@@ -1,0 +1,48 @@
+{
+    "title": "Alerts",
+    "intro": "What is waiting for you personally: approvals, cases assigned to you and system warnings.",
+    "none_title": "There are no alerts for your role",
+    "none_body": "Approvals, cases and system warnings appear here once your role may handle them.",
+    "downloads": {
+        "title": "Ready to download",
+        "until": "until :time",
+        "download": "Download"
+    },
+    "approvals": {
+        "title": "Approvals for you",
+        "queue": "All approvals",
+        "empty": "No approval is waiting for you",
+        "expires": "expires :time",
+        "by": "Requested by :name"
+    },
+    "cases": {
+        "title": "Cases assigned to you",
+        "empty": "No open case is assigned to you",
+        "reports": ":count reports",
+        "status_new": "New",
+        "status_in_review": "In review",
+        "target_member": "Member",
+        "target_vehicle": "Vehicle",
+        "target_photo": "Photo",
+        "target_message": "Message",
+        "target_build_update": "Build update",
+        "target_modification": "Modification"
+    },
+    "warnings": {
+        "title": "System warnings",
+        "empty": "No warnings",
+        "since": "Detected :time",
+        "open": "View",
+        "pii_reveal_limit": "A staff member reached today's limit of revealed addresses",
+        "audit_chain_broken": "The audit chain check failed",
+        "failed_jobs": "There are failed background jobs",
+        "scheduler": "The scheduler is not reporting",
+        "queue": "Jobs have been waiting unusually long in the queue"
+    },
+    "running": {
+        "title": "Running now",
+        "busy": "Running",
+        "mine": "requested by you, approved :time",
+        "approved": "approved by you :time"
+    }
+}

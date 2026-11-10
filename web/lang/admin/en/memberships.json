@@ -1,0 +1,103 @@
+{
+    "nav": {
+        "plans": "Plans",
+        "entitlements": "Entitlements"
+    },
+    "scaffold": "Scaffold behind the flag “premium.enabled”: no payments. Digital premium content later goes through Apple and Google purchases in the app.",
+    "plans": {
+        "title": "Memberships: plans",
+        "intro": "Plans with names and features in German and English. No price: V1 has no payments.",
+        "caption": "Plans",
+        "create": "Add plan",
+        "edit": "Edit",
+        "error": "The plans could not be loaded",
+        "empty_title": "No plan yet",
+        "empty_body": "Add a plan before you grant it to members.",
+        "columns": {
+            "plan": "Plan",
+            "features": "Features",
+            "status": "Status",
+            "holders": "Members",
+            "actions": "Actions"
+        },
+        "active": "Active",
+        "inactive": "Inactive",
+        "features_count": "{0} none|{1} 1 feature|[2,*] :count features",
+        "holders": "{0} nobody|{1} 1 member|[2,*] :count members"
+    },
+    "plan_form": {
+        "create_title": "Add plan",
+        "edit_title": "Edit plan :name",
+        "key": "Key",
+        "key_hint": "Lower-case letters, digits and hyphens; fixed once created.",
+        "name_de": "Name (German)",
+        "name_en": "Name (English)",
+        "features_de": "Features (German)",
+        "features_en": "Features (English)",
+        "features_hint": "One feature per line, at most 20, each up to 160 characters.",
+        "active": "Active: can be granted",
+        "submit": "Save",
+        "errors": {
+            "key": "Lower-case letters, digits and hyphens, up to 64 characters.",
+            "name": "Enter a German name (up to 80 characters).",
+            "features": "At most 20 features of up to 160 characters each."
+        }
+    },
+    "entitlements": {
+        "title": "Memberships: entitlements",
+        "intro": "Who holds which plan, granted by whom, with reason, start and end. A revocation stays as history.",
+        "caption": "Entitlements",
+        "grant": "Grant",
+        "revoke": "Revoke",
+        "error": "The entitlements could not be loaded",
+        "empty_title": "No entitlement yet",
+        "empty_body": "Members you grant a plan show here with plan, period and reason.",
+        "columns": {
+            "member": "Member",
+            "plan": "Plan",
+            "period": "Period",
+            "status": "Status",
+            "granted": "Granted by",
+            "reason": "Reason",
+            "actions": "Actions"
+        },
+        "status": {
+            "active": "Active",
+            "scheduled": "Scheduled",
+            "ended": "Ended",
+            "revoked": "Revoked"
+        },
+        "open_end": "no end",
+        "from": "from :date",
+        "period": ":from to :to",
+        "revoked_line": "Revoked :date by :name: :reason",
+        "no_plans": "Add an active plan first."
+    },
+    "grant_form": {
+        "title": "Grant a member",
+        "body": "The grant goes into the audit log with its reason.",
+        "member": "Username",
+        "member_hint": "With or without @, e.g. @lukas.sc",
+        "plan": "Plan",
+        "period": "Period",
+        "period_hint": "Empty: from today, no end.",
+        "submit": "Grant",
+        "errors": {
+            "member": "Enter a username.",
+            "plan": "Choose an active plan."
+        },
+        "no_plan_title": "No active plan yet",
+        "no_plan_body": "You can grant a plan once an active plan exists. Create it under “Plans”.",
+        "to_plans": "Open plans"
+    },
+    "revoke_dialog": {
+        "title": "Revoke the entitlement of :member",
+        "body": "The plan :plan ends at once. The row stays as history."
+    },
+    "flash": {
+        "plan_created": "Plan added.",
+        "plan_saved": "Plan saved.",
+        "granted": "Granted.",
+        "revoked": "Revoked."
+    }
+}

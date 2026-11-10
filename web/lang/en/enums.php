@@ -1,0 +1,210 @@
+<?php
+
+// Labels for App\Enums, one group per enum (App\Support\Enums\HasLabel).
+return [
+    'power_unit' => [
+        'ps' => 'PS',
+        'kw' => 'kW',
+        'hp' => 'hp',
+    ],
+    'power_source' => [
+        'factory' => 'Factory figure',
+        'claimed' => 'Owner figure',
+        'measured' => 'Measured',
+    ],
+    'vehicle_status' => [
+        'draft' => 'Draft',
+        'published' => 'Published',
+        'archived' => 'Archived',
+    ],
+    'visibility' => [
+        'public' => 'Public',
+        'unlisted' => 'Unlisted',
+        'private' => 'Private',
+    ],
+    'mod_status' => [
+        'installed' => 'Installed',
+        'planned' => 'Planned',
+        'removed' => 'Removed',
+    ],
+    'legal_status' => [
+        'abe' => 'ABE',
+        'parts_certificate' => 'Parts certificate',
+        'registered' => 'Registered',
+        'individual_approval' => 'Individual approval',
+        'not_required' => 'Not required',
+        'unknown' => 'Unknown',
+    ],
+    'media_category' => [
+        'exterior' => 'Exterior',
+        'interior' => 'Interior',
+        'engine' => 'Engine',
+        'wheels' => 'Wheels',
+        'detail' => 'Details',
+        'other' => 'Other',
+    ],
+    'media_status' => [
+        'processing' => 'Processing',
+        'ready' => 'Ready',
+        'failed' => 'Failed',
+    ],
+    'moderation_status' => [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'flagged' => 'Flagged',
+        'rejected' => 'Rejected',
+    ],
+    'qr_status' => [
+        'active' => 'Active',
+        'revoked' => 'Revoked',
+    ],
+    'qr_revocation_reason' => [
+        'reissued' => 'Reissued',
+        'vehicle_deleted' => 'Vehicle deleted',
+        'account_deleted' => 'Account deleted',
+        'moderation' => 'Moderation',
+    ],
+    'fuel' => [
+        'petrol' => 'Petrol',
+        'diesel' => 'Diesel',
+        'hybrid' => 'Hybrid',
+        'plug_in_hybrid' => 'Plug-in hybrid',
+        'electric' => 'Electric',
+        'lpg' => 'LPG',
+        'cng' => 'CNG',
+        'ethanol' => 'Ethanol (E85)',
+        'other' => 'Other',
+    ],
+    'aspiration' => [
+        'naturally_aspirated' => 'Naturally aspirated',
+        'turbo' => 'Turbo',
+        'biturbo' => 'Twin turbo',
+        'supercharged' => 'Supercharged',
+        'twincharged' => 'Twincharged',
+        'none' => 'None (electric)',
+    ],
+    'drivetrain' => [
+        'front' => 'Front-wheel drive',
+        'rear' => 'Rear-wheel drive',
+        'all' => 'All-wheel drive',
+    ],
+    'gearbox' => [
+        'manual' => 'Manual',
+        'automatic' => 'Automatic',
+        'dual_clutch' => 'Dual clutch',
+        'sequential' => 'Sequential',
+        'cvt' => 'CVT',
+        'single_speed' => 'Single speed',
+    ],
+    'user_status' => [
+        'active' => 'Active',
+        'suspended' => 'Suspended',
+        'deactivated' => 'Deactivated',
+    ],
+    'restriction_type' => [
+        'messaging' => 'Messaging',
+        'publishing' => 'Publishing',
+    ],
+    'verification_purpose' => [
+        'email_verification' => 'Verify email',
+        'password_reset' => 'Reset password',
+        'email_change' => 'Change email',
+    ],
+    'theme_preference' => [
+        'carbon' => 'Carbon',
+        'black' => 'Black',
+        'light' => 'Light',
+        'system' => 'System',
+    ],
+    'power_display' => [
+        'ps_kw' => 'PS (kW)',
+        'kw_ps' => 'kW (PS)',
+        'hp' => 'hp',
+    ],
+    'who_can_message' => [
+        'everyone' => 'Everyone',
+        'following' => 'Members I follow',
+        'nobody' => 'Nobody',
+    ],
+    'build_update_type' => [
+        'mod_added' => 'Modification added',
+        'mod_changed' => 'Modification changed',
+        'mod_removed' => 'Modification removed',
+        'specs_changed' => 'Specs changed',
+        'photos_added' => 'New photos',
+        'note' => 'Note',
+    ],
+    'device_platform' => [
+        'ios' => 'iOS',
+        'android' => 'Android',
+        'web' => 'Web',
+    ],
+    'catalog_request_status' => [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'rejected' => 'Rejected',
+    ],
+    'mod_field_type' => [
+        'text' => 'Text',
+        'number' => 'Number',
+        'boolean' => 'Yes/No',
+        'select' => 'Select',
+        'brand' => 'Brand',
+    ],
+    'config_version_status' => [
+        'draft' => 'Draft',
+        'published' => 'Published',
+        'superseded' => 'Superseded',
+    ],
+    'legal_document_key' => [
+        'imprint' => 'Legal notice',
+        'privacy' => 'Privacy policy',
+        'terms' => 'Terms of use',
+        'community' => 'Community guidelines',
+        'licenses' => 'Licences',
+    ],
+    'audit_actor_type' => [
+        'staff' => 'Staff',
+        'member' => 'Member',
+        'system' => 'System',
+    ],
+    'cannot_message_reason' => [
+        'recipient_closed' => 'This member is not taking messages from you right now.',
+        'not_verified' => 'Confirm your e-mail address first, then you can write.',
+        'restricted' => 'Your account is restricted from messaging right now.',
+    ],
+    // M2.5 settings, data rights and support.
+    'data_export_status' => [
+        'queued' => 'Requested',
+        'running' => 'Being created',
+        'ready' => 'Ready',
+        'failed' => 'Failed',
+        'expired' => 'Expired',
+    ],
+    'support_category' => [
+        'account' => 'Account and sign-in',
+        'vehicle' => 'Vehicles and garage',
+        'qr' => 'QR stickers',
+        'messaging' => 'Messages',
+        'safety' => 'Safety and reports',
+        'other' => 'Other',
+    ],
+    'support_ticket_status' => [
+        'open' => 'Open',
+        'pending' => 'Waiting for reply',
+        'closed' => 'Done',
+    ],
+    'support_ticket_source' => [
+        'app' => 'App',
+        'web' => 'Contact form',
+    ],
+    'ticket_author_type' => [
+        'member' => 'Member',
+        'guest' => 'Guest',
+        'staff' => 'Team',
+    ],
+    'session_kind' => [
+        'app' => 'App',
+        'web' => 'Browser',
+    ],
+];

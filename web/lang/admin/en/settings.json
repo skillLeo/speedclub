@@ -1,0 +1,99 @@
+{
+    "title": "Organisation",
+    "intro": "The operator’s details for the Impressum, the legal texts and the e‑mails. Each field fills the placeholder next to it.",
+    "error": "The settings could not be loaded",
+    "groups": {
+        "company": "Company",
+        "contact": "Contact",
+        "register": "Register and supervision",
+        "locale": "Language"
+    },
+    "placeholder": "Fills :placeholder.",
+    "no_placeholder": "Only for the app and the e‑mails.",
+    "empty_value": "not set",
+    "last": "Version :version, published :date by :name",
+    "never": "Not published yet: the legal texts show the placeholders.",
+    "owner_only": "Only an Owner changes the organisation details. You can see them here.",
+    "missing": "{1} 1 detail still missing|[2,*] :count details still missing",
+    "save": "Save",
+    "discard": "Discard",
+    "confirm_title": "Save the organisation details",
+    "confirm_body": "Impressum, legal texts and e‑mails show the new details at once.",
+    "locales": {
+        "de": "German",
+        "en": "English"
+    },
+    "errors": {
+        "email": "Enter a valid e‑mail address.",
+        "vat_id": "A VAT ID starts with two capital letters, e.g. DE123456789.",
+        "phone": "Only digits, spaces, +, /, - and brackets."
+    },
+    "fields": {
+        "company_name": {
+            "label": "Company name"
+        },
+        "legal_form": {
+            "label": "Legal form",
+            "hint": "e.g. GmbH, UG (haftungsbeschränkt)"
+        },
+        "street": {
+            "label": "Street and number"
+        },
+        "postal_city": {
+            "label": "Postcode and city"
+        },
+        "representative": {
+            "label": "Authorised representative",
+            "hint": "Management, for the Impressum."
+        },
+        "responsible_person": {
+            "label": "Person responsible",
+            "hint": "Responsible for content (§ 18(2) MStV)."
+        },
+        "contact_email": {
+            "label": "Contact e‑mail"
+        },
+        "phone": {
+            "label": "Phone",
+            "hint": "With the area code, e.g. +49 30 1234567."
+        },
+        "support_email": {
+            "label": "Support e‑mail",
+            "hint": "The e‑mails to members name this address too."
+        },
+        "privacy_email": {
+            "label": "Privacy e‑mail"
+        },
+        "dsa_email": {
+            "label": "DSA contact e‑mail",
+            "hint": "Point of contact under Art. 11 and 12 DSA."
+        },
+        "report_email": {
+            "label": "Report e‑mail",
+            "hint": "For reports of illegal content."
+        },
+        "register_court": {
+            "label": "Register court"
+        },
+        "register_number": {
+            "label": "Register number",
+            "hint": "e.g. HRB 123456"
+        },
+        "vat_id": {
+            "label": "VAT ID",
+            "hint": "e.g. DE123456789"
+        },
+        "supervisory_authority": {
+            "label": "Supervisory authority",
+            "hint": "The data protection authority of the federal state."
+        },
+        "default_locale": {
+            "label": "Default language",
+            "hint": "For members and guests who chose none."
+        }
+    },
+    "flash": {
+        "saved": "Details saved and published."
+    },
+    "missing_field": "Still missing."
+}

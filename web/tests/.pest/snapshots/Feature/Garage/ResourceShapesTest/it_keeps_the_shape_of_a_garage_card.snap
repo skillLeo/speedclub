@@ -1,0 +1,70 @@
+{
+    "id": "string",
+    "public_id": "string",
+    "slug": "string",
+    "status": "string",
+    "visibility": "string",
+    "is_main": "bool",
+    "eyebrow": "string",
+    "make": "string",
+    "model": "string",
+    "generation": "null",
+    "title": "string",
+    "full_title": "string",
+    "nickname": "string",
+    "color": "string",
+    "model_year": "int",
+    "subline_parts": [
+        "string"
+    ],
+    "spec_strip": [
+        {
+            "key": "string",
+            "value": "string",
+            "unit": "string",
+            "label": "string"
+        }
+    ],
+    "cover": {
+        "id": "string",
+        "status": "string",
+        "category": "string",
+        "width": "int",
+        "height": "int",
+        "blurhash": "string",
+        "focal_x": "null",
+        "focal_y": "null",
+        "alt": "null",
+        "sort": "int",
+        "variants": [
+            {
+                "width": "int",
+                "height": "int",
+                "url": "string"
+            }
+        ],
+        "created_at": "string"
+    },
+    "photo_count": "int",
+    "mod_count": "int",
+    "published_at": "string",
+    "updated_at": "string",
+    "wizard": "null",
+    "completeness": {
+        "percent": "int",
+        "is_complete": "bool",
+        "line": "string",
+        "hint": "string",
+        "missing": [
+            {
+                "key": "string",
+                "label": "string",
+                "section": "string"
+            }
+        ]
+    },
+    "qr": {
+        "code": "string",
+        "url": "string"
+    }
+}

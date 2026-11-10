@@ -1,0 +1,146 @@
+# F1 Onboarding on Android, the native counterpart of web/tests/e2e/flows/f1-onboarding.spec.ts:
+# first launch opens Welcome → Konto erstellen → code from the local mailbox → the app is killed and resumes at the
+# username step → username → killed again, resumes at profile setup → "Überspringen" → Garage.
+# AUTH-10 (notification primer) is P2 and not built, so profile setup leads straight to the garage.
+#
+# Needs a LAN or emulator build against a local server with the dev mailbox (/dev/mail/latest). The emulator reaches
+# the host as 10.0.2.2; for a device pass -e API_URL=http://<lan-ip>:8080. Run:
+#   maestro test mobile/e2e/maestro/f1-onboarding.yaml
+# The account ends in @e2e.speedclub.test; remove it afterwards with
+#   php web/tests/e2e/support/backend.php delete-accounts f1.maestro.
+# (the Playwright run's global teardown removes it too).
+appId: de.speedclub.app
+name: f1-onboarding
+env:
+  API_URL: http://10.0.2.2:8080
+  PASSWORD: Ladeluft-Maestro-Kurve
+---
+- evalScript: ${output.stamp = new Date().getTime().toString(36)}
+- evalScript: ${output.email = 'f1.maestro.' + output.stamp + '@e2e.speedclub.test'}
+- evalScript: ${output.username = 'f1m' + output.stamp}
+
+- launchApp:
+    clearState: true
+    stopApp: true
+# A first launch opens Welcome (FS-1).
+- extendedWaitUntil:
+    visible:
+      id: AUTH-02.root
+    timeout: 60000
+- assertVisible:
+    id: AUTH-02.signUp
+- assertVisible:
+    id: AUTH-02.signIn
+- assertVisible:
+    id: AUTH-02.browse
+- takeScreenshot: f1-1-welcome
+- tapOn:
+    id: AUTH-02.signUp
+
+# AUTH-04
+- extendedWaitUntil:
+    visible:
+      id: AUTH-04.root
+    timeout: 15000
+- tapOn:
+    id: AUTH-04.email
+- inputText: ${output.email}
+- tapOn:
+    id: AUTH-04.password
+- inputText: ${PASSWORD}
+- hideKeyboard
+- assertVisible:
+    id: AUTH-04.rules.length
+- tapOn:
+    id: AUTH-04.ageConfirmed
+- tapOn:
+    id: AUTH-04.termsAccepted
+- tapOn:
+    id: AUTH-04.privacyAccepted
+- takeScreenshot: f1-2-sign-up
+- tapOn:
+    id: AUTH-04.cta.primary
+
+# AUTH-05: the code from the mailbox. The password is still held for this address, so the six digits send the form.
+- extendedWaitUntil:
+    visible:
+      id: AUTH-05.root
+    timeout: 20000
+- assertVisible:
+    id: AUTH-05.resend
+    enabled: false
+- retry:
+    maxRetries: 5
+    commands:
+      - runScript:
+          file: scripts/latest-code.js
+          env:
+            EMAIL: ${output.email}
+            PREVIOUS: ''
+- takeScreenshot: f1-3-verify
+- tapOn:
+    id: AUTH-05.code
+- inputText: ${output.code}
+
+# AUTH-08, then the app is killed: it has to come back on the step that is still open.
+- extendedWaitUntil:
+    visible:
+      id: AUTH-08.root
+    timeout: 20000
+- stopApp
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: AUTH-08.root
+    timeout: 60000
+- tapOn:
+    id: AUTH-08.username
+- inputText: ${output.username}
+- hideKeyboard
+- extendedWaitUntil:
+    visible:
+      id: AUTH-08.available
+    timeout: 15000
+- takeScreenshot: f1-4-username
+- tapOn:
+    id: AUTH-08.cta.primary
+
+# AUTH-09, killed once more.
+- extendedWaitUntil:
+    visible:
+      id: AUTH-09.root
+    timeout: 20000
+- stopApp
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: AUTH-09.root
+    timeout: 60000
+- takeScreenshot: f1-5-profile-setup
+- tapOn:
+    id: AUTH-09.skip
+
+# GAR-01. Its empty state "Füge dein erstes Auto hinzu" arrives with M1.6; until then the shell placeholder.
+- extendedWaitUntil:
+    visible:
+      id: GAR-01.root
+    timeout: 20000
+- assertVisible:
+    id: tab.garage
+    selected: true
+- takeScreenshot: f1-6-garage
+
+# A normal start now: no step is open any more.
+- stopApp
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: tab.home
+    timeout: 60000
+- assertNotVisible:
+    id: AUTH-08.root
+- assertNotVisible:
+    id: AUTH-09.root

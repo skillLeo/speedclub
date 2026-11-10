@@ -1,0 +1,99 @@
+{
+    "title": "Organisation",
+    "intro": "Die Angaben zum Betreiber für Impressum, Rechtstexte und E‑Mails. Jedes Feld füllt den Platzhalter, der daneben steht.",
+    "error": "Die Einstellungen konnten nicht geladen werden",
+    "groups": {
+        "company": "Unternehmen",
+        "contact": "Kontakt",
+        "register": "Register und Aufsicht",
+        "locale": "Sprache"
+    },
+    "placeholder": "Füllt :placeholder.",
+    "no_placeholder": "Nur für die App und die E‑Mails.",
+    "empty_value": "nicht gesetzt",
+    "last": "Version :version, veröffentlicht :date von :name",
+    "never": "Noch nicht veröffentlicht: Die Rechtstexte zeigen die Platzhalter.",
+    "owner_only": "Nur ein Owner ändert die Angaben zur Organisation. Du siehst sie hier.",
+    "missing": "{1} 1 Angabe fehlt noch|[2,*] :count Angaben fehlen noch",
+    "save": "Speichern",
+    "discard": "Verwerfen",
+    "confirm_title": "Angaben zur Organisation speichern",
+    "confirm_body": "Impressum, Rechtstexte und E‑Mails zeigen die neuen Angaben sofort.",
+    "locales": {
+        "de": "Deutsch",
+        "en": "Englisch"
+    },
+    "errors": {
+        "email": "Gib eine gültige E‑Mail-Adresse ein.",
+        "vat_id": "Eine USt-IdNr. beginnt mit zwei Großbuchstaben, z. B. DE123456789.",
+        "phone": "Nur Ziffern, Leerzeichen, +, /, - und Klammern."
+    },
+    "fields": {
+        "company_name": {
+            "label": "Firmenname"
+        },
+        "legal_form": {
+            "label": "Rechtsform",
+            "hint": "z. B. GmbH, UG (haftungsbeschränkt)"
+        },
+        "street": {
+            "label": "Straße und Hausnummer"
+        },
+        "postal_city": {
+            "label": "PLZ und Ort"
+        },
+        "representative": {
+            "label": "Vertretungsberechtigte Person",
+            "hint": "Geschäftsführung, für das Impressum."
+        },
+        "responsible_person": {
+            "label": "Verantwortliche Person",
+            "hint": "Inhaltlich verantwortlich (§ 18 Abs. 2 MStV)."
+        },
+        "contact_email": {
+            "label": "Kontakt-E‑Mail"
+        },
+        "phone": {
+            "label": "Telefon",
+            "hint": "Mit Vorwahl, z. B. +49 30 1234567."
+        },
+        "support_email": {
+            "label": "Support-E‑Mail",
+            "hint": "Diese Adresse nennen auch die E‑Mails an Mitglieder."
+        },
+        "privacy_email": {
+            "label": "Datenschutz-E‑Mail"
+        },
+        "dsa_email": {
+            "label": "DSA-Kontakt-E‑Mail",
+            "hint": "Kontaktstelle nach Art. 11 und 12 DSA."
+        },
+        "report_email": {
+            "label": "Melde-E‑Mail",
+            "hint": "Für Meldungen rechtswidriger Inhalte."
+        },
+        "register_court": {
+            "label": "Registergericht"
+        },
+        "register_number": {
+            "label": "Registernummer",
+            "hint": "z. B. HRB 123456"
+        },
+        "vat_id": {
+            "label": "USt-IdNr.",
+            "hint": "z. B. DE123456789"
+        },
+        "supervisory_authority": {
+            "label": "Zuständige Aufsichtsbehörde",
+            "hint": "Datenschutz-Aufsicht des Bundeslands."
+        },
+        "default_locale": {
+            "label": "Standardsprache",
+            "hint": "Für Mitglieder und Gäste ohne eigene Wahl."
+        }
+    },
+    "flash": {
+        "saved": "Angaben gespeichert und veröffentlicht."
+    },
+    "missing_field": "Fehlt noch."
+}

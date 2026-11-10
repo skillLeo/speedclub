@@ -1,0 +1,15 @@
+{
+    "network": "Keine Verbindung. Prüfe dein Netz und versuch es noch einmal.",
+    "unauthenticated": "Bitte melde dich an.",
+    "restricted": "Dein Konto ist eingeschränkt.",
+    "forbidden": "Das darfst du leider nicht.",
+    "not_found": "Das haben wir nicht gefunden.",
+    "conflict": "Das hat sich gerade geändert. Lade neu und versuch es noch einmal.",
+    "validation": "Bitte prüfe deine Eingaben.",
+    "session_expired": "Deine Sitzung ist abgelaufen. Versuch es noch einmal.",
+    "maintenance": "SPEED CLUB wird gerade gewartet.",
+    "upgrade": "Bitte aktualisiere die App.",
+    "rate_limited": "Das war etwas schnell. Warte kurz und versuch es noch einmal.",
+    "server": "Bei uns ist etwas schiefgelaufen. Versuch es gleich noch einmal.",
+    "consent_required": "Stimm zuerst den geänderten Bedingungen zu, dann geht es weiter."
+}

@@ -1,0 +1,127 @@
+<?php
+
+// Server-rendered strings of the garage and vehicle screens (02_PRODUCT_SPEC §3.2, §3.3, §3.9).
+return [
+    'limit_reached' => 'Du hast schon :max Fahrzeuge in deiner Garage. Lösche eins, bevor du ein neues anlegst.',
+    'mod_limit_reached' => 'Dieses Fahrzeug hat schon :max Modifikationen. Lösche eine, bevor du eine neue hinzufügst.',
+    'mod_photo_limit_reached' => 'Diese Modifikation hat schon :max Fotos. Lösche eins, bevor du ein neues hinzufügst.',
+    'order_mismatch' => 'Die Liste hat sich inzwischen geändert. Lade neu und sortiere noch einmal.',
+    'model_mismatch' => 'Dieses Modell gehört nicht zur gewählten Marke.',
+    'generation_mismatch' => 'Diese Generation gehört nicht zum gewählten Modell.',
+    'year_outside_generation' => 'Das Baujahr passt nicht zu dieser Generation (:from bis :to).',
+    'installed_in_future' => 'Der Einbaumonat darf nicht in der Zukunft liegen.',
+    'cover_invalid' => 'Das Titelbild muss ein fertiges Foto dieses Fahrzeugs sein.',
+
+    'publish_missing' => [
+        'make' => 'Wähl eine Marke aus.',
+        'model' => 'Wähl ein Modell aus.',
+        'model_year' => 'Gib das Baujahr an.',
+        'photo' => 'Füge mindestens ein fertiges Foto hinzu.',
+        'username' => 'Wähl zuerst einen Benutzernamen.',
+    ],
+
+    'mod_fields' => [
+        'unknown' => 'Dieses Feld gibt es in dieser Kategorie nicht.',
+        'required' => ':field ist erforderlich.',
+        'number' => ':field muss eine Zahl sein.',
+        'boolean' => ':field muss Ja oder Nein sein.',
+        'text' => ':field muss ein Text sein.',
+        'too_long' => ':field darf höchstens :max Zeichen haben.',
+        'pattern' => ':field hat nicht das richtige Format, zum Beispiel :example.',
+        'option' => 'Wähl für :field einen Wert aus der Liste.',
+        'min' => ':field muss mindestens :min sein.',
+        'max' => ':field darf höchstens :max sein.',
+        'step' => ':field geht in Schritten von :step.',
+        'rear_without_front' => 'Gib zuerst den Durchmesser vorne an.',
+        'object' => 'Die Felder müssen ein Objekt sein.',
+    ],
+
+    'completeness' => [
+        'hint' => 'Noch eine Angabe bis zum vollständigen Build|Noch :count Angaben bis zum vollständigen Build',
+        'line' => 'Build zu :percent % vollständig',
+        'make' => 'Marke',
+        'model' => 'Modell',
+        'model_year' => 'Baujahr',
+        'color' => 'Farbe',
+        'description' => 'Beschreibung',
+        'engine' => 'Motor',
+        'power' => 'Leistung',
+        'torque' => 'Drehmoment',
+        'drivetrain' => 'Antrieb',
+        'gearbox' => 'Getriebe',
+        'photo' => 'Erstes Foto',
+        'photos' => "Mindestens 3\u{00A0}Fotos",
+        'mod' => 'Erste Modifikation',
+    ],
+
+    'spec' => [
+        'status' => 'Status',
+        'model_year' => 'Baujahr',
+        'make' => 'Marke',
+        'model' => 'Modell',
+        'generation' => 'Generation',
+        'color' => 'Farbe',
+        'engine_code' => 'Motorcode',
+        'engine_text' => 'Motor',
+        'displacement_cc' => 'Hubraum',
+        'fuel' => 'Kraftstoff',
+        'aspiration' => 'Aufladung',
+        'power' => 'Leistung',
+        'torque_nm' => 'Drehmoment',
+        'torque' => 'Drehmoment',
+        'drivetrain' => 'Antrieb',
+        'gearbox' => 'Getriebe',
+    ],
+
+    'spec_group' => [
+        'vehicle' => 'Fahrzeug',
+        'engine' => 'Motor',
+        'power' => 'Leistung',
+        'drivetrain' => 'Antrieb',
+    ],
+
+    'strip' => [
+        'model_year' => 'Baujahr',
+        'drivetrain' => 'Antrieb',
+    ],
+
+    // The short form of the spec strip in FS-3.
+    'drivetrain_short' => [
+        'front' => 'FWD',
+        'rear' => 'RWD',
+        'all' => 'AWD',
+    ],
+
+    'yes' => 'Ja',
+    'no' => 'Nein',
+    'stock' => 'Serie',
+    'removed' => 'entfernt',
+    'none' => 'keine Angabe',
+    'more_changes' => ':count weitere',
+    // The bold title of a Verlauf entry (DQ-290, 03_DESIGN_SYSTEM §8): category and verb of its first change.
+    'update_title' => [
+        'mod_added' => ':part hinzugefügt',
+        'mod_changed' => ':part geändert',
+        'mod_removed' => ':part entfernt',
+        'specs_changed' => 'Technik aktualisiert',
+        'photos_added' => 'Fotos hinzugefügt',
+        'note' => 'Notiz',
+        'parts' => [
+            'wheels_tires' => 'Räder',
+            'suspension' => 'Fahrwerk',
+            'exhaust' => 'Abgasanlage',
+            'engine_performance' => 'Motor',
+            'brakes' => 'Bremsen',
+            'aero_body' => 'Karosserie',
+            'interior' => 'Innenraum',
+            'electronics' => 'Elektronik',
+            'drivetrain' => 'Antrieb',
+            'other' => 'Teil',
+        ],
+    ],
+    'planned_prefix' => 'Geplant: :title',
+    'photos_label' => 'Fotos',
+    'photos_added' => 'Ein neues Foto|:count neue Fotos',
+    'legal_disclaimer' => 'Angaben des Besitzers, keine rechtliche Prüfung',
+    'cost' => ':amount €',
+];

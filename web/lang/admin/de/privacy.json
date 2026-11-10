@@ -1,0 +1,365 @@
+{
+    "nav": {
+        "requests": "DSGVO-Anfragen",
+        "retention": "Aufbewahrung"
+    },
+    "types": {
+        "access": "Auskunft",
+        "export": "Datenexport",
+        "erasure": "Löschung",
+        "rectification": "Berichtigung",
+        "objection": "Widerspruch",
+        "restriction": "Einschränkung"
+    },
+    "article": "Art. :article DSGVO",
+    "status": {
+        "open": "Offen",
+        "in_progress": "In Bearbeitung",
+        "waiting": "Wartet auf Antwort",
+        "completed": "Abgeschlossen",
+        "rejected": "Abgelehnt"
+    },
+    "sources": {
+        "email": "E‑Mail",
+        "post": "Brief",
+        "support": "Support-Ticket",
+        "other": "Anderer Weg"
+    },
+    "due": {
+        "in_days": "{0} heute fällig|{1} noch 1 Tag|[2,*] noch :count Tage",
+        "overdue": "{1} 1 Tag überfällig|[2,*] :count Tage überfällig",
+        "extended": "verlängert",
+        "done": "erledigt am :date"
+    },
+    "requests": {
+        "title": "DSGVO-Anfragen",
+        "intro": "Auskunft, Export, Löschung, Berichtigung, Widerspruch und Einschränkung. Antwort innerhalb eines Monats nach Eingang, einmal um zwei Monate verlängerbar (Art. 12 Abs. 3 DSGVO).",
+        "caption": "DSGVO-Anfragen nach Fälligkeit",
+        "create": "Anfrage erfassen",
+        "counts": {
+            "open": "Offen: :count",
+            "due_soon": "Frist ≤ :days Tage: :count",
+            "overdue": "Überfällig: :count"
+        },
+        "empty_title": "Keine Anfrage",
+        "empty_body": "Anfragen, die per E‑Mail, Brief oder Support eingehen, erfasst du hier. Exporte und Löschungen aus der App stehen unten.",
+        "columns": {
+            "request": "Anfrage",
+            "requester": "Von",
+            "received": "Eingang",
+            "due": "Frist",
+            "status": "Status",
+            "assigned": "Zuständig"
+        },
+        "presets": {
+            "open": "Offen",
+            "due_soon": "Frist ≤ 7 Tage",
+            "overdue": "Überfällig",
+            "mine": "Mir zugewiesen"
+        },
+        "filters": {
+            "label": "Anfragen filtern",
+            "q": "Suche",
+            "q_placeholder": "DS-Nummer, Name oder @Benutzername",
+            "status": "Status",
+            "open": "Alle offenen",
+            "type": "Art",
+            "due": "Frist",
+            "due_soon": "≤ 7 Tage",
+            "overdue": "Überfällig",
+            "assigned": "Zuständig",
+            "me": "Ich",
+            "none": "Niemand",
+            "any": "Alle",
+            "apply": "Anwenden"
+        },
+        "external": "Externe Person",
+        "deleted_member": "Gelöschtes Konto",
+        "nobody": "–",
+        "you": "Du",
+        "self_title": "In der App selbst erledigt",
+        "self_body": "Datenexporte und Kontolöschungen, die Mitglieder in den Einstellungen selbst ausgelöst haben. Nur zur Übersicht, ohne weitere Schritte.",
+        "self_caption": "Selbst erledigte Anfragen aus der App",
+        "self_empty": "Noch keine Exporte oder Löschungen aus der App.",
+        "self_kind": {
+            "export": "Datenexport",
+            "erasure": "Kontolöschung"
+        },
+        "self_columns": {
+            "kind": "Art",
+            "member": "Mitglied",
+            "at": "Ausgelöst",
+            "status": "Status"
+        },
+        "self_done": "Abgeschlossen"
+    },
+    "create": {
+        "title": "Anfrage erfassen",
+        "body": "Die Frist beginnt mit dem Eingang und endet einen Monat später.",
+        "type": "Art der Anfrage",
+        "source": "Eingegangen per",
+        "who": "Von wem",
+        "who_member": "Mitglied",
+        "who_external": "Externe Person",
+        "member": "Benutzername",
+        "member_hint": "Mit oder ohne @, z. B. @lukas.sc",
+        "member_unknown": "Ein Mitglied mit diesem Benutzernamen gibt es nicht.",
+        "name": "Name",
+        "email": "E‑Mail-Adresse",
+        "email_hint": "Dorthin gehen die Antworten.",
+        "locale": "Sprache der Antworten",
+        "received": "Eingegangen am",
+        "received_hint": "Leer lassen für heute. Höchstens ein Jahr zurück.",
+        "details": "Inhalt der Anfrage",
+        "details_hint": "Was die Person verlangt, bis 5.000 Zeichen.",
+        "submit": "Anfrage anlegen",
+        "errors": {
+            "member": "Gib einen Benutzernamen ein.",
+            "email": "Gib eine gültige E‑Mail-Adresse ein."
+        }
+    },
+    "request": {
+        "error": "Die Anfrage konnte nicht geladen werden",
+        "tabs_label": "Bereiche der Anfrage",
+        "tabs": {
+            "request": "Anfrage",
+            "reply": "Antworten",
+            "complete": "Abschluss"
+        },
+        "received": "Eingang :date",
+        "due": "Frist :date",
+        "source": "per :source",
+        "requester_title": "Von",
+        "member_link": "Zum Mitglied",
+        "address": "Antworten an :email",
+        "no_address": "Keine E‑Mail-Adresse bekannt: Antworten gehen nicht.",
+        "details_title": "Inhalt",
+        "no_details": "Kein Text erfasst.",
+        "deadline_title": "Frist",
+        "deadline_line": "Eingang :received, Antwort bis :due",
+        "extended_line": "Am :date um zwei Monate verlängert: :reason",
+        "extend_hint": "Einmal möglich, vor Ablauf der ersten Frist. Danach die Antwort „Verlängerung“ senden.",
+        "handling_title": "Zuständigkeit und Status",
+        "assignee": "Zuständig",
+        "nobody": "Niemand",
+        "status": "Status",
+        "save": "Übernehmen",
+        "linked_title": "Verknüpft",
+        "export_status": "Datenexport: :status",
+        "approval_status": "Löschung (Vier-Augen): :status",
+        "export_states": {
+            "queued": "wartet",
+            "running": "wird erstellt",
+            "ready": "per E‑Mail verschickt",
+            "failed": "fehlgeschlagen",
+            "expired": "abgelaufen"
+        },
+        "reply_title": "Antwort mit Vorlage",
+        "reply_body": "Die Vorlage nennt die DS-Nummer und die Frist. Gespeichert wird nur, dass die Antwort gesendet wurde, nicht ihr Text.",
+        "template": "Vorlage",
+        "reply_locale": "Sprache",
+        "detail": "Eigener Absatz",
+        "detail_hint": "Optional, bis 2.000 Zeichen, steht unter dem Vorlagentext.",
+        "templates": {
+            "received": "Eingangsbestätigung",
+            "identity": "Bitte um Identitätsnachweis",
+            "extension": "Verlängerung der Frist",
+            "completed": "Erledigt",
+            "rejected": "Ablehnung mit Rechtsbehelf"
+        },
+        "template_about": {
+            "received": "Bestätigt den Eingang und nennt die Frist.",
+            "identity": "Bittet um einen Nachweis, dass die Anfrage von der Person selbst kommt.",
+            "extension": "Teilt die Verlängerung um zwei Monate mit Grund mit. Erst nach „Frist verlängern“.",
+            "completed": "Teilt mit, dass die Anfrage erledigt ist.",
+            "rejected": "Nennt die Gründe und den Weg zur Aufsichtsbehörde und zum Gericht. Erst nach „Ablehnen“."
+        },
+        "template_unavailable": "Diese Vorlage passt erst später.",
+        "send": "Antwort senden",
+        "last_reply": "Zuletzt geantwortet :date",
+        "complete_title": "Abschließen",
+        "complete_body": "Zum Abschluss gehört ein Nachweis: eine Notiz, eine Datei oder beides. Eine Ablehnung braucht die Gründe als Notiz.",
+        "outcome": "Ergebnis",
+        "outcomes": {
+            "completed": "Erledigt",
+            "rejected": "Abgelehnt"
+        },
+        "note": "Notiz",
+        "note_hint": "Was getan wurde und wann, 10 bis 5.000 Zeichen.",
+        "file": "Datei",
+        "file_hint": "PDF, Bild, Text oder ZIP, bis 10 MB. Liegt geschützt, nur Teammitglieder mit Datenschutz-Recht laden sie herunter.",
+        "file_choose": "Datei wählen",
+        "file_none": "Keine Datei gewählt",
+        "file_remove": "Datei entfernen",
+        "complete_submit": "Abschließen",
+        "reject_submit": "Ablehnen",
+        "evidence_title": "Nachweis",
+        "evidence_note": "Notiz",
+        "evidence_file": "Datei",
+        "download": "Herunterladen",
+        "no_evidence": "Kein Nachweis gespeichert.",
+        "final": "Diese Anfrage ist abgeschlossen. Sie bleibt mit ihrem Nachweis so lange, wie unter „Aufbewahrung“ eingestellt.",
+        "view_only": "Du kannst die Anfrage ansehen; bearbeiten dürfen Teammitglieder mit „DSGVO-Anfragen bearbeiten“.",
+        "errors": {
+            "note": "Die Notiz braucht 10 bis 5.000 Zeichen.",
+            "evidence": "Füge einen Nachweis hinzu: eine Notiz oder eine Datei.",
+            "reject_note": "Eine Ablehnung braucht die Gründe als Notiz (10 bis 5.000 Zeichen)."
+        },
+        "reply_to": "Geht an :email",
+        "no_member_address": "Das Konto hat keine erreichbare E‑Mail-Adresse: Antworten gehen nicht."
+    },
+    "actions": {
+        "extend": "Frist verlängern",
+        "export": "Export senden",
+        "erasure": "Löschung anfragen"
+    },
+    "extend": {
+        "title": "Frist um zwei Monate verlängern",
+        "body": "Neue Frist: :date. Nur einmal möglich. Sende danach die Antwort „Verlängerung der Frist“ mit dem Grund."
+    },
+    "export": {
+        "title": "Datenexport an das Mitglied senden",
+        "body": "Das Mitglied bekommt seinen Datenexport wie in der App per E‑Mail, mit einem Link, der 7 Tage gilt. Das Team sieht die Datei nicht. Prüfe vorher die Identität.",
+        "submit": "Export senden"
+    },
+    "erasure": {
+        "title": "Löschung des Kontos anfragen",
+        "body": "Nach der Freigabe durch eine zweite Person wird das Konto sofort geschlossen und innerhalb von 30 Tagen endgültig gelöscht, wie bei einer Löschung in der App. Schließe die Anfrage danach mit Nachweis ab."
+    },
+    "retention": {
+        "title": "Aufbewahrung",
+        "intro": "Wie lange Daten bleiben, bevor die täglichen Aufräumjobs sie löschen. Jeder Wert liegt zwischen dem gesetzlichen oder technischen Minimum und dem, was die Datenschutzerklärung zusagt.",
+        "caption": "Aufbewahrungsfristen",
+        "error": "Die Fristen konnten nicht geladen werden",
+        "editable_title": "Einstellbar",
+        "fixed_title": "Fest",
+        "fixed_body": "Diese Fristen sind technisch, gesetzlich oder vom Hosting vorgegeben und hier nicht änderbar.",
+        "columns": {
+            "area": "Bereich",
+            "period": "Frist",
+            "bounds": "Erlaubt",
+            "default": "Standard"
+        },
+        "bounds": ":min bis :max",
+        "changed": "geändert",
+        "last": "Version :version, veröffentlicht :date von :name",
+        "never": "Es gelten die Standardwerte.",
+        "save": "Speichern",
+        "discard": "Verwerfen",
+        "confirm_title": "Fristen speichern",
+        "confirm_body": "Die neuen Fristen gelten ab dem nächsten Lauf der Aufräumjobs. Die Änderung steht mit Begründung im Audit-Log.",
+        "view_only": "Du kannst die Fristen ansehen; ändern dürfen Teammitglieder mit „Aufbewahrungsfristen ändern“.",
+        "out_of_bounds": "Erlaubt sind :min bis :max.",
+        "units": {
+            "hours": "{1} 1 Stunde|[2,*] :count Stunden",
+            "days": "{1} 1 Tag|[2,*] :count Tage",
+            "months": "{1} 1 Monat|[2,*] :count Monate"
+        },
+        "unit_names": {
+            "hours": "Stunden",
+            "days": "Tage",
+            "months": "Monate"
+        },
+        "keys": {
+            "accounts_hard_delete_days": {
+                "label": "Gelöschte Konten",
+                "note": "Danach endgültig gelöscht. Mindestens 7 Tage, so lange bleibt der Datenexport nach dem Löschantrag abrufbar; höchstens 30 Tage laut Datenschutzerklärung."
+            },
+            "deleted_vehicles_days": {
+                "label": "Gelöschte Fahrzeuge",
+                "note": "Daten und Fotos gelöschter Fahrzeuge. Höchstens 30 Tage laut Datenschutzerklärung."
+            },
+            "deleted_media_days": {
+                "label": "Gelöschte Fotos",
+                "note": "Fotos, die Mitglieder gelöscht haben. Höchstens 30 Tage laut Datenschutzerklärung."
+            },
+            "unverified_accounts_days": {
+                "label": "Unbestätigte Konten",
+                "note": "Konten ohne bestätigte E‑Mail-Adresse. Mindestens 2 Tage, damit der Bestätigungslink nutzbar bleibt; höchstens 7 Tage."
+            },
+            "known_devices_months": {
+                "label": "Bekannte Geräte",
+                "note": "Für den Hinweis bei einer Anmeldung von einem neuen Gerät. Höchstens 12 Monate."
+            },
+            "support_tickets_months": {
+                "label": "Support-Tickets",
+                "note": "Geschlossene Tickets. Mindestens 6 Monate für Rückfragen, höchstens 24 Monate laut Datenschutzerklärung."
+            },
+            "audit_access_months": {
+                "label": "IP-Adressen im Audit-Log",
+                "note": "IP-Adresse und Browser der Teammitglieder zu Audit-Ereignissen, außerhalb der Prüfkette. 6 bis 12 Monate."
+            },
+            "privacy_requests_months": {
+                "label": "DSGVO-Anfragen",
+                "note": "Abgeschlossene Anfragen mit Nachweis. Mindestens 36 Monate: Rechenschaftspflicht (Art. 5 Abs. 2 DSGVO) für die Verjährung von 3 Jahren (§ 195 BGB)."
+            },
+            "verification_codes": {
+                "label": "Bestätigungscodes",
+                "note": "Technisch fest."
+            },
+            "idempotency_keys": {
+                "label": "Schutz vor doppelten Anfragen",
+                "note": "Technisch fest."
+            },
+            "sanctum_tokens": {
+                "label": "Abgelaufene Anmelde-Tokens",
+                "note": "Werden täglich gelöscht.",
+                "value": "täglich"
+            },
+            "messages_of_deleted_members": {
+                "label": "Nachrichten gelöschter Mitglieder",
+                "note": "Die andere Seite behält ihre Kopie; der Absender erscheint anonym.",
+                "value": "beim Gegenüber"
+            },
+            "audit_events": {
+                "label": "Audit-Ereignisse",
+                "note": "Mit den täglichen Exporten der Prüfkette."
+            },
+            "audit_archive": {
+                "label": "Archiv des Audit-Logs",
+                "note": "Danach archivierter Export, bis zu diesem Alter."
+            },
+            "moderation_cases": {
+                "label": "Moderationsfälle",
+                "note": "Zur Rechtsverteidigung. Die Frist prüft noch die Rechtsberatung."
+            },
+            "qr_scans": {
+                "label": "QR-Scans",
+                "note": "Nur gezählte Aufrufe pro Tag, keine personenbezogenen Daten.",
+                "value": "nur Summen"
+            },
+            "application_logs": {
+                "label": "Server-Protokolle",
+                "note": "Einstellung des Hostings."
+            },
+            "backups": {
+                "label": "Sicherungen",
+                "note": "Einstellung des Hostings."
+            }
+        }
+    },
+    "flash": {
+        "created": "Anfrage angelegt. Die Frist läuft.",
+        "updated": "Gespeichert.",
+        "extended": "Frist verlängert. Sende jetzt die Antwort „Verlängerung der Frist“.",
+        "replied": "Antwort gesendet.",
+        "export_sent": "Der Export wird erstellt und dem Mitglied per E‑Mail geschickt.",
+        "completed": "Anfrage abgeschlossen.",
+        "rejected": "Anfrage abgelehnt. Sende jetzt die Antwort „Ablehnung“.",
+        "retention_saved": "Fristen gespeichert."
+    },
+    "events": {
+        "privacy": {
+            "request_created": "Anfrage erfasst",
+            "request_assigned": "Zuständigkeit geändert",
+            "request_extended": "Frist verlängert",
+            "request_status_changed": "Status geändert",
+            "request_completed": "Abgeschlossen",
+            "reply_sent": "Antwort gesendet",
+            "evidence_viewed": "Nachweis heruntergeladen",
+            "export_sent": "Export gesendet",
+            "erasure_requested": "Löschung angefragt",
+            "request_viewed": "Angesehen"
+        }
+    }
+}

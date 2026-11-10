@@ -1,0 +1,40 @@
+# Android hardware back pops a pushed screen within its tab and keeps the app open (BUG-1, ADR-117).
+# `back` sends KEYCODE_BACK, the same key as `adb shell input keyevent KEYCODE_BACK`.
+# As a guest since M1.6: Profile pushes the settings (SET-01), a real screen of the Profile tab.
+appId: de.speedclub.app
+name: nav-hardware-back
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: AUTH-02.root
+    timeout: 60000
+- tapOn:
+    id: AUTH-02.browse
+- extendedWaitUntil:
+    visible:
+      id: HOME-01.root
+    timeout: 30000
+- tapOn:
+    id: tab.profile
+    retryTapIfNoChange: false
+- assertVisible:
+    id: PROF-01.guest
+- tapOn:
+    id: PROF-01.settings
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: SET-01.root
+    timeout: 15000
+- back
+- assertVisible:
+    id: PROF-01.root
+- assertNotVisible:
+    id: SET-01.root
+- assertVisible:
+    id: tab.profile
+    selected: true
+- takeScreenshot: back-1-profile-root

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de" data-theme="carbon">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0B0B0C" />
+    <title>%WEB_TITLE%</title>
+    <!-- react-native-web full-height reset, as in the Expo template. -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <!--
+      Canvas colours per theme, painted before the first frame. mobile/tests/indexHtml.test.ts fails
+      when these values or the ones in the script below drift from design/tokens/tokens.json.
+    -->
+    <style id="sc-canvas">
+      html {
+        overflow-x: hidden;
+        color-scheme: dark;
+        background-color: #0B0B0C;
+        color: #F5F5F3;
+      }
+      html[data-theme='black'] {
+        color-scheme: dark;
+        background-color: #000000;
+        color: #EDEDED;
+      }
+      html[data-theme='light'] {
+        color-scheme: light;
+        background-color: #F6F6F4;
+        color: #111113;
+      }
+    </style>
+    <script id="sc-theme-boot">
+      (function () {
+        var THEMES = {
+          carbon: { scheme: 'dark', canvas: '#0B0B0C' },
+          black: { scheme: 'dark', canvas: '#000000' },
+          light: { scheme: 'light', canvas: '#F6F6F4' },
+        };
+        var SYSTEM = { dark: 'carbon', light: 'light' };
+        function isTheme(value) {
+          return value === 'carbon' || value === 'black' || value === 'light';
+        }
+        var pref = null;
+        var locale = null;
+        /*qa:start*/
+        try {
+          var params = new URLSearchParams(location.search);
+          var qaTheme = params.get('qaTheme');
+          var qaLocale = params.get('qaLocale');
+          if (isTheme(qaTheme) || qaTheme === 'system') pref = qaTheme;
+          if (qaLocale === 'de' || qaLocale === 'en') locale = qaLocale;
+        } catch (e) {}
+        /*qa:end*/
+        /* DQ-613: an ADM-34 preview frame's own theme, only with a preview token (the shape of src/api/preview.ts); never stored. */
+        if (!pref) {
+          try {
+            var query = new URLSearchParams(location.search);
+            var tokens = query.getAll('preview');
+            var asked = query.getAll('previewTheme');
+            if (tokens.length === 1 && /^[A-Za-z0-9_-]{8,2048}\.[A-Za-z0-9_-]{16,256}$/.test(tokens[0]) && asked.length === 1 && isTheme(asked[0])) {
+              pref = asked[0];
+            }
+          } catch (e) {}
+        }
+        if (!pref) {
+          try {
+            pref = localStorage.getItem('sc.theme');
+          } catch (e) {}
+        }
+        var name = 'carbon';
+        if (isTheme(pref)) {
+          name = pref;
+        } else if (pref === 'system') {
+          name = matchMedia('(prefers-color-scheme: dark)').matches ? SYSTEM.dark : SYSTEM.light;
+        }
+        if (!locale) {
+          var language = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+          locale = language.toLowerCase().indexOf('en') === 0 ? 'en' : 'de';
+        }
+        var root = document.documentElement;
+        root.lang = locale;
+        root.setAttribute('data-theme', name);
+        document.querySelector('meta[name="color-scheme"]').setAttribute('content', THEMES[name].scheme);
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', THEMES[name].canvas);
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>Bitte aktiviere JavaScript, um SPEED CLUB zu nutzen.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

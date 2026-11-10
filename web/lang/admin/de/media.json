@@ -1,0 +1,83 @@
+{
+    "nav": {
+        "title": "Fotoprüfung"
+    },
+    "title": "Fotoprüfung",
+    "intro": "Neue Fotos freigeben oder ausblenden. Chat-Fotos erscheinen hier nie.",
+    "queue": "Fotos zur Prüfung",
+    "error": "Die Fotos konnten nicht geladen werden",
+    "tabs": {
+        "label": "Warteschlangen",
+        "new": "Neu",
+        "reported": "Gemeldet",
+        "hidden": "Ausgeblendet"
+    },
+    "keys": {
+        "move": "nächstes / voriges Foto",
+        "approve": "freigeben",
+        "hide": "ausblenden",
+        "key_j": "J",
+        "key_k": "K",
+        "key_a": "A",
+        "key_h": "H",
+        "scope": "In der Liste:"
+    },
+    "empty": {
+        "new_title": "Alles geprüft",
+        "new_body": "Neue Uploads erscheinen hier, neueste zuerst.",
+        "reported_title": "Keine gemeldeten Fotos",
+        "reported_body": "Fotos mit einem offenen Fall erscheinen hier.",
+        "hidden_title": "Keine ausgeblendeten Fotos",
+        "hidden_body": "Fotos, die eine Entscheidung entfernt hat, erscheinen hier."
+    },
+    "card_label": "Foto von :owner, :date",
+    "photo_alt": "Hochgeladenes Foto",
+    "removed": "Foto entfernt",
+    "reports": ":count Meldungen",
+    "ai_score": "KI-Vorschlag :score %",
+    "kinds": {
+        "vehicle": "Fahrzeugfoto",
+        "modification": "Mod-Foto",
+        "build_update": "Build-Update",
+        "user": "Profilbild",
+        "profile": "Profilbild"
+    },
+    "categories": {
+        "exterior": "Außen",
+        "interior": "Innen",
+        "engine": "Motor",
+        "wheels": "Räder",
+        "detail": "Detail",
+        "other": "Sonstiges"
+    },
+    "status": {
+        "approved": "Freigegeben",
+        "hidden": "Ausgeblendet"
+    },
+    "actions": {
+        "approve": "Freigeben",
+        "hide": "Ausblenden",
+        "unhide": "Einblenden",
+        "hide_key": "Ausblenden (H)"
+    },
+    "flash": {
+        "approved": "Freigegeben.",
+        "hidden": "Ausgeblendet. Der Besitzer wurde informiert.",
+        "unhidden": "Wieder sichtbar. Der Besitzer wurde informiert.",
+        "not_possible": "Das geht bei diesem Foto gerade nicht."
+    },
+    "hide": {
+        "title": "Foto ausblenden",
+        "body": "Das Foto wird sofort entfernt; das Original bleibt privat für einen Einspruch. Der Besitzer liest die Begründung."
+    },
+    "unhide": {
+        "title": "Foto wieder einblenden",
+        "body": "Eine neue Entscheidung hebt das Ausblenden auf; das Foto wird aus dem Original neu erstellt. Der Besitzer wird informiert."
+    },
+    "position": ":n von :total",
+    "reveal": "Anzeigen",
+    "reveal_note": "Original, das Anzeigen wird protokolliert",
+    "reveal_failed": "Das Original konnte nicht geladen werden.",
+    "hidden_line": "Ausgeblendet am :date · :ground",
+    "hidden_since": "Ausgeblendet am :date"
+}

@@ -1,0 +1,84 @@
+{
+    "title": "Dashboard",
+    "intro": "Hello :name. First what is waiting for you, then the numbers.",
+    "first_run": {
+        "title": "No members yet",
+        "body": "As soon as the first member signs up, KPIs and charts fill in. Queues are already shown."
+    },
+    "queues": {
+        "title": "Queues",
+        "error": "Queues could not be loaded",
+        "none_title": "There are no queues for your role",
+        "none_body": "KPIs and search are still available to you.",
+        "open": "Go to :queue",
+        "open_short": "Open",
+        "since": "oldest :time",
+        "last": "last :time",
+        "stale": "No signal",
+        "reports": "Open reports",
+        "reports_empty": "No open reports",
+        "appeals": "Appeals",
+        "appeals_empty": "No open appeals",
+        "privacy_due": "GDPR deadlines ≤ 7 days",
+        "privacy_due_empty": "No deadline in the next 7 days",
+        "support_tickets": "Support tickets",
+        "support_tickets_empty": "No open tickets",
+        "failed_jobs": "Failed jobs",
+        "failed_jobs_empty": "No failed jobs",
+        "scheduler": "Scheduler",
+        "scheduler_empty": "Running on schedule",
+        "queue": "Background jobs",
+        "queue_empty": "No jobs waiting",
+        "clear": "All done",
+        "clear_since": "All done · last :time",
+        "waiting": ":count waiting"
+    },
+    "analytics_forbidden": {
+        "title": "KPIs are hidden for your role",
+        "body": "This needs the “view statistics” permission. Your queues above are complete."
+    },
+    "kpis": {
+        "title": "KPIs",
+        "error": "KPIs could not be loaded",
+        "empty_title": "No KPIs yet",
+        "empty_body": "Counting starts with the first member activity. Only totals are stored, never the history of individuals.",
+        "series": "Trend: last 14 days, change from the previous period",
+        "members_today": "New members today",
+        "members_7d": "New members, 7 days",
+        "members_30d": "New members, 30 days",
+        "dau": "Active today (DAU)",
+        "wau": "Active this week (WAU)",
+        "vehicles_published": "Published vehicles",
+        "qr_scans_7d": "QR scans, 7 days",
+        "qr_registrations_7d": "QR scan → sign-up, 7 days",
+        "messages_7d": "Messages, 7 days",
+        "per_day": "Line: new per day"
+    },
+    "charts": {
+        "title": "Trends",
+        "error": "Charts could not be loaded",
+        "registrations": "How many people sign up each day?",
+        "registrations_body": "Sign-ups per day, last 30 days",
+        "qr_funnel": "How many QR scans turn into members?",
+        "qr_funnel_body": "QR scans and sign-ups after a scan, per day, last 30 days",
+        "top_makes": "Which makes are in the garages?",
+        "top_makes_body": "Top 10 makes by published vehicles",
+        "series_registrations": "Sign-ups",
+        "series_scans": "QR scans",
+        "series_vehicles": "Vehicles",
+        "registrations_zero": "No sign-ups in the last 30 days",
+        "qr_funnel_zero": "No QR scans in the last 30 days"
+    },
+    "dsa": {
+        "title": "Average monthly active users (6 months)",
+        "body": "For requests under Art. 24(3) DSA: average of the last six full months.",
+        "empty": "Not enough months counted yet.",
+        "error": "The DSA figure could not be loaded",
+        "months": "Active members per month"
+    },
+    "intro_queues_only": "Hello :name. Here is what is waiting for you.",
+    "error_all": {
+        "title": "The dashboard could not be loaded",
+        "body": "Queues, KPIs and charts are unavailable right now. One retry reloads all of them."
+    }
+}

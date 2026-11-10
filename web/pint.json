@@ -1,0 +1,5 @@
+{
+    "preset": "laravel",
+    "exclude": ["public/app", "node_modules", "storage", "bootstrap/cache"],
+    "notPath": ["tests/e2e"]
+}

@@ -1,0 +1,531 @@
+{
+    "nav": {
+        "reports": "Meldungen",
+        "messages": "Nachrichten",
+        "rules": "Regeln",
+        "templates": "Begründungsvorlagen"
+    },
+    "reports": {
+        "title": "Meldungen",
+        "intro": "Meldungen nach dem Digital Services Act: nach Priorität sortiert. Eine Person aus dem Team entscheidet jeden Fall.",
+        "caption": "Moderationsfälle",
+        "tabs": {
+            "label": "Fälle",
+            "new": "Neu",
+            "in_review": "In Prüfung",
+            "decided": "Entschieden",
+            "appeals": "Einsprüche"
+        },
+        "toolbar": {
+            "new": "Neue Fälle, die noch niemand übernommen hat.",
+            "in_review": "Fälle, die gerade jemand prüft.",
+            "decided": "Entschiedene Fälle, die neuesten zuerst.",
+            "appeals": "Einsprüche entscheidet immer ein anderes Teammitglied als bei der ersten Entscheidung."
+        },
+        "columns": {
+            "priority": "Priorität",
+            "target": "Inhalt",
+            "reason": "Grund",
+            "reporters": "Meldende",
+            "first_report": "Erste Meldung",
+            "last_report": "Letzte Meldung",
+            "assigned": "Zuständig",
+            "status": "Status",
+            "ai": "KI-Vorschlag",
+            "decision": "Entscheidung",
+            "actions": "Aktionen",
+            "case": "Fall",
+            "original": "Angefochtene Entscheidung",
+            "role": "Von",
+            "filed": "Eingegangen",
+            "decider": "Entschieden von"
+        },
+        "more_reasons": "+:count weitere",
+        "take": "Übernehmen",
+        "open": "Öffnen",
+        "you": "Du",
+        "nobody": "–",
+        "empty": {
+            "new_title": "Keine neuen Meldungen",
+            "new_body": "Alles ist übernommen oder entschieden.",
+            "in_review_title": "Nichts in Prüfung",
+            "in_review_body": "Übernimm einen Fall aus „Neu“, um ihn zu prüfen.",
+            "decided_title": "Noch keine Entscheidungen",
+            "decided_body": "Entschiedene Fälle erscheinen hier mit ihrer Begründung.",
+            "appeals_title": "Keine Einsprüche",
+            "appeals_body": "Wenn ein Mitglied oder eine meldende Person widerspricht, erscheint der Einspruch hier."
+        },
+        "error": "Die Meldungen konnten nicht geladen werden.",
+        "filters": {
+            "label": "Fälle filtern",
+            "q": "Suche",
+            "q_placeholder": "Fallnummer oder Inhalt",
+            "target_type": "Inhalt",
+            "reason": "Grund",
+            "assigned": "Zuständig",
+            "source": "Herkunft",
+            "status": "Status",
+            "role": "Von",
+            "any": "Alle",
+            "apply": "Anwenden",
+            "assigned_me": "Ich",
+            "assigned_none": "Niemand",
+            "assigned_others": "Andere",
+            "source_automated": "Automatisch erkannt",
+            "source_web_form": "Webformular",
+            "source_staff": "Eigeninitiative"
+        },
+        "bulk": {
+            "no_action": "Keine Maßnahme",
+            "title": "Keine Maßnahme für :count Fälle",
+            "body": "Die Fälle werden ohne Maßnahme abgeschlossen. Wer gemeldet hat, erfährt das Ergebnis. Mehr als 100 Fälle in 24 Stunden brauchen eine Freigabe.",
+            "result": "Keine Maßnahme: Ergebnis",
+            "codes": {
+                "not_found": "Fall nicht gefunden",
+                "forbidden": "Nachrichtenfälle nur mit Nachrichten-Berechtigung",
+                "invalid": "Ungültige Angabe",
+                "not_possible": "Bereits entschieden",
+                "failed": "Fehlgeschlagen"
+            }
+        }
+    },
+    "priority": {
+        "tooltip": ":total Punkte: Grund :reason · Meldende +:reporters (:count) · Wiederholung +:repeat (:repeat_count frühere) · Wartezeit +:age (:days Tage)",
+        "label": "Priorität :total"
+    },
+    "target_types": {
+        "member": "Profil",
+        "vehicle": "Fahrzeug",
+        "photo": "Foto",
+        "message": "Nachricht",
+        "build_update": "Update",
+        "modification": "Modifikation"
+    },
+    "target_of": {
+        "member": "Profil :label",
+        "vehicle": "Fahrzeug :label",
+        "photo": "Foto von :label",
+        "message": "Nachricht von :label",
+        "build_update": "Update von :label",
+        "modification": "Mod an :label"
+    },
+    "unnamed": "Ohne Namen",
+    "reasons": {
+        "illegal": "Rechtswidrig",
+        "harassment": "Belästigung",
+        "nudity": "Nacktheit",
+        "spam": "Spam",
+        "impersonation": "Identitätsmissbrauch",
+        "other": "Sonstiges"
+    },
+    "sub_reasons": {
+        "street_racing": "Illegale Rennen (§ 315d StGB)",
+        "hate_speech": "Hassrede",
+        "privacy": "Privatsphäre",
+        "copyright": "Urheberrecht",
+        "other_illegal": "Anderer Rechtsverstoß"
+    },
+    "status": {
+        "new": "Neu",
+        "in_review": "In Prüfung",
+        "decided": "Entschieden",
+        "closed": "Geschlossen",
+        "open": "Offen"
+    },
+    "sources": {
+        "app": "App",
+        "web_form": "Webformular",
+        "automated": "Automatisch erkannt"
+    },
+    "origin_staff": "Eigeninitiative",
+    "outcomes": {
+        "no_action": "Keine Maßnahme",
+        "remove_content": "Inhalt entfernt",
+        "restrict": "Eingeschränkt",
+        "suspend": "Gesperrt",
+        "reverse": "Maßnahme aufgehoben"
+    },
+    "roles": {
+        "affected": "Betroffenes Mitglied",
+        "reporter": "Meldende Person"
+    },
+    "appeal_status": {
+        "open": "Offen",
+        "upheld": "Bestätigt",
+        "reversed": "Geändert"
+    },
+    "case": {
+        "title": "Fall :reference",
+        "crumb": "Meldungen",
+        "tabs": {
+            "label": "Fall",
+            "overview": "Inhalt",
+            "reports": "Meldungen",
+            "evidence": "Beweise",
+            "decision": "Entscheidung",
+            "prior": "Frühere"
+        },
+        "meta": {
+            "created": "Eingegangen :date",
+            "reports": ":count Meldungen",
+            "reports_one": "1 Meldung",
+            "assigned": "Bei :name",
+            "unassigned": "Noch niemand zuständig",
+            "member": "Mitglied :username"
+        },
+        "actions": {
+            "take": "Übernehmen",
+            "reassign": "Übergeben",
+            "decide": "Entscheiden",
+            "member": "Zum Mitglied",
+            "more": "Weitere Aktionen"
+        },
+        "taken_by_other": ":name prüft diesen Fall gerade.",
+        "error": "Der Fall konnte nicht geladen werden.",
+        "preview": {
+            "title": "So sehen Mitglieder es jetzt",
+            "gone": "Der Inhalt existiert nicht mehr.",
+            "message": "Nachrichten zeigen wir nur im geschützten Bereich „Nachrichten“, mit protokolliertem Zugriff.",
+            "message_link": "Im Bereich Nachrichten öffnen",
+            "no_bio": "Keine Kurzbeschreibung",
+            "no_description": "Keine Beschreibung",
+            "hidden": "Ausgeblendet",
+            "removed_photo": "Das Foto ist entfernt; öffentliche Varianten gibt es nicht mehr.",
+            "deleted": "Gelöscht",
+            "private": "Privat"
+        },
+        "reports": {
+            "title": "Meldungen",
+            "details_withheld": "Die Angaben stehen nur mit Nachrichten-Berechtigung zur Verfügung, weil sie die Nachricht zitieren können.",
+            "contact": "Kontakt: :value",
+            "reveal": "Anzeigen",
+            "reveal_error": "Die Adresse konnte nicht geladen werden.",
+            "good_faith": "Nach bestem Wissen bestätigt",
+            "anonymous": "Ohne Konto",
+            "automated": "Schlagwortregel",
+            "none": "Keine Meldungen: Das Team hat den Fall selbst angelegt."
+        },
+        "evidence": {
+            "title": "Beweise",
+            "intro": "Was beim Melden gespeichert wurde. Jedes Öffnen wird im Audit-Log festgehalten.",
+            "reveal": "Beweise anzeigen",
+            "revealing": "Lädt …",
+            "logged": "Angezeigt und protokolliert",
+            "forbidden": "Beweise zu Nachrichten siehst du nur mit der Berechtigung für Nachrichten.",
+            "error": "Die Beweise konnten nicht geladen werden.",
+            "snapshot": "Stand beim Melden",
+            "no_snapshot": "Kein Text gespeichert.",
+            "more": "Mehr Kontext laden (±10 Nachrichten)",
+            "more_hint": "Liest die Unterhaltung, wie die meldende Person sie heute sieht. Wird gesondert protokolliert.",
+            "more_none": "Die Unterhaltung gibt es nicht mehr.",
+            "live_title": "Aktueller Verlauf",
+            "from": {
+                "reported": "@:username",
+                "reporter": "@:username (hat gemeldet)",
+                "other": "Andere Person"
+            },
+            "reported_badge": "Gemeldet",
+            "photo": "Foto",
+            "vehicle": "Fahrzeugkarte: :title",
+            "removed": "Zurückgezogen",
+            "fields": {
+                "username": "Benutzername",
+                "display_name": "Anzeigename",
+                "bio": "Kurzbeschreibung",
+                "title": "Titel",
+                "slug": "Adresse",
+                "nickname": "Spitzname",
+                "description": "Beschreibung",
+                "alt": "Bildbeschreibung",
+                "note": "Text",
+                "type": "Art",
+                "brand_text": "Marke",
+                "part_name": "Teil",
+                "notes": "Notizen"
+            }
+        },
+        "decision": {
+            "title": "Entscheidung",
+            "none": "Noch nicht entschieden.",
+            "by": "Entschieden von :name am :date",
+            "by_system": "Entschieden am :date",
+            "facts": "Sachverhalt",
+            "ground": "Grundlage",
+            "until": "bis :date",
+            "no_end": "Ohne Ende",
+            "appeal_until": "Einspruch möglich bis :date",
+            "reversed": "Später aufgehoben am :date",
+            "automated_detection": "Automatisch erkannt",
+            "human": "Von einer Person entschieden"
+        },
+        "appeals": {
+            "title": "Einsprüche",
+            "none": "Kein Einspruch eingelegt.",
+            "filed": "Eingegangen :date",
+            "decided": "Entschieden von :name am :date",
+            "decide": "Einspruch entscheiden",
+            "same_staff": "Du hast die Entscheidung getroffen. Ein anderes Teammitglied entscheidet den Einspruch.",
+            "text_hidden": "Den Text des Einspruchs sieht, wer Einsprüche entscheidet."
+        },
+        "prior": {
+            "title": "Frühere Entscheidungen zum Mitglied",
+            "none": "Keine früheren Entscheidungen.",
+            "reversed": "Aufgehoben",
+            "open": "Fall öffnen"
+        },
+        "history": {
+            "empty": "Noch keine Einträge."
+        },
+        "ai": "KI-Vorschlag :score %",
+        "ai_note": "Nur ein Vorschlag der KI, keine Entscheidung.",
+        "ai_title": "KI-Vorschlag, keine Entscheidung: :summary"
+    },
+    "composer": {
+        "title": "Entscheidung treffen",
+        "description": "Das Mitglied liest die Begründung in der App und per E‑Mail. Alles bleibt bis zum Senden änderbar.",
+        "action": "Maßnahme",
+        "actions": {
+            "no_action": "Keine Maßnahme",
+            "remove_content": "Inhalt entfernen",
+            "restrict": "Einschränken",
+            "suspend": "Sperren"
+        },
+        "hints": {
+            "no_action": "Der Fall wird geschlossen. Wer gemeldet hat, erfährt das Ergebnis; das Mitglied nicht.",
+            "remove_content": "Der Inhalt wird ausgeblendet; beim Profil Anzeigename, Kurzbeschreibung und Bilder.",
+            "restrict": "Nachrichten oder Veröffentlichen sperren, mit oder ohne Ende.",
+            "suspend": "Das Konto wird gesperrt. Ein zweites Teammitglied muss freigeben."
+        },
+        "restriction": "Was eingeschränkt wird",
+        "template": "Vorlage",
+        "template_hint": "Vorlagen in der Sprache des Mitglieds (:locale). Platzhalter werden ausgefüllt.",
+        "template_none": "Ohne Vorlage",
+        "automated": "Automatisierte Mittel",
+        "automated_detection_yes": "Erkannt: automatisch (Schlagwortregel oder KI-Vorschlag)",
+        "automated_detection_no": "Erkannt: durch eine Meldung oder das Team",
+        "automated_decision": "Entschieden: von dir, nicht automatisiert",
+        "preview": "Vorschau für das Mitglied",
+        "preview_hint": "So sieht das Mitglied es in der App und in der E‑Mail.",
+        "preview_load": "Vorschau aktualisieren",
+        "preview_error": "Die Vorschau konnte nicht geladen werden.",
+        "preview_de": "Deutsch",
+        "preview_en": "Englisch",
+        "submit": "Entscheidung senden",
+        "submit_suspend": "Sperre anfragen",
+        "no_action_note": "Keine Begründung nötig: Das Mitglied erfährt nichts von der Meldung.",
+        "preview_waiting": "Die Vorschau erscheint, sobald Sachverhalt und Grundlage ausgefüllt sind.",
+        "preview_other": "Auf :language, falls das Mitglied die Sprache wechselt"
+    },
+    "reassign": {
+        "title": "Fall übergeben",
+        "staff": "An",
+        "submit": "Übergeben",
+        "placeholder": "Teammitglied wählen"
+    },
+    "appeal": {
+        "title": "Einspruch entscheiden",
+        "outcome": "Ergebnis",
+        "upheld": "Entscheidung bestätigen",
+        "upheld_hint": "Die Maßnahme bleibt. Die Person erfährt es mit deiner Begründung.",
+        "reversed": "Entscheidung ändern",
+        "reversed_hint_affected": "Die Maßnahme wird aufgehoben, Inhalte kommen zurück. Mitglied und Meldende werden benachrichtigt.",
+        "reversed_hint_reporter": "Du triffst jetzt eine Maßnahme zum gemeldeten Inhalt.",
+        "explanation": "Begründung für die einspruchführende Person",
+        "explanation_hint": "10–5.000 Zeichen. Steht in der E‑Mail.",
+        "measure": "Neue Maßnahme",
+        "submit": "Einspruch entscheiden",
+        "text": "Einspruch",
+        "internal_reason": "Interne Begründung (nur Audit-Log)"
+    },
+    "messages": {
+        "title": "Nachrichten",
+        "intro": "Gemeldete Nachrichten. Du siehst nur die gemeldete Nachricht und den gespeicherten Kontext; jedes Öffnen wird protokolliert.",
+        "caption": "Gemeldete Nachrichten",
+        "tabs": {
+            "label": "Nachrichtenfälle",
+            "open": "Offen",
+            "decided": "Entschieden"
+        },
+        "columns": {
+            "participants": "Beteiligte",
+            "reason": "Grund",
+            "reported": "Gemeldet",
+            "status": "Status",
+            "priority": "Priorität",
+            "case": "Fall"
+        },
+        "participants": "Nachricht von @:reported an @:reporter",
+        "select": "Wähle oben einen Fall.",
+        "select_body": "Die Nachricht lädt erst, wenn du den Fall öffnest.",
+        "empty_open_title": "Keine gemeldeten Nachrichten",
+        "empty_open_body": "Wenn jemand eine Nachricht meldet, erscheint sie hier.",
+        "empty_decided_title": "Noch nichts entschieden",
+        "empty_decided_body": "Entschiedene Nachrichtenfälle erscheinen hier.",
+        "error": "Die Nachrichtenfälle konnten nicht geladen werden.",
+        "open_case": "Fallseite",
+        "reported_by": "Gemeldet von @:reporter",
+        "between": "@:reported → @:reporter"
+    },
+    "rules": {
+        "title": "Regeln",
+        "intro": "Schlagwörter für Texte von Mitgliedern und Limits für Anfragen. Jede Änderung braucht eine Begründung und steht im Audit-Log.",
+        "keywords": {
+            "title": "Schlagwörter",
+            "intro": "Gilt für Fahrzeugbeschreibungen, Build-Notizen, Kurzbeschreibung und Anzeigename. Nachrichten werden nur markiert, nie gesperrt. Private Mod-Notizen werden nicht geprüft.",
+            "caption": "Schlagwörter",
+            "term": "Begriff",
+            "list": "Liste",
+            "created": "Angelegt",
+            "hits": "Treffer 30 Tage",
+            "actions": "Aktionen",
+            "add": "Begriff hinzufügen",
+            "remove": "Entfernen",
+            "remove_title": "„:term“ entfernen?",
+            "remove_body": "Der Begriff gilt sofort nicht mehr. Die Treffer-Zählung wird gelöscht.",
+            "empty_title": "Noch keine Schlagwörter",
+            "empty_body": "Lege Begriffe an, die gesperrt oder zur Prüfung markiert werden.",
+            "by": ":name, :date",
+            "lists": {
+                "block": "Sperren",
+                "flag": "Markieren"
+            },
+            "list_hints": {
+                "block": "Der Text wird mit einem neutralen Hinweis abgelehnt.",
+                "flag": "Der Text wird gespeichert, und ein Fall entsteht zur Prüfung."
+            },
+            "add_title": "Begriff hinzufügen",
+            "term_hint": "Groß- und Kleinschreibung, Umlaute und Satzzeichen spielen keine Rolle. Es zählen ganze Wörter.",
+            "submit": "Hinzufügen",
+            "term_error": "Mindestens 2 Zeichen."
+        },
+        "limits": {
+            "title": "Anfrage-Limits",
+            "intro": "Abweichungen vom Standard, zwischen 0,25× und 4×. Gilt für alle Mitglieder ab der nächsten Anfrage.",
+            "caption": "Anfrage-Limits",
+            "name": "Limit",
+            "default": "Standard",
+            "window": "Zeitraum",
+            "override": "Neu",
+            "range": "Erlaubt",
+            "edit": "Limits bearbeiten",
+            "edit_title": "Anfrage-Limits bearbeiten",
+            "submit": "Veröffentlichen",
+            "published": "Version :version, veröffentlicht von :name am :date",
+            "never": "Es gelten die Standardwerte.",
+            "per": ":max pro :window",
+            "minutes": "{1} :count Minute|[2,*] :count Minuten",
+            "hours": "{1} :count Stunde|[2,*] :count Stunden",
+            "days": "{1} :count Tag|[2,*] :count Tage",
+            "range_value": ":min–:max",
+            "reset": "Standard",
+            "changed": ":count geändert",
+            "invalid": "Zwischen :min und :max.",
+            "names": {
+                "account_edits": "Profil- und Einstellungsänderungen",
+                "account_security": "Sicherheitsänderungen am Konto",
+                "ai": "KI-Vorschläge",
+                "ai_translate": "KI-Übersetzungen",
+                "appeals": "Einsprüche",
+                "blocks": "Blockieren",
+                "browse": "Start und Entdecken",
+                "catalog_requests": "Katalog-Anfragen",
+                "contact_form": "Kontaktformular (pro IP)",
+                "conversation_edits": "Chat-Aktionen",
+                "conversation_requests": "Nachrichtenanfragen",
+                "conversations": "Neue Unterhaltungen",
+                "csrf_cookie": "Sitzungscookie (pro IP)",
+                "follows": "Folgen",
+                "garage_edits": "Garage bearbeiten",
+                "garage_reorders": "Garage sortieren",
+                "garage_writes": "Fahrzeuge und Mods anlegen",
+                "member_email": "E‑Mail‑Codes (pro IP)",
+                "member_login": "Anmeldung (pro IP)",
+                "member_register": "Registrierung (pro IP)",
+                "member_verify": "Bestätigungscodes (pro IP)",
+                "messages": "Nachrichten",
+                "notification_reads": "Benachrichtigungen gelesen",
+                "public_read": "Öffentliche Abrufe (pro IP)",
+                "push_tokens": "Push-Geräte",
+                "qr": "QR-Scans (pro IP)",
+                "qr_downloads": "QR-Downloads",
+                "qr_reissues": "QR neu ausgeben",
+                "realtime_auth": "Echtzeit-Verbindungen",
+                "reports": "Meldungen",
+                "saves": "Builds speichern",
+                "search": "Suche",
+                "support_tickets": "Support-Anfragen",
+                "token_rotate": "Token-Erneuerung",
+                "two_factor_challenge": "Zwei-Faktor-Codes (pro IP)",
+                "typing": "Tipp-Anzeige",
+                "unfollows": "Entfolgen",
+                "uploads": "Foto-Uploads",
+                "username_check": "Benutzernamen prüfen",
+                "web_account_deletion": "Konto löschen im Web (pro IP)"
+            },
+            "groups": {
+                "account": "Konto",
+                "content": "Inhalte",
+                "messages": "Nachrichten",
+                "public": "Öffentlich"
+            }
+        },
+        "error": "Die Regeln konnten nicht geladen werden.",
+        "reason_hint": "Für das Audit-Log, 10–1.000 Zeichen."
+    },
+    "templates": {
+        "title": "Begründungsvorlagen",
+        "intro": "Vorlagen für die Begründung nach Art. 17 DSA, auf Deutsch und Englisch. Platzhalter: {target}, {date}, {member}. Die Hinweise zum Einspruch setzt das System immer selbst ein.",
+        "caption": "Vorlagen",
+        "columns": {
+            "label": "Vorlage",
+            "locale": "Sprache",
+            "action": "Für",
+            "ground": "Grundlage",
+            "updated": "Geändert",
+            "actions": "Aktionen"
+        },
+        "locales": {
+            "de": "Deutsch",
+            "en": "Englisch"
+        },
+        "new": "Neue Vorlage",
+        "edit": "Bearbeiten",
+        "delete": "Löschen",
+        "delete_title": "Vorlage „:label“ löschen?",
+        "delete_body": "Schon gesendete Entscheidungen behalten ihren Text.",
+        "drawer_new": "Neue Vorlage",
+        "drawer_edit": "Vorlage bearbeiten",
+        "fields": {
+            "key": "Schlüssel",
+            "key_hint": "Kleinbuchstaben, Ziffern und _. Gleicher Schlüssel = gleiche Vorlage in der anderen Sprache.",
+            "locale": "Sprache",
+            "action": "Für Maßnahme",
+            "label": "Name",
+            "facts": "Sachverhalt",
+            "facts_hint": "Mit Platzhaltern {target}, {date}, {member}.",
+            "ground": "Grundlage",
+            "document": "Steht in",
+            "section": "Abschnitt",
+            "sort": "Reihenfolge"
+        },
+        "redress": "Rechtsbehelfe (fest, vom Gesetz vorgegeben): interner Einspruch binnen 6 Monaten, außergerichtliche Streitbeilegung nach Art. 21 DSA, Gericht.",
+        "save": "Speichern",
+        "empty_title": "Noch keine Vorlagen",
+        "empty_body": "Lege eine Vorlage an, damit das Team schneller begründen kann.",
+        "error": "Die Vorlagen konnten nicht geladen werden."
+    },
+    "flash": {
+        "bulk_done": "Fälle ohne Maßnahme abgeschlossen.",
+        "bulk_partial": "Nicht alle Fälle konnten abgeschlossen werden. Details in der Übersicht.",
+        "taken": "Du bearbeitest den Fall jetzt.",
+        "reassigned": "Fall übergeben.",
+        "decided": "Entscheidung gespeichert. Das Mitglied und die Meldenden werden benachrichtigt.",
+        "not_possible": "Das geht gerade nicht. Lade die Seite neu und versuch es noch einmal.",
+        "appeal_decided": "Einspruch entschieden. Die einspruchführende Person wird benachrichtigt.",
+        "keyword_added": "Begriff hinzugefügt.",
+        "keyword_removed": "Begriff entfernt.",
+        "limits_published": "Limits veröffentlicht. Sie gelten ab der nächsten Anfrage.",
+        "template_saved": "Vorlage gespeichert.",
+        "template_deleted": "Vorlage gelöscht."
+    }
+}

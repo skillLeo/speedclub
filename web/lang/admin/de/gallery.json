@@ -1,0 +1,127 @@
+{
+    "title": "Komponenten-Galerie",
+    "intro": "Jede Admin-Komponente in jedem Zustand, in Carbon und Hell. Nur lokal und im Test erreichbar. Mit ?dialog=dialog|drawer|confirm|bulk|palette öffnet sich ein Overlay direkt.",
+    "theme_carbon": "Carbon",
+    "theme_light": "Hell",
+    "sections": {
+        "buttons": "Buttons",
+        "inputs": "Eingabefelder",
+        "choices": "Auswahl",
+        "status": "Status & Badges",
+        "navigation": "Tabs, Menü, Tooltip, Seiten",
+        "feedback": "Zustände & Rückmeldungen",
+        "overlays": "Dialoge & Panels",
+        "kpis": "Kennzahlen & Diagramme",
+        "diff": "Diff & Aktivität",
+        "table": "Tabelle",
+        "record": "Datensatz-Seite"
+    },
+    "states": {
+        "default": "Standard",
+        "disabled": "Deaktiviert",
+        "loading": "Lädt",
+        "error": "Fehler",
+        "empty": "Leer",
+        "ready": "Mit Daten"
+    },
+    "variants": {
+        "primary": "Speichern",
+        "secondary": "Bearbeiten",
+        "ghost": "Abbrechen",
+        "danger": "Konto löschen",
+        "icon": "Weitere Aktionen",
+        "destructive": "Einschränken"
+    },
+    "fields": {
+        "username": "Benutzername",
+        "username_hint": "3 bis 30 Zeichen, nur Kleinbuchstaben, Ziffern und _",
+        "username_error": "Dieser Benutzername ist schon vergeben.",
+        "note": "Interne Notiz",
+        "status": "Status",
+        "make": "Marke",
+        "make_placeholder": "Marke wählen",
+        "notify": "Mitglied per E‑Mail informieren",
+        "restrict": "Nachrichten einschränken",
+        "duration": "Dauer",
+        "duration_7": "7 Tage",
+        "duration_30": "30 Tage",
+        "duration_hint": "Moderation darf höchstens 30 Tage sperren."
+    },
+    "statuses": {
+        "active": "Aktiv",
+        "restricted": "Eingeschränkt",
+        "suspended": "Gesperrt",
+        "pending": "Wartet",
+        "verified": "Verifiziert",
+        "new": "Neu"
+    },
+    "tabs": {
+        "overview": "Übersicht",
+        "vehicles": "Fahrzeuge",
+        "security": "Sicherheit & Sitzungen",
+        "reports": "Meldungen",
+        "panel": "Inhalt des Tabs „:tab“"
+    },
+    "menu": {
+        "open": "Datensatz öffnen",
+        "copy": "Link kopieren",
+        "delete": "Löschen",
+        "tooltip": "Erklärt ein Symbol in einem Wort"
+    },
+    "feedback": {
+        "clear": "Keine offenen Meldungen",
+        "clear_body": "Alles abgearbeitet.",
+        "quiet": "Noch nichts eingegangen",
+        "quiet_body": "In den letzten 7 Tagen kam keine Meldung.",
+        "first": "Noch keine Fahrzeuge",
+        "first_body": "Sobald ein Mitglied ein Fahrzeug veröffentlicht, erscheint es hier.",
+        "forbidden": "Für deine Rolle nur lesbar",
+        "forbidden_body": "Ändern darf hier nur, wer „Mitglieder bearbeiten“ hat.",
+        "partial": "3 von 12 Datensätzen wurden nicht geändert",
+        "toast_success": "Erfolg zeigen",
+        "toast_error": "Fehler zeigen",
+        "toast_text": "Änderungen gespeichert",
+        "toast_error_text": "Speichern fehlgeschlagen"
+    },
+    "overlays": {
+        "dialog": "Dialog öffnen",
+        "drawer": "Drawer öffnen",
+        "confirm": "Löschen bestätigen",
+        "bulk": "Ergebnis einer Sammelaktion",
+        "palette": "Befehlspalette öffnen",
+        "dialog_title": "Mitglied einschränken",
+        "dialog_body": "@nightrunner_s14 kann für die gewählte Dauer keine neuen Unterhaltungen beginnen.",
+        "drawer_title": "Profil bearbeiten",
+        "confirm_title": "Mitglied endgültig löschen?",
+        "confirm_body": "Konto, Fahrzeuge und Fotos von @nightrunner_s14 werden gelöscht. Das lässt sich nicht rückgängig machen.",
+        "confirm_submit": "Löschung anfragen",
+        "bulk_title": "Sitzungen beendet",
+        "bulk_reason": "Konto bereits gesperrt"
+    },
+    "kpis": {
+        "members": "Neue Mitglieder, 7 Tage",
+        "chart_line": "Wie viele melden sich pro Tag an?",
+        "chart_bar": "Welche Marken stehen in den Garagen?"
+    },
+    "timeline": {
+        "restricted": "Nachrichten für 7 Tage eingeschränkt",
+        "reset": "Link zum Zurücksetzen des Passworts gesendet",
+        "viewed": "Kontaktdaten angesehen"
+    },
+    "table": {
+        "caption": "Beispiel-Mitglieder",
+        "empty": "Noch keine Mitglieder",
+        "username": "Mitglied",
+        "vehicles": "Fahrzeuge",
+        "followers": "Follower",
+        "registered": "Registriert",
+        "status": "Status",
+        "restrict": "Einschränken"
+    },
+    "record": {
+        "title": "@nightrunner_s14",
+        "crumb": "Mitglieder",
+        "edit": "Bearbeiten",
+        "meta": "Registriert am 14.06.2026 · 3 Fahrzeuge · 2FA aktiv"
+    }
+}

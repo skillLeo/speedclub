@@ -1,0 +1,173 @@
+{
+  "tabs": {
+    "label": "Sections",
+    "overview": "Overview",
+    "specs": "Specs",
+    "mods": "Mods",
+    "history": "History"
+  },
+  "hero": {
+    "galleryLabel": "Photos: {{title}}",
+    "open": "Open photo {{current}} of {{total}}: {{alt}}",
+    "show": "Show photo {{current}} of {{total}}: {{alt}}",
+    "morePhotos": "+{{count}}",
+    "noPhotoTitle": "No photos yet",
+    "noPhotoOwner": "@{{username}} has not uploaded any pictures of this vehicle yet.",
+    "noPhotoBody": "There are no pictures of this vehicle yet."
+  },
+  "actions": {
+    "share": "Share",
+    "more": "More actions",
+    "follow": "Follow",
+    "message": "Message",
+    "messageSend": "Send a message",
+    "save": "Save build"
+  },
+  "more": {
+    "copyLink": "Copy link",
+    "openGarage": "Edit in your garage",
+    "qr": "Show QR code",
+    "compare": "Compare",
+    "shareCard": "Share as card"
+  },
+  "share": {
+    "copied": "Link copied",
+    "failed": "Sharing didn't work. Here's the link: {{url}}",
+    "copyFailed": "Copying didn't work. Here's the link: {{url}}"
+  },
+  "overview": {
+    "highlights": "Highlights",
+    "allMods": "All mods ({{count}})",
+    "photos": "Photos",
+    "allPhotos": "All photos ({{count}})",
+    "empty": "There is no description of this vehicle yet.",
+    "closingTitle": "Questions for {{name}}?",
+    "closingBody": "Parts, tuning, experience: sign in and write directly."
+  },
+  "specs": {
+    "empty": "No specs entered yet."
+  },
+  "mods": {
+    "empty": "No mods listed yet.",
+    "disclaimer": "Stated by the owner, no legal review",
+    "count_one": "{{count}} mod",
+    "count_other": "{{count}} mods"
+  },
+  "history": {
+    "empty": "Nothing in the history yet.",
+    "loadOlder_one": "Load {{count}} older entry",
+    "loadOlder_other": "Load {{count}} older entries",
+    "loadError": "Older entries couldn't be loaded. Please try again.",
+    "moreChanges_one": "and {{count}} more change",
+    "moreChanges_other": "and {{count}} more changes"
+  },
+  "unavailable": {
+    "title": "Vehicle not available",
+    "body": "It was removed or is not public right now.",
+    "discover": "Discover builds"
+  },
+  "error": {
+    "title": "The vehicle couldn't be loaded",
+    "offlineTitle": "You're offline",
+    "offlineBody": "This vehicle isn't saved on your device yet. Connect and try again."
+  },
+  "backToVehicle": "Back to vehicle",
+  "mod": {
+    "screenTitle": "Modification",
+    "installedSince": "Installed: {{date}}",
+    "details": "Details",
+    "general": "General",
+    "brand": "Brand",
+    "partNumber": "Part number",
+    "cost": "Cost",
+    "notFoundTitle": "This modification no longer exists",
+    "notFoundBody": "It was removed. The vehicle page shows what's fitted now.",
+    "legalStatus": "Legal status"
+  },
+  "gallery": {
+    "title": "Photos",
+    "filterLabel": "Categories",
+    "all": "All",
+    "count_one": "{{count}} photo",
+    "count_other": "{{count}} photos",
+    "categories": {
+      "exterior": "Exterior",
+      "interior": "Interior",
+      "engine": "Engine",
+      "wheels": "Wheels",
+      "detail": "Details",
+      "other": "Other"
+    },
+    "emptyTitle": "No photos yet",
+    "emptyBody": "There are no pictures of this vehicle yet."
+  },
+  "update": {
+    "screenTitle": "Build update",
+    "changes": "Changes",
+    "before": "Before",
+    "after": "After",
+    "openMod": "View modification",
+    "notFoundTitle": "This entry no longer exists",
+    "notFoundBody": "It's no longer shown in the history.",
+    "reportLabel": "Update to {{vehicle}}"
+  },
+  "viewer": {
+    "loading": "Loading photo",
+    "offline": "Offline – you’re seeing the photos loaded last."
+  },
+  "save": {
+    "saved": "Saved",
+    "removed": "Removed from Saved",
+    "failed": "That didn't work. Try again in a moment."
+  },
+  "compare": {
+    "title": "Comparison",
+    "specs": "Specs",
+    "mods": "Mods",
+    "differs": "different",
+    "same": "same",
+    "missing": "not given",
+    "rowLabel": "{{label}}: {{a}} versus {{b}}, {{state}}",
+    "summary": "{{differences}} of {{rows}} values differ",
+    "noMods": "No mods in either build.",
+    "noModsSide": "None",
+    "open": "Open {{vehicle}}",
+    "sameTitle": "This is the same build",
+    "sameBody": "Choose another vehicle to compare.",
+    "pickOther": "Choose another vehicle",
+    "missingTitle": "Two builds to compare",
+    "missingBody": "Open a vehicle and choose “Compare” under “More actions”.",
+    "unavailableTitle": "Comparison not available",
+    "unavailableBody": "One of the vehicles is no longer public or was deleted.",
+    "errorTitle": "The comparison could not be loaded",
+    "picker": {
+      "title": "Compare with",
+      "search": "Make, model or nickname",
+      "garage": "Your garage",
+      "saved": "Saved",
+      "results": "Search results",
+      "hint": "Search for a build or pick one from your garage.",
+      "hintGuest": "Search for a build to compare with.",
+      "empty": "No matching builds",
+      "errorTitle": "The builds could not be loaded"
+    }
+  },
+  "shareCard": {
+    "title": "Share as card",
+    "format": "Format",
+    "formats": {
+      "story": "Story 9:16",
+      "square": "Square 1:1"
+    },
+    "hint": "For Instagram and WhatsApp stories: photo, specs and the build’s QR code.",
+    "previewLabel": "Preview of the card for {{vehicle}}, {{format}}",
+    "share": "Share",
+    "save": "Save",
+    "saved": "Card saved: {{file}}",
+    "shareFailed": "Sharing did not work. Please try again.",
+    "noShare": "Sharing is not possible on this device right now.",
+    "errorTitle": "The card could not be loaded",
+    "unavailableTitle": "Card not available",
+    "unavailableBody": "This vehicle is not publicly visible."
+  }
+}

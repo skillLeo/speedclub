@@ -1,0 +1,220 @@
+{
+    "nav": {
+        "health": "Systemzustand",
+        "jobs": "Jobs",
+        "integrations": "Integrationen"
+    },
+    "status": {
+        "ok": "In Ordnung",
+        "warning": "Warnung",
+        "failed": "Fehler",
+        "crashed": "Abgestürzt",
+        "skipped": "Übersprungen",
+        "unknown": "Noch nicht geprüft",
+        "not_configured": "Nicht eingerichtet"
+    },
+    "health": {
+        "title": "Systemzustand",
+        "intro": "Die Prüfungen laufen alle fünf Minuten. Hier steht das Ergebnis des letzten Laufs; „Jetzt prüfen“ startet sie sofort.",
+        "run": "Jetzt prüfen",
+        "last": "Zuletzt geprüft :date",
+        "never_title": "Noch keine Prüfung gelaufen",
+        "never_body": "Sobald der Zeitplaner läuft, prüft er alle fünf Minuten. Du kannst auch jetzt prüfen.",
+        "caption": "Prüfungen mit Status und Ergebnis",
+        "error": "Der Systemzustand konnte nicht geladen werden",
+        "columns": {
+            "check": "Prüfung",
+            "status": "Status",
+            "result": "Ergebnis",
+            "todo": "Was tun"
+        },
+        "checks": {
+            "Database": "Datenbank",
+            "Cache": "Cache",
+            "Queue": "Warteschlange",
+            "QueueBacklog": "Wartende Jobs",
+            "FailedJobs": "Fehlgeschlagene Jobs",
+            "Schedule": "Zeitplaner (Cron)",
+            "DiskSpace": "Speicherplatz",
+            "StorageLink": "Speicher-Link",
+            "GdWebp": "GD mit WebP",
+            "PhpEnvironment": "PHP und Erweiterungen",
+            "MailConfig": "E‑Mail-Versand",
+            "Pusher": "Pusher",
+            "AiProvider": "KI-Anbieter",
+            "LastBackup": "Letzte Sicherung",
+            "AuditChain": "Audit-Prüfkette",
+            "DebugMode": "Debug-Modus",
+            "Environment": "Umgebung",
+            "OptimizedApp": "Optimierte App"
+        },
+        "problems": "{1} 1 Prüfung braucht Aufmerksamkeit|[2,*] :count Prüfungen brauchen Aufmerksamkeit",
+        "all_ok": "Alle Prüfungen in Ordnung",
+        "reasons": {
+            "disk_used": "Speicher zu :percent % belegt",
+            "disk_unknown": "Der Server meldet den belegten Speicher nicht",
+            "failed_jobs": "{0} Kein fehlgeschlagener Job|{1} 1 fehlgeschlagener Job|[2,*] :count fehlgeschlagene Jobs",
+            "queue_waiting": "{0} Kein Job wartet|{1} 1 Job wartet|[2,*] :count Jobs warten",
+            "queue_waits_minutes": "{1} Der älteste Job wartet seit 1 Minute|[2,*] Der älteste Job wartet seit :count Minuten",
+            "queue_waits_hours": "{1} Der älteste Job wartet seit 1 Stunde|[2,*] Der älteste Job wartet seit :count Stunden",
+            "queue_waits_days": "{1} Der älteste Job wartet seit 1 Tag|[2,*] Der älteste Job wartet seit :count Tagen",
+            "queue_failed": "Der Testjob der Warteschlange lief nicht rechtzeitig",
+            "schedule_silent": "Der Zeitplaner meldet sich nicht: den Cronjob auf dem Server prüfen",
+            "database_failed": "Keine Verbindung zur Datenbank",
+            "cache_failed": "Der Cache lässt sich nicht schreiben oder lesen",
+            "storage_link_missing": "public/storage fehlt: auf dem Server „php artisan storage:link“ ausführen",
+            "gd_missing": "GD ohne WebP oder FreeType: Fotos lassen sich nicht umwandeln",
+            "gd_ok": "WebP und FreeType vorhanden",
+            "php_missing": "Es fehlen PHP-Erweiterungen: :list",
+            "php_old": "PHP :version ist zu alt",
+            "php_version": "PHP :version, alle Erweiterungen vorhanden",
+            "mail_log": "Treiber „:driver“: Mails landen nur im Log",
+            "mail_no_delivery": "Der Treiber „:driver“ stellt im Live-System keine Mails zu",
+            "mail_no_sender": "Keine Absenderadresse eingerichtet",
+            "mail_driver": "Versand über „:driver“",
+            "pusher_off": "Ohne Pusher fragen die Apps regelmäßig nach",
+            "pusher_unreachable": "Pusher antwortet nicht",
+            "pusher_reachable": "Pusher erreichbar",
+            "ai_none": "Kein KI-Anbieter eingerichtet",
+            "ai_no_key": "Für :provider ist kein Schlüssel hinterlegt",
+            "ai_unreachable": ":provider antwortet nicht",
+            "ai_ready": ":provider eingerichtet",
+            "backup_none": "Noch keine Sicherung vorhanden",
+            "backup_unreadable": "Das Sicherungslaufwerk ist nicht lesbar",
+            "backup_at": "Letzte Sicherung :date",
+            "backup_old_hours": "{1} Die neueste Sicherung ist 1 Stunde alt|[2,*] Die neueste Sicherung ist :count Stunden alt",
+            "backup_old_days": "{1} Die neueste Sicherung ist 1 Tag alt|[2,*] Die neueste Sicherung ist :count Tage alt",
+            "audit_never": "Die Prüfkette wurde noch nie geprüft",
+            "audit_broken": "Die Prüfkette ist unterbrochen",
+            "audit_old": "Zuletzt geprüft :date, vor mehr als einem Tag",
+            "audit_ok": "{0} Geprüft :date|{1} 1 Eintrag geprüft :date|[2,*] :count Einträge geprüft :date",
+            "debug_on": "Der Debug-Modus ist im Live-System an",
+            "environment_wrong": "Die Umgebung ist nicht „production“",
+            "not_optimized": "Konfiguration, Routen oder Events sind nicht zwischengespeichert",
+            "queue_ok": "Der Testjob lief rechtzeitig",
+            "schedule_ok": "Meldet sich regelmäßig",
+            "database_ok": "Verbindung steht",
+            "cache_ok": "Schreiben und Lesen klappt",
+            "storage_link_ok": "public/storage ist verknüpft"
+        },
+        "problems_title": "Braucht Aufmerksamkeit",
+        "ok_title": "In Ordnung",
+        "ok_list": "Prüfungen ohne Befund",
+        "todo": "Was tun",
+        "todo_targets": {
+            "jobs": "Zu den Jobs",
+            "integrations": "Zu den Integrationen",
+            "audit": "Zum Audit-Log"
+        },
+        "counts": {
+            "failed": "{1} 1 Fehler|[2,*] :count Fehler",
+            "warning": "{1} 1 Warnung|[2,*] :count Warnungen",
+            "ok": "{1} 1 in Ordnung|[2,*] :count in Ordnung",
+            "not_configured": "{1} 1 nicht eingerichtet|[2,*] :count nicht eingerichtet"
+        },
+        "nothing_open": "Keine Prüfung braucht Aufmerksamkeit."
+    },
+    "jobs": {
+        "title": "Jobs",
+        "intro": "Hintergrund-Jobs nach Klasse, Warteschlange und Zeit. Inhalte von Jobs werden hier nie angezeigt, nur ihre Klassennamen.",
+        "tabs_label": "Jobs",
+        "tabs": {
+            "failed": "Fehlgeschlagen",
+            "pending": "Wartend"
+        },
+        "heartbeat": "Zeitplaner zuletzt aktiv :date",
+        "heartbeat_never": "Zeitplaner noch nie gesehen: Ohne Cron laufen wiederholte Jobs nicht.",
+        "caption_failed": "Fehlgeschlagene Jobs",
+        "caption_pending": "Wartende Jobs",
+        "error": "Die Jobs konnten nicht geladen werden",
+        "columns": {
+            "job": "Job",
+            "queue": "Warteschlange",
+            "exception": "Fehler",
+            "failed_at": "Fehlgeschlagen",
+            "attempts": "Versuche",
+            "state": "Zustand",
+            "available_at": "Fällig",
+            "created_at": "Eingereiht"
+        },
+        "select_all": "Alle fehlgeschlagenen Jobs auswählen",
+        "select": "Job :job auswählen",
+        "selected": "{1} 1 Job ausgewählt|[2,*] :count Jobs ausgewählt",
+        "retry": "Erneut versuchen",
+        "forget": "Verwerfen",
+        "running": "läuft",
+        "waiting": "wartet",
+        "failed_empty": "Keine fehlgeschlagenen Jobs",
+        "failed_empty_body": "Schlägt ein Job fehl, steht er hier mit seiner Fehlerklasse.",
+        "pending_empty": "Keine wartenden Jobs",
+        "pending_empty_body": "Der Zeitplaner arbeitet die Warteschlange jede Minute ab.",
+        "forget_title": "{1} 1 Job verwerfen|[2,*] :count Jobs verwerfen",
+        "forget_body": "Die Jobs werden gelöscht und nicht mehr ausgeführt.",
+        "retry_title": "{1} 1 Job erneut versuchen|[2,*] :count Jobs erneut versuchen",
+        "retry_body": "Die Jobs kommen zurück in ihre Warteschlange; der Zeitplaner nimmt sie innerhalb einer Minute auf.",
+        "limit": "Höchstens 100 auf einmal.",
+        "view_only": "Wiederholen und Verwerfen dürfen Teammitglieder mit „Jobs wiederholen oder verwerfen“."
+    },
+    "integrations": {
+        "title": "Integrationen",
+        "intro": "Ob die Dienste eingerichtet sind. Schlüssel, Server und Adressen werden hier nie angezeigt; sie stehen nur in der Server-Konfiguration.",
+        "error": "Die Integrationen konnten nicht geladen werden",
+        "configured": "Eingerichtet",
+        "not_configured": "Nicht eingerichtet",
+        "driver": "Treiber: :driver",
+        "provider": "Anbieter: :driver",
+        "keys": {
+            "mail": {
+                "name": "E‑Mail",
+                "about": "Versand von Bestätigungen, Einladungen und Antworten.",
+                "test": "Test-E‑Mail an mich"
+            },
+            "pusher": {
+                "name": "Pusher",
+                "about": "Echtzeit für Nachrichten und Hinweise.",
+                "test": "Test-Ereignis senden"
+            },
+            "push": {
+                "name": "Push-Mitteilungen (Expo)",
+                "about": "Mitteilungen an die App auf den Geräten der Mitglieder.",
+                "test": "Test-Push an mein Gerät"
+            },
+            "ai": {
+                "name": "KI-Anbieter",
+                "about": "Für die KI-Funktionen hinter Flags; ohne Schlüssel antwortet eine Attrappe.",
+                "test": "KI-Aufruf testen"
+            },
+            "turnstile": {
+                "name": "Cloudflare Turnstile",
+                "about": "Schutz der öffentlichen Formulare vor Bots.",
+                "test": "Test"
+            },
+            "sentry": {
+                "name": "Sentry",
+                "about": "Fehlerberichte aus App und Server.",
+                "test": "Test"
+            }
+        },
+        "reasons": {
+            "not_configured": "Erst nach der Einrichtung möglich.",
+            "no_device": "Teammitglieder registrieren kein Gerät für Push-Mitteilungen; ein Test hat kein Ziel.",
+            "no_test": "Kein Test verfügbar"
+        },
+        "last_ok": "Letzter Test :date: erfolgreich",
+        "last_ok_faked": "Letzter Test :date: erfolgreich, mit der Attrappe (kein Schlüssel)",
+        "last_failed": "Letzter Test :date: fehlgeschlagen (:error)"
+    },
+    "flash": {
+        "health_ok": "Alle Prüfungen in Ordnung.",
+        "health_problems": "Geprüft. Mindestens eine Prüfung braucht Aufmerksamkeit.",
+        "retried": "Die Jobs sind zurück in der Warteschlange.",
+        "retried_partial": "Zurück in der Warteschlange; einige Jobs gab es nicht mehr.",
+        "forgotten": "Die Jobs sind verworfen.",
+        "forgotten_partial": "Verworfen; einige Jobs gab es nicht mehr.",
+        "test_ok_mail": "Test-E‑Mail verschickt. Sieh in dein Postfach.",
+        "test_ok_pusher": "Test-Ereignis gesendet.",
+        "test_ok_ai": "Der KI-Aufruf hat geantwortet.",
+        "test_ok_push": "Test-Push gesendet.",
+        "test_failed": "Der Test ist fehlgeschlagen."
+    }
+}

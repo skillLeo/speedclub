@@ -1,0 +1,20 @@
+{
+    "data": {
+        "username": "string",
+        "display_name": "string",
+        "city": "string",
+        "bio": "null",
+        "avatar": "null",
+        "cover": "null",
+        "member_since": "string",
+        "stats": {
+            "vehicles": "int",
+            "followers": "int",
+            "following": "int"
+        },
+        "is_self": "bool",
+        "is_following": "bool",
+        "follows_you": "bool",
+        "can_message": "bool"
+    }
+}

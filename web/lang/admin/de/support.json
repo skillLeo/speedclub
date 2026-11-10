@@ -1,0 +1,183 @@
+{
+    "nav": {
+        "tickets": "Tickets",
+        "macros": "Textbausteine"
+    },
+    "tickets": {
+        "title": "Support-Tickets",
+        "intro": "Anfragen aus der App (Einstellungen → Hilfe & FAQ → Support kontaktieren) und vom Kontaktformular. Mitglieder lesen die Antwort in der App und bekommen eine Mitteilung, Kontakte ohne Konto bekommen sie per E‑Mail.",
+        "caption": "Support-Tickets",
+        "columns": {
+            "subject": "Betreff",
+            "from": "Von",
+            "category": "Kategorie",
+            "status": "Status",
+            "assigned": "Zuständig",
+            "last_activity": "Letzte Aktivität",
+            "messages": "Nachrichten",
+            "reference": "Nummer"
+        },
+        "presets": {
+            "active": "Offen und wartend",
+            "mine": "Meine",
+            "unassigned": "Ohne Zuständige"
+        },
+        "filters": {
+            "label": "Tickets filtern",
+            "q": "Suche",
+            "q_placeholder": "Betreff oder SC-Nummer",
+            "status": "Status",
+            "category": "Kategorie",
+            "source": "Herkunft",
+            "assigned": "Zuständig",
+            "any": "Alle",
+            "apply": "Anwenden",
+            "assigned_me": "Ich",
+            "assigned_none": "Niemand",
+            "status_active": "Offen oder wartend"
+        },
+        "from": {
+            "member": "@:username",
+            "web": ":name",
+            "web_unknown": "Kontaktformular",
+            "member_unknown": "Gelöschtes Mitglied"
+        },
+        "sources": {
+            "app": "App",
+            "web": "Kontaktformular"
+        },
+        "empty_title": "Keine Tickets",
+        "empty_body": "Neue Anfragen erscheinen hier, sobald jemand schreibt.",
+        "error": "Die Tickets konnten nicht geladen werden.",
+        "assign": "Zuständigkeit",
+        "assign_title": "Zuständig für :reference",
+        "assign_staff": "Teammitglied",
+        "assign_none": "Niemand",
+        "assign_submit": "Speichern",
+        "bulk": {
+            "status": "Status ändern",
+            "title": "Status für :count Tickets ändern",
+            "body": "Mehr als 100 Tickets in 24 Stunden brauchen eine Freigabe.",
+            "to": "Neuer Status",
+            "submit": "Ändern",
+            "result": "Status ändern: Ergebnis",
+            "codes": {
+                "not_found": "Ticket nicht gefunden",
+                "forbidden": "Keine Berechtigung",
+                "invalid": "Ungültige Angabe",
+                "not_possible": "Nicht möglich",
+                "failed": "Fehlgeschlagen"
+            }
+        }
+    },
+    "status": {
+        "open": "Offen",
+        "pending": "Wartet",
+        "closed": "Erledigt"
+    },
+    "categories": {
+        "account": "Konto",
+        "vehicle": "Fahrzeug",
+        "qr": "QR-Code",
+        "messaging": "Nachrichten",
+        "safety": "Sicherheit",
+        "other": "Sonstiges"
+    },
+    "ticket": {
+        "title": ":subject",
+        "crumb": "Tickets",
+        "error": "Das Ticket konnte nicht geladen werden.",
+        "tabs": {
+            "label": "Ticket",
+            "thread": "Verlauf"
+        },
+        "meta": {
+            "reference": "Nummer :reference",
+            "created": "Eingegangen :date",
+            "source_app": "Aus der App",
+            "source_web": "Kontaktformular",
+            "locale": "Sprache :locale"
+        },
+        "actions": {
+            "assign": "Zuständigkeit",
+            "member": "Zum Mitglied",
+            "status": "Status"
+        },
+        "from_title": "Von",
+        "member_link": "Mitglied öffnen",
+        "email": "E‑Mail: :email",
+        "channel_app": "Antworten erscheinen in der App des Mitglieds.",
+        "channel_email": "Antworten gehen per E‑Mail an diese Adresse.",
+        "thread": {
+            "internal": "Interne Notiz",
+            "internal_hint": "Nur für das Team, wird nie gesendet.",
+            "mailed": "Per E‑Mail gesendet :date",
+            "queued": "E‑Mail wird gesendet",
+            "team": "Team",
+            "empty": "Noch keine Nachrichten."
+        },
+        "composer": {
+            "reply": "Antworten",
+            "note": "Interne Notiz",
+            "label_reply": "Antwort an :name",
+            "label_note": "Notiz für das Team",
+            "macro": "Textbaustein",
+            "macro_placeholder": "Textbaustein einfügen",
+            "status_after": "Danach",
+            "send": "Antwort senden",
+            "save_note": "Notiz speichern",
+            "discard": "Verwerfen",
+            "hint_reply_app": "Das Mitglied sieht die Antwort in der App unter Einstellungen → Hilfe & FAQ → Deine Anfragen.",
+            "hint_reply_email": "Geht per E‑Mail an die angegebene Adresse.",
+            "hint_note": "Bleibt intern."
+        },
+        "closed_note": "Das Ticket ist erledigt. Eine neue Antwort öffnet es nicht von selbst wieder; ändere dazu den Status.",
+        "reveal": "Anzeigen",
+        "reveal_error": "Die Adresse konnte nicht geladen werden."
+    },
+    "macros": {
+        "title": "Textbausteine",
+        "intro": "Vorlagen für Antworten auf Deutsch und Englisch. Variablen: {name}, {reference}. Antworten unterschreibt das Team, nie eine Person. Die Antwort bleibt vor dem Senden änderbar.",
+        "caption": "Textbausteine",
+        "columns": {
+            "title": "Titel",
+            "locale": "Sprache",
+            "body": "Text",
+            "updated": "Geändert",
+            "actions": "Aktionen"
+        },
+        "locales": {
+            "de": "Deutsch",
+            "en": "Englisch"
+        },
+        "new": "Neuer Textbaustein",
+        "edit": "Bearbeiten",
+        "delete": "Löschen",
+        "delete_title": "„:title“ löschen?",
+        "delete_body": "Schon gesendete Antworten behalten ihren Text.",
+        "drawer_new": "Neuer Textbaustein",
+        "drawer_edit": "Textbaustein bearbeiten",
+        "fields": {
+            "key": "Schlüssel",
+            "key_hint": "Kleinbuchstaben, Ziffern und _. Gleicher Schlüssel = gleicher Baustein in der anderen Sprache.",
+            "locale": "Sprache",
+            "title": "Titel",
+            "body": "Text",
+            "body_hint": "Mit den Variablen {name} und {reference}.",
+            "sort": "Reihenfolge"
+        },
+        "save": "Speichern",
+        "empty_title": "Noch keine Textbausteine",
+        "empty_body": "Lege Bausteine für häufige Antworten an.",
+        "error": "Die Textbausteine konnten nicht geladen werden."
+    },
+    "flash": {
+        "bulk_done": "Status geändert.",
+        "bulk_partial": "Nicht bei allen Tickets hat es geklappt. Details in der Übersicht.",
+        "replied": "Antwort gesendet.",
+        "noted": "Notiz gespeichert.",
+        "updated": "Ticket aktualisiert.",
+        "macro_saved": "Textbaustein gespeichert.",
+        "macro_deleted": "Textbaustein gelöscht."
+    }
+}

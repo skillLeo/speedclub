@@ -1,0 +1,303 @@
+{
+    "title": "Audit log",
+    "intro": "Every change by the team and every access to sensitive data, chained so it cannot be tampered with. Entries cannot be changed or deleted.",
+    "caption": "Audit events, newest first",
+    "empty_title": "No events yet",
+    "empty_body": "As soon as someone on the team changes something, it shows up here.",
+    "columns": {
+        "occurred_at": "Time",
+        "actor": "Who",
+        "action": "Action",
+        "target": "Target",
+        "reason": "Reason",
+        "id": "No."
+    },
+    "actor": {
+        "system": "System",
+        "staff": "Staff",
+        "member": "Member",
+        "any_staff": "Anyone on the team",
+        "any_member": "All members"
+    },
+    "presets": {
+        "staff": "Team only",
+        "approvals": "Approvals",
+        "security": "Team security"
+    },
+    "filters": {
+        "label": "Filters",
+        "actor": "Who",
+        "any_actor": "Everyone",
+        "action": "Action starts with",
+        "action_placeholder": "e.g. approval.",
+        "target_type": "Target type",
+        "any_target": "All",
+        "target_id": "Target ID",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply",
+        "target": "Target",
+        "period": "Period"
+    },
+    "targets": {
+        "user": "Member",
+        "staff": "Staff account",
+        "vehicle": "Vehicle",
+        "media": "Media",
+        "qr_code": "QR code",
+        "moderation_case": "Case",
+        "decision": "Decision",
+        "appeal": "Appeal",
+        "report": "Report",
+        "support_ticket": "Support ticket",
+        "audit_event": "Audit event",
+        "config_version": "Config version",
+        "feature_flag": "Feature flag",
+        "legal_document": "Legal document",
+        "approval_request": "Approval"
+    },
+    "chain": {
+        "intact": "Integrity checked: :time",
+        "broken": "Chain broken at no. :id",
+        "unknown": "Integrity not checked yet",
+        "broken_title": "The audit chain is not intact",
+        "broken_body": "The last check found a mismatch at event no. :id (:checked events before it intact). Tell an owner immediately and do not touch the database."
+    },
+    "event": {
+        "title": "Event",
+        "failed": "The event could not be loaded",
+        "missing": "This event does not exist",
+        "request": "Request ID",
+        "hash": "Hash",
+        "diff": "Before / after",
+        "viewed_note": "Opening this event was itself recorded in the audit log.",
+        "key": "Key: :key"
+    },
+    "export": {
+        "title": "Export the audit log",
+        "body": "Exports :count events with the current filters. After approval you can download the file for 24 hours.",
+        "format": "Format",
+        "submit": "Request approval"
+    },
+    "actions": {
+        "admin": {
+            "saved_view": {
+                "deleted": "Saved view deleted",
+                "saved": "View saved"
+            }
+        },
+        "approval": {
+            "approved": "Approved and executed",
+            "cancelled": "Approval request withdrawn",
+            "denied": "Approval denied",
+            "expired": "Approval request expired",
+            "export_downloaded": "Export downloaded",
+            "failed": "Approved, execution refused",
+            "requested": "Approval requested"
+        },
+        "audit": {
+            "event_viewed": "Audit event viewed",
+            "exported": "Audit log exported"
+        },
+        "brand": {
+            "asset_uploaded": "Brand image uploaded"
+        },
+        "catalog": {
+            "activated": "Catalogue entry activated",
+            "category_created": "Mod category created",
+            "category_updated": "Mod category changed",
+            "created": "Catalogue entry created",
+            "deactivated": "Catalogue entry deactivated",
+            "deleted": "Catalogue entry deleted",
+            "exported": "Catalogue exported as CSV",
+            "import_analysed": "CSV import checked",
+            "import_finished": "CSV import finished",
+            "import_started": "CSV import started",
+            "merged": "Catalogue entries merged",
+            "request_accepted": "Catalogue request accepted",
+            "request_rejected": "Catalogue request rejected",
+            "schema_changed": "Fields changed (new version)",
+            "updated": "Catalogue entry changed"
+        },
+        "config": {
+            "draft_discarded": "Configuration draft discarded",
+            "draft_saved": "Configuration draft saved",
+            "preview_issued": "Preview link issued",
+            "published": "Configuration published",
+            "rolled_back": "Configuration rolled back"
+        },
+        "flag": {
+            "changed": "Feature flag changed"
+        },
+        "help": {
+            "deleted": "Help article deleted",
+            "published": "Help article published",
+            "saved": "Help article saved",
+            "unpublished": "Help article unpublished"
+        },
+        "legal": {
+            "draft_discarded": "Legal text draft discarded",
+            "draft_saved": "Legal text draft saved",
+            "published": "Legal text published"
+        },
+        "media": {
+            "original_viewed": "Original of a hidden photo shown",
+            "reviewed": "Photo approved"
+        },
+        "member": {
+            "bulk_executed": "Bulk action run",
+            "consent_accepted": "New legal version accepted",
+            "data_export_downloaded": "Data export downloaded",
+            "data_export_requested": "Data export requested",
+            "deleted_by_staff": "Account deleted by staff",
+            "deletion_requested": "Account deletion requested",
+            "email_change_requested": "E-mail change requested",
+            "email_changed": "E-mail address changed",
+            "email_changed_by_staff": "E-mail address changed by staff",
+            "email_verified": "E-mail address verified",
+            "export_downloaded": "Staff export downloaded",
+            "export_started": "Staff export started",
+            "hard_deleted": "Account permanently deleted",
+            "list_exported": "Member list exported as CSV",
+            "login_new_device": "Sign-in on a new device",
+            "logout_all": "Signed out everywhere",
+            "message_metadata_viewed": "Message metadata viewed",
+            "password_change_forced": "Password change forced",
+            "password_changed": "Password changed",
+            "password_check_failed": "Wrong password",
+            "password_reset": "Password reset",
+            "pii_viewed": "Personal data revealed",
+            "profile_edited": "Profile edited by staff",
+            "qr_reissued": "QR code reissued",
+            "recovery_code_used": "Recovery code used",
+            "recovery_codes_regenerated": "New recovery codes",
+            "registered": "Signed up",
+            "reset_link_sent": "Reset code sent",
+            "second_factor_locked": "Second factor locked",
+            "session_revoked": "Session ended",
+            "sessions_revoked_by_staff": "All sessions ended by staff",
+            "token_replayed": "Old token replayed",
+            "token_rotation_retried": "Token rotation retried",
+            "two_factor_disabled": "Two-factor turned off",
+            "two_factor_enabled": "Two-factor turned on",
+            "two_factor_reset": "Two-factor reset",
+            "username_changed": "Username changed",
+            "view_as_ended": "View-as ended",
+            "view_as_started": "View-as started"
+        },
+        "membership": {
+            "entitlement_granted": "Membership granted",
+            "entitlement_revoked": "Membership revoked",
+            "plan_created": "Membership plan created",
+            "plan_updated": "Membership plan updated"
+        },
+        "moderation": {
+            "appeal_decided": "Appeal decided",
+            "appeal_filed": "Appeal filed",
+            "bulk_no_action": "Cases closed in bulk without action",
+            "case_assigned": "Case taken or handed over",
+            "contact_viewed": "Notifier contact address viewed",
+            "decided": "Moderation decision",
+            "evidence_viewed": "Evidence viewed",
+            "keyword_added": "Keyword added",
+            "keyword_removed": "Keyword removed",
+            "live_context_viewed": "Current conversation viewed",
+            "rate_limits_published": "Request limits published",
+            "restriction_lifted": "Restriction ended",
+            "template_deleted": "Statement template deleted",
+            "template_saved": "Statement template saved"
+        },
+        "permissions": {
+            "changed": "Role permissions changed"
+        },
+        "privacy": {
+            "erasure_requested": "Erasure sent for approval",
+            "evidence_viewed": "Privacy request evidence opened",
+            "export_sent": "Data export sent",
+            "reply_sent": "Privacy request reply sent",
+            "request_assigned": "Privacy request assigned",
+            "request_completed": "Privacy request completed",
+            "request_created": "Privacy request recorded",
+            "request_extended": "Privacy request deadline extended",
+            "request_status_changed": "Privacy request status changed",
+            "request_viewed": "Privacy request viewed"
+        },
+        "qr": {
+            "reissued_by_staff": "QR code reissued by staff",
+            "revoked_by_staff": "QR code revoked by staff"
+        },
+        "release": {
+            "recorded": "Release recorded",
+            "synced": "Release register synced",
+            "updated": "Release updated"
+        },
+        "role": {
+            "created": "Role created",
+            "deleted": "Role deleted",
+            "updated": "Role updated"
+        },
+        "staff": {
+            "challenge_passed": "Code confirmed",
+            "code_check_failed": "Wrong code at a security step",
+            "deactivated": "Team member deactivated",
+            "deleted": "Team member deleted",
+            "invite_accepted": "Invitation accepted",
+            "invite_resent": "Invitation resent",
+            "invited": "Team member invited",
+            "own_session_revoked": "Own session ended",
+            "password_changed": "Password changed",
+            "password_check_failed": "Wrong password",
+            "password_reset": "Password reset",
+            "pii_reveal_limit_reached": "Contact detail reveal limit reached",
+            "reactivated": "Team member reactivated",
+            "recovery_code_used": "Recovery code used",
+            "recovery_codes_regenerated": "New recovery codes",
+            "recovery_codes_viewed": "Recovery codes viewed",
+            "roles_changed": "Team member roles changed",
+            "session_ended_credentials_changed": "Session ended: credentials changed",
+            "session_ended_inactive": "Session ended: account inactive",
+            "session_ended_without_code": "Session ended: code missing",
+            "sessions_revoked": "Team member sessions ended",
+            "sign_in_failed": "Sign-in failed",
+            "signed_in": "Signed in",
+            "signed_in_without_code": "Signed in without code",
+            "signed_out": "Signed out",
+            "two_factor_confirmed": "Two-factor confirmed",
+            "two_factor_disabled": "Two-factor turned off",
+            "two_factor_enabled": "Two-factor set up",
+            "two_factor_failed": "Wrong code",
+            "two_factor_reset": "Two-factor reset",
+            "two_factor_rotated": "New authenticator confirmed",
+            "two_factor_rotation_cancelled": "Authenticator change cancelled",
+            "two_factor_rotation_started": "Authenticator change started"
+        },
+        "support": {
+            "bulk_status": "Ticket status changed in bulk",
+            "contact_viewed": "Contact address viewed",
+            "macro_deleted": "Macro deleted",
+            "macro_saved": "Macro saved",
+            "note_added": "Internal note",
+            "replied": "Ticket answered",
+            "status_changed": "Ticket status changed",
+            "ticket_assigned": "Ticket assigned"
+        },
+        "system": {
+            "health_checks_run": "Health checks run",
+            "jobs_forgotten": "Failed jobs discarded",
+            "jobs_retried": "Failed jobs retried",
+            "test_ai_run": "AI connection tested",
+            "test_mail_sent": "Test email sent",
+            "test_pusher_sent": "Realtime connection tested"
+        },
+        "template": {
+            "reset": "Template reset",
+            "saved": "Template saved",
+            "test_sent": "Template test sent"
+        },
+        "vehicle": {
+            "bulk_hidden": "Vehicles hidden in bulk",
+            "deleted_by_staff": "Vehicle deleted by staff",
+            "edited_by_staff": "Vehicle edited by staff"
+        }
+    }
+}

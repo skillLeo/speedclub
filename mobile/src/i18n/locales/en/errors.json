@@ -1,0 +1,15 @@
+{
+    "network": "No connection. Check your network and try again.",
+    "unauthenticated": "Please sign in.",
+    "restricted": "Your account is restricted.",
+    "forbidden": "You are not allowed to do this.",
+    "not_found": "We could not find that.",
+    "conflict": "This has just changed. Reload and try again.",
+    "validation": "Please check your entries.",
+    "session_expired": "Your session has expired. Please try again.",
+    "maintenance": "SPEED CLUB is under maintenance.",
+    "upgrade": "Please update the app.",
+    "rate_limited": "That was a bit fast. Wait a moment and try again.",
+    "server": "Something went wrong on our side. Please try again shortly.",
+    "consent_required": "Please accept the updated terms first, then you can carry on."
+}

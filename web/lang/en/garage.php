@@ -1,0 +1,127 @@
+<?php
+
+// Server-rendered strings of the garage and vehicle screens (02_PRODUCT_SPEC §3.2, §3.3, §3.9).
+return [
+    'limit_reached' => 'You already have :max vehicles in your garage. Delete one before adding another.',
+    'mod_limit_reached' => 'This vehicle already has :max modifications. Delete one before adding another.',
+    'mod_photo_limit_reached' => 'This modification already has :max photos. Delete one before adding another.',
+    'order_mismatch' => 'The list has changed in the meantime. Reload and sort it again.',
+    'model_mismatch' => 'This model does not belong to the chosen make.',
+    'generation_mismatch' => 'This generation does not belong to the chosen model.',
+    'year_outside_generation' => 'The model year does not fit this generation (:from to :to).',
+    'installed_in_future' => 'The month of installation must not be in the future.',
+    'cover_invalid' => 'The cover must be a finished photo of this vehicle.',
+
+    'publish_missing' => [
+        'make' => 'Choose a make.',
+        'model' => 'Choose a model.',
+        'model_year' => 'Enter the model year.',
+        'photo' => 'Add at least one finished photo.',
+        'username' => 'Choose a username first.',
+    ],
+
+    'mod_fields' => [
+        'unknown' => 'This field does not exist in this category.',
+        'required' => ':field is required.',
+        'number' => ':field must be a number.',
+        'boolean' => ':field must be yes or no.',
+        'text' => ':field must be text.',
+        'too_long' => ':field may have at most :max characters.',
+        'pattern' => ':field is not in the right format, for example :example.',
+        'option' => 'Choose a value from the list for :field.',
+        'min' => ':field must be at least :min.',
+        'max' => ':field must be at most :max.',
+        'step' => ':field goes in steps of :step.',
+        'rear_without_front' => 'Enter the front diameter first.',
+        'object' => 'The fields must be an object.',
+    ],
+
+    'completeness' => [
+        'hint' => 'One more detail until the build is complete|:count more details until the build is complete',
+        'line' => 'Build :percent % complete',
+        'make' => 'Make',
+        'model' => 'Model',
+        'model_year' => 'Model year',
+        'color' => 'Colour',
+        'description' => 'Description',
+        'engine' => 'Engine',
+        'power' => 'Power',
+        'torque' => 'Torque',
+        'drivetrain' => 'Drivetrain',
+        'gearbox' => 'Gearbox',
+        'photo' => 'First photo',
+        'photos' => "At least 3\u{00A0}photos",
+        'mod' => 'First modification',
+    ],
+
+    'spec' => [
+        'status' => 'Status',
+        'model_year' => 'Model year',
+        'make' => 'Make',
+        'model' => 'Model',
+        'generation' => 'Generation',
+        'color' => 'Colour',
+        'engine_code' => 'Engine code',
+        'engine_text' => 'Engine',
+        'displacement_cc' => 'Displacement',
+        'fuel' => 'Fuel',
+        'aspiration' => 'Aspiration',
+        'power' => 'Power',
+        'torque_nm' => 'Torque',
+        'torque' => 'Torque',
+        'drivetrain' => 'Drivetrain',
+        'gearbox' => 'Gearbox',
+    ],
+
+    'spec_group' => [
+        'vehicle' => 'Vehicle',
+        'engine' => 'Engine',
+        'power' => 'Power',
+        'drivetrain' => 'Drivetrain',
+    ],
+
+    'strip' => [
+        'model_year' => 'Year',
+        'drivetrain' => 'Drive',
+    ],
+
+    // The short form of the spec strip in FS-3.
+    'drivetrain_short' => [
+        'front' => 'FWD',
+        'rear' => 'RWD',
+        'all' => 'AWD',
+    ],
+
+    'yes' => 'Yes',
+    'no' => 'No',
+    'stock' => 'Stock',
+    'removed' => 'removed',
+    'none' => 'not specified',
+    'more_changes' => ':count more',
+    // The bold title of a Verlauf entry (DQ-290, 03_DESIGN_SYSTEM §8): category and verb of its first change.
+    'update_title' => [
+        'mod_added' => ':part added',
+        'mod_changed' => ':part changed',
+        'mod_removed' => ':part removed',
+        'specs_changed' => 'Specs updated',
+        'photos_added' => 'Photos added',
+        'note' => 'Note',
+        'parts' => [
+            'wheels_tires' => 'Wheels',
+            'suspension' => 'Suspension',
+            'exhaust' => 'Exhaust',
+            'engine_performance' => 'Engine',
+            'brakes' => 'Brakes',
+            'aero_body' => 'Bodywork',
+            'interior' => 'Interior',
+            'electronics' => 'Electronics',
+            'drivetrain' => 'Drivetrain',
+            'other' => 'Part',
+        ],
+    ],
+    'planned_prefix' => 'Planned: :title',
+    'photos_label' => 'Photos',
+    'photos_added' => 'One new photo|:count new photos',
+    'legal_disclaimer' => 'Stated by the owner, no legal review',
+    'cost' => '€:amount',
+];

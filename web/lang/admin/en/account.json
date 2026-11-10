@@ -1,0 +1,90 @@
+{
+    "title": "My account",
+    "intro": "Your access to the admin: password, two-factor sign-in and where you are signed in.",
+    "error": "Your account could not be loaded",
+    "profile": {
+        "title": "Profile",
+        "name": "Name",
+        "email": "E‑mail address",
+        "roles": "Roles",
+        "no_roles": "No role",
+        "last_login": "Last sign-in",
+        "managed": "An Owner or Admin changes name, address and roles in the team."
+    },
+    "password": {
+        "title": "Change password",
+        "body": "After the change every other session ends; this one stays signed in.",
+        "current": "Current password",
+        "new": "New password",
+        "new_hint": "At least :min characters.",
+        "confirmation": "Repeat the new password",
+        "submit": "Change password",
+        "done": "Password changed. Every other session has ended.",
+        "errors": {
+            "current": "Enter your current password.",
+            "new": "The new password needs at least :min characters.",
+            "confirmation": "The two passwords do not match."
+        }
+    },
+    "two_factor": {
+        "title": "Two-factor sign-in",
+        "on": "Set up on :date",
+        "off": "Not set up.",
+        "rotate": "Change authenticator",
+        "rotate_body": "For a new phone or another app. Your current code keeps working until you confirm the new one.",
+        "code": "Current code",
+        "code_hint": "Six digits from your authenticator app.",
+        "new_code": "Code from the new app",
+        "new_code_hint": "Six digits the new app shows now.",
+        "start": "Continue",
+        "scan": "Scan the QR code with the new app or enter the key.",
+        "key": "Key",
+        "copy": "Copy key",
+        "copied": "Copied",
+        "qr_alt": "QR code for the authenticator app",
+        "expires": "Valid until :time. After that you start again.",
+        "confirm": "Confirm new authenticator",
+        "cancel": "Cancel",
+        "done": "Authenticator changed. Every other session has ended.",
+        "pending": "A change was started and is valid until :time. The key is shown only once: start again or cancel.",
+        "restart": "Start again",
+        "errors": {
+            "code": "Enter the six digits.",
+            "failed": "That did not work. Try again."
+        }
+    },
+    "recovery": {
+        "title": "Recovery codes",
+        "body": "With a recovery code you sign in when your phone is missing. Each code works once. Showing them needs a current code.",
+        "show": "Show codes",
+        "regenerate": "Create new codes",
+        "regenerate_body": "The old codes stop working, and every other session ends.",
+        "list_title": "Your recovery codes",
+        "list_hint": "Keep them somewhere safe, not on the same phone. They disappear when you leave the page.",
+        "hide": "Hide",
+        "download": "Save as a text file",
+        "file_title": "SPEED CLUB Admin: recovery codes",
+        "copy": "Copy all",
+        "new_done": "New codes created. The old ones no longer work."
+    },
+    "sessions": {
+        "title": "Sessions",
+        "body": "Where your account is signed in right now.",
+        "empty": "Only this session.",
+        "current": "This session",
+        "line": ":browser on :os",
+        "unknown": "Unknown device",
+        "active": "last active :date",
+        "end": "Sign out",
+        "end_label": "Sign out session :device",
+        "end_others": "Sign out all others",
+        "end_others_title": "Sign out every other session",
+        "end_others_body": "Every other sign-in of your account ends at once. This one stays.",
+        "end_title": "Sign out session",
+        "end_body": "The session on :device ends at once."
+    },
+    "flash": {
+        "session_ended": "Session signed out.",
+        "sessions_ended": "Every other session signed out."
+    }
+}

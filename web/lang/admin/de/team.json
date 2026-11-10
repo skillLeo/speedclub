@@ -1,0 +1,442 @@
+{
+    "nav": {
+        "staff": "Team",
+        "roles": "Rollen",
+        "permissions": "Rechte-Matrix"
+    },
+    "roles_names": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "moderator": "Moderation",
+        "support": "Support",
+        "content_editor": "Redaktion",
+        "analyst": "Analyse"
+    },
+    "roles_about": {
+        "owner": "Alle Rechte; nur Owner ernennen Owner und ändern die Firmenangaben.",
+        "admin": "Alle Rechte außer den Owner-Aufgaben.",
+        "moderator": "Meldungen, Fotos und Widersprüche prüfen, Inhalte ausblenden, Konten sperren.",
+        "support": "Tickets beantworten, Kontaktdaten sehen, Passwort-Links senden, als Mitglied ansehen.",
+        "content_editor": "Inhalte, Marke und Fahrzeugkatalog pflegen und veröffentlichen.",
+        "analyst": "Statistiken sehen; Mitglieder, Fahrzeuge und Meldungen nur lesen."
+    },
+    "state": {
+        "active": "Aktiv",
+        "invited": "Eingeladen",
+        "suspended": "Gesperrt",
+        "deactivated": "Deaktiviert",
+        "deleted": "Gelöscht"
+    },
+    "yes": "Ja",
+    "no": "Nein",
+    "you": "Du",
+    "never": "Noch nie",
+    "four_eyes": "Vier-Augen",
+    "index": {
+        "title": "Team",
+        "intro": "Wer im Admin-Bereich arbeitet und mit welchen Rollen. Neue Teammitglieder lädst du per E‑Mail ein; danach richten sie den Zwei‑Faktor-Schutz ein.",
+        "caption": "Teammitglieder mit Rollen, Status und letzter Anmeldung",
+        "owners": "Owner: :count · höchstens :max",
+        "invite": "Einladen",
+        "empty_title": "Niemand passt zu diesen Filtern",
+        "empty_body": "Ändere die Filter oder lade ein neues Teammitglied ein.",
+        "error": "Das Team konnte nicht geladen werden",
+        "columns": {
+            "name": "Name",
+            "roles": "Rollen",
+            "state": "Status",
+            "two_factor": "Zwei‑Faktor",
+            "last_login": "Letzte Anmeldung",
+            "created": "Seit"
+        },
+        "invite_until": "Einladung bis :date",
+        "invite_expired": "Einladung abgelaufen",
+        "presets": {
+            "active": "Aktiv",
+            "invited": "Eingeladen",
+            "deactivated": "Deaktiviert"
+        },
+        "filters": {
+            "label": "Team filtern",
+            "q": "Name oder E‑Mail",
+            "q_placeholder": "z. B. Lena",
+            "state": "Status",
+            "role": "Rolle",
+            "any": "Alle",
+            "apply": "Anwenden"
+        }
+    },
+    "invite": {
+        "title": "Teammitglied einladen",
+        "body": "Die Person bekommt einen Link, der 72 Stunden und nur einmal gilt. Sie legt ihr Passwort fest und richtet danach den Zwei‑Faktor-Schutz ein.",
+        "name": "Name",
+        "email": "E‑Mail-Adresse",
+        "locale": "Sprache der E‑Mail",
+        "roles": "Rollen",
+        "roles_hint": "Du kannst nur Rollen vergeben, deren Rechte du selbst hast.",
+        "owner_only": "Owner kann nur ein Owner einladen.",
+        "elevating": "Admin, Owner und Rollen mit kritischen Rechten gelten erst nach einer Freigabe. Bis dahin hat das Konto nur die übrigen Rollen.",
+        "reason_hint": "Pflicht für die Freigabe. Steht im Audit-Log, 10 bis 1.000 Zeichen.",
+        "submit": "Einladung senden",
+        "locales": {
+            "de": "Deutsch",
+            "en": "Englisch"
+        },
+        "errors": {
+            "name": "Gib einen Namen mit 2 bis 120 Zeichen ein.",
+            "email": "Gib eine gültige E‑Mail-Adresse ein.",
+            "roles": "Wähle mindestens eine Rolle.",
+            "reason": "Für die Freigabe braucht es eine Begründung mit 10 bis 1.000 Zeichen."
+        },
+        "accepted": "Dein Passwort ist gesetzt. Melde dich jetzt an und richte den Zwei‑Faktor-Schutz ein."
+    },
+    "accept": {
+        "title": "Einladung annehmen",
+        "intro": "Lege dein Passwort für den SPEED CLUB Admin-Bereich fest. Danach meldest du dich an und richtest den Zwei‑Faktor-Schutz ein.",
+        "password": "Neues Passwort",
+        "password_hint": "Mindestens :min Zeichen. Ein langer Satz ist sicherer als ein kurzes Wort.",
+        "password_confirmation": "Passwort wiederholen",
+        "submit": "Passwort festlegen",
+        "link_broken": "Dieser Link ist unvollständig. Öffne ihn bitte direkt aus der E‑Mail.",
+        "back": "Zur Anmeldung"
+    },
+    "show": {
+        "error": "Das Teammitglied konnte nicht geladen werden",
+        "tabs_label": "Bereiche des Teammitglieds",
+        "tabs": {
+            "roles": "Rollen & Rechte",
+            "security": "Sicherheit & Sitzungen"
+        },
+        "since": "Im Team seit :date",
+        "last_login": "Zuletzt angemeldet :date",
+        "deactivated_at": "Deaktiviert am :date",
+        "pending_title": "Wartet auf Freigabe",
+        "pending_line": ":title, angefragt von :name, läuft ab :date",
+        "roles_title": "Rollen",
+        "no_roles": "Keine Rolle: Das Konto sieht nur „Mein Konto“.",
+        "atoms_title": "Rechte aus diesen Rollen",
+        "atoms_count": "{1} 1 Recht|[2,*] :count Rechte",
+        "all_atoms": "Owner und Admin haben immer alle Rechte.",
+        "security_title": "Zwei‑Faktor-Schutz",
+        "two_factor_on": "Eingerichtet am :date",
+        "two_factor_off": "Noch nicht eingerichtet. Das Konto kommt erst nach der Einrichtung in den Admin-Bereich.",
+        "sessions_title": "Sitzungen",
+        "sessions_empty": "Keine offene Sitzung.",
+        "session_line": ":browser auf :os",
+        "session_unknown": "Unbekanntes Gerät",
+        "session_current": "diese Sitzung",
+        "session_active": "zuletzt aktiv :date",
+        "own_account": "Das ist dein Konto. Rollen, Sitzungen und Zwei‑Faktor verwaltest du unter „Mein Konto“; anheben kannst du dich nicht selbst.",
+        "own_account_link": "Mein Konto öffnen",
+        "view_only": "Du kannst dieses Teammitglied ansehen, aber nicht ändern.",
+        "owner_view_only": "Ein Owner-Konto ändert nur ein Owner.",
+        "never_signed_in": "Noch nie angemeldet"
+    },
+    "actions": {
+        "roles": "Rollen ändern",
+        "deactivate": "Deaktivieren",
+        "reactivate": "Reaktivieren",
+        "delete": "Löschen",
+        "revoke_sessions": "Alle Sitzungen beenden",
+        "reset_two_factor": "Zwei‑Faktor zurücksetzen",
+        "resend_invite": "Einladung erneut senden",
+        "open": "Öffnen"
+    },
+    "roles_drawer": {
+        "title": "Rollen von :name",
+        "body": "Die neuen Rollen gelten sofort, außer bei Admin, Owner, kritischen Rechten oder einem Owner-Konto: Dann wird eine Freigabe angefragt.",
+        "added": "Neue Rechte",
+        "removed": "Entfallende Rechte",
+        "none": "Keine Änderung an den Rechten.",
+        "four_eyes": "Diese Änderung braucht eine Freigabe durch eine zweite Person:",
+        "why": {
+            "elevates": "Sie gibt Admin, Owner oder ein kritisches Recht.",
+            "owner": "Sie betrifft ein Owner-Konto; ein zweiter Owner gibt frei.",
+            "demotes": "Sie nimmt die Rolle Admin weg."
+        },
+        "reason_optional": "Optional, steht im Audit-Log.",
+        "submit": "Rollen speichern",
+        "submit_four_eyes": "Freigabe anfragen",
+        "self": "Bei deinem eigenen Konto kannst du Rollen nur abgeben, nicht hinzufügen.",
+        "none_added": "Keine neuen Rechte",
+        "none_removed": "Keine Rechte entfallen"
+    },
+    "deactivate": {
+        "title": ":name deaktivieren",
+        "body": "Alle Sitzungen enden sofort, offene Einladungslinks und gestartete Ansichten als Mitglied auch. Rollen bleiben, damit eine Reaktivierung das Konto wiederherstellt.",
+        "four_eyes": "Owner und Admin werden nur nach einer Freigabe deaktiviert."
+    },
+    "reactivate": {
+        "title": ":name reaktivieren",
+        "body": "Das Konto bekommt Zugang mit seinen bisherigen Rollen, seinem Passwort und seinem Zwei‑Faktor-Schutz zurück."
+    },
+    "delete": {
+        "title": ":name löschen",
+        "body": "Name, E‑Mail-Adresse, Passwort, Zwei‑Faktor und Rollen werden entfernt. Das Audit-Log nennt das Konto danach als „Gelöschtes Teammitglied“. Das lässt sich nicht rückgängig machen.",
+        "needs_deactivation": "Deaktiviere das Konto, bevor du es löschst."
+    },
+    "revoke_sessions": {
+        "title": "Alle Sitzungen von :name beenden",
+        "body": "Jede Anmeldung des Kontos endet sofort; zum Weiterarbeiten meldet es sich neu an."
+    },
+    "reset_two_factor": {
+        "title": "Zwei‑Faktor von :name zurücksetzen",
+        "body": "Für eine verlorene Authenticator-App. Nach der Freigabe durch einen zweiten Owner enden alle Sitzungen; das Konto setzt über „Passwort vergessen“ ein neues Passwort und richtet den Zwei‑Faktor-Schutz neu ein."
+    },
+    "resend": {
+        "title": "Einladung an :name erneut senden",
+        "body": "Ein neuer Link ersetzt den alten und gilt wieder 72 Stunden.",
+        "submit": "Neu senden"
+    },
+    "roles_page": {
+        "title": "Rollen",
+        "intro": "Rollen bündeln Rechte. Die sechs Grundrollen bleiben; eigene Rollen legst du mit Beschreibung an. Kritische Rechte gelten erst nach einer Freigabe.",
+        "caption": "Rollen mit Rechten und Teammitgliedern",
+        "create": "Rolle anlegen",
+        "error": "Die Rollen konnten nicht geladen werden",
+        "columns": {
+            "role": "Rolle",
+            "atoms": "Rechte",
+            "staff": "Teammitglieder",
+            "kind": "Art",
+            "actions": "Aktionen"
+        },
+        "kind": {
+            "locked": "Hat alle Rechte",
+            "system": "Grundrolle",
+            "custom": "Eigene Rolle"
+        },
+        "edit": "Bearbeiten",
+        "delete": "Löschen",
+        "empty_custom": "Noch keine eigene Rolle. Lege eine an, wenn eine Aufgabe nicht zu einer Grundrolle passt.",
+        "staff_count": "{0} niemand|{1} 1 Person|[2,*] :count Personen",
+        "atoms_count": "{0} keine|{1} 1 Recht|[2,*] :count Rechte",
+        "in_use": "Noch vergeben: Nimm die Rolle zuerst allen Teammitgliedern weg."
+    },
+    "role_form": {
+        "create_title": "Rolle anlegen",
+        "edit_title": "Rolle :name bearbeiten",
+        "name": "Name",
+        "name_hint": "3 bis 60 Zeichen. Grundrollen behalten ihren Namen.",
+        "description": "Beschreibung",
+        "description_hint": "Wofür die Rolle da ist, bis 500 Zeichen.",
+        "atoms": "Rechte",
+        "atoms_count": "{0} Kein Recht gewählt|{1} 1 Recht gewählt|[2,*] :count Rechte gewählt",
+        "sensitive": "Kritische Rechte (mit Vier-Augen-Symbol) gelten erst nach einer Freigabe durch eine zweite Person.",
+        "reason_hint": "Pflicht, sobald ein kritisches Recht dazukommt. 10 bis 1.000 Zeichen.",
+        "submit": "Speichern",
+        "submit_four_eyes": "Speichern und Freigabe anfragen",
+        "errors": {
+            "name": "Gib einen Namen mit 3 bis 60 Zeichen ein (Buchstaben, Ziffern, Leerzeichen, Punkt, Bindestrich).",
+            "reason": "Für die Freigabe braucht es eine Begründung mit 10 bis 1.000 Zeichen."
+        }
+    },
+    "role_delete": {
+        "title": "Rolle :name löschen",
+        "body": "Die Rolle verschwindet aus der Rechte-Matrix. Das lässt sich nicht rückgängig machen."
+    },
+    "matrix": {
+        "title": "Rechte-Matrix",
+        "intro": "Welche Rolle welche Rechte hat. Vor dem Speichern siehst du, was sich ändert und wie viele Personen das betrifft. Owner und Admin haben immer alle Rechte.",
+        "caption": "Rechte je Rolle",
+        "error": "Die Rechte-Matrix konnte nicht geladen werden",
+        "atom": "Recht",
+        "locked": "alle",
+        "sensitive": "Kritisches Recht: Vergabe nur nach Freigabe",
+        "staff": "{0} niemand|{1} 1 Person|[2,*] :count Personen",
+        "changes": "{0} Keine Änderung|{1} 1 Änderung|[2,*] :count Änderungen",
+        "review": "Änderungen prüfen",
+        "discard": "Verwerfen",
+        "view_only": "Du kannst die Matrix ansehen; ändern dürfen nur Teammitglieder mit „Rollen und Rechte verwalten“.",
+        "cell": ":atom für :role",
+        "scroll": "Rechte-Matrix, seitlich scrollbar",
+        "diff_title": "Änderungen an den Rechten",
+        "diff_body": "So ändert sich die Matrix. Entzogene Rechte und unkritische gelten sofort.",
+        "diff_role": ":role · :staff",
+        "diff_added": "Neu",
+        "diff_removed": "Entfällt",
+        "diff_four_eyes": "Kritische Rechte kommen dazu (:atoms). Die ganze Änderung gilt erst nach einer Freigabe durch eine zweite Person, die keine der Rollen hat.",
+        "diff_total": "{0} Betrifft niemanden|{1} Betrifft 1 Person|[2,*] Betrifft :count Personen",
+        "diff_failed": "Die Änderungen konnten nicht geprüft werden.",
+        "save": "Speichern",
+        "save_four_eyes": "Freigabe anfragen",
+        "reason_optional": "Optional, steht im Audit-Log."
+    },
+    "flash": {
+        "invited": "Einladung gesendet.",
+        "invite_resent": "Neuer Einladungslink gesendet.",
+        "roles_changed": "Rollen gespeichert.",
+        "deactivated": "Konto deaktiviert, alle Sitzungen beendet.",
+        "reactivated": "Konto reaktiviert.",
+        "deleted": "Konto gelöscht.",
+        "sessions_revoked": "Alle Sitzungen beendet.",
+        "two_factor_reset": "Zwei‑Faktor zurückgesetzt.",
+        "role_created": "Rolle angelegt.",
+        "role_saved": "Rolle gespeichert.",
+        "role_deleted": "Rolle gelöscht.",
+        "permissions_saved": "Rechte gespeichert."
+    },
+    "events": {
+        "staff": {
+            "invited": "Eingeladen",
+            "invite_resent": "Einladung erneut gesendet",
+            "invite_accepted": "Einladung angenommen",
+            "roles_changed": "Rollen geändert",
+            "deactivated": "Deaktiviert",
+            "reactivated": "Reaktiviert",
+            "deleted": "Gelöscht",
+            "sessions_revoked": "Alle Sitzungen beendet",
+            "two_factor_reset": "Zwei‑Faktor zurückgesetzt",
+            "two_factor_rotation_started": "Authenticator-Wechsel begonnen",
+            "two_factor_rotated": "Authenticator gewechselt",
+            "two_factor_rotation_cancelled": "Authenticator-Wechsel abgebrochen",
+            "recovery_codes_viewed": "Wiederherstellungscodes angezeigt",
+            "code_check_failed": "Falscher Code",
+            "own_session_revoked": "Eigene Sitzung beendet"
+        },
+        "role": {
+            "created": "Rolle angelegt",
+            "updated": "Rolle geändert",
+            "deleted": "Rolle gelöscht"
+        },
+        "permissions": {
+            "changed": "Rechte geändert"
+        }
+    },
+    "atom_groups": {
+        "members": "Mitglieder",
+        "vehicles": "Fahrzeuge",
+        "media": "Fotos",
+        "catalog": "Katalog",
+        "qr": "QR",
+        "moderation": "Moderation",
+        "support": "Support",
+        "content": "Inhalte",
+        "brand": "Marke",
+        "legal": "Rechtstexte",
+        "flags": "Feature-Flags",
+        "remote_config": "Remote-Konfiguration",
+        "maintenance": "Wartung",
+        "releases": "Releases",
+        "staff": "Team",
+        "roles": "Rollen",
+        "approvals": "Freigaben",
+        "audit": "Audit-Log",
+        "privacy": "Datenschutz",
+        "retention": "Aufbewahrung",
+        "system": "System",
+        "integrations": "Integrationen",
+        "analytics": "Statistiken",
+        "memberships": "Mitgliedschaften",
+        "lists": "Listen"
+    },
+    "atoms": {
+        "members": {
+            "view": "Mitglieder ansehen",
+            "view_pii": "Persönliche Daten sehen",
+            "edit": "Profile bearbeiten",
+            "restrict": "Mitglieder einschränken",
+            "suspend": "Mitglieder sperren",
+            "delete": "Mitglieder löschen",
+            "reset_password": "Link zum Zurücksetzen senden",
+            "revoke_sessions": "Sitzungen von Mitgliedern beenden",
+            "reset_2fa": "Zwei‑Faktor von Mitgliedern zurücksetzen",
+            "view_as": "Ansicht als Mitglied",
+            "export": "Mitgliederdaten exportieren",
+            "message_metadata": "Nachrichten-Metadaten sehen"
+        },
+        "vehicles": {
+            "view": "Fahrzeuge ansehen",
+            "edit": "Fahrzeuge bearbeiten",
+            "hide": "Fahrzeuge ausblenden",
+            "delete": "Fahrzeuge löschen"
+        },
+        "media": {
+            "review": "Fotos prüfen",
+            "hide": "Fotos ausblenden"
+        },
+        "catalog": {
+            "view": "Katalog ansehen",
+            "manage": "Katalog pflegen",
+            "import": "Katalog importieren"
+        },
+        "qr": {
+            "view": "QR-Codes ansehen",
+            "revoke": "QR-Codes sperren"
+        },
+        "moderation": {
+            "view": "Meldungen ansehen",
+            "decide": "Über Meldungen entscheiden",
+            "appeals": "Einsprüche prüfen",
+            "messages": "Gemeldete Nachrichten lesen",
+            "rules": "Wortlisten pflegen",
+            "templates": "Begründungsvorlagen pflegen"
+        },
+        "support": {
+            "view": "Support-Tickets ansehen",
+            "reply": "Auf Tickets antworten",
+            "macros": "Textbausteine pflegen"
+        },
+        "content": {
+            "view": "Inhalte ansehen",
+            "edit": "Inhalte bearbeiten",
+            "publish": "Inhalte veröffentlichen"
+        },
+        "brand": {
+            "manage": "Marke und Design pflegen"
+        },
+        "legal": {
+            "publish": "Rechtstexte veröffentlichen"
+        },
+        "flags": {
+            "manage": "Feature-Flags schalten"
+        },
+        "remote_config": {
+            "manage": "Remote-Konfiguration pflegen"
+        },
+        "maintenance": {
+            "toggle": "Wartungsmodus schalten"
+        },
+        "releases": {
+            "manage": "Releases pflegen"
+        },
+        "staff": {
+            "view": "Team ansehen",
+            "invite": "Teammitglieder einladen",
+            "manage": "Teammitglieder verwalten"
+        },
+        "roles": {
+            "manage": "Rollen und Rechte verwalten"
+        },
+        "approvals": {
+            "decide": "Vier-Augen-Anfragen freigeben"
+        },
+        "audit": {
+            "view": "Audit-Log ansehen",
+            "export": "Audit-Log exportieren"
+        },
+        "privacy": {
+            "view": "DSGVO-Anfragen ansehen",
+            "process": "DSGVO-Anfragen bearbeiten"
+        },
+        "retention": {
+            "manage": "Aufbewahrungsfristen ändern"
+        },
+        "system": {
+            "view": "Systemzustand ansehen",
+            "jobs": "Jobs wiederholen oder verwerfen"
+        },
+        "integrations": {
+            "view": "Integrationen ansehen und testen"
+        },
+        "analytics": {
+            "view": "Statistiken ansehen"
+        },
+        "memberships": {
+            "manage": "Mitgliedschaften verwalten"
+        },
+        "lists": {
+            "export": "Listen als CSV exportieren"
+        }
+    }
+}

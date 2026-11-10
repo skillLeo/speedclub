@@ -1,0 +1,365 @@
+{
+    "nav": {
+        "requests": "GDPR requests",
+        "retention": "Retention"
+    },
+    "types": {
+        "access": "Access",
+        "export": "Data export",
+        "erasure": "Erasure",
+        "rectification": "Rectification",
+        "objection": "Objection",
+        "restriction": "Restriction"
+    },
+    "article": "Art. :article GDPR",
+    "status": {
+        "open": "Open",
+        "in_progress": "In progress",
+        "waiting": "Waiting for reply",
+        "completed": "Completed",
+        "rejected": "Rejected"
+    },
+    "sources": {
+        "email": "E‑mail",
+        "post": "Letter",
+        "support": "Support ticket",
+        "other": "Other"
+    },
+    "due": {
+        "in_days": "{0} due today|{1} 1 day left|[2,*] :count days left",
+        "overdue": "{1} 1 day overdue|[2,*] :count days overdue",
+        "extended": "extended",
+        "done": "done on :date"
+    },
+    "requests": {
+        "title": "GDPR requests",
+        "intro": "Access, export, erasure, rectification, objection and restriction. Answer within one month of receipt, extendable once by two months (Art. 12(3) GDPR).",
+        "caption": "GDPR requests by due date",
+        "create": "Record request",
+        "counts": {
+            "open": "Open: :count",
+            "due_soon": "Due ≤ :days days: :count",
+            "overdue": "Overdue: :count"
+        },
+        "empty_title": "No request",
+        "empty_body": "Record requests that come by e‑mail, letter or support here. Exports and deletions from the app are listed below.",
+        "columns": {
+            "request": "Request",
+            "requester": "From",
+            "received": "Received",
+            "due": "Due",
+            "status": "Status",
+            "assigned": "Assignee"
+        },
+        "presets": {
+            "open": "Open",
+            "due_soon": "Due ≤ 7 days",
+            "overdue": "Overdue",
+            "mine": "Assigned to me"
+        },
+        "filters": {
+            "label": "Filter requests",
+            "q": "Search",
+            "q_placeholder": "DS number, name or @username",
+            "status": "Status",
+            "open": "All open",
+            "type": "Type",
+            "due": "Due",
+            "due_soon": "≤ 7 days",
+            "overdue": "Overdue",
+            "assigned": "Assignee",
+            "me": "Me",
+            "none": "Nobody",
+            "any": "All",
+            "apply": "Apply"
+        },
+        "external": "External person",
+        "deleted_member": "Deleted account",
+        "nobody": "–",
+        "you": "You",
+        "self_title": "Done in the app",
+        "self_body": "Data exports and account deletions that members started themselves in the settings. For the overview only, no further steps.",
+        "self_caption": "Self-service requests from the app",
+        "self_empty": "No exports or deletions from the app yet.",
+        "self_kind": {
+            "export": "Data export",
+            "erasure": "Account deletion"
+        },
+        "self_columns": {
+            "kind": "Type",
+            "member": "Member",
+            "at": "Started",
+            "status": "Status"
+        },
+        "self_done": "Completed"
+    },
+    "create": {
+        "title": "Record request",
+        "body": "The deadline starts on receipt and ends one month later.",
+        "type": "Type of request",
+        "source": "Received by",
+        "who": "From whom",
+        "who_member": "Member",
+        "who_external": "External person",
+        "member": "Username",
+        "member_hint": "With or without @, e.g. @lukas.sc",
+        "member_unknown": "There is no member with this username.",
+        "name": "Name",
+        "email": "E‑mail address",
+        "email_hint": "Replies go there.",
+        "locale": "Language of the replies",
+        "received": "Received on",
+        "received_hint": "Leave empty for today. At most one year back.",
+        "details": "What was asked",
+        "details_hint": "What the person asks for, up to 5,000 characters.",
+        "submit": "Create request",
+        "errors": {
+            "member": "Enter a username.",
+            "email": "Enter a valid e‑mail address."
+        }
+    },
+    "request": {
+        "error": "The request could not be loaded",
+        "tabs_label": "Sections of the request",
+        "tabs": {
+            "request": "Request",
+            "reply": "Replies",
+            "complete": "Closing"
+        },
+        "received": "Received :date",
+        "due": "Due :date",
+        "source": "by :source",
+        "requester_title": "From",
+        "member_link": "Open member",
+        "address": "Replies to :email",
+        "no_address": "No e‑mail address known: replies cannot be sent.",
+        "details_title": "Content",
+        "no_details": "No text recorded.",
+        "deadline_title": "Deadline",
+        "deadline_line": "Received :received, answer by :due",
+        "extended_line": "Extended by two months on :date: :reason",
+        "extend_hint": "Possible once, before the first deadline ends. Then send the reply “Extension”.",
+        "handling_title": "Assignee and status",
+        "assignee": "Assignee",
+        "nobody": "Nobody",
+        "status": "Status",
+        "save": "Apply",
+        "linked_title": "Linked",
+        "export_status": "Data export: :status",
+        "approval_status": "Erasure (four-eyes): :status",
+        "export_states": {
+            "queued": "waiting",
+            "running": "being built",
+            "ready": "sent by e‑mail",
+            "failed": "failed",
+            "expired": "expired"
+        },
+        "reply_title": "Reply with a template",
+        "reply_body": "The template names the DS number and the deadline. Only the fact that the reply was sent is stored, not its text.",
+        "template": "Template",
+        "reply_locale": "Language",
+        "detail": "Own paragraph",
+        "detail_hint": "Optional, up to 2,000 characters, below the template text.",
+        "templates": {
+            "received": "Acknowledgement",
+            "identity": "Request for proof of identity",
+            "extension": "Extension of the deadline",
+            "completed": "Done",
+            "rejected": "Refusal with redress"
+        },
+        "template_about": {
+            "received": "Confirms receipt and names the deadline.",
+            "identity": "Asks for proof that the request comes from the person themselves.",
+            "extension": "Announces the two-month extension with its reason. Only after “Extend deadline”.",
+            "completed": "Says that the request is done.",
+            "rejected": "Gives the grounds and the way to the supervisory authority and the court. Only after “Reject”."
+        },
+        "template_unavailable": "This template fits only later.",
+        "send": "Send reply",
+        "last_reply": "Last replied :date",
+        "complete_title": "Close",
+        "complete_body": "Closing needs evidence: a note, a file or both. A refusal needs its grounds as a note.",
+        "outcome": "Outcome",
+        "outcomes": {
+            "completed": "Done",
+            "rejected": "Rejected"
+        },
+        "note": "Note",
+        "note_hint": "What was done and when, 10 to 5,000 characters.",
+        "file": "File",
+        "file_hint": "PDF, image, text or ZIP, up to 10 MB. Stored privately; only team members with the privacy permission download it.",
+        "file_choose": "Choose file",
+        "file_none": "No file chosen",
+        "file_remove": "Remove file",
+        "complete_submit": "Close request",
+        "reject_submit": "Reject",
+        "evidence_title": "Evidence",
+        "evidence_note": "Note",
+        "evidence_file": "File",
+        "download": "Download",
+        "no_evidence": "No evidence stored.",
+        "final": "This request is closed. It stays with its evidence as long as set under “Retention”.",
+        "view_only": "You can view the request; team members with “Process GDPR requests” work on it.",
+        "errors": {
+            "note": "The note needs 10 to 5,000 characters.",
+            "evidence": "Add evidence: a note or a file.",
+            "reject_note": "A refusal needs its grounds as a note (10 to 5,000 characters)."
+        },
+        "reply_to": "Goes to :email",
+        "no_member_address": "The account has no reachable e‑mail address: replies cannot be sent."
+    },
+    "actions": {
+        "extend": "Extend deadline",
+        "export": "Send export",
+        "erasure": "Ask for erasure"
+    },
+    "extend": {
+        "title": "Extend the deadline by two months",
+        "body": "New deadline: :date. Possible only once. Then send the reply “Extension of the deadline” with the reason."
+    },
+    "export": {
+        "title": "Send the data export to the member",
+        "body": "The member gets their data export by e‑mail as in the app, with a link that works for 7 days. The team does not see the file. Check the identity first.",
+        "submit": "Send export"
+    },
+    "erasure": {
+        "title": "Ask for the account’s erasure",
+        "body": "After a second person approves, the account closes at once and is deleted for good within 30 days, as with a deletion in the app. Then close the request with evidence."
+    },
+    "retention": {
+        "title": "Retention",
+        "intro": "How long data stays before the daily clean-up jobs delete it. Every value lies between the legal or technical minimum and what the privacy policy promises.",
+        "caption": "Retention periods",
+        "error": "The periods could not be loaded",
+        "editable_title": "Adjustable",
+        "fixed_title": "Fixed",
+        "fixed_body": "These periods are set by technology, law or the hosting and cannot be changed here.",
+        "columns": {
+            "area": "Area",
+            "period": "Period",
+            "bounds": "Allowed",
+            "default": "Default"
+        },
+        "bounds": ":min to :max",
+        "changed": "changed",
+        "last": "Version :version, published :date by :name",
+        "never": "The default values apply.",
+        "save": "Save",
+        "discard": "Discard",
+        "confirm_title": "Save periods",
+        "confirm_body": "The new periods apply from the next run of the clean-up jobs. The change goes into the audit log with its reason.",
+        "view_only": "You can view the periods; team members with “Change retention periods” change them.",
+        "out_of_bounds": "Allowed are :min to :max.",
+        "units": {
+            "hours": "{1} 1 hour|[2,*] :count hours",
+            "days": "{1} 1 day|[2,*] :count days",
+            "months": "{1} 1 month|[2,*] :count months"
+        },
+        "unit_names": {
+            "hours": "hours",
+            "days": "days",
+            "months": "months"
+        },
+        "keys": {
+            "accounts_hard_delete_days": {
+                "label": "Deleted accounts",
+                "note": "Then deleted for good. At least 7 days, so long the data export stays available after the deletion request; at most 30 days as the privacy policy says."
+            },
+            "deleted_vehicles_days": {
+                "label": "Deleted vehicles",
+                "note": "Data and photos of deleted vehicles. At most 30 days as the privacy policy says."
+            },
+            "deleted_media_days": {
+                "label": "Deleted photos",
+                "note": "Photos members deleted. At most 30 days as the privacy policy says."
+            },
+            "unverified_accounts_days": {
+                "label": "Unconfirmed accounts",
+                "note": "Accounts without a confirmed e‑mail address. At least 2 days so the confirmation link stays usable; at most 7 days."
+            },
+            "known_devices_months": {
+                "label": "Known devices",
+                "note": "For the notice about a sign-in from a new device. At most 12 months."
+            },
+            "support_tickets_months": {
+                "label": "Support tickets",
+                "note": "Closed tickets. At least 6 months for follow-up questions, at most 24 months as the privacy policy says."
+            },
+            "audit_access_months": {
+                "label": "IP addresses in the audit log",
+                "note": "IP address and browser of team members for audit events, outside the hash chain. 6 to 12 months."
+            },
+            "privacy_requests_months": {
+                "label": "GDPR requests",
+                "note": "Closed requests with evidence. At least 36 months: accountability (Art. 5(2) GDPR) for the 3-year limitation period (§ 195 BGB)."
+            },
+            "verification_codes": {
+                "label": "Verification codes",
+                "note": "Fixed by technology."
+            },
+            "idempotency_keys": {
+                "label": "Protection against duplicate requests",
+                "note": "Fixed by technology."
+            },
+            "sanctum_tokens": {
+                "label": "Expired sign-in tokens",
+                "note": "Deleted every day.",
+                "value": "daily"
+            },
+            "messages_of_deleted_members": {
+                "label": "Messages of deleted members",
+                "note": "The other side keeps its copy; the sender appears anonymous.",
+                "value": "with the other side"
+            },
+            "audit_events": {
+                "label": "Audit events",
+                "note": "With the daily exports of the hash chain."
+            },
+            "audit_archive": {
+                "label": "Audit log archive",
+                "note": "Then an archived export, up to this age."
+            },
+            "moderation_cases": {
+                "label": "Moderation cases",
+                "note": "For legal defence. The period is still with legal counsel."
+            },
+            "qr_scans": {
+                "label": "QR scans",
+                "note": "Only counted views per day, no personal data.",
+                "value": "totals only"
+            },
+            "application_logs": {
+                "label": "Server logs",
+                "note": "Set by the hosting."
+            },
+            "backups": {
+                "label": "Backups",
+                "note": "Set by the hosting."
+            }
+        }
+    },
+    "flash": {
+        "created": "Request created. The deadline is running.",
+        "updated": "Saved.",
+        "extended": "Deadline extended. Now send the reply “Extension of the deadline”.",
+        "replied": "Reply sent.",
+        "export_sent": "The export is being built and sent to the member by e‑mail.",
+        "completed": "Request closed.",
+        "rejected": "Request rejected. Now send the reply “Refusal”.",
+        "retention_saved": "Periods saved."
+    },
+    "events": {
+        "privacy": {
+            "request_created": "Request recorded",
+            "request_assigned": "Assignee changed",
+            "request_extended": "Deadline extended",
+            "request_status_changed": "Status changed",
+            "request_completed": "Closed",
+            "reply_sent": "Reply sent",
+            "evidence_viewed": "Evidence downloaded",
+            "export_sent": "Export sent",
+            "erasure_requested": "Erasure requested",
+            "request_viewed": "Viewed"
+        }
+    }
+}

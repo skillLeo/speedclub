@@ -1,0 +1,139 @@
+{
+    "actions": {
+        "cancel": "Abbrechen",
+        "close": "Schließen",
+        "done": "Fertig"
+    },
+    "field": {
+        "optional": "optional",
+        "count": ":count / :max"
+    },
+    "dialog": {
+        "close": "Schließen"
+    },
+    "combobox": {
+        "open": "Auswahl öffnen",
+        "empty": "Keine passenden Einträge"
+    },
+    "toast": {
+        "region": "Benachrichtigungen",
+        "dismiss": "Benachrichtigung schließen"
+    },
+    "confirm": {
+        "typed_word": "LÖSCHEN",
+        "typed_label": "Zur Bestätigung „:word“ eingeben",
+        "reason": "Begründung",
+        "reason_hint": "Steht im Audit-Log. 10 bis 1.000 Zeichen.",
+        "reason_length": "Die Begründung braucht 10 bis 1.000 Zeichen.",
+        "reason_length_max": "Die Begründung braucht 10 bis :max Zeichen.",
+        "four_eyes": "Vier-Augen-Prinzip: Es wird nur eine Freigabe angefragt. Ausgeführt wird erst, wenn ein zweites Teammitglied zustimmt (innerhalb von 24 Stunden).",
+        "request": "Freigabe anfragen"
+    },
+    "state": {
+        "error_title": "Das hat nicht geklappt",
+        "error_body": "Die Daten konnten nicht geladen werden. Versuche es erneut.",
+        "retry": "Erneut versuchen",
+        "reloading": "Wird neu geladen …",
+        "server_error": "Der Server hat nicht geantwortet. Es wurde nichts geändert; versuche es erneut."
+    },
+    "table": {
+        "columns": "Spalten",
+        "count": "{1} 1 Eintrag|[2,*] :count Einträge",
+        "export": "Exportieren",
+        "select_page": "Alle Zeilen dieser Seite auswählen",
+        "select_row": "Zeile auswählen",
+        "no_results_title": "Keine Treffer für diese Filter",
+        "no_results_body": "Ändere die Filter oder setze sie zurück.",
+        "reset_filters": "Filter zurücksetzen",
+        "bulk": {
+            "region": "Auswahl",
+            "selected": ":count ausgewählt",
+            "clear": "Auswahl aufheben",
+            "four_eyes": "Mehr als 100 Datensätze: Die Aktion braucht eine Freigabe."
+        },
+        "views": {
+            "label": "Ansichten",
+            "manage": "Ansichten verwalten",
+            "manage_body": "Speichere Filter, Sortierung und Seitengröße unter einem Namen. Nur du siehst deine Ansichten.",
+            "name": "Name der Ansicht",
+            "name_short": "Der Name braucht mindestens 2 Zeichen.",
+            "save": "Aktuelle speichern",
+            "saved": "Ansicht gespeichert",
+            "deleted": "Ansicht gelöscht",
+            "delete": "Ansicht „:name“ löschen",
+            "none": "Noch keine eigenen Ansichten."
+        },
+        "export_csv": "CSV, Adressen maskiert",
+        "export_menu": "Exportieren",
+        "scroll_hint": "Die Tabelle ist breiter als die Spalte: seitlich scrollen."
+    },
+    "pagination": {
+        "label": "Seiten",
+        "range": ":from–:to von :total",
+        "none": "Keine Einträge",
+        "per_page": "Pro Seite",
+        "page": "Seite :page von :last",
+        "previous": "Vorherige Seite",
+        "next": "Nächste Seite"
+    },
+    "kpi": {
+        "delta": "Veränderung zum Vorzeitraum: "
+    },
+    "chart": {
+        "legend": "Legende",
+        "label": "Tag",
+        "empty": "Noch keine Daten für diesen Zeitraum",
+        "error": "Diagramm konnte nicht geladen werden"
+    },
+    "diff": {
+        "empty": "Keine Änderungen gespeichert.",
+        "change": "Art der Änderung",
+        "field": "Feld",
+        "line": "Zeile",
+        "before": "Vorher",
+        "after": "Nachher",
+        "kind_added": "hinzugefügt",
+        "kind_removed": "entfernt",
+        "kind_changed": "geändert",
+        "none_changed": "Kein Feld geändert.",
+        "unchanged_hidden": ":count unverändertes Feld ausgeblendet|:count unveränderte Felder ausgeblendet",
+        "unchanged_shown": ":count unverändertes Feld eingeblendet|:count unveränderte Felder eingeblendet",
+        "show_all": "Alle Felder anzeigen",
+        "show_changed": "Nur Änderungen anzeigen"
+    },
+    "timeline": {
+        "title": "Aktivität",
+        "empty": "Noch keine Aktivität zu diesem Datensatz.",
+        "error": "Aktivität konnte nicht geladen werden",
+        "more": "Alles im Audit-Log",
+        "system": "System",
+        "times": ":count×",
+        "show_more": ":count weitere anzeigen"
+    },
+    "approval": {
+        "requested": "Freigabe angefragt: :title",
+        "next": "Ein zweites Teammitglied muss bis :until zustimmen. Erst dann wird die Aktion ausgeführt; du bekommst einen Hinweis.",
+        "preview_title": "Braucht eine Freigabe",
+        "preview_body": "Diese Aktion fällt unter das Vier-Augen-Prinzip. Sie wird erst ausgeführt, wenn ein zweites Teammitglied zustimmt.",
+        "open_queue": "Zu den Freigaben",
+        "already": "Diese Anfrage wartet schon auf Freigabe: :title"
+    },
+    "bulk": {
+        "summary": ":done erledigt, :failed fehlgeschlagen",
+        "partial": "Nicht alle Datensätze wurden geändert",
+        "record": "Datensatz",
+        "reason": "Grund"
+    },
+    "date": {
+        "placeholder": "TT.MM.JJJJ",
+        "from": "Von",
+        "to": "Bis"
+    },
+    "time": {
+        "just_now": "gerade eben"
+    },
+    "tabs": {
+        "more": "Mehr",
+        "more_label": "Mehr: :count weitere Bereiche"
+    }
+}

@@ -1,0 +1,100 @@
+{
+    "brand": "SPEED CLUB",
+    "brand_suffix": "Admin",
+    "build": "Build :version",
+    "breadcrumb": "Brotkrumen",
+    "skip": "Zum Inhalt springen",
+    "sidebar": "Hauptnavigation",
+    "menu": "Navigation öffnen",
+    "groups": {
+        "overview": "Übersicht",
+        "members": "Mitglieder",
+        "vehicles_media": "Fahrzeuge & Medien",
+        "catalog": "Katalog",
+        "qr": "QR",
+        "moderation": "Moderation",
+        "support": "Support",
+        "brand_content": "Marke & Inhalte",
+        "configuration": "Konfiguration",
+        "team": "Team & Rollen",
+        "audit_privacy": "Audit & Datenschutz",
+        "system": "System",
+        "settings": "Einstellungen"
+    },
+    "nav": {
+        "label": "Bereiche",
+        "dashboard": "Dashboard",
+        "search": "Suche",
+        "alerts": "Hinweise",
+        "audit": "Audit-Log",
+        "gallery": "Komponenten",
+        "badge": " offen"
+    },
+    "search": {
+        "open": "Suche öffnen",
+        "placeholder": "Mitglied, Fahrzeug, QR-Code oder Fall suchen"
+    },
+    "env": {
+        "local": "LOCAL",
+        "staging": "STAGING",
+        "prod": "PROD",
+        "local_title": "Lokale Entwicklungsumgebung",
+        "staging_title": "Testumgebung: Änderungen erreichen keine echten Mitglieder",
+        "prod_title": "Live-System: Änderungen wirken sofort für alle Mitglieder"
+    },
+    "theme": {
+        "to_light": "Helles Design",
+        "to_carbon": "Dunkles Design (Carbon)"
+    },
+    "locale": {
+        "label": "Sprache",
+        "de": "DE",
+        "en": "EN",
+        "separator": ", ",
+        "de_name": "Deutsch",
+        "en_name": "Englisch"
+    },
+    "staff": {
+        "account": "Mein Konto",
+        "sign_out": "Abmelden"
+    },
+    "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "moderator": "Moderation",
+        "support": "Support",
+        "content_editor": "Redaktion",
+        "analyst": "Analyse"
+    },
+    "idle": {
+        "title": "Sitzung läuft ab",
+        "body": "Du warst eine Weile inaktiv. In :time wirst du aus Sicherheitsgründen abgemeldet.",
+        "extend": "Sitzung verlängern",
+        "failed": "Die Sitzung konnte nicht verlängert werden. Melde dich bitte neu an."
+    },
+    "password": {
+        "title": "Passwort bestätigen",
+        "body": "Diese Aktion ist geschützt. Bestätige dein Passwort, dann wird sie ausgeführt.",
+        "label": "Passwort",
+        "submit": "Bestätigen und fortfahren",
+        "required": "Gib dein Passwort ein.",
+        "failed": "Das Passwort stimmt nicht.",
+        "throttled": "Zu viele Versuche. Warte kurz und versuche es dann erneut."
+    },
+    "palette": {
+        "title": "Befehlspalette",
+        "description": "Seiten öffnen und Datensätze finden",
+        "input": "Seite oder Datensatz suchen",
+        "placeholder": "Wohin? Seite, @username, Kennung, QR-Code …",
+        "results": "Treffer",
+        "empty": "Nichts gefunden.",
+        "failed": "Die Suche hat nicht geantwortet. Versuche es erneut.",
+        "all_results": "Alle Treffer für „:q“",
+        "open": "öffnen",
+        "copy": "Link kopieren",
+        "move": "wählen",
+        "esc": "Esc",
+        "copied": "Link kopiert",
+        "copy_failed": "Der Link konnte nicht kopiert werden."
+    }
+}

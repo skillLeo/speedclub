@@ -1,0 +1,83 @@
+{
+    "nav": {
+        "title": "Media review"
+    },
+    "title": "Media review",
+    "intro": "Approve or hide new photos. Chat photos never show here.",
+    "queue": "Photos to review",
+    "error": "The photos could not be loaded",
+    "tabs": {
+        "label": "Queues",
+        "new": "New",
+        "reported": "Reported",
+        "hidden": "Hidden"
+    },
+    "keys": {
+        "move": "next / previous photo",
+        "approve": "approve",
+        "hide": "hide",
+        "key_j": "J",
+        "key_k": "K",
+        "key_a": "A",
+        "key_h": "H",
+        "scope": "In the list:"
+    },
+    "empty": {
+        "new_title": "All reviewed",
+        "new_body": "New uploads show here, newest first.",
+        "reported_title": "No reported photos",
+        "reported_body": "Photos with an open case show here.",
+        "hidden_title": "No hidden photos",
+        "hidden_body": "Photos a decision removed show here."
+    },
+    "card_label": "Photo by :owner, :date",
+    "photo_alt": "Uploaded photo",
+    "removed": "Photo removed",
+    "reports": ":count reports",
+    "ai_score": "AI suggestion :score %",
+    "kinds": {
+        "vehicle": "Vehicle photo",
+        "modification": "Mod photo",
+        "build_update": "Build update",
+        "user": "Profile picture",
+        "profile": "Profile picture"
+    },
+    "categories": {
+        "exterior": "Exterior",
+        "interior": "Interior",
+        "engine": "Engine",
+        "wheels": "Wheels",
+        "detail": "Detail",
+        "other": "Other"
+    },
+    "status": {
+        "approved": "Approved",
+        "hidden": "Hidden"
+    },
+    "actions": {
+        "approve": "Approve",
+        "hide": "Hide",
+        "unhide": "Unhide",
+        "hide_key": "Hide (H)"
+    },
+    "flash": {
+        "approved": "Approved.",
+        "hidden": "Hidden. The owner was told.",
+        "unhidden": "Visible again. The owner was told.",
+        "not_possible": "That is not possible for this photo right now."
+    },
+    "hide": {
+        "title": "Hide photo",
+        "body": "The photo is removed at once; the original stays private for an appeal. The owner reads the statement."
+    },
+    "unhide": {
+        "title": "Unhide photo",
+        "body": "A new decision lifts the hiding; the photo is drawn again from the original. The owner is told."
+    },
+    "position": ":n of :total",
+    "reveal": "Show",
+    "reveal_note": "Original, showing it is logged",
+    "reveal_failed": "The original could not be loaded.",
+    "hidden_line": "Hidden on :date · :ground",
+    "hidden_since": "Hidden on :date"
+}

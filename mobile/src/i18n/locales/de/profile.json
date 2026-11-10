@@ -1,0 +1,185 @@
+{
+    "title": "Profil",
+    "memberSince": "Mitglied seit {{date}}",
+    "offline": "Offline – du siehst dein Profil, wie es zuletzt geladen wurde.",
+    "stats": {
+        "vehicles_one": "Fahrzeug",
+        "vehicles_other": "Fahrzeuge",
+        "followers_one": "Follower",
+        "followers_other": "Follower",
+        "following": "Folge ich",
+        "followingLink": "{{label}} – Konten anzeigen, denen du folgst",
+        "followingOther": "Gefolgt",
+        "followingLinkOther": "{{label}} – Konten anzeigen, denen {{name}} folgt",
+        "followersLink": "{{label}} – Liste anzeigen"
+    },
+    "actions": {
+        "edit": "Profil bearbeiten",
+        "view": "Profil ansehen",
+        "share": "Profil teilen",
+        "qr": "Meine QR-⁠Codes"
+    },
+    "share": {
+        "title": "{{name}} auf SPEED CLUB",
+        "copied": "Link zu deinem Profil kopiert",
+        "failed": "Teilen hat nicht geklappt. Dein Profil: {{url}}"
+    },
+    "garage": {
+        "title": "Garage",
+        "all": "Alle anzeigen",
+        "emptyTitle": "Füge dein erstes Auto hinzu",
+        "emptyBody": "Dokumentiere Technik und Mods und erhalte deinen persönlichen QR-⁠Code.",
+        "add": "Fahrzeug hinzufügen",
+        "errorTitle": "Deine Fahrzeuge konnten nicht geladen werden",
+        "errorBody": "Prüfe deine Verbindung und versuche es noch einmal."
+    },
+    "rows": {
+        "qrCodes": "Meine QR-⁠Codes",
+        "settings": "Einstellungen",
+        "addVehicle": "Fahrzeug hinzufügen",
+        "saved": "Gespeichert"
+    },
+    "guest": {
+        "title": "Dein Profil bei SPEED CLUB",
+        "body": "Melde dich an, um deine Garage, deine Mods und deine QR-⁠Codes an einem Ort zu haben.",
+        "signIn": "Anmelden",
+        "signUp": "Konto erstellen",
+        "offline": "Offline – zum Anmelden brauchst du eine Verbindung."
+    },
+    "restricted": "Dein Konto ist eingeschränkt. Dein Profil kannst du gerade nicht ändern.",
+    "restrictedUntil": "Dein Konto ist bis zum {{date}} Uhr eingeschränkt. So lange kannst du dein Profil nicht ändern.",
+    "error": {
+        "title": "Dein Profil konnte nicht geladen werden",
+        "offlineTitle": "Du bist offline",
+        "offlineBody": "Sobald du wieder online bist, laden wir dein Profil."
+    },
+    "edit": {
+        "title": "Profil bearbeiten",
+        "save": "Speichern",
+        "saved": "Profil gespeichert",
+        "offline": "Offline – zum Speichern brauchst du eine Verbindung.",
+        "serverError": "Das hat gerade nicht geklappt. Versuch es gleich noch einmal.",
+        "usernameOnly": "Dein Benutzername ist geändert, deine anderen Änderungen noch nicht. Tippe noch einmal auf Speichern.",
+        "photos": {
+            "avatar": "Profilbild ändern",
+            "avatarAdd": "Profilbild hinzufügen",
+            "cover": "Titelbild ändern",
+            "coverAdd": "Titelbild hinzufügen",
+            "avatarUploading": "Profilbild wird hochgeladen, {{percent}} %",
+            "coverUploading": "Titelbild wird hochgeladen, {{percent}} %",
+            "avatarSaved": "Profilbild aktualisiert",
+            "coverSaved": "Titelbild aktualisiert",
+            "hint": "Profilbild quadratisch, Titelbild im Format 3:1. JPEG, PNG oder WebP bis 15 MB.",
+            "failed": "Das Foto konnte nicht hochgeladen werden. Versuch es noch einmal oder wähle ein anderes.",
+            "retry": "Erneut versuchen"
+        },
+        "fields": {
+            "displayName": "Name",
+            "displayNameHelper": "So erscheinst du auf deinem Profil.",
+            "username": "Benutzername",
+            "usernameHelper": "Du kannst ihn alle 30 Tage ändern. Links mit deinem alten Namen funktionieren danach noch 14 Tage.",
+            "usernameCooldown": "Du kannst deinen Benutzernamen ab dem {{date}} Uhr wieder ändern.",
+            "usernameAvailable": "Dieser Name ist frei.",
+            "usernameCheckFailed": "Wir konnten den Namen gerade nicht prüfen. Das holen wir beim Speichern nach.",
+            "city": "Stadt",
+            "cityHelper": "Zeigt anderen, wo deine Autos zu Hause sind.",
+            "bio": "Über dich",
+            "bioCount": "{{count}} von {{max}} Zeichen"
+        },
+        "validation": {
+            "displayNameTooLong": "Dein Name darf höchstens 60 Zeichen haben.",
+            "cityTooLong": "Die Stadt darf höchstens 100 Zeichen haben.",
+            "bioTooLong": "Dein Text darf höchstens 500 Zeichen haben."
+        }
+    },
+    "follow": {
+        "follow": "Folgen",
+        "following": "Folge ich",
+        "followName": "Folgen – {{name}}",
+        "followingName": "Folge ich – {{name}} nicht mehr folgen",
+        "failed": "Das hat gerade nicht geklappt. Versuch es gleich noch einmal."
+    },
+    "member": {
+        "followsYou": "Folgt dir",
+        "message": "Nachricht",
+        "more": "Weitere Aktionen",
+        "share": "Profil teilen",
+        "block": "Blockieren",
+        "shareCopied": "Link zum Profil kopiert",
+        "messageUnverified": "Bestätige deine E-⁠Mail-Adresse, dann kannst du Nachrichten schreiben.",
+        "messageRestricted": "Dein Konto ist gerade für Nachrichten eingeschränkt.",
+        "messageClosed": "{{name}} nimmt gerade keine Nachrichten von dir an.",
+        "garageError": "Die Fahrzeuge konnten nicht geladen werden",
+        "garageEmpty": "Noch keine öffentlichen Fahrzeuge.",
+        "unavailableTitle": "Profil nicht verfügbar",
+        "unavailableBody": "Es wurde entfernt oder ist gerade nicht sichtbar.",
+        "unavailableAction": "Builds entdecken",
+        "errorTitle": "Das Profil konnte nicht geladen werden",
+        "offlineBody": "Dieses Profil ist noch nicht auf deinem Gerät. Sobald du online bist, laden wir es.",
+        "offlineBanner": "Offline – du siehst das Profil, wie es zuletzt geladen wurde.",
+        "ownProfile": "Zu deinem Profil"
+    },
+    "connections": {
+        "followers": "Follower",
+        "following": "Folge ich",
+        "followersCount_one": "Follower ({{value}})",
+        "followersCount_other": "Follower ({{value}})",
+        "followingCount": "Folge ich ({{value}})",
+        "tabsLabel": "Follower und Folge ich",
+        "searchFollowers": "Follower durchsuchen",
+        "searchFollowing": "Suchen, wem du folgst",
+        "remove": "Entfernen",
+        "removeName": "{{name}} als Follower entfernen",
+        "selfName": "{{name}} · Du",
+        "removeTitle": "{{name}} als Follower entfernen?",
+        "removeBody": "{{name}} folgt dir dann nicht mehr und wird nicht benachrichtigt.",
+        "cancel": "Abbrechen",
+        "removed": "{{name}} folgt dir nicht mehr",
+        "removeFailed": "Das Entfernen hat nicht geklappt. Versuch es noch einmal.",
+        "errorTitle": "Die Liste konnte nicht geladen werden",
+        "offlineBody": "Die Liste ist noch nicht auf deinem Gerät. Sobald du online bist, laden wir sie.",
+        "offlineBanner": "Offline – du siehst die Liste, wie sie zuletzt geladen wurde.",
+        "noResults": "Keine Treffer für „{{q}}“",
+        "noResultsBody": "Prüfe die Schreibweise oder suche nach einem anderen Namen.",
+        "discover": "Mitglieder entdecken",
+        "empty": {
+            "own": {
+                "followers": {
+                    "title": "Noch keine Follower",
+                    "body": "Sobald dir jemand folgt, siehst du es hier."
+                },
+                "following": {
+                    "title": "Du folgst noch niemandem",
+                    "body": "Folge Mitgliedern, deren Builds du nicht verpassen willst."
+                }
+            },
+            "other": {
+                "followers": {
+                    "title": "{{name}} hat noch keine Follower",
+                    "body": "Hier erscheinen alle, die {{name}} folgen."
+                },
+                "following": {
+                    "title": "{{name}} folgt noch niemandem",
+                    "body": "Hier erscheinen alle, denen {{name}} folgt."
+                }
+            }
+        },
+        "followingOther": "Gefolgt",
+        "followingCountOther": "Gefolgt ({{value}})",
+        "searchFollowingOther": "Gefolgte Konten durchsuchen",
+        "tabsLabelOther": "Follower und Gefolgt"
+    },
+    "saved": {
+        "title": "Gespeichert",
+        "remove": "{{name}} aus „Gespeichert“ entfernen",
+        "removed": "{{name}} aus „Gespeichert“ entfernt",
+        "failed": "Das hat gerade nicht geklappt. Versuch es gleich noch einmal.",
+        "errorTitle": "Deine gespeicherten Builds konnten nicht geladen werden",
+        "offlineBody": "Die Liste ist noch nicht auf deinem Gerät. Sobald du online bist, laden wir sie.",
+        "offlineBanner": "Offline – du siehst deine Liste, wie sie zuletzt geladen wurde.",
+        "emptyTitle": "Noch nichts gespeichert",
+        "emptyBody": "Speichere Builds, die du dir merken willst. Nur du siehst diese Liste.",
+        "discover": "Builds entdecken",
+        "since": "Gespeichert am {{date}}"
+    }
+}

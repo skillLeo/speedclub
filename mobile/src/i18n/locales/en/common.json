@@ -1,0 +1,196 @@
+{
+    "tabs": {
+        "home": "Home",
+        "discover": "Discover",
+        "garage": "Garage",
+        "messages": "Messages",
+        "profile": "Profile"
+    },
+    "actions": {
+        "back": "Back",
+        "retry": "Try again",
+        "cancel": "Cancel",
+        "close": "Close",
+        "clear": "Clear input",
+        "done": "Done",
+        "save": "Save",
+        "undo": "Undo",
+        "showMore": "Show more",
+        "showLess": "Show less",
+        "all": "All",
+        "more": "More",
+        "share": "Share",
+        "remove": "Remove",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password",
+        "decrease": "Decrease",
+        "increase": "Increase",
+        "previous": "Previous photo",
+        "next": "Next photo"
+    },
+    "discard": {
+        "title": "Discard changes?",
+        "body": "Your changes won’t be saved.",
+        "confirm": "Discard",
+        "keep": "Keep editing"
+    },
+    "notFound": {
+        "title": "This page doesn’t exist.",
+        "body": "The link may be out of date or have a typo.",
+        "home": "Back to home"
+    },
+    "states": {
+        "loading": "Loading",
+        "offline": "Offline – changes will be sent when you’re back online.",
+        "errorTitle": "That didn’t work",
+        "errorBody": "Check your connection and try again.",
+        "required": "Required",
+        "restrictedTitle": "Your account is restricted",
+        "restrictedBody": "This feature isn’t available to you right now.",
+        "comingSoon": "Coming soon"
+    },
+    "a11y": {
+        "photoCounter": "Photo {{current}} of {{total}}",
+        "unreadCount": "{{count}} unread",
+        "sheetGrabber": "Drag to resize the sheet",
+        "imageViewer": "Image viewer",
+        "mainVehicle": "Main vehicle",
+        "unreadNotifications": "New notifications",
+        "mainNavigation": "Main navigation"
+    },
+    "badges": {
+        "mainVehicle": "Main vehicle",
+        "installed": "Installed",
+        "planned": "Planned",
+        "removed": "Removed"
+    },
+    "auth": {
+        "signIn": "Sign in",
+        "signUp": "Create account"
+    },
+    "authRequired": {
+        "title": "You need an account for this",
+        "body": "Sign in or create an account to continue."
+    },
+    "gate": {
+        "checkAgain": "Check again",
+        "maintenanceTitle": "Back in a moment",
+        "maintenanceBody": "SPEED CLUB is under maintenance. Please try again shortly.",
+        "updateTitle": "Update required",
+        "updateBody": "This version is out of date. Please install the update."
+    },
+    "shell": {
+        "addVehicle": "Add vehicle",
+        "placeholderBody": "We’re working on this.",
+        "sampleVehicle": "View a sample build",
+        "routeError": {
+            "title": "This screen couldn’t load",
+            "bodyBack": "Try again or go back a step.",
+            "bodyClose": "Try again or close this screen.",
+            "bodyAlone": "Try again in a moment.",
+            "reload": "Reload"
+        }
+    },
+    "routes": {
+        "welcome": "Welcome",
+        "signIn": "Sign in",
+        "signUp": "Create account",
+        "verifyEmail": "Confirm email",
+        "forgotPassword": "Forgot password",
+        "resetPassword": "New password",
+        "username": "Username",
+        "profileSetup": "Your profile",
+        "vehicle": "Vehicle",
+        "vehicleGallery": "Photos",
+        "vehicleMod": "Modification",
+        "vehicleUpdate": "Build update",
+        "qrDetail": "QR code",
+        "qrPlacement": "Place sticker",
+        "qrPreview": "Public page",
+        "qrList": "My QR codes",
+        "qrResolve": "QR code",
+        "search": "Search",
+        "garageVehicle": "Your vehicle",
+        "garageBasics": "Basics",
+        "garageSpecs": "Specs",
+        "garagePhotos": "Photos",
+        "garagePhoto": "Edit photo",
+        "garageMods": "Mods",
+        "garageMod": "Modification",
+        "garageHistory": "History",
+        "garageVisibility": "Visibility",
+        "profileEdit": "Edit profile",
+        "appearance": "Appearance",
+        "legal": "Legal",
+        "legalDocument": "Legal",
+        "addVehicle": "Add vehicle",
+        "published": "Published",
+        "viewer": "Photos"
+    },
+    "system": {
+        "update": {
+            "version": "Installed: {{current}} · Required: {{required}}",
+            "ios": "Open the App Store",
+            "android": "Open Google Play",
+            "page": "Get the app",
+            "openFailed": "The link could not be opened. Please try again."
+        },
+        "shortcuts": {
+            "title": "Keyboard shortcuts",
+            "then": "then",
+            "rows": {
+                "search": "Focus search",
+                "switcher": "Open quick switcher",
+                "home": "Go to Home",
+                "discover": "Go to Discover",
+                "garage": "Go to Garage",
+                "messages": "Go to Messages",
+                "profile": "Go to Profile",
+                "help": "This overview"
+            },
+            "note": "Shortcuts do nothing while you type in a field.",
+            "switcher": {
+                "title": "Quick switcher",
+                "search": "Vehicle, conversation or page",
+                "groups": {
+                    "vehicles": "Vehicles",
+                    "conversations": "Conversations",
+                    "settings": "Settings",
+                    "tabs": "Sections"
+                },
+                "empty": "Nothing found for “{{query}}”",
+                "results_one": "{{count}} result",
+                "results_other": "{{count}} results",
+                "hint": "Arrow keys choose, Enter opens, Esc closes.",
+                "settings": "Settings"
+            }
+        }
+    },
+    "ai": {
+        "translate": {
+            "action": "Translate",
+            "pending": "Translating",
+            "retry": "Translate again",
+            "showOriginal": "Show original",
+            "showTranslation": "Show translation"
+        },
+        "accept": "Use",
+        "discard": "Discard",
+        "acceptAll": "Use all",
+        "errors": {
+            "refused": "We can’t make a suggestion for that.",
+            "unverifiable": "The suggestion couldn’t be backed by your details, so we don’t show it.",
+            "unavailable": "AI suggestions can’t be reached right now. Try again later.",
+            "budget": "No more AI suggestions today. They’ll be back tomorrow.",
+            "optIn": "First switch on “AI suggestions” under Privacy & contact.",
+            "disabled": "This feature isn’t available right now.",
+            "rateLimited": "You’ve asked for a lot of suggestions just now. Try again in a while.",
+            "network": "No connection. Try again once you’re online.",
+            "processing": "The photo is still being processed. Try again in a moment.",
+            "failed": "That didn’t work just now. Try again in a moment.",
+            "emailNotVerified": "AI features need a confirmed email address.",
+            "dailyLimit": "You’ve used up today’s allowance for this AI feature. It resets tomorrow."
+        },
+        "verifyEmail": "Confirm email address"
+    }
+}

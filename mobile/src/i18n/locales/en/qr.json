@@ -1,0 +1,170 @@
+{
+    "common": {
+        "offlineTitle": "You're offline",
+        "offlineBody": "We'll load the data as soon as you're back online.",
+        "offlineBanner": "Offline – you're seeing what was loaded last.",
+        "retry": "Try again"
+    },
+    "status": {
+        "active": "Active",
+        "private": "Private",
+        "blocked": "Blocked",
+        "none": "No code"
+    },
+    "list": {
+        "title": "My QR codes",
+        "subtitle": "Every published vehicle has its own code.",
+        "emptyTitle": "No QR codes yet",
+        "emptyBody": "Publish a vehicle and you'll get its QR code.",
+        "addVehicle": "Add vehicle",
+        "errorTitle": "Your QR codes could not be loaded",
+        "offlineBody": "As soon as you're back online, we'll load your QR codes.",
+        "suspendedNotice": "Your account is suspended. Anyone scanning your codes currently sees “This vehicle is private”."
+    },
+    "detail": {
+        "title": "QR code",
+        "cardLabel": "QR code for {{vehicle}}",
+        "download": "Download",
+        "share": "Share",
+        "shareTitle": "{{vehicle}} on SPEED CLUB",
+        "linkCopied": "Link copied",
+        "shareFailed": "Sharing didn't work. Please try again.",
+        "publicPage": "View public page",
+        "placement": "Sticker placement",
+        "reissue": "Replace QR code",
+        "reissueHint": "Old stickers will then only show “no longer valid”.",
+        "privateNotice": "Your vehicle is private. Anyone scanning the code sees “This vehicle is private”.",
+        "suspendedNotice": "Your account is suspended. While the suspension lasts, you can't replace the QR code.",
+        "errorTitle": "The QR code could not be loaded",
+        "cardErrorTitle": "The code could not be shown"
+    },
+    "reissue": {
+        "title": "Replace QR code?",
+        "body": "You'll get a new code. Anyone scanning the old sticker will then only see “This QR code is no longer valid”. This can't be undone.",
+        "cancel": "Cancel",
+        "confirm": "Replace QR code",
+        "done": "Your new QR code is active. Download it and replace the old sticker.",
+        "failed": "Replacing didn't work. Please try again."
+    },
+    "blocked": {
+        "title": "This QR code is blocked",
+        "body": "Our team has blocked it. Anyone scanning it sees “This QR code is no longer valid”. Only our team can issue a new code."
+    },
+    "inactive": {
+        "title": "No active QR code right now",
+        "body": "There's no active code for this vehicle at the moment. Please try again shortly."
+    },
+    "unavailable": {
+        "title": "QR code not available",
+        "body": "The vehicle isn't published yet or isn't in your garage.",
+        "garage": "Go to garage"
+    },
+    "guest": {
+        "title": "Sign in to see your QR codes",
+        "body": "Every vehicle you publish gets a QR code for your sticker.",
+        "signIn": "Sign in"
+    },
+    "download": {
+        "title": "Download",
+        "formats": {
+            "png": {
+                "title": "PNG",
+                "detail": "1024 × 1024 pixels, for screens and messaging apps"
+            },
+            "png2048": {
+                "title": "PNG, large",
+                "detail": "2048 × 2048 pixels, for large prints"
+            },
+            "svg": {
+                "title": "SVG",
+                "detail": "Vector graphic for print shops, scales to any size"
+            },
+            "pdf": {
+                "title": "PDF sticker",
+                "detail": "A6 sheet with logo, code and placement hint"
+            },
+            "placardA5": {
+                "title": "Placard A5",
+                "detail": "Build sheet for meets: photo, specs, top mods and QR code"
+            },
+            "placardA4": {
+                "title": "Placard A4",
+                "detail": "The build sheet in large, for stands and tables"
+            }
+        },
+        "loading": "Downloading",
+        "progress": "Downloading, {{percent}}%",
+        "started": "Download started: {{file}}",
+        "gone": "This code is no longer active. The page is loading the latest status.",
+        "noShare": "Sharing isn't available on this device right now.",
+        "shareTitle": "QR code for {{vehicle}}"
+    },
+    "placement": {
+        "title": "Sticker placement",
+        "subtitle": "Where to put your QR sticker",
+        "diagramLabel": "Car seen from above, front on the left: 1 boot lid and bumper, 2 rear window, 3 front side windows, 4 windscreen.",
+        "front": "Front",
+        "rear": "Rear",
+        "tone": {
+            "ok": "{{number}}, safest",
+            "caution": "{{number}}, with restrictions",
+            "avoid": "{{number}}, not recommended"
+        },
+        "rules": {
+            "body": "Safest: outside on the bodywork (e.g. boot lid, bumper) or small, inside a corner of the rear window.",
+            "rearWindow": "Rear window only if your car has two exterior mirrors. Otherwise only right at the edge, so the view to the rear stays clear.",
+            "frontSide": "Front side windows: no stickers.",
+            "windscreen": "Windscreen: preferably not at all. If you must, only right at the edge outside the field of view and never in the wiper area.",
+            "size": "Keep it small: well under 0.1 m² and never more than a quarter of a window. Not reflective, not illuminated, never covering number plates, lights or inspection stickers."
+        },
+        "print": "Printing: at least 30 × 30 mm for scans from about 1 m, larger for longer distances. Leave a white margin of 4 modules (squares) around the code. Matte vinyl, black on white.",
+        "disclaimer": "Not legal advice. The German StVZO (including §§ 35b, 40) and how the authorities apply it are decisive. Violations can result in a fine."
+    },
+    "preview": {
+        "title": "Public page",
+        "open": "Open page",
+        "active": "This is how everyone who scans your sticker sees your vehicle – no app, no account.",
+        "unlisted": "Unlisted: the page can only be reached through your sticker and the link, not through search or the feed.",
+        "private": "Your vehicle is private. Anyone scanning the sticker sees “This vehicle is private”, not this page.",
+        "blocked": "Your QR code is blocked. Anyone scanning it sees “This QR code is no longer valid”.",
+        "openFailed": "The page couldn't be opened. Please try again.",
+        "errorTitle": "The page could not be loaded"
+    },
+    "resolve": {
+        "checking": "Checking QR code",
+        "states": {
+            "revoked": {
+                "title": "This QR code is no longer valid",
+                "body": "This sticker no longer leads to a vehicle."
+            },
+            "private": {
+                "title": "This vehicle is private",
+                "body": "The owner is not showing it publicly right now. Maybe later."
+            },
+            "not_found": {
+                "title": "We do not know this QR code",
+                "body": "Check the code on the sticker or scan it again."
+            }
+        },
+        "discover": "Discover builds",
+        "home": "Go to the home page",
+        "errorTitle": "The QR code could not be checked",
+        "rateLimitedTitle": "One moment",
+        "rateLimitedBody": "That was a lot of requests. Please try again shortly.",
+        "offlineBody": "You need a connection to check the QR code."
+    },
+    "stats": {
+        "title": "Scans",
+        "summary": "{{recent}} in 14 days · {{total}} total",
+        "label": "Scans: {{recent}} in the last 14 days, {{total}} in total. {{milestone}}",
+        "milestoneNext": "Next milestone: {{next}} scans",
+        "milestoneReached": "Milestone reached: {{reached}} scans. The next one is at {{next}}.",
+        "milestoneLast": "Milestone reached: {{reached}} scans",
+        "privacy": "We only count scans, never who scanned.",
+        "errorTitle": "The scans could not be loaded",
+        "summaryNone": "No scans yet",
+        "summaryNoneRecent": "{{total}} in total · none in the last 14 days",
+        "labelNone": "Scans: none yet. {{milestone}}",
+        "milestoneFirst": "First milestone: {{next}} scans"
+    }
+}

@@ -1,0 +1,139 @@
+{
+    "actions": {
+        "cancel": "Cancel",
+        "close": "Close",
+        "done": "Done"
+    },
+    "field": {
+        "optional": "optional",
+        "count": ":count / :max"
+    },
+    "dialog": {
+        "close": "Close"
+    },
+    "combobox": {
+        "open": "Open options",
+        "empty": "No matching entries"
+    },
+    "toast": {
+        "region": "Notifications",
+        "dismiss": "Dismiss notification"
+    },
+    "confirm": {
+        "typed_word": "DELETE",
+        "typed_label": "Type “:word” to confirm",
+        "reason": "Reason",
+        "reason_hint": "Goes into the audit log. 10 to 1,000 characters.",
+        "reason_length": "The reason needs 10 to 1,000 characters.",
+        "reason_length_max": "The reason needs 10 to :max characters.",
+        "four_eyes": "Four-eyes rule: this only requests approval. Nothing runs until a second team member approves (within 24 hours).",
+        "request": "Request approval"
+    },
+    "state": {
+        "error_title": "That did not work",
+        "error_body": "The data could not be loaded. Try again.",
+        "retry": "Try again",
+        "reloading": "Reloading …",
+        "server_error": "The server did not answer. Nothing was changed; try again."
+    },
+    "table": {
+        "columns": "Columns",
+        "count": "{1} 1 entry|[2,*] :count entries",
+        "export": "Export",
+        "select_page": "Select all rows on this page",
+        "select_row": "Select row",
+        "no_results_title": "No results for these filters",
+        "no_results_body": "Change the filters or reset them.",
+        "reset_filters": "Reset filters",
+        "bulk": {
+            "region": "Selection",
+            "selected": ":count selected",
+            "clear": "Clear selection",
+            "four_eyes": "More than 100 records: the action needs approval."
+        },
+        "views": {
+            "label": "Views",
+            "manage": "Manage views",
+            "manage_body": "Save filters, sort and page size under a name. Only you see your views.",
+            "name": "View name",
+            "name_short": "The name needs at least 2 characters.",
+            "save": "Save current",
+            "saved": "View saved",
+            "deleted": "View deleted",
+            "delete": "Delete view “:name”",
+            "none": "No views of your own yet."
+        },
+        "export_csv": "CSV, addresses masked",
+        "export_menu": "Export",
+        "scroll_hint": "The table is wider than the column: scroll sideways."
+    },
+    "pagination": {
+        "label": "Pages",
+        "range": ":from–:to of :total",
+        "none": "No entries",
+        "per_page": "Per page",
+        "page": "Page :page of :last",
+        "previous": "Previous page",
+        "next": "Next page"
+    },
+    "kpi": {
+        "delta": "Change from previous period: "
+    },
+    "chart": {
+        "legend": "Legend",
+        "label": "Day",
+        "empty": "No data for this period yet",
+        "error": "Chart could not be loaded"
+    },
+    "diff": {
+        "empty": "No changes recorded.",
+        "change": "Kind of change",
+        "field": "Field",
+        "line": "Line",
+        "before": "Before",
+        "after": "After",
+        "kind_added": "added",
+        "kind_removed": "removed",
+        "kind_changed": "changed",
+        "none_changed": "No field changed.",
+        "unchanged_hidden": ":count unchanged field hidden|:count unchanged fields hidden",
+        "unchanged_shown": ":count unchanged field shown|:count unchanged fields shown",
+        "show_all": "Show all fields",
+        "show_changed": "Show changes only"
+    },
+    "timeline": {
+        "title": "Activity",
+        "empty": "No activity on this record yet.",
+        "error": "Activity could not be loaded",
+        "more": "All in the audit log",
+        "system": "System",
+        "times": ":count×",
+        "show_more": "Show :count more"
+    },
+    "approval": {
+        "requested": "Approval requested: :title",
+        "next": "A second team member has to approve by :until. Only then does the action run; you will get an alert.",
+        "preview_title": "Needs approval",
+        "preview_body": "This action falls under the four-eyes rule. It only runs once a second team member approves.",
+        "open_queue": "Go to approvals",
+        "already": "This request is already waiting for approval: :title"
+    },
+    "bulk": {
+        "summary": ":done done, :failed failed",
+        "partial": "Not every record was changed",
+        "record": "Record",
+        "reason": "Reason"
+    },
+    "date": {
+        "placeholder": "DD/MM/YYYY",
+        "from": "From",
+        "to": "To"
+    },
+    "time": {
+        "just_now": "just now"
+    },
+    "tabs": {
+        "more": "More",
+        "more_label": "More: :count further sections"
+    }
+}

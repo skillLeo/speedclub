@@ -1,0 +1,442 @@
+{
+    "nav": {
+        "staff": "Team",
+        "roles": "Roles",
+        "permissions": "Permission matrix"
+    },
+    "roles_names": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "moderator": "Moderation",
+        "support": "Support",
+        "content_editor": "Editorial",
+        "analyst": "Analytics"
+    },
+    "roles_about": {
+        "owner": "Every permission; only Owners appoint Owners and change the company details.",
+        "admin": "Every permission except the Owner tasks.",
+        "moderator": "Review reports, photos and appeals, hide content, suspend accounts.",
+        "support": "Answer tickets, see contact details, send password links, view as a member.",
+        "content_editor": "Maintain and publish content, brand and the vehicle catalogue.",
+        "analyst": "See statistics; read members, vehicles and reports only."
+    },
+    "state": {
+        "active": "Active",
+        "invited": "Invited",
+        "suspended": "Suspended",
+        "deactivated": "Deactivated",
+        "deleted": "Deleted"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "you": "You",
+    "never": "Never",
+    "four_eyes": "Four-eyes",
+    "index": {
+        "title": "Team",
+        "intro": "Who works in the admin and with which roles. You invite new team members by e‑mail; they then set up two-factor sign-in.",
+        "caption": "Team members with roles, status and last sign-in",
+        "owners": "Owners: :count · at most :max",
+        "invite": "Invite",
+        "empty_title": "Nobody matches these filters",
+        "empty_body": "Change the filters or invite a new team member.",
+        "error": "The team could not be loaded",
+        "columns": {
+            "name": "Name",
+            "roles": "Roles",
+            "state": "Status",
+            "two_factor": "Two-factor",
+            "last_login": "Last sign-in",
+            "created": "Since"
+        },
+        "invite_until": "Invitation until :date",
+        "invite_expired": "Invitation expired",
+        "presets": {
+            "active": "Active",
+            "invited": "Invited",
+            "deactivated": "Deactivated"
+        },
+        "filters": {
+            "label": "Filter the team",
+            "q": "Name or e‑mail",
+            "q_placeholder": "e.g. Lena",
+            "state": "Status",
+            "role": "Role",
+            "any": "All",
+            "apply": "Apply"
+        }
+    },
+    "invite": {
+        "title": "Invite a team member",
+        "body": "The person gets a link that works for 72 hours and only once. They set their password and then set up two-factor sign-in.",
+        "name": "Name",
+        "email": "E‑mail address",
+        "locale": "Language of the e‑mail",
+        "roles": "Roles",
+        "roles_hint": "You can only give roles whose permissions you hold yourself.",
+        "owner_only": "Only an Owner can invite an Owner.",
+        "elevating": "Admin, Owner and roles with sensitive permissions apply only after an approval. Until then the account has only the other roles.",
+        "reason_hint": "Required for the approval. Goes into the audit log, 10 to 1,000 characters.",
+        "submit": "Send invitation",
+        "locales": {
+            "de": "German",
+            "en": "English"
+        },
+        "errors": {
+            "name": "Enter a name of 2 to 120 characters.",
+            "email": "Enter a valid e‑mail address.",
+            "roles": "Choose at least one role.",
+            "reason": "The approval needs a reason of 10 to 1,000 characters."
+        },
+        "accepted": "Your password is set. Sign in now and set up two-factor sign-in."
+    },
+    "accept": {
+        "title": "Accept the invitation",
+        "intro": "Set your password for the SPEED CLUB admin. Then sign in and set up two-factor sign-in.",
+        "password": "New password",
+        "password_hint": "At least :min characters. A long sentence is safer than a short word.",
+        "password_confirmation": "Repeat the password",
+        "submit": "Set password",
+        "link_broken": "This link is incomplete. Please open it straight from the e‑mail.",
+        "back": "Back to sign-in"
+    },
+    "show": {
+        "error": "The team member could not be loaded",
+        "tabs_label": "Sections of the team member",
+        "tabs": {
+            "roles": "Roles & permissions",
+            "security": "Security & sessions"
+        },
+        "since": "In the team since :date",
+        "last_login": "Last signed in :date",
+        "deactivated_at": "Deactivated on :date",
+        "pending_title": "Waiting for approval",
+        "pending_line": ":title, asked by :name, expires :date",
+        "roles_title": "Roles",
+        "no_roles": "No role: the account sees only “My account”.",
+        "atoms_title": "Permissions from these roles",
+        "atoms_count": "{1} 1 permission|[2,*] :count permissions",
+        "all_atoms": "Owner and Admin always hold every permission.",
+        "security_title": "Two-factor sign-in",
+        "two_factor_on": "Set up on :date",
+        "two_factor_off": "Not set up yet. The account gets into the admin only after setting it up.",
+        "sessions_title": "Sessions",
+        "sessions_empty": "No open session.",
+        "session_line": ":browser on :os",
+        "session_unknown": "Unknown device",
+        "session_current": "this session",
+        "session_active": "last active :date",
+        "own_account": "This is your account. You manage your sessions and two-factor in “My account”; you cannot raise your own roles.",
+        "own_account_link": "Open My account",
+        "view_only": "You can view this team member but not change it.",
+        "owner_view_only": "Only an Owner changes an Owner account.",
+        "never_signed_in": "Never signed in"
+    },
+    "actions": {
+        "roles": "Change roles",
+        "deactivate": "Deactivate",
+        "reactivate": "Reactivate",
+        "delete": "Delete",
+        "revoke_sessions": "End all sessions",
+        "reset_two_factor": "Reset two-factor",
+        "resend_invite": "Resend invitation",
+        "open": "Open"
+    },
+    "roles_drawer": {
+        "title": "Roles of :name",
+        "body": "The new roles apply at once, except for Admin, Owner, sensitive permissions or an Owner account: then an approval is requested.",
+        "added": "New permissions",
+        "removed": "Permissions that go",
+        "none": "No change to the permissions.",
+        "four_eyes": "This change needs an approval by a second person:",
+        "why": {
+            "elevates": "It grants Admin, Owner or a sensitive permission.",
+            "owner": "It concerns an Owner account; a second Owner approves.",
+            "demotes": "It takes the Admin role away."
+        },
+        "reason_optional": "Optional, goes into the audit log.",
+        "submit": "Save roles",
+        "submit_four_eyes": "Ask for approval",
+        "self": "On your own account you can only give roles up, not add them.",
+        "none_added": "No new permissions",
+        "none_removed": "No permissions go"
+    },
+    "deactivate": {
+        "title": "Deactivate :name",
+        "body": "Every session ends at once, open invitation links and started view-as sessions too. Roles stay, so a reactivation restores the account.",
+        "four_eyes": "Owners and Admins are deactivated only after an approval."
+    },
+    "reactivate": {
+        "title": "Reactivate :name",
+        "body": "The account gets access back with its roles, password and two-factor sign-in."
+    },
+    "delete": {
+        "title": "Delete :name",
+        "body": "Name, e‑mail address, password, two-factor and roles are removed. The audit log then names the account “Deleted team member”. This cannot be undone.",
+        "needs_deactivation": "Deactivate the account before you delete it."
+    },
+    "revoke_sessions": {
+        "title": "End all sessions of :name",
+        "body": "Every sign-in of the account ends at once; to go on working it signs in again."
+    },
+    "reset_two_factor": {
+        "title": "Reset two-factor of :name",
+        "body": "For a lost authenticator app. After a second Owner approves, every session ends; the account sets a new password through “Forgot password” and sets up two-factor sign-in again."
+    },
+    "resend": {
+        "title": "Resend the invitation to :name",
+        "body": "A new link replaces the old one and again works for 72 hours.",
+        "submit": "Send again"
+    },
+    "roles_page": {
+        "title": "Roles",
+        "intro": "Roles bundle permissions. The six base roles stay; you add your own roles with a description. Sensitive permissions apply only after an approval.",
+        "caption": "Roles with permissions and team members",
+        "create": "Add role",
+        "error": "The roles could not be loaded",
+        "columns": {
+            "role": "Role",
+            "atoms": "Permissions",
+            "staff": "Team members",
+            "kind": "Kind",
+            "actions": "Actions"
+        },
+        "kind": {
+            "locked": "Holds every permission",
+            "system": "Base role",
+            "custom": "Custom role"
+        },
+        "edit": "Edit",
+        "delete": "Delete",
+        "empty_custom": "No custom role yet. Add one when a task does not fit a base role.",
+        "staff_count": "{0} nobody|{1} 1 person|[2,*] :count people",
+        "atoms_count": "{0} none|{1} 1 permission|[2,*] :count permissions",
+        "in_use": "Still assigned: take the role away from every team member first."
+    },
+    "role_form": {
+        "create_title": "Add role",
+        "edit_title": "Edit role :name",
+        "name": "Name",
+        "name_hint": "3 to 60 characters. Base roles keep their name.",
+        "description": "Description",
+        "description_hint": "What the role is for, up to 500 characters.",
+        "atoms": "Permissions",
+        "atoms_count": "{0} No permission chosen|{1} 1 permission chosen|[2,*] :count permissions chosen",
+        "sensitive": "Sensitive permissions (with the four-eyes symbol) apply only after an approval by a second person.",
+        "reason_hint": "Required as soon as a sensitive permission is added. 10 to 1,000 characters.",
+        "submit": "Save",
+        "submit_four_eyes": "Save and ask for approval",
+        "errors": {
+            "name": "Enter a name of 3 to 60 characters (letters, digits, spaces, dot, hyphen).",
+            "reason": "The approval needs a reason of 10 to 1,000 characters."
+        }
+    },
+    "role_delete": {
+        "title": "Delete role :name",
+        "body": "The role disappears from the permission matrix. This cannot be undone."
+    },
+    "matrix": {
+        "title": "Permission matrix",
+        "intro": "Which role holds which permissions. Before saving you see what changes and how many people it affects. Owner and Admin always hold every permission.",
+        "caption": "Permissions per role",
+        "error": "The permission matrix could not be loaded",
+        "atom": "Permission",
+        "locked": "all",
+        "sensitive": "Sensitive permission: granted only after an approval",
+        "staff": "{0} nobody|{1} 1 person|[2,*] :count people",
+        "changes": "{0} No change|{1} 1 change|[2,*] :count changes",
+        "review": "Review changes",
+        "discard": "Discard",
+        "view_only": "You can view the matrix; only team members with “Manage roles and permissions” can change it.",
+        "cell": ":atom for :role",
+        "scroll": "Permission matrix, scrolls sideways",
+        "diff_title": "Changes to the permissions",
+        "diff_body": "This is how the matrix changes. Removed and non-sensitive permissions apply at once.",
+        "diff_role": ":role · :staff",
+        "diff_added": "New",
+        "diff_removed": "Goes",
+        "diff_four_eyes": "Sensitive permissions are added (:atoms). The whole change applies only after an approval by a second person who holds none of the roles.",
+        "diff_total": "{0} Affects nobody|{1} Affects 1 person|[2,*] Affects :count people",
+        "diff_failed": "The changes could not be checked.",
+        "save": "Save",
+        "save_four_eyes": "Ask for approval",
+        "reason_optional": "Optional, goes into the audit log."
+    },
+    "flash": {
+        "invited": "Invitation sent.",
+        "invite_resent": "New invitation link sent.",
+        "roles_changed": "Roles saved.",
+        "deactivated": "Account deactivated, every session ended.",
+        "reactivated": "Account reactivated.",
+        "deleted": "Account deleted.",
+        "sessions_revoked": "Every session ended.",
+        "two_factor_reset": "Two-factor reset.",
+        "role_created": "Role added.",
+        "role_saved": "Role saved.",
+        "role_deleted": "Role deleted.",
+        "permissions_saved": "Permissions saved."
+    },
+    "events": {
+        "staff": {
+            "invited": "Invited",
+            "invite_resent": "Invitation resent",
+            "invite_accepted": "Invitation accepted",
+            "roles_changed": "Roles changed",
+            "deactivated": "Deactivated",
+            "reactivated": "Reactivated",
+            "deleted": "Deleted",
+            "sessions_revoked": "Every session ended",
+            "two_factor_reset": "Two-factor reset",
+            "two_factor_rotation_started": "Authenticator change started",
+            "two_factor_rotated": "Authenticator changed",
+            "two_factor_rotation_cancelled": "Authenticator change cancelled",
+            "recovery_codes_viewed": "Recovery codes shown",
+            "code_check_failed": "Wrong code",
+            "own_session_revoked": "Own session ended"
+        },
+        "role": {
+            "created": "Role added",
+            "updated": "Role changed",
+            "deleted": "Role deleted"
+        },
+        "permissions": {
+            "changed": "Permissions changed"
+        }
+    },
+    "atom_groups": {
+        "members": "Members",
+        "vehicles": "Vehicles",
+        "media": "Photos",
+        "catalog": "Catalogue",
+        "qr": "QR",
+        "moderation": "Moderation",
+        "support": "Support",
+        "content": "Content",
+        "brand": "Brand",
+        "legal": "Legal",
+        "flags": "Feature flags",
+        "remote_config": "Remote config",
+        "maintenance": "Maintenance",
+        "releases": "Releases",
+        "staff": "Team",
+        "roles": "Roles",
+        "approvals": "Approvals",
+        "audit": "Audit log",
+        "privacy": "Privacy",
+        "retention": "Retention",
+        "system": "System",
+        "integrations": "Integrations",
+        "analytics": "Analytics",
+        "memberships": "Memberships",
+        "lists": "Lists"
+    },
+    "atoms": {
+        "members": {
+            "view": "View members",
+            "view_pii": "See personal data",
+            "edit": "Edit profiles",
+            "restrict": "Restrict members",
+            "suspend": "Suspend members",
+            "delete": "Delete members",
+            "reset_password": "Send reset links",
+            "revoke_sessions": "End member sessions",
+            "reset_2fa": "Reset member two-factor",
+            "view_as": "View as member",
+            "export": "Export member data",
+            "message_metadata": "See message metadata"
+        },
+        "vehicles": {
+            "view": "View vehicles",
+            "edit": "Edit vehicles",
+            "hide": "Hide vehicles",
+            "delete": "Delete vehicles"
+        },
+        "media": {
+            "review": "Review photos",
+            "hide": "Hide photos"
+        },
+        "catalog": {
+            "view": "View catalogue",
+            "manage": "Manage catalogue",
+            "import": "Import catalogue"
+        },
+        "qr": {
+            "view": "View QR codes",
+            "revoke": "Revoke QR codes"
+        },
+        "moderation": {
+            "view": "View reports",
+            "decide": "Decide reports",
+            "appeals": "Review appeals",
+            "messages": "Read reported messages",
+            "rules": "Manage keyword rules",
+            "templates": "Manage statement templates"
+        },
+        "support": {
+            "view": "View support tickets",
+            "reply": "Reply to tickets",
+            "macros": "Manage macros"
+        },
+        "content": {
+            "view": "View content",
+            "edit": "Edit content",
+            "publish": "Publish content"
+        },
+        "brand": {
+            "manage": "Manage brand and theme"
+        },
+        "legal": {
+            "publish": "Publish legal documents"
+        },
+        "flags": {
+            "manage": "Manage feature flags"
+        },
+        "remote_config": {
+            "manage": "Manage remote config"
+        },
+        "maintenance": {
+            "toggle": "Toggle maintenance mode"
+        },
+        "releases": {
+            "manage": "Manage releases"
+        },
+        "staff": {
+            "view": "View team",
+            "invite": "Invite staff",
+            "manage": "Manage staff"
+        },
+        "roles": {
+            "manage": "Manage roles and permissions"
+        },
+        "approvals": {
+            "decide": "Decide four-eyes requests"
+        },
+        "audit": {
+            "view": "View audit log",
+            "export": "Export audit log"
+        },
+        "privacy": {
+            "view": "View GDPR requests",
+            "process": "Process GDPR requests"
+        },
+        "retention": {
+            "manage": "Change retention periods"
+        },
+        "system": {
+            "view": "View system health",
+            "jobs": "Retry or forget jobs"
+        },
+        "integrations": {
+            "view": "View and test integrations"
+        },
+        "analytics": {
+            "view": "View analytics"
+        },
+        "memberships": {
+            "manage": "Manage memberships"
+        },
+        "lists": {
+            "export": "Export lists as CSV"
+        }
+    }
+}

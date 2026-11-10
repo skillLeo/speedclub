@@ -1,0 +1,19 @@
+{
+    "title": "Suche",
+    "intro": "Mitglieder nach @username, Fahrzeuge nach Slug oder ID, QR-Codes nach Code, Fälle nach ID. E‑Mail‑Adressen nur exakt und nur mit PII-Berechtigung.",
+    "label": "Suchbegriff",
+    "placeholder": "z. B. @nightrunner, 7H2K QXMB, s14-kouki",
+    "submit": "Suchen",
+    "empty_title": "Wonach suchst du?",
+    "empty_body": "Tipp: Mit ⌘K oder Strg K öffnest du die Suche auf jeder Seite.",
+    "no_results_title": "Keine Treffer für „:q“",
+    "no_results_body": "Prüfe die Schreibweise. Gruppen, für die dir die Berechtigung fehlt, werden nicht durchsucht.",
+    "count": ":count Treffer für „:q“",
+    "groups": {
+        "members": "Mitglieder",
+        "vehicles": "Fahrzeuge",
+        "qr": "QR-Codes",
+        "cases": "Fälle"
+    },
+    "searching": "Suche nach „:q“ läuft …"
+}

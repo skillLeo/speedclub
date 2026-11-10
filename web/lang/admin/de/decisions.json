@@ -1,0 +1,87 @@
+{
+    "legend": "Begründung für das Mitglied",
+    "template": "Vorlage",
+    "template_hint": "Füllt die Felder; alles bleibt änderbar.",
+    "template_placeholder": "Vorlage wählen",
+    "facts": "Sachverhalt",
+    "facts_hint": "Was passiert ist, in deinen Worten. Das Mitglied liest es.",
+    "ground": "Grundlage",
+    "document": "Steht in",
+    "section": "Abschnitt",
+    "documents": {
+        "community": "Community-Richtlinien",
+        "terms": "AGB",
+        "law": "Gesetz"
+    },
+    "redress_note": "Keine automatisierten Mittel. Das Mitglied erfährt, wie es Einspruch einlegen kann (intern binnen 6 Monaten, außergerichtliche Streitbeilegung, Gericht).",
+    "measure": "Maßnahme",
+    "measures": {
+        "messaging": "Nachrichten",
+        "messaging_hint": "Kann keine Nachrichten und Anfragen senden.",
+        "publishing": "Veröffentlichen",
+        "publishing_hint": "Kann nichts veröffentlichen oder öffentlich schalten.",
+        "suspension": "Sperre",
+        "suspension_hint": "Konto gesperrt. Braucht die Freigabe eines zweiten Teammitglieds."
+    },
+    "duration": "Dauer",
+    "until": "Bis einschließlich",
+    "durations": {
+        "1": "1 Tag",
+        "7": "7 Tage",
+        "30": "30 Tage",
+        "date": "Bis zu einem Datum",
+        "none": "Ohne Ende"
+    },
+    "max_days_hint": "Moderation sperrt höchstens :days Tage.",
+    "reason_hint": "Für das Audit-Log, 10–1.000 Zeichen. Das Mitglied sieht sie nicht.",
+    "submit_restrict": "Einschränken",
+    "submit_suspend": "Sperre anfragen",
+    "errors": {
+        "facts": "Der Sachverhalt braucht 10 bis 5.000 Zeichen.",
+        "ground": "Die Grundlage braucht 3 bis 2.000 Zeichen.",
+        "date": "Gib ein Datum als TT.MM.JJJJ ein.",
+        "date_past": "Das Ende muss in der Zukunft liegen.",
+        "max_days": "Höchstens :days Tage ab heute.",
+        "typed": "Tippe :word, um zu bestätigen."
+    },
+    "templates": {
+        "spam": {
+            "label": "Spam oder Werbung",
+            "facts_member": "Du hast wiederholt gleiche Nachrichten mit Werbung an Mitglieder geschickt, die dich nicht kennen.",
+            "facts_vehicle": "Das Fahrzeug dient als Werbung für einen Verkauf oder ein Gewerbe statt als Build.",
+            "facts_photo": "Das Foto zeigt Werbung oder Kontaktdaten für einen Verkauf.",
+            "ground": "Keine Werbung und kein Spam"
+        },
+        "harassment": {
+            "label": "Belästigung oder Beleidigung",
+            "facts_member": "Du hast andere Mitglieder in Nachrichten beleidigt und nach einer Ablehnung weiter angeschrieben.",
+            "facts_vehicle": "Beschreibung oder Updates des Fahrzeugs beleidigen andere Mitglieder.",
+            "facts_photo": "Das Foto zeigt beleidigende Inhalte gegen andere.",
+            "ground": "Respektvoller Umgang"
+        },
+        "impersonation": {
+            "label": "Identitätsmissbrauch",
+            "facts_member": "Das Konto gibt sich als eine andere Person oder Firma aus.",
+            "facts_vehicle": "Das Fahrzeug gehört nachweislich nicht dir; Fotos stammen von anderen.",
+            "facts_photo": "Das Foto stammt von einer anderen Person und wird als eigenes ausgegeben.",
+            "ground": "Echte Identität und eigene Inhalte"
+        },
+        "nudity": {
+            "label": "Nacktheit oder sexuelle Inhalte",
+            "facts_member": "Dein Profil zeigt sexuelle Inhalte.",
+            "facts_vehicle": "Fotos des Fahrzeugs zeigen sexuelle Inhalte.",
+            "facts_photo": "Das Foto zeigt Nacktheit oder sexuelle Inhalte.",
+            "ground": "Keine sexuellen Inhalte"
+        },
+        "illegal": {
+            "label": "Rechtswidriger Inhalt",
+            "facts_member": "Inhalte deines Kontos verstoßen gegen geltendes Recht.",
+            "facts_vehicle": "Das Fahrzeug zeigt oder bewirbt rechtswidrige Umbauten oder Inhalte.",
+            "facts_photo": "Das Foto zeigt rechtswidrige Inhalte, etwa ein lesbares fremdes Kennzeichen mit Personenbezug.",
+            "ground": "Geltendes Recht (bitte Vorschrift nennen)"
+        },
+        "other": {
+            "label": "Eigene Begründung"
+        }
+    }
+}

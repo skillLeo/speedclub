@@ -1,0 +1,95 @@
+# F4 on Android, the native counterpart of web/tests/e2e/flows/f4-scan.spec.ts: a scan opened in the app goes through
+# the in-app resolver c/[code] (QR-RESOLVE), which replaces itself with the vehicle for an active code and shows the
+# WEB-06 wording for a revoked, a private and an unknown one; and the same sticker opened in the browser, as a stranger
+# without the app, is the server-rendered page with "In der App öffnen" and "Registrieren".
+#
+# Not run yet: no APK with the M1.7 screens exists. LAN and emulator builds have no verified App Links (staging and
+# production only, mobile/app.config.ts), so the app is reached with its scheme here; the https link opens Chrome. The
+# demo codes are DemoSeeder's (docs/07_QA_AND_RELEASE.md, test data). Run:
+#   maestro --device emulator-5554 test mobile/e2e/maestro/f4-scan.yaml
+appId: de.speedclub.app
+name: f4-scan
+env:
+  WEB_URL: http://10.0.2.2:8080
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: AUTH-02.root
+    timeout: 60000
+- tapOn:
+    id: AUTH-02.browse
+- extendedWaitUntil:
+    visible:
+      id: HOME-01.root
+    timeout: 30000
+
+# An active code: the resolver replaces itself with the R34.
+- openLink: speedclub://c/8TR0Q3MC
+- extendedWaitUntil:
+    visible:
+      id: VEH-01.title
+      text: Skyline GT-R R34
+    timeout: 30000
+- assertNotVisible:
+    id: QR-RESOLVE.root
+- takeScreenshot: f4-1-active
+
+# A typed code with a hyphen and in lower case is cleaned up before the server is asked.
+- openLink: speedclub://c/8tr0-q3mc
+- extendedWaitUntil:
+    visible:
+      id: VEH-01.title
+      text: Skyline GT-R R34
+    timeout: 30000
+
+# The three states, in the server's words, and no way to the vehicle.
+- openLink: speedclub://c/APPY9FZ9
+- extendedWaitUntil:
+    visible:
+      id: QR-RESOLVE.state.revoked
+    timeout: 30000
+- assertVisible:
+    id: QR-RESOLVE.title
+    text: Dieser QR-Code ist nicht mehr gültig
+- takeScreenshot: f4-2-revoked
+- openLink: speedclub://c/5A7XE8ET
+- extendedWaitUntil:
+    visible:
+      id: QR-RESOLVE.state.private
+    timeout: 30000
+- assertVisible:
+    id: QR-RESOLVE.title
+    text: Dieses Fahrzeug ist privat
+- takeScreenshot: f4-3-private
+- openLink: speedclub://c/ZZZZZZZZ
+- extendedWaitUntil:
+    visible:
+      id: QR-RESOLVE.state.not_found
+    timeout: 30000
+- assertVisible:
+    id: QR-RESOLVE.title
+    text: Diesen QR-Code kennen wir nicht
+- tapOn:
+    id: QR-RESOLVE.discover
+- extendedWaitUntil:
+    visible:
+      id: DISC-01.root
+    timeout: 20000
+- takeScreenshot: f4-4-not-found-to-discover
+
+# A stranger without the app: the camera hands the sticker URL to the browser, the server renders the page.
+- openLink:
+    link: ${WEB_URL}/C/8TR0Q3MC
+    browser: true
+- extendedWaitUntil:
+    visible:
+      text: Skyline GT-R R34
+    timeout: 60000
+- assertVisible:
+    text: In der App öffnen
+- assertVisible:
+    text: Registrieren
+- takeScreenshot: f4-5-browser-page

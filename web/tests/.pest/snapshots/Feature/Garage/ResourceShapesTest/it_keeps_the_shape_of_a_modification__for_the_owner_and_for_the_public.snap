@@ -1,0 +1,94 @@
+{
+    "data": {
+        "id": "string",
+        "title": "string",
+        "category": {
+            "key": "string",
+            "name": "string",
+            "icon": "string"
+        },
+        "brand": "null",
+        "summary_line": "string",
+        "status": "string",
+        "status_label": "string",
+        "installed_on": "string",
+        "installed_label": "string",
+        "cost_public": "bool",
+        "cost": {
+            "cents": "int",
+            "label": "string"
+        },
+        "legal_status": "null",
+        "legal_status_label": "null",
+        "thumb": {
+            "id": "string",
+            "status": "string",
+            "category": "string",
+            "width": "int",
+            "height": "int",
+            "blurhash": "string",
+            "focal_x": "null",
+            "focal_y": "null",
+            "alt": "null",
+            "sort": "int",
+            "variants": [
+                {
+                    "width": "int",
+                    "height": "int",
+                    "url": "string"
+                }
+            ],
+            "created_at": "string"
+        },
+        "vehicle_id": "string",
+        "brand_id": "null",
+        "brand_text": "null",
+        "part_name": "null",
+        "part_number": "null",
+        "notes": "string",
+        "sort": "int",
+        "specs": [
+            {
+                "key": "string",
+                "label": "string",
+                "value": "string"
+            }
+        ],
+        "fields": {
+            "type": "string",
+            "lowering_front": "int"
+        },
+        "legal_disclaimer": "null",
+        "photos": [
+            {
+                "id": "string",
+                "status": "string",
+                "category": "string",
+                "width": "int",
+                "height": "int",
+                "blurhash": "string",
+                "focal_x": "null",
+                "focal_y": "null",
+                "alt": "null",
+                "sort": "int",
+                "variants": [
+                    {
+                        "width": "int",
+                        "height": "int",
+                        "url": "string"
+                    }
+                ],
+                "created_at": "string"
+            }
+        ],
+        "failed_photos": [],
+        "search": {
+            "mod_category": "string",
+            "wheel_brand": "null",
+            "wheel_diameter": "null",
+            "suspension_type": "string",
+            "suspension_brand": "null",
+            "exhaust_brand": "null"
+        }
+    }
+}

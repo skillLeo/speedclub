@@ -1,0 +1,219 @@
+{
+  "offline": "Offline – search works again once you're back online.",
+  "search": {
+    "placeholder": "Make, model, mods or members",
+    "submit": "Search for “{{query}}”",
+    "placeholderShort": "Make, model, member"
+  },
+  "recent": {
+    "title": "Recent searches",
+    "clear": "Clear",
+    "clearLabel": "Clear recent searches"
+  },
+  "suggestions": {
+    "makes": "Makes"
+  },
+  "makes": {
+    "title": "Makes",
+    "count_one": "{{formatted}} build",
+    "count_other": "{{formatted}} builds",
+    "emptyTitle": "No makes yet",
+    "emptyBody": "As soon as builds are public, you'll find their makes here.",
+    "emptyAction": "Add vehicle",
+    "errorTitle": "Makes couldn't be loaded"
+  },
+  "start": {
+    "title": "What are you looking for?",
+    "body": "Search by make, model, engine code, mods or members."
+  },
+  "tabs": {
+    "label": "Search results",
+    "vehicles": "Vehicles ({{count}})",
+    "members": "Members ({{count}})"
+  },
+  "noResults": {
+    "title": "No results for “{{query}}”",
+    "body": "Check the spelling or try a make."
+  },
+  "noVehicles": "No vehicles for “{{query}}”",
+  "noMembers": "No members for “{{query}}”",
+  "invalid": {
+    "title": "Check your search"
+  },
+  "members": {
+    "you": "You"
+  },
+  "list": {
+    "more": "Load more",
+    "loadingMore": "Loading more results",
+    "moreError": "More results couldn't be loaded.",
+    "searching": "Searching"
+  },
+  "error": {
+    "title": "The search didn't work"
+  },
+  "chips": {
+    "label": "Active filters",
+    "filter": "Filters",
+    "filterLabel_one": "Filters, {{count}} active",
+    "filterLabel_other": "Filters, {{count}} active",
+    "remove": "Remove {{label}}",
+    "powerFrom": "from {{value}} PS",
+    "powerTo": "up to {{value}} PS",
+    "powerBetween": "{{min}}–{{max}} PS",
+    "powerExact": "{{value}} PS",
+    "yearFrom": "{{value}} or newer",
+    "yearTo": "{{value}} or older",
+    "yearBetween": "Year {{min}}–{{max}}",
+    "yearExact": "Year {{value}}",
+    "wheelDiameter": "{{value}}″"
+  },
+  "results": {
+    "count_one": "{{formatted}} build",
+    "count_other": "{{formatted}} builds",
+    "sortLabel": "Sort: {{sort}}. Change",
+    "viewLabel": "View",
+    "viewList": "Show as list",
+    "viewGrid": "Show as grid",
+    "understood": "Recognised and set as filters"
+  },
+  "sort": {
+    "title": "Sort",
+    "relevance": "Relevance",
+    "newest": "Newest",
+    "updated": "Recently updated",
+    "power": "Most power"
+  },
+  "filters": {
+    "title": "Filters",
+    "show_one": "Show {{formatted}} build",
+    "show_other": "Show {{formatted}} builds",
+    "showCapped": "Show {{formatted}}+ builds",
+    "showPending": "Show builds",
+    "reset": "Reset",
+    "resetAll": "Reset filters",
+    "panelLabel": "Filters for the search results",
+    "groups": {
+      "vehicle": "Vehicle",
+      "power": "Power",
+      "drive": "Powertrain",
+      "wheels": "Wheels & suspension",
+      "exhaust": "Exhaust",
+      "mods": "Mods"
+    },
+    "fields": {
+      "make": "Make",
+      "model": "Model",
+      "generation": "Generation",
+      "year": "Model year",
+      "yearFrom": "Year from",
+      "yearTo": "Year to",
+      "powerLow": "Minimum power",
+      "powerHigh": "Maximum power",
+      "powerFrom": "From",
+      "powerTo": "To",
+      "drivetrain": "Drivetrain",
+      "gearbox": "Gearbox",
+      "fuel": "Fuel",
+      "wheelDiameter": "Wheel diameter",
+      "wheelBrand": "Wheel brand",
+      "suspensionType": "Suspension type",
+      "suspensionBrand": "Suspension brand",
+      "exhaustBrand": "Exhaust brand",
+      "modCategory": "Mod categories"
+    },
+    "any": "Any",
+    "modelNeedsMake": "Choose a make first.",
+    "optionLabel_one": "{{label}}, {{formatted}} build",
+    "optionLabel_other": "{{label}}, {{formatted}} builds",
+    "loadError": "The filters couldn't be loaded.",
+    "offline": "Offline – filters load once you're back online.",
+    "yearInvalid": "Enter a year between {{min}} and {{max}}.",
+    "back": "Back to filters",
+    "chooseMake": "Choose make",
+    "chooseModel": "Choose model",
+    "findMake": "Find a make",
+    "findModel": "Find a model",
+    "noMatch": "No matches for “{{query}}”",
+    "allMakes": "All makes",
+    "allModels": "All models",
+    "powerUnit": "PS",
+    "dropped_one": "The filter “{{labels}}” no longer applies and was removed.",
+    "dropped_other": "The filters “{{labels}}” no longer apply and were removed."
+  },
+  "noResultsFiltered": {
+    "title": "No builds for these filters",
+    "body": "Remove a filter or reset all filters.",
+    "action": "Reset filters"
+  },
+  "collections": {
+    "title": "Collections",
+    "count_one": "{{formatted}} build",
+    "count_other": "{{formatted}} builds"
+  },
+  "popularMods": {
+    "title": "Popular mods"
+  },
+  "similarMembers": {
+    "title": "Members with similar cars"
+  },
+  "home": {
+    "errorTitle": "Discover couldn't be loaded"
+  },
+  "make": {
+    "count_one": "{{formatted}} public build",
+    "count_other": "{{formatted}} public builds",
+    "models": "Models",
+    "modelCount_one": "{{formatted}} build",
+    "modelCount_other": "{{formatted}} builds",
+    "generations": "Generations of {{model}}",
+    "allBuilds": "All {{make}} builds",
+    "notFoundTitle": "Make not found",
+    "notFoundBody": "There are no public builds of this make. Choose another make in Discover.",
+    "errorTitle": "The make couldn't be loaded",
+    "back": "To Discover",
+    "since": "since {{year}}"
+  },
+  "model": {
+    "count_one": "{{formatted}} public build",
+    "count_other": "{{formatted}} public builds",
+    "generations": "Generation",
+    "allGenerations": "All",
+    "segments": "View",
+    "builds": "Builds",
+    "wheels": "Wheel comparison",
+    "notFoundTitle": "Model not found",
+    "notFoundBody": "There are no public builds of this model. Choose another model in Discover.",
+    "errorTitle": "The model couldn't be loaded",
+    "buildsEmptyTitle": "No builds in this generation",
+    "buildsEmptyBody": "Choose another generation or “All”.",
+    "wheelsEmptyTitle": "No wheels added yet",
+    "wheelsEmptyBody": "As soon as a build of this model lists its wheels, they appear here.",
+    "wheelsError": "The wheel comparison couldn't be loaded.",
+    "showAllGenerations": "Show all generations"
+  },
+  "wheelTable": {
+    "caption": "{{model}} wheel comparison",
+    "build": "Build",
+    "wheel": "Wheels",
+    "suspension": "Suspension",
+    "lowering": "Lowering",
+    "size": "Size",
+    "et": "Offset",
+    "tyres": "Tyres",
+    "axles": "{{front}} front · {{rear}} rear"
+  },
+  "similar": {
+    "title": "Similar builds",
+    "label": "Builds similar to {{title}}"
+  },
+  "searchSimilar": {
+    "action": "Find similar",
+    "label": "Find similar builds with {{mod}}"
+  },
+  "ai": {
+    "action": "Search with AI",
+    "nothing": "We didn’t find matching filters for that. The search for your text carries on.",
+    "applied": "Filters from your search"
+  }
+}

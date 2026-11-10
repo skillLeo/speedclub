@@ -1,0 +1,23 @@
+{
+"sig.saved_builds":"Builds speichern, Liste \"Gespeichert\" und wöchentliche Sammelmeldung an den Besitzer",
+"sig.compare":"Zwei Builds nebeneinander vergleichen",
+"sig.share_cards":"Serverseitig gerenderte Share-Karten 9:16 und 1:1",
+"sig.placard_pdf":"Fahrzeugschild und Build-Sheet A5 und A4 als PDF mit QR-Code",
+"sig.qr_stats":"Tägliche Scan-Zahlen ohne Personenbezug und Meilensteine",
+"sig.mod_legal_status":"Feld ABE, Teilegutachten, Eingetragen mit Hinweis \"Angaben des Besitzers\"",
+"sig.plate_blur":"Kennzeichen und Gesichter auf Fotos manuell verpixeln",
+"sig.hu_au_reminder":"HU/AU-Monat am Fahrzeug und Erinnerung 30 Tage vorher",
+"sig.msg_typing":"Tipp-Anzeige in Nachrichten",
+"sig.msg_read_receipts":"Lesebestätigungen in Nachrichten",
+"sig.msg_reactions":"Sechs feste Reaktionen auf Nachrichten",
+"sig.msg_organize":"Unterhaltungen anpinnen, stummschalten, archivieren und durchsuchen",
+"sig.similar_builds":"Ähnliche Builds und Mitglieder mit ähnlichen Autos",
+"sig.web_shortcuts":"Tastenkürzel und Schnellwechsler im Web",
+"ai.nl_search":"Suche in natürlicher Sprache, ergibt sichtbare Filter-Chips",
+"ai.mod_assist":"Text einfügen, Vorschläge für Kategorie, Marke und Maße",
+"ai.photo_tagging":"Fotokategorie beim Hochladen vorschlagen",
+"ai.translate":"Beschreibungen und Nachrichten DE/EN auf Wunsch übersetzen",
+"ai.description_assist":"Beschreibung aus strukturierten Daten vorschlagen",
+"ai.moderation_triage":"Admin: Risikowert und Kurzfassung bei Meldungen, ein Mensch entscheidet",
+"premium.enabled":"Mitgliedschaften (Pläne und manuelle Freischaltungen im Admin), V1 ohne Zahlung, standardmäßig aus"
+}

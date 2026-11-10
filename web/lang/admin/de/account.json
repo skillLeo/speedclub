@@ -1,0 +1,90 @@
+{
+    "title": "Mein Konto",
+    "intro": "Dein Zugang zum Admin: Passwort, Zwei‑Faktor-Schutz und wo du angemeldet bist.",
+    "error": "Dein Konto konnte nicht geladen werden",
+    "profile": {
+        "title": "Profil",
+        "name": "Name",
+        "email": "E‑Mail-Adresse",
+        "roles": "Rollen",
+        "no_roles": "Keine Rolle",
+        "last_login": "Letzte Anmeldung",
+        "managed": "Name, Adresse und Rollen ändert ein Owner oder Admin im Team."
+    },
+    "password": {
+        "title": "Passwort ändern",
+        "body": "Nach der Änderung enden alle anderen Sitzungen; diese bleibt angemeldet.",
+        "current": "Aktuelles Passwort",
+        "new": "Neues Passwort",
+        "new_hint": "Mindestens :min Zeichen.",
+        "confirmation": "Neues Passwort wiederholen",
+        "submit": "Passwort ändern",
+        "done": "Passwort geändert. Alle anderen Sitzungen sind beendet.",
+        "errors": {
+            "current": "Gib dein aktuelles Passwort ein.",
+            "new": "Das neue Passwort braucht mindestens :min Zeichen.",
+            "confirmation": "Die beiden Passwörter stimmen nicht überein."
+        }
+    },
+    "two_factor": {
+        "title": "Zwei‑Faktor-Schutz",
+        "on": "Eingerichtet am :date",
+        "off": "Nicht eingerichtet.",
+        "rotate": "Authenticator wechseln",
+        "rotate_body": "Für ein neues Telefon oder eine andere App. Dein bisheriger Code gilt weiter, bis du den neuen bestätigst.",
+        "code": "Aktueller Code",
+        "code_hint": "Sechs Ziffern aus deiner Authenticator-App.",
+        "new_code": "Code aus der neuen App",
+        "new_code_hint": "Sechs Ziffern, die die neue App jetzt zeigt.",
+        "start": "Weiter",
+        "scan": "Scanne den QR-Code mit der neuen App oder gib den Schlüssel ein.",
+        "key": "Schlüssel",
+        "copy": "Schlüssel kopieren",
+        "copied": "Kopiert",
+        "qr_alt": "QR-Code für die Authenticator-App",
+        "expires": "Gilt bis :time. Danach fängst du neu an.",
+        "confirm": "Neuen Authenticator bestätigen",
+        "cancel": "Abbrechen",
+        "done": "Authenticator gewechselt. Alle anderen Sitzungen sind beendet.",
+        "pending": "Ein Wechsel ist begonnen und gilt bis :time. Der Schlüssel wird nur einmal gezeigt: Fange neu an oder brich ab.",
+        "restart": "Neu anfangen",
+        "errors": {
+            "code": "Gib die sechs Ziffern ein.",
+            "failed": "Das hat nicht geklappt. Versuche es erneut."
+        }
+    },
+    "recovery": {
+        "title": "Wiederherstellungscodes",
+        "body": "Mit einem Wiederherstellungscode meldest du dich an, wenn dein Telefon fehlt. Jeder Code gilt einmal. Zum Anzeigen brauchst du einen aktuellen Code.",
+        "show": "Codes anzeigen",
+        "regenerate": "Neue Codes erzeugen",
+        "regenerate_body": "Die alten Codes gelten danach nicht mehr, und alle anderen Sitzungen enden.",
+        "list_title": "Deine Wiederherstellungscodes",
+        "list_hint": "Bewahre sie an einem sicheren Ort auf, nicht auf demselben Telefon. Sie verschwinden, wenn du die Seite verlässt.",
+        "hide": "Ausblenden",
+        "download": "Als Textdatei sichern",
+        "file_title": "SPEED CLUB Admin: Wiederherstellungscodes",
+        "copy": "Alle kopieren",
+        "new_done": "Neue Codes erzeugt. Die alten gelten nicht mehr."
+    },
+    "sessions": {
+        "title": "Sitzungen",
+        "body": "Wo dein Konto gerade angemeldet ist.",
+        "empty": "Nur diese Sitzung.",
+        "current": "Diese Sitzung",
+        "line": ":browser auf :os",
+        "unknown": "Unbekanntes Gerät",
+        "active": "zuletzt aktiv :date",
+        "end": "Abmelden",
+        "end_label": "Sitzung :device abmelden",
+        "end_others": "Alle anderen abmelden",
+        "end_others_title": "Alle anderen Sitzungen abmelden",
+        "end_others_body": "Jede andere Anmeldung deines Kontos endet sofort. Diese bleibt.",
+        "end_title": "Sitzung abmelden",
+        "end_body": "Die Sitzung auf :device endet sofort."
+    },
+    "flash": {
+        "session_ended": "Sitzung abgemeldet.",
+        "sessions_ended": "Alle anderen Sitzungen abgemeldet."
+    }
+}

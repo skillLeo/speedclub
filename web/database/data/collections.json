@@ -1,0 +1,9 @@
+[
+  {"key": "bmw-m", "title": {"de": "BMW M Builds", "en": "BMW M builds"}, "subtitle": {"de": "M2, M3 und M4 ab 340 PS", "en": "M2, M3 and M4 from 340 PS"}, "filters": {"make": "bmw", "power_min": 340}, "sort": "power", "demo_cover": "bmw-g82"},
+  {"key": "golf-gti-generationen", "title": {"de": "Golf GTI Generationen", "en": "Golf GTI generations"}, "subtitle": {"de": "Vom 19E bis zum CD", "en": "From the 19E to the CD"}, "filters": {"make": "volkswagen", "model": "golf-gti"}, "sort": "newest", "demo_cover": "vw-golf2"},
+  {"key": "skyline-gt-r", "title": {"de": "Skyline GT-R", "en": "Skyline GT-R"}, "subtitle": {"de": "Nissans Ikone mit RB26", "en": "Nissan's icon with the RB26"}, "filters": {"make": "nissan", "model": "skyline-gt-r"}, "sort": "updated", "demo_cover": "nissan-r34"},
+  {"key": "youngtimer", "title": {"de": "Youngtimer", "en": "Youngtimers"}, "subtitle": {"de": "Baujahr bis 1999", "en": "Built up to 1999"}, "filters": {"year_max": 1999}, "sort": "newest", "demo_cover": "porsche-964"},
+  {"key": "500-ps", "title": {"de": "500 PS und mehr", "en": "500 PS and more"}, "subtitle": {"de": "Nach Leistung sortiert", "en": "Sorted by power"}, "filters": {"power_min": 500}, "sort": "power", "demo_cover": "toyota-a80"},
+  {"key": "allrad-ab-400-ps", "title": {"de": "Allrad ab 400 PS", "en": "AWD from 400 PS"}, "subtitle": {"de": "quattro, ATTESA und 4MATIC", "en": "quattro, ATTESA and 4MATIC"}, "filters": {"drivetrain": ["all"], "power_min": 400}, "sort": "power", "demo_cover": "audi-rs6-c8"},
+  {"key": "gewindefahrwerk", "title": {"de": "Auf Gewinde", "en": "On coilovers"}, "subtitle": {"de": "Builds mit Gewindefahrwerk", "en": "Builds with coilovers"}, "filters": {"suspension_type": ["coilover"]}, "sort": "updated", "demo_cover": "nissan-s15"}
+]

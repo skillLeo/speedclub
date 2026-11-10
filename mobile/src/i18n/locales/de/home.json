@@ -1,0 +1,170 @@
+{
+  "offline": "Offline – du siehst den zuletzt geladenen Stand.",
+  "featured": {
+    "eyebrow": "FEATURED BUILD"
+  },
+  "newBuilds": {
+    "title": "Neue Builds",
+    "allLabel": "Alle neuen Builds in Entdecken"
+  },
+  "card": {
+    "latestChange": "Letzte Änderung",
+    "ownerProfile": "Profil von {{name}}"
+  },
+  "list": {
+    "more": "Mehr laden",
+    "loadingMore": "Weitere Builds werden geladen",
+    "moreError": "Weitere Builds konnten nicht geladen werden.",
+    "end": "Das waren alle öffentlichen Builds.",
+    "endFollowing": "Das war alles von Mitgliedern, denen du folgst."
+  },
+  "empty": {
+    "title": "Noch keine öffentlichen Builds",
+    "body": "Sobald Mitglieder ihre Fahrzeuge veröffentlichen, erscheinen sie hier. Fang mit deinem an.",
+    "action": "Fahrzeug hinzufügen"
+  },
+  "error": {
+    "title": "Builds konnten nicht geladen werden",
+    "body": "Prüfe deine Verbindung und versuche es noch einmal.",
+    "offlineTitle": "Du bist offline",
+    "offlineBody": "Sobald du wieder online bist, laden wir die Builds."
+  },
+  "restricted": {
+    "body": "Dein Konto ist eingeschränkt. Builds ansehen und suchen kannst du weiterhin.",
+    "until": "Dein Konto ist bis {{date}} eingeschränkt. Builds ansehen und suchen kannst du weiterhin.",
+    "suspended": "Dein Konto ist gesperrt. Deine Builds sind gerade für niemanden sichtbar."
+  },
+  "rail": {
+    "makes": "Marken",
+    "allMakes": "Alle",
+    "allMakesLabel": "Alle Marken in Entdecken",
+    "makeCount_one": "{{formatted}} Build",
+    "makeCount_other": "{{formatted}} Builds",
+    "garageTitle": "Deine Garage",
+    "garageOpen": "Zur Garage",
+    "vehicleCount_one": "{{formatted}} Fahrzeug",
+    "vehicleCount_other": "{{formatted}} Fahrzeuge",
+    "aboutTitle": "Über SPEED CLUB",
+    "aboutBody": "Deine Garage mit Technik und Mods als echte Daten, und ein QR-⁠Code, der dein Auto auf dem Parkplatz mit seiner Build-Seite verbindet.",
+    "join": "Konto erstellen"
+  },
+  "tabs": {
+    "label": "Ansicht von Start",
+    "forYou": "Für dich",
+    "following": "Folge ich"
+  },
+  "bell": {
+    "label": "Mitteilungen",
+    "unread_one": "{{count}} ungelesen",
+    "unread_other": "{{count}} ungelesen"
+  },
+  "updates": {
+    "title": "Build-Updates"
+  },
+  "members": {
+    "title": "Aktive Mitglieder",
+    "profileOf": "Profil von {{name}}"
+  },
+  "mods": {
+    "title": "Beliebte Mods diese Woche"
+  },
+  "following": {
+    "empty": {
+      "title": "Noch nichts von Mitgliedern, denen du folgst",
+      "body": "Folge Mitgliedern, deren Builds dich interessieren. Ihre neuen Builds und Änderungen erscheinen dann hier.",
+      "bodySuggestions": "Folge Mitgliedern, deren Builds dich interessieren.",
+      "discover": "Mitglieder entdecken"
+    },
+    "suggestions": "Vorschläge für dich",
+    "suggestionsActive": "Gerade aktiv",
+    "guest": {
+      "title": "Sieh, was sich bei deinen Leuten tut",
+      "body": "Melde dich an und folge Mitgliedern. Ihre neuen Builds und Änderungen erscheinen dann hier.",
+      "signIn": "Anmelden"
+    }
+  },
+  "notifications": {
+    "title": "Mitteilungen",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "unread": "Ungelesen",
+    "someone": "Ein Mitglied",
+    "aBuild": "einen Build",
+    "readAll": "Alle als gelesen markieren",
+    "readAllFailed": "Die Mitteilungen konnten nicht als gelesen markiert werden. Versuch es gleich noch einmal.",
+    "emptyTitle": "Noch keine Mitteilungen",
+    "emptyBody": "Hier siehst du, wer dir folgt und was es Neues von Mitgliedern gibt, denen du folgst.",
+    "errorTitle": "Mitteilungen konnten nicht geladen werden",
+    "offlineBody": "Sobald du wieder online bist, laden wir deine Mitteilungen.",
+    "loadingMore": "Weitere Mitteilungen werden geladen",
+    "guest": {
+      "title": "Deine Mitteilungen",
+      "body": "Melde dich an, um zu sehen, wer dir folgt und was es Neues gibt."
+    },
+    "text": {
+      "newFollower": "{{actor}} folgt dir jetzt",
+      "newFollowerTwo": "{{actor}} und {{other}} folgen dir jetzt",
+      "newFollowerMany_one": "{{actor}} und {{count}} weiteres Mitglied folgen dir jetzt",
+      "newFollowerMany_other": "{{actor}} und {{count}} weitere folgen dir jetzt",
+      "followedPublished": "{{actor}} hat {{vehicle}} veröffentlicht",
+      "followedUpdated": "{{actor}} hat {{vehicle}} aktualisiert",
+      "followedUpdates_one": "{{actor}} hat {{count}} Build-Update veröffentlicht",
+      "followedUpdates_other": "{{actor}} hat {{count}} Build-Updates veröffentlicht",
+      "buildSaved_one": "{{count}} Mitglied hat deinen Build {{vehicle}} gespeichert",
+      "buildSaved_other": "{{count}} Mitglieder haben deinen Build {{vehicle}} gespeichert",
+      "buildSavedAny_one": "{{count}} Mitglied hat einen deiner Builds gespeichert",
+      "buildSavedAny_other": "{{count}} Mitglieder haben einen deiner Builds gespeichert",
+      "security": {
+        "new_device": "Neue Anmeldung auf einem unbekannten Gerät. Warst du das nicht? Dann ändere sofort dein Passwort.",
+        "password_changed": "Dein Passwort wurde geändert. Warst du das nicht? Dann setz es über „Passwort vergessen“ zurück.",
+        "email_changed": "Deine E-⁠Mail-Adresse wurde geändert. Warst du das nicht? Dann ändere sofort dein Passwort.",
+        "two_factor_changed": "Deine Zwei-Faktor-Anmeldung wurde geändert. Warst du das nicht? Dann ändere sofort dein Passwort.",
+        "deletion_requested": "Die Löschung deines Kontos wurde beantragt. Warst du das nicht? Dann ändere sofort dein Passwort.",
+        "other": "Eine Sicherheitseinstellung deines Kontos wurde geändert. Warst du das nicht? Dann ändere sofort dein Passwort.",
+        "new_device_named": "Neue Anmeldung auf {{device}}. Warst du das nicht? Dann ändere sofort dein Passwort.",
+        "sessions_revoked": "Geräte wurden von deinem Konto abgemeldet. Warst du das nicht? Dann ändere sofort dein Passwort.",
+        "verification_failed": "Bei deinem Konto wurde ein falsches Passwort oder ein falscher Code eingegeben. Warst du das nicht? Dann ändere sofort dein Passwort.",
+        "recovery_code_used": "Für eine Anmeldung wurde ein Wiederherstellungscode verwendet. Warst du das nicht? Dann ändere sofort dein Passwort."
+      },
+      "other": "Neue Mitteilung",
+      "followedBuilds_one": "{{actor}} hat {{count}} Build veröffentlicht",
+      "followedBuilds_other": "{{actor}} hat {{count}} Builds veröffentlicht",
+      "followedMixed_one": "{{actor}} hat {{count}} Neuigkeit veröffentlicht",
+      "followedMixed_other": "{{actor}} hat {{count}} neue Builds und Build-Updates veröffentlicht",
+      "moderation": {
+        "remove_content": "Wir haben einen deiner Inhalte entfernt. Tippe für die Begründung und deine Möglichkeiten.",
+        "restrict": "Wir haben dein Konto eingeschränkt. Tippe für die Begründung und deine Möglichkeiten.",
+        "suspend": "Wir haben dein Konto gesperrt. Tippe für die Begründung und deine Möglichkeiten.",
+        "reverse": "Wir haben eine Maßnahme aufgehoben. Tippe für die Begründung.",
+        "other": "Wir haben eine Entscheidung zu deinen Inhalten oder deinem Konto getroffen. Tippe für die Begründung."
+      },
+      "reportDecided": "Wir haben deine Meldung geprüft. Tippe für das Ergebnis.",
+      "reportDecidedOutcome": {
+        "no_action": "Wir haben deine Meldung geprüft und keinen Verstoß festgestellt. Tippe für Einzelheiten.",
+        "remove_content": "Wir haben deine Meldung geprüft und den Inhalt entfernt. Tippe für Einzelheiten.",
+        "measures": "Wir haben deine Meldung geprüft und Maßnahmen ergriffen. Tippe für Einzelheiten.",
+        "reversed": "Wir haben eine frühere Maßnahme aufgehoben. Tippe für Einzelheiten."
+      },
+      "qrMilestone": "Dein QR-⁠Code für {{vehicle}} wurde {{scans}}-mal gescannt",
+      "qrMilestoneAny": "Einer deiner QR-⁠Codes wurde {{scans}}-mal gescannt",
+      "huAuReminder": "HU/AU für {{vehicle}} ist im {{month}} fällig",
+      "huAuReminderAny": "Deine HU/AU ist im {{month}} fällig",
+      "catalogRequest": {
+        "accepted": "Dein Fahrzeug ist jetzt im Katalog: {{vehicle}}",
+        "rejected": "Deine Katalog-Anfrage für {{vehicle}} haben wir nicht übernommen.",
+        "rejectedReason": "Deine Katalog-Anfrage für {{vehicle}} haben wir nicht übernommen. Grund: {{reason}}",
+        "yourVehicle": "dein Fahrzeug"
+      },
+      "supportReply": "Das Team hat auf deine Anfrage {{reference}} geantwortet",
+      "supportReplyAny": "Das Team hat auf deine Support-Anfrage geantwortet"
+    },
+    "restricted": "Dein Konto ist eingeschränkt. Deine Mitteilungen siehst du weiterhin.",
+    "restrictedUntil": "Dein Konto ist bis {{date}} eingeschränkt. Deine Mitteilungen siehst du weiterhin."
+  },
+  "announcements": {
+    "dismiss": "Hinweis ausblenden",
+    "more": "Mehr erfahren",
+    "externalLabel": "{{label}} (öffnet im Browser)",
+    "warningLabel": "Wichtig: {{title}}"
+  }
+}

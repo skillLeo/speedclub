@@ -1,0 +1,103 @@
+# 07 — Quality, Testing, Design QA & Release
+
+**Goal:** the requester never tests manually. Everything is tested automatically; a phase is complete only when every gate below is green.
+**Honest release standard:** zero known Blocker/High defects; zero open High/Medium design defects across the matrix; every flow (F1–F8, A1–A4) green on web and as far as possible native; performance budgets met; known Low issues listed in the release notes. ("Zero bugs" cannot be proven; this is the professional equivalent.)
+
+## 1. Gate commands (exact names — create them in Phase 1, keep them stable)
+| Command (run from repo root) | What it runs | Must |
+|---|---|---|
+| `node design/scripts/build-tokens.mjs --check` | token contrast gate + generated files up to date | exit 0 |
+| `npm --prefix mobile run verify` | `tsc --noEmit` (strict) → `eslint . --max-warnings 0` → `jest --ci` → `node scripts/check-i18n.mjs` (file `mobile/scripts/check-i18n.mjs`: DE/EN keys identical, no hard-coded UI strings) | exit 0 |
+| `composer --working-dir=web verify` | `pint --test` → `phpstan analyse` (Larastan, level 6 minimum, aim 8) → `pest --parallel` (feature + unit + arch) → `composer audit` | exit 0 |
+| `npm --prefix web run verify` | `vue-tsc --noEmit` → `eslint` → `vite build` | exit 0 |
+| `npm --prefix web run e2e` | Playwright: flows F1–F8 (member web on `/app` + public Blade pages), A1–A4 (admin), axe accessibility, DOM audit | exit 0 |
+| `npm --prefix web run visual -- --tier=module|phase` | screenshot matrix + contact sheets + baseline diff | exit 0 + design-QA approval |
+| `npm --prefix web run lhci` | Lighthouse CI on `/`, `/v/{demo-slug}`, `/u/{demo}` (mobile profile) | budgets met |
+| `powershell -File scripts/verify.ps1 -Phase N` | all of the above for the phase, writes `docs/reports/phase-N/verify-<timestamp>.md` | exit 0 |
+| `powershell -File scripts/build-apk.ps1 -Target lan|staging|production` | signed release APK + checksum + apksigner verification | exit 0 |
+Long commands (Gradle, Playwright matrix, Expo export) can exceed tool time limits: run them **in the background**, write logs to `docs/reports/logs/`, poll until done.
+
+## 2. Test layers
+| Layer | Tool | Scope & rules |
+|---|---|---|
+| Static | TypeScript strict, ESLint (expo config + `react-native/no-color-literals`, `no-inline-styles`, custom: no numeric style literals outside tokens), Larastan, Pint, vue-tsc | zero warnings |
+| Backend feature | **Pest** against MySQL `speedclub_testing` (`--parallel`) | **every endpoint** has: happy path, validation errors, **authorisation matrix** (guest · owner · other member · blocked member · restricted member · staff roles where relevant), rate-limit and idempotency where applicable; snapshot of the JSON shape for key resources |
+| Backend unit | Pest | units conversion, code generation, slugging, query understanding, ranking, SoR builder, audit hash chain |
+| Architecture | Pest arch | controllers don't use Eloquent writes directly (Actions do); no `env()` outside config; no `dd/dump/ray`; models only in `App\Models`; resources for all API output |
+| Mobile unit/component | Jest + React Native Testing Library (`jest-expo`) | every primitive (states, accessibility props), hooks (units, formatting, auth/session, upload queue), plugin unit test for `withReleaseSigning` |
+| Web/admin E2E | **Playwright** (Chromium + WebKit) | flows, admin flows, public pages, deletion route, error states (API mocked failures via route interception), keyboard navigation |
+| Native E2E | **Maestro** (YAML) on an Android emulator when available | smoke F1, F2, F5 + screenshots; if no emulator, record "not run" in the report (never claim it ran) |
+| Visual regression | Playwright screenshots + baselines | see §3 |
+| Accessibility | `@axe-core/playwright` (no serious/critical), focus order, visible focus, labels on icon buttons (lint), 200 % font | |
+| Performance | Lighthouse CI; bundle sizes; API timing tests on seeded data | budgets in `05_ARCHITECTURE.md` §21 |
+| Security | security review checklist (§6) + `composer audit` + `npm audit --omit=dev` | 0 High |
+
+**Test data:** `DemoSeeder` is deterministic (fixed Faker seed `de_DE`): 12 members (e.g. `lukas.sc`, `jann.ptrs`, `max.e46`, `sara.gti`, `kenji.r34` …), 30 vehicles across BMW/VW/Audi/Porsche/Mercedes/Nissan/Toyota/Honda/Mazda/Subaru with real-world specs, 120 mods, photos from `design/seed-photos/`, follows, conversations, one report case. Test credentials are documented in `docs/HANDOFF.md` (local/staging only).
+
+## 3. Screenshot matrix & visual QA
+- **Viewports:** 360×780 · 390×844 · 430×932 · 768×1024 · 1280×800 · 1440×900. **Themes:** carbon · black · light. **Locales:** de · en. **Font scale:** 1 · 2 (`?qaFontScale=2`). **States:** default · loading · empty · error · offline (`?qaState=…`).
+- **QA overrides** (`qaFontScale`, `qaState`, `qaTheme`, `qaLocale`, `qaNow` fixed clock, `qaOpen=report` opens the report sheet on PROF-02/VEH-01/VEH-05) exist **only** when `EXPO_PUBLIC_APP_ENV ≠ production` and are read by the app shell; animations are disabled during capture (`?qaMotion=off`), fonts awaited, images decoded.
+- **Tiers:** *module* (after each module): each new route × {390 carbon de, 360 light de, 430 black en, 1280 carbon de}. *Phase* (exit gate): every route of the phase × 6 viewports × 3 themes × de, + en at 390, + font scale 2 at 390 carbon de, + all states at 390 carbon de; admin routes at 1280/1440 × carbon/light.
+- **Files:** `docs/reports/visual/phase-N/<ROUTE-ID>__<w>x<h>__<theme>__<locale>[__fs2][__<state>].png`; contact sheets `…/contact/<ROUTE-ID>.png` (grid of thumbnails with labels) — design QA reviews contact sheets first, then opens individual images at 1×.
+- **Baselines:** approved screenshots become baselines under `web/tests/e2e/__screenshots__/`; later runs diff with `maxDiffPixelRatio 0.002`; an intended change requires design-QA re-approval and a baseline update in the same commit.
+- **Parity test:** `/v/{demo}` (Blade) vs `/app/v/{demo}` (SPA) at 390 × carbon × de — same texts in the same order for hero/title/spec strip/owner row, pixel diff of those regions ≤ 3 %.
+
+### DOM audit (runs on every matrix page; violations fail the run)
+| Check | Rule | Severity |
+|---|---|---|
+| Horizontal overflow | `document.scrollingElement.scrollWidth ≤ innerWidth` | High |
+| Clipped text | element with `overflow:hidden` and `scrollWidth > clientWidth + 1` that is not an intentional `numberOfLines` truncation with accessible full text | High |
+| Overlap | bounding boxes of interactive elements intersect | High |
+| Touch target | interactive elements ≥ 44×44 (or hitSlop-equivalent wrapper) | High |
+| Off-scale spacing | computed margin/padding/gap ∉ {0,2,4,8,12,16,20,24,32,40,48,64} (+ documented exceptions: safe-area insets, hairlines) | Medium |
+| Non-token colour | computed text/background/border colour not in the active theme's token set (photos/QR excluded) | Medium |
+| Non-scale font | font-size/line-height pair not in the type scale | Medium |
+| Image without aspect | `<img>`/image view without explicit dimensions/aspect | Medium |
+| Missing label | icon-only control without accessible name | High |
+
+## 4. Design QA protocol (design review)
+**Inputs:** the module's routes (from `04_SCREEN_REGISTER.md`), contact sheets + screenshots, DOM-audit JSON, `03_DESIGN_SYSTEM.md` (component specs, flagship blueprints, anti-AI rulebook).
+**Two passes:** (1) **Conformance** — tokens, spacing, type, radii, icons, states, themes, German copy length, alignment to gutters, safe areas, red ≤ 5 %. (2) **Taste ("would a top studio ship this?")** — one clear focal point and one primary action per screen; hierarchy via size/weight/colour rather than boxes; consistent left edges; vertical rhythm; photography dominant; no template tells (gradients, glass, bento, centred hero + 3 cards, fake counts, emoji icons); numbers aligned (tnum) with explicit units; motion purposeful.
+**Severity:** **Blocker** — crash, unusable flow, data loss, legal violation · **High** — overflow, clipping/truncation of key data, overlap, wrong theme colours, missing required state, contrast failure, target < 44, broken navigation, flagship screen not matching its blueprint · **Medium** — off-scale spacing/type, misalignment > 1 pt, inconsistent component usage, weak hierarchy/rhythm, unnatural German copy, skeleton geometry mismatch · **Low** — polish ideas.
+**Report:** `docs/reports/design-qa/phase-N/<YYYY-MM-DD>-<module>.md` — table: `DQ-###`, route, viewport/theme/locale, severity, issue, evidence (file), expected (spec reference), fix, status. The lead fixes and re-runs until **0 open High/Medium**. Lows go to the backlog in HANDOFF.
+
+## 5. Native checks (when an Android emulator or device is attached via adb)
+Install the latest LAN APK (`adb install -r`), run Maestro smoke flows, capture screenshots in dark/light (`adb shell cmd uimode night yes|no`) and font scale 2 (`adb shell settings put system font_scale 2.0`, reset to 1.0 after), check status/navigation bar colours, safe areas, keyboard over sticky CTAs, back gesture, deep link `adb shell am start -a android.intent.action.VIEW -d "http://<lan-ip>:8080/v/<slug>"`.
+
+## 6. Security review checklist (every phase)
+Authorisation matrix tests exist for every endpoint (IDOR: other member's vehicle/mod/media/conversation/message/export) · mass assignment (FormRequest `validated()` only) · rate limits present · enumeration (emails on register/forgot, usernames, QR codes, public ids) · upload handling (MIME sniff, re-encode, size, path traversal) · XSS (Blade escaping, Markdown safe mode, OG tags) · CSRF/CORS/cookies (SameSite, Secure, staff cookie path) · CSP + security headers · staff guard isolation (member session can never reach `/admin`, staff session never authenticates `/api`) · view-as token restrictions · four-eyes cannot be bypassed (direct POST tests) · audit chain verifies · secrets not in repo/bundle/logs · token storage (SecureStore native, httpOnly web) · deep-link/URL validation · WebView (QR-04) restricted to own domain · dependency audits · SQL safety in search (bindings only). Report: `docs/reports/security/phase-N.md` with findings + fixes; **0 open High** to pass.
+
+## 7. Signed APK pipeline (Windows, local, every milestone)
+**One-time (done by `scripts/setup-windows.ps1`):** JDK 17 + Android SDK; upload keystore `C:\speedclub-secrets\speedclub-upload.keystore` (PKCS12, RSA 2048, 10 000 days); credentials in `%USERPROFILE%\.gradle\gradle.properties` (`SPEEDCLUB_UPLOAD_STORE_FILE` with forward slashes, `…_STORE_PASSWORD`, `…_KEY_ALIAS=speedclub`, `…_KEY_PASSWORD`) and a backup note in `C:\speedclub-secrets\README-KEYSTORE.txt`. **Back up the keystore + passwords in a password manager** — losing it means a new app identity for sideloaded testers (with Play App Signing, the upload key can be reset via Google support).
+**Config plugin:** `mobile/plugins/withReleaseSigning.js` (template in `scripts/templates/`) adds `signingConfigs.release` from those properties, switches `buildTypes.release` to it and **fails a release build when credentials are missing**. Register it in `app.config.ts`. Unit-test it (Jest) against a fixture `build.gradle`.
+**Build:** `powershell -ExecutionPolicy Bypass -File scripts/build-apk.ps1 -Target lan|staging|production [-ApiUrl …] [-Clean]`:
+1. resolves the API URL (lan → this PC's IPv4 on port 8080), bumps `mobile/version.json` `versionCode` (+1; `versionName` changes only per phase/milestone);
+2. sets `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_API_URL` (inlined at bundle time);
+3. `npx expo prebuild --platform android --no-install` (`--clean` when switching targets or after native config changes);
+4. provisions a private CMake copy with a long-path aware ninja (ADR-108; `subst` is incompatible with current RN autolinking), checks Windows `LongPathsEnabled=1`, runs `gradlew.bat app:assembleRelease`;
+5. copies `app-release.apk` to `releases/android/speedclub-<versionName>-b<versionCode>-<target>-<yyyyMMdd-HHmm>.apk`, writes `.sha256`, runs `apksigner verify --print-certs` (must **not** be the Android Debug certificate), appends to `docs/RELEASES.md`.
+**Versioning:** `versionName` 0.1.x = Phase 1, 0.2.x = Phase 2, 0.3.x = Phase 3, 1.0.0 = store release. Build number visible in Settings → "Über die App".
+**Cleartext:** only `lan` builds allow HTTP (expo-build-properties `usesCleartextTraffic`), staging/production are HTTPS-only.
+**iOS:** needs an Apple Developer account (owner). Then `eas build -p ios --profile preview` (cloud; works from Windows) → TestFlight. EAS cloud Android (`eas build -p android --profile preview`) is the fallback if local Gradle is blocked. `eas build --local` does not run on Windows.
+**Play policies (Nov 2026):** target API 36 ✓; 16 KB page-size support required for updates from 1 Feb 2027 (run Android Studio's 16 KB check on native libs before store upload); Android developer verification currently enforced only in Brazil, Indonesia, Singapore and Thailand (global from 2027) — sideloading test APKs in Germany works today; register the package name early.
+
+## 8. Release notes entry (`docs/RELEASES.md`, appended by the build script, completed by the release engineer)
+```
+## 0.1.3 (Build 14) — lan — 2026-11-20 18:42
+APK: releases/android/speedclub-0.1.3-b14-lan-20261120-1842.apk
+SHA-256: 3F9A…C21B
+Signed by: CN=SPEED CLUB, O=SPEED CLUB, C=DE (cert SHA-256 …)
+Changes: …
+Known issues (Low): …
+Test status: verify ✓ · e2e ✓ · visual ✓ (0 High/Medium) · security ✓ · Maestro: not run (no emulator) | ✓
+```
+
+## 9. Guide for the client (send with every APK) — DE
+**Installieren (Android):** Link auf dem Handy öffnen → APK herunterladen → "Installation aus dieser Quelle erlauben" für den Browser einmal bestätigen → Öffnen. Falls Play Protect warnt: "Details" → "Trotzdem installieren". **Update:** neue APK einfach darüber installieren — dein Login bleibt erhalten.
+**Was ist das?** Jede APK, die du bekommst, ist ein **Release-Build** — gleiche Geschwindigkeit und gleiches Verhalten wie später im Play Store. Der Play Store selbst bekommt später ein AAB (ein Paketformat, aus dem Google optimierte APKs erzeugt).
+**iPhone:** TestFlight aus dem App Store installieren → Einladungs-E-Mail annehmen → Installieren (Builds laufen nach 90 Tagen ab).
+**Fehler melden:** Screenshot oder Bildschirmaufnahme + was du getippt hast + was du erwartet hast + Handymodell + **Build-Nummer aus Einstellungen → Über die App**.
+**"Getestet" heißt:** automatisierte Abläufe auf Web und Android sind grün, alle Bildschirme wurden in allen Themes, beiden Sprachen und mit großer Schrift automatisch geprüft. Es heißt nicht, dass nie ein Fehler auftreten kann — dafür gibt es die Fehlermeldung oben.
+
+## 10. Bug report template (`docs/reports/bugs/BUG-###.md`)
+Title · build/version · platform/device · theme/locale/font scale · steps · expected · actual · evidence · severity · route ID · status · fix commit.

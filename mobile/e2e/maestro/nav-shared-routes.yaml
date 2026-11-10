@@ -1,0 +1,134 @@
+# ADR-101 on Android, the native counterpart of web/tests/e2e/flows/nav-shared-routes.spec.ts, on the real screens
+# since M1.6: a shared route stays in the tab that opened it (VEH-01 from Profile, QR-02 from Garage), each tab keeps its
+# own stack, in-app back pops within the tab, and re-tapping the active tab pops to its root.
+# Signed in as the demo member lukas.sc (docs/07_QA_AND_RELEASE.md, test data). The password comes from the command line and is
+# never written here:
+#   maestro --device emulator-5554 test -e DEMO_MEMBER_PASSWORD=... mobile/e2e/maestro/nav-shared-routes.yaml
+appId: de.speedclub.app
+name: nav-shared-routes
+env:
+  EMAIL: lukas.sc@speedclub.test
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: AUTH-02.root
+    timeout: 60000
+- tapOn:
+    id: AUTH-02.signIn
+- extendedWaitUntil:
+    visible:
+      id: AUTH-03.root
+    timeout: 15000
+- tapOn:
+    id: AUTH-03.email
+- inputText: ${EMAIL}
+- tapOn:
+    id: AUTH-03.password
+- inputText: ${DEMO_MEMBER_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: AUTH-03.cta.primary
+- extendedWaitUntil:
+    visible:
+      id: HOME-01.root
+    timeout: 30000
+- assertVisible:
+    id: tab.home
+    selected: true
+
+# Profile pushes the R34's page and stays in Profile.
+- tapOn:
+    id: tab.profile
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: 'PROF-01\.vehicle\..*'
+    timeout: 20000
+- tapOn:
+    id: 'PROF-01\.vehicle\..*'
+    index: 0
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: VEH-01.title
+      text: Skyline GT-R R34
+    timeout: 20000
+- assertVisible:
+    id: tab.profile
+    selected: true
+- takeScreenshot: nav-1-profile-vehicle
+
+# Garage pushes the QR page of the same car and stays in Garage.
+- tapOn:
+    id: tab.garage
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: GAR-01.root
+    timeout: 20000
+- assertNotVisible:
+    id: VEH-01.title
+- tapOn:
+    id: 'GAR-01\.card\..*\.qr'
+    index: 0
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: QR-02.card.shortCode
+      text: 8TR0 Q3MC
+    timeout: 20000
+- assertVisible:
+    id: tab.garage
+    selected: true
+- takeScreenshot: nav-2-garage-qr
+
+# Per-tab stack: Profile still shows the page it pushed.
+- tapOn:
+    id: tab.profile
+    retryTapIfNoChange: false
+- assertVisible:
+    id: VEH-01.title
+    text: Skyline GT-R R34
+- assertNotVisible:
+    id: QR-02.root
+- assertVisible:
+    id: tab.profile
+    selected: true
+- takeScreenshot: nav-3-profile-kept
+
+# In-app back pops within the tab, to the tab root, without changing tabs.
+# Hardware back is covered by nav-hardware-back.yaml.
+- tapOn:
+    id: VEH-01.header.back
+    retryTapIfNoChange: false
+- assertVisible:
+    id: PROF-01.root
+- assertNotVisible:
+    id: VEH-01.title
+- assertVisible:
+    id: tab.profile
+    selected: true
+- takeScreenshot: nav-4-profile-after-back
+
+# Back in Profile did not touch Garage.
+- tapOn:
+    id: tab.garage
+    retryTapIfNoChange: false
+- assertVisible:
+    id: QR-02.root
+
+# Re-tapping the active tab pops to its root.
+- tapOn:
+    id: tab.garage
+    retryTapIfNoChange: false
+- assertVisible:
+    id: GAR-01.root
+- assertNotVisible:
+    id: QR-02.root
+- assertVisible:
+    id: tab.garage
+    selected: true
+- takeScreenshot: nav-5-garage-after-retap

@@ -1,0 +1,219 @@
+{
+  "offline": "Offline – die Suche geht wieder, sobald du online bist.",
+  "search": {
+    "placeholder": "Marke, Modell, Mods oder Mitglieder",
+    "submit": "Nach „{{query}}“ suchen",
+    "placeholderShort": "Marke, Modell, Mitglied"
+  },
+  "recent": {
+    "title": "Zuletzt gesucht",
+    "clear": "Löschen",
+    "clearLabel": "Letzte Suchen löschen"
+  },
+  "suggestions": {
+    "makes": "Marken"
+  },
+  "makes": {
+    "title": "Marken",
+    "count_one": "{{formatted}} Build",
+    "count_other": "{{formatted}} Builds",
+    "emptyTitle": "Noch keine Marken",
+    "emptyBody": "Sobald Builds öffentlich sind, findest du ihre Marken hier.",
+    "emptyAction": "Fahrzeug hinzufügen",
+    "errorTitle": "Marken konnten nicht geladen werden"
+  },
+  "start": {
+    "title": "Wonach suchst du?",
+    "body": "Suche nach Marke, Modell, Motorcode, Mods oder Mitgliedern."
+  },
+  "tabs": {
+    "label": "Suchergebnisse",
+    "vehicles": "Fahrzeuge ({{count}})",
+    "members": "Mitglieder ({{count}})"
+  },
+  "noResults": {
+    "title": "Keine Treffer für „{{query}}“",
+    "body": "Prüfe die Schreibweise oder versuche es mit einer Marke."
+  },
+  "noVehicles": "Keine Fahrzeuge für „{{query}}“",
+  "noMembers": "Keine Mitglieder für „{{query}}“",
+  "invalid": {
+    "title": "Suchbegriff prüfen"
+  },
+  "members": {
+    "you": "Du"
+  },
+  "list": {
+    "more": "Mehr laden",
+    "loadingMore": "Weitere Ergebnisse werden geladen",
+    "moreError": "Weitere Ergebnisse konnten nicht geladen werden.",
+    "searching": "Wird gesucht"
+  },
+  "error": {
+    "title": "Die Suche hat nicht geklappt"
+  },
+  "chips": {
+    "label": "Aktive Filter",
+    "filter": "Filter",
+    "filterLabel_one": "Filter, {{count}} aktiv",
+    "filterLabel_other": "Filter, {{count}} aktiv",
+    "remove": "{{label}} entfernen",
+    "powerFrom": "ab {{value}} PS",
+    "powerTo": "bis {{value}} PS",
+    "powerBetween": "{{min}}–{{max}} PS",
+    "powerExact": "{{value}} PS",
+    "yearFrom": "ab Baujahr {{value}}",
+    "yearTo": "bis Baujahr {{value}}",
+    "yearBetween": "Baujahr {{min}}–{{max}}",
+    "yearExact": "Baujahr {{value}}",
+    "wheelDiameter": "{{value}}″"
+  },
+  "results": {
+    "count_one": "{{formatted}} Build",
+    "count_other": "{{formatted}} Builds",
+    "sortLabel": "Sortierung: {{sort}}. Ändern",
+    "viewLabel": "Ansicht",
+    "viewList": "Als Liste zeigen",
+    "viewGrid": "Als Raster zeigen",
+    "understood": "Erkannt und als Filter gesetzt"
+  },
+  "sort": {
+    "title": "Sortieren",
+    "relevance": "Relevanz",
+    "newest": "Neueste",
+    "updated": "Zuletzt aktualisiert",
+    "power": "Meiste PS"
+  },
+  "filters": {
+    "title": "Filter",
+    "show_one": "{{formatted}} Build anzeigen",
+    "show_other": "{{formatted}} Builds anzeigen",
+    "showCapped": "{{formatted}}+ Builds anzeigen",
+    "showPending": "Builds anzeigen",
+    "reset": "Zurücksetzen",
+    "resetAll": "Filter zurücksetzen",
+    "panelLabel": "Filter für die Suchergebnisse",
+    "groups": {
+      "vehicle": "Fahrzeug",
+      "power": "Leistung",
+      "drive": "Antrieb",
+      "wheels": "Räder & Fahrwerk",
+      "exhaust": "Abgas",
+      "mods": "Mods"
+    },
+    "fields": {
+      "make": "Marke",
+      "model": "Modell",
+      "generation": "Generation",
+      "year": "Baujahr",
+      "yearFrom": "Baujahr von",
+      "yearTo": "Baujahr bis",
+      "powerLow": "Mindestleistung",
+      "powerHigh": "Höchstleistung",
+      "powerFrom": "Ab",
+      "powerTo": "Bis",
+      "drivetrain": "Antriebsart",
+      "gearbox": "Getriebe",
+      "fuel": "Kraftstoff",
+      "wheelDiameter": "Felgendurchmesser",
+      "wheelBrand": "Felgenmarke",
+      "suspensionType": "Fahrwerksart",
+      "suspensionBrand": "Fahrwerksmarke",
+      "exhaustBrand": "Marke der Abgasanlage",
+      "modCategory": "Mod-Kategorien"
+    },
+    "any": "Alle",
+    "modelNeedsMake": "Wähle zuerst eine Marke.",
+    "optionLabel_one": "{{label}}, {{formatted}} Build",
+    "optionLabel_other": "{{label}}, {{formatted}} Builds",
+    "loadError": "Die Filter konnten nicht geladen werden.",
+    "offline": "Offline – die Filter laden, sobald du wieder online bist.",
+    "yearInvalid": "Gib ein Jahr zwischen {{min}} und {{max}} ein.",
+    "back": "Zurück zu den Filtern",
+    "chooseMake": "Marke wählen",
+    "chooseModel": "Modell wählen",
+    "findMake": "Marke suchen",
+    "findModel": "Modell suchen",
+    "noMatch": "Keine Treffer für „{{query}}“",
+    "allMakes": "Alle Marken",
+    "allModels": "Alle Modelle",
+    "powerUnit": "PS",
+    "dropped_one": "Der Filter „{{labels}}“ passt nicht mehr und wurde entfernt.",
+    "dropped_other": "Die Filter „{{labels}}“ passen nicht mehr und wurden entfernt."
+  },
+  "noResultsFiltered": {
+    "title": "Keine Builds für diese Filter",
+    "body": "Entferne einen Filter oder setze alle zurück.",
+    "action": "Filter zurücksetzen"
+  },
+  "collections": {
+    "title": "Kollektionen",
+    "count_one": "{{formatted}} Build",
+    "count_other": "{{formatted}} Builds"
+  },
+  "popularMods": {
+    "title": "Beliebte Mods"
+  },
+  "similarMembers": {
+    "title": "Mitglieder mit ähnlichen Autos"
+  },
+  "home": {
+    "errorTitle": "Entdecken konnte nicht geladen werden"
+  },
+  "make": {
+    "count_one": "{{formatted}} öffentlicher Build",
+    "count_other": "{{formatted}} öffentliche Builds",
+    "models": "Modelle",
+    "modelCount_one": "{{formatted}} Build",
+    "modelCount_other": "{{formatted}} Builds",
+    "generations": "Generationen von {{model}}",
+    "allBuilds": "Alle Builds von {{make}}",
+    "notFoundTitle": "Marke nicht gefunden",
+    "notFoundBody": "Zu dieser Marke gibt es keine öffentlichen Builds. Wähle in Entdecken eine andere Marke.",
+    "errorTitle": "Die Marke konnte nicht geladen werden",
+    "back": "Zu Entdecken",
+    "since": "seit {{year}}"
+  },
+  "model": {
+    "count_one": "{{formatted}} öffentlicher Build",
+    "count_other": "{{formatted}} öffentliche Builds",
+    "generations": "Generation",
+    "allGenerations": "Alle",
+    "segments": "Ansicht",
+    "builds": "Builds",
+    "wheels": "Räder-Vergleich",
+    "notFoundTitle": "Modell nicht gefunden",
+    "notFoundBody": "Zu diesem Modell gibt es keine öffentlichen Builds. Wähle in Entdecken ein anderes Modell.",
+    "errorTitle": "Das Modell konnte nicht geladen werden",
+    "buildsEmptyTitle": "Keine Builds in dieser Generation",
+    "buildsEmptyBody": "Wähle eine andere Generation oder „Alle“.",
+    "wheelsEmptyTitle": "Noch keine Räder angegeben",
+    "wheelsEmptyBody": "Sobald bei einem Build dieses Modells Räder angegeben sind, erscheinen sie hier.",
+    "wheelsError": "Der Räder-Vergleich konnte nicht geladen werden.",
+    "showAllGenerations": "Alle Generationen zeigen"
+  },
+  "wheelTable": {
+    "caption": "Räder-Vergleich: {{model}}",
+    "build": "Build",
+    "wheel": "Felgen",
+    "suspension": "Fahrwerk",
+    "lowering": "Tieferlegung",
+    "size": "Größe",
+    "et": "ET",
+    "tyres": "Reifen",
+    "axles": "{{front}} vorne · {{rear}} hinten"
+  },
+  "similar": {
+    "title": "Ähnliche Builds",
+    "label": "Ähnliche Builds zu {{title}}"
+  },
+  "searchSimilar": {
+    "action": "Ähnliche suchen",
+    "label": "Ähnliche Builds mit {{mod}} suchen"
+  },
+  "ai": {
+    "action": "Mit KI suchen",
+    "nothing": "Dazu haben wir keine passenden Filter gefunden. Die Suche nach deinem Text läuft weiter.",
+    "applied": "Filter aus deiner Suche"
+  }
+}

@@ -1,0 +1,36 @@
+{
+    "code": "Fehler :code",
+    "retry": "Neu laden",
+    "dashboard": "Zum Dashboard",
+    "login": "Zur Anmeldung",
+    "back": "Zurück",
+    "400": {
+        "title": "Diese Anfrage verstehen wir nicht",
+        "body": "Ein Filter oder eine Sortierung ist ungültig. Setze die Filter zurück und versuche es erneut."
+    },
+    "403": {
+        "title": "Kein Zugriff",
+        "body": "Für diese Seite oder Aktion fehlt deiner Rolle die Berechtigung.",
+        "hint": "Brauchst du Zugriff? Frag einen Owner oder Admin. Rollen und Berechtigungen werden im Bereich Team & Rollen vergeben."
+    },
+    "404": {
+        "title": "Seite nicht gefunden",
+        "body": "Diese Seite gibt es nicht, oder der Datensatz wurde entfernt."
+    },
+    "419": {
+        "title": "Seite abgelaufen",
+        "body": "Die Seite war zu lange offen. Lade sie neu und versuche es noch einmal."
+    },
+    "429": {
+        "title": "Zu viele Anfragen",
+        "body": "Bitte warte einen Moment, bevor du es erneut versuchst."
+    },
+    "500": {
+        "title": "Etwas ist schiefgelaufen",
+        "body": "Auf dem Server ist ein Fehler aufgetreten. Er wurde protokolliert. Versuche es gleich noch einmal."
+    },
+    "503": {
+        "title": "Wartungsarbeiten",
+        "body": "SPEED CLUB wird gerade gewartet. Der Admin-Bereich ist gleich wieder erreichbar."
+    }
+}

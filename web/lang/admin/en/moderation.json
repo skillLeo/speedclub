@@ -1,0 +1,531 @@
+{
+    "nav": {
+        "reports": "Reports",
+        "messages": "Messages",
+        "rules": "Rules",
+        "templates": "Statement templates"
+    },
+    "reports": {
+        "title": "Reports",
+        "intro": "Notices under the Digital Services Act, sorted by priority. A person on the team decides every case.",
+        "caption": "Moderation cases",
+        "tabs": {
+            "label": "Cases",
+            "new": "New",
+            "in_review": "In review",
+            "decided": "Decided",
+            "appeals": "Appeals"
+        },
+        "toolbar": {
+            "new": "New cases nobody has taken yet.",
+            "in_review": "Cases someone is reviewing now.",
+            "decided": "Decided cases, newest first.",
+            "appeals": "An appeal is always decided by another team member than the first decision."
+        },
+        "columns": {
+            "priority": "Priority",
+            "target": "Content",
+            "reason": "Reason",
+            "reporters": "Reporters",
+            "first_report": "First report",
+            "last_report": "Last report",
+            "assigned": "Assigned",
+            "status": "Status",
+            "ai": "AI suggestion",
+            "decision": "Decision",
+            "actions": "Actions",
+            "case": "Case",
+            "original": "Decision appealed",
+            "role": "By",
+            "filed": "Received",
+            "decider": "Decided by"
+        },
+        "more_reasons": "+:count more",
+        "take": "Take",
+        "open": "Open",
+        "you": "You",
+        "nobody": "–",
+        "empty": {
+            "new_title": "No new reports",
+            "new_body": "Everything is taken or decided.",
+            "in_review_title": "Nothing in review",
+            "in_review_body": "Take a case from “New” to review it.",
+            "decided_title": "No decisions yet",
+            "decided_body": "Decided cases appear here with their statement of reasons.",
+            "appeals_title": "No appeals",
+            "appeals_body": "When a member or a reporter disagrees, the appeal appears here."
+        },
+        "error": "The reports could not be loaded.",
+        "filters": {
+            "label": "Filter cases",
+            "q": "Search",
+            "q_placeholder": "Case number or content",
+            "target_type": "Content",
+            "reason": "Reason",
+            "assigned": "Assigned",
+            "source": "Source",
+            "status": "Status",
+            "role": "By",
+            "any": "All",
+            "apply": "Apply",
+            "assigned_me": "Me",
+            "assigned_none": "Nobody",
+            "assigned_others": "Others",
+            "source_automated": "Detected automatically",
+            "source_web_form": "Web form",
+            "source_staff": "Own initiative"
+        },
+        "bulk": {
+            "no_action": "No action",
+            "title": "No action for :count cases",
+            "body": "The cases are closed without action. Reporters learn the outcome. More than 100 cases in 24 hours need an approval.",
+            "result": "No action: result",
+            "codes": {
+                "not_found": "Case not found",
+                "forbidden": "Message cases only with the messages permission",
+                "invalid": "Invalid input",
+                "not_possible": "Already decided",
+                "failed": "Failed"
+            }
+        }
+    },
+    "priority": {
+        "tooltip": ":total points: reason :reason · reporters +:reporters (:count) · repeat +:repeat (:repeat_count earlier) · waiting +:age (:days days)",
+        "label": "Priority :total"
+    },
+    "target_types": {
+        "member": "Profile",
+        "vehicle": "Vehicle",
+        "photo": "Photo",
+        "message": "Message",
+        "build_update": "Update",
+        "modification": "Modification"
+    },
+    "target_of": {
+        "member": "Profile :label",
+        "vehicle": "Vehicle :label",
+        "photo": "Photo of :label",
+        "message": "Message from :label",
+        "build_update": "Update of :label",
+        "modification": "Mod on :label"
+    },
+    "unnamed": "Unnamed",
+    "reasons": {
+        "illegal": "Illegal",
+        "harassment": "Harassment",
+        "nudity": "Nudity",
+        "spam": "Spam",
+        "impersonation": "Impersonation",
+        "other": "Other"
+    },
+    "sub_reasons": {
+        "street_racing": "Illegal racing (section 315d StGB)",
+        "hate_speech": "Hate speech",
+        "privacy": "Privacy",
+        "copyright": "Copyright",
+        "other_illegal": "Other offence"
+    },
+    "status": {
+        "new": "New",
+        "in_review": "In review",
+        "decided": "Decided",
+        "closed": "Closed",
+        "open": "Open"
+    },
+    "sources": {
+        "app": "App",
+        "web_form": "Web form",
+        "automated": "Detected automatically"
+    },
+    "origin_staff": "Own initiative",
+    "outcomes": {
+        "no_action": "No action",
+        "remove_content": "Content removed",
+        "restrict": "Restricted",
+        "suspend": "Suspended",
+        "reverse": "Measure lifted"
+    },
+    "roles": {
+        "affected": "Affected member",
+        "reporter": "Reporter"
+    },
+    "appeal_status": {
+        "open": "Open",
+        "upheld": "Upheld",
+        "reversed": "Changed"
+    },
+    "case": {
+        "title": "Case :reference",
+        "crumb": "Reports",
+        "tabs": {
+            "label": "Case",
+            "overview": "Content",
+            "reports": "Reports",
+            "evidence": "Evidence",
+            "decision": "Decision",
+            "prior": "Earlier"
+        },
+        "meta": {
+            "created": "Received :date",
+            "reports": ":count reports",
+            "reports_one": "1 report",
+            "assigned": "With :name",
+            "unassigned": "Nobody assigned yet",
+            "member": "Member :username"
+        },
+        "actions": {
+            "take": "Take",
+            "reassign": "Hand over",
+            "decide": "Decide",
+            "member": "Go to member",
+            "more": "More actions"
+        },
+        "taken_by_other": ":name is reviewing this case right now.",
+        "error": "The case could not be loaded.",
+        "preview": {
+            "title": "What members see now",
+            "gone": "The content no longer exists.",
+            "message": "Messages are only shown in the protected Messages area, with every access logged.",
+            "message_link": "Open in Messages",
+            "no_bio": "No bio",
+            "no_description": "No description",
+            "hidden": "Hidden",
+            "removed_photo": "The photo is removed; its public variants are gone.",
+            "deleted": "Deleted",
+            "private": "Private"
+        },
+        "reports": {
+            "title": "Reports",
+            "details_withheld": "The details are only available with the messages permission, as they may quote the message.",
+            "contact": "Contact: :value",
+            "reveal": "Show",
+            "reveal_error": "The address could not be loaded.",
+            "good_faith": "Confirmed in good faith",
+            "anonymous": "No account",
+            "automated": "Keyword rule",
+            "none": "No reports: the team opened this case itself."
+        },
+        "evidence": {
+            "title": "Evidence",
+            "intro": "What was stored when it was reported. Every opening is recorded in the audit log.",
+            "reveal": "Show evidence",
+            "revealing": "Loading …",
+            "logged": "Shown and logged",
+            "forbidden": "Evidence about messages needs the messages permission.",
+            "error": "The evidence could not be loaded.",
+            "snapshot": "As reported",
+            "no_snapshot": "No text stored.",
+            "more": "Load more context (±10 messages)",
+            "more_hint": "Reads the conversation as the reporter sees it today. Logged separately.",
+            "more_none": "The conversation no longer exists.",
+            "live_title": "Current conversation",
+            "from": {
+                "reported": "@:username",
+                "reporter": "@:username (reported it)",
+                "other": "Someone else"
+            },
+            "reported_badge": "Reported",
+            "photo": "Photo",
+            "vehicle": "Vehicle card: :title",
+            "removed": "Withdrawn",
+            "fields": {
+                "username": "Username",
+                "display_name": "Display name",
+                "bio": "Bio",
+                "title": "Title",
+                "slug": "Address",
+                "nickname": "Nickname",
+                "description": "Description",
+                "alt": "Image description",
+                "note": "Text",
+                "type": "Kind",
+                "brand_text": "Brand",
+                "part_name": "Part",
+                "notes": "Notes"
+            }
+        },
+        "decision": {
+            "title": "Decision",
+            "none": "Not decided yet.",
+            "by": "Decided by :name on :date",
+            "by_system": "Decided on :date",
+            "facts": "Facts",
+            "ground": "Ground",
+            "until": "until :date",
+            "no_end": "No end date",
+            "appeal_until": "Appeal possible until :date",
+            "reversed": "Lifted later on :date",
+            "automated_detection": "Detected automatically",
+            "human": "Decided by a person"
+        },
+        "appeals": {
+            "title": "Appeals",
+            "none": "No appeal filed.",
+            "filed": "Received :date",
+            "decided": "Decided by :name on :date",
+            "decide": "Decide appeal",
+            "same_staff": "You took this decision. Another team member decides the appeal.",
+            "text_hidden": "The appeal text is visible to whoever decides appeals."
+        },
+        "prior": {
+            "title": "Earlier decisions about the member",
+            "none": "No earlier decisions.",
+            "reversed": "Lifted",
+            "open": "Open case"
+        },
+        "history": {
+            "empty": "No entries yet."
+        },
+        "ai": "AI suggestion :score %",
+        "ai_note": "An AI suggestion only, not a decision.",
+        "ai_title": "AI suggestion, not a decision: :summary"
+    },
+    "composer": {
+        "title": "Take a decision",
+        "description": "The member reads the statement of reasons in the app and by e-mail. Everything stays editable until you send it.",
+        "action": "Measure",
+        "actions": {
+            "no_action": "No action",
+            "remove_content": "Remove content",
+            "restrict": "Restrict",
+            "suspend": "Suspend"
+        },
+        "hints": {
+            "no_action": "The case is closed. Reporters learn the outcome; the member does not.",
+            "remove_content": "The content is hidden; for a profile the name, bio and pictures.",
+            "restrict": "Block messaging or publishing, with or without an end date.",
+            "suspend": "The account is suspended. A second team member must approve."
+        },
+        "restriction": "What is restricted",
+        "template": "Template",
+        "template_hint": "Templates in the member's language (:locale). Placeholders are filled in.",
+        "template_none": "No template",
+        "automated": "Automated means",
+        "automated_detection_yes": "Detected: automatically (keyword rule or AI suggestion)",
+        "automated_detection_no": "Detected: by a report or the team",
+        "automated_decision": "Decided: by you, not automated",
+        "preview": "Preview for the member",
+        "preview_hint": "As the member sees it in the app and in the e‑mail.",
+        "preview_load": "Refresh preview",
+        "preview_error": "The preview could not be loaded.",
+        "preview_de": "German",
+        "preview_en": "English",
+        "submit": "Send decision",
+        "submit_suspend": "Request suspension",
+        "no_action_note": "No statement needed: the member never learns about the report.",
+        "preview_waiting": "The preview appears once facts and ground are filled in.",
+        "preview_other": "In :language, if the member switches the language"
+    },
+    "reassign": {
+        "title": "Hand over case",
+        "staff": "To",
+        "submit": "Hand over",
+        "placeholder": "Choose a team member"
+    },
+    "appeal": {
+        "title": "Decide appeal",
+        "outcome": "Outcome",
+        "upheld": "Uphold the decision",
+        "upheld_hint": "The measure stays. The person learns this with your explanation.",
+        "reversed": "Change the decision",
+        "reversed_hint_affected": "The measure is lifted and content comes back. The member and the reporters are notified.",
+        "reversed_hint_reporter": "You now take a measure on the reported content.",
+        "explanation": "Explanation for the person who appealed",
+        "explanation_hint": "10–5,000 characters. It is in the e-mail.",
+        "measure": "New measure",
+        "submit": "Decide appeal",
+        "text": "Appeal",
+        "internal_reason": "Internal reason (audit log only)"
+    },
+    "messages": {
+        "title": "Messages",
+        "intro": "Reported messages. You only see the reported message and its stored context; every opening is logged.",
+        "caption": "Reported messages",
+        "tabs": {
+            "label": "Message cases",
+            "open": "Open",
+            "decided": "Decided"
+        },
+        "columns": {
+            "participants": "Participants",
+            "reason": "Reason",
+            "reported": "Reported",
+            "status": "Status",
+            "priority": "Priority",
+            "case": "Case"
+        },
+        "participants": "Message from @:reported to @:reporter",
+        "select": "Choose a case above.",
+        "select_body": "The message loads only when you open the case.",
+        "empty_open_title": "No reported messages",
+        "empty_open_body": "When someone reports a message, it appears here.",
+        "empty_decided_title": "Nothing decided yet",
+        "empty_decided_body": "Decided message cases appear here.",
+        "error": "The message cases could not be loaded.",
+        "open_case": "Case page",
+        "reported_by": "Reported by @:reporter",
+        "between": "@:reported → @:reporter"
+    },
+    "rules": {
+        "title": "Rules",
+        "intro": "Keywords for members' texts and limits for requests. Every change needs a reason and is in the audit log.",
+        "keywords": {
+            "title": "Keywords",
+            "intro": "Applies to vehicle descriptions, build notes, bio and display name. Messages are only flagged, never blocked. Private mod notes are not checked.",
+            "caption": "Keywords",
+            "term": "Term",
+            "list": "List",
+            "created": "Added",
+            "hits": "Matches 30 days",
+            "actions": "Actions",
+            "add": "Add term",
+            "remove": "Remove",
+            "remove_title": "Remove “:term”?",
+            "remove_body": "The term stops applying at once. Its match count is deleted.",
+            "empty_title": "No keywords yet",
+            "empty_body": "Add terms that are blocked or flagged for review.",
+            "by": ":name, :date",
+            "lists": {
+                "block": "Block",
+                "flag": "Flag"
+            },
+            "list_hints": {
+                "block": "The text is refused with a neutral message.",
+                "flag": "The text is saved, and a case opens for review."
+            },
+            "add_title": "Add term",
+            "term_hint": "Case, umlauts and punctuation do not matter. Whole words count.",
+            "submit": "Add",
+            "term_error": "At least 2 characters."
+        },
+        "limits": {
+            "title": "Request limits",
+            "intro": "Deviations from the default, between 0.25× and 4×. Applies to every member from the next request.",
+            "caption": "Request limits",
+            "name": "Limit",
+            "default": "Default",
+            "window": "Window",
+            "override": "New",
+            "range": "Allowed",
+            "edit": "Edit limits",
+            "edit_title": "Edit request limits",
+            "submit": "Publish",
+            "published": "Version :version, published by :name on :date",
+            "never": "The default values apply.",
+            "per": ":max per :window",
+            "minutes": "{1} :count minute|[2,*] :count minutes",
+            "hours": "{1} :count hour|[2,*] :count hours",
+            "days": "{1} :count day|[2,*] :count days",
+            "range_value": ":min–:max",
+            "reset": "Default",
+            "changed": ":count changed",
+            "invalid": "Between :min and :max.",
+            "names": {
+                "account_edits": "Profile and settings changes",
+                "account_security": "Account security changes",
+                "ai": "AI suggestions",
+                "ai_translate": "AI translations",
+                "appeals": "Appeals",
+                "blocks": "Blocking",
+                "browse": "Home and Discover",
+                "catalog_requests": "Catalogue requests",
+                "contact_form": "Contact form (per IP)",
+                "conversation_edits": "Chat actions",
+                "conversation_requests": "Message requests",
+                "conversations": "New conversations",
+                "csrf_cookie": "Session cookie (per IP)",
+                "follows": "Follows",
+                "garage_edits": "Garage edits",
+                "garage_reorders": "Garage reordering",
+                "garage_writes": "New vehicles and mods",
+                "member_email": "E‑mail codes (per IP)",
+                "member_login": "Sign-in (per IP)",
+                "member_register": "Registration (per IP)",
+                "member_verify": "Verification codes (per IP)",
+                "messages": "Messages",
+                "notification_reads": "Notifications read",
+                "public_read": "Public reads (per IP)",
+                "push_tokens": "Push devices",
+                "qr": "QR scans (per IP)",
+                "qr_downloads": "QR downloads",
+                "qr_reissues": "QR reissues",
+                "realtime_auth": "Realtime connections",
+                "reports": "Reports",
+                "saves": "Saved builds",
+                "search": "Search",
+                "support_tickets": "Support requests",
+                "token_rotate": "Token renewal",
+                "two_factor_challenge": "Two-factor codes (per IP)",
+                "typing": "Typing indicator",
+                "unfollows": "Unfollows",
+                "uploads": "Photo uploads",
+                "username_check": "Username checks",
+                "web_account_deletion": "Web account deletion (per IP)"
+            },
+            "groups": {
+                "account": "Account",
+                "content": "Content",
+                "messages": "Messages",
+                "public": "Public"
+            }
+        },
+        "error": "The rules could not be loaded.",
+        "reason_hint": "For the audit log, 10–1,000 characters."
+    },
+    "templates": {
+        "title": "Statement templates",
+        "intro": "Templates for the statement of reasons under Art. 17 DSA, in German and English. Placeholders: {target}, {date}, {member}. The system always adds the redress information itself.",
+        "caption": "Templates",
+        "columns": {
+            "label": "Template",
+            "locale": "Language",
+            "action": "For",
+            "ground": "Ground",
+            "updated": "Changed",
+            "actions": "Actions"
+        },
+        "locales": {
+            "de": "German",
+            "en": "English"
+        },
+        "new": "New template",
+        "edit": "Edit",
+        "delete": "Delete",
+        "delete_title": "Delete template “:label”?",
+        "delete_body": "Decisions already sent keep their text.",
+        "drawer_new": "New template",
+        "drawer_edit": "Edit template",
+        "fields": {
+            "key": "Key",
+            "key_hint": "Lower-case letters, digits and _. Same key = same template in the other language.",
+            "locale": "Language",
+            "action": "For measure",
+            "label": "Name",
+            "facts": "Facts",
+            "facts_hint": "With the placeholders {target}, {date}, {member}.",
+            "ground": "Ground",
+            "document": "Written in",
+            "section": "Section",
+            "sort": "Order"
+        },
+        "redress": "Redress (fixed by law): internal appeal within 6 months, out-of-court dispute settlement under Art. 21 DSA, court.",
+        "save": "Save",
+        "empty_title": "No templates yet",
+        "empty_body": "Add a template so the team can state reasons faster.",
+        "error": "The templates could not be loaded."
+    },
+    "flash": {
+        "bulk_done": "Cases closed without action.",
+        "bulk_partial": "Not every case could be closed. See the overview for details.",
+        "taken": "You are now working on this case.",
+        "reassigned": "Case handed over.",
+        "decided": "Decision saved. The member and the reporters are notified.",
+        "not_possible": "That is not possible right now. Reload the page and try again.",
+        "appeal_decided": "Appeal decided. The person who appealed is notified.",
+        "keyword_added": "Term added.",
+        "keyword_removed": "Term removed.",
+        "limits_published": "Limits published. They apply from the next request.",
+        "template_saved": "Template saved.",
+        "template_deleted": "Template deleted."
+    }
+}

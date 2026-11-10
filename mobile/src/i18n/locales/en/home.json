@@ -1,0 +1,170 @@
+{
+  "offline": "Offline – you're seeing what was loaded last.",
+  "featured": {
+    "eyebrow": "FEATURED BUILD"
+  },
+  "newBuilds": {
+    "title": "New builds",
+    "allLabel": "All new builds in Discover"
+  },
+  "card": {
+    "latestChange": "Latest change",
+    "ownerProfile": "Profile of {{name}}"
+  },
+  "list": {
+    "more": "Load more",
+    "loadingMore": "Loading more builds",
+    "moreError": "More builds couldn't be loaded.",
+    "end": "That's every public build.",
+    "endFollowing": "That's everything from members you follow."
+  },
+  "empty": {
+    "title": "No public builds yet",
+    "body": "As soon as members publish their cars, they show up here. Start with yours.",
+    "action": "Add vehicle"
+  },
+  "error": {
+    "title": "Builds couldn't be loaded",
+    "body": "Check your connection and try again.",
+    "offlineTitle": "You're offline",
+    "offlineBody": "We'll load the builds as soon as you're back online."
+  },
+  "restricted": {
+    "body": "Your account is restricted. You can still view and search builds.",
+    "until": "Your account is restricted until {{date}}. You can still view and search builds.",
+    "suspended": "Your account is suspended. Your builds are hidden from everyone for now."
+  },
+  "rail": {
+    "makes": "Makes",
+    "allMakes": "All",
+    "allMakesLabel": "All makes in Discover",
+    "makeCount_one": "{{formatted}} build",
+    "makeCount_other": "{{formatted}} builds",
+    "garageTitle": "Your garage",
+    "garageOpen": "Open garage",
+    "vehicleCount_one": "{{formatted}} vehicle",
+    "vehicleCount_other": "{{formatted}} vehicles",
+    "aboutTitle": "About SPEED CLUB",
+    "aboutBody": "Your garage with specs and mods as real data, and a QR code that links your car in the car park to its build page.",
+    "join": "Create account"
+  },
+  "tabs": {
+    "label": "Home view",
+    "forYou": "For you",
+    "following": "Following"
+  },
+  "bell": {
+    "label": "Notifications",
+    "unread_one": "{{count}} unread",
+    "unread_other": "{{count}} unread"
+  },
+  "updates": {
+    "title": "Build updates"
+  },
+  "members": {
+    "title": "Active members",
+    "profileOf": "Profile of {{name}}"
+  },
+  "mods": {
+    "title": "Popular mods this week"
+  },
+  "following": {
+    "empty": {
+      "title": "Nothing yet from members you follow",
+      "body": "Follow members whose builds interest you. Their new builds and changes will show up here.",
+      "bodySuggestions": "Follow members whose builds interest you.",
+      "discover": "Discover members"
+    },
+    "suggestions": "Suggestions for you",
+    "suggestionsActive": "Active right now",
+    "guest": {
+      "title": "See what your people are up to",
+      "body": "Sign in and follow members. Their new builds and changes will show up here.",
+      "signIn": "Sign in"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "unread": "Unread",
+    "someone": "A member",
+    "aBuild": "a build",
+    "readAll": "Mark all as read",
+    "readAllFailed": "Couldn't mark your notifications as read. Try again in a moment.",
+    "emptyTitle": "No notifications yet",
+    "emptyBody": "This is where you'll see who follows you and what's new from members you follow.",
+    "errorTitle": "Notifications couldn't be loaded",
+    "offlineBody": "We'll load your notifications as soon as you're back online.",
+    "loadingMore": "Loading more notifications",
+    "guest": {
+      "title": "Your notifications",
+      "body": "Sign in to see who follows you and what's new."
+    },
+    "text": {
+      "newFollower": "{{actor}} now follows you",
+      "newFollowerTwo": "{{actor}} and {{other}} now follow you",
+      "newFollowerMany_one": "{{actor}} and {{count}} other now follow you",
+      "newFollowerMany_other": "{{actor}} and {{count}} others now follow you",
+      "followedPublished": "{{actor}} published {{vehicle}}",
+      "followedUpdated": "{{actor}} updated {{vehicle}}",
+      "followedUpdates_one": "{{actor}} posted {{count}} build update",
+      "followedUpdates_other": "{{actor}} posted {{count}} build updates",
+      "buildSaved_one": "{{count}} member saved your {{vehicle}}",
+      "buildSaved_other": "{{count}} members saved your {{vehicle}}",
+      "buildSavedAny_one": "{{count}} member saved one of your builds",
+      "buildSavedAny_other": "{{count}} members saved one of your builds",
+      "security": {
+        "new_device": "New sign-in on an unknown device. If this wasn't you, change your password now.",
+        "password_changed": "Your password was changed. If this wasn't you, reset it with “Forgot password”.",
+        "email_changed": "Your email address was changed. If this wasn't you, change your password now.",
+        "two_factor_changed": "Your two-factor sign-in was changed. If this wasn't you, change your password now.",
+        "deletion_requested": "Deletion of your account was requested. If this wasn't you, change your password now.",
+        "other": "A security setting on your account was changed. If this wasn't you, change your password now.",
+        "new_device_named": "New sign-in on {{device}}. If this wasn't you, change your password now.",
+        "sessions_revoked": "Devices were signed out of your account. Wasn’t you? Change your password right away.",
+        "verification_failed": "A wrong password or code was entered for your account. Wasn’t you? Change your password right away.",
+        "recovery_code_used": "A recovery code was used to sign in. Wasn’t you? Change your password right away."
+      },
+      "other": "New notification",
+      "followedBuilds_one": "{{actor}} published {{count}} build",
+      "followedBuilds_other": "{{actor}} published {{count}} builds",
+      "followedMixed_one": "{{actor}} posted {{count}} new item",
+      "followedMixed_other": "{{actor}} posted {{count}} new builds and build updates",
+      "moderation": {
+        "remove_content": "We removed something you posted. Tap for the reasons and your options.",
+        "restrict": "We restricted your account. Tap for the reasons and your options.",
+        "suspend": "We suspended your account. Tap for the reasons and your options.",
+        "reverse": "We lifted a measure. Tap for the reasons.",
+        "other": "We made a decision about your content or your account. Tap for the reasons."
+      },
+      "reportDecided": "We've reviewed your report. Tap for the outcome.",
+      "reportDecidedOutcome": {
+        "no_action": "We've reviewed your report and found no breach. Tap for details.",
+        "remove_content": "We've reviewed your report and removed the content. Tap for details.",
+        "measures": "We've reviewed your report and took action. Tap for details.",
+        "reversed": "We lifted an earlier measure. Tap for details."
+      },
+      "qrMilestone": "Your QR code for {{vehicle}} has been scanned {{scans}} times",
+      "qrMilestoneAny": "One of your QR codes has been scanned {{scans}} times",
+      "huAuReminder": "The HU/AU inspection for {{vehicle}} is due in {{month}}",
+      "huAuReminderAny": "Your HU/AU inspection is due in {{month}}",
+      "catalogRequest": {
+        "accepted": "Your vehicle is now in the catalogue: {{vehicle}}",
+        "rejected": "We didn’t add your catalogue request for {{vehicle}}.",
+        "rejectedReason": "We didn’t add your catalogue request for {{vehicle}}. Reason: {{reason}}",
+        "yourVehicle": "your vehicle"
+      },
+      "supportReply": "The team replied to your request {{reference}}",
+      "supportReplyAny": "The team replied to your support request"
+    },
+    "restricted": "Your account is restricted. You can still see your notifications.",
+    "restrictedUntil": "Your account is restricted until {{date}}. You can still see your notifications."
+  },
+  "announcements": {
+    "dismiss": "Hide notice",
+    "more": "Learn more",
+    "externalLabel": "{{label}} (opens in the browser)",
+    "warningLabel": "Important: {{title}}"
+  }
+}

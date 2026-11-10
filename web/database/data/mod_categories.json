@@ -1,0 +1,143 @@
+[
+{"key":"wheels_tires","name":{"de":"Räder & Reifen","en":"Wheels & tyres"},"icon":"wheel","fields":[
+  {"key":"wheel_brand","label":{"de":"Felgenmarke","en":"Wheel brand"},"type":"brand","searchable":true,"facet":true},
+  {"key":"wheel_model","label":{"de":"Felgenmodell","en":"Wheel model"},"type":"text","searchable":true},
+  {"key":"diameter","label":{"de":"Durchmesser","en":"Diameter"},"type":"number","unit":"in","min":13,"max":24,"step":0.5,"facet":true},
+  {"key":"diameter_rear","label":{"de":"Durchmesser hinten","en":"Diameter rear"},"type":"number","unit":"in","min":13,"max":24,"step":0.5},
+  {"key":"width_front","label":{"de":"Breite vorne","en":"Width front"},"type":"number","unit":"in","min":3,"max":16,"step":0.5},
+  {"key":"width_rear","label":{"de":"Breite hinten","en":"Width rear"},"type":"number","unit":"in","min":3,"max":16,"step":0.5},
+  {"key":"et_front","label":{"de":"ET vorne","en":"ET front"},"type":"number","min":-50,"max":70},
+  {"key":"et_rear","label":{"de":"ET hinten","en":"ET rear"},"type":"number","min":-50,"max":70},
+  {"key":"bolt_pattern","label":{"de":"Lochkreis","en":"Bolt pattern"},"type":"text","options":{"example":"5×120"}},
+  {"key":"finish","label":{"de":"Finish/Farbe","en":"Finish/colour"},"type":"text"},
+  {"key":"staggered","label":{"de":"Mischbereifung","en":"Staggered"},"type":"boolean"},
+  {"key":"tyre_brand","label":{"de":"Reifenmarke","en":"Tyre brand"},"type":"brand","searchable":true},
+  {"key":"tyre_model","label":{"de":"Reifenmodell","en":"Tyre model"},"type":"text","searchable":true},
+  {"key":"tyre_size_front","label":{"de":"Reifengröße vorne","en":"Tyre size front"},"type":"text","options":{"pattern":"^\\d{3}/\\d{2} R\\d{2}$","example":"255/35 R19"}},
+  {"key":"tyre_size_rear","label":{"de":"Reifengröße hinten","en":"Tyre size rear"},"type":"text","options":{"pattern":"^\\d{3}/\\d{2} R\\d{2}$","example":"255/35 R19"}},
+  {"key":"spacer_front","label":{"de":"Spurplatten vorne","en":"Spacers front"},"type":"number","unit":"mm","min":0,"max":60},
+  {"key":"spacer_rear","label":{"de":"Spurplatten hinten","en":"Spacers rear"},"type":"number","unit":"mm","min":0,"max":60}
+]},
+{"key":"suspension","name":{"de":"Fahrwerk","en":"Suspension"},"icon":"coilover","fields":[
+  {"key":"type","label":{"de":"Art","en":"Type"},"type":"select","facet":true,"options":[
+    {"value":"coilover","label":{"de":"Gewindefahrwerk","en":"Coilovers"}},
+    {"value":"air","label":{"de":"Luftfahrwerk","en":"Air suspension"}},
+    {"value":"lowering_springs","label":{"de":"Tieferlegungsfedern","en":"Lowering springs"}},
+    {"value":"sport_dampers","label":{"de":"Sportdämpfer","en":"Sport dampers"}},
+    {"value":"stock","label":{"de":"Serie","en":"Stock"}},
+    {"value":"other","label":{"de":"Sonstiges","en":"Other"}}
+  ]},
+  {"key":"brand","label":{"de":"Marke","en":"Brand"},"type":"brand","searchable":true,"facet":true},
+  {"key":"model","label":{"de":"Modell","en":"Model"},"type":"text","searchable":true},
+  {"key":"lowering_front","label":{"de":"Tieferlegung vorne","en":"Lowering front"},"type":"number","unit":"mm","min":0,"max":200},
+  {"key":"lowering_rear","label":{"de":"Tieferlegung hinten","en":"Lowering rear"},"type":"number","unit":"mm","min":0,"max":200},
+  {"key":"adjustable_damping","label":{"de":"Dämpfung einstellbar","en":"Adjustable damping"},"type":"boolean"}
+]},
+{"key":"exhaust","name":{"de":"Abgasanlage","en":"Exhaust"},"icon":"exhaust","fields":[
+  {"key":"type","label":{"de":"Art","en":"Type"},"type":"select","options":[
+    {"value":"valved","label":{"de":"Klappenauspuff","en":"Valved exhaust"}},
+    {"value":"catback","label":{"de":"Catback","en":"Cat-back"}},
+    {"value":"downpipe","label":{"de":"Downpipe/Turbo-back","en":"Downpipe/turbo-back"}},
+    {"value":"full_system","label":{"de":"Komplettanlage","en":"Full system"}},
+    {"value":"rear_silencer","label":{"de":"Endschalldämpfer","en":"Rear silencer"}},
+    {"value":"headers","label":{"de":"Fächerkrümmer","en":"Headers"}}
+  ]},
+  {"key":"brand","label":{"de":"Marke","en":"Brand"},"type":"brand","searchable":true,"facet":true},
+  {"key":"model","label":{"de":"Modell","en":"Model"},"type":"text","searchable":true},
+  {"key":"material","label":{"de":"Material","en":"Material"},"type":"select","options":[
+    {"value":"stainless","label":{"de":"Edelstahl","en":"Stainless steel"}},
+    {"value":"titanium","label":{"de":"Titan","en":"Titanium"}},
+    {"value":"other","label":{"de":"Sonstiges","en":"Other"}}
+  ]},
+  {"key":"valves","label":{"de":"Klappen","en":"Valves"},"type":"boolean"}
+]},
+{"key":"engine_performance","name":{"de":"Motor & Leistung","en":"Engine & performance"},"icon":"turbo","fields":[
+  {"key":"stage","label":{"de":"Stage","en":"Stage"},"type":"select","options":[
+    {"value":"stage_1","label":{"de":"Stage 1","en":"Stage 1"}},
+    {"value":"stage_2","label":{"de":"Stage 2","en":"Stage 2"}},
+    {"value":"stage_3","label":{"de":"Stage 3","en":"Stage 3"}},
+    {"value":"custom","label":{"de":"Individuell","en":"Custom"}}
+  ]},
+  {"key":"tuner","label":{"de":"Tuner","en":"Tuner"},"type":"brand","searchable":true},
+  {"key":"software","label":{"de":"Software","en":"Software"},"type":"text","searchable":true},
+  {"key":"turbo_upgrade","label":{"de":"Turbo-/Kompressor-Upgrade","en":"Turbo/compressor upgrade"},"type":"text","searchable":true},
+  {"key":"intake","label":{"de":"Ansaugung","en":"Intake"},"type":"text","searchable":true},
+  {"key":"intercooler","label":{"de":"Ladeluftkühler","en":"Intercooler"},"type":"text","searchable":true},
+  {"key":"fuel_system","label":{"de":"Kraftstoffsystem","en":"Fuel system"},"type":"text","searchable":true},
+  {"key":"claimed_power","label":{"de":"Angegebene Leistung","en":"Claimed power"},"type":"number","unit":"PS","min":1,"max":5000},
+  {"key":"claimed_torque","label":{"de":"Angegebenes Drehmoment","en":"Claimed torque"},"type":"number","unit":"Nm","min":1,"max":5000},
+  {"key":"measured_on_dyno","label":{"de":"Auf dem Prüfstand gemessen","en":"Measured on dyno"},"type":"boolean"}
+]},
+{"key":"brakes","name":{"de":"Bremsen","en":"Brakes"},"icon":"brake-disc","fields":[
+  {"key":"brand","label":{"de":"Marke","en":"Brand"},"type":"brand","searchable":true},
+  {"key":"model","label":{"de":"Modell","en":"Model"},"type":"text","searchable":true},
+  {"key":"front_pistons","label":{"de":"Kolben vorne","en":"Front caliper pistons"},"type":"number","min":1,"max":12,"step":1},
+  {"key":"front_disc","label":{"de":"Scheibe vorne Ø","en":"Front disc Ø"},"type":"number","unit":"mm","min":150,"max":600},
+  {"key":"rear_pistons","label":{"de":"Kolben hinten","en":"Rear caliper pistons"},"type":"number","min":1,"max":12,"step":1},
+  {"key":"rear_disc","label":{"de":"Scheibe hinten Ø","en":"Rear disc Ø"},"type":"number","unit":"mm","min":150,"max":600},
+  {"key":"pads","label":{"de":"Beläge","en":"Pads"},"type":"text","searchable":true}
+]},
+{"key":"aero_body","name":{"de":"Aero & Karosserie","en":"Aero & body"},"icon":"wing","fields":[
+  {"key":"part","label":{"de":"Teil","en":"Part"},"type":"select","options":[
+    {"value":"front_lip","label":{"de":"Frontlippe","en":"Front lip"}},
+    {"value":"splitter","label":{"de":"Splitter","en":"Splitter"}},
+    {"value":"side_skirts","label":{"de":"Seitenschweller","en":"Side skirts"}},
+    {"value":"diffuser","label":{"de":"Diffusor","en":"Diffuser"}},
+    {"value":"wing","label":{"de":"Heckflügel/Spoiler","en":"Wing/spoiler"}},
+    {"value":"widebody","label":{"de":"Widebody","en":"Widebody"}},
+    {"value":"hood","label":{"de":"Motorhaube","en":"Hood"}},
+    {"value":"wrap","label":{"de":"Folierung","en":"Wrap"}},
+    {"value":"paint","label":{"de":"Lackierung","en":"Paint"}},
+    {"value":"other","label":{"de":"Sonstiges","en":"Other"}}
+  ]},
+  {"key":"brand","label":{"de":"Marke","en":"Brand"},"type":"brand","searchable":true},
+  {"key":"material","label":{"de":"Material","en":"Material"},"type":"select","options":[
+    {"value":"carbon","label":{"de":"Carbon","en":"Carbon"}},
+    {"value":"grp","label":{"de":"GFK","en":"Fibreglass"}},
+    {"value":"abs","label":{"de":"ABS","en":"ABS"}},
+    {"value":"other","label":{"de":"Sonstiges","en":"Other"}}
+  ]},
+  {"key":"colour","label":{"de":"Farbe","en":"Colour"},"type":"text"}
+]},
+{"key":"interior","name":{"de":"Innenraum","en":"Interior"},"icon":"seat","fields":[
+  {"key":"part","label":{"de":"Teil","en":"Part"},"type":"select","options":[
+    {"value":"seats","label":{"de":"Sitze","en":"Seats"}},
+    {"value":"steering_wheel","label":{"de":"Lenkrad","en":"Steering wheel"}},
+    {"value":"roll_cage","label":{"de":"Überrollkäfig","en":"Roll cage"}},
+    {"value":"harness","label":{"de":"Gurte","en":"Harnesses"}},
+    {"value":"shift_knob","label":{"de":"Schaltknauf","en":"Shift knob"}},
+    {"value":"gauges","label":{"de":"Instrumente","en":"Gauges"}},
+    {"value":"trim","label":{"de":"Verkleidung","en":"Trim"}},
+    {"value":"other","label":{"de":"Sonstiges","en":"Other"}}
+  ]},
+  {"key":"brand","label":{"de":"Marke","en":"Brand"},"type":"brand","searchable":true},
+  {"key":"model","label":{"de":"Modell","en":"Model"},"type":"text","searchable":true}
+]},
+{"key":"electronics","name":{"de":"Elektronik & Licht","en":"Electronics & lighting"},"icon":"light","fields":[
+  {"key":"part","label":{"de":"Teil","en":"Part"},"type":"select","options":[
+    {"value":"lighting","label":{"de":"Beleuchtung","en":"Lighting"}},
+    {"value":"audio","label":{"de":"Audio","en":"Audio"}},
+    {"value":"displays","label":{"de":"Anzeigen","en":"Displays"}},
+    {"value":"data_logger","label":{"de":"Datenlogger","en":"Data logger"}},
+    {"value":"coding","label":{"de":"Codierung","en":"Coding"}},
+    {"value":"other","label":{"de":"Sonstiges","en":"Other"}}
+  ]},
+  {"key":"brand","label":{"de":"Marke","en":"Brand"},"type":"brand","searchable":true},
+  {"key":"model","label":{"de":"Modell","en":"Model"},"type":"text","searchable":true}
+]},
+{"key":"drivetrain","name":{"de":"Antrieb & Getriebe","en":"Drivetrain & gearbox"},"icon":"gearbox","fields":[
+  {"key":"part","label":{"de":"Teil","en":"Part"},"type":"select","options":[
+    {"value":"clutch","label":{"de":"Kupplung","en":"Clutch"}},
+    {"value":"flywheel","label":{"de":"Schwungrad","en":"Flywheel"}},
+    {"value":"lsd","label":{"de":"Sperrdifferenzial","en":"Limited-slip differential"}},
+    {"value":"gearbox","label":{"de":"Getriebe","en":"Gearbox"}},
+    {"value":"driveshaft","label":{"de":"Antriebswelle","en":"Driveshaft"}},
+    {"value":"other","label":{"de":"Sonstiges","en":"Other"}}
+  ]},
+  {"key":"brand","label":{"de":"Marke","en":"Brand"},"type":"brand","searchable":true},
+  {"key":"model","label":{"de":"Modell","en":"Model"},"type":"text","searchable":true}
+]},
+{"key":"other","name":{"de":"Sonstiges","en":"Other"},"icon":"wrench","fields":[
+  {"key":"title","label":{"de":"Titel","en":"Title"},"type":"text","required":true,"searchable":true}
+]}
+]

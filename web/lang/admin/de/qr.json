@@ -1,0 +1,87 @@
+{
+    "nav": {
+        "title": "QR-Codes"
+    },
+    "title": "QR-Codes",
+    "intro": "Jeder Sticker-Code mit Fahrzeug, Besitzer und Scans. Gezählt werden nur Scans pro Tag, keine Personen.",
+    "caption": "QR-Codes, neueste zuerst",
+    "empty_title": "Noch keine QR-Codes",
+    "empty_body": "Ein Code entsteht, wenn ein Fahrzeug veröffentlicht wird.",
+    "no_vehicle": "Kein Fahrzeug",
+    "vehicle_deleted": "Fahrzeug gelöscht",
+    "columns": {
+        "code": "Code",
+        "status": "Status",
+        "vehicle": "Fahrzeug",
+        "owner": "Besitzer",
+        "created": "Erstellt",
+        "scans_7": "Scans 7 Tage",
+        "scans_30": "Scans 30 Tage"
+    },
+    "presets": {
+        "active": "Aktiv",
+        "revoked": "Gesperrt",
+        "top": "Meiste Scans"
+    },
+    "filters": {
+        "label": "QR-Codes filtern",
+        "q": "Code",
+        "q_placeholder": "z. B. 7H2K",
+        "status": "Status",
+        "any": "Alle",
+        "apply": "Anwenden"
+    },
+    "status": {
+        "active": "Aktiv",
+        "revoked": "Gesperrt"
+    },
+    "reasons": {
+        "reissued": "Neu ausgegeben",
+        "vehicle_deleted": "Fahrzeug gelöscht",
+        "account_deleted": "Konto gelöscht",
+        "moderation": "Durch das Team gesperrt"
+    },
+    "actions": {
+        "revoke": "Sperren",
+        "reissue": "Neu ausgeben"
+    },
+    "flash": {
+        "revoked": "Code gesperrt. Der Besitzer wurde informiert.",
+        "reissued": "Neuer Code ausgegeben. Der Besitzer wurde informiert.",
+        "not_possible": "Das geht bei diesem Code gerade nicht."
+    },
+    "detail": {
+        "error": "Der Code konnte nicht geladen werden",
+        "created": "erstellt :date",
+        "revoked": "gesperrt :date (:reason)",
+        "range": "Zeitraum",
+        "days_30": "30 Tage",
+        "days_90": "90 Tage",
+        "total": ":count Scans in :days Tagen",
+        "loading": "Scans werden geladen …",
+        "chart_title": "Wie oft wird der Sticker gescannt?",
+        "chart_body": "Scans pro Tag, letzte :days Tage",
+        "series": "Scans",
+        "zero": "Kein Scan in den letzten :days Tagen",
+        "history": "Verlauf",
+        "siblings": "Weitere Codes dieses Fahrzeugs"
+    },
+    "history": {
+        "created": "Erstellt",
+        "revoked": "Gesperrt",
+        "revoked_by_staff": "Durch das Team gesperrt",
+        "reissued_by_staff": "Durch das Team ersetzt, neuer Code :code",
+        "issued_by_staff": "Durch das Team ausgegeben",
+        "other": "Geändert",
+        "owner_or_system": "Beim Veröffentlichen"
+    },
+    "revoke": {
+        "title": "Code :code sperren",
+        "body": "Ein Scan zeigt dann „nicht mehr gültig“, und der Besitzer kann keinen neuen Code ausgeben; das kann nur das Team. Der Besitzer bekommt eine E‑Mail."
+    },
+    "reissue": {
+        "title": "Neuen Code ausgeben",
+        "body": "Der aktive Code des Fahrzeugs wird ersetzt; alte Sticker funktionieren nicht mehr. Der Besitzer bekommt eine E‑Mail."
+    },
+    "revoked_because": "Grund: :reason"
+}

@@ -1,0 +1,54 @@
+{
+  "cli": {
+    "appVersionSource": "local",
+    "requireCommit": true
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "local"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "staging"
+      },
+      "android": {
+        "distribution": "internal",
+        "buildType": "apk"
+      },
+      "ios": {
+        "distribution": "store"
+      }
+    },
+    "production": {
+      "environment": "production",
+      "distribution": "store",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "preview": {
+      "ios": {
+        "language": "de-DE"
+      }
+    },
+    "production": {
+      "ios": {
+        "language": "de-DE"
+      }
+    }
+  }
+}

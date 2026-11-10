@@ -1,0 +1,101 @@
+{
+    "nav": {
+        "title": "Marke & Theme"
+    },
+    "title": "Marke & Theme",
+    "intro": "Logos, Startbilder, Akzentfarbe und Standard-Theme der App und der Website. Änderungen landen im Entwurf und gehen erst mit „Veröffentlichen“ live.",
+    "error": "Die Markeneinstellungen konnten nicht geladen werden.",
+    "choose": "Auswählen",
+    "replace": "Ersetzen",
+    "remove": "Entfernen",
+    "size": ":width × :height px",
+    "minimum": "Neues Bild mindestens :width × :height px",
+    "flash": {
+        "uploaded": "Bild hochgeladen. Es ist im Entwurf ausgewählt."
+    },
+    "logos": {
+        "title": "Logo-Set",
+        "intro": "Die Logos des Kunden, nie nachgebaut oder umgefärbt (nur reines Weiß oder Schwarz). PNG oder WebP mit Transparenz.",
+        "wordmark_white": "Schriftzug weiß",
+        "wordmark_white_hint": "Auf dunklen Flächen und Fotos mit Verlauf.",
+        "wordmark_black": "Schriftzug schwarz",
+        "wordmark_black_hint": "Auf hellen Flächen, im Theme Hell.",
+        "square": "Quadratisches Logo",
+        "square_hint": "Profilbild in sozialen Netzwerken, E‑Mail-Kopf.",
+        "app_mark": "App-Symbol",
+        "app_mark_hint": "Zeichen ohne Schrift, z. B. im Ladebildschirm.",
+        "bundled": "Mitgeliefertes Logo",
+        "none": "Noch kein eigenes Logo"
+    },
+    "heroes": {
+        "title": "Startbilder",
+        "intro": "Fotos für den Willkommensbildschirm, die Startseite im Web und den Ladebildschirm. Klick ins Bild setzt den Bildmittelpunkt, um den die App zuschneidet.",
+        "welcome": "Willkommen (App)",
+        "welcome_hint": "Vollbild hinter „Konto erstellen“ und „Anmelden“.",
+        "welcome_bundled": "Die App zeigt das mitgelieferte Nachtfoto.",
+        "landing": "Startseite (Web)",
+        "landing_hint": "Großes Bild oben auf speedclub.de.",
+        "landing_bundled": "Die Website zeigt das mitgelieferte Foto.",
+        "splash": "Ladebildschirm",
+        "splash_hint": "Erscheint kurz beim Öffnen der App.",
+        "splash_bundled": "Die App zeigt den mitgelieferten Ladebildschirm.",
+        "bundled_badge": "Mitgeliefert"
+    },
+    "focal": {
+        "label": "Bildmittelpunkt für :slot",
+        "value": ":x % von links, :y % von oben",
+        "hint": "Ins Bild klicken oder mit den Pfeiltasten verschieben (Umschalt für große Schritte).",
+        "read_only": "Nur lesen: der Entwurf gehört jemand anderem oder wartet auf Freigabe.",
+        "crop": "So schneidet das Handy zu"
+    },
+    "contrast": {
+        "passes": "Logo und Text bleiben gut lesbar",
+        "fails": "Zu wenig Kontrast: so lässt sich der Entwurf nicht speichern",
+        "ratios": "Logo :logo · Text :text · nötig mindestens :minimum",
+        "failed": "Der Kontrast konnte gerade nicht gemessen werden. Beim Speichern wird er trotzdem geprüft."
+    },
+    "og": {
+        "title": "Vorschaubild für Links",
+        "intro": "Erscheint, wenn eine Seite ohne eigenes Bild geteilt wird (WhatsApp, Instagram, Messenger). 1200 × 630 px.",
+        "bundled": "Es gilt das mitgelieferte Vorschaubild."
+    },
+    "accent": {
+        "title": "Akzentfarbe",
+        "intro": "Für Tab-Markierung, ungelesen-Punkte und die Markenschaltfläche. Nur geprüfte Farbsätze: jeder erfüllt die Kontrastregeln in allen drei Themes.",
+        "rule": "Freie Farbwerte sind bewusst nicht möglich.",
+        "default": "Standard",
+        "sets": {
+            "signalRed": "Signalrot",
+            "emberOrange": "Glutorange",
+            "racingBlue": "Rennblau",
+            "pitGreen": "Boxengrün"
+        }
+    },
+    "themes": {
+        "title": "Standard-Theme",
+        "intro": "Gilt für neue Installationen. Mitglieder können es in den Einstellungen jederzeit ändern.",
+        "carbon": "Carbon",
+        "carbon_hint": "Dunkel mit Flächenabstufungen, der Standard.",
+        "black": "Schwarz",
+        "black_hint": "Echtes Schwarz für OLED-Displays.",
+        "light": "Hell",
+        "light_hint": "Helle Flächen für Tageslicht.",
+        "system": "Wie das Gerät",
+        "system_hint": "Folgt der Einstellung des Geräts: dunkel wird Carbon, hell wird Hell."
+    },
+    "picker": {
+        "title": "Bild für „:slot“",
+        "description": "Wähle ein hochgeladenes Bild oder lade ein neues hoch. Live geht es erst mit dem Veröffentlichen.",
+        "list": "Hochgeladene Bilder",
+        "empty_title": "Noch nichts hochgeladen",
+        "empty_body": "Lade das erste Bild für diesen Platz hoch.",
+        "choose": "Auswählen",
+        "chosen": "Ausgewählt",
+        "upload": "Neues Bild hochladen",
+        "rules": "JPEG, PNG oder WebP, mindestens :width × :height px, höchstens :size MB. Metadaten wie Standort werden entfernt.",
+        "select_file": "Datei wählen",
+        "no_file": "Keine Datei gewählt",
+        "choose_file": "Wähle zuerst eine Datei.",
+        "submit": "Hochladen"
+    }
+}

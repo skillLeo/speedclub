@@ -1,0 +1,179 @@
+# F2 Add first vehicle → QR on Android, the native counterpart of web/tests/e2e/flows/f2-add-vehicle.spec.ts: a new
+# account from F1 (empty garage) → "Fahrzeug hinzufügen" → Fahrzeug (Nissan · Skyline GT-R · R34 · 2002) → Technik
+# (RB26DETT, 280 PS with the kW helper, Werksangabe, Allrad) → Fotos & Beschreibung (one photo through the system photo
+# picker and the upload queue) → Prüfen & veröffentlichen → GAR-04 with the QR code → "Mods hinzufügen" → GAR-09.
+#
+# Not run yet: no APK with the M1.6 screens exists. The photo picker is system UI; its thumbnail id below is the one of
+# Android 13 to 15's Photo Picker and must be checked with `maestro hierarchy` on the first run.
+# Needs a LAN or emulator build against a local server with the dev mailbox (F1). Run:
+#   maestro --device emulator-5554 test mobile/e2e/maestro/f2-add-vehicle.yaml
+# The account ends in @e2e.speedclub.test; remove it with its vehicle afterwards:
+#   php web/tests/e2e/support/backend.php delete-accounts f1.maestro.
+appId: de.speedclub.app
+name: f2-add-vehicle
+env:
+  PHOTO: ../../../design/seed-photos/generic-exterior-01.jpg
+---
+# A fresh, verified account with an empty garage: F1 from Welcome to the garage.
+- runFlow: f1-onboarding.yaml
+- addMedia:
+    - ${PHOTO}
+
+- tapOn:
+    id: tab.garage
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: GAR-01.empty
+    timeout: 20000
+- assertVisible:
+    id: GAR-01.empty.title
+    text: Füge dein erstes Auto hinzu
+- takeScreenshot: f2-1-empty-garage
+- tapOn:
+    id: GAR-01.empty.action
+
+# Step 1 Fahrzeug.
+- extendedWaitUntil:
+    visible:
+      id: GAR-03.make
+    timeout: 20000
+- assertVisible:
+    id: GAR-03.caption
+    text: '.*Schritt 1 von 4.*'
+- tapOn:
+    id: GAR-03.make
+- tapOn:
+    id: GAR-03.makeSheet.search
+- inputText: Nissa
+- tapOn:
+    text: Nissan
+- tapOn:
+    id: GAR-03.model
+- tapOn:
+    id: GAR-03.modelSheet.search
+- inputText: Skyline
+- tapOn:
+    text: Skyline GT-R
+- tapOn:
+    id: GAR-03.generation
+- tapOn:
+    text: 'R34.*'
+- tapOn:
+    id: GAR-03.year
+- inputText: '2002'
+- hideKeyboard
+- takeScreenshot: f2-2-step-vehicle
+- tapOn:
+    id: GAR-03.vehicle.cta.primary
+
+# Step 2 Technik (FS-5).
+- extendedWaitUntil:
+    visible:
+      id: GAR-03.engineCode
+    timeout: 20000
+- tapOn:
+    id: GAR-03.engineCode
+- inputText: RB26DETT
+- tapOn:
+    id: GAR-03.powerValue
+- inputText: '280'
+- hideKeyboard
+- assertVisible:
+    id: GAR-03.powerValue.helper
+    text: '.*206 kW.*'
+- tapOn:
+    id: GAR-03.powerSource.factory
+- scrollUntilVisible:
+    element:
+      id: GAR-03.drivetrain.all
+    direction: DOWN
+- tapOn:
+    id: GAR-03.drivetrain.all
+- takeScreenshot: f2-3-step-specs
+- tapOn:
+    id: GAR-03.specs.cta.primary
+
+# Step 3 Fotos & Beschreibung: one photo from the gallery through the queue.
+- extendedWaitUntil:
+    visible:
+      id: GAR-03.photos.add
+    timeout: 20000
+- tapOn:
+    id: GAR-03.photos.add
+- extendedWaitUntil:
+    visible:
+      id: 'com.google.android.providers.media.module:id/icon_thumbnail'
+    timeout: 20000
+- tapOn:
+    id: 'com.google.android.providers.media.module:id/icon_thumbnail'
+    index: 0
+# A multi-select picker asks to confirm; a single-select one has already returned.
+- runFlow:
+    when:
+      visible:
+        text: '(Hinzufügen|Add|Fertig|Done)'
+    commands:
+      - tapOn:
+          text: '(Hinzufügen|Add|Fertig|Done)'
+- extendedWaitUntil:
+    visible:
+      id: 'GAR-03\.photos\.photo\..*'
+    timeout: 90000
+- assertVisible:
+    id: GAR-03.photos.count
+    text: 1 von 30 Fotos
+- tapOn:
+    id: GAR-03.description
+- inputText: Bayside Blue, seit 2015 in meiner Garage.
+- hideKeyboard
+- takeScreenshot: f2-4-step-photos
+- tapOn:
+    id: GAR-03.photos.cta.primary
+
+# Step 4 Prüfen & veröffentlichen.
+- extendedWaitUntil:
+    visible:
+      id: GAR-03.review.card
+    timeout: 20000
+- assertNotVisible:
+    id: GAR-03.review.missing
+- assertVisible:
+    id: GAR-03.review.visibility.public
+    checked: true
+- takeScreenshot: f2-5-step-review
+- tapOn:
+    id: GAR-03.review.cta.primary
+
+# GAR-04: the QR reveal (the wipe runs on the UI thread here, unlike the web run).
+- extendedWaitUntil:
+    visible:
+      id: GAR-04.qr.shortCode
+      text: '[0-9A-Z]{4} [0-9A-Z]{4}'
+    timeout: 30000
+- assertVisible:
+    id: GAR-04.title
+    text: Dein Build ist online
+- takeScreenshot: f2-6-published
+- tapOn:
+    id: GAR-04.addMods
+- extendedWaitUntil:
+    visible:
+      id: GAR-09.empty
+    timeout: 20000
+- assertVisible:
+    id: tab.garage
+    selected: true
+- takeScreenshot: f2-7-mods
+
+# Back in the garage: the new car is the main vehicle, with its QR button.
+- tapOn:
+    id: tab.garage
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: 'GAR-01\.card\..*\.badge'
+    timeout: 20000
+- assertVisible:
+    id: 'GAR-01\.card\..*\.qr'
+- takeScreenshot: f2-8-garage

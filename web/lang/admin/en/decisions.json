@@ -1,0 +1,87 @@
+{
+    "legend": "Statement for the member",
+    "template": "Template",
+    "template_hint": "Fills the fields; everything stays editable.",
+    "template_placeholder": "Choose a template",
+    "facts": "Facts",
+    "facts_hint": "What happened, in your words. The member reads it.",
+    "ground": "Ground",
+    "document": "Written in",
+    "section": "Section",
+    "documents": {
+        "community": "Community guidelines",
+        "terms": "Terms",
+        "law": "Law"
+    },
+    "redress_note": "No automated means. The member is told how to appeal (internally within 6 months, out-of-court dispute settlement, court).",
+    "measure": "Measure",
+    "measures": {
+        "messaging": "Messaging",
+        "messaging_hint": "Cannot send messages or requests.",
+        "publishing": "Publishing",
+        "publishing_hint": "Cannot publish anything or make it public.",
+        "suspension": "Suspension",
+        "suspension_hint": "Account suspended. Needs a second team member's approval."
+    },
+    "duration": "Duration",
+    "until": "Until and including",
+    "durations": {
+        "1": "1 day",
+        "7": "7 days",
+        "30": "30 days",
+        "date": "Until a date",
+        "none": "No end"
+    },
+    "max_days_hint": "Moderators suspend for at most :days days.",
+    "reason_hint": "For the audit log, 10–1,000 characters. The member does not see it.",
+    "submit_restrict": "Restrict",
+    "submit_suspend": "Request suspension",
+    "errors": {
+        "facts": "The facts need 10 to 5,000 characters.",
+        "ground": "The ground needs 3 to 2,000 characters.",
+        "date": "Enter a date as DD/MM/YYYY.",
+        "date_past": "The end must be in the future.",
+        "max_days": "At most :days days from today.",
+        "typed": "Type :word to confirm."
+    },
+    "templates": {
+        "spam": {
+            "label": "Spam or advertising",
+            "facts_member": "You repeatedly sent the same advertising messages to members who do not know you.",
+            "facts_vehicle": "The vehicle is used to advertise a sale or a business instead of showing a build.",
+            "facts_photo": "The photo shows advertising or contact details for a sale.",
+            "ground": "No advertising and no spam"
+        },
+        "harassment": {
+            "label": "Harassment or insults",
+            "facts_member": "You insulted other members in messages and kept writing after being turned down.",
+            "facts_vehicle": "The vehicle's description or updates insult other members.",
+            "facts_photo": "The photo shows insulting content aimed at others.",
+            "ground": "Respectful conduct"
+        },
+        "impersonation": {
+            "label": "Impersonation",
+            "facts_member": "The account poses as another person or company.",
+            "facts_vehicle": "The vehicle is shown not to be yours; the photos come from others.",
+            "facts_photo": "The photo comes from someone else and is passed off as your own.",
+            "ground": "Real identity and own content"
+        },
+        "nudity": {
+            "label": "Nudity or sexual content",
+            "facts_member": "Your profile shows sexual content.",
+            "facts_vehicle": "Photos of the vehicle show sexual content.",
+            "facts_photo": "The photo shows nudity or sexual content.",
+            "ground": "No sexual content"
+        },
+        "illegal": {
+            "label": "Illegal content",
+            "facts_member": "Content of your account breaks the law.",
+            "facts_vehicle": "The vehicle shows or promotes illegal modifications or content.",
+            "facts_photo": "The photo shows illegal content, such as a readable third-party plate tied to a person.",
+            "ground": "Applicable law (please name the provision)"
+        },
+        "other": {
+            "label": "Own statement"
+        }
+    }
+}

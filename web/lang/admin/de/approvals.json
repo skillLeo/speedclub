@@ -1,0 +1,229 @@
+{
+    "nav": {
+        "title": "Freigaben"
+    },
+    "title": "Freigaben",
+    "intro": "Vier-Augen-Prinzip: Was ein Teammitglied anfragt, führt ein zweites aus, innerhalb von 24 Stunden.",
+    "error": "Die Freigaben konnten nicht geladen werden",
+    "tabs": {
+        "label": "Freigaben",
+        "for_me": "Für mich",
+        "mine": "Von mir",
+        "all": "Alle"
+    },
+    "filters": {
+        "status": "Status",
+        "any": "Alle"
+    },
+    "status": {
+        "pending": "Wartet",
+        "executing": "Wird ausgeführt",
+        "executed": "Ausgeführt",
+        "failed": "Fehlgeschlagen",
+        "denied": "Abgelehnt",
+        "expired": "Abgelaufen",
+        "cancelled": "Zurückgezogen"
+    },
+    "empty": {
+        "for_me_title": "Nichts wartet auf dich",
+        "for_me_body": "Neue Anfragen anderer Teammitglieder erscheinen hier.",
+        "mine_title": "Keine Anfragen von dir",
+        "mine_body": "Vier-Augen-Aktionen, die du startest, erscheinen hier mit ihrem Stand.",
+        "all_title": "Keine Anfragen",
+        "all_body": "Hier stehen alle Anfragen des Teams."
+    },
+    "requested": "Angefragt von :name am :time",
+    "decided": ":name, :time",
+    "expires_in": "läuft ab in :hours Std. :minutes Min.",
+    "expired_now": "abgelaufen",
+    "comment": "Kommentar: :comment",
+    "result": ":done erledigt, :failed nicht möglich",
+    "failed_title": "Freigegeben, aber nicht ausgeführt",
+    "yours": "Deine Anfrage",
+    "actions": {
+        "approve": "Freigeben",
+        "deny": "Ablehnen",
+        "cancel": "Zurückziehen",
+        "download": "Herunterladen"
+    },
+    "approve": {
+        "title": "Anfrage freigeben",
+        "body": "Mit der Freigabe wird die Aktion sofort ausgeführt, in deinem Namen als zweite Person."
+    },
+    "deny": {
+        "title": "Anfrage ablehnen",
+        "body": "Die Aktion wird nicht ausgeführt. Die anfragende Person sieht deinen Kommentar."
+    },
+    "cancel": {
+        "title": "Anfrage zurückziehen",
+        "body": "Die Anfrage endet, nichts wird ausgeführt."
+    },
+    "comment_label": "Kommentar",
+    "comment_optional": "Optional, 3–1.000 Zeichen.",
+    "comment_required": "Pflicht beim Ablehnen, 3–1.000 Zeichen.",
+    "errors": {
+        "comment_required": "Sag kurz, warum du ablehnst (mindestens 3 Zeichen).",
+        "comment_length": "Der Kommentar braucht 3 bis 1.000 Zeichen."
+    },
+    "flash": {
+        "approved": "Freigegeben und ausgeführt.",
+        "denied": "Abgelehnt.",
+        "cancelled": "Zurückgezogen.",
+        "expired": "Die Anfrage war schon abgelaufen.",
+        "failed": "Freigegeben, aber die Aktion war nicht mehr möglich. Nichts wurde geändert.",
+        "conflict": "Diese Anfrage wartet nicht mehr."
+    },
+    "values": {
+        "on": "an",
+        "off": "aus",
+        "active": "aktiv",
+        "deactivated": "deaktiviert",
+        "set_12": "Datenexport wie in der App (Einstellungen → Daten exportieren)",
+        "restrict": "Einschränken",
+        "revoke_sessions": "Sitzungen beenden",
+        "export": "Exportieren",
+        "delete": "Löschen",
+        "community": "Community-Richtlinien",
+        "terms": "AGB",
+        "law": "Gesetz",
+        "csv": "CSV",
+        "jsonl": "JSONL",
+        "id": "ID",
+        "username": "Benutzername",
+        "display_name": "Name",
+        "email": "E‑Mail",
+        "status": "Status",
+        "vehicles": "Fahrzeuge",
+        "followers": "Follower",
+        "registered_at": "Registriert",
+        "last_active_at": "Zuletzt aktiv",
+        "two_factor": "2FA",
+        "verified": "Bestätigt"
+    },
+    "audit_export": {
+        "title": "Audit-Log exportieren",
+        "format": "Format",
+        "from": "Von",
+        "to": "Bis",
+        "action": "Aktion beginnt mit",
+        "actor": "Wer",
+        "target": "Ziel"
+    },
+    "moderation_suspend": {
+        "title": "Mitglied sperren",
+        "case": "Fall",
+        "ground": "Grundlage",
+        "until": "Bis"
+    },
+    "members_reset_2fa": {
+        "title": "2FA eines Mitglieds zurücksetzen",
+        "two_factor": "Zwei-Faktor-Anmeldung"
+    },
+    "members_export": {
+        "title": "Daten eines Mitglieds exportieren",
+        "contents": "Inhalt"
+    },
+    "members_delete": {
+        "title": "Konto eines Mitglieds löschen",
+        "status": "Konto"
+    },
+    "members_bulk": {
+        "title": "Sammelaktion für Mitglieder",
+        "action": "Aktion",
+        "count": "Anzahl",
+        "members": "Mitglieder",
+        "more": "Weitere Mitglieder"
+    },
+    "members_list_export": {
+        "title": "Mitgliederliste mit E‑Mail‑Adressen exportieren",
+        "filter": "Filter",
+        "rows": "Zeilen",
+        "columns": "Spalten"
+    },
+    "vehicles_bulk_hide": {
+        "title": "Fahrzeuge gesammelt ausblenden",
+        "count": "Anzahl",
+        "vehicles": "Fahrzeuge",
+        "more": "Weitere Fahrzeuge",
+        "ground": "Grundlage"
+    },
+    "toolbar": {
+        "for_me": "Anfragen anderer, die du freigeben darfst, neueste zuerst.",
+        "mine": "Was du angefragt hast, mit Stand und Ergebnis.",
+        "all": "Alle Anfragen des Teams, neueste zuerst."
+    },
+    "catalog_bulk_merge": {
+        "title": "Katalogeinträge zusammenführen",
+        "level": "Ebene",
+        "merge": "Zusammenführen",
+        "vehicles": "Betroffene Fahrzeuge"
+    },
+    "catalog_import_apply": {
+        "title": "Katalog-Import übernehmen",
+        "kind": "Art",
+        "new": "Neu",
+        "changed": "Geändert",
+        "errors": "Fehler"
+    },
+    "flags_critical_change": {
+        "title": "Kritischen Schalter ändern",
+        "enabled": "Eingeschaltet",
+        "environments": "Umgebungen",
+        "staff_only": "Nur für das Team",
+        "percentage": "Anteil in Prozent",
+        "critical": "Kritisch",
+        "description": "Beschreibung"
+    },
+    "legal_publish_reconsent": {
+        "title": "Rechtstext veröffentlichen, neue Zustimmung nötig",
+        "version": "Version",
+        "summary": "Zusammenfassung"
+    },
+    "maintenance_enable": {
+        "title": "Wartungsmodus einschalten",
+        "mode": "Modus",
+        "maintenance": "Wartung",
+        "message_de": "Hinweis (Deutsch)",
+        "message_en": "Hinweis (Englisch)"
+    },
+    "expired_on": "abgelaufen am :time",
+    "moderation_bulk_no_action": {
+        "title": "Fälle gesammelt ohne Maßnahme schließen",
+        "count": "Anzahl",
+        "cases": "Fälle",
+        "more": "Weitere Fälle"
+    },
+    "support_bulk_status": {
+        "title": "Status mehrerer Tickets ändern",
+        "count": "Anzahl",
+        "status": "Neuer Status",
+        "tickets": "Tickets",
+        "more": "Weitere Tickets"
+    },
+    "staff_role_elevation": {
+        "title": "Rollen ändern",
+        "roles": "Neue Rollen"
+    },
+    "staff_deactivate_privileged": {
+        "title": "Owner oder Admin deaktivieren",
+        "status": "Neuer Status"
+    },
+    "staff_delete_owner": {
+        "title": "Owner-Konto löschen",
+        "account": "Konto"
+    },
+    "roles_sensitive_atoms": {
+        "title": "Kritische Berechtigungen vergeben",
+        "role": "Rolle",
+        "staff": "Betrifft Teammitglieder"
+    },
+    "staff_reset_two_factor": {
+        "title": "Zwei-Faktor-Anmeldung zurücksetzen",
+        "account": "Konto",
+        "two_factor": "Zwei-Faktor-Anmeldung"
+    },
+    "staff_reactivate_owner": {
+        "title": "Owner-Konto reaktivieren",
+        "status": "Neuer Status"
+    }
+}

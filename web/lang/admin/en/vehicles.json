@@ -1,0 +1,182 @@
+{
+    "nav": {
+        "title": "Vehicles"
+    },
+    "title": "Vehicles",
+    "intro": "Every vehicle with visibility, moderation, photos, mods and QR code.",
+    "caption": "Vehicles, last updated first",
+    "empty_title": "No vehicles yet",
+    "empty_body": "As soon as a member adds a vehicle, it shows here.",
+    "nickname": "“:name”",
+    "columns": {
+        "cover": "Cover",
+        "title": "Vehicle",
+        "year": "Year",
+        "owner": "Owner",
+        "visibility": "Visibility",
+        "moderation": "Moderation",
+        "photos": "Photos",
+        "mods": "Mods",
+        "qr": "QR",
+        "updated": "Updated"
+    },
+    "presets": {
+        "hidden": "Hidden",
+        "reported": "Reported",
+        "no_qr": "Without QR code"
+    },
+    "filters": {
+        "label": "Filter vehicles",
+        "q": "Search",
+        "q_placeholder": "Slug, ID or nickname",
+        "make": "Make",
+        "visibility": "Visibility",
+        "moderation": "Moderation",
+        "reported": "Reported",
+        "reported_yes": "Open case",
+        "reported_no": "No open case",
+        "qr": "QR code",
+        "qr_yes": "With an active code",
+        "qr_no": "Without an active code",
+        "updated": "Updated",
+        "any": "All",
+        "apply": "Apply"
+    },
+    "visibility": {
+        "public": "Public",
+        "unlisted": "Unlisted",
+        "private": "Private"
+    },
+    "status": {
+        "draft": "Draft",
+        "published": "Published",
+        "archived": "Archived",
+        "deleted": "Deleted"
+    },
+    "moderation": {
+        "visible": "Visible",
+        "hidden": "Hidden",
+        "reported": "Reported"
+    },
+    "qr": {
+        "none": "No code",
+        "empty": "No QR code yet",
+        "empty_body": "A code is created when the vehicle is published.",
+        "scans": ":count scans in 30 days"
+    },
+    "bulk": {
+        "hide": "Hide",
+        "hide_title": "Hide :count vehicles",
+        "hide_body": "Each vehicle gets a decision of its own with this statement; the owners are told and may appeal.",
+        "result": "Result: hide"
+    },
+    "flash": {
+        "bulk_done": "Vehicles hidden. The owners were told.",
+        "bulk_partial": "Not every vehicle could be hidden. The list shows which.",
+        "hidden": "Hidden. The owner was told.",
+        "unhidden": "Visible again. The owner was told.",
+        "edited": "Vehicle saved.",
+        "deleted": "Vehicle deleted. The owner was told.",
+        "not_possible": "That is not possible for this vehicle right now."
+    },
+    "tabs": {
+        "label": "Vehicle sections",
+        "details": "Details",
+        "photos": "Photos",
+        "mods": "Mods",
+        "qr": "QR",
+        "history": "History",
+        "reports": "Reports"
+    },
+    "actions": {
+        "public": "Public page",
+        "edit": "Edit",
+        "hide": "Hide",
+        "unhide": "Unhide",
+        "delete": "Delete",
+        "more": "More actions"
+    },
+    "record": {
+        "error": "The vehicle could not be loaded",
+        "tab_error": "This section could not be loaded",
+        "hidden_since": "hidden since :date",
+        "cover_alt": "Cover: :title"
+    },
+    "fields": {
+        "make": "Make",
+        "model": "Model",
+        "generation": "Generation",
+        "year": "Year",
+        "nickname": "Nickname",
+        "color": "Colour",
+        "slug": "Slug",
+        "published": "Published",
+        "created": "Created",
+        "updated": "Updated",
+        "description": "Description"
+    },
+    "photos": {
+        "empty": "No photos yet",
+        "alt": "Photo of the vehicle",
+        "removed": "Photo removed",
+        "hidden": "Hidden",
+        "approved": "Approved",
+        "unreviewed": "Not reviewed"
+    },
+    "mods": {
+        "empty": "No mods yet",
+        "title": "Mod",
+        "category": "Category",
+        "brand": "Brand",
+        "status": "Status",
+        "legal": "Approval",
+        "installed": "Installed",
+        "status_installed": "Installed",
+        "status_planned": "Planned",
+        "status_removed": "Removed",
+        "legal_unknown": "Unknown",
+        "legal_registered": "Registered",
+        "legal_abe": "ABE",
+        "legal_parts_certificate": "Parts certificate",
+        "legal_individual_approval": "Individual approval",
+        "legal_not_required": "Not required"
+    },
+    "history": {
+        "empty": "No history yet",
+        "hidden": "hidden",
+        "change": ":before → :after",
+        "type_mod_added": "Mod added",
+        "type_mod_removed": "Mod removed",
+        "type_mod_changed": "Mod changed",
+        "type_note": "Note",
+        "type_photos_added": "New photos",
+        "type_specs_changed": "Specs changed"
+    },
+    "reports": {
+        "empty": "No case about this vehicle or its photos.",
+        "count": ":count reports"
+    },
+    "hide": {
+        "title": "Hide vehicle",
+        "body": "The vehicle becomes private and leaves search; the owner cannot show it again. They read the statement in the app and by e-mail and may appeal."
+    },
+    "unhide": {
+        "title": "Unhide vehicle",
+        "body": "A new decision lifts the hiding; the vehicle gets back its earlier visibility. The owner is told.",
+        "facts": "What the owner reads",
+        "facts_hint": "Why the measure ends, 10–5,000 characters."
+    },
+    "delete": {
+        "title": "Delete vehicle",
+        "body": "First a decision with a statement to the owner, then the vehicle is deleted with every photo and its QR code revoked. Final after 30 days."
+    },
+    "edit": {
+        "title": "Edit vehicle",
+        "body": "Catalogue link and title fields. A staff correction does not show as a build update.",
+        "choose": "Choose",
+        "make_text": "Make as text",
+        "model_text": "Model as text",
+        "year_invalid": "Enter a four-digit year.",
+        "save": "Save"
+    }
+}

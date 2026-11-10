@@ -1,0 +1,182 @@
+{
+    "nav": {
+        "title": "Fahrzeuge"
+    },
+    "title": "Fahrzeuge",
+    "intro": "Alle Fahrzeuge mit Sichtbarkeit, Moderation, Fotos, Mods und QR-Code.",
+    "caption": "Fahrzeuge, zuletzt geändert zuerst",
+    "empty_title": "Noch keine Fahrzeuge",
+    "empty_body": "Sobald ein Mitglied ein Fahrzeug anlegt, steht es hier.",
+    "nickname": "„:name“",
+    "columns": {
+        "cover": "Titelbild",
+        "title": "Fahrzeug",
+        "year": "Baujahr",
+        "owner": "Besitzer",
+        "visibility": "Sichtbarkeit",
+        "moderation": "Moderation",
+        "photos": "Fotos",
+        "mods": "Mods",
+        "qr": "QR",
+        "updated": "Geändert"
+    },
+    "presets": {
+        "hidden": "Ausgeblendet",
+        "reported": "Gemeldet",
+        "no_qr": "Ohne QR-Code"
+    },
+    "filters": {
+        "label": "Fahrzeuge filtern",
+        "q": "Suche",
+        "q_placeholder": "Slug, ID oder Spitzname",
+        "make": "Marke",
+        "visibility": "Sichtbarkeit",
+        "moderation": "Moderation",
+        "reported": "Gemeldet",
+        "reported_yes": "Offener Fall",
+        "reported_no": "Kein offener Fall",
+        "qr": "QR-Code",
+        "qr_yes": "Mit aktivem Code",
+        "qr_no": "Ohne aktiven Code",
+        "updated": "Geändert",
+        "any": "Alle",
+        "apply": "Anwenden"
+    },
+    "visibility": {
+        "public": "Öffentlich",
+        "unlisted": "Nur mit Link",
+        "private": "Privat"
+    },
+    "status": {
+        "draft": "Entwurf",
+        "published": "Veröffentlicht",
+        "archived": "Archiviert",
+        "deleted": "Gelöscht"
+    },
+    "moderation": {
+        "visible": "Sichtbar",
+        "hidden": "Ausgeblendet",
+        "reported": "Gemeldet"
+    },
+    "qr": {
+        "none": "Kein Code",
+        "empty": "Noch kein QR-Code",
+        "empty_body": "Ein Code entsteht, wenn das Fahrzeug veröffentlicht wird.",
+        "scans": ":count Scans in 30 Tagen"
+    },
+    "bulk": {
+        "hide": "Ausblenden",
+        "hide_title": ":count Fahrzeuge ausblenden",
+        "hide_body": "Jedes Fahrzeug bekommt eine eigene Entscheidung mit dieser Begründung; die Besitzer werden informiert und können Einspruch einlegen.",
+        "result": "Ergebnis: Ausblenden"
+    },
+    "flash": {
+        "bulk_done": "Fahrzeuge ausgeblendet. Die Besitzer wurden informiert.",
+        "bulk_partial": "Nicht alle Fahrzeuge konnten ausgeblendet werden. Die Liste zeigt, welche.",
+        "hidden": "Ausgeblendet. Der Besitzer wurde informiert.",
+        "unhidden": "Wieder sichtbar. Der Besitzer wurde informiert.",
+        "edited": "Fahrzeug gespeichert.",
+        "deleted": "Fahrzeug gelöscht. Der Besitzer wurde informiert.",
+        "not_possible": "Das geht bei diesem Fahrzeug gerade nicht."
+    },
+    "tabs": {
+        "label": "Bereiche des Fahrzeugs",
+        "details": "Details",
+        "photos": "Fotos",
+        "mods": "Mods",
+        "qr": "QR",
+        "history": "Verlauf",
+        "reports": "Meldungen"
+    },
+    "actions": {
+        "public": "Öffentliche Seite",
+        "edit": "Bearbeiten",
+        "hide": "Ausblenden",
+        "unhide": "Einblenden",
+        "delete": "Löschen",
+        "more": "Weitere Aktionen"
+    },
+    "record": {
+        "error": "Das Fahrzeug konnte nicht geladen werden",
+        "tab_error": "Dieser Bereich konnte nicht geladen werden",
+        "hidden_since": "ausgeblendet seit :date",
+        "cover_alt": "Titelbild: :title"
+    },
+    "fields": {
+        "make": "Marke",
+        "model": "Modell",
+        "generation": "Generation",
+        "year": "Baujahr",
+        "nickname": "Spitzname",
+        "color": "Farbe",
+        "slug": "Slug",
+        "published": "Veröffentlicht",
+        "created": "Angelegt",
+        "updated": "Geändert",
+        "description": "Beschreibung"
+    },
+    "photos": {
+        "empty": "Noch keine Fotos",
+        "alt": "Foto des Fahrzeugs",
+        "removed": "Foto entfernt",
+        "hidden": "Ausgeblendet",
+        "approved": "Freigegeben",
+        "unreviewed": "Nicht geprüft"
+    },
+    "mods": {
+        "empty": "Noch keine Mods",
+        "title": "Mod",
+        "category": "Kategorie",
+        "brand": "Marke",
+        "status": "Status",
+        "legal": "Eintragung",
+        "installed": "Verbaut",
+        "status_installed": "Verbaut",
+        "status_planned": "Geplant",
+        "status_removed": "Ausgebaut",
+        "legal_unknown": "Unbekannt",
+        "legal_registered": "Eingetragen",
+        "legal_abe": "ABE",
+        "legal_parts_certificate": "Teilegutachten",
+        "legal_individual_approval": "Einzelabnahme",
+        "legal_not_required": "Nicht nötig"
+    },
+    "history": {
+        "empty": "Noch kein Verlauf",
+        "hidden": "ausgeblendet",
+        "change": ":before → :after",
+        "type_mod_added": "Mod hinzugefügt",
+        "type_mod_removed": "Mod entfernt",
+        "type_mod_changed": "Mod geändert",
+        "type_note": "Notiz",
+        "type_photos_added": "Neue Fotos",
+        "type_specs_changed": "Daten geändert"
+    },
+    "reports": {
+        "empty": "Kein Fall zu diesem Fahrzeug oder seinen Fotos.",
+        "count": ":count Meldungen"
+    },
+    "hide": {
+        "title": "Fahrzeug ausblenden",
+        "body": "Das Fahrzeug wird privat und aus der Suche genommen; der Besitzer kann es nicht wieder zeigen. Er liest die Begründung in der App und per E‑Mail und kann Einspruch einlegen."
+    },
+    "unhide": {
+        "title": "Fahrzeug wieder einblenden",
+        "body": "Eine neue Entscheidung hebt das Ausblenden auf; das Fahrzeug bekommt seine vorherige Sichtbarkeit zurück. Der Besitzer wird informiert.",
+        "facts": "Was der Besitzer liest",
+        "facts_hint": "Warum die Maßnahme endet, 10–5.000 Zeichen."
+    },
+    "delete": {
+        "title": "Fahrzeug löschen",
+        "body": "Erst eine Entscheidung mit Begründung an den Besitzer, dann wird das Fahrzeug mit allen Fotos gelöscht und der QR-Code gesperrt. Nach 30 Tagen endgültig."
+    },
+    "edit": {
+        "title": "Fahrzeug bearbeiten",
+        "body": "Katalog-Zuordnung und Titelfelder. Eine Korrektur des Teams erscheint nicht als Build-Update.",
+        "choose": "Auswählen",
+        "make_text": "Marke als Text",
+        "model_text": "Modell als Text",
+        "year_invalid": "Gib ein Jahr mit vier Ziffern ein.",
+        "save": "Speichern"
+    }
+}

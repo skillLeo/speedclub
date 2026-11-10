@@ -1,0 +1,87 @@
+{
+    "nav": {
+        "title": "QR codes"
+    },
+    "title": "QR codes",
+    "intro": "Every sticker code with vehicle, owner and scans. Only scans per day are counted, no people.",
+    "caption": "QR codes, newest first",
+    "empty_title": "No QR codes yet",
+    "empty_body": "A code is created when a vehicle is published.",
+    "no_vehicle": "No vehicle",
+    "vehicle_deleted": "Vehicle deleted",
+    "columns": {
+        "code": "Code",
+        "status": "Status",
+        "vehicle": "Vehicle",
+        "owner": "Owner",
+        "created": "Created",
+        "scans_7": "Scans 7 days",
+        "scans_30": "Scans 30 days"
+    },
+    "presets": {
+        "active": "Active",
+        "revoked": "Revoked",
+        "top": "Most scans"
+    },
+    "filters": {
+        "label": "Filter QR codes",
+        "q": "Code",
+        "q_placeholder": "e.g. 7H2K",
+        "status": "Status",
+        "any": "All",
+        "apply": "Apply"
+    },
+    "status": {
+        "active": "Active",
+        "revoked": "Revoked"
+    },
+    "reasons": {
+        "reissued": "Reissued",
+        "vehicle_deleted": "Vehicle deleted",
+        "account_deleted": "Account deleted",
+        "moderation": "Revoked by staff"
+    },
+    "actions": {
+        "revoke": "Revoke",
+        "reissue": "Reissue"
+    },
+    "flash": {
+        "revoked": "Code revoked. The owner was told.",
+        "reissued": "New code issued. The owner was told.",
+        "not_possible": "That is not possible for this code right now."
+    },
+    "detail": {
+        "error": "The code could not be loaded",
+        "created": "created :date",
+        "revoked": "revoked :date (:reason)",
+        "range": "Period",
+        "days_30": "30 days",
+        "days_90": "90 days",
+        "total": ":count scans in :days days",
+        "loading": "Loading scans …",
+        "chart_title": "How often is the sticker scanned?",
+        "chart_body": "Scans per day, last :days days",
+        "series": "Scans",
+        "zero": "No scan in the last :days days",
+        "history": "History",
+        "siblings": "Other codes of this vehicle"
+    },
+    "history": {
+        "created": "Created",
+        "revoked": "Revoked",
+        "revoked_by_staff": "Revoked by staff",
+        "reissued_by_staff": "Replaced by staff, new code :code",
+        "issued_by_staff": "Issued by staff",
+        "other": "Changed",
+        "owner_or_system": "On publishing"
+    },
+    "revoke": {
+        "title": "Revoke code :code",
+        "body": "A scan then shows “no longer valid”, and the owner cannot issue a new code; only staff can. The owner is mailed."
+    },
+    "reissue": {
+        "title": "Issue a new code",
+        "body": "The vehicle's active code is replaced; old stickers stop working. The owner is mailed."
+    },
+    "revoked_because": "Reason: :reason"
+}

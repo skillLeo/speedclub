@@ -1,0 +1,258 @@
+{
+    "data": {
+        "id": "string",
+        "public_id": "string",
+        "slug": "string",
+        "status": "string",
+        "visibility": "string",
+        "is_main": "bool",
+        "eyebrow": "string",
+        "make": "string",
+        "model": "string",
+        "generation": "null",
+        "title": "string",
+        "full_title": "string",
+        "nickname": "string",
+        "color": "string",
+        "model_year": "int",
+        "subline_parts": [
+            "string"
+        ],
+        "spec_strip": [
+            {
+                "key": "string",
+                "value": "string",
+                "unit": "string",
+                "label": "string"
+            }
+        ],
+        "cover": {
+            "id": "string",
+            "status": "string",
+            "category": "string",
+            "width": "int",
+            "height": "int",
+            "blurhash": "string",
+            "focal_x": "null",
+            "focal_y": "null",
+            "alt": "null",
+            "sort": "int",
+            "variants": [
+                {
+                    "width": "int",
+                    "height": "int",
+                    "url": "string"
+                }
+            ],
+            "created_at": "string"
+        },
+        "photo_count": "int",
+        "mod_count": "int",
+        "published_at": "string",
+        "updated_at": "string",
+        "wizard": "null",
+        "completeness": "null",
+        "qr": "null",
+        "canonical_url": "string",
+        "description": "string",
+        "power": {
+            "label": "string",
+            "value": "int",
+            "unit": "string",
+            "ps": "int",
+            "source": "string",
+            "source_label": "string"
+        },
+        "torque": {
+            "label": "string",
+            "nm": "int",
+            "source": "string",
+            "source_label": "string"
+        },
+        "spec_groups": [
+            {
+                "key": "string",
+                "label": "string",
+                "rows": [
+                    {
+                        "key": "string",
+                        "label": "string",
+                        "value": "string",
+                        "source": "null",
+                        "source_label": "null"
+                    }
+                ]
+            }
+        ],
+        "photos": [
+            {
+                "id": "string",
+                "status": "string",
+                "category": "string",
+                "width": "int",
+                "height": "int",
+                "blurhash": "string",
+                "focal_x": "null",
+                "focal_y": "null",
+                "alt": "null",
+                "sort": "int",
+                "variants": [
+                    {
+                        "width": "int",
+                        "height": "int",
+                        "url": "string"
+                    }
+                ],
+                "created_at": "string"
+            }
+        ],
+        "highlights": [
+            {
+                "id": "string",
+                "title": "string",
+                "category": {
+                    "key": "string",
+                    "name": "string",
+                    "icon": "string"
+                },
+                "brand": "null",
+                "summary_line": "string",
+                "status": "string",
+                "status_label": "string",
+                "installed_on": "string",
+                "installed_label": "string",
+                "cost_public": "bool",
+                "cost": {
+                    "cents": "int",
+                    "label": "string"
+                },
+                "legal_status": "null",
+                "legal_status_label": "null",
+                "thumb": {
+                    "id": "string",
+                    "status": "string",
+                    "category": "string",
+                    "width": "int",
+                    "height": "int",
+                    "blurhash": "string",
+                    "focal_x": "null",
+                    "focal_y": "null",
+                    "alt": "null",
+                    "sort": "int",
+                    "variants": [
+                        {
+                            "width": "int",
+                            "height": "int",
+                            "url": "string"
+                        }
+                    ],
+                    "created_at": "string"
+                }
+            }
+        ],
+        "mods": {
+            "count": "int",
+            "groups": [
+                {
+                    "category": {
+                        "key": "string",
+                        "name": "string",
+                        "icon": "string"
+                    },
+                    "count": "int",
+                    "items": [
+                        {
+                            "id": "string",
+                            "title": "string",
+                            "category": {
+                                "key": "string",
+                                "name": "string",
+                                "icon": "string"
+                            },
+                            "brand": "null",
+                            "summary_line": "string",
+                            "status": "string",
+                            "status_label": "string",
+                            "installed_on": "string",
+                            "installed_label": "string",
+                            "cost_public": "bool",
+                            "cost": {
+                                "cents": "int",
+                                "label": "string"
+                            },
+                            "legal_status": "null",
+                            "legal_status_label": "null",
+                            "thumb": {
+                                "id": "string",
+                                "status": "string",
+                                "category": "string",
+                                "width": "int",
+                                "height": "int",
+                                "blurhash": "string",
+                                "focal_x": "null",
+                                "focal_y": "null",
+                                "alt": "null",
+                                "sort": "int",
+                                "variants": [
+                                    {
+                                        "width": "int",
+                                        "height": "int",
+                                        "url": "string"
+                                    }
+                                ],
+                                "created_at": "string"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "updates_count": "int",
+        "updates": [
+            {
+                "id": "string",
+                "type": "string",
+                "type_label": "string",
+                "note": "null",
+                "summary": "string",
+                "changes": [
+                    {
+                        "kind": "string",
+                        "category": "string",
+                        "modification_id": "string",
+                        "label": "string",
+                        "before": "string",
+                        "after": "string",
+                        "text": "string",
+                        "details": []
+                    }
+                ],
+                "changes_count": "int",
+                "hidden": "bool",
+                "created_at": "string",
+                "month_label": "string"
+            }
+        ],
+        "owner": {
+            "username": "string",
+            "display_name": "string",
+            "city": "string",
+            "bio": "null",
+            "avatar": "null",
+            "cover": "null",
+            "member_since": "string",
+            "stats": {
+                "vehicles": "int",
+                "followers": "int",
+                "following": "int"
+            },
+            "is_self": "bool",
+            "is_following": "bool",
+            "follows_you": "bool",
+            "can_message": "bool"
+        },
+        "share_card_url": "null",
+        "is_owner": "bool",
+        "is_saved": "null"
+    }
+}

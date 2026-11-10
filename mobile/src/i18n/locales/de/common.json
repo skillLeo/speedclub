@@ -1,0 +1,196 @@
+{
+    "tabs": {
+        "home": "Start",
+        "discover": "Entdecken",
+        "garage": "Garage",
+        "messages": "Nachrichten",
+        "profile": "Profil"
+    },
+    "actions": {
+        "back": "Zurück",
+        "retry": "Erneut versuchen",
+        "cancel": "Abbrechen",
+        "close": "Schließen",
+        "clear": "Eingabe löschen",
+        "done": "Fertig",
+        "save": "Speichern",
+        "undo": "Rückgängig",
+        "showMore": "Mehr anzeigen",
+        "showLess": "Weniger anzeigen",
+        "all": "Alle",
+        "more": "Mehr",
+        "share": "Teilen",
+        "remove": "Entfernen",
+        "showPassword": "Passwort anzeigen",
+        "hidePassword": "Passwort verbergen",
+        "decrease": "Weniger",
+        "increase": "Mehr",
+        "previous": "Vorheriges Foto",
+        "next": "Nächstes Foto"
+    },
+    "discard": {
+        "title": "Änderungen verwerfen?",
+        "body": "Deine Änderungen werden nicht gespeichert.",
+        "confirm": "Verwerfen",
+        "keep": "Weiter bearbeiten"
+    },
+    "notFound": {
+        "title": "Diese Seite gibt es nicht.",
+        "body": "Der Link ist vielleicht veraltet oder hat einen Tippfehler.",
+        "home": "Zur Startseite"
+    },
+    "states": {
+        "loading": "Wird geladen",
+        "offline": "Offline – Änderungen werden gesendet, sobald du online bist.",
+        "errorTitle": "Das hat nicht geklappt",
+        "errorBody": "Prüfe deine Verbindung und versuche es noch einmal.",
+        "required": "Pflichtfeld",
+        "restrictedTitle": "Dein Konto ist eingeschränkt",
+        "restrictedBody": "Diese Funktion steht dir gerade nicht zur Verfügung.",
+        "comingSoon": "Bald verfügbar"
+    },
+    "a11y": {
+        "photoCounter": "Foto {{current}} von {{total}}",
+        "unreadCount": "{{count}} ungelesen",
+        "sheetGrabber": "Ziehen, um die Größe zu ändern",
+        "imageViewer": "Bildansicht",
+        "mainVehicle": "Hauptfahrzeug",
+        "unreadNotifications": "Neue Benachrichtigungen",
+        "mainNavigation": "Hauptnavigation"
+    },
+    "badges": {
+        "mainVehicle": "Hauptfahrzeug",
+        "installed": "Verbaut",
+        "planned": "Geplant",
+        "removed": "Entfernt"
+    },
+    "auth": {
+        "signIn": "Anmelden",
+        "signUp": "Konto erstellen"
+    },
+    "authRequired": {
+        "title": "Dafür brauchst du ein Konto",
+        "body": "Melde dich an oder erstelle ein Konto, um weiterzumachen."
+    },
+    "gate": {
+        "checkAgain": "Erneut prüfen",
+        "maintenanceTitle": "Wir sind gleich zurück",
+        "maintenanceBody": "SPEED CLUB wird gerade gewartet. Versuche es gleich noch einmal.",
+        "updateTitle": "Update erforderlich",
+        "updateBody": "Diese Version ist veraltet. Bitte installiere das Update."
+    },
+    "shell": {
+        "addVehicle": "Fahrzeug hinzufügen",
+        "placeholderBody": "Daran arbeiten wir gerade.",
+        "sampleVehicle": "Beispiel-Build ansehen",
+        "routeError": {
+            "title": "Diese Ansicht konnte nicht geladen werden",
+            "bodyBack": "Versuch es noch einmal oder geh einen Schritt zurück.",
+            "bodyClose": "Versuch es noch einmal oder schließ die Ansicht.",
+            "bodyAlone": "Versuch es gleich noch einmal.",
+            "reload": "Neu laden"
+        }
+    },
+    "routes": {
+        "welcome": "Willkommen",
+        "signIn": "Anmelden",
+        "signUp": "Konto erstellen",
+        "verifyEmail": "E-⁠Mail bestätigen",
+        "forgotPassword": "Passwort vergessen",
+        "resetPassword": "Neues Passwort",
+        "username": "Benutzername",
+        "profileSetup": "Dein Profil",
+        "vehicle": "Fahrzeug",
+        "vehicleGallery": "Fotos",
+        "vehicleMod": "Modifikation",
+        "vehicleUpdate": "Build-Update",
+        "qrDetail": "QR-⁠Code",
+        "qrPlacement": "Sticker anbringen",
+        "qrPreview": "Öffentliche Seite",
+        "qrList": "Meine QR-⁠Codes",
+        "qrResolve": "QR-⁠Code",
+        "search": "Suche",
+        "garageVehicle": "Dein Fahrzeug",
+        "garageBasics": "Grunddaten",
+        "garageSpecs": "Technik",
+        "garagePhotos": "Fotos",
+        "garagePhoto": "Foto bearbeiten",
+        "garageMods": "Mods",
+        "garageMod": "Modifikation",
+        "garageHistory": "Verlauf",
+        "garageVisibility": "Sichtbarkeit",
+        "profileEdit": "Profil bearbeiten",
+        "appearance": "Erscheinungsbild",
+        "legal": "Rechtliches",
+        "legalDocument": "Rechtliches",
+        "addVehicle": "Fahrzeug hinzufügen",
+        "published": "Veröffentlicht",
+        "viewer": "Fotos"
+    },
+    "system": {
+        "update": {
+            "version": "Installiert: {{current}} · Benötigt: {{required}}",
+            "ios": "Zum App Store",
+            "android": "Zu Google Play",
+            "page": "App laden",
+            "openFailed": "Der Link ließ sich nicht öffnen. Versuch es noch einmal."
+        },
+        "shortcuts": {
+            "title": "Tastenkürzel",
+            "then": "dann",
+            "rows": {
+                "search": "Suche fokussieren",
+                "switcher": "Schnellwechsel öffnen",
+                "home": "Zu Start",
+                "discover": "Zu Entdecken",
+                "garage": "Zur Garage",
+                "messages": "Zu Nachrichten",
+                "profile": "Zum Profil",
+                "help": "Diese Übersicht"
+            },
+            "note": "Kürzel wirken nicht, solange du in ein Feld tippst.",
+            "switcher": {
+                "title": "Schnellwechsel",
+                "search": "Fahrzeug, Unterhaltung oder Seite",
+                "groups": {
+                    "vehicles": "Fahrzeuge",
+                    "conversations": "Unterhaltungen",
+                    "settings": "Einstellungen",
+                    "tabs": "Bereiche"
+                },
+                "empty": "Nichts gefunden für „{{query}}“",
+                "results_one": "{{count}} Treffer",
+                "results_other": "{{count}} Treffer",
+                "hint": "Pfeiltasten wählen, Enter öffnet, Esc schließt.",
+                "settings": "Einstellungen"
+            }
+        }
+    },
+    "ai": {
+        "translate": {
+            "action": "Übersetzen",
+            "pending": "Wird übersetzt",
+            "retry": "Erneut übersetzen",
+            "showOriginal": "Original anzeigen",
+            "showTranslation": "Übersetzung anzeigen"
+        },
+        "accept": "Übernehmen",
+        "discard": "Verwerfen",
+        "acceptAll": "Alle übernehmen",
+        "errors": {
+            "refused": "Dazu können wir keinen Vorschlag machen.",
+            "unverifiable": "Der Vorschlag ließ sich nicht mit deinen Angaben belegen, deshalb zeigen wir ihn nicht.",
+            "unavailable": "KI-Vorschläge sind gerade nicht erreichbar. Versuch es später noch einmal.",
+            "budget": "Für heute sind keine KI-Vorschläge mehr möglich. Morgen geht es wieder.",
+            "optIn": "Schalte zuerst „KI-Vorschläge“ unter Privatsphäre & Kontakt ein.",
+            "disabled": "Diese Funktion ist gerade nicht verfügbar.",
+            "rateLimited": "Du hast gerade viele Vorschläge angefragt. Versuch es in einer Weile noch einmal.",
+            "network": "Keine Verbindung. Versuch es noch einmal, sobald du online bist.",
+            "processing": "Das Foto wird noch verarbeitet. Versuch es gleich noch einmal.",
+            "failed": "Das hat gerade nicht geklappt. Versuch es gleich noch einmal.",
+            "emailNotVerified": "Für KI-Funktionen brauchst du eine bestätigte E-Mail-Adresse.",
+            "dailyLimit": "Dein Tageskontingent für diese KI-Funktion ist aufgebraucht. Morgen geht es wieder."
+        },
+        "verifyEmail": "E-Mail-Adresse bestätigen"
+    }
+}

@@ -1,0 +1,84 @@
+{
+    "title": "Dashboard",
+    "intro": "Hallo :name. Zuerst, was auf dich wartet, dann die Zahlen.",
+    "first_run": {
+        "title": "Noch keine Mitglieder",
+        "body": "Sobald sich das erste Mitglied registriert, füllen sich Kennzahlen und Diagramme. Warteschlangen siehst du schon jetzt."
+    },
+    "queues": {
+        "title": "Warteschlangen",
+        "error": "Warteschlangen konnten nicht geladen werden",
+        "none_title": "Für deine Rolle gibt es keine Warteschlangen",
+        "none_body": "Kennzahlen und Suche stehen dir trotzdem zur Verfügung.",
+        "open": ":queue öffnen",
+        "open_short": "Öffnen",
+        "since": "älteste :time",
+        "last": "zuletzt :time",
+        "stale": "Keine Rückmeldung",
+        "reports": "Offene Meldungen",
+        "reports_empty": "Keine offenen Meldungen",
+        "appeals": "Einsprüche",
+        "appeals_empty": "Keine offenen Einsprüche",
+        "privacy_due": "DSGVO-Fristen ≤ 7 Tage",
+        "privacy_due_empty": "Keine Frist in den nächsten 7 Tagen",
+        "support_tickets": "Support-Tickets",
+        "support_tickets_empty": "Keine offenen Tickets",
+        "failed_jobs": "Fehlgeschlagene Jobs",
+        "failed_jobs_empty": "Keine fehlgeschlagenen Jobs",
+        "scheduler": "Zeitplaner",
+        "scheduler_empty": "Läuft planmäßig",
+        "queue": "Hintergrund-Jobs",
+        "queue_empty": "Keine wartenden Jobs",
+        "clear": "Alles erledigt",
+        "clear_since": "Alles erledigt · zuletzt :time",
+        "waiting": ":count warten"
+    },
+    "analytics_forbidden": {
+        "title": "Kennzahlen sind für deine Rolle ausgeblendet",
+        "body": "Dafür braucht es die Berechtigung „Statistiken ansehen“. Deine Warteschlangen oben sind vollständig."
+    },
+    "kpis": {
+        "title": "Kennzahlen",
+        "error": "Kennzahlen konnten nicht geladen werden",
+        "empty_title": "Noch keine Kennzahlen",
+        "empty_body": "Die Zählung beginnt mit der ersten Aktivität von Mitgliedern. Es werden nur Summen gespeichert, keine Verläufe einzelner Personen.",
+        "series": "Verlauf: letzte 14 Tage, Veränderung zum Vorzeitraum",
+        "members_today": "Neue Mitglieder heute",
+        "members_7d": "Neue Mitglieder, 7 Tage",
+        "members_30d": "Neue Mitglieder, 30 Tage",
+        "dau": "Aktiv heute (DAU)",
+        "wau": "Aktiv diese Woche (WAU)",
+        "vehicles_published": "Veröffentlichte Fahrzeuge",
+        "qr_scans_7d": "QR-Scans, 7 Tage",
+        "qr_registrations_7d": "QR-Scan → Registrierung, 7 Tage",
+        "messages_7d": "Nachrichten, 7 Tage",
+        "per_day": "Linie: neu pro Tag"
+    },
+    "charts": {
+        "title": "Entwicklung",
+        "error": "Diagramme konnten nicht geladen werden",
+        "registrations": "Wie viele registrieren sich pro Tag?",
+        "registrations_body": "Registrierungen pro Tag, letzte 30 Tage",
+        "qr_funnel": "Wie viele QR-Scans werden zu Mitgliedern?",
+        "qr_funnel_body": "QR-Scans und Registrierungen nach einem Scan, pro Tag, letzte 30 Tage",
+        "top_makes": "Welche Marken stehen in den Garagen?",
+        "top_makes_body": "Top 10 Marken nach veröffentlichten Fahrzeugen",
+        "series_registrations": "Registrierungen",
+        "series_scans": "QR-Scans",
+        "series_vehicles": "Fahrzeuge",
+        "registrations_zero": "Keine Registrierungen in den letzten 30 Tagen",
+        "qr_funnel_zero": "Keine QR-Scans in den letzten 30 Tagen"
+    },
+    "dsa": {
+        "title": "Ø monatlich aktive Nutzer (6 Monate)",
+        "body": "Für Auskunftsersuchen nach Art. 24 Abs. 3 DSA: Durchschnitt der letzten sechs vollen Monate.",
+        "empty": "Noch nicht genug Monate gezählt.",
+        "error": "Der DSA-Wert konnte nicht geladen werden",
+        "months": "Aktive Mitglieder pro Monat"
+    },
+    "intro_queues_only": "Hallo :name. Das wartet auf dich.",
+    "error_all": {
+        "title": "Das Dashboard konnte nicht geladen werden",
+        "body": "Warteschlangen, Kennzahlen und Diagramme sind gerade nicht erreichbar. Ein neuer Versuch lädt alles auf einmal."
+    }
+}

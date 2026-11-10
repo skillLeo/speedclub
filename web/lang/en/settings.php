@@ -1,0 +1,57 @@
+<?php
+
+return [
+    'password_wrong' => 'The password is not correct.',
+    'password_locked' => 'The password was entered incorrectly too many times. Try again in :time.',
+    'code_required' => 'Enter the code from your authenticator app or a recovery code.',
+    'code_wrong' => 'This code is not correct. Use the current code from your authenticator app or an unused recovery code.',
+    'email' => [
+        'same' => 'This is already your account’s address.',
+        'unavailable' => 'This address cannot be used. Choose a different e-mail address.',
+        'nothing_pending' => 'There is no pending change of your e-mail address. Request a code first.',
+    ],
+    'two_factor' => [
+        'already_on' => 'Two-factor protection is already on.',
+        'not_on' => 'Two-factor protection is not on.',
+        'nothing_pending' => 'The setup is no longer active. Start it again.',
+        'needs_verified_email' => 'Confirm your e-mail address first, then you can turn on two-factor protection.',
+    ],
+    'sessions' => [
+        'current' => 'This is the device you are using. To sign out here, use “Sign out”.',
+        'browser' => 'Browser',
+        'browser_on' => ':browser on :os',
+    ],
+    'export' => [
+        'busy' => 'A lot of exports are being created right now. Try again in an hour.',
+        'readme' => [
+            'title' => 'SPEED CLUB – your data export',
+            'created' => 'Created on :date for @:username (:email).',
+            'intro' => 'This ZIP file holds the data SPEED CLUB stores about your account (Art. 15 and 20 GDPR). The files are JSON (UTF-8) and open in any text editor.',
+            'files' => [
+                'profile.json' => 'Profile: e-mail address, username, name, city, bio, status, member since.',
+                'settings.json' => 'Settings: language, theme, power display, privacy, notifications, two-factor protection on or off.',
+                'consents.json' => 'Consents: versions of the terms and the privacy policy, times, marketing consent.',
+                'vehicles.json' => 'Vehicles with specs, modifications, history and QR codes, drafts and deleted ones (within the 30 days) included.',
+                'photos.json' => 'Every photo you uploaded; the originals are in the folder photos/.',
+                'follows.json' => 'Whom you follow and who follows you (usernames only).',
+                'blocks.json' => 'Accounts you blocked.',
+                'saves.json' => 'Builds you saved.',
+                'conversations/' => 'Your conversations and the messages you can see, in files of 50 conversations each. Other members by username only; null stands for a deleted member.',
+                'notifications/' => 'Your notifications, in files of 500.',
+                'reports.json' => 'Reports you sent.',
+                'support_tickets.json' => 'Your requests to support.',
+                'devices.json' => 'Signed-in devices with name, platform and date.',
+                'moderation_decisions.json' => 'The team’s decisions about your content, with the reasons.',
+                'appeals.json' => 'Your appeals against decisions.',
+                'security_events.json' => 'Your security log: sign-ins on new devices, changes of password, e-mail address and two-factor protection, with date and device name, without IP address.',
+                'reactions.json' => 'Your reactions to messages.',
+                'push_devices.json' => 'Devices that get notifications, with platform and date.',
+                'browser_sessions.json' => 'Signed-in browsers with browser, system and last use.',
+            ],
+            'not_included' => 'Not included: your password and your two-factor keys (stored only as check values), photos other members sent you, and other members’ data. We do not store IP addresses of members.',
+            'staff_copy' => 'Copy for the SPEED CLUB team (four-eyes approval): without message texts, chat photos and reactions. Each conversation lists only the other members, folder, dates and counts.',
+            'questions' => 'Questions? Write to us at :support.',
+        ],
+        'cooldown' => 'You can request one export every 24 hours. You can request the next one from :date.',
+    ],
+];

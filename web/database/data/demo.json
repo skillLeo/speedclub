@@ -1,0 +1,422 @@
+{
+"members":[
+  {"username":"lukas.sc","joined":"2023-03-12","display_name":"Lukas Scholz","city":"Stuttgart","bio":"KFZ-Mechatroniker aus Stuttgart. Der R34 war zehn Jahre ein Traum, seit 2021 steht er in der Garage. Schraube fast alles selbst."},
+  {"username":"jann.ptrs","joined":"2024-02-18","display_name":"Jann Petersen","city":"Hamburg","bio":"Hamburg, M-Autos, viel zu viele Felgenkataloge. Fahre am liebsten früh am Sonntag über die Dörfer."},
+  {"username":"max.e46","joined":"2024-09-03","display_name":"Max Ebert","city":"München","bio":"Saugmotor-Fan. Der E46 ist mein Alltagsauto, der E92 kommt nur bei trockener Straße raus."},
+  {"username":"sara.gti","joined":"2024-11-20","display_name":"Sara Yildiz","city":"Braunschweig","bio":"GTI seit dem ersten Führerschein-Tag. Ein Golf 2 zum Restaurieren, ein Golf 7 zum Fahren."},
+  {"username":"kenji.r34","joined":"2024-03-27","display_name":"Kenji Tanaka","city":"Düsseldorf","bio":"Der R34 im Namen kam erst als Wunsch, seit diesem Frühjahr steht er in der Garage. Dazu Reihensechser und VR38 aus Düsseldorf."},
+  {"username":"tobi.quattro","joined":"2025-01-09","display_name":"Tobias Krämer","city":"Ingolstadt","bio":"Fünfzylinder, V8, Hauptsache Allrad. Ingenieur bei Tag, Garagenschrauber am Wochenende."},
+  {"username":"lena.911","joined":"2024-06-15","display_name":"Lena Hoffmann","city":"Leipzig","bio":"Luftgekühlt im Herzen. Fahre meine Porsche so, wie sie gedacht sind, und ab und zu auf der Rennstrecke."},
+  {"username":"marco.amg","joined":"2024-05-02","display_name":"Marco Bianchi","city":"Frankfurt am Main","bio":"Vom 190er bis zum A 45: Mercedes aus allen Jahrzehnten. Pflege lieber, als dass ich umbaue."},
+  {"username":"finn.jdm","joined":"2024-08-11","display_name":"Finn Lorenzen","city":"Kiel","bio":"Hinterradantrieb und hohe Drehzahlen. Importiere meine Teile selbst und lerne gerade Japanisch dafür."},
+  {"username":"aylin.vtec","joined":"2023-10-22","display_name":"Aylin Demir","city":"Köln","bio":"VTEC ist kein Mythos. Trackdays am Nürburgring und lange Abende in der Tiefgarage."},
+  {"username":"nico.sti","joined":"2025-02-14","display_name":"Nico Wagner","city":"Dresden","bio":"Blauer Lack, schwarze Felgen, Boxer-Sound. Allrad ist die beste Antwort auf sächsische Landstraßen."},
+  {"username":"paul.roadster","joined":"2024-12-05","display_name":"Paul Berger","city":"Bremen","bio":"Offen fahren, sobald es nicht regnet. Sammle ehrliche kleine Autos mit Charakter."}
+],
+"empty_member":{"username":"nina.neu","joined":"2026-09-17","display_name":"Nina Neumann","city":"Berlin","bio":"Noch kein Auto in der Garage, aber der Plan steht."},
+"vehicles":[
+{"key":"nissan-r34","owner":"lukas.sc","make":"Nissan","model":"Skyline GT-R","generation":"R34","year":2002,"nickname":"Bayside","color":"Bayside Blue","published":"2026-03-14",
+ "description":"Skyline GT-R V-Spec II aus Japan, 2021 über Yokohama importiert und seitdem Schritt für Schritt aufgebaut. Der RB26 läuft mit GT-SS-Ladern und sauberer Abstimmung auf dem Prüfstand. Ziel: ein Auto, das man wirklich fährt.",
+ "photos":["nissan-r34-01.jpg","generic-interior-03.jpg","generic-engine-03.jpg"],
+ "specs":{"engine_code":"RB26DETT","engine_text":"2,6 l R6 Biturbo","displacement_cc":2568,"fuel":"petrol","aspiration":"biturbo","power":[500,"ps","measured"],"torque":[540,"measured"],"drivetrain":"all","gearbox":"manual"},
+ "mods":[
+  {"c":"wheels_tires","b":"Rays","p":"Volk Racing TE37 Saga","d":"2022-05","lg":"unknown","cost":4200,"notes":"Sechs Speichen in Schwarz. Mit ET22 bündig, passt ohne Bördeln.","f":{"wheel_brand":"Rays","wheel_model":"Volk Racing TE37 Saga","diameter":18,"width_front":9.5,"width_rear":9.5,"et_front":22,"et_rear":22,"bolt_pattern":"5×114,3","finish":"Schwarz","staggered":false,"tyre_brand":"Michelin","tyre_model":"Pilot Sport 4 S","tyre_size_front":"265/35 R18","tyre_size_rear":"265/35 R18"},"diff":["Räder","Serie 18″","Volk Racing TE37 Saga 18″ × 9,5J ET22"]},
+  {"c":"suspension","b":"KW","p":"V3","d":"2022-03","lg":"parts_certificate","cost":2300,"f":{"type":"coilover","brand":"KW","model":"V3","lowering_front":35,"lowering_rear":35,"adjustable_damping":true},"diff":["Fahrwerk","Serie","KW V3 · −35 mm"]},
+  {"c":"exhaust","b":"HKS","p":"Super Turbo Muffler","d":"2023-02","lg":"unknown","f":{"type":"catback","brand":"HKS","model":"Super Turbo Muffler","material":"stainless","valves":false},"diff":["Abgasanlage","Fujitsubo Legalis R","HKS Super Turbo Muffler"]},
+  {"c":"exhaust","b":"Fujitsubo","p":"Legalis R","s":"removed","d":"2021-09","lg":"unknown","notes":"War beim Kauf verbaut, zugunsten der HKS-Anlage ausgebaut.","f":{"type":"catback","brand":"Fujitsubo","model":"Legalis R","material":"stainless","valves":false}},
+  {"c":"exhaust","b":"Tomei","p":"Expreme Ti","s":"planned","lg":"unknown","notes":"Titan-Anlage ist für nächsten Winter geplant.","f":{"type":"catback","brand":"Tomei","model":"Expreme Ti","material":"titanium","valves":false}},
+  {"c":"engine_performance","b":"HKS","p":"GT-SS Twin Turbo","d":"2024-04","lg":"individual_approval","cost":9800,"notes":"Abstimmung auf dem Rollenprüfstand: 500 PS und 540 Nm.","f":{"stage":"custom","tuner":"HKS","software":"Link G4X Plug-in","turbo_upgrade":"HKS GT-SS Twin Turbo","intake":"HKS Racing Suction","intercooler":"HKS R-Type","fuel_system":"Nismo 555 cc Einspritzventile","claimed_power":500,"claimed_torque":540,"measured_on_dyno":true},"diff":["Leistung","280 PS","500 PS · gemessen"]},
+  {"c":"brakes","b":"AP Racing","p":"Radi-CAL","d":"2024-09","lg":"parts_certificate","f":{"brand":"AP Racing","model":"Radi-CAL","front_pistons":6,"front_disc":356,"pads":"Endless MX72"},"diff":["Bremsen","Brembo Serie","AP Racing Radi-CAL · 356 mm"]},
+  {"c":"aero_body","b":"Nismo","p":"Aero-Seitenschweller","d":"2023-07","lg":"not_required","f":{"part":"side_skirts","brand":"Nismo","material":"abs","colour":"Bayside Blue"}},
+  {"c":"aero_body","b":"Seibon","p":"Carbon-Kofferraumdeckel OEM-Style","d":"2025-03","lg":"not_required","notes":"In Bayside Blue lackiert, damit er zum Rest passt.","f":{"part":"other","brand":"Seibon","material":"carbon","colour":"Bayside Blue"}},
+  {"c":"interior","b":"Bride","p":"Zeta III","d":"2023-11","lg":"parts_certificate","f":{"part":"seats","brand":"Bride","model":"Zeta III"}},
+  {"c":"interior","b":"Nardi","p":"Classic 330","d":"2022-08","lg":"unknown","f":{"part":"steering_wheel","brand":"Nardi","model":"Classic 330"}},
+  {"c":"electronics","b":"Defi","p":"Advance BF","d":"2023-01","lg":"not_required","f":{"part":"displays","brand":"Defi","model":"Advance BF"}},
+  {"c":"drivetrain","b":"Exedy","p":"Hyper Multi","d":"2024-04","lg":"not_required","f":{"part":"clutch","brand":"Exedy","model":"Hyper Multi"},"diff":["Kupplung","Serie","Exedy Hyper Multi"]},
+  {"c":"electronics","b":"HKS","p":"EVC 7","d":"2024-04","lg":"unknown","notes":"Elektronische Ladedruckregelung, mit den GT-SS-Ladern eingebaut.","f":{"part":"other","brand":"HKS","model":"EVC 7"}}
+ ],
+ "notes":[{"date":"2026-05-10","text":"Saisonstart: Öl, Kerzen und Bremsflüssigkeit neu. Läuft wie am ersten Tag."},{"date":"2025-04-20","text":"Erster Check nach dem Winterlager.","hidden":true}]
+},
+{"key":"nissan-s15","owner":"lukas.sc","make":"Nissan","model":"Silvia","generation":"S15","year":2001,"nickname":"Spec-R","color":"Silber","published":"2025-09-02",
+ "description":"Silvia Spec-R mit Sechsgang-Getriebe, mein Auto für die Rennstrecke und Driftkurse auf abgesperrtem Gelände. Einfach aufgebaut und leicht zu reparieren.",
+ "photos":["nissan-s15-01.jpg","generic-engine-01.jpg"],
+ "specs":{"engine_code":"SR20DET","engine_text":"2,0 l R4 Turbo","displacement_cc":1998,"fuel":"petrol","aspiration":"turbo","power":[320,"ps","claimed"],"torque":[400,"claimed"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"wheels_tires","b":"Work Wheels","p":"Meister S1 3P","d":"2025-06","lg":"unknown","photo":"generic-wheels-01.jpg","f":{"wheel_brand":"Work Wheels","wheel_model":"Meister S1 3P","diameter":18,"width_front":9.5,"width_rear":9.5,"et_front":12,"et_rear":12,"bolt_pattern":"5×114,3","finish":"Bronze","staggered":false,"tyre_brand":"Toyo","tyre_model":"Proxes R888R","tyre_size_front":"245/40 R18","tyre_size_rear":"245/40 R18"},"diff":["Räder","Serie 16″","Work Meister S1 3P 18″"]},
+  {"c":"brakes","b":"Brembo","p":"GT 6-Kolben","d":"2025-06","lg":"parts_certificate","notes":"Sättel in Pink lackiert, damit sie hinter den Felgen auffallen.","f":{"brand":"Brembo","model":"GT","front_pistons":6,"front_disc":355,"pads":"Brembo Sport"}},
+  {"c":"interior","b":"Corbeau","p":"Revolution","d":"2025-07","lg":"unknown","notes":"Mit gelben Sabelt-Gurten, nur für die Rennstrecke.","photo":"generic-interior-02.jpg","f":{"part":"seats","brand":"Corbeau","model":"Revolution"}},
+  {"c":"suspension","b":"Tein","p":"Flex Z","d":"2025-06","lg":"unknown","f":{"type":"coilover","brand":"Tein","model":"Flex Z","lowering_front":45,"lowering_rear":40,"adjustable_damping":true}},
+  {"c":"engine_performance","b":"HKS","p":"GT2835 Turbo-Kit","d":"2025-08","lg":"unknown","f":{"stage":"custom","tuner":"HKS","turbo_upgrade":"HKS GT2835","intake":"A'PEXi Power Intake, verchromter Sammler","intercooler":"Trust Spec-R","claimed_power":320,"claimed_torque":400,"measured_on_dyno":false},"diff":["Leistung","250 PS","320 PS · Besitzerangabe"]},
+  {"c":"aero_body","b":"Voltex","p":"Type 7 Heckflügel","d":"2026-02","lg":"unknown","f":{"part":"wing","brand":"Voltex","material":"carbon"}},
+  {"c":"drivetrain","b":"Cusco","p":"Type RS Sperrdifferenzial","d":"2025-08","lg":"not_required","f":{"part":"lsd","brand":"Cusco","model":"Type RS"}}
+ ]
+},
+{"key":"bmw-e30-draft","owner":"lukas.sc","make":"BMW","model":"M3","generation":"E30","year":1989,"status":"draft","color":"Alpinweiß",
+ "photos":[],
+ "specs":{"engine_code":"S14B23","engine_text":"2,3 l R4","displacement_cc":2302,"fuel":"petrol","aspiration":"naturally_aspirated","drivetrain":"rear","gearbox":"manual"},
+ "mods":[]
+},
+{"key":"bmw-g82","owner":"jann.ptrs","make":"BMW","model":"M4","generation":"G82","year":2022,"nickname":"Speedgelb","color":"São Paulo Gelb","published":"2026-06-22",
+ "description":"M4 Competition mit Heckantrieb und Breitbau-Kit. 20-Zoll-Setup nach langer Suche gefunden, alle Teile mit Maßen in den Mods dokumentiert.",
+ "photos":["bmw-g82-01.jpg"],
+ "specs":{"engine_code":"S58B30T0","engine_text":"3,0 l R6 Biturbo","displacement_cc":2993,"fuel":"petrol","aspiration":"biturbo","power":[510,"ps","factory"],"torque":[650,"factory"],"drivetrain":"rear","gearbox":"automatic"},
+ "mods":[
+  {"c":"wheels_tires","b":"HRE","p":"FF04","d":"2025-04","lg":"parts_certificate","cost":5400,"f":{"wheel_brand":"HRE","wheel_model":"FF04","diameter":20,"width_front":9,"width_rear":10.5,"et_front":25,"et_rear":20,"bolt_pattern":"5×112","finish":"Satin Black","staggered":true,"tyre_brand":"Michelin","tyre_model":"Pilot Sport 4 S","tyre_size_front":"275/30 R20","tyre_size_rear":"285/30 R20"},"diff":["Räder","Serie 19″/20″","HRE FF04 20″ × 9J/10,5J"]},
+  {"c":"suspension","b":"KW","p":"V3","d":"2025-02","lg":"parts_certificate","f":{"type":"coilover","brand":"KW","model":"V3","lowering_front":25,"lowering_rear":25,"adjustable_damping":true},"diff":["Fahrwerk","Serie","KW V3 · −25 mm"]},
+  {"c":"exhaust","b":"Akrapovič","p":"Slip-On Line Titanium","d":"2025-02","lg":"abe","cost":6100,"f":{"type":"valved","brand":"Akrapovič","model":"Slip-On Line Titanium","material":"titanium","valves":true}},
+  {"c":"aero_body","b":"Flossmann","p":"GTR Wide Body Kit","d":"2026-05","lg":"individual_approval","f":{"part":"widebody","brand":"Flossmann","material":"grp","colour":"Wagenfarbe"},"diff":["Karosserie","Serie","Flossmann GTR Wide Body Kit"]},
+  {"c":"electronics","b":"BimmerCode","p":"Codierung","d":"2024-11","lg":"not_required","f":{"part":"coding","brand":"BimmerCode","model":"Komfort und Anzeigen"}}
+ ]
+},
+{"key":"bmw-f87","owner":"jann.ptrs","make":"BMW","model":"M2","generation":"F87","year":2019,"nickname":"Competition","color":"Sunset Orange metallic","published":"2025-07-05",
+ "description":"M2 Competition mit S55 und Doppelkupplung. Kurz, breit und auf der Landstraße genau richtig. Technik weitgehend Serie, Fahrwerk und Bremsen gemacht.",
+ "photos":["bmw-f87-01.jpg"],
+ "specs":{"engine_code":"S55B30T0","engine_text":"3,0 l R6 Biturbo","displacement_cc":2979,"fuel":"petrol","aspiration":"biturbo","power":[410,"ps","factory"],"torque":[550,"factory"],"drivetrain":"rear","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"wheels_tires","b":"Apex Race Parts","p":"ARC-8R","s":"planned","lg":"unknown","notes":"Zweiter Radsatz für die Rennstrecke, passt nur mit der 380-mm-Bremse. Bis dahin bleiben die Serienräder drauf.","f":{"wheel_brand":"Apex Race Parts","wheel_model":"ARC-8R","diameter":18,"width_front":9.5,"width_rear":10.5,"et_front":28,"et_rear":40,"bolt_pattern":"5×120","finish":"Brushed Clear","staggered":true,"tyre_brand":"Toyo","tyre_model":"Proxes R888R","tyre_size_front":"265/35 R18","tyre_size_rear":"275/35 R18"}},
+  {"c":"suspension","b":"KW","p":"V3 Clubsport","d":"2025-05","lg":"parts_certificate","f":{"type":"coilover","brand":"KW","model":"V3 Clubsport","lowering_front":30,"lowering_rear":25,"adjustable_damping":true},"diff":["Fahrwerk","Serie","KW V3 Clubsport · −30 mm"]},
+  {"c":"brakes","b":"BimmerWorld","p":"380-mm-Umbau","d":"2025-05","lg":"unknown","f":{"brand":"BimmerWorld","model":"380-mm-Umbau","front_disc":380},"diff":["Bremsen","Serie","BimmerWorld · 380 mm"]},
+  {"c":"engine_performance","b":"Wagner Tuning","p":"Competition Ladeluftkühler","d":"2026-03","lg":"not_required","f":{"tuner":"Wagner Tuning","intercooler":"Wagner Tuning Competition"}},
+  {"c":"exhaust","b":"Akrapovič","p":"Slip-On Line Titanium","s":"planned","lg":"unknown","f":{"type":"catback","brand":"Akrapovič","model":"Slip-On Line Titanium","material":"titanium","valves":true}}
+ ]
+},
+{"key":"bmw-e46","owner":"max.e46","make":"BMW","model":"M3","generation":"E46","year":2004,"color":"Titansilber metallic","published":"2026-01-18",
+ "description":"M3 E46 mit Sechsgang-Handschaltung, seit acht Jahren in meiner Hand. Der S54 bleibt Serie, alles andere soll ihn nur besser zur Geltung bringen.",
+ "photos":["bmw-e46-01.jpg"],
+ "specs":{"engine_code":"S54B32","engine_text":"3,2 l R6","displacement_cc":3246,"fuel":"petrol","aspiration":"naturally_aspirated","power":[343,"ps","factory"],"torque":[365,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"suspension","b":"Bilstein","p":"B16 PSS10","d":"2023-04","lg":"parts_certificate","f":{"type":"coilover","brand":"Bilstein","model":"B16 PSS10","lowering_front":30,"lowering_rear":25,"adjustable_damping":true},"diff":["Fahrwerk","Serie","Bilstein B16 PSS10 · −30 mm"]},
+  {"c":"exhaust","b":"Supersprint","p":"Race-Endschalldämpfer","d":"2023-09","lg":"unknown","f":{"type":"rear_silencer","brand":"Supersprint","model":"Race-Endschalldämpfer","material":"stainless","valves":false}},
+  {"c":"wheels_tires","b":"Apex Race Parts","p":"EC-7","d":"2024-03","lg":"unknown","f":{"wheel_brand":"Apex Race Parts","wheel_model":"EC-7","diameter":18,"width_front":9,"width_rear":10,"et_front":31,"et_rear":25,"bolt_pattern":"5×120","finish":"Anthracite","staggered":true,"tyre_brand":"Michelin","tyre_model":"Pilot Sport 4 S","tyre_size_front":"245/40 R18","tyre_size_rear":"275/35 R18"}},
+  {"c":"aero_body","b":"Voltex","p":"GT-Heckflügel","d":"2024-05","lg":"unknown","f":{"part":"wing","brand":"Voltex","material":"carbon"}},
+  {"c":"interior","b":"Recaro","p":"Pole Position","d":"2024-11","lg":"parts_certificate","f":{"part":"seats","brand":"Recaro","model":"Pole Position"}}
+ ]
+},
+{"key":"bmw-e92","owner":"max.e46","make":"BMW","model":"M3","generation":"E90/E92/E93","year":2009,"nickname":"V8","color":"Alpinweiß","published":"2025-11-08",
+ "description":"M3 Coupé mit dem letzten Saug-V8 der Baureihe und M-DKG. Kommt nur bei trockener Straße aus der Tiefgarage und dreht bis 8.400 Touren.",
+ "photos":["bmw-e92-01.jpg"],
+ "specs":{"engine_code":"S65B40","engine_text":"4,0 l V8","displacement_cc":3999,"fuel":"petrol","aspiration":"naturally_aspirated","power":[420,"ps","factory"],"torque":[400,"factory"],"drivetrain":"rear","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"wheels_tires","b":"BBS","p":"CH-R","d":"2024-05","lg":"parts_certificate","f":{"wheel_brand":"BBS","wheel_model":"CH-R","diameter":19,"width_front":8.5,"width_rear":9.5,"et_front":27,"et_rear":30,"bolt_pattern":"5×120","finish":"Brilliant Silver","staggered":true,"tyre_brand":"Michelin","tyre_model":"Pilot Sport 4 S","tyre_size_front":"245/35 R19","tyre_size_rear":"265/35 R19"}},
+  {"c":"suspension","b":"KW","p":"V3","d":"2024-05","lg":"parts_certificate","f":{"type":"coilover","brand":"KW","model":"V3","lowering_front":25,"lowering_rear":25,"adjustable_damping":true},"diff":["Fahrwerk","EDC Serie","KW V3 · −25 mm"]},
+  {"c":"exhaust","b":"Akrapovič","p":"Evolution Line Titanium","d":"2025-03","lg":"abe","f":{"type":"valved","brand":"Akrapovič","model":"Evolution Line Titanium","material":"titanium","valves":true}},
+  {"c":"interior","b":"Recaro","p":"Sportster CS","s":"planned","lg":"unknown","f":{"part":"seats","brand":"Recaro","model":"Sportster CS"}}
+ ]
+},
+{"key":"vw-golf7-gti","owner":"sara.gti","make":"Volkswagen","model":"Golf GTI","generation":"VII (5G)","year":2015,"nickname":"Performance","color":"Dunkelgrau","published":"2026-08-03",
+ "description":"Golf 7 GTI Performance mit DSG und Sperre. Mein Alltagsauto: Stage 1 mit APR-Software, dazu ein größerer Ladeluftkühler. Die Karositze bleiben natürlich drin.",
+ "photos":["vw-golf7-gti-01.jpg","vw-golf7-gti-02.jpg"],
+ "specs":{"engine_code":"CHHA","engine_text":"2,0 l R4 Turbo","displacement_cc":1984,"fuel":"petrol","aspiration":"turbo","power":[300,"ps","claimed"],"torque":[420,"claimed"],"drivetrain":"front","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"engine_performance","b":"APR","p":"Stage 1 Software","d":"2024-06","lg":"unknown","f":{"stage":"stage_1","tuner":"APR","software":"APR Stage 1","claimed_power":300,"claimed_torque":420,"measured_on_dyno":false},"diff":["Leistung","230 PS","300 PS · Besitzerangabe"]},
+  {"c":"engine_performance","b":"Wagner Tuning","p":"Competition Ladeluftkühler","d":"2024-06","lg":"not_required","f":{"tuner":"Wagner Tuning","intercooler":"Wagner Tuning Competition"}},
+  {"c":"suspension","b":"Bilstein","p":"B16","d":"2023-08","lg":"parts_certificate","f":{"type":"coilover","brand":"Bilstein","model":"B16","lowering_front":35,"lowering_rear":30,"adjustable_damping":true},"diff":["Fahrwerk","Serie","Bilstein B16 · −35 mm"]},
+  {"c":"exhaust","b":"Milltek Sport","p":"Cat-back","d":"2025-01","lg":"unknown","f":{"type":"catback","brand":"Milltek Sport","model":"Cat-back Non-Resonated","material":"stainless","valves":false}},
+  {"c":"wheels_tires","b":"OZ Racing","p":"Leggera HLT","d":"2024-03","lg":"parts_certificate","f":{"wheel_brand":"OZ Racing","wheel_model":"Leggera HLT","diameter":18,"width_front":8,"width_rear":8,"et_front":48,"et_rear":48,"bolt_pattern":"5×112","finish":"Grigio Corsa","staggered":false,"tyre_brand":"Michelin","tyre_model":"Pilot Sport 4","tyre_size_front":"225/40 R18","tyre_size_rear":"225/40 R18"}}
+ ],
+ "notes":[{"date":"2026-09-21","text":"100.000 km auf der Uhr. DSG-Öl gewechselt, sonst nichts Auffälliges."}]
+},
+{"key":"vw-golf2","owner":"sara.gti","make":"Volkswagen","model":"Golf GTI","generation":"II (19E)","year":1988,"nickname":"16V","color":"Weiß","published":"2025-05-30",
+ "description":"Golf 2 GTI 16V aus erster Hand gerettet. Karosserie komplett entrostet, der Motorraum neu aufgebaut und glattgezogen. Die Serienfelgen liegen für den H-Kennzeichen-Termin im Regal.",
+ "photos":["vw-golf2-01.jpg"],
+ "specs":{"engine_code":"KR","engine_text":"1,8 l R4 16V","displacement_cc":1781,"fuel":"petrol","aspiration":"naturally_aspirated","power":[139,"ps","factory"],"torque":[168,"factory"],"drivetrain":"front","gearbox":"manual"},
+ "mods":[
+  {"c":"wheels_tires","b":"OZ Racing","p":"Rally Racing","d":"2024-07","lg":"parts_certificate","f":{"wheel_brand":"OZ Racing","wheel_model":"Rally Racing","diameter":17,"width_front":7,"width_rear":7,"et_front":30,"et_rear":30,"bolt_pattern":"4×100","finish":"Race White","staggered":false,"tyre_brand":"Toyo","tyre_model":"Proxes TR1","tyre_size_front":"205/40 R17","tyre_size_rear":"205/40 R17"}},
+  {"c":"suspension","b":"KW","p":"V1","d":"2024-07","lg":"parts_certificate","f":{"type":"coilover","brand":"KW","model":"V1","lowering_front":40,"lowering_rear":35,"adjustable_damping":false},"diff":["Fahrwerk","Serie","KW V1 · −40 mm"]},
+  {"c":"exhaust","b":"Bastuck","p":"Edelstahl-Endschalldämpfer","d":"2024-10","lg":"abe","f":{"type":"rear_silencer","brand":"Bastuck","model":"Edelstahl-Endschalldämpfer","material":"stainless","valves":false}},
+  {"c":"interior","b":"Momo","p":"Prototipo","d":"2023-12","lg":"unknown","f":{"part":"steering_wheel","brand":"Momo","model":"Prototipo"}}
+ ]
+},
+{"key":"nissan-r35","owner":"kenji.r34","make":"Nissan","model":"GT-R","generation":"R35","year":2017,"nickname":"Godzilla","color":"Katsura Orange","published":"2026-02-11",
+ "description":"GT-R Modelljahr 2017 in Katsura Orange. Noch nahe an der Serie, die Leistung reicht vorerst. Fahrwerk und Felgen waren der erste Schritt.",
+ "photos":["nissan-r35-01.jpg"],
+ "specs":{"engine_code":"VR38DETT","engine_text":"3,8 l V6 Biturbo","displacement_cc":3799,"fuel":"petrol","aspiration":"biturbo","power":[570,"ps","factory"],"torque":[637,"factory"],"drivetrain":"all","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"wheels_tires","b":"Rays","p":"Volk Racing TE37 Ultra","d":"2025-04","lg":"unknown","f":{"wheel_brand":"Rays","wheel_model":"Volk Racing TE37 Ultra","diameter":20,"width_front":10,"width_rear":11,"et_front":30,"et_rear":15,"bolt_pattern":"5×114,3","finish":"Matt Graphit","staggered":true,"tyre_brand":"Michelin","tyre_model":"Pilot Sport Cup 2","tyre_size_front":"285/35 R20","tyre_size_rear":"305/30 R20"}},
+  {"c":"suspension","b":"Öhlins","p":"Road & Track","d":"2025-04","lg":"parts_certificate","f":{"type":"coilover","brand":"Öhlins","model":"Road & Track","lowering_front":20,"lowering_rear":20,"adjustable_damping":true},"diff":["Fahrwerk","Serie","Öhlins Road & Track · −20 mm"]},
+  {"c":"exhaust","b":"Akrapovič","p":"Evolution Line Titanium","d":"2025-10","lg":"abe","f":{"type":"catback","brand":"Akrapovič","model":"Evolution Line Titanium","material":"titanium","valves":true}},
+  {"c":"engine_performance","b":"Litchfield","p":"Stage 4","s":"planned","lg":"unknown","f":{"stage":"custom","tuner":"Litchfield"}}
+ ]
+},
+{"key":"toyota-a80","owner":"kenji.r34","make":"Toyota","model":"Supra","generation":"A80","year":1996,"nickname":"2JZ","color":"Schwarz","published":"2026-04-02",
+ "description":"Supra Biturbo, umgebaut auf einen großen Einzellader. Motor innen weitgehend Serie, weil der 2JZ das aushält. Auf dem Prüfstand gemessen und eingetragen.",
+ "photos":["toyota-a80-01.jpg"],
+ "specs":{"engine_code":"2JZ-GTE","engine_text":"3,0 l R6 Turbo","displacement_cc":2997,"fuel":"petrol","aspiration":"turbo","power":[620,"ps","measured"],"torque":[780,"measured"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"engine_performance","b":"Precision Turbo","p":"6266 Single-Turbo-Kit","d":"2024-02","lg":"individual_approval","cost":11500,"f":{"stage":"custom","tuner":"Link ECU","software":"Link G4X","turbo_upgrade":"Precision 6266","intake":"HKS Racing Suction","intercooler":"Mishimoto Frontmount","fuel_system":"DeatschWerks 1200 cc Einspritzventile","claimed_power":620,"claimed_torque":780,"measured_on_dyno":true},"diff":["Leistung","330 PS","620 PS · gemessen"]},
+  {"c":"wheels_tires","b":"Work Wheels","p":"Meister S1 3P","d":"2023-06","lg":"unknown","f":{"wheel_brand":"Work Wheels","wheel_model":"Meister S1 3P","diameter":18,"width_front":9.5,"width_rear":10.5,"et_front":20,"et_rear":15,"bolt_pattern":"5×114,3","finish":"Schwarz poliert","staggered":true,"tyre_brand":"Yokohama","tyre_model":"Advan Neova AD09","tyre_size_front":"255/35 R18","tyre_size_rear":"285/30 R18"}},
+  {"c":"wheels_tires","b":"Work Wheels","p":"Meister S1","s":"removed","d":"2021-05","lg":"unknown","notes":"Mein erster Satz, verkauft für das schwarze Setup.","photo":"generic-wheels-02.jpg","f":{"wheel_brand":"Work Wheels","wheel_model":"Meister S1","diameter":18,"width_front":9.5,"width_rear":10.5,"et_front":20,"et_rear":15,"bolt_pattern":"5×114,3","finish":"Bronze","staggered":true,"tyre_brand":"Toyo","tyre_model":"Proxes R888R","tyre_size_front":"255/35 R18","tyre_size_rear":"275/35 R18"}},
+  {"c":"suspension","b":"Öhlins","p":"Road & Track","d":"2023-06","lg":"parts_certificate","f":{"type":"coilover","brand":"Öhlins","model":"Road & Track","lowering_front":30,"lowering_rear":30,"adjustable_damping":true}},
+  {"c":"exhaust","b":"Blitz","p":"Nur-Spec","d":"2024-02","lg":"unknown","f":{"type":"catback","brand":"Blitz","model":"Nur-Spec","material":"stainless","valves":false}},
+  {"c":"drivetrain","b":"Exedy","p":"Hyper Twin","d":"2024-02","lg":"not_required","f":{"part":"clutch","brand":"Exedy","model":"Hyper Twin"}},
+  {"c":"aero_body","b":"Voltex","p":"Type 2 Heckflügel","d":"2025-05","lg":"unknown","f":{"part":"wing","brand":"Voltex","material":"carbon"}}
+ ]
+},
+{"key":"nissan-z33","owner":"kenji.r34","make":"Nissan","model":"350Z","generation":"Z33","year":2007,"color":"Rot","published":"2024-10-12",
+ "description":"350Z mit dem späten VQ35HR und Nismo-Optik. Unkompliziert, laut und bezahlbar. Mein Einstieg in die Marke und immer noch das Auto für lange Touren.",
+ "photos":["nissan-z33-01.jpg","nissan-z33-02.jpg"],
+ "specs":{"engine_code":"VQ35HR","engine_text":"3,5 l V6","displacement_cc":3498,"fuel":"petrol","aspiration":"naturally_aspirated","power":[313,"ps","factory"],"torque":[358,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"wheels_tires","b":"Enkei","p":"RPF1","d":"2023-04","lg":"unknown","f":{"wheel_brand":"Enkei","wheel_model":"RPF1","diameter":18,"width_front":9.5,"width_rear":9.5,"et_front":15,"et_rear":15,"bolt_pattern":"5×114,3","finish":"Matte Black","staggered":false,"tyre_brand":"Federal","tyre_model":"595 RS-R","tyre_size_front":"265/35 R18","tyre_size_rear":"265/35 R18"}},
+  {"c":"suspension","b":"Tein","p":"Flex Z","d":"2023-04","lg":"unknown","f":{"type":"coilover","brand":"Tein","model":"Flex Z","lowering_front":30,"lowering_rear":30,"adjustable_damping":true}},
+  {"c":"exhaust","b":"HKS","p":"Hi-Power","d":"2023-09","lg":"unknown","f":{"type":"catback","brand":"HKS","model":"Hi-Power","material":"stainless","valves":false}},
+  {"c":"brakes","b":"Project Mu","p":"Club Racer","d":"2024-03","lg":"not_required","f":{"brand":"Project Mu","model":"Club Racer","pads":"Project Mu Club Racer"}}
+ ]
+},
+{"key":"audi-rs3-8y","owner":"tobi.quattro","make":"Audi","model":"RS3","generation":"8Y","year":2022,"nickname":"Fünfender","color":"Daytonagrau","published":"2026-07-16",
+ "description":"RS3 Sportback mit Fünfzylinder und Torque Splitter. Leistung bleibt Serie, dafür mit Abgasanlage und etwas tiefer. Klingt auf jeder Fahrt nach Rallye-Geschichte.",
+ "photos":["audi-rs3-8y-01.jpg"],
+ "specs":{"engine_code":"DNWC","engine_text":"2,5 l R5 Turbo","displacement_cc":2480,"fuel":"petrol","aspiration":"turbo","power":[400,"ps","factory"],"torque":[500,"factory"],"drivetrain":"all","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"exhaust","b":"Akrapovič","p":"Evolution Line Titanium","d":"2025-06","lg":"abe","f":{"type":"valved","brand":"Akrapovič","model":"Evolution Line Titanium","material":"titanium","valves":true}},
+  {"c":"suspension","b":"H&R","p":"Sportfedern","d":"2025-03","lg":"abe","f":{"type":"lowering_springs","brand":"H&R","model":"Sportfedern","lowering_front":25,"lowering_rear":20,"adjustable_damping":false},"diff":["Fahrwerk","Serie","H&R Sportfedern · −25 mm"]},
+  {"c":"aero_body","b":"Maxton Design","p":"Frontlippe V1","d":"2025-09","lg":"not_required","f":{"part":"front_lip","brand":"Maxton Design","material":"abs","colour":"Glanzschwarz"}},
+  {"c":"wheels_tires","b":"BBS","p":"CI-R","s":"planned","lg":"parts_certificate","f":{"wheel_brand":"BBS","wheel_model":"CI-R","diameter":19,"width_front":9,"width_rear":9,"et_front":42,"et_rear":42,"bolt_pattern":"5×112","finish":"Nürburgring Edition","staggered":false,"tyre_brand":"Pirelli","tyre_model":"P Zero","tyre_size_front":"265/30 R19","tyre_size_rear":"265/30 R19"}}
+ ]
+},
+{"key":"audi-rs6-c8","owner":"tobi.quattro","make":"Audi","model":"RS6","generation":"C8","year":2021,"nickname":"Familienkutsche","color":"Dunkelgrün","published":"2026-03-28",
+ "description":"RS6 Avant mit Keramikbremse. Kinderwagen rein, Autobahn frei, alles gut. Nur dezente Änderungen, das Auto soll wie ab Werk aussehen.",
+ "photos":["audi-rs6-c8-01.jpg","generic-wheels-04.jpg"],
+ "specs":{"engine_code":"DJPB","engine_text":"4,0 l V8 Biturbo","displacement_cc":3996,"fuel":"petrol","aspiration":"biturbo","power":[600,"ps","factory"],"torque":[800,"factory"],"drivetrain":"all","gearbox":"automatic"},
+ "mods":[
+  {"c":"wheels_tires","b":"Vossen","p":"HF-5","d":"2025-07","lg":"unknown","f":{"wheel_brand":"Vossen","wheel_model":"HF-5","diameter":22,"width_front":10.5,"width_rear":10.5,"et_front":20,"et_rear":20,"bolt_pattern":"5×112","finish":"Gloss Black","staggered":false,"tyre_brand":"Continental","tyre_model":"SportContact 7","tyre_size_front":"285/30 R22","tyre_size_rear":"285/30 R22"}},
+  {"c":"suspension","b":"KW","p":"Gewindefedern","d":"2025-07","lg":"parts_certificate","f":{"type":"lowering_springs","brand":"KW","model":"Gewindefedern","lowering_front":20,"lowering_rear":20,"adjustable_damping":false}},
+  {"c":"exhaust","b":"Milltek Sport","p":"GPF-Back","d":"2026-01","lg":"abe","f":{"type":"valved","brand":"Milltek Sport","model":"GPF-Back","material":"stainless","valves":true}}
+ ]
+},
+{"key":"audi-tt-8s","owner":"tobi.quattro","make":"Audi","model":"TT RS","generation":"8S","year":2018,"visibility":"unlisted","color":"Vegasgelb","published":"2025-10-04",
+ "description":"Nur über Link und QR-Code sichtbar. TT RS mit Fünfzylinder, gehört eigentlich meiner Frau und soll deshalb nicht im Feed auftauchen.",
+ "photos":["audi-tt-8s-02.jpg"],
+ "specs":{"engine_code":"DAZA","engine_text":"2,5 l R5 Turbo","displacement_cc":2480,"fuel":"petrol","aspiration":"turbo","power":[400,"ps","factory"],"torque":[480,"factory"],"drivetrain":"all","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"suspension","b":"Eibach","p":"Pro-Kit","d":"2025-08","lg":"abe","f":{"type":"lowering_springs","brand":"Eibach","model":"Pro-Kit","lowering_front":25,"lowering_rear":25,"adjustable_damping":false}},
+  {"c":"exhaust","b":"Remus","p":"Sportauspuff","d":"2025-08","lg":"abe","f":{"type":"rear_silencer","brand":"Remus","model":"Sportauspuff","material":"stainless","valves":false}}
+ ]
+},
+{"key":"porsche-964","owner":"lena.911","make":"Porsche","model":"911","generation":"964","year":1991,"color":"Dunkelgrau","published":"2026-05-19",
+ "description":"911 Carrera 2 mit Handschaltung, von mir in dritter Hand. Luftgekühlter Boxer, BBS RS und ein Bilstein-Fahrwerk. Alles andere bleibt, wie Zuffenhausen es gebaut hat.",
+ "photos":["porsche-964-02.jpg","porsche-964-01.jpg"],
+ "specs":{"engine_code":"M64/01","engine_text":"3,6 l Boxer-Sechszylinder","displacement_cc":3600,"fuel":"petrol","aspiration":"naturally_aspirated","power":[250,"ps","factory"],"torque":[310,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"wheels_tires","b":"BBS","p":"RS","d":"2024-04","lg":"unknown","notes":"RS 257 vorne, RS 258 hinten. Die Felgenbetten habe ich neu polieren lassen.","f":{"wheel_brand":"BBS","wheel_model":"RS","diameter":17,"width_front":8,"width_rear":9.5,"et_front":49,"et_rear":52,"bolt_pattern":"5×130","finish":"Silber, Felgenbett poliert","staggered":true,"tyre_brand":"Michelin","tyre_model":"Pilot Sport 4","tyre_size_front":"225/45 R17","tyre_size_rear":"255/40 R17"}},
+  {"c":"suspension","b":"Bilstein","p":"B16","d":"2024-04","lg":"parts_certificate","f":{"type":"coilover","brand":"Bilstein","model":"B16","lowering_front":25,"lowering_rear":20,"adjustable_damping":true},"diff":["Fahrwerk","Serie","Bilstein B16 · −25 mm"]},
+  {"c":"exhaust","b":"Cargraphic","p":"Sportendschalldämpfer","d":"2024-09","lg":"abe","f":{"type":"rear_silencer","brand":"Cargraphic","model":"Sportendschalldämpfer","material":"stainless","valves":false}},
+  {"c":"interior","b":"Momo","p":"Prototipo","d":"2023-03","lg":"unknown","f":{"part":"steering_wheel","brand":"Momo","model":"Prototipo"}}
+ ]
+},
+{"key":"porsche-718","owner":"lena.911","make":"Porsche","model":"718 Cayman","generation":"982","year":2023,"nickname":"GT4 RS","color":"Rot","published":"2026-09-02",
+ "description":"718 Cayman GT4 RS mit dem Saugmotor aus dem GT3. Ab Werk fast perfekt, deshalb nur Kleinigkeiten für die Rennstrecke. 9.000 Touren hinter dem Kopf sind nicht zu erklären.",
+ "photos":["porsche-718-01.jpg"],
+ "specs":{"engine_text":"4,0 l Boxer-Sechszylinder","displacement_cc":3996,"fuel":"petrol","aspiration":"naturally_aspirated","power":[500,"ps","factory"],"torque":[450,"factory"],"drivetrain":"rear","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"aero_body","b":"Manthey Racing","p":"Manthey Kit","d":"2026-07","lg":"parts_certificate","f":{"part":"other","brand":"Manthey Racing","material":"carbon"},"diff":["Aero","Serie","Manthey Kit"]},
+  {"c":"brakes","b":"Endless","p":"Rennbeläge","d":"2026-07","lg":"not_required","f":{"brand":"Endless","model":"Rennbeläge","pads":"Endless Racing"}},
+  {"c":"interior","b":"Schroth","p":"Hosenträgergurte","d":"2026-07","lg":"unknown","f":{"part":"harness","brand":"Schroth","model":"Profi II"}}
+ ]
+},
+{"key":"porsche-992","owner":"lena.911","make":"Porsche","model":"911","generation":"992","year":2022,"nickname":"Carrera GTS","color":"Schwarz","published":"2025-12-06",
+ "description":"911 Carrera GTS mit PDK, das vernünftige Auto für lange Strecken nach Spa und Hockenheim. Nur Fahrwerk und Abgasanlage geändert, die schwarzen Serienräder mit Zentralverschluss bleiben vorerst drauf.",
+ "photos":["porsche-992-01.jpg"],
+ "specs":{"engine_text":"3,0 l Boxer-Sechszylinder Biturbo","displacement_cc":2981,"fuel":"petrol","aspiration":"biturbo","power":[480,"ps","factory"],"torque":[570,"factory"],"drivetrain":"rear","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"exhaust","b":"Akrapovič","p":"Slip-On Race Line Titanium","d":"2025-05","lg":"abe","f":{"type":"valved","brand":"Akrapovič","model":"Slip-On Race Line Titanium","material":"titanium","valves":true}},
+  {"c":"suspension","b":"H&R","p":"Sportfedern","d":"2025-03","lg":"abe","f":{"type":"lowering_springs","brand":"H&R","model":"Sportfedern","lowering_front":25,"lowering_rear":20,"adjustable_damping":false}},
+  {"c":"wheels_tires","b":"BBS","p":"FI-R","s":"planned","lg":"unknown","f":{"wheel_brand":"BBS","wheel_model":"FI-R","diameter":20,"diameter_rear":21,"width_front":9,"width_rear":11.5,"finish":"Platinum Silver","staggered":true,"tyre_brand":"Michelin","tyre_model":"Pilot Sport 4 S","tyre_size_front":"245/35 R20","tyre_size_rear":"305/30 R21"},"notes":"Als Zweitsatz geplant, vorher muss ich klären, ob es ihn für den Zentralverschluss gibt. Bis dahin bleiben die schwarzen Serienräder drauf."}
+ ]
+},
+{"key":"mercedes-w204","owner":"marco.amg","make":"Mercedes-Benz","model":"C 63 AMG","generation":"W204","year":2012,"nickname":"6,2","color":"Obsidianschwarz metallic","published":"2026-06-01",
+ "description":"C 63 mit dem großen Sauger M156 und der Eisenmann-Anlage. Wahrscheinlich das letzte Auto dieser Art, deshalb bleibt die Technik original und bekommt jedes Jahr den besten Service.",
+ "photos":["mercedes-w204-01.jpg"],
+ "specs":{"engine_code":"M156","engine_text":"6,2 l V8","displacement_cc":6208,"fuel":"petrol","aspiration":"naturally_aspirated","power":[457,"ps","factory"],"torque":[600,"factory"],"drivetrain":"rear","gearbox":"automatic"},
+ "mods":[
+  {"c":"exhaust","b":"Eisenmann","p":"Sport-Endschalldämpfer","d":"2025-02","lg":"abe","f":{"type":"rear_silencer","brand":"Eisenmann","model":"Sport-Endschalldämpfer","material":"stainless","valves":false}},
+  {"c":"suspension","b":"Eibach","p":"Pro-Kit","d":"2024-08","lg":"abe","f":{"type":"lowering_springs","brand":"Eibach","model":"Pro-Kit","lowering_front":25,"lowering_rear":20,"adjustable_damping":false},"diff":["Fahrwerk","Serie","Eibach Pro-Kit · −25 mm"]},
+  {"c":"wheels_tires","b":"BBS","p":"CH-R","d":"2024-08","lg":"parts_certificate","f":{"wheel_brand":"BBS","wheel_model":"CH-R","diameter":19,"width_front":8.5,"width_rear":9.5,"et_front":35,"et_rear":35,"bolt_pattern":"5×112","finish":"Satin Black","staggered":true,"tyre_brand":"Continental","tyre_model":"SportContact 6","tyre_size_front":"235/35 R19","tyre_size_rear":"265/30 R19"}},
+  {"c":"brakes","b":"Tarox","p":"F2000 Bremsscheiben","d":"2025-11","lg":"parts_certificate","f":{"brand":"Tarox","model":"F2000","front_disc":360,"rear_disc":330,"pads":"Tarox Strada"}}
+ ]
+},
+{"key":"mercedes-w177","owner":"marco.amg","make":"Mercedes-Benz","model":"A 45 AMG","generation":"W177","year":2020,"nickname":"A 45 S","color":"Dunkelgrau","published":"2026-02-20",
+ "description":"A 45 S mit dem stärksten Serien-Vierzylinder, den es zu kaufen gab. Mein Alltag und die meisten Kilometer im Jahr.",
+ "photos":["mercedes-w177-01.jpg"],
+ "specs":{"engine_code":"M139","engine_text":"2,0 l R4 Turbo","displacement_cc":1991,"fuel":"petrol","aspiration":"turbo","power":[421,"ps","factory"],"torque":[500,"factory"],"drivetrain":"all","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"exhaust","b":"Remus","p":"Sportauspuff","d":"2025-06","lg":"abe","f":{"type":"valved","brand":"Remus","model":"Sportauspuff","material":"stainless","valves":true}},
+  {"c":"suspension","b":"H&R","p":"Sportfedern","d":"2025-06","lg":"abe","f":{"type":"lowering_springs","brand":"H&R","model":"Sportfedern","lowering_front":20,"lowering_rear":20,"adjustable_damping":false}},
+  {"c":"aero_body","b":"Maxton Design","p":"Frontlippe V2","d":"2025-10","lg":"not_required","f":{"part":"front_lip","brand":"Maxton Design","material":"abs","colour":"Glanzschwarz"}}
+ ]
+},
+{"key":"mercedes-w201","owner":"marco.amg","make":"Mercedes-Benz","model":"190","generation":"W201","year":1989,"nickname":"2.5-16","color":"Schwarz","published":"2025-08-15",
+ "description":"190 E 2.5-16 mit dem Cosworth-Vierventiler. Wird kaum bewegt und nur gepflegt. Die DTM-Geschichte sieht man ihm an, deshalb bleibt die Technik original. Nur die Räder sind nicht ab Werk.",
+ "photos":["mercedes-w201-01.jpg"],
+ "specs":{"engine_code":"M102","engine_text":"2,5 l R4 16V","displacement_cc":2498,"fuel":"petrol","aspiration":"naturally_aspirated","power":[195,"ps","factory"],"torque":[235,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"suspension","b":"Bilstein","p":"B6 Sport","d":"2023-05","lg":"not_required","f":{"type":"sport_dampers","brand":"Bilstein","model":"B6 Sport","adjustable_damping":false}},
+  {"c":"interior","b":"Recaro","p":"Sitzbezug Original-Stoff","d":"2024-02","lg":"not_required","f":{"part":"seats","brand":"Recaro","model":"Originalbezug neu aufgepolstert"}},
+  {"c":"wheels_tires","b":"Continental","p":"MaxContact MC6","d":"2025-03","lg":"unknown","notes":"Die sechsspeichigen Felgen waren beim Kauf schon drauf, den Hersteller kenne ich nicht. Neu sind nur die Reifen, die Originalfelgen liegen im Keller.","f":{"tyre_brand":"Continental","tyre_model":"MaxContact MC6","tyre_size_front":"205/45 R17","tyre_size_rear":"205/45 R17"}}
+ ]
+},
+{"key":"toyota-ae86","owner":"finn.jdm","make":"Toyota","model":"Corolla Levin/Trueno","generation":"AE86","year":1985,"nickname":"Hachiroku","color":"Weiß/Schwarz (Panda)","published":"2026-08-24",
+ "description":"Corolla Levin aus Okinawa importiert, das Foto entstand noch vor der Verschiffung. Klein, leicht und mit Hinterradantrieb. Der 4A-GE läuft jetzt mit Einzeldrosseln und will immer hoch drehen.",
+ "photos":["toyota-ae86-01.jpg"],
+ "specs":{"engine_code":"4A-GE","engine_text":"1,6 l R4 16V","displacement_cc":1587,"fuel":"petrol","aspiration":"naturally_aspirated","power":[165,"ps","claimed"],"torque":[165,"claimed"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"wheels_tires","b":"SSR","p":"Longchamp XR-4","d":"2026-04","lg":"unknown","f":{"wheel_brand":"SSR","wheel_model":"Longchamp XR-4","diameter":14,"width_front":7,"width_rear":7,"et_front":0,"et_rear":0,"bolt_pattern":"4×100","finish":"Schwarz","staggered":false,"tyre_brand":"Yokohama","tyre_model":"Advan A048","tyre_size_front":"195/60 R14","tyre_size_rear":"195/60 R14"}},
+  {"c":"suspension","b":"BC Racing","p":"BR","d":"2026-04","lg":"unknown","f":{"type":"coilover","brand":"BC Racing","model":"BR","lowering_front":40,"lowering_rear":35,"adjustable_damping":true},"diff":["Fahrwerk","Serie","BC Racing BR · −40 mm"]},
+  {"c":"engine_performance","b":"TRD","p":"Einzeldrosselanlage","d":"2026-06","lg":"individual_approval","f":{"stage":"custom","tuner":"TRD","intake":"Einzeldrosselanlage","claimed_power":165,"claimed_torque":165,"measured_on_dyno":false},"diff":["Leistung","130 PS","165 PS · Besitzerangabe"]},
+  {"c":"drivetrain","b":"Cusco","p":"Type RS Sperrdifferenzial","d":"2026-06","lg":"not_required","f":{"part":"lsd","brand":"Cusco","model":"Type RS"}},
+  {"c":"interior","b":"Nardi","p":"Deep Corn","d":"2026-03","lg":"unknown","f":{"part":"steering_wheel","brand":"Nardi","model":"Deep Corn"}}
+ ]
+},
+{"key":"toyota-gt86","owner":"finn.jdm","make":"Toyota","model":"GR86","generation":"ZN8","year":2022,"visibility":"private","color":"Weiß","published":"2025-04-11",
+ "description":"Noch nicht bereit für die Öffentlichkeit, der Umbau läuft. Bis alles passt, nur für mich sichtbar.",
+ "photos":["toyota-gt86-01.jpg","toyota-gt86-02.jpg","generic-interior-01.jpg"],
+ "specs":{"engine_code":"FA24","engine_text":"2,4 l Boxer-Vierzylinder","displacement_cc":2387,"fuel":"petrol","aspiration":"naturally_aspirated","power":[234,"ps","factory"],"torque":[250,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"suspension","b":"Tein","p":"Street Advance Z","d":"2025-03","lg":"unknown","f":{"type":"coilover","brand":"Tein","model":"Street Advance Z","lowering_front":30,"lowering_rear":30,"adjustable_damping":true}},
+  {"c":"exhaust","b":"Fujitsubo","p":"Authorize R","d":"2025-03","lg":"unknown","f":{"type":"catback","brand":"Fujitsubo","model":"Authorize R","material":"stainless","valves":false}},
+  {"c":"wheels_tires","b":"Enkei","p":"RPF1","s":"planned","lg":"unknown","f":{"wheel_brand":"Enkei","wheel_model":"RPF1","diameter":17,"width_front":8,"width_rear":8,"et_front":35,"et_rear":35,"bolt_pattern":"5×100","staggered":false,"tyre_brand":"Toyo","tyre_model":"Proxes R888R","tyre_size_front":"225/45 R17","tyre_size_rear":"225/45 R17"}}
+ ]
+},
+{"key":"mazda-fd","owner":"finn.jdm","make":"Mazda","model":"RX-7","generation":"FD","year":1993,"nickname":"Wankel","color":"Brilliant Black","published":"2026-01-30",
+ "description":"RX-7 FD aus deutscher Erstauslieferung. Der 13B-REW braucht Pflege, aber kein anderer Motor klingt so. Klappscheinwerfer auf, Zündung an, los.",
+ "photos":["mazda-fd-01.jpg"],
+ "specs":{"engine_code":"13B-REW","engine_text":"1,3 l Wankel Biturbo","displacement_cc":1308,"fuel":"petrol","aspiration":"biturbo","power":[239,"ps","factory"],"torque":[294,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"wheels_tires","b":"Enkei","p":"RPF1","d":"2024-06","lg":"unknown","f":{"wheel_brand":"Enkei","wheel_model":"RPF1","diameter":17,"width_front":9,"width_rear":9,"et_front":22,"et_rear":22,"bolt_pattern":"5×114,3","finish":"Silber","staggered":false,"tyre_brand":"Bridgestone","tyre_model":"Potenza RE-71RS","tyre_size_front":"245/40 R17","tyre_size_rear":"245/40 R17"}},
+  {"c":"suspension","b":"Tein","p":"Mono Sport","d":"2024-06","lg":"unknown","f":{"type":"coilover","brand":"Tein","model":"Mono Sport","lowering_front":30,"lowering_rear":30,"adjustable_damping":true}},
+  {"c":"engine_performance","b":"A'PEXi","p":"Power FC","d":"2025-01","lg":"unknown","f":{"stage":"custom","tuner":"A'PEXi","software":"Power FC"}},
+  {"c":"exhaust","b":"Fujitsubo","p":"Super Ti","d":"2025-07","lg":"unknown","f":{"type":"catback","brand":"Fujitsubo","model":"Super Ti","material":"titanium","valves":false}}
+ ]
+},
+{"key":"honda-fk8","owner":"aylin.vtec","make":"Honda","model":"Civic Type R","generation":"FK8","year":2018,"color":"Polished Metal Metallic","published":"2026-09-14",
+ "description":"Civic Type R mit Hondata und größerem Ladeluftkühler. Der Frontantrieb lässt sich auf der Nordschleife ernst nehmen, und im Alltag bleibt er trotzdem ein Civic.",
+ "photos":["honda-fk8-01.jpg","generic-engine-02.jpg"],
+ "specs":{"engine_code":"K20C1","engine_text":"2,0 l R4 Turbo","displacement_cc":1996,"fuel":"petrol","aspiration":"turbo","power":[370,"ps","claimed"],"torque":[480,"claimed"],"drivetrain":"front","gearbox":"manual"},
+ "mods":[
+  {"c":"engine_performance","b":"Hondata","p":"FlashPro","d":"2025-04","lg":"unknown","f":{"stage":"stage_1","tuner":"Hondata","software":"FlashPro","intercooler":"Mishimoto Performance","intake":"Mishimoto Performance","claimed_power":370,"claimed_torque":480,"measured_on_dyno":false},"diff":["Leistung","320 PS","370 PS · Besitzerangabe"]},
+  {"c":"wheels_tires","b":"Enkei","p":"GTC02","s":"planned","lg":"unknown","notes":"18-Zoll-Satz für die Rennstrecke. Bis dahin bleiben die Serienräder drauf.","f":{"wheel_brand":"Enkei","wheel_model":"GTC02","diameter":18,"width_front":9.5,"width_rear":9.5,"et_front":45,"et_rear":45,"bolt_pattern":"5×120","finish":"Hyper Silver","staggered":false,"tyre_brand":"Yokohama","tyre_model":"Advan Neova AD08R","tyre_size_front":"265/35 R18","tyre_size_rear":"265/35 R18"}},
+  {"c":"suspension","b":"Öhlins","p":"Road & Track","d":"2024-09","lg":"parts_certificate","f":{"type":"coilover","brand":"Öhlins","model":"Road & Track","lowering_front":20,"lowering_rear":20,"adjustable_damping":true},"diff":["Fahrwerk","Serie","Öhlins Road & Track · −20 mm"]},
+  {"c":"brakes","b":"EBC","p":"Yellowstuff","d":"2025-06","lg":"parts_certificate","f":{"brand":"EBC","model":"Yellowstuff","pads":"EBC Yellowstuff"}},
+  {"c":"exhaust","b":"Milltek Sport","p":"Cat-back","d":"2025-10","lg":"unknown","f":{"type":"catback","brand":"Milltek Sport","model":"Cat-back Non-Resonated","material":"stainless","valves":false}}
+ ]
+},
+{"key":"honda-s2000","owner":"aylin.vtec","make":"Honda","model":"S2000","generation":"AP1","year":2001,"color":"Berlina Black","published":"2025-06-07",
+ "description":"S2000 AP1, 9.000 Touren und Faltdach. Mein Sonntagsauto. Technisch fast Serie, nur Fahrwerk und Reifen so, wie Honda sie heute wählen würde.",
+ "photos":["honda-s2000-01.jpg"],
+ "specs":{"engine_code":"F20C","engine_text":"2,0 l R4 VTEC","displacement_cc":1997,"fuel":"petrol","aspiration":"naturally_aspirated","power":[240,"ps","factory"],"torque":[208,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"suspension","b":"Tein","p":"Flex Z","d":"2024-05","lg":"unknown","f":{"type":"coilover","brand":"Tein","model":"Flex Z","lowering_front":25,"lowering_rear":25,"adjustable_damping":true}},
+  {"c":"wheels_tires","b":"SSR","p":"Professor MS1","d":"2024-05","lg":"unknown","f":{"wheel_brand":"SSR","wheel_model":"Professor MS1","diameter":17,"width_front":8,"width_rear":9,"et_front":44,"et_rear":45,"bolt_pattern":"5×114,3","finish":"Weiß, Nieten gold","staggered":true,"tyre_brand":"Bridgestone","tyre_model":"Potenza RE-71RS","tyre_size_front":"225/45 R17","tyre_size_rear":"255/40 R17"}},
+  {"c":"brakes","b":"Spoon Sports","p":"Monoblock-Bremssattel","s":"planned","lg":"unknown","f":{"brand":"Spoon Sports","model":"Monoblock-Bremssattel","front_pistons":4}},
+  {"c":"aero_body","b":"Mugen","p":"Hardtop","s":"planned","lg":"unknown","f":{"part":"other","brand":"Mugen","material":"grp","colour":"Wagenfarbe"}}
+ ]
+},
+{"key":"subaru-sti","owner":"nico.sti","make":"Subaru","model":"Impreza WRX STI","generation":"GD","year":2005,"nickname":"Blobeye","color":"WR Blue Mica","published":"2026-07-03",
+ "description":"Impreza WRX STI Type-UK mit EJ207 und den Blobeye-Scheinwerfern. Fährt mich jeden Tag zur Arbeit und im Sommer zu den Rallyes als Zuschauer.",
+ "photos":["subaru-sti-01.jpg"],
+ "specs":{"engine_code":"EJ207","engine_text":"2,0 l Boxer-Vierzylinder Turbo","displacement_cc":1994,"fuel":"petrol","aspiration":"turbo","power":[330,"ps","claimed"],"torque":[450,"claimed"],"drivetrain":"all","gearbox":"manual"},
+ "mods":[
+  {"c":"engine_performance","b":"EcuTek","p":"Custom Map","d":"2025-03","lg":"unknown","f":{"stage":"stage_2","tuner":"EcuTek","software":"EcuTek Custom Map","claimed_power":330,"claimed_torque":450,"measured_on_dyno":false},"diff":["Leistung","265 PS","330 PS · Besitzerangabe"]},
+  {"c":"wheels_tires","b":"OZ Racing","p":"Ultraleggera","d":"2024-06","lg":"unknown","f":{"wheel_brand":"OZ Racing","wheel_model":"Ultraleggera","diameter":18,"width_front":8,"width_rear":8,"et_front":48,"et_rear":48,"finish":"Matt Black","staggered":false,"tyre_brand":"Yokohama","tyre_model":"Advan Neova AD09","tyre_size_front":"245/40 R18","tyre_size_rear":"245/40 R18"}},
+  {"c":"suspension","b":"Bilstein","p":"B14","d":"2024-06","lg":"parts_certificate","f":{"type":"coilover","brand":"Bilstein","model":"B14","lowering_front":30,"lowering_rear":30,"adjustable_damping":false},"diff":["Fahrwerk","Serie","Bilstein B14 · −30 mm"]},
+  {"c":"exhaust","b":"Milltek Sport","p":"Turbo-Back","d":"2025-03","lg":"abe","f":{"type":"downpipe","brand":"Milltek Sport","model":"Turbo-Back","material":"stainless","valves":false}}
+ ]
+},
+{"key":"toyota-gr-yaris","owner":"nico.sti","make":"Toyota","model":"GR Yaris","generation":"GXPA16","year":2021,"nickname":"Dreizylinder","color":"Weiß","published":"2026-04-26",
+ "description":"GR Yaris mit Circuit-Paket und zwei Torsen-Sperren. Drei Zylinder, Allrad und mehr Spaß, als so ein kleines Auto bringen dürfte.",
+ "photos":["toyota-gr-yaris-01.jpg"],
+ "specs":{"engine_code":"G16E-GTS","engine_text":"1,6 l R3 Turbo","displacement_cc":1618,"fuel":"petrol","aspiration":"turbo","power":[261,"ps","factory"],"torque":[360,"factory"],"drivetrain":"all","gearbox":"manual"},
+ "mods":[
+  {"c":"wheels_tires","b":"Rays","p":"Volk Racing TE37 Saga SL","d":"2025-05","lg":"unknown","f":{"wheel_brand":"Rays","wheel_model":"Volk Racing TE37 Saga SL","diameter":18,"width_front":8.5,"width_rear":8.5,"et_front":45,"et_rear":45,"bolt_pattern":"5×114,3","finish":"Pressed Graphite","staggered":false,"tyre_brand":"Yokohama","tyre_model":"Advan A052","tyre_size_front":"235/40 R18","tyre_size_rear":"235/40 R18"}},
+  {"c":"suspension","b":"KW","p":"V3","d":"2025-05","lg":"parts_certificate","f":{"type":"coilover","brand":"KW","model":"V3","lowering_front":25,"lowering_rear":25,"adjustable_damping":true}},
+  {"c":"exhaust","b":"Milltek Sport","p":"GPF-Back","d":"2025-09","lg":"abe","f":{"type":"catback","brand":"Milltek Sport","model":"GPF-Back","material":"stainless","valves":false}}
+ ]
+},
+{"key":"mazda-mx5","owner":"paul.roadster","make":"Mazda","model":"MX-5","generation":"NA","year":1990,"nickname":"Popup","color":"Classic Red","published":"2026-05-05",
+ "description":"MX-5 NA mit dem 1,6-Liter und einem Satz neuer Schweller. Bei Regen in der Garage, bei Sonne immer offen. Mehr Auto braucht niemand auf Bremer Landstraßen.",
+ "photos":["mazda-mx5-01.jpg"],
+ "specs":{"engine_code":"B6-ZE","engine_text":"1,6 l R4 16V","displacement_cc":1597,"fuel":"petrol","aspiration":"naturally_aspirated","power":[115,"ps","factory"],"torque":[135,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"suspension","b":"MeisterR","p":"ClubRace","d":"2025-04","lg":"unknown","f":{"type":"coilover","brand":"MeisterR","model":"ClubRace","lowering_front":30,"lowering_rear":30,"adjustable_damping":true},"diff":["Fahrwerk","Serie","MeisterR ClubRace · −30 mm"]},
+  {"c":"wheels_tires","b":"Enkei","p":"RPF1","d":"2025-04","lg":"unknown","f":{"wheel_brand":"Enkei","wheel_model":"RPF1","diameter":15,"width_front":7,"width_rear":7,"et_front":35,"et_rear":35,"bolt_pattern":"4×100","finish":"Matte Black","staggered":false,"tyre_brand":"Toyo","tyre_model":"Proxes R888R","tyre_size_front":"195/50 R15","tyre_size_rear":"195/50 R15"}},
+  {"c":"interior","b":"Momo","p":"Prototipo","d":"2024-08","lg":"unknown","f":{"part":"steering_wheel","brand":"Momo","model":"Prototipo"}},
+  {"c":"drivetrain","b":"Exedy","p":"Sportkupplung","d":"2025-11","lg":"not_required","f":{"part":"clutch","brand":"Exedy","model":"Sportkupplung"}}
+ ]
+},
+{"key":"vw-scirocco","owner":"paul.roadster","make":"Volkswagen","model":"Scirocco","generation":"III (13)","year":2012,"nickname":"Scirocco R","color":"Weiß mit schwarzen Streifen","published":"2025-03-22",
+ "description":"Scirocco R mit EA113, leicht optimiert. Das Coupé, das VW nicht mehr baut. Sehr unterschätzt, sehr praktisch und mit Stage 1 auf jeder Bundesstraße zu Hause.",
+ "photos":["vw-scirocco-01.jpg"],
+ "specs":{"engine_code":"CDLA","engine_text":"2,0 l R4 Turbo","displacement_cc":1984,"fuel":"petrol","aspiration":"turbo","power":[320,"ps","claimed"],"torque":[420,"claimed"],"drivetrain":"front","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"engine_performance","b":"Revo","p":"Stage 1","d":"2024-07","lg":"unknown","f":{"stage":"stage_1","tuner":"Revo","software":"Revo Stage 1","intake":"Forge Motorsport Twintake","claimed_power":320,"claimed_torque":420,"measured_on_dyno":false},"diff":["Leistung","265 PS","320 PS · Besitzerangabe"]},
+  {"c":"suspension","b":"H&R","p":"Sportfedern","d":"2023-10","lg":"abe","f":{"type":"lowering_springs","brand":"H&R","model":"Sportfedern","lowering_front":30,"lowering_rear":25,"adjustable_damping":false}},
+  {"c":"exhaust","b":"Milltek Sport","p":"Cat-back","d":"2024-10","lg":"unknown","f":{"type":"catback","brand":"Milltek Sport","model":"Cat-back Non-Resonated","material":"stainless","valves":false}},
+  {"c":"wheels_tires","b":"Rotiform","p":"BLQ","s":"removed","d":"2023-04","lg":"unknown","notes":"Sahen gut aus, im Winter aber zu empfindlich. Wieder verkauft.","f":{"wheel_brand":"Rotiform","wheel_model":"BLQ","diameter":19,"width_front":8.5,"width_rear":8.5,"et_front":45,"et_rear":45,"bolt_pattern":"5×112","finish":"Matt Silver","staggered":false,"tyre_brand":"Hankook","tyre_model":"Ventus S1 Evo3","tyre_size_front":"235/35 R19","tyre_size_rear":"235/35 R19"},"diff":["Räder","Rotiform BLQ 19″","Serie 18″"]}
+ ]
+},
+{"key":"vw-golf8-gti","owner":"paul.roadster","make":"Volkswagen","model":"Golf GTI","generation":"VIII (CD)","year":2021,"nickname":"Clubsport","color":"Oryxweiß Perlmutt","published":"2026-10-06",
+ "description":"Golf 8 GTI Clubsport, gerade neu dazugekommen. Serienleistung, der Rest kommt noch. Bin gespannt, wie weit ein Fronttriebler heute kommt.",
+ "photos":["vw-golf8-gti-01.jpg"],
+ "specs":{"engine_code":"DNFC","engine_text":"2,0 l R4 Turbo","displacement_cc":1984,"fuel":"petrol","aspiration":"turbo","power":[300,"ps","factory"],"torque":[400,"factory"],"drivetrain":"front","gearbox":"dual_clutch"},
+ "mods":[
+  {"c":"aero_body","b":"Maxton Design","p":"Frontlippe V3","d":"2026-10","lg":"not_required","f":{"part":"front_lip","brand":"Maxton Design","material":"abs","colour":"Glanzschwarz"}},
+  {"c":"suspension","b":"H&R","p":"Sportfedern","s":"planned","lg":"abe","f":{"type":"lowering_springs","brand":"H&R","model":"Sportfedern","lowering_front":25,"lowering_rear":25,"adjustable_damping":false}},
+  {"c":"exhaust","b":"Akrapovič","p":"VW Original Titan-Abgasanlage","s":"planned","lg":"unknown","f":{"type":"valved","brand":"Akrapovič","model":"VW Original Titan-Abgasanlage","material":"titanium","valves":true}}
+ ]
+},
+{"key":"nissan-r34-silver","owner":"kenji.r34","main":true,"make":"Nissan","model":"Skyline GT-R","generation":"R34","year":2001,"nickname":"Containerfund","color":"Athlete Silver","published":"2026-05-30",
+ "description":"Skyline GT-R V-Spec II, im Frühjahr aus Japan gekommen. Das Foto entstand im Hafen, kurz nachdem der Container aufging. Technisch bleibt er nah an der Serie, der Rest kommt Stück für Stück.",
+ "photos":["nissan-r34-02.jpg"],
+ "specs":{"engine_code":"RB26DETT","engine_text":"2,6 l R6 Biturbo","displacement_cc":2568,"fuel":"petrol","aspiration":"biturbo","power":[280,"ps","factory"],"torque":[392,"factory"],"drivetrain":"all","gearbox":"manual"},
+ "mods":[
+  {"c":"wheels_tires","b":"Rays","p":"Volk Racing TE37 SL","d":"2026-04","lg":"unknown","f":{"wheel_brand":"Rays","wheel_model":"Volk Racing TE37 SL","diameter":18,"width_front":9.5,"width_rear":9.5,"et_front":22,"et_rear":22,"bolt_pattern":"5×114,3","finish":"Schwarz","staggered":false,"tyre_brand":"Yokohama","tyre_model":"Advan Neova AD09","tyre_size_front":"265/35 R18","tyre_size_rear":"265/35 R18"},"diff":["Räder","Serie 18″","Volk Racing TE37 SL 18″ × 9,5J"]},
+  {"c":"suspension","b":"HKS","p":"Hipermax IV GT","d":"2026-04","lg":"unknown","f":{"type":"coilover","brand":"HKS","model":"Hipermax IV GT","lowering_front":25,"lowering_rear":25,"adjustable_damping":true}},
+  {"c":"exhaust","b":"HKS","p":"Super Turbo Muffler","d":"2026-04","lg":"unknown","f":{"type":"catback","brand":"HKS","model":"Super Turbo Muffler","material":"stainless","valves":false}},
+  {"c":"aero_body","b":"Nismo","p":"Seitenschweller","d":"2026-04","lg":"not_required","f":{"part":"side_skirts","brand":"Nismo","material":"grp","colour":"Wagenfarbe"}},
+  {"c":"engine_performance","b":"Link ECU","p":"G4X Plug-in","s":"planned","lg":"unknown","f":{"stage":"custom","tuner":"Link ECU","software":"Link G4X"}}
+ ]
+},
+{"key":"mazda-fd-white","owner":"aylin.vtec","make":"Mazda","model":"RX-7","generation":"FD","year":1994,"nickname":"Kreiskolben","color":"Chaste White","published":"2026-09-26",
+ "description":"Weißes FD aus Japan, das Foto ist noch von dort. Nach Jahren mit VTEC wollte ich wissen, wie sich ein Kreiskolben anfühlt. Carbonhaube und Fahrwerk waren beim Kauf schon drauf.",
+ "photos":["mazda-fd-02.jpg"],
+ "specs":{"engine_code":"13B-REW","engine_text":"1,3 l Wankel Biturbo","displacement_cc":1308,"fuel":"petrol","aspiration":"biturbo","power":[255,"ps","factory"],"torque":[294,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"aero_body","b":"Seibon","p":"Carbon-Motorhaube","d":"2026-08","lg":"not_required","f":{"part":"hood","brand":"Seibon","material":"carbon","colour":"Sichtcarbon"}},
+  {"c":"wheels_tires","b":"Advan Racing","p":"GT","d":"2026-08","lg":"unknown","f":{"wheel_brand":"Advan Racing","wheel_model":"GT","diameter":18,"width_front":9.5,"width_rear":10.5,"et_front":29,"et_rear":24,"bolt_pattern":"5×114,3","finish":"Semi Gloss Black","staggered":true,"tyre_brand":"Bridgestone","tyre_model":"Potenza RE-71RS","tyre_size_front":"245/40 R18","tyre_size_rear":"275/35 R18"}},
+  {"c":"suspension","b":"Tein","p":"Mono Sport","d":"2026-08","lg":"unknown","f":{"type":"coilover","brand":"Tein","model":"Mono Sport","lowering_front":35,"lowering_rear":35,"adjustable_damping":true},"diff":["Fahrwerk","Serie","Tein Mono Sport · −35 mm"]},
+  {"c":"engine_performance","b":"A'PEXi","p":"Power FC","s":"planned","lg":"unknown","f":{"stage":"custom","tuner":"A'PEXi","software":"Power FC"}}
+ ]
+},
+{"key":"mazda-mx5-nd","owner":"max.e46","make":"Mazda","model":"MX-5","generation":"ND","year":2020,"nickname":"Soft Top","color":"Silber","published":"2026-06-14",
+ "description":"Der dritte Sauger in meiner Garage: MX-5 ND mit dem 2,0-Liter. Wenig Gewicht, Handschaltung und genau die Leistung, die man auf Landstraßen wirklich ausfahren kann.",
+ "photos":["mazda-mx5-02.jpg"],
+ "specs":{"engine_text":"2,0 l R4","displacement_cc":1998,"fuel":"petrol","aspiration":"naturally_aspirated","power":[184,"ps","factory"],"torque":[205,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"suspension","b":"Tein","p":"Flex Z","d":"2026-03","lg":"unknown","f":{"type":"coilover","brand":"Tein","model":"Flex Z","lowering_front":25,"lowering_rear":25,"adjustable_damping":true}},
+  {"c":"wheels_tires","b":"Enkei","p":"RPF1","d":"2026-03","lg":"unknown","f":{"wheel_brand":"Enkei","wheel_model":"RPF1","diameter":17,"width_front":7,"width_rear":7,"et_front":35,"et_rear":35,"bolt_pattern":"4×100","finish":"Silber","staggered":false,"tyre_brand":"Yokohama","tyre_model":"Advan Neova AD09","tyre_size_front":"205/45 R17","tyre_size_rear":"205/45 R17"}},
+  {"c":"exhaust","b":"Remus","p":"Sportauspuff","s":"planned","lg":"abe","f":{"type":"rear_silencer","brand":"Remus","model":"Sportauspuff","material":"stainless","valves":false}}
+ ]
+},
+{"key":"toyota-a80-silver","owner":"finn.jdm","make":"Toyota","model":"Supra","generation":"A80","year":1994,"nickname":"Biturbo","color":"Silber","published":"2026-07-21",
+ "description":"Supra Biturbo in Serienleistung und fast unverbastelt. Das Foto ist in der Halle entstanden, mit offener Haube, weil es bei diesem Reihensechser immer etwas zu zeigen gibt.",
+ "photos":["toyota-a80-02.jpg"],
+ "specs":{"engine_code":"2JZ-GTE","engine_text":"3,0 l R6 Biturbo","displacement_cc":2997,"fuel":"petrol","aspiration":"biturbo","power":[330,"ps","factory"],"torque":[441,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"engine_performance","b":"GReddy","p":"Spec-LS Ladeluftkühler","d":"2025-11","lg":"not_required","f":{"tuner":"GReddy","intercooler":"GReddy Spec-LS"}},
+  {"c":"wheels_tires","b":"BBS","p":"LM","d":"2025-11","lg":"unknown","f":{"wheel_brand":"BBS","wheel_model":"LM","diameter":18,"width_front":9.5,"width_rear":10.5,"et_front":20,"et_rear":15,"bolt_pattern":"5×114,3","finish":"Schwarz, Felgenbett poliert","staggered":true,"tyre_brand":"Yokohama","tyre_model":"Advan Neova AD09","tyre_size_front":"255/35 R18","tyre_size_rear":"285/30 R18"}},
+  {"c":"suspension","b":"Tein","p":"Flex Z","d":"2026-02","lg":"unknown","f":{"type":"coilover","brand":"Tein","model":"Flex Z","lowering_front":30,"lowering_rear":30,"adjustable_damping":true},"diff":["Fahrwerk","Serie","Tein Flex Z · −30 mm"]},
+  {"c":"exhaust","b":"HKS","p":"Hi-Power","d":"2026-02","lg":"unknown","f":{"type":"catback","brand":"HKS","model":"Hi-Power","material":"stainless","valves":false}}
+ ]
+},
+{"key":"toyota-ae86-trueno","owner":"paul.roadster","make":"Toyota","model":"Corolla Levin/Trueno","generation":"AE86","year":1985,"nickname":"Trueno","color":"Weiß/Schwarz (Panda)","published":"2026-08-08",
+ "description":"Sprinter Trueno mit Klappscheinwerfern. Serienleistung, und das soll auch so bleiben. Der 4A-GE dreht gern, wiegt wenig und ist nachts mit offenem Licht am schönsten.",
+ "photos":["toyota-ae86-02.jpg"],
+ "specs":{"engine_code":"4A-GE","engine_text":"1,6 l R4 16V","displacement_cc":1587,"fuel":"petrol","aspiration":"naturally_aspirated","power":[130,"ps","factory"],"torque":[149,"factory"],"drivetrain":"rear","gearbox":"manual"},
+ "mods":[
+  {"c":"suspension","b":"BC Racing","p":"BR","d":"2026-05","lg":"unknown","f":{"type":"coilover","brand":"BC Racing","model":"BR","lowering_front":30,"lowering_rear":30,"adjustable_damping":true}},
+  {"c":"drivetrain","b":"Cusco","p":"Type RS Sperrdifferenzial","d":"2026-05","lg":"not_required","f":{"part":"lsd","brand":"Cusco","model":"Type RS"}},
+  {"c":"interior","b":"Nardi","p":"Classic 330","d":"2026-06","lg":"unknown","f":{"part":"steering_wheel","brand":"Nardi","model":"Classic 330"}}
+ ]
+}
+]
+}

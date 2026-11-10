@@ -1,0 +1,104 @@
+@import "tailwindcss" source(none);
+@import "./tokens.generated.css";
+@import "./tailwind-theme.generated.css";
+@import "./fonts.css";
+
+@source "../js/admin";
+@source "../views/app.blade.php";
+
+/*
+ * ADR-212: below 1024 px the admin sidebar becomes an overlay drawer. The generated theme has no breakpoint at 1024
+ * (tokens.json: tablet 768, desktop 1280, wide 1440), so the shell breakpoint is declared here, for the admin only.
+ */
+@theme {
+    --breakpoint-shell: 1024px;
+}
+
+@layer base {
+    html {
+        font-feature-settings: "cv11";
+        /* DQ-503: no automatic hyphenation in UI copy (it broke German words and usernames); soft hyphens only where written. */
+        hyphens: manual;
+    }
+
+    p, dd, li, figcaption, td {
+        text-wrap: pretty;
+    }
+
+    body {
+        background-color: var(--sc-color-bg-canvas);
+    }
+
+    :focus-visible {
+        outline-color: var(--sc-color-focus-ring);
+    }
+}
+
+/* Usernames, ids, codes and hashes never hyphenate; a long one may break anywhere rather than overflow (DQ-503). */
+@utility sc-key {
+    hyphens: none;
+    overflow-wrap: anywhere;
+}
+
+/* Long-form content (legal and help previews, later modules) may hyphenate. */
+@utility sc-prose {
+    hyphens: auto;
+}
+
+/* Widths Reka UI measures at runtime (popper content as wide as its trigger, tab underline). */
+@utility sc-match-trigger {
+    min-width: var(--reka-select-trigger-width, var(--reka-combobox-trigger-width, auto));
+}
+
+@utility sc-tab-indicator {
+    width: var(--reka-tabs-indicator-size);
+    transform: translateX(var(--reka-tabs-indicator-position));
+}
+
+/* Motion (03 §10): short, functional; all of it off with prefers-reduced-motion and ?qaMotion=off. */
+@keyframes sc-fade-in {
+    from { opacity: 0; }
+}
+
+@keyframes sc-pop-in {
+    from { opacity: 0; transform: translateY(4px) scale(0.98); }
+}
+
+@keyframes sc-slide-in-right {
+    from { transform: translateX(100%); }
+}
+
+@keyframes sc-slide-in-left {
+    from { transform: translateX(-100%); }
+}
+
+@keyframes sc-pulse {
+    50% { background-color: var(--sc-color-skeleton-highlight); }
+}
+
+@keyframes sc-progress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+.sc-fade[data-state="open"] { animation: sc-fade-in 150ms var(--ease-standard); }
+.sc-pop[data-state="open"], .sc-pop:not([data-state]) { animation: sc-pop-in 150ms var(--ease-decelerate); }
+.sc-slide-in[data-state="open"] { animation: sc-slide-in-right 200ms var(--ease-decelerate); }
+.sc-slide-in-left[data-state="open"] { animation: sc-slide-in-left 200ms var(--ease-decelerate); }
+.sc-skeleton { animation: sc-pulse 1.6s ease-in-out infinite; }
+.sc-progress { transform-origin: left; animation: sc-progress 1.2s var(--ease-decelerate) forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+.qa-motion-off *, .qa-motion-off *::before, .qa-motion-off *::after {
+    animation: none !important;
+    transition: none !important;
+    caret-color: transparent;
+}
+
+/* ?qaFontScale=2 (non-production): the browser-zoom equivalent of ADR-212's 200 % cell. */
+.qa-font-scale-2 {
+    zoom: 2;
+}

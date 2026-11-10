@@ -1,0 +1,170 @@
+{
+    "common": {
+        "offlineTitle": "Du bist offline",
+        "offlineBody": "Sobald du wieder online bist, laden wir die Daten.",
+        "offlineBanner": "Offline – du siehst den zuletzt geladenen Stand.",
+        "retry": "Erneut versuchen"
+    },
+    "status": {
+        "active": "Aktiv",
+        "private": "Privat",
+        "blocked": "Gesperrt",
+        "none": "Kein Code"
+    },
+    "list": {
+        "title": "Meine QR-⁠Codes",
+        "subtitle": "Jedes veröffentlichte Fahrzeug hat seinen eigenen Code.",
+        "emptyTitle": "Noch keine QR-⁠Codes",
+        "emptyBody": "Veröffentliche ein Fahrzeug, dann bekommst du seinen QR-⁠Code.",
+        "addVehicle": "Fahrzeug hinzufügen",
+        "errorTitle": "Deine QR-⁠Codes konnten nicht geladen werden",
+        "offlineBody": "Sobald du wieder online bist, laden wir deine QR-⁠Codes.",
+        "suspendedNotice": "Dein Konto ist gesperrt. Wer deine Codes scannt, sieht gerade „Dieses Fahrzeug ist privat“."
+    },
+    "detail": {
+        "title": "QR-⁠Code",
+        "cardLabel": "QR-⁠Code für {{vehicle}}",
+        "download": "Herunterladen",
+        "share": "Teilen",
+        "shareTitle": "{{vehicle}} auf SPEED CLUB",
+        "linkCopied": "Link kopiert",
+        "shareFailed": "Teilen hat nicht geklappt. Versuch es noch einmal.",
+        "publicPage": "Öffentliche Seite ansehen",
+        "placement": "Sticker-Platzierung",
+        "reissue": "QR-⁠Code ersetzen",
+        "reissueHint": "Alte Sticker zeigen danach nur noch „nicht mehr gültig“.",
+        "privateNotice": "Dein Fahrzeug ist privat. Wer den Code scannt, sieht „Dieses Fahrzeug ist privat“.",
+        "suspendedNotice": "Dein Konto ist gesperrt. Solange die Sperre gilt, kannst du den QR-⁠Code nicht ersetzen.",
+        "errorTitle": "Der QR-⁠Code konnte nicht geladen werden",
+        "cardErrorTitle": "Der Code konnte nicht angezeigt werden"
+    },
+    "reissue": {
+        "title": "QR-⁠Code ersetzen?",
+        "body": "Du bekommst einen neuen Code. Wer den alten Sticker scannt, sieht danach nur noch „Dieser QR-⁠Code ist nicht mehr gültig“. Das lässt sich nicht rückgängig machen.",
+        "cancel": "Abbrechen",
+        "confirm": "QR-⁠Code ersetzen",
+        "done": "Neuer QR-⁠Code ist aktiv. Lade ihn herunter und tausch den alten Sticker aus.",
+        "failed": "Das Ersetzen hat nicht geklappt. Versuch es noch einmal."
+    },
+    "blocked": {
+        "title": "Dieser QR-⁠Code ist gesperrt",
+        "body": "Unser Team hat ihn gesperrt. Wer ihn scannt, sieht „Dieser QR-⁠Code ist nicht mehr gültig“. Einen neuen Code kann nur unser Team ausstellen."
+    },
+    "inactive": {
+        "title": "Gerade kein aktiver QR-⁠Code",
+        "body": "Für dieses Fahrzeug ist im Moment kein Code aktiv. Versuch es gleich noch einmal."
+    },
+    "unavailable": {
+        "title": "QR-⁠Code nicht verfügbar",
+        "body": "Das Fahrzeug ist noch nicht veröffentlicht oder gehört nicht zu deiner Garage.",
+        "garage": "Zur Garage"
+    },
+    "guest": {
+        "title": "Melde dich an, um deine QR-⁠Codes zu sehen",
+        "body": "Jedes Fahrzeug, das du veröffentlichst, bekommt einen QR-⁠Code für deinen Sticker.",
+        "signIn": "Anmelden"
+    },
+    "download": {
+        "title": "Herunterladen",
+        "formats": {
+            "png": {
+                "title": "PNG",
+                "detail": "1024 × 1024 Pixel, für Bildschirm und Messenger"
+            },
+            "png2048": {
+                "title": "PNG, groß",
+                "detail": "2048 × 2048 Pixel, für große Drucke"
+            },
+            "svg": {
+                "title": "SVG",
+                "detail": "Vektorgrafik für Druckereien, beliebig skalierbar"
+            },
+            "pdf": {
+                "title": "PDF-⁠Sticker",
+                "detail": "A6-⁠Bogen mit Logo, Code und Platzierungshinweis"
+            },
+            "placardA5": {
+                "title": "Placard A5",
+                "detail": "Build-Sheet fürs Treffen: Foto, Technik, Top-Mods und QR-⁠Code"
+            },
+            "placardA4": {
+                "title": "Placard A4",
+                "detail": "Das Build-Sheet groß, für Aufsteller und Tisch"
+            }
+        },
+        "loading": "Wird heruntergeladen",
+        "progress": "Wird heruntergeladen, {{percent}} %",
+        "started": "Download gestartet: {{file}}",
+        "gone": "Dieser Code ist nicht mehr aktiv. Die Seite lädt den aktuellen Stand.",
+        "noShare": "Teilen ist auf diesem Gerät gerade nicht möglich.",
+        "shareTitle": "QR-⁠Code für {{vehicle}}"
+    },
+    "placement": {
+        "title": "Sticker-Platzierung",
+        "subtitle": "Wo dein QR-⁠Sticker hingehört",
+        "diagramLabel": "Auto von oben, vorne links: 1 Kofferraumdeckel und Stoßfänger, 2 Heckscheibe, 3 vordere Seitenscheiben, 4 Windschutzscheibe.",
+        "front": "Vorne",
+        "rear": "Hinten",
+        "tone": {
+            "ok": "{{number}}, am sichersten",
+            "caution": "{{number}}, mit Einschränkung",
+            "avoid": "{{number}}, nicht empfohlen"
+        },
+        "rules": {
+            "body": "Am sichersten: außen auf der Karosserie (z. B. Kofferraumdeckel, Stoßfänger) oder klein innen in einer Ecke der Heckscheibe.",
+            "rearWindow": "Heckscheibe nur, wenn dein Auto zwei Außenspiegel hat. Sonst nur ganz am Rand, damit die Sicht nach hinten frei bleibt.",
+            "frontSide": "Vordere Seitenscheiben: nicht bekleben.",
+            "windscreen": "Windschutzscheibe: möglichst gar nicht. Wenn überhaupt, nur ganz am Rand außerhalb des Sichtfelds und nie im Wischerbereich.",
+            "size": "Klein halten: deutlich unter 0,1 m² und nie mehr als ein Viertel einer Scheibe. Nicht spiegelnd, nicht leuchtend, keine Kennzeichen, Leuchten oder Plaketten verdecken."
+        },
+        "print": "Druck: mindestens 30 × 30 mm für Scans aus etwa 1 m, für größere Entfernungen größer. Rund um den Code einen weißen Rand von 4 Modulen (Kästchen) frei lassen. Matte Folie, schwarz auf weiß.",
+        "disclaimer": "Keine Rechtsberatung. Maßgeblich sind die StVZO (u. a. §§ 35b, 40) und die Auslegung der Behörden. Verstöße können ein Bußgeld nach sich ziehen."
+    },
+    "preview": {
+        "title": "Öffentliche Seite",
+        "open": "Seite öffnen",
+        "active": "So sieht dein Fahrzeug für alle aus, die deinen Sticker scannen – ohne App und ohne Konto.",
+        "unlisted": "Nicht gelistet: Die Seite ist nur über deinen Sticker und den Link erreichbar, nicht über Suche und Feed.",
+        "private": "Dein Fahrzeug ist privat. Wer den Sticker scannt, sieht „Dieses Fahrzeug ist privat“ und nicht diese Seite.",
+        "blocked": "Dein QR-⁠Code ist gesperrt. Wer ihn scannt, sieht „Dieser QR-⁠Code ist nicht mehr gültig“.",
+        "openFailed": "Die Seite ließ sich nicht öffnen. Versuch es noch einmal.",
+        "errorTitle": "Die Seite konnte nicht geladen werden"
+    },
+    "resolve": {
+        "checking": "QR-⁠Code wird geprüft",
+        "states": {
+            "revoked": {
+                "title": "Dieser QR-⁠Code ist nicht mehr gültig",
+                "body": "Dieser Sticker führt zu keinem Fahrzeug mehr."
+            },
+            "private": {
+                "title": "Dieses Fahrzeug ist privat",
+                "body": "Der Besitzer zeigt es gerade nicht öffentlich. Vielleicht klappt es später."
+            },
+            "not_found": {
+                "title": "Diesen QR-⁠Code kennen wir nicht",
+                "body": "Prüf den Code auf dem Sticker oder scanne ihn noch einmal."
+            }
+        },
+        "discover": "Builds entdecken",
+        "home": "Zur Startseite",
+        "errorTitle": "Der QR-⁠Code konnte nicht geprüft werden",
+        "rateLimitedTitle": "Kurz durchatmen",
+        "rateLimitedBody": "Das waren gerade sehr viele Aufrufe. Versuch es gleich noch einmal.",
+        "offlineBody": "Um den QR-⁠Code zu prüfen, brauchst du eine Verbindung."
+    },
+    "stats": {
+        "title": "Scans",
+        "summary": "{{recent}} in 14 Tagen · {{total}} gesamt",
+        "label": "Scans: {{recent}} in den letzten 14 Tagen, {{total}} insgesamt. {{milestone}}",
+        "milestoneNext": "Nächster Meilenstein: {{next}} Scans",
+        "milestoneReached": "Meilenstein erreicht: {{reached}} Scans. Der nächste kommt bei {{next}}.",
+        "milestoneLast": "Meilenstein erreicht: {{reached}} Scans",
+        "privacy": "Wir zählen nur Scans, nicht wer scannt.",
+        "errorTitle": "Die Scans konnten nicht geladen werden",
+        "summaryNone": "Noch keine Scans",
+        "summaryNoneRecent": "{{total}} gesamt · keine in den letzten 14 Tagen",
+        "labelNone": "Scans: noch keine. {{milestone}}",
+        "milestoneFirst": "Erster Meilenstein: {{next}} Scans"
+    }
+}

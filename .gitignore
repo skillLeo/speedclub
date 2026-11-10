@@ -1,0 +1,54 @@
+# ---- dependencies & generated builds
+node_modules/
+vendor/
+mobile/android/
+mobile/ios/
+mobile/dist/
+mobile/.expo/
+mobile/web-build/
+web/public/app/
+web/public/build/
+web/public/hot
+web/public/storage
+# Build outputs at the repo root only: a bare `releases/` also hid web/app/Services/Releases (core.ignorecase on macOS).
+/releases/
+scripts/logs/
+docs/reports/logs/
+docs/reports/visual/
+test-results/
+playwright-report/
+blob-report/
+.lighthouseci/
+coverage/
+*.tsbuildinfo
+
+# ---- environment & secrets (never commit)
+.env
+.env.*
+!.env.example
+!**/.env.example
+!**/.env.production.example
+*.keystore
+*.jks
+*.p8
+*.p12
+*.pem
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+# Composer credentials only (a bare `auth.json` also hid web/lang/admin/*/auth.json).
+/auth.json
+/web/auth.json
+/mobile/auth.json
+# EAS / Google service-account keys (M2.9 iOS + Play submit)
+credentials.json
+# Composer credentials above; the auth screens' translations share the name.
+!mobile/src/i18n/locales/*/auth.json
+
+# ---- local tooling
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.log

@@ -1,0 +1,185 @@
+{
+    "title": "Profile",
+    "memberSince": "Member since {{date}}",
+    "offline": "Offline – you are seeing your profile as it was last loaded.",
+    "stats": {
+        "vehicles_one": "vehicle",
+        "vehicles_other": "vehicles",
+        "followers_one": "follower",
+        "followers_other": "followers",
+        "following": "following",
+        "followingLink": "{{label}} – show accounts you follow",
+        "followingOther": "following",
+        "followingLinkOther": "{{label}} – show accounts {{name}} follows",
+        "followersLink": "{{label}} – show the list"
+    },
+    "actions": {
+        "edit": "Edit profile",
+        "view": "View profile",
+        "share": "Share profile",
+        "qr": "My QR codes"
+    },
+    "share": {
+        "title": "{{name}} on SPEED CLUB",
+        "copied": "Link to your profile copied",
+        "failed": "Sharing didn't work. Your profile: {{url}}"
+    },
+    "garage": {
+        "title": "Garage",
+        "all": "Show all",
+        "emptyTitle": "Add your first car",
+        "emptyBody": "Document specs and mods and get your personal QR code.",
+        "add": "Add vehicle",
+        "errorTitle": "Your vehicles couldn't be loaded",
+        "errorBody": "Check your connection and try again."
+    },
+    "rows": {
+        "qrCodes": "My QR codes",
+        "settings": "Settings",
+        "addVehicle": "Add vehicle",
+        "saved": "Saved"
+    },
+    "guest": {
+        "title": "Your profile on SPEED CLUB",
+        "body": "Sign in to keep your garage, your mods and your QR codes in one place.",
+        "signIn": "Sign in",
+        "signUp": "Create account",
+        "offline": "Offline – you need a connection to sign in."
+    },
+    "restricted": "Your account is restricted. You can't change your profile right now.",
+    "restrictedUntil": "Your account is restricted until {{date}}. Until then you can't change your profile.",
+    "error": {
+        "title": "Your profile couldn't be loaded",
+        "offlineTitle": "You're offline",
+        "offlineBody": "We'll load your profile once you're back online."
+    },
+    "edit": {
+        "title": "Edit profile",
+        "save": "Save",
+        "saved": "Profile saved",
+        "offline": "Offline – you need a connection to save.",
+        "serverError": "That didn't work just now. Try again in a moment.",
+        "usernameOnly": "Your username has changed, but your other changes haven't been saved yet. Tap Save again.",
+        "photos": {
+            "avatar": "Change profile photo",
+            "avatarAdd": "Add profile photo",
+            "cover": "Change cover photo",
+            "coverAdd": "Add cover photo",
+            "avatarUploading": "Uploading profile photo, {{percent}} %",
+            "coverUploading": "Uploading cover photo, {{percent}} %",
+            "avatarSaved": "Profile photo updated",
+            "coverSaved": "Cover photo updated",
+            "hint": "Profile photo square, cover photo 3:1. JPEG, PNG or WebP up to 15 MB.",
+            "failed": "The photo couldn't be uploaded. Try again or choose another one.",
+            "retry": "Try again"
+        },
+        "fields": {
+            "displayName": "Name",
+            "displayNameHelper": "This is how you appear on your profile.",
+            "username": "Username",
+            "usernameHelper": "You can change it every 30 days. Links with your old name keep working for 14 days.",
+            "usernameCooldown": "You can change your username again from {{date}}.",
+            "usernameAvailable": "This name is available.",
+            "usernameCheckFailed": "We couldn't check the name just now. We'll check it again when you save.",
+            "city": "City",
+            "cityHelper": "Shows others where your cars live.",
+            "bio": "About you",
+            "bioCount": "{{count}} of {{max}} characters"
+        },
+        "validation": {
+            "displayNameTooLong": "Your name can't be longer than 60 characters.",
+            "cityTooLong": "The city can't be longer than 100 characters.",
+            "bioTooLong": "Your text can't be longer than 500 characters."
+        }
+    },
+    "follow": {
+        "follow": "Follow",
+        "following": "Following",
+        "followName": "Follow {{name}}",
+        "followingName": "Following – unfollow {{name}}",
+        "failed": "That didn't work. Try again in a moment."
+    },
+    "member": {
+        "followsYou": "Follows you",
+        "message": "Message",
+        "more": "More actions",
+        "share": "Share profile",
+        "block": "Block",
+        "shareCopied": "Profile link copied",
+        "messageUnverified": "Confirm your email address to send messages.",
+        "messageRestricted": "Your account is restricted from messaging right now.",
+        "messageClosed": "{{name}} isn't accepting messages from you right now.",
+        "garageError": "The vehicles couldn't be loaded",
+        "garageEmpty": "No public vehicles yet.",
+        "unavailableTitle": "Profile not available",
+        "unavailableBody": "It was removed or isn't visible right now.",
+        "unavailableAction": "Discover builds",
+        "errorTitle": "The profile couldn't be loaded",
+        "offlineBody": "This profile isn't on your device yet. We'll load it as soon as you're online.",
+        "offlineBanner": "Offline – you're seeing the profile as it was last loaded.",
+        "ownProfile": "Go to your profile"
+    },
+    "connections": {
+        "followers": "Followers",
+        "following": "Following",
+        "followersCount_one": "Followers ({{value}})",
+        "followersCount_other": "Followers ({{value}})",
+        "followingCount": "Following ({{value}})",
+        "tabsLabel": "Followers and following",
+        "searchFollowers": "Search followers",
+        "searchFollowing": "Search accounts you follow",
+        "remove": "Remove",
+        "removeName": "Remove {{name}} as a follower",
+        "selfName": "{{name}} · You",
+        "removeTitle": "Remove {{name}} as a follower?",
+        "removeBody": "{{name}} will no longer follow you and won't be notified.",
+        "cancel": "Cancel",
+        "removed": "{{name}} no longer follows you",
+        "removeFailed": "Removing didn't work. Try again.",
+        "errorTitle": "The list couldn't be loaded",
+        "offlineBody": "The list isn't on your device yet. We'll load it as soon as you're online.",
+        "offlineBanner": "Offline – you're seeing the list as it was last loaded.",
+        "noResults": "No results for “{{q}}”",
+        "noResultsBody": "Check the spelling or search for another name.",
+        "discover": "Discover members",
+        "empty": {
+            "own": {
+                "followers": {
+                    "title": "No followers yet",
+                    "body": "When someone follows you, they show up here."
+                },
+                "following": {
+                    "title": "You're not following anyone yet",
+                    "body": "Follow members whose builds you don't want to miss."
+                }
+            },
+            "other": {
+                "followers": {
+                    "title": "{{name}} has no followers yet",
+                    "body": "Everyone who follows {{name}} shows up here."
+                },
+                "following": {
+                    "title": "{{name}} isn't following anyone yet",
+                    "body": "Everyone {{name}} follows shows up here."
+                }
+            }
+        },
+        "followingOther": "Following",
+        "followingCountOther": "Following ({{value}})",
+        "searchFollowingOther": "Search followed accounts",
+        "tabsLabelOther": "Followers and following"
+    },
+    "saved": {
+        "title": "Saved",
+        "remove": "Remove {{name}} from Saved",
+        "removed": "{{name}} removed from Saved",
+        "failed": "That didn't work. Try again in a moment.",
+        "errorTitle": "Your saved builds couldn't be loaded",
+        "offlineBody": "The list isn't on your device yet. We'll load it as soon as you're online.",
+        "offlineBanner": "Offline – you're seeing your list as it was last loaded.",
+        "emptyTitle": "Nothing saved yet",
+        "emptyBody": "Save builds you want to remember. Only you can see this list.",
+        "discover": "Discover builds",
+        "since": "Saved on {{date}}"
+    }
+}

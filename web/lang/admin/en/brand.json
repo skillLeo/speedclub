@@ -1,0 +1,101 @@
+{
+    "nav": {
+        "title": "Brand & theme"
+    },
+    "title": "Brand & theme",
+    "intro": "Logos, hero images, accent colour and default theme of the app and the website. Changes go into the draft and only go live with “Publish”.",
+    "error": "The brand settings could not be loaded.",
+    "choose": "Choose",
+    "replace": "Replace",
+    "remove": "Remove",
+    "size": ":width × :height px",
+    "minimum": "New image at least :width × :height px",
+    "flash": {
+        "uploaded": "Image uploaded. It is selected in the draft."
+    },
+    "logos": {
+        "title": "Logo set",
+        "intro": "The client's logos, never redrawn or recoloured (pure white or black only). PNG or WebP with transparency.",
+        "wordmark_white": "Wordmark white",
+        "wordmark_white_hint": "On dark surfaces and photos with a scrim.",
+        "wordmark_black": "Wordmark black",
+        "wordmark_black_hint": "On light surfaces, in the Light theme.",
+        "square": "Square logo",
+        "square_hint": "Social profile picture, e-mail header.",
+        "app_mark": "App mark",
+        "app_mark_hint": "The mark without lettering, e.g. on the loading screen.",
+        "bundled": "Bundled logo",
+        "none": "No own logo yet"
+    },
+    "heroes": {
+        "title": "Hero images",
+        "intro": "Photos for the welcome screen, the web start page and the loading screen. A click into the photo sets the focal point the app crops around.",
+        "welcome": "Welcome (app)",
+        "welcome_hint": "Full screen behind “Create account” and “Sign in”.",
+        "welcome_bundled": "The app shows the bundled night photo.",
+        "landing": "Start page (web)",
+        "landing_hint": "Large image at the top of speedclub.de.",
+        "landing_bundled": "The website shows the bundled photo.",
+        "splash": "Loading screen",
+        "splash_hint": "Shown briefly when the app opens.",
+        "splash_bundled": "The app shows the bundled loading screen.",
+        "bundled_badge": "Bundled"
+    },
+    "focal": {
+        "label": "Focal point for :slot",
+        "value": ":x % from the left, :y % from the top",
+        "hint": "Click into the photo or move it with the arrow keys (Shift for large steps).",
+        "read_only": "Read only: the draft belongs to someone else or waits for approval.",
+        "crop": "How a phone crops it"
+    },
+    "contrast": {
+        "passes": "Logo and text stay readable",
+        "fails": "Too little contrast: the draft cannot be saved like this",
+        "ratios": "Logo :logo · text :text · at least :minimum needed",
+        "failed": "The contrast could not be measured just now. It is checked again on saving."
+    },
+    "og": {
+        "title": "Link preview image",
+        "intro": "Shown when a page without its own image is shared (WhatsApp, Instagram, Messenger). 1200 × 630 px.",
+        "bundled": "The bundled preview image applies."
+    },
+    "accent": {
+        "title": "Accent colour",
+        "intro": "For the tab marker, unread dots and the brand button. Checked sets only: each meets the contrast rules in all three themes.",
+        "rule": "Free colour values are deliberately not possible.",
+        "default": "Default",
+        "sets": {
+            "signalRed": "Signal red",
+            "emberOrange": "Ember orange",
+            "racingBlue": "Racing blue",
+            "pitGreen": "Pit green"
+        }
+    },
+    "themes": {
+        "title": "Default theme",
+        "intro": "Applies to new installs. Members can change it in the settings at any time.",
+        "carbon": "Carbon",
+        "carbon_hint": "Dark with surface steps, the default.",
+        "black": "Black",
+        "black_hint": "True black for OLED displays.",
+        "light": "Light",
+        "light_hint": "Light surfaces for daylight.",
+        "system": "Like the device",
+        "system_hint": "Follows the device setting: dark becomes Carbon, light becomes Light."
+    },
+    "picker": {
+        "title": "Image for “:slot”",
+        "description": "Choose an uploaded image or upload a new one. It goes live only when the draft is published.",
+        "list": "Uploaded images",
+        "empty_title": "Nothing uploaded yet",
+        "empty_body": "Upload the first image for this slot.",
+        "choose": "Choose",
+        "chosen": "Chosen",
+        "upload": "Upload a new image",
+        "rules": "JPEG, PNG or WebP, at least :width × :height px, at most :size MB. Metadata such as location is removed.",
+        "select_file": "Choose file",
+        "no_file": "No file chosen",
+        "choose_file": "Choose a file first.",
+        "submit": "Upload"
+    }
+}

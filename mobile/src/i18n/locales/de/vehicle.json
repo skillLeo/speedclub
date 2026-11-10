@@ -1,0 +1,173 @@
+{
+  "tabs": {
+    "label": "Abschnitte",
+    "overview": "Übersicht",
+    "specs": "Technik",
+    "mods": "Mods",
+    "history": "Verlauf"
+  },
+  "hero": {
+    "galleryLabel": "Fotos: {{title}}",
+    "open": "Foto {{current}} von {{total}} öffnen: {{alt}}",
+    "show": "Foto {{current}} von {{total}} zeigen: {{alt}}",
+    "morePhotos": "+{{count}}",
+    "noPhotoTitle": "Noch keine Fotos",
+    "noPhotoOwner": "@{{username}} hat für dieses Fahrzeug noch keine Bilder hochgeladen.",
+    "noPhotoBody": "Für dieses Fahrzeug gibt es noch keine Bilder."
+  },
+  "actions": {
+    "share": "Teilen",
+    "more": "Weitere Aktionen",
+    "follow": "Folgen",
+    "message": "Nachricht",
+    "messageSend": "Nachricht senden",
+    "save": "Build speichern"
+  },
+  "more": {
+    "copyLink": "Link kopieren",
+    "openGarage": "In der Garage bearbeiten",
+    "qr": "QR-⁠Code anzeigen",
+    "compare": "Vergleichen",
+    "shareCard": "Als Karte teilen"
+  },
+  "share": {
+    "copied": "Link kopiert",
+    "failed": "Teilen hat nicht geklappt. Hier ist der Link: {{url}}",
+    "copyFailed": "Kopieren hat nicht geklappt. Hier ist der Link: {{url}}"
+  },
+  "overview": {
+    "highlights": "Highlights",
+    "allMods": "Alle Mods ({{count}})",
+    "photos": "Fotos",
+    "allPhotos": "Alle Fotos ({{count}})",
+    "empty": "Zu diesem Fahrzeug gibt es noch keine Beschreibung.",
+    "closingTitle": "Fragen an {{name}}?",
+    "closingBody": "Teile, Abstimmung, Erfahrungen: Melde dich an und schreib direkt."
+  },
+  "specs": {
+    "empty": "Noch keine technischen Daten eingetragen."
+  },
+  "mods": {
+    "empty": "Noch keine Mods eingetragen.",
+    "disclaimer": "Angaben des Besitzers, keine rechtliche Prüfung",
+    "count_one": "{{count}} Mod",
+    "count_other": "{{count}} Mods"
+  },
+  "history": {
+    "empty": "Noch keine Einträge im Verlauf.",
+    "loadOlder_one": "{{count}} älteren Eintrag laden",
+    "loadOlder_other": "{{count}} ältere Einträge laden",
+    "loadError": "Ältere Einträge konnten nicht geladen werden. Versuche es noch einmal.",
+    "moreChanges_one": "und {{count}} weitere Änderung",
+    "moreChanges_other": "und {{count}} weitere Änderungen"
+  },
+  "unavailable": {
+    "title": "Fahrzeug nicht verfügbar",
+    "body": "Es wurde entfernt oder ist gerade nicht öffentlich.",
+    "discover": "Builds entdecken"
+  },
+  "error": {
+    "title": "Das Fahrzeug konnte nicht geladen werden",
+    "offlineTitle": "Du bist offline",
+    "offlineBody": "Dieses Fahrzeug ist noch nicht auf deinem Gerät gespeichert. Verbinde dich und versuche es erneut."
+  },
+  "backToVehicle": "Zum Fahrzeug",
+  "mod": {
+    "screenTitle": "Modifikation",
+    "installedSince": "Eingebaut: {{date}}",
+    "details": "Details",
+    "general": "Allgemein",
+    "brand": "Marke",
+    "partNumber": "Teilenummer",
+    "cost": "Kosten",
+    "notFoundTitle": "Diese Modifikation gibt es nicht mehr",
+    "notFoundBody": "Sie wurde entfernt. Auf der Fahrzeugseite siehst du, was jetzt verbaut ist.",
+    "legalStatus": "Rechtlicher Status"
+  },
+  "gallery": {
+    "title": "Fotos",
+    "filterLabel": "Kategorien",
+    "all": "Alle",
+    "count_one": "{{count}} Foto",
+    "count_other": "{{count}} Fotos",
+    "categories": {
+      "exterior": "Außen",
+      "interior": "Innenraum",
+      "engine": "Motor",
+      "wheels": "Räder",
+      "detail": "Details",
+      "other": "Sonstiges"
+    },
+    "emptyTitle": "Noch keine Fotos",
+    "emptyBody": "Für dieses Fahrzeug gibt es noch keine Bilder."
+  },
+  "update": {
+    "screenTitle": "Build-Update",
+    "changes": "Änderungen",
+    "before": "Vorher",
+    "after": "Nachher",
+    "openMod": "Modifikation ansehen",
+    "notFoundTitle": "Diesen Eintrag gibt es nicht mehr",
+    "notFoundBody": "Er ist im Verlauf nicht mehr zu sehen.",
+    "reportLabel": "Update zu {{vehicle}}"
+  },
+  "viewer": {
+    "loading": "Foto wird geladen",
+    "offline": "Offline – du siehst die zuletzt geladenen Fotos."
+  },
+  "save": {
+    "saved": "Gespeichert",
+    "removed": "Aus „Gespeichert“ entfernt",
+    "failed": "Das hat gerade nicht geklappt. Versuch es gleich noch einmal."
+  },
+  "compare": {
+    "title": "Vergleich",
+    "specs": "Technik",
+    "mods": "Mods",
+    "differs": "unterschiedlich",
+    "same": "gleich",
+    "missing": "keine Angabe",
+    "rowLabel": "{{label}}: {{a}} gegenüber {{b}}, {{state}}",
+    "summary": "{{differences}} von {{rows}} Werten unterscheiden sich",
+    "noMods": "Keine Mods in beiden Builds.",
+    "noModsSide": "Keine",
+    "open": "{{vehicle}} öffnen",
+    "sameTitle": "Das ist derselbe Build",
+    "sameBody": "Wähle ein anderes Fahrzeug, um zu vergleichen.",
+    "pickOther": "Anderes Fahrzeug wählen",
+    "missingTitle": "Zwei Builds zum Vergleichen",
+    "missingBody": "Öffne ein Fahrzeug und wähle unter „Weitere Aktionen“ „Vergleichen“.",
+    "unavailableTitle": "Vergleich nicht verfügbar",
+    "unavailableBody": "Eines der Fahrzeuge ist nicht mehr öffentlich oder wurde gelöscht.",
+    "errorTitle": "Der Vergleich konnte nicht geladen werden",
+    "picker": {
+      "title": "Vergleichen mit",
+      "search": "Marke, Modell oder Spitzname",
+      "garage": "Deine Garage",
+      "saved": "Gespeichert",
+      "results": "Suchergebnisse",
+      "hint": "Such nach einem Build oder wähle eins aus deiner Garage.",
+      "hintGuest": "Such nach einem Build, mit dem du vergleichen willst.",
+      "empty": "Keine passenden Builds",
+      "errorTitle": "Die Builds konnten nicht geladen werden"
+    }
+  },
+  "shareCard": {
+    "title": "Als Karte teilen",
+    "format": "Format",
+    "formats": {
+      "story": "Story 9:16",
+      "square": "Quadrat 1:1"
+    },
+    "hint": "Für Storys auf Instagram und WhatsApp: Foto, Technik und der QR-⁠Code des Builds.",
+    "previewLabel": "Vorschau der Karte für {{vehicle}}, {{format}}",
+    "share": "Teilen",
+    "save": "Speichern",
+    "saved": "Karte gespeichert: {{file}}",
+    "shareFailed": "Teilen hat nicht geklappt. Versuch es noch einmal.",
+    "noShare": "Teilen ist auf diesem Gerät gerade nicht möglich.",
+    "errorTitle": "Die Karte konnte nicht geladen werden",
+    "unavailableTitle": "Karte nicht verfügbar",
+    "unavailableBody": "Dieses Fahrzeug ist nicht öffentlich sichtbar."
+  }
+}

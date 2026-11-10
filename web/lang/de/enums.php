@@ -1,0 +1,210 @@
+<?php
+
+// Labels for App\Enums, one group per enum (App\Support\Enums\HasLabel).
+return [
+    'power_unit' => [
+        'ps' => 'PS',
+        'kw' => 'kW',
+        'hp' => 'hp',
+    ],
+    'power_source' => [
+        'factory' => 'Werksangabe',
+        'claimed' => 'Besitzerangabe',
+        'measured' => 'Gemessen',
+    ],
+    'vehicle_status' => [
+        'draft' => 'Entwurf',
+        'published' => 'Veröffentlicht',
+        'archived' => 'Archiviert',
+    ],
+    'visibility' => [
+        'public' => 'Öffentlich',
+        'unlisted' => 'Nur per Link',
+        'private' => 'Privat',
+    ],
+    'mod_status' => [
+        'installed' => 'Verbaut',
+        'planned' => 'Geplant',
+        'removed' => 'Entfernt',
+    ],
+    'legal_status' => [
+        'abe' => 'ABE',
+        'parts_certificate' => 'Teilegutachten',
+        'registered' => 'Eingetragen',
+        'individual_approval' => 'Einzelabnahme',
+        'not_required' => 'Nicht erforderlich',
+        'unknown' => 'Unbekannt',
+    ],
+    'media_category' => [
+        'exterior' => 'Exterieur',
+        'interior' => 'Innenraum',
+        'engine' => 'Motor',
+        'wheels' => 'Räder',
+        'detail' => 'Details',
+        'other' => 'Sonstiges',
+    ],
+    'media_status' => [
+        'processing' => 'Wird verarbeitet',
+        'ready' => 'Bereit',
+        'failed' => 'Fehlgeschlagen',
+    ],
+    'moderation_status' => [
+        'pending' => 'Ausstehend',
+        'approved' => 'Freigegeben',
+        'flagged' => 'Markiert',
+        'rejected' => 'Abgelehnt',
+    ],
+    'qr_status' => [
+        'active' => 'Aktiv',
+        'revoked' => 'Widerrufen',
+    ],
+    'qr_revocation_reason' => [
+        'reissued' => 'Neu ausgestellt',
+        'vehicle_deleted' => 'Fahrzeug gelöscht',
+        'account_deleted' => 'Konto gelöscht',
+        'moderation' => 'Moderation',
+    ],
+    'fuel' => [
+        'petrol' => 'Benzin',
+        'diesel' => 'Diesel',
+        'hybrid' => 'Hybrid',
+        'plug_in_hybrid' => 'Plug-in-Hybrid',
+        'electric' => 'Elektro',
+        'lpg' => 'Autogas (LPG)',
+        'cng' => 'Erdgas (CNG)',
+        'ethanol' => 'Ethanol (E85)',
+        'other' => 'Sonstiges',
+    ],
+    'aspiration' => [
+        'naturally_aspirated' => 'Saugmotor',
+        'turbo' => 'Turbo',
+        'biturbo' => 'Biturbo',
+        'supercharged' => 'Kompressor',
+        'twincharged' => 'Turbo + Kompressor',
+        'none' => 'Keine (Elektro)',
+    ],
+    'drivetrain' => [
+        'front' => 'Front',
+        'rear' => 'Heck',
+        'all' => 'Allrad',
+    ],
+    'gearbox' => [
+        'manual' => 'Schaltgetriebe',
+        'automatic' => 'Automatik',
+        'dual_clutch' => 'Doppelkupplung',
+        'sequential' => 'Sequenziell',
+        'cvt' => 'CVT',
+        'single_speed' => '1-Gang-Getriebe',
+    ],
+    'user_status' => [
+        'active' => 'Aktiv',
+        'suspended' => 'Gesperrt',
+        'deactivated' => 'Deaktiviert',
+    ],
+    'restriction_type' => [
+        'messaging' => 'Nachrichten',
+        'publishing' => 'Veröffentlichen',
+    ],
+    'verification_purpose' => [
+        'email_verification' => 'E-Mail bestätigen',
+        'password_reset' => 'Passwort zurücksetzen',
+        'email_change' => 'E-Mail ändern',
+    ],
+    'theme_preference' => [
+        'carbon' => 'Carbon',
+        'black' => 'Schwarz',
+        'light' => 'Hell',
+        'system' => 'System',
+    ],
+    'power_display' => [
+        'ps_kw' => 'PS (kW)',
+        'kw_ps' => 'kW (PS)',
+        'hp' => 'hp',
+    ],
+    'who_can_message' => [
+        'everyone' => 'Alle',
+        'following' => 'Mitglieder, denen ich folge',
+        'nobody' => 'Niemand',
+    ],
+    'build_update_type' => [
+        'mod_added' => 'Modifikation hinzugefügt',
+        'mod_changed' => 'Modifikation geändert',
+        'mod_removed' => 'Modifikation entfernt',
+        'specs_changed' => 'Technik geändert',
+        'photos_added' => 'Neue Fotos',
+        'note' => 'Notiz',
+    ],
+    'device_platform' => [
+        'ios' => 'iOS',
+        'android' => 'Android',
+        'web' => 'Web',
+    ],
+    'catalog_request_status' => [
+        'pending' => 'Offen',
+        'approved' => 'Angenommen',
+        'rejected' => 'Abgelehnt',
+    ],
+    'mod_field_type' => [
+        'text' => 'Text',
+        'number' => 'Zahl',
+        'boolean' => 'Ja/Nein',
+        'select' => 'Auswahl',
+        'brand' => 'Marke',
+    ],
+    'config_version_status' => [
+        'draft' => 'Entwurf',
+        'published' => 'Veröffentlicht',
+        'superseded' => 'Abgelöst',
+    ],
+    'legal_document_key' => [
+        'imprint' => 'Impressum',
+        'privacy' => 'Datenschutz',
+        'terms' => 'AGB',
+        'community' => 'Community-Richtlinien',
+        'licenses' => 'Lizenzen',
+    ],
+    'audit_actor_type' => [
+        'staff' => 'Team',
+        'member' => 'Mitglied',
+        'system' => 'System',
+    ],
+    'cannot_message_reason' => [
+        'recipient_closed' => 'Dieses Mitglied nimmt gerade keine Nachrichten von dir an.',
+        'not_verified' => 'Bestätige zuerst deine E-Mail-Adresse, dann kannst du schreiben.',
+        'restricted' => 'Dein Konto ist für Nachrichten gerade eingeschränkt.',
+    ],
+    // M2.5 settings, data rights and support.
+    'data_export_status' => [
+        'queued' => 'Angefordert',
+        'running' => 'Wird erstellt',
+        'ready' => 'Bereit',
+        'failed' => 'Fehlgeschlagen',
+        'expired' => 'Abgelaufen',
+    ],
+    'support_category' => [
+        'account' => 'Konto und Anmeldung',
+        'vehicle' => 'Fahrzeuge und Garage',
+        'qr' => 'QR-Sticker',
+        'messaging' => 'Nachrichten',
+        'safety' => 'Sicherheit und Meldungen',
+        'other' => 'Sonstiges',
+    ],
+    'support_ticket_status' => [
+        'open' => 'Offen',
+        'pending' => 'Wartet auf Antwort',
+        'closed' => 'Erledigt',
+    ],
+    'support_ticket_source' => [
+        'app' => 'App',
+        'web' => 'Kontaktformular',
+    ],
+    'ticket_author_type' => [
+        'member' => 'Mitglied',
+        'guest' => 'Gast',
+        'staff' => 'Team',
+    ],
+    'session_kind' => [
+        'app' => 'App',
+        'web' => 'Browser',
+    ],
+];

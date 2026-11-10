@@ -1,0 +1,36 @@
+{
+    "code": "Error :code",
+    "retry": "Reload",
+    "dashboard": "Go to the dashboard",
+    "login": "Go to sign-in",
+    "back": "Back",
+    "400": {
+        "title": "We cannot read this request",
+        "body": "A filter or sort is not valid. Reset the filters and try again."
+    },
+    "403": {
+        "title": "No access",
+        "body": "Your role does not have permission for this page or action.",
+        "hint": "Need access? Ask an owner or admin. Roles and permissions are managed under Team & roles."
+    },
+    "404": {
+        "title": "Page not found",
+        "body": "This page does not exist, or the record was removed."
+    },
+    "419": {
+        "title": "Page expired",
+        "body": "The page was open too long. Reload it and try again."
+    },
+    "429": {
+        "title": "Too many requests",
+        "body": "Please wait a moment before trying again."
+    },
+    "500": {
+        "title": "Something went wrong",
+        "body": "An error occurred on the server. It has been logged. Try again in a moment."
+    },
+    "503": {
+        "title": "Maintenance",
+        "body": "SPEED CLUB is under maintenance. The admin will be back shortly."
+    }
+}

@@ -1,0 +1,183 @@
+{
+    "nav": {
+        "tickets": "Tickets",
+        "macros": "Macros"
+    },
+    "tickets": {
+        "title": "Support tickets",
+        "intro": "Requests from the app (Settings → Help & FAQ → Contact support) and the contact form. Members read the reply in the app and get a notification; contacts without an account get it by e‑mail.",
+        "caption": "Support tickets",
+        "columns": {
+            "subject": "Subject",
+            "from": "From",
+            "category": "Category",
+            "status": "Status",
+            "assigned": "Assigned",
+            "last_activity": "Last activity",
+            "messages": "Messages",
+            "reference": "Number"
+        },
+        "presets": {
+            "active": "Open and waiting",
+            "mine": "Mine",
+            "unassigned": "Unassigned"
+        },
+        "filters": {
+            "label": "Filter tickets",
+            "q": "Search",
+            "q_placeholder": "Subject or SC number",
+            "status": "Status",
+            "category": "Category",
+            "source": "Source",
+            "assigned": "Assigned",
+            "any": "All",
+            "apply": "Apply",
+            "assigned_me": "Me",
+            "assigned_none": "Nobody",
+            "status_active": "Open or waiting"
+        },
+        "from": {
+            "member": "@:username",
+            "web": ":name",
+            "web_unknown": "Contact form",
+            "member_unknown": "Deleted member"
+        },
+        "sources": {
+            "app": "App",
+            "web": "Contact form"
+        },
+        "empty_title": "No tickets",
+        "empty_body": "New requests appear here as soon as someone writes.",
+        "error": "The tickets could not be loaded.",
+        "assign": "Assignment",
+        "assign_title": "Assigned for :reference",
+        "assign_staff": "Team member",
+        "assign_none": "Nobody",
+        "assign_submit": "Save",
+        "bulk": {
+            "status": "Change status",
+            "title": "Change status for :count tickets",
+            "body": "More than 100 tickets in 24 hours need an approval.",
+            "to": "New status",
+            "submit": "Change",
+            "result": "Change status: result",
+            "codes": {
+                "not_found": "Ticket not found",
+                "forbidden": "No permission",
+                "invalid": "Invalid input",
+                "not_possible": "Not possible",
+                "failed": "Failed"
+            }
+        }
+    },
+    "status": {
+        "open": "Open",
+        "pending": "Waiting",
+        "closed": "Resolved"
+    },
+    "categories": {
+        "account": "Account",
+        "vehicle": "Vehicle",
+        "qr": "QR code",
+        "messaging": "Messaging",
+        "safety": "Safety",
+        "other": "Other"
+    },
+    "ticket": {
+        "title": ":subject",
+        "crumb": "Tickets",
+        "error": "The ticket could not be loaded.",
+        "tabs": {
+            "label": "Ticket",
+            "thread": "Thread"
+        },
+        "meta": {
+            "reference": "Number :reference",
+            "created": "Received :date",
+            "source_app": "From the app",
+            "source_web": "Contact form",
+            "locale": "Language :locale"
+        },
+        "actions": {
+            "assign": "Assignment",
+            "member": "Go to member",
+            "status": "Status"
+        },
+        "from_title": "From",
+        "member_link": "Open member",
+        "email": "E‑mail: :email",
+        "channel_app": "Replies appear in the member's app.",
+        "channel_email": "Replies go to this address by e‑mail.",
+        "thread": {
+            "internal": "Internal note",
+            "internal_hint": "For the team only, never sent.",
+            "mailed": "Sent by e‑mail :date",
+            "queued": "E‑mail is being sent",
+            "team": "Team",
+            "empty": "No messages yet."
+        },
+        "composer": {
+            "reply": "Reply",
+            "note": "Internal note",
+            "label_reply": "Reply to :name",
+            "label_note": "Note for the team",
+            "macro": "Macro",
+            "macro_placeholder": "Insert a macro",
+            "status_after": "Then",
+            "send": "Send reply",
+            "save_note": "Save note",
+            "discard": "Discard",
+            "hint_reply_app": "The member sees the reply in the app under Settings → Help & FAQ → Your requests.",
+            "hint_reply_email": "Goes by e‑mail to the address given.",
+            "hint_note": "Stays internal."
+        },
+        "closed_note": "This ticket is resolved. A new reply does not reopen it by itself; change the status to do that.",
+        "reveal": "Show",
+        "reveal_error": "The address could not be loaded."
+    },
+    "macros": {
+        "title": "Macros",
+        "intro": "Reply templates in German and English. Variables: {name}, {reference}. Replies are signed by the team, never a person. The reply stays editable before it is sent.",
+        "caption": "Macros",
+        "columns": {
+            "title": "Title",
+            "locale": "Language",
+            "body": "Text",
+            "updated": "Changed",
+            "actions": "Actions"
+        },
+        "locales": {
+            "de": "German",
+            "en": "English"
+        },
+        "new": "New macro",
+        "edit": "Edit",
+        "delete": "Delete",
+        "delete_title": "Delete “:title”?",
+        "delete_body": "Replies already sent keep their text.",
+        "drawer_new": "New macro",
+        "drawer_edit": "Edit macro",
+        "fields": {
+            "key": "Key",
+            "key_hint": "Lower-case letters, digits and _. Same key = same macro in the other language.",
+            "locale": "Language",
+            "title": "Title",
+            "body": "Text",
+            "body_hint": "With the variables {name} and {reference}.",
+            "sort": "Order"
+        },
+        "save": "Save",
+        "empty_title": "No macros yet",
+        "empty_body": "Add macros for frequent replies.",
+        "error": "The macros could not be loaded."
+    },
+    "flash": {
+        "bulk_done": "Status changed.",
+        "bulk_partial": "It did not work for every ticket. See the overview for details.",
+        "replied": "Reply sent.",
+        "noted": "Note saved.",
+        "updated": "Ticket updated.",
+        "macro_saved": "Macro saved.",
+        "macro_deleted": "Macro deleted."
+    }
+}

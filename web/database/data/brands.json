@@ -1,0 +1,78 @@
+{
+"wheels_tires":[
+  ["BBS",["BBS Motorsport"]],["OZ Racing",["OZ","O.Z."]],["Rotiform",[]],["Work Wheels",["Work"]],
+  ["Rays",["Volk Racing","Gram Lights","TE37"]],["Enkei",[]],["Vossen",[]],["HRE",["HRE Performance Wheels"]],
+  ["Borbet",[]],["ATS",["ATS Wheels"]],["Ronal",[]],["AEZ",[]],["Dotz",[]],["MSW",[]],["Alutec",[]],
+  ["Japan Racing",["JR Wheels"]],["Konig",[]],["Fifteen52",[]],["Advan Racing",["Advan"]],["Weds",["WedsSport"]],
+  ["SSR",["Speed Star Racing"]],["Forgeline",[]],["Brixton Forged",[]],["Forgestar",[]],["Apex Race Parts",["Apex"]],
+  ["TSW",[]],["Z-Performance",[]],["Breyton",[]],["Barracuda Racing Wheels",["Barracuda"]],["Wheelforce",[]],
+  ["Corspeed",[]],["Oxigin",[]],["Keskin Tuning",["KT"]],["Mille Miglia",[]],["MAK",[]],["Rial",[]],
+  ["Schmidt Revolution",["Schmidt"]],["Compomotive",[]],["Fuchs",["Fuchsfelge"]],["Team Dynamics",[]],["3SDM",[]],
+  ["Michelin",[]],["Pirelli",[]],["Continental",["Conti"]],["Bridgestone",[]],["Yokohama",[]],["Toyo",["Toyo Tires"]],
+  ["Nankang",[]],["Falken",[]],["Goodyear",[]],["Dunlop",[]],["Hankook",[]],["Kumho",[]],["Nexen",[]],["Federal",[]],
+  ["Vredestein",[]],["Nokian",[]],["Semperit",[]],["Uniroyal",[]],["Barum",[]],["Maxxis",[]],["Achilles",[]],
+  ["Accelera",[]],["Zestino",[]],["BFGoodrich",[]]
+],
+"suspension":[
+  ["KW",["KW automotive"]],["Bilstein",[]],["H&R",["H&R Spezialfedern"]],["Eibach",[]],["Öhlins",["Ohlins"]],["Tein",[]],
+  ["BC Racing",[]],["Air Lift Performance",["Air Lift"]],["Airrex",[]],["ST Suspensions",["ST"]],["Koni",[]],["Sachs",[]],
+  ["AP Sportfahrwerke",[]],["Vogtland",[]],["FK Automotive",[]],["TA Technix",[]],["Weitec",[]],["Spax",[]],["Cusco",[]],
+  ["MeisterR",["Meister-R"]],["Fortune Auto",[]],["Stance",[]],["AST",["AST Suspension"]],["JRZ",[]],["Nitron",[]],["Moton",[]],
+  ["Intrax",[]],["Whiteline",[]],["Powerflex",[]],["SuperPro",[]],["Hotchkis",[]],["Swift Springs",["Swift"]],["RS-R",[]],
+  ["D2 Racing",[]],["GAZ",[]],["Yellow Speed Racing",["YellowSpeed"]],["Hardrace",[]],["Megan Racing",[]],["AccuAir",[]],
+  ["Bag Yard",["Bagyard"]],["Wisefab",[]]
+],
+"exhaust":[
+  ["Akrapovič",["Akrapovic"]],["Remus",[]],["Milltek Sport",["Milltek"]],["Supersprint",[]],["Capristo",[]],["Eisenmann",[]],
+  ["Borla",[]],["MagnaFlow",[]],["Scorpion Exhausts",["Scorpion"]],["Bastuck",[]],["Friedrich Motorsport",[]],
+  ["FOX Sportauspuff",["FOX"]],["Ulter Sport",[]],["Novus",[]],["Cobra Sport",[]],["Armytrix",[]],
+  ["iPE",["Innotech Performance Exhaust"]],["Kline Innovation",[]],["Tubi Style",[]],["Larini",[]],["Quicksilver",[]],
+  ["HJS",["HJS Motorsport"]],["Fi Exhaust",["Frequency Intelligent Exhaust"]],["Invidia",[]],["Fujitsubo",[]],["Flowmaster",[]],
+  ["Corsa Performance",[]],["MBRP",[]],["Inoxcar",[]],["Ragazzon",[]],["Jetex",[]],["AWE Tuning",["AWE"]],["Cargraphic",[]]
+],
+"engine_performance":[
+  ["HKS",[]],["GReddy",["Greddy","Trust"]],["Tomei",[]],["Garrett",["Garrett Motion"]],["BorgWarner",["Borg Warner"]],
+  ["Wagner Tuning",["Wagner"]],["Forge Motorsport",["Forge"]],["Mishimoto",[]],["Haltech",[]],["MoTeC",[]],
+  ["AEM",["AEM Electronics"]],["Link ECU",["Link"]],["EcuTek",[]],["APR",[]],["Revo",["Revo Technik"]],
+  ["Cobb Tuning",["COBB"]],["Mountune",[]],["MTM",["Motoren Technik Mayer"]],["ABT Sportsline",["ABT"]],["Brabus",[]],
+  ["Manhart Racing",["Manhart"]],["G-Power",[]],["Hennessey",[]],["Litchfield",[]],["Alpha-N Performance",[]],
+  ["Burger Motorsports",["BMS","JB4"]],["Dinan",[]],["RaceChip",[]],["DTE Systems",[]],["Oettinger",[]],["Novitec",[]],
+  ["Renntech",[]],["TechArt",[]],["Gemballa",[]],["RUF",[]],["AC Schnitzer",[]],["Hamann",[]],["Nismo",[]],["TRD",["Toyota Racing Development"]],
+  ["Mugen",[]],["Spoon Sports",["Spoon"]],["Skunk2",[]],["Hondata",[]],["K&N",[]],["BMC",["BMC Air Filter"]],["ITG",[]],
+  ["Pipercross",[]],["Injen",[]],["Holley",[]],["Bosch Motorsport",[]],["DeatschWerks",[]],["Nuke Performance",[]],
+  ["Radium Engineering",[]],["Precision Turbo",[]],["Xona Rotor",[]],["Tial",[]],["Turbosmart",[]],["Blitz",[]],
+  ["A'PEXi",["Apexi"]],["SARD",[]],["Cosworth",[]],["Pure Turbos",[]],["Eventuri",[]],["Armaspeed",[]],["CSF",[]],
+  ["Setrab",[]],["Mahle",["Mahle Motorsport"]],["Wiseco",[]],["JE Pistons",[]],["ARP",[]],["Integrated Engineering",["IE"]],
+  ["Subaru Tecnica International",["STI"]]
+],
+"brakes":[
+  ["Brembo",[]],["BimmerWorld",[]],["AP Racing",[]],["Tarox",[]],["Ferodo",[]],["EBC",["EBC Brakes"]],["Alcon",[]],["Wilwood",[]],["Movit",[]],
+  ["StopTech",[]],["Endless",[]],["Project Mu",[]],["Pagid",[]],["Hawk Performance",["Hawk"]],["Mintex",[]],["Goodridge",[]],
+  ["Zimmermann",[]],["ATE",[]],["Textar",[]],["Girodisc",[]],["K-Sport",[]],["HEL Performance",["HEL"]],["Winmax",[]]
+],
+"aero_body":[
+  ["Maxton Design",["Maxton"]],["Flossmann",["Floßmann","Flossmann Auto Design"]],["Vorsteiner",[]],["Liberty Walk",["LB-Works","LB Performance"]],["Rocket Bunny",["Pandem","TRA Kyoto"]],
+  ["Prior Design",[]],["Varis",[]],["Seibon",[]],["Voltex",[]],["Mansory",[]],["1016 Industries",[]],["RKP Composites",["RKP"]],
+  ["RevoZport",[]],["Anderson Composites",[]],["Duraflex",[]],["3M",["3M Wrap"]],["Avery Dennison",[]],["Orafol",["Oracal"]],
+  ["KPMF",[]],["Rieger Tuning",["Rieger"]],["Zender",[]],["Origin Labo",[]],["Manthey Racing",["Manthey"]],["BN Sports",[]]
+],
+"interior":[
+  ["Recaro",[]],["Bride",[]],["Sparco",[]],["OMP",[]],["Momo",[]],["Nardi",["Personal"]],["Sabelt",[]],["Schroth",[]],
+  ["Takata",[]],["Cobra Seats",[]],["Corbeau",[]],["Scheel-Mann",[]],["Wiechers Sport",["Wiechers"]],["Custom Cages",[]],
+  ["TRS",[]],["Raid",["Raid HP"]],["Luisi",[]]
+],
+"electronics":[
+  ["Alpine",[]],["Pioneer",[]],["Kenwood",[]],["JL Audio",[]],["Focal",[]],["Hertz",[]],["Morel",[]],["Audison",[]],["Helix",[]],
+  ["Kicker",[]],["Brax",[]],["Defi",[]],["AiM Sports",["AiM"]],["Racelogic",["VBOX"]],["Hella",[]],["Osram",[]],["Philips",[]],
+  ["Morimoto",[]],["BimmerCode",[]],["Carly",[]],["Ross-Tech",["VCDS"]],["OBDeleven",[]]
+],
+"drivetrain":[
+  ["Quaife",[]],["Wavetrac",[]],["Drexler",[]],["OS Giken",[]],["Exedy",[]],["ACT",["Advanced Clutch Technology"]],
+  ["Clutch Masters",[]],["Samsonas",[]],["PPG",["PPG Gearbox"]],["Holinger",[]],["Hewland",[]],["Sadev",[]],["Tilton",[]],
+  ["Competition Clutch",[]],["Spec Clutch",[]],["South Bend Clutch",[]],["Kaaz",[]],["ZF",["ZF Friedrichshafen"]],["LuK",[]],
+  ["Valeo",[]],["Fidanza",[]],["The Driveshaft Shop",[]]
+],
+"other":[
+  ["Motul",[]],["Liqui Moly",[]],["Castrol",[]],["Meguiar's",[]],["Swissvax",[]],["Koch-Chemie",[]]
+]
+}

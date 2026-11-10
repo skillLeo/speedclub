@@ -1,0 +1,303 @@
+{
+    "title": "Audit-Log",
+    "intro": "Jede Änderung durch das Team und jeder Zugriff auf sensible Daten, fälschungssicher verkettet. Einträge lassen sich nicht ändern oder löschen.",
+    "caption": "Audit-Ereignisse, neueste zuerst",
+    "empty_title": "Noch keine Ereignisse",
+    "empty_body": "Sobald jemand im Team etwas ändert, steht es hier.",
+    "columns": {
+        "occurred_at": "Zeitpunkt",
+        "actor": "Wer",
+        "action": "Aktion",
+        "target": "Ziel",
+        "reason": "Begründung",
+        "id": "Nr."
+    },
+    "actor": {
+        "system": "System",
+        "staff": "Team",
+        "member": "Mitglied",
+        "any_staff": "Alle aus dem Team",
+        "any_member": "Alle Mitglieder"
+    },
+    "presets": {
+        "staff": "Nur Team",
+        "approvals": "Freigaben",
+        "security": "Team-Sicherheit"
+    },
+    "filters": {
+        "label": "Filter",
+        "actor": "Wer",
+        "any_actor": "Alle",
+        "action": "Aktion beginnt mit",
+        "action_placeholder": "z. B. approval.",
+        "target_type": "Ziel-Typ",
+        "any_target": "Alle",
+        "target_id": "Ziel-ID",
+        "from": "Von",
+        "to": "Bis",
+        "apply": "Anwenden",
+        "target": "Ziel",
+        "period": "Zeitraum"
+    },
+    "targets": {
+        "user": "Mitglied",
+        "staff": "Team-Konto",
+        "vehicle": "Fahrzeug",
+        "media": "Medium",
+        "qr_code": "QR-Code",
+        "moderation_case": "Fall",
+        "decision": "Entscheidung",
+        "appeal": "Einspruch",
+        "report": "Meldung",
+        "support_ticket": "Support-Ticket",
+        "audit_event": "Audit-Ereignis",
+        "config_version": "Konfigurationsversion",
+        "feature_flag": "Feature-Flag",
+        "legal_document": "Rechtstext",
+        "approval_request": "Freigabe"
+    },
+    "chain": {
+        "intact": "Integrität geprüft: :time",
+        "broken": "Kette unterbrochen bei Nr. :id",
+        "unknown": "Integrität noch nicht geprüft",
+        "broken_title": "Die Audit-Kette ist nicht intakt",
+        "broken_body": "Die letzte Prüfung hat bei Ereignis Nr. :id eine Abweichung gefunden (:checked Ereignisse davor intakt). Informiere sofort einen Owner und ändere nichts an der Datenbank."
+    },
+    "event": {
+        "title": "Ereignis",
+        "failed": "Das Ereignis konnte nicht geladen werden",
+        "missing": "Dieses Ereignis gibt es nicht",
+        "request": "Anfrage-ID",
+        "hash": "Hash",
+        "diff": "Vorher / Nachher",
+        "viewed_note": "Das Öffnen dieses Ereignisses wurde selbst im Audit-Log vermerkt.",
+        "key": "Schlüssel: :key"
+    },
+    "export": {
+        "title": "Audit-Log exportieren",
+        "body": "Exportiert :count Ereignisse mit den aktuellen Filtern. Die Datei kannst du nach der Freigabe 24 Stunden lang herunterladen.",
+        "format": "Format",
+        "submit": "Freigabe anfragen"
+    },
+    "actions": {
+        "admin": {
+            "saved_view": {
+                "deleted": "Gespeicherte Ansicht gelöscht",
+                "saved": "Ansicht gespeichert"
+            }
+        },
+        "approval": {
+            "approved": "Freigabe erteilt und ausgeführt",
+            "cancelled": "Freigabeanfrage zurückgezogen",
+            "denied": "Freigabe abgelehnt",
+            "expired": "Freigabeanfrage abgelaufen",
+            "export_downloaded": "Export heruntergeladen",
+            "failed": "Freigabe erteilt, Ausführung abgelehnt",
+            "requested": "Freigabe angefragt"
+        },
+        "audit": {
+            "event_viewed": "Audit-Ereignis angesehen",
+            "exported": "Audit-Log exportiert"
+        },
+        "brand": {
+            "asset_uploaded": "Markenbild hochgeladen"
+        },
+        "catalog": {
+            "activated": "Katalogeintrag aktiviert",
+            "category_created": "Mod-Kategorie angelegt",
+            "category_updated": "Mod-Kategorie geändert",
+            "created": "Katalogeintrag angelegt",
+            "deactivated": "Katalogeintrag deaktiviert",
+            "deleted": "Katalogeintrag gelöscht",
+            "exported": "Katalog als CSV exportiert",
+            "import_analysed": "CSV-Import geprüft",
+            "import_finished": "CSV-Import beendet",
+            "import_started": "CSV-Import gestartet",
+            "merged": "Katalogeinträge zusammengeführt",
+            "request_accepted": "Katalog-Anfrage übernommen",
+            "request_rejected": "Katalog-Anfrage abgelehnt",
+            "schema_changed": "Felder geändert (neue Version)",
+            "updated": "Katalogeintrag geändert"
+        },
+        "config": {
+            "draft_discarded": "Konfigurationsentwurf verworfen",
+            "draft_saved": "Konfigurationsentwurf gespeichert",
+            "preview_issued": "Vorschau-Link erstellt",
+            "published": "Konfiguration veröffentlicht",
+            "rolled_back": "Konfiguration zurückgerollt"
+        },
+        "flag": {
+            "changed": "Feature-Flag geändert"
+        },
+        "help": {
+            "deleted": "Hilfeartikel gelöscht",
+            "published": "Hilfeartikel veröffentlicht",
+            "saved": "Hilfeartikel gespeichert",
+            "unpublished": "Hilfeartikel zurückgezogen"
+        },
+        "legal": {
+            "draft_discarded": "Entwurf eines Rechtstexts verworfen",
+            "draft_saved": "Entwurf eines Rechtstexts gespeichert",
+            "published": "Rechtstext veröffentlicht"
+        },
+        "media": {
+            "original_viewed": "Original eines ausgeblendeten Fotos angezeigt",
+            "reviewed": "Foto freigegeben"
+        },
+        "member": {
+            "bulk_executed": "Sammelaktion ausgeführt",
+            "consent_accepted": "Neuer Fassung der Rechtstexte zugestimmt",
+            "data_export_downloaded": "Datenexport heruntergeladen",
+            "data_export_requested": "Datenexport angefordert",
+            "deleted_by_staff": "Konto durch das Team gelöscht",
+            "deletion_requested": "Kontolöschung beantragt",
+            "email_change_requested": "E‑Mail‑Änderung angefordert",
+            "email_changed": "E‑Mail‑Adresse geändert",
+            "email_changed_by_staff": "E‑Mail‑Adresse durch das Team geändert",
+            "email_verified": "E‑Mail‑Adresse bestätigt",
+            "export_downloaded": "Team-Export heruntergeladen",
+            "export_started": "Team-Export gestartet",
+            "hard_deleted": "Konto endgültig gelöscht",
+            "list_exported": "Mitgliederliste als CSV exportiert",
+            "login_new_device": "Anmeldung auf neuem Gerät",
+            "logout_all": "Überall abgemeldet",
+            "message_metadata_viewed": "Nachrichten-Metadaten angesehen",
+            "password_change_forced": "Passwortänderung erzwungen",
+            "password_changed": "Passwort geändert",
+            "password_check_failed": "Falsches Passwort",
+            "password_reset": "Passwort zurückgesetzt",
+            "pii_viewed": "Persönliche Daten angezeigt",
+            "profile_edited": "Profil durch das Team bearbeitet",
+            "qr_reissued": "QR-Code neu ausgegeben",
+            "recovery_code_used": "Wiederherstellungscode benutzt",
+            "recovery_codes_regenerated": "Neue Wiederherstellungscodes",
+            "registered": "Registriert",
+            "reset_link_sent": "Code zum Zurücksetzen gesendet",
+            "second_factor_locked": "Zweiter Faktor gesperrt",
+            "session_revoked": "Sitzung beendet",
+            "sessions_revoked_by_staff": "Alle Sitzungen durch das Team beendet",
+            "token_replayed": "Altes Token erneut benutzt",
+            "token_rotation_retried": "Token-Erneuerung wiederholt",
+            "two_factor_disabled": "Zwei-Faktor-Anmeldung aus",
+            "two_factor_enabled": "Zwei-Faktor-Anmeldung an",
+            "two_factor_reset": "Zwei-Faktor-Anmeldung zurückgesetzt",
+            "username_changed": "Benutzername geändert",
+            "view_as_ended": "Ansicht als Mitglied beendet",
+            "view_as_started": "Ansicht als Mitglied gestartet"
+        },
+        "membership": {
+            "entitlement_granted": "Mitgliedschaft vergeben",
+            "entitlement_revoked": "Mitgliedschaft entzogen",
+            "plan_created": "Mitgliedschaftsplan angelegt",
+            "plan_updated": "Mitgliedschaftsplan geändert"
+        },
+        "moderation": {
+            "appeal_decided": "Einspruch entschieden",
+            "appeal_filed": "Einspruch eingelegt",
+            "bulk_no_action": "Fälle gesammelt ohne Maßnahme",
+            "case_assigned": "Fall übernommen oder übergeben",
+            "contact_viewed": "Kontaktadresse der Meldung angesehen",
+            "decided": "Moderationsentscheidung",
+            "evidence_viewed": "Beweise angesehen",
+            "keyword_added": "Schlagwort hinzugefügt",
+            "keyword_removed": "Schlagwort entfernt",
+            "live_context_viewed": "Aktuellen Nachrichtenverlauf angesehen",
+            "rate_limits_published": "Anfrage-Limits veröffentlicht",
+            "restriction_lifted": "Einschränkung abgelaufen",
+            "template_deleted": "Begründungsvorlage gelöscht",
+            "template_saved": "Begründungsvorlage gespeichert"
+        },
+        "permissions": {
+            "changed": "Rechte der Rollen geändert"
+        },
+        "privacy": {
+            "erasure_requested": "Löschung zur Freigabe angefragt",
+            "evidence_viewed": "Nachweis einer Datenschutzanfrage geöffnet",
+            "export_sent": "Datenexport verschickt",
+            "reply_sent": "Antwort auf Datenschutzanfrage verschickt",
+            "request_assigned": "Datenschutzanfrage zugewiesen",
+            "request_completed": "Datenschutzanfrage abgeschlossen",
+            "request_created": "Datenschutzanfrage erfasst",
+            "request_extended": "Frist einer Datenschutzanfrage verlängert",
+            "request_status_changed": "Status einer Datenschutzanfrage geändert",
+            "request_viewed": "Datenschutzanfrage angesehen"
+        },
+        "qr": {
+            "reissued_by_staff": "QR-Code durch das Team neu ausgegeben",
+            "revoked_by_staff": "QR-Code durch das Team gesperrt"
+        },
+        "release": {
+            "recorded": "Release eingetragen",
+            "synced": "Release-Register abgeglichen",
+            "updated": "Release geändert"
+        },
+        "role": {
+            "created": "Rolle angelegt",
+            "deleted": "Rolle gelöscht",
+            "updated": "Rolle geändert"
+        },
+        "staff": {
+            "challenge_passed": "Code bestätigt",
+            "code_check_failed": "Falscher Code bei Sicherheitsschritt",
+            "deactivated": "Teammitglied deaktiviert",
+            "deleted": "Teammitglied gelöscht",
+            "invite_accepted": "Einladung angenommen",
+            "invite_resent": "Einladung erneut verschickt",
+            "invited": "Teammitglied eingeladen",
+            "own_session_revoked": "Eigene Sitzung beendet",
+            "password_changed": "Passwort geändert",
+            "password_check_failed": "Falsches Passwort",
+            "password_reset": "Passwort zurückgesetzt",
+            "pii_reveal_limit_reached": "Limit für Kontaktdaten-Anzeigen erreicht",
+            "reactivated": "Teammitglied reaktiviert",
+            "recovery_code_used": "Wiederherstellungscode benutzt",
+            "recovery_codes_regenerated": "Neue Wiederherstellungscodes",
+            "recovery_codes_viewed": "Wiederherstellungscodes angezeigt",
+            "roles_changed": "Rollen eines Teammitglieds geändert",
+            "session_ended_credentials_changed": "Sitzung beendet: Zugangsdaten geändert",
+            "session_ended_inactive": "Sitzung beendet: Konto inaktiv",
+            "session_ended_without_code": "Sitzung beendet: Code fehlte",
+            "sessions_revoked": "Sitzungen eines Teammitglieds beendet",
+            "sign_in_failed": "Anmeldung fehlgeschlagen",
+            "signed_in": "Angemeldet",
+            "signed_in_without_code": "Angemeldet ohne Code",
+            "signed_out": "Abgemeldet",
+            "two_factor_confirmed": "Zwei-Faktor-Anmeldung bestätigt",
+            "two_factor_disabled": "Zwei-Faktor-Anmeldung aus",
+            "two_factor_enabled": "Zwei-Faktor-Anmeldung eingerichtet",
+            "two_factor_failed": "Falscher Code",
+            "two_factor_reset": "Zwei-Faktor-Anmeldung zurückgesetzt",
+            "two_factor_rotated": "Neuer Authenticator bestätigt",
+            "two_factor_rotation_cancelled": "Authenticator-Wechsel abgebrochen",
+            "two_factor_rotation_started": "Authenticator-Wechsel begonnen"
+        },
+        "support": {
+            "bulk_status": "Ticketstatus gesammelt geändert",
+            "contact_viewed": "Kontaktadresse angesehen",
+            "macro_deleted": "Textbaustein gelöscht",
+            "macro_saved": "Textbaustein gespeichert",
+            "note_added": "Interne Notiz",
+            "replied": "Ticket beantwortet",
+            "status_changed": "Ticketstatus geändert",
+            "ticket_assigned": "Ticket zugewiesen"
+        },
+        "system": {
+            "health_checks_run": "Systemprüfung ausgeführt",
+            "jobs_forgotten": "Fehlgeschlagene Jobs verworfen",
+            "jobs_retried": "Fehlgeschlagene Jobs neu gestartet",
+            "test_ai_run": "KI-Verbindung getestet",
+            "test_mail_sent": "Test-E‑Mail verschickt",
+            "test_pusher_sent": "Echtzeit-Verbindung getestet"
+        },
+        "template": {
+            "reset": "Vorlage zurückgesetzt",
+            "saved": "Vorlage gespeichert",
+            "test_sent": "Testversand einer Vorlage"
+        },
+        "vehicle": {
+            "bulk_hidden": "Fahrzeuge gesammelt ausgeblendet",
+            "deleted_by_staff": "Fahrzeug durch das Team gelöscht",
+            "edited_by_staff": "Fahrzeug durch das Team bearbeitet"
+        }
+    }
+}

@@ -1,0 +1,103 @@
+{
+    "nav": {
+        "plans": "Pläne",
+        "entitlements": "Freischaltungen"
+    },
+    "scaffold": "Gerüst hinter dem Flag „premium.enabled“: keine Zahlungen. Digitale Premium-Inhalte laufen später über Apple- und Google-Käufe in der App.",
+    "plans": {
+        "title": "Mitgliedschaften: Pläne",
+        "intro": "Pläne mit Namen und Leistungen in Deutsch und Englisch. Ohne Preis: In V1 gibt es keine Zahlungen.",
+        "caption": "Pläne",
+        "create": "Plan anlegen",
+        "edit": "Bearbeiten",
+        "error": "Die Pläne konnten nicht geladen werden",
+        "empty_title": "Noch kein Plan",
+        "empty_body": "Lege einen Plan an, bevor du Mitglieder freischaltest.",
+        "columns": {
+            "plan": "Plan",
+            "features": "Leistungen",
+            "status": "Status",
+            "holders": "Mitglieder",
+            "actions": "Aktionen"
+        },
+        "active": "Aktiv",
+        "inactive": "Inaktiv",
+        "features_count": "{0} keine|{1} 1 Leistung|[2,*] :count Leistungen",
+        "holders": "{0} niemand|{1} 1 Mitglied|[2,*] :count Mitglieder"
+    },
+    "plan_form": {
+        "create_title": "Plan anlegen",
+        "edit_title": "Plan :name bearbeiten",
+        "key": "Schlüssel",
+        "key_hint": "Kleinbuchstaben, Ziffern und Bindestrich; bleibt nach dem Anlegen fest.",
+        "name_de": "Name (Deutsch)",
+        "name_en": "Name (Englisch)",
+        "features_de": "Leistungen (Deutsch)",
+        "features_en": "Leistungen (Englisch)",
+        "features_hint": "Eine Leistung pro Zeile, höchstens 20, je bis 160 Zeichen.",
+        "active": "Aktiv: Kann freigeschaltet werden",
+        "submit": "Speichern",
+        "errors": {
+            "key": "Kleinbuchstaben, Ziffern und Bindestrich, bis 64 Zeichen.",
+            "name": "Gib einen deutschen Namen ein (bis 80 Zeichen).",
+            "features": "Höchstens 20 Leistungen mit je bis 160 Zeichen."
+        }
+    },
+    "entitlements": {
+        "title": "Mitgliedschaften: Freischaltungen",
+        "intro": "Wer welchen Plan hat, von wem freigeschaltet, mit Grund, Beginn und Ende. Ein Widerruf bleibt als Verlauf stehen.",
+        "caption": "Freischaltungen",
+        "grant": "Freischalten",
+        "revoke": "Widerrufen",
+        "error": "Die Freischaltungen konnten nicht geladen werden",
+        "empty_title": "Noch keine Freischaltung",
+        "empty_body": "Freigeschaltete Mitglieder erscheinen hier mit Plan, Zeitraum und Grund.",
+        "columns": {
+            "member": "Mitglied",
+            "plan": "Plan",
+            "period": "Zeitraum",
+            "status": "Status",
+            "granted": "Freigeschaltet von",
+            "reason": "Grund",
+            "actions": "Aktionen"
+        },
+        "status": {
+            "active": "Aktiv",
+            "scheduled": "Geplant",
+            "ended": "Abgelaufen",
+            "revoked": "Widerrufen"
+        },
+        "open_end": "ohne Ende",
+        "from": "ab :date",
+        "period": ":from bis :to",
+        "revoked_line": "Widerrufen :date von :name: :reason",
+        "no_plans": "Lege zuerst einen aktiven Plan an."
+    },
+    "grant_form": {
+        "title": "Mitglied freischalten",
+        "body": "Die Freischaltung steht mit Grund im Audit-Log.",
+        "member": "Benutzername",
+        "member_hint": "Mit oder ohne @, z. B. @lukas.sc",
+        "plan": "Plan",
+        "period": "Zeitraum",
+        "period_hint": "Leer: ab heute, ohne Ende.",
+        "submit": "Freischalten",
+        "errors": {
+            "member": "Gib einen Benutzernamen ein.",
+            "plan": "Wähle einen aktiven Plan."
+        },
+        "no_plan_title": "Noch kein aktiver Plan",
+        "no_plan_body": "Freischalten geht erst, wenn es einen aktiven Plan gibt. Lege ihn unter „Pläne“ an.",
+        "to_plans": "Zu den Plänen"
+    },
+    "revoke_dialog": {
+        "title": "Freischaltung von :member widerrufen",
+        "body": "Der Plan :plan endet sofort. Die Zeile bleibt als Verlauf."
+    },
+    "flash": {
+        "plan_created": "Plan angelegt.",
+        "plan_saved": "Plan gespeichert.",
+        "granted": "Freigeschaltet.",
+        "revoked": "Widerrufen."
+    }
+}

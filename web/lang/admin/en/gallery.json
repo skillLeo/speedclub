@@ -1,0 +1,127 @@
+{
+    "title": "Component gallery",
+    "intro": "Every admin component in every state, in Carbon and Light. Local and testing only. ?dialog=dialog|drawer|confirm|bulk|palette opens an overlay directly.",
+    "theme_carbon": "Carbon",
+    "theme_light": "Light",
+    "sections": {
+        "buttons": "Buttons",
+        "inputs": "Inputs",
+        "choices": "Choices",
+        "status": "Status & badges",
+        "navigation": "Tabs, menu, tooltip, pages",
+        "feedback": "States & feedback",
+        "overlays": "Dialogs & panels",
+        "kpis": "KPIs & charts",
+        "diff": "Diff & activity",
+        "table": "Table",
+        "record": "Record page"
+    },
+    "states": {
+        "default": "Default",
+        "disabled": "Disabled",
+        "loading": "Loading",
+        "error": "Error",
+        "empty": "Empty",
+        "ready": "With data"
+    },
+    "variants": {
+        "primary": "Save",
+        "secondary": "Edit",
+        "ghost": "Cancel",
+        "danger": "Delete account",
+        "icon": "More actions",
+        "destructive": "Restrict"
+    },
+    "fields": {
+        "username": "Username",
+        "username_hint": "3 to 30 characters, lowercase letters, digits and _ only",
+        "username_error": "This username is already taken.",
+        "note": "Internal note",
+        "status": "Status",
+        "make": "Make",
+        "make_placeholder": "Choose a make",
+        "notify": "Notify the member by email",
+        "restrict": "Restrict messaging",
+        "duration": "Duration",
+        "duration_7": "7 days",
+        "duration_30": "30 days",
+        "duration_hint": "Moderators may suspend for at most 30 days."
+    },
+    "statuses": {
+        "active": "Active",
+        "restricted": "Restricted",
+        "suspended": "Suspended",
+        "pending": "Waiting",
+        "verified": "Verified",
+        "new": "New"
+    },
+    "tabs": {
+        "overview": "Overview",
+        "vehicles": "Vehicles",
+        "security": "Security & sessions",
+        "reports": "Reports",
+        "panel": "Content of the “:tab” tab"
+    },
+    "menu": {
+        "open": "Open record",
+        "copy": "Copy link",
+        "delete": "Delete",
+        "tooltip": "Explains an icon in a word"
+    },
+    "feedback": {
+        "clear": "No open reports",
+        "clear_body": "All caught up.",
+        "quiet": "Nothing has arrived yet",
+        "quiet_body": "No report in the last 7 days.",
+        "first": "No vehicles yet",
+        "first_body": "As soon as a member publishes a vehicle, it shows up here.",
+        "forbidden": "Read-only for your role",
+        "forbidden_body": "Only staff with “edit members” may change this.",
+        "partial": "3 of 12 records were not changed",
+        "toast_success": "Show success",
+        "toast_error": "Show error",
+        "toast_text": "Changes saved",
+        "toast_error_text": "Saving failed"
+    },
+    "overlays": {
+        "dialog": "Open dialog",
+        "drawer": "Open drawer",
+        "confirm": "Confirm deletion",
+        "bulk": "Bulk action result",
+        "palette": "Open command palette",
+        "dialog_title": "Restrict member",
+        "dialog_body": "@nightrunner_s14 cannot start new conversations for the chosen period.",
+        "drawer_title": "Edit profile",
+        "confirm_title": "Delete member for good?",
+        "confirm_body": "The account, vehicles and photos of @nightrunner_s14 are deleted. This cannot be undone.",
+        "confirm_submit": "Request deletion",
+        "bulk_title": "Sessions revoked",
+        "bulk_reason": "Account already suspended"
+    },
+    "kpis": {
+        "members": "New members, 7 days",
+        "chart_line": "How many sign up per day?",
+        "chart_bar": "Which makes are in the garages?"
+    },
+    "timeline": {
+        "restricted": "Messaging restricted for 7 days",
+        "reset": "Password reset link sent",
+        "viewed": "Contact details viewed"
+    },
+    "table": {
+        "caption": "Sample members",
+        "empty": "No members yet",
+        "username": "Member",
+        "vehicles": "Vehicles",
+        "followers": "Followers",
+        "registered": "Registered",
+        "status": "Status",
+        "restrict": "Restrict"
+    },
+    "record": {
+        "title": "@nightrunner_s14",
+        "crumb": "Members",
+        "edit": "Edit",
+        "meta": "Registered 14/06/2026 · 3 vehicles · 2FA on"
+    }
+}

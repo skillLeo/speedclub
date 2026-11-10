@@ -1,0 +1,48 @@
+{
+    "title": "Hinweise",
+    "intro": "Was auf dich persönlich wartet: Freigaben, dir zugewiesene Fälle und Systemwarnungen.",
+    "none_title": "Für deine Rolle gibt es keine Hinweise",
+    "none_body": "Freigaben, Fälle und Systemwarnungen erscheinen hier, sobald deine Rolle sie bearbeiten darf.",
+    "downloads": {
+        "title": "Bereit zum Herunterladen",
+        "until": "bis :time",
+        "download": "Herunterladen"
+    },
+    "approvals": {
+        "title": "Freigaben für dich",
+        "queue": "Alle Freigaben",
+        "empty": "Keine Freigabe wartet auf dich",
+        "expires": "läuft ab :time",
+        "by": "Angefragt von :name"
+    },
+    "cases": {
+        "title": "Dir zugewiesene Fälle",
+        "empty": "Kein offener Fall ist dir zugewiesen",
+        "reports": ":count Meldungen",
+        "status_new": "Neu",
+        "status_in_review": "In Prüfung",
+        "target_member": "Mitglied",
+        "target_vehicle": "Fahrzeug",
+        "target_photo": "Foto",
+        "target_message": "Nachricht",
+        "target_build_update": "Build-Update",
+        "target_modification": "Modifikation"
+    },
+    "warnings": {
+        "title": "Systemwarnungen",
+        "empty": "Keine Warnungen",
+        "since": "Festgestellt :time",
+        "open": "Ansehen",
+        "pii_reveal_limit": "Ein Teammitglied hat heute das Tageslimit für angezeigte Adressen erreicht",
+        "audit_chain_broken": "Die Prüfung der Audit-Kette ist fehlgeschlagen",
+        "failed_jobs": "Es gibt fehlgeschlagene Hintergrund-Jobs",
+        "scheduler": "Der Zeitplaner meldet sich nicht",
+        "queue": "Hintergrund-Jobs warten ungewöhnlich lange"
+    },
+    "running": {
+        "title": "Wird gerade ausgeführt",
+        "busy": "Läuft",
+        "mine": "von dir angefragt, freigegeben :time",
+        "approved": "von dir freigegeben :time"
+    }
+}

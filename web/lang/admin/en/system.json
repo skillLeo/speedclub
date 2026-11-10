@@ -1,0 +1,220 @@
+{
+    "nav": {
+        "health": "System health",
+        "jobs": "Jobs",
+        "integrations": "Integrations"
+    },
+    "status": {
+        "ok": "OK",
+        "warning": "Warning",
+        "failed": "Failed",
+        "crashed": "Crashed",
+        "skipped": "Skipped",
+        "unknown": "Not checked yet",
+        "not_configured": "Not set up"
+    },
+    "health": {
+        "title": "System health",
+        "intro": "The checks run every five minutes. This is the result of the last run; “Check now” runs them at once.",
+        "run": "Check now",
+        "last": "Last checked :date",
+        "never_title": "No check has run yet",
+        "never_body": "Once the scheduler runs, it checks every five minutes. You can also check now.",
+        "caption": "Checks with status and result",
+        "error": "The system health could not be loaded",
+        "columns": {
+            "check": "Check",
+            "status": "Status",
+            "result": "Result",
+            "todo": "What to do"
+        },
+        "checks": {
+            "Database": "Database",
+            "Cache": "Cache",
+            "Queue": "Queue",
+            "QueueBacklog": "Waiting jobs",
+            "FailedJobs": "Failed jobs",
+            "Schedule": "Scheduler (cron)",
+            "DiskSpace": "Disk space",
+            "StorageLink": "Storage link",
+            "GdWebp": "GD with WebP",
+            "PhpEnvironment": "PHP and extensions",
+            "MailConfig": "Mail sending",
+            "Pusher": "Pusher",
+            "AiProvider": "AI provider",
+            "LastBackup": "Last backup",
+            "AuditChain": "Audit hash chain",
+            "DebugMode": "Debug mode",
+            "Environment": "Environment",
+            "OptimizedApp": "Optimised app"
+        },
+        "problems": "{1} 1 check needs attention|[2,*] :count checks need attention",
+        "all_ok": "All checks OK",
+        "reasons": {
+            "disk_used": "Storage :percent % used",
+            "disk_unknown": "The server does not report the used storage",
+            "failed_jobs": "{0} No failed job|{1} 1 failed job|[2,*] :count failed jobs",
+            "queue_waiting": "{0} No job waiting|{1} 1 job waiting|[2,*] :count jobs waiting",
+            "queue_waits_minutes": "{1} The oldest job has waited 1 minute|[2,*] The oldest job has waited :count minutes",
+            "queue_waits_hours": "{1} The oldest job has waited 1 hour|[2,*] The oldest job has waited :count hours",
+            "queue_waits_days": "{1} The oldest job has waited 1 day|[2,*] The oldest job has waited :count days",
+            "queue_failed": "The queue test job did not run in time",
+            "schedule_silent": "The scheduler does not report: check the cron job on the server",
+            "database_failed": "No connection to the database",
+            "cache_failed": "The cache cannot be written or read",
+            "storage_link_missing": "public/storage is missing: run “php artisan storage:link” on the server",
+            "gd_missing": "GD without WebP or FreeType: photos cannot be converted",
+            "gd_ok": "WebP and FreeType available",
+            "php_missing": "PHP extensions are missing: :list",
+            "php_old": "PHP :version is too old",
+            "php_version": "PHP :version, all extensions available",
+            "mail_log": "Driver “:driver”: mail only goes to the log",
+            "mail_no_delivery": "The driver “:driver” delivers no mail in production",
+            "mail_no_sender": "No sender address set up",
+            "mail_driver": "Sending through “:driver”",
+            "pusher_off": "Without Pusher the apps poll regularly",
+            "pusher_unreachable": "Pusher does not answer",
+            "pusher_reachable": "Pusher reachable",
+            "ai_none": "No AI provider set up",
+            "ai_no_key": "No key is set for :provider",
+            "ai_unreachable": ":provider does not answer",
+            "ai_ready": ":provider set up",
+            "backup_none": "No backup yet",
+            "backup_unreadable": "The backup disk cannot be read",
+            "backup_at": "Last backup :date",
+            "backup_old_hours": "{1} The newest backup is 1 hour old|[2,*] The newest backup is :count hours old",
+            "backup_old_days": "{1} The newest backup is 1 day old|[2,*] The newest backup is :count days old",
+            "audit_never": "The audit chain was never verified",
+            "audit_broken": "The audit chain is broken",
+            "audit_old": "Last verified :date, more than a day ago",
+            "audit_ok": "{0} Verified :date|{1} 1 entry verified :date|[2,*] :count entries verified :date",
+            "debug_on": "Debug mode is on in production",
+            "environment_wrong": "The environment is not “production”",
+            "not_optimized": "Config, routes or events are not cached",
+            "queue_ok": "The test job ran in time",
+            "schedule_ok": "Reports regularly",
+            "database_ok": "Connected",
+            "cache_ok": "Writing and reading work",
+            "storage_link_ok": "public/storage is linked"
+        },
+        "problems_title": "Needs attention",
+        "ok_title": "OK",
+        "ok_list": "Checks without findings",
+        "todo": "What to do",
+        "todo_targets": {
+            "jobs": "Open jobs",
+            "integrations": "Open integrations",
+            "audit": "Open audit log"
+        },
+        "counts": {
+            "failed": "{1} 1 error|[2,*] :count errors",
+            "warning": "{1} 1 warning|[2,*] :count warnings",
+            "ok": "{1} 1 OK|[2,*] :count OK",
+            "not_configured": "{1} 1 not set up|[2,*] :count not set up"
+        },
+        "nothing_open": "No check needs attention."
+    },
+    "jobs": {
+        "title": "Jobs",
+        "intro": "Background jobs by class, queue and time. The admin never shows what a job carries, only its class name.",
+        "tabs_label": "Jobs",
+        "tabs": {
+            "failed": "Failed",
+            "pending": "Waiting"
+        },
+        "heartbeat": "Scheduler last active :date",
+        "heartbeat_never": "Scheduler never seen: without cron, retried jobs do not run.",
+        "caption_failed": "Failed jobs",
+        "caption_pending": "Waiting jobs",
+        "error": "The jobs could not be loaded",
+        "columns": {
+            "job": "Job",
+            "queue": "Queue",
+            "exception": "Error",
+            "failed_at": "Failed",
+            "attempts": "Attempts",
+            "state": "State",
+            "available_at": "Due",
+            "created_at": "Queued"
+        },
+        "select_all": "Select every failed job",
+        "select": "Select job :job",
+        "selected": "{1} 1 job selected|[2,*] :count jobs selected",
+        "retry": "Retry",
+        "forget": "Forget",
+        "running": "running",
+        "waiting": "waiting",
+        "failed_empty": "No failed jobs",
+        "failed_empty_body": "When a job fails, it shows here with its error class.",
+        "pending_empty": "No waiting jobs",
+        "pending_empty_body": "The scheduler works through the queue every minute.",
+        "forget_title": "{1} Forget 1 job|[2,*] Forget :count jobs",
+        "forget_body": "The jobs are deleted and will not run.",
+        "retry_title": "{1} Retry 1 job|[2,*] Retry :count jobs",
+        "retry_body": "The jobs go back to their queue; the scheduler picks them up within a minute.",
+        "limit": "At most 100 at once.",
+        "view_only": "Team members with “Retry or forget jobs” retry and forget."
+    },
+    "integrations": {
+        "title": "Integrations",
+        "intro": "Whether the services are set up. The admin never shows keys, servers or addresses; they live only in the server configuration.",
+        "error": "The integrations could not be loaded",
+        "configured": "Set up",
+        "not_configured": "Not set up",
+        "driver": "Driver: :driver",
+        "provider": "Provider: :driver",
+        "keys": {
+            "mail": {
+                "name": "E‑mail",
+                "about": "Sends confirmations, invitations and replies.",
+                "test": "Test e‑mail to me"
+            },
+            "pusher": {
+                "name": "Pusher",
+                "about": "Real time for messages and notices.",
+                "test": "Send test event"
+            },
+            "push": {
+                "name": "Push notifications (Expo)",
+                "about": "Notifications to the app on members’ devices.",
+                "test": "Test push to my device"
+            },
+            "ai": {
+                "name": "AI provider",
+                "about": "For the AI features behind flags; without a key a stand-in answers.",
+                "test": "Test AI call"
+            },
+            "turnstile": {
+                "name": "Cloudflare Turnstile",
+                "about": "Protects the public forms from bots.",
+                "test": "Test"
+            },
+            "sentry": {
+                "name": "Sentry",
+                "about": "Error reports from app and server.",
+                "test": "Test"
+            }
+        },
+        "reasons": {
+            "not_configured": "Possible once it is set up.",
+            "no_device": "Team members register no device for push notifications; a test has no target.",
+            "no_test": "There is no test for this service in the admin."
+        },
+        "last_ok": "Last test :date: passed",
+        "last_ok_faked": "Last test :date: passed, with the stand-in (no key)",
+        "last_failed": "Last test :date: failed (:error)"
+    },
+    "flash": {
+        "health_ok": "All checks OK.",
+        "health_problems": "Checked. At least one check needs attention.",
+        "retried": "The jobs are back in the queue.",
+        "retried_partial": "Back in the queue; some jobs no longer existed.",
+        "forgotten": "The jobs are forgotten.",
+        "forgotten_partial": "Forgotten; some jobs no longer existed.",
+        "test_ok_mail": "Test e‑mail sent. Check your inbox.",
+        "test_ok_pusher": "Test event sent.",
+        "test_ok_ai": "The AI call answered.",
+        "test_ok_push": "Test push sent.",
+        "test_failed": "The test failed."
+    }
+}

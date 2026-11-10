@@ -1,0 +1,19 @@
+{
+    "title": "Search",
+    "intro": "Members by @username, vehicles by slug or ID, QR codes by code, cases by ID. Email addresses only exact and only with the PII permission.",
+    "label": "Search term",
+    "placeholder": "e.g. @nightrunner, 7H2K QXMB, s14-kouki",
+    "submit": "Search",
+    "empty_title": "What are you looking for?",
+    "empty_body": "Tip: ⌘K or Ctrl K opens search on every page.",
+    "no_results_title": "No results for “:q”",
+    "no_results_body": "Check the spelling. Groups you have no permission for are not searched.",
+    "count": ":count results for “:q”",
+    "groups": {
+        "members": "Members",
+        "vehicles": "Vehicles",
+        "qr": "QR codes",
+        "cases": "Cases"
+    },
+    "searching": "Searching for “:q” …"
+}

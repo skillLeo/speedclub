@@ -1,0 +1,15 @@
+{
+  "name": "speedclub-design",
+  "private": true,
+  "type": "module",
+  "description": "Design tooling for SPEED CLUB (tokens, brand asset derivation, icon generation). Dev PC only.",
+  "scripts": {
+    "tokens": "node scripts/build-tokens.mjs",
+    "tokens:check": "node scripts/build-tokens.mjs --check",
+    "brand": "node scripts/build-brand.mjs",
+    "icons": "node scripts/build-icons.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
+  }
+}

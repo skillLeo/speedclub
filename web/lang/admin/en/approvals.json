@@ -1,0 +1,229 @@
+{
+    "nav": {
+        "title": "Approvals"
+    },
+    "title": "Approvals",
+    "intro": "Four-eyes principle: what one team member asks for, a second one runs, within 24 hours.",
+    "error": "The approvals could not be loaded",
+    "tabs": {
+        "label": "Approvals",
+        "for_me": "For me",
+        "mine": "Mine",
+        "all": "All"
+    },
+    "filters": {
+        "status": "Status",
+        "any": "All"
+    },
+    "status": {
+        "pending": "Pending",
+        "executing": "Running",
+        "executed": "Executed",
+        "failed": "Failed",
+        "denied": "Denied",
+        "expired": "Expired",
+        "cancelled": "Withdrawn"
+    },
+    "empty": {
+        "for_me_title": "Nothing is waiting for you",
+        "for_me_body": "New requests of other team members show here.",
+        "mine_title": "No requests of yours",
+        "mine_body": "Four-eyes actions you start show here with their status.",
+        "all_title": "No requests",
+        "all_body": "Every request of the team shows here."
+    },
+    "requested": "Requested by :name on :time",
+    "decided": ":name, :time",
+    "expires_in": "expires in :hours h :minutes min",
+    "expired_now": "expired",
+    "comment": "Comment: :comment",
+    "result": ":done done, :failed not possible",
+    "failed_title": "Approved, but not executed",
+    "yours": "Your request",
+    "actions": {
+        "approve": "Approve",
+        "deny": "Deny",
+        "cancel": "Withdraw",
+        "download": "Download"
+    },
+    "approve": {
+        "title": "Approve request",
+        "body": "On approval the action runs at once, with you as the second person."
+    },
+    "deny": {
+        "title": "Deny request",
+        "body": "The action does not run. The requester sees your comment."
+    },
+    "cancel": {
+        "title": "Withdraw request",
+        "body": "The request ends, nothing runs."
+    },
+    "comment_label": "Comment",
+    "comment_optional": "Optional, 3–1,000 characters.",
+    "comment_required": "Required to deny, 3–1,000 characters.",
+    "errors": {
+        "comment_required": "Say briefly why you deny (at least 3 characters).",
+        "comment_length": "The comment needs 3 to 1,000 characters."
+    },
+    "flash": {
+        "approved": "Approved and executed.",
+        "denied": "Denied.",
+        "cancelled": "Withdrawn.",
+        "expired": "The request had already expired.",
+        "failed": "Approved, but the action was no longer possible. Nothing changed.",
+        "conflict": "This request is no longer pending."
+    },
+    "values": {
+        "on": "on",
+        "off": "off",
+        "active": "active",
+        "deactivated": "deactivated",
+        "set_12": "Data export as in the app (Settings → Export data)",
+        "restrict": "Restrict",
+        "revoke_sessions": "End sessions",
+        "export": "Export",
+        "delete": "Delete",
+        "community": "Community guidelines",
+        "terms": "Terms",
+        "law": "Law",
+        "csv": "CSV",
+        "jsonl": "JSONL",
+        "id": "ID",
+        "username": "Username",
+        "display_name": "Name",
+        "email": "E-mail",
+        "status": "Status",
+        "vehicles": "Vehicles",
+        "followers": "Followers",
+        "registered_at": "Signed up",
+        "last_active_at": "Last active",
+        "two_factor": "2FA",
+        "verified": "Verified"
+    },
+    "audit_export": {
+        "title": "Export the audit log",
+        "format": "Format",
+        "from": "From",
+        "to": "To",
+        "action": "Action starts with",
+        "actor": "Who",
+        "target": "Target"
+    },
+    "moderation_suspend": {
+        "title": "Suspend member",
+        "case": "Case",
+        "ground": "Ground",
+        "until": "Until"
+    },
+    "members_reset_2fa": {
+        "title": "Reset a member's 2FA",
+        "two_factor": "Two-factor sign-in"
+    },
+    "members_export": {
+        "title": "Export a member's data",
+        "contents": "Contents"
+    },
+    "members_delete": {
+        "title": "Delete a member's account",
+        "status": "Account"
+    },
+    "members_bulk": {
+        "title": "Bulk action on members",
+        "action": "Action",
+        "count": "Count",
+        "members": "Members",
+        "more": "More members"
+    },
+    "members_list_export": {
+        "title": "Export the member list with e-mail addresses",
+        "filter": "Filter",
+        "rows": "Rows",
+        "columns": "Columns"
+    },
+    "vehicles_bulk_hide": {
+        "title": "Hide vehicles in bulk",
+        "count": "Count",
+        "vehicles": "Vehicles",
+        "more": "More vehicles",
+        "ground": "Ground"
+    },
+    "toolbar": {
+        "for_me": "Requests by others that you may approve, newest first.",
+        "mine": "What you asked for, with its state and result.",
+        "all": "Every request of the team, newest first."
+    },
+    "catalog_bulk_merge": {
+        "title": "Merge catalogue entries",
+        "level": "Level",
+        "merge": "Merge",
+        "vehicles": "Vehicles affected"
+    },
+    "catalog_import_apply": {
+        "title": "Apply a catalogue import",
+        "kind": "Kind",
+        "new": "New",
+        "changed": "Changed",
+        "errors": "Errors"
+    },
+    "flags_critical_change": {
+        "title": "Change a critical switch",
+        "enabled": "Switched on",
+        "environments": "Environments",
+        "staff_only": "Team only",
+        "percentage": "Share in per cent",
+        "critical": "Critical",
+        "description": "Description"
+    },
+    "legal_publish_reconsent": {
+        "title": "Publish a legal text that needs new consent",
+        "version": "Version",
+        "summary": "Summary"
+    },
+    "maintenance_enable": {
+        "title": "Turn on maintenance mode",
+        "mode": "Mode",
+        "maintenance": "Maintenance",
+        "message_de": "Notice (German)",
+        "message_en": "Notice (English)"
+    },
+    "expired_on": "expired on :time",
+    "moderation_bulk_no_action": {
+        "title": "Close cases in bulk without action",
+        "count": "Count",
+        "cases": "Cases",
+        "more": "More cases"
+    },
+    "support_bulk_status": {
+        "title": "Change the status of several tickets",
+        "count": "Count",
+        "status": "New status",
+        "tickets": "Tickets",
+        "more": "More tickets"
+    },
+    "staff_role_elevation": {
+        "title": "Change roles",
+        "roles": "New roles"
+    },
+    "staff_deactivate_privileged": {
+        "title": "Deactivate an Owner or Admin",
+        "status": "New status"
+    },
+    "staff_delete_owner": {
+        "title": "Delete an Owner account",
+        "account": "Account"
+    },
+    "roles_sensitive_atoms": {
+        "title": "Grant sensitive permissions",
+        "role": "Role",
+        "staff": "Affects staff members"
+    },
+    "staff_reset_two_factor": {
+        "title": "Reset two-factor sign-in",
+        "account": "Account",
+        "two_factor": "Two-factor sign-in"
+    },
+    "staff_reactivate_owner": {
+        "title": "Reactivate an Owner account",
+        "status": "New status"
+    }
+}

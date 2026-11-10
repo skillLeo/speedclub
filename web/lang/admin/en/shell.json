@@ -1,0 +1,100 @@
+{
+    "brand": "SPEED CLUB",
+    "brand_suffix": "Admin",
+    "build": "Build :version",
+    "breadcrumb": "Breadcrumb",
+    "skip": "Skip to content",
+    "sidebar": "Main navigation",
+    "menu": "Open navigation",
+    "groups": {
+        "overview": "Overview",
+        "members": "Members",
+        "vehicles_media": "Vehicles & media",
+        "catalog": "Catalogue",
+        "qr": "QR",
+        "moderation": "Moderation",
+        "support": "Support",
+        "brand_content": "Brand & content",
+        "configuration": "Configuration",
+        "team": "Team & roles",
+        "audit_privacy": "Audit & privacy",
+        "system": "System",
+        "settings": "Settings"
+    },
+    "nav": {
+        "label": "Sections",
+        "dashboard": "Dashboard",
+        "search": "Search",
+        "alerts": "Alerts",
+        "audit": "Audit log",
+        "gallery": "Components",
+        "badge": " open"
+    },
+    "search": {
+        "open": "Open search",
+        "placeholder": "Search member, vehicle, QR code or case"
+    },
+    "env": {
+        "local": "LOCAL",
+        "staging": "STAGING",
+        "prod": "PROD",
+        "local_title": "Local development environment",
+        "staging_title": "Staging: changes do not reach real members",
+        "prod_title": "Production: changes take effect for all members at once"
+    },
+    "theme": {
+        "to_light": "Light theme",
+        "to_carbon": "Dark theme (Carbon)"
+    },
+    "locale": {
+        "label": "Language",
+        "de": "DE",
+        "en": "EN",
+        "separator": ", ",
+        "de_name": "German",
+        "en_name": "English"
+    },
+    "staff": {
+        "account": "My account",
+        "sign_out": "Sign out"
+    },
+    "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "moderator": "Moderator",
+        "support": "Support",
+        "content_editor": "Content editor",
+        "analyst": "Analyst"
+    },
+    "idle": {
+        "title": "Session expiring",
+        "body": "You have been inactive for a while. For your security you will be signed out in :time.",
+        "extend": "Stay signed in",
+        "failed": "The session could not be extended. Please sign in again."
+    },
+    "password": {
+        "title": "Confirm your password",
+        "body": "This action is protected. Confirm your password and it will run.",
+        "label": "Password",
+        "submit": "Confirm and continue",
+        "required": "Enter your password.",
+        "failed": "That password is not correct.",
+        "throttled": "Too many attempts. Wait a moment, then try again."
+    },
+    "palette": {
+        "title": "Command palette",
+        "description": "Open pages and find records",
+        "input": "Search pages or records",
+        "placeholder": "Where to? Page, @username, ID, QR code …",
+        "results": "Results",
+        "empty": "Nothing found.",
+        "failed": "Search did not respond. Try again.",
+        "all_results": "All results for “:q”",
+        "open": "open",
+        "copy": "Copy link",
+        "move": "select",
+        "esc": "Esc",
+        "copied": "Link copied",
+        "copy_failed": "The link could not be copied."
+    }
+}

@@ -46,6 +46,7 @@ import { DownloadSimpleIcon } from 'phosphor-react-native/src/icons/DownloadSimp
 import { EnvelopeSimpleIcon } from 'phosphor-react-native/src/icons/EnvelopeSimple';
 import { EyeIcon } from 'phosphor-react-native/src/icons/Eye';
 import { EyeSlashIcon } from 'phosphor-react-native/src/icons/EyeSlash';
+import { ExportIcon } from 'phosphor-react-native/src/icons/Export';
 import { FlagIcon } from 'phosphor-react-native/src/icons/Flag';
 import { FlagCheckeredIcon } from 'phosphor-react-native/src/icons/FlagCheckered';
 import { FunnelIcon } from 'phosphor-react-native/src/icons/Funnel';
@@ -69,6 +70,7 @@ import { MegaphoneSimpleIcon } from 'phosphor-react-native/src/icons/MegaphoneSi
 import { MinusIcon } from 'phosphor-react-native/src/icons/Minus';
 import { PencilSimpleIcon } from 'phosphor-react-native/src/icons/PencilSimple';
 import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
+import { PlusSquareIcon } from 'phosphor-react-native/src/icons/PlusSquare';
 import { ProhibitIcon } from 'phosphor-react-native/src/icons/Prohibit';
 import { PushPinIcon } from 'phosphor-react-native/src/icons/PushPin';
 import { QrCodeIcon } from 'phosphor-react-native/src/icons/QrCode';
@@ -92,6 +94,8 @@ import { UsersIcon } from 'phosphor-react-native/src/icons/Users';
 import { CalendarPlusIcon } from 'phosphor-react-native/src/icons/CalendarPlus';
 import { WifiSlashIcon } from 'phosphor-react-native/src/icons/WifiSlash';
 import { WrenchIcon } from 'phosphor-react-native/src/icons/Wrench';
+import { PhoneIcon } from 'phosphor-react-native/src/icons/Phone';
+import { GlobeSimpleIcon } from 'phosphor-react-native/src/icons/GlobeSimple';
 import { XIcon } from 'phosphor-react-native/src/icons/X';
 import { View } from 'react-native';
 
@@ -133,6 +137,8 @@ export const phosphorIcons = {
   'envelope-simple': EnvelopeSimpleIcon,
   eye: EyeIcon,
   'eye-slash': EyeSlashIcon,
+  /** The iOS share glyph (square with arrow up): the install hint names Safari's Teilen button with it (09 §7.15). */
+  export: ExportIcon,
   flag: FlagIcon,
   'flag-checkered': FlagCheckeredIcon,
   funnel: FunnelIcon,
@@ -156,6 +162,7 @@ export const phosphorIcons = {
   minus: MinusIcon,
   'pencil-simple': PencilSimpleIcon,
   plus: PlusIcon,
+  'plus-square': PlusSquareIcon,
   prohibit: ProhibitIcon,
   'push-pin': PushPinIcon,
   'qr-code': QrCodeIcon,
@@ -180,6 +187,9 @@ export const phosphorIcons = {
   users: UsersIcon,
   'calendar-plus': CalendarPlusIcon,
   wrench: WrenchIcon,
+  // M4.14 business profiles: contact rows "Anrufen" and "Website".
+  phone: PhoneIcon,
+  'globe-simple': GlobeSimpleIcon,
   x: XIcon,
 } satisfies Record<string, PhosphorIcon>;
 

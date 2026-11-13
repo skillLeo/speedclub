@@ -188,6 +188,10 @@ export function wheelMod(overrides: Partial<OwnerMod> = {}): OwnerMod {
     photos: [],
     failed_photos: [],
     search: { mod_category: 'wheels_tires', wheel_brand: 'bbs', wheel_diameter: 19, suspension_type: null, suspension_brand: null, exhaust_brand: null },
+    // M4.14 (schema): the catalogue product, the fitting business and its tag; none on this mod.
+    product: null,
+    installed_by: null,
+    business_tag: null,
     ...overrides,
   };
 }

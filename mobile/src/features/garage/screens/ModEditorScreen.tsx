@@ -22,6 +22,8 @@ import { Button, Dialog, Text, TextInput, toast } from '@/ui';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 import { ValueText } from '@/ui/ValueText';
 import { ModAssist } from '@/features/ai/ModAssist';
+import { InstalledByField, ProductField } from '@/features/parts/components/ModEditorParts';
+import { PARTS_FLAG } from '@/api/queries/parts';
 
 import { FittingSegmented, FormGroup, PickerField, useCharCount } from '../components/fields';
 import { OptionSheet } from '../components/OptionSheet';
@@ -125,6 +127,8 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
   const [photoToDelete, setPhotoToDelete] = useState<OwnerMod['photos'][number] | null>(null);
   const [legalSheet, setLegalSheet] = useState(false);
   const legalEnabled = useFlag(LEGAL_STATUS_FLAG);
+  const partsEnabled = useFlag(PARTS_FLAG);
+  const tParts = useTranslation('parts').t;
   const month = currentMonth(now());
   const schema = useMemo(() => modSchema(fields, format.locale, month), [fields, format.locale, month]);
   // Fresh data reaches the fields the member has not touched: PATCH sends `fields`, notes and cost whole (BH-10).
@@ -260,14 +264,22 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
     }
     if (stale) {
       // The stored title may be the lost attempt's: on top of it the form's says what stays, empty meaning automatic.
-      await update.mutateAsync({ modId, payload: modPayload(form, fields, format.locale, { titleTouched: true, staggered: form.fields.staggered === true, legalStatus: legalEnabled }) });
+      await update.mutateAsync({
+        modId,
+        payload: modPayload(form, fields, format.locale, { titleTouched: true, staggered: form.fields.staggered === true, legalStatus: legalEnabled, product: partsEnabled }),
+      });
     }
   };
 
   const submit = handleSubmit(
     async (form) => {
       setNotice(null);
-      const payload = modPayload(form, fields, format.locale, { titleTouched: Boolean(dirtyFields.title), staggered: form.fields.staggered === true, legalStatus: legalEnabled });
+      const payload = modPayload(form, fields, format.locale, {
+        titleTouched: Boolean(dirtyFields.title),
+        staggered: form.fields.staggered === true,
+        legalStatus: legalEnabled,
+        product: partsEnabled && Boolean(dirtyFields.product),
+      });
       let creating = !mod && createdId === null;
       try {
         if (mod) {
@@ -384,7 +396,19 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
           ) : null}
         </FormGroup>
       ))}
+      {partsEnabled ? (
+        // M4.14 (09 §7.6 GAR-10, §8.9): the catalogue product, searched as the member types; the fields above stay free text.
+        <FormGroup title={tParts('editor.productGroup')} testID={`${ROUTE}.group.product`}>
+          <Controller
+            control={control}
+            name="product"
+            render={({ field }) => <ProductField value={field.value} onChange={field.onChange} category={category.key} disabled={fieldsLocked} routeId={ROUTE} />}
+          />
+        </FormGroup>
+      ) : null}
       <FormGroup title={t('mods.groups.install')} testID={`${ROUTE}.group.install`}>
+        {/* M4.14 "Eingebaut von" (ADR-414): a request to the business, sent at once; the business confirms it in BIZ-04. */}
+        <InstalledByField mod={mod} disabled={locked || !online} routeId={ROUTE} />
         {status === 'planned' ? null : (
           <Controller
             control={control}

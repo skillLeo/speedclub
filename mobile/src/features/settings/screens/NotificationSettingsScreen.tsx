@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { useFlag } from '@/api/queries/appConfig';
 import { useMemberSettings, useUpdateMemberSettings, type NotificationPrefs, type SettingsPatch } from '@/api/queries/settings';
 import { FormNotice } from '@/features/auth/components/FormNotice';
+import { useWebPush, type WebPushState } from '@/features/pwa/useWebPush';
 import { HU_AU_FLAG } from '@/features/garage/screens/EditSpecsScreen';
 import { SAVED_BUILDS_FLAG } from '@/features/vehicle/save';
 import { isWeb } from '@/lib/platform';
@@ -149,6 +150,49 @@ function TimeRow({ label, value, onChange, disabled, testID }: { label: string; 
   );
 }
 
+/** The helper line of the browser row for each state (09 §8.13): what is on, or what the member can do. */
+const WEB_PUSH_HELPER: Readonly<Record<Exclude<WebPushState['kind'], 'hidden'>, string>> = {
+  checking: 'notifications.webPush.helperOff',
+  off: 'notifications.webPush.helperOff',
+  on: 'notifications.webPush.helperOn',
+  denied: 'notifications.webPush.helperDenied',
+  needsInstall: 'notifications.webPush.helperInstall',
+  unsupported: 'notifications.webPush.helperUnsupported',
+  unavailable: 'notifications.webPush.helperUnavailable',
+};
+
+/**
+ * "In diesem Browser" (ADR-452): one switch for this browser's notifications. The browser asks for permission only after the tap;
+ * blocked, unsupported or (iPhone) not installed, the switch stays off and the line under it says what to do.
+ */
+function BrowserPushGroup({ push, online }: { push: ReturnType<typeof useWebPush>; online: boolean }) {
+  const { t } = useTranslation('settings');
+  const failure = useFailureMessage();
+  const kind = push.state.kind as Exclude<WebPushState['kind'], 'hidden'>;
+  const actionable = kind === 'on' || kind === 'off';
+  const change = (next: boolean) => {
+    const run = next ? push.enable() : push.disable();
+    run
+      .then((outcome) => {
+        if (outcome === 'unavailable') toast(t('notifications.webPush.helperUnavailable'), { testID: `${ROUTE}.webPush.toast` });
+        if (outcome === 'noWorker') toast(t('notifications.webPush.noWorker'), { testID: `${ROUTE}.webPush.toast` });
+      })
+      .catch((error: unknown) => toast(failure(error), { haptic: 'warning', testID: `${ROUTE}.webPush.toast` }));
+  };
+  return (
+    <RowGroup title={t('notifications.webPush.group')} testID={`${ROUTE}.webPush`}>
+      <SwitchRow
+        title={t('notifications.webPush.title')}
+        helper={t(WEB_PUSH_HELPER[kind])}
+        value={kind === 'on'}
+        onValueChange={change}
+        disabled={!actionable || push.busy || !online}
+        testID={`${ROUTE}.webPush.${kind}`}
+      />
+    </RowGroup>
+  );
+}
+
 function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
   const { t } = useTranslation('settings');
   const styles = useStyles();
@@ -172,7 +216,11 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
 
   const send = (patch: SettingsPatch) =>
     update.mutate(patch, { onError: (error) => toast(failure(error), { haptic: 'warning', testID: `${ROUTE}.failed` }) });
-  const setPush = (type: PushType, push: boolean) => send({ notification_prefs: { types: { [type]: { push } } } });
+  // M4.15 (09 §7.9 Web-Push column): with this browser's notifications on, the type switches on the web are its `web_push` channel;
+  // otherwise they stay the phone's `push`, as the notice above them says.
+  const webPush = useWebPush();
+  const channel = isWeb && webPush.state.kind === 'on' ? 'web_push' : 'push';
+  const setPush = (type: PushType, next: boolean) => send({ notification_prefs: { types: { [type]: { [channel]: next } } } });
   const setEmail = (type: EmailType, email: boolean) => send({ notification_prefs: { types: { [type]: { email } } } });
   const moveTime = (key: 'from' | 'to', minutes: number) => {
     const next = { ...times, [key]: minutes };
@@ -189,7 +237,20 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
 
   return (
     <View style={styles.groups}>
-      {isWeb ? <FormNotice tone="info" message={t('notifications.webNote')} testID={`${ROUTE}.webNote`} /> : null}
+      {isWeb && webPush.state.kind !== 'hidden' ? <BrowserPushGroup push={webPush} online={online} /> : null}
+      {isWeb ? (
+        <FormNotice
+          tone="info"
+          message={t(
+            channel === 'web_push'
+              ? 'notifications.webPush.typesNote'
+              : webPush.state.kind === 'hidden'
+                ? 'notifications.webNote'
+                : 'notifications.webPush.phoneNote',
+          )}
+          testID={`${ROUTE}.webNote`}
+        />
+      ) : null}
       {categories.map((category) => {
         const rows = category.rows.flatMap((row) => {
           const entries = [{ row, channel: 'push' as const }];
@@ -220,7 +281,7 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
                   key={type}
                   title={t(`notifications.types.${type}`)}
                   helper={t(`notifications.types.${type}Helper`)}
-                  value={prefs.types[type].push}
+                  value={prefs.types[type][channel]}
                   onValueChange={(next) => setPush(type, next)}
                   disabled={disabled}
                   divider={divider}
@@ -277,7 +338,7 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
  * SET-09 /settings/notifications (09 §7.9): per category (Builds & Community · Nachrichten · Treffen · Fälligkeiten) the push switch
  * of each type and, for the reminders, the e-mail switch; message previews (off by default, 08 §1), quiet hours with their times,
  * and the e-mail digest. Types whose feature is off are not offered. Security and moderation mails cannot be switched off, and the
- * page says so. Web-Push and a digest frequency wait for the API (M4.15).
+ * page says so. On the web, "In diesem Browser" turns on Web Push (M4.15, ADR-452); the digest frequency waits for the API.
  */
 export function NotificationSettingsScreen() {
   const { t } = useTranslation('settings');

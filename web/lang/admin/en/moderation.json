@@ -101,7 +101,8 @@
         "build_update": "Update",
         "modification": "Modification",
         "comment": "Comment",
-        "event": "Meet"
+        "event": "Meet",
+        "business": "Business"
     },
     "target_of": {
         "member": "Profile :label",
@@ -111,7 +112,8 @@
         "build_update": "Update of :label",
         "modification": "Mod on :label",
         "comment": "Comment by :label",
-        "event": "Meet “:label”"
+        "event": "Meet “:label”",
+        "business": "Business “:label”"
     },
     "unnamed": "Unnamed",
     "reasons": {
@@ -203,6 +205,7 @@
             "comment_deleted": "Deleted by its author",
             "open_vehicle": "Open vehicle",
             "open_event": "Open meet",
+            "open_business": "Open business",
             "event_removed": "Removed by a moderation decision"
         },
         "reports": {

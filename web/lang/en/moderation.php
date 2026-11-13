@@ -12,6 +12,7 @@ return [
         'modification' => 'a modification on your build :label',
         'comment' => 'a comment you wrote',
         'event' => 'your meet “:label”',
+        'business' => 'your business profile “:label”',
     ],
     'target_unnamed' => [
         'member' => 'your profile',
@@ -22,6 +23,7 @@ return [
         'modification' => 'one of your modifications',
         'comment' => 'a comment you wrote',
         'event' => 'one of your meets',
+        'business' => 'your business profile',
     ],
 
     'outcome' => [

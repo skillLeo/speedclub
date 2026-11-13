@@ -55,7 +55,12 @@ function open(flag: Flag): void {
     drawerOpen.value = true;
 }
 const qaFlag = props.flags.find((flag) => flag.ai) ?? props.flags[0];
-if (qaDialog() === 'edit' && qaFlag) open(qaFlag);
+// ⌘K "Flag umschalten…" (09 §10.2) lands here with ?flag=<key>: that flag's drawer opens; changing it still needs the reason (⚿, four-eyes
+// for a critical flag in production).
+const askedFlag = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('flag');
+const paletteFlag = askedFlag === null ? undefined : props.flags.find((flag) => flag.key === askedFlag && !flag.pending);
+if (paletteFlag) open(paletteFlag);
+else if (qaDialog() === 'edit' && qaFlag) open(qaFlag);
 
 const changes = computed<Record<string, unknown>>(() => {
     const flag = editing.value;

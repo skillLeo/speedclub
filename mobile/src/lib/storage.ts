@@ -10,7 +10,8 @@ import type { PowerDisplay } from './units';
 
 export type StorageSchema = {
   'sc.theme': ThemePreference;
-  'sc.locale': 'de' | 'en';
+  /** SET-11: a language, or 'system' to follow the device (ADR-451). */
+  'sc.locale': 'de' | 'en' | 'system';
   'sc.powerDisplay': PowerDisplay;
   /** Who was signed in: what an offline start shows. Holds no address and no token (src/api/queries/auth.ts). */
   'sc.sessionMember': string;

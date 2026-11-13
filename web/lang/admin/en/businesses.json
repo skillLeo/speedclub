@@ -1,0 +1,199 @@
+{
+    "title": "Businesses",
+    "queue_title": "Business applications",
+    "nav": {
+        "title": "Businesses"
+    },
+    "tabs": {
+        "label": "Businesses by status",
+        "applied": "Applications",
+        "verified": "Verified",
+        "rejected": "Rejected",
+        "suspended": "Suspended",
+        "all": "All"
+    },
+    "flash": {
+        "verified": "Business verified.",
+        "rejected": "Application rejected.",
+        "reinstated": "Business reinstated.",
+        "reopened": "Decision reopened, the application is back in the queue.",
+        "not_possible": "That is no longer possible in this state."
+    },
+    "conflict": {
+        "changed": "The business changed in the meantime. Check the current version, then decide.",
+        "title": "Changed meanwhile"
+    },
+    "intro": "Businesses that applied for a profile. Check name, address, legal notice and register before you verify. The oldest application is at the top.",
+    "caption": "Businesses with waiting time, legal form, applicant and reports",
+    "columns": {
+        "waiting": "Waiting",
+        "business": "Business",
+        "legal": "Company",
+        "owner": "Applicant",
+        "reports": "Reports",
+        "status": "Status"
+    },
+    "filters": {
+        "label": "Filter businesses",
+        "q": "Search",
+        "q_placeholder": "Name, company, city or @applicant",
+        "kind": "Type",
+        "any": "All",
+        "apply": "Apply"
+    },
+    "kinds": {
+        "workshop": "Workshop",
+        "tuner": "Tuner",
+        "detailing": "Detailing",
+        "wrapping": "Wrapping",
+        "paint": "Paint shop",
+        "dealer": "Dealer",
+        "parts_shop": "Parts shop",
+        "other": "Other"
+    },
+    "legal_forms": {
+        "sole_trader": "Sole trader",
+        "ek": "e. K. (registered merchant)",
+        "gbr": "GbR",
+        "ohg": "OHG",
+        "kg": "KG",
+        "gmbh": "GmbH",
+        "gmbh_co_kg": "GmbH & Co. KG",
+        "ug": "UG (limited liability)",
+        "ag": "AG",
+        "other": "Other legal form"
+    },
+    "status": {
+        "applied": "Application",
+        "verified": "Verified",
+        "rejected": "Rejected",
+        "suspended": "Suspended",
+        "removed": "Removed"
+    },
+    "roles": {
+        "owner": "Owner",
+        "staff": "Team"
+    },
+    "weekdays": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+    },
+    "waiting": {
+        "minutes": ":count min",
+        "hours": ":count h",
+        "days": ":count d",
+        "label": "Waiting since :date"
+    },
+    "empty": {
+        "applied_title": "No open applications",
+        "applied_body": "New applications appear here as soon as a business sends its profile for review.",
+        "verified_title": "No verified businesses yet",
+        "verified_body": "Verified businesses are listed here with their legal notice.",
+        "rejected_title": "No rejected applications",
+        "rejected_body": "Rejected applications stay here with their reason.",
+        "suspended_title": "No suspended businesses",
+        "suspended_body": "Suspended businesses stay here until they are reinstated.",
+        "all_title": "No businesses yet",
+        "all_body": "As soon as members apply for a business profile, they are listed here."
+    },
+    "pane": {
+        "label": "Selected business",
+        "select_body": "Pick an application: it opens on the right with legal notice, register and address. j and k move, a verifies, r rejects.",
+        "gone": "This business no longer exists.",
+        "open": "Open business"
+    },
+    "detail": {
+        "applicant": "Applicant",
+        "member_since": "Member since :date",
+        "cover": "Cover of “:name”",
+        "logo": "Logo of “:name”",
+        "no_cover": "No cover uploaded",
+        "impressum": "Legal notice (§ 5 DDG)",
+        "missing": "Missing: :count",
+        "complete": "Complete",
+        "missing_field": "Missing",
+        "not_given": "Not given",
+        "new_tab": "(opens in a new tab)",
+        "document_note": "Note on documents",
+        "no_document_note": "The applicant left no note on documents.",
+        "about": "About the business",
+        "no_about": "No description",
+        "services": "Services",
+        "no_services": "No services given",
+        "hours": "Opening hours",
+        "no_hours": "No opening hours given",
+        "closed": "closed",
+        "team": "Team",
+        "portfolio": "Portfolio",
+        "tags": ":accepted confirmed · :pending open",
+        "sample": "Sample",
+        "reports": "Open reports",
+        "submitted": "Applied :date",
+        "review": "Decision",
+        "reviewed": ":name, :date",
+        "suspended": "Suspended since :date"
+    },
+    "impressum": {
+        "address": "Address",
+        "legal_name": "Company",
+        "legal_form": "Legal form",
+        "representative": "Authorised representative",
+        "email": "Email",
+        "phone": "Phone",
+        "website": "Website",
+        "register_court": "Register court",
+        "register_number": "Register number",
+        "vat_id": "VAT ID"
+    },
+    "actions": {
+        "verify": "Verify",
+        "reject": "Reject",
+        "suspend": "Suspend",
+        "request_suspend": "Request suspension",
+        "reinstate": "Reinstate",
+        "reopen": "Reopen decision",
+        "undo": "Undo",
+        "reload": "Reload"
+    },
+    "reject_dialog": {
+        "title": "Reject the application of “:name”?",
+        "body": "The applicant reads the reason and can send a changed application again.",
+        "reason": "Reason for the applicant"
+    },
+    "suspend_dialog": {
+        "title": "Suspend “:name”?",
+        "body": "The profile is then no longer public. The owner reads the reason.",
+        "reason": "Reason for the owner"
+    },
+    "reinstate_dialog": {
+        "title": "Reinstate “:name”?",
+        "body": "The profile is public again at once. The owner is notified.",
+        "reason": "Reason (kept in the audit log)"
+    },
+    "reopen_dialog": {
+        "title": "Reopen the decision on “:name”?",
+        "body": "The application is back in the queue and not public until it is decided again."
+    },
+    "undo": {
+        "verified": "“:name” verified.",
+        "rejected": "Application of “:name” rejected."
+    },
+    "view_only": "View only: deciding needs a role with “Decide moderation”.",
+    "keys": "Keyboard: j and k move, a verifies, r rejects, u undoes.",
+    "record": {
+        "crumb": "Businesses",
+        "tabs": {
+            "label": "Sections of the business",
+            "overview": "Overview",
+            "reports": "Reports"
+        },
+        "no_cases": "There are no reports about this business.",
+        "case": "Case of :date",
+        "error": "The business could not be loaded."
+    }
+}

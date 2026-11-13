@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
+import { chooseLocale, readLocalePreference, type LocalePreference } from '@/api/queries/auth';
 import { useUpdateMemberSettings, type SettingsPatch } from '@/api/queries/settings';
 import {
   DISTANCE_UNITS,
@@ -10,7 +12,6 @@ import {
   WEIGHT_UNITS,
   type DisplayUnits,
 } from '@/lib/displayUnits';
-import { setStored } from '@/lib/storage';
 import { useQaState } from '@/lib/qa';
 import type { PowerDisplay } from '@/lib/units';
 import { useFormat } from '@/lib/useFormat';
@@ -37,7 +38,6 @@ export const EXAMPLE_KM = 12400;
 /** Which field of `PATCH me/settings` each unit is. */
 const UNIT_FIELD = { distance: 'distance_unit', torque: 'torque_unit', weight: 'weight_unit' } as const;
 
-type Language = 'de' | 'en';
 
 const useStyles = createStyles((t) => ({
   groups: { gap: t.space[32] },
@@ -47,7 +47,7 @@ const useStyles = createStyles((t) => ({
 }));
 
 /**
- * SET-11 /settings/language (09 §7.9, §8.11): Deutsch or English, Leistung (PS/kW/hp), Drehmoment (Nm/lb-ft), Entfernung (km/mi),
+ * SET-11 /settings/language (09 §7.9, §8.11): System, Deutsch or English, Leistung (PS/kW/hp), Drehmoment (Nm/lb-ft), Entfernung (km/mi),
  * Gewicht (kg/lb), with a live preview. Everything applies at once. The language syncs to the account through the settings sync
  * (§11); the units are saved to the account directly and kept on the device. Stored values never change their unit.
  */
@@ -63,12 +63,23 @@ export function LanguageScreen() {
   const update = useUpdateMemberSettings();
   const display = usePowerDisplay();
   const units = useDisplayUnits();
-  const language: Language = i18n.language === 'en' ? 'en' : 'de';
+  const shown: LocalePreference = i18n.language === 'en' ? 'en' : 'de';
+  // ADR-451: "System" follows the device's language (re-read when the app comes back to the front).
+  const [language, setLanguage] = useState<LocalePreference>(shown);
+  useEffect(() => {
+    let live = true;
+    void readLocalePreference().then((preference) => {
+      if (live) setLanguage(preference);
+    });
+    return () => {
+      live = false;
+    };
+  }, [shown]);
 
-  const chooseLanguage = (next: Language) => {
+  const chooseLanguage = (next: LocalePreference) => {
     if (next === language) return;
-    void setStored('sc.locale', next);
-    void i18n.changeLanguage(next);
+    setLanguage(next);
+    void chooseLocale(next);
   };
   /** Applies at once on every screen; a member's account follows, and a refusal puts the previous display back. */
   const choosePower = (next: PowerDisplay) => {
@@ -131,12 +142,13 @@ export function LanguageScreen() {
       ) : (
         <View style={styles.groups}>
           <RowGroup title={t('language.languageGroup')} testID={`${ROUTE}.languageGroup`}>
-            <RadioRows<Language>
+            <RadioRows<LocalePreference>
               label={t('language.languageGroup')}
               value={language}
               onChange={chooseLanguage}
               options={[
-                // Each language in its own name, so it can be found whatever is set now.
+                // "System" names the language it shows now; each language in its own name, so it can be found whatever is set now.
+                { value: 'system', label: t('language.names.system'), helper: t('language.systemHelper', { language: t(`language.names.${shown}`) }) },
                 { value: 'de', label: t('language.names.de') },
                 { value: 'en', label: t('language.names.en') },
               ]}

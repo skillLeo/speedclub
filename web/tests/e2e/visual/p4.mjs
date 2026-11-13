@@ -114,7 +114,7 @@ export function planP4Route(route) {
 
   for (const deviceId of deviceIds) for (const theme of themes) add(deviceId, theme, 'de');
   if (kind !== 'admin' && isEn12(route)) for (const deviceId of P4_EN_DEVICES) add(deviceId, 'carbon', 'en');
-  if (large) for (const deviceId of P4_FONT_SCALE_DEVICES) add(deviceId, 'carbon', 'de', 2);
+  if (large || (kind !== 'admin' && route.fs2 === true)) for (const deviceId of P4_FONT_SCALE_DEVICES) add(deviceId, 'carbon', 'de', 2);
   if (kind !== 'admin' && isSpecimen(route)) {
     add(P4_SPECIMEN_DEVICE, 'carbon', 'de', 2);
     add(P4_SPECIMEN_DEVICE, P4_FLAGSHIP_THEME, 'de');

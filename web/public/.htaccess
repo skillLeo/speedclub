@@ -34,12 +34,21 @@
 </IfModule>
 
 # Fingerprinted build output never changes under the same URL.
+# M4.15 (09 §8.13): the member web's service worker and manifest keep their URL across exports, so the browser asks again every time
+# (no-cache = revalidate; the worker's update check depends on it). The install icons and splash images under /app/pwa/ keep their
+# names too, so they are cached for a week, not immutable. The worker lives in /app/ and its scope is /app/: no
+# Service-Worker-Allowed header is needed.
 <IfModule mod_setenvif.c>
     SetEnvIf Request_URI "^/(app/_expo/static|app/assets|build/assets|storage/media|storage/og)/" SC_IMMUTABLE_ASSET=1
+    SetEnvIf Request_URI "^/app/(sw\.js|manifest\.webmanifest)$" SC_PWA_REVALIDATE=1
+    SetEnvIf Request_URI "^/app/pwa/" SC_PWA_ASSET=1
 </IfModule>
 <IfModule mod_headers.c>
     Header set Cache-Control "public, max-age=31536000, immutable" env=SC_IMMUTABLE_ASSET
     Header set X-Content-Type-Options "nosniff" env=SC_IMMUTABLE_ASSET
+    Header set Cache-Control "no-cache" env=SC_PWA_REVALIDATE
+    Header set X-Content-Type-Options "nosniff" env=SC_PWA_REVALIDATE
+    Header set Cache-Control "public, max-age=604800" env=SC_PWA_ASSET
 </IfModule>
 
 # The web manifest of the public pages (site.webmanifest): browsers want this type, and not every host's mime.types has it.

@@ -11,13 +11,16 @@ use App\Mail\HuAuReminderMail;
 use App\Mail\MaintenanceDueMail;
 use App\Mail\SecurityNoticeMail;
 use App\Models\BuildUpdate;
+use App\Models\Business;
 use App\Models\CatalogRequest;
 use App\Models\Comment;
 use App\Models\Decision;
 use App\Models\Event;
 use App\Models\EventUpdate;
 use App\Models\MaintenanceItem;
+use App\Models\ModBusinessTag;
 use App\Models\Notification;
+use App\Models\PushSubscription;
 use App\Models\PushToken;
 use App\Models\SupportTicket;
 use App\Models\User;
@@ -52,6 +55,7 @@ class Notifier
     public function __construct(
         private readonly AuthMailer $mailer,
         private readonly ExpoPush $push,
+        private readonly WebPush $webPush,
     ) {}
 
     /**
@@ -203,7 +207,7 @@ class Notifier
             'created_at' => now(),
         ])->save();
 
-        if ($notice === SecurityNotice::NewDevice && $this->push->enabled() && $this->reaches($user)) {
+        if ($notice === SecurityNotice::NewDevice && ($this->push->enabled() || $this->webPush->enabled()) && $this->reaches($user)) {
             $claimed = Notification::query()->whereKey($row->id)->whereNull('pushed_at')->toBase()->update(['pushed_at' => now()]);
 
             if ($claimed === 1) {
@@ -487,6 +491,41 @@ class Notifier
     /**
      * Nothing about an event reaches a member who blocked its organiser or whom the organiser blocked (02 §3.5).
      */
+    /**
+     * M4.14 (09 §8.10): staff decided about the recipient's business ($outcome verified|rejected|suspended|reinstated). The reason of a
+     * rejection or suspension goes along (the applicant must learn why, DSA Art. 17 in spirit). One row per decision.
+     */
+    public function businessReviewed(User $owner, Business $business, string $outcome, ?string $reason): ?Notification
+    {
+        return $this->grouped(NotificationType::BusinessReview, $owner, null, 'business_review:'.$business->id.':'.$outcome.':'.now()->getTimestamp(), null, fn (array $data): array => [
+            'business_id' => $business->id,
+            'outcome' => $outcome,
+            'reason' => in_array($outcome, ['rejected', 'suspended'], true) && $reason !== null ? mb_substr($reason, 0, 1000) : null,
+        ], reaches: true);
+    }
+
+    /**
+     * M4.14 (09 §8.10): a portfolio tag of $tag's mod changed state ($state requested|accepted|declined); the recipient is the side
+     * that has to act (requested) or the side that asked (accepted, declined). One row per tag and state.
+     */
+    public function businessTag(User $recipient, ModBusinessTag $tag, string $state, bool $toBusiness): ?Notification
+    {
+        $mod = $tag->modification()->withTrashed()->first();
+        $vehicle = $mod?->vehicle;
+
+        if ($vehicle instanceof Vehicle && $vehicle->owner instanceof User && $recipient->hasBlockWith($vehicle->owner)) {
+            return null;
+        }
+
+        return $this->grouped(NotificationType::BusinessTag, $recipient, null, 'business_tag:'.$tag->id.':'.$state, $vehicle instanceof Vehicle ? $vehicle : null, fn (array $data): array => [
+            'tag_id' => $tag->id,
+            'business_id' => $tag->business_id,
+            'mod_id' => $tag->mod_id,
+            'state' => $state,
+            'side' => $toBusiness ? 'business' : 'member',
+        ]);
+    }
+
     private function blockedFromEvent(User $member, Event $event): bool
     {
         $organiser = $event->organiser;
@@ -597,9 +636,11 @@ class Notifier
     private function maybePush(Notification $row, User $recipient): void
     {
         $preference = $row->type->pushPreference();
-        $wanted = $preference === null ? $row->type->alwaysPushes() : NotificationPrefs::wantsPush($recipient, $preference);
+        // M4.15 (ADR-452): the app's push and the member web's browser notifications, each with its own switch of the type.
+        $native = $this->push->enabled() && ($preference === null ? $row->type->alwaysPushes() : NotificationPrefs::wantsPush($recipient, $preference));
+        $web = $this->webPush->enabled() && ($preference === null ? $row->type->alwaysPushes() : NotificationPrefs::wantsWebPush($recipient, $preference));
 
-        if (! $wanted || ! $this->push->enabled()) {
+        if (! $native && ! $web) {
             return;
         }
 
@@ -615,7 +656,8 @@ class Notifier
             return;
         }
 
-        if (! PushToken::query()->where('user_id', $recipient->id)->exists()) {
+        if (! ($native && PushToken::query()->where('user_id', $recipient->id)->exists())
+            && ! ($web && PushSubscription::query()->where('user_id', $recipient->id)->exists())) {
             return;
         }
 

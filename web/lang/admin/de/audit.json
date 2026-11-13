@@ -63,6 +63,12 @@
         "broken_title": "Die Audit-Kette ist nicht intakt",
         "broken_body": "Die letzte Prüfung hat bei Ereignis Nr. :id eine Abweichung gefunden (:checked Ereignisse davor intakt). Informiere sofort einen Owner und ändere nichts an der Datenbank."
     },
+    "page_check": {
+        "action": "Diese Seite prüfen",
+        "intact": ":count Einträge passen zur Kette",
+        "broken": "Abweichung bei Nr. :ids",
+        "failed": "Die Prüfung hat nicht geantwortet."
+    },
     "event": {
         "title": "Ereignis",
         "failed": "Das Ereignis konnte nicht geladen werden",
@@ -322,6 +328,20 @@
             "cancelled_by_staff": "Treffen vom Team abgesagt",
             "reopened": "Treffen zurück in die Prüfung",
             "private_place_viewed": "Genauen Ort eines Treffens angesehen"
+        },
+        "business": {
+            "verified": "Betrieb verifiziert",
+            "rejected": "Betrieb abgelehnt",
+            "suspended": "Betrieb gesperrt",
+            "reinstated": "Betrieb wieder freigeschaltet",
+            "reopened": "Betriebsentscheidung zurückgenommen"
+        },
+        "product": {
+            "created": "Teil angelegt",
+            "updated": "Teil geändert",
+            "archived": "Teil archiviert",
+            "restored": "Teil wiederhergestellt",
+            "merged": "Teile zusammengeführt"
         }
     }
 }

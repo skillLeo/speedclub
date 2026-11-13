@@ -47,6 +47,12 @@ enum NotificationType: string
     // M4.13 (09 §8.8, §8.17): a maintenance item of the recipient's vehicle is due (a lead time reached, or the mileage within 1,000 km);
     // one row per reminder stage, its group_key the stage's deterministic reminder key (maintenance:reminders). SET-09 "Fälligkeiten".
     case MaintenanceDue = 'maintenance_due';
+    // M4.14 (09 §8.10): staff verified, rejected, suspended or reinstated the recipient's business (ADM-55/56); one row per decision.
+    // In-app only, like catalog_request: SET-09 has no switch for it.
+    case BusinessReview = 'business_review';
+    // M4.14 (09 §8.10): a portfolio tag ("Eingebaut von") waits for the recipient's confirmation (to the business owner, or to the build's
+    // owner when the business asked), or the other side decided; one row per tag and state. In-app only.
+    case BusinessTag = 'business_tag';
 
     /**
      * M4.8 HOME-02 chips (`?category=`): Builds (own and followed builds, due dates), Sozial (people), Treffen, System (account, safety,
@@ -55,10 +61,10 @@ enum NotificationType: string
     public function category(): string
     {
         return match ($this) {
-            self::FollowedPublished, self::BuildSaved, self::QrMilestone, self::HuAuReminder, self::CatalogRequest, self::MaintenanceDue => 'builds',
+            self::FollowedPublished, self::BuildSaved, self::QrMilestone, self::HuAuReminder, self::CatalogRequest, self::MaintenanceDue, self::BusinessTag => 'builds',
             self::NewFollower, self::Reaction, self::Mention, self::Comment, self::VehicleFollower => 'social',
             self::EventReview, self::EventPromoted, self::EventReminder, self::EventUpdate, self::EventCancelled => 'events',
-            self::Security, self::ModerationDecision, self::ReportDecided, self::SupportReply => 'system',
+            self::Security, self::ModerationDecision, self::ReportDecided, self::SupportReply, self::BusinessReview => 'system',
         };
     }
 
@@ -78,7 +84,8 @@ enum NotificationType: string
         return match ($this) {
             self::NewFollower, self::FollowedPublished, self::Reaction, self::Mention, self::Comment, self::VehicleFollower => true,
             self::BuildSaved, self::Security, self::ModerationDecision, self::ReportDecided, self::QrMilestone, self::HuAuReminder, self::CatalogRequest, self::SupportReply,
-            self::EventReview, self::EventPromoted, self::EventReminder, self::EventUpdate, self::EventCancelled, self::MaintenanceDue => false,
+            self::EventReview, self::EventPromoted, self::EventReminder, self::EventUpdate, self::EventCancelled, self::MaintenanceDue,
+            self::BusinessReview, self::BusinessTag => false,
         };
     }
 
@@ -119,7 +126,7 @@ enum NotificationType: string
             self::EventReview, self::EventPromoted, self::EventUpdate, self::EventCancelled => 'event_update',
             // M4.13: SET-09 has one row "Fälligkeiten" for every maintenance reminder, the HU/AU's switch since M2.7 (push, e-mail).
             self::MaintenanceDue => 'hu_au_reminder',
-            self::Security, self::ModerationDecision, self::ReportDecided, self::CatalogRequest, self::SupportReply => null,
+            self::Security, self::ModerationDecision, self::ReportDecided, self::CatalogRequest, self::SupportReply, self::BusinessReview, self::BusinessTag => null,
         };
     }
 }

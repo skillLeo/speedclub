@@ -8,6 +8,7 @@ use App\Services\Messaging\SendMessagePush;
 use App\Services\Notifications\ExpoPush;
 use App\Services\Notifications\NotificationTexts;
 use App\Services\Notifications\Notifier;
+use App\Services\Notifications\WebPush;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -217,7 +218,7 @@ describe('message pushes', function () {
         $this->travelTo(CarbonImmutable::parse('2026-11-08 12:00', 'Europe/Berlin'));
         msgSide($message->conversation_id, $lukas)->forceFill(['last_read_message_id' => $message->id])->save();
 
-        (new SendMessagePush($lukas->id, $jann->id, $message->conversation_id, $message->id))->handle(app(ExpoPush::class), app(Conversations::class), app(Notifier::class), app(NotificationTexts::class));
+        (new SendMessagePush($lukas->id, $jann->id, $message->conversation_id, $message->id))->handle(app(ExpoPush::class), app(Conversations::class), app(Notifier::class), app(NotificationTexts::class), app(WebPush::class));
         socBlock($lukas, $jann);
         msgSide($message->conversation_id, $lukas)->forceFill(['last_read_message_id' => null])->save();
         dispatch_sync(new SendMessagePush($lukas->id, $jann->id, $message->conversation_id, $message->id));

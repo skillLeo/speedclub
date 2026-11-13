@@ -4,6 +4,7 @@ namespace App\Services\Social;
 
 use App\Enums\CollectionItemType;
 use App\Models\BuildUpdate;
+use App\Models\Business;
 use App\Models\Event;
 use App\Models\Media;
 use App\Models\MemberCollection;
@@ -52,7 +53,7 @@ final class Collections
     /**
      * The row behind an item reference, or null for anything that does not exist.
      */
-    public function find(CollectionItemType $type, string $id): Vehicle|Modification|BuildUpdate|Event|null
+    public function find(CollectionItemType $type, string $id): Vehicle|Modification|BuildUpdate|Event|Business|null
     {
         if (preg_match('/\A[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{26}\z/', $id) !== 1) {
             return null;
@@ -65,6 +66,8 @@ final class Collections
             CollectionItemType::Modification => Modification::query()->with('vehicle')->find($id),
             CollectionItemType::BuildUpdate => BuildUpdate::query()->with('vehicle')->find($id),
             CollectionItemType::Event => Event::query()->with('organiser')->find($id),
+            // M4.14 (09 §8.6): a business profile.
+            CollectionItemType::Business => Business::query()->with('owner')->find($id),
         };
     }
 
@@ -178,6 +181,8 @@ final class Collections
                 $target instanceof Vehicle => $target->cover,
                 $target instanceof BuildUpdate => $target->photos()->usablePhoto()->first(),
                 $target instanceof Event => $target->cover,
+                // M4.14: a business's cover.
+                $target instanceof Business => $target->cover,
                 default => $target->vehicle->cover,
             };
 

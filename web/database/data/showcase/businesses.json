@@ -1,0 +1,26 @@
+{
+ "_comment": "Sample business of the showcase (09 §8.19, ADR-412, M4.14): an obviously fictional workshop name, placeholder Impressum data marked as a sample on the page (is_sample), owned by the SPEED CLUB Editorial account, cover from the graded seed photos (design/seed-photos/processed, cover-workshop-*, used by no other sample). The street and the register number are placeholders, not a real company or house; the coordinates are the city area. `portfolio`: how many Editorial builds with a linked suspension part join its portfolio (both sides are the Editorial account, so the tag is confirmed). No ratings, no reviews, no counts beyond the real portfolio (hidden on samples).",
+ "businesses": [
+  {
+   "slug": "beispiel-werkstatt-nord",
+   "name": "Beispiel-Werkstatt Nord",
+   "kind": "workshop",
+   "legal_name": "Beispiel-Werkstatt Nord GmbH (Beispieldaten)",
+   "legal_form": "gmbh",
+   "representative": "Beispiel-Geschäftsführung",
+   "street": "Beispielweg 1",
+   "postcode": "20095",
+   "city": "Hamburg",
+   "lat": 53.55,
+   "lng": 10.0,
+   "email": "kontakt@beispiel.invalid",
+   "register_court": "Amtsgericht Hamburg (Beispiel)",
+   "register_number": "HRB 000000 (Beispiel)",
+   "about": "Beispielbetrieb der Redaktion: So sieht ein Betriebsprofil aus. Fahrwerk, Abgasanlage und Bremsen, dazu Achsvermessung auf der eigenen Bühne.",
+   "services": ["Fahrwerk", "Abgasanlage", "Bremsen", "Achsvermessung", "Felgen und Reifen"],
+   "opening_hours": {"mon": [["08:00", "17:30"]], "tue": [["08:00", "17:30"]], "wed": [["08:00", "17:30"]], "thu": [["08:00", "17:30"]], "fri": [["08:00", "15:00"]], "sat": [["09:00", "13:00"]]},
+   "cover": "cover-workshop-02.jpg",
+   "portfolio": 3
+  }
+ ]
+}

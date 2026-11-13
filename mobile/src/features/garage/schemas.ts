@@ -181,6 +181,7 @@ export function modSchema(fields: readonly ModCategoryField[], locale: FormatLoc
       legalStatus: z.enum(LEGAL_STATUSES).or(z.literal('')),
       notes: z.string().max(NOTES_MAX_LENGTH, issue('validation.tooLong', { max: NOTES_MAX_LENGTH })),
       fields: z.record(z.string(), z.union([z.string(), z.boolean()])),
+      product: z.object({ id: z.string(), label: z.string() }).nullable(),
     })
     .superRefine((values, context) => {
       for (const field of fields) {

@@ -8,7 +8,9 @@ import {
   backendSync,
   brandingState,
   deleteTestAccounts,
+  disableM414Flags,
   disablePremiumFixture,
+  enableM414Flags,
   enablePremiumFixture,
   ensureReconsentFixture,
   ensureSupportFixture,
@@ -140,6 +142,16 @@ export const STAGE_FIXTURES = {
     setup: () => enablePremiumFixture(),
     teardown: () => disablePremiumFixture(),
     teardownSync: () => backendSync(['disable-premium-fixture']),
+  },
+  // M4.14 (ADR-455): parts_catalogue and businesses are off everywhere until the module's design QA passed, and their API answers 404
+  // feature_disabled while off; the BRD/BIZ cells (routes-m414.mjs) switch both on for their capture and off right after. Only the
+  // `enabled` column; refused when a person switched one on (support/backend.php m414FlagsFixture). The app side reads them from
+  // app-config, and the cells also name them in qaFlags.
+  'm414-flags': {
+    what: 'parts_catalogue and businesses on, so BRD-01/02, BIZ-01…04 and the Teile/Betriebe scopes have data',
+    setup: () => enableM414Flags(),
+    teardown: () => disableM414Flags(),
+    teardownSync: () => backendSync(['disable-m414-flags']),
   },
   // ADM-48: a local demo has no cron, so a fresh seed has no health run and the default cells would be the empty state (visual run 3).
   // One run of the checks the scheduler makes (no notification, no audit row); only its own batches are removed after.

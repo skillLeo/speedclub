@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Brand;
 use App\Models\ModCategory;
+use App\Models\Product;
 use Database\Seeders\Concerns\SeedClock;
 use Illuminate\Database\Seeder;
 
@@ -11,7 +12,7 @@ class DatabaseSeeder extends Seeder
 {
     /**
      * Everything except DemoSeeder is safe in production and safe to run again. ADR-234: the catalogue seeders (makes/models,
-     * modification categories and fields, part brands) only fill an empty table on install; on a host whose catalogue has rows they are
+     * modification categories and fields, part brands, M4.14 products) only fill an empty table on install; on a host whose catalogue has rows they are
      * skipped, so a re-run never brings back an entry, a field or a brand the team deleted in the admin.
      */
     public function run(): void
@@ -20,6 +21,8 @@ class DatabaseSeeder extends Seeder
             CatalogSeeder::class => ! CatalogSeeder::catalogueHasRows(),
             ModCategorySeeder::class => ! ModCategory::query()->exists(),
             BrandSeeder::class => ! Brand::query()->exists(),
+            // M4.14: the parts catalogue, after its brands and categories.
+            ProductSeeder::class => ! Product::query()->exists(),
         ]));
 
         $seed = function () use ($catalogue): void {

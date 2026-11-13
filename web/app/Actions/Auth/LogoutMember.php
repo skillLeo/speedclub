@@ -3,6 +3,7 @@
 namespace App\Actions\Auth;
 
 use App\Models\PersonalAccessToken;
+use App\Models\PushSubscription;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,7 @@ class LogoutMember
     /**
      * Ends this sign-in only: the token of this device, or this browser's session. Right after a rotation the device has two
      * tokens (RotateMemberToken), and both go: the other one must not outlive the sign-out by its grace period. So does the push token
-     * of that device.
+     * of that device, and the Web Push subscription of that browser.
      */
     public function handle(User $user, Request $request): void
     {
@@ -29,6 +30,9 @@ class LogoutMember
 
             return;
         }
+
+        // M4.15: this browser's Web Push ends with its sign-in (the member web also drops it itself, but may be offline).
+        $user->pushSubscriptions()->where('session_key', PushSubscription::sessionKey($request->session()->getId()))->delete();
 
         Auth::guard('web')->logout();
         $request->session()->invalidate();

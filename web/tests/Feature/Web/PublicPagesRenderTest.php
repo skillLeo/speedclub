@@ -523,7 +523,7 @@ describe('WEB-02', function () {
         expect($text)->toBe('1 Fahrzeug · 0 Follower · 0 Folge ich')
             ->and(substr_count($stats, '<span class="sc-keep">'))->toBe(3)
             // A stat wraps only between stats, after its dot, so no line starts with one.
-            ->and($stats)->toContain('&nbsp;·</span></span>')
+            ->and($stats)->toContain('&nbsp;·</span>')
             ->and($stats)->not->toMatch('~\s·~u');
     });
 
@@ -533,7 +533,7 @@ describe('WEB-02', function () {
         $cover = Media::factory()->forModel($this->owner)->create(['owner_id' => $this->owner->id]);
         $this->owner->forceFill(['cover_media_id' => $cover->id])->save();
 
-        expect($this->get('/u/lukas.sc')->getContent())->toContain('data-testid="WEB-02.cover"')->toContain('sc-member-covered');
+        expect($this->get('/u/lukas.sc')->getContent())->toContain('data-testid="WEB-02.cover"')->toContain('sc-prof is-covered');
     });
 
     it('has a designed empty garage', function () {
@@ -552,7 +552,8 @@ describe('WEB-03', function () {
         $html = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
 
         expect($html)
-            ->toContain('Cars. People. Culture.')
+            // M4.16 (09 §9 WEB-03 (1)): the claim of the spec, left-aligned in display.title.
+            ->toContain('Dein Auto. Dein Build. Dein Club.')
             ->toContain('data-testid="WEB-03.step1"')
             ->toContain('data-testid="WEB-03.step2"')
             ->toContain('data-testid="WEB-03.step3"')
@@ -584,15 +585,16 @@ describe('WEB-03', function () {
         expect(QrScanDaily::query()->count())->toBe(0);
     });
 
-    it('tells the truth about the stores until they exist, and links them once they do', function () {
+    it('shows store links only once they exist (09 §9 WEB-03 (5)), and the web app always', function () {
         $html = $this->withHeader('Accept-Language', 'de')->get('/')->getContent();
 
-        expect($html)->toContain('Bald verfügbar')->toContain('href="'.url('/app').'"')
-            ->not->toContain('apps.apple.com')->not->toContain('play.google.com');
+        expect($html)->toContain('Die App ist unterwegs.')->toContain('href="'.url('/app').'"')->not->toContain('data-testid="WEB-03.store"')
+            ->not->toContain('Bald verfügbar')->not->toContain('apps.apple.com')->not->toContain('play.google.com');
 
         config(['speedclub.mobile.store_url_ios' => 'https://apps.apple.com/app/id1']);
 
-        expect($this->withHeader('Accept-Language', 'de')->get('/')->getContent())->toContain('href="https://apps.apple.com/app/id1"')->toContain('Bald verfügbar');
+        expect($this->withHeader('Accept-Language', 'de')->get('/')->getContent())->toMatch('~href="https://apps.apple.com/app/id1"[^>]*data-testid="WEB-03.store"~')
+            ->toContain('App Store')->not->toContain('Google Play')->not->toContain('Bald verfügbar');
     });
 
     it('prefers the configured build, and falls back when it cannot be shown', function () {
@@ -638,12 +640,14 @@ describe('WEB-03', function () {
         expect(jsonLdBlocks((string) $this->get('/')->getContent())[0]['@type'])->toBe('Organization');
     });
 
-    it('keeps red on one call to action, "Konto erstellen" (DQ-228)', function () {
+    it('keeps red on one call to action, "Zur Web-App" (DQ-228, 09 §9 WEB-03 (1)), with the QR story as a text link', function () {
         $html = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
 
         expect(preg_match_all('~(?<![:\w-])bg-accent-fill(?![\w-])~', $html))->toBe(1)
-            ->and($html)->toMatch('~bg-accent-fill [^>]*data-testid="WEB-03.signUp"~')
-            ->and($html)->toMatch('~bg-inverse text-ink-inverse[^>]*data-testid="WEB-03.openWebApp"~');
+            ->and(preg_match_all('~(?<![:\w-])bg-inverse(?![\w-])~', $html))->toBe(0)
+            ->and($html)->toMatch('~bg-accent-fill [^>]*data-testid="WEB-03.openWebApp"~')
+            ->and($html)->toMatch('~href="#qr"[^>]*data-testid="WEB-03.howQr"~')
+            ->and($html)->toContain('id="qr"');
     });
 });
 

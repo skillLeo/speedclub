@@ -172,8 +172,8 @@ describe('route wiring', function () {
     it('limits every anonymous route per address and keeps it out of shared caches', function () {
         $routes = gsRoutes('Public');
 
-        // M2.1 added the follower lists of PROF-04.
-        expect(count($routes))->toBe(8);
+        // M2.1 added the follower lists of PROF-04; Phase 4 lane B the member's update list of PROF-01/02.
+        expect(count($routes))->toBe(9);
 
         foreach ($routes as $route) {
             expect($route->gatherMiddleware())->toContain('throttle:public-read', 'etag')->not->toContain('member');

@@ -5,11 +5,13 @@ namespace App\Services\Catalog;
 use App\Actions\Admin\Catalog\CreateCatalogEntry;
 use App\Actions\Admin\Catalog\SetCatalogEntryActive;
 use App\Actions\Admin\Catalog\UpdateCatalogEntry;
+use App\Actions\Admin\Parts\ManageProducts;
 use App\Enums\CatalogLevel;
 use App\Enums\CatalogRowStatus;
 use App\Models\Brand;
 use App\Models\Generation;
 use App\Models\Make;
+use App\Models\Product;
 use App\Models\Staff;
 use App\Models\VehicleModel;
 
@@ -41,6 +43,12 @@ final class CatalogImportApplier
 
         if ($row['level'] === 'brand') {
             $this->brand($data, $staff, $reason);
+
+            return;
+        }
+
+        if ($row['level'] === 'product') {
+            $this->product($data, $staff, $reason);
 
             return;
         }
@@ -118,6 +126,28 @@ final class CatalogImportApplier
             /** @var Generation $generation */
             $this->active->handle($staff, $generation, $active, $reason);
         }
+    }
+
+    /**
+     * M4.14 ADM-57: through ManageProducts like a manual edit (audited per product).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function product(array $data, Staff $staff, string $reason): void
+    {
+        $id = $data['product_id'] ?? null;
+        $product = is_string($id) ? Product::query()->find($id) : null;
+        $products = app(ManageProducts::class);
+
+        if (! $product instanceof Product) {
+            $products->add($staff, array_filter([
+                'brand_id' => $data['brand_id'], 'category_id' => $data['category_id'], 'name' => $data['name'], 'line' => $data['line'], 'url' => $data['url'],
+            ], fn (mixed $value): bool => $value !== null), $reason);
+
+            return;
+        }
+
+        $products->change($staff, $product, array_filter(['category_id' => $data['category_id'], 'line' => $data['line'], 'url' => $data['url']], fn (mixed $value): bool => $value !== null), $reason);
     }
 
     /**

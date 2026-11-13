@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\Support\ActivityFeed;
 use App\Http\Controllers\Admin\Support\MediaUrls;
 use App\Models\Appeal;
 use App\Models\BuildUpdate;
+use App\Models\Business;
 use App\Models\Comment;
 use App\Models\Decision;
 use App\Models\Event;
@@ -165,6 +166,18 @@ class CaseRecord
                 'description' => $target->getAttribute('description'),
                 'cover' => MediaUrls::at($target->cover, 640),
                 'removed' => $target->getAttribute('removed_at') !== null,
+            ],
+            $target instanceof Business => [
+                'kind' => 'business',
+                'id' => $target->id,
+                'slug' => $target->slug,
+                'name' => $target->name,
+                'legal_name' => $target->legal_name,
+                'status' => $target->status->value,
+                'city' => $target->city,
+                'about' => $target->about,
+                'cover' => MediaUrls::at($target->cover, 640),
+                'removed' => $target->removed_at !== null,
             ],
             $target instanceof Modification => [
                 'kind' => 'modification',

@@ -63,6 +63,12 @@
         "broken_title": "The audit chain is not intact",
         "broken_body": "The last check found a mismatch at event no. :id (:checked events before it intact). Tell an owner immediately and do not touch the database."
     },
+    "page_check": {
+        "action": "Check this page",
+        "intact": ":count entries match the chain",
+        "broken": "Mismatch at no. :ids",
+        "failed": "The check did not answer."
+    },
     "event": {
         "title": "Event",
         "failed": "The event could not be loaded",
@@ -322,6 +328,20 @@
             "cancelled_by_staff": "Meet cancelled by staff",
             "reopened": "Meet back in review",
             "private_place_viewed": "Viewed the exact place of a meet"
+        },
+        "business": {
+            "verified": "Business verified",
+            "rejected": "Business rejected",
+            "suspended": "Business suspended",
+            "reinstated": "Business reinstated",
+            "reopened": "Business decision reopened"
+        },
+        "product": {
+            "created": "Part created",
+            "updated": "Part changed",
+            "archived": "Part archived",
+            "restored": "Part restored",
+            "merged": "Parts merged"
         }
     }
 }

@@ -66,7 +66,7 @@ test.describe('F4 a stranger scans the sticker', () => {
     const bar = id(page, 'WEB-01.stickyBar');
     await expect(bar).toBeVisible();
     await expect(id(page, 'WEB-01.openInApp')).toHaveText('In der App öffnen');
-    await expect(id(page, 'WEB-01.register')).toHaveText('Registrieren');
+    await expect(id(page, 'WEB-01.register')).toHaveText('Kostenlos beitreten'); // M4.16 (09 §9)
     const register = new URL((await id(page, 'WEB-01.register').getAttribute('href')) ?? '', BASE_URL);
     expect(register.pathname).toBe('/app/sign-up');
     expect(register.searchParams.get('next')).toBe(bladePage);

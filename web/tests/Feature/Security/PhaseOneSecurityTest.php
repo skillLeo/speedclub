@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureFeatureEnabled;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,18 @@ function p1PublicApi(): array
         'api.v1.events.pins',
         'api.v1.events.show',
         'api.v1.events.ics',
+        // M4.14 (09 §8.9, §8.10): business and part pages read by guests too (ADR-124), behind browse, ETag and their flags
+        // (`businesses`, `parts_catalogue`: 404 feature_disabled while off, like events).
+        'api.v1.businesses.index',
+        'api.v1.businesses.show',
+        'api.v1.businesses.portfolio',
+        'api.v1.brands.index',
+        'api.v1.brands.show',
+        'api.v1.brands.products',
+        'api.v1.brands.builds',
+        'api.v1.products.index',
+        'api.v1.products.show',
+        'api.v1.products.builds',
         // M4.6 Auth 2.0 (09 §8.1, §8.2): the passwordless ways in, each behind its own limiter.
         'api.v1.auth.apple',
         'api.v1.auth.email.resend',
@@ -195,6 +208,20 @@ describe('API route table', function () {
         }
     });
 
+    it('keeps the M4.14 guest reads behind their flag, the browse limiter and an ETag', function (string $prefix, string $flag) {
+        $routes = array_filter(p1Routes('api'), fn (LaravelRoute $route): bool => str_starts_with((string) $route->getName(), $prefix));
+
+        expect($routes)->not->toBeEmpty();
+
+        foreach ($routes as $route) {
+            expect(p1Middleware($route))->toContain(EnsureFeatureEnabled::class.':'.$flag, 'throttle:browse', 'etag');
+        }
+    })->with([
+        ['api.v1.businesses.', 'businesses'],
+        ['api.v1.brands.', 'parts_catalogue'],
+        ['api.v1.products.', 'parts_catalogue'],
+    ]);
+
     it('throttles every member write, apart from the listed ones', function () {
         $missing = [];
 
@@ -332,8 +359,10 @@ describe('storage and data minimisation', function () {
 
         // M4.12: the coordinates of an event's venue and its coarse area point (09 §8.7, §11), a place an organiser publishes, never a
         // member's position (device location is used per request only and never stored). Phase 4 lane B: the SET-11 home region, a city
-        // the member picks, stored snapped to the 0.05° grid and shown to nobody else (not a device position either).
-        expect($found)->toBe(['audit_event_access.ip', 'audit_event_access.user_agent', 'events.area_lat', 'events.area_lng', 'events.lat', 'events.lng', 'sessions.ip_address', 'sessions.user_agent', 'users.home_region_lat', 'users.home_region_lng']);
+        // the member picks, stored snapped to the 0.05° grid and shown to nobody else (not a device position either). M4.14: a business's
+        // map point (09 §7 BIZ-01 "address + map + Route", §8.10 Impressum): the published place of a company, at the precision of an
+        // event venue (6 decimals), never a member's position.
+        expect($found)->toBe(['audit_event_access.ip', 'audit_event_access.user_agent', 'businesses.lat', 'businesses.lng', 'events.area_lat', 'events.area_lng', 'events.lat', 'events.lng', 'sessions.ip_address', 'sessions.user_agent', 'users.home_region_lat', 'users.home_region_lng']);
     });
 
     it('counts QR scans per code and day, nothing about the scanner', function () {

@@ -6,6 +6,18 @@
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#0B0B0C" />
     <title>%WEB_TITLE%</title>
+    <!--
+      Home-screen app (09 §8.13, §7.15): manifest, icons and the iOS standalone tags. The startup images are put in at the
+      marker by scripts/export-web.mjs (scripts/pwa-shell.js), one per current iPhone screen.
+    -->
+    <link rel="manifest" href="/app/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/app/pwa/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SPEED CLUB" />
+    <meta name="format-detection" content="telephone=no" />
+    <!--sc:pwa-startup-->
     <!-- react-native-web full-height reset, as in the Expo template. -->
     <style id="expo-reset">
       html,
@@ -15,6 +27,13 @@
       body {
         margin: 0;
         overflow: hidden;
+      }
+      /* 09 §7.15: no grey tap flash, no page bounce (only scroll containers bounce), no font boost on rotation. */
+      html {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        overscroll-behavior: none;
       }
       #root {
         display: flex;

@@ -35,11 +35,12 @@ it('inlines the built stylesheet in a nonced style block and links no stylesheet
         ->not->toContain('inter-latin-');
 })->with(['home', 'vehicle', 'member']);
 
-it('keeps the wordmark in the landing hero behind the photo in the queue', function () {
+it('puts the landing hero photo first in the queue, as the only high-priority image (M4.16: the wordmark lives in the top bar)', function () {
     $html = (string) $this->get('/')->assertOk()->getContent();
 
-    expect($html)->toMatch('~<img[^>]+fetchpriority="low"[^>]+data-testid="WEB-03.logo"~')
-        ->toMatch('~<img[^>]+fetchpriority="high"[^>]+class="sc-photo sc-ph-landing-hero~');
+    expect($html)->toMatch('~<img[^>]+fetchpriority="high"[^>]+class="sc-photo sc-ph-landing-hero~')
+        ->and(preg_match_all('~<img[^>]+fetchpriority="high"~', $html))->toBe(1)
+        ->and($html)->not->toContain('data-testid="WEB-03.logo"');
 });
 
 it('loads the first garage card of a member page without lazy loading, and the others lazily', function () {

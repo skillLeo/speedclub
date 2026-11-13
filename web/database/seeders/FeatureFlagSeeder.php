@@ -37,10 +37,12 @@ class FeatureFlagSeeder extends Seeder
         'events.create' => '09 §8.18: members create events (M4.12); production after the client signed off the event rules',
         'app_icons' => '09 §8.18: alternate app icons (M4.13); production after the store builds carry them',
         'qr_milestone' => 'M4.9: the QR milestone moment (scan marks of a sticker); production with the release that ships it',
+        'web_push' => '09 §8.18: browser notifications of the member web (M4.15); staging sends only once VAPID keys exist (OA-32)',
     ];
 
     /**
-     * Not listed anywhere, so off in every environment: `businesses` (M4.14 not built yet), `membership` (09 §8.18: off, no billing) and
+     * Not listed anywhere, so off in every environment: `businesses` and `parts_catalogue` (M4.14, until its review passed; then
+     * on · on · off per 09 §8.18), `affiliate_links` (09 §8.18: off), `membership` (09 §8.18: off, no billing) and
      * `msg_replies` (ADR-445, ADR-450: the API stores replies, the app turns them on),
      * besides the off-by-default ones above (build_comments, sticker_shop, premium.enabled, auth.apple, auth.google).
      *

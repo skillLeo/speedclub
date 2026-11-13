@@ -4,7 +4,7 @@ import { formatNumber } from '../../lib/format';
 import { routeOr } from '../../lib/routes';
 
 /** Shared shapes and labels of the moderation pages (ADM-20…24); the server builds them in CaseListQuery / CaseRecord. */
-export type TargetType = 'member' | 'vehicle' | 'photo' | 'message' | 'build_update' | 'modification' | 'comment' | 'event';
+export type TargetType = 'member' | 'vehicle' | 'photo' | 'message' | 'build_update' | 'modification' | 'comment' | 'event' | 'business';
 export type CaseStatus = 'new' | 'in_review' | 'decided' | 'closed';
 export type DecisionActionKey = 'no_action' | 'remove_content' | 'restrict' | 'suspend' | 'reverse';
 

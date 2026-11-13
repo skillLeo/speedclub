@@ -51,6 +51,8 @@ class ExportContents
             'security_events.json' => $this->securityEvents($user),
             'reactions.json' => $forStaff ? ['count' => $this->reactionCount($user)] : $this->reactions($user),
             'push_devices.json' => $this->pushDevices($user),
+            // M4.15: the member web's browsers with Web Push (browser and dates; never the endpoint or its keys).
+            'web_push_browsers.json' => $this->webPushBrowsers($user),
             'browser_sessions.json' => $this->browserSessions($user),
             // M4.7 (09 §8.4, §13): app installs with model, system and app version (never the install id or its hash).
             'device_installs.json' => $this->deviceInstalls($user),
@@ -725,6 +727,25 @@ class ExportContents
             ->where('user_id', $user->getKey())
             ->orderBy('created_at')
             ->get(['platform', 'created_at', 'last_used_at'])
+            ->map(fn (object $row): array => (array) $row)
+            ->all();
+    }
+
+    /**
+     * Browsers that get Web Push. The endpoint and its keys are left out: they are addresses for the push services.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function webPushBrowsers(User $user): array
+    {
+        if (! Schema::hasTable('push_subscriptions')) {
+            return [];
+        }
+
+        return DB::table('push_subscriptions')
+            ->where('user_id', $user->getKey())
+            ->orderBy('created_at')
+            ->get(['browser', 'created_at', 'last_used_at'])
             ->map(fn (object $row): array => (array) $row)
             ->all();
     }

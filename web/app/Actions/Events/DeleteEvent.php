@@ -9,6 +9,7 @@ use App\Exceptions\ApiException;
 use App\Models\Event;
 use App\Models\Media;
 use App\Services\Media\MediaService;
+use App\Services\PublicPages\SitemapWriter;
 use App\Services\Social\Collections;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  */
 class DeleteEvent
 {
-    public function __construct(private readonly MediaService $media) {}
+    public function __construct(private readonly MediaService $media, private readonly SitemapWriter $sitemap) {}
 
     public function handle(Event $event): void
     {
@@ -40,6 +41,11 @@ class DeleteEvent
 
         foreach ($photos as $photo) {
             $this->media->purge($photo);
+        }
+
+        // M4.16: a public event's page /e/{slug} is gone; the sitemap must not list it until the night.
+        if ($event->status->isPublic()) {
+            $this->sitemap->forget();
         }
     }
 }

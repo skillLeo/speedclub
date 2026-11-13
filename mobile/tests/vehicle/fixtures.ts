@@ -1180,5 +1180,8 @@ export const R34_WHEELS: PublicMod = {
     "exhaust_brand": null
   },
   "photos": [],
-  "failed_photos": []
+  "failed_photos": [],
+  "product": null,
+  "installed_by": null,
+  "business_tag": null
 };

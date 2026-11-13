@@ -1142,7 +1142,8 @@ export const material = {
     "reducedTransparency": "chrome.opaque"
   },
   "qrBackdrop": {
-    "blur": 16
+    "blur": 16,
+    "zoom": 1.6
   },
   "scrim": {
     "photo": {

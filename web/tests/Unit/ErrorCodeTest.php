@@ -23,8 +23,8 @@ it('gives every code a status that maps back, except the named variants of a gen
         ErrorCode::InvalidCode, ErrorCode::VehicleIncomplete, ErrorCode::OwnContent, ErrorCode::AppealPeriodOver, ErrorCode::ChallengeExpired, ErrorCode::TwoFactorCodeRequired, ErrorCode::DecisionNotAppealable, ErrorCode::ContentBlocked, ErrorCode::AiRefused, ErrorCode::AiUnverifiable, ErrorCode::CodeExpired, ErrorCode::PasskeyInvalid => ErrorCode::ValidationFailed,
         ErrorCode::AiUnavailable, ErrorCode::AiBudgetExhausted, ErrorCode::GeocodeUnavailable => ErrorCode::ServiceUnavailable,
         ErrorCode::AiDailyLimit, ErrorCode::EmailCodeLocked => ErrorCode::RateLimited,
-        ErrorCode::VehicleUnavailable, ErrorCode::MemberUnavailable, ErrorCode::FeatureDisabled, ErrorCode::EventUnavailable => ErrorCode::NotFound,
-        ErrorCode::UsernameChangeCooldown, ErrorCode::TokenRotationNotDue, ErrorCode::TwoFactorRequired, ErrorCode::IdempotencyKeyReused, ErrorCode::FeedStale, ErrorCode::RequestPending, ErrorCode::AlreadyReported, ErrorCode::AppealExists, ErrorCode::ProviderAlreadyLinked, ErrorCode::LastSignInMethod, ErrorCode::LimitReached, ErrorCode::EventClosed, ErrorCode::EventInReview, ErrorCode::EditConflict => ErrorCode::Conflict,
+        ErrorCode::VehicleUnavailable, ErrorCode::MemberUnavailable, ErrorCode::FeatureDisabled, ErrorCode::EventUnavailable, ErrorCode::BusinessUnavailable, ErrorCode::ProductUnavailable => ErrorCode::NotFound,
+        ErrorCode::UsernameChangeCooldown, ErrorCode::TokenRotationNotDue, ErrorCode::TwoFactorRequired, ErrorCode::IdempotencyKeyReused, ErrorCode::FeedStale, ErrorCode::RequestPending, ErrorCode::AlreadyReported, ErrorCode::AppealExists, ErrorCode::ProviderAlreadyLinked, ErrorCode::LastSignInMethod, ErrorCode::LimitReached, ErrorCode::EventClosed, ErrorCode::EventInReview, ErrorCode::EditConflict, ErrorCode::BusinessExists, ErrorCode::BusinessNotVerified => ErrorCode::Conflict,
         default => $code,
     };
 

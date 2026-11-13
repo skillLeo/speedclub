@@ -1,25 +1,32 @@
 {
     "brand": "SPEED CLUB",
     "brand_suffix": "Admin",
+    "brand_short": "SC",
     "build": "Build :version",
     "breadcrumb": "Brotkrumen",
     "skip": "Zum Inhalt springen",
     "sidebar": "Hauptnavigation",
+    "sidebar_collapse": "Seitenleiste einklappen",
+    "sidebar_expand": "Seitenleiste ausklappen",
     "menu": "Navigation öffnen",
     "groups": {
-        "overview": "Übersicht",
-        "members": "Mitglieder",
-        "vehicles_media": "Fahrzeuge & Medien",
+        "overview": "Plattform",
+        "members": "Community",
+        "vehicles_media": "Community",
         "catalog": "Katalog",
-        "qr": "QR",
-        "moderation": "Moderation",
-        "support": "Support",
-        "brand_content": "Marke & Inhalte",
-        "configuration": "Konfiguration",
-        "team": "Team & Rollen",
-        "audit_privacy": "Audit & Datenschutz",
-        "system": "System",
-        "settings": "Einstellungen"
+        "qr": "Katalog",
+        "moderation": "Trust & Safety",
+        "support": "Trust & Safety",
+        "brand_content": "Plattform",
+        "configuration": "Plattform",
+        "team": "Governance",
+        "audit_privacy": "Governance",
+        "system": "Governance",
+        "settings": "Governance",
+        "community": "Community",
+        "trust_safety": "Trust & Safety",
+        "platform": "Plattform",
+        "governance": "Governance"
     },
     "nav": {
         "label": "Bereiche",
@@ -95,7 +102,28 @@
         "move": "wählen",
         "esc": "Esc",
         "copied": "Link kopiert",
-        "copy_failed": "Der Link konnte nicht kopiert werden."
+        "copy_failed": "Der Link konnte nicht kopiert werden.",
+        "action_hint": "Aktion",
+        "recent": "Zuletzt geöffnet",
+        "back": "Aktion verlassen",
+        "leave_action": "„:action“ verlassen",
+        "actions": {
+            "member_suspend": "Mitglied sperren…",
+            "event_approve": "Treffen freigeben…",
+            "business_verify": "Betrieb verifizieren…",
+            "flag_toggle": "Flag umschalten…"
+        },
+        "targets": {
+            "member": "Mitglied suchen: @username oder E-Mail",
+            "member_hint": "Tippe mindestens zwei Zeichen.",
+            "member_empty": "Kein Mitglied gefunden.",
+            "event": "Treffen in Prüfung suchen",
+            "event_empty": "Kein Treffen wartet auf Freigabe.",
+            "business": "Antrag suchen",
+            "business_empty": "Kein Antrag offen.",
+            "flag": "Flag suchen",
+            "flag_empty": "Kein Flag gefunden."
+        }
     },
     "two_factor": {
         "required_for_action": "Für diesen Schritt brauchst du einen Code aus der Authenticator-App. Richte die Zwei-Faktor-Anmeldung zuerst ein.",
@@ -103,5 +131,25 @@
         "reminder_link": "Jetzt einrichten",
         "reminder_dismiss": "Hinweis ausblenden",
         "reminder_label": "Zwei-Faktor-Anmeldung fehlt"
+    },
+    "density": {
+        "compact": "Kompakte Zeilen"
+    },
+    "shortcuts": {
+        "title": "Tastenkürzel",
+        "body": "Funktionieren überall außer in Eingabefeldern.",
+        "go": "Gehe zu",
+        "then": "dann",
+        "palette": "Befehlspalette",
+        "sheet": "Diese Übersicht",
+        "lists": "Listen",
+        "rows": "Nächste und vorige Zeile",
+        "select": "Zeile auswählen",
+        "open": "Zeile öffnen",
+        "filter": "Zum Filter",
+        "queues": "Prüf-Queues",
+        "approve": "Freigeben oder verifizieren",
+        "reject": "Ablehnen",
+        "undo": "Letzte Entscheidung zurücknehmen (5 s)"
     }
 }

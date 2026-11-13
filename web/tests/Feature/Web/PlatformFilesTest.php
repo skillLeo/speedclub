@@ -5,7 +5,9 @@ use App\Actions\Garage\DeleteVehicle;
 use App\Actions\Me\UpdateSettings;
 use App\Enums\LegalDocumentKey;
 use App\Enums\Visibility;
+use App\Http\Controllers\Web\PlatformFilesController;
 use App\Http\RateLimits;
+use App\Models\FeatureFlag;
 use App\Models\LegalDocument;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -294,14 +296,63 @@ describe('.well-known', function () {
                 // The same two screens of the member web, which mails may open under /app (app lane, M4.6/M4.7).
                 ['/' => '/app/auth/magic'],
                 ['/' => '/app/auth/secure'],
+                // M4.15 (ADR-453 e): SET-21 of the security mail, in both spellings, as the app claims them (mobile/app.config.ts).
+                ['/' => '/settings/security/activity'],
+                ['/' => '/app/settings/security/activity'],
             ])
             // M4.6 (09 §8.2): passkeys of this site in the app.
             ->and($response->json('webcredentials'))->toBe(['apps' => ['ABCDE12345.de.speedclub.app']]);
     });
 
+    it('claims /b and /brands only while their flags are on', function (array $flags, array $paths) {
+        config(['speedclub.mobile.ios_team_id' => 'ABCDE12345']);
+
+        foreach (['businesses', 'parts_catalogue'] as $flag) {
+            FeatureFlag::query()->updateOrCreate(['key' => $flag], ['enabled' => in_array($flag, $flags, true)]);
+        }
+
+        $components = collect($this->get('/.well-known/apple-app-site-association')->assertOk()->json('applinks.details.0.components'))->pluck('/');
+
+        expect($components->filter(fn (string $path): bool => in_array($path, ['/b/*', '/brands/*'], true))->values()->all())->toBe($paths);
+    })->with([
+        'both off' => [[], []],
+        'businesses on' => [['businesses'], ['/b/*']],
+        'both on' => [['businesses', 'parts_catalogue'], ['/b/*', '/brands/*']],
+    ]);
+
+    it('answers both files without redirect, cookie, session or auth', function (string $path) {
+        config(['speedclub.mobile.ios_team_id' => 'ABCDE12345', 'speedclub.mobile.android_cert_sha256' => CERT_LOWER]);
+
+        $response = $this->get($path)->assertOk();
+
+        expect($response->headers->get('Content-Type'))->toBe('application/json')
+            ->and($response->headers->getCookies())->toBe([])
+            ->and($response->headers->has('Location'))->toBeFalse()
+            ->and(json_decode((string) $response->getContent(), true))->toBeArray();
+    })->with(['/.well-known/assetlinks.json', '/.well-known/apple-app-site-association']);
+
     it('links nothing without a team id', function () {
         config(['speedclub.mobile.ios_team_id' => null]);
 
         $this->get('/.well-known/apple-app-site-association')->assertOk()->assertExactJson(['applinks' => ['details' => []], 'webcredentials' => ['apps' => []]]);
+    });
+});
+
+describe('app-link paths in a browser without the app', function () {
+    it('sends /settings/security/activity to the member web with the query kept, without a cookie', function (string $path, string $target) {
+        $response = $this->get($path)->assertRedirect($target)->assertStatus(302);
+
+        expect($response->headers->getCookies())->toBe([]);
+    })->with([
+        'with the event of a login alert' => ['/settings/security/activity?event=01JABCDEFGHJKMNPQRSTVWXYZ0', '/app/settings/security/activity?event=01JABCDEFGHJKMNPQRSTVWXYZ0'],
+        'without a query' => ['/settings/security/activity', '/app/settings/security/activity'],
+    ]);
+
+    it('has a web route for every claimed exact path outside /app (the member web serves /app itself)', function () {
+        foreach (PlatformFilesController::APP_PATHS as $path) {
+            if (! str_contains($path, '*') && ! str_starts_with($path, '/app/')) {
+                expect($this->get($path)->getStatusCode())->toBe(302, "$path has no web route");
+            }
+        }
     });
 });

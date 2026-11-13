@@ -1,0 +1,1631 @@
+{
+ "_comment": "Parts catalogue (09 §8.9, M4.14): real brands of brands.json and real product lines, imported by `php artisan catalog:import-products` and ProductSeeder. Only facts: names and product lines as the makers sell them, the type of part and, where the line itself says it, what is adjustable or how it is made. No prices, no performance figures, no fitment claims, no ratings. `brands`: what BRD-01 shows (about per language, official website, country) for a few brands. `attributes`: {de: {label: value}, en: {…}}.",
+ "brands": {
+  "BBS": {
+   "about": {
+    "de": "Felgenhersteller aus Schiltach im Schwarzwald, gegründet 1970.",
+    "en": "Wheel maker from Schiltach in the Black Forest, founded in 1970."
+   },
+   "website": "https://www.bbs.com",
+   "country": "DE"
+  },
+  "KW": {
+   "about": {
+    "de": "Fahrwerkshersteller aus Fichtenberg in Baden-Württemberg.",
+    "en": "Suspension maker from Fichtenberg in Baden-Württemberg, Germany."
+   },
+   "website": null,
+   "country": "DE"
+  },
+  "ST Suspensions": {
+   "about": {
+    "de": "Fahrwerksmarke der KW-Gruppe.",
+    "en": "Suspension brand of the KW group."
+   },
+   "website": null,
+   "country": "DE"
+  },
+  "Bilstein": {
+   "about": {
+    "de": "Stoßdämpfer- und Fahrwerkshersteller aus Ennepetal.",
+    "en": "Damper and suspension maker from Ennepetal, Germany."
+   },
+   "website": "https://www.bilstein.com",
+   "country": "DE"
+  },
+  "H&R": {
+   "about": {
+    "de": "Hersteller von Sportfedern, Fahrwerken und Spurverbreiterungen aus Lennestadt im Sauerland.",
+    "en": "Maker of lowering springs, suspension kits and wheel spacers from Lennestadt, Germany."
+   },
+   "website": "https://www.h-r.com",
+   "country": "DE"
+  },
+  "Eibach": {
+   "about": {
+    "de": "Federnhersteller aus Finnentrop im Sauerland.",
+    "en": "Spring maker from Finnentrop, Germany."
+   },
+   "website": "https://www.eibach.com",
+   "country": "DE"
+  },
+  "Öhlins": {
+   "about": {
+    "de": "Fahrwerkshersteller aus Schweden.",
+    "en": "Suspension maker from Sweden."
+   },
+   "website": null,
+   "country": "SE"
+  },
+  "Akrapovič": {
+   "about": {
+    "de": "Hersteller von Abgasanlagen aus Titan und Edelstahl aus Slowenien, gegründet 1990.",
+    "en": "Maker of titanium and stainless steel exhaust systems from Slovenia, founded in 1990."
+   },
+   "website": "https://www.akrapovic.com",
+   "country": "SI"
+  },
+  "Milltek Sport": {
+   "about": {
+    "de": "Hersteller von Sportabgasanlagen aus Großbritannien.",
+    "en": "Performance exhaust maker from the United Kingdom."
+   },
+   "website": null,
+   "country": "GB"
+  },
+  "Brembo": {
+   "about": {
+    "de": "Bremsenhersteller aus Italien, gegründet 1961.",
+    "en": "Brake maker from Italy, founded in 1961."
+   },
+   "website": "https://www.brembo.com",
+   "country": "IT"
+  },
+  "OZ Racing": {
+   "about": {
+    "de": "Felgenhersteller aus Italien.",
+    "en": "Wheel maker from Italy."
+   },
+   "website": null,
+   "country": "IT"
+  },
+  "Michelin": {
+   "about": {
+    "de": "Reifenhersteller aus Clermont-Ferrand, Frankreich.",
+    "en": "Tyre maker from Clermont-Ferrand, France."
+   },
+   "website": null,
+   "country": "FR"
+  },
+  "Pirelli": {
+   "about": {
+    "de": "Reifenhersteller aus Mailand.",
+    "en": "Tyre maker from Milan."
+   },
+   "website": null,
+   "country": "IT"
+  },
+  "Quaife": {
+   "about": {
+    "de": "Getriebe- und Differenzialhersteller aus Großbritannien.",
+    "en": "Gearbox and differential maker from the United Kingdom."
+   },
+   "website": null,
+   "country": "GB"
+  },
+  "Sparco": {
+   "about": {
+    "de": "Hersteller von Sitzen und Motorsportausrüstung aus Italien.",
+    "en": "Maker of seats and motorsport equipment from Italy."
+   },
+   "website": null,
+   "country": "IT"
+  }
+ },
+ "products": [
+  {
+   "brand": "KW",
+   "category": "suspension",
+   "name": "Variante 1",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height"
+    }
+   }
+  },
+  {
+   "brand": "KW",
+   "category": "suspension",
+   "name": "Variante 2",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe, Zugstufe"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height, rebound"
+    }
+   }
+  },
+  {
+   "brand": "KW",
+   "category": "suspension",
+   "name": "Variante 3",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe, Zug- und Druckstufe"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height, rebound and compression"
+    }
+   }
+  },
+  {
+   "brand": "KW",
+   "category": "suspension",
+   "name": "Clubsport 2-Wege",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe, Zug- und Druckstufe"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height, rebound and compression"
+    }
+   }
+  },
+  {
+   "brand": "KW",
+   "category": "suspension",
+   "name": "DDC Plug & Play",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk mit elektronischer Dämpferregelung"
+    },
+    "en": {
+     "Type": "Coilover kit with electronic damping control"
+    }
+   }
+  },
+  {
+   "brand": "ST Suspensions",
+   "category": "suspension",
+   "name": "ST X",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height"
+    }
+   }
+  },
+  {
+   "brand": "ST Suspensions",
+   "category": "suspension",
+   "name": "ST XA",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe, Zugstufe"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height, rebound"
+    }
+   }
+  },
+  {
+   "brand": "ST Suspensions",
+   "category": "suspension",
+   "name": "ST XTA",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe, Zugstufe, Sturz (Domlager)"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height, rebound, camber (top mounts)"
+    }
+   }
+  },
+  {
+   "brand": "Bilstein",
+   "category": "suspension",
+   "name": "B14 PSS",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height"
+    }
+   }
+  },
+  {
+   "brand": "Bilstein",
+   "category": "suspension",
+   "name": "B16 PSS10",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe, Dämpfung"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height, damping"
+    }
+   }
+  },
+  {
+   "brand": "Bilstein",
+   "category": "suspension",
+   "name": "B12 Pro-Kit",
+   "line": "Sportfahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Sportfahrwerk (Dämpfer und Federn)"
+    },
+    "en": {
+     "Type": "Sport suspension kit (dampers and springs)"
+    }
+   }
+  },
+  {
+   "brand": "Bilstein",
+   "category": "suspension",
+   "name": "B8 Performance Plus",
+   "line": "Dämpfer",
+   "attributes": {
+    "de": {
+     "Bauart": "Sportdämpfer für tiefergelegte Fahrzeuge"
+    },
+    "en": {
+     "Type": "Sport dampers for lowered cars"
+    }
+   }
+  },
+  {
+   "brand": "Bilstein",
+   "category": "suspension",
+   "name": "B6 Performance",
+   "line": "Dämpfer",
+   "attributes": {
+    "de": {
+     "Bauart": "Sportdämpfer für Serienhöhe"
+    },
+    "en": {
+     "Type": "Sport dampers for stock ride height"
+    }
+   }
+  },
+  {
+   "brand": "H&R",
+   "category": "suspension",
+   "name": "Sportfedern",
+   "line": "Federn",
+   "attributes": {
+    "de": {
+     "Bauart": "Tieferlegungsfedern"
+    },
+    "en": {
+     "Type": "Lowering springs"
+    }
+   }
+  },
+  {
+   "brand": "H&R",
+   "category": "suspension",
+   "name": "Gewindefahrwerk",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk"
+    },
+    "en": {
+     "Type": "Coilover kit"
+    }
+   }
+  },
+  {
+   "brand": "H&R",
+   "category": "suspension",
+   "name": "TRAK+ Spurverbreiterung",
+   "line": "Spurverbreiterungen",
+   "attributes": {
+    "de": {
+     "Bauart": "Spurverbreiterung"
+    },
+    "en": {
+     "Type": "Wheel spacers"
+    }
+   }
+  },
+  {
+   "brand": "H&R",
+   "category": "suspension",
+   "name": "Stabilisatoren",
+   "line": "Stabilisatoren",
+   "attributes": {
+    "de": {
+     "Bauart": "Stabilisator"
+    },
+    "en": {
+     "Type": "Anti-roll bar"
+    }
+   }
+  },
+  {
+   "brand": "Eibach",
+   "category": "suspension",
+   "name": "Pro-Kit",
+   "line": "Federn",
+   "attributes": {
+    "de": {
+     "Bauart": "Tieferlegungsfedern"
+    },
+    "en": {
+     "Type": "Lowering springs"
+    }
+   }
+  },
+  {
+   "brand": "Eibach",
+   "category": "suspension",
+   "name": "Sportline",
+   "line": "Federn",
+   "attributes": {
+    "de": {
+     "Bauart": "Tieferlegungsfedern"
+    },
+    "en": {
+     "Type": "Lowering springs"
+    }
+   }
+  },
+  {
+   "brand": "Eibach",
+   "category": "suspension",
+   "name": "Pro-Street-S",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk"
+    },
+    "en": {
+     "Type": "Coilover kit"
+    }
+   }
+  },
+  {
+   "brand": "Eibach",
+   "category": "suspension",
+   "name": "Pro-Spacer",
+   "line": "Spurverbreiterungen",
+   "attributes": {
+    "de": {
+     "Bauart": "Spurverbreiterung"
+    },
+    "en": {
+     "Type": "Wheel spacers"
+    }
+   }
+  },
+  {
+   "brand": "Eibach",
+   "category": "suspension",
+   "name": "Anti-Roll-Kit",
+   "line": "Stabilisatoren",
+   "attributes": {
+    "de": {
+     "Bauart": "Stabilisator"
+    },
+    "en": {
+     "Type": "Anti-roll bar"
+    }
+   }
+  },
+  {
+   "brand": "Öhlins",
+   "category": "suspension",
+   "name": "Road & Track",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe, Dämpfung"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height, damping"
+    }
+   }
+  },
+  {
+   "brand": "Tein",
+   "category": "suspension",
+   "name": "Flex Z",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe, Dämpfung"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height, damping"
+    }
+   }
+  },
+  {
+   "brand": "BC Racing",
+   "category": "suspension",
+   "name": "BR Series",
+   "line": "Gewindefahrwerke",
+   "attributes": {
+    "de": {
+     "Bauart": "Gewindefahrwerk",
+     "Einstellbar": "Höhe, Dämpfung"
+    },
+    "en": {
+     "Type": "Coilover kit",
+     "Adjustable": "Height, damping"
+    }
+   }
+  },
+  {
+   "brand": "Air Lift Performance",
+   "category": "suspension",
+   "name": "3P",
+   "line": "Management",
+   "attributes": {
+    "de": {
+     "Bauart": "Luftfahrwerk-Steuerung (Druck)"
+    },
+    "en": {
+     "Type": "Air suspension management (pressure)"
+    }
+   }
+  },
+  {
+   "brand": "Air Lift Performance",
+   "category": "suspension",
+   "name": "3H",
+   "line": "Management",
+   "attributes": {
+    "de": {
+     "Bauart": "Luftfahrwerk-Steuerung (Druck und Höhe)"
+    },
+    "en": {
+     "Type": "Air suspension management (pressure and height)"
+    }
+   }
+  },
+  {
+   "brand": "BBS",
+   "category": "wheels_tires",
+   "name": "CH-R",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "BBS",
+   "category": "wheels_tires",
+   "name": "CI-R",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "BBS",
+   "category": "wheels_tires",
+   "name": "LM",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "BBS",
+   "category": "wheels_tires",
+   "name": "RS",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "BBS",
+   "category": "wheels_tires",
+   "name": "SR",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "BBS",
+   "category": "wheels_tires",
+   "name": "XA",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "BBS",
+   "category": "wheels_tires",
+   "name": "CC-R",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "BBS",
+   "category": "wheels_tires",
+   "name": "FI-R",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge",
+     "Fertigung": "geschmiedet"
+    },
+    "en": {
+     "Type": "Alloy wheel",
+     "Construction": "Forged"
+    }
+   }
+  },
+  {
+   "brand": "BBS",
+   "category": "wheels_tires",
+   "name": "RI-A",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge",
+     "Fertigung": "geschmiedet"
+    },
+    "en": {
+     "Type": "Alloy wheel",
+     "Construction": "Forged"
+    }
+   }
+  },
+  {
+   "brand": "OZ Racing",
+   "category": "wheels_tires",
+   "name": "Ultraleggera",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "OZ Racing",
+   "category": "wheels_tires",
+   "name": "Ultraleggera HLT",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "OZ Racing",
+   "category": "wheels_tires",
+   "name": "Superturismo",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "OZ Racing",
+   "category": "wheels_tires",
+   "name": "Leggera HLT",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Rotiform",
+   "category": "wheels_tires",
+   "name": "BLQ",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Rotiform",
+   "category": "wheels_tires",
+   "name": "LAS-R",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Rotiform",
+   "category": "wheels_tires",
+   "name": "SIX",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Rotiform",
+   "category": "wheels_tires",
+   "name": "ROC",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Work Wheels",
+   "category": "wheels_tires",
+   "name": "Meister S1",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Work Wheels",
+   "category": "wheels_tires",
+   "name": "Emotion CR Kiwami",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Rays",
+   "category": "wheels_tires",
+   "name": "Volk Racing TE37",
+   "line": "Volk Racing",
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge",
+     "Fertigung": "geschmiedet"
+    },
+    "en": {
+     "Type": "Alloy wheel",
+     "Construction": "Forged"
+    }
+   }
+  },
+  {
+   "brand": "Rays",
+   "category": "wheels_tires",
+   "name": "Volk Racing CE28N",
+   "line": "Volk Racing",
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge",
+     "Fertigung": "geschmiedet"
+    },
+    "en": {
+     "Type": "Alloy wheel",
+     "Construction": "Forged"
+    }
+   }
+  },
+  {
+   "brand": "Rays",
+   "category": "wheels_tires",
+   "name": "Gram Lights 57DR",
+   "line": "Gram Lights",
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Enkei",
+   "category": "wheels_tires",
+   "name": "RPF1",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Japan Racing",
+   "category": "wheels_tires",
+   "name": "JR11",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Leichtmetallfelge"
+    },
+    "en": {
+     "Type": "Alloy wheel"
+    }
+   }
+  },
+  {
+   "brand": "Michelin",
+   "category": "wheels_tires",
+   "name": "Pilot Sport 4 S",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen"
+    },
+    "en": {
+     "Type": "Summer tyre"
+    }
+   }
+  },
+  {
+   "brand": "Michelin",
+   "category": "wheels_tires",
+   "name": "Pilot Sport 5",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen"
+    },
+    "en": {
+     "Type": "Summer tyre"
+    }
+   }
+  },
+  {
+   "brand": "Pirelli",
+   "category": "wheels_tires",
+   "name": "P Zero",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen"
+    },
+    "en": {
+     "Type": "Summer tyre"
+    }
+   }
+  },
+  {
+   "brand": "Continental",
+   "category": "wheels_tires",
+   "name": "SportContact 7",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen"
+    },
+    "en": {
+     "Type": "Summer tyre"
+    }
+   }
+  },
+  {
+   "brand": "Bridgestone",
+   "category": "wheels_tires",
+   "name": "Potenza Sport",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen"
+    },
+    "en": {
+     "Type": "Summer tyre"
+    }
+   }
+  },
+  {
+   "brand": "Hankook",
+   "category": "wheels_tires",
+   "name": "Ventus S1 evo3",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen"
+    },
+    "en": {
+     "Type": "Summer tyre"
+    }
+   }
+  },
+  {
+   "brand": "Yokohama",
+   "category": "wheels_tires",
+   "name": "Advan Sport V107",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen"
+    },
+    "en": {
+     "Type": "Summer tyre"
+    }
+   }
+  },
+  {
+   "brand": "Michelin",
+   "category": "wheels_tires",
+   "name": "Pilot Sport Cup 2",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen",
+     "Einsatz": "Straße und Rennstrecke"
+    },
+    "en": {
+     "Type": "Summer tyre",
+     "Use": "Road and track"
+    }
+   }
+  },
+  {
+   "brand": "Pirelli",
+   "category": "wheels_tires",
+   "name": "P Zero Trofeo R",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen",
+     "Einsatz": "Straße und Rennstrecke"
+    },
+    "en": {
+     "Type": "Summer tyre",
+     "Use": "Road and track"
+    }
+   }
+  },
+  {
+   "brand": "Toyo",
+   "category": "wheels_tires",
+   "name": "Proxes R888R",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen",
+     "Einsatz": "Straße und Rennstrecke"
+    },
+    "en": {
+     "Type": "Summer tyre",
+     "Use": "Road and track"
+    }
+   }
+  },
+  {
+   "brand": "Yokohama",
+   "category": "wheels_tires",
+   "name": "Advan Neova AD09",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sommerreifen",
+     "Einsatz": "Straße und Rennstrecke"
+    },
+    "en": {
+     "Type": "Summer tyre",
+     "Use": "Road and track"
+    }
+   }
+  },
+  {
+   "brand": "Akrapovič",
+   "category": "exhaust",
+   "name": "Slip-On Line (Titan)",
+   "line": "Slip-On Line",
+   "attributes": {
+    "de": {
+     "Bauart": "Endschalldämpfer",
+     "Werkstoff": "Titan"
+    },
+    "en": {
+     "Type": "Rear silencer",
+     "Material": "Titanium"
+    }
+   }
+  },
+  {
+   "brand": "Akrapovič",
+   "category": "exhaust",
+   "name": "Evolution Line (Titan)",
+   "line": "Evolution Line",
+   "attributes": {
+    "de": {
+     "Bauart": "Abgasanlage",
+     "Werkstoff": "Titan"
+    },
+    "en": {
+     "Type": "Exhaust system",
+     "Material": "Titanium"
+    }
+   }
+  },
+  {
+   "brand": "Milltek Sport",
+   "category": "exhaust",
+   "name": "Cat-Back",
+   "line": "Abgasanlagen",
+   "attributes": {
+    "de": {
+     "Bauart": "Abgasanlage ab Katalysator"
+    },
+    "en": {
+     "Type": "Cat-back exhaust"
+    }
+   }
+  },
+  {
+   "brand": "Milltek Sport",
+   "category": "exhaust",
+   "name": "Turbo-Back",
+   "line": "Abgasanlagen",
+   "attributes": {
+    "de": {
+     "Bauart": "Abgasanlage ab Turbolader"
+    },
+    "en": {
+     "Type": "Turbo-back exhaust"
+    }
+   }
+  },
+  {
+   "brand": "AWE Tuning",
+   "category": "exhaust",
+   "name": "Touring Edition",
+   "line": "Abgasanlagen",
+   "attributes": {
+    "de": {
+     "Bauart": "Abgasanlage"
+    },
+    "en": {
+     "Type": "Exhaust system"
+    }
+   }
+  },
+  {
+   "brand": "AWE Tuning",
+   "category": "exhaust",
+   "name": "Track Edition",
+   "line": "Abgasanlagen",
+   "attributes": {
+    "de": {
+     "Bauart": "Abgasanlage"
+    },
+    "en": {
+     "Type": "Exhaust system"
+    }
+   }
+  },
+  {
+   "brand": "Wagner Tuning",
+   "category": "engine_performance",
+   "name": "Competition Ladeluftkühler",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Ladeluftkühler"
+    },
+    "en": {
+     "Type": "Intercooler"
+    }
+   }
+  },
+  {
+   "brand": "Eventuri",
+   "category": "engine_performance",
+   "name": "Carbon-Ansaugsystem",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Ansaugsystem",
+     "Werkstoff": "Carbon"
+    },
+    "en": {
+     "Type": "Intake system",
+     "Material": "Carbon fibre"
+    }
+   }
+  },
+  {
+   "brand": "BMC",
+   "category": "engine_performance",
+   "name": "CDA Carbon Dynamic Airbox",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Ansaugsystem",
+     "Werkstoff": "Carbon"
+    },
+    "en": {
+     "Type": "Intake system",
+     "Material": "Carbon fibre"
+    }
+   }
+  },
+  {
+   "brand": "K&N",
+   "category": "engine_performance",
+   "name": "57i Ansaugsystem",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Ansaugsystem"
+    },
+    "en": {
+     "Type": "Intake system"
+    }
+   }
+  },
+  {
+   "brand": "Forge Motorsport",
+   "category": "engine_performance",
+   "name": "Schubumluftventil",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Schubumluftventil"
+    },
+    "en": {
+     "Type": "Diverter valve"
+    }
+   }
+  },
+  {
+   "brand": "Garrett",
+   "category": "engine_performance",
+   "name": "G25-660",
+   "line": "G-Serie",
+   "attributes": {
+    "de": {
+     "Bauart": "Turbolader"
+    },
+    "en": {
+     "Type": "Turbocharger"
+    }
+   }
+  },
+  {
+   "brand": "Garrett",
+   "category": "engine_performance",
+   "name": "GTX3582R",
+   "line": "GTX-Serie",
+   "attributes": {
+    "de": {
+     "Bauart": "Turbolader"
+    },
+    "en": {
+     "Type": "Turbocharger"
+    }
+   }
+  },
+  {
+   "brand": "Haltech",
+   "category": "engine_performance",
+   "name": "Elite 2500",
+   "line": "Elite",
+   "attributes": {
+    "de": {
+     "Bauart": "Motorsteuergerät"
+    },
+    "en": {
+     "Type": "Engine control unit"
+    }
+   }
+  },
+  {
+   "brand": "MoTeC",
+   "category": "engine_performance",
+   "name": "M150",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Motorsteuergerät"
+    },
+    "en": {
+     "Type": "Engine control unit"
+    }
+   }
+  },
+  {
+   "brand": "Cobb Tuning",
+   "category": "engine_performance",
+   "name": "Accessport V3",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Steuergeräte-Programmiergerät"
+    },
+    "en": {
+     "Type": "ECU programmer"
+    }
+   }
+  },
+  {
+   "brand": "Brembo",
+   "category": "brakes",
+   "name": "GT-Bremsanlage",
+   "line": "GT",
+   "attributes": {
+    "de": {
+     "Bauart": "Bremsanlage mit Festsätteln"
+    },
+    "en": {
+     "Type": "Big brake kit with fixed calipers"
+    }
+   }
+  },
+  {
+   "brand": "Brembo",
+   "category": "brakes",
+   "name": "Max Bremsscheiben",
+   "line": "Max",
+   "attributes": {
+    "de": {
+     "Bauart": "Bremsscheiben"
+    },
+    "en": {
+     "Type": "Brake discs"
+    }
+   }
+  },
+  {
+   "brand": "Brembo",
+   "category": "brakes",
+   "name": "Sport HP2000",
+   "line": "Sport",
+   "attributes": {
+    "de": {
+     "Bauart": "Bremsbeläge"
+    },
+    "en": {
+     "Type": "Brake pads"
+    }
+   }
+  },
+  {
+   "brand": "AP Racing",
+   "category": "brakes",
+   "name": "Radi-CAL",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Bremssattel"
+    },
+    "en": {
+     "Type": "Brake caliper"
+    }
+   }
+  },
+  {
+   "brand": "Endless",
+   "category": "brakes",
+   "name": "MX72",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Bremsbeläge"
+    },
+    "en": {
+     "Type": "Brake pads"
+    }
+   }
+  },
+  {
+   "brand": "Ferodo",
+   "category": "brakes",
+   "name": "DS2500",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Bremsbeläge"
+    },
+    "en": {
+     "Type": "Brake pads"
+    }
+   }
+  },
+  {
+   "brand": "EBC",
+   "category": "brakes",
+   "name": "Yellowstuff",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Bremsbeläge"
+    },
+    "en": {
+     "Type": "Brake pads"
+    }
+   }
+  },
+  {
+   "brand": "Pagid",
+   "category": "brakes",
+   "name": "RS29",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Bremsbeläge"
+    },
+    "en": {
+     "Type": "Brake pads"
+    }
+   }
+  },
+  {
+   "brand": "Tarox",
+   "category": "brakes",
+   "name": "F2000",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Bremsscheiben"
+    },
+    "en": {
+     "Type": "Brake discs"
+    }
+   }
+  },
+  {
+   "brand": "Recaro",
+   "category": "interior",
+   "name": "Pole Position",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Schalensitz"
+    },
+    "en": {
+     "Type": "Bucket seat"
+    }
+   }
+  },
+  {
+   "brand": "Recaro",
+   "category": "interior",
+   "name": "Profi SPG",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Schalensitz"
+    },
+    "en": {
+     "Type": "Bucket seat"
+    }
+   }
+  },
+  {
+   "brand": "Recaro",
+   "category": "interior",
+   "name": "Sportster CS",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sportsitz"
+    },
+    "en": {
+     "Type": "Sport seat"
+    }
+   }
+  },
+  {
+   "brand": "Sparco",
+   "category": "interior",
+   "name": "Sprint",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Schalensitz"
+    },
+    "en": {
+     "Type": "Bucket seat"
+    }
+   }
+  },
+  {
+   "brand": "Sparco",
+   "category": "interior",
+   "name": "QRT-R",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Schalensitz"
+    },
+    "en": {
+     "Type": "Bucket seat"
+    }
+   }
+  },
+  {
+   "brand": "Bride",
+   "category": "interior",
+   "name": "Zeta IV",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Schalensitz"
+    },
+    "en": {
+     "Type": "Bucket seat"
+    }
+   }
+  },
+  {
+   "brand": "Momo",
+   "category": "interior",
+   "name": "Prototipo",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sportlenkrad"
+    },
+    "en": {
+     "Type": "Sport steering wheel"
+    }
+   }
+  },
+  {
+   "brand": "Nardi",
+   "category": "interior",
+   "name": "Deep Corn",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sportlenkrad"
+    },
+    "en": {
+     "Type": "Sport steering wheel"
+    }
+   }
+  },
+  {
+   "brand": "AiM Sports",
+   "category": "electronics",
+   "name": "Solo 2 DL",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Rundenzeitmessung"
+    },
+    "en": {
+     "Type": "Lap timer"
+    }
+   }
+  },
+  {
+   "brand": "Racelogic",
+   "category": "electronics",
+   "name": "VBOX Sport",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Datenlogger"
+    },
+    "en": {
+     "Type": "Data logger"
+    }
+   }
+  },
+  {
+   "brand": "Defi",
+   "category": "electronics",
+   "name": "Advance BF",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Zusatzinstrumente"
+    },
+    "en": {
+     "Type": "Additional gauges"
+    }
+   }
+  },
+  {
+   "brand": "Quaife",
+   "category": "drivetrain",
+   "name": "ATB Sperrdifferenzial",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sperrdifferenzial (Schrägverzahnung)"
+    },
+    "en": {
+     "Type": "Limited-slip differential (helical gear)"
+    }
+   }
+  },
+  {
+   "brand": "Wavetrac",
+   "category": "drivetrain",
+   "name": "Wavetrac Differenzial",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sperrdifferenzial"
+    },
+    "en": {
+     "Type": "Limited-slip differential"
+    }
+   }
+  },
+  {
+   "brand": "Drexler",
+   "category": "drivetrain",
+   "name": "Sperrdifferenzial",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sperrdifferenzial (Lamellen)"
+    },
+    "en": {
+     "Type": "Limited-slip differential (plate type)"
+    }
+   }
+  },
+  {
+   "brand": "OS Giken",
+   "category": "drivetrain",
+   "name": "Super Lock LSD",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Sperrdifferenzial (Lamellen)"
+    },
+    "en": {
+     "Type": "Limited-slip differential (plate type)"
+    }
+   }
+  },
+  {
+   "brand": "Exedy",
+   "category": "drivetrain",
+   "name": "Stage 1 Organic",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Kupplung"
+    },
+    "en": {
+     "Type": "Clutch"
+    }
+   }
+  },
+  {
+   "brand": "Motul",
+   "category": "other",
+   "name": "300V",
+   "line": null,
+   "attributes": {
+    "de": {
+     "Bauart": "Motoröl"
+    },
+    "en": {
+     "Type": "Engine oil"
+    }
+   }
+  }
+ ]
+}

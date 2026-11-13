@@ -55,7 +55,7 @@ class MemberShowController extends Controller
             ],
             'tab' => $tab,
             'vehicles' => $panel('vehicles', fn (): array => self::vehicles($user, $presenter)),
-            'security' => $panel('security', fn (): array => $record->security($user)),
+            'security' => $panel('security', fn (): array => [...$record->security($user), ...MemberSecurityPanel::for($user)]),
             'reports' => $panel('reports', fn (): array => $record->reports($user)),
             'messages' => $panel('messages', fn (): ?array => $staff->can('members.message_metadata') ? $record->messageMetadata($user, $staff) : null),
             'audit' => $panel('audit', fn (): ?array => $staff->can('audit.view') ? self::audit($user) : null),

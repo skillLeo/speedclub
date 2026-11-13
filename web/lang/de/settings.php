@@ -86,6 +86,7 @@ return [
                 'security_events.json' => 'Dein Sicherheitsprotokoll: Anmeldungen auf neuen Geräten, Änderungen an Passwort, E-Mail-Adresse und Zwei-Faktor-Schutz, mit Datum und Gerätename, ohne IP-Adresse.',
                 'reactions.json' => 'Deine Reaktionen auf Nachrichten.',
                 'push_devices.json' => 'Geräte, die Mitteilungen bekommen, mit Plattform und Datum.',
+                'web_push_browsers.json' => 'Browser, die Browser-Mitteilungen bekommen, mit Browser, System und Datum.',
                 'device_installs.json' => 'App-Installationen mit Gerät, System- und App-Version, erster und letzter Anmeldung.',
                 'browser_sessions.json' => 'Angemeldete Browser mit Browser, System und letzter Nutzung.',
             ],

@@ -229,7 +229,8 @@ export function MaintenanceScreen() {
     }
     if (row.kind === 'next' && next) {
       return (
-        <View style={[styles.column, styles.next]} testID={`${ROUTE}.nextBlock`}>
+        // DQ-1127: on the desktop grid the hero starts at the side column's section top (32), so both titles share a line.
+        <View style={[styles.column, grid ? styles.section : styles.next]} testID={`${ROUTE}.nextBlock`}>
           <SectionHeader title={t('maintenance.next')} />
           <ItemCard item={next} unit={unit} hero onOpen={openItem} />
         </View>

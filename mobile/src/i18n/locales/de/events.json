@@ -421,7 +421,8 @@
         "regionLabel": "Karte mit Treffen",
         "pickerLabel": "Karte, um den Ort des Treffens festzulegen",
         "consentBody": "Die Karte lädt Daten von OpenFreeMap und OpenStreetMap. Erst wenn du tippst.",
-        "consentAction": "Karte anzeigen"
+        "consentAction": "Karte anzeigen",
+        "offlineBody": "Du bist offline. Die Karte lädt, sobald du wieder verbunden bist."
     },
     "sample": {
         "title": "Cars & Coffee am Hafen",

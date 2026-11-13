@@ -12,6 +12,7 @@ import { garageCardProps } from '@/features/garage/card';
 import { withoutRepeatedKind } from '@/features/home/components/HomeFeedCard';
 import { historyMetaLine, updateGlyph, updateHeadline } from '@/features/vehicle/model';
 import { keepNameTogether } from '@/lib/format';
+import { bindTrailingCode } from '@/ui/textBreaks';
 import { useQaState, type QaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, space } from '@/theme';
@@ -216,7 +217,9 @@ export function profileUpdateText(
 ): { title: string; diff: string | undefined; meta: string } {
   const { update, vehicle } = entry;
   const when = update.created_at ? date(new Date(update.created_at)) : null;
-  const build = keepNameTogether(vehicle.full_title);
+  // DQ-1126: the model code stays with the word before it ("GT-R R34"), so the meta never ends a line on a lone "R34" (ADR-426 c).
+  // A caption pair this short fits every phone line, also at 200 %.
+  const build = bindTrailingCode(keepNameTogether(vehicle.full_title), () => true);
   const authored = (update.type === 'note' || update.type === 'post') && update.note?.trim();
   if (authored) {
     return { title: update.note?.trim() ?? '', diff: undefined, meta: [when, build].filter(Boolean).join(' · ') };

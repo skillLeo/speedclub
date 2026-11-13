@@ -13,13 +13,14 @@ import * as Device from 'expo-device';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AppState } from 'react-native';
 
 import { api, ApiError, apiData, apiOrigin, networkError, whileTokenChanges, withIdempotency } from '@/api/client';
 import { isViewAsTab, requestViewAsEnd } from '@/api/clientViewAs';
 import { appConfigKey } from '@/api/queries/appConfig';
 import { clearQueryCache, queryClient, removePersistedCache } from '@/api/queryClient';
 import type { components } from '@/api/schema';
-import i18n from '@/i18n';
+import i18n, { detectLocale } from '@/i18n';
 import { normalizeEmail } from '@/lib/emailAddress';
 import { isNative, isWeb } from '@/lib/platform';
 import { qa } from '@/lib/qa';
@@ -51,6 +52,8 @@ export type MemberSettings = components['schemas']['MemberSettingsResource'];
 type SettingsPatch = components['schemas']['UpdateSettingsRequest'];
 /** A concrete language: the account may also say "system" (follow the device), which is never synced as a language. */
 type Locale = Exclude<NonNullable<SettingsPatch['locale']>, 'system'>;
+/** SET-11's choice: a language, or "system" (ADR-451: follow `detectLocale()`, re-read whenever the app comes to the front). */
+export type LocalePreference = NonNullable<SettingsPatch['locale']>;
 type ThemePreference = MemberSettings['theme'];
 
 export const meKey = ['auth', 'me'] as const;
@@ -563,10 +566,35 @@ export function rotateTokenIfDue(now: number = Date.now()): Promise<void> {
 
 // -- Settings sync (§11): the device and the account agree on theme and language.
 
-type SyncedSettings = { theme?: ThemePreference; locale?: Locale };
+type SyncedSettings = { theme?: ThemePreference; locale?: LocalePreference };
 
 function asLocale(value: string): Locale | null {
   return value === 'de' || value === 'en' ? value : null;
+}
+
+function asLocalePreference(value: string | null | undefined): LocalePreference | null {
+  return value === 'system' ? 'system' : asLocale(value ?? '');
+}
+
+/** The language a preference shows: "system" is the device's language now. */
+export function localeOfPreference(preference: LocalePreference): Locale {
+  return preference === 'system' ? detectLocale() : preference;
+}
+
+/** SET-11's current choice on this device; a device that never chose follows the language it started in. */
+export async function readLocalePreference(): Promise<LocalePreference> {
+  return asLocalePreference(await getStored('sc.locale')) ?? (asLocale(i18n.language) ?? 'de');
+}
+
+/**
+ * SET-11: the language chosen here applies at once and is stored; "system" follows the device from now on. A member's account
+ * follows through useSettingsSync (pushChangedSettings), which sends the preference, "system" included.
+ */
+export async function chooseLocale(preference: LocalePreference): Promise<void> {
+  await setStored('sc.locale', preference);
+  const locale = localeOfPreference(preference);
+  if (i18n.language !== locale) await i18n.changeLanguage(locale);
+  else if (useSessionStore.getState().status === 'member') void pushChangedSettings();
 }
 
 async function readSynced(): Promise<SyncedSettings> {
@@ -630,14 +658,20 @@ export function reconcileSettings(me: Pick<Me, 'theme' | 'locale'>): Promise<voi
       }
     }
     if (!qa.locale) {
-      const device = await getStored('sc.locale');
-      const account = asLocale(me.locale);
-      if (device && device !== synced.locale && device !== account) {
+      const device = asLocalePreference(await getStored('sc.locale'));
+      const account = asLocalePreference(me.locale);
+      if (device === 'system' && synced.locale === 'system') {
+        // auth/me names the concrete language even for an account that follows the device (MeResource; lane B request M4.15):
+        // a "system" both sides agreed on stays, and the device's language shows.
+        const shown = detectLocale();
+        if (i18n.language !== shown) await i18n.changeLanguage(shown);
+      } else if (device && device !== synced.locale && device !== account) {
         patch.locale = device;
       } else if (account) {
         next.locale = account;
         await setStored('sc.locale', account);
-        if (i18n.language !== account) await i18n.changeLanguage(account);
+        const shown = localeOfPreference(account);
+        if (i18n.language !== shown) await i18n.changeLanguage(shown);
       }
     }
     if (await patchSettings(patch)) Object.assign(next, patch);
@@ -655,7 +689,9 @@ export function pushChangedSettings(): Promise<void> {
     const synced = await readSynced();
     const patch: SettingsPatch = {};
     const theme = getThemePreference();
-    const locale = asLocale(i18n.language);
+    // "system" is sent as such, never as the language it shows today (ADR-451).
+    const stored = asLocalePreference(await getStored('sc.locale'));
+    const locale = stored === 'system' ? 'system' : asLocale(i18n.language);
     if (!fixedThemePreference() && theme !== synced.theme) patch.theme = theme;
     if (!qa.locale && locale && locale !== synced.locale) patch.locale = locale;
     if (Object.keys(patch).length === 0) return;
@@ -663,11 +699,34 @@ export function pushChangedSettings(): Promise<void> {
   });
 }
 
+/** "System" (ADR-451): back in the foreground, the device language may have changed in the system settings meanwhile. */
+async function followSystemLocale(): Promise<void> {
+  if (qa.locale || (await getStored('sc.locale')) !== 'system') return;
+  const device = detectLocale();
+  if (i18n.language !== device) await i18n.changeLanguage(device);
+}
+
+let followingSystemLocale = false;
+
+function startFollowingSystemLocale(): void {
+  if (followingSystemLocale) return;
+  followingSystemLocale = true;
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') void followSystemLocale();
+  });
+  // The member web: the browser's language list changed, or the tab came back.
+  if (isWeb && typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    window.addEventListener('languagechange', () => void followSystemLocale());
+  }
+}
+
 /** Applies the language chosen on this device before the splash hides. Never rejects. */
 export async function hydrateLocale(): Promise<void> {
+  startFollowingSystemLocale();
   if (qa.locale) return;
-  const stored = await getStored('sc.locale');
-  if (stored && stored !== i18n.language) await i18n.changeLanguage(stored);
+  const stored = asLocalePreference(await getStored('sc.locale'));
+  const locale = stored ? localeOfPreference(stored) : null;
+  if (locale && locale !== i18n.language) await i18n.changeLanguage(locale);
 }
 
 /** Pushes changes of theme and language to the account. Skips the first run, which only tells what is current. */

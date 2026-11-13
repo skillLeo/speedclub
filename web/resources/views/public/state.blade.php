@@ -1,6 +1,6 @@
 {{--
     WEB-06 and its siblings: one line of what happened, a way forward, never anything about the vehicle behind a revoked or private code.
-    state: revoked | private | not_found (WEB-06) · vehicle_unavailable · member_unavailable · not_published · rate_limited · page_not_found · server_error · maintenance
+    state: revoked | private | not_found (WEB-06) · vehicle_unavailable · member_unavailable · business_unavailable · event_unavailable · brand_unavailable · not_published · rate_limited · page_not_found · server_error · maintenance
     copy: for WEB-06, the text under public.qr_state (QrResolution::copy); a revoked code of a deleted vehicle reads "unavailable"
 --}}
 @php
@@ -10,7 +10,7 @@
     $text = $body ?? ($isQr ? __('public.qr_state.'.$key.'.body') : __('public.state.'.$key.'.body'));
     $id = $isQr ? 'WEB-06' : 'WEB-STATE';
     // DQ-172: one glyph per state, the same in the app (QrResolveScreen). What is gone reads like private, who cannot be found like not found.
-    $icon = ['revoked' => 'prohibit', 'private' => 'lock-simple', 'not_found' => 'magnifying-glass', 'vehicle_unavailable' => 'lock-simple', 'member_unavailable' => 'magnifying-glass'][$state] ?? 'compass';
+    $icon = ['revoked' => 'prohibit', 'private' => 'lock-simple', 'not_found' => 'magnifying-glass', 'vehicle_unavailable' => 'lock-simple', 'member_unavailable' => 'magnifying-glass', 'business_unavailable' => 'lock-simple', 'event_unavailable' => 'lock-simple', 'brand_unavailable' => 'magnifying-glass'][$state] ?? 'compass';
     $photo = \App\Services\PublicPages\PublicPhoto::brand('state-garage');
 @endphp
 <x-public.layout :title="$title.' · SPEED CLUB'" :description="$text" robots="noindex">

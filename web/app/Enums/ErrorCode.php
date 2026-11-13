@@ -115,6 +115,15 @@ enum ErrorCode: string
     case EventInReview = 'event_in_review';
     // M4.13 (09 §8.12 offline outbox): the edit started from an older `version` of the row; the body's `current` holds the server's row.
     case EditConflict = 'edit_conflict';
+    // M4.14 (09 §8.10): a business profile that does not exist, or one the reader may not see (applied, rejected, suspended, removed,
+    // samples while hidden, a block with its owner); the same answer for each.
+    case BusinessUnavailable = 'business_unavailable';
+    // M4.14: the member already owns or works for a business (one per member), or the business is not in the state the action needs.
+    case BusinessExists = 'business_exists';
+    // M4.14: portfolio tags need a verified business on both ends (a pending, rejected or suspended business cannot tag or be tagged).
+    case BusinessNotVerified = 'business_not_verified';
+    // M4.14 (09 §8.9): a product that does not exist or is not in the catalogue any more.
+    case ProductUnavailable = 'product_unavailable';
 
     public function status(): int
     {
@@ -122,9 +131,9 @@ enum ErrorCode: string
             self::BadRequest => 400,
             self::Unauthenticated, self::InvalidCredentials, self::InvalidIdentityToken => 401,
             self::Forbidden, self::AccountRestricted, self::EmailNotVerified, self::PasswordChangeRequired, self::QrRevokedByStaff, self::CannotMessage, self::SecondFactorLocked, self::PasswordConfirmationRequired, self::ViewAsReadOnly, self::ViewAsNoMessages, self::ViewAsPrivate, self::AiOptInRequired, self::ConsentRequired, self::TermsRequired, self::ReauthenticationRequired, self::EditWindowClosed, self::CommentsDisabled, self::OrganiserNotEligible => 403,
-            self::NotFound, self::VehicleUnavailable, self::MemberUnavailable, self::FeatureDisabled, self::EventUnavailable => 404,
+            self::NotFound, self::VehicleUnavailable, self::MemberUnavailable, self::FeatureDisabled, self::EventUnavailable, self::BusinessUnavailable, self::ProductUnavailable => 404,
             self::MethodNotAllowed => 405,
-            self::Conflict, self::UsernameChangeCooldown, self::TokenRotationNotDue, self::TwoFactorRequired, self::IdempotencyKeyReused, self::FeedStale, self::RequestPending, self::AlreadyReported, self::AppealExists, self::ProviderAlreadyLinked, self::LastSignInMethod, self::LimitReached, self::EventClosed, self::EventInReview, self::EditConflict => 409,
+            self::Conflict, self::UsernameChangeCooldown, self::TokenRotationNotDue, self::TwoFactorRequired, self::IdempotencyKeyReused, self::FeedStale, self::RequestPending, self::AlreadyReported, self::AppealExists, self::ProviderAlreadyLinked, self::LastSignInMethod, self::LimitReached, self::EventClosed, self::EventInReview, self::EditConflict, self::BusinessExists, self::BusinessNotVerified => 409,
             self::PayloadTooLarge => 413,
             self::UnsupportedMediaType => 415,
             self::SessionExpired => 419,

@@ -51,6 +51,8 @@ import { routesM35 } from './routes-m35.mjs';
 import { routesM36 } from './routes-m36.mjs';
 import { routesM410Mnt } from './routes-m410-mnt.mjs';
 import { routesM412Evt } from './routes-m412-evt.mjs';
+import { routesM414 } from './routes-m414.mjs';
+import { routesM415 } from './routes-m415.mjs';
 import { routesM417EvtAdmin } from './routes-m417-evt-admin.mjs';
 import { routesM410Prof } from './routes-m410-prof.mjs';
 import { routesM410Set } from './routes-m410-set.mjs';
@@ -905,7 +907,9 @@ export const routes = [
     phase: 3,
     auth: 'member',
     states: ['default'],
-    ready: '[data-testid="VEH-01.ownerCapsule"]',
+    // DQ-1073 (M4.15): the "Nächste HU" chip needs an HU/AU item; the seed has none, the maintenance fixture does (März 2027).
+    ready: '[data-testid="VEH-01.ownerCapsule"] [data-testid="VEH-01.nextHu"], [data-testid="VEH-01.nextHu"]',
+    fixture: 'maintenance',
     capture: 'expanded',
     notes: 'M4.9: lukas.sc on his own R34: the OwnerCapsule (Update posten + QR, Bearbeiten, Mods, Fotos) instead of the visitor action row; the Highlights rail with "Bearbeiten" (or the pin invitation when empty).',
   },
@@ -1328,7 +1332,10 @@ export const routes = [
     auth: 'member',
     states: ['default', 'loading', 'error', 'offline'],
     // DQ-1087: PROF-05 opens the "Gespeichert" collection (COL-02); its own states are the wall skeleton and the error.
-    ready: '[data-testid^="COL-02.item."], [data-testid="COL-02.empty"], [data-testid="PROF-05.skeleton"], [data-testid="PROF-05.error"]',
+    // DQ-1124: the default cell waits for the loaded wall (a tile's link, or COL-02's empty state). PROF-05's own skeleton is there
+    // first, before the redirect, so it only counts in the forced states; matching it in the default cell photographed COL-02's
+    // skeleton while the items were still on the way (the 1280 cell).
+    ready: loadedOr('[data-testid^="COL-02.item."][data-testid$=".open"], [data-qa-state="default"] [data-testid="COL-02.empty"]', 'PROF-05.root'),
     capture: 'expanded',
     notes: 'DQ-1087: /profile/saved keeps its address and replaces itself with lukas.sc\'s "Gespeichert" collection, the COL-02 wall (no v1 cards). loading = the wall skeleton under "Gespeichert"; error/offline = the retry.',
   },
@@ -2581,7 +2588,9 @@ routes.push(
 );
 
 // Phase 3 modules built in parallel keep their entries in their own files (lead, M3.5/M3.6).
-routes.push(...routesM35, ...routesM36, ...routesM410Mnt, ...routesM410Prof, ...routesM410Set, ...routesM48R3, ...routesM412Evt, ...routesM417EvtAdmin);
+routes.push(...routesM35, ...routesM36, ...routesM410Mnt, ...routesM410Prof, ...routesM410Set, ...routesM48R3, ...routesM412Evt, ...routesM414, ...routesM415, ...routesM417EvtAdmin);
+routes.push(...(await import('./routes-m416.mjs')).routesM416); // M4.16 Public web 2.0 (lane B)
+routes.push(...(await import('./routes-m417.mjs')).routesM417); // M4.17 Admin 2.0 (admin-builder)
 
 // M3.5 + M3.7 app surfaces of 8b9d874 (QA). The announcement on Start, the re-consent sheet and the member's support requests
 // show data every viewer (or a staff queue) would see, so each names a stage fixture (support/stage-fixtures.mjs): the runner takes these

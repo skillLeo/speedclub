@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers\Admin\Support;
 
+use App\Enums\BusinessStatus;
+use App\Enums\EventStatus;
+use App\Models\Business;
+use App\Models\Event;
 use App\Models\Staff;
 use App\Services\Admin\Kpi;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Dashboard data for ADM-06 in the shape the page renders (resources/js/admin/types/dashboard.ts), from App\Services\Admin\Kpi
@@ -22,7 +28,33 @@ class DashboardData
      */
     public function queues(Staff $staff): array
     {
-        return $this->kpi->queues($staff);
+        $queues = $this->kpi->queues($staff);
+
+        // M4.17: the review queues of 09 §10.2 (ADM-53 Treffen, ADM-55 Betriebe), oldest submission as `since` (the SLA).
+        if ($staff->can('moderation.view')) {
+            $queues['events_review'] = self::waiting(Event::query()->where('status', EventStatus::PendingReview->value));
+            $queues['business_applications'] = self::waiting(Business::query()->where('status', BusinessStatus::Applied->value));
+        }
+
+        return $queues;
+    }
+
+    /**
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return array{count: int, status: 'ok'|'warning', since: string|null}
+     */
+    private static function waiting(Builder $query): array
+    {
+        $count = (clone $query)->count();
+        $oldest = $count > 0 ? (clone $query)->min('submitted_at') : null;
+
+        return [
+            'count' => $count,
+            'status' => $count > 0 ? 'warning' : 'ok',
+            'since' => is_string($oldest) ? CarbonImmutable::parse($oldest, 'UTC')->toIso8601String() : null,
+        ];
     }
 
     /**

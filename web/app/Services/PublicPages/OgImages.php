@@ -409,7 +409,8 @@ class OgImages
         $this->sweep(Vehicle::withTrashed()->with(self::VEHICLE_RELATIONS), $keep, $removed);
         $this->sweep(User::withTrashed()->with(self::MEMBER_RELATIONS), $keep, $removed);
 
-        return $removed + $this->removeOrphans() + app(ShareCards::class)->prune();
+        // M4.16: the event, business and brand cards keep no column; their folders are swept by what is current.
+        return $removed + $this->removeOrphans() + app(ShareCards::class)->prune() + app(PartnerOgImages::class)->prune();
     }
 
     /**

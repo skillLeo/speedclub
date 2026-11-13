@@ -89,6 +89,13 @@ export const appConfigSchema: z.ZodType<AppConfig> = z.object({
   links: z.record(z.string(), nullableString),
   // M2.4: Pusher's public values. A config cached by an older build has none: realtime is then off and the app polls.
   realtime: z.object({ enabled: z.boolean(), key: nullableString, cluster: nullableString }).default({ enabled: false, key: null, cluster: null }),
+  // ADR-452 (M4.15): the public VAPID key of Web Push, null without keys. A config cached by an older build has none: no key then.
+  web_push: z
+    .object({ vapid_public_key: nullableString })
+    .nullable()
+    .optional()
+    .transform((value) => value ?? { vapid_public_key: null })
+    .catch({ vapid_public_key: null }),
 });
 
 /** Nothing blocked, no flag on. What a first launch without network runs on. */
@@ -104,6 +111,7 @@ export const BUNDLED_APP_CONFIG: AppConfig = {
   legal_reconsent: { terms: null, privacy: null },
   links: {},
   realtime: { enabled: false, key: null, cluster: null },
+  web_push: { vapid_public_key: null },
 };
 
 export const APP_CONFIG_STORAGE_KEY = 'sc.appConfig';

@@ -41,5 +41,8 @@
 "qr_milestone":"Feier-Moment, wenn ein QR-Sticker eine Scan-Marke erreicht (Meilenstein-Karte und Mitteilung)",
 "businesses":"Betriebsprofile (Werkstätten und Tuner), Bewerbung und Verifizierung; aus, bis das Modul gebaut und geprüft ist",
 "membership":"Mitgliedschaft (SET-24, MEM-01): Vorteile und Paywall-Gerüst ohne Zahlung; aus",
-"msg_replies":"Auf einzelne Nachrichten antworten (Wischen zum Antworten, Zitat über der Nachricht); aus, bis die App es freigibt"
+"msg_replies":"Auf einzelne Nachrichten antworten (Wischen zum Antworten, Zitat über der Nachricht); aus, bis die App es freigibt",
+"parts_catalogue":"Teilekatalog: Marken- und Produktseiten, Teile im Mod-Editor verknüpfen, \"Builds mit {Produkt}\"; aus, bis das Modul gebaut und geprüft ist",
+"affiliate_links":"Partnerlinks bei Produkten, gekennzeichnet als \"Anzeige\" (rel=\"sponsored\"); aus",
+"web_push":"Browser-Mitteilungen der Mitglieder-Web-App (Web Push); wirkt nur mit VAPID-Schlüsseln auf dem Server"
 }

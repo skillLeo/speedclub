@@ -6,6 +6,7 @@ use App\Enums\DevicePlatform;
 use App\Enums\MessageType;
 use App\Models\ConversationParticipant;
 use App\Models\Message;
+use App\Models\PushSubscription;
 use App\Models\PushToken;
 use App\Models\User;
 use App\Services\Notifications\ExpoPush;
@@ -13,6 +14,7 @@ use App\Services\Notifications\NotificationPrefs;
 use App\Services\Notifications\NotificationTexts;
 use App\Services\Notifications\Notifier;
 use App\Services\Notifications\QuietHours;
+use App\Services\Notifications\WebPush;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Cache;
@@ -25,6 +27,9 @@ use Illuminate\Support\Facades\Cache;
  * Text: "Neue Nachricht von @name" ("@name möchte dir schreiben" for a request). Only a member who turned message previews on gets the
  * start of a text ("Foto" / "Fahrzeug" for the others), never for a request (ADR-035). Data: {type, notification_id: null, path}, the path
  * of MSG-02 or MSG-04.
+ *
+ * M4.15 (ADR-452): the same text goes to the member web's browsers under the type's `web_push` switch, tagged per conversation so a
+ * newer message replaces the older notification, opening the thread's /app route. The cooldown is shared by both channels.
  */
 class SendMessagePush implements ShouldQueue
 {
@@ -32,7 +37,8 @@ class SendMessagePush implements ShouldQueue
 
     public int $tries = 1;
 
-    public int $timeout = 20;
+    // M4.15: Expo (10 s) and up to five browsers (5 s each) one after the other, inside the queue's 50 s.
+    public int $timeout = 40;
 
     public function __construct(
         public readonly string $recipientId,
@@ -41,12 +47,12 @@ class SendMessagePush implements ShouldQueue
         public readonly string $messageId,
     ) {}
 
-    public function handle(ExpoPush $push, Conversations $conversations, Notifier $notifier, NotificationTexts $texts): void
+    public function handle(ExpoPush $push, Conversations $conversations, Notifier $notifier, NotificationTexts $texts, WebPush $webPush): void
     {
         $recipient = User::query()->find($this->recipientId);
         $sender = User::query()->find($this->senderId);
 
-        if (! $push->enabled() || ! $recipient instanceof User || ! $sender instanceof User || ! $recipient->isActive() || ! $recipient->hasVerifiedEmail()) {
+        if ((! $push->enabled() && ! $webPush->enabled()) || ! $recipient instanceof User || ! $sender instanceof User || ! $recipient->isActive() || ! $recipient->hasVerifiedEmail()) {
             return;
         }
 
@@ -60,7 +66,10 @@ class SendMessagePush implements ShouldQueue
         $request = $participant->isPendingRequest();
         $type = $request ? 'message_request' : 'new_message';
 
-        if (! NotificationPrefs::wantsPush($recipient, $type) || QuietHours::active($recipient) || ! $notifier->mayShow($recipient, $sender)) {
+        $native = $push->enabled() && NotificationPrefs::wantsPush($recipient, $type);
+        $web = $webPush->enabled() && NotificationPrefs::wantsWebPush($recipient, $type);
+
+        if ((! $native && ! $web) || QuietHours::active($recipient) || ! $notifier->mayShow($recipient, $sender)) {
             return;
         }
 
@@ -80,12 +89,13 @@ class SendMessagePush implements ShouldQueue
             return;
         }
 
-        $tokens = PushToken::query()
+        $tokens = $native ? PushToken::query()
             ->where('user_id', $recipient->id)
             ->whereIn('platform', [DevicePlatform::Ios->value, DevicePlatform::Android->value])
-            ->get();
+            ->get() : collect();
+        $subscriptions = $web ? PushSubscription::query()->where('user_id', $recipient->id)->get() : collect();
 
-        if ($tokens->isEmpty()) {
+        if ($tokens->isEmpty() && $subscriptions->isEmpty()) {
             return;
         }
 
@@ -97,11 +107,15 @@ class SendMessagePush implements ShouldQueue
             ? ['@'.$sender->username, $this->preview($message, $locale)]
             : [(string) __('notifications.title', [], $locale), (string) __('messaging.push.'.$type, $name, $locale)];
 
-        $push->send($tokens, $title, $body, [
-            'type' => $type,
-            'notification_id' => null,
-            'path' => $request ? '/messages/requests/'.$this->conversationId : '/messages/'.$this->conversationId,
-        ]);
+        $path = $request ? '/messages/requests/'.$this->conversationId : '/messages/'.$this->conversationId;
+
+        if ($tokens->isNotEmpty()) {
+            $push->send($tokens, $title, $body, ['type' => $type, 'notification_id' => null, 'path' => $path]);
+        }
+
+        if ($subscriptions->isNotEmpty()) {
+            $webPush->send($subscriptions, $title, $body, $path, 'msg-'.$this->conversationId, $locale);
+        }
     }
 
     private function preview(Message $message, string $locale): string

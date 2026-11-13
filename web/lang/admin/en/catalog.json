@@ -3,6 +3,7 @@
         "vehicles": "Vehicle catalogue",
         "categories": "Mod categories",
         "brands": "Part brands",
+        "products": "Parts & products",
         "import": "CSV import"
     },
     "palette": {
@@ -547,11 +548,13 @@
         "intro": "Vehicle catalogue or part brands as CSV, :rows rows and :mb MB at most. The check changes nothing; only “Apply” writes to the catalogue.",
         "template_vehicles": "Vehicles template",
         "template_brands": "Part brands template",
+        "template_products": "Parts template",
         "upload_title": "Check a file",
         "kind": "Content",
         "kinds": {
             "vehicles": "Vehicles",
-            "brands": "Part brands"
+            "brands": "Part brands",
+            "products": "Parts"
         },
         "file": "CSV file",
         "file_hint": "UTF-8 or Excel CSV with ; or ,",
@@ -661,7 +664,9 @@
             "duplicate": "Duplicate: the same entry is in line :line already.",
             "invalid": "Invalid value in “:field”.",
             "forbidden": "No permission any more.",
-            "failed": "Could not be applied."
+            "failed": "Could not be applied.",
+            "brand_missing": "This brand is not in the catalogue.",
+            "invalid_url": "The link must start with https://."
         },
         "import_of": "Import of :file",
         "lines_later": "The rows appear once the import has finished.",
@@ -688,5 +693,119 @@
         "import_analysed": "Checked. Look at the result before you apply it.",
         "import_queued": "Import started."
     },
-    "error_body": "Check the connection and try again."
+    "error_body": "Check the connection and try again.",
+    "products": {
+        "flash": {
+            "created": "Part created.",
+            "updated": "Saved.",
+            "archived": "Archived.",
+            "restored": "Restored.",
+            "merged": "Merged."
+        },
+        "title": "Parts & products",
+        "intro": "The parts catalogue members link their mods to. Only what the maker states, no invented data.",
+        "caption": "Parts with brand, category, usage and status",
+        "import": "Import parts",
+        "new": "New part",
+        "columns": {
+            "product": "Part",
+            "brand": "Brand",
+            "category": "Category",
+            "mods": "In mods",
+            "created": "Created",
+            "status": "Status"
+        },
+        "filters": {
+            "q": "Name, product line or brand",
+            "brand": "Brand"
+        },
+        "presets": {
+            "most_used": "Most used",
+            "newest": "Newest",
+            "archived": "Archived"
+        },
+        "status": {
+            "archived": "Archived"
+        },
+        "affiliate_short": "Ad link",
+        "empty_title": "No parts in the catalogue yet",
+        "empty_body": "Parts are added by the catalogue team or imported as CSV.",
+        "empty_body_manage": "Add the first part or import a maker's list as CSV.",
+        "view_only": "View only: editing needs a role with “Manage catalogue”.",
+        "drawer": {
+            "new": "New part",
+            "edit": "Edit part",
+            "body": "This is how the part appears when members link a mod to it."
+        },
+        "fields": {
+            "brand": "Brand",
+            "brand_placeholder": "Search brand",
+            "brand_loading": "Loading brands …",
+            "category": "Category",
+            "category_placeholder": "Choose a category",
+            "name": "Product name",
+            "name_hint": "As the maker calls it, without the brand: “Variante 3”.",
+            "line": "Product line",
+            "line_hint": "For example “Coilovers”.",
+            "url": "Maker's page",
+            "url_hint": "https only.",
+            "affiliate_url": "Affiliate link",
+            "affiliate_hint": "Members see it marked as an ad. https only."
+        },
+        "facts": {
+            "title": "Maker's facts",
+            "hint": "Up to 12 facts per language, as the maker states them.",
+            "language": "Language of the facts",
+            "de": "German",
+            "en": "English",
+            "label": "Fact :n",
+            "value": "Value :n",
+            "label_placeholder": "Type",
+            "value_placeholder": "Coilover",
+            "remove": "Remove fact :n",
+            "add": "Add fact",
+            "none": "No maker's facts on file.",
+            "en_missing": "No English facts: members using English see the German ones."
+        },
+        "errors": {
+            "brand": "Choose a brand.",
+            "category": "Choose a category.",
+            "name": "The product name needs at least 2 characters."
+        },
+        "actions": {
+            "archive": "Archive",
+            "restore": "Restore"
+        },
+        "archive_dialog": {
+            "title": "Archive “:name”?",
+            "body": "New mods can no longer choose the part. Existing links stay."
+        },
+        "restore_dialog": {
+            "title": "Restore “:name”?",
+            "body": "Members can choose the part again."
+        },
+        "merge": {
+            "title": "Merge “:name”",
+            "body": "The mods go to the part that stays, the name becomes one of its spellings, and this part is archived.",
+            "survivor": "Stays",
+            "survivor_hint": "Active parts of the same category, the same brand first.",
+            "placeholder": "Search part",
+            "option": ":name · :count mod|:name · :count mods",
+            "outcome": ":count mod of “:name” goes to “:survivor”.|:count mods of “:name” go to “:survivor”.",
+            "none": "No other active part in this category.",
+            "load_error": "The choice could not be loaded.",
+            "confirm": "Merge"
+        },
+        "record": {
+            "overview": "Overview",
+            "tabs": "Sections of the part",
+            "created": "created :date",
+            "mods": "Linked in mods",
+            "none": "Not on file",
+            "affiliate_note": "Members see the link marked as an ad.",
+            "aliases": "Other spellings",
+            "no_aliases": "No other spellings",
+            "error": "The part could not be loaded."
+        }
+    }
 }

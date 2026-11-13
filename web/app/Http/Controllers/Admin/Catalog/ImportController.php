@@ -79,7 +79,9 @@ class ImportController extends Controller
 
         return response(CatalogCsvWriter::template($kind), 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="speedclub-vorlage-'.($kind === CatalogImportKind::Vehicles ? 'fahrzeuge' : 'teilemarken').'.csv"',
+            'Content-Disposition' => 'attachment; filename="speedclub-vorlage-'.(match ($kind) {
+                CatalogImportKind::Vehicles => 'fahrzeuge', CatalogImportKind::Brands => 'teilemarken', CatalogImportKind::Products => 'teile'
+            }).'.csv"',
             'Cache-Control' => 'no-store',
         ]);
     }

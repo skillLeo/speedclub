@@ -210,6 +210,47 @@ class OgImageCanvas
         return $this->encode($image);
     }
 
+    /**
+     * M4.16 (09 §9): the card of an event, a business or a part brand, in the vehicle card's layout. The photo is the subject's own
+     * (an event or business cover) or the brand layer's night photo; without one the panel is the whole card (a part brand: its name
+     * as the wordmark). `voice` picks the title's face: 'name' (Inter Display, events and businesses: people and places speak Inter),
+     * 'marque' (Archivo SemiExpanded, a brand's wordmark). One line under the title, then up to three facts in the spec style.
+     *
+     * @param  string|null  $photo  image bytes
+     * @param  list<array{value: string, unit: string|null, label: string}>  $facts
+     */
+    public function feature(?string $photo, ?float $focalX, ?float $focalY, string $eyebrow, string $title, string $voice, ?string $line, array $facts = [], string $format = self::LANDSCAPE): string
+    {
+        $eyebrow = $this->sanitise($eyebrow);
+        $title = $this->sanitise($title);
+        $line = $this->sanitise((string) $line);
+        $facts = $this->drawableSpecs($facts);
+        $font = $voice === 'marque' ? self::FONT_DISPLAY : self::FONT_NAME;
+
+        [$image, $panel] = $this->split($format, $photo, $focalX, $focalY);
+        $square = $format === self::SQUARE;
+        $cursor = $this->brandRow($image, $panel, '', $square ? 180 : 168);
+
+        if ($eyebrow !== '') {
+            $cursor = $this->line($image, self::FONT_LABEL, mb_strtoupper($eyebrow), $square ? 20 : 17, 13, $panel['x'], $cursor, $panel['width'], 'text-secondary') + ($square ? 16 : 14);
+        }
+
+        if ($title !== '') {
+            $big = $photo === null && $voice === 'marque';
+            $cursor = $this->title($image, $font, $title, $big ? ($square ? 88 : 72) : ($square ? 56 : 42), $square ? 36 : 28, $panel['x'], $cursor, $panel['width']) + 12;
+        }
+
+        if ($line !== '') {
+            $this->line($image, self::FONT_TEXT, $line, $square ? 26 : 22, 16, $panel['x'], $cursor, $panel['width'], 'text-secondary');
+        }
+
+        if ($facts !== []) {
+            $this->specs($image, $facts, $panel['x'], $square ? 884 : 420, $panel['width'], $square ? 56 : 48);
+        }
+
+        return $this->encode($image);
+    }
+
     /** Brackets, quotes aside: a pair with nothing left inside it is dropped. */
     private const EMPTY_PAIR = '/\(\s*\)|\[\s*\]|\{\s*\}/u';
 

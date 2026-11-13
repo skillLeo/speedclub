@@ -339,14 +339,24 @@ const QA_DIALOGS: Record<string, Exclude<DialogName, null>> = {
     export: 'export',
     delete: 'delete',
 };
+// ⌘K "Mitglied sperren…" (09 §10.2) lands here with ?action=suspend, in every environment: the sheet opens on Sperren; the server still
+// decides (members.suspend, password, the four-eyes request of RequestMemberSuspension).
+const paletteAction = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('action');
+const paletteSuspend = paletteAction === 'suspend' && can('members.suspend');
 const restrictPreset = computed(() =>
     qaOverlay === 'suspend'
         ? { measure: 'suspension' as const, duration: '30' as const, template: 'harassment' }
         : qaOverlay === 'restrict'
           ? { measure: 'messaging' as const, duration: '7' as const, template: 'spam' }
-          : null,
+          : paletteSuspend
+            ? { measure: 'suspension' as const }
+            : null,
 );
 onMounted(async () => {
+    if (qaOverlay === null && paletteSuspend) {
+        show('restrict');
+        return;
+    }
     const name = qaOverlay === null ? undefined : QA_DIALOGS[qaOverlay];
     if (name === undefined) return;
     if (name === 'lift') openLift(props.member.restrictions[0]?.type ?? 'messaging');

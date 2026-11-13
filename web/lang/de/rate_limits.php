@@ -65,4 +65,6 @@ return [
         'minutes' => ':count Minute|:count Minuten',
         'hours' => ':count Stunde|:count Stunden',
     ],
+    'businesses' => 'Du hast deinen Betrieb gerade sehr oft geändert. Versuch es in :time noch einmal.',
+    'business_tags' => 'Du hast gerade sehr viele Markierungen angefragt oder entschieden. Versuch es in :time noch einmal.',
 ];

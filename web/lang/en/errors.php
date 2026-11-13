@@ -86,4 +86,9 @@ return [
     'edit_conflict' => 'This was changed on another device in the meantime. Check the current version, then save again.',
     'organiser_not_eligible' => 'You can create meets once your account is 14 days old.',
     'geocode_unavailable' => 'The place search is not answering right now. Place the pin on the map yourself or try again in a moment.',
+    // M4.14 businesses and parts (09 §8.9, §8.10).
+    'business_unavailable' => 'This business does not exist or you cannot see it.',
+    'business_exists' => 'You already have a business or work for one. One business per account.',
+    'business_not_verified' => 'That works once the business is verified.',
+    'product_unavailable' => 'This part is no longer in the catalogue.',
 ];

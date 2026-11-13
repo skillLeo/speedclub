@@ -85,6 +85,7 @@ return [
                 'security_events.json' => 'Your security log: sign-ins on new devices, changes of password, e-mail address and two-factor protection, with date and device name, without IP address.',
                 'reactions.json' => 'Your reactions to messages.',
                 'push_devices.json' => 'Devices that get notifications, with platform and date.',
+                'web_push_browsers.json' => 'Browsers that get browser notifications, with browser, system and date.',
                 'device_installs.json' => 'App installs with device, system and app version, first and last sign-in.',
                 'browser_sessions.json' => 'Signed-in browsers with browser, system and last use.',
             ],

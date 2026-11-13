@@ -13,14 +13,18 @@ const seed = join(web, '..', 'design', 'seed-photos');
 
 const GLYPHS = [
   'arrow-right',
+  'arrow-square-out',
   'bookmark-simple',
+  'calendar-blank',
   'caret-right',
+  'clock',
   'compass',
   'device-mobile',
   'images',
   'list-bullets',
   'lock-simple',
   'magnifying-glass',
+  'map-pin',
   'prohibit',
   'qr-code',
   'share-network',

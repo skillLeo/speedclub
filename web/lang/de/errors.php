@@ -86,4 +86,9 @@ return [
     'edit_conflict' => 'Das wurde inzwischen auf einem anderen Gerät geändert. Sieh dir die aktuelle Fassung an und speichere dann erneut.',
     'organiser_not_eligible' => 'Treffen erstellen kannst du, sobald dein Konto 14 Tage alt ist.',
     'geocode_unavailable' => 'Die Ortssuche antwortet gerade nicht. Setz den Pin selbst auf die Karte oder versuch es gleich noch einmal.',
+    // M4.14 Betriebe und Teile (09 §8.9, §8.10).
+    'business_unavailable' => 'Diesen Betrieb gibt es nicht oder du kannst ihn nicht sehen.',
+    'business_exists' => 'Du hast schon einen Betrieb oder arbeitest in einem mit. Pro Konto geht ein Betrieb.',
+    'business_not_verified' => 'Das geht erst, wenn der Betrieb verifiziert ist.',
+    'product_unavailable' => 'Dieses Teil gibt es im Katalog nicht mehr.',
 ];

@@ -71,6 +71,7 @@ chmod 600 .env
 - **Staff (7):** `ADMIN_IP_ALLOWLIST` = your fixed staff addresses or ranges; `STAFF_OWNER_EMAIL` = the address of the first Owner (a real mailbox the Owner reads); `ADMIN_DOMAIN` only if you want a separate admin host. `DEMO_STAFF_PASSWORD`, `DEMO_MEMBER_PASSWORD` empty, `DEMO_SEED_ON_STAGING=false`.
 - `ANDROID_PACKAGE=de.speedclub.app` and `ANDROID_CERT_SHA256` (App Links): the current upload key, created on the Mac on 2026-11-07, is `95:EF:80:0D:F2:D5:D9:2B:0F:8C:A9:C9:DE:D0:B7:1B:F9:6B:0B:82:38:92:84:B2:1E:8E:24:86:30:02:F0:79`. Once the app is on Google Play, add Play's app-signing certificate, comma separated (Play Console → App integrity).
 - `IOS_TEAM_ID` (and `IOS_BUNDLE_ID=de.speedclub.app`) once the Apple Developer account exists (OA-15).
+- These four feed `/.well-known/assetlinks.json` (package, `ANDROID_CERT_SHA256` → `handle_all_urls` + `get_login_creds`) and `/.well-known/apple-app-site-association` (`IOS_TEAM_ID`.`IOS_BUNDLE_ID` → app links and passkeys). Both answer 200 `application/json` from PHP, without redirect, cookie or sign-in; without the values they are valid but link nothing. Never put a static file with these names into `public/.well-known/`: it would shadow the env values.
 - `HEALTH_TO_ADDRESS`: who gets the health mails (cron stopped, queue stuck, disk full). `HOME_CLOCK` stays **empty** on every host.
 - `BACKUP_ARCHIVE_PASSWORD`: a long random password for the backup zips (12); keep a copy in the password manager.
 
@@ -79,6 +80,7 @@ chmod 600 .env
 | Key | Set to | Without it |
 |---|---|---|
 | `PUSHER_APP_ID`, `PUSHER_APP_KEY`, `PUSHER_APP_SECRET`, `PUSHER_APP_CLUSTER=eu`, `BROADCAST_CONNECTION=pusher` | the Pusher Channels app (EU), OA-13; see 10 | the apps poll (3 s in a conversation, 15 s in the inbox) |
+| `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_VAPID_SUBJECT` | browser notifications of the member web (OA-32, ADR-452): a key pair from `php artisan speedclub:web-push-keys` and a `mailto:` or `https://` contact; see 10 | app-config has no VAPID key, the member web hides the browser option; app push is unaffected |
 | `PUSH_ENABLED`, `EXPO_ACCESS_TOKEN` | `true` once the Expo project and its FCM V1 / APNs keys exist (OA-14); the token with "enhanced push security" on (10, **recommended for production**, SEC-P2-14) | no push; in-app notifications, tab badges and e-mail still work |
 | `AI_PROVIDER`, `ANTHROPIC_API_KEY` (or the key of another provider); optional `AI_MODEL`, `AI_TIMEOUT`, `AI_DAILY_*` | both set (OA-18); then switch the features on in the admin (10) | every AI endpoint answers 404 `feature_disabled`, no `ai.*` flag can be switched on; the app hides the AI entries |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET` | a Cloudflare Turnstile widget for the domain; protects `/melden`, `/kontakt`, `/konto-loeschen` | the forms work without a challenge, protected by their rate limits only. Recommended on any public host |
@@ -261,7 +263,8 @@ Smoke test in a browser or with curl:
 | `/admin/forgot-password` (allow-listed) | 200, "Passwort vergessen?" form |
 | `/robots.txt` | `Disallow: /` on staging; production allows and names the sitemap |
 | `/.well-known/assetlinks.json` | your package name and certificate |
-| `/.well-known/apple-app-site-association` | with `IOS_TEAM_ID`: `<Team ID>.de.speedclub.app` and the paths `/v/*`, `/u/*`, `/c/*`, `/C/*`; without it an empty `details` list |
+| `/.well-known/apple-app-site-association` | with `IOS_TEAM_ID`: `<Team ID>.de.speedclub.app` and the paths `/v/*`, `/u/*`, `/c/*`, `/C/*`, the e-mail and auth paths and `/settings/security/activity` (plus `/b/*` and `/brands/*` while `businesses` and `parts_catalogue` are on); without it an empty `details` list |
+| `/app/sw.js`, `/app/manifest.webmanifest` | 200 with `Cache-Control: no-cache` (the `public/.htaccess` of the package) |
 | `/impressum`, `/datenschutz`, `/agb`, `/community-richtlinien` | 200, no `[[…]]` visible |
 | `/melden`, `/kontakt`, `/konto-loeschen` (WEB-09, WEB-10, WEB-05) | 200, the German form; with Turnstile keys the widget shows |
 | `/app-laden` (WEB-04) | 200; on staging with `TESTER_APK_URL` the download link and its SHA-256 |
@@ -292,6 +295,13 @@ Messaging works without Pusher (polling). With a Pusher Channels app in the EU c
 1. The owner creates the Expo project (`eas init`, `EAS_PROJECT_ID`), uploads the **FCM V1** service-account key (Android) and lets EAS create the **APNs** key (iOS) in the Expo dashboard → Credentials. App builds need `EAS_PROJECT_ID` and `GOOGLE_SERVICES_JSON` at build time.
 2. **Enhanced push security (recommended for production, SEC-P2-14):** expo.dev → project → Settings → Push → turn on "Enhanced Security for Push Notifications", create an access token (Account settings → Access tokens; a robot user's token is best) and put it into `EXPO_ACCESS_TOKEN`. Without it, anyone who learns a device's push token could send that device pushes (the app opens only internal paths, so the damage is limited to spam). **Order matters:** set the token on the server first, `config:cache`, then switch the setting on; with the setting on and no token every push fails.
 3. `PUSH_ENABLED=true`, `php artisan config:cache`. Pushes go through the queue to `exp.host` (outbound HTTPS); receipts are checked every 15 minutes. Message previews are off by default for members (docs/08 §1).
+
+### Web Push of the member web (optional, OA-32)
+
+1. On the host, once: `php artisan speedclub:web-push-keys`. It prints `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY` and `WEB_PUSH_VAPID_SUBJECT=mailto:…` and writes nothing. Copy the three lines into `.env` (change the subject to another `mailto:` or `https://` contact if needed), then `php artisan config:cache`. Do not paste the private key into any chat or ticket, and keep the pair in the password manager.
+2. **Keep the pair for good.** A new pair cuts off every subscribed browser until its member turns browser notifications on again. Use one pair per host (staging and production differ).
+3. Switch the flag `web_push` on in the admin (Feature-Flags, ADM-36; on by default outside production). `GET /api/v1/app-config` then shows `web_push.vapid_public_key`, and SET-09 in the member web offers "Browser-Mitteilungen einschalten".
+4. Delivery runs in the queue (the cron of 5, also through `speedclub:schedule-inline`), to the browser vendors' push services over outbound HTTPS: `fcm.googleapis.com`, `*.push.services.mozilla.com`, `*.push.apple.com` and `*.notify.windows.com`. iPhones get Web Push only for the member web added to the home screen (iOS 16.4+).
 
 ### AI features (optional, OA-18)
 

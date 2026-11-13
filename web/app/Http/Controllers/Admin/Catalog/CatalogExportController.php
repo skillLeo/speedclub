@@ -24,7 +24,9 @@ class CatalogExportController extends Controller
         $kind = CatalogImportKind::tryFrom($kind) ?? abort(404);
         $record->handle($staff, $kind);
 
-        $name = sprintf('speedclub-katalog-%s-%s.csv', $kind === CatalogImportKind::Vehicles ? 'fahrzeuge' : 'teilemarken', now(config()->string('speedclub.display_timezone'))->format('Y-m-d'));
+        $name = sprintf('speedclub-katalog-%s-%s.csv', match ($kind) {
+            CatalogImportKind::Vehicles => 'fahrzeuge', CatalogImportKind::Brands => 'teilemarken', CatalogImportKind::Products => 'teile'
+        }, now(config()->string('speedclub.display_timezone'))->format('Y-m-d'));
 
         return response()->streamDownload(function () use ($kind): void {
             $out = fopen('php://output', 'w');

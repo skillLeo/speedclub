@@ -2,6 +2,8 @@
 
 return [
     'push_device_mismatch' => 'This install is signed in with another device ID.',
+    'push_endpoint' => 'This address does not belong to a browser push service.',
+    'push_key' => 'The browser key is invalid.',
 
     /*
     |--------------------------------------------------------------------------

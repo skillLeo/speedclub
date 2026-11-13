@@ -1,4 +1,4 @@
-import { PhCalendarDots } from '@phosphor-icons/vue';
+import { PhCalendarCheck, PhCalendarDots } from '@phosphor-icons/vue';
 import { defineModule } from './registry';
 
 /**
@@ -23,6 +23,10 @@ export default defineModule({
                 },
             ],
         },
+    ],
+    actions: [{ key: 'event-approve', label: 'shell.palette.actions.event_approve', kind: 'event', atom: 'moderation.decide', route: 'admin.events.queue', icon: PhCalendarCheck, keywords: ['freigeben', 'approve', 'treffen', 'meet'] }],
+    queues: [
+        { key: 'events_review', label: 'dashboard.queues.events_review', empty: 'dashboard.queues.events_review_empty', atom: 'moderation.view', route: 'admin.events.queue', order: 12, testId: 'events-review' },
     ],
     palette: [
         { key: 'events-published', label: 'events.tabs.published', route: 'admin.events.queue', params: { tab: 'published' }, atom: 'moderation.view', keywords: ['veröffentlichte treffen', 'published meets'] },

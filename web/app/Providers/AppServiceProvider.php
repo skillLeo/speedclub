@@ -9,6 +9,9 @@ use App\Models\AuditEvent;
 use App\Models\Block;
 use App\Models\Brand;
 use App\Models\BuildUpdate;
+use App\Models\Business;
+use App\Models\BusinessMember;
+use App\Models\BusinessViewDay;
 use App\Models\CatalogRequest;
 use App\Models\Comment;
 use App\Models\ConfigVersion;
@@ -40,6 +43,7 @@ use App\Models\MemberPasskey;
 use App\Models\Mention;
 use App\Models\Message;
 use App\Models\MessageReactionRow;
+use App\Models\ModBusinessTag;
 use App\Models\ModCategory;
 use App\Models\ModCategoryField;
 use App\Models\ModerationCase;
@@ -48,6 +52,8 @@ use App\Models\Notification;
 use App\Models\PasskeyChallenge;
 use App\Models\Permission;
 use App\Models\PersonalAccessToken;
+use App\Models\Product;
+use App\Models\PushSubscription;
 use App\Models\PushToken;
 use App\Models\QrCode;
 use App\Models\QrScanDaily;
@@ -161,6 +167,9 @@ class AppServiceProvider extends ServiceProvider
             'block' => Block::class,
             'brand' => Brand::class,
             'build_update' => BuildUpdate::class,
+            'business' => Business::class,
+            'business_member' => BusinessMember::class,
+            'business_view_day' => BusinessViewDay::class,
             'catalog_request' => CatalogRequest::class,
             'comment' => Comment::class,
             'config_version' => ConfigVersion::class,
@@ -196,10 +205,13 @@ class AppServiceProvider extends ServiceProvider
             'mod_category_field' => ModCategoryField::class,
             'moderation_case' => ModerationCase::class,
             'modification' => Modification::class,
+            'mod_business_tag' => ModBusinessTag::class,
             'notification' => Notification::class,
             'passkey_challenge' => PasskeyChallenge::class,
             'permission' => Permission::class,
             'personal_access_token' => PersonalAccessToken::class,
+            'product' => Product::class,
+            'push_subscription' => PushSubscription::class,
             'push_token' => PushToken::class,
             'qr_code' => QrCode::class,
             'qr_scan_daily' => QrScanDaily::class,

@@ -158,6 +158,8 @@ export const routesM412Evt = [
     auth: 'member',
     states: LIST_STATES,
     ready: loadedOr('[data-testid^="EVT-05.event."]', 'EVT-05.root'),
+    // M4.15: the tab row at 200 % (DQ-1115 / DQ-1089 shared fix), outside the flagship and form sets.
+    fs2: true,
     notes: 'Meine Treffen, tab Organisiert: lukas.sc\'s two events with their pills (In Prüfung, Entwurf); tabs Zugesagt · Interessiert · Organisiert · Vergangen. empty = the badged sample and "Treffen erstellen".',
   },
   {

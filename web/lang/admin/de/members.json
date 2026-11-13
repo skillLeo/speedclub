@@ -211,7 +211,21 @@
         "no_sign_ins": "Noch keine Anmeldung gezählt.",
         "device_n": "Gerät :n",
         "seen": "erstmals :first · zuletzt :last",
-        "browser": "Browser"
+        "browser": "Browser",
+        "passkeys": "Passkeys",
+        "no_passkeys": "Keine Passkeys eingerichtet.",
+        "passkey_synced": "Synchronisiert",
+        "passkey_dates": "angelegt :created · zuletzt :used",
+        "never": "nie",
+        "providers": "Verknüpfte Anmeldungen",
+        "no_providers": "Keine Anmeldung über Apple oder Google verknüpft.",
+        "provider_apple": "Mit Apple anmelden",
+        "provider_google": "Mit Google anmelden",
+        "private_relay": "Private Relay",
+        "linked_at": "verknüpft :date",
+        "events": "Sicherheitsereignisse",
+        "events_note": "Die letzten 50 Ereignisse aus dem Sicherheitsprotokoll des Mitglieds, mit Gerät und ungefährer Stadt. Keine IP-Adressen.",
+        "no_events": "Noch keine Sicherheitsereignisse."
     },
     "reports": {
         "as_target": "Fälle zum Mitglied",

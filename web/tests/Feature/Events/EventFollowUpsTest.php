@@ -184,11 +184,11 @@ describe('design-QA seeds (ShowcaseEvents)', function () {
         $this->photos = sys_get_temp_dir().'/seed-photos-'.bin2hex(random_bytes(4));
         File::ensureDirectoryExists($this->photos.'/processed');
         // Only the graded renditions count; the raw file of the second cover alone gives no cover.
-        file_put_contents($this->photos.'/processed/cover-garage-02-2048.jpg', TestImages::jpeg(1600, 1067));
-        file_put_contents($this->photos.'/processed/generic-exterior-02-2048.jpg', TestImages::jpeg(1600, 2133));
-        file_put_contents($this->photos.'/cover-garage-04.jpg', TestImages::jpeg(1600, 1067));
+        file_put_contents($this->photos.'/processed/nissan-s14-03-2048.jpg', TestImages::jpeg(1600, 1067));
+        file_put_contents($this->photos.'/processed/nissan-z33-05-2048.jpg', TestImages::jpeg(1600, 2133));
+        file_put_contents($this->photos.'/toyota-a90-04.jpg', TestImages::jpeg(1600, 1067));
         file_put_contents($this->photos.'/manifest.json', json_encode([
-            ['file' => 'cover-garage-02.jpg', 'alt_de' => 'Parkhausdeck in Schwarz-Weiß mit nassem Betonboden', 'focal' => ['x' => 0.5, 'y' => 0.6]],
+            ['file' => 'nissan-s14-03.jpg', 'alt_de' => 'Dunkelgrauer Nissan Silvia S14 Driftprojekt ohne Frontschürze am Hafen vor einer Fähre', 'focal' => ['x' => 0.5, 'y' => 0.6]],
         ]));
         $this->editorial = evOrganiser(['username' => 'speedclub.editorial', 'is_sample' => true, 'is_editorial' => true]);
     });
@@ -202,8 +202,8 @@ describe('design-QA seeds (ShowcaseEvents)', function () {
         $hafen = Event::query()->where('slug', 'abendtreffen-am-hafen-klahfh')->firstOrFail();
         $cover = Media::query()->findOrFail($hafen->getAttribute('cover_media_id'));
 
-        expect($cover->getAttribute('sample_source'))->toBe('event-cover:cover-garage-02.jpg')
-            ->and($cover->getAttribute('alt'))->toBe('Parkhausdeck in Schwarz-Weiß mit nassem Betonboden')
+        expect($cover->getAttribute('sample_source'))->toBe('event-cover:nissan-s14-03.jpg')
+            ->and($cover->getAttribute('alt'))->toBe('Dunkelgrauer Nissan Silvia S14 Driftprojekt ohne Frontschürze am Hafen vor einer Fähre')
             ->and(Event::query()->where('slug', 'cars-coffee-altstadt-urtgii')->value('cover_media_id'))->toBeNull()
             ->and(Event::query()->find($stale->id))->toBeNull();
 

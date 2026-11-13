@@ -426,7 +426,8 @@ describe('crawlers', function () {
             ->toContain('Allow: /v/')->toContain('Allow: /u/')->toContain('Allow: /og/')->toContain('Allow: /c/');
 
         if ($indexing) {
-            expect($robots)->toStartWith("User-agent: *\nAllow: /v/\nAllow: /u/\nAllow: /og/\n")
+            // M4.16: the event, business and brand pages join the crawled paths (each says noindex where its subject asks).
+            expect($robots)->toStartWith("User-agent: *\nAllow: /v/\nAllow: /u/\nAllow: /e/\nAllow: /b/\nAllow: /brands/\nAllow: /og/\n")
                 ->toContain('Disallow: /app/')->toContain('Disallow: /admin')
                 ->and(explode("\n", $previews))->not->toContain('Disallow: /');
         } else {

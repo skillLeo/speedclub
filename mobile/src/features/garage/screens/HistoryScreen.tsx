@@ -23,10 +23,26 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, useBreakpoint } from '@/theme';
-import { Button, Dialog, EmptyState, Header, IconButton, Screen, Sheet, Skeleton, SkeletonText, StatusPill, Text, TextInput, toast, type HeaderAction } from '@/ui';
-import { RowBody, useStacksAtFontScale } from '@/ui/rowParts';
+import {
+  Button,
+  Dialog,
+  EmptyState,
+  Header,
+  IconButton,
+  Screen,
+  Sheet,
+  Skeleton,
+  SkeletonText,
+  StatusPill,
+  Text,
+  TextInput,
+  TimelineMonth,
+  TimelineRow,
+  toast,
+  type HeaderAction,
+  type TimelineEntry,
+} from '@/ui';
 import { WEB_HAIRLINE } from '@/ui/specStripLayout';
-import { ValueText } from '@/ui/ValueText';
 
 import { useCharCount } from '../components/fields';
 import { FORM_MAX_WIDTH, GoneState, LoadErrorState, RestrictedNotice, SignInState, useGarageAccess, usePushedHeaderWidth } from '../components/frames';
@@ -70,28 +86,11 @@ const useStyles = createStyles((t) => ({
   column: { alignSelf: 'flex-start', maxWidth: FORM_MAX_WIDTH, width: '100%' },
   top: { gap: t.space[16], paddingBottom: t.space[8], paddingTop: t.space[16] },
   month: { paddingBottom: t.space[12], paddingTop: t.space[24] },
-  monthFirst: { paddingTop: t.space[8] },
-  // DQ-1072: the Timeline anatomy of VEH-01's Verlauf (ui/Timeline) — a hairline spine with a node per entry, no boxed cards —
-  // plus the owner's trailing eye. Timeline has no trailing slot yet, so the owner page draws the same spine itself.
+  // The skeleton's piece of VEH-01's Timeline spine (the entries themselves are ui/TimelineRow, DQ-1072).
   card: { borderLeftColor: t.color.border.default, borderLeftWidth: SPINE, marginLeft: t.space[4] },
   first: { marginTop: t.space[8] },
   last: { paddingBottom: t.space[8] },
-  node: {
-    backgroundColor: t.color.text.tertiary,
-    borderRadius: t.radius.full,
-    height: t.space[8],
-    left: -(t.space[8] + SPINE) / 2,
-    position: 'absolute',
-    top: t.space[12] + (t.typography.bodyStrong.lineHeight - t.space[8]) / 2,
-    width: t.space[8],
-  },
-  entry: { alignItems: 'center', flexDirection: 'row' },
-  body: { flex: 1, minWidth: 0 },
   text: { gap: t.space[2], paddingLeft: t.space[16], paddingRight: t.space[8], paddingVertical: t.space[12] },
-  change: { gap: t.space[2] },
-  meta: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
-  hidden: { opacity: t.opacity.pressed },
-  toggle: { paddingRight: t.space[4] },
   end: { paddingBottom: t.space[32] },
   more: { alignItems: 'center', paddingTop: t.space[16] },
   sheetBody: { gap: t.space[16], paddingBottom: t.space[8] },
@@ -99,94 +98,57 @@ const useStyles = createStyles((t) => ({
 
 type EntryProps = { update: OwnerUpdate; first: boolean; last: boolean; onToggle: (update: OwnerUpdate) => void; onOpen: (update: OwnerUpdate) => void; disabled: boolean };
 
+/**
+ * DQ-1072: one entry of the owner's Verlauf in VEH-01's Timeline anatomy (ui/TimelineRow: spine, node, `headline` title, changes,
+ * note, meta) with the owner's eye in Timeline's trailing slot. A hidden entry is dimmed and says so.
+ */
 const Entry = memo(function Entry({ update, first, last, onToggle, onOpen, disabled }: EntryProps) {
   const { t } = useTranslation('garage');
   const vehicleT = useTranslation('vehicle').t;
-  const styles = useStyles();
   const format = useFormat();
   const created = update.created_at ? format.relative(new Date(update.created_at)) : null;
   const note = update.type === 'note';
-  const largeFont = useStacksAtFontScale();
-  // DQ-175: as VEH-01's Verlauf, each change under its own title ("Fahrwerk: Serie → KW V3"), and what kind of entry it is in
-  // the meta line. DQ-1059: an entry with one named change takes VEH-01's title ("AP Racing Radi-CAL statt Brembo Serie") and only
-  // the system and key value under it ("Bremsen · 356 mm"), so the kind is printed once. A note is titled by its own text, never
-  // "Notiz" (DQ-1085).
+  // DQ-175: as VEH-01's Verlauf, each change under its own label ("Fahrwerk: Serie → KW V3"). DQ-1059: an entry with one named
+  // change takes VEH-01's title ("AP Racing Radi-CAL statt Brembo Serie") and only the system and key value under it ("Bremsen ·
+  // 356 mm"), so the kind is printed once. A note is titled by its own text, never "Notiz" (DQ-1085).
   const named = note ? null : historyMetaLine(update);
   const { lines, more } = note || named ? { lines: [], more: 0 } : changeLines(update, HISTORY_CHANGES_SHOWN);
   const noteText = note ? (update.note ?? update.summary)?.trim() || null : null;
   const head = note ? t('history.note') : update.type_label;
   const title = named
     ? historyTitle(update, (key, values) => vehicleT(`history.title.${key}`, values))
-    : (noteText ?? lines[0]?.label ?? head);
-  const namedLine = named ? [named.label, named.diff].filter(Boolean).join(' · ') : null;
+    : (noteText ?? (lines.length > 0 ? head : null) ?? head);
   // The toggle hides the whole entry: it takes the name of a change only when that is all there is, else the kind and its date.
   const onlyChange = named ? title : lines.length === 1 && more === 0 ? lines[0]?.label : undefined;
   const toggleName = onlyChange ?? [head, created].filter(Boolean).join(', ');
-  const line = lines.length > 0 || named || note ? null : update.summary;
+  const summary = lines.length > 0 || named || note ? null : keepFiguresTogether(update.summary, true);
   const added = note ? null : update.note?.trim();
-  const moreText = more > 0 ? vehicleT('history.moreChanges', { count: more }) : null;
-  const meta = [lines.length > 0 ? head : null, created].filter(Boolean).join(' · ');
-  // A change's diff or a summary can be wider than the card: its words wrap and only figures stay together (DQ-216). A note
-  // is the member's own sentence and may hyphenate.
-  const valueLine = (text: string) => (
-    <ValueText variant="callout" color="text.secondary" hyphenate={note || largeFont} values={keepFiguresTogether(text, !largeFont)} wholeValues={false} />
-  );
-  return (
-    <View style={[styles.card, first ? styles.first : null, last ? styles.last : null]}>
-      <View aria-hidden style={styles.node} />
-      <View style={styles.entry}>
-        <RowBody
-          onPress={update.hidden ? undefined : () => onOpen(update)}
-          label={[...lines.flatMap((entry) => [entry.label, entry.diff]), lines.length > 0 ? null : title, namedLine, line, added, moreText, meta].filter(Boolean).join(', ')}
-          boxStyle={styles.body}
-          style={[styles.text, update.hidden ? styles.hidden : null]}
-          testID={`${ROUTE}.entry.${update.id}`}
-        >
-          {lines.length === 0 ? (
-            <Text variant="bodyStrong" hyphenate={note}>
-              {title}
-            </Text>
-          ) : null}
-          {namedLine ? valueLine(namedLine) : null}
-          {lines.map((entry) => (
-            <View key={entry.key} style={styles.change}>
-              <Text variant="bodyStrong">{entry.label}</Text>
-              {entry.diff ? valueLine(entry.diff) : null}
-            </View>
-          ))}
-          {line ? valueLine(line) : null}
-          {added ? (
-            <Text variant="callout" color="text.secondary">
-              {added}
-            </Text>
-          ) : null}
-          {moreText ? (
-            <Text variant="caption" color="text.tertiary">
-              {moreText}
-            </Text>
-          ) : null}
-          <View style={styles.meta}>
-            {meta ? (
-              <Text variant="caption" color="text.tertiary">
-                {meta}
-              </Text>
-            ) : null}
-            {update.hidden ? <StatusPill label={t('history.hidden')} testID={`${ROUTE}.entry.${update.id}.hidden`} /> : null}
-          </View>
-        </RowBody>
-        <View style={styles.toggle}>
-          <IconButton
-            icon={update.hidden ? 'eye' : 'eye-slash'}
-            label={update.hidden ? t('history.show', { entry: toggleName }) : t('history.hide', { entry: toggleName })}
-            color="text.secondary"
-            disabled={disabled}
-            onPress={() => onToggle(update)}
-            testID={`${ROUTE}.entry.${update.id}.toggle`}
-          />
-        </View>
-      </View>
-    </View>
-  );
+  const entry: TimelineEntry = {
+    key: update.id,
+    date: update.month_label ?? '',
+    title,
+    lines: named
+      ? [{ key: 'named', label: named.label, detail: named.diff ?? undefined, inline: true }]
+      : lines.map((line) => ({ key: line.key, label: line.label, detail: line.diff ?? undefined })),
+    note: [summary, added].filter(Boolean).join('\n') || undefined,
+    more: more > 0 ? vehicleT('history.moreChanges', { count: more }) : undefined,
+    meta: created ?? undefined,
+    dimmed: update.hidden,
+    status: update.hidden ? <StatusPill label={t('history.hidden')} testID={`${ROUTE}.entry.${update.id}.hidden`} /> : undefined,
+    trailing: (
+      <IconButton
+        icon={update.hidden ? 'eye' : 'eye-slash'}
+        label={update.hidden ? t('history.show', { entry: toggleName }) : t('history.hide', { entry: toggleName })}
+        color="text.secondary"
+        disabled={disabled}
+        onPress={() => onToggle(update)}
+        testID={`${ROUTE}.entry.${update.id}.toggle`}
+      />
+    ),
+    onPress: update.hidden ? undefined : () => onOpen(update),
+    testID: `${ROUTE}.entry.${update.id}`,
+  };
+  return <TimelineRow entry={entry} first={first} last={last} />;
 });
 
 function HistorySkeleton() {
@@ -336,9 +298,7 @@ export function HistoryScreen() {
         renderItem={({ item }: { item: Row }) => (
           <View style={styles.column}>
             {item.kind === 'month' ? (
-              <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)} style={[styles.month, item.first ? styles.monthFirst : null]}>
-                {item.label}
-              </Text>
+              <TimelineMonth label={item.label} first={item.first} />
             ) : (
               <Entry update={item.update} first={item.first} last={item.last} onToggle={toggle} onOpen={open} disabled={!online || (locked && item.update.hidden)} />
             )}

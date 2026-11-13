@@ -18,4 +18,6 @@ enum ReportTargetType: string
     case Comment = 'comment';
     // M4.12 (09 §8.7): an event ("Illegales Rennen / gefährliches Fahren" among the reasons); its organiser is the subject.
     case Event = 'event';
+    // M4.14 (09 §8.10, DSA): a business profile; its owner (the applicant) is the subject.
+    case Business = 'business';
 }

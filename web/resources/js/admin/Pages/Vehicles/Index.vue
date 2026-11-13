@@ -137,6 +137,7 @@ watch(
 
         <DataTable
             id="vehicles"
+            row-keys
             :columns="columns"
             :rows="rows"
             :query="query"

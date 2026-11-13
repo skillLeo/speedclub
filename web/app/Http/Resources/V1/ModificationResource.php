@@ -2,14 +2,22 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Enums\BusinessStatus;
 use App\Enums\MediaStatus;
+use App\Enums\ModTagInitiator;
+use App\Enums\ModTagStatus;
+use App\Enums\ProductStatus;
+use App\Models\Business;
 use App\Models\Media;
+use App\Models\ModBusinessTag;
 use App\Models\Modification;
+use App\Models\Product;
 use App\Services\AppConfig\FeatureFlags;
 use App\Services\Discover\SearchFilterResolver;
 use App\Services\Garage\ModPresenter;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The whole modification: VEH-02 reads `specs`, the owner's editor GAR-10 reads `fields`, which is null for anybody else.
@@ -79,6 +87,73 @@ class ModificationResource extends ModificationRowResource
              * @var array{mod_category: string, wheel_brand: string|null, wheel_diameter: float|null, suspension_type: string|null, suspension_brand: string|null, exhaust_brand: string|null}
              */
             'search' => $this->search($fields),
+            /**
+             * M4.14 (09 §8.9): the linked catalogue product (BRD-02, "Builds mit {Produkt}"), or null. Null while parts_catalogue is off.
+             *
+             * @var array{id: string, name: string, full_name: string, brand_slug: string, archived: bool}|null
+             */
+            'product' => $this->product(),
+            /**
+             * M4.14 (09 §8.10): "Eingebaut von", only once the business and the owner both confirmed it and the reader may see the
+             * business; null otherwise. Null while businesses is off.
+             *
+             * @var array{slug: string, name: string, city: string, verified: bool}|null
+             */
+            'installed_by' => $this->installedBy($request),
+            /**
+             * The owner's alone (null for anybody else): the state of the tag while it waits or after the business declined it.
+             *
+             * @var array{id: string, business_slug: string, business_name: string, status: ModTagStatus, initiated_by: ModTagInitiator}|null
+             */
+            'business_tag' => $isOwner ? $this->businessTag() : null,
+        ];
+    }
+
+    /**
+     * @return array{id: string, name: string, full_name: string, brand_slug: string, archived: bool}|null
+     */
+    private function product(): ?array
+    {
+        if (! app(FeatureFlags::class)->enabled('parts_catalogue') || ! ($product = $this->resource->product) instanceof Product) {
+            return null;
+        }
+
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'full_name' => $product->fullName(),
+            'brand_slug' => $product->brand->slug,
+            'archived' => $product->status === ProductStatus::Archived,
+        ];
+    }
+
+    /**
+     * @return array{slug: string, name: string, city: string, verified: bool}|null
+     */
+    private function installedBy(Request $request): ?array
+    {
+        if (! app(FeatureFlags::class)->enabled('businesses') || ! ($business = $this->resource->installedBy) instanceof Business || ! Gate::forUser(Viewer::from($request))->allows('view', $business)) {
+            return null;
+        }
+
+        return ['slug' => $business->slug, 'name' => $business->name, 'city' => $business->city, 'verified' => $business->status === BusinessStatus::Verified];
+    }
+
+    /**
+     * @return array{id: string, business_slug: string, business_name: string, status: ModTagStatus, initiated_by: ModTagInitiator}|null
+     */
+    private function businessTag(): ?array
+    {
+        if (! app(FeatureFlags::class)->enabled('businesses') || ! ($tag = $this->resource->businessTag) instanceof ModBusinessTag) {
+            return null;
+        }
+
+        return [
+            'id' => $tag->id,
+            'business_slug' => $tag->business->slug,
+            'business_name' => $tag->business->name,
+            'status' => $tag->status,
+            'initiated_by' => $tag->initiated_by,
         ];
     }
 

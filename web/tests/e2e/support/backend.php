@@ -27,6 +27,9 @@
  *   php tests/e2e/support/backend.php restore-seeded-drafts
  *   php tests/e2e/support/backend.php enable-premium-fixture
  *   php tests/e2e/support/backend.php disable-premium-fixture
+ *   php tests/e2e/support/backend.php enable-m414-flags
+ *   php tests/e2e/support/backend.php disable-m414-flags
+ *   php tests/e2e/support/backend.php review-test-business <slug of a test owner's business> verify|reject
  *   php tests/e2e/support/backend.php run-health-fixture
  *   php tests/e2e/support/backend.php remove-health-fixture
  *   php tests/e2e/support/backend.php reset-staff-limits
@@ -638,6 +641,155 @@ function premiumFixture(bool $on): array
     app(AppConfig::class)->flush();
 
     return ['enabled' => (bool) DB::table('feature_flags')->where('id', $flag->id)->value('enabled'), 'by_fixture' => $on || $marked];
+}
+
+/** M4.14 (stage fixture `m414-flags`, F13): the cache key that says the fixture, not a person, switched the two flags on. */
+const M414_FIXTURE_MARK = 'e2e.m414-flags-fixture';
+/** The flags of M4.14, off everywhere until its design QA passed (ADR-455), on only while the matrix captures or F13 runs. */
+const M414_FLAGS = ['parts_catalogue', 'businesses'];
+
+/**
+ * Switches parts_catalogue and businesses on for the M4.14 cells and F13, or off again, like premiumFixture: only the `enabled` column,
+ * only flags this fixture switched on (a flag a person switched on is refused and never switched off), app-config flushed both ways.
+ */
+function m414FlagsFixture(bool $on): array
+{
+    $flags = DB::table('feature_flags')->whereIn('key', M414_FLAGS)->get(['id', 'key', 'enabled']);
+    if ($flags->count() !== count(M414_FLAGS)) {
+        refuse('refusing: parts_catalogue or businesses is missing; run the FeatureFlagSeeder');
+    }
+    $cache = app(CacheRepository::class);
+    $marked = $cache->get(M414_FIXTURE_MARK) === true;
+    if ($on) {
+        if (! $marked && $flags->contains(fn (object $flag): bool => (bool) $flag->enabled)) {
+            refuse('refusing: a M4.14 flag is on, and not by this fixture; it never changes a real setting');
+        }
+        DB::table('feature_flags')->whereIn('key', M414_FLAGS)->update(['enabled' => true]);
+        $cache->forever(M414_FIXTURE_MARK, true);
+    } elseif ($marked) {
+        DB::table('feature_flags')->whereIn('key', M414_FLAGS)->update(['enabled' => false]);
+        $cache->forget(M414_FIXTURE_MARK);
+    }
+    app(AppConfig::class)->flush();
+    $business = $on ? m414BusinessFixture() : removeM414BusinessFixture();
+
+    return [
+        'flags' => DB::table('feature_flags')->whereIn('key', M414_FLAGS)->pluck('enabled', 'key')->map(fn (mixed $enabled): bool => (bool) $enabled)->all(),
+        'by_fixture' => $on || $marked,
+        'business' => $business,
+    ];
+}
+
+/** The fixed ids of the M4.14 stage business: the prefix makes sure the removal only ever deletes these rows. */
+const M414_BUSINESS_ID = '01m414fx000000000000000001';
+const M414_PREFIX = '01m414fx';
+
+/**
+ * BIZ-03 / BIZ-04 / BIZ-01 with data (stage fixture `m414-flags`): lukas.sc owns the verified "Werkstatt am Kanal" (test data, the
+ * Impressum says so) with kenji.r34 as staff, one confirmed build of jann.ptrs in the portfolio, one request of max.e46 waiting for
+ * the business, one proposal of the business waiting for nina.neu, and 30 days of profile views. Rows with fixed ids only; a member
+ * who already belongs to a business is left alone (refused), so a real business is never touched.
+ */
+function m414BusinessFixture(): array
+{
+    removeM414BusinessFixture();
+    $users = DB::table('users')->whereIn('username', ['lukas.sc', 'kenji.r34', 'jann.ptrs', 'max.e46', 'nina.neu'])->pluck('id', 'username');
+    if ($users->count() !== 5) {
+        refuse('refusing: the demo members are missing; run the DemoSeeder');
+    }
+    if (DB::table('business_members')->whereIn('user_id', [$users['lukas.sc'], $users['kenji.r34']])->exists()) {
+        refuse('refusing: lukas.sc or kenji.r34 already belongs to a business');
+    }
+    $publicMod = fn (string $username): ?string => DB::table('modifications as m')
+        ->join('vehicles as v', 'v.id', '=', 'm.vehicle_id')
+        ->where('v.owner_id', $users[$username])->where('v.status', 'published')->where('v.visibility', 'public')
+        ->whereNull('v.deleted_at')->whereNull('m.deleted_at')->whereNull('m.installed_by_business_id')
+        ->whereNotExists(fn ($tags) => $tags->selectRaw('1')->from('mod_business_tags as t')->whereColumn('t.mod_id', 'm.id'))
+        ->orderBy('m.created_at')->value('m.id');
+    $cover = DB::table('businesses')->where('slug', 'beispiel-werkstatt-nord')->value('cover_media_id');
+    $now = now();
+    DB::table('businesses')->insert([
+        'id' => M414_BUSINESS_ID,
+        'owner_id' => $users['lukas.sc'],
+        'slug' => 'werkstatt-am-kanal-m414',
+        'name' => 'Werkstatt am Kanal',
+        'kind' => 'workshop',
+        'legal_name' => 'Werkstatt am Kanal GmbH (Testdaten)',
+        'legal_form' => 'gmbh',
+        'representative' => 'Lukas Scholz (Testdaten)',
+        'street' => 'Kanalstraße 12',
+        'postcode' => '22085',
+        'city' => 'Hamburg',
+        'country' => 'DE',
+        'lat' => 53.5725,
+        'lng' => 10.0237,
+        'phone' => '+49 40 0000000',
+        'email' => 'werkstatt-am-kanal@speedclub.test',
+        'website' => null,
+        'register_court' => 'Amtsgericht Hamburg',
+        'register_number' => 'HRB 000000 (Testdaten)',
+        'vat_id' => null,
+        'about' => 'Fahrwerk, Abgasanlage und Achsvermessung für Japaner und Youngtimer. Eigene Bühne, Termine nach Absprache.',
+        'services' => json_encode(['Fahrwerk', 'Abgasanlage', 'Achsvermessung', 'Bremsen', 'Einzelabnahme']),
+        'opening_hours' => json_encode(['mon' => [['08:00', '17:30']], 'tue' => [['08:00', '17:30']], 'wed' => [['08:00', '12:00'], ['13:00', '17:30']], 'thu' => [['08:00', '17:30']], 'fri' => [['08:00', '15:00']], 'sat' => [['10:00', '13:00']]]),
+        'logo_media_id' => null,
+        'cover_media_id' => $cover,
+        'document_note' => 'Gewerbeanmeldung und Handelsregisterauszug liegen vor.',
+        'status' => 'verified',
+        'submitted_at' => $now->copy()->subDays(20),
+        'reviewed_at' => $now->copy()->subDays(18),
+        'verified_at' => $now->copy()->subDays(18),
+        'is_sample' => false,
+        'created_at' => $now->copy()->subDays(20),
+        'updated_at' => $now,
+    ]);
+    DB::table('business_members')->insert([
+        ['id' => M414_PREFIX.'000000000000000m01', 'business_id' => M414_BUSINESS_ID, 'user_id' => $users['lukas.sc'], 'role' => 'owner', 'created_at' => $now, 'updated_at' => $now],
+        ['id' => M414_PREFIX.'000000000000000m02', 'business_id' => M414_BUSINESS_ID, 'user_id' => $users['kenji.r34'], 'role' => 'staff', 'created_at' => $now, 'updated_at' => $now],
+    ]);
+    $tags = [];
+    foreach ([['jann.ptrs', 'accepted', 'member', 't01'], ['max.e46', 'pending', 'member', 't02'], ['nina.neu', 'pending', 'business', 't03']] as [$member, $status, $by, $suffix]) {
+        $mod = $publicMod($member);
+        if ($mod === null) {
+            continue;
+        }
+        DB::table('mod_business_tags')->insert([
+            'id' => M414_PREFIX.'000000000000000'.$suffix,
+            'mod_id' => $mod,
+            'business_id' => M414_BUSINESS_ID,
+            'status' => $status,
+            'initiated_by' => $by,
+            'requested_by' => $by === 'member' ? $users[$member] : $users['lukas.sc'],
+            'decided_by' => $status === 'accepted' ? $users['lukas.sc'] : null,
+            'decided_at' => $status === 'accepted' ? $now->copy()->subDays(3) : null,
+            'created_at' => $now->copy()->subDays($status === 'accepted' ? 5 : 1),
+            'updated_at' => $now,
+        ]);
+        if ($status === 'accepted') {
+            DB::table('modifications')->where('id', $mod)->update(['installed_by_business_id' => M414_BUSINESS_ID]);
+        }
+        $tags[] = $status;
+    }
+    $views = [];
+    for ($day = 1; $day <= 30; $day++) {
+        $views[] = ['business_id' => M414_BUSINESS_ID, 'day' => $now->copy()->subDays($day)->toDateString(), 'views' => 3 + ($day * 7) % 11];
+    }
+    DB::table('business_view_days')->insert($views);
+
+    return ['id' => M414_BUSINESS_ID, 'tags' => $tags];
+}
+
+/** Removes the stage business and everything hanging on it (its tags, team, view days, the mods' installed_by). */
+function removeM414BusinessFixture(): array
+{
+    $mods = DB::table('modifications')->where('installed_by_business_id', M414_BUSINESS_ID)->update(['installed_by_business_id' => null]);
+    $tags = DB::table('mod_business_tags')->where('business_id', M414_BUSINESS_ID)->where('id', 'like', M414_PREFIX.'%')->delete();
+    DB::table('mod_business_tags')->where('business_id', M414_BUSINESS_ID)->delete();
+    DB::table('business_members')->where('business_id', M414_BUSINESS_ID)->delete();
+    DB::table('business_view_days')->where('business_id', M414_BUSINESS_ID)->delete();
+    $business = DB::table('businesses')->where('id', M414_BUSINESS_ID)->delete();
+
+    return ['removed' => $business, 'tags' => $tags, 'mods' => $mods];
 }
 
 /**
@@ -1365,6 +1517,37 @@ switch ($command) {
 
     case 'restore-seeded-drafts':
         finish(['restored' => restoreSeededDraftOwners()]);
+
+    case 'm414-ids':
+        // M4.14 visual path tokens: the seeded KW Variante 3 (ids change with every seed) and a public build's mod that links it, for
+        // BRD-02 and VEH-02's "Builds mit {Produkt}". Read from the database, so the lookup works while parts_catalogue is still off.
+        $product = DB::table('products as p')->join('brands as b', 'b.id', '=', 'p.brand_id')
+            ->where('b.slug', 'kw')->where('p.slug', 'variante-3')->value('p.id') ?? refuse('no KW Variante 3; run the catalogue seeder');
+        $mod = DB::table('modifications as m')->join('vehicles as v', 'v.id', '=', 'm.vehicle_id')
+            ->where('m.product_id', $product)->where('v.status', 'published')->where('v.visibility', 'public')
+            ->whereNull('v.deleted_at')->whereNull('m.deleted_at')->orderBy('v.created_at')->first(['m.id as mod', 'v.slug as vehicle']);
+        // M4.17: the seeded sample business (ShowcaseBusinesses) for ADM-55's pane and ADM-56.
+        $sampleBusiness = DB::table('businesses')->where('slug', 'beispiel-werkstatt-nord')->value('id');
+        finish(['kwProduct' => $product, 'productMod' => $mod?->mod, 'productModVehicle' => $mod?->vehicle, 'sampleBusiness' => $sampleBusiness]);
+
+    case 'enable-m414-flags':
+        finish(m414FlagsFixture(true));
+
+    case 'disable-m414-flags':
+        finish(m414FlagsFixture(false));
+
+    case 'review-test-business':
+        // M4.14 F13: the ADM-55 decision on a test applicant's business, without the admin queue (lane B's UI): verify makes it
+        // public with the badge, reject keeps it out with a reason. Only businesses owned by accounts under E2E_DOMAIN.
+        [$slug, $outcome] = $args + [null, 'verify'];
+        $business = \App\Models\Business::query()->where('slug', (string) $slug)->with('owner')->first() ?? refuse('no such business');
+        if (! isTestAccount((string) $business->owner?->email) || ! in_array($outcome, ['verify', 'reject'], true)) {
+            refuse('usage: backend.php review-test-business <slug of a test owner> verify|reject');
+        }
+        $business->forceFill($outcome === 'verify'
+            ? ['status' => \App\Enums\BusinessStatus::Verified, 'verified_at' => now(), 'reviewed_at' => now(), 'review_reason' => null]
+            : ['status' => \App\Enums\BusinessStatus::Rejected, 'reviewed_at' => now(), 'review_reason' => 'Bitte ergänze die Registernummer.'])->save();
+        finish(['slug' => $business->slug, 'status' => $business->status->value]);
 
     case 'enable-premium-fixture':
         finish(premiumFixture(true));

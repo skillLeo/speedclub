@@ -24,12 +24,14 @@ export const LINK_MAP: readonly LinkEntry[] = [
   { public: '/v/{slug}', route: '/v/[slug]', screen: 'VEH-01', ready: true },
   { public: '/c/{code}', route: '/c/[code]', screen: 'QR resolver', ready: true },
   { public: '/u/{username}', route: '/u/[username]', screen: 'PROF-02', ready: true },
-  { public: '/e/{slug}', route: '/events/[slug]', screen: 'EVT-02', module: 'M4.12', ready: false },
-  { public: '/b/{slug}', route: '/b/[slug]', screen: 'BIZ-01', module: 'M4.14', ready: false },
-  { public: '/brands/{slug}', route: '/brands/[slug]', screen: 'BRD-01', module: 'M4.14', ready: false },
+  { public: '/e/{slug}', route: '/events/[slug]', screen: 'EVT-02', module: 'M4.12', ready: true },
+  // M4.14: BIZ-01 and BRD-01 exist (behind `businesses` / `parts_catalogue`: while a flag is off the screen says so, never a 404).
+  { public: '/b/{slug}', route: '/b/[slug]', screen: 'BIZ-01', ready: true },
+  { public: '/brands/{slug}', route: '/brands/[slug]', screen: 'BRD-01', ready: true },
   // WEB-12 / AUTH-13 magic link: the token rides in the fragment (ADR-429 b), the attempt stays on the device.
   { public: '/auth/magic', route: '/auth/magic', screen: 'WEB-12', ready: true },
-  { public: '/settings/security/activity', route: '/settings/security/activity', screen: 'SET-21', module: 'M4.7', ready: false },
+  // M4.15 (09 §6.5): SET-21 exists since M4.7; a security notification opens it. The App Link path is the lead's (app.config.ts).
+  { public: '/settings/security/activity', route: '/settings/security/activity', screen: 'SET-21', ready: true },
 ];
 
 export type LegacyRedirect = { from: string; to: string; why: string; module: string; ready: boolean };

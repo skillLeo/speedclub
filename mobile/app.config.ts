@@ -17,12 +17,21 @@ const allowCleartext = appEnv === 'local' || appEnv === 'lan';
 const APP_LINK_ENVS: ReadonlySet<string> = new Set(['staging', 'production']);
 // SEC-P2-03: the reset and verify mails' https links open the installed app as verified App Links, so their code never has to
 // travel over the custom scheme, which any app can claim.
-const APP_LINK_PATH_PREFIXES = ['/c/', '/C/', '/v/', '/u/'] as const;
+const APP_LINK_PATH_PREFIXES = ['/c/', '/C/', '/v/', '/u/', '/b/', '/brands/', '/e/'] as const;
 /**
  * Exact paths, so no later /app/reset-password… route is taken along. M4.6 / M4.7: the magic link and "Das war ich nicht" of the
  * mails (/auth/…, redirected to /app/auth/… on the web) carry a token too.
  */
-const APP_LINK_PATHS = ['/app/reset-password', '/app/verify-email', '/auth/magic', '/app/auth/magic', '/auth/secure', '/app/auth/secure'] as const;
+const APP_LINK_PATHS = [
+  '/app/reset-password',
+  '/app/verify-email',
+  '/auth/magic',
+  '/app/auth/magic',
+  '/auth/secure',
+  '/app/auth/secure',
+  '/settings/security/activity',
+  '/app/settings/security/activity',
+] as const;
 
 function appLinkOrigin(): { host: string; port: string | null } | null {
   if (!APP_LINK_ENVS.has(appEnv)) return null;

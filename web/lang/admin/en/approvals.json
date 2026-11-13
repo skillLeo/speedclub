@@ -225,5 +225,9 @@
     "staff_reactivate_owner": {
         "title": "Reactivate an Owner account",
         "status": "New status"
+    },
+    "business_suspend": {
+        "title": "Suspend business",
+        "status": "Status"
     }
 }

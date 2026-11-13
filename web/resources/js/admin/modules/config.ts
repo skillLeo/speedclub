@@ -1,4 +1,4 @@
-import { PhCloudArrowDown, PhPackage, PhToggleRight } from '@phosphor-icons/vue';
+import { PhCloudArrowDown, PhPackage, PhToggleLeft, PhToggleRight } from '@phosphor-icons/vue';
 import { defineModule } from './registry';
 
 /** Konfiguration: ADM-36 Feature-Flags, ADM-37 Remote-Konfiguration, ADM-38 Release-Register (M3.5). */
@@ -14,4 +14,5 @@ export default defineModule({
             ],
         },
     ],
+    actions: [{ key: 'flag-toggle', label: 'shell.palette.actions.flag_toggle', kind: 'flag', atom: 'flags.manage', route: 'admin.config.flags', icon: PhToggleLeft, keywords: ['flag', 'schalter', 'umschalten', 'toggle', 'feature'] }],
 });

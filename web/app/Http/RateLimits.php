@@ -39,6 +39,8 @@ final class RateLimits
         'reactions', 'comments', 'mention_suggest', 'collections', 'build_updates',
         // M4.12 events.
         'events', 'rsvps', 'event_updates', 'geocode',
+        // M4.14 businesses.
+        'businesses', 'business_tags',
     ];
 
     /**

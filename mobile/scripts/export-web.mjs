@@ -16,6 +16,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import preloadFonts from './preload-fonts.js';
+import pwaShell from './pwa-shell.js';
 import stripQa from './strip-qa.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -60,6 +61,20 @@ try {
 // The bundle compiles the QA overrides out by itself; the inline head script needs this step.
 if (env.EXPO_PUBLIC_APP_ENV === 'production') {
   writeFileSync(indexHtml, stripQa.stripQaBlock(readFileSync(indexHtml, 'utf8')));
+}
+
+// 09 §8.13: the iOS startup images, and the service worker's version and shell precache list for exactly this export
+// (pwa-shell.js). Both fail the export rather than ship a worker that precaches files the export does not have.
+try {
+  const html = pwaShell.injectStartupImages(readFileSync(indexHtml, 'utf8'));
+  writeFileSync(indexHtml, html);
+  const worker = join(dist, 'sw.js');
+  const precache = pwaShell.shellFiles(html, preloadFonts.filesBelow(dist));
+  writeFileSync(worker, pwaShell.injectServiceWorker(readFileSync(worker, 'utf8'), precache));
+  console.log(`✔ service worker: ${precache.length} shell files precached`);
+} catch (error) {
+  console.error(`✖ ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
 }
 
 rmSync(target, { recursive: true, force: true });

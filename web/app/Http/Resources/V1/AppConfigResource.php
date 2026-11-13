@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1;
 
 use App\Services\AppConfig\AppConfig;
 use App\Services\Messaging\Realtime;
+use App\Services\Notifications\WebPush;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -68,6 +69,13 @@ class AppConfigResource extends JsonResource
              * @var array{enabled: bool, key: string|null, cluster: string|null}
              */
             'realtime' => Realtime::publicConfig(),
+            /**
+             * M4.15 (ADR-452): the VAPID public key (base64url) the member web subscribes with; null while the server has no VAPID keys,
+             * and then the browser option stays hidden. The flag `web_push` switches the option and the delivery on top.
+             *
+             * @var array{vapid_public_key: string|null}
+             */
+            'web_push' => ['vapid_public_key' => app(WebPush::class)->publicKey()],
         ];
     }
 

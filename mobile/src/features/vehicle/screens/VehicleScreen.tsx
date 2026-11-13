@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { publicIdOf, usePublicVehicle } from '@/api/queries/vehicles';
 import { NextHuChip, useNextHu } from '@/features/maintenance/components/NextHuChip';
@@ -19,7 +19,7 @@ const ROUTE_ID = 'VEH-01';
  * can open Verlauf directly. An old slug is replaced by the canonical one the API answered with.
  */
 export function VehicleScreen() {
-  const params = useLocalSearchParams<{ slug: string; tab?: string }>();
+  const params = useLocalSearchParams<{ slug: string; tab?: string; mod?: string }>();
   const slug = paramOf(params.slug) ?? '';
   const router = useRouter();
   const qaState = useQaState();
@@ -36,6 +36,17 @@ export function VehicleScreen() {
   useEffect(() => {
     if (canonical && canonical !== slug && publicIdOf(canonical) === publicIdOf(slug)) router.setParams({ slug: canonical });
   }, [canonical, router, slug]);
+
+  // M4.14: a business_tag notification or push opens /v/{slug}?mod={id} (NotificationTexts::path): VEH-02 of that mod, once, where
+  // the owner confirms or declines "Eingebaut von".
+  const modParam = paramOf(params.mod);
+  const openedMod = useRef<string | null>(null);
+  useEffect(() => {
+    if (!modParam || !canonical || openedMod.current === modParam || !/^[0-9a-z]{26}$/i.test(modParam)) return;
+    openedMod.current = modParam;
+    router.setParams({ mod: undefined });
+    router.push({ pathname: '/v/[slug]/mods/[modId]', params: { slug: canonical, modId: modParam } });
+  }, [canonical, modParam, router]);
 
   const changeTab = (next: ProfileTab) => router.setParams({ tab: next === 'overview' ? undefined : next });
 

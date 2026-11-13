@@ -92,4 +92,23 @@ return [
         'action' => 'Wartung öffnen',
         'note' => 'Du bekommst diese E-Mail, weil du E-Mails zu Fälligkeiten unter Einstellungen › Mitteilungen eingeschaltet hast. Dort kannst du sie auch wieder ausschalten.',
     ],
+    // M4.14 Betriebe (09 §8.10), nur in der App.
+    'business_review' => [
+        'verified' => '„:name“ ist verifiziert und jetzt öffentlich sichtbar.',
+        'rejected' => '„:name“ wurde nicht verifiziert. Den Grund findest du in deinem Betriebs-Dashboard.',
+        'suspended' => '„:name“ ist gesperrt und nicht mehr öffentlich. Den Grund findest du in deinem Betriebs-Dashboard.',
+        'reinstated' => '„:name“ ist wieder freigeschaltet.',
+    ],
+    'business_tag' => [
+        'business' => [
+            'requested' => 'Neue Markierung für „:name“: Bestätige den Einbau an :vehicle.',
+            'accepted' => 'Der Einbau an :vehicle ist bestätigt und steht jetzt in eurem Portfolio.',
+            'declined' => 'Die Markierung an :vehicle wurde abgelehnt.',
+        ],
+        'member' => [
+            'requested' => '„:name“ möchte deinen :vehicle ins Portfolio aufnehmen. Bestätige den Einbau.',
+            'accepted' => '„:name“ hat den Einbau an deinem :vehicle bestätigt.',
+            'declined' => '„:name“ hat die Markierung an deinem :vehicle abgelehnt.',
+        ],
+    ],
 ];

@@ -6,6 +6,7 @@ use App\Enums\AiFeature;
 use App\Enums\CaseOrigin;
 use App\Enums\ReportTargetType;
 use App\Models\BuildUpdate;
+use App\Models\Business;
 use App\Models\Comment;
 use App\Models\Event;
 use App\Models\Media;
@@ -169,6 +170,7 @@ final class Triage
             ReportTargetType::Member => User::query()->whereKey($case->target_id)->value('bio'),
             ReportTargetType::Comment => Comment::withTrashed()->whereKey($case->target_id)->value('body'),
             ReportTargetType::Event => Event::query()->whereKey($case->target_id)->value('description'),
+            ReportTargetType::Business => Business::query()->whereKey($case->target_id)->value('about'),
             default => null,
         };
 

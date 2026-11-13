@@ -4,6 +4,7 @@ namespace App\Services\Notifications;
 
 use App\Enums\NotificationType;
 use App\Enums\SecurityNotice;
+use App\Models\Business;
 use App\Models\Event;
 use App\Models\Notification;
 use App\Models\User;
@@ -105,6 +106,12 @@ class NotificationTexts
             NotificationType::EventCancelled => $event === null ? null : (string) __('notifications.event_cancelled', ['title' => $event->title], $locale),
             // M4.13: the owner's own vehicle and item (MaintenanceTexts), in their distance unit.
             NotificationType::MaintenanceDue => $vehicle === null ? null : app(MaintenanceTexts::class)->sentence($row->data ?? [], $this->presenter->title($vehicle), $recipient, $locale),
+            // M4.14: in-app only (no push switch); the business's own name, never a reason in the text.
+            NotificationType::BusinessReview => ($business = $this->business($row)) === null ? null : (string) __('notifications.business_review.'.self::oneOf($row->data['outcome'] ?? null, ['verified', 'rejected', 'suspended', 'reinstated'], 'rejected'), ['name' => $business->name], $locale),
+            NotificationType::BusinessTag => ($business = $this->business($row)) === null || $vehicle === null ? null : (string) __('notifications.business_tag.'.(($row->data['side'] ?? null) === 'business' ? 'business' : 'member').'.'.self::oneOf($row->data['state'] ?? null, ['requested', 'accepted', 'declined'], 'requested'), [
+                'name' => $business->name,
+                'vehicle' => $this->presenter->title($vehicle),
+            ], $locale),
         };
 
         return $body === null ? null : ['title' => (string) __('notifications.title', [], $locale), 'body' => $body];
@@ -135,10 +142,30 @@ class NotificationTexts
             // M4.12: EVT-02 while the reader may see the event; the organiser's own (even rejected) event opens EVT-05 "Organisiert".
             // M4.13: MNT-01 of the vehicle, at the item.
             NotificationType::MaintenanceDue => $vehicle !== null ? '/garage/'.$vehicle->id.'/maintenance'.(is_string($row->data['item_id'] ?? null) ? '?item='.$row->data['item_id'] : '') : '/notifications',
+            // M4.14: BIZ-03 for the business owner, BIZ-04 for a tag waiting for the business, else the build.
+            NotificationType::BusinessReview => '/business',
+            NotificationType::BusinessTag => ($row->data['side'] ?? null) === 'business'
+                ? '/business/requests'
+                : ($vehicle !== null ? '/v/'.$vehicle->slug.(is_string($row->data['mod_id'] ?? null) ? '?mod='.$row->data['mod_id'] : '') : '/notifications'),
             NotificationType::EventReview, NotificationType::EventPromoted, NotificationType::EventReminder, NotificationType::EventUpdate, NotificationType::EventCancelled => ($event = $this->event($row)) !== null
                 ? '/events/'.$event->slug
                 : ($row->type === NotificationType::EventReview ? '/events/mine?tab=organised' : '/notifications'),
         };
+    }
+
+    private function business(Notification $row): ?Business
+    {
+        $id = $row->data['business_id'] ?? null;
+
+        return is_string($id) ? Business::query()->find($id) : null;
+    }
+
+    /**
+     * @param  list<string>  $allowed
+     */
+    private static function oneOf(mixed $value, array $allowed, string $default): string
+    {
+        return is_string($value) && in_array($value, $allowed, true) ? $value : $default;
     }
 
     private function updatePath(Notification $row, ?Vehicle $vehicle): string

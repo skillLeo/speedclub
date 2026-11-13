@@ -386,6 +386,18 @@ export const enablePremiumFixture = () => backend('enable-premium-fixture');
 /** premium.enabled off again, only when the fixture switched it on. */
 export const disablePremiumFixture = () => backend('disable-premium-fixture');
 
+/** M4.14: parts_catalogue and businesses on for the matrix cells and F13 (refused when a person switched one on, ADR-455). */
+export const enableM414Flags = () => backend('enable-m414-flags');
+
+/** parts_catalogue and businesses off again, only when the fixture switched them on. */
+export const disableM414Flags = () => backend('disable-m414-flags');
+
+/** M4.14 visual path tokens {kwProduct}, {productMod}, {productModVehicle}. @returns {Promise<Record<string, string|null>>} */
+export const m414Ids = () => backend('m414-ids');
+
+/** M4.14 F13: staff verify (or reject) a test applicant's business, as ADM-55 would. */
+export const reviewTestBusiness = (slug, outcome = 'verify') => backend('review-test-business', slug, outcome);
+
 /** SET-15a / SET-15b: support.fixture with its two requests. @returns {Promise<{email:string, tickets:string[]}>} */
 export const ensureSupportFixture = () => backend('ensure-support-fixture');
 

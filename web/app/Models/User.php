@@ -366,6 +366,16 @@ class User extends Authenticatable
     }
 
     /**
+     * M4.15 (ADR-452): the member web's Web Push subscriptions, one per browser.
+     *
+     * @return HasMany<PushSubscription, $this>
+     */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
+    /**
      * @return HasMany<KnownDevice, $this>
      */
     public function knownDevices(): HasMany

@@ -26,7 +26,7 @@ const deltaTone = computed(() => (delta.value === null || delta.value === 0 ? 't
 
 <template>
     <div class="flex min-w-0 flex-col gap-8 bg-surface px-16 py-16" :data-testid="testId">
-        <p class="truncate text-caption text-ink-2">{{ label }}</p>
+        <p class="truncate text-caption text-ink-2" :title="label">{{ label }}</p>
         <!-- The loading tile has the ready tile's lines: number, sparkline and, with a `period`, its caption line (DQ-533). -->
         <template v-if="loading">
             <Skeleton class="h-28 w-80" />

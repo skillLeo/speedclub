@@ -6,6 +6,7 @@ use App\Enums\CatalogImportKind;
 use App\Models\Brand;
 use App\Models\Generation;
 use App\Models\Make;
+use App\Models\Product;
 use App\Models\VehicleModel;
 use App\Services\Admin\CsvCell;
 use Generator;
@@ -35,9 +36,11 @@ final class CatalogCsvWriter
      */
     public static function template(CatalogImportKind $kind): string
     {
-        $example = $kind === CatalogImportKind::Vehicles
-            ? ['BMW', '', 'DE', 'ja', 'M4', '', 'G82', '', '2021', '', 'ja']
-            : ['Akrapovič', '', 'exhaust', 'Akrapovic|Akra'];
+        $example = match ($kind) {
+            CatalogImportKind::Vehicles => ['BMW', '', 'DE', 'ja', 'M4', '', 'G82', '', '2021', '', 'ja'],
+            CatalogImportKind::Brands => ['Akrapovič', '', 'exhaust', 'Akrapovic|Akra'],
+            CatalogImportKind::Products => ['KW', 'Variante 3', 'Gewindefahrwerke', 'suspension', ''],
+        };
 
         return self::BOM.self::line(self::header($kind)).self::line($example);
     }
@@ -52,7 +55,13 @@ final class CatalogCsvWriter
         fwrite($out, self::BOM.self::line(self::header($kind)));
         $count = 0;
 
-        foreach ($kind === CatalogImportKind::Vehicles ? self::vehicleRows() : self::brandRows() as $row) {
+        $rows = match ($kind) {
+            CatalogImportKind::Vehicles => self::vehicleRows(),
+            CatalogImportKind::Brands => self::brandRows(),
+            CatalogImportKind::Products => self::productRows(),
+        };
+
+        foreach ($rows as $row) {
             fwrite($out, self::line($row));
             $count++;
         }
@@ -133,6 +142,18 @@ final class CatalogCsvWriter
                 $brand->getAttribute('category_hint'),
                 implode('|', is_array($brand->aliases) ? array_filter($brand->aliases, is_string(...)) : []),
             ];
+        }
+    }
+
+    /**
+     * M4.14 ADM-57: active and archived products (not merged ones), as the import reads them.
+     *
+     * @return Generator<int, list<mixed>>
+     */
+    private static function productRows(): Generator
+    {
+        foreach (Product::query()->with(['brand', 'category'])->whereNull('merged_into_id')->orderBy('id')->lazyById(500) as $product) {
+            yield [$product->brand->name, $product->name, $product->line, $product->category->key, $product->url];
         }
     }
 

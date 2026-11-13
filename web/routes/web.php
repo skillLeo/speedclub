@@ -3,6 +3,7 @@
 use App\Enums\LegalDocumentKey;
 use App\Http\Controllers\Api\V1\Events\EventCalendarController;
 use App\Http\Controllers\Web\AccountDeletionPageController;
+use App\Http\Controllers\Web\AppRouteRedirectController;
 use App\Http\Controllers\Web\ContactPageController;
 use App\Http\Controllers\Web\DevMailController;
 use App\Http\Controllers\Web\EmailActionPageController;
@@ -11,6 +12,9 @@ use App\Http\Controllers\Web\LandingController;
 use App\Http\Controllers\Web\LegalPageController;
 use App\Http\Controllers\Web\OgImageController;
 use App\Http\Controllers\Web\PlatformFilesController;
+use App\Http\Controllers\Web\PublicBrandController;
+use App\Http\Controllers\Web\PublicBusinessController;
+use App\Http\Controllers\Web\PublicEventController;
 use App\Http\Controllers\Web\PublicMemberController;
 use App\Http\Controllers\Web\PublicVehicleController;
 use App\Http\Controllers\Web\QrScanController;
@@ -34,8 +38,14 @@ Route::withoutMiddleware(PublicPages::WITHOUT_SESSION)->group(function (): void 
             Route::get('/v/{slug}', PublicVehicleController::class)->middleware(RedirectMembersToApp::class)->name('public.vehicle');
             // Signed-in members read PROF-02 in the member web app since M2.1 (ADR-148 i, ADR-176 f); ?view=public stays here.
             Route::get('/u/{username}', PublicMemberController::class)->middleware(RedirectMembersToApp::class)->name('public.member');
-            // M4.12 (09 §8.7, WEB-09): the calendar file of an event, public or signed for one member; the page /e/{slug} comes in M4.16.
+            // M4.12 (09 §8.7, WEB-09): the calendar file of an event, public or signed for one member. Before the page, which would
+            // otherwise take "x.ics" as its slug.
             Route::get('/e/{slug}.ics', [EventCalendarController::class, 'web'])->where('slug', '[A-Za-z0-9-]{3,140}')->name('public.event.ics');
+            // M4.16 WEB-09 (09 §9): the public event page, behind the flag `events`; the place of an after_rsvp event stays the city.
+            Route::get('/e/{slug}', PublicEventController::class)->where('slug', '[A-Za-z0-9-]{3,140}')->name('public.event');
+            // M4.14 (09 §9 WEB-10/11): the business page with its Impressum (flag businesses) and the part brand page (flag parts_catalogue).
+            Route::get('/b/{slug}', PublicBusinessController::class)->where('slug', '[A-Za-z0-9-]{2,140}')->name('public.business');
+            Route::get('/brands/{slug}', PublicBrandController::class)->where('slug', '[A-Za-z0-9-]{1,140}')->name('public.brand');
         });
 
         Route::middleware('throttle:public-read')->name('legal.')->group(function (): void {
@@ -68,12 +78,15 @@ Route::withoutMiddleware(PublicPages::WITHOUT_SESSION)->group(function (): void 
         Route::redirect('/auth/magic', '/app/auth/magic', 302)->middleware('throttle:public-read')->name('auth.magic');
         // M4.7 (09 §8.4): "Das war ich nicht" of a login alert, the same way (token in the fragment, POST auth/secure-account).
         Route::redirect('/auth/secure', '/app/auth/secure', 302)->middleware('throttle:public-read')->name('auth.secure');
+        // M4.15 (ADR-453 e): SET-21 from the security mail and the login alert's push. The app claims the path; a browser without it
+        // lands on the member web's screen, with ?event= kept.
+        Route::get('/settings/security/activity', AppRouteRedirectController::class)->middleware('throttle:public-read')->name('security-activity');
     });
 
     // Link previews (og:image, twitter:image): a versioned JPEG, drawn on the first request when the queue has not drawn it yet.
-    // Later routes (/e, /b, /brands) add their letter to whereIn and a card to OgImages.
+    // M4.16: /e, /b and /brands draw through PartnerOgImages.
     Route::middleware('throttle:public-read')->group(function (): void {
-        Route::get('/og/{type}/{file}', OgImageController::class)->whereIn('type', ['v', 'u'])->where('file', '[A-Za-z0-9._-]+\.jpg')->name('og.image');
+        Route::get('/og/{type}/{file}', OgImageController::class)->whereIn('type', ['v', 'u', 'e', 'b', 'brands'])->where('file', '[A-Za-z0-9._-]+\.jpg')->name('og.image');
         Route::get('/og/{file}', OgImageController::class)->where('file', 'site-[0-9a-f]{16}(-square)?\.jpg')->name('og.site');
     });
 

@@ -233,6 +233,7 @@ onMounted(() => {
 
         <DataTable
             id="members"
+            row-keys
             :columns="columns"
             :rows="rows"
             :query="query"

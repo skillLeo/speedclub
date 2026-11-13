@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Admin\Businesses\ReviewBusiness;
 use App\Actions\Admin\Catalog\ApplyCatalogImport;
 use App\Actions\Admin\Catalog\MergeCatalogEntries;
 use App\Actions\Admin\Config\UpdateFeatureFlag;
@@ -36,6 +37,7 @@ use App\Services\Approvals\Handlers\ReactivateOwnerStaff;
 use App\Services\Approvals\Handlers\ResetStaffTwoFactorHandler;
 use App\Services\Approvals\Handlers\SetTicketStatusInBulk;
 use App\Services\Approvals\Handlers\StaffRoleElevation;
+use App\Services\Approvals\Handlers\SuspendBusiness;
 use App\Services\Config\ConfigVersions;
 use Tests\Support\SourceScanner;
 
@@ -76,6 +78,8 @@ arch('the four-eyes check is only used by the engine, its handlers, the executor
         'App\Actions\Admin\Team\ReactivateStaff',
         'App\Services\Config\ConfigVersions',
         'App\Actions\Moderation\DecideCase',
+        // M4.14: suspending a business (business.suspend).
+        'App\Actions\Admin\Businesses\ReviewBusiness',
         'App\Console\Commands\DecideModerationCaseCommand',
     ]);
 
@@ -98,6 +102,8 @@ const FOUR_EYES_EXECUTORS = [
     BulkNoAction::class => ['execute' => [CloseCasesInBulk::class]],
     BulkTicketStatus::class => ['execute' => [SetTicketStatusInBulk::class]],
     MergeCatalogEntries::class => ['execute' => [MergeCatalogEntriesInBulk::class]],
+    // M4.14: business.suspend.
+    ReviewBusiness::class => ['suspend' => [SuspendBusiness::class]],
     ApplyCatalogImport::class => ['execute' => [ApplyCatalogImportInBulk::class]],
     UpdateFeatureFlag::class => ['execute' => [ChangeCriticalFlag::class]],
     PublishLegalDocument::class => ['execute' => [PublishLegalWithReconsent::class]],

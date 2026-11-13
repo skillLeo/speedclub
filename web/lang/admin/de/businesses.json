@@ -1,0 +1,199 @@
+{
+    "title": "Betriebe",
+    "queue_title": "Betriebs-Anträge",
+    "nav": {
+        "title": "Betriebe"
+    },
+    "tabs": {
+        "label": "Betriebe nach Status",
+        "applied": "Anträge",
+        "verified": "Verifiziert",
+        "rejected": "Abgelehnt",
+        "suspended": "Gesperrt",
+        "all": "Alle"
+    },
+    "flash": {
+        "verified": "Betrieb verifiziert.",
+        "rejected": "Antrag abgelehnt.",
+        "reinstated": "Betrieb wieder freigeschaltet.",
+        "reopened": "Entscheidung zurückgenommen, der Antrag ist wieder in der Queue.",
+        "not_possible": "Das geht in diesem Zustand nicht mehr."
+    },
+    "conflict": {
+        "changed": "Der Betrieb wurde inzwischen geändert. Sieh dir die aktuelle Fassung an und entscheide dann.",
+        "title": "Inzwischen geändert"
+    },
+    "intro": "Betriebe, die ein Profil beantragt haben. Prüfe Name, Anschrift, Impressum und Register, bevor du verifizierst. Der älteste Antrag steht oben.",
+    "caption": "Betriebe mit Wartezeit, Rechtsform, Antragsteller und Meldungen",
+    "columns": {
+        "waiting": "Wartet",
+        "business": "Betrieb",
+        "legal": "Firma",
+        "owner": "Antragsteller",
+        "reports": "Meldungen",
+        "status": "Status"
+    },
+    "filters": {
+        "label": "Betriebe filtern",
+        "q": "Suche",
+        "q_placeholder": "Name, Firma, Stadt oder @Antragsteller",
+        "kind": "Art",
+        "any": "Alle",
+        "apply": "Anwenden"
+    },
+    "kinds": {
+        "workshop": "Werkstatt",
+        "tuner": "Tuner",
+        "detailing": "Aufbereitung",
+        "wrapping": "Folierung",
+        "paint": "Lackiererei",
+        "dealer": "Händler",
+        "parts_shop": "Teilehandel",
+        "other": "Sonstiges"
+    },
+    "legal_forms": {
+        "sole_trader": "Einzelunternehmen",
+        "ek": "e. K.",
+        "gbr": "GbR",
+        "ohg": "OHG",
+        "kg": "KG",
+        "gmbh": "GmbH",
+        "gmbh_co_kg": "GmbH & Co. KG",
+        "ug": "UG (haftungsbeschränkt)",
+        "ag": "AG",
+        "other": "Andere Rechtsform"
+    },
+    "status": {
+        "applied": "Antrag",
+        "verified": "Verifiziert",
+        "rejected": "Abgelehnt",
+        "suspended": "Gesperrt",
+        "removed": "Entfernt"
+    },
+    "roles": {
+        "owner": "Inhaber",
+        "staff": "Team"
+    },
+    "weekdays": {
+        "mon": "Mo",
+        "tue": "Di",
+        "wed": "Mi",
+        "thu": "Do",
+        "fri": "Fr",
+        "sat": "Sa",
+        "sun": "So"
+    },
+    "waiting": {
+        "minutes": ":count Min.",
+        "hours": ":count Std.",
+        "days": ":count Tg.",
+        "label": "Wartet seit :date"
+    },
+    "empty": {
+        "applied_title": "Keine offenen Anträge",
+        "applied_body": "Neue Anträge erscheinen hier, sobald ein Betrieb sein Profil zur Prüfung sendet.",
+        "verified_title": "Noch keine verifizierten Betriebe",
+        "verified_body": "Verifizierte Betriebe stehen hier mit ihrem Impressum.",
+        "rejected_title": "Keine abgelehnten Anträge",
+        "rejected_body": "Abgelehnte Anträge bleiben hier mit ihrem Grund.",
+        "suspended_title": "Keine gesperrten Betriebe",
+        "suspended_body": "Gesperrte Betriebe stehen hier, bis sie wieder freigeschaltet sind.",
+        "all_title": "Noch keine Betriebe",
+        "all_body": "Sobald Mitglieder ein Betriebsprofil beantragen, stehen sie hier."
+    },
+    "pane": {
+        "label": "Ausgewählter Betrieb",
+        "select_body": "Wähle einen Antrag: Er öffnet sich rechts mit Impressum, Register und Anschrift. j und k wechseln, a verifiziert, r lehnt ab.",
+        "gone": "Diesen Betrieb gibt es nicht mehr.",
+        "open": "Betrieb öffnen"
+    },
+    "detail": {
+        "applicant": "Antragsteller",
+        "member_since": "Mitglied seit :date",
+        "cover": "Titelbild von „:name“",
+        "logo": "Logo von „:name“",
+        "no_cover": "Kein Titelbild hochgeladen",
+        "impressum": "Impressum (§ 5 DDG)",
+        "missing": "Fehlt: :count",
+        "complete": "Vollständig",
+        "missing_field": "Fehlt",
+        "not_given": "Nicht angegeben",
+        "new_tab": "(öffnet in einem neuen Tab)",
+        "document_note": "Hinweis zu Nachweisen",
+        "no_document_note": "Der Antragsteller hat keinen Hinweis zu Nachweisen hinterlassen.",
+        "about": "Über den Betrieb",
+        "no_about": "Keine Beschreibung",
+        "services": "Leistungen",
+        "no_services": "Keine Leistungen angegeben",
+        "hours": "Öffnungszeiten",
+        "no_hours": "Keine Öffnungszeiten angegeben",
+        "closed": "geschlossen",
+        "team": "Team",
+        "portfolio": "Portfolio",
+        "tags": ":accepted bestätigt · :pending offen",
+        "sample": "Beispiel",
+        "reports": "Offene Meldungen",
+        "submitted": "Antrag vom :date",
+        "review": "Entscheidung",
+        "reviewed": ":name, :date",
+        "suspended": "Gesperrt seit :date"
+    },
+    "impressum": {
+        "address": "Anschrift",
+        "legal_name": "Firma",
+        "legal_form": "Rechtsform",
+        "representative": "Vertretungsberechtigt",
+        "email": "E-Mail",
+        "phone": "Telefon",
+        "website": "Website",
+        "register_court": "Registergericht",
+        "register_number": "Registernummer",
+        "vat_id": "USt-IdNr."
+    },
+    "actions": {
+        "verify": "Verifizieren",
+        "reject": "Ablehnen",
+        "suspend": "Sperren",
+        "request_suspend": "Sperrung beantragen",
+        "reinstate": "Wieder freischalten",
+        "reopen": "Entscheidung zurücknehmen",
+        "undo": "Rückgängig",
+        "reload": "Neu laden"
+    },
+    "reject_dialog": {
+        "title": "Antrag von „:name“ ablehnen?",
+        "body": "Der Antragsteller liest den Grund und kann den Antrag geändert erneut senden.",
+        "reason": "Grund für den Antragsteller"
+    },
+    "suspend_dialog": {
+        "title": "„:name“ sperren?",
+        "body": "Das Profil ist dann nicht mehr öffentlich. Der Inhaber liest den Grund.",
+        "reason": "Grund für den Inhaber"
+    },
+    "reinstate_dialog": {
+        "title": "„:name“ wieder freischalten?",
+        "body": "Das Profil ist sofort wieder öffentlich. Der Inhaber wird benachrichtigt.",
+        "reason": "Grund (steht im Audit-Log)"
+    },
+    "reopen_dialog": {
+        "title": "Entscheidung zu „:name“ zurücknehmen?",
+        "body": "Der Antrag steht wieder in der Queue und ist nicht öffentlich, bis er neu entschieden ist."
+    },
+    "undo": {
+        "verified": "„:name“ verifiziert.",
+        "rejected": "Antrag von „:name“ abgelehnt."
+    },
+    "view_only": "Nur Ansicht: Entscheiden dürfen Rollen mit „Moderation entscheiden“.",
+    "keys": "Tastatur: j und k wechseln, a verifiziert, r lehnt ab, u macht rückgängig.",
+    "record": {
+        "crumb": "Betriebe",
+        "tabs": {
+            "label": "Bereiche des Betriebs",
+            "overview": "Überblick",
+            "reports": "Meldungen"
+        },
+        "no_cases": "Zu diesem Betrieb gibt es keine Meldungen.",
+        "case": "Fall vom :date",
+        "error": "Der Betrieb konnte nicht geladen werden."
+    }
+}

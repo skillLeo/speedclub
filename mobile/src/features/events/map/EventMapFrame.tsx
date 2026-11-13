@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { createStyles } from '@/theme';
+import { useOnline } from '@/state/online';
 import { Button, Icon, SkeletonBlock, Text } from '@/ui';
 
 import { grantMapConsent } from './mapConsent';
@@ -73,6 +74,8 @@ export function EventMapFrame({
 }) {
   const styles = useStyles();
   const { t } = useTranslation('events');
+  // M4.15: offline the tiles cannot load, so the gate says so and its button waits for the connection.
+  const online = useOnline();
   return (
     <View
       role="region"
@@ -99,13 +102,15 @@ export function EventMapFrame({
       {phase === 'consent' ? (
         <View style={styles.failed} testID={testID ? `${testID}.consent` : undefined}>
           <Icon name="map-trifold" size={24} color="text.secondary" />
-          <Text variant="callout" color="text.secondary">
-            {t('map.consentBody')}
+          {/* DQ-1131: product names ("OpenFreeMap") never split at a hyphen of their own. */}
+          <Text variant="callout" color="text.secondary" hyphenate={false} testID={testID ? `${testID}.consentBody` : undefined}>
+            {online ? t('map.consentBody') : t('map.offlineBody')}
           </Text>
           <Button
             label={t('map.consentAction')}
             variant="secondary"
             size="s"
+            disabled={!online}
             onPress={grantMapConsent}
             style={styles.consentAction}
             testID={testID ? `${testID}.load` : undefined}

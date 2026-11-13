@@ -120,7 +120,7 @@ const sourceModel = selectModel('source');
 const statusModel = selectModel('status');
 const roleModel = selectModel('role');
 const any = computed(() => ({ value: ANY, label: trans('moderation.reports.filters.any') }));
-const typeOptions = computed(() => [any.value, ...(['member', 'vehicle', 'photo', 'message', 'build_update', 'modification', 'comment', 'event'] as const).map((v) => ({ value: v, label: trans(`moderation.target_types.${v}`) }))]);
+const typeOptions = computed(() => [any.value, ...(['member', 'vehicle', 'photo', 'message', 'build_update', 'modification', 'comment', 'event', 'business'] as const).map((v) => ({ value: v, label: trans(`moderation.target_types.${v}`) }))]);
 const reasonOptions = computed(() => [any.value, ...(['illegal', 'harassment', 'nudity', 'impersonation', 'spam', 'other'] as const).map((v) => ({ value: v, label: trans(`moderation.reasons.${v}`) }))]);
 const assignedOptions = computed(() => [any.value, ...(['me', 'none', 'others'] as const).map((v) => ({ value: v, label: trans(`moderation.reports.filters.assigned_${v}`) }))]);
 const sourceOptions = computed(() => [any.value, ...(['automated', 'web_form', 'staff'] as const).map((v) => ({ value: v, label: trans(`moderation.reports.filters.source_${v}`) }))]);
@@ -188,6 +188,7 @@ const emptyKey = computed(() => props.tab);
         <DataTable
             :id="`moderation-${tab}`"
             :key="tab"
+            row-keys
             :columns="columns"
             :rows="rows"
             :query="query"

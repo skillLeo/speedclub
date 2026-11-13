@@ -98,7 +98,8 @@
         "build_update": "Build-Update",
         "modification": "Modifikation",
         "comment": "Kommentar",
-        "event": "Treffen"
+        "event": "Treffen",
+        "business": "Betrieb"
     },
     "status": {
         "received": "Eingegangen",
@@ -223,7 +224,7 @@
         "required": "Schreib kurz, warum du widersprichst.",
         "send": "Einspruch senden",
         "sentTitle": "Dein Einspruch ist eingegangen",
-        "sentBody": "Sobald wir entschieden haben, sagen wir dir per Mitteilung und E-\u2060Mail Bescheid.",
+        "sentBody": "Sobald wir entschieden haben, sagen wir dir per Mitteilung und E-⁠Mail Bescheid.",
         "done": "Fertig",
         "failure": {
             "offline": "Du bist offline. Dein Einspruch ist noch nicht gesendet. Versuch es noch einmal, sobald du wieder online bist.",

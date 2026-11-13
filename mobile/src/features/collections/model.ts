@@ -16,7 +16,7 @@ export type ItemTile = {
   href: Href | null;
 };
 
-/** A saved build, mod or update as a tile. Exported for the tests. */
+/** A saved build, mod, update, event or business as a tile. Exported for the tests. */
 export function itemTile(item: CollectionItem): ItemTile {
   const key = collectionItemKey(item);
   const ref = { key, type: item.type, id: item.id };
@@ -38,6 +38,13 @@ export function itemTile(item: CollectionItem): ItemTile {
       isSample: mod.vehicle.is_sample,
       href: `/v/${mod.vehicle.slug}/mods/${mod.id}`,
     };
+  }
+  // M4.12 / M4.14 (09 §7.7 COL-02): a saved event opens EVT-02 with its cover, a saved business BIZ-01 with its logo.
+  if (item.type === 'event' && item.event) {
+    return { ...ref, title: item.event.title, cover: item.event.cover, isSample: item.event.is_sample, href: `/events/${item.event.slug}` };
+  }
+  if (item.type === 'business' && item.business) {
+    return { ...ref, title: item.business.name, cover: item.business.logo, isSample: item.business.is_sample, href: `/b/${item.business.slug}` };
   }
   const update = item.build_update;
   return {

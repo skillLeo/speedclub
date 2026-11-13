@@ -708,9 +708,10 @@
     "costs": {
       "title": "Costs",
       "total": "Total",
-      "line": "{{maintenance}} maintenance · {{mods}} modifications",
       "note": "Maintenance and modifications together. Only you can see these figures.",
-      "empty": "No costs logged yet."
+      "empty": "No costs logged yet.",
+      "maintenancePart": "{{amount}} maintenance",
+      "modsPart": "{{amount}} modifications"
     },
     "log": {
       "workshop": "Workshop: {{name}}",

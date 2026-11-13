@@ -78,12 +78,13 @@ describe('ADM-06 dashboard', function () {
         actingAsStaff(staffWithRole($role))->get('/admin')
             ->assertInertia(fn (AssertableInertia $page) => $page->where('queues', fn ($queues) => collect($queues)->keys()->sort()->values()->all() === $expected));
     })->with([
-        // M3.6: privacy_due (GDPR deadlines ≤ 7 days) for privacy.view.
-        'owner' => ['owner', ['appeals', 'failed_jobs', 'privacy_due', 'queue', 'reports', 'scheduler', 'support_tickets']],
-        'moderator' => ['moderator', ['appeals', 'reports', 'support_tickets']],
+        // M3.6: privacy_due (GDPR deadlines ≤ 7 days) for privacy.view. M4.17: the review queues events_review (ADM-53) and
+        // business_applications (ADM-55) for moderation.view.
+        'owner' => ['owner', ['appeals', 'business_applications', 'events_review', 'failed_jobs', 'privacy_due', 'queue', 'reports', 'scheduler', 'support_tickets']],
+        'moderator' => ['moderator', ['appeals', 'business_applications', 'events_review', 'reports', 'support_tickets']],
         'support' => ['support', ['privacy_due', 'support_tickets']],
         'content editor' => ['content_editor', []],
-        'analyst' => ['analyst', ['reports']],
+        'analyst' => ['analyst', ['business_applications', 'events_review', 'reports']],
     ]);
 
     it('counts open cases for the reports queue', function () {

@@ -5,6 +5,7 @@ import { View } from 'react-native';
 
 import { useCachedPublicVehicle, usePublicMod, type PublicMod, type PublicModRow } from '@/api/queries/vehicles';
 import { SearchSimilarButton } from '@/features/discover/components/SearchSimilarButton';
+import { ModLinksCard, OwnerTagPanel, ProductBuildsRail } from '@/features/parts/components/ModParts';
 import { createStyles, space, useBreakpoint } from '@/theme';
 import { Icon, Photo, PressableScale, Skeleton, SkeletonBlock, SkeletonText, SpecRow, StatusPill, Text } from '@/ui';
 
@@ -125,9 +126,10 @@ function generalRows(mod: PublicMod, t: (key: string) => string): { key: string;
   ].filter((row): row is { key: string; label: string; value: string } => row !== null);
 }
 
-function ModBody({ mod, onOpenPhoto }: { mod: PublicMod; onOpenPhoto: (index: number) => void }) {
+function ModBody({ mod, slug, onOpenPhoto }: { mod: PublicMod; slug: string; onOpenPhoto: (index: number) => void }) {
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
+  const { gutter } = useBreakpoint();
   // The first photo is the hero (ModHero); the wall holds the rest.
   const photos = visiblePhotos(mod.photos).slice(1);
   const specValues = new Set(mod.specs.map((row) => row.value));
@@ -138,6 +140,9 @@ function ModBody({ mod, onOpenPhoto }: { mod: PublicMod; onOpenPhoto: (index: nu
 
   return (
     <>
+      {/* M4.14 (09 §7.6 VEH-02): product and brand (BRD-02, BRD-01), "Eingebaut von" (BIZ-01); the owner sees an unsettled tag. */}
+      <ModLinksCard mod={mod} routeId={ROUTE_ID} style={styles.section} />
+      <OwnerTagPanel mod={mod} routeId={ROUTE_ID} style={styles.section} />
       {photos.length > 0 ? (
         <View style={[styles.section, styles.photoRows]} testID={`${ROUTE_ID}.photos`}>
           {rows.map((row, rowIndex) => (
@@ -202,6 +207,12 @@ function ModBody({ mod, onOpenPhoto }: { mod: PublicMod; onOpenPhoto: (index: nu
         {mod.legal_disclaimer ?? t('mods.disclaimer')}
       </Text>
       <SearchSimilarButton mod={mod} style={styles.section} testID={`${ROUTE_ID}.searchSimilar`} />
+      {/* DQ-1070: "Ähnliche Builds mit {Produkt}", the other visible builds that run the same catalogue product. */}
+      {mod.product ? (
+        <View style={styles.section}>
+          <ProductBuildsRail productId={mod.product.id} productName={mod.product.full_name} excludeSlug={slug} bleed={gutter} testID={`${ROUTE_ID}.productBuilds`} />
+        </View>
+      ) : null}
     </>
   );
 }
@@ -282,7 +293,7 @@ export function ModDetailScreen() {
     >
       {state === 'ready' && mod ? <ModHero mod={mod} onOpenPhoto={setViewerIndex} /> : null}
       {head ? <ModHeader mod={head} /> : null}
-      {state === 'ready' && mod ? <ModBody mod={mod} onOpenPhoto={setViewerIndex} /> : <ModBodySkeleton />}
+      {state === 'ready' && mod ? <ModBody mod={mod} slug={slug} onOpenPhoto={setViewerIndex} /> : <ModBodySkeleton />}
     </PushedPage>
   );
 }

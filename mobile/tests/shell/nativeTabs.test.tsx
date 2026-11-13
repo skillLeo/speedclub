@@ -322,7 +322,8 @@ describe('the link map (09 §6.5)', () => {
 
   it('leaves the routes of later modules alone until they exist', () => {
     for (const entry of LINK_MAP.filter((link) => !link.ready)) expect(entry.module).toMatch(/^M4\.\d+$/);
-    expect(rewriteLinkedPath('/e/treffen-hockenheim')).toBe('/e/treffen-hockenheim');
+    // M4.16: the public event page (WEB-13) exists, so /e/ links open EVT-02.
+    expect(rewriteLinkedPath('/e/treffen-hockenheim')).toBe('/events/treffen-hockenheim');
     // M4.6: AUTH-04 links go to AUTH-12; AUTH-05 stays for the password registration's mail.
     expect(rewriteLinkedPath('/sign-up')).toBe('/auth/email');
     expect(rewriteLinkedPath('/verify-email')).toBe('/verify-email');

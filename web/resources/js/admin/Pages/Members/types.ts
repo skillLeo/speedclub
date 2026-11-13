@@ -63,6 +63,10 @@ export interface MemberSecurity {
         browser?: string | null;
         os?: string | null;
     }[];
+    /** ADM-59 (M4.17): names and dates only, never a credential, provider subject, provider e-mail or IP. */
+    passkeys?: { id: string; name: string; synced: boolean; created_at: string | null; last_used_at: string | null }[];
+    providers?: { id: string; provider: 'apple' | 'google'; private_relay: boolean; linked_at: string | null; last_used_at: string | null }[];
+    events?: { id: string; type: string; device_name: string | null; platform: string | null; approx_city: string | null; created_at: string }[];
 }
 
 export interface MemberReports {

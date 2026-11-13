@@ -104,9 +104,9 @@ describe('items', function () {
 
         $private = publishedVehicle(null, ['visibility' => 'private']);
         $this->postJson("/api/v1/me/collections/$id/items", ['type' => 'vehicle', 'id' => $private->id])->assertNotFound();
-        // Events are items since lane B (M4.12): an id that is no event is the 404 of an unknown item; businesses join with M4.14.
+        // Events (M4.12) and businesses (M4.14) are items: an id that is none of them is the 404 of an unknown item.
         $this->postJson("/api/v1/me/collections/$id/items", ['type' => 'event', 'id' => $private->id])->assertNotFound();
-        $this->postJson("/api/v1/me/collections/$id/items", ['type' => 'business', 'id' => $private->id])->assertUnprocessable();
+        $this->postJson("/api/v1/me/collections/$id/items", ['type' => 'business', 'id' => $private->id])->assertNotFound();
     });
 
     it('leaves out what the member can no longer see, keeps it stored, and reorders what it shows', function () {

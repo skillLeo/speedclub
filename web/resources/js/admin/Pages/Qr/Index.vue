@@ -75,6 +75,7 @@ const memberHref = (id: string) => routeOr('admin.members.show', `/admin/members
 
         <DataTable
             id="qr"
+            row-keys
             :columns="columns"
             :rows="rows"
             :query="query"

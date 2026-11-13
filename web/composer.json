@@ -24,6 +24,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "league/flysystem-aws-s3-v3": "^3.35",
+        "minishlink/web-push": "^11.0",
         "pragmarx/google2fa": "^9.1",
         "pusher/pusher-php-server": "^7.3",
         "spatie/laravel-backup": "^10.3",
@@ -113,7 +114,7 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": false
         },
         "platform": {
             "php": "8.3.0"

@@ -18,12 +18,15 @@ import SkeletonRows from './Partials/SkeletonRows.vue';
 import { useCatalogWrite } from './shared';
 
 /**
- * ADM-17 CSV import (06 §3 Catalogue, m3.3-contract §2; catalog.import): upload makes/models/generations or part brands (templates in
+ * ADM-17 CSV import (06 §3 Catalogue, m3.3-contract §2; catalog.import): upload makes/models/generations, part brands or parts (ADM-57,
+ * M4.14; `?kind=products` preselects it from the parts table) (templates in
  * the import's own format) → dry run, the diff per row new / changed / unchanged / error with the reason → "Übernehmen" (⚿, reason,
  * catalog.manage too): one queued job through the same Actions as manual edits, with progress and the result per row. More than 100
  * changed rows ask a second staff member first (ApprovalNotice). The file stays on the private disk for 30 days.
  */
-type Kind = 'vehicles' | 'brands';
+type Kind = 'vehicles' | 'brands' | 'products';
+const KINDS: Kind[] = ['vehicles', 'brands', 'products'];
+const isKind = (value: unknown): value is Kind => typeof value === 'string' && (KINDS as string[]).includes(value);
 type ImportStatus = 'analysed' | 'awaiting_approval' | 'queued' | 'applying' | 'applied' | 'failed' | 'expired';
 type RowStatus = 'new' | 'changed' | 'unchanged' | 'error';
 interface Counts {
@@ -77,9 +80,10 @@ const history = computed(() => (state.value === 'empty' ? [] : props.history));
 const current = computed(() => (state.value === 'empty' ? null : props.current));
 
 // ---- upload -------------------------------------------------------------------------------------------------------------
-const kind = ref<Kind>(props.current?.kind ?? 'vehicles');
-const kindModel = computed({ get: () => kind.value, set: (v: string) => (kind.value = v === 'brands' ? 'brands' : 'vehicles') });
-const kindOptions = computed(() => (['vehicles', 'brands'] as const).map((value) => ({ value, label: trans(`catalog.import.kinds.${value}`) })));
+const askedKind = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('kind');
+const kind = ref<Kind>(props.current?.kind ?? (isKind(askedKind) ? askedKind : 'vehicles'));
+const kindModel = computed({ get: () => kind.value, set: (v: string) => (kind.value = isKind(v) ? v : 'vehicles') });
+const kindOptions = computed(() => KINDS.map((value) => ({ value, label: trans(`catalog.import.kinds.${value}`) })));
 const file = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const upload = useCatalogWrite();
@@ -191,6 +195,7 @@ const title = computed(() => trans('catalog.import.title'));
             <template #actions>
                 <Button size="sm" variant="ghost" :icon="PhDownloadSimple" :href="templateUrl('vehicles')" external data-testid="ADM-17.template.vehicles">{{ trans('catalog.import.template_vehicles') }}</Button>
                 <Button size="sm" variant="ghost" :icon="PhDownloadSimple" :href="templateUrl('brands')" external data-testid="ADM-17.template.brands">{{ trans('catalog.import.template_brands') }}</Button>
+                <Button size="sm" variant="ghost" :icon="PhDownloadSimple" :href="templateUrl('products')" external data-testid="ADM-17.template.products">{{ trans('catalog.import.template_products') }}</Button>
             </template>
         </PageHeader>
 
@@ -212,7 +217,7 @@ const title = computed(() => trans('catalog.import.title'));
                             <Field :label="trans('catalog.import.file')" :error="uploadError" required>
                                 <span class="flex h-40 items-center gap-12 rounded-sm border border-line-control bg-raised px-12">
                                     <PhFileCsv :size="20" class="shrink-0 text-ink-3" aria-hidden="true" />
-                                    <span class="min-w-0 grow truncate text-admin-base" :class="file ? 'text-ink' : 'text-ink-3'">{{ file ? file.name : trans('catalog.import.no_file') }}</span>
+                                    <span class="min-w-0 grow truncate text-admin-base" :class="file ? 'text-ink' : 'text-ink-3'" :title="file ? file.name : trans('catalog.import.no_file')">{{ file ? file.name : trans('catalog.import.no_file') }}</span>
                                     <input id="adm17-file" ref="fileInput" type="file" accept=".csv,text/csv,text/plain" class="peer sr-only" data-testid="ADM-17.file" @change="pick" />
                                     <label for="adm17-file" :class="['inline-flex h-32 shrink-0 cursor-pointer items-center rounded-sm border border-line-control px-12 text-admin-base-strong text-ink hover:bg-hover peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus']">{{ trans('catalog.import.choose') }}</label>
                                 </span>

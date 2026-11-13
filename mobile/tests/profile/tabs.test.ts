@@ -1,7 +1,7 @@
 import { mergeProfileUpdates, type ProfileUpdate } from '@/api/queries/profile';
 import type { BuildUpdate } from '@/api/queries/vehicles';
 import { eventDateParts, garageColumns, profileTabs, profileUpdatePhotos, profileUpdateText } from '@/features/profile/components/ProfileTabs';
-import { profileCover, profileCoverAspect, profileCoverHeight } from '@/features/profile/components/ProfileHeader';
+import { PROFILE_COLUMN_MAX, profileCover, profileCoverAspect, profileCoverHeight } from '@/features/profile/components/ProfileHeader';
 
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
 jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.resolve(null)) }));
@@ -54,11 +54,11 @@ describe('PROF-01 cover', () => {
     expect(profileCover({ cover: car }, [car])).toBe(car);
   });
 
-  it('is 16:9 on phones and tablets and the 3:1 band on the desktop', () => {
+  it('is 16:9 on every width, in the profile column on the desktop (ADR-451)', () => {
     expect(profileCoverAspect('phone')).toBe('16:9');
-    expect(profileCoverAspect('desktop')).toBe('3:1');
+    expect(profileCoverAspect('desktop')).toBe('16:9');
     expect(profileCoverHeight(390, 'phone')).toBeCloseTo(219.375);
-    expect(profileCoverHeight(1200, 'desktop')).toBe(400);
+    expect(profileCoverHeight(1200, 'desktop')).toBeCloseTo(PROFILE_COLUMN_MAX / (16 / 9));
   });
 });
 
@@ -92,6 +92,8 @@ describe('PROF-01 Updates rows (DQ-1093)', () => {
     expect(text.title.replace(/\u00A0/g, ' ')).toBe('HKS Super Turbo Muffler statt Fujitsubo Legalis R');
     expect(text.meta.replace(/[\u00A0\u2060]/g, (char) => (char === '\u00A0' ? ' ' : ''))).toBe('Abgasanlage · 2023-03-13 · Nissan Skyline GT-R R34');
     expect(text.diff).toBeUndefined();
+    // DQ-1126: the model code is bound to the word before it.
+    expect(text.meta).toMatch(/\u00A0R34$/);
   });
 
   it('titles a note by its text, never "Notiz", and drops the repeated system of a summary', () => {

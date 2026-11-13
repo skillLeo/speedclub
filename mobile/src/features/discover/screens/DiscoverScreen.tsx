@@ -1,4 +1,4 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import type { TextInput as RNTextInput } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,10 @@ import { flattenBuilds, useNewBuilds, type FeedVehicle } from '@/api/queries/hom
 import { normalizeQuery, SEARCH_MAX_LENGTH } from '@/api/queries/search';
 import { EmbeddedEvents } from '@/features/events/components/EmbeddedEvents';
 import { EventsModule } from '@/features/events/components/EventsModule';
+import { EmbeddedBusinesses } from '@/features/parts/components/EmbeddedBusinesses';
+import { EmbeddedParts } from '@/features/parts/components/EmbeddedParts';
+import { BUSINESSES_FLAG } from '@/api/queries/businesses';
+import { PARTS_FLAG } from '@/api/queries/parts';
 import { BrowseErrorState, RestrictionNotice, useBrowseRestriction } from '@/features/home/components/BrowseStates';
 import { vehiclePath } from '@/features/home/navigation';
 import { useTabScrollToTop } from '@/features/shell/retap';
@@ -46,10 +50,22 @@ const HAIRLINE_FADE = space[8];
 /** "Neu entdeckt" (09 §7.5, DQ-1038): whole rows of the wall, 4 of 2 on a phone, 3 of 3 from 768, 2 of 4 from 1280. */
 const WALL_ROWS = { phone: 4, tablet: 3, desktop: 2 } as const;
 const NEWEST_PATH = { pathname: '/discover/search', params: { sort: 'newest' } } as const;
-/** M4.12: "Treffen" is a scope of DISC-01 that embeds EVT-01 (09 §7.5); searches from it look in every scope. */
-type DiscoverScope = SearchScope | 'events';
+/**
+ * M4.12: "Treffen" is a scope of DISC-01 that embeds EVT-01 (09 §7.5); searches from it look in every scope. M4.14: "Betriebe" lists
+ * BusinessCards and "Teile" the part brands and ProductRows; there the search field narrows the embedded list instead.
+ */
+type DiscoverScope = SearchScope | 'events' | 'businesses' | 'parts';
+/** The scopes whose list the search field narrows in place (no DISC-02 for them). */
+const IN_PLACE_SCOPES: ReadonlySet<DiscoverScope> = new Set(['businesses', 'parts']);
 /** "Treffen am Wochenende" (09 §7.5): at most three cards before "Alle Treffen". */
 const WEEKEND_CARDS = 3;
+const DISCOVER_SCOPES: readonly DiscoverScope[] = ['all', 'vehicles', 'members', 'events', 'businesses', 'parts'];
+
+/** A scope named in the URL, or null. */
+function discoverScopeOf(value: string | string[] | undefined): DiscoverScope | null {
+  const first = Array.isArray(value) ? value[0] : value;
+  return (DISCOVER_SCOPES as readonly string[]).includes(first ?? '') ? (first as DiscoverScope) : null;
+}
 /** Remembered while the app runs, so coming back to Entdecken keeps the scope the member chose. */
 let lastScope: DiscoverScope = 'all';
 
@@ -99,11 +115,20 @@ export function DiscoverScreen() {
   const discover = useDiscover();
   const recent = useRecentSearches();
   const [text, setText] = useState('');
-  const [scope, setScopeState] = useState<DiscoverScope>(lastScope);
+  // `?scope=` opens a scope by link (the visual matrix, a shared "Betriebe" link); otherwise the one chosen last in this session.
+  const scopeParam = useLocalSearchParams<{ scope?: string }>().scope;
+  const [scope, setScopeState] = useState<DiscoverScope>(() => discoverScopeOf(scopeParam) ?? lastScope);
   const tEvents = useTranslation('events').t;
   const eventsOn = useFlag(EVENTS_FLAG);
   const eventsScope = scope === 'events' && eventsOn;
-  const searchScope: SearchScope = scope === 'events' ? 'all' : scope;
+  const tParts = useTranslation('parts').t;
+  const businessesOn = useFlag(BUSINESSES_FLAG);
+  const partsOn = useFlag(PARTS_FLAG);
+  const businessesScope = scope === 'businesses' && businessesOn;
+  const partsScope = scope === 'parts' && partsOn;
+  const inPlace = businessesScope || partsScope;
+  const embedded = eventsScope || inPlace;
+  const searchScope: SearchScope = scope === 'events' || scope === 'businesses' || scope === 'parts' ? 'all' : scope;
   const [allMakes, setAllMakes] = useState(false);
   const newBuilds = useNewBuilds();
   const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
@@ -164,7 +189,8 @@ export function DiscoverScreen() {
   // A submitted text is read for filters on DISC-02 (contract §3), where its chips show.
   const search = (term: string) => {
     const q = normalizeQuery(term);
-    if (!q) return;
+    // Betriebe and Teile narrow their own list as the member types; Enter keeps the text there.
+    if (!q || IN_PLACE_SCOPES.has(scope)) return;
     rememberSearch(q);
     setText('');
     router.push(searchPath(q, { understand: true, scope: searchScope }));
@@ -232,6 +258,8 @@ export function DiscoverScreen() {
   const scopes: { value: DiscoverScope; label: string }[] = [
     ...SEARCH_SCOPES.map((value) => ({ value, label: t(`scopes.${value}`) })),
     ...(eventsOn ? [{ value: 'events' as const, label: tEvents('discover.scope') }] : []),
+    ...(businessesOn ? [{ value: 'businesses' as const, label: tParts('scope.businesses') }] : []),
+    ...(partsOn ? [{ value: 'parts' as const, label: tParts('scope.parts') }] : []),
   ];
 
   return (
@@ -281,7 +309,7 @@ export function DiscoverScreen() {
             ))}
           </View>
           {restriction ? <RestrictionNotice message={restriction} testID={`${ROUTE}.restricted`} /> : null}
-          {typed ? (
+          {inPlace ? null : typed ? (
             <View style={styles.submit}>
               <ListRow
                 icon="magnifying-glass"
@@ -303,6 +331,10 @@ export function DiscoverScreen() {
           )}
           {eventsScope ? (
             <EmbeddedEvents width={columnWidth} bleed={phone ? gutter : 0} routeId={ROUTE} />
+          ) : businessesScope ? (
+            <EmbeddedBusinesses query={text} bleed={gutter} routeId={ROUTE} />
+          ) : partsScope ? (
+            <EmbeddedParts query={text} width={columnWidth} phone={phone} routeId={ROUTE} />
           ) : (
             <>
             <View>
@@ -328,7 +360,7 @@ export function DiscoverScreen() {
             </>
           )}
         </View>
-        {!eventsScope && (wallPending || newest.length > 0) ? (
+        {!embedded && (wallPending || newest.length > 0) ? (
           <View style={[phone ? column : [styles.wide, kind === 'desktop' ? styles.columnStart : styles.centred], gutterStyle]}>
             {wallPending ? (
               <Skeleton testID={`${ROUTE}.newest.skeleton`}>

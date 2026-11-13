@@ -2,11 +2,19 @@
 
 namespace App\Services\PublicPages;
 
+use App\Enums\BusinessStatus;
+use App\Enums\EventStatus;
+use App\Enums\EventVisibility;
 use App\Enums\LegalDocumentKey;
+use App\Enums\ProductStatus;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
+use App\Models\Brand;
+use App\Models\Business;
+use App\Models\Event;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\AppConfig\FeatureFlags;
 use App\Services\AppConfig\LegalDocuments;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
@@ -146,6 +154,17 @@ class SitemapWriter
             }
         }
 
+        // M4.14 (09 §9): business pages (verified, not removed, no samples) and brand pages with catalogue products, while their flags are on;
+        // M4.16: event pages.
+        foreach ($this->partnerPaths() as $path => $modified) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $this->url($writer, $path, $modified);
+            $remaining--;
+        }
+
         $writer->endElement();
         $writer->endDocument();
 
@@ -179,6 +198,50 @@ class SitemapWriter
             ->orderByDesc('updated_at')
             ->orderBy('id')
             ->lazy(500);
+    }
+
+    /**
+     * @return iterable<string, CarbonInterface|null>
+     */
+    private function partnerPaths(): iterable
+    {
+        $flags = app(FeatureFlags::class);
+
+        if ($flags->enabled('businesses')) {
+            $businesses = Business::query()->where('status', BusinessStatus::Verified->value)->whereNull('removed_at')->where('is_sample', false)
+                ->whereHas('owner', fn ($owner) => $owner->where('is_sample', false)->whereNotNull('email_verified_at'))
+                ->orderBy('id')->lazyById(500);
+
+            foreach ($businesses as $business) {
+                if ($business->owner->isPubliclyVisible()) {
+                    yield '/b/'.$business->slug => $business->updated_at;
+                }
+            }
+        }
+
+        // M4.16 (09 §9): public meets from 30 days ago on, while `events` is on: published or cancelled (a cancellation is news too),
+        // visibility public (never followers-only or unlisted), no samples, an organiser who is public and allows search engines.
+        if ($flags->enabled('events')) {
+            $events = Event::query()->whereIn('status', [EventStatus::Published->value, EventStatus::Cancelled->value])
+                ->where('visibility', EventVisibility::Public->value)->whereNull('removed_at')->where('is_sample', false)
+                ->where('starts_at', '>=', now()->subDays(30))
+                ->whereHas('organiser', fn ($organiser) => $organiser->where('indexable', true)->where('is_sample', false))
+                ->with('organiser')->orderBy('id')->lazyById(500);
+
+            foreach ($events as $event) {
+                if ($event->organiser->isPubliclyVisible()) {
+                    yield '/e/'.$event->slug => $event->updated_at;
+                }
+            }
+        }
+
+        if ($flags->enabled('parts_catalogue')) {
+            $brands = Brand::query()->whereNull('merged_into_id')->whereHas('products', fn ($products) => $products->where('status', ProductStatus::Active->value))->orderBy('id')->lazyById(500);
+
+            foreach ($brands as $brand) {
+                yield '/brands/'.$brand->slug => null;
+            }
+        }
     }
 
     /**

@@ -56,6 +56,8 @@ describe('outside production', () => {
     expect(parseQa('?qaOpen=report').open).toBe('report');
     // MSG-02-translate: the message actions sheet, which the matrix cannot long-press open.
     expect(parseQa('?qaOpen=actions').open).toBe('actions');
+    // M4.15: the member web's install hint, which an automated browser never gets on its own.
+    expect(parseQa('?qaOpen=installHint').open).toBe('installHint');
     expect(parseQa('?qaOpen=menu')).toEqual({});
   });
 
@@ -64,6 +66,10 @@ describe('outside production', () => {
     expect(parseQa('?qaFlags=ai.nl_search,ai.translate').flags).toEqual(['ai.nl_search', 'ai.translate']);
     expect(parseQa('?qaFlags=ai.nl_search,<script>,Nope,ai').flags).toEqual(['ai.nl_search']);
     expect(parseQa('?qaFlags=')).toEqual({});
+    // M4.15: three named product flags without a dot (MEM-01, the QR-02 shop link, SET-09 Web-Push); no other bare key.
+    expect(parseQa('?qaFlags=membership,sticker_shop,web_push,events,maintenance').flags).toEqual(['membership', 'sticker_shop', 'web_push']);
+    // M4.14: the parts catalogue and business profiles, also off everywhere until their design QA passed (ADR-455).
+    expect(parseQa('?qaFlags=parts_catalogue,businesses,affiliate_links').flags).toEqual(['parts_catalogue', 'businesses']);
     const { qaForcesFlag } = load<QaModule>('@/lib/qa', 'local', '?qaFlags=ai.photo_tagging');
     expect(qaForcesFlag('ai.photo_tagging')).toBe(true);
     expect(qaForcesFlag('ai.translate')).toBe(false);

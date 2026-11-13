@@ -83,6 +83,7 @@ use App\Services\Notifications\QrMilestones;
 use App\Services\Qr\QrCodes;
 use App\Services\Search\VehicleSearchProjector;
 use App\Services\Showcase\Showcase;
+use App\Services\Showcase\ShowcaseBusinesses;
 use App\Services\Showcase\ShowcaseEvents;
 use App\Services\Showcase\ShowcaseMaintenance;
 use App\Services\Showcase\ShowcasePhotos;
@@ -229,6 +230,8 @@ class DemoShowcaseSeeder extends Seeder
                 $this->seedCuration();
                 // M4.12 (09 §8.19): the 8 sample events of the Editorial account, dated from now.
                 app(ShowcaseEvents::class)->seed(photos: $this->photoDirectory());
+                // M4.14 (09 §8.19): sample mods linked to catalogue products, the sample workshop and its confirmed portfolio.
+                app(ShowcaseBusinesses::class)->seed(photos: $this->photoDirectory());
                 // M4.13 (09 §8.19): sample maintenance on the showcase member's and the Editorial account's main build (owner-only).
                 app(ShowcaseMaintenance::class)->seed();
                 app(VehicleSearchProjector::class)->rebuildAll();
@@ -311,6 +314,9 @@ class DemoShowcaseSeeder extends Seeder
 
         /** @var array<string, array{make: string, model: string, generation: string}> $legacy */
         $legacy = $this->readJson('showcase/photo-map.json');
+        // DQ-1132: an event or business cover may be a car photo; it stays that item's own photo and never goes on a build too.
+        $covers = $this->coverFiles();
+        $manifest = array_filter($manifest, fn (mixed $entry): bool => ! is_array($entry) || ! is_string($entry['file'] ?? null) || ! isset($covers[$entry['file']]));
         $photos = new ShowcasePhotos($directory, array_values($manifest), $legacy, $this->demoPhotoFiles());
         $this->photos = $photos->allocate($candidates, self::MAX_VEHICLES);
 
@@ -385,6 +391,31 @@ class DemoShowcaseSeeder extends Seeder
     private function isEditorial(string $username): bool
     {
         return $username === $this->editorial;
+    }
+
+    /**
+     * The cover files of the sample events, the demo meets (showcase/events.json) and the sample businesses (showcase/businesses.json).
+     *
+     * @return array<string, true> file => true
+     */
+    private function coverFiles(): array
+    {
+        $events = $this->readJson('showcase/events.json');
+        $businesses = $this->readJson('showcase/businesses.json');
+        $rows = [
+            ...(is_array($events['events'] ?? null) ? $events['events'] : []),
+            ...(is_array($events['member_events'] ?? null) ? $events['member_events'] : []),
+            ...(is_array($businesses['businesses'] ?? null) ? $businesses['businesses'] : []),
+        ];
+        $files = [];
+
+        foreach ($rows as $row) {
+            if (is_array($row) && is_string($row['cover'] ?? null)) {
+                $files[$row['cover']] = true;
+            }
+        }
+
+        return $files;
     }
 
     /**

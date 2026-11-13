@@ -7,6 +7,8 @@ import AdminLayout from './Layouts/AdminLayout.vue';
 import AuthLayout from './Layouts/AuthLayout.vue';
 import { adminMessages } from './lib/i18n';
 import { initQa, qaLocale, reportQaLocale, reportQaState } from './lib/qa';
+import { initDensity } from './lib/density';
+import { initSidebar } from './lib/sidebar';
 import { initTheme } from './lib/theme';
 import type { SharedPageProps } from '@inertiajs/core';
 
@@ -44,6 +46,8 @@ void createInertiaApp({
         // Before the first render: QA overrides (non-production only) and the stored theme.
         initQa(props.initialPage.props.app.env);
         initTheme();
+        initSidebar();
+        initDensity((props.initialPage.props as unknown as SharedPageProps).staff?.id);
         const locale = qaLocale() ?? props.initialPage.props.app.locale;
         setLang(locale);
 

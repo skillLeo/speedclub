@@ -4,6 +4,7 @@ import { useShellStore } from '@/state/shell';
 import { size, useBreakpoint } from '@/theme';
 import { ToastHost } from '@/ui';
 import { useStickyBarHeight } from '@/ui/toastPlacement';
+import { PwaHost } from '@/features/pwa/PwaHost';
 
 import { useNativeTabBarStore } from './navMode';
 
@@ -27,6 +28,8 @@ export function toastTabBarOffset({
 /**
  * One toast host for the app, 8 above the tab bar where there is one, and 8 above the sticky CTA bar of a form, which
  * reports its height while its screen is focused. The gallery route mounts its own to test it.
+ * M4.15: the member web's PwaHost (service worker, update toast, install hint) lives here, beside the toast it uses; native and
+ * the gallery render none.
  */
 export function ShellToastHost() {
   const [first] = useSegments();
@@ -36,5 +39,10 @@ export function ShellToastHost() {
   const stickyBar = useStickyBarHeight();
   if ((first as string | undefined) === 'dev') return null;
   const tabBarOffset = toastTabBarOffset({ inTabs: first === '(tabs)', phone: kind === 'phone', hidden, native });
-  return <ToastHost tabBarOffset={tabBarOffset} stickyBarHeight={stickyBar} />;
+  return (
+    <>
+      <ToastHost tabBarOffset={tabBarOffset} stickyBarHeight={stickyBar} />
+      <PwaHost inTabs={first === '(tabs)'} />
+    </>
+  );
 }

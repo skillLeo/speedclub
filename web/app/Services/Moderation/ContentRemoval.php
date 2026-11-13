@@ -8,6 +8,7 @@ use App\Enums\ModerationStatus;
 use App\Enums\ReportTargetType;
 use App\Enums\Visibility;
 use App\Models\BuildUpdate;
+use App\Models\Business;
 use App\Models\Comment;
 use App\Models\Event;
 use App\Models\Media;
@@ -62,6 +63,7 @@ class ContentRemoval
             ReportTargetType::Message => ($message = Message::query()->find($id)) instanceof Message ? $this->message($message) : [],
             ReportTargetType::Comment => ($comment = Comment::query()->find($id)) instanceof Comment ? $this->comment($comment) : [],
             ReportTargetType::Event => ($event = Event::query()->find($id)) instanceof Event ? $this->event($event) : [],
+            ReportTargetType::Business => ($business = Business::query()->find($id)) instanceof Business ? $this->business($business) : [],
         };
     }
 
@@ -160,7 +162,23 @@ class ContentRemoval
             $event->forceFill(['status_before_removal' => $event->status->value, 'status' => EventStatus::Rejected, 'removed_at' => now()])->save();
         }
 
-        return [];
+        // M4.16: the page /e/{slug} answers 404 at once; the sitemap must not list it until the night.
+        return [fn () => $this->sitemap->forget()];
+    }
+
+    /**
+     * M4.14: a removed business page shows to nobody but its team and staff; an appeal can bring it back (ContentRestoration).
+     *
+     * @return list<Closure(): void>
+     */
+    private function business(Business $business): array
+    {
+        if ($business->removed_at === null) {
+            $business->forceFill(['status_before_removal' => $business->status->value, 'removed_at' => now()])->save();
+        }
+
+        // M4.16: as for an event, the sitemap forgets the page now.
+        return [fn () => $this->sitemap->forget()];
     }
 
     /**

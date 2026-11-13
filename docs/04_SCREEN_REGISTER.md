@@ -158,6 +158,10 @@ Web desktop: split view 360 + thread.
 | WEB-08 | Public legal pages | /impressum, /datenschutz, /agb, /community-richtlinien | P1 | SSR from CMS, ≤ 2 clicks from every page |
 | WEB-09 | Report form (DSA Art. 16, no account) | /melden | P2 (M2.6) | fields of `08_LEGAL` §4: explanation, URL, optional contact, good-faith statement; Turnstile when configured. On launch add it to community §8, terms §8 and privacy §6 (ADR-116) |
 | WEB-10 | Contact form | /kontakt | P2 (M2.5) | creates a support ticket (`06_ADMIN_SPEC` ADM-25) |
+| WEB-13 | Public meet (09 §9) | /e/{slug} | P4 (M4.16) | guest render only; after-RSVP place → city; sample/unlisted noindex; ICS; OG 1200×630 + 1080×1080 (ADR-459) |
+| WEB-14 | Public business (09 §9) | /b/{slug} | P4 (M4.14/M4.16) | Impressum block, JSON-LD, flag `businesses` |
+| WEB-15 | Public brand (09 §9) | /brands/{slug} | P4 (M4.14/M4.16) | flag `parts_catalogue` |
+| WEB-16 | Magic-link hand-off (09 §9) | /auth/magic | P4 (M4.6) | redirects to the member web AUTH-13 |
 Plus static: `/robots.txt`, `/sitemap.xml` (public vehicles + members that allow search engines), `/.well-known/assetlinks.json`, `/.well-known/apple-app-site-association`.
 **Responsive frames (26):** desktop ≥ 1280 and tablet 768 layouts of HOME-01, DISC-01/02, GAR-01/02/03, VEH-01, MSG-01/02, PROF-01/02, SET-01, WEB-01 … (screenshot matrix covers them).
 

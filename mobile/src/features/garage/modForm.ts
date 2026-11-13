@@ -34,6 +34,8 @@ export type ModFormValues = {
   legalStatus: LegalStatus | '';
   notes: string;
   fields: Record<string, FieldValue>;
+  /** M4.14 [`parts_catalogue`]: the linked catalogue product ("KW Variante 3"), or none (free text stays possible). */
+  product: { id: string; label: string } | null;
 };
 
 export type LayoutRow =
@@ -191,6 +193,7 @@ export function modValuesFrom(mod: OwnerMod | undefined, fields: readonly ModCat
     legalStatus: legalStatusOf(mod?.legal_status) ?? '',
     notes: mod?.notes ?? '',
     fields: values,
+    product: mod?.product ? { id: mod.product.id, label: mod.product.full_name } : null,
   };
 }
 
@@ -230,7 +233,7 @@ export function modPayload(
   values: ModFormValues,
   fields: readonly ModCategoryField[],
   locale: FormatLocale,
-  options: { titleTouched: boolean; staggered: boolean; legalStatus?: boolean },
+  options: { titleTouched: boolean; staggered: boolean; legalStatus?: boolean; product?: boolean },
 ): ModPayload {
   const stored: ModFieldValues = {};
   for (const field of fields) {
@@ -252,6 +255,8 @@ export function modPayload(
   if (options.titleTouched) payload.title = values.title.trim() || null;
   // Only while the flag is on: the server ignores the key otherwise, and a form without the field must not send its default.
   if (options.legalStatus) payload.legal_status = values.legalStatus || null;
+  // M4.14: only a changed link is sent, and only while parts_catalogue is on (the server ignores it otherwise); null unlinks it.
+  if (options.product) payload.product_id = values.product?.id ?? null;
   return payload;
 }
 

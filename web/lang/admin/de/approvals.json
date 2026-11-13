@@ -225,5 +225,9 @@
     "staff_reactivate_owner": {
         "title": "Owner-Konto reaktivieren",
         "status": "Neuer Status"
+    },
+    "business_suspend": {
+        "title": "Betrieb sperren",
+        "status": "Status"
     }
 }

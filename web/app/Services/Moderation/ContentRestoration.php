@@ -11,6 +11,7 @@ use App\Enums\ReportTargetType;
 use App\Enums\UserStatus;
 use App\Enums\Visibility;
 use App\Models\BuildUpdate;
+use App\Models\Business;
 use App\Models\Comment;
 use App\Models\Decision;
 use App\Models\Event;
@@ -70,6 +71,7 @@ class ContentRestoration
             ReportTargetType::Modification, ReportTargetType::Message => [],
             ReportTargetType::Comment => ($comment = Comment::withTrashed()->find($id)) instanceof Comment ? ['status' => $comment->status->value] : null,
             ReportTargetType::Event => ($event = Event::query()->find($id)) instanceof Event ? ['status' => $event->status->value, 'removed' => $event->getAttribute('removed_at') !== null] : null,
+            ReportTargetType::Business => ($business = Business::query()->find($id)) instanceof Business ? ['removed' => $business->removed_at !== null] : null,
         };
     }
 
@@ -143,6 +145,7 @@ class ContentRestoration
             ReportTargetType::Message => ($message = Message::withTrashed()->find($id)) instanceof Message ? $this->message($message) : [],
             ReportTargetType::Comment => ($comment = Comment::withTrashed()->find($id)) instanceof Comment ? $this->comment($comment, $snapshot) : [],
             ReportTargetType::Event => ($event = Event::query()->find($id)) instanceof Event ? $this->event($event, $snapshot) : [],
+            ReportTargetType::Business => ($business = Business::query()->find($id)) instanceof Business ? $this->business($business, $snapshot) : [],
         };
     }
 
@@ -289,6 +292,19 @@ class ContentRestoration
 
         if (($snapshot['removed'] ?? false) !== true && $event->getAttribute('removed_at') !== null && $before !== null) {
             $event->forceFill(['status' => $before, 'removed_at' => null, 'status_before_removal' => null])->save();
+        }
+
+        return [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshot
+     * @return list<Closure(): void>
+     */
+    private function business(Business $business, array $snapshot): array
+    {
+        if (($snapshot['removed'] ?? false) !== true && $business->removed_at !== null) {
+            $business->forceFill(['removed_at' => null, 'status_before_removal' => null])->save();
         }
 
         return [];

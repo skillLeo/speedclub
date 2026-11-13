@@ -13,6 +13,7 @@ return [
         'modification' => 'einer Modifikation an deinem Build :label',
         'comment' => 'einem Kommentar von dir',
         'event' => 'deinem Treffen „:label“',
+        'business' => 'deinem Betriebsprofil „:label“',
     ],
     'target_unnamed' => [
         'member' => 'deinem Profil',
@@ -23,6 +24,7 @@ return [
         'modification' => 'einer deiner Modifikationen',
         'comment' => 'einem Kommentar von dir',
         'event' => 'einem deiner Treffen',
+        'business' => 'deinem Betriebsprofil',
     ],
 
     'outcome' => [

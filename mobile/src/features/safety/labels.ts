@@ -26,6 +26,8 @@ export function targetLabel(t: TFunction<'safety'>, target: SafetyTargetRef, lab
   switch (target.type) {
     case 'member':
     case 'vehicle':
+    // M4.14: a business profile is named by its own name, like a member or a vehicle.
+    case 'business':
       return name;
     case 'photo':
     case 'message':

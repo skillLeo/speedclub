@@ -92,4 +92,23 @@ return [
         'action' => 'Open maintenance',
         'note' => 'You are getting this e-mail because you switched on e-mails about due dates under Settings › Notifications. You can switch them off there too.',
     ],
+    // M4.14 businesses (09 §8.10), in-app only.
+    'business_review' => [
+        'verified' => '":name" is verified and now public.',
+        'rejected' => '":name" was not verified. You will find the reason in your business dashboard.',
+        'suspended' => '":name" is suspended and no longer public. You will find the reason in your business dashboard.',
+        'reinstated' => '":name" is live again.',
+    ],
+    'business_tag' => [
+        'business' => [
+            'requested' => 'New tag for ":name": confirm the install on the :vehicle.',
+            'accepted' => 'The install on the :vehicle is confirmed and now in your portfolio.',
+            'declined' => 'The tag on the :vehicle was declined.',
+        ],
+        'member' => [
+            'requested' => '":name" would like to add your :vehicle to their portfolio. Confirm the install.',
+            'accepted' => '":name" confirmed the install on your :vehicle.',
+            'declined' => '":name" declined the tag on your :vehicle.',
+        ],
+    ],
 ];

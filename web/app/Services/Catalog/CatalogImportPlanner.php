@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Generation;
 use App\Models\Make;
 use App\Models\ModCategory;
+use App\Models\Product;
 use App\Support\Slug;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
@@ -48,6 +49,14 @@ final class CatalogImportPlanner
             'slug' => ['slug'],
             'category_hint' => ['kategorie', 'category', 'category_hint'],
             'aliases' => ['aliase', 'aliases', 'alias'],
+        ],
+        // M4.14 ADM-57: products of the parts catalogue.
+        'products' => [
+            'brand' => ['marke', 'brand'],
+            'name' => ['produkt', 'name', 'product'],
+            'line' => ['linie', 'line', 'produktlinie'],
+            'category' => ['kategorie', 'category'],
+            'url' => ['url', 'link'],
         ],
     ];
 
@@ -103,7 +112,11 @@ final class CatalogImportPlanner
      */
     public function row(CatalogImportKind $kind, array $values, int $line, array $planned = []): array
     {
-        return $kind === CatalogImportKind::Brands ? $this->brand($values, $line, $planned) : $this->vehicle($values, $line, $planned);
+        return match ($kind) {
+            CatalogImportKind::Brands => $this->brand($values, $line, $planned),
+            CatalogImportKind::Products => $this->product($values, $line, $planned),
+            CatalogImportKind::Vehicles => $this->vehicle($values, $line, $planned),
+        };
     }
 
     /**
@@ -146,10 +159,16 @@ final class CatalogImportPlanner
             $columns[$position] = $column;
         }
 
-        $required = $kind === CatalogImportKind::Brands ? 'name' : 'make';
+        $required = match ($kind) {
+            CatalogImportKind::Brands => ['name' => 'Marke'],
+            CatalogImportKind::Products => ['brand' => 'Marke', 'name' => 'Produkt', 'category' => 'Kategorie'],
+            CatalogImportKind::Vehicles => ['make' => 'Marke'],
+        };
 
-        if (! in_array($required, $columns, true)) {
-            throw ValidationException::withMessages(['file' => [(string) __('catalog_import.file.missing_column', ['column' => 'Marke'])]]);
+        foreach ($required as $column => $label) {
+            if (! in_array($column, $columns, true)) {
+                throw ValidationException::withMessages(['file' => [(string) __('catalog_import.file.missing_column', ['column' => $label])]]);
+            }
         }
 
         return $columns;
@@ -391,6 +410,85 @@ final class CatalogImportPlanner
         ];
 
         return self::result($line, 'brand', $name, $changes, $creates, $data);
+    }
+
+    /**
+     * M4.14 ADM-57: a product, found by its brand (a merged brand speaks of its survivor) and the slug of its name; never renamed by an
+     * import. Line, category and url change when given. Row error codes as for brands, plus brand_missing (unknown brand) and
+     * invalid_url (not https).
+     *
+     * @param  array<string, string>  $v
+     * @param  array<string, true>  $planned
+     * @return PlannedRow
+     */
+    private function product(array $v, int $line, array $planned): array
+    {
+        $name = $v['name'] ?? '';
+        $brandName = $v['brand'] ?? '';
+        $data = ['label' => trim($brandName.' '.$name)];
+
+        if ($name === '') {
+            return self::error($line, 'name_missing', [], $data);
+        }
+
+        if (mb_strlen($name) > 160 || mb_strlen($v['line'] ?? '') > 120) {
+            return self::error($line, 'too_long', ['column' => mb_strlen($name) > 160 ? 'name' : 'line', 'max' => mb_strlen($name) > 160 ? 160 : 120], $data);
+        }
+
+        $brand = $brandName === '' ? null : CatalogSlugs::brand(Slug::make($brandName));
+
+        if (! $brand instanceof Brand) {
+            return self::error($line, 'brand_missing', [], $data);
+        }
+
+        $category = ModCategory::query()->where('key', $v['category'] ?? '')->first();
+
+        if (! $category instanceof ModCategory) {
+            return self::error($line, 'invalid_category', [], $data);
+        }
+
+        $url = $v['url'] ?? '';
+
+        if ($url !== '' && (preg_match('~\Ahttps://~', $url) !== 1 || mb_strlen($url) > 500)) {
+            return self::error($line, 'invalid_url', [], $data);
+        }
+
+        $slug = Slug::make($name);
+
+        if ($slug === '') {
+            return self::error($line, 'invalid_slug', ['column' => 'name'], $data);
+        }
+
+        $brandSlug = (string) $brand->getAttribute('slug');
+        $target = $brandSlug.'/'.$slug;
+        $product = Product::query()->where('brand_id', $brand->id)->where('slug', $slug)->first();
+        $changes = [];
+        $creates = [];
+        $lineValue = ($v['line'] ?? '') === '' ? null : $v['line'];
+
+        if ($product === null) {
+            if (! isset($planned['product:'.$target])) {
+                $creates[] = 'product';
+            }
+        } else {
+            self::change($changes, 'product.line', $product->line, $lineValue, array_key_exists('line', $v) && $v['line'] !== '');
+            self::change($changes, 'product.category', $product->category_id, $category->id, true);
+            self::change($changes, 'product.url', $product->url, $url === '' ? null : $url, $url !== '');
+        }
+
+        $data += [
+            'target' => 'product:'.$target,
+            'path' => ['product' => $target],
+            'level' => 'product',
+            'brand_id' => $brand->id,
+            'category_id' => $category->id,
+            'name' => $name,
+            'line' => $lineValue,
+            'url' => $url === '' ? null : $url,
+            'product_id' => $product?->id,
+        ];
+
+        return self::result($line, 'product', $data['label'], $changes, $creates, $data);
     }
 
     /**

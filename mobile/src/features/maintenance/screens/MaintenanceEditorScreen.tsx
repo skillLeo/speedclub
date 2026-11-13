@@ -474,6 +474,8 @@ function ItemForm({
               label={t('maintenance.editor.delete')}
               variant="destructive"
               size="m"
+              // DQ-1128: the label starts on the field edge, not 12 inside it.
+              flush="start"
               disabled={locked}
               loading={remove.isPending}
               onPress={() => setConfirming(true)}
@@ -677,6 +679,8 @@ function LogForm({
               label={t('maintenance.editor.deleteLog')}
               variant="destructive"
               size="m"
+              // DQ-1128: the label starts on the field edge, not 12 inside it.
+              flush="start"
               disabled={locked}
               loading={remove.isPending}
               onPress={() => setConfirming(true)}

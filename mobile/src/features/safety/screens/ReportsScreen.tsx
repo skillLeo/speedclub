@@ -44,6 +44,7 @@ export const TARGET_GLYPHS: Readonly<Record<ReportTargetType, IconName>> = {
   modification: 'wrench',
   comment: 'chat-circle',
   event: 'calendar-blank',
+  business: 'workshop',
 };
 
 const useStyles = createStyles((t) => ({

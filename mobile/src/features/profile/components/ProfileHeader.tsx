@@ -20,16 +20,22 @@ export const PROFILE_WIDE_MAX = layout.contentMax + 2 * layout.gutter.desktop;
 const AVATAR_OVERLAP = size.avatar.xl / 2;
 
 /**
- * 09 §7.7: the cover is 16:9 edge to edge on phones and tablets. From 1280 the column sits beside the sidebar and a 16:9 cover
- * of 1,200 points would push the name below the fold, so the desktop cover is the 3:1 band of the public profile.
+ * 09 §7.7, §4.6, ADR-451 (DQ-1091): the cover is 16:9 on every width, so one upload is never cropped two ways. Phones and tablets
+ * show it edge to edge; from 1280 it stands in the profile column (like the VEH-01 hero in its column), so a 16:9 cover of the whole
+ * pane cannot push the name below the fold.
  */
-export function profileCoverAspect(kind: BreakpointKind): PhotoAspect {
-  return kind === 'desktop' ? '3:1' : '16:9';
+export function profileCoverAspect(_kind?: BreakpointKind): PhotoAspect {
+  return '16:9';
+}
+
+/** The cover's width in a pane `width` wide: the pane, or the profile column on the desktop. */
+export function profileCoverWidth(width: number, kind: BreakpointKind): number {
+  return kind === 'desktop' ? Math.min(width, PROFILE_COLUMN_MAX) : width;
 }
 
 /** Height of the cover at `width`: where the photo header turns solid, and the skeleton's block. */
 export function profileCoverHeight(width: number, kind: BreakpointKind): number {
-  return width / ratioOf(profileCoverAspect(kind));
+  return profileCoverWidth(width, kind) / ratioOf(profileCoverAspect(kind));
 }
 
 const useStyles = createStyles((t) => ({
@@ -130,7 +136,13 @@ export function ProfileIdentity({
   return (
     <View testID={`${routeId}.identity`}>
       {cover && width > 0 ? (
-        <Photo {...photoFields(cover, width)} aspect={profileCoverAspect(kind)} label={t('coverLabel', { name })} testID={`${routeId}.cover`}>
+        <Photo
+          {...photoFields(cover, profileCoverWidth(width, kind))}
+          aspect={profileCoverAspect(kind)}
+          label={t('coverLabel', { name })}
+          style={{ width: profileCoverWidth(width, kind) }}
+          testID={`${routeId}.cover`}
+        >
           <PhotoTopScrim />
         </Photo>
       ) : null}

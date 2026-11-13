@@ -51,8 +51,12 @@ class MeResource extends JsonResource
             'avatar' => $avatar === null ? null : new MediaResource($avatar),
             /** @var MediaResource|null */
             'cover' => $cover === null ? null : new MediaResource($cover),
-            /** @var string */
-            'locale' => $member->getAttribute('locale'),
+            /**
+             * SET-11: de, en, or "system" when the app follows the device language (as in GET me/settings).
+             *
+             * @var 'de'|'en'|'system'
+             */
+            'locale' => $member->getAttribute('locale_follows_system') === true ? 'system' : $member->getAttribute('locale'),
             /** @var ThemePreference */
             'theme' => $member->getAttribute('theme'),
             /** @var PowerDisplay */

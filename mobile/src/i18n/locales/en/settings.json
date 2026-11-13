@@ -370,6 +370,19 @@
             "messages": "Messages",
             "events": "Meets",
             "garage": "Due dates"
+        },
+        "webPush": {
+            "group": "In this browser",
+            "title": "Browser notifications",
+            "helperOff": "Notifications here in the browser too, while SPEED CLUB is closed.",
+            "helperOn": "This browser gets notifications. Choose which ones below.",
+            "helperDenied": "You blocked notifications for SPEED CLUB in this browser. Allow them in the site settings (the icon left of the address), then come back here.",
+            "helperInstall": "On iPhone, notifications only reach the app on your home screen: in Safari, tap “Share”, choose “Add to Home Screen” and open SPEED CLUB from there.",
+            "helperUnsupported": "This browser cannot show notifications.",
+            "helperUnavailable": "Browser notifications are coming soon. Until then, you get everything in the app and by email.",
+            "noWorker": "The browser is not ready yet. Reload the page and try again.",
+            "typesNote": "These switches are for notifications in the browser. Set up the app on your phone in the app.",
+            "phoneNote": "The switches below are for the app on your phone until you turn on browser notifications."
         }
     },
     "language": {
@@ -377,7 +390,8 @@
         "languageGroup": "Language",
         "names": {
             "de": "Deutsch",
-            "en": "English"
+            "en": "English",
+            "system": "System"
         },
         "powerGroup": "Show power as",
         "power": {
@@ -399,7 +413,8 @@
             "mi": "Miles (mi)",
             "kg": "Kilograms (kg)",
             "lb": "Pounds (lb)"
-        }
+        },
+        "systemHelper": "Same as your device, currently {{language}}"
     },
     "export": {
         "title": "Export my data",
@@ -878,5 +893,32 @@
         "body": "Sign in to find your settings for your account, garage and messages here.",
         "signIn": "Sign in",
         "signUp": "Create account"
+    },
+    "membership": {
+        "soon": "Coming soon",
+        "plan": "SPEED CLUB membership",
+        "lead": "Extra features for your garage and your profile, as an optional add-on.",
+        "perksTitle": "What it could include",
+        "perks": {
+            "garage": "More room in your garage",
+            "garageBody": "More vehicles than a free account has.",
+            "photos": "More photos per vehicle",
+            "photosBody": "For builds with more to show.",
+            "stickers": "More QR sticker designs",
+            "stickersBody": "Extra designs for the sticker on your car.",
+            "costs": "Build cost overview",
+            "costsBody": "What your build has cost so far. Only you can see it.",
+            "accent": "Profile accent colour",
+            "accentBody": "A colour of your own for your profile."
+        },
+        "priceTitle": "Price",
+        "priceBody": "Monthly or yearly. Prices show here before you can sign up for anything.",
+        "cancelAnytime": "Cancel any time.",
+        "cta": "Available soon",
+        "legal": {
+            "terms": "Terms",
+            "privacy": "Privacy"
+        },
+        "offline": "You're offline."
     }
 }

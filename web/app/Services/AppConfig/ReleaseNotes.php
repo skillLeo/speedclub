@@ -26,7 +26,7 @@ final class ReleaseNotes
             return [];
         }
 
-        return Cache::remember('release-notes:'.$locale.':'.filemtime($path).':'.md5($path), now()->addDay(), fn (): array => $this->read($path, $locale));
+        return Cache::remember('release-notes:'.$locale.':'.filemtime($path).':'.hash('xxh128', $path), now()->addDay(), fn (): array => $this->read($path, $locale));
     }
 
     /**

@@ -21,6 +21,8 @@ final class MemberSessions
     {
         // A signed-out device must not keep getting pushes (M2.2).
         $user->pushTokens()->delete();
+        // M4.15: nor a browser its Web Push (the member web drops its own subscription at a normal sign-out).
+        $user->pushSubscriptions()->delete();
         // Nor keep a signed link that is a credential of its own, such as the export download (SEC-P2-02).
         if (! $keepExportLinks) {
             CredentialEpoch::rotate($user);

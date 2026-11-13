@@ -303,6 +303,33 @@ return [
         'calendar_link_days_after' => 2,
     ],
 
+    // M4.14 parts catalogue (09 §8.9) and business profiles (09 §8.10, ADR-414).
+    'parts' => [
+        'page_size' => 30,
+        'max_page_size' => 50,
+        // "Marken im Fokus" and the Teile scope's brand row: at most this many brands, by their real number of builds.
+        'top_brands_max' => 24,
+        'query_min' => 2,
+        'query_max' => 80,
+    ],
+
+    'businesses' => [
+        'page_size' => 30,
+        'max_page_size' => 50,
+        'services_max' => 12,
+        'service_max' => 40,
+        'about_max' => 2000,
+        // Staff of a business besides its owner (not in the spec).
+        'members_max' => 10,
+        // Pending tag proposals a business may have open at once (not in the spec): bounds a business tagging builds it never touched.
+        'open_proposals_max' => 100,
+        // BIZ-03 "Profilaufrufe": the days summed, and how long the daily numbers are kept.
+        'views_days' => 30,
+        'views_retention_days' => 400,
+        'near_default_km' => 50,
+        'near_max_km' => 300,
+    ],
+
     // M4.12 geocoding proxy (09 §8.7, ADR-411): Nominatim (OpenStreetMap) behind the server, search on submit only, 1 request a second
     // for the whole host, 30-day cache. The upstream host is fixed here, never taken from a request (no SSRF). The usage policy needs a
     // descriptive User-Agent with a contact address: GEOCODE_CONTACT_EMAIL (owner action); without it the proxy names the site URL only.
@@ -450,6 +477,9 @@ return [
         'rsvps' => ['max' => 120, 'minutes' => 60],
         'event_updates' => ['max' => 20, 'minutes' => 60],
         'geocode' => ['max' => 60, 'minutes' => 60],
+        // Not in the spec (M4.14): BIZ-02 applications and profile edits per member and hour; tag requests and decisions per member and hour.
+        'businesses' => ['max' => 30, 'minutes' => 60],
+        'business_tags' => ['max' => 120, 'minutes' => 60],
         // Not in the spec (M2.6): appeals against decisions, one per decision anyway; bounds a flood of attempts.
         'appeals' => ['max' => 10, 'minutes' => 1440],
         // M3.7 [AI] (m3.7 contract §1): every AI endpoint but the translation, and the translation, per member and hour.
@@ -459,7 +489,8 @@ return [
         'account_edits' => ['max' => 60, 'minutes' => 1],
         // Not in the spec (M2.2): marking notifications read, one or all.
         'notification_reads' => ['max' => 120, 'minutes' => 1],
-        // Not in the spec (M2.2): registering and removing push tokens; a device does it at sign-in and on a token change.
+        // Not in the spec (M2.2): registering and removing push tokens; a device does it at sign-in and on a token change. M4.15: the
+        // member web's Web Push subscriptions (POST/DELETE me/push-subscriptions) count here too.
         'push_tokens' => ['max' => 30, 'minutes' => 60],
         // Not in the spec: the PDF takes dompdf a moment, and someone printing stickers downloads a handful.
         'qr_downloads' => ['max' => 30, 'minutes' => 1],
@@ -749,6 +780,28 @@ return [
         // Expo keeps receipts about a day; tickets older than this are dropped unchecked.
         'ticket_max_age_hours' => 24,
         'timeout_seconds' => 10,
+    ],
+
+    // Web Push of the member web (M4.15, ADR-452, ADR-456): VAPID keys only from env (php artisan speedclub:web-push-keys prints a pair,
+    // owner action OA-32). Without all three nothing is sent and app-config's web_push.vapid_public_key is null, so the member web
+    // hides the browser option; the flag web_push switches delivery on and off on top. The endpoints a browser may register are those of
+    // the browser vendors' push services (exact host or a subdomain of it), so the server never posts to an address a member chose.
+    'web_push' => [
+        'public_key' => env('WEB_PUSH_VAPID_PUBLIC_KEY'),
+        'private_key' => env('WEB_PUSH_VAPID_PRIVATE_KEY'),
+        // mailto: or https: the push services' contact for this sender.
+        'subject' => env('WEB_PUSH_VAPID_SUBJECT'),
+        'hosts' => ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com'],
+        // How long a push service keeps a notification for a browser that is offline.
+        'ttl_seconds' => 43200,
+        // Per push service request; a member has at most max_per_member browsers, sent to one after the other inside the push job.
+        'timeout_seconds' => 5,
+        'connect_timeout_seconds' => 3,
+        'max_per_member' => 5,
+        // Failed sends in a row (other than 404/410, which remove the subscription at once) after which a subscription is dropped.
+        'max_failures' => 5,
+        // The longest stored endpoint; browsers send a few hundred characters.
+        'endpoint_max_length' => 2048,
     ],
 
     // DISC-01 and DISC-02 P1-lite (02_PRODUCT_SPEC §3.7, 05_ARCHITECTURE §10). Filters, facets and sorts are Phase 2.

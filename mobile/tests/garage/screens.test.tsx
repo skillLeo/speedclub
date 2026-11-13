@@ -542,7 +542,8 @@ describe('GAR-11 entries', () => {
   it('titles one named change as VEH-01 does, the system and key value under it, the kind never twice (DQ-175, DQ-1059)', async () => {
     await show([update({})]);
     await waitFor(() => expect(screen.getByTestId('GAR-11.entry.01upd')).toBeTruthy());
-    expect(screen.getByTestId('GAR-11.entry.01upd')).toHaveTextContent('KW V3 statt SerieFahrwerk · −35 mm');
+    // DQ-1072: VEH-01's Timeline line, the system and the value as their own texts around the "·".
+    expect(screen.getByTestId('GAR-11.entry.01upd')).toHaveTextContent(/^KW V3 statt Serie\s*Fahrwerk\s*·\s*−35\s*mm/);
     expect(screen.getByTestId('GAR-11.entry.01upd')).not.toHaveTextContent('Modifikation geändert');
     expect(screen.getByLabelText('KW V3 statt Serie ausblenden')).toBeTruthy();
   });

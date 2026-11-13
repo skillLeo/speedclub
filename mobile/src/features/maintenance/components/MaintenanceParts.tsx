@@ -60,6 +60,7 @@ const useStyles = createStyles((t) => ({
   section: { gap: t.space[8], paddingTop: t.space[32] },
   // DQ-1098: one header system on MNT-01, the SectionHeader at the gutter with 12 to its group.
   pageSection: { gap: t.space[12], paddingTop: t.space[32] },
+  headerAction: { flexShrink: 0, marginBottom: -t.space[8], marginRight: -t.size.buttonPaddingX.s, marginTop: -t.space[4] },
   sectionFirst: { gap: t.space[8], paddingTop: t.space[24] },
   hero: { paddingTop: t.space[24] },
   group: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
@@ -221,15 +222,19 @@ export function OdometerRow({
       <SectionHeader
         title={t('maintenance.odometer.title')}
         trailing={
-          <Button
-            label={t('maintenance.odometer.update')}
-            accessibilityLabel={t('maintenance.odometer.updateLabel')}
-            variant="tertiary"
-            size="s"
-            disabled={disabled}
-            onPress={() => setOpen(true)}
-            testID={`${ROUTE}.odometer.update`}
-          />
+          // DQ-1127: the Button S overhangs the title line as SectionHeader's own action does (DQ-298), so this header is as high
+          // as the plain "Als Nächstes" beside it and both titles stand on one line on the desktop grid.
+          <View style={styles.headerAction}>
+            <Button
+              label={t('maintenance.odometer.update')}
+              accessibilityLabel={t('maintenance.odometer.updateLabel')}
+              variant="tertiary"
+              size="s"
+              disabled={disabled}
+              onPress={() => setOpen(true)}
+              testID={`${ROUTE}.odometer.update`}
+            />
+          </View>
         }
         testID={`${ROUTE}.odometerHeader`}
       />
@@ -317,6 +322,15 @@ function OdometerForm({ onClose, vehicleId, km, unit }: { onClose: () => void; v
   );
 }
 
+/**
+ * DQ-1127: "0 € Wartung · 6.500 € Umbauten" with each amount bound to its word (no-break spaces), so a narrow column breaks only at
+ * the separator, between the two pairs.
+ */
+export function costLine(t: ReturnType<typeof useTranslation<'garage'>>['t'], maintenance: string, mods: string): string {
+  const bind = (text: string) => text.replace(/ /g, '\u00A0');
+  return `${bind(t('maintenance.costs.maintenancePart', { amount: maintenance }))} · ${bind(t('maintenance.costs.modsPart', { amount: mods }))}`;
+}
+
 /** Private costs (ADR-441): the current year and the years before, maintenance and modifications. Never shown to anybody else. */
 export function CostsBlock({ costs }: { costs: MaintenanceCosts | undefined }) {
   const { t } = useTranslation('garage');
@@ -340,7 +354,8 @@ export function CostsBlock({ costs }: { costs: MaintenanceCosts | undefined }) {
           <ListRow
             key={year.year}
             title={String(year.year)}
-            subtitle={t('maintenance.costs.line', { maintenance: euroText(year.maintenance_cents, format.locale), mods: euroText(year.mods_cents, format.locale) })}
+            subtitle={costLine(t, euroText(year.maintenance_cents, format.locale), euroText(year.mods_cents, format.locale))}
+            hyphenate={false}
             value={euroText(year.total_cents, format.locale)}
             divider={index < costs.years.length - 1}
             testID={`${ROUTE}.costs.${year.year}`}

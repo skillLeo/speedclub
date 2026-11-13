@@ -1,0 +1,46 @@
+{
+    "title": "Comments",
+    "nav": {
+        "title": "Comments"
+    },
+    "intro": "Every comment under build updates, newest first. A comment is taken down through its case with a statement of reasons, not here.",
+    "caption": "Comments with author, build, open reports, date and status",
+    "columns": {
+        "comment": "Comment",
+        "author": "Author",
+        "build": "Build",
+        "case": "Reports",
+        "created": "Written",
+        "status": "Status"
+    },
+    "filters": {
+        "label": "Filter comments",
+        "q": "Search",
+        "q_placeholder": "Text or @author",
+        "status": "Status",
+        "reported": "Reported",
+        "reported_only": "Only with an open report",
+        "any": "All",
+        "apply": "Apply"
+    },
+    "presets": {
+        "reported": "Reported",
+        "removed": "Removed"
+    },
+    "status": {
+        "visible": "Visible",
+        "removed": "Removed",
+        "deleted": "Deleted by the author"
+    },
+    "reply": "Reply to a comment",
+    "open_build": "Open build",
+    "reports": ":count open",
+    "flag": {
+        "on": "Comments are switched on for members.",
+        "off": "Comments are switched off for members (flag build_comments). Only comments from tests and previews are listed.",
+        "open": "Open flag"
+    },
+    "empty_title": "No comments yet",
+    "empty_body_on": "As soon as members comment under build updates, the comments are listed here.",
+    "empty_body_off": "Comments are switched off. Once the flag is on and members comment, they are listed here."
+}

@@ -205,5 +205,23 @@
     "buildSheet": {
         "expand": "Details zu {{name}} anzeigen",
         "collapse": "Details zu {{name}} ausblenden"
+    },
+    "pwa": {
+        "update": {
+            "message": "Neue Version verfügbar",
+            "reload": "Neu laden"
+        },
+        "install": {
+            "title": "SPEED CLUB auf den Home-Bildschirm",
+            "lead": "Vom Home-Bildschirm startet SPEED CLUB wie eine App: im Vollbild, ohne Browserleiste.",
+            "steps": {
+                "share": "Tippe in Safari auf „Teilen“.",
+                "add": "Wähle „Zum Home-Bildschirm“.",
+                "confirm": "Tippe oben rechts auf „Hinzufügen“."
+            },
+            "install": "Installieren",
+            "later": "Später",
+            "gotIt": "Verstanden"
+        }
     }
 }

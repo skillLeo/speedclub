@@ -125,6 +125,9 @@ class ShowcasePurge
             app(EventHousekeeping::class)->delete($event);
         }
 
+        // M4.14: the sample business with its photos (before its owner, the Editorial account).
+        app(ShowcaseBusinesses::class)->purge();
+
         foreach (User::withTrashed()->where('is_sample', true)->get() as $user) {
             $this->removeMember($user);
         }

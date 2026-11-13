@@ -14,7 +14,9 @@ import {
   useReorderCollectionItems,
   type MemberCollection,
 } from '@/api/queries/social2';
-import { BuildWallSkeleton, wallCellWidth, wallRows, WALL_GAP } from '@/features/discover/components/BuildWall';
+import { wallCellWidth, wallRows, WALL_GAP } from '@/features/discover/components/BuildWall';
+import { ratioOf } from '@/ui/Photo';
+import { MEDIA_ASPECT } from '@/ui/mediaCardLayout';
 import { WALL_COLUMNS_BY_KIND } from '@/features/discover/layout';
 import { SampleWall } from '@/features/discover/components/SampleWall';
 import { photoFields } from '@/features/profile/media';
@@ -29,6 +31,7 @@ import { clearAuthIntent, useSessionStore } from '@/state/session';
 import { createStyles, layout, useBreakpoint } from '@/theme';
 import {
   CollapsingFlashList,
+  ContextMenuArea,
   ContextMenuButton,
   EmptyState,
   ErrorState,
@@ -36,8 +39,10 @@ import {
   HeaderLargeTitle,
   Icon,
   MediaCard,
+  PressableScale,
   Screen,
   Skeleton,
+  SkeletonBlock,
   Text,
   toast,
   useCollapsingHeader,
@@ -56,10 +61,18 @@ const useStyles = createStyles((t) => ({
   list: { flex: 1 },
   head: { paddingBottom: t.space[16] },
   meta: { alignItems: 'center', flexDirection: 'row', gap: t.space[4] },
-  row: { flexDirection: 'row', gap: WALL_GAP, paddingBottom: t.space[8] },
-  // m4.10 COL-02 overlap High: the menu sits on a caption line under the tile, never over the tile's link.
-  cellFoot: { alignItems: 'center', flexDirection: 'row', gap: t.space[4], paddingLeft: t.space[8] },
-  cellKind: { flex: 1 },
+  // DQ-1125: 2 apart like every wall (09 §5); the tile's menu sits on the tile, not on a row of its own.
+  row: { flexDirection: 'row', gap: WALL_GAP, paddingBottom: WALL_GAP },
+  cell: { position: 'relative' },
+  // The link takes the tile under the top control band, so it never shares a pixel with the menu (dom-audit overlap, axe
+  // nested-interactive): the band holds the sample badge on the left and the "···" on the right.
+  cellLink: { bottom: 0, left: 0, position: 'absolute', right: 0, top: t.size.touchMin },
+  cellLinkFill: { flex: 1 },
+  cellMore: { position: 'absolute', right: 0, top: 0 },
+  skeletonRows: { gap: WALL_GAP },
+  skeletonRow: { flexDirection: 'row', gap: WALL_GAP },
+  // DQ-1107 b: the kind under the tile only when the collection mixes kinds.
+  cellFoot: { paddingHorizontal: t.space[8], paddingVertical: t.space[4] },
   states: { paddingTop: t.space[8] },
   end: { paddingBottom: t.space[32] },
 }));
@@ -87,33 +100,52 @@ const ItemCell = memo(function ItemCell({ tile, index, total, width, showKind, o
     { key: 'back', label: t('collections.moveBack'), icon: 'caret-right', disabled: index === total - 1, onSelect: () => onMove(tile, 1) },
     { key: 'remove', label: t('collections.removeItem'), icon: 'trash', destructive: true, onSelect: () => onRemove(tile) },
   ];
+  const name = tile.title || t('collections.updateFallback');
   return (
-    <View role="listitem" style={{ width }}>
-      <MediaCard
-        variant="wall"
-        title={tile.title || t('collections.updateFallback')}
-        photo={photoFields(tile.cover, width)}
-        sample={{ is_sample: tile.isSample }}
-        onPress={tile.href ? () => onOpen(tile) : undefined}
-        testID={testID}
+    <View role="listitem" style={[styles.cell, { width }]}>
+      <MediaCard variant="wall" title={name} photo={photoFields(tile.cover, width)} sample={{ is_sample: tile.isSample }} testID={testID} />
+      {tile.href ? (
+        <ContextMenuArea items={items} label={t('collections.itemActions', { name })} style={styles.cellLink} testID={`${testID}.area`}>
+          <PressableScale role="link" aria-label={name} onPress={() => onOpen(tile)} ring="card" style={styles.cellLinkFill} testID={`${testID}.open`} />
+        </ContextMenuArea>
+      ) : null}
+      <ContextMenuButton
+        items={items}
+        label={t('collections.itemActions', { name })}
+        variant="onPhoto"
+        style={styles.cellMore}
+        testID={`${testID}.more`}
       />
-      <View style={styles.cellFoot}>
-        <View style={styles.cellKind}>
-          {showKind ? (
-            <Text variant="caption" color="text.secondary" numberOfLines={1} testID={`${testID}.kind`}>
-              {t(`collections.kind.${tile.type}`)}
-            </Text>
-          ) : null}
+      {showKind ? (
+        <View style={styles.cellFoot}>
+          <Text variant="caption" color="text.secondary" numberOfLines={1} testID={`${testID}.kind`}>
+            {t(`collections.kind.${tile.type}`)}
+          </Text>
         </View>
-        <ContextMenuButton
-          items={items}
-          label={t('collections.itemActions', { name: tile.title || t('collections.updateFallback') })}
-          testID={`${testID}.more`}
-        />
-      </View>
+      ) : null}
     </View>
   );
 });
+
+/**
+ * DQ-1124: the wall while it loads, in the content's geometry: the same columns and tile width, the static skeleton tone (not the
+ * photo stage), as many tiles as the collection holds (at most two rows) once its count is known.
+ */
+function WallSkeleton({ width, columns, count }: { width: number; columns: number; count: number }) {
+  const styles = useStyles();
+  const cell = wallCellWidth(width, columns);
+  return (
+    <View style={styles.skeletonRows}>
+      {wallRows(Array.from({ length: count }, (_, index) => index), columns).map((row) => (
+        <View key={row[0]} style={styles.skeletonRow}>
+          {row.map((index) => (
+            <SkeletonBlock key={index} width={cell} aspectRatio={ratioOf(MEDIA_ASPECT.wall)} corner="none" />
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
 
 /**
  * COL-02 (09 §7.7): the wall of one collection — builds, mods and updates — 2 px apart, edge to edge. Each tile's menu moves it
@@ -198,9 +230,12 @@ export function CollectionScreen() {
     qaState === 'loading' ||
     status === 'loading' ||
     (status === 'member' && !items.data && items.isPending && items.fetchStatus !== 'paused' && qaState !== 'error' && qaState !== 'offline');
+  const known = collection?.items_count;
+  const skeletonCount = known === undefined ? SKELETON_CELLS : Math.max(1, Math.min(known, columns * 2));
   const missing = status === 'member' && collections.isSuccess && !collection && qaState !== 'loading';
 
   let state: ReactNode = null;
+  let skeleton = false;
   if (status === 'guest') {
     state = (
       <EmptyState
@@ -218,9 +253,10 @@ export function CollectionScreen() {
       />
     );
   } else if (loading) {
+    skeleton = true;
     state = (
       <Skeleton testID={`${ROUTE}.skeleton`}>
-        <BuildWallSkeleton width={wallWidth} columns={columns} count={SKELETON_CELLS} />
+        <WallSkeleton width={wallWidth} columns={columns} count={skeletonCount} />
       </Skeleton>
     );
   } else if (missing) {
@@ -317,11 +353,15 @@ export function CollectionScreen() {
               ) : null}
             </View>
           }
-          ListEmptyComponent={state ? <View style={[pad, styles.states]}>{state}</View> : null}
+          ListEmptyComponent={
+            state ? <View style={skeleton ? wallBox : [pad, styles.states]}>{state}</View> : null
+          }
           ListFooterComponent={
             items.isFetchingNextPage ? (
               <View style={wallBox}>
-                <BuildWallSkeleton width={wallWidth} columns={columns} count={columns} />
+                <Skeleton>
+                  <WallSkeleton width={wallWidth} columns={columns} count={columns} />
+                </Skeleton>
               </View>
             ) : (
               <View style={styles.end} />

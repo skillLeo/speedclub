@@ -3,10 +3,15 @@ import { trans } from 'laravel-vue-i18n';
 import Badge from '../../../Components/ui/Badge.vue';
 import StatusPill from '../../../Components/ui/StatusPill.vue';
 import ScrollRegion from '../../../Components/patterns/ScrollRegion.vue';
+import { actionLabel } from '../../../lib/audit';
 import { formatDateTime, formatRelative } from '../../../lib/format';
 import type { MemberSecurity } from '../types';
 
-/** ADM-10 "Sicherheit & Sitzungen": two-factor state, signed-in devices (dates, device names, platform; never an IP), sign-ins by device. */
+/**
+ * ADM-10 "Sicherheit & Sitzungen" (with ADM-59, 09 §10.3): two-factor state, signed-in devices (dates, device names, platform; never an
+ * IP), passkeys, linked sign-in providers, sign-ins by device and the security events. Read-only; "Alle Sitzungen beenden" is the record's
+ * action. Staff never see a secret, a provider's e-mail or an IP.
+ */
 defineProps<{ security: MemberSecurity }>();
 
 type SignIn = MemberSecurity['sign_ins'][number];
@@ -66,6 +71,35 @@ function deviceLabel(item: SignIn, index: number): string {
             </ScrollRegion>
         </section>
 
+        <div class="grid grid-cols-1 gap-32 desktop:grid-cols-2">
+            <section class="flex flex-col gap-12" :aria-label="trans('members.security.passkeys')" data-testid="ADM-10.security.passkeys">
+                <h2 class="text-headline text-ink">{{ trans('members.security.passkeys') }}</h2>
+                <p v-if="(security.passkeys ?? []).length === 0" class="text-admin-base text-ink-2">{{ trans('members.security.no_passkeys') }}</p>
+                <ul v-else class="flex flex-col rounded-sm border border-line-subtle bg-surface">
+                    <li v-for="key in security.passkeys" :key="key.id" class="flex min-h-40 flex-wrap items-center justify-between gap-x-12 border-b border-line-subtle px-12 py-4 text-admin-base last:border-b-0">
+                        <span class="flex min-w-0 items-center gap-8">
+                            <span class="truncate text-ink">{{ key.name }}</span>
+                            <Badge v-if="key.synced" tone="neutral">{{ trans('members.security.passkey_synced') }}</Badge>
+                        </span>
+                        <span class="text-ink-2 tabular-nums">{{ trans('members.security.passkey_dates', { created: formatDateTime(key.created_at), used: key.last_used_at ? formatRelative(key.last_used_at) : trans('members.security.never') }) }}</span>
+                    </li>
+                </ul>
+            </section>
+            <section class="flex flex-col gap-12" :aria-label="trans('members.security.providers')" data-testid="ADM-10.security.providers">
+                <h2 class="text-headline text-ink">{{ trans('members.security.providers') }}</h2>
+                <p v-if="(security.providers ?? []).length === 0" class="text-admin-base text-ink-2">{{ trans('members.security.no_providers') }}</p>
+                <ul v-else class="flex flex-col rounded-sm border border-line-subtle bg-surface">
+                    <li v-for="account in security.providers" :key="account.id" class="flex min-h-40 flex-wrap items-center justify-between gap-x-12 border-b border-line-subtle px-12 py-4 text-admin-base last:border-b-0">
+                        <span class="flex items-center gap-8">
+                            <span class="text-ink">{{ trans(`members.security.provider_${account.provider}`) }}</span>
+                            <Badge v-if="account.private_relay" tone="neutral">{{ trans('members.security.private_relay') }}</Badge>
+                        </span>
+                        <span class="text-ink-2 tabular-nums">{{ trans('members.security.linked_at', { date: formatDateTime(account.linked_at) }) }}</span>
+                    </li>
+                </ul>
+            </section>
+        </div>
+
         <section class="flex flex-col gap-12" :aria-label="trans('members.security.sign_ins')">
             <h2 class="text-headline text-ink">{{ trans('members.security.sign_ins') }}</h2>
             <p class="text-admin-base text-ink-3">{{ trans('members.security.sign_ins_note') }}</p>
@@ -74,6 +108,18 @@ function deviceLabel(item: SignIn, index: number): string {
                 <li v-for="(item, index) in security.sign_ins" :key="index" class="flex h-40 items-center justify-between gap-12 border-b border-line-subtle px-12 text-admin-base last:border-b-0">
                     <span class="text-ink">{{ deviceLabel(item, index) }}</span>
                     <span class="text-ink-2 tabular-nums">{{ trans('members.security.seen', { first: formatDateTime(item.first_seen_at), last: formatDateTime(item.last_seen_at) }) }}</span>
+                </li>
+            </ol>
+        </section>
+
+        <section class="flex flex-col gap-12" :aria-label="trans('members.security.events')" data-testid="ADM-10.security.events">
+            <h2 class="text-headline text-ink">{{ trans('members.security.events') }}</h2>
+            <p class="text-admin-base text-ink-3">{{ trans('members.security.events_note') }}</p>
+            <p v-if="(security.events ?? []).length === 0" class="text-admin-base text-ink-2">{{ trans('members.security.no_events') }}</p>
+            <ol v-else class="flex flex-col rounded-sm border border-line-subtle bg-surface">
+                <li v-for="event in security.events" :key="event.id" class="flex min-h-40 flex-wrap items-center justify-between gap-x-12 border-b border-line-subtle px-12 py-4 text-admin-base last:border-b-0">
+                    <span class="text-ink">{{ actionLabel(event.type) }}</span>
+                    <span class="text-ink-2 tabular-nums">{{ [event.device_name, event.approx_city, formatDateTime(event.created_at)].filter(Boolean).join(' · ') }}</span>
                 </li>
             </ol>
         </section>

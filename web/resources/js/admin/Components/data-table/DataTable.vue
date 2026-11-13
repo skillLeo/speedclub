@@ -4,7 +4,7 @@ import { PhArrowDown, PhArrowUp, PhArrowsDownUp, PhArrowsHorizontal, PhCaretDown
 import { columnVisibilityFeature, rowSelectionFeature, tableFeatures, useTable, type ColumnVisibilityState, type RowSelectionState, type Updater } from '@tanstack/vue-table';
 import { DropdownMenuCheckboxItem, DropdownMenuItemIndicator } from 'reka-ui';
 import { trans, transChoice } from 'laravel-vue-i18n';
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useResizeObserver } from '@vueuse/core';
 import { PhCheck } from '@phosphor-icons/vue';
 import Button from '../ui/Button.vue';
@@ -14,17 +14,20 @@ import EmptyQueue from '../ui/EmptyQueue.vue';
 import Pagination from '../ui/Pagination.vue';
 import Skeleton from '../ui/Skeleton.vue';
 import { focusRing, menuItem } from '../ui/styles';
+import { rowHeight } from '../../lib/density';
 import { formatNumber } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
 import { qaState } from '../../lib/qa';
 import { qaDialog } from '../../composables/qaDialog';
+import { isTyping } from '../../composables/splitQueue';
 import type { Paginated, PresetView, SavedView, TableQuery } from '../../types/table';
 import SavedViews from './SavedViews.vue';
 import StateBlock from '../patterns/StateBlock.vue';
 import { columnMins, headerWidth, isFluid, loadHiddenColumns, saveHiddenColumns, skeletonBar, type BulkAction, type TableColumn } from './table';
 
 /**
- * Server-driven table (03 §14, 06 §5): sort/filter/page through Inertia partial reloads of `only`, 40 px rows, hairline grid,
+ * Server-driven table (03 §14, 06 §5): sort/filter/page through Inertia partial reloads of `only`, 40 or 32 px rows (the staff member's
+ * density, 09 §10.2), hairline grid,
  * sticky header, column chooser (localStorage per table), saved views, selection + bulk bar, CSV export behind permission,
  * and the states loading / empty / no results / error. Filter controls go in the `filters` slot and call `apply()`.
  */
@@ -67,6 +70,8 @@ const props = withDefaults(
         forceState?: 'loading' | 'error' | 'empty';
         /** A narrow list beside a detail pane (DQ-598): no 960 px minimum, the columns fit the column. */
         narrow?: boolean;
+        /** 09 §10.2 row keys for the page's main list: j/k move the row cursor, x selects it, e (or Enter on it) opens it. One table per page. */
+        rowKeys?: boolean;
         testId: string;
     }>(),
     {
@@ -87,6 +92,7 @@ const props = withDefaults(
         clickableRows: false,
         forceState: undefined,
         narrow: false,
+        rowKeys: false,
     },
 );
 
@@ -274,6 +280,37 @@ function measureScroll(): void {
 useResizeObserver(scroller, measureScroll);
 watch([() => props.rows, () => columnVisibility.value], () => void nextTick(measureScroll), { deep: true });
 
+// ---- row keys (09 §10.2): j/k, x, e ---------------------------------------------------------------------------------------
+const keyboardRow = ref<string | null>(null);
+watch(
+    () => props.rows,
+    () => (keyboardRow.value = null),
+);
+function moveCursor(step: 1 | -1): void {
+    const rows = table.getRowModel().rows;
+    if (rows.length === 0) return;
+    const index = rows.findIndex((r) => r.id === keyboardRow.value);
+    const next = index === -1 ? (step === 1 ? 0 : rows.length - 1) : Math.min(rows.length - 1, Math.max(0, index + step));
+    keyboardRow.value = rows[next]?.id ?? null;
+    void nextTick(() => scroller.value?.querySelector<HTMLElement>(`[data-row-id="${CSS.escape(keyboardRow.value ?? '')}"]`)?.scrollIntoView({ block: 'nearest' }));
+}
+function onRowKey(event: KeyboardEvent): void {
+    if (!props.rowKeys || view.value !== 'rows' || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || isTyping(event)) return;
+    const key = event.key.toLowerCase();
+    const current = table.getRowModel().rows.find((r) => r.id === keyboardRow.value) ?? null;
+    if (key === 'j' || key === 'k') moveCursor(key === 'j' ? 1 : -1);
+    else if (key === 'x' && current !== null && props.selectable) current.toggleSelected(!current.getIsSelected());
+    else if (key === 'e' && current !== null) {
+        const href = props.rowHref?.(current.original);
+        if (href) router.visit(href);
+        else if (props.clickableRows) emit('open', current.original);
+        else return;
+    } else return;
+    event.preventDefault();
+}
+onMounted(() => window.addEventListener('keydown', onRowKey));
+onBeforeUnmount(() => window.removeEventListener('keydown', onRowKey));
+
 function onRowClick(row: Row, event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (target.closest('a,button,input,label,[role="checkbox"]')) return;
@@ -406,7 +443,7 @@ function onRowClick(row: Row, event: MouseEvent): void {
                     </tr>
                 </thead>
                 <tbody v-if="view === 'loading'">
-                    <tr v-for="n in skeletonRows" :key="n" class="h-40 border-b border-line-subtle last:border-b-0">
+                    <tr v-for="n in skeletonRows" :key="n" :class="[rowHeight, 'border-b border-line-subtle last:border-b-0']">
                         <td v-if="selectable" class="px-12"><Skeleton class="size-16" /></td>
                         <td v-for="column in visibleColumns" :key="column.key" class="px-12">
                             <Skeleton :shape="skeletonBar(column).shape" :class="skeletonBar(column).class" />
@@ -417,10 +454,11 @@ function onRowClick(row: Row, event: MouseEvent): void {
                     <tr
                         v-for="row in table.getRowModel().rows"
                         :key="row.id"
-                        class="h-40 border-b border-line-subtle last:border-b-0 hover:bg-hover"
-                        :class="[row.getIsSelected() ? 'bg-selected' : '', rowHref || clickableRows ? 'cursor-pointer' : '']"
+                        class="border-b border-line-subtle last:border-b-0 hover:bg-hover"
+                        :class="[rowHeight, row.getIsSelected() ? 'bg-selected' : '', rowHref || clickableRows ? 'cursor-pointer' : '', keyboardRow === row.id ? 'bg-hover outline-2 -outline-offset-2 outline-focus' : '']"
                         :data-testid="`${testId}.row`"
                         :data-row-id="row.id"
+                        :data-row-cursor="keyboardRow === row.id || undefined"
                         @click="onRowClick(row.original, $event)"
                     >
                         <td v-if="selectable" class="px-12">

@@ -1,0 +1,46 @@
+{
+    "title": "Kommentare",
+    "nav": {
+        "title": "Kommentare"
+    },
+    "intro": "Alle Kommentare unter Build-Updates, die neuesten oben. Entfernt wird ein Kommentar über seinen Fall mit Begründung, nicht hier.",
+    "caption": "Kommentare mit Autor, Build, offenen Meldungen, Datum und Status",
+    "columns": {
+        "comment": "Kommentar",
+        "author": "Autor",
+        "build": "Build",
+        "case": "Meldungen",
+        "created": "Geschrieben",
+        "status": "Status"
+    },
+    "filters": {
+        "label": "Kommentare filtern",
+        "q": "Suche",
+        "q_placeholder": "Text oder @Autor",
+        "status": "Status",
+        "reported": "Gemeldet",
+        "reported_only": "Nur mit offener Meldung",
+        "any": "Alle",
+        "apply": "Anwenden"
+    },
+    "presets": {
+        "reported": "Gemeldet",
+        "removed": "Entfernt"
+    },
+    "status": {
+        "visible": "Sichtbar",
+        "removed": "Entfernt",
+        "deleted": "Vom Autor gelöscht"
+    },
+    "reply": "Antwort auf einen Kommentar",
+    "open_build": "Build öffnen",
+    "reports": ":count offen",
+    "flag": {
+        "on": "Kommentare sind für Mitglieder eingeschaltet.",
+        "off": "Kommentare sind für Mitglieder ausgeschaltet (Flag build_comments). Hier stehen nur Kommentare aus Tests und Vorschauen.",
+        "open": "Flag öffnen"
+    },
+    "empty_title": "Noch keine Kommentare",
+    "empty_body_on": "Sobald Mitglieder unter Build-Updates kommentieren, stehen die Kommentare hier.",
+    "empty_body_off": "Kommentare sind ausgeschaltet. Sobald das Flag an ist und Mitglieder kommentieren, stehen sie hier."
+}

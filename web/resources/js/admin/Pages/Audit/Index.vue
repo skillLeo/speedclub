@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { PhFunnel } from '@phosphor-icons/vue';
+import { PhFunnel, PhShieldCheck } from '@phosphor-icons/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, reactive, ref, watch } from 'vue';
 import DataTable from '../../Components/data-table/DataTable.vue';
@@ -22,6 +22,7 @@ import StatusPill from '../../Components/ui/StatusPill.vue';
 import { usePageState } from '../../composables/pageState';
 import { actionLabel } from '../../lib/audit';
 import { formatDateTime, formatNumber, formatTime } from '../../lib/format';
+import { requestJson } from '../../lib/http';
 import { routeOr } from '../../lib/routes';
 import type { Paginated, PresetView, SavedView, TableQuery } from '../../types/table';
 
@@ -156,6 +157,35 @@ watch(drawerOpen, (open) => {
     router.get(url.pathname + url.search, {}, { only: ['selected'], preserveState: true, preserveScroll: true, replace: true });
 });
 
+// ---- hash check of this page (09 §10.2) ------------------------------------------------------------------------------------
+interface PageCheck {
+    checked: number;
+    missing: number;
+    intact: boolean;
+    broken: number[];
+    checked_at: string;
+}
+const pageCheck = ref<PageCheck | null>(null);
+const pageCheckState = ref<'idle' | 'checking' | 'failed'>('idle');
+watch(
+    () => props.rows,
+    () => {
+        pageCheck.value = null;
+        pageCheckState.value = 'idle';
+    },
+);
+async function checkPage(): Promise<void> {
+    const ids = props.rows.data.map((row) => row.id);
+    if (ids.length === 0) return;
+    pageCheckState.value = 'checking';
+    try {
+        pageCheck.value = await requestJson<PageCheck>('get', routeOr('admin.audit.verify-page', '/admin/audit/verify-page'), { ids: ids.join(',') });
+        pageCheckState.value = 'idle';
+    } catch {
+        pageCheckState.value = 'failed';
+    }
+}
+
 // ---- export (four-eyes) ---------------------------------------------------------------------------------------------------
 const exportOpen = ref(false);
 const formats = [
@@ -209,6 +239,7 @@ function requestExport(reason: string | null): void {
 
         <DataTable
             id="audit"
+            row-keys
             :columns="columns"
             :rows="rows"
             :query="query"
@@ -225,6 +256,13 @@ function requestExport(reason: string | null): void {
             @open="openEvent"
             @export="exportOpen = true"
         >
+            <template #actions>
+                <span v-if="pageCheck" class="flex items-center text-admin-base tabular-nums" :class="pageCheck.intact ? 'text-success' : 'text-danger'" role="status" data-testid="ADM-44.page-check.result">
+                    {{ pageCheck.intact ? trans('audit.page_check.intact', { count: formatNumber(pageCheck.checked) }) : trans('audit.page_check.broken', { ids: pageCheck.broken.map((id) => formatNumber(id)).join(', ') || '–' }) }}
+                </span>
+                <span v-else-if="pageCheckState === 'failed'" class="text-admin-base text-danger" role="alert">{{ trans('audit.page_check.failed') }}</span>
+                <Button size="sm" variant="secondary" :icon="PhShieldCheck" :loading="pageCheckState === 'checking'" data-testid="ADM-44.page-check" @click="checkPage">{{ trans('audit.page_check.action') }}</Button>
+            </template>
             <template #filters="{ apply, loading }">
                 <!-- One row (DQ-509): Wer · Aktion · Ziel (type + id) · Zeitraum · Anwenden. -->
                 <form class="flex w-full flex-wrap items-end gap-8 desktop:flex-nowrap" :aria-label="trans('audit.filters.label')" @submit.prevent="apply({ ...filters })">

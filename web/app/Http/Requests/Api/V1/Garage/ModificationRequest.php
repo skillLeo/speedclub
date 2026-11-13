@@ -4,8 +4,10 @@ namespace App\Http\Requests\Api\V1\Garage;
 
 use App\Enums\LegalStatus;
 use App\Enums\ModStatus;
+use App\Enums\ProductStatus;
 use App\Models\Brand;
 use App\Models\ModCategory;
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,6 +32,11 @@ class ModificationRequest extends FormRequest
             'title' => ['sometimes', 'nullable', 'string', 'max:160'],
             'brand_id' => ['sometimes', 'nullable', 'integer', Rule::exists(Brand::class, 'id')],
             'brand_text' => ['sometimes', 'nullable', 'string', 'max:120', 'prohibits:brand_id'],
+            /**
+             * M4.14 (09 §8.9): a product of the parts catalogue (products search); sets the brand and, when no part name is sent, the
+             * part name. Null unlinks it; free text stays possible. Ignored while the flag parts_catalogue is off.
+             */
+            'product_id' => ['sometimes', 'nullable', 'string', 'size:26', Rule::exists(Product::class, 'id')->where('status', ProductStatus::Active->value)],
             'part_name' => ['sometimes', 'nullable', 'string', 'max:160'],
             'part_number' => ['sometimes', 'nullable', 'string', 'max:80'],
             'status' => ['sometimes', Rule::enum(ModStatus::class)],

@@ -5,7 +5,7 @@
  */
 
 /** What can be reported (contract §1 `target_type`). */
-export type ReportTargetType = 'member' | 'vehicle' | 'photo' | 'message' | 'build_update' | 'modification' | 'comment' | 'event';
+export type ReportTargetType = 'member' | 'vehicle' | 'photo' | 'message' | 'build_update' | 'modification' | 'comment' | 'event' | 'business';
 
 export type ReportTarget = {
   type: ReportTargetType;

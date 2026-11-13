@@ -4,12 +4,13 @@ import { trans } from 'laravel-vue-i18n';
 import IconButton from '../ui/IconButton.vue';
 import Kbd from '../ui/Kbd.vue';
 import { focusRing } from '../ui/styles';
+import DensityToggle from './DensityToggle.vue';
 import EnvBadge from './EnvBadge.vue';
 import LocaleToggle from './LocaleToggle.vue';
 import StaffMenu from './StaffMenu.vue';
 import ThemeToggle from './ThemeToggle.vue';
 
-/** Top bar (03 §14): menu (below 1024), global search opening the palette, environment, theme, language, staff menu. */
+/** Top bar (03 §14, 09 §10.1): menu (below 1024), global search opening the palette, environment, density (from tablet), theme, language, staff menu. */
 defineProps<{ shortcut: string }>();
 const emit = defineEmits<{ menu: []; search: [] }>();
 </script>
@@ -40,6 +41,7 @@ const emit = defineEmits<{ menu: []; search: [] }>();
         </button>
         <div class="ml-auto flex shrink-0 items-center gap-8">
             <EnvBadge />
+            <DensityToggle class="hidden tablet:inline-flex" />
             <ThemeToggle />
             <LocaleToggle class="hidden tablet:flex" />
             <StaffMenu />

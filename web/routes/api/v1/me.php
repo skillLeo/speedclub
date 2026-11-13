@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Me\DataExportController;
 use App\Http\Controllers\Api\V1\Me\DeviceSessionController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
 use App\Http\Controllers\Api\V1\Me\ProfileImageController;
+use App\Http\Controllers\Api\V1\Me\PushSubscriptionController;
 use App\Http\Controllers\Api\V1\Me\PushTokenController;
 use App\Http\Controllers\Api\V1\Me\SettingsController;
 use App\Http\Controllers\Api\V1\Me\TwoFactorController;
@@ -37,6 +38,10 @@ Route::prefix('me')->name('me.')->middleware('member')->group(function () use ($
     // AUTH-10 (M2.2): this install's Expo push token. Sign-out removes it too (LogoutMember).
     Route::post('push-tokens', [PushTokenController::class, 'store'])->middleware(['throttle:push-tokens', 'idempotent'])->name('push-tokens.store');
     Route::delete('push-tokens/{deviceId}', [PushTokenController::class, 'destroy'])->where('deviceId', DeviceInfo::ROUTE_PATTERN)->middleware('throttle:push-tokens')->name('push-tokens.destroy');
+    // M4.15 (09 §8.13, ADR-452): the member web's Web Push subscription of this browser, per endpoint, under the same limiter. Registering
+    // needs the flag web_push; removing stays open, so a browser can always clean up.
+    Route::post('push-subscriptions', [PushSubscriptionController::class, 'store'])->middleware([EnsureFeatureEnabled::class.':web_push', 'throttle:push-tokens', 'idempotent'])->name('push-subscriptions.store');
+    Route::delete('push-subscriptions', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:push-tokens')->name('push-subscriptions.destroy');
 
     // PROF-04 "Entfernen". Open under a restriction and before verification, like unfollowing would be for the follower.
     Route::delete('followers/{username}', [FollowerController::class, 'destroy'])->middleware('throttle:unfollows')->name('followers.destroy');

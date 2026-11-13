@@ -324,6 +324,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/brands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the top part brands
+         * @description Guests too. "Marken im Fokus" (`per_page=3`) and the Teile scope: catalogue brands by their real number of visible builds, most
+         *     first, at most 24; brands without a build are left out.
+         */
+        get: operations["v1.brands.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/brands/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show a brand page
+         * @description Guests too. Name, about (catalogue), website, real counts of builds and products, and the product lines.
+         */
+        get: operations["v1.brands.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/brands/{slug}/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a brand's products
+         * @description Guests too. Active products of the brand by line and name, with their real build counts; cursor pages.
+         */
+        get: operations["v1.brands.products"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/brands/{slug}/builds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the builds with a brand
+         * @description Guests too. "Builds mit {Marke}": visible builds with a mod of the brand, last changed first; cursor pages.
+         */
+        get: operations["v1.brands.builds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/broadcasting/auth": {
         parameters: {
             query?: never;
@@ -462,6 +543,121 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/businesses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List businesses
+         * @description Guests too. The Betriebe scope of Entdecken and Home "Werkstätten in deiner Nähe" (`lat`, `lng`, `radius_km`; each card carries
+         *     `distance_km`). Verified businesses by name; cursor pages.
+         */
+        get: operations["v1.businesses.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/businesses/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show a business
+         * @description Guests too. BIZ-01 and the data of /b/{slug}: profile, opening hours, address, contact, the real portfolio count and the Impressum
+         *     (§ 5 DDG). Counts a private profile view for BIZ-03 (not the team's own).
+         */
+        get: operations["v1.businesses.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/businesses/{slug}/portfolio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a business's portfolio
+         * @description Guests too. "Builds aus unserer Werkstatt": visible builds with a mod whose tag the business and the build's owner both confirmed,
+         *     last changed first; cursor pages.
+         */
+        get: operations["v1.businesses.portfolio"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business/tag-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my business's tags
+         * @description Owner and staff. `direction=incoming` (default): members asked, the business decides; `outgoing`: the business proposed.
+         *     `status` (default pending). Newest first; cursor pages.
+         */
+        get: operations["v1.me.business.tags.index"];
+        put?: never;
+        /**
+         * Propose a build
+         * @description Accepts an Idempotency-Key header. The business names a mod of a public build it worked on; the build's owner confirms. The
+         *     business must be verified (409 business_not_verified); a mod with another business's tag: 409 conflict; at most 100 open
+         *     proposals (409 limit_reached).
+         */
+        post: operations["v1.me.business.tags.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business/tag-requests/{tag}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a tag
+         * @description Owner and staff: withdraws a proposal or takes a build off the portfolio (the undo of BIZ-04 too). Answers 204.
+         */
+        delete: operations["v1.me.business.tags.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Decide a request
+         * @description Owner and staff: `decision` accepted (the build joins the portfolio) or declined. Only a member's pending request (403 for the
+         *     business's own proposals, 409 when decided).
+         */
+        patch: operations["v1.me.business.tags.update"];
         trace?: never;
     };
     "/catalog/makes": {
@@ -2194,6 +2390,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/mods/{modification}/business-tag": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Tag a business on a mod
+         * @description The mod's owner names the business (`business`: its slug) that installed the part; the business confirms (BIZ-04). Confirms a
+         *     pending proposal of the same business at once; replaces another business's tag. The business must be verified (409
+         *     business_not_verified). 201 when a tag was created, 200 when an existing one was confirmed or kept.
+         */
+        put: operations["v1.mods.business-tag.update"];
+        post?: never;
+        /**
+         * Remove the tag of a mod
+         * @description The mod's owner takes "Eingebaut von" off (also declining a pending proposal this way); the portfolio loses the build. Answers 204,
+         *     also when there was none.
+         */
+        delete: operations["v1.mods.business-tag.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/mod-tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the tags on my mods
+         * @description `direction=incoming` (default): businesses proposed, the member confirms; `outgoing`: the member asked. `status` (default pending).
+         *     Newest first; cursor pages.
+         */
+        get: operations["v1.me.mod-tags.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/mod-tags/{tag}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Decide a business's proposal
+         * @description The build's owner: `decision` accepted (the build joins the business's portfolio) or declined. Only a business's pending proposal
+         *     on an own mod (403 for the member's own requests, 409 when decided).
+         */
+        patch: operations["v1.me.mod-tags.update"];
+        trace?: never;
+    };
     "/vehicles/{vehicle}/mods": {
         parameters: {
             query?: never;
@@ -2286,6 +2551,143 @@ export interface paths {
          */
         post: operations["v1.mods.media.store"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show my business
+         * @description BIZ-02 status screen and BIZ-03: the profile with status, staff reason (rejected, suspended), team, open requests and the private
+         *     30-day profile views.
+         */
+        get: operations["v1.me.business.show"];
+        put?: never;
+        /**
+         * Apply with a business
+         * @description Accepts an Idempotency-Key header. BIZ-02: the business starts as `applied` and waits for staff (ADM-55); the member becomes its
+         *     owner. Needs a verified e-mail (403 email_not_verified); one business per member (409 business_exists). Legal forms with a
+         *     register entry need register court and number (422).
+         */
+        post: operations["v1.me.business.store"];
+        /**
+         * Withdraw my application
+         * @description The owner deletes an applied or rejected business. A verified or suspended one: 409 business_exists (through support). Answers 204.
+         */
+        delete: operations["v1.me.business.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Change my business
+         * @description Owner and staff. Only the keys sent change. Once verified, name, legal form, representative, address and register details are
+         *     locked (422 naming the fields): they change through support.
+         */
+        patch: operations["v1.me.business.update"];
+        trace?: never;
+    };
+    "/me/business/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send my business again
+         * @description The owner, after a rejection: back to staff (`applied`). Any other state: 409 conflict.
+         */
+        post: operations["v1.me.business.submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload the logo
+         * @description Accepts an Idempotency-Key header. Square, shown at 56; re-encoded without metadata, WebP variants; replaces the old one.
+         */
+        post: operations["v1.me.business.logo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload the cover
+         * @description Accepts an Idempotency-Key header. 16:9 on BIZ-01; re-encoded without metadata, WebP variants; replaces the old one.
+         */
+        post: operations["v1.me.business.cover"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a team member
+         * @description Accepts an Idempotency-Key header. Answers the business with its team. The owner adds a member (@username) as staff: they edit the profile and decide tags. One
+         *     business per member (422), at most 10 staff (409 limit_reached).
+         */
+        post: operations["v1.me.business.members.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business/members/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a team member
+         * @description The owner removes staff; staff may remove themselves (leave). The owner cannot be removed (403). Answers 204.
+         */
+        delete: operations["v1.me.business.members.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2630,6 +3032,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search products
+         * @description Guests too. The Teile scope of Entdecken (`counts=true` for "In 14 Builds") and the mod editor's autocomplete (`q`, `category`
+         *     of the mod, `per_page=8`). Active products only, by name; cursor pages.
+         */
+        get: operations["v1.products.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/products/{product}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show a product
+         * @description Guests too. BRD-02: the row with the attributes table, the official link, the affiliate link only while `affiliate_links` is on
+         *     (labelled "Anzeige", rel="sponsored"), and the real number of builds. An archived product still answers (mods link it); a merged
+         *     one answers as its survivor (compare `id`).
+         */
+        get: operations["v1.products.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/products/{product}/builds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the builds with a product
+         * @description Guests too. "Builds mit {Produkt}" (BRD-02, VEH-02 rail): visible builds with a mod linking the product, last changed first;
+         *     cursor pages.
+         */
+        get: operations["v1.products.builds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/profile": {
         parameters: {
             query?: never;
@@ -2896,6 +3362,31 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register this browser's Web Push subscription
+         * @description Upsert per `endpoint`: calling it again leaves one row, and an endpoint another member registered before moves to you. Only
+         *     endpoints of the browsers' push services are accepted. 404 `feature_disabled` while the flag `web_push` is off. Answers 204.
+         */
+        post: operations["v1.me.push-subscriptions.store"];
+        /**
+         * Remove this browser's Web Push subscription
+         * @description Answers 204, also when the server has no such subscription of yours. Open while the flag is off, so a browser can always clean up.
+         */
+        delete: operations["v1.me.push-subscriptions.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4340,6 +4831,13 @@ export interface components {
             /** @description Whether the reader follows the member; false for guests. */
             is_following: boolean;
         };
+        /**
+         * AddMemberRequest
+         * @description BIZ-03 Team: a member (their @username) joins the business as staff.
+         */
+        AddMemberRequest: {
+            username: string;
+        };
         /** AlreadyReportedError */
         AlreadyReportedError: {
             /** @description Translated, safe to show. */
@@ -4504,6 +5002,13 @@ export interface components {
                 key: string | null;
                 cluster: string | null;
             };
+            /**
+             * @description M4.15 (ADR-452): the VAPID public key (base64url) the member web subscribes with; null while the server has no VAPID keys,
+             *     and then the browser option stays hidden. The flag `web_push` switches the option and the delivery on top.
+             */
+            web_push: {
+                vapid_public_key: string | null;
+            };
         };
         /** AppealExistsError */
         AppealExistsError: {
@@ -4606,6 +5111,30 @@ export interface components {
             vehicle_count: string;
             cover: components["schemas"]["MediaResource"] | null;
         };
+        /** BrandPageResource */
+        BrandPageResource: {
+            slug: string;
+            name: string;
+            /** @description One or two sentences from the catalogue, in the reader's language; null when the catalogue has none. */
+            about: string | null;
+            /** @description The official website. @var string|null */
+            website: string;
+            /** @description ISO 3166-1 alpha-2. @var string|null */
+            country: string;
+            /** @description The mod category key the brand is best known for. @var string|null */
+            category: string;
+            /** @description Visible builds with a mod of this brand ("1.204 Builds"), a real count. */
+            builds: string;
+            /** @description Active products in the catalogue. */
+            products: string;
+            /** @description Product lines with their number of active products, by name. */
+            lines: {
+                name: string;
+                products: number;
+            }[];
+            /** @description "/brands/kw" */
+            share_path: string;
+        };
         /** BrandResource */
         BrandResource: {
             id: number;
@@ -4613,6 +5142,13 @@ export interface components {
             slug: string;
             category_hint: string | null;
             aliases: string[];
+        };
+        /** BrandTileResource */
+        BrandTileResource: {
+            slug: string;
+            name: string;
+            /** @description Visible builds with a mod of this brand, a real count. */
+            builds: string;
         };
         /** BuildOfWeekResource */
         BuildOfWeekResource: {
@@ -4730,6 +5266,135 @@ export interface components {
          * @enum {string}
          */
         BuildUpdateType: "mod_added" | "mod_changed" | "mod_removed" | "specs_changed" | "photos_added" | "note" | "post";
+        /** BusinessCardResource */
+        BusinessCardResource: {
+            id: string;
+            slug: string;
+            name: string;
+            kind: components["schemas"]["BusinessKind"];
+            /** @description "Werkstatt" */
+            kind_label: string;
+            city: string;
+            /** @description "Werkstatt · München" */
+            subline: string;
+            services: string[];
+            logo: components["schemas"]["MediaResource"] | null;
+            /** @description Staff verified the business (ADM-55): the Verifiziert badge. */
+            verified: boolean;
+            /** @description Sample content (09 §8.19): the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description Kilometres from `lat`/`lng` of the list request, else null. */
+            distance_km: number | null;
+            /** @description "/b/beispiel-werkstatt-nord" */
+            share_path: string;
+        };
+        /**
+         * BusinessKind
+         * @description What a business does, the first half of BIZ-01's "Werkstatt · München" line.
+         * @enum {string}
+         */
+        BusinessKind: "workshop" | "tuner" | "detailing" | "wrapping" | "paint" | "dealer" | "parts_shop" | "other";
+        /**
+         * BusinessLegalForm
+         * @description The legal form of BIZ-02 and the Impressum (§ 5 DDG). A register entry is expected for every form but the sole trader, the GbR and "other" (BusinessImpressum::needsRegister).
+         * @enum {string}
+         */
+        BusinessLegalForm: "sole_trader" | "ek" | "gbr" | "ohg" | "kg" | "gmbh" | "gmbh_co_kg" | "ug" | "ag" | "other";
+        /**
+         * BusinessMediaRequest
+         * @description Logo (square, shown at 56) or cover (16:9) of a business; re-encoded without metadata like every upload.
+         */
+        BusinessMediaRequest: {
+            /**
+             * Format: binary
+             * @description Type, size and pixels are checked by MediaService::inspectUpload (as for every upload).
+             */
+            file: string;
+            alt?: string | null;
+            focal_x?: number | null;
+            focal_y?: number | null;
+        };
+        /** BusinessResource */
+        BusinessResource: {
+            id: string;
+            slug: string;
+            name: string;
+            kind: components["schemas"]["BusinessKind"];
+            /** @description "Werkstatt" */
+            kind_label: string;
+            city: string;
+            /** @description "Werkstatt · München" */
+            subline: string;
+            services: string[];
+            logo: components["schemas"]["MediaResource"] | null;
+            /** @description Staff verified the business (ADM-55): the Verifiziert badge. */
+            verified: boolean;
+            /** @description Sample content (09 §8.19): the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description Kilometres from `lat`/`lng` of the list request, else null. */
+            distance_km: number | null;
+            /** @description "/b/beispiel-werkstatt-nord" */
+            share_path: string;
+            cover: components["schemas"]["MediaResource"] | null;
+            about: string | null;
+            /** @description Monday first; `ranges` empty = closed; `today` in Europe/Berlin. */
+            opening_hours: {
+                day: string;
+                ranges: {
+                    opens: string;
+                    closes: string;
+                }[];
+                today: boolean;
+            }[];
+            address: {
+                street: string;
+                postcode: string;
+                city: string;
+                country: string;
+                lat: number | null;
+                lng: number | null;
+            };
+            /** @description `message_username`: "Nachricht" opens a conversation with this account (the business owner); null when it has no username. */
+            contact: {
+                phone: string | null;
+                email: string;
+                website: string | null;
+                message_username: string | null;
+            };
+            /** @description Builds in "Builds aus unserer Werkstatt" (both sides confirmed), a real count; null on a sample (09 §8.19). */
+            portfolio_count: number | null;
+            /** @description § 5 DDG; on a sample its data is a placeholder (`is_sample`). */
+            impressum: {
+                legal_name: string;
+                /** @enum {string} */
+                legal_form: "sole_trader" | "ek" | "gbr" | "ohg" | "kg" | "gmbh" | "gmbh_co_kg" | "ug" | "ag" | "other";
+                legal_form_label: string;
+                representative: string | null;
+                street: string;
+                postcode: string;
+                city: string;
+                country: string;
+                email: string;
+                phone: string | null;
+                register_court: string | null;
+                register_number: string | null;
+                vat_id: string | null;
+                is_sample: boolean;
+            };
+            viewer_role: components["schemas"]["BusinessRole"] | null;
+        };
+        /**
+         * BusinessRole
+         * @description Members of a business (09 §8.10 `business_members`): the owner (the applicant; one per business) manages the team and the profile; staff edit the profile and decide portfolio tags.
+         * @enum {string}
+         */
+        BusinessRole: "owner" | "staff";
+        /**
+         * BusinessStatus
+         * @description Business profiles (09 §8.10, ADR-414): applied (BIZ-02, waiting for ADM-55) → verified (public, badge) or rejected (with a reason; the applicant can change and send it again); a verified business can be suspended by staff (reason, audit, notice) and reinstated. Only a verified business is seen by anybody but its members and staff.
+         * @enum {string}
+         */
+        BusinessStatus: "applied" | "verified" | "rejected" | "suspended";
         /** CannotMessageError */
         CannotMessageError: {
             /** @description Translated, safe to show. */
@@ -4959,10 +5624,10 @@ export interface components {
         };
         /**
          * CollectionItemType
-         * @description What a private collection holds (09 §8.6): builds, mods, build updates and events (M4.12); businesses join with M4.14. The value is the morph name stored in member_collection_items.item_type.
+         * @description What a private collection holds (09 §8.6): builds, mods, build updates and events (M4.12) and businesses (M4.14). The value is the morph name stored in member_collection_items.item_type.
          * @enum {string}
          */
-        CollectionItemType: "vehicle" | "modification" | "build_update" | "event";
+        CollectionItemType: "vehicle" | "modification" | "build_update" | "event" | "business";
         /**
          * CollectionRequest
          * @description POST and PATCH me/collections: the name. Blank names are refused; the default collection may be renamed.
@@ -5232,6 +5897,14 @@ export interface components {
          * @enum {string}
          */
         DataExportStatus: "queued" | "running" | "ready" | "failed" | "expired";
+        /**
+         * DecideTagRequest
+         * @description BIZ-04 "Annehmen" / "Ablehnen" (and the member's confirmation of a business's proposal).
+         */
+        DecideTagRequest: {
+            /** @enum {string} */
+            decision: "accepted" | "declined";
+        };
         /**
          * DecisionAction
          * @description ADM-21 decision composer: keine Maßnahme · Inhalt entfernen · Einschränken · Sperren. Every action but no_action restricts the affected member and needs a statement of reasons to them (Art. 17 DSA). `reverse` (M3.2, m3.2-contract §1): lifts the restriction or brings back the content of an earlier decision (decisions.reverses_decision_id): staff lifting a restriction or unhiding, and an upheld appeal (M3.4). It restricts nobody, but the affected member is told, in the app and by e-mail, like any decision about them.
@@ -6434,7 +7107,11 @@ export interface components {
             bio: string | null;
             avatar: components["schemas"]["MediaResource"] | null;
             cover: components["schemas"]["MediaResource"] | null;
-            locale: string;
+            /**
+             * @description SET-11: de, en, or "system" when the app follows the device language (as in GET me/settings).
+             * @enum {string}
+             */
+            locale: "de" | "en" | "system";
             theme: components["schemas"]["ThemePreference"];
             power_display: components["schemas"]["PowerDisplay"];
             member_since: string;
@@ -6516,6 +7193,7 @@ export interface components {
             } | null;
             build_update: components["schemas"]["CollectionBuildUpdateResource"] | null;
             event: components["schemas"]["EventCardResource"] | null;
+            business: components["schemas"]["BusinessCardResource"] | null;
         };
         /** MemberCollectionResource */
         MemberCollectionResource: {
@@ -6861,6 +7539,45 @@ export interface components {
             /** @description "KI-Vorschlag". */
             label: string;
         };
+        /**
+         * ModTagInitiator
+         * @description Which side asked first: the build's owner ("Eingebaut von", BIZ-04 for the business to confirm) or the business (BIZ-03 portfolio, for the owner to confirm). The other side's confirmation is the second of the double confirmation.
+         * @enum {string}
+         */
+        ModTagInitiator: "member" | "business";
+        /**
+         * ModTagRequest
+         * @description GAR-10 / VEH-02 "Eingebaut von": the business (its slug) that installed the part.
+         */
+        ModTagRequest: {
+            business: string;
+        };
+        /** ModTagResource */
+        ModTagResource: {
+            id: string;
+            status: components["schemas"]["ModTagStatus"];
+            /** @description Who asked first; the other side decides. @var \App\Enums\ModTagInitiator */
+            initiated_by: components["schemas"]["ModTagInitiator"];
+            mod: {
+                id: string;
+                title: string;
+                category: string;
+            } | null;
+            vehicle: components["schemas"]["VehicleRefResource"] | null;
+            owner_username: string | null;
+            business: {
+                slug: string;
+                name: string;
+            };
+            decided_at: string | null;
+            created_at: string | null;
+        };
+        /**
+         * ModTagStatus
+         * @description "Eingebaut von" (09 §8.10, ADR-414): a tag of a business on a mod is pending until the other side confirms it (accepted) or declines it. Only an accepted tag reaches the business page and the mod's public face.
+         * @enum {string}
+         */
+        ModTagStatus: "pending" | "accepted" | "declined";
         /** ModelCountResource */
         ModelCountResource: {
             id: number;
@@ -6906,6 +7623,11 @@ export interface components {
             title?: string | null;
             brand_id?: number | null;
             brand_text?: string | null;
+            /**
+             * @description M4.14 (09 §8.9): a product of the parts catalogue (products search); sets the brand and, when no part name is sent, the
+             *     part name. Null unlinks it; free text stays possible. Ignored while the flag parts_catalogue is off.
+             */
+            product_id?: string | null;
             part_name?: string | null;
             part_number?: string | null;
             status?: components["schemas"]["ModStatus"];
@@ -6989,6 +7711,32 @@ export interface components {
                 suspension_brand: string | null;
                 exhaust_brand: string | null;
             };
+            /** @description M4.14 (09 §8.9): the linked catalogue product (BRD-02, "Builds mit {Produkt}"), or null. Null while parts_catalogue is off. */
+            product: {
+                id: string;
+                name: string;
+                full_name: string;
+                brand_slug: string;
+                archived: boolean;
+            } | null;
+            /**
+             * @description M4.14 (09 §8.10): "Eingebaut von", only once the business and the owner both confirmed it and the reader may see the
+             *     business; null otherwise. Null while businesses is off.
+             */
+            installed_by: {
+                slug: string;
+                name: string;
+                city: string;
+                verified: boolean;
+            } | null;
+            /** @description The owner's alone (null for anybody else): the state of the tag while it waits or after the business declined it. */
+            business_tag: {
+                id: string;
+                business_slug: string;
+                business_name: string;
+                status: components["schemas"]["ModTagStatus"];
+                initiated_by: components["schemas"]["ModTagInitiator"];
+            } | null;
         };
         /** ModificationRowResource */
         ModificationRowResource: {
@@ -7021,6 +7769,93 @@ export interface components {
             legal_status: string | null;
             legal_status_label: string | null;
             thumb: components["schemas"]["MediaResource"] | null;
+        };
+        /** MyBusinessResource */
+        MyBusinessResource: {
+            id: string;
+            slug: string;
+            name: string;
+            kind: components["schemas"]["BusinessKind"];
+            /** @description "Werkstatt" */
+            kind_label: string;
+            city: string;
+            /** @description "Werkstatt · München" */
+            subline: string;
+            services: string[];
+            logo: components["schemas"]["MediaResource"] | null;
+            /** @description Staff verified the business (ADM-55): the Verifiziert badge. */
+            verified: boolean;
+            /** @description Sample content (09 §8.19): the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description Kilometres from `lat`/`lng` of the list request, else null. */
+            distance_km: number | null;
+            /** @description "/b/beispiel-werkstatt-nord" */
+            share_path: string;
+            cover: components["schemas"]["MediaResource"] | null;
+            about: string | null;
+            /** @description Monday first; `ranges` empty = closed; `today` in Europe/Berlin. */
+            opening_hours: {
+                day: string;
+                ranges: {
+                    opens: string;
+                    closes: string;
+                }[];
+                today: boolean;
+            }[];
+            address: {
+                street: string;
+                postcode: string;
+                city: string;
+                country: string;
+                lat: number | null;
+                lng: number | null;
+            };
+            /** @description `message_username`: "Nachricht" opens a conversation with this account (the business owner); null when it has no username. */
+            contact: {
+                phone: string | null;
+                email: string;
+                website: string | null;
+                message_username: string | null;
+            };
+            /** @description Builds in "Builds aus unserer Werkstatt" (both sides confirmed), a real count; null on a sample (09 §8.19). */
+            portfolio_count: number | null;
+            /** @description § 5 DDG; on a sample its data is a placeholder (`is_sample`). */
+            impressum: {
+                legal_name: string;
+                /** @enum {string} */
+                legal_form: "sole_trader" | "ek" | "gbr" | "ohg" | "kg" | "gmbh" | "gmbh_co_kg" | "ug" | "ag" | "other";
+                legal_form_label: string;
+                representative: string | null;
+                street: string;
+                postcode: string;
+                city: string;
+                country: string;
+                email: string;
+                phone: string | null;
+                register_court: string | null;
+                register_number: string | null;
+                vat_id: string | null;
+                is_sample: boolean;
+            };
+            viewer_role: components["schemas"]["BusinessRole"] | null;
+            status: components["schemas"]["BusinessStatus"];
+            /** @description Taken down by a moderation decision (SAFE-01 has the statement of reasons). */
+            removed: boolean;
+            /** @description Why staff rejected or suspended it; null otherwise. @var string|null */
+            status_reason: unknown;
+            submitted_at: string | null;
+            verified_at: string | null;
+            document_note: string | null;
+            /** @description Verified: name, legal form, address and register details change through support only. */
+            identity_locked: boolean;
+            team: {
+                username: string | null;
+                role: components["schemas"]["BusinessRole"];
+            }[];
+            /** @description Member requests waiting for the business (BIZ-04 badge). */
+            pending_requests: number;
+            /** @description Profile views of the last 30 days (Europe/Berlin), private to the team; the team's own views are not counted. */
+            views_30d: string;
         };
         /** NextStepResource */
         NextStepResource: {
@@ -7075,7 +7910,10 @@ export interface components {
              *     reader moved from the waitlist to going), event_reminder {kind: "24h"|"2h"}, event_update {kind: "update"|"changed" (time or
              *     place changed), update_id}, event_cancelled {by_staff}. Never the text of an update. M4.13 maintenance_due (vehicle: the
              *     reader's own): {kind: "date"|"km", item_id, item_type, due_on (YYYY-MM-DD) or due_km, lead_days, reminder_key (the id of the
-             *     app's local backup notification, also in the push data)}; MNT-01 opens.
+             *     app's local backup notification, also in the push data)}; MNT-01 opens. M4.14 (in-app only): business_review {outcome:
+             *     "verified"|"rejected"|"suspended"|"reinstated", business_id, reason (rejected and suspended only)}, BIZ-03 opens; business_tag
+             *     {state: "requested"|"accepted"|"declined", side: "business" (the business must act or hears back; BIZ-04 opens) | "member" (the
+             *     build's owner; VEH-02 opens), tag_id, business_id, mod_id} (vehicle: the build of the mod).
              */
             details: {
                 /** @enum {string} */
@@ -7108,6 +7946,11 @@ export interface components {
                 due_km?: number | null;
                 lead_days?: number | null;
                 reminder_key?: string | null;
+                business_id?: string | null;
+                state?: string | null;
+                side?: string | null;
+                tag_id?: string | null;
+                mod_id?: string | null;
             };
             read_at: string | null;
             /** @description The row's latest event, ISO 8601. */
@@ -7118,7 +7961,7 @@ export interface components {
          * @description The rows of the notification list (02_PRODUCT_SPEC §7). Written by App\Services\Notifications\Notifier only; later modules add their types here (M2.4 messages and requests, M2.6 decisions, M2.7 QR milestones and HU/AU).
          * @enum {string}
          */
-        NotificationType: "new_follower" | "followed_published" | "build_saved" | "security" | "moderation_decision" | "report_decided" | "qr_milestone" | "hu_au_reminder" | "catalog_request" | "support_reply" | "reaction" | "mention" | "comment" | "vehicle_follower" | "event_review" | "event_promoted" | "event_reminder" | "event_update" | "event_cancelled" | "maintenance_due";
+        NotificationType: "new_follower" | "followed_published" | "build_saved" | "security" | "moderation_decision" | "report_decided" | "qr_milestone" | "hu_au_reminder" | "catalog_request" | "support_reply" | "reaction" | "mention" | "comment" | "vehicle_follower" | "event_review" | "event_promoted" | "event_reminder" | "event_update" | "event_cancelled" | "maintenance_due" | "business_review" | "business_tag";
         /** OdometerRequest */
         OdometerRequest: {
             /** @description The mileage now, in km (the app converts mi). */
@@ -7284,6 +8127,78 @@ export interface components {
          * @enum {string}
          */
         PowerUnit: "ps" | "kw" | "hp";
+        /** ProductResource */
+        ProductResource: {
+            id: string;
+            slug: string;
+            /** @description "Variante 3" */
+            name: string;
+            /** @description "KW Variante 3" */
+            full_name: string;
+            line: string | null;
+            brand: {
+                slug: string;
+                name: string;
+            };
+            category: {
+                key: string;
+                name: string;
+                icon: string | null;
+            };
+            /** @description Visible builds with this product, a real count; null where the list does not count (the editor's autocomplete). */
+            builds: number | null;
+            status: components["schemas"]["ProductStatus"];
+            /** @description Key attributes from the catalogue, in the reader's language (German where the catalogue has no English). */
+            attributes: {
+                label: string;
+                value: string;
+            }[];
+            /** @description The maker's page. @var string|null */
+            url: string;
+            /** @description Only while affiliate_links is on and the product has one: show `label` next to the link and set `rel`. */
+            affiliate: {
+                url: string;
+                label: string;
+                rel: string;
+            } | null;
+            /** @description "/brands/kw" */
+            brand_path: string;
+        };
+        /** ProductRowResource */
+        ProductRowResource: {
+            id: string;
+            slug: string;
+            /** @description "Variante 3" */
+            name: string;
+            /** @description "KW Variante 3" */
+            full_name: string;
+            line: string | null;
+            brand: {
+                slug: string;
+                name: string;
+            };
+            category: {
+                key: string;
+                name: string;
+                icon: string | null;
+            };
+            /** @description Visible builds with this product, a real count; null where the list does not count (the editor's autocomplete). */
+            builds: number | null;
+            status: components["schemas"]["ProductStatus"];
+        };
+        /**
+         * ProductStatus
+         * @description Products of the parts catalogue (09 §8.9, ADM-57): active ones are listed, searched and linkable in the mod editor; archived ones stay on the mods that link them (their name still shows) but leave search and the brand pages.
+         * @enum {string}
+         */
+        ProductStatus: "active" | "archived";
+        /**
+         * ProposeTagRequest
+         * @description BIZ-03 Portfolio "Build markieren": the mod the business built (on a public build); its owner confirms.
+         */
+        ProposeTagRequest: {
+            mod_id: string;
+        };
         /** PublicVehicleResource */
         PublicVehicleResource: {
             id: string;
@@ -7658,7 +8573,7 @@ export interface components {
          * @description What can be reported (m2.6-contract §1). The id is the member's username for `member` (resolved to the account on receipt) and the ULID of the row otherwise.
          * @enum {string}
          */
-        ReportTargetType: "member" | "vehicle" | "photo" | "message" | "build_update" | "modification" | "comment" | "event";
+        ReportTargetType: "member" | "vehicle" | "photo" | "message" | "build_update" | "modification" | "comment" | "event" | "business";
         /** RequestPendingError */
         RequestPendingError: {
             /** @description Translated, safe to show. */
@@ -7778,6 +8693,32 @@ export interface components {
                 suspension_brand: string | null;
                 exhaust_brand: string | null;
             };
+            /** @description M4.14 (09 §8.9): the linked catalogue product (BRD-02, "Builds mit {Produkt}"), or null. Null while parts_catalogue is off. */
+            product: {
+                id: string;
+                name: string;
+                full_name: string;
+                brand_slug: string;
+                archived: boolean;
+            } | null;
+            /**
+             * @description M4.14 (09 §8.10): "Eingebaut von", only once the business and the owner both confirmed it and the reader may see the
+             *     business; null otherwise. Null while businesses is off.
+             */
+            installed_by: {
+                slug: string;
+                name: string;
+                city: string;
+                verified: boolean;
+            } | null;
+            /** @description The owner's alone (null for anybody else): the state of the tag while it waits or after the business declined it. */
+            business_tag: {
+                id: string;
+                business_slug: string;
+                business_name: string;
+                status: components["schemas"]["ModTagStatus"];
+                initiated_by: components["schemas"]["ModTagInitiator"];
+            } | null;
             /** @description Whether Verlauf now tells about this edit. Decides between "Gespeichert" and "Im Verlauf erscheint ein Eintrag". */
             history_recorded: boolean;
         };
@@ -8179,6 +9120,55 @@ export interface components {
         StoreBuildUpdateRequest: {
             note: string;
         };
+        /**
+         * StoreBusinessRequest
+         * @description BIZ-02 Bewerbung: the application; `accept_terms` confirms the Impressum data is the applicant's own business and correct.
+         */
+        StoreBusinessRequest: {
+            /** @description The name on the page ("Beispiel-Werkstatt Nord"). */
+            name: string;
+            kind: components["schemas"]["BusinessKind"];
+            /** @description The company as registered (Impressum). */
+            legal_name: string;
+            legal_form: components["schemas"]["BusinessLegalForm"];
+            /** @description Who represents the company (Geschäftsführung, Inhaber). */
+            representative: string;
+            street: string;
+            postcode: string;
+            city: string;
+            /** @enum {string} */
+            country?: "DE" | "AT" | "CH" | "LU" | "NL" | "BE" | "DK" | "PL" | "CZ" | "FR";
+            /** @description The point on the map (BIZ-01 "Route"); optional. */
+            lat?: number | null;
+            lng?: number | null;
+            phone?: string | null;
+            /**
+             * Format: email
+             * @description Public contact address (Impressum).
+             */
+            email: string;
+            /** Format: uri */
+            website?: string | null;
+            /** @description Register court and number: required for the forms with a register entry (e. K., OHG, KG, GmbH, GmbH & Co. KG, UG, AG). */
+            register_court?: string | null;
+            register_number?: string | null;
+            /** @description USt-IdNr., optional ("DE123456789"). */
+            vat_id?: string | null;
+            about?: string | null;
+            /** @description Service chips ("Fahrwerk", "Folierung"), at most 12. */
+            services?: string[] | null;
+            /** @description {"mon": [["09:00", "18:00"]], ...}; days mon…sun, up to two ranges each; a day left out is closed. */
+            opening_hours?: {
+                [key: string]: string[][];
+            } | null;
+            /** @description BIZ-02 "Nachweise": what you can show us on request (Gewerbeanmeldung, Handelsregisterauszug); never public. */
+            document_note?: string | null;
+            /**
+             * @description "Ich vertrete diesen Betrieb und die Angaben stimmen"; must be true.
+             * @enum {unknown}
+             */
+            accept_terms: "yes" | "on" | "1" | 1 | "true" | true;
+        };
         /** StoreCatalogRequestRequest */
         StoreCatalogRequestRequest: {
             make_text: string;
@@ -8291,6 +9281,25 @@ export interface components {
                 response: string[];
             };
             name?: string | null;
+        };
+        /**
+         * StorePushSubscriptionRequest
+         * @description M4.15 (ADR-452): the member web's Web Push subscription of this browser, as PushSubscription.toJSON() gives it.
+         */
+        StorePushSubscriptionRequest: {
+            /**
+             * Format: uri
+             * @description The push service URL of this browser: HTTPS, at a browser vendor's push service.
+             */
+            endpoint: string;
+            keys: {
+                /** @description The browser's P-256 public key (65 bytes), base64url. */
+                p256dh: string;
+                /** @description The browser's auth secret (16 bytes), base64url. */
+                auth: string;
+            };
+            /** @description navigator.userAgent, shortened to 255 characters. Only the browser and system names are kept ("Chrome, macOS"). */
+            user_agent?: string | null;
         };
         /**
          * StorePushTokenRequest
@@ -8518,6 +9527,50 @@ export interface components {
         /** UpdateBuildUpdateRequest */
         UpdateBuildUpdateRequest: {
             hidden: boolean;
+        };
+        /**
+         * UpdateBusinessRequest
+         * @description BIZ-03 "Profil bearbeiten": only the keys sent change. Once verified, the identity and Impressum fields are locked (422).
+         */
+        UpdateBusinessRequest: {
+            /** @description The name on the page ("Beispiel-Werkstatt Nord"). */
+            name?: string;
+            kind?: components["schemas"]["BusinessKind"];
+            /** @description The company as registered (Impressum). */
+            legal_name?: string;
+            legal_form?: components["schemas"]["BusinessLegalForm"];
+            /** @description Who represents the company (Geschäftsführung, Inhaber). */
+            representative?: string;
+            street?: string;
+            postcode?: string;
+            city?: string;
+            /** @enum {string} */
+            country?: "DE" | "AT" | "CH" | "LU" | "NL" | "BE" | "DK" | "PL" | "CZ" | "FR";
+            /** @description The point on the map (BIZ-01 "Route"); optional. */
+            lat?: number | null;
+            lng?: number | null;
+            phone?: string | null;
+            /**
+             * Format: email
+             * @description Public contact address (Impressum).
+             */
+            email?: string;
+            /** Format: uri */
+            website?: string | null;
+            /** @description Register court and number: required for the forms with a register entry (e. K., OHG, KG, GmbH, GmbH & Co. KG, UG, AG). */
+            register_court?: string | null;
+            register_number?: string | null;
+            /** @description USt-IdNr., optional ("DE123456789"). */
+            vat_id?: string | null;
+            about?: string | null;
+            /** @description Service chips ("Fahrwerk", "Folierung"), at most 12. */
+            services?: string[] | null;
+            /** @description {"mon": [["09:00", "18:00"]], ...}; days mon…sun, up to two ranges each; a day left out is closed. */
+            opening_hours?: {
+                [key: string]: string[][];
+            } | null;
+            /** @description BIZ-02 "Nachweise": what you can show us on request (Gewerbeanmeldung, Handelsregisterauszug); never public. */
+            document_note?: string | null;
         };
         /** UpdateEventRequest */
         UpdateEventRequest: {
@@ -10542,6 +11595,264 @@ export interface operations {
             };
         };
     };
+    "v1.brands.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `BrandTileResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BrandTileResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.brands.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `BrandPageResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BrandPageResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.brands.products": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ProductRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProductRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.brands.builds": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `FeedVehicleResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FeedVehicleResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.broadcasting.auth": {
         parameters: {
             query?: never;
@@ -11182,6 +12493,551 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.businesses.index": {
+        parameters: {
+            query?: {
+                q?: string | null;
+                city?: string | null;
+                kind?: components["schemas"]["BusinessKind"] | null;
+                service?: string | null;
+                lat?: number | null;
+                lng?: number | null;
+                radius_km?: number;
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `BusinessCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BusinessCardResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.businesses.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `BusinessResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BusinessResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.businesses.portfolio": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `FeedVehicleResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FeedVehicleResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.tags.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                cursor?: string;
+                status?: components["schemas"]["ModTagStatus"];
+                direction?: "incoming" | "outgoing";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ModTagResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ModTagResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.tags.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposeTagRequest"];
+            };
+        };
+        responses: {
+            /** @description `ModTagResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ModTagResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.tags.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.tags.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecideTagRequest"];
+            };
+        };
+        responses: {
+            /** @description `ModTagResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ModTagResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
                 };
             };
             /** @description payload_too_large: a JSON body over 512 KB. */
@@ -18475,6 +20331,334 @@ export interface operations {
             };
         };
     };
+    "v1.mods.business-tag.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                modification: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModTagRequest"];
+            };
+        };
+        responses: {
+            /** @description `ModTagResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ModTagResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.mods.business-tag.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                modification: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.mod-tags.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                cursor?: string;
+                status?: components["schemas"]["ModTagStatus"];
+                direction?: "incoming" | "outgoing";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ModTagResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ModTagResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.mod-tags.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecideTagRequest"];
+            };
+        };
+        responses: {
+            /** @description `ModTagResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ModTagResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.vehicles.mods.index": {
         parameters: {
             query?: {
@@ -18984,6 +21168,757 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MyBusinessResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyBusinessResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreBusinessRequest"];
+            };
+        };
+        responses: {
+            /** @description `MyBusinessResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyBusinessResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateBusinessRequest"];
+            };
+        };
+        responses: {
+            /** @description `MyBusinessResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyBusinessResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MyBusinessResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyBusinessResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.logo": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["BusinessMediaRequest"];
+            };
+        };
+        responses: {
+            /** @description `MediaResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.cover": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["BusinessMediaRequest"];
+            };
+        };
+        responses: {
+            /** @description `MediaResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.members.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description `MyBusinessResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyBusinessResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business.members.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -20236,6 +23171,210 @@ export interface operations {
             };
         };
     };
+    "v1.products.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                cursor?: string;
+                q?: string | null;
+                brand?: string | null;
+                category?: string | null;
+                counts?: boolean;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ProductRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProductRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.products.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                product: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ProductResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProductResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.products.builds": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                product: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `FeedVehicleResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FeedVehicleResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.me.profile.show": {
         parameters: {
             query?: never;
@@ -21241,6 +24380,166 @@ export interface operations {
                     "application/json": components["schemas"]["VehicleUnavailableError"] | components["schemas"]["ApiError"];
                 };
             };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.push-subscriptions.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StorePushSubscriptionRequest"];
+            };
+        };
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.push-subscriptions.destroy": {
+        parameters: {
+            query: {
+                /** @description The push service URL the browser subscribed with. */
+                endpoint: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {

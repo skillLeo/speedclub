@@ -421,7 +421,8 @@
         "regionLabel": "Map of meets",
         "pickerLabel": "Map to set the meet's place",
         "consentBody": "The map loads data from OpenFreeMap and OpenStreetMap. Only once you tap.",
-        "consentAction": "Show map"
+        "consentAction": "Show map",
+        "offlineBody": "You're offline. The map loads once you're connected again."
     },
     "sample": {
         "title": "Cars & Coffee at the harbour",

@@ -9,8 +9,8 @@ use App\Models\User;
  * users.notification_prefs (SET-09, M2.5 screen; the API since M2.2). Stored as what the member changed, read merged over the defaults of
  * the 02_PRODUCT_SPEC §7 matrix, so a default changed later reaches everybody who never touched it.
  *
- * Phase 4 (09 §7.12 SET-09): every type has a `web_push` channel next to `push` (the member web's browser notifications, sent once Web
- * Push ships; the browser's permission is the opt-in, so it starts like `push`), and `digest_frequency` says how often the message
+ * Phase 4 (09 §7.12 SET-09): every type has a `web_push` channel next to `push` (the member web's browser notifications, sent since
+ * M4.15; the browser's permission is the opt-in, so it starts like `push`), and `digest_frequency` says how often the message
  * digest may go out (daily or weekly).
  *
  * @phpstan-type Prefs array{types: array<string, array<string, bool>>, quiet_hours: array{enabled: bool, from: string, to: string}, message_previews: bool, digest_frequency: string}
@@ -126,5 +126,13 @@ final class NotificationPrefs
     public static function wantsPush(User $user, string $type): bool
     {
         return self::for($user)['types'][$type]['push'] ?? false;
+    }
+
+    /**
+     * M4.15 (ADR-452): the member web's browser notifications of the type.
+     */
+    public static function wantsWebPush(User $user, string $type): bool
+    {
+        return self::for($user)['types'][$type][self::WEB_PUSH] ?? false;
     }
 }

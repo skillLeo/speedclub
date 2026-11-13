@@ -205,5 +205,23 @@
     "buildSheet": {
         "expand": "Show details of {{name}}",
         "collapse": "Hide details of {{name}}"
+    },
+    "pwa": {
+        "update": {
+            "message": "New version available",
+            "reload": "Reload"
+        },
+        "install": {
+            "title": "Put SPEED CLUB on your home screen",
+            "lead": "From the home screen, SPEED CLUB opens like an app: full screen, without the browser bar.",
+            "steps": {
+                "share": "In Safari, tap “Share”.",
+                "add": "Choose “Add to Home Screen”.",
+                "confirm": "Tap “Add” in the top right."
+            },
+            "install": "Install",
+            "later": "Not now",
+            "gotIt": "Got it"
+        }
     }
 }

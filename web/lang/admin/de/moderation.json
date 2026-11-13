@@ -101,7 +101,8 @@
         "build_update": "Update",
         "modification": "Modifikation",
         "comment": "Kommentar",
-        "event": "Treffen"
+        "event": "Treffen",
+        "business": "Betrieb"
     },
     "target_of": {
         "member": "Profil :label",
@@ -111,7 +112,8 @@
         "build_update": "Update von :label",
         "modification": "Mod an :label",
         "comment": "Kommentar von :label",
-        "event": "Treffen „:label“"
+        "event": "Treffen „:label“",
+        "business": "Betrieb „:label“"
     },
     "unnamed": "Ohne Namen",
     "reasons": {
@@ -203,6 +205,7 @@
             "comment_deleted": "Vom Verfasser gelöscht",
             "open_vehicle": "Fahrzeug öffnen",
             "open_event": "Treffen öffnen",
+            "open_business": "Betrieb öffnen",
             "event_removed": "Durch eine Moderationsentscheidung entfernt"
         },
         "reports": {

@@ -67,34 +67,28 @@ it('sets the WEB-01 title by the page rule on the hero at every width, 30/34 on 
         ->and($css)->toContain($scope.' .sc-bind{white-space:nowrap}');
 });
 
-it('sets the WEB-03 claim by the page rule and the featured title by the page rule under the photo, the card rule on the tablet band and the page rule on the desktop band (ADR-426 b, DQ-929)', function () {
+it('sets the WEB-03 claim by the page rule and the featured lead by the page rule edge to edge on a phone, the card rule in the rounded lead from 768 (ADR-426 b, M4.16)', function () {
     $response = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk();
     $html = (string) $response->getContent();
-    $placements = ['phone' => 'page', 'tablet' => 'card', 'desktop' => 'page'];
-    $claim = expectTitleCss($response, 'Cars. People. Culture.', 'page', false);
+    $placements = ['phone' => 'page', 'tablet' => 'card', 'desktop' => 'card'];
+    $claim = expectTitleCss($response, 'Dein Auto. Dein Build. Dein Club.', 'page', false);
     $featured = expectTitleCss($response, 'Nissan Skyline GT-R R34', $placements);
     $css = DisplayTitleLayout::css('Nissan Skyline GT-R R34', $featured, $placements, true);
     $scope = '.sc-display-title.'.$featured;
     $full = '{font-size:var(--sc-type-display-title-size);line-height:var(--sc-type-display-title-line);letter-spacing:var(--sc-type-display-title-tracking)}';
     $base = '{font-size:var(--sc-type-display-title-base-size);line-height:var(--sc-type-display-title-base-line);letter-spacing:var(--sc-type-display-title-base-tracking)}';
 
-    expect($html)->toMatch('~<div class="sc-land-hero-block sc-title-box">\s*<h1 class="sc-display-title t-display-title '.$claim.' text-on-photo" data-testid="WEB-03.claim">Cars. People. Culture.</h1>~')
-        ->and($html)->toMatch('~<span class="sc-feature-text sc-title-box">.*?<span class="sc-display-title t-display-title-base '.$featured.' sc-feature-title block" id="feature-title" data-testid="WEB-03.featuredTitle">Nissan Skyline <span class="sc-bind"><span class="sc-keep">GT-R</span> R34</span></span>~su')
-        ->and(DisplayTitleLayout::css('Cars. People. Culture.', $claim, 'page'))->toContain('@media (min-width: 1280px){.sc-display-title.'.$claim.'{font-size:var(--sc-type-display-title-size);')
+    expect($html)->toMatch('~<div class="sc-land-hero-inner">\s*(?:\{\{--.*?--\}\}\s*)?<div class="sc-title-box">\s*<h1 class="sc-display-title t-display-title '.$claim.' text-on-photo" id="claim" data-testid="WEB-03.claim">Dein Auto. Dein Build. Dein Club.</h1>~')
+        ->and($html)->toMatch('~<span class="sc-lead-text sc-title-box">.*?<span class="sc-display-title t-display-title '.$featured.' block text-on-photo" data-testid="WEB-03.featuredTitle">Nissan Skyline <span class="sc-bind"><span class="sc-keep">GT-R</span> R34</span></span>~su')
+        ->and(DisplayTitleLayout::css('Dein Auto. Dein Build. Dein Club.', $claim, 'page'))->toContain('@media (min-width: 1280px){.sc-display-title.'.$claim.'{font-size:var(--sc-type-display-title-size);')
         // The claim is not a car name: nothing to bind.
-        ->and(DisplayTitleLayout::css('Cars. People. Culture.', $claim, 'page'))->not->toContain('sc-bind')
+        ->and(DisplayTitleLayout::css('Dein Auto. Dein Build. Dein Club.', $claim, 'page'))->not->toContain('sc-bind')
         ->and(DisplayTitleLayout::placements($placements))->toBe($placements)
-        // Tablet band: the card rule, 30/34 (the phone pair at every width).
+        // Tablet and desktop: the card rule, 30/34 (the phone pair at every width), never the desktop page size.
         ->and($css)->toContain('@media (min-width: 768px) and (max-width: 1279.98px){'.$scope.$base)
-        // Desktop band from 1280: no card, the page rule at the role's desktop size, 44/48 (tokens: --sc-type-display-title-* from 1280).
-        ->and($css)->toContain('@media (min-width: 1280px){'.$scope.$full)
-        ->and($css)->not->toContain('@media (min-width: 1280px){'.$scope.$base)
-        ->and($css)->toContain($scope.' .sc-bind{white-space:nowrap}')
-        // At the QA font scale too: the desktop band takes the page rule.
-        ->and($css)->toContain('@media (min-width: 1280px){:root[data-qa-font-scale="2"] '.$scope.$full);
-
-    // 44/48 holds while the name needs at most 2 lines on the desktop band (frame 1248 less the gutters).
-    expect(DisplayTitleLayout::state('Nissan Skyline GT-R R34', 1200.0, 'page', true, 1.0, true)['size'])->toBe((float) DisplayTitleLayout::SIZE_DESKTOP);
+        ->and($css)->toContain('@media (min-width: 1280px){'.$scope.$base)
+        ->and($css)->not->toContain('@media (min-width: 1280px){'.$scope.$full)
+        ->and($css)->toContain($scope.' .sc-bind{white-space:nowrap}');
 });
 
 it('estimates the text it prints: the name, its pair bound per width, and the CSS once for two identical titles', function () {

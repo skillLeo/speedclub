@@ -29,7 +29,7 @@ const entries = computed<MenuEntry[]>(() => [
         <template #trigger>
             <button type="button" :class="[focusRing, 'flex h-32 max-w-120 items-center gap-8 rounded-sm px-8 text-left hover:bg-hover tablet:max-w-240']" data-testid="shell.staff">
                 <span class="flex min-w-0 flex-col">
-                    <span class="truncate text-admin-base-strong text-ink">{{ staff.name }}</span>
+                    <span class="truncate text-admin-base-strong text-ink" :title="staff.name">{{ staff.name }}</span>
                     <span class="sr-only">{{ roles }}</span>
                 </span>
                 <PhCaretDown :size="16" class="shrink-0 text-ink-3" aria-hidden="true" />

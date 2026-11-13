@@ -68,6 +68,11 @@ const ADMIN_WRITES_WITHOUT_RECENT_PASSWORD = [
     'admin.catalog.fields.reorder' => 'field order with a reason; a new schema version',
     'admin.catalog.fields.archive' => 'archive / restore with a reason: reversible, data stays',
     'admin.catalog.import.store' => 'the dry run: the file is analysed, nothing in the catalogue changes',
+    // M4.14 ADM-57: reversible, audited product edits (the merge needs the password).
+    'admin.catalog.products.store' => 'adds a product; audited, archivable',
+    'admin.catalog.products.update' => 'edits a product; audited with before and after',
+    'admin.catalog.products.archive' => 'archive with a reason: reversible, mods keep the product',
+    'admin.catalog.products.restore' => 'restore with a reason: reversible',
     // M3.6
     'admin.team.permissions.diff' => 'a read-only preview of a matrix change; saving it needs the recent password',
     'admin.invite.store' => 'signed out: the invited person sets the password here',

@@ -79,7 +79,7 @@
             "coverUploading": "Uploading cover photo, {{percent}} %",
             "avatarSaved": "Profile photo updated",
             "coverSaved": "Cover photo updated",
-            "hint": "Profile photo square, cover photo landscape, at least 1,920 px wide. JPEG, PNG or WebP up to 15 MB.",
+            "hint": "Profile photo square, cover photo 16:9, at least 1,920 px wide. JPEG, PNG or WebP up to 15 MB.",
             "failed": "The photo couldn't be uploaded. Try again or choose another one.",
             "retry": "Try again"
         },

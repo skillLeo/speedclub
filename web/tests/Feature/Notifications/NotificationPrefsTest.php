@@ -18,24 +18,26 @@ beforeEach(function () {
 it('answers the defaults of the matrix before anything was set', function () {
     $this->getJson('/api/v1/me/settings')->assertOk()->assertJsonPath('data.notification_prefs', [
         'types' => [
-            'new_follower' => ['push' => true],
-            'followed_published' => ['push' => false],
-            'build_saved' => ['push' => false],
-            'new_message' => ['push' => true, 'email_digest' => false],
-            'message_request' => ['push' => true],
-            'hu_au_reminder' => ['push' => true, 'email' => false],
-            'qr_milestone' => ['push' => false],
+            'new_follower' => ['push' => true, 'web_push' => true],
+            'followed_published' => ['push' => false, 'web_push' => false],
+            'build_saved' => ['push' => false, 'web_push' => false],
+            'new_message' => ['push' => true, 'email_digest' => false, 'web_push' => true],
+            'message_request' => ['push' => true, 'web_push' => true],
+            'hu_au_reminder' => ['push' => true, 'email' => false, 'web_push' => true],
+            'qr_milestone' => ['push' => false, 'web_push' => false],
             // M4.11 (09 §8.17).
-            'reaction' => ['push' => true],
-            'mention' => ['push' => true],
-            'comment' => ['push' => true],
-            'vehicle_follower' => ['push' => true],
+            'reaction' => ['push' => true, 'web_push' => true],
+            'mention' => ['push' => true, 'web_push' => true],
+            'comment' => ['push' => true, 'web_push' => true],
+            'vehicle_follower' => ['push' => true, 'web_push' => true],
             // M4.12 (09 §8.17).
-            'event_reminder' => ['push' => true, 'email' => false],
-            'event_update' => ['push' => true],
+            'event_reminder' => ['push' => true, 'email' => false, 'web_push' => true],
+            'event_update' => ['push' => true, 'web_push' => true],
         ],
         'quiet_hours' => ['enabled' => true, 'from' => '22:00', 'to' => '07:00'],
         'message_previews' => false,
+        // Phase 4 SET-09: every type has web_push (starting like push) and the message digest a frequency.
+        'digest_frequency' => 'daily',
     ]);
 });
 

@@ -150,6 +150,8 @@ export function ReminderDefaultsScreen() {
             variant="tertiary"
             size="s"
             role="link"
+            // DQ-1128: the label on the gutter like the text above it; the hit area reaches into it.
+            flush="start"
             onPress={() => router.push('/settings/notifications')}
             testID={`${ROUTE}.notifications`}
           />

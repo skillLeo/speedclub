@@ -10,6 +10,7 @@ use App\Exceptions\ApiException;
 use App\Models\Brand;
 use App\Models\ModCategory;
 use App\Models\Modification;
+use App\Models\Product;
 use App\Models\Vehicle;
 use App\Services\AppConfig\FeatureFlags;
 use App\Services\Garage\BuildUpdates;
@@ -134,6 +135,7 @@ class SaveModification
             'brand_text' => $mod->getAttribute('brand_text'),
             'part_name' => $mod->getAttribute('part_name'),
             'part_number' => $mod->getAttribute('part_number'),
+            'product_id' => $mod->getAttribute('product_id'),
             'installed_on' => $installed instanceof CarbonInterface ? $installed->format('Y-m') : null,
             'legal_status' => $mod->getAttribute('legal_status') instanceof LegalStatus ? $mod->getAttribute('legal_status')->value : $mod->getAttribute('legal_status'),
             'sort' => $mod->getAttribute('sort'),
@@ -172,6 +174,8 @@ class SaveModification
         if ($isNew || $fieldsSent || array_key_exists('part_name', $attributes)) {
             $this->fillPart($mod, $fields, $current, $attributes);
         }
+
+        $this->fillProduct($mod, $attributes);
 
         foreach (['part_number', 'notes', 'cost_cents'] as $key) {
             if (array_key_exists($key, $attributes)) {
@@ -265,6 +269,34 @@ class SaveModification
 
         if ($this->namedAny($previous, self::PART_FIELDS)) {
             $mod->setAttribute('part_name', null);
+        }
+    }
+
+    /**
+     * M4.14 (09 §8.9): a linked catalogue product names the brand (its catalogue brand) and, unless the member wrote one, the part.
+     * Unlinking keeps brand and part as they are. Ignored while parts_catalogue is off.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function fillProduct(Modification $mod, array $attributes): void
+    {
+        if (! array_key_exists('product_id', $attributes) || ! $this->flags->enabled('parts_catalogue')) {
+            return;
+        }
+
+        $id = $attributes['product_id'];
+        $product = is_string($id) ? Product::query()->find(strtolower($id)) : null;
+        $mod->setAttribute('product_id', $product?->id);
+
+        if (! $product instanceof Product) {
+            return;
+        }
+
+        $mod->setAttribute('brand_id', $product->brand_id);
+        $mod->setAttribute('brand_text', null);
+
+        if (! is_string($attributes['part_name'] ?? null)) {
+            $mod->setAttribute('part_name', $product->name);
         }
     }
 

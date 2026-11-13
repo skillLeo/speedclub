@@ -7,6 +7,8 @@ import { hydrateThemePreference, ThemeProvider } from '@/theme';
 import { Text } from '@/ui';
 import { setReducedMotionPreview } from '@/ui/motion';
 import { CarouselSnap, QrReveal } from '@/ui/motion/kit';
+import { backdropOrigin, backdropZoom } from '@/ui/motion/QrReveal';
+import { material } from '@/theme/tokens.generated';
 import { carouselIndex, carouselProgress } from '@/ui/motion/math';
 
 import { renderUi } from './helpers';
@@ -103,5 +105,25 @@ describe('QrReveal placeholder (M4.9)', () => {
     await view.rerender(stage(true));
     expect(screen.queryByTestId('q.placeholder')).toBeNull();
     expect(screen.getByText('Karte')).toBeTruthy();
+  });
+});
+
+describe('QrReveal backdrop (DQ-1053, ADR-451)', () => {
+  it('enlarges the blurred photo by the token around its focal point, so the car reaches the stage edges', async () => {
+    expect(material.qrBackdrop.zoom).toBeGreaterThan(1);
+    expect(backdropZoom({ x: 0.54, y: 0.66 })).toEqual({ transform: [{ scale: material.qrBackdrop.zoom }], transformOrigin: '54% 66%' });
+    expect(backdropOrigin(undefined)).toBe('50% 50%');
+    // DQ-1053 r3: a phone takes the phone zoom (material.qrBackdrop.zoomCompact) once the token exists, the regular zoom until then.
+    const compact = (material.qrBackdrop as { zoom: number; zoomCompact?: number }).zoomCompact ?? material.qrBackdrop.zoom;
+    expect(backdropZoom({ x: 0.54, y: 0.66 }, true).transform).toEqual([{ scale: compact }]);
+    expect(backdropOrigin({ x: 1.4, y: -1 })).toBe('100% 0%');
+    await renderUi(
+      <ThemeProvider>
+        <QrReveal revealed photo={{ source: 1, focal: { x: 0.54, y: 0.66 } }} testID="q">
+          <Text>Karte</Text>
+        </QrReveal>
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('q.backdrop', { includeHiddenElements: true })).toBeTruthy();
   });
 });

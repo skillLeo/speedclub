@@ -66,6 +66,18 @@ describe('DQ-1063: distinct similar builds', () => {
     expect(result.map((vehicle) => vehicle.id)).toEqual(['real', 's2', 's3']);
     expect(result.filter((vehicle) => vehicle.is_sample)).toHaveLength(SIMILAR_SAMPLE_MAX);
   });
+
+  it('compares what the card prints: a sample that differs only in a value past the first two is the same card (r2)', () => {
+    const strip = (weight: string) => [
+      { key: 'power', value: '280', unit: 'PS', label: 'PS' },
+      { key: 'torque', value: '392', unit: 'Nm', label: 'Nm' },
+      { key: 'weight', value: weight, unit: 'kg', label: 'kg' },
+    ];
+    const real = make('real', { spec_strip: strip('1.560') } as Partial<FeedVehicle>);
+    const twin = make('s1', { is_sample: true, spec_strip: strip('1.540') } as Partial<FeedVehicle>);
+    const twin2 = make('s2', { is_sample: true, spec_strip: strip('1.580') } as Partial<FeedVehicle>);
+    expect(distinctSimilar([real, twin, twin2]).map((vehicle) => vehicle.id)).toEqual(['real']);
+  });
 });
 
 describe('DQ-1049: the owner capsule never wraps its primary', () => {

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { isWeb } from '@/lib/platform';
@@ -45,6 +46,17 @@ export type TimelineEntry = {
     after: PhotoFields & { label: string };
     label: string;
   };
+  /** A tertiary caption under the text: "Mod · vor 2 Tagen" on the owner's GAR-11. */
+  meta?: string;
+  /** Under the text, for a state of the entry ("Ausgeblendet", a StatusPill). */
+  status?: ReactNode;
+  /** The entry is shown dimmed (hidden from the public page). */
+  dimmed?: boolean;
+  /**
+   * DQ-1072: a control at the row's end, on the title's first line, outside the pressable text (GAR-11's owner eye, an IconButton
+   * with its own 44 target). It replaces the caret.
+   */
+  trailing?: ReactNode;
   /** Opens the update (VEH-05). */
   onPress?: () => void;
   /** Overrides `<testID>.entry.<key>` (VEH-01 keeps `VEH-01.update.<id>`). */
@@ -92,6 +104,17 @@ const useStyles = createStyles((t) => ({
     paddingVertical: t.space[8],
   },
   text: { flex: 1, gap: t.space[2], minWidth: 0 },
+  // DQ-1072: the row holds the pressable text and the trailing control side by side.
+  rowWithTrailing: { alignItems: 'flex-start', flexDirection: 'row' },
+  rowBox: { flex: 1, minWidth: 0 },
+  trailing: { paddingRight: t.space[4], paddingTop: t.space[2] },
+  dimmed: { opacity: t.opacity.pressed },
+  // One entry of a virtualised list (TimelineRow) draws its own piece of the spine.
+  rowSpine: { borderLeftColor: t.color.border.default, borderLeftWidth: SPINE, marginLeft: t.space[4] },
+  rowFirst: { marginTop: t.space[8] },
+  rowLast: { paddingBottom: t.space[8] },
+  month: { paddingBottom: t.space[4], paddingTop: t.space[24] },
+  monthFirst: { paddingTop: t.space[8] },
   line: { gap: t.space[2] },
   lineInline: { alignItems: 'baseline', columnGap: t.space[4], flexDirection: 'row', flexWrap: 'wrap' },
   caret: { paddingTop: t.space[4] },
@@ -118,13 +141,22 @@ export function Timeline({ entries, style, testID, groupTestID }: TimelineProps)
           testID={groupTestID ? groupTestID(index) : testID ? `${testID}.group.${index}` : undefined}
         >
           {group.date ? (
-            <Text variant="calloutStrong" color="text.secondary" role="heading" {...({ 'aria-level': 2 } as object)}>
+            <Text
+              variant="calloutStrong"
+              color="text.secondary"
+              role="heading"
+              {...({ 'aria-level': 2 } as object)}
+            >
               {group.date}
             </Text>
           ) : null}
           <View style={styles.spine}>
             {group.entries.map((entry) => (
-              <TimelineItem key={entry.key} entry={entry} testID={entry.testID ?? (testID ? `${testID}.entry.${entry.key}` : undefined)} />
+              <TimelineItem
+                key={entry.key}
+                entry={entry}
+                testID={entry.testID ?? (testID ? `${testID}.entry.${entry.key}` : undefined)}
+              />
             ))}
           </View>
         </View>
@@ -147,62 +179,103 @@ function TimelineItem({ entry, testID }: { entry: TimelineEntry; testID?: string
     entry.note,
     entry.mileage,
     entry.more,
+    entry.meta,
   ]);
+  const body = (
+    <RowBody
+      onPress={entry.onPress}
+      label={label}
+      boxStyle={entry.trailing ? styles.rowBox : undefined}
+      style={[styles.row, entry.dimmed ? styles.dimmed : null]}
+      testID={testID}
+    >
+      <View style={styles.text}>
+        <Text variant="headline">{entry.title}</Text>
+        {(entry.lines ?? []).map((line) =>
+          line.inline ? (
+            <View key={line.key} style={styles.lineInline}>
+              <Text variant="caption" color="text.secondary">
+                {line.label}
+              </Text>
+              {line.detail ? (
+                <>
+                  <Text variant="caption" color="text.secondary" aria-hidden>
+                    ·
+                  </Text>
+                  <ValueText
+                    variant="caption"
+                    color="text.secondary"
+                    hyphenate={false}
+                    values={line.detail}
+                    wholeValues
+                  />
+                </>
+              ) : null}
+            </View>
+          ) : (
+            <View key={line.key} style={styles.line}>
+              {/* DQ-955: the system is a caption over its change, never a second headline under the title. */}
+              <Text variant="caption" color="text.secondary">
+                {line.label}
+              </Text>
+              {line.detail ? (
+                <ValueText
+                  variant="callout"
+                  color="text.secondary"
+                  hyphenate={largeFont}
+                  values={line.detail}
+                  wholeValues={!largeFont}
+                />
+              ) : null}
+            </View>
+          ),
+        )}
+        {entry.note ? (
+          <Text variant="callout" color="text.secondary">
+            {entry.note}
+          </Text>
+        ) : null}
+        {entry.mileage ? (
+          <Text
+            variant="caption"
+            color="text.secondary"
+            numeric
+            hyphenate={false}
+            testID={testID ? `${testID}.mileage` : undefined}
+          >
+            {entry.mileage}
+          </Text>
+        ) : null}
+        {entry.more ? (
+          <Text variant="caption" color="text.tertiary">
+            {entry.more}
+          </Text>
+        ) : null}
+        {entry.meta ? (
+          <Text variant="caption" color="text.tertiary" testID={testID ? `${testID}.meta` : undefined}>
+            {entry.meta}
+          </Text>
+        ) : null}
+        {entry.status}
+      </View>
+      {entry.onPress && !entry.trailing ? (
+        <View style={styles.caret}>
+          <Icon name="caret-right" size={16} color="text.tertiary" />
+        </View>
+      ) : null}
+    </RowBody>
+  );
   return (
     <View style={styles.entry}>
       <View aria-hidden style={[styles.node, nodeTop]} testID={testID ? `${testID}.node` : undefined} />
-      <RowBody onPress={entry.onPress} label={label} style={styles.row} testID={testID}>
-        <View style={styles.text}>
-          <Text variant="headline">{entry.title}</Text>
-          {(entry.lines ?? []).map((line) =>
-            line.inline ? (
-              <View key={line.key} style={styles.lineInline}>
-                <Text variant="caption" color="text.secondary">
-                  {line.label}
-                </Text>
-                {line.detail ? (
-                  <>
-                    <Text variant="caption" color="text.secondary" aria-hidden>
-                      ·
-                    </Text>
-                    <ValueText variant="caption" color="text.secondary" hyphenate={false} values={line.detail} wholeValues />
-                  </>
-                ) : null}
-              </View>
-            ) : (
-              <View key={line.key} style={styles.line}>
-                {/* DQ-955: the system is a caption over its change, never a second headline under the title. */}
-                <Text variant="caption" color="text.secondary">
-                  {line.label}
-                </Text>
-                {line.detail ? (
-                  <ValueText variant="callout" color="text.secondary" hyphenate={largeFont} values={line.detail} wholeValues={!largeFont} />
-                ) : null}
-              </View>
-            ),
-          )}
-          {entry.note ? (
-            <Text variant="callout" color="text.secondary">
-              {entry.note}
-            </Text>
-          ) : null}
-          {entry.mileage ? (
-            <Text variant="caption" color="text.secondary" numeric hyphenate={false} testID={testID ? `${testID}.mileage` : undefined}>
-              {entry.mileage}
-            </Text>
-          ) : null}
-          {entry.more ? (
-            <Text variant="caption" color="text.tertiary">
-              {entry.more}
-            </Text>
-          ) : null}
+      {entry.trailing ? (
+        <View style={styles.rowWithTrailing}>
+          {body}
+          <View style={styles.trailing}>{entry.trailing}</View>
         </View>
-        {entry.onPress ? (
-          <View style={styles.caret}>
-            <Icon name="caret-right" size={16} color="text.tertiary" />
-          </View>
-        ) : null}
-      </RowBody>
+      ) : (
+        body
+      )}
       {entry.beforeAfter ? (
         // DQ-968: inset media are radius 8, as the 3-up photos beside it.
         <View style={[styles.media, styles.beforeAfterFrame]}>
@@ -225,6 +298,44 @@ function TimelineItem({ entry, testID }: { entry: TimelineEntry; testID?: string
           ))}
         </View>
       ) : null}
+    </View>
+  );
+}
+
+export type TimelineRowProps = {
+  entry: TimelineEntry;
+  /** The first entry under its month heading, and the last before the next one: where the spine piece starts and ends. */
+  first: boolean;
+  last: boolean;
+  testID?: string;
+};
+
+/**
+ * DQ-1072: one Timeline entry as a row of a virtualised list (GAR-11's FlashList, which pages): the same anatomy as `Timeline`,
+ * each row drawing its own piece of the spine. Use `TimelineMonth` for the month rows between them.
+ */
+export function TimelineRow({ entry, first, last, testID }: TimelineRowProps) {
+  const styles = useStyles();
+  return (
+    <View style={[styles.rowSpine, first ? styles.rowFirst : null, last ? styles.rowLast : null]}>
+      <TimelineItem entry={entry} testID={entry.testID ?? testID} />
+    </View>
+  );
+}
+
+/** The month heading of a virtualised Timeline, as `Timeline` sets it ("März 2023"). */
+export function TimelineMonth({ label, first, testID }: { label: string; first: boolean; testID?: string }) {
+  const styles = useStyles();
+  return (
+    <View style={first ? [styles.month, styles.monthFirst] : styles.month} testID={testID}>
+      <Text
+        variant="calloutStrong"
+        color="text.secondary"
+        role="heading"
+        {...({ 'aria-level': 2 } as object)}
+      >
+        {label}
+      </Text>
     </View>
   );
 }

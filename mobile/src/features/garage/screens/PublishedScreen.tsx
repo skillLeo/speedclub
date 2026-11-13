@@ -158,9 +158,15 @@ export function PublishedScreen() {
   const short = !desktop && fontScale < FIT_SCALE && viewport > 0 && viewport < SHORT_WINDOW;
   const stagePad = short ? space[16] + space[16] : space[32] + space[40];
   // Everything under the card counts: the copy column, the stage's padding, the mark and its gap, the scroller's end padding.
-  const fit = viewport - below - stagePad - mark - (short ? space[16] : space[24]) - CARD_EXTRA - (short ? space[16] : space[32]);
+  const markGap = short ? space[16] : space[24];
+  const withMark = viewport - below - stagePad - mark - markGap - CARD_EXTRA - (short ? space[16] : space[32]);
   // DQ-1064: the card may shrink to the scannable minimum (QR 200) so the moment fits the window (r2: 393 × 852 was 13 over at 3/4).
   const floor = size.qrMinOnScreen + 2 * space[24];
+  // DQ-1064 r3 (iPhone SE 375 × 667, 33 over at the floor): when even the smallest card leaves the actions below the fold, the
+  // wordmark gives way: the card, the title and the actions are what this moment needs on the smallest phone. `mark` keeps its
+  // last measured height, so the decision does not flip back once the mark is gone.
+  const cramped = short && mark > 0 && withMark < floor;
+  const fit = cramped ? withMark + mark + markGap : withMark;
   const columnWidth = desktop
     ? COLUMN_MAX
     : fontScale < FIT_SCALE && viewport > 0 && below > 0
@@ -207,9 +213,11 @@ export function PublishedScreen() {
           >
             <View style={[styles.stageColumn, short ? styles.stageColumnShort : null, { width: columnWidth }]}>
               {/* DQ-1064: the brush logo with its own katakana is the brand moment, once; no second katakana line, no extra rule. */}
-              <View style={styles.mark} onLayout={(event) => setMark(event.nativeEvent.layout.height)}>
-                <AppWordmark width={short ? WORDMARK_WIDTH_SHORT : WORDMARK_WIDTH} tone="white" decorative testID={`${ROUTE}.wordmark`} />
-              </View>
+              {cramped ? null : (
+                <View style={styles.mark} onLayout={(event) => setMark(event.nativeEvent.layout.height)}>
+                  <AppWordmark width={short ? WORDMARK_WIDTH_SHORT : WORDMARK_WIDTH} tone="white" decorative testID={`${ROUTE}.wordmark`} />
+                </View>
+              )}
               <View style={styles.card}>
                 {ready && vehicle.qr && svg.data ? (
                   <PrintWipe printing={ready} testID={`${ROUTE}.print`}>

@@ -37,7 +37,7 @@
             <div class="sc-veh-stage{{ $count > 0 ? '' : ' is-empty' }}" data-testid="WEB-01.stage">
                 <div class="sc-hero" data-testid="VEH-01.hero" data-qa-exempt="photo">
                     @if ($count > 0)
-                        <div class="sc-pager" data-pager @if ($count > 1) tabindex="0" role="group" aria-roledescription="carousel" aria-label="{{ __('public.vehicle.gallery_label', ['title' => $vehicle['full_title']]) }}" @endif>
+                        <div class="sc-pager" data-pager @if ($count > 1) tabindex="0" role="region" aria-roledescription="carousel" aria-label="{{ __('public.vehicle.gallery_label', ['title' => $vehicle['full_title']]) }}" @endif>
                             @foreach ($photos as $index => $photo)
                                 <div class="sc-slide" id="photo-{{ $index + 1 }}">
                                     <x-public.photo :photo="$photo" :sizes="$heroSizes" :priority="$index === 0" :alt="$photo['alt'] ?: $vehicle['full_title']" class="h-full w-full object-cover" />
@@ -103,7 +103,7 @@
                 @endif
 
                 <div class="sc-veh-cta" data-testid="WEB-01.desktopCta">
-                    <x-public.open-in-app :links="$links" testid="WEB-01.openInAppDesktop" class="sc-grow" />
+                    <x-public.open-in-app :links="$links" testid="WEB-01.openInAppDesktop" :variant="$owner ? 'secondary' : 'brand'" class="sc-grow" />
                     <x-public.button :href="$links['register']" variant="secondary" size="l" class="sc-grow">{{ __('public.vehicle.register') }}</x-public.button>
                 </div>
             </aside>
@@ -241,6 +241,6 @@
             </div>
         </main>
 
-        <x-public.sticky-cta :links="$links" />
+        <x-public.sticky-cta :links="$links" :quiet="$owner !== null" />
     </div>
 </x-public.layout>

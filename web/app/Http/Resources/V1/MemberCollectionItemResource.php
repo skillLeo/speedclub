@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1;
 
 use App\Enums\CollectionItemType;
 use App\Models\BuildUpdate;
+use App\Models\Business;
 use App\Models\Event;
 use App\Models\MemberCollectionItem;
 use App\Models\Modification;
@@ -51,6 +52,8 @@ class MemberCollectionItemResource extends JsonResource
             'build_update' => $item->item_type === CollectionItemType::BuildUpdate && $target instanceof BuildUpdate ? new CollectionBuildUpdateResource($target) : null,
             /** M4.12: a saved event, as the EventCard of EVT-01 (never the exact place of an after_rsvp event). */
             'event' => $item->item_type === CollectionItemType::Event && $target instanceof Event ? new EventCardResource($target) : null,
+            /** M4.14: a saved business, as the BusinessCard. */
+            'business' => $item->item_type === CollectionItemType::Business && $target instanceof Business ? new BusinessCardResource($target) : null,
         ];
     }
 }

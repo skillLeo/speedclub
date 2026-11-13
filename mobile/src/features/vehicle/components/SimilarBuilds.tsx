@@ -6,14 +6,18 @@ import { useFlag } from '@/api/queries/appConfig';
 import { useSimilarBuilds } from '@/api/queries/discover';
 import type { FeedVehicle } from '@/api/queries/home';
 import { SimilarBuildsList } from '@/features/discover/components/SimilarBuildsList';
+import { railSpec } from '@/features/home/components/NewInGarageRail';
 
 /** DQ-1063: at most this many sample builds ("Beispiel") in the rail, so samples never read as a stack of filler. */
 export const SIMILAR_SAMPLE_MAX = 2;
 
-/** What makes two rail cards look the same: the name and the key values the card prints. */
+/**
+ * What makes two rail cards look the same: exactly what the card prints, the name and its spec line (railSpec: the first two
+ * values). DQ-1063 r2: comparing the whole strip let sample R34s through that differ only in a value the card never shows (the
+ * weight), so three "Nissan Skyline GT-R R34 · 280 PS · 392 Nm" stood side by side.
+ */
 function lookOf(vehicle: FeedVehicle): string {
-  const values = (vehicle.spec_strip ?? []).map((item) => `${item.value ?? ''}${item.unit ?? ''}`).join('|');
-  return `${vehicle.full_title}|${values}`;
+  return `${vehicle.full_title}|${railSpec(vehicle) ?? ''}`;
 }
 
 /**

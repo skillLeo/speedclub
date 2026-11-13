@@ -1,0 +1,20 @@
+{
+  "id": "/app/",
+  "name": "SPEED CLUB",
+  "short_name": "SPEED CLUB",
+  "description": "Deine digitale Garage: Fahrzeuge, Umbauten und QR-Sticker, die dein Auto mit seiner Build-Seite verbinden.",
+  "lang": "de-DE",
+  "dir": "ltr",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0B0C",
+  "theme_color": "#0B0B0C",
+  "categories": ["lifestyle", "social"],
+  "icons": [
+    { "src": "/app/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/app/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/app/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

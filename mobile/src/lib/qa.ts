@@ -20,9 +20,11 @@ export type QaOverrides = {
   /**
    * `qaOpen=report`: the page's report sheet (M2.6) opens by itself once its target is there, so the visual matrix, which cannot
    * tap, captures it (PROF-02, VEH-01). `qaOpen=actions`: MSG-02 opens the actions sheet of the newest received text message once
-   * the thread has loaded (MSG-02-translate), as the matrix cannot long-press. Not part of the reported overrides on <html>.
+   * the thread has loaded (MSG-02-translate), as the matrix cannot long-press. `qaOpen=installHint`: the member web's install hint
+   * (M4.15, features/pwa/installHint.ts) shows even in an automated browser, which otherwise never gets it. Not part of the reported
+   * overrides on <html>.
    */
-  readonly open?: 'report' | 'actions';
+  readonly open?: 'report' | 'actions' | 'installHint';
   /**
    * `qaFlags=ai.nl_search,ai.translate`: these app-config flags count as on, and an AI surface they switch on needs no opt-in, so the
    * visual matrix can capture the [AI] surfaces on a host without a provider (where no `ai.*` flag can be on, ADR-242). What a tap then
@@ -33,6 +35,13 @@ export type QaOverrides = {
 
 /** A flag key as app-config names them ("ai.nl_search"); at most this many in one override. */
 const QA_FLAG = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
+/**
+ * M4.15: the off-by-default product flags without a dot whose screens the matrix and the e2e specs must still reach (MEM-01 / SET-24
+ * `membership`, the QR-02 shop link `sticker_shop`, SET-09's browser row `web_push`). M4.14: `parts_catalogue` (BRD-01/02, the Teile
+ * scope, the mod editor's product search) and `businesses` (BIZ-01…04, the Betriebe scope, "Eingebaut von"). Named one by one, so no
+ * other bare key counts.
+ */
+const QA_PLAIN_FLAGS: ReadonlySet<string> = new Set(['membership', 'sticker_shop', 'web_push', 'parts_catalogue', 'businesses']);
 const QA_FLAGS_MAX = 12;
 
 const NO_OVERRIDES: QaOverrides = Object.freeze({});
@@ -50,7 +59,7 @@ export const parseQa: (search: string) => QaOverrides =
         const flags = (params.get('qaFlags') ?? '')
           .split(',')
           .map((flag) => flag.trim())
-          .filter((flag) => QA_FLAG.test(flag))
+          .filter((flag) => QA_FLAG.test(flag) || QA_PLAIN_FLAGS.has(flag))
           .slice(0, QA_FLAGS_MAX);
         return {
           ...(theme === 'carbon' || theme === 'black' || theme === 'light' || theme === 'system' ? { theme } : {}),
@@ -67,6 +76,7 @@ export const parseQa: (search: string) => QaOverrides =
           ...(params.get('qaMotion') === 'off' ? { motion: 'off' as const } : {}),
           ...(params.get('qaOpen') === 'report' ? { open: 'report' as const } : {}),
           ...(params.get('qaOpen') === 'actions' ? { open: 'actions' as const } : {}),
+          ...(params.get('qaOpen') === 'installHint' ? { open: 'installHint' as const } : {}),
           ...(Number.isNaN(now.getTime()) ? {} : { now }),
           ...(flags.length > 0 ? { flags } : {}),
         };

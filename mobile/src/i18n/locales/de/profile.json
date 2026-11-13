@@ -79,7 +79,7 @@
             "coverUploading": "Titelbild wird hochgeladen, {{percent}} %",
             "avatarSaved": "Profilbild aktualisiert",
             "coverSaved": "Titelbild aktualisiert",
-            "hint": "Profilbild quadratisch, Titelbild im Querformat, mindestens 1.920 px breit. JPEG, PNG oder WebP bis 15 MB.",
+            "hint": "Profilbild quadratisch, Titelbild im Format 16:9, mindestens 1.920 px breit. JPEG, PNG oder WebP bis 15 MB.",
             "failed": "Das Foto konnte nicht hochgeladen werden. Versuch es noch einmal oder wähle ein anderes.",
             "retry": "Erneut versuchen"
         },

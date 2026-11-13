@@ -187,7 +187,8 @@ describe('COL-02 Sammlung', () => {
     await waitFor(() => expect(screen.getByTestId('COL-02.item.vehicle:v1')).toBeTruthy());
     expect(screen.getByTestId('COL-02.item.modification:m9')).toBeTruthy();
     expect(screen.getByTestId('COL-02.meta')).toHaveTextContent('Privat · 2 Einträge');
-    await fireEvent.press(screen.getByTestId('COL-02.item.modification:m9'));
+    // DQ-1125: the tile's link is under the control band that holds its menu.
+    await fireEvent.press(screen.getByTestId('COL-02.item.modification:m9.open'));
     expect(mockRouter.push).toHaveBeenCalledWith('/v/nissan-skyline-gt-r-r34-5tf974vj/mods/m9');
   });
 

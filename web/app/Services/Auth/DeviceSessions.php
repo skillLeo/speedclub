@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Enums\SessionKind;
 use App\Models\PersonalAccessToken;
+use App\Models\PushSubscription;
 use App\Models\User;
 use App\Support\Auth\DeviceSession;
 use Carbon\CarbonImmutable;
@@ -55,6 +56,8 @@ final class DeviceSessions
             foreach ($this->sessionIds($user) as $sessionId) {
                 if (hash_equals($this->browserId($sessionId), $id)) {
                     $this->sessionTable()->where('id', $sessionId)->delete();
+                    // M4.15: that browser's Web Push ends with its sign-in.
+                    $user->pushSubscriptions()->where('session_key', PushSubscription::sessionKey($sessionId))->delete();
                     CredentialEpoch::rotate($user);
 
                     return true;
@@ -95,16 +98,31 @@ final class DeviceSessions
      */
     public function endOtherBrowsers(User $user, Request $request): int
     {
+        $sessionId = $this->currentSessionId($user, $request);
+
+        // M4.15: every other browser's Web Push ends too, whatever the session driver: all subscriptions but this browser's (a token
+        // request has no browser, so all of them go).
+        $keep = $sessionId === null ? null : PushSubscription::sessionKey($sessionId);
+        $user->pushSubscriptions()
+            ->when($keep !== null, fn ($query) => $query->where(fn ($other) => $other->whereNull('session_key')->orWhere('session_key', '!=', $keep)))
+            ->delete();
+
         if (! $this->hasSessionTable()) {
             return 0;
         }
-
-        $sessionId = $this->currentToken($user) !== null || ! $request->hasSession() ? null : $request->session()->getId();
 
         return $this->sessionTable()
             ->where('user_id', $user->getKey())
             ->when($sessionId !== null, fn ($query) => $query->where('id', '!=', $sessionId))
             ->delete();
+    }
+
+    /**
+     * The member web session of this request, or null for an app token (or a request without a session).
+     */
+    public function currentSessionId(User $user, Request $request): ?string
+    {
+        return $this->currentToken($user) !== null || ! $request->hasSession() ? null : $request->session()->getId();
     }
 
     /**
@@ -242,6 +260,22 @@ final class DeviceSessions
      */
     public static function browserName(string $agent): string
     {
+        [$browser, $os] = self::browserParts($agent);
+
+        if ($browser === null) {
+            return (string) __('settings.sessions.browser');
+        }
+
+        return $os === null ? $browser : (string) __('settings.sessions.browser_on', ['browser' => $browser, 'os' => $os]);
+    }
+
+    /**
+     * Browser and system names of a user agent ("Chrome", "macOS"), each null when unknown. M4.15: Web Push stores only these.
+     *
+     * @return array{0: string|null, 1: string|null}
+     */
+    public static function browserParts(string $agent): array
+    {
         $browser = match (true) {
             str_contains($agent, 'Edg/') => 'Edge',
             str_contains($agent, 'OPR/') => 'Opera',
@@ -259,11 +293,7 @@ final class DeviceSessions
             default => null,
         };
 
-        if ($browser === null) {
-            return (string) __('settings.sessions.browser');
-        }
-
-        return $os === null ? $browser : (string) __('settings.sessions.browser_on', ['browser' => $browser, 'os' => $os]);
+        return [$browser, $os];
     }
 
     private function deviceKey(PersonalAccessToken $token): string

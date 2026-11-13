@@ -85,6 +85,9 @@
             "suspension_type": "string",
             "suspension_brand": "null",
             "exhaust_brand": "null"
-        }
+        },
+        "product": "null",
+        "installed_by": "null",
+        "business_tag": "null"
     }
 }

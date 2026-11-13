@@ -125,6 +125,9 @@ const useStyles = createStyles((t) => ({
   update: { gap: t.space[4] },
   centred: { flexGrow: 1, justifyContent: 'center' },
   skeleton: { gap: t.space[16] },
+  skeletonDate: { alignItems: 'center', gap: t.space[2], minWidth: t.size.avatar.lg },
+  // EventMapFrame's consent gate: its padding and gaps, at least the snippet's height.
+  skeletonMap: { gap: t.space[8], justifyContent: 'center', minHeight: SNIPPET_HEIGHT, padding: t.space[20] },
   skeletonHeader: { left: 0, position: 'absolute', right: 0, top: 0 },
   hero: { alignSelf: 'center', maxWidth: layout.fullBleedMax, width: '100%' },
   // DQ-1114: from 1280 the photo fades into the dark stage (every theme, ADR-421 b) with the date and the title on it, as on VEH-01.
@@ -254,12 +257,34 @@ function EventDetailSkeleton({ onBack }: { onBack: () => void }) {
           <SkeletonBlock aspectRatio={HERO_RATIO} corner="none" />
         </View>
         <View style={[styles.column, { paddingHorizontal: gutter }]}>
-          <View style={styles.skeleton}>
-            <SkeletonText variant="heroNumeralS" width="20%" />
+          {/* DQ-1129: the real anatomy. The date column (weekday, day, month) beside the time and the kind, then the title. */}
+          <View style={styles.identity}>
+            <View style={styles.when}>
+              <View style={styles.skeletonDate}>
+                <SkeletonText variant="labelCaps" width={size.avatar.lg} />
+                <SkeletonText variant="heroNumeralS" width={size.avatar.lg} />
+                <SkeletonText variant="labelCaps" width={size.avatar.lg} />
+              </View>
+              <View style={styles.whenText}>
+                <SkeletonText variant="headline" width="60%" />
+                <SkeletonText variant="caption" width="35%" />
+              </View>
+            </View>
             <SkeletonText variant="title1" lines={2} lastLineWidth="60%" />
-            <SkeletonText variant="callout" width="40%" />
           </View>
-          <SkeletonBlock height={SNIPPET_HEIGHT} corner="md" />
+          {/* The place card: the map gate (glyph, two lines, "Karte anzeigen"), then the place's three lines and "Route". */}
+          <View style={styles.place}>
+            <View style={styles.skeletonMap}>
+              <SkeletonBlock width={size.icon.l} height={size.icon.l} corner="sm" />
+              <SkeletonText variant="callout" lines={2} lastLineWidth="70%" />
+              <SkeletonBlock width="45%" height={size.button.s} corner="sm" style={styles.placeAction} />
+            </View>
+            <View style={styles.placeBody}>
+              <SkeletonText variant="headline" width="55%" />
+              <SkeletonText variant="callout" lines={2} lastLineWidth="40%" />
+              <SkeletonBlock width="30%" height={size.button.s} corner="sm" style={styles.placeAction} />
+            </View>
+          </View>
           <SkeletonText variant="body" lines={3} lastLineWidth="70%" />
         </View>
       </Skeleton>

@@ -87,14 +87,14 @@ describe('the status pill and the main badge in label.badge (DQ-923, ADR-421 a, 
         }
     });
 
-    it('keeps a store name whole and lets the pill wrap under it on WEB-03', function () {
+    it('keeps a store name whole on WEB-03, once the store links exist (09 §9 WEB-03 (5))', function () {
+        config(['speedclub.mobile.store_url_ios' => 'https://apps.apple.com/app/id1', 'speedclub.mobile.store_url_android' => 'https://play.google.com/store/apps/details?id=x']);
         $html = (string) $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
-        $main = '<span class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-12 gap-y-4" data-testid="WEB-03.storeMain">';
 
-        // The row wraps (flex-wrap) and the name never shrinks below itself (nowrap), so the pill moves under the name.
-        expect(substr_count($html, $main))->toBe(2)
-            ->and($html)->toMatch('~'.preg_quote($main, '~').'\s*<span class="whitespace-nowrap hyphens-none text-body text-ink" data-testid="WEB-03.storeName">Google Play</span>\s*<span class="[^"]*text-label-badge whitespace-nowrap hyphens-none[^"]*">Bald verfügbar</span>~')
-            ->and($html)->toContain('data-testid="WEB-03.storeName">App Store</span>');
+        expect(substr_count($html, 'data-testid="WEB-03.store"'))->toBe(2)
+            ->and($html)->toContain('<span class="whitespace-nowrap hyphens-none">Google Play</span>')
+            ->and($html)->toContain('<span class="whitespace-nowrap hyphens-none">App Store</span>')
+            ->and($html)->not->toContain('Bald verfügbar');
     });
 });
 

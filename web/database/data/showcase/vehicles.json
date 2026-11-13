@@ -2659,10 +2659,10 @@
   "make": "BMW",
   "model": "M4",
   "generation": "G82",
-  "year": 2023,
+  "year": 2021,
   "color": "Frozen Portimao Blau",
   "nickname": null,
-  "description": "M4 Competition xDrive. Allrad macht ihn zum Ganzjahresauto, das Coupé zum schönsten M4.",
+  "description": "M4 Coupé mit Sechsgang-Handschaltung, bewusst ohne Competition. Drei Pedale und Hinterradantrieb für die Landstraße.",
   "published_days": 40,
   "specs": {
    "engine_code": "S58B30T0",
@@ -2670,14 +2670,14 @@
    "displacement_cc": 2993,
    "fuel": "petrol",
    "aspiration": "biturbo",
-   "power_kw": 375,
-   "torque_nm": 650,
-   "drivetrain": "all",
-   "gearbox": "automatic"
+   "power_kw": 353,
+   "torque_nm": 550,
+   "drivetrain": "rear",
+   "gearbox": "manual"
   },
   "factory": {
-   "zero_to_100_s": 3.5,
-   "weight_kg": 1775
+   "zero_to_100_s": 4.2,
+   "weight_kg": null
   },
   "mods": [
    {
@@ -2702,24 +2702,6 @@
      "tyre_size_rear": "285/30 R20",
      "bolt_pattern": "5×112"
     }
-   },
-   {
-    "ref": "tune",
-    "c": "engine_performance",
-    "b": "Manhart Racing",
-    "p": "Leistungssteigerung Stage 1",
-    "cost": 900,
-    "lg": "parts_certificate",
-    "s": "installed",
-    "f": {
-     "stage": "stage_1",
-     "tuner": "Manhart Racing",
-     "software": "Softwareoptimierung Stage 1",
-     "claimed_power": 610,
-     "claimed_torque": 760,
-     "measured_on_dyno": true
-    },
-    "notes": "Abstimmung: 610 PS und 760 Nm, auf dem Prüfstand gemessen."
    },
    {
     "ref": "kw-v4",
@@ -2838,7 +2820,8 @@
      "title": "Keramikversiegelung"
     }
    }
-  ]
+  ],
+  "source": "BMW Group PressClub, BMW M3 Limousine und M4 Coupé (09/2020): M4 Coupé mit 6-Gang-Handschaltung 353 kW (480 PS), 550 Nm, 0–100 km/h 4,2 s; das Leergewicht bleibt leer."
  },
  {
   "key": "maxi-f82",
@@ -3423,10 +3406,10 @@
   "make": "BMW",
   "model": "M4",
   "generation": "G82",
-  "year": 2021,
-  "color": "Sao Paulo Gelb",
+  "year": 2022,
+  "color": "Frozen Brooklyn Grau metallic",
   "nickname": null,
-  "description": "Der gelbe M4 für Trackdays. Fahrwerk, Bremse, Sitze, dann wird gefahren.",
+  "description": "M4 CSL für Trackdays. Fahrwerk, Bremse und Gurte, die Carbon-Schalensitze hat er ab Werk. Dann wird gefahren.",
   "published_days": 75,
   "specs": {
    "engine_code": "S58B30T0",
@@ -3434,14 +3417,14 @@
    "displacement_cc": 2993,
    "fuel": "petrol",
    "aspiration": "biturbo",
-   "power_kw": 375,
+   "power_kw": 405,
    "torque_nm": 650,
    "drivetrain": "rear",
    "gearbox": "automatic"
   },
   "factory": {
-   "zero_to_100_s": 3.9,
-   "weight_kg": 1725
+   "zero_to_100_s": 3.6,
+   "weight_kg": 1625
   },
   "mods": [
    {
@@ -3517,20 +3500,6 @@
     }
    },
    {
-    "ref": "recaro-cs",
-    "c": "interior",
-    "b": "Recaro",
-    "p": "Sportster CS",
-    "cost": 3400,
-    "lg": "parts_certificate",
-    "s": "installed",
-    "f": {
-     "part": "seats",
-     "brand": "Recaro",
-     "model": "Sportster CS"
-    }
-   },
-   {
     "ref": "schroth-profi",
     "c": "interior",
     "b": "Schroth",
@@ -3558,7 +3527,8 @@
      "model": "VBOX Video HD2"
     }
    }
-  ]
+  ],
+  "source": "BMW Group PressClub, Der neue BMW M4 CSL (05/2022): 405 kW (550 PS), 650 Nm, 0–100 km/h 3,6 s, DIN-Leergewicht 1.625 kg. Das Foto zeigt einen CSL (Niere mit roter Kontur)."
  },
  {
   "key": "felix-992",
@@ -9943,120 +9913,6 @@
     "s": "installed",
     "f": {
      "tuner": "Mishimoto"
-    }
-   }
-  ]
- },
- {
-  "key": "luca-r34",
-  "owner": "luca.r35",
-  "pick": null,
-  "make": "Nissan",
-  "model": "Skyline GT-R",
-  "generation": "R34",
-  "year": 1999,
-  "color": "Athlete Silver",
-  "nickname": null,
-  "description": "R34 GT-R in Athlete Silver. Der Gegenpol zum R35, analog und roh.",
-  "published_days": 250,
-  "specs": {
-   "engine_code": "RB26DETT",
-   "engine_text": "2,6 l Reihensechszylinder Biturbo",
-   "displacement_cc": 2568,
-   "fuel": "petrol",
-   "aspiration": "biturbo",
-   "power_kw": 206,
-   "torque_nm": 392,
-   "drivetrain": "all",
-   "gearbox": "manual"
-  },
-  "factory": {
-   "zero_to_100_s": null,
-   "weight_kg": 1560
-  },
-  "mods": [
-   {
-    "ref": "wheels:ce28",
-    "c": "wheels_tires",
-    "b": "Rays",
-    "p": "Volk Racing CE28N 18 Zoll",
-    "cost": 3800,
-    "lg": "parts_certificate",
-    "s": "installed",
-    "f": {
-     "wheel_brand": "Rays",
-     "wheel_model": "Volk Racing CE28N",
-     "diameter": 18,
-     "width_front": 9.5,
-     "width_rear": 9.5,
-     "finish": "Diamond Dark Gunmetal",
-     "staggered": false,
-     "tyre_brand": "Yokohama",
-     "tyre_model": "Advan Neova AD09",
-     "tyre_size_front": "265/35 R18",
-     "tyre_size_rear": "265/35 R18",
-     "bolt_pattern": "5×114,3"
-    }
-   },
-   {
-    "ref": "tein-flexz",
-    "c": "suspension",
-    "b": "Tein",
-    "p": "Flex Z",
-    "cost": 1100,
-    "lg": "unknown",
-    "s": "installed",
-    "f": {
-     "type": "coilover",
-     "brand": "Tein",
-     "model": "Flex Z",
-     "lowering_front": 40,
-     "lowering_rear": 40,
-     "adjustable_damping": true
-    }
-   },
-   {
-    "ref": "tomei-expreme",
-    "c": "exhaust",
-    "b": "Tomei",
-    "p": "Expreme Ti",
-    "cost": 1300,
-    "lg": "unknown",
-    "s": "installed",
-    "f": {
-     "type": "catback",
-     "brand": "Tomei",
-     "model": "Expreme Ti",
-     "material": "titanium",
-     "valves": false
-    }
-   },
-   {
-    "ref": "defi",
-    "c": "electronics",
-    "b": "Defi",
-    "p": "Racer Gauges Ladedruck und Öltemperatur",
-    "cost": 450,
-    "lg": "not_required",
-    "s": "installed",
-    "f": {
-     "part": "displays",
-     "brand": "Defi",
-     "model": "Racer Gauges"
-    }
-   },
-   {
-    "ref": "osgiken-lsd",
-    "c": "drivetrain",
-    "b": "OS Giken",
-    "p": "Super Lock LSD",
-    "cost": 1800,
-    "lg": "not_required",
-    "s": "installed",
-    "f": {
-     "part": "lsd",
-     "brand": "OS Giken",
-     "model": "Super Lock LSD"
     }
    }
   ]

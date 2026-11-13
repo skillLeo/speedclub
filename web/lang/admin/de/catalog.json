@@ -3,6 +3,7 @@
         "vehicles": "Fahrzeugkatalog",
         "categories": "Mod-Kategorien",
         "brands": "Teilemarken",
+        "products": "Teile & Produkte",
         "import": "CSV-Import"
     },
     "palette": {
@@ -547,11 +548,13 @@
         "intro": "Fahrzeugkatalog oder Teilemarken als CSV, höchstens :rows Zeilen und :mb MB. Die Prüfung ändert nichts, erst „Übernehmen“ schreibt in den Katalog.",
         "template_vehicles": "Vorlage Fahrzeuge",
         "template_brands": "Vorlage Teilemarken",
+        "template_products": "Vorlage Teile",
         "upload_title": "Datei prüfen",
         "kind": "Inhalt",
         "kinds": {
             "vehicles": "Fahrzeuge",
-            "brands": "Teilemarken"
+            "brands": "Teilemarken",
+            "products": "Teile"
         },
         "file": "CSV-Datei",
         "file_hint": "UTF-8 oder Excel-CSV mit ; oder ,",
@@ -661,7 +664,9 @@
             "duplicate": "Doppelt: derselbe Eintrag steht schon in Zeile :line.",
             "invalid": "Ungültiger Wert in „:field“.",
             "forbidden": "Keine Berechtigung mehr.",
-            "failed": "Konnte nicht übernommen werden."
+            "failed": "Konnte nicht übernommen werden.",
+            "brand_missing": "Diese Marke gibt es im Katalog nicht.",
+            "invalid_url": "Der Link muss mit https:// beginnen."
         },
         "import_of": "Import von :file",
         "lines_later": "Die Zeilen erscheinen, sobald der Import fertig ist.",
@@ -688,5 +693,119 @@
         "import_analysed": "Geprüft. Sieh dir das Ergebnis an, bevor du übernimmst.",
         "import_queued": "Import gestartet."
     },
-    "error_body": "Prüfe die Verbindung und versuche es erneut."
+    "error_body": "Prüfe die Verbindung und versuche es erneut.",
+    "products": {
+        "flash": {
+            "created": "Teil angelegt.",
+            "updated": "Gespeichert.",
+            "archived": "Archiviert.",
+            "restored": "Wiederhergestellt.",
+            "merged": "Zusammengeführt."
+        },
+        "title": "Teile & Produkte",
+        "intro": "Der Teilekatalog, mit dem Mitglieder ihre Mods verknüpfen. Nur Angaben des Herstellers, keine erfundenen Daten.",
+        "caption": "Teile mit Marke, Kategorie, Verwendung und Status",
+        "import": "Teile importieren",
+        "new": "Neues Teil",
+        "columns": {
+            "product": "Teil",
+            "brand": "Marke",
+            "category": "Kategorie",
+            "mods": "In Mods",
+            "created": "Angelegt",
+            "status": "Status"
+        },
+        "filters": {
+            "q": "Name, Produktlinie oder Marke",
+            "brand": "Marke"
+        },
+        "presets": {
+            "most_used": "Meistverwendet",
+            "newest": "Zuletzt angelegt",
+            "archived": "Archiviert"
+        },
+        "status": {
+            "archived": "Archiviert"
+        },
+        "affiliate_short": "Anzeige-Link",
+        "empty_title": "Noch keine Teile im Katalog",
+        "empty_body": "Teile legt das Katalog-Team an oder importiert sie als CSV.",
+        "empty_body_manage": "Leg das erste Teil an oder importiere eine Herstellerliste als CSV.",
+        "view_only": "Nur Ansicht: Bearbeiten dürfen Rollen mit „Katalog verwalten“.",
+        "drawer": {
+            "new": "Neues Teil",
+            "edit": "Teil bearbeiten",
+            "body": "So erscheint das Teil, wenn Mitglieder eine Mod damit verknüpfen."
+        },
+        "fields": {
+            "brand": "Marke",
+            "brand_placeholder": "Marke suchen",
+            "brand_loading": "Marken werden geladen …",
+            "category": "Kategorie",
+            "category_placeholder": "Kategorie wählen",
+            "name": "Produktname",
+            "name_hint": "Wie der Hersteller es nennt, ohne Marke: „Variante 3“.",
+            "line": "Produktlinie",
+            "line_hint": "Zum Beispiel „Gewindefahrwerke“.",
+            "url": "Herstellerseite",
+            "url_hint": "Nur https.",
+            "affiliate_url": "Affiliate-Link",
+            "affiliate_hint": "Mitglieder sehen ihn als „Anzeige“ markiert. Nur https."
+        },
+        "facts": {
+            "title": "Herstellerangaben",
+            "hint": "Bis zu 12 Angaben je Sprache, so wie der Hersteller sie nennt.",
+            "language": "Sprache der Angaben",
+            "de": "Deutsch",
+            "en": "Englisch",
+            "label": "Angabe :n",
+            "value": "Wert :n",
+            "label_placeholder": "Bauart",
+            "value_placeholder": "Gewindefahrwerk",
+            "remove": "Angabe :n entfernen",
+            "add": "Angabe hinzufügen",
+            "none": "Keine Herstellerangaben hinterlegt.",
+            "en_missing": "Keine englischen Angaben: Mitglieder mit Englisch sehen die deutschen."
+        },
+        "errors": {
+            "brand": "Wähle eine Marke.",
+            "category": "Wähle eine Kategorie.",
+            "name": "Der Produktname braucht mindestens 2 Zeichen."
+        },
+        "actions": {
+            "archive": "Archivieren",
+            "restore": "Wiederherstellen"
+        },
+        "archive_dialog": {
+            "title": "„:name“ archivieren?",
+            "body": "Neue Mods können das Teil nicht mehr wählen. Bestehende Verknüpfungen bleiben."
+        },
+        "restore_dialog": {
+            "title": "„:name“ wiederherstellen?",
+            "body": "Das Teil steht Mitgliedern wieder zur Auswahl."
+        },
+        "merge": {
+            "title": "„:name“ zusammenführen",
+            "body": "Die Mods gehen an das verbleibende Teil, der Name wird dort eine weitere Schreibweise, dieses Teil wird archiviert.",
+            "survivor": "Bleibt bestehen",
+            "survivor_hint": "Aktive Teile derselben Kategorie, die gleiche Marke zuerst.",
+            "placeholder": "Teil suchen",
+            "option": ":name · :count Mod|:name · :count Mods",
+            "outcome": ":count Mod von „:name“ geht an „:survivor“.|:count Mods von „:name“ gehen an „:survivor“.",
+            "none": "Kein anderes aktives Teil in dieser Kategorie.",
+            "load_error": "Die Auswahl konnte nicht geladen werden.",
+            "confirm": "Zusammenführen"
+        },
+        "record": {
+            "overview": "Überblick",
+            "tabs": "Bereiche des Teils",
+            "created": "angelegt am :date",
+            "mods": "In Mods verknüpft",
+            "none": "Nicht hinterlegt",
+            "affiliate_note": "Mitglieder sehen den Link als „Anzeige“ markiert.",
+            "aliases": "Weitere Schreibweisen",
+            "no_aliases": "Keine weiteren Schreibweisen",
+            "error": "Das Teil konnte nicht geladen werden."
+        }
+    }
 }

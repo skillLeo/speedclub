@@ -7,6 +7,7 @@ import type { TFunction } from 'i18next';
 
 import type { AppNotification } from '@/api/queries/notifications';
 import '@/features/events/i18n';
+import '@/features/parts/i18n';
 import { formatDueMonth } from '@/features/garage/huAu';
 import { deviceNameText } from '@/features/settings/deviceLines';
 import { passkeyOwnName } from '@/features/settings/passkeyName';
@@ -85,7 +86,7 @@ export function groupByDay(
 export const NOTIFICATION_FILTERS = ['all', 'builds', 'social', 'events', 'system'] as const;
 export type NotificationFilter = (typeof NOTIFICATION_FILTERS)[number];
 
-const BUILD_TYPES = new Set<string>(['followed_published', 'build_saved', 'qr_milestone', 'hu_au_reminder', 'catalog_request']);
+const BUILD_TYPES = new Set<string>(['followed_published', 'build_saved', 'qr_milestone', 'hu_au_reminder', 'catalog_request', 'business_tag']);
 const SOCIAL_TYPES = new Set<string>(['new_follower', 'reaction', 'mention', 'comment', 'vehicle_follower']);
 
 /** The chip a row belongs to: builds, people, meets, or the system (security, moderation, support and anything unknown). */
@@ -225,6 +226,9 @@ const SECURITY_EVENTS = new Set([
 ]);
 
 /** M4.6: the events whose `device_name` carries a label (the provider's name, the passkey's name) for a sentence of its own. */
+/** A modification id (ULID), as business_tag carries it in `mod_id`. */
+const TAG_MOD_ID = /^[0-9A-Za-z]{26}$/;
+
 /** A member_security_events id (ULID), as the server puts it in `security_event_id`. */
 const SECURITY_EVENT_ID = /^[0-9A-Za-z]{26}$/;
 
@@ -343,9 +347,30 @@ export function notificationText(notification: AppNotification, t: TFunction): s
     case 'event_update':
     case 'event_cancelled':
       return eventText(notification, data, t);
+    case 'business_review':
+    case 'business_tag':
+      return businessText(notification, data, t);
     default:
       return t('notifications.text.other');
   }
+}
+
+/**
+ * M4.14 (09 §8.10, ADR-414; in-app only): business_review says how staff decided on the member's business (never the reason, which
+ * BIZ-03 shows); business_tag says where an "Eingebaut von" tag stands, for the business (BIZ-04) or for the build's owner (VEH-02).
+ * The row carries no business name, so the sentence names the build instead.
+ */
+function businessText(notification: AppNotification, data: Record<string, unknown>, t: TFunction): string {
+  const tx = (key: string, values: Record<string, string> = {}) =>
+    (t as unknown as (name: string, options: Record<string, string>) => string)(`parts:notifications.${key}`, values);
+  if (notification.type === 'business_review') {
+    const outcome = stringIn(data, 'outcome');
+    return tx(`review.${outcome === 'verified' || outcome === 'suspended' || outcome === 'reinstated' ? outcome : 'rejected'}`);
+  }
+  const vehicle = keepLastWordWithNext(notification.vehicle?.full_title?.trim() || tx('aBuild'));
+  const side = stringIn(data, 'side') === 'business' ? 'business' : 'member';
+  const state = stringIn(data, 'state');
+  return tx(`tag.${side}.${state === 'accepted' || state === 'declined' ? state : 'requested'}`, { vehicle });
 }
 
 /**
@@ -407,6 +432,9 @@ export function notificationIcon(notification: Pick<AppNotification, 'type'>): I
     case 'event_update':
     case 'event_cancelled':
       return 'meet';
+    case 'business_review':
+    case 'business_tag':
+      return 'workshop';
     default:
       return 'bell';
   }
@@ -473,6 +501,18 @@ export function notificationTarget(notification: AppNotification, own: string | 
     case 'event_update':
     case 'event_cancelled':
       return notification.event ? `/events/${notification.event.slug}` : '/profile/events';
+    // M4.14: BIZ-03 for the business's review; a tag the business must answer (or hears back about) opens BIZ-04, the build owner's
+    // opens VEH-02 of the mod, where "Eingebaut von" is confirmed or declined.
+    case 'business_review':
+      return '/business';
+    case 'business_tag': {
+      if (stringIn(data, 'side') === 'business') return '/business/requests';
+      const modId = stringIn(data, 'mod_id');
+      if (!notification.vehicle) return null;
+      return modId && TAG_MOD_ID.test(modId)
+        ? { pathname: '/v/[slug]/mods/[modId]', params: { slug: notification.vehicle.slug, modId } }
+        : `/v/${notification.vehicle.slug}`;
+    }
     default:
       return null;
   }

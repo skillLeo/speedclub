@@ -6,6 +6,7 @@ use App\Enums\ErrorCode;
 use App\Enums\ReportTargetType;
 use App\Exceptions\ApiException;
 use App\Models\BuildUpdate;
+use App\Models\Business;
 use App\Models\Comment;
 use App\Models\ConversationParticipant;
 use App\Models\Event;
@@ -56,6 +57,8 @@ class ReportTargets
             ReportTargetType::Comment => $this->ulid($id) ? Comment::query()->with('buildUpdate.vehicle.owner')->find(strtolower($id)) : null,
             // M4.12: an event the reporter can see (EventPolicy::view).
             ReportTargetType::Event => $this->ulid($id) ? Event::query()->with('organiser')->find(strtolower($id)) : null,
+            // M4.14 (09 §8.10, DSA): a business profile the reporter can see (BusinessPolicy::view).
+            ReportTargetType::Business => $this->ulid($id) ? Business::query()->with('owner')->find(strtolower($id)) : null,
         };
 
         if ($target === null) {
@@ -178,7 +181,7 @@ class ReportTargets
     /**
      * Photos of builds, mods and profiles. A message photo is reported with its message, so the context comes along.
      */
-    private function isReportablePhoto(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): bool
+    private function isReportablePhoto(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): bool
     {
         if (! $target instanceof Media) {
             return true;
@@ -198,7 +201,7 @@ class ReportTargets
             && ConversationParticipant::query()->where('conversation_id', $message->conversation_id)->where('user_id', $reporter->id)->exists();
     }
 
-    private function subjectOf(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): ?string
+    private function subjectOf(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): ?string
     {
         return match (true) {
             $target instanceof User => $target->id,
@@ -209,13 +212,14 @@ class ReportTargets
             $target instanceof Message => $target->sender_id,
             $target instanceof Comment => $target->user_id,
             $target instanceof Event => $target->organiser_id,
+            $target instanceof Business => $target->owner_id,
         };
     }
 
     /**
      * A target staff act on without a report (own-initiative case, M3.2): its type, member and label, as a report would have them.
      */
-    public function forStaff(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): ResolvedTarget
+    public function forStaff(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): ResolvedTarget
     {
         $type = match (true) {
             $target instanceof User => ReportTargetType::Member,
@@ -226,12 +230,13 @@ class ReportTargets
             $target instanceof Message => ReportTargetType::Message,
             $target instanceof Comment => ReportTargetType::Comment,
             $target instanceof Event => ReportTargetType::Event,
+            $target instanceof Business => ReportTargetType::Business,
         };
 
         return $this->resolved($type, $target, $this->subjectOf($target));
     }
 
-    private function resolved(ReportTargetType $type, User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target, ?string $subjectId): ResolvedTarget
+    private function resolved(ReportTargetType $type, User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target, ?string $subjectId): ResolvedTarget
     {
         return new ResolvedTarget($type, $target, $subjectId, $this->label($target), $this->snapshot($target));
     }
@@ -239,7 +244,7 @@ class ReportTargets
     /**
      * Language-free: the member's @name, or the build's title for the build and everything on it; the client adds "Foto von …".
      */
-    private function label(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): string
+    private function label(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): string
     {
         $label = match (true) {
             $target instanceof User => '@'.$target->username,
@@ -249,6 +254,7 @@ class ReportTargets
             $target instanceof Message => $target->sender?->username === null ? '' : '@'.$target->sender->username,
             $target instanceof Comment => $target->user?->username === null ? '' : '@'.$target->user->username,
             $target instanceof Event => $target->title,
+            $target instanceof Business => $target->name,
         };
 
         return mb_substr($label, 0, 200);
@@ -272,7 +278,7 @@ class ReportTargets
      *
      * @return array<string, mixed>
      */
-    private function snapshot(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): array
+    private function snapshot(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): array
     {
         return match (true) {
             $target instanceof User => [
@@ -323,6 +329,16 @@ class ReportTargets
                 'venue_name' => $target->getAttribute('venue_name'),
                 'description' => $target->getAttribute('description'),
                 'organiser_rules' => $target->getAttribute('organiser_rules'),
+            ],
+            // M4.14: what the business page showed when reported, the Impressum included.
+            $target instanceof Business => [
+                'slug' => $target->slug,
+                'name' => $target->name,
+                'legal_name' => $target->legal_name,
+                'city' => $target->city,
+                'about' => $target->about,
+                'services' => $target->services,
+                'website' => $target->website,
             ],
         };
     }

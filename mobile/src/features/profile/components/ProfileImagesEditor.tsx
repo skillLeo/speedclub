@@ -65,7 +65,7 @@ export type ProfileImagesEditorProps = {
 };
 
 /**
- * PROF-03: cover 3:1 with the avatar over its corner, as on the profile. A pick uploads at once with its progress on the
+ * PROF-03: cover 16:9 (ADR-451) with the avatar over its corner, as on the profile. A pick uploads at once with its progress on the
  * image; the same pick keeps its idempotency key across retries, so a retried upload cannot arrive twice.
  */
 export function ProfileImagesEditor({ me, width, disabled = false }: ProfileImagesEditorProps) {
@@ -103,7 +103,7 @@ export function ProfileImagesEditor({ me, width, disabled = false }: ProfileImag
     <View style={styles.root} testID="PROF-03.images">
       <View style={styles.composite}>
         <View style={styles.cover}>
-          <Photo {...photoFields(me.cover, width)} aspect="3:1" corner="md" testID="PROF-03.cover" />
+          <Photo {...photoFields(me.cover, width)} aspect="16:9" corner="md" testID="PROF-03.cover" />
           {cover.progress !== null ? (
             <UploadBadge
               value={cover.progress}

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 return [
     'push_device_mismatch' => 'Diese Installation ist mit einer anderen Geräte-ID angemeldet.',
+    'push_endpoint' => 'Diese Adresse gehört zu keinem Push-Dienst eines Browsers.',
+    'push_key' => 'Der Schlüssel des Browsers ist ungültig.',
     'accepted' => ':Attribute muss akzeptiert werden.',
     'accepted_if' => ':Attribute muss akzeptiert werden, wenn :other :value ist.',
     'active_url' => ':Attribute ist keine gültige Internet-Adresse.',

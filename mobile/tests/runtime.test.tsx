@@ -216,6 +216,12 @@ describe('Icon', () => {
     'navigation-arrow',
     'users',
     'calendar-plus',
+    // M4.15 install hint (09 §7.15): Safari's share glyph and "Zum Home-Bildschirm".
+    'export',
+    'plus-square',
+    // M4.14 business profiles: the contact rows "Anrufen" and "Website".
+    'phone',
+    'globe-simple',
   ];
 
   it('curates every icon the primitives need', () => {

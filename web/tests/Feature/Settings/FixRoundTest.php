@@ -11,6 +11,7 @@ use App\Mail\VerificationCodeMail;
 use App\Models\AuditEvent;
 use App\Models\DataExport;
 use App\Models\HelpArticle;
+use App\Models\PushSubscription;
 use App\Models\PushToken;
 use App\Models\SupportTicket;
 use App\Models\User;
@@ -213,6 +214,8 @@ describe('should-fix 3, 4, 10, 11 and nit 26: the export', function () {
         msgStart($member, setMember(), 'Drei');
         DB::table('message_reactions')->insert(['message_id' => $first->id, 'user_id' => $member->id, 'reaction' => 'fire', 'created_at' => now()]);
         PushToken::factory()->create(['user_id' => $member->id, 'token' => 'ExponentPushToken[ffffffffffffffffffffff]']);
+        // M4.15: a browser with Web Push.
+        PushSubscription::factory()->create(['user_id' => $member->id]);
         DB::table('sessions')->insert(['id' => 'sess-1', 'user_id' => $member->id, 'ip_address' => null, 'user_agent' => 'Mozilla/5.0 (Windows NT 10.0) Gecko/20100101 Firefox/133.0', 'payload' => 'x', 'last_activity' => now()->getTimestamp()]);
         setSignIn($member, 'install-sec-00001');
 
@@ -223,6 +226,8 @@ describe('should-fix 3, 4, 10, 11 and nit 26: the export', function () {
         expect(array_keys($files))->toContain('conversations/0001.json', 'conversations/0002.json', 'conversations/0003.json')
             ->and(json_decode($files['reactions.json'], true)[0]['reaction'])->toBe('fire')
             ->and(json_decode($files['push_devices.json'], true)[0])->not->toHaveKey('token')
+            ->and(json_decode($files['web_push_browsers.json'], true)[0])->toHaveKeys(['browser', 'created_at', 'last_used_at'])
+            ->and($files['web_push_browsers.json'])->not->toContain('fcm.googleapis.com')
             ->and(json_decode($files['browser_sessions.json'], true)[0]['browser'])->toBe('Firefox auf Windows')
             ->and(collect(json_decode($files['security_events.json'], true))->pluck('action')->all())->toContain('member.data_export_requested')
             ->and($files['security_events.json'])->not->toContain('ip')

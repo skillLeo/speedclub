@@ -211,7 +211,21 @@
         "no_sign_ins": "No sign-in counted yet.",
         "device_n": "Device :n",
         "seen": "first :first · last :last",
-        "browser": "Browser"
+        "browser": "Browser",
+        "passkeys": "Passkeys",
+        "no_passkeys": "No passkeys set up.",
+        "passkey_synced": "Synced",
+        "passkey_dates": "created :created · last used :used",
+        "never": "never",
+        "providers": "Linked sign-ins",
+        "no_providers": "No Apple or Google sign-in linked.",
+        "provider_apple": "Sign in with Apple",
+        "provider_google": "Sign in with Google",
+        "private_relay": "Private Relay",
+        "linked_at": "linked :date",
+        "events": "Security events",
+        "events_note": "The member's last 50 security log events, with device and approximate city. No IP addresses.",
+        "no_events": "No security events yet."
     },
     "reports": {
         "as_target": "Cases on the member",

@@ -708,9 +708,10 @@
     "costs": {
       "title": "Kosten",
       "total": "Gesamt",
-      "line": "{{maintenance}} Wartung · {{mods}} Umbauten",
       "note": "Wartung und Umbauten zusammen. Nur du siehst diese Zahlen.",
-      "empty": "Noch keine Kosten eingetragen."
+      "empty": "Noch keine Kosten eingetragen.",
+      "maintenancePart": "{{amount}} Wartung",
+      "modsPart": "{{amount}} Umbauten"
     },
     "log": {
       "workshop": "Werkstatt: {{name}}",

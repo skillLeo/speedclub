@@ -1,25 +1,32 @@
 {
     "brand": "SPEED CLUB",
     "brand_suffix": "Admin",
+    "brand_short": "SC",
     "build": "Build :version",
     "breadcrumb": "Breadcrumb",
     "skip": "Skip to content",
     "sidebar": "Main navigation",
+    "sidebar_collapse": "Collapse sidebar",
+    "sidebar_expand": "Expand sidebar",
     "menu": "Open navigation",
     "groups": {
-        "overview": "Overview",
-        "members": "Members",
-        "vehicles_media": "Vehicles & media",
+        "overview": "Platform",
+        "members": "Community",
+        "vehicles_media": "Community",
         "catalog": "Catalogue",
-        "qr": "QR",
-        "moderation": "Moderation",
-        "support": "Support",
-        "brand_content": "Brand & content",
-        "configuration": "Configuration",
-        "team": "Team & roles",
-        "audit_privacy": "Audit & privacy",
-        "system": "System",
-        "settings": "Settings"
+        "qr": "Catalogue",
+        "moderation": "Trust & Safety",
+        "support": "Trust & Safety",
+        "brand_content": "Platform",
+        "configuration": "Platform",
+        "team": "Governance",
+        "audit_privacy": "Governance",
+        "system": "Governance",
+        "settings": "Governance",
+        "community": "Community",
+        "trust_safety": "Trust & Safety",
+        "platform": "Platform",
+        "governance": "Governance"
     },
     "nav": {
         "label": "Sections",
@@ -95,7 +102,28 @@
         "move": "select",
         "esc": "Esc",
         "copied": "Link copied",
-        "copy_failed": "The link could not be copied."
+        "copy_failed": "The link could not be copied.",
+        "action_hint": "Action",
+        "recent": "Recently opened",
+        "back": "Leave action",
+        "leave_action": "Leave “:action”",
+        "actions": {
+            "member_suspend": "Suspend member…",
+            "event_approve": "Approve meet…",
+            "business_verify": "Verify business…",
+            "flag_toggle": "Toggle flag…"
+        },
+        "targets": {
+            "member": "Find member: @username or email",
+            "member_hint": "Type at least two characters.",
+            "member_empty": "No member found.",
+            "event": "Find a meet in review",
+            "event_empty": "No meet waits for approval.",
+            "business": "Find an application",
+            "business_empty": "No open application.",
+            "flag": "Find a flag",
+            "flag_empty": "No flag found."
+        }
     },
     "two_factor": {
         "required_for_action": "This step needs a code from your authenticator app. Set up two-factor sign-in first.",
@@ -103,5 +131,25 @@
         "reminder_link": "Set up now",
         "reminder_dismiss": "Hide notice",
         "reminder_label": "Two-factor sign-in missing"
+    },
+    "density": {
+        "compact": "Compact rows"
+    },
+    "shortcuts": {
+        "title": "Keyboard shortcuts",
+        "body": "They work everywhere except in input fields.",
+        "go": "Go to",
+        "then": "then",
+        "palette": "Command palette",
+        "sheet": "This overview",
+        "lists": "Lists",
+        "rows": "Next and previous row",
+        "select": "Select row",
+        "open": "Open row",
+        "filter": "Jump to the filter",
+        "queues": "Review queues",
+        "approve": "Approve or verify",
+        "reject": "Reject",
+        "undo": "Undo the last decision (5 s)"
     }
 }

@@ -6,6 +6,7 @@ return [
     'photo_unknown' => 'Dieses Foto gibt es nicht mehr. Lade es noch einmal hoch.',
     'photo_not_ready' => 'Das Foto wird noch verarbeitet. Versuch es gleich noch einmal.',
     'vehicle_unavailable' => 'Dieses Fahrzeug kannst du gerade nicht teilen.',
+    'reply_unavailable' => 'Auf diese Nachricht kannst du nicht mehr antworten.',
     'recipient_self' => 'Du kannst dir nicht selbst schreiben.',
     'pin_limit' => 'Du kannst höchstens :max Unterhaltungen anheften.',
     'push' => [

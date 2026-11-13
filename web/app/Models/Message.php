@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $body
  * @property string|null $media_id
  * @property string|null $vehicle_id
+ * @property string|null $reply_to_id SM11: the quoted message of the same conversation
  * @property Carbon $created_at
  */
 class Message extends Model
@@ -78,6 +79,16 @@ class Message extends Model
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class)->withTrashed();
+    }
+
+    /**
+     * The quoted message (SM11), removed ones included: MessageViews decides what the reader may see of it.
+     *
+     * @return BelongsTo<Message, $this>
+     */
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'reply_to_id')->withTrashed();
     }
 
     /**

@@ -99,7 +99,9 @@
         "photo": "Foto",
         "message": "Nachricht",
         "build_update": "Update",
-        "modification": "Modifikation"
+        "modification": "Modifikation",
+        "comment": "Kommentar",
+        "event": "Treffen"
     },
     "target_of": {
         "member": "Profil :label",
@@ -107,7 +109,9 @@
         "photo": "Foto von :label",
         "message": "Nachricht von :label",
         "build_update": "Update von :label",
-        "modification": "Mod an :label"
+        "modification": "Mod an :label",
+        "comment": "Kommentar von :label",
+        "event": "Treffen „:label“"
     },
     "unnamed": "Ohne Namen",
     "reasons": {
@@ -192,7 +196,14 @@
             "hidden": "Ausgeblendet",
             "removed_photo": "Das Foto ist entfernt; öffentliche Varianten gibt es nicht mehr.",
             "deleted": "Gelöscht",
-            "private": "Privat"
+            "private": "Privat",
+            "comment_reply": "Antwort auf einen Kommentar",
+            "comment_on": "Kommentar unter einem Build-Update",
+            "comment_removed": "Entfernt: Nur der Verfasser sieht den Kommentar noch.",
+            "comment_deleted": "Vom Verfasser gelöscht",
+            "open_vehicle": "Fahrzeug öffnen",
+            "open_event": "Treffen öffnen",
+            "event_removed": "Durch eine Moderationsentscheidung entfernt"
         },
         "reports": {
             "title": "Meldungen",
@@ -241,7 +252,11 @@
                 "type": "Art",
                 "brand_text": "Marke",
                 "part_name": "Teil",
-                "notes": "Notizen"
+                "notes": "Notizen",
+                "body": "Kommentar",
+                "venue_name": "Ort",
+                "city": "Stadt",
+                "organiser_rules": "Regeln des Organisators"
             }
         },
         "decision": {
@@ -426,9 +441,16 @@
                 "ai": "KI-Vorschläge",
                 "ai_translate": "KI-Übersetzungen",
                 "appeals": "Einsprüche",
+                "auth_email_start": "Anmeldecodes anfordern (pro IP)",
+                "auth_email_verify": "Anmeldecodes prüfen (pro IP)",
+                "auth_methods": "Passkeys und Anmeldemethoden ändern",
+                "auth_secure_account": "„Das war ich nicht“-Links (pro IP)",
+                "auth_passkeys": "Anmeldung mit Passkey (pro IP)",
+                "auth_social": "Anmeldung mit Apple oder Google (pro IP)",
                 "blocks": "Blockieren",
                 "browse": "Start und Entdecken",
                 "catalog_requests": "Katalog-Anfragen",
+                "client_errors": "Fehlerberichte der App (pro IP)",
                 "contact_form": "Kontaktformular (pro IP)",
                 "conversation_edits": "Chat-Aktionen",
                 "conversation_requests": "Nachrichtenanfragen",
@@ -450,6 +472,7 @@
                 "qr_downloads": "QR-Downloads",
                 "qr_reissues": "QR neu ausgeben",
                 "realtime_auth": "Echtzeit-Verbindungen",
+                "reauth": "Identität bestätigen",
                 "reports": "Meldungen",
                 "saves": "Builds speichern",
                 "search": "Suche",
@@ -460,7 +483,16 @@
                 "unfollows": "Entfolgen",
                 "uploads": "Foto-Uploads",
                 "username_check": "Benutzernamen prüfen",
-                "web_account_deletion": "Konto löschen im Web (pro IP)"
+                "web_account_deletion": "Konto löschen im Web (pro IP)",
+                "reactions": "Reaktionen",
+                "comments": "Kommentare",
+                "mention_suggest": "Erwähnungs-Vorschläge",
+                "collections": "Sammlungen bearbeiten",
+                "build_updates": "Updates posten",
+                "events": "Treffen anlegen",
+                "rsvps": "Zusagen ändern",
+                "event_updates": "Treffen-Updates senden",
+                "geocode": "Ortssuche"
             },
             "groups": {
                 "account": "Konto",

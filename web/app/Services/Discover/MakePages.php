@@ -24,7 +24,12 @@ final class MakePages
             return null;
         }
 
-        return new MakePage($make, array_sum(array_column($counts, 'hits')), $this->models($counts));
+        $models = $this->models($counts);
+        // M4.9 DISC-03: each model's newest visible build cover, in two queries for the page.
+        $covers = app(CatalogHighlights::class)->modelCovers($viewer, array_map(fn (ModelCount $model): int => (int) $model->model->getKey(), $models));
+        $models = array_map(fn (ModelCount $model): ModelCount => new ModelCount($model->model, $model->count, $model->generations, $covers[(int) $model->model->getKey()] ?? null), $models);
+
+        return new MakePage($make, array_sum(array_column($counts, 'hits')), $models);
     }
 
     public function model(?User $viewer, VehicleModel $model): ?ModelCount

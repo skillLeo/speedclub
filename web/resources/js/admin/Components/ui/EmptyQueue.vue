@@ -24,7 +24,7 @@ const icons = { clear: PhCheck, quiet: PhTray, first: PhTray } as const;
     <div v-if="compact" class="flex items-start gap-8" :data-empty="variant">
         <component :is="icon ?? icons[variant]" :size="16" class="mt-2 shrink-0" :class="variant === 'clear' ? 'text-success' : 'text-ink-3'" aria-hidden="true" />
         <div class="flex min-w-0 flex-col gap-2">
-            <p class="text-supporting text-ink-2">{{ title }}</p>
+            <p class="text-admin-base text-ink-2">{{ title }}</p>
             <p v-if="body" class="text-caption text-ink-3">{{ body }}</p>
             <div v-if="$slots.default" class="mt-8"><slot /></div>
         </div>
@@ -32,8 +32,8 @@ const icons = { clear: PhCheck, quiet: PhTray, first: PhTray } as const;
     <div v-else class="flex items-start gap-12 rounded-sm border border-dashed border-line px-16 py-24" :data-empty="variant">
         <component :is="icon ?? icons[variant]" :size="20" class="mt-2 shrink-0" :class="variant === 'clear' ? 'text-success' : 'text-ink-3'" aria-hidden="true" />
         <div class="flex min-w-0 flex-col gap-4">
-            <p class="text-label-s text-ink">{{ title }}</p>
-            <p v-if="body" class="text-supporting text-ink-2">{{ body }}</p>
+            <p class="text-admin-base-strong text-ink">{{ title }}</p>
+            <p v-if="body" class="text-admin-base text-ink-2">{{ body }}</p>
             <div v-if="$slots.default" class="mt-8"><slot /></div>
         </div>
     </div>

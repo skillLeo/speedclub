@@ -1,10 +1,10 @@
 @props(['href', 'variant' => 'secondary', 'size' => 'm'])
-{{-- §8 button. A link on these pages, since every action leads somewhere else. Size S grows to the 44 touch target through its ::before. The outline of the outlined variants is an inset ring: it takes no layout, so the label inset is 20 / 16 / 12 on every variant, as in the app's Button (DQ-065). --}}
+{{-- §8 button. A link on these pages, since every action leads somewhere else. Size S is 32 high (2.0, tokens size.button.s; the app's Button S) and grows to a 48 touch target through its ::before. The outline of the outlined variants is an inset ring: it takes no layout, so the label inset is 20 / 16 / 12 on every variant, as in the app's Button (DQ-065). --}}
 @php
     $sizes = [
-        'l' => 'min-h-52 px-20 py-8 text-label',
-        'm' => 'min-h-44 px-16 py-8 text-label',
-        's' => 'min-h-36 px-12 py-4 text-label-s before:absolute before:inset-x-0 before:-inset-y-8',
+        'l' => 'min-h-52 px-20 py-8 text-body-strong',
+        'm' => 'min-h-44 px-16 py-8 text-body-strong',
+        's' => 'min-h-32 px-12 py-4 text-callout before:absolute before:inset-x-0 before:-inset-y-8',
     ];
     $variants = [
         'primary' => 'bg-inverse text-ink-inverse',

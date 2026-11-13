@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 
 import { publicIdOf, usePublicVehicle } from '@/api/queries/vehicles';
+import { NextHuChip, useNextHu } from '@/features/maintenance/components/NextHuChip';
 import { useQaState } from '@/lib/qa';
 
 import { StateScreen } from '../components/StateScreen';
@@ -28,6 +29,9 @@ export function VehicleScreen() {
   const canonical = query.data?.slug;
   const tabParam = paramOf(params.tab);
   const tab = isProfileTab(tabParam) ? tabParam : undefined;
+  // DQ-1073: the owner sees "Nächste HU" under the owner row, as on GAR-02; private, so nobody else ever asks for it.
+  const ownId = query.data?.is_owner ? query.data.id : '';
+  const nextHu = useNextHu(ownId);
 
   useEffect(() => {
     if (canonical && canonical !== slug && publicIdOf(canonical) === publicIdOf(slug)) router.setParams({ slug: canonical });
@@ -50,5 +54,15 @@ export function VehicleScreen() {
   }
 
   const vehicle = qaState === 'empty' ? withoutContent(query.data) : query.data;
-  return <VehicleProfile vehicle={vehicle} routeId={ROUTE_ID} onBack={back} tab={tab ?? 'overview'} onTabChange={changeTab} />;
+  return (
+    <VehicleProfile
+      vehicle={vehicle}
+      routeId={ROUTE_ID}
+      onBack={back}
+      tab={tab ?? 'overview'}
+      onTabChange={changeTab}
+      updatedAt={query.dataUpdatedAt}
+      ownerContent={nextHu && ownId ? <NextHuChip vehicleId={ownId} routeId={ROUTE_ID} /> : undefined}
+    />
+  );
 }

@@ -47,7 +47,7 @@ useResizeObserver(list, measure);
 <template>
     <div class="flex h-full flex-col bg-surface">
         <div class="flex h-56 shrink-0 items-center gap-8 border-b border-line-subtle px-16">
-            <span class="font-display text-title-s tracking-normal text-ink">{{ trans('shell.brand') }}</span>
+            <span class="font-marque text-headline tracking-normal text-ink">{{ trans('shell.brand') }}</span>
             <span class="text-caption text-ink-3">{{ trans('shell.brand_suffix') }}</span>
         </div>
         <div class="relative min-h-0 flex-1">

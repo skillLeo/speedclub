@@ -28,7 +28,7 @@ class SettingsController extends Controller
     /**
      * Update app, privacy and notification settings.
      *
-     * Any subset of: theme, locale, power_display, show_owner_on_qr, who_can_message, discoverable, indexable, read_receipts,
+     * Any subset of: theme, locale, power_display, distance_unit, torque_unit, weight_unit, maintenance (SET-23), show_owner_on_qr, who_can_message, mention_privacy, discoverable, indexable, read_receipts,
      * ai_suggestions, notification_prefs. indexable false takes the profile and the builds out of the sitemap at once and marks the pages noindex.
      */
     public function update(UpdateSettingsRequest $request, UpdateSettings $action): MemberSettingsResource

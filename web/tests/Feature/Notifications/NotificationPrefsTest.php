@@ -25,6 +25,14 @@ it('answers the defaults of the matrix before anything was set', function () {
             'message_request' => ['push' => true],
             'hu_au_reminder' => ['push' => true, 'email' => false],
             'qr_milestone' => ['push' => false],
+            // M4.11 (09 §8.17).
+            'reaction' => ['push' => true],
+            'mention' => ['push' => true],
+            'comment' => ['push' => true],
+            'vehicle_follower' => ['push' => true],
+            // M4.12 (09 §8.17).
+            'event_reminder' => ['push' => true, 'email' => false],
+            'event_update' => ['push' => true],
         ],
         'quiet_hours' => ['enabled' => true, 'from' => '22:00', 'to' => '07:00'],
         'message_previews' => false,

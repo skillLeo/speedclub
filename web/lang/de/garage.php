@@ -106,6 +106,7 @@ return [
         'specs_changed' => 'Technik aktualisiert',
         'photos_added' => 'Fotos hinzugefügt',
         'note' => 'Notiz',
+        'post' => 'Update',
         'parts' => [
             'wheels_tires' => 'Räder',
             'suspension' => 'Fahrwerk',

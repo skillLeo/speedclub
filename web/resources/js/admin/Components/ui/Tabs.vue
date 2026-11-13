@@ -38,7 +38,7 @@ const available = ref(0);
 
 const triggerClass = [
     focusRing,
-    'inline-flex h-40 min-w-32 shrink-0 items-center justify-center gap-8 whitespace-nowrap rounded-xs text-label-s text-ink-2 hover:text-ink data-[state=active]:text-ink data-[disabled]:text-ink-disabled',
+    'inline-flex h-40 min-w-32 shrink-0 items-center justify-center gap-8 whitespace-nowrap rounded-xs text-admin-base-strong text-ink-2 hover:text-ink data-[state=active]:text-ink data-[disabled]:text-ink-disabled',
 ];
 
 async function measure(): Promise<void> {
@@ -115,7 +115,7 @@ const overflowEntries = computed<MenuEntry[]>(() =>
                     {{ item.label }}
                     <span v-if="item.count !== undefined && item.count !== null" class="text-caption text-ink-3 tabular-nums">{{ formatNumber(item.count) }}</span>
                 </TabsTrigger>
-                <TabsIndicator class="absolute bottom-0 left-0 h-2 sc-tab-indicator bg-accent transition-transform duration-200 ease-standard" />
+                <TabsIndicator class="absolute bottom-0 left-0 h-2 sc-tab-indicator bg-ink transition-transform duration-effect-default ease-effect-default" />
             </TabsList>
             <DropdownMenu v-if="split.overflow.length > 0" :items="overflowEntries" align="end">
                 <template #trigger>

@@ -1,0 +1,29 @@
+{
+ "_comment": "SET-25 \"Was ist neu\" (09 §7.12): what members read about each release, newest first by date, German and English. Written for members, not engineers: no build numbers, hashes or module ids. The release engineer adds an entry with each release that reaches members (docs/RELEASES.md is the technical register). Only what the release really ships.",
+ "releases": [
+  {
+   "version": "1.0.0",
+   "date": "2026-11-10",
+   "de": {
+    "title": "SPEED CLUB 1.0",
+    "items": [
+     "Deine Garage: Fahrzeuge mit Fotos, technischen Daten und Modifikationen anlegen, Schritt für Schritt.",
+     "QR-Sticker: Jeder Build bekommt einen eigenen Code, der zu seiner öffentlichen Seite führt.",
+     "Entdecken: Builds nach Marke, Modell und Mods finden.",
+     "Nachrichten: Schreib anderen Mitgliedern direkt. Wer dir noch nicht folgt, landet zuerst bei den Anfragen.",
+     "Profile und Folgen: Folge Mitgliedern und erfahre, wenn sie einen Build veröffentlichen."
+    ]
+   },
+   "en": {
+    "title": "SPEED CLUB 1.0",
+    "items": [
+     "Your garage: add vehicles with photos, specs and modifications, step by step.",
+     "QR stickers: every build gets its own code that leads to its public page.",
+     "Discover: find builds by make, model and mods.",
+     "Messages: write to other members directly. Anyone who doesn't follow you yet lands in your requests first.",
+     "Profiles and following: follow members and hear when they publish a build."
+    ]
+   }
+  }
+ ]
+}

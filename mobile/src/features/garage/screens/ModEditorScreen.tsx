@@ -23,7 +23,7 @@ import { useStacksAtFontScale } from '@/ui/rowParts';
 import { ValueText } from '@/ui/ValueText';
 import { ModAssist } from '@/features/ai/ModAssist';
 
-import { FittingSegmented, FormGroup, PickerField, SwitchRow, useCharCount } from '../components/fields';
+import { FittingSegmented, FormGroup, PickerField, useCharCount } from '../components/fields';
 import { OptionSheet } from '../components/OptionSheet';
 import { CentredState, EditorForm, EditorLoading, EditorScreen, GoneState, LoadErrorState, RestrictedNotice, HEADER_TEXT_ACTION } from '../components/frames';
 import { ModFieldRow } from '../components/ModFieldInputs';
@@ -189,13 +189,12 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
       ...Object.fromEntries(fields.map((field) => [`fields.${field.key}`, `fields.${field.key}` as const])),
       installed_on: 'installedOn',
       cost_cents: 'cost',
-      cost_public: 'costPublic',
       legal_status: 'legalStatus',
       notes: 'notes',
       title: 'title',
       part_number: 'partNumber',
       status: 'status',
-    }) as Record<string, 'installedOn' | 'cost' | 'costPublic' | 'legalStatus' | 'notes' | 'title' | 'partNumber' | 'status' | `fields.${string}`>,
+    }) as Record<string, 'installedOn' | 'cost' | 'legalStatus' | 'notes' | 'title' | 'partNumber' | 'status' | `fields.${string}`>,
     [fields],
   );
 
@@ -352,9 +351,10 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
           // DQ-155: a radio list once "Entfernt" no longer fits its third of the track.
           <FittingSegmented
             label={t('mods.status')}
+            // 09 §7.6: in the order a part lives through, Geplant · Verbaut · Ausgebaut.
             options={[
-              { value: MOD_STATUSES[0], label: t('mods.statuses.installed') },
               { value: MOD_STATUSES[1], label: t('mods.statuses.planned') },
+              { value: MOD_STATUSES[0], label: t('mods.statuses.installed') },
               { value: MOD_STATUSES[2], label: t('mods.statuses.removed') },
             ]}
             value={field.value}
@@ -418,6 +418,8 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
               onChangeText={field.onChange}
               onBlur={field.onBlur}
               placeholder={t('mods.costPlaceholder')}
+              // DQ-1055 / 09 §7.6 GAR-10: costs are private, never public; there is no switch any more.
+              helper={t('mods.costPrivate')}
               suffix="€"
               error={fieldMessage(t, fieldState.error)}
               disabled={fieldsLocked}
@@ -426,13 +428,6 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
               maxLength={12}
               testID={`${ROUTE}.cost`}
             />
-          )}
-        />
-        <Controller
-          control={control}
-          name="costPublic"
-          render={({ field }) => (
-            <SwitchRow label={t('mods.costPublic')} helper={t('mods.costPublicHelper')} value={field.value} onChange={field.onChange} disabled={fieldsLocked} testID={`${ROUTE}.costPublic`} />
           )}
         />
         {legalEnabled ? (
@@ -495,11 +490,12 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
           fallbackAlt={mod?.title ?? category.name}
           testID={`${ROUTE}.photos`}
         />
-        <Text variant="helper" color="text.secondary">
+        <Text variant="caption" color="text.secondary">
           {mod ? t('mods.photoCount', { count: photos.length + shownUploads.length, max: MOD_PHOTO_LIMIT }) : t('mods.photoAfterSave')}
         </Text>
       </FormGroup>
-      <FormGroup title={t('mods.groups.notes')} testID={`${ROUTE}.group.notes`}>
+      {/* ADR-426 e: one field, and its label says it all; a header 'Notizen' would repeat it (DQ-928). */}
+      <FormGroup testID={`${ROUTE}.group.notes`}>
         <Controller
           control={control}
           name="notes"

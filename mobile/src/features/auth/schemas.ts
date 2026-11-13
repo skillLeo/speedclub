@@ -128,3 +128,21 @@ export const usernameSchema = z.object({
   }),
 });
 export type UsernameValues = z.infer<typeof usernameSchema>;
+
+/** AUTH-12: the address alone (M4.6). */
+export const emailEntrySchema = z.object({ email: emailField });
+export type EmailEntryValues = z.infer<typeof emailEntrySchema>;
+
+/** AUTH-09b: both boxes start unticked and must be ticked (09 §7.2). */
+export const finishSchema = z.object({
+  ageConfirmed: z.boolean().refine(Boolean, 'validation.ageRequired'),
+  termsAccepted: z.boolean().refine(Boolean, 'validation.termsAndPrivacyRequired'),
+});
+export type FinishValues = z.infer<typeof finishSchema>;
+
+/** SET-19: a passkey's name as the member calls it (the server keeps up to 64 characters). */
+export const PASSKEY_NAME_MAX_LENGTH = 64;
+export const passkeyNameSchema = z.object({
+  name: z.string().trim().min(1, 'validation.passkeyNameRequired').max(PASSKEY_NAME_MAX_LENGTH, 'validation.passkeyNameTooLong'),
+});
+export type PasskeyNameValues = z.infer<typeof passkeyNameSchema>;

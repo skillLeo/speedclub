@@ -9,9 +9,9 @@
 <li {{ $attributes->class('sc-mod-row') }} data-testid="WEB-01.modRow">
     <x-public.icon :name="$mod['category']['icon'] ?? 'wrench'" :size="20" class="sc-mod-glyph text-ink-2" />
     <div class="min-w-0 flex-1">
-        <p class="text-body-strong text-ink">{{ $title }}</p>
+        <p class="text-body-strong text-ink">{{ \App\Support\KeepTogether::shortNames($title) }}</p>
         @if ($values)
-            <p class="text-supporting tabular-nums text-ink-2">{{ \App\Support\KeepTogether::figures($values) }}</p>
+            <p class="text-callout tabular-nums text-ink-2">{{ \App\Support\KeepTogether::figures($values) }}</p>
         @endif
         @if ($legal)
             {{-- As VEH-01's ModRow (DQ-424): the legal pill never sits beside the install status; it goes under the values, on the text's edge. --}}

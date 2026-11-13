@@ -5,8 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { isIOS, isWeb } from '@/lib/platform';
-import { createStyles, size, space, useTheme } from '@/theme';
+import { createStyles, material, space, useTheme } from '@/theme';
 import { Hairline, Text } from '@/ui';
+import { WEB_BACKDROP } from '@/ui/chrome';
 import { useSafeEdge } from '@/ui/safeArea';
 
 import { TAB_DESTINATIONS } from './destinations';
@@ -31,7 +32,7 @@ export function tabLabelCap(cell: number): number | undefined {
  * BlurView takes an intensity from 0 to 100, not a radius. This factor gives the blur token the same frosted read on
  * iOS as the CSS radius on web, without losing the 92 % background token on top.
  */
-const BLUR_INTENSITY = size.tabBarBlur * 2.5;
+const BLUR_INTENSITY = material.chrome.blur * 2.5;
 
 const useStyles = createStyles((t) => ({
   bar: {
@@ -45,7 +46,8 @@ const useStyles = createStyles((t) => ({
   // twin. Web blurs through CSS, because BlurView on web adds a tint colour of its own that is not a token.
   background: {
     backgroundColor: isIOS || isWeb ? t.color.tabBar.background : t.color.bg.surface,
-    ...(isWeb ? { backdropFilter: `blur(${t.size.tabBarBlur}px)` } : {}),
+    // The same backdrop as ChromeSurface, the -webkit- twin included.
+    ...(isWeb ? WEB_BACKDROP : {}),
   },
   // Over the iOS BlurView; the bar itself stays transparent there, or the blur would have nothing to show.
   iosBar: { backgroundColor: 'transparent' },
@@ -144,7 +146,7 @@ export function TabBar() {
       {largeLabel ? (
         <View aria-hidden style={styles.largeLabel} testID="shell.tabbar.largeLabel">
           <View style={styles.largeLabelBubble}>
-            <Text variant="titleM" selectable={false}>
+            <Text variant="title2" selectable={false}>
               {largeLabel}
             </Text>
           </View>

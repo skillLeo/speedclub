@@ -6,7 +6,7 @@
 import { expect, test, watchPageErrors } from '../support/fixtures';
 import { R34 } from '../support/garage.mjs';
 import { contextOptions, makeContextDeterministic, qaUrl, waitForStablePage } from '../support/qa.mjs';
-import { compareParity, MAX_REGION_DIFF, VEHICLE_REGIONS } from './compare.mjs';
+import { compareParity, MAX_REGION_DIFF, VEHICLE_HERO_CHROME, VEHICLE_REGIONS } from './compare.mjs';
 
 const QA = { theme: 'carbon', locale: 'de' } as const;
 
@@ -29,12 +29,13 @@ test('/v/{demo} and /app/v/{demo} match in hero, title, spec strip and owner row
     expect(await blade.evaluate(() => document.documentElement.dataset.qaTheme)).toBe('carbon');
     expect(await page.evaluate(() => document.documentElement.dataset.qaTheme)).toBe('carbon');
 
-    const result = await compareParity(blade, page);
+    const result = await compareParity(blade, page, { chrome: VEHICLE_HERO_CHROME });
     const report = result.regions
-      .map((r) => `${r.testId}: texts ${r.textsEqual ? 'equal' : `differ (${r.textDifference})`}, pixels ${(r.pixelDiff * 100).toFixed(2)} %, same size ${r.sameSize}`)
+      .map((r) => `${r.testId}: texts ${r.textsEqual ? 'equal' : `differ (${r.textDifference})`}, pixels ${(r.pixelDiff * 100).toFixed(2)} %, same size ${r.sameSize}${r.occludedBy.length ? `, covered by ${r.occludedBy.join(', ')}` : ''}`)
       .join('\n');
     expect(result.regions.map((r) => r.testId)).toEqual(VEHICLE_REGIONS);
     for (const region of result.regions) {
+      expect(region.occludedBy, `${region.testId} must be uncovered when it is captured\n${report}`).toEqual([]);
       expect(region.textsEqual, `${region.testId} texts\n${report}`).toBe(true);
       expect(region.pixelDiff, `${region.testId} pixels (at most ${MAX_REGION_DIFF * 100} %)\n${report}`).toBeLessThanOrEqual(MAX_REGION_DIFF);
     }

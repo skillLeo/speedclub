@@ -9,8 +9,8 @@ import { THEMES } from '../support/tokens.mjs';
 type Screen = { name: string; path: string; auth: 'guest' | 'member'; ready: string; expected?: { status: number; url: RegExp } };
 
 const SCREENS: Screen[] = [
-  { name: 'HOME-01 guest', path: '/app/', auth: 'guest', ready: '[data-testid^="HOME-01.card."]' },
-  { name: 'HOME-01 member', path: '/app/', auth: 'member', ready: '[data-testid^="HOME-01.card."]' },
+  { name: 'HOME-01 guest', path: '/app/', auth: 'guest', ready: '[data-testid^="HOME-01.newBuilds.item."]' },
+  { name: 'HOME-01 member', path: '/app/', auth: 'member', ready: '[data-testid^="HOME-01.newBuilds.item."]' },
   { name: 'DISC-01 guest', path: '/app/discover', auth: 'guest', ready: '[data-testid^="DISC-01.makes."]' },
   { name: 'DISC-02 r34', path: '/app/discover/search?q=r34', auth: 'guest', ready: ':is([data-testid^="DISC-02.vehicle."], [data-testid^="DISC-02.tile."])' },
   { name: 'DISC-02 member', path: '/app/discover/search?q=lukas', auth: 'member', ready: '[data-testid="DISC-02.member.lukas.sc"]' },

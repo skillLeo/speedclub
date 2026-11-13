@@ -11,10 +11,24 @@ export const UNDERSTAND_PARAM = 'understand';
  * DISC-02 with the query in the URL, so a result list can be linked, reloaded and reached with back. `understand` marks a text
  * that was submitted (Enter, a recent search): DISC-02 then turns what `search/interpret` reads into visible filter chips.
  */
-export function searchPath(query: string, options: { understand?: boolean } = {}): Href {
+export function searchPath(query: string, options: { understand?: boolean; scope?: SearchScope } = {}): Href {
   const q = normalizeQuery(query);
   if (!q) return '/discover/search';
-  return { pathname: '/discover/search', params: options.understand ? { q, [UNDERSTAND_PARAM]: '1' } : { q } };
+  const params: Record<string, string> = { q };
+  if (options.understand) params[UNDERSTAND_PARAM] = '1';
+  if (options.scope && options.scope !== 'all') params[SCOPE_PARAM] = options.scope;
+  return { pathname: '/discover/search', params };
+}
+
+/** DISC-01's scope chips (09 §7.5): Alles · Builds · Mitglieder. Treffen, Betriebe and Teile follow with their modules (M4.12, M4.14). */
+export const SEARCH_SCOPES = ['all', 'vehicles', 'members'] as const;
+export type SearchScope = (typeof SEARCH_SCOPES)[number];
+/** The URL param that carries a scope other than "Alles" to DISC-02. */
+export const SCOPE_PARAM = 'scope';
+
+/** A scope from the URL; anything else is "Alles". */
+export function searchScopeOf(value: string | null | undefined): SearchScope {
+  return (SEARCH_SCOPES as readonly string[]).includes(value ?? '') ? (value as SearchScope) : 'all';
 }
 
 /** A Kollektion opens DISC-02 with its filters and sort as visible chips (m2.3 handover §6). */

@@ -10,6 +10,7 @@ use App\Models\Media;
 use App\Models\Staff;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Maintenance\MaintenancePrefs;
 use App\Services\Notifications\NotificationPrefs;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -218,7 +219,10 @@ describe('me/profile', function () {
                 'username', 'username_change_available_at', 'display_name', 'city', 'bio', 'avatar', 'cover', 'locale', 'theme',
                 'power_display', 'member_since',
                 'stats' => ['vehicles', 'followers', 'following'],
+                'is_sample', 'is_editorial',
                 'two_factor_enabled',
+                // M4.6: false for a passwordless account.
+                'password_set',
                 'restrictions' => [
                     'suspended',
                     'messaging' => ['restricted', 'until', 'decision_id'],
@@ -338,7 +342,7 @@ describe('real stats', function () {
     it('counts for others in the public resource, which holds nothing private', function () {
         $public = (new MemberPublicResource($this->member))->resolve(new Request);
 
-        expect(array_keys($public))->toBe(['username', 'display_name', 'city', 'bio', 'avatar', 'cover', 'member_since', 'stats'])
+        expect(array_keys($public))->toBe(['username', 'display_name', 'city', 'bio', 'avatar', 'cover', 'member_since', 'stats', 'is_sample', 'is_editorial'])
             ->and($public['stats'])->toBe(['vehicles' => 1, 'followers' => 2, 'following' => 1]);
     });
 });
@@ -445,7 +449,7 @@ describe('me/settings', function () {
 
         $this->getJson('/api/v1/me/settings')
             ->assertOk()
-            ->assertExactJson(['data' => ['theme' => 'carbon', 'locale' => 'de', 'power_display' => 'ps_kw', 'show_owner_on_qr' => true, 'who_can_message' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
+            ->assertExactJson(['data' => ['theme' => 'carbon', 'locale' => 'de', 'effective_locale' => 'de', 'home_region' => null, 'power_display' => 'ps_kw', 'distance_unit' => 'km', 'torque_unit' => 'nm', 'weight_unit' => 'kg', 'maintenance' => MaintenancePrefs::DEFAULTS, 'show_owner_on_qr' => true, 'who_can_message' => 'everyone', 'mention_privacy' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
     });
 
     it('updates what is sent', function () {
@@ -453,7 +457,7 @@ describe('me/settings', function () {
 
         $this->patchJson('/api/v1/me/settings', ['theme' => 'light', 'locale' => 'en', 'power_display' => 'hp'])
             ->assertOk()
-            ->assertExactJson(['data' => ['theme' => 'light', 'locale' => 'en', 'power_display' => 'hp', 'show_owner_on_qr' => true, 'who_can_message' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
+            ->assertExactJson(['data' => ['theme' => 'light', 'locale' => 'en', 'effective_locale' => 'en', 'home_region' => null, 'power_display' => 'hp', 'distance_unit' => 'km', 'torque_unit' => 'nm', 'weight_unit' => 'kg', 'maintenance' => MaintenancePrefs::DEFAULTS, 'show_owner_on_qr' => true, 'who_can_message' => 'everyone', 'mention_privacy' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
 
         $this->patchJson('/api/v1/me/settings', ['theme' => 'black'])
             ->assertOk()
@@ -466,7 +470,7 @@ describe('me/settings', function () {
 
         $this->patchJson('/api/v1/me/settings', ['show_owner_on_qr' => false])
             ->assertOk()
-            ->assertExactJson(['data' => ['theme' => 'light', 'locale' => 'en', 'power_display' => 'hp', 'show_owner_on_qr' => false, 'who_can_message' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
+            ->assertExactJson(['data' => ['theme' => 'light', 'locale' => 'en', 'effective_locale' => 'en', 'home_region' => null, 'power_display' => 'hp', 'distance_unit' => 'km', 'torque_unit' => 'nm', 'weight_unit' => 'kg', 'maintenance' => MaintenancePrefs::DEFAULTS, 'show_owner_on_qr' => false, 'who_can_message' => 'everyone', 'mention_privacy' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
 
         expect($member->refresh()->getAttribute('show_owner_on_qr'))->toBeFalse();
 

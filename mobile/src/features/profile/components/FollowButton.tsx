@@ -3,7 +3,7 @@ import { usePathname } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { readMemberProfileNow, useFollow } from '@/api/queries/social';
-import { haptics } from '@/lib/haptics';
+import { hapticFor } from '@/lib/haptics';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { Button, toast, type ButtonSize } from '@/ui';
 import { useViewAsLock } from '@/features/viewAs/useViewAs';
@@ -22,7 +22,7 @@ export type FollowButtonProps = {
 };
 
 /**
- * Folgen / Folge ich (§10: label change plus the check glyph, light haptic, no confetti). Optimistic: the label turns at once
+ * Folgen / Folge ich (§10: label change plus the check glyph, light haptic, no confetti; SM7 press). Optimistic: the label turns at once
  * and turns back with a toast when the server refuses (rate limit, unverified address). A guest gets the auth-required sheet;
  * the follow then happens after sign-in, back on this page, unless the member signing in is this member or follows already.
  */
@@ -42,7 +42,6 @@ export function FollowButton({ username, following, size = 'm', variant = 'prima
 
   const press = () => {
     if (useSessionStore.getState().status === 'member') {
-      haptics.light();
       send(!following);
       return;
     }
@@ -53,7 +52,6 @@ export function FollowButton({ username, following, size = 'm', variant = 'prima
         void readMemberProfileNow(client, username)
           .then((profile) => {
             if (profile.is_self || profile.is_following) return;
-            haptics.light();
             send(true);
           })
           .catch(() => undefined);
@@ -68,7 +66,10 @@ export function FollowButton({ username, following, size = 'm', variant = 'prima
       icon={following ? 'check' : undefined}
       variant={following ? 'secondary' : variant}
       size={size}
-      onPress={press}
+      onPress={() => {
+        hapticFor('follow');
+        press();
+      }}
       locked={locked}
       accessibilityLabel={following ? t('follow.followingName', { name }) : t('follow.followName', { name })}
       testID={testID}

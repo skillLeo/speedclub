@@ -15,8 +15,41 @@ import Light from './Light.vue';
 import Audio from './Audio.vue';
 import Gearbox from './Gearbox.vue';
 import Drivetrain from './Drivetrain.vue';
+import Supercharger from './Supercharger.vue';
+import Intercooler from './Intercooler.vue';
+import Fuel from './Fuel.vue';
+import Cooling from './Cooling.vue';
+import Oil from './Oil.vue';
+import BrakeCaliper from './BrakeCaliper.vue';
+import SplitterDiffuser from './SplitterDiffuser.vue';
+import BodyKit from './BodyKit.vue';
+import WrapPaint from './WrapPaint.vue';
+import SteeringWheel from './SteeringWheel.vue';
+import RollCage from './RollCage.vue';
+import Electronics from './Electronics.vue';
+import Clutch from './Clutch.vue';
+import Differential from './Differential.vue';
+import ChassisBrace from './ChassisBrace.vue';
+import EvBattery from './EvBattery.vue';
+import EvPlug from './EvPlug.vue';
+import GarageBay from './GarageBay.vue';
+import QrSticker from './QrSticker.vue';
+import Dyno from './Dyno.vue';
+import HuPlakette from './HuPlakette.vue';
+import ServiceWrench from './ServiceWrench.vue';
+import TyreSeason from './TyreSeason.vue';
+import Insurance from './Insurance.vue';
+import Workshop from './Workshop.vue';
+import PartBox from './PartBox.vue';
+import Meet from './Meet.vue';
+import CruiseRoute from './CruiseRoute.vue';
+import TrackDay from './TrackDay.vue';
+import Strong from './Strong.vue';
+import Clean from './Clean.vue';
+import Low from './Low.vue';
+import Loud from './Loud.vue';
 
-export { Wheel, Tyre, Coilover, AirSuspension, Exhaust, Turbo, Intake, Engine, EcuChip, BrakeDisc, Wing, Seat, Light, Audio, Gearbox, Drivetrain };
+export { Wheel, Tyre, Coilover, AirSuspension, Exhaust, Turbo, Intake, Engine, EcuChip, BrakeDisc, Wing, Seat, Light, Audio, Gearbox, Drivetrain, Supercharger, Intercooler, Fuel, Cooling, Oil, BrakeCaliper, SplitterDiffuser, BodyKit, WrapPaint, SteeringWheel, RollCage, Electronics, Clutch, Differential, ChassisBrace, EvBattery, EvPlug, GarageBay, QrSticker, Dyno, HuPlakette, ServiceWrench, TyreSeason, Insurance, Workshop, PartBox, Meet, CruiseRoute, TrackDay, Strong, Clean, Low, Loud };
 
 export type AutoIconName =
   | 'wheel'
@@ -34,7 +67,40 @@ export type AutoIconName =
   | 'light'
   | 'audio'
   | 'gearbox'
-  | 'drivetrain';
+  | 'drivetrain'
+  | 'supercharger'
+  | 'intercooler'
+  | 'fuel'
+  | 'cooling'
+  | 'oil'
+  | 'brake-caliper'
+  | 'splitter-diffuser'
+  | 'body-kit'
+  | 'wrap-paint'
+  | 'steering-wheel'
+  | 'roll-cage'
+  | 'electronics'
+  | 'clutch'
+  | 'differential'
+  | 'chassis-brace'
+  | 'ev-battery'
+  | 'ev-plug'
+  | 'garage-bay'
+  | 'qr-sticker'
+  | 'dyno'
+  | 'hu-plakette'
+  | 'service-wrench'
+  | 'tyre-season'
+  | 'insurance'
+  | 'workshop'
+  | 'part-box'
+  | 'meet'
+  | 'cruise-route'
+  | 'track-day'
+  | 'strong'
+  | 'clean'
+  | 'low'
+  | 'loud';
 
 export const autoIcons = {
   wheel: Wheel,
@@ -53,4 +119,37 @@ export const autoIcons = {
   audio: Audio,
   gearbox: Gearbox,
   drivetrain: Drivetrain,
+  supercharger: Supercharger,
+  intercooler: Intercooler,
+  fuel: Fuel,
+  cooling: Cooling,
+  oil: Oil,
+  'brake-caliper': BrakeCaliper,
+  'splitter-diffuser': SplitterDiffuser,
+  'body-kit': BodyKit,
+  'wrap-paint': WrapPaint,
+  'steering-wheel': SteeringWheel,
+  'roll-cage': RollCage,
+  electronics: Electronics,
+  clutch: Clutch,
+  differential: Differential,
+  'chassis-brace': ChassisBrace,
+  'ev-battery': EvBattery,
+  'ev-plug': EvPlug,
+  'garage-bay': GarageBay,
+  'qr-sticker': QrSticker,
+  dyno: Dyno,
+  'hu-plakette': HuPlakette,
+  'service-wrench': ServiceWrench,
+  'tyre-season': TyreSeason,
+  insurance: Insurance,
+  workshop: Workshop,
+  'part-box': PartBox,
+  meet: Meet,
+  'cruise-route': CruiseRoute,
+  'track-day': TrackDay,
+  strong: Strong,
+  clean: Clean,
+  low: Low,
+  loud: Loud,
 } satisfies Record<AutoIconName, unknown>;

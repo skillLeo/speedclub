@@ -103,7 +103,7 @@ function AnnouncementCard({ announcement, routeId, style }: { announcement: Anno
           {announcement.title}
         </Text>
         {announcement.body.trim() ? (
-          <Text variant="bodyDense" color="text.secondary" testID={`${testID}.body`}>
+          <Text variant="body" color="text.secondary" testID={`${testID}.body`}>
             {announcement.body}
           </Text>
         ) : null}

@@ -31,7 +31,7 @@ const props = withDefaults(
 );
 
 const variants: Record<ButtonVariant, string> = {
-    primary: 'bg-inverse text-ink-inverse hover:bg-inverse/90 active:bg-inverse/80',
+    primary: 'bg-admin-primary text-admin-primary-text hover:bg-admin-primary-pressed active:bg-admin-primary-pressed',
     secondary: 'border border-line-control text-ink hover:bg-hover active:bg-pressed',
     ghost: 'text-ink-2 hover:bg-hover hover:text-ink active:bg-pressed',
     danger: 'bg-accent-fill text-on-accent hover:bg-accent-fill-pressed active:bg-accent-fill-pressed',
@@ -39,14 +39,14 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
-    sm: 'h-32 gap-4 px-12 text-label-s',
-    md: 'h-40 gap-8 px-16 text-label-s',
+    sm: 'h-32 gap-4 px-12 text-admin-base-strong',
+    md: 'h-40 gap-8 px-16 text-admin-base-strong',
 };
 
 const inactive = computed(() => props.disabled || props.loading);
 
 const classes = computed(() => [
-    'inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap rounded-sm transition-colors duration-150 ease-standard',
+    'inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap rounded-sm transition-colors duration-effect-fast ease-effect-fast',
     focusRing,
     sizes[props.size],
     inactive.value ? 'cursor-not-allowed border-transparent bg-raised text-ink-disabled' : variants[props.variant],

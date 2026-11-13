@@ -96,7 +96,9 @@
         "photo": "Photo",
         "message": "Message",
         "build_update": "Build update",
-        "modification": "Modification"
+        "modification": "Modification",
+        "comment": "Comment",
+        "event": "Meet"
     },
     "status": {
         "received": "Received",
@@ -178,8 +180,8 @@
         "appealUpheld": "We reviewed your appeal and confirmed the decision on {{date}}.",
         "appealReversed": "We reviewed your appeal and reversed the decision on {{date}}.",
         "appealButton": "Appeal",
-        "disputeTitle": "Out-of-court dispute settlement",
-        "disputeBody": "You can turn to a certified out-of-court dispute settlement body under Art. 21 DSA.",
+        "disputeTitle": "Out-\u2060of-\u2060court dispute settlement",
+        "disputeBody": "You can turn to a certified out-\u2060of-\u2060court dispute settlement body under Art. 21 DSA.",
         "courtTitle": "Court",
         "courtBody": "You can also have the decision reviewed by a court at any time.",
         "notFoundTitle": "This decision isn't available",
@@ -245,6 +247,8 @@
         "message": "Message from {{label}}",
         "build_update": "Update to {{label}}",
         "modification": "Mod on {{label}}",
+        "comment": "Comment by {{label}}",
+        "event": "Meet “{{label}}”",
         "gone": "No longer available"
     }
 }

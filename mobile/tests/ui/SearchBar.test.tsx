@@ -23,7 +23,7 @@ describe('SearchBar', () => {
 
     const settle = () =>
       act(async () => {
-        jest.advanceTimersByTime(motion.duration.micro);
+        jest.advanceTimersByTime(motion.css['effect.fast'].duration);
       });
 
     it('does not leave the cancel action up after the field lost focus', async () => {
@@ -70,7 +70,7 @@ describe('SearchBar', () => {
     expect(input.props['aria-label']).toBe(props.placeholder);
     const field = flat(screen.getByTestId('s.field').props.style);
     expect(field.minHeight).toBe(size.search);
-    expect(field.borderRadius).toBe(radius.search);
+    expect(field.borderRadius).toBe(radius.md);
   });
 
   it('shows clear only with text, and clear empties the field', async () => {

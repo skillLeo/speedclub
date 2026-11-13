@@ -356,7 +356,7 @@ describe('rendering', function () {
         expect(round((float) $box[1] / 72 * 25.4))->toBe(105.0)
             ->and(round((float) $box[2] / 72 * 25.4))->toBe(148.0)
             ->and($pdf)->toContain('Inter-Regular')
-            ->and($pdf)->toContain('BarlowSemiCondensed-Bold')
+            ->and($pdf)->toContain('InterDisplay-SemiBold')
             ->and(substr_count($pdf, '/FontFile2'))->toBe(3);
     })->with(['de', 'en']);
 
@@ -571,11 +571,14 @@ describe('GET vehicles/{id}/qr/stats', function () {
         Sanctum::actingAs($this->owner);
 
         $this->getJson('/api/v1/vehicles/'.$this->vehicle->id.'/qr/stats')->assertOk()
-            ->assertJsonCount(14, 'data.days')
-            ->assertJsonPath('data.days.0', ['date' => '2026-10-21', 'count' => 1])
-            ->assertJsonPath('data.days.1', ['date' => '2026-10-22', 'count' => 0])
-            ->assertJsonPath('data.days.13', ['date' => '2026-11-03', 'count' => 7])
+            // M4.9 (09 QR-02): thirty days; total_14_days stays the last fourteen of them for older apps.
+            ->assertJsonCount(30, 'data.days')
+            ->assertJsonPath('data.days.0', ['date' => '2026-10-05', 'count' => 0])
+            ->assertJsonPath('data.days.15', ['date' => '2026-10-20', 'count' => 100])
+            ->assertJsonPath('data.days.16', ['date' => '2026-10-21', 'count' => 1])
+            ->assertJsonPath('data.days.29', ['date' => '2026-11-03', 'count' => 7])
             ->assertJsonPath('data.total_14_days', 8)
+            ->assertJsonPath('data.total_30_days', 108)
             ->assertJsonPath('data.total', 108);
     });
 });

@@ -26,11 +26,11 @@ export function RowsSection() {
   const avatarBlurhash = PHOTOS.wheels.blurhash;
   return (
     <SectionScreen section="rows">
-      <Group title="Section Header" note="title.s, optionale Textaktion.">
+      <Group title="Section Header" note="headline, optionale Textaktion.">
         <SectionHeader title="Neue Builds" actionLabel="Alle" onAction={noop} actionAccessibilityLabel="Alle neuen Builds" testID="DEV-01.rows.sectionHeader" />
         <SectionHeader title="Deine Fahrzeuge und alle gespeicherten Builds der letzten Wochen" />
       </Group>
-      <Group title="Build-Update" note="56er Thumb, Zahlenwerte im Diff in tnum, Trennlinie ab Textbeginn.">
+      <Group title="Build-Update" note="Vorschaubild 56, Zahlenwerte im Diff tabellarisch (tnum), Trennlinie ab Textbeginn.">
         <Panel>
           <BuildUpdateRow
             title="Fahrwerk geändert"
@@ -116,12 +116,12 @@ export function RowsSection() {
           </Specimen>
         ))}
       </Group>
-      <Group title="Mod" note="Kategorie-Glyphe 20, Werte in tnum, Status-Pill, Chevron.">
+      <Group title="Mod" note="Kategorie-Glyphe 20, Werte in tnum, Statusanzeige, Chevron.">
         <Panel>
           <ModRow icon="wheel" name="BBS LM" values={'19″ × 9,5J ET35 · 255/35 R19'} status="Verbaut" onPress={noop} inset={16} divider testID="DEV-01.rows.mod" />
           <ModRow icon="coilover" name="KW V3" values="−35 mm" status="Verbaut" onPress={noop} inset={16} divider />
           <ModRow icon="exhaust" name="HKS Hi-Power Titan" values="Endschalldämpfer" status="Geplant" onPress={noop} inset={16} divider />
-          <ModRow icon="brake-disc" name="Brembo GT" values="6-Kolben · 380 mm" status="Entfernt" onPress={noop} inset={16} />
+          <ModRow icon="brake-disc" name="Brembo GT" values="6-Kolben · 380 mm" status="Ausgebaut" onPress={noop} inset={16} />
         </Panel>
       </Group>
       <Group title="Mod, Zustände">

@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { useFlag } from '@/api/queries/appConfig';
 import { useMemberSettings, useUpdateMemberSettings, type NotificationPrefs, type SettingsPatch } from '@/api/queries/settings';
 import { FormNotice } from '@/features/auth/components/FormNotice';
-import { GuestInvitation } from '@/features/profile/components/GuestInvitation';
+import { HU_AU_FLAG } from '@/features/garage/screens/EditSpecsScreen';
 import { SAVED_BUILDS_FLAG } from '@/features/vehicle/save';
 import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
@@ -19,6 +19,7 @@ import { SwitchRow } from '../components/SettingRows';
 import { SettingsPage } from '../components/SettingsPage';
 import { ROW_INSET } from '../components/ValueRow';
 import { useFailureMessage } from '../forms';
+import { SettingsGuest } from '../components/SettingsGuest';
 
 const ROUTE = 'SET-09';
 /** Quiet hours move in half hours; a time the server holds off that grid moves from where it is. */
@@ -27,7 +28,61 @@ const LAST_SLOT = 24 * 60 - TIME_STEP;
 /** A time stops moving this long before it is sent, so a run of taps is one request (throttle:account-edits). */
 const TIME_SETTLE_MS = 700;
 
-type PushType = 'new_follower' | 'message_request' | 'new_message' | 'followed_published' | 'build_saved';
+type PushType = keyof NotificationPrefs['types'];
+/** The types with an e-mail switch beside push (the reminders); every other type is push only. */
+type EmailType = 'hu_au_reminder' | 'event_reminder';
+
+/** 09 §7.9 SET-09: the categories as groups, each type with its flag (a type whose feature is off is not offered). */
+type CategoryRow = { type: PushType; flag?: string; email?: boolean };
+type Category = { key: 'builds' | 'messages' | 'events' | 'garage'; rows: readonly CategoryRow[]; flag?: string };
+
+export const NOTIFICATION_CATEGORIES: readonly Category[] = [
+  {
+    key: 'builds',
+    rows: [
+      { type: 'followed_published' },
+      { type: 'reaction', flag: 'build_reactions' },
+      { type: 'mention', flag: 'mentions' },
+      { type: 'comment', flag: 'build_comments' },
+      { type: 'new_follower' },
+      { type: 'vehicle_follower', flag: 'vehicle_follow' },
+      { type: 'build_saved', flag: SAVED_BUILDS_FLAG },
+    ],
+  },
+  { key: 'messages', rows: [{ type: 'new_message' }, { type: 'message_request' }] },
+  { key: 'events', flag: 'events', rows: [{ type: 'event_reminder', email: true }, { type: 'event_update' }] },
+  // ADR-441: the key stays `hu_au_reminder` for every maintenance reminder (HU/AU, Service, Reifen, Versicherung).
+  { key: 'garage', rows: [{ type: 'hu_au_reminder', email: true }] },
+];
+
+/** The flags the matrix reads. */
+function useMatrixFlags(): Readonly<Record<string, boolean>> {
+  const reactions = useFlag('build_reactions');
+  const mentions = useFlag('mentions');
+  const comments = useFlag('build_comments');
+  const vehicleFollow = useFlag('vehicle_follow');
+  const saved = useFlag(SAVED_BUILDS_FLAG);
+  const events = useFlag('events');
+  const maintenance = useFlag('maintenance');
+  const huAu = useFlag(HU_AU_FLAG);
+  return {
+    build_reactions: reactions,
+    mentions,
+    build_comments: comments,
+    vehicle_follow: vehicleFollow,
+    [SAVED_BUILDS_FLAG]: saved,
+    events,
+    maintenance,
+    [HU_AU_FLAG]: huAu,
+  };
+}
+
+/** The categories and rows on offer while these flags are on. Fälligkeiten: with maintenance (M4.13) or the v1 HU/AU reminder. */
+export function visibleCategories(flags: Readonly<Partial<Record<string, boolean>>>): Category[] {
+  return NOTIFICATION_CATEGORIES.filter((category) => (category.key === 'garage' ? flags.maintenance || flags[HU_AU_FLAG] : !category.flag || flags[category.flag]))
+    .map((category) => ({ ...category, rows: category.rows.filter((row) => !row.flag || flags[row.flag]) }))
+    .filter((category) => category.rows.length > 0);
+}
 
 const useStyles = createStyles((t) => ({
   groups: { gap: t.space[32] },
@@ -61,9 +116,9 @@ function NotificationsSkeleton() {
   return (
     <Skeleton testID={`${ROUTE}.skeleton`}>
       <View style={styles.groups}>
-        {[4, 2, 3, 1].map((rows, index) => (
+        {[5, 2, 1, 3, 1].map((rows, index) => (
           <View key={index} style={styles.skeletonGroup}>
-            <SkeletonText variant="labelS" width="30%" style={styles.skeletonLabel} />
+            <SkeletonText variant="callout" width="30%" style={styles.skeletonLabel} />
             <SkeletonBlock height={size.row.withThumb * rows} corner="md" />
           </View>
         ))}
@@ -100,7 +155,7 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
   const online = useOnline();
   const failure = useFailureMessage();
   const update = useUpdateMemberSettings();
-  const savedBuilds = useFlag(SAVED_BUILDS_FLAG);
+  const flags = useMatrixFlags();
   const disabled = !online;
   const [times, setTimes] = useState({ from: minutesOf(prefs.quiet_hours.from), to: minutesOf(prefs.quiet_hours.to) });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -118,6 +173,7 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
   const send = (patch: SettingsPatch) =>
     update.mutate(patch, { onError: (error) => toast(failure(error), { haptic: 'warning', testID: `${ROUTE}.failed` }) });
   const setPush = (type: PushType, push: boolean) => send({ notification_prefs: { types: { [type]: { push } } } });
+  const setEmail = (type: EmailType, email: boolean) => send({ notification_prefs: { types: { [type]: { email } } } });
   const moveTime = (key: 'from' | 'to', minutes: number) => {
     const next = { ...times, [key]: minutes };
     setTimes(next);
@@ -128,32 +184,53 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
     }, TIME_SETTLE_MS);
   };
 
-  const pushRows: { type: PushType; on: boolean }[] = [
-    { type: 'new_follower', on: prefs.types.new_follower.push },
-    { type: 'message_request', on: prefs.types.message_request.push },
-    { type: 'new_message', on: prefs.types.new_message.push },
-    { type: 'followed_published', on: prefs.types.followed_published.push },
-    ...(savedBuilds ? [{ type: 'build_saved' as const, on: prefs.types.build_saved.push }] : []),
-  ];
+  const categories = visibleCategories(flags);
   const quiet = prefs.quiet_hours.enabled;
 
   return (
     <View style={styles.groups}>
       {isWeb ? <FormNotice tone="info" message={t('notifications.webNote')} testID={`${ROUTE}.webNote`} /> : null}
-      <RowGroup title={t('notifications.pushGroup')} testID={`${ROUTE}.push`}>
-        {pushRows.map((row, index) => (
-          <SwitchRow
-            key={row.type}
-            title={t(`notifications.types.${row.type}`)}
-            helper={t(`notifications.types.${row.type}Helper`)}
-            value={row.on}
-            onValueChange={(next) => setPush(row.type, next)}
-            disabled={disabled}
-            divider={index < pushRows.length - 1}
-            testID={`${ROUTE}.push.${row.type}`}
-          />
-        ))}
-      </RowGroup>
+      {categories.map((category) => {
+        const rows = category.rows.flatMap((row) => {
+          const entries = [{ row, channel: 'push' as const }];
+          return row.email ? [...entries, { row, channel: 'email' as const }] : entries;
+        });
+        return (
+          <RowGroup key={category.key} title={t(`notifications.categories.${category.key}`)} testID={`${ROUTE}.${category.key === 'builds' ? 'push' : category.key}`}>
+            {rows.map(({ row, channel }, index) => {
+              const type = row.type;
+              const divider = index < rows.length - 1;
+              if (channel === 'email') {
+                const emailType = type as EmailType;
+                return (
+                  <SwitchRow
+                    key={`${type}.email`}
+                    title={t(`notifications.types.${type}Email`)}
+                    helper={t(`notifications.types.${type}EmailHelper`)}
+                    value={prefs.types[emailType].email}
+                    onValueChange={(next) => setEmail(emailType, next)}
+                    disabled={disabled}
+                    divider={divider}
+                    testID={`${ROUTE}.email.${type}`}
+                  />
+                );
+              }
+              return (
+                <SwitchRow
+                  key={type}
+                  title={t(`notifications.types.${type}`)}
+                  helper={t(`notifications.types.${type}Helper`)}
+                  value={prefs.types[type].push}
+                  onValueChange={(next) => setPush(type, next)}
+                  disabled={disabled}
+                  divider={divider}
+                  testID={`${ROUTE}.push.${type}`}
+                />
+              );
+            })}
+          </RowGroup>
+        );
+      })}
       <RowGroup title={t('notifications.previewGroup')} testID={`${ROUTE}.previewGroup`}>
         <SwitchRow
           title={t('notifications.previews')}
@@ -188,7 +265,7 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
           divider
           testID={`${ROUTE}.digest`}
         />
-        <Text variant="supporting" color="text.secondary" style={styles.note} testID={`${ROUTE}.mandatory`}>
+        <Text variant="callout" color="text.secondary" style={styles.note} testID={`${ROUTE}.mandatory`}>
           {t('notifications.mandatory')}
         </Text>
       </RowGroup>
@@ -197,8 +274,10 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
 }
 
 /**
- * SET-09 /settings/notifications: push per type from `notification_prefs` (02 §7), message previews (off by default, 08 §1),
- * quiet hours with their times, and the e-mail digest. Security and moderation mails cannot be switched off, and the page says so.
+ * SET-09 /settings/notifications (09 §7.9): per category (Builds & Community · Nachrichten · Treffen · Fälligkeiten) the push switch
+ * of each type and, for the reminders, the e-mail switch; message previews (off by default, 08 §1), quiet hours with their times,
+ * and the e-mail digest. Types whose feature is off are not offered. Security and moderation mails cannot be switched off, and the
+ * page says so. Web-Push and a digest frequency wait for the API (M4.15).
  */
 export function NotificationSettingsScreen() {
   const { t } = useTranslation('settings');
@@ -209,7 +288,7 @@ export function NotificationSettingsScreen() {
 
   let body: ReactNode;
   if (status === 'guest') {
-    body = <GuestInvitation routeId={ROUTE} returnTo="/settings/notifications" />;
+    body = <SettingsGuest routeId={ROUTE} returnTo="/settings/notifications" />;
   } else if (qaState === 'loading' || status === 'loading' || (settings.isPending && settings.fetchStatus !== 'paused' && qaState !== 'error')) {
     body = <NotificationsSkeleton />;
   } else if (qaState === 'error' || !settings.data) {

@@ -16,7 +16,7 @@ const ROUTE = 'AUTH-10';
 const useStyles = createStyles((t) => ({
   points: { gap: t.space[16] },
   point: { alignItems: 'flex-start', flexDirection: 'row', gap: t.space[12] },
-  // The glyph sits on the first line of its title (title.s line height 24 → 2 above a 20 glyph).
+  // The glyph sits on the first line of its title (body.strong line 22: 1 above a 20 glyph; 2 is the nearest space token).
   glyph: { paddingTop: t.space[2] },
   text: { flex: 1, gap: t.space[2], minWidth: 0 },
 }));
@@ -98,7 +98,7 @@ export function NotificationsPrimerScreen() {
             </View>
             <View style={styles.text}>
               <Text variant="bodyStrong">{t(`primer.points.${point.key}.title`)}</Text>
-              <Text variant="supporting" color="text.secondary">
+              <Text variant="callout" color="text.secondary">
                 {t(`primer.points.${point.key}.body`)}
               </Text>
             </View>

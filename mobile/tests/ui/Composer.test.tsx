@@ -4,7 +4,7 @@ import { useWindowDimensions } from 'react-native';
 import { hydrateThemePreference, size, space, themes, typography } from '@/theme';
 import { Composer, sendsOnKey } from '@/ui/Composer';
 
-import { flat, renderUi, visualOf } from './helpers';
+import { flat, measureOf, renderUi, visualOf } from './helpers';
 
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
   __esModule: true,
@@ -22,8 +22,10 @@ const base = {
 
 describe('Composer', () => {
   it.each([
-    [360, space[16]],
+    // 09 §4.3: 20 on phones below 430, 24 from 430 and on tablets and desktop.
+    [360, space[20]],
     [390, space[20]],
+    [430, space[24]],
     [1280, space[24]],
   ])('takes its side inset from the gutter at %i: plus on the gutter, send ending on it', async (width, gutter) => {
     (useWindowDimensions as jest.Mock).mockReturnValue({ width, height: 844, scale: 1, fontScale: 1 });
@@ -45,11 +47,11 @@ describe('Composer', () => {
     expect(onSend).not.toHaveBeenCalled();
   });
 
-  it('sends the trimmed text from a 44 circle on bg.inverse', async () => {
+  it('sends the trimmed text from a 44 accent-filled circle (09 §7.8)', async () => {
     const onSend = jest.fn();
     await renderUi(<Composer {...base} value="  Servus  " onSend={onSend} />);
     expect(visualOf('c.send').width).toBe(size.touchMin);
-    expect(visualOf('c.send').backgroundColor).toBe(themes.carbon.color.bg.inverse);
+    expect(visualOf('c.send').backgroundColor).toBe(themes.carbon.color.accent.fill);
     await fireEvent.press(screen.getByRole('button', { name: 'Senden' }));
     expect(onSend).toHaveBeenCalledWith('Servus');
   });
@@ -62,11 +64,13 @@ describe('Composer', () => {
     expect(screen.getByTestId('c.input').props.editable).toBe(false);
   });
 
-  it('is a multiline field that stops growing at 5 lines', async () => {
+  it('is a multiline field that stops growing at 5 lines, measured as drawn (a hidden line of its role, native only)', async () => {
     await renderUi(<Composer {...base} value="" onSend={jest.fn()} />);
     const input = screen.getByTestId('c.input');
     expect(input.props.multiline).toBe(true);
-    expect(flat(input.props.style).maxHeight).toBe(typography.body.lineHeight * size.composerMaxLines);
+    // At font scale 1 the drawn line is the role's own 24 until a measurement says otherwise.
+    expect(flat(input.props.style).maxHeight).toBe(typography.input.lineHeight * size.composerMaxLines);
+    expect(measureOf('c', 'line').props['aria-hidden']).toBe(true);
   });
 
   it('keeps padding and border out of the scrolling text, so no sixth line shows under the fifth (DQ-034)', async () => {
@@ -89,7 +93,7 @@ describe('Composer', () => {
     await renderUi(<Composer {...base} value="" onSend={jest.fn()} />);
     const box = flat(screen.getByTestId('c.box').props.style);
     const height =
-      typography.body.lineHeight +
+      typography.input.lineHeight +
       (box.paddingVertical as number) * 2 +
       (box.borderTopWidth as number) +
       (box.borderBottomWidth as number);
@@ -102,7 +106,7 @@ describe('Composer', () => {
     await renderUi(<Composer {...base} value="Hallo" onSend={onSend} sending />);
     const send = screen.getByTestId('c.send');
     expect(send.props.accessibilityState.busy).toBe(true);
-    expect(visualOf('c.send').backgroundColor).toBe(themes.carbon.color.bg.inverse);
+    expect(visualOf('c.send').backgroundColor).toBe(themes.carbon.color.accent.fill);
     await fireEvent.press(send);
     expect(onSend).not.toHaveBeenCalled();
   });

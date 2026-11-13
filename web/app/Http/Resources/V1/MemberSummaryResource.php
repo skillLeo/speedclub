@@ -10,7 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * The owner row of a card and the featured overlay (FS-2 "@lukas.sc · Stuttgart"): public profile data only, no counts.
+ * The owner row of a card and the featured overlay (FS-2 "@lukas.sc · Stuttgart"): public profile data only, no counts. is_sample and
+ * is_editorial carry the "Beispiel" and "Editorial" badges (09 §8.19).
  *
  * @property User $resource
  */
@@ -33,6 +34,10 @@ class MemberSummaryResource extends JsonResource
             /** @var string|null */
             'city' => $member->getAttribute('city'),
             'avatar' => $visible ? new MediaResource($avatar) : null,
+            /** Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            'is_sample' => $member->getAttribute('is_sample') === true,
+            /** The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            'is_editorial' => $member->getAttribute('is_editorial') === true,
         ];
     }
 }

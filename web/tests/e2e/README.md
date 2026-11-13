@@ -7,6 +7,7 @@ Spec: `docs/07_QA_AND_RELEASE.md`. Commands run from the repo root; the server m
 | Flows, accessibility, DOM audit and harness self-tests (Chromium + WebKit) | `npm --prefix web run e2e` |
 | Module screenshots | `npm --prefix web run visual -- --tier=module --routes=GAR-01,GAR-02` |
 | Phase screenshots (background, log in `docs/reports/logs/`): every route of phases 1 to N, into `phase-N/` | `npm --prefix web run visual -- --tier=phase --phase=2` |
+| Phase 4 screenshots (devices, sets, `--plan`, `--capture-only`: see below) | `npm --prefix web run visual -- --tier=p4` |
 | Resume an interrupted run | add `--resume` |
 | Accept screenshots as baselines (after design-QA approval) | add `--update-baselines` |
 | Promote the exact reviewed PNGs of a run as baselines (approval JSON per route/cell; dry run unless `--write`; host-dependent routes only from a run on `SPEEDCLUB_BASELINE_URL`) | `node web/tests/e2e/visual/promote-baselines.mjs --approval=FILE.json [--write]` |
@@ -16,6 +17,37 @@ Spec: `docs/07_QA_AND_RELEASE.md`. Commands run from the repo root; the server m
 | Type-check the harness | `npx --prefix web tsc -p web/tests/e2e/tsconfig.json` |
 
 Results: `docs/reports/visual/phase-N/` holds `<name>.png`, `<name>.audit.json`, `contact/<ROUTE-ID>.png`, `diff/<name>.png`, `summary.json`.
+
+## Phase 4 tier (`--tier=p4`, docs/09_PREMIUM_2_0.md §14.1)
+
+The module and phase tiers stay exactly as they are (their planned cell lists are unchanged); the p4 options below are refused on them.
+
+| Purpose | Command |
+|---|---|
+| What a run would take, no browser: cell counts per device, theme, locale, font scale and state | `npm --prefix web run visual -- --tier=p4 --plan [--routes=…] [filters]` |
+| The "before" pictures (M4.0): every route, default cells, audits reported but not failed on (picture-integrity findings still fail) | `npm --prefix web run visual -- --tier=p4 --capture-only --states=default --out=<absolute dir>` |
+| Client preview at 2× (needs `--out`, never updates baselines) | add `--scale=2` (same as `--device-scale=2`) |
+| Narrow a run | `--devices=iphone15pro,iphonese,pixel8,tablet,desktop1280,desktop1440` · `--themes=carbon,black,light` (Schwarz = black, Hell = light) · `--locales=de,en` · `--states=default,loading,empty,error,offline,restricted,…` · `--font-scales=1,2` |
+
+**Devices** (`visual/p4-devices.mjs`; one browser per engine and worker, deviceScaleFactor from `--scale`, default 1):
+
+| id | Engine | Viewport | Descriptor (user agent, isMobile, hasTouch) | Takes |
+|---|---|---|---|---|
+| `iphone15pro` | WebKit | 393×852 | iPhone 15 Pro, viewport overridden: the member web as a home-screen app has the whole screen | every member route and public page; the primary cell |
+| `iphonese` | WebKit | 375×667 | iPhone SE (3rd gen) | flagship screens and forms |
+| `pixel8` | Chromium | 412×915 | Pixel 8, its screen as the viewport | every member route and public page |
+| `tablet` | WebKit | 820×1180 | iPad (gen 11), viewport overridden | the TABLET list (rail layout) |
+| `desktop1280`, `desktop1440` | Chromium | 1280×800, 1440×900 | none: the module/phase context | every member, admin and public route |
+
+The tablet is WebKit because every browser on iPadOS is WebKit and the client's devices are Apple; 820×1180 is the CSS size of iPad Air and iPad 10th generation, which no installed descriptor has, so the newest iPad descriptor gives the user agent and the viewport is set. Public pages also go on the two phones: they are what a scanned QR code opens, and EN12's public page needs its DE cell at 393.
+
+**Cells.** Carbon and Hell on every cell, Schwarz in addition on flagship screens. DE everywhere, EN (Carbon) only for EN12 at `iphone15pro` and `desktop1440`. 200 % text (`qaFontScale=2`, the existing override) for flagship screens and forms at `iphone15pro` and `desktop1440`. A route's forced states once at the primary cell, `iphone15pro` Carbon DE. Admin routes keep ADR-212: `desktop1280` and `desktop1440`, Carbon and Hell, the zoom cell `__zoom2` at `desktop1280`, their states at `desktop1280` Carbon DE; public pages keep their `page` capture. When a route's `viewports` exclude its primary device, its states go to the first device it allows (`desktop1280` for a desktop-only member route), never dropped. A route's `viewports` keeps the desktops it lists, the phones for a width below 600 and the tablet for one from 600 to 1199. Every cell runs with `reducedMotion: 'reduce'` and `qaMotion=off`, so the pictures are deterministic.
+
+**Sets** (`visual/p4-sets.mjs`, extended by later modules): FLAGSHIP = the ★ screens of 09 §7 and §9 (WEB-03 Landing and WEB-01 the public vehicle page, the pages a scanned sticker opens) and their registry variants (`<ID>-…`); FORMS = member routes on an auth, wizard, garage-editor, profile-editor or settings path whose states are the editor set (`loading`, nothing `empty`), plus AUTH-11, WEB-05, WEB-09, WEB-10; EN12; TABLET. Every p4 run prints the sets and the ids that are **not built yet** (AUTH-01, ONB-01…03, EVT-02, BIZ-01 at M4.0).
+
+**Names and folders.** `<ROUTE-ID>__<w>x<h>__<theme>__<locale>__<device>[__fs2][__zoom2][__<state>]`, e.g. `HOME-01__393x852__carbon__de__iphone15pro`: the device makes every p4 name distinct from a module or phase name. Output into `docs/reports/visual/p4/` (or `--out`), flat, with one `summary.json` and `contact/`. Baselines in `tests/e2e/__screenshots__/p4/`; a cell without one reports `new` ("no baseline") and does not fail on that alone. `promote-baselines.mjs` sends p4 cells (named with a device) there and every other cell where it always went.
+
+**Audits.** DOM audit, runtime checks, the qa-override contract and the state check run on every p4 cell unchanged. `--capture-only` keeps all of them and their findings, but they do not fail the run (capture failures, baseline mismatches and a changed export still do); `summary.json` then lists every finding (`findings`, `findingsByCheck`, `auditWouldFail`): the documented "before" state the 2.0 redesign must fix. It never relaxes **picture integrity**: a cell with `qa-override` (the page did not apply the requested theme, locale, font scale or state), `state-not-rendered`, `server-error`, `runtime-error` or `broken-image` is no valid picture of its cell, so these fail the run with `--capture-only` too; the run prints them under `PICTURE INTEGRITY` and `summary.json` lists them in `integrityFailures`. Third parties are unreachable on both engines without request interception: Chromium by its host resolver rules, WebKit through a proxy on the discard port that refuses them; either way they are recorded as High `third-party-request`.
 
 ## Adding a route
 
@@ -117,7 +149,7 @@ Auth kinds: `staff-guest` (signed out), `staff-owner`, `staff-admin`, `staff-mod
 
 ## Parity (M1.7)
 
-`/v/{slug}` (Blade) and `/app/v/{slug}` (SPA) both expose `data-testid` `VEH-01.hero`, `VEH-01.title`, `VEH-01.specStrip`, `VEH-01.ownerRow`. `parity/vehicle.spec.ts` opens both as a guest at 390 × carbon × de, calls `compareParity(blade, spa)` and asserts `passed`.
+`/v/{slug}` (Blade) and `/app/v/{slug}` (SPA) both expose `data-testid` `VEH-01.hero`, `VEH-01.title`, `VEH-01.specStrip`, `VEH-01.ownerRow`. `parity/vehicle.spec.ts` opens both as a guest at 390 × carbon × de, calls `compareParity(blade, spa)` and asserts `passed`. Before each capture `compareParity` scrolls the region to the middle of its scroller and hit-tests its edges: an element screenshot shows whatever is painted over the region (WEB-01's sticky CTA bar), so a region that is still covered fails with `occludedBy` instead of being compared. Floating controls over the hero (`VEHICLE_HERO_CHROME`: the app's photo header, WEB-01's save chip) are chrome that the two sides place differently; they are hidden on both sides during the capture (`chrome` option), so the photo, its scrim and the counter are compared.
 
 ## Rules
 
@@ -129,3 +161,7 @@ Keyboard specs press `Alt+Tab` on WebKit (`tabKey(browserName)`): WebKit on macO
 
 ## Running QA commands next to other work
 `export:web` replaces `web/public/app`, which invalidates a browser run in progress. Wrap every export, e2e, visual and Lighthouse run so they queue up: `node scripts/dev/qa-run.mjs npm --prefix web run e2e`.
+
+## Showcase crawl (Phase 4)
+
+`crawl/showcase.spec.ts` (config `crawl/crawl.config.ts`, helpers `crawl/lib.ts`, setup and report `crawl/setup.ts`) visits every page a guest, the showcase member and the showcase admin may see, on `iphone15pro` (WebKit 393×852), `desktop1440` (Chromium) and `desktop1440-webkit`, and fails a role × device run on console or page errors, failed requests and 4xx/5xx answers, broken images (also a GET of every image URL found, `og:image` and icons included), empty or error states where the role should see content, visible i18n keys and unfilled `[[…]]`/`{{…}}` placeholders, and QR codes whose `/c/{code}` does not end on its `/v/{slug}` with 200. Ids come from the API as the member (never from the seed); admin pages come from `crawl/admin-routes.json` (`node web/tests/e2e/crawl/admin-routes.mjs` after a change of `routes/admin/*.php`; the `@meta` test checks it locally), records of admin detail routes from links on the crawled admin pages. It needs no database access, so it runs against staging too. Run commands and environment are in the spec's header; always through `scripts/dev/qa-run.mjs`. Report: `docs/reports/phase-4/showcase-crawl-<target>.{md,json}`. Legitimately empty sections are allowlisted per page with a reason (`allowEmpty` in `crawl/lib.ts`); registry routes the crawl does not visit are listed with a reason in `EXCLUDED`.

@@ -116,19 +116,19 @@ export function UsernameScreen() {
         />
         {available ? (
           <View style={styles.available} role="status" testID="AUTH-08.available">
-            <Icon name="check" size={16} color="status.success" />
-            <Text variant="helper" color="status.success">
+            <Icon name="check" size={16} color="state.success" />
+            <Text variant="caption" color="state.success">
               {t('username.available')}
             </Text>
           </View>
         ) : null}
         {check.isError && checkable ? (
-          <Text variant="helper" color="text.secondary" role="status" testID="AUTH-08.checkFailed">
+          <Text variant="caption" color="text.secondary" role="status" testID="AUTH-08.checkFailed">
             {t('username.checkFailed')}
           </Text>
         ) : null}
         {normalized ? (
-          <Text variant="supporting" color="text.secondary" hyphenate={false} style={styles.preview} testID="AUTH-08.preview">
+          <Text variant="callout" color="text.secondary" hyphenate={false} style={styles.preview} testID="AUTH-08.preview">
             {profileUrlPreview(normalized, process.env.EXPO_PUBLIC_WEB_URL, browserHost())}
           </Text>
         ) : null}

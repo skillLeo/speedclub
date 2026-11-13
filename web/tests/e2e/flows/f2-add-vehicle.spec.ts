@@ -1,6 +1,6 @@
 // F2 Add first vehicle → QR (02_PRODUCT_SPEC §4, FS-4, FS-5) on the member web at /app, against the real API: the empty
 // garage, "+", the four wizard steps (Fahrzeug, Technik, Fotos & Beschreibung, Prüfen & veröffentlichen) with a real photo
-// through the upload queue, GAR-04 with the QR reveal, "Mods hinzufügen", and the edges of F2 and §3.2: every step
+// through the upload queue, GAR-04 with the QR reveal, "QR-Code ansehen", and the edges of F2 and §3.2: every step
 // autosaves and a closed wizard resumes from Entwürfe, leaving a changed step asks first, the steps refuse what is
 // missing, a failed upload stays in the queue with its reason and goes through on retry, a server error on publish keeps
 // the draft, and the desktop layout with steps rail and live preview.
@@ -73,7 +73,7 @@ test.describe('F2 add first vehicle', () => {
     const ids = await catalogueIds(member.api, SKYLINE);
     await open(page, '/app/garage');
     await expect(id(page, 'GAR-01.empty')).toBeVisible();
-    await expect(id(page, 'GAR-01.empty.title')).toHaveText('Füge dein erstes Auto hinzu');
+    await expect(id(page, 'GAR-01.empty.title')).toHaveText('Deine Garage wartet.');
 
     // Garage "+" → Step 1 Fahrzeug.
     await id(page, 'GAR-01.add').click();
@@ -145,7 +145,7 @@ test.describe('F2 add first vehicle', () => {
     expect(beforePublish.photos).toHaveLength(1);
   });
 
-  test('step 4 publishes: the QR reveal, "Mods hinzufügen", the garage, and a stranger who scans the new sticker', async ({ page, browser }) => {
+  test('step 4 publishes: the QR reveal, "QR-Code ansehen", the garage, and a stranger who scans the new sticker', async ({ page, browser }) => {
     const member = await signedInMember(page, 'happy-publish');
     const { id: vehicleId } = await buildVehicle(member.api, { draft: true, photos: 1 });
     expectStatus(await member.api.patch(`vehicles/${vehicleId}`, { wizard_step: 4 }), 200, 'PATCH wizard_step');
@@ -160,15 +160,21 @@ test.describe('F2 add first vehicle', () => {
     // GAR-04: the QR reveal with the vehicle's own code.
     await expect(id(page, 'GAR-04.root')).toBeVisible();
     expect(pathOf(page)).toBe(`/app/published/${vehicleId}`);
-    await expect(id(page, 'GAR-04.title')).toHaveText('Dein Build ist online');
+    await expect(id(page, 'GAR-04.title')).toHaveText('Dein Build ist live.');
     const published = await vehicleOf(member.api, vehicleId);
     expect(published).toMatchObject({ status: 'published', visibility: 'public', is_main: true });
     expect(published.qr?.code).toMatch(/^[0-9A-HJKMNP-TV-Z]{8}$/);
     const code = published.qr.code as string;
     await expect(id(page, 'GAR-04.qr.shortCode')).toHaveText(`${code.slice(0, 4)} ${code.slice(4)}`);
 
-    // "Mods hinzufügen" → GAR-09 of this vehicle, still empty.
-    await id(page, 'GAR-04.addMods').click();
+    // "QR-Code ansehen" (09 §7.6 GAR-04) → QR-02 of this vehicle, with the same code.
+    await id(page, 'GAR-04.viewQr').click();
+    await expect(id(page, 'QR-02.root')).toBeVisible();
+    expect(pathOf(page)).toBe(`/app/qr/${vehicleId}`);
+    await expect(id(page, 'QR-02.card.shortCode')).toHaveText(`${code.slice(0, 4)} ${code.slice(4)}`);
+
+    // GAR-09 of this vehicle is still empty (GAR-04 no longer links it; the garage's quick action "Mods" does).
+    await open(page, `/app/garage/${vehicleId}/mods`);
     await expect(id(page, 'GAR-09.root')).toBeVisible();
     expect(pathOf(page)).toBe(`/app/garage/${vehicleId}/mods`);
     await expect(id(page, 'GAR-09.empty')).toBeVisible();
@@ -270,8 +276,9 @@ test.describe('F2 add first vehicle', () => {
     await open(page, `/app/add-vehicle/${draft.id}/review`);
     await expect(id(page, 'GAR-03.review.missing')).toBeVisible();
     await expect(id(page, 'GAR-03.review.missing.photo')).toContainText('Mindestens ein Foto');
-    await id(page, 'GAR-03.review.cta.primary').click();
-    await expect(id(page, 'GAR-03.notice')).toHaveText('Es fehlen noch Angaben. Ergänze sie, dann kannst du veröffentlichen.');
+    // DQ-1069 (M4.9 design QA): while "Fehlt noch" lists anything, "Veröffentlichen" is disabled and says why, so nothing is posted.
+    await expect(id(page, 'GAR-03.review.cta.primary')).toBeDisabled();
+    await expect(id(page, 'GAR-03.review.publishNote')).toContainText('Zum Veröffentlichen fehlt noch: Mindestens ein Foto');
     expect(pathOf(page)).toBe(`/app/add-vehicle/${draft.id}/review`);
     expect((await vehicleOf(member.api, draft.id)).status).toBe('draft');
 
@@ -590,7 +597,8 @@ test.describe('F2 add first vehicle', () => {
       expectStatus(await member.api.patch(`vehicles/${draft.id}`, { wizard_step: 4 }), 200, 'PATCH wizard_step');
       await open(page, '/app/');
       await expect(id(page, 'HOME-01.root')).toBeVisible();
-      await expect(page.locator(`[data-testid="HOME-01.card.${draft.id}"]`)).toHaveCount(0);
+      // M4.8 (09 §7.3): the newest builds are the "Neu in der Garage" rail, and the stream repeats nothing above it.
+      await expect(page.locator(`[data-testid="HOME-01.card.${draft.id}"], [data-testid="HOME-01.newBuilds.item.${draft.id}"]`)).toHaveCount(0);
       await tab(page, 'profile').click();
       await expect(id(page, 'PROF-01.stats')).toContainText('0 Fahrzeuge');
 
@@ -601,7 +609,7 @@ test.describe('F2 add first vehicle', () => {
       await id(page, 'GAR-04.header.back').click();
 
       await tab(page, 'home').click();
-      await expect(id(page, `HOME-01.card.${draft.id}`)).toBeVisible();
+      await expect(id(page, `HOME-01.newBuilds.item.${draft.id}`)).toBeVisible();
       releaseStartLock();
       await tab(page, 'profile').click();
       await expect(id(page, 'PROF-01.stats')).toContainText('1 Fahrzeug');
@@ -616,8 +624,8 @@ test.describe('F2 add first vehicle', () => {
       await open(page, '/app/');
       const rail = id(page, 'HOME-01.rail.garage.open');
       await expect(rail).toContainText('1 Fahrzeug');
-      // The newest public build, a card of Neue Builds: nothing else published meanwhile.
-      await expect(id(page, `HOME-01.card.${car.id}`)).toBeVisible();
+      // The newest public build, a card of "Neu in der Garage" (M4.8): nothing else published meanwhile.
+      await expect(id(page, `HOME-01.newBuilds.item.${car.id}`)).toBeVisible();
       releaseStartLock();
 
       await tab(page, 'garage').click();
@@ -631,7 +639,7 @@ test.describe('F2 add first vehicle', () => {
 
       await tab(page, 'home').click();
       await expect(id(page, 'HOME-01.root')).toBeVisible();
-      await expect(page.locator(`[data-testid="HOME-01.card.${car.id}"]`)).toHaveCount(0);
+      await expect(page.locator(`[data-testid="HOME-01.card.${car.id}"], [data-testid="HOME-01.newBuilds.item.${car.id}"]`)).toHaveCount(0);
       // No "0 Fahrzeuge" (DQ-311): the count goes, with no reload.
       await expect(rail).not.toContainText('Fahrzeug');
     });

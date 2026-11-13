@@ -19,9 +19,10 @@ export type QaOverrides = {
   readonly now?: Date;
   /**
    * `qaOpen=report`: the page's report sheet (M2.6) opens by itself once its target is there, so the visual matrix, which cannot
-   * tap, captures it (PROF-02, VEH-01). Not part of the reported overrides on <html>.
+   * tap, captures it (PROF-02, VEH-01). `qaOpen=actions`: MSG-02 opens the actions sheet of the newest received text message once
+   * the thread has loaded (MSG-02-translate), as the matrix cannot long-press. Not part of the reported overrides on <html>.
    */
-  readonly open?: 'report';
+  readonly open?: 'report' | 'actions';
   /**
    * `qaFlags=ai.nl_search,ai.translate`: these app-config flags count as on, and an AI surface they switch on needs no opt-in, so the
    * visual matrix can capture the [AI] surfaces on a host without a provider (where no `ai.*` flag can be on, ADR-242). What a tap then
@@ -65,6 +66,7 @@ export const parseQa: (search: string) => QaOverrides =
             : {}),
           ...(params.get('qaMotion') === 'off' ? { motion: 'off' as const } : {}),
           ...(params.get('qaOpen') === 'report' ? { open: 'report' as const } : {}),
+          ...(params.get('qaOpen') === 'actions' ? { open: 'actions' as const } : {}),
           ...(Number.isNaN(now.getTime()) ? {} : { now }),
           ...(flags.length > 0 ? { flags } : {}),
         };

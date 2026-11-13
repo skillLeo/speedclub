@@ -244,7 +244,7 @@ onMounted(async () => {
 
         <div v-if="state === 'loading' || loading" class="grid grid-cols-2 gap-16 tablet:grid-cols-3 wide:grid-cols-4" aria-busy="true" data-testid="ADM-13.loading">
             <!-- The lines of a ready card: photo, vehicle, owner · date · part, badges, one action row (DQ-533). -->
-            <div v-for="n in 8" :key="n" class="flex flex-col gap-8 rounded-md border border-line-subtle bg-surface p-12">
+            <div v-for="n in 8" :key="n" class="flex flex-col gap-8 rounded-sm border border-line-subtle bg-surface p-12">
                 <Skeleton class="aspect-4/3 w-full" />
                 <div class="flex flex-col gap-2">
                     <span class="flex h-32 items-center"><Skeleton shape="text" class="w-3/4" /></span>
@@ -268,7 +268,7 @@ onMounted(async () => {
                         :aria-label="trans('media.card_label', { owner: item.owner?.username ? `@${item.owner.username}` : '–', date: formatDateTime(item.created_at) })"
                         :class="[
                             focusRing,
-                            'group flex h-full flex-col gap-8 rounded-md border bg-surface p-12',
+                            'group flex h-full flex-col gap-8 rounded-sm border bg-surface p-12',
                             index === selected ? 'border-ink outline-2 outline-offset-2 outline-focus' : 'border-line-subtle',
                         ]"
                         :data-testid="`ADM-13.item`"
@@ -300,7 +300,7 @@ onMounted(async () => {
                             <PhImageBroken :size="24" :aria-label="trans('media.removed')" />
                         </div>
                         <div class="flex min-w-0 flex-col gap-2">
-                            <p class="flex min-w-0 items-center gap-8 text-supporting text-ink">
+                            <p class="flex min-w-0 items-center gap-8 text-admin-base text-ink">
                                 <Link v-if="item.vehicle" :href="vehicleHref(item.vehicle.id)" :title="item.vehicle.title" :class="[focusRing, 'inline-flex min-h-32 min-w-0 items-center rounded-xs hover:underline']"><span class="truncate">{{ item.vehicle.title }}</span></Link>
                                 <span v-else class="truncate">{{ trans(`media.kinds.${item.kind}`) }}</span>
                             </p>

@@ -9,6 +9,7 @@ use App\Http\Requests\Api\V1\Garage\BuildUpdateListRequest;
 use App\Http\Resources\V1\BuildUpdateResource;
 use App\Http\Resources\V1\ModificationResource;
 use App\Http\Resources\V1\PublicVehicleResource;
+use App\Models\BuildUpdate;
 use App\Models\Modification;
 use App\Models\Vehicle;
 use App\Support\Viewer;
@@ -48,7 +49,7 @@ class PublicVehicleController extends Controller
     /**
      * Read a modification of a vehicle page.
      *
-     * For VEH-02. The cost is null unless cost_public is set or the owner asks.
+     * For VEH-02. The cost is null for anybody but the owner (costs are never public).
      *
      * @unauthenticated
      */
@@ -75,9 +76,11 @@ class PublicVehicleController extends Controller
     {
         $vehicle = $this->visible($request, $slug);
 
+        $updates = $vehicle->buildUpdates();
+        BuildUpdate::restrictTo($updates->getQuery(), Viewer::from($request), $vehicle);
+
         return BuildUpdateResource::collection(
-            $vehicle->buildUpdates()
-                ->when(! $vehicle->isOwnedBy(Viewer::from($request)), fn ($query) => $query->where('hidden', false))
+            $updates
                 ->orderByDesc('created_at')
                 ->orderByDesc('id')
                 ->cursorPaginate($request->pageSize())
@@ -96,7 +99,7 @@ class PublicVehicleController extends Controller
     {
         $vehicle = $this->visible($request, $slug);
         $entry = $vehicle->buildUpdates()
-            ->when(! $vehicle->isOwnedBy(Viewer::from($request)), fn ($query) => $query->where('hidden', false))
+            ->visibleTo(Viewer::from($request), $vehicle)
             ->whereKey($update)
             ->first();
 

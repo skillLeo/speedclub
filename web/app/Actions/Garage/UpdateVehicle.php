@@ -7,6 +7,7 @@ use App\Exceptions\ApiException;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Garage\VehicleAttributes;
+use App\Services\Maintenance\MaintenanceItems;
 use App\Services\PublicPages\OgImages;
 use App\Services\Rules\ContentScreen;
 use App\Services\Search\VehicleSearchProjector;
@@ -44,6 +45,10 @@ class UpdateVehicle
             $this->attributes->apply($vehicle, $attributes);
             $this->assertKeepsBasics($vehicle, $attributes);
             $vehicle->save();
+            // M4.13 (09 §8.8): the HU/AU month and the HU/AU maintenance item stay one.
+            if (array_key_exists('hu_au_due', $attributes)) {
+                app(MaintenanceItems::class)->huAuMonthChanged($vehicle, $vehicle->getAttribute('hu_au_due')?->format('Y-m-d'));
+            }
             $this->attributes->fileCatalogRequest($user, $vehicle, $attributes);
             $this->search->queue($vehicle);
             $this->og->queue($vehicle);

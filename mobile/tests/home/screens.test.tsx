@@ -9,7 +9,7 @@ import { MessagingContext, unavailableMessaging } from '@/features/messages/data
 import { MessagesScreen } from '@/features/messages/screens/MessagesScreen';
 import i18n from '@/i18n';
 import { useSessionStore } from '@/state/session';
-import { hydrateThemePreference, space } from '@/theme';
+import { hydrateThemePreference } from '@/theme';
 
 import { activeMember, buildUpdate, FEATURED, feedPage, feedVehicle, GTI, M4, modules, page, R34, updateItem, vehicleItem } from './fixtures';
 import { callsTo, newQueryClient, renderWithProviders, setNetwork, stubFetch, type Answer, type NetInfoListener } from './harness';
@@ -143,11 +143,11 @@ describe('HOME-01 Start', () => {
     expect(mockRetained.mock.calls[0]?.[0]).toHaveProperty('current.scrollToOffset', mockScrollToOffset);
   });
 
-  it('lays Für dich out in the FS-2 order, with no counts of any kind', async () => {
-    const update = buildUpdate();
+  it('lays Für dich out in the 09 §7.3 order, with no counts of any kind', async () => {
+    const weekly = feedVehicle({ id: '01weekly', slug: 'weekly-e30', full_title: 'BMW M3 E30' });
     stubFetch(
       answers({
-        '/home/featured': { body: { data: FEATURED } },
+        '/home/featured': { body: { data: [...FEATURED, { source: 'editorial', vehicle: weekly }] } },
         '/home/new-builds': { body: page([R34, M4]) },
         '/home/modules': { body: { data: modules() } },
         '/feed': { body: feedPage([updateItem(buildUpdate({ id: 'stream-u' }))]) },
@@ -156,44 +156,41 @@ describe('HOME-01 Start', () => {
     await renderWithProviders(<HomeScreen />);
 
     expect(await screen.findByTestId('HOME-01.featured')).toBeTruthy();
-    expect(screen.getByTestId('HOME-01.featured.eyebrow')).toHaveTextContent('FEATURED BUILD');
-    expect(screen.getByTestId('HOME-01.featured.byline')).toHaveTextContent('@kenji.r34 · Düsseldorf');
+    expect(screen.getByTestId('HOME-01.featured.title')).toHaveTextContent(GTI.full_title);
+    expect(screen.getByTestId('HOME-01.header.logo')).toBeTruthy();
     expect(screen.getByTestId('HOME-01.tabs')).toBeTruthy();
     expect(screen.getByText('Für dich')).toBeTruthy();
     expect(screen.getByText('Folge ich')).toBeTruthy();
-    expect(screen.getByTestId('HOME-01.newBuilds')).toHaveTextContent(/Neue Builds/);
-    expect(screen.getByTestId(`HOME-01.card.${R34.id}.owner`)).toHaveTextContent(/@kenji\.r34/);
-    expect(screen.getByTestId(`HOME-01.card.${R34.id}.latest`)).toHaveTextContent(/Volk Racing TE37 SL/);
-    // ADR-148 a: the M4's owner is hidden, so its card names nobody.
-    expect(screen.queryByTestId(`HOME-01.card.${M4.id}.owner`)).toBeNull();
-    expect(screen.getByTestId('HOME-01.updates')).toHaveTextContent('Build-Updates');
-    expect(screen.getByTestId(`HOME-01.update.${update.id}`)).toHaveTextContent(/Fahrwerk geändert/);
-    // DQ-309: the module takes back its first row's 12, so the first thumb sits 12 under the header like the other modules.
-    expect(StyleSheet.flatten(screen.getByTestId('HOME-01.updates.list').props.style)).toMatchObject({ marginTop: -space[12] });
+    expect(screen.getByTestId('HOME-01.newBuilds')).toHaveTextContent(/Neu in der Garage/);
+    expect(screen.getByTestId(`HOME-01.newBuilds.item.${R34.id}`)).toBeTruthy();
+    expect(screen.getByTestId(`HOME-01.newBuilds.item.${M4.id}`)).toBeTruthy();
+    expect(screen.getByTestId('HOME-01.stream.update.stream-u.caption')).toHaveTextContent(/Fahrwerk geändert/);
+    expect(screen.getByTestId('HOME-01.weekly')).toHaveTextContent('Build der Woche');
+    expect(screen.getByTestId('HOME-01.weekly.card.title')).toHaveTextContent('BMW M3 E30');
     expect(screen.getByTestId('HOME-01.members')).toHaveTextContent('Aktive Mitglieder');
     expect(screen.getByTestId('HOME-01.activeMembers.member.jann.ptrs.car')).toHaveTextContent('BMW M4 Competition');
     expect(screen.getByTestId('HOME-01.mods')).toHaveTextContent('Beliebte Mods diese Woche');
     expect(screen.getByTestId('HOME-01.mods.list.chip.0')).toBeTruthy();
-    expect(screen.getByTestId('HOME-01.stream.update.stream-u')).toBeTruthy();
-    // FS-2 order in the list's data.
     const kinds = (mockLastList.props?.data as { kind: string; section?: string }[]).map((row) => row.section ?? row.kind);
-    expect(kinds).toEqual(['hero', 'newBuilds', 'card', 'card', 'updates', 'updates', 'members', 'members', 'mods', 'mods', 'streamUpdates']);
+    expect(kinds).toEqual(['hero', 'newBuilds', 'rail', 'update', 'weekly', 'weekly', 'members', 'members', 'mods', 'mods']);
     expect(screen.queryByText(/Likes?|Gefällt|Follower/)).toBeNull();
   });
 
-  it('shows two Neue Builds, never the featured one, and none of them again in the stream (DQ-188)', async () => {
+  it('shows the rail without the lead, and none of its builds again in the stream (DQ-188)', async () => {
     stubFetch(
       answers({
         '/home/featured': { body: { data: [{ source: 'editorial', vehicle: R34 }] } },
-        '/home/new-builds': { body: page([R34, M4, GTI]) },
+        '/home/new-builds': { body: page([R34, M4]) },
         '/feed': { body: feedPage([vehicleItem(M4), vehicleItem(GTI)]) },
       }),
     );
     await renderWithProviders(<HomeScreen />);
 
     expect(await screen.findByTestId('HOME-01.featured')).toBeTruthy();
+    expect(screen.queryByTestId(`HOME-01.newBuilds.item.${R34.id}`)).toBeNull();
+    expect(screen.getByTestId(`HOME-01.newBuilds.item.${M4.id}`)).toBeTruthy();
     expect(screen.queryByTestId(`HOME-01.card.${R34.id}`)).toBeNull();
-    expect(screen.getAllByTestId(`HOME-01.card.${M4.id}`)).toHaveLength(1);
+    expect(screen.queryByTestId(`HOME-01.card.${M4.id}`)).toBeNull();
     expect(screen.getAllByTestId(`HOME-01.card.${GTI.id}`)).toHaveLength(1);
   });
 
@@ -202,53 +199,61 @@ describe('HOME-01 Start', () => {
       answers({
         '/home/featured': { body: { data: FEATURED } },
         '/home/modules': { body: { data: modules() } },
-        '/feed': { body: feedPage([vehicleItem(R34)]) },
+        '/feed': { body: feedPage([vehicleItem(R34), updateItem(buildUpdate({ id: 'update-kw', vehicle: M4 }))]) },
       }),
     );
     await renderWithProviders(<HomeScreen />);
 
-    await fireEvent.press(await screen.findByTestId(`HOME-01.card.${R34.id}.body`));
+    await fireEvent.press(await screen.findByTestId(`HOME-01.card.${R34.id}.header`));
     expect(mockRouter.push).toHaveBeenCalledWith(`/v/${R34.slug}`);
-    await fireEvent.press(screen.getByTestId(`HOME-01.card.${R34.id}.latest`));
-    expect(mockRouter.push).toHaveBeenCalledWith(`/v/${R34.slug}/updates/update-1`);
+    expect(screen.getByTestId(`HOME-01.card.${R34.id}.caption`)).toHaveTextContent(/Volk Racing TE37 SL/);
     await fireEvent.press(screen.getByTestId(`HOME-01.card.${R34.id}.owner`));
     expect(mockRouter.push).toHaveBeenCalledWith('/u/kenji.r34');
-    await fireEvent.press(screen.getByTestId('HOME-01.update.update-kw.body'));
+    await fireEvent.press(screen.getByTestId('HOME-01.stream.update.update-kw.header'));
     expect(mockRouter.push).toHaveBeenCalledWith(`/v/${M4.slug}/updates/update-kw`);
+    await fireEvent.press(screen.getByTestId('HOME-01.featured.open'));
+    expect(mockRouter.push).toHaveBeenCalledWith(`/v/${GTI.slug}`);
     await fireEvent.press(screen.getByTestId('HOME-01.activeMembers.member.jann.ptrs'));
     expect(mockRouter.push).toHaveBeenCalledWith('/u/jann.ptrs');
     await fireEvent.press(screen.getByTestId('HOME-01.mods.list.chip.0'));
     expect(mockRouter.navigate).toHaveBeenCalledWith({ pathname: '/discover/search', params: { q: 'KW V3' } });
   });
 
+  it('names nobody on a build whose owner is hidden (ADR-148 a)', async () => {
+    stubFetch(answers({ '/feed': { body: feedPage([vehicleItem(M4)]) } }));
+    await renderWithProviders(<HomeScreen />);
+    expect(await screen.findByTestId(`HOME-01.card.${M4.id}`)).toBeTruthy();
+    expect(screen.queryByTestId(`HOME-01.card.${M4.id}.owner`)).toBeNull();
+  });
+
   it('opens your own profile from your own owner row', async () => {
     const client = signIn();
-    stubFetch(answers({ '/feed': { body: feedPage([vehicleItem(feedVehicle({ owner: { username: 'lukas.sc', display_name: null, city: null, avatar: null } }))]) } }));
+    stubFetch(answers({ '/feed': { body: feedPage([vehicleItem(feedVehicle({ owner: { username: 'lukas.sc', display_name: null, city: null, avatar: null, is_sample: false, is_editorial: false } }))]) } }));
     await renderWithProviders(<HomeScreen />, client);
     await fireEvent.press(await screen.findByTestId(`HOME-01.card.${R34.id}.owner`));
     expect(mockRouter.navigate).toHaveBeenCalledWith('/profile');
   });
 
-  it('leads "Alle" of Neue Builds to the search in the same order, the last change first', async () => {
+  it('leads "Alle" of Neu in der Garage to the search in the same order, the last change first', async () => {
     stubFetch(answers({ '/home/new-builds': { body: page([R34]) } }));
     await renderWithProviders(<HomeScreen />);
     await fireEvent.press(await screen.findByTestId('HOME-01.newBuilds.action'));
     expect(mockRouter.navigate).toHaveBeenCalledWith({ pathname: '/discover/search', params: { sort: 'updated' } });
   });
 
-  it('asks for two Neue Builds and one more, for when the featured build is one of them', async () => {
+  it('asks for the 8 builds of the rail and one more, for when the lead is one of them', async () => {
     const { calls } = stubFetch(answers());
     await renderWithProviders(<HomeScreen />);
     await waitFor(() => expect(callsTo(calls, '/home/new-builds')).toHaveLength(1));
-    expect(new URL(callsTo(calls, '/home/new-builds')[0]?.url ?? '').searchParams.get('per_page')).toBe('3');
+    expect(new URL(callsTo(calls, '/home/new-builds')[0]?.url ?? '').searchParams.get('per_page')).toBe('9');
   });
 
   it('hides a module the API leaves empty', async () => {
-    stubFetch(answers({ '/home/modules': { body: { data: modules({ popular_mods: [], active_members: [] }) } }, '/feed': { body: feedPage([vehicleItem(R34)]) } }));
+    stubFetch(answers({ '/home/modules': { body: { data: modules({ popular_mods: [], active_members: [activeMember()] }) } }, '/feed': { body: feedPage([vehicleItem(R34)]) } }));
     await renderWithProviders(<HomeScreen />);
-    expect(await screen.findByTestId('HOME-01.updates')).toBeTruthy();
-    expect(screen.queryByTestId('HOME-01.members')).toBeNull();
+    expect(await screen.findByTestId('HOME-01.members')).toBeTruthy();
     expect(screen.queryByTestId('HOME-01.mods')).toBeNull();
+    expect(screen.queryByTestId('HOME-01.weekly')).toBeNull();
   });
 
   it('loads the next page of the stream with the cursor at the end of the list, then says it was all', async () => {
@@ -412,7 +417,7 @@ describe('HOME-01 Start', () => {
       await fireEvent.press(screen.getByTestId('HOME-01.tab.following'));
       expect(await screen.findByTestId('HOME-01.following.guest')).toBeTruthy();
       await fireEvent.press(screen.getByTestId('HOME-01.following.guest.action'));
-      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/sign-in', params: { returnTo: '/' } });
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/auth/email', params: { returnTo: '/' } });
       expect(feedCalls(calls, 'following')).toHaveLength(0);
     });
 
@@ -474,7 +479,7 @@ describe('HOME-01 Start', () => {
         await fireEvent.press(screen.getByTestId('HOME-01.tab.following'));
         await waitFor(() => expect(screen.getByTestId('HOME-01.suggestions.header')).toHaveTextContent(header));
         // The body no longer names the list a second time.
-        expect(screen.getByTestId('HOME-01.following.empty')).toHaveTextContent(/deren Builds dich interessieren\.$/);
+        expect(screen.getByTestId('HOME-01.following.empty.body')).toHaveTextContent(/^Neue Fotos und Änderungen dieser Builds landen dann hier\.$/);
         expect(screen.queryByText(/gerade aktiv\./)).toBeNull();
         await view.unmount();
       }

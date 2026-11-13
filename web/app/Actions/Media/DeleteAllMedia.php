@@ -2,6 +2,7 @@
 
 namespace App\Actions\Media;
 
+use App\Models\MaintenanceLog;
 use App\Models\Media;
 use App\Models\Modification;
 use App\Models\User;
@@ -19,7 +20,7 @@ class DeleteAllMedia
     public function __construct(private readonly DeleteMedia $delete) {}
 
     /**
-     * Gallery and mod photos of a vehicle.
+     * Gallery and mod photos of a vehicle, and the photos of its service log (M4.13).
      */
     public function forVehicle(Vehicle $vehicle): int
     {
@@ -36,7 +37,10 @@ class DeleteAllMedia
                 ->where(fn ($gallery) => $gallery->where('mediable_type', $vehicle->getMorphClass())->where('mediable_id', $vehicle->getKey()))
                 ->orWhere(fn ($mods) => $mods
                     ->where('mediable_type', (new Modification)->getMorphClass())
-                    ->whereIn('mediable_id', Modification::withTrashed()->where('vehicle_id', $vehicle->getKey())->select('id'))))
+                    ->whereIn('mediable_id', Modification::withTrashed()->where('vehicle_id', $vehicle->getKey())->select('id')))
+                ->orWhere(fn ($logs) => $logs
+                    ->where('mediable_type', (new MaintenanceLog)->getMorphClass())
+                    ->whereIn('mediable_id', MaintenanceLog::query()->where('vehicle_id', $vehicle->getKey())->select('id'))))
             ->get();
     }
 

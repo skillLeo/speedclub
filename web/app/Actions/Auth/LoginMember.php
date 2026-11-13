@@ -3,10 +3,12 @@
 namespace App\Actions\Auth;
 
 use App\Enums\ErrorCode;
+use App\Enums\SignInMethod;
 use App\Exceptions\ApiException;
 use App\Models\User;
 use App\Services\Auth\LoginThrottle;
 use App\Services\Auth\PasswordProof;
+use App\Services\Security\FailedSignIns;
 use App\Support\Auth\AuthResult;
 use App\Support\Auth\DeviceInfo;
 use App\Support\Auth\TwoFactorPending;
@@ -19,6 +21,7 @@ class LoginMember
         private readonly LoginThrottle $throttle,
         private readonly PasswordProof $passwords,
         private readonly SignInMember $signIn,
+        private readonly FailedSignIns $failures,
     ) {}
 
     /**
@@ -34,6 +37,11 @@ class LoginMember
 
         if (! $this->passwords->check($user, $password)) {
             $this->throttle->recordFailure($subject);
+
+            // SET-21 (09 §8.4), after the response: the answer takes as long as for an unknown address.
+            if ($user !== null) {
+                $this->failures->later($user, 'password');
+            }
 
             throw new ApiException(ErrorCode::InvalidCredentials);
         }
@@ -54,6 +62,6 @@ class LoginMember
             $user->forceFill(['password' => Hash::make($password)])->save();
         }
 
-        return $this->signIn->begin($user, $device, $request);
+        return $this->signIn->begin($user, $device, $request, method: SignInMethod::Password);
     }
 }

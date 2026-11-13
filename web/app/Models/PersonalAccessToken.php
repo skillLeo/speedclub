@@ -6,6 +6,7 @@ use App\Enums\DevicePlatform;
 use Database\Factories\PersonalAccessTokenFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\PersonalAccessToken as SanctumPersonalAccessToken;
 
 /**
@@ -30,7 +31,7 @@ class PersonalAccessToken extends SanctumPersonalAccessToken
      */
     protected function casts(): array
     {
-        return ['platform' => DevicePlatform::class];
+        return ['platform' => DevicePlatform::class, 'reauthenticated_at' => 'datetime', 'second_factor_at' => 'datetime'];
     }
 
     /**
@@ -42,6 +43,16 @@ class PersonalAccessToken extends SanctumPersonalAccessToken
         $name = $this->getAttribute('name');
 
         return is_string($device) ? $device : (is_string($name) ? $name : 'device');
+    }
+
+    /**
+     * M4.7 (09 §8.4): the install this token belongs to.
+     *
+     * @return BelongsTo<DeviceInstall, $this>
+     */
+    public function deviceInstall(): BelongsTo
+    {
+        return $this->belongsTo(DeviceInstall::class);
     }
 
     /**

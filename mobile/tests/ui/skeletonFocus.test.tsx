@@ -4,8 +4,8 @@ import { IsFocusedContext } from 'expo-router/build/react-navigation/core/useIsF
 import { useState, type ReactNode } from 'react';
 import { withRepeat } from 'react-native-reanimated';
 
-import { hydrateThemePreference } from '@/theme';
-import { Skeleton, SKELETON_DELAY_MS, SkeletonBlock } from '@/ui/Skeleton';
+import { hydrateThemePreference, motion } from '@/theme';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { renderUi } from './helpers';
@@ -33,7 +33,7 @@ it('reads the route focus, and counts as shown outside any route', async () => {
   expect((await renderHook(() => useScreenFocused(), { wrapper: focusedAs(true) })).result.current).toBe(true);
 });
 
-it('a skeleton in a screen left behind does not start its loop; shown again, it does', async () => {
+it('a skeleton in a screen left behind does not start its loop; shown again, it does (once the load is slow, SM15)', async () => {
   let show: (focused: boolean) => void = () => undefined;
   function Host() {
     const [focused, setFocused] = useState(false);
@@ -47,8 +47,21 @@ it('a skeleton in a screen left behind does not start its loop; shown again, it 
     );
   }
   await renderUi(<Host />);
-  await act(async () => jest.advanceTimersByTime(SKELETON_DELAY_MS));
+  // No shimmer before skeleton.shimmerAfter, even on show.
+  await act(async () => jest.advanceTimersByTime(motion.skeleton.shimmerAfter));
   expect(withRepeat).not.toHaveBeenCalled();
   await act(async () => show(true));
+  expect(withRepeat).toHaveBeenCalled();
+});
+
+it('stands still while a load is fast, and shimmers only past skeleton.shimmerAfter (SM15)', async () => {
+  await renderUi(
+    <Skeleton testID="sk">
+      <SkeletonBlock height={20} />
+    </Skeleton>,
+  );
+  await act(async () => jest.advanceTimersByTime(motion.skeleton.shimmerAfter - 1));
+  expect(withRepeat).not.toHaveBeenCalled();
+  await act(async () => jest.advanceTimersByTime(1));
   expect(withRepeat).toHaveBeenCalled();
 });

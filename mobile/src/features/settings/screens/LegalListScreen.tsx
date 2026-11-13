@@ -36,7 +36,7 @@ function ListSkeleton() {
           <View key={index}>
             <View style={styles.skeletonRow}>
               <SkeletonText variant="body" width="45%" />
-              <SkeletonText variant="supporting" width="35%" />
+              <SkeletonText variant="callout" width="35%" />
             </View>
             {index < 4 ? <Hairline inset={space[16]} /> : null}
           </View>

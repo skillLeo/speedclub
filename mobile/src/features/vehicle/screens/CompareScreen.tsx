@@ -15,6 +15,7 @@ import { useOnline } from '@/state/online';
 import { createStyles, layout, useBreakpoint } from '@/theme';
 import { EmptyState, ErrorState, Hairline, Header, Icon, Photo, PressableScale, Screen, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
 import { vehicleNameText } from '@/ui/textBreaks';
+import { keepShortNamesTogether } from '@/lib/format';
 
 import { COMPARE_FLAG, compareItems, compareSummary, type CompareData, type CompareItem, type CompareModCategory, type CompareSide, type CompareSpecRow, type CompareVehicle } from '../compare';
 import { photoFields } from '../media';
@@ -172,7 +173,7 @@ const CompareRow = memo(function CompareRow({ item, data, edge }: { item: Compar
     case 'group':
       body = (
         <View style={styles.group}>
-          <Text variant="eyebrow" color="text.secondary" role="heading" {...({ 'aria-level': 3 } as object)}>
+          <Text variant="labelCaps" color="text.secondary" role="heading" {...({ 'aria-level': 3 } as object)}>
             {item.title}
           </Text>
         </View>
@@ -221,7 +222,7 @@ function Car({ vehicle, side }: { vehicle: CompareVehicle; side: CompareSide }) 
     >
       <Photo {...photoFields(vehicle.cover, THUMB_WIDTH)} aspect="4:3" corner="sm" testID={`${ROUTE}.car.${side}.photo`} />
       {/* §4: make and model are never cut; the title wraps instead (three lines at twice the size). */}
-      <Text variant="labelS" color="text.primary" hyphenate={false} testID={`${ROUTE}.car.${side}.title`}>
+      <Text variant="callout" color="text.primary" hyphenate={false} testID={`${ROUTE}.car.${side}.title`}>
         {/* DQ-438: "GT-R" and "C 63" stay whole at twice the size; the title wraps at its other spaces. */}
         {vehicleNameText(vehicle.title)}
       </Text>
@@ -235,11 +236,11 @@ function SectionTitle({ kind, data }: { kind: 'specs' | 'mods'; data: CompareDat
   const summary = compareSummary(data);
   return (
     <View style={styles.section}>
-      <Text variant="titleS" role="heading" {...({ 'aria-level': 2 } as object)}>
+      <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)}>
         {kind === 'specs' ? t('compare.specs') : t('compare.mods')}
       </Text>
       {kind === 'specs' && summary.rows > 0 ? (
-        <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.summary`}>
+        <Text variant="callout" color="text.secondary" testID={`${ROUTE}.summary`}>
           {t('compare.summary', { differences: summary.differences, rows: summary.rows })}
         </Text>
       ) : null}
@@ -264,7 +265,7 @@ function SpecPair({ row, differs, last }: { row: CompareSpecRow; differs: boolea
         style={styles.row}
         testID={`${ROUTE}.spec.${row.key}`}
       >
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {row.label}
         </Text>
         <View style={styles.pair}>
@@ -301,13 +302,14 @@ function ModPair({ category }: { category: CompareModCategory }) {
         {SIDES.map((side) => (
           <View key={side} style={styles.modList} testID={`${ROUTE}.mods.${category.key}.${side}`}>
             {category[side].length === 0 ? (
-              <Text variant="supporting" color="text.tertiary">
+              <Text variant="callout" color="text.tertiary">
                 {t('compare.noModsSide')}
               </Text>
             ) : (
               category[side].map((mod) => (
                 <View key={mod.id} style={styles.mod}>
-                  <Text variant="supporting">{mod.title}</Text>
+                  {/* DQ-926: a part name never breaks at its own hyphen ("Slip- / On"). */}
+                  <Text variant="callout">{keepShortNamesTogether(mod.title)}</Text>
                   {mod.summary && mod.summary !== mod.title ? (
                     <Text variant="caption" color="text.secondary">
                       {mod.summary}
@@ -332,7 +334,7 @@ function NoMods() {
   const styles = useStyles();
   return (
     <View style={styles.mods}>
-      <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.noMods`}>
+      <Text variant="callout" color="text.secondary" testID={`${ROUTE}.noMods`}>
         {t('compare.noMods')}
       </Text>
     </View>
@@ -353,23 +355,23 @@ function CompareSkeleton({ gutter }: { gutter: number }) {
           {SIDES.map((side) => (
             <View key={side} style={styles.car} testID={`${ROUTE}.skeleton.car.${side}`}>
               <SkeletonBlock width="100%" aspectRatio={4 / 3} corner="sm" testID={`${ROUTE}.skeleton.car.${side}.photo`} />
-              <SkeletonText variant="labelS" width="80%" testID={`${ROUTE}.skeleton.car.${side}.title`} />
+              <SkeletonText variant="callout" width="80%" testID={`${ROUTE}.skeleton.car.${side}.title`} />
             </View>
           ))}
         </View>
       </View>
       <View style={edge}>
         <View style={[styles.column, styles.section]}>
-          <SkeletonText variant="titleS" width="30%" />
-          <SkeletonText variant="supporting" width="55%" />
+          <SkeletonText variant="headline" width="30%" />
+          <SkeletonText variant="callout" width="55%" />
         </View>
         <View style={[styles.column, styles.group]}>
-          <SkeletonText variant="eyebrow" width="20%" />
+          <SkeletonText variant="labelCaps" width="20%" />
         </View>
         {Array.from({ length: SKELETON_ROWS }, (_, index) => (
           <View key={index} style={styles.column} testID={`${ROUTE}.skeleton.row`}>
             <View style={styles.row}>
-              <SkeletonText variant="supporting" width="35%" />
+              <SkeletonText variant="callout" width="35%" />
               <View style={styles.pair}>
                 <View style={styles.cell}>
                   <SkeletonText variant="body" width="60%" />

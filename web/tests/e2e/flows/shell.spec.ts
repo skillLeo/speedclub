@@ -278,12 +278,13 @@ test.describe('guest', () => {
     await expect(anyWithId(page, 'shell.sidebar.account')).toHaveCount(0);
 
     await byTestId('shell.sidebar.signIn').click();
-    await expect(byTestId('AUTH-03.root')).toBeVisible();
-    await expect.poll(() => pathOf(page)).toBe('/app/sign-in');
+    // M4.6: the passwordless start (AUTH-12) is the way in.
+    await expect(byTestId('AUTH-12.root')).toBeVisible();
+    await expect.poll(() => pathOf(page)).toBe('/app/auth/email');
     expect(new URL(page.url()).searchParams.has('returnTo')).toBe(false);
     await expect(anyWithId(page, 'shell.authRequired')).toHaveCount(0);
 
-    await byTestId('AUTH-03.header.back').click();
+    await byTestId('AUTH-12.header.back').click();
     await expect(byTestId(ROOTS.discover)).toBeVisible();
     await expect.poll(() => pathOf(page)).toBe('/app/discover');
     await expect(byTestId('shell.sidebar')).toBeVisible();
@@ -345,7 +346,7 @@ test.describe('auth-required sheet', () => {
       });
 
       for (const { action, route, path } of [
-        { action: 'shell.authRequired.signIn', route: 'AUTH-03', path: '/app/sign-in' },
+        { action: 'shell.authRequired.signIn', route: 'AUTH-12', path: '/app/auth/email' },
         { action: 'shell.authRequired.signUp', route: 'AUTH-04', path: '/app/sign-up' },
       ]) {
         test(`${route} carries the way back to ${returnTo}, and its back returns to the garage`, async ({ page, byTestId }) => {
@@ -768,20 +769,26 @@ test.describe('not found', () => {
     });
   }
 
-  test('a primary button in a column of 480 centred in the window, from 768', async ({ page, qaGoto, byTestId }) => {
+  test('DQ-1088: a brand state, the photo on 7 of 12 columns and the copy beside it from 768, a back control over the photo', async ({ page, qaGoto, byTestId }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await qaGoto('/app/gibt-es-nicht');
-    const title = await byTestId('SYS-03.title').boundingBox();
+    const photo = await byTestId('SYS-03.photo').boundingBox();
+    if (!photo) throw new Error('no photo');
+    expect(photo.x).toBe(0);
+    expect(photo.height).toBe(800);
+    const title = await byTestId('SYS-03.state.title').boundingBox();
     if (!title) throw new Error('no title');
-    expect(title.x).toBe((1280 - 480) / 2);
+    expect(title.x).toBeGreaterThan(photo.width);
     const home = await byTestId('SYS-03.home').boundingBox();
     if (!home) throw new Error('no button');
     expect(home.x).toBe(title.x);
-    expect(home.height).toBe(tokens.size.button.m);
+    expect(home.height).toBe(tokens.size.button.l);
     expect(await byTestId('SYS-03.home').evaluate((node) => getComputedStyle(node.firstElementChild ?? node).backgroundColor)).not.toBe('rgba(0, 0, 0, 0)');
+    await expect(page.getByRole('button', { name: 'Zurück' })).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
-    const phone = await byTestId('SYS-03.title').boundingBox();
-    expect(phone?.x).toBe(20);
+    // The phone layout replaces the split: wait for it before measuring.
+    await expect.poll(async () => (await byTestId('SYS-03.photo').boundingBox())?.y).toBe(0);
+    await expect.poll(async () => (await byTestId('SYS-03.state.title').boundingBox())?.x).toBe(20);
   });
 
   test('speaks English too', async ({ qaGoto, byTestId }) => {

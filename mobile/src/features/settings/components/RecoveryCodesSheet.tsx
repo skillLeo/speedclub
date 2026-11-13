@@ -4,6 +4,8 @@ import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
 import { Button, Checkbox, Sheet, Text, toast } from '@/ui';
+import { SlotText } from '@/ui/SlotText';
+import { PRODUCT_NAMES } from '@/ui/textBreaks';
 
 import { copyText, RECOVERY_FILE_NAME, recoveryCodesText, saveTextFile } from '../recoveryCodes';
 
@@ -79,12 +81,10 @@ export function RecoveryCodesSheet({ codes, onDone, testID }: RecoveryCodesSheet
       }
     >
       <View style={styles.body}>
-        <Text variant="bodyDense" color="text.secondary">
-          {t('twoFactor.codesBody')}
-        </Text>
+        <SlotText variant="body" color="text.secondary" text={t('twoFactor.codesBody')} keep={PRODUCT_NAMES} />
         <View style={styles.codes} testID={`${testID}.list`}>
           {(codes ?? []).map((code) => (
-            <Text key={code} variant="code" selectable style={styles.code}>
+            <Text key={code} variant="body" numeric selectable style={styles.code}>
               {code}
             </Text>
           ))}

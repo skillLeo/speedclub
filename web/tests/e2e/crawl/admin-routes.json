@@ -1,0 +1,528 @@
+{
+  "source": "php artisan route:list --path=admin --method=GET --json",
+  "routes": [
+    {
+      "uri": "/admin",
+      "name": "admin.dashboard",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/{fallbackPlaceholder}",
+      "name": "admin.fallback",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/account",
+      "name": "admin.account",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/alerts",
+      "name": "admin.alerts",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/approvals/download",
+      "name": "admin.approvals.download",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/audit",
+      "name": "admin.audit.index",
+      "permissions": [
+        "audit.view"
+      ]
+    },
+    {
+      "uri": "/admin/brand",
+      "name": "admin.brand.index",
+      "permissions": [
+        "brand.manage"
+      ]
+    },
+    {
+      "uri": "/admin/brand/assets/{asset}/contrast",
+      "name": "admin.brand.assets.contrast",
+      "permissions": [
+        "brand.manage"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/brands",
+      "name": "admin.catalog.brands",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/entries/{level}/{id}/impact",
+      "name": "admin.catalog.entries.impact",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/export/{kind}.csv",
+      "name": "admin.catalog.export",
+      "permissions": [
+        "catalog.view",
+        "lists.export"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/import",
+      "name": "admin.catalog.import",
+      "permissions": [
+        "catalog.view",
+        "catalog.import"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/import/{import}",
+      "name": "admin.catalog.import.show",
+      "permissions": [
+        "catalog.view",
+        "catalog.import"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/import/template/{kind}.csv",
+      "name": "admin.catalog.import.template",
+      "permissions": [
+        "catalog.view",
+        "catalog.import"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/makes",
+      "name": "admin.catalog.vehicles.makes",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/makes/{make}",
+      "name": "admin.catalog.vehicles.make",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/mod-categories",
+      "name": "admin.catalog.categories",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/mod-categories/{category}",
+      "name": "admin.catalog.categories.show",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/models/{model}",
+      "name": "admin.catalog.vehicles.model",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/requests",
+      "name": "admin.catalog.vehicles.requests",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/requests/options",
+      "name": "admin.catalog.vehicles.requests.options",
+      "permissions": [
+        "catalog.view",
+        "catalog.manage"
+      ]
+    },
+    {
+      "uri": "/admin/config/flags",
+      "name": "admin.config.flags",
+      "permissions": [
+        "flags.manage"
+      ]
+    },
+    {
+      "uri": "/admin/config/releases",
+      "name": "admin.config.releases",
+      "permissions": [
+        "releases.manage"
+      ]
+    },
+    {
+      "uri": "/admin/config/remote",
+      "name": "admin.config.remote",
+      "permissions": [
+        "remote_config.manage"
+      ]
+    },
+    {
+      "uri": "/admin/content/announcements",
+      "name": "admin.content.announcements",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/help",
+      "name": "admin.content.help",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/home",
+      "name": "admin.content.home",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/home/vehicles",
+      "name": "admin.content.home.vehicles",
+      "permissions": [
+        "content.view",
+        "content.edit"
+      ]
+    },
+    {
+      "uri": "/admin/content/legal",
+      "name": "admin.content.legal",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/preview",
+      "name": "admin.content.preview",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/templates",
+      "name": "admin.content.templates",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/versions",
+      "name": "admin.content.versions",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/dev/gallery",
+      "name": "admin.dev.gallery",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/forgot-password",
+      "name": "password.request",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/invite",
+      "name": "admin.invite",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/login",
+      "name": "login",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/media-review",
+      "name": "admin.media.index",
+      "permissions": [
+        "media.review"
+      ]
+    },
+    {
+      "uri": "/admin/media-review/{media}/original",
+      "name": "admin.media.original.file",
+      "permissions": [
+        "media.review"
+      ]
+    },
+    {
+      "uri": "/admin/members",
+      "name": "admin.members.index",
+      "permissions": [
+        "members.view"
+      ]
+    },
+    {
+      "uri": "/admin/members/{member}",
+      "name": "admin.members.show",
+      "permissions": [
+        "members.view"
+      ]
+    },
+    {
+      "uri": "/admin/members/{member}/exports/{export}/download",
+      "name": "admin.members.exports.download",
+      "permissions": [
+        "members.view",
+        "members.export"
+      ]
+    },
+    {
+      "uri": "/admin/members/export.csv",
+      "name": "admin.members.export",
+      "permissions": [
+        "members.view",
+        "lists.export"
+      ]
+    },
+    {
+      "uri": "/admin/memberships/entitlements",
+      "name": "admin.memberships.entitlements",
+      "permissions": [
+        "memberships.manage"
+      ]
+    },
+    {
+      "uri": "/admin/memberships/plans",
+      "name": "admin.memberships.plans",
+      "permissions": [
+        "memberships.manage"
+      ]
+    },
+    {
+      "uri": "/admin/moderation/cases/{case}",
+      "name": "admin.moderation.cases.show",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
+      "uri": "/admin/moderation/messages",
+      "name": "admin.moderation.messages",
+      "permissions": [
+        "moderation.view",
+        "moderation.messages"
+      ]
+    },
+    {
+      "uri": "/admin/moderation/reports",
+      "name": "admin.moderation.reports",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
+      "uri": "/admin/moderation/rules",
+      "name": "admin.moderation.rules",
+      "permissions": [
+        "moderation.view",
+        "moderation.rules"
+      ]
+    },
+    {
+      "uri": "/admin/moderation/templates",
+      "name": "admin.moderation.templates",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
+      "uri": "/admin/privacy/requests",
+      "name": "admin.privacy.requests",
+      "permissions": [
+        "privacy.view"
+      ]
+    },
+    {
+      "uri": "/admin/privacy/requests/{privacyRequest}",
+      "name": "admin.privacy.requests.show",
+      "permissions": [
+        "privacy.view"
+      ]
+    },
+    {
+      "uri": "/admin/privacy/requests/{privacyRequest}/evidence",
+      "name": "admin.privacy.requests.evidence",
+      "permissions": [
+        "privacy.view"
+      ]
+    },
+    {
+      "uri": "/admin/privacy/retention",
+      "name": "admin.privacy.retention",
+      "permissions": [
+        "privacy.view"
+      ]
+    },
+    {
+      "uri": "/admin/qr",
+      "name": "admin.qr.index",
+      "permissions": [
+        "qr.view"
+      ]
+    },
+    {
+      "uri": "/admin/qr/{qr}",
+      "name": "admin.qr.show",
+      "permissions": [
+        "qr.view"
+      ]
+    },
+    {
+      "uri": "/admin/reset",
+      "name": "password.reset",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/search",
+      "name": "admin.search",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/search/suggest",
+      "name": "admin.search.suggest",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/settings",
+      "name": "admin.settings",
+      "permissions": [
+        "staff.manage"
+      ]
+    },
+    {
+      "uri": "/admin/support/macros",
+      "name": "admin.support.macros",
+      "permissions": [
+        "support.view"
+      ]
+    },
+    {
+      "uri": "/admin/support/tickets",
+      "name": "admin.support.tickets",
+      "permissions": [
+        "support.view"
+      ]
+    },
+    {
+      "uri": "/admin/support/tickets/{ticket}",
+      "name": "admin.support.tickets.show",
+      "permissions": [
+        "support.view"
+      ]
+    },
+    {
+      "uri": "/admin/system/health",
+      "name": "admin.system.health",
+      "permissions": [
+        "system.view"
+      ]
+    },
+    {
+      "uri": "/admin/system/integrations",
+      "name": "admin.system.integrations",
+      "permissions": [
+        "integrations.view"
+      ]
+    },
+    {
+      "uri": "/admin/system/jobs",
+      "name": "admin.system.jobs",
+      "permissions": [
+        "system.view"
+      ]
+    },
+    {
+      "uri": "/admin/team",
+      "name": "admin.team.staff",
+      "permissions": [
+        "staff.view"
+      ]
+    },
+    {
+      "uri": "/admin/team/{staff}",
+      "name": "admin.team.staff.show",
+      "permissions": [
+        "staff.view"
+      ]
+    },
+    {
+      "uri": "/admin/team/approvals",
+      "name": "admin.team.approvals",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/team/permissions",
+      "name": "admin.team.permissions",
+      "permissions": [
+        "staff.view"
+      ]
+    },
+    {
+      "uri": "/admin/team/roles",
+      "name": "admin.team.roles",
+      "permissions": [
+        "staff.view"
+      ]
+    },
+    {
+      "uri": "/admin/two-factor-challenge",
+      "name": "two-factor.login",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/two-factor/setup",
+      "name": "admin.two-factor.setup",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/user/confirm-password",
+      "name": "password.confirm",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/user/confirmed-password-status",
+      "name": "password.confirmation",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/user/two-factor-qr-code",
+      "name": "two-factor.qr-code",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/user/two-factor-recovery-codes",
+      "name": "two-factor.recovery-codes",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/user/two-factor-secret-key",
+      "name": "two-factor.secret-key",
+      "permissions": []
+    },
+    {
+      "uri": "/admin/vehicles",
+      "name": "admin.vehicles.index",
+      "permissions": [
+        "vehicles.view"
+      ]
+    },
+    {
+      "uri": "/admin/vehicles/{vehicle}",
+      "name": "admin.vehicles.show",
+      "permissions": [
+        "vehicles.view"
+      ]
+    }
+  ]
+}

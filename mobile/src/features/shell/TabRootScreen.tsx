@@ -5,7 +5,8 @@ import Animated from 'react-native-reanimated';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { isWeb } from '@/lib/platform';
-import { createStyles, useMotion } from '@/theme';
+import { createStyles } from '@/theme';
+import { motionDuration, useMotionPreference } from '@/ui/motion';
 import { Header, HeaderLargeTitle, Screen, type HeaderAction } from '@/ui';
 import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
@@ -41,7 +42,7 @@ export type TabRootScreenProps = {
  */
 export function TabRootScreen({ routeId, title, actions, bodyTestID, offlineLabel, children }: TabRootScreenProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const header = useCollapsingHeader();
   const padding = useTabBarPadding();
   const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
@@ -62,7 +63,7 @@ export function TabRootScreen({ routeId, title, actions, bodyTestID, offlineLabe
       const node = scrollRef.current?.getScrollableNode() as unknown as { scrollTop: number };
       setTimeout(() => {
         if (node.scrollTop === before) node.scrollTop = 0;
-      }, motion.duration.small);
+      }, motionDuration('effect.default'));
     }
     return true;
   });

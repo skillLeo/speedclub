@@ -151,7 +151,7 @@ export function PhotoGrid({
                 <Photo {...photoFields(photo, tile)} aspect="4:3" corner="sm">
                   {isCover ? (
                     <View style={styles.badge} testID={`${testID}.photo.${photo.id}.cover`}>
-                      <Text variant="badge" color="onPhoto.primary">
+                      <Text variant="labelBadge" color="onPhoto.primary">
                         {t('photos.cover')}
                       </Text>
                     </View>

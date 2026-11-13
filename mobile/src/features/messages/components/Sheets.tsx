@@ -6,6 +6,7 @@ import { photoFields } from '@/features/profile/media';
 import { keepNameTogether } from '@/lib/format';
 import { createStyles, size } from '@/theme';
 import { EmptyState, ErrorState, ListRow, Sheet, Skeleton, SkeletonBlock, SkeletonText, type IconName } from '@/ui';
+import { nameInText } from '@/ui/textBreaks';
 
 import type { Loadable, MuteChange } from '../data';
 import { MESSAGE_GLYPHS } from '../glyphs';
@@ -76,17 +77,33 @@ export type MessageActionsSheetProps = {
   /** A photo or vehicle message opens from here too, so a screen reader reaches it (review 11). */
   onOpenPhoto?: (message: ThreadMessage) => void;
   onOpenVehicle?: (vehicle: ChatVehicle) => void;
+  /** 09 §7.8 "Antworten" (flag `msg_replies`): the way to reply without the swipe (screen readers, keyboards, web). */
+  onReply?: (message: ThreadMessage) => void;
   testID: string;
 };
 
 /** Contract §7: reactions on long-press (six fixed) and Kopieren · Für mich löschen · Melden. */
-export function MessageActionsSheet({ message, onClose, reactions, onReact, onCopy, onHide, onTranslate, onReport, onOpenPhoto, onOpenVehicle, testID }: MessageActionsSheetProps) {
+export function MessageActionsSheet({
+  message,
+  onClose,
+  reactions,
+  onReact,
+  onCopy,
+  onHide,
+  onTranslate,
+  onReport,
+  onOpenPhoto,
+  onOpenVehicle,
+  onReply,
+  testID,
+}: MessageActionsSheetProps) {
   const { t } = useTranslation('messages');
   const common = useTranslation('common').t;
   const actions: SheetAction[] = [];
+  if (message?.id && onReply) actions.push({ key: 'reply', label: t('reply.action'), icon: 'arrow-bend-up-left', onPress: () => onReply(message) });
   if (message?.kind === 'photo' && onOpenPhoto) actions.push({ key: 'openPhoto', label: t('thread.openPhoto'), icon: MESSAGE_GLYPHS.photo, onPress: () => onOpenPhoto(message) });
   const shared = message?.kind === 'vehicle' ? message.vehicle : null;
-  if (shared && onOpenVehicle) actions.push({ key: 'openVehicle', label: t('thread.vehicleOpen', { title: shared.title }), icon: MESSAGE_GLYPHS.vehicle, onPress: () => onOpenVehicle(shared) });
+  if (shared && onOpenVehicle) actions.push({ key: 'openVehicle', label: t('thread.vehicleOpen', { title: nameInText(shared.title) }), icon: MESSAGE_GLYPHS.vehicle, onPress: () => onOpenVehicle(shared) });
   if (message?.kind === 'text' && message.body) actions.push({ key: 'copy', label: t('actions.copy'), icon: MESSAGE_GLYPHS.copy, onPress: () => onCopy(message) });
   if (message?.kind === 'text' && message.body && message.id && !message.mine && onTranslate) {
     actions.push({ key: 'translate', label: common('ai.translate.action'), icon: 'translate', onPress: () => onTranslate(message) });

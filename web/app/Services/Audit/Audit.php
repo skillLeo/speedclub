@@ -5,6 +5,7 @@ namespace App\Services\Audit;
 use App\Enums\AuditActorType;
 use App\Models\Staff;
 use App\Models\User;
+use App\Services\Security\SecurityEventLog;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -56,7 +57,7 @@ final class Audit
             'request_id' => self::requestId(),
         ];
 
-        DB::transaction(function () use ($row, $isStaff): void {
+        DB::transaction(function () use ($row, $isStaff, $target, $actor): void {
             $head = self::lockHead();
             $hash = AuditChain::hash($head, $row);
 
@@ -69,6 +70,9 @@ final class Audit
             ]);
 
             DB::table('audit_chain_head')->where('id', 1)->update(['last_event_id' => $id, 'hash' => $hash]);
+
+            // M4.7 (09 §8.4): a member security event about a member is also a row of their SET-21 log.
+            SecurityEventLog::capture($row['action'], $target, $row['after'], $actor);
 
             // Member IP addresses are not stored (05_ARCHITECTURE §6). Staff access data stays outside the chain (ADR-113).
             if ($isStaff) {

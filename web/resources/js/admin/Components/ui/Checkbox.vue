@@ -23,7 +23,7 @@ const field = useField(props);
 
 <template>
     <label
-        class="inline-flex min-h-32 cursor-pointer items-center gap-8 text-supporting text-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:text-ink-3"
+        class="inline-flex min-h-32 cursor-pointer items-center gap-8 text-admin-base text-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:text-ink-3"
         :class="label ? '' : 'min-w-32 justify-center'"
     >
         <CheckboxRoot

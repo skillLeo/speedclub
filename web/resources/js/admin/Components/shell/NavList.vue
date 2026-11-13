@@ -43,16 +43,16 @@ function badge(item: NavItem): number {
                         :aria-current="active(item) ? 'page' : undefined"
                         :class="[
                             focusRing,
-                            'relative flex h-32 items-center gap-12 rounded-sm px-8 text-label-s transition-colors duration-150 ease-standard',
+                            'relative flex h-32 items-center gap-12 rounded-sm px-8 text-admin-base-strong transition-colors duration-effect-fast ease-effect-fast',
                             active(item) ? 'bg-selected text-ink' : 'text-ink-2 hover:bg-hover hover:text-ink',
                         ]"
                         :data-testid="`shell.nav.${item.testId}`"
                         @click="emit('navigate')"
                     >
-                        <span v-if="active(item)" class="absolute inset-y-8 left-0 w-2 rounded-full bg-accent" aria-hidden="true" />
+                        <span v-if="active(item)" class="absolute inset-y-8 left-0 w-2 rounded-full bg-ink" aria-hidden="true" />
                         <component :is="item.icon" :size="16" :weight="active(item) ? 'fill' : 'regular'" aria-hidden="true" />
                         <span class="flex-1 truncate">{{ trans(item.label) }}</span>
-                        <span v-if="badge(item) > 0" class="min-w-20 rounded-xs border border-accent px-4 text-center text-badge text-accent tabular-nums">
+                        <span v-if="badge(item) > 0" class="min-w-20 rounded-xs border border-line-strong px-4 text-center text-caption text-ink tabular-nums">
                             {{ formatNumber(badge(item)) }}<span class="sr-only">{{ trans('shell.nav.badge') }}</span>
                         </span>
                     </Link>

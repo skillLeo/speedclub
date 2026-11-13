@@ -152,7 +152,8 @@ describe('MF-3: a re-consent approval pins version, text and summary', function 
 describe('SF-7: the OG default comes from the cached app-config', function () {
     it('answers the configured default, then the published og_default, without a query once cached', function () {
         $staff = m31Staff('content_editor');
-        expect(app(OgImages::class)->defaultUrl())->toBe(url(config()->string('speedclub.public_pages.og_default')));
+        // Nothing published: the drawn brand card (OgImages), served by /og/site-{hash}.jpg.
+        expect(app(OgImages::class)->defaultUrl())->toMatch('~/og/site-[0-9a-f]{16}\.jpg$~');
 
         $og = m35Asset(BrandAssetKind::Og, 'generic-exterior-01.jpg');
         adm35Publish($staff, ConfigKey::Branding, m35Branding(['og_default' => $og->id]));

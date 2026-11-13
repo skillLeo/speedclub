@@ -51,8 +51,9 @@ describe('Dialog', () => {
     expect(panel.props['aria-label']).toBe('Fahrzeug löschen?');
     const style = flat(panel.props.style);
     expect(style.maxWidth).toBe(size.dialogMaxWidth);
-    expect(style.borderRadius).toBe(radius.md);
-    expect(style.borderRadius).toBe(12);
+    // 09 §5: a dialog takes the sheet radius, 20.
+    expect(style.borderRadius).toBe(radius.xl);
+    expect(style.borderRadius).toBe(20);
     expect(screen.getByTestId('d.body')).toHaveTextContent('Das kann nicht rückgängig gemacht werden.');
   });
 

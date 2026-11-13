@@ -2,6 +2,7 @@
 
 namespace App\Actions\Media;
 
+use App\Models\MaintenanceLog;
 use App\Models\Media;
 use App\Models\Modification;
 use App\Models\Vehicle;
@@ -39,7 +40,8 @@ class SweepDetachedMedia
         $vehicles = Vehicle::onlyTrashed()
             ->where(fn ($query) => $query
                 ->whereHas('media')
-                ->orWhereHas('modifications', fn ($mods) => $mods->withTrashed()->whereHas('media')))
+                ->orWhereHas('modifications', fn ($mods) => $mods->withTrashed()->whereHas('media'))
+                ->orWhereHas('maintenanceLogs', fn ($logs) => $logs->whereHas('media')))
             ->limit($batch)
             ->get();
 
@@ -86,7 +88,8 @@ class SweepDetachedMedia
         return Media::query()
             ->where(fn (Builder $query) => $query
                 ->where($missing((new Vehicle)->getMorphClass(), (new Vehicle)->getTable()))
-                ->orWhere($missing((new Modification)->getMorphClass(), (new Modification)->getTable())))
+                ->orWhere($missing((new Modification)->getMorphClass(), (new Modification)->getTable()))
+                ->orWhere($missing((new MaintenanceLog)->getMorphClass(), (new MaintenanceLog)->getTable())))
             ->limit($batch)
             ->get();
     }

@@ -1,0 +1,212 @@
+{
+ "reports": [
+  {
+   "key": "r-vehicle-power",
+   "reporter": "jan.s15",
+   "target": {
+    "type": "vehicle",
+    "vehicle": "luca-r35"
+   },
+   "reason": "other",
+   "days_ago": 3,
+   "details": "Die angegebene Leistung passt aus meiner Sicht nicht zu den eingetragenen Teilen. Bitte einmal prüfen."
+  },
+  {
+   "key": "r-note-spam",
+   "reporter": "mia.s2k",
+   "target": {
+    "type": "build_update",
+    "vehicle": "niklas-z34",
+    "note": "spam-open"
+   },
+   "reason": "spam",
+   "days_ago": 2,
+   "details": "Der gleiche Verkaufstext steht auch bei anderen Builds. Das ist Werbung, kein Build-Update."
+  },
+  {
+   "key": "r-member-photos",
+   "reporter": "hannah.mx5",
+   "target": {
+    "type": "member",
+    "member": "yusuf.r33"
+   },
+   "reason": "impersonation",
+   "days_ago": 1,
+   "details": "Ich glaube, das Profil nutzt Bilder eines bekannten Instagram-Accounts und gibt sich als dessen Besitzer aus."
+  },
+  {
+   "key": "r-photo-plate",
+   "reporter": "anna.964",
+   "target": {
+    "type": "photo",
+    "vehicle": "dominik-r35",
+    "index": 2
+   },
+   "reason": "other",
+   "days_ago": 4,
+   "details": "Auf dem Foto ist das Kennzeichen eines fremden Autos im Hintergrund gut lesbar."
+  }
+ ],
+ "decided": [
+  {
+   "key": "d-no-action",
+   "reporter": "sebastian.demo",
+   "target": {
+    "type": "vehicle",
+    "vehicle": "yusuf-a80"
+   },
+   "reason": "other",
+   "days_ago": 11,
+   "decided_days_ago": 9,
+   "details": "Die Supra ist laut Text komplett original, auf den Fotos sieht man aber eine andere Haube.",
+   "action": "no_action",
+   "facts": "Die Angaben zum Fahrzeug stimmen mit den Fotos überein. Eine Haube in Wagenfarbe ist kein Verstoß.",
+   "ground": "Community-Richtlinien § 4 (Deine Inhalte)",
+   "section": "4"
+  },
+  {
+   "key": "d-remove-spam",
+   "reporter": "tim.sti",
+   "target": {
+    "type": "build_update",
+    "vehicle": "jan-s14",
+    "note": "spam-decided"
+   },
+   "reason": "spam",
+   "days_ago": 16,
+   "decided_days_ago": 14,
+   "details": "Reine Verkaufsanzeige im Build-Verlauf.",
+   "action": "remove_content",
+   "facts": "Der Eintrag im Build-Verlauf bietet Teile zum Verkauf an und hat mit dem Aufbau des Fahrzeugs nichts zu tun.",
+   "ground": "Community-Richtlinien § 5 (Keine Werbung)",
+   "section": "5"
+  }
+ ],
+ "notes": {
+  "spam-open": {
+   "vehicle": "niklas-z34",
+   "days_ago": 3,
+   "text": "Verkaufe noch zehn Sätze Felgen und mehrere Gewindefahrwerke zum Bestpreis. Schreib mir einfach eine Nachricht."
+  },
+  "spam-decided": {
+   "vehicle": "jan-s14",
+   "days_ago": 17,
+   "text": "Komplette Teilesammlung abzugeben, Abholung oder Versand. Preise auf Anfrage per Nachricht."
+  }
+ },
+ "tickets": [
+  {
+   "key": "t-sticker",
+   "member": "sebastian.demo",
+   "category": "qr",
+   "days_ago": 6,
+   "subject": "Zweiten QR-Sticker für meinen Build",
+   "body": "Hallo, kann ich für mein Auto einen zweiten Sticker bekommen? Ich möchte einen in die Heckscheibe und einen in den Motorraum kleben.",
+   "reply": {
+    "days_ago": 5,
+    "status": "pending",
+    "body": "Hallo Sebastian,\n\ndu kannst das Sticker-PDF in der App unter Garage → Fahrzeug → QR-Code beliebig oft drucken. Beide Sticker zeigen auf denselben Build.\n\nViele Grüße\nSupport-Team"
+   }
+  },
+  {
+   "key": "t-email",
+   "member": "mia.s2k",
+   "category": "account",
+   "days_ago": 1,
+   "subject": "Bestätigungsmail für neue Adresse kommt nicht an",
+   "body": "Ich habe meine E-Mail-Adresse geändert, aber die Bestätigung kommt nicht an. Spam-Ordner habe ich schon geprüft."
+  },
+  {
+   "key": "t-generation",
+   "member": "jan.s15",
+   "category": "vehicle",
+   "days_ago": 12,
+   "subject": "Facelift-Version bei der S14 auswählen",
+   "body": "Bei meinem 200SX kann ich nur S14 auswählen. Gibt es eine Möglichkeit, die S14a (Facelift) anzugeben?",
+   "reply": {
+    "days_ago": 11,
+    "status": "closed",
+    "body": "Hallo Jan,\n\nim Katalog führen wir die S14 als eine Generation. Das Facelift kannst du gern in der Beschreibung erwähnen.\n\nViele Grüße\nSupport-Team"
+   }
+  },
+  {
+   "key": "t-messages",
+   "member": "kathi.rx8",
+   "category": "messaging",
+   "days_ago": 4,
+   "subject": "Nachrichten erscheinen erst nach dem Neustart",
+   "body": "Neue Nachrichten sehe ich oft erst, wenn ich die App neu starte. Ist das ein bekanntes Problem?",
+   "reply": {
+    "days_ago": 3,
+    "status": "pending",
+    "body": "Hallo Katharina,\n\ndanke für deine Meldung. Welches Gerät und welche App-Version nutzt du? Dann können wir das nachstellen.\n\nViele Grüße\nSupport-Team"
+   },
+   "member_reply": {
+    "days_ago": 2,
+    "body": "Ein Pixel 8 mit der aktuellen Version aus dem Play Store."
+   }
+  },
+  {
+   "key": "t-photos",
+   "member": "lars.skyline",
+   "category": "safety",
+   "days_ago": 2,
+   "subject": "Jemand nutzt Fotos meines R34",
+   "body": "Auf einem anderen Profil tauchen Fotos meines R34 auf, die ich hier hochgeladen habe. Was kann ich tun?",
+   "internal": {
+    "days_ago": 1,
+    "body": "Profil prüfen: Fotos ggf. über die Meldefunktion als Urheberrechtsverletzung einordnen."
+   }
+  }
+ ],
+ "approvals": [
+  {
+   "key": "a-export-robin",
+   "type": "members.export",
+   "member": "robin.e30",
+   "reason": "Auskunftsersuchen nach Art. 15 DSGVO, per E-Mail eingegangen und Identität geprüft."
+  },
+  {
+   "key": "a-export-dominik",
+   "type": "members.export",
+   "member": "dominik.r32",
+   "reason": "Mitglied bittet über den Support um eine vollständige Kopie seiner Daten."
+  },
+  {
+   "key": "a-delete-kathi",
+   "type": "members.delete",
+   "member": "kathi.rx8",
+   "reason": "Mitglied bittet per Support-Ticket um die sofortige Löschung des Kontos."
+  }
+ ],
+ "catalog_requests": [
+  {
+   "key": "c-m4-csl",
+   "member": "sebastian.demo",
+   "make": "BMW",
+   "model": "M4 CSL",
+   "generation": "G82",
+   "accepted": true,
+   "days_ago": 7
+  },
+  {
+   "key": "c-s13-kouki",
+   "member": "jan.s15",
+   "make": "Nissan",
+   "model": "Silvia",
+   "generation": "S13 Kouki",
+   "accepted": false,
+   "days_ago": 10,
+   "reason": "Die S13 steht bereits als Generation im Katalog. Das Facelift kannst du in der Beschreibung angeben."
+  },
+  {
+   "key": "c-gr-corolla",
+   "member": "selin.yaris",
+   "make": "Toyota",
+   "model": "GR Corolla",
+   "generation": "E210",
+   "accepted": null,
+   "days_ago": 2
+  }
+ ]
+}

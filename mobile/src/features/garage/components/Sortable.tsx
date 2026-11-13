@@ -7,7 +7,8 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { haptics } from '@/lib/haptics';
 import { isIOS, isWeb } from '@/lib/platform';
-import { createStyles, useMotion } from '@/theme';
+import { createStyles } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import { Icon, PressableScale, Text } from '@/ui';
 import { keyOf as keyOfEvent } from '@/ui/useRovingKeys';
 
@@ -62,7 +63,7 @@ const SortHandleContext = createContext<HandleContext | null>(null);
 
 /**
  * Reorder by touch, mouse and keyboard (GAR-01 "Sortieren", GAR-07, GAR-09). Cells sit at fixed slots and slide with
- * spring.snappy; a held cell follows the pointer on the UI thread and the others make room under it. The handle is a
+ * spring.fast; a held cell follows the pointer on the UI thread and the others make room under it. The handle is a
  * button: arrow keys move its item by one place, screen readers get the same moves as actions, and every move is announced.
  * The order reaches the parent once per drop or key press. The sets are bounded (20 vehicles, 30 photos, a category's
  * mods), so every cell is mounted.
@@ -198,7 +199,7 @@ type SortableCellProps = {
 
 function SortableCell({ itemKey, index, count, cell, order, activeKey, disabled, onLift, onDrop, onAnnounce, handle, children, testID }: SortableCellProps) {
   const styles = useStyles();
-  const { springTo } = useMotion();
+  const { springTo } = useMotionPreference();
   const home = slotPosition(index, cell);
   const x = useSharedValue(home.x);
   const y = useSharedValue(home.y);
@@ -215,8 +216,8 @@ function SortableCell({ itemKey, index, count, cell, order, activeKey, disabled,
         x.set(target.x);
         y.set(target.y);
       } else if (slot !== previous) {
-        x.set(springTo(target.x));
-        y.set(springTo(target.y));
+        x.set(springTo(target.x, 'fast'));
+        y.set(springTo(target.y, 'fast'));
       }
     },
     // Native follows the closure by itself and warns about dependencies; the web needs them.
@@ -227,7 +228,7 @@ function SortableCell({ itemKey, index, count, cell, order, activeKey, disabled,
     'worklet';
     activeKey.set(itemKey);
     start.set({ x: x.get(), y: y.get() });
-    lifted.set(springTo(1));
+    lifted.set(springTo(1, 'fast'));
     scheduleOnRN(onLift, itemKey);
   };
 
@@ -255,9 +256,9 @@ function SortableCell({ itemKey, index, count, cell, order, activeKey, disabled,
     if (activeKey.get() !== itemKey) return;
     const slot = Math.max(0, order.get().indexOf(itemKey));
     const target = slotPosition(slot, cell);
-    x.set(springTo(target.x));
-    y.set(springTo(target.y));
-    lifted.set(springTo(0));
+    x.set(springTo(target.x, 'fast'));
+    y.set(springTo(target.y, 'fast'));
+    lifted.set(springTo(0, 'fast'));
     activeKey.set(null);
     scheduleOnRN(onDrop, order.get());
   };

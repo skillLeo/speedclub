@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { wholeRows } from '@/features/discover/layout';
 import type { ReactNode } from 'react';
 
 import type { DiscoverCollection, MakePage, ModelPage, WheelSetup } from '@/api/queries/discover';
@@ -9,7 +10,7 @@ import { resetRecentSearchesForTests } from '@/features/discover/recentSearches'
 import { DiscoverScreen } from '@/features/discover/screens/DiscoverScreen';
 import { MakeScreen } from '@/features/discover/screens/MakeScreen';
 import { ModelScreen } from '@/features/discover/screens/ModelScreen';
-import { FACETS_DEBOUNCE_MS, SearchScreen } from '@/features/discover/screens/SearchScreen';
+import { FACETS_DEBOUNCE_MS, SEARCH_DEBOUNCE_MS, SearchScreen } from '@/features/discover/screens/SearchScreen';
 import { similarSearchHref, similarSearchState } from '@/features/discover/similarSearch';
 import i18n from '@/i18n';
 import { useSessionStore } from '@/state/session';
@@ -142,11 +143,58 @@ beforeEach(async () => {
   await AsyncStorage.clear();
 });
 
+describe('DISC-01 2.0 (09 §7.5)', () => {
+  it('sends the chosen scope with the search, and "Alles" sends none', async () => {
+    stubFetch({ '/discover': { body: { data: { makes: MAKES, collections: [], popular_mods: [], similar_members: null } } } });
+    await renderWithProviders(<DiscoverScreen />);
+    expect(await screen.findByTestId('DISC-01.scope.all')).toBeChecked();
+    await fireEvent.press(screen.getByTestId('DISC-01.scope.members'));
+    expect(screen.getByTestId('DISC-01.scope.members')).toBeChecked();
+    await fireEvent.changeText(screen.getByTestId('DISC-01.search'), 'lukas');
+    expect(screen.getByTestId('DISC-01.searchSubmit')).toHaveTextContent('Mitglieder zu „lukas“ suchen');
+    await fireEvent(screen.getByTestId('DISC-01.search'), 'submitEditing');
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/discover/search', params: { q: 'lukas', understand: '1', scope: 'members' } });
+    await fireEvent.press(screen.getByTestId('DISC-01.scope.all'));
+  });
+
+  it('shows the top 6 makes on a phone (DQ-1036), and "Alle" shows the rest', async () => {
+    const many = Array.from({ length: 14 }, (_, index) => ({ id: index + 1, name: `Marke ${index + 1}`, slug: `marke-${index + 1}`, vehicle_count: 20 - index }));
+    stubFetch({ '/discover': { body: { data: { makes: many, collections: [], popular_mods: [], similar_members: null } } } });
+    await renderWithProviders(<DiscoverScreen />);
+    expect(await screen.findByTestId('DISC-01.makes.marke-6')).toBeTruthy();
+    expect(screen.queryByTestId('DISC-01.makes.marke-7')).toBeNull();
+    await fireEvent.press(screen.getByTestId('DISC-01.makesHeader.action'));
+    expect(screen.getByTestId('DISC-01.makes.marke-14')).toBeTruthy();
+    expect(screen.queryByTestId('DISC-01.makesHeader.action')).toBeNull();
+  });
+
+  it('shows "Neu entdeckt" as a photo wall of the newest builds, each opening VEH-01', async () => {
+    stubFetch({
+      '/discover': { body: { data: { makes: MAKES, collections: [], popular_mods: [], similar_members: null } } },
+      '/home/new-builds': { body: page([R34, M4]) },
+    });
+    await renderWithProviders(<DiscoverScreen />);
+    expect(await screen.findByTestId(`DISC-01.newest.wall.${R34.id}`)).toBeTruthy();
+    expect(screen.getByTestId('DISC-01.newest.header')).toHaveTextContent(/Neu entdeckt/);
+    await fireEvent.press(screen.getByTestId(`DISC-01.newest.wall.${M4.id}`));
+    expect(mockRouter.push).toHaveBeenCalledWith(`/v/${M4.slug}`);
+  });
+
+  it('previews the tiles as "Beispiel" above the empty state', async () => {
+    stubFetch({ '/discover': { body: { data: { makes: [], collections: [], popular_mods: [], similar_members: null } } } });
+    await renderWithProviders(<DiscoverScreen />);
+    // The preview is decoration (aria-hidden): the empty state's title and action speak.
+    expect(await screen.findByTestId('DISC-01.sample.badge', { includeHiddenElements: true })).toHaveTextContent('Beispiel');
+    expect(screen.getByTestId('DISC-01.empty')).toBeTruthy();
+    expect(screen.queryByTestId('DISC-01.newest')).toBeNull();
+  });
+});
+
 describe('DISC-01 additions (FS-11)', () => {
-  it('shows Kollektionen with their real count, and one opens DISC-02 with its filters and sort as chips', async () => {
+  it('shows Kollektionen as rail photo cards with their real count, and one opens DISC-02 with its filters and sort as chips', async () => {
     stubFetch({ '/discover': { body: { data: { makes: MAKES, collections: [COLLECTION], popular_mods: MODS, similar_members: null } } } });
     await renderWithProviders(<DiscoverScreen />);
-    expect(await screen.findByTestId('DISC-01.collections.bmw-m')).toHaveTextContent(/BMW M Builds.*M2, M3 und M4 ab 340 PS.*4 Builds/);
+    expect(await screen.findByTestId('DISC-01.collections.bmw-m')).toHaveTextContent(/BMW M Builds.*4 Builds/);
     await fireEvent.press(screen.getByTestId('DISC-01.collections.bmw-m'));
     expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/discover/search', params: { make: 'bmw', power_min: '340', sort: 'power' } });
   });
@@ -394,6 +442,15 @@ describe('DISC-02 query understanding (contract §3)', () => {
       '/search/interpret': { body: { data: understood } },
       '/discover': { body: { data: { makes: MAKES } } },
     });
+    // NH-6: the URL answers setParams as Expo Router does. Without that echo the field's debounce, started by the typing, never
+    // learns that Enter already sent "r34", and its own late setParams({ q: 'r34' }) landed after the chips under load. The real
+    // router echoes on the next render, which clears that timer (useQueryField), so the chips are the final state.
+    mockRouter.setParams.mockImplementation((next: Record<string, string | undefined>) => {
+      for (const [key, value] of Object.entries(next)) {
+        if (value === undefined) delete mockParams[key];
+        else mockParams[key] = value;
+      }
+    });
     await renderWithProviders(<SearchScreen />);
     await setNetwork(false, mockNetListeners);
     try {
@@ -402,7 +459,13 @@ describe('DISC-02 query understanding (contract §3)', () => {
       expect(mockRouter.setParams).not.toHaveBeenCalledWith(expect.objectContaining({ make: 'nissan' }));
       await setNetwork(true, mockNetListeners);
       await waitFor(() => expect(mockRouter.setParams).toHaveBeenLastCalledWith(expect.objectContaining({ make: 'nissan', generation: 'r34' })));
+      // Past the debounce: nothing sends the text again, and the URL ends on the understood chips with the text used up.
+      await act(() => new Promise((resolve) => setTimeout(resolve, SEARCH_DEBOUNCE_MS + 100)));
+      expect(mockRouter.setParams).toHaveBeenLastCalledWith(expect.objectContaining({ make: 'nissan', generation: 'r34' }));
+      expect(mockParams).toMatchObject({ make: 'nissan', model: 'skyline-gt-r', generation: 'r34' });
+      expect(mockParams.q).toBeUndefined();
     } finally {
+      mockRouter.setParams.mockReset();
       await setNetwork(true, mockNetListeners);
     }
   });
@@ -426,12 +489,13 @@ const MAKE_PAGE: MakePage = {
       slug: 'm3',
       key: 'bmw--m3',
       vehicle_count: 2,
+      cover: null,
       generations: [
         { name: 'E46', slug: 'e46', year_from: 2000, year_to: 2006, vehicle_count: 1 },
         { name: 'G80', slug: 'g80', year_from: 2020, year_to: null, vehicle_count: 1 },
       ],
     },
-    { id: 11, name: 'M4', slug: 'm4', key: 'bmw--m4', vehicle_count: 1, generations: [] },
+    { id: 11, name: 'M4', slug: 'm4', key: 'bmw--m4', vehicle_count: 1, cover: null, generations: [] },
   ],
 };
 
@@ -465,7 +529,7 @@ const MODEL_PAGE: ModelPage = {
   generations: [{ name: 'R34', slug: 'r34', year_from: 1999, year_to: 2002, vehicle_count: 2 }],
 };
 const SETUP: WheelSetup = {
-  vehicle: { id: R34.id, slug: R34.slug, full_title: R34.full_title, cover: null, owner: null },
+  vehicle: { id: R34.id, slug: R34.slug, full_title: R34.full_title, cover: null, is_sample: false, owner: null },
   wheel: {
     brand: 'Volk Racing',
     model: 'TE37 SL',
@@ -552,5 +616,15 @@ describe('VEH-02 "Ähnliche suchen"', () => {
       search: { mod_category: 'interior', wheel_brand: null, wheel_diameter: null, suspension_type: null, suspension_brand: null, exhaust_brand: null },
     });
     expect(similarSearchHref(state)).toEqual({ pathname: '/discover/search', params: { q: 'Recaro', mod_category: 'interior' } });
+  });
+});
+
+describe('DQ-1038 whole rows', () => {
+  it('never ends a short wall or grid on a lone tile', () => {
+    expect(wholeRows(10, 3, 12)).toBe(9);
+    expect(wholeRows(14, 2, 6)).toBe(6);
+    expect(wholeRows(7, 4, 8)).toBe(4);
+    expect(wholeRows(2, 3, 9)).toBe(2);
+    expect(wholeRows(5, 1, 6)).toBe(5);
   });
 });

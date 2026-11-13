@@ -37,16 +37,19 @@ const useStyles = createStyles((t) => ({
 }));
 
 const HEADING_VARIANT: Record<MdHeadingLevel, TypeVariant> = {
-  1: 'titleM',
-  2: 'titleS',
+  1: 'title2',
+  2: 'headline',
   3: 'headline',
   4: 'bodyStrong',
   5: 'bodyStrong',
   6: 'bodyStrong',
 };
 
-/** The bold face of a running variant, at the same size and line height. */
-const STRONG_VARIANT: Partial<Record<TypeVariant, TypeVariant>> = { body: 'bodyStrong', supporting: 'labelS', bodyDense: 'bodyStrong' };
+/**
+ * The bold face of a running variant, at the same size and line height. The 2.0 scale has a strong twin only for body;
+ * callout is already Inter 500 and stays as it is.
+ */
+const STRONG_VARIANT: Partial<Record<TypeVariant, TypeVariant>> = { body: 'bodyStrong' };
 
 function openExternal(url: string): void {
   if (url.startsWith('mailto:')) {
@@ -143,16 +146,16 @@ function Table({ block, site, keyPrefix }: { block: Extract<MdBlock, { type: 'ta
             <View key={rowKey}>
               <View style={stacked ? styles.pairStacked : styles.pair}>
                 {/* The first column names the row, as public.css has it and as the record tables below do. */}
-                <Text variant={header ? 'labelS' : 'bodyStrong'} color={header ? 'text.secondary' : 'text.primary'} style={styles.pairLabel} selectable>
-                  <Inlines nodes={row[0] ?? []} variant={header ? 'labelS' : 'bodyStrong'} site={site} keyPrefix={`${rowKey}.0`} />
+                <Text variant={header ? 'callout' : 'bodyStrong'} color={header ? 'text.secondary' : 'text.primary'} style={styles.pairLabel} selectable>
+                  <Inlines nodes={row[0] ?? []} variant={header ? 'callout' : 'bodyStrong'} site={site} keyPrefix={`${rowKey}.0`} />
                 </Text>
                 <Text
-                  variant={header ? 'labelS' : 'supporting'}
+                  variant="callout"
                   color={header ? 'text.secondary' : 'text.primary'}
                   style={[styles.pairValue, stacked ? styles.pairValueStacked : null]}
                   selectable
                 >
-                  <Inlines nodes={row[1] ?? []} variant={header ? 'labelS' : 'supporting'} site={site} keyPrefix={`${rowKey}.1`} />
+                  <Inlines nodes={row[1] ?? []} variant="callout" site={site} keyPrefix={`${rowKey}.1`} />
                 </Text>
               </View>
               {divider}
@@ -167,11 +170,11 @@ function Table({ block, site, keyPrefix }: { block: Extract<MdBlock, { type: 'ta
               </Text>
               {row.slice(1).map((cell, cellIndex) => (
                 <View key={`${rowKey}.${cellIndex + 1}`} style={styles.field}>
-                  <Text variant="labelS" color="text.secondary">
+                  <Text variant="callout" color="text.secondary">
                     {plainText(block.header[cellIndex + 1] ?? [])}
                   </Text>
-                  <Text variant="supporting" selectable>
-                    <Inlines nodes={cell} variant="supporting" site={site} keyPrefix={`${rowKey}.${cellIndex + 1}`} />
+                  <Text variant="callout" selectable>
+                    <Inlines nodes={cell} variant="callout" site={site} keyPrefix={`${rowKey}.${cellIndex + 1}`} />
                   </Text>
                 </View>
               ))}
@@ -219,7 +222,7 @@ function Block({ block, site, keyPrefix }: { block: MdBlock; site: string | null
     case 'code':
       return (
         <View style={styles.code}>
-          <Text variant="bodyDense" selectable hyphenate={false}>
+          <Text variant="body" selectable hyphenate={false}>
             {block.text}
           </Text>
         </View>

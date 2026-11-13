@@ -77,7 +77,8 @@ onMounted(() => {
     if (props.autoload && props.allowed && props.forceState === undefined) void reveal();
 });
 
-const SNAPSHOT_FIELDS = ['username', 'display_name', 'bio', 'title', 'nickname', 'description', 'alt', 'note', 'brand_text', 'part_name', 'notes'];
+// M4.17: a comment's text (body) and an event's place and rules as they were reported.
+const SNAPSHOT_FIELDS = ['username', 'display_name', 'bio', 'title', 'nickname', 'description', 'alt', 'note', 'body', 'brand_text', 'part_name', 'notes', 'venue_name', 'city', 'organiser_rules'];
 function snapshotRows(target: Record<string, unknown> | null): { key: string; value: string }[] {
     if (target === null) return [];
     return SNAPSHOT_FIELDS.filter((key) => typeof target[key] === 'string' && (target[key]).trim() !== '').map((key) => ({ key, value: target[key] as string }));
@@ -95,7 +96,7 @@ function sender(message: EvidenceMessage): string {
         <div class="flex flex-wrap items-start justify-between gap-12">
             <div class="flex max-w-720 flex-col gap-4">
                 <h2 class="text-headline text-ink">{{ trans('moderation.case.evidence.title') }}</h2>
-                <p class="text-supporting text-ink-2">{{ trans('moderation.case.evidence.intro') }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans('moderation.case.evidence.intro') }}</p>
             </div>
             <Badge v-if="shownState === 'ready'" tone="neutral" :data-testid="`${testId}.logged`"><PhEye :size="16" aria-hidden="true" />{{ trans('moderation.case.evidence.logged') }}</Badge>
             <Button v-else-if="allowed && shownState === 'idle'" size="sm" variant="secondary" :icon="PhEye" :data-testid="`${testId}.reveal`" @click="reveal()">{{ trans('moderation.case.evidence.reveal') }}</Button>
@@ -103,7 +104,7 @@ function sender(message: EvidenceMessage): string {
 
         <div v-if="!allowed" class="flex items-start gap-8 rounded-sm border border-dashed border-line px-16 py-16" :data-testid="`${testId}.forbidden`">
             <PhLockSimple :size="20" class="mt-2 shrink-0 text-ink-3" aria-hidden="true" />
-            <p class="text-supporting text-ink-2">{{ trans('moderation.case.evidence.forbidden') }}</p>
+            <p class="text-admin-base text-ink-2">{{ trans('moderation.case.evidence.forbidden') }}</p>
         </div>
         <div v-else-if="shownState === 'loading'" class="flex flex-col gap-12" aria-busy="true" :data-testid="`${testId}.loading`">
             <div v-for="n in 3" :key="n" class="flex flex-col gap-8 border-t border-line-subtle pt-12 first:border-t-0 first:pt-0">
@@ -131,19 +132,19 @@ function sender(message: EvidenceMessage): string {
                             <time v-if="message.created_at" :datetime="message.created_at">{{ formatDateTime(message.created_at) }}</time>
                             <Badge v-if="message.reported" tone="warning">{{ trans('moderation.case.evidence.reported_badge') }}</Badge>
                         </p>
-                        <p v-if="message.body" class="whitespace-pre-line text-supporting text-ink">{{ message.body }}</p>
-                        <p v-else-if="message.type === 'photo'" class="flex items-center gap-4 text-supporting text-ink-2"><PhImage :size="16" aria-hidden="true" />{{ trans('moderation.case.evidence.photo') }}</p>
-                        <p v-else-if="message.vehicle" class="text-supporting text-ink-2">{{ trans('moderation.case.evidence.vehicle', { title: message.vehicle }) }}</p>
-                        <p v-else class="text-supporting text-ink-3">{{ trans('moderation.case.evidence.removed') }}</p>
+                        <p v-if="message.body" class="whitespace-pre-line text-admin-base text-ink">{{ message.body }}</p>
+                        <p v-else-if="message.type === 'photo'" class="flex items-center gap-4 text-admin-base text-ink-2"><PhImage :size="16" aria-hidden="true" />{{ trans('moderation.case.evidence.photo') }}</p>
+                        <p v-else-if="message.vehicle" class="text-admin-base text-ink-2">{{ trans('moderation.case.evidence.vehicle', { title: message.vehicle }) }}</p>
+                        <p v-else class="text-admin-base text-ink-3">{{ trans('moderation.case.evidence.removed') }}</p>
                     </li>
                 </ol>
                 <dl v-else-if="snapshotRows(report.target).length > 0" class="flex flex-col gap-8">
                     <div v-for="row in snapshotRows(report.target)" :key="row.key" class="flex flex-col gap-2 desktop:flex-row desktop:gap-16">
-                        <dt class="shrink-0 text-supporting text-ink-3 desktop:w-160">{{ trans(`moderation.case.evidence.fields.${row.key}`) }}</dt>
-                        <dd class="min-w-0 whitespace-pre-line text-supporting text-ink">{{ row.value }}</dd>
+                        <dt class="shrink-0 text-admin-base text-ink-3 desktop:w-160">{{ trans(`moderation.case.evidence.fields.${row.key}`) }}</dt>
+                        <dd class="min-w-0 whitespace-pre-line text-admin-base text-ink">{{ row.value }}</dd>
                     </div>
                 </dl>
-                <p v-else class="text-supporting text-ink-3">{{ trans('moderation.case.evidence.no_snapshot') }}</p>
+                <p v-else class="text-admin-base text-ink-3">{{ trans('moderation.case.evidence.no_snapshot') }}</p>
             </article>
 
             <div v-if="evidence.target_type === 'message'" class="flex flex-col gap-12 border-t border-line-subtle pt-16">
@@ -154,10 +155,10 @@ function sender(message: EvidenceMessage): string {
                         </Button>
                         <p class="text-caption text-ink-3">{{ evidence.live_available ? trans('moderation.case.evidence.more_hint') : trans('moderation.case.evidence.more_none') }}</p>
                     </div>
-                    <p v-if="liveFailed" class="text-helper text-danger" role="alert">{{ trans('moderation.case.evidence.error') }}</p>
+                    <p v-if="liveFailed" class="text-admin-base text-danger" role="alert">{{ trans('moderation.case.evidence.error') }}</p>
                 </template>
                 <template v-else>
-                    <h3 class="text-label-s text-ink">{{ trans('moderation.case.evidence.live_title') }}</h3>
+                    <h3 class="text-admin-base-strong text-ink">{{ trans('moderation.case.evidence.live_title') }}</h3>
                     <ol class="flex flex-col gap-8" :data-testid="`${testId}.live-list`">
                         <li v-for="message in live" :key="message.id" class="flex flex-col gap-4 rounded-sm border px-12 py-8" :class="message.reported ? 'border-line-strong bg-raised' : 'border-line-subtle'">
                             <p class="flex flex-wrap items-center gap-8 text-caption text-ink-3 tabular-nums">
@@ -165,8 +166,8 @@ function sender(message: EvidenceMessage): string {
                                 <time v-if="message.created_at" :datetime="message.created_at">{{ formatDateTime(message.created_at) }}</time>
                                 <Badge v-if="message.reported" tone="warning">{{ trans('moderation.case.evidence.reported_badge') }}</Badge>
                             </p>
-                            <p v-if="message.body" class="whitespace-pre-line text-supporting text-ink">{{ message.body }}</p>
-                            <p v-else class="text-supporting text-ink-3">{{ message.type === 'photo' ? trans('moderation.case.evidence.photo') : message.vehicle ? trans('moderation.case.evidence.vehicle', { title: message.vehicle }) : trans('moderation.case.evidence.removed') }}</p>
+                            <p v-if="message.body" class="whitespace-pre-line text-admin-base text-ink">{{ message.body }}</p>
+                            <p v-else class="text-admin-base text-ink-3">{{ message.type === 'photo' ? trans('moderation.case.evidence.photo') : message.vehicle ? trans('moderation.case.evidence.vehicle', { title: message.vehicle }) : trans('moderation.case.evidence.removed') }}</p>
                         </li>
                     </ol>
                 </template>

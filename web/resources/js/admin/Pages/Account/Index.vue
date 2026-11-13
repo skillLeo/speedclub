@@ -201,21 +201,21 @@ onMounted(() => {
         <div v-else class="grid grid-cols-1 items-start gap-24 desktop:grid-cols-2">
             <!-- Profile -->
             <section class="flex flex-col gap-16 rounded-sm border border-line bg-surface p-16" data-testid="ADM-51.profile" aria-labelledby="adm51-profile">
-                <h2 id="adm51-profile" class="text-title-s text-ink">{{ trans('account.profile.title') }}</h2>
+                <h2 id="adm51-profile" class="text-headline text-ink">{{ trans('account.profile.title') }}</h2>
                 <dl class="grid grid-cols-1 gap-12 tablet:grid-cols-2">
-                    <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('account.profile.name') }}</dt><dd class="text-supporting text-ink">{{ account.name }}</dd></div>
-                    <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('account.profile.email') }}</dt><dd class="text-supporting text-ink" data-testid="ADM-51.profile.email"><template v-for="(part, i) in emailParts" :key="i">{{ part }}<wbr /></template></dd></div>
-                    <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('account.profile.roles') }}</dt><dd class="text-supporting text-ink">{{ account.roles.length > 0 ? account.roles.map(roleLabel).join(', ') : trans('account.profile.no_roles') }}</dd></div>
-                    <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('account.profile.last_login') }}</dt><dd class="text-supporting text-ink tabular-nums">{{ formatDateTime(account.last_login_at) }}</dd></div>
+                    <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('account.profile.name') }}</dt><dd class="text-admin-base text-ink">{{ account.name }}</dd></div>
+                    <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('account.profile.email') }}</dt><dd class="text-admin-base text-ink" data-testid="ADM-51.profile.email"><template v-for="(part, i) in emailParts" :key="i">{{ part }}<wbr /></template></dd></div>
+                    <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('account.profile.roles') }}</dt><dd class="text-admin-base text-ink">{{ account.roles.length > 0 ? account.roles.map(roleLabel).join(', ') : trans('account.profile.no_roles') }}</dd></div>
+                    <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('account.profile.last_login') }}</dt><dd class="text-admin-base text-ink tabular-nums">{{ formatDateTime(account.last_login_at) }}</dd></div>
                 </dl>
-                <p class="text-helper text-ink-3">{{ trans('account.profile.managed') }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('account.profile.managed') }}</p>
             </section>
 
             <!-- Password -->
             <section class="flex flex-col gap-16 rounded-sm border border-line bg-surface p-16" data-testid="ADM-51.password" aria-labelledby="adm51-password">
                 <div class="flex flex-col gap-4">
-                    <h2 id="adm51-password" class="text-title-s text-ink">{{ trans('account.password.title') }}</h2>
-                    <p class="text-supporting text-ink-2">{{ trans('account.password.body') }}</p>
+                    <h2 id="adm51-password" class="text-headline text-ink">{{ trans('account.password.title') }}</h2>
+                    <p class="text-admin-base text-ink-2">{{ trans('account.password.body') }}</p>
                 </div>
                 <form class="flex flex-col gap-16" novalidate @submit.prevent="changePassword()">
                     <Field :label="trans('account.password.current')" :error="passwordErrors.current_password" required><Input v-model="password.current_password" type="password" autocomplete="current-password" data-testid="ADM-51.password.current" /></Field>
@@ -231,12 +231,12 @@ onMounted(() => {
             <!-- Two-factor rotation -->
             <section class="flex flex-col gap-16 rounded-sm border border-line bg-surface p-16" data-testid="ADM-51.two-factor" aria-labelledby="adm51-2fa" :data-step="rotation.step">
                 <div class="flex flex-col gap-4">
-                    <h2 id="adm51-2fa" class="text-title-s text-ink">{{ trans('account.two_factor.title') }}</h2>
-                    <p class="text-supporting text-ink-2 tabular-nums">{{ account.two_factor_confirmed_at ? trans('account.two_factor.on', { date: formatDate(account.two_factor_confirmed_at) }) : trans('account.two_factor.off') }}</p>
+                    <h2 id="adm51-2fa" class="text-headline text-ink">{{ trans('account.two_factor.title') }}</h2>
+                    <p class="text-admin-base text-ink-2 tabular-nums">{{ account.two_factor_confirmed_at ? trans('account.two_factor.on', { date: formatDate(account.two_factor_confirmed_at) }) : trans('account.two_factor.off') }}</p>
                 </div>
                 <template v-if="rotation.step === 'idle'">
-                    <p v-if="account.rotation_expires_at" class="text-supporting text-warning" data-testid="ADM-51.rotation.pending">{{ trans('account.two_factor.pending', { time: formatTime(account.rotation_expires_at) }) }}</p>
-                    <p class="text-supporting text-ink-2">{{ trans('account.two_factor.rotate_body') }}</p>
+                    <p v-if="account.rotation_expires_at" class="text-admin-base text-warning" data-testid="ADM-51.rotation.pending">{{ trans('account.two_factor.pending', { time: formatTime(account.rotation_expires_at) }) }}</p>
+                    <p class="text-admin-base text-ink-2">{{ trans('account.two_factor.rotate_body') }}</p>
                     <div class="flex flex-wrap gap-8">
                         <Button size="sm" variant="secondary" :icon="PhArrowsClockwise" data-testid="ADM-51.rotation.begin" @click="(rotation.step = 'code', (rotation.error = null))">{{ account.rotation_expires_at ? trans('account.two_factor.restart') : trans('account.two_factor.rotate') }}</Button>
                         <Button v-if="account.rotation_expires_at" size="sm" variant="ghost" data-testid="ADM-51.rotation.cancel-pending" @click="cancelRotation()">{{ trans('account.two_factor.cancel') }}</Button>
@@ -252,14 +252,14 @@ onMounted(() => {
                     </div>
                 </form>
                 <div v-else class="flex flex-col gap-16" data-testid="ADM-51.rotation.scan">
-                    <p class="text-supporting text-ink">{{ trans('account.two_factor.scan') }}</p>
+                    <p class="text-admin-base text-ink">{{ trans('account.two_factor.scan') }}</p>
                     <div class="flex flex-wrap items-start gap-24">
-                        <div class="rounded-lg bg-qr-bg p-16"><img v-if="qrSrc" :src="qrSrc" :alt="trans('account.two_factor.qr_alt')" class="size-160" data-testid="ADM-51.rotation.qr" /></div>
+                        <div class="rounded-sm bg-qr-bg p-16"><img v-if="qrSrc" :src="qrSrc" :alt="trans('account.two_factor.qr_alt')" class="size-160" data-testid="ADM-51.rotation.qr" /></div>
                         <div class="flex flex-col gap-4">
                             <p class="text-caption text-ink-2">{{ trans('account.two_factor.key') }}</p>
-                            <code class="sc-key flex flex-col font-ui text-code text-ink tabular-nums" data-testid="ADM-51.rotation.key"><span v-for="line in secretLines" :key="line" class="whitespace-nowrap">{{ line }}</span></code>
+                            <code class="sc-key flex flex-col font-ui text-admin-base text-ink tabular-nums" data-testid="ADM-51.rotation.key"><span v-for="line in secretLines" :key="line" class="whitespace-nowrap">{{ line }}</span></code>
                             <Button size="sm" variant="ghost" :icon="PhCopy" class="-ml-12 self-start" @click="copySecret()">{{ rotation.copied ? trans('account.two_factor.copied') : trans('account.two_factor.copy') }}</Button>
-                            <p class="text-helper text-ink-3 tabular-nums">{{ trans('account.two_factor.expires', { time: formatTime(rotation.expires) }) }}</p>
+                            <p class="text-admin-base text-ink-3 tabular-nums">{{ trans('account.two_factor.expires', { time: formatTime(rotation.expires) }) }}</p>
                         </div>
                     </div>
                     <form class="flex flex-col gap-16" novalidate @submit.prevent="confirmRotation()">
@@ -277,23 +277,23 @@ onMounted(() => {
             <!-- Recovery codes -->
             <section class="flex flex-col gap-16 rounded-sm border border-line bg-surface p-16" data-testid="ADM-51.recovery" aria-labelledby="adm51-recovery">
                 <div class="flex flex-col gap-4">
-                    <h2 id="adm51-recovery" class="text-title-s text-ink">{{ trans('account.recovery.title') }}</h2>
-                    <p class="text-supporting text-ink-2">{{ trans('account.recovery.body') }}</p>
+                    <h2 id="adm51-recovery" class="text-headline text-ink">{{ trans('account.recovery.title') }}</h2>
+                    <p class="text-admin-base text-ink-2">{{ trans('account.recovery.body') }}</p>
                 </div>
                 <div v-if="recovery.codes.length > 0" class="@container flex flex-col gap-12" data-testid="ADM-51.recovery.codes">
-                    <p class="text-label text-ink">{{ trans('account.recovery.list_title') }}</p>
+                    <p class="text-admin-base-strong text-ink">{{ trans('account.recovery.list_title') }}</p>
                     <!-- DQ-619: two columns only where two codes fit with a 24 gap; a narrower card lists them in one column. -->
-                    <ol class="grid grid-cols-1 gap-x-24 gap-y-4 rounded-sm border border-line-subtle bg-raised px-16 py-12 font-ui text-code text-ink tabular-nums @xl:grid-cols-2">
+                    <ol class="grid grid-cols-1 gap-x-24 gap-y-4 rounded-sm border border-line-subtle bg-raised px-16 py-12 font-ui text-admin-base text-ink tabular-nums @xl:grid-cols-2">
                         <li v-for="c in recovery.codes" :key="c" class="sc-key whitespace-nowrap">{{ c }}</li>
                     </ol>
-                    <p class="text-helper text-ink-3">{{ trans('account.recovery.list_hint') }}</p>
+                    <p class="text-admin-base text-ink-3">{{ trans('account.recovery.list_hint') }}</p>
                     <div class="flex flex-wrap gap-8">
                         <Button size="sm" variant="secondary" :icon="PhDownloadSimple" :href="recoveryFile" external download="speedclub-admin-recovery-codes.txt">{{ trans('account.recovery.download') }}</Button>
                         <Button size="sm" variant="ghost" :icon="PhEyeSlash" data-testid="ADM-51.recovery.hide" @click="recovery.codes = []">{{ trans('account.recovery.hide') }}</Button>
                     </div>
                 </div>
                 <form v-else-if="recovery.mode !== 'idle'" class="flex flex-col gap-16" novalidate @submit.prevent="recoveryStep()">
-                    <p v-if="recovery.mode === 'regenerate'" class="text-supporting text-warning">{{ trans('account.recovery.regenerate_body') }}</p>
+                    <p v-if="recovery.mode === 'regenerate'" class="text-admin-base text-warning">{{ trans('account.recovery.regenerate_body') }}</p>
                     <Field :label="trans('account.two_factor.code')" :hint="trans('account.two_factor.code_hint')" :error="recovery.error" required>
                         <Input v-model="recovery.code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" tnum class="w-160" data-autofocus data-testid="ADM-51.recovery.code" />
                     </Field>
@@ -312,19 +312,19 @@ onMounted(() => {
             <section class="flex flex-col gap-16 rounded-sm border border-line bg-surface p-16 desktop:col-span-2" data-testid="ADM-51.sessions" aria-labelledby="adm51-sessions">
                 <div class="flex flex-wrap items-start justify-between gap-12">
                     <div class="flex flex-col gap-4">
-                        <h2 id="adm51-sessions" class="text-title-s text-ink">{{ trans('account.sessions.title') }}</h2>
-                        <p class="text-supporting text-ink-2">{{ trans('account.sessions.body') }}</p>
+                        <h2 id="adm51-sessions" class="text-headline text-ink">{{ trans('account.sessions.title') }}</h2>
+                        <p class="text-admin-base text-ink-2">{{ trans('account.sessions.body') }}</p>
                     </div>
                     <Button v-if="others.length > 0" size="sm" variant="secondary" :icon="PhSignOut" data-testid="ADM-51.sessions.others" @click="(action.reset(), (othersOpen = true))">{{ trans('account.sessions.end_others') }}</Button>
                 </div>
                 <ul class="flex flex-col rounded-sm border border-line-subtle">
-                    <li v-for="s in sessions" :key="s.handle" class="flex min-h-48 flex-wrap items-center gap-x-12 gap-y-2 border-b border-line-subtle px-12 py-8 text-supporting last:border-b-0" :data-testid="s.current ? 'ADM-51.sessions.current' : 'ADM-51.sessions.other'">
+                    <li v-for="s in sessions" :key="s.handle" class="flex min-h-48 flex-wrap items-center gap-x-12 gap-y-2 border-b border-line-subtle px-12 py-8 text-admin-base last:border-b-0" :data-testid="s.current ? 'ADM-51.sessions.current' : 'ADM-51.sessions.other'">
                         <span class="min-w-0 flex-1 text-ink">{{ deviceText(s) }}</span>
-                        <span v-if="s.current" class="text-label-s text-ink-2">{{ trans('account.sessions.current') }}</span>
+                        <span v-if="s.current" class="text-admin-base-strong text-ink-2">{{ trans('account.sessions.current') }}</span>
                         <span v-else class="text-ink-3 tabular-nums">{{ trans('account.sessions.active', { date: formatDateTime(s.last_active_at) }) }}</span>
                         <Button v-if="!s.current" size="sm" variant="ghost" :icon="PhSignOut" :aria-label="trans('account.sessions.end_label', { device: deviceText(s) })" @click="(action.reset(), (ending = s))">{{ trans('account.sessions.end') }}</Button>
                     </li>
-                    <li v-if="sessions.length === 0" class="px-12 py-8 text-supporting text-ink-3">{{ trans('account.sessions.empty') }}</li>
+                    <li v-if="sessions.length === 0" class="px-12 py-8 text-admin-base text-ink-3">{{ trans('account.sessions.empty') }}</li>
                 </ul>
             </section>
         </div>

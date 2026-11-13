@@ -23,8 +23,8 @@ function submit(): void {
     <Head :title="trans('auth.forgot.title')" />
     <div class="flex flex-col gap-24" data-testid="ADM-04" :data-qa-state="state">
         <div class="flex flex-col gap-8">
-            <h1 class="text-title-m text-ink">{{ trans('auth.forgot.title') }}</h1>
-            <p class="text-supporting text-ink-2">{{ trans('auth.forgot.intro') }}</p>
+            <h1 class="text-title-2 text-ink">{{ trans('auth.forgot.title') }}</h1>
+            <p class="text-admin-base text-ink-2">{{ trans('auth.forgot.intro') }}</p>
         </div>
         <AuthNotice v-if="props.status" tone="success" :text="flashText(props.status, trans)" test-id="ADM-04.status" />
         <AuthNotice v-if="state === 'error'" tone="error" :text="trans('auth.common.server_error')" />
@@ -35,7 +35,7 @@ function submit(): void {
             </Field>
             <Button type="submit" variant="primary" block :loading="form.processing || state === 'loading'" data-testid="ADM-04.submit">{{ trans('auth.forgot.submit') }}</Button>
         </form>
-        <Link :href="loginUrl()" class="inline-flex h-32 items-center self-start rounded-xs text-label-s text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+        <Link :href="loginUrl()" class="inline-flex h-32 items-center self-start rounded-xs text-admin-base-strong text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
             {{ trans('auth.common.back_to_login') }}
         </Link>
     </div>

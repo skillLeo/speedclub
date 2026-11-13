@@ -3,6 +3,10 @@
 // admin-only run never signs in a member; the SAFE-01 fixture decisions from support/backend.php ensure-decisions-fixture.
 import { decisionsFixtureIds } from './auth.mjs';
 import { seededAuditEvent } from './backend.mjs';
+import { EVENT_FIXTURE_TOKENS, eventTokenValues, MISSING_SEEDS } from './events.mjs';
+
+/** Seeded tokens without a value in this run and why (support/events.mjs `optionalSeed`): their cells are skipped, not the run. */
+export const missingTokens = MISSING_SEEDS;
 import { demoIds } from './garage.mjs';
 
 /** Tokens the admin's routes use (ADM-44-event: the newest seeded audit event, ADR-223). */
@@ -32,10 +36,13 @@ async function decisionFixtureValues() {
 export async function tokenValues(names) {
   const needAdmin = names.some((n) => ADMIN_TOKENS.includes(n));
   const needDecisions = names.some((n) => DECISION_FIXTURE_TOKENS.includes(n));
-  const needDemo = names.some((n) => !ADMIN_TOKENS.includes(n) && !DECISION_FIXTURE_TOKENS.includes(n));
+  // M4.12: lukas.sc's organiser events (support/events.mjs), made on first use; DQ-1110 {memberEvent}, the answerable demo meet.
+  const needEvents = names.some((n) => EVENT_FIXTURE_TOKENS.includes(n));
+  const needDemo = names.some((n) => !ADMIN_TOKENS.includes(n) && !DECISION_FIXTURE_TOKENS.includes(n) && !EVENT_FIXTURE_TOKENS.includes(n));
   return {
     ...(needDemo ? await demoIds() : {}),
     ...(needAdmin ? await adminIds() : {}),
     ...(needDecisions ? await decisionFixtureValues() : {}),
+    ...(needEvents ? await eventTokenValues(names) : {}),
   };
 }

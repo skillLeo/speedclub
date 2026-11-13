@@ -23,16 +23,40 @@ function p1PublicApi(): array
 {
     return [
         'api.v1.app-config',
+        // M4.11 Social 2.0: VEH-05, the Highlights rail and [build_comments] reads, guests included like the vehicle page.
+        'api.v1.build-updates.show',
+        'api.v1.vehicles.highlights.index',
+        'api.v1.comments.index',
+        // M4.12 events (09 §8.7): list, map pins, detail and the calendar file read by guests too, behind browse and the events flag.
+        'api.v1.events.index',
+        'api.v1.events.pins',
+        'api.v1.events.show',
+        'api.v1.events.ics',
+        // M4.6 Auth 2.0 (09 §8.1, §8.2): the passwordless ways in, each behind its own limiter.
+        'api.v1.auth.apple',
         'api.v1.auth.email.resend',
+        'api.v1.auth.email.start',
         'api.v1.auth.email.verify',
+        'api.v1.auth.google',
+        'api.v1.auth.link.confirm',
         'api.v1.auth.login',
+        // SEC-M46-05: the nonce of an Apple or Google sign-in, before any account is known (throttle:auth-social).
+        'api.v1.auth.nonce',
+        'api.v1.auth.passkeys.options',
+        'api.v1.auth.passkeys.verify',
         'api.v1.auth.password.forgot',
         'api.v1.auth.password.reset',
         'api.v1.auth.register',
+        // M4.7 (09 §8.4): "Das war ich nicht" from a login alert; the token is the credential (throttle:auth-secure-account).
+        'api.v1.auth.secure-account',
         'api.v1.auth.two-factor.challenge',
         'api.v1.catalog.brands',
         // M2.4 review #5: a chat photo by signed URL (signed + viewer re-check), like the data export download.
         'api.v1.chat-media.show',
+        // M4.13: a service log photo by signed URL (signed + owner re-check), like chat media.
+        'api.v1.maintenance-media.show',
+        // Crash reports of the app's error screens: an error can happen signed out too (per-IP limit, no personal data).
+        'api.v1.client-errors.store',
         'api.v1.catalog.generations',
         'api.v1.catalog.makes',
         'api.v1.catalog.mod-categories',
@@ -50,11 +74,16 @@ function p1PublicApi(): array
         'api.v1.home.new-builds',
         'api.v1.legal.index',
         'api.v1.legal.show',
+        // Phase 4 lane B: SET-25 "Was ist neu" (a data file of the release, throttle:public-read).
+        'api.v1.release-notes.index',
         'api.v1.me.exports.download',
         'api.v1.public.users.followers',
         'api.v1.public.users.following',
         'api.v1.public.users.show',
         'api.v1.public.users.vehicles',
+        // Phase 4 lane B: PROF-01/02 "Updates" and "Treffen", by the profile's own rules (the events list also behind the events flag).
+        'api.v1.public.users.updates',
+        'api.v1.public.users.events',
         'api.v1.public.vehicles.mods.show',
         'api.v1.public.vehicles.show',
         'api.v1.public.vehicles.updates.index',
@@ -301,7 +330,10 @@ describe('storage and data minimisation', function () {
 
         sort($found);
 
-        expect($found)->toBe(['audit_event_access.ip', 'audit_event_access.user_agent', 'sessions.ip_address', 'sessions.user_agent']);
+        // M4.12: the coordinates of an event's venue and its coarse area point (09 §8.7, §11), a place an organiser publishes, never a
+        // member's position (device location is used per request only and never stored). Phase 4 lane B: the SET-11 home region, a city
+        // the member picks, stored snapped to the 0.05° grid and shown to nobody else (not a device position either).
+        expect($found)->toBe(['audit_event_access.ip', 'audit_event_access.user_agent', 'events.area_lat', 'events.area_lng', 'events.lat', 'events.lng', 'sessions.ip_address', 'sessions.user_agent', 'users.home_region_lat', 'users.home_region_lng']);
     });
 
     it('counts QR scans per code and day, nothing about the scanner', function () {

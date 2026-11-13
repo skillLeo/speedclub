@@ -16,6 +16,9 @@ use Throwable;
  * Once per due date: vehicles.hu_au_reminded_for holds the due month the reminder went out for, claimed by a conditional update before
  * anything is sent. A run that was missed catches up until the due month ends; a due month entered inside the window is reminded at the
  * next run; an overdue one (a month already over) is not. A new due date gets its own reminder. Bounded by time; the rest waits a day.
+ *
+ * M4.13: while the `maintenance` flag is on, the HU/AU is a maintenance item and App\Services\Maintenance\MaintenanceReminders tells it
+ * (30/14/1 days, SET-23); this one then stays silent, so nobody hears about one HU/AU twice.
  */
 final class HuAuReminders
 {
@@ -29,11 +32,11 @@ final class HuAuReminders
     ) {}
 
     /**
-     * @return int|null how many reminders went out, null while the flag is off
+     * @return int|null how many reminders went out, null while the flag is off (or `maintenance` is on)
      */
     public function run(?CarbonImmutable $today = null): ?int
     {
-        if (! $this->flags->enabled('sig.hu_au_reminder')) {
+        if (! $this->flags->enabled('sig.hu_au_reminder') || $this->flags->enabled('maintenance')) {
             return null;
         }
 

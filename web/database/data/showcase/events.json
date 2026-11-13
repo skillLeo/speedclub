@@ -1,0 +1,314 @@
+{
+ "_comment": "Sample events (09 §8.19, ADR-412, M4.12, DQ-1112): fictional meets with plausible, generic public places (squares, car parks, streets without a real business or a real house) in real German cities (the coordinates are the city areas). The names carry no \"Beispiel\": the app's Beispiel badge says it (is_sample). Organised by the SPEED CLUB Editorial account. Each event has its own cover, a real seed photo (design/seed-photos, graded rendition in processed/) that no other sample uses. Dates are relative to the moment of seeding (the next `weekday` plus `weeks` weeks, local time Europe/Berlin) and move forward by whole weeks once they are over (events:housekeeping), so the showcase never runs dry. Counts on samples are hidden; no attendees are invented beyond the showcase account itself. `member_events` (DQ-1110): a published meet of a classic demo member (DemoSeeder, not a sample, so it shows whatever editorial_samples says) that members can answer, with going and interested demo members and an organiser update, and one that is over; seeded only where the demo members exist. `going`/`interested` name demo members; `days` counts from now.",
+ "events": [
+  {
+   "key": "hafen",
+   "title": "Abendtreffen am Hafen",
+   "type": "meet",
+   "city": "Hamburg",
+   "postcode": "20457",
+   "venue_name": "Kaiplatz",
+   "street": "Am Kai 1",
+   "lat": 53.5413,
+   "lng": 9.9845,
+   "weekday": 6,
+   "weeks": 1,
+   "start": "18:00",
+   "hours": 3,
+   "location_visibility": "public",
+   "capacity": null,
+   "description": "Ein ruhiges Abendtreffen am Wasser. Motor aus auf dem Platz, Gespräche über Builds, Fotos im letzten Licht.",
+   "organiser_rules": "Bitte nur auf den markierten Flächen parken.",
+   "rules": [
+    "legal_only",
+    "no_racing",
+    "respect_residents",
+    "no_litter"
+   ],
+   "cover": "cover-garage-02.jpg"
+  },
+  {
+   "key": "altstadt",
+   "title": "Cars & Coffee Altstadt",
+   "type": "meet",
+   "city": "Köln",
+   "postcode": "50667",
+   "venue_name": "Parkdeck Altstadt",
+   "street": "Ringstraße 12",
+   "lat": 50.9384,
+   "lng": 6.9583,
+   "weekday": 7,
+   "weeks": 1,
+   "start": "09:30",
+   "hours": 3,
+   "location_visibility": "public",
+   "capacity": null,
+   "description": "Kaffee, Croissants und Autos am Sonntagmorgen. Komm vorbei und bleib, so lange du magst.",
+   "organiser_rules": null,
+   "rules": [
+    "legal_only",
+    "no_racing",
+    "respect_residents",
+    "no_litter"
+   ],
+   "cover": "cover-garage-04.jpg"
+  },
+  {
+   "key": "mittelgebirge",
+   "title": "Ausfahrt durchs Mittelgebirge",
+   "type": "cruise",
+   "city": "Kassel",
+   "postcode": "34117",
+   "venue_name": "Wanderparkplatz am Ortsausgang",
+   "street": "Waldweg 3",
+   "lat": 51.3127,
+   "lng": 9.4797,
+   "weekday": 6,
+   "weeks": 2,
+   "start": "10:00",
+   "hours": 6,
+   "location_visibility": "public",
+   "capacity": 25,
+   "description": "Eine gemütliche Runde über Landstraßen mit zwei Pausen. Wir fahren in kleinen Gruppen, die Straßenverkehrsordnung gilt.",
+   "organiser_rules": "Tankt vorher voll. Kein Überholen innerhalb der Gruppe.",
+   "rules": [
+    "legal_only",
+    "no_racing",
+    "respect_residents",
+    "no_litter"
+   ],
+   "cover": "cover-road-02.jpg"
+  },
+  {
+   "key": "trackday",
+   "title": "Trackday Rennstrecke Nord",
+   "type": "track_day",
+   "city": "Hannover",
+   "postcode": "30159",
+   "venue_name": "Rennstrecke Nord",
+   "street": "Zur Rennstrecke 40",
+   "lat": 52.3759,
+   "lng": 9.732,
+   "weekday": 6,
+   "weeks": 3,
+   "start": "08:00",
+   "hours": 9,
+   "location_visibility": "public",
+   "capacity": 30,
+   "description": "Ein Tag auf einer abgesperrten Strecke mit Fahrerbesprechung, Instruktoren und festen Turns. Helm und technische Abnahme vor Ort.",
+   "organiser_rules": "Helmpflicht, Abnahme ab 07:00 Uhr, Lärmgrenze der Strecke beachten.",
+   "rules": [
+    "legal_only",
+    "permits_arranged",
+    "no_litter"
+   ],
+   "cover": "cover-track-01.jpg"
+  },
+  {
+   "key": "messe",
+   "title": "Tuning-Messe Halle 3",
+   "type": "show",
+   "city": "Essen",
+   "postcode": "45131",
+   "venue_name": "Messehalle 3",
+   "street": "Messeallee 7",
+   "lat": 51.4556,
+   "lng": 7.0116,
+   "weekday": 5,
+   "weeks": 4,
+   "start": "10:00",
+   "hours": 56,
+   "location_visibility": "public",
+   "capacity": null,
+   "description": "Drei Tage Tuning, Teile und Builds unter einem Dach, mit Club-Stand.",
+   "organiser_rules": null,
+   "rules": [
+    "legal_only",
+    "permits_arranged",
+    "no_litter"
+   ],
+   "cover": "cover-garage-01.jpg"
+  },
+  {
+   "key": "sued",
+   "title": "Abendtreffen im Süden",
+   "type": "meet",
+   "city": "München",
+   "postcode": "80331",
+   "venue_name": "Hof am Stadtrand",
+   "street": "Feldgasse 5",
+   "lat": 48.1351,
+   "lng": 11.582,
+   "weekday": 5,
+   "weeks": 1,
+   "start": "19:00",
+   "hours": 3,
+   "location_visibility": "after_rsvp",
+   "capacity": 40,
+   "description": "Ein kleines Treffen auf einem privaten Hof. Den genauen Ort siehst du nach deiner Zusage.",
+   "organiser_rules": "Anreise leise, keine Musik nach 21 Uhr.",
+   "rules": [
+    "legal_only",
+    "no_racing",
+    "respect_residents",
+    "no_litter",
+    "permits_arranged"
+   ],
+   "cover": "generic-exterior-04.jpg"
+  },
+  {
+   "key": "seenplatte",
+   "title": "Ausfahrt zur Seenplatte",
+   "type": "cruise",
+   "city": "Berlin",
+   "postcode": "10115",
+   "venue_name": "Parkplatz am Nordufer",
+   "street": "Uferweg 2",
+   "lat": 52.52,
+   "lng": 13.405,
+   "weekday": 7,
+   "weeks": 2,
+   "start": "10:00",
+   "hours": 5,
+   "location_visibility": "public",
+   "capacity": null,
+   "description": "Raus aus der Stadt, rein in die Alleen. Mittagspause am See, Rückkehr am Nachmittag.",
+   "organiser_rules": null,
+   "rules": [
+    "legal_only",
+    "no_racing",
+    "respect_residents",
+    "no_litter"
+   ],
+   "cover": "cover-road-05.jpg"
+  },
+  {
+   "key": "weinberg",
+   "title": "Treffen am Weinberg",
+   "type": "meet",
+   "city": "Stuttgart",
+   "postcode": "70173",
+   "venue_name": "Aussichtspunkt am Weinberg",
+   "street": "Weinbergweg 9",
+   "lat": 48.7758,
+   "lng": 9.1829,
+   "weekday": 6,
+   "weeks": 0,
+   "start": "15:00",
+   "hours": 4,
+   "location_visibility": "public",
+   "capacity": null,
+   "description": "Nachmittagstreffen mit Blick über die Stadt. Platz für etwa vierzig Autos.",
+   "organiser_rules": null,
+   "rules": [
+    "legal_only",
+    "no_racing",
+    "respect_residents",
+    "no_litter"
+   ],
+   "cover": "cover-road-01.jpg"
+  }
+ ],
+ "rsvps": [
+  {
+   "member": "sebastian.demo",
+   "event": "hafen",
+   "status": "going"
+  },
+  {
+   "member": "sebastian.demo",
+   "event": "sued",
+   "status": "going"
+  },
+  {
+   "member": "sebastian.demo",
+   "event": "mittelgebirge",
+   "status": "interested"
+  }
+ ],
+ "member_events": [
+  {
+   "key": "elbdeich",
+   "organiser": "jann.ptrs",
+   "title": "Feierabendtreffen am Elbdeich",
+   "type": "meet",
+   "city": "Hamburg",
+   "postcode": "21107",
+   "venue_name": "Parkplatz am Elbdeich",
+   "street": "Deichweg 4",
+   "lat": 53.5072,
+   "lng": 9.9891,
+   "days": 10,
+   "start": "19:00",
+   "hours": 3,
+   "location_visibility": "public",
+   "capacity": 40,
+   "description": "Nach Feierabend an die Elbe: Wir stellen uns auf den großen Parkplatz am Deich, quatschen über Builds und fahren, wenn es dunkel wird, ruhig nach Hause.",
+   "organiser_rules": "Leise an- und abfahren, kein Burnout, kein Launch. Müll nehmen wir wieder mit.",
+   "rules": [
+    "legal_only",
+    "no_racing",
+    "respect_residents",
+    "no_litter"
+   ],
+   "cover": "generic-exterior-02.jpg",
+   "going": [
+    "lukas.sc",
+    "max.e46",
+    "sara.gti",
+    "kenji.r34",
+    "tobi.quattro",
+    "lena.911",
+    "marco.amg",
+    "finn.jdm"
+   ],
+   "interested": [
+    "aylin.vtec",
+    "nico.sti",
+    "paul.roadster"
+   ],
+   "updates": [
+    {
+     "hours_ago": 20,
+     "body": "Der Parkplatz ist ab 18:30 Uhr für uns reserviert. Stellt euch bitte in die hinteren Reihen, vorne parken die Anwohner."
+    }
+   ]
+  },
+  {
+   "key": "saugmotor",
+   "organiser": "max.e46",
+   "title": "Saugmotor-Abend",
+   "type": "meet",
+   "city": "München",
+   "postcode": "80939",
+   "venue_name": "Parkdeck Nord",
+   "street": "Nordring 8",
+   "lat": 48.2003,
+   "lng": 11.6145,
+   "days": -21,
+   "start": "19:30",
+   "hours": 3,
+   "location_visibility": "public",
+   "capacity": null,
+   "description": "Ein Abend für Saugmotoren: Reihensechser, V8 und Vierzylinder mit hoher Drehzahl. Motorhauben auf, Fragen erwünscht.",
+   "organiser_rules": null,
+   "rules": [
+    "legal_only",
+    "no_racing",
+    "respect_residents",
+    "no_litter"
+   ],
+   "cover": "cover-garage-03.jpg",
+   "going": [
+    "lukas.sc",
+    "sara.gti",
+    "lena.911",
+    "finn.jdm"
+   ],
+   "interested": [
+    "tobi.quattro"
+   ],
+   "updates": []
+  }
+ ]
+}

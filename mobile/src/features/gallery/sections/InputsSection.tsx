@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { radius, size } from '@/theme';
 import { RangeSlider, SearchBar, Stepper, TextInput, type RangeValue } from '@/ui';
 
 import { noop } from '../data';
@@ -14,7 +15,7 @@ export function InputsSection() {
 
   return (
     <SectionScreen section="inputs">
-      <Group title="Textfeld" note="52 hoch, Label oben, Hinweis oder Fehler unten.">
+      <Group title="Textfeld" note={`${size.input} hoch, Radius ${radius.sm}, Label oben, Hinweis oder Fehler unten.`}>
         <Specimen label="Leer" fill>
           <TextInput label="Modell" placeholder="z. B. Skyline GT-R R34" testID="DEV-01.inputs.empty" />
         </Specimen>
@@ -65,7 +66,7 @@ export function InputsSection() {
           <TextInput label="Fahrgestellnummer" defaultValue="BNR34-400123" disabled helper="Nicht änderbar." testID="DEV-01.inputs.disabled" />
         </Specimen>
       </Group>
-      <Group title="Suche" note="44 hoch, Radius 10, Abbrechen erscheint beim Fokus.">
+      <Group title="Suche" note={`${size.search} hoch, Radius ${radius.md}, Abbrechen erscheint beim Fokus.`}>
         <Specimen label="Leer" fill>
           <SearchBar value="" onChangeText={noop} placeholder="Fahrzeuge und Mitglieder suchen" testID="DEV-01.inputs.search" />
         </Specimen>
@@ -76,7 +77,7 @@ export function InputsSection() {
           <SearchBar value="Nissan" onChangeText={noop} onCancel={noop} placeholder="Fahrzeuge und Mitglieder suchen" />
         </Specimen>
       </Group>
-      <Group title="Bereichsregler" note="Leistung von 50 bis 1500 PS, Schrittweite 10.">
+      <Group title="Bereichsregler" note={'Leistung von 50 bis 1.500\u00a0PS, Schrittweite 10.'}>
         <Specimen label="Mit Eingabefeldern" fill>
           <RangeSlider
             min={50}
@@ -119,7 +120,7 @@ export function InputsSection() {
           />
         </Specimen>
       </Group>
-      <Group title="Stepper" note="36 hoch, Minus und Plus mit 44er Ziel.">
+      <Group title="Stepper" note={`${size.stepper} hoch, Minus und Plus mit ${size.touchMin}er Ziel.`}>
         <Wrap>
           <Specimen label="Standard">
             <Stepper value={owners} onChange={setOwners} min={0} max={9} label="Vorbesitzer" testID="DEV-01.inputs.stepper" />

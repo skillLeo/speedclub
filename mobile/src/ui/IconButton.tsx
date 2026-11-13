@@ -14,8 +14,11 @@ export type IconButtonProps = {
   /** Required: an icon-only control has no other name. */
   label: string;
   onPress?: () => void;
-  /** `onPhoto`: a 36 circle inside the 44 target, for controls over photography. */
-  variant?: 'default' | 'onPhoto';
+  /**
+   * 09 §5, all inside the 44 target: `default` (plain) a 36 visual whose pressed fill is radius 8; `tonal` a 40 surface-2
+   * circle; `onPhoto` a 36 circle for controls over photography (the 44 floating control over a hero is `FloatingControl`).
+   */
+  variant?: 'default' | 'tonal' | 'onPhoto';
   weight?: IconWeight;
   /** Glyph colour; defaults to text.primary, onPhoto.primary on a photo. */
   color?: ColorToken;
@@ -46,9 +49,18 @@ const useStyles = createStyles((t) => ({
     alignItems: 'center',
     borderRadius: t.radius.sm,
     flexGrow: 0,
-    height: t.size.iconButton,
+    height: t.size.iconButtonVisual.plain,
     justifyContent: 'center',
-    width: t.size.iconButton,
+    width: t.size.iconButtonVisual.plain,
+  },
+  tonalVisual: {
+    alignItems: 'center',
+    backgroundColor: t.color.bg.raised,
+    borderRadius: t.radius.full,
+    flexGrow: 0,
+    height: t.size.iconButtonVisual.tonal,
+    justifyContent: 'center',
+    width: t.size.iconButtonVisual.tonal,
   },
   hover: { backgroundColor: t.color.state.hover },
   pressed: { backgroundColor: t.color.state.pressed },
@@ -82,11 +94,14 @@ export function IconButton({
 }: IconButtonProps) {
   const styles = useStyles();
   const onPhoto = variant === 'onPhoto';
+  const tonal = variant === 'tonal';
   const disabled = disabledProp || Boolean(locked);
   const glyph: ColorToken = disabled ? (onPhoto ? 'onPhoto.secondary' : 'text.disabled') : (color ?? (onPhoto ? 'onPhoto.primary' : 'text.primary'));
 
   return (
     <PressableScale
+      // Off the photo it draws its own state.pressed fill; the round photo control takes the tone layer (SM7).
+      toneShift={onPhoto || tonal}
       ref={ref}
       role="button"
       aria-label={label}
@@ -110,7 +125,9 @@ export function IconButton({
       contentStyle={(state) =>
         onPhoto
           ? styles.photoVisual
-          : [styles.visual, state.pressed ? styles.pressed : state.hovered ? styles.hover : null]
+          : tonal
+            ? styles.tonalVisual
+            : [styles.visual, state.pressed ? styles.pressed : state.hovered ? styles.hover : null]
       }
     >
       {loading ? (

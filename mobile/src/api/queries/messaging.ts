@@ -47,7 +47,7 @@ import type {
 } from '@/features/messages/data';
 import { classifyError } from '@/features/messages/errors';
 import { newestServerId, uniqueServerMessages } from '@/features/messages/merge';
-import { compareIds } from '@/features/messages/model';
+import { compareIds, isReactionKey } from '@/features/messages/model';
 import type {
   ChatMember,
   ChatVehicle,
@@ -57,6 +57,7 @@ import type {
   MessageCandidate,
   MessagePreview,
   ReactionKey,
+  ReplyQuote,
   ThreadMessage,
 } from '@/features/messages/model';
 import type { LocalPhoto, SendRequest } from '@/features/messages/outbox';
@@ -94,8 +95,48 @@ const NOT_MODIFIED = 304;
 
 export function toChatMember(member: MemberSummaryData | null): ChatMember | null {
   return member
-    ? { username: member.username, displayName: member.display_name, avatar: member.avatar }
+    ? {
+        username: member.username,
+        displayName: member.display_name,
+        avatar: member.avatar,
+        carCover: readCarCover(member),
+        mainVehicle: readMainVehicle(member),
+      }
     : null;
+}
+
+/** A field of a response the generated types do not have yet (lane B gaps), read only when the server sends it. */
+function extraField(source: object, key: string): unknown {
+  return key in source ? (source as Record<string, unknown>)[key] : undefined;
+}
+
+/** DQ-1086: `main_vehicle {slug, title}` of the conversation member ("fährt BMW M3"); null when absent or without a title. */
+export function readMainVehicle(member: object): ChatMember['mainVehicle'] {
+  const vehicle = extraField(member, 'main_vehicle');
+  if (typeof vehicle !== 'object' || vehicle === null) return null;
+  const slug = extraField(vehicle, 'slug');
+  const title = extraField(vehicle, 'title');
+  return typeof slug === 'string' && typeof title === 'string' && title.trim() !== '' ? { slug, title: title.trim() } : null;
+}
+
+/** DQ-1086: the spec mini-line's values, only those the server sends. */
+function specOf(vehicle: object): Pick<ChatVehicle, 'powerPs' | 'torqueNm'> {
+  const powerPs = readSpec(vehicle, 'power_ps');
+  const torqueNm = readSpec(vehicle, 'torque_nm');
+  return { ...(powerPs === null ? {} : { powerPs }), ...(torqueNm === null ? {} : { torqueNm }) };
+}
+
+/** DQ-1086: a positive number of the shared vehicle's spec, or null. */
+function readSpec(vehicle: object, key: string): number | null {
+  const value = extraField(vehicle, key);
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+/** 09 §7.8 car badge: `main_vehicle_cover` is not in the API types yet (lane B gap), so it is read only when the server sends it. */
+export function readCarCover(member: object): ChatMember['carCover'] {
+  if (!('main_vehicle_cover' in member)) return null;
+  const cover: unknown = (member as { main_vehicle_cover?: unknown }).main_vehicle_cover;
+  return typeof cover === 'object' && cover !== null && 'variants' in cover ? (cover as NonNullable<ChatMember['carCover']>) : null;
 }
 
 export function toChatVehicle(vehicle: ChatVehicleData | null): ChatVehicle | null {
@@ -106,6 +147,7 @@ export function toChatVehicle(vehicle: ChatVehicleData | null): ChatVehicle | nu
         title: vehicle.full_title,
         cover: vehicle.cover,
         ownerUsername: vehicle.owner_username,
+        ...specOf(vehicle),
       }
     : null;
 }
@@ -173,14 +215,27 @@ export function toMessage(row: MessageData): ThreadMessage {
     senderDeleted: row.sender_deleted,
     senderUsername: row.is_mine ? null : (row.sender?.username ?? null),
     createdAt: row.created_at,
-    reactions: row.reactions.map((reaction) => ({
-      key: reaction.key,
-      count: reaction.count,
-      mine: reaction.mine,
-    })),
+    // Every key the app knows, the four build reactions (Stark · Sauber · Tief · Laut) included; a key from a newer server is left out.
+    reactions: row.reactions.flatMap((reaction) =>
+      isReactionKey(reaction.key) ? [{ key: reaction.key, count: reaction.count, mine: reaction.mine }] : [],
+    ),
     delivery: 'sent',
     failure: null,
+    replyTo: readReplyTo(row),
   };
+}
+
+/**
+ * Swipe-to-reply (09 §7.8, flag `msg_replies`): `reply_to` is not in the API types yet (lane B gap), so it is read only when the
+ * server sends it, and checked field by field.
+ */
+export function readReplyTo(row: object): ReplyQuote | null {
+  if (!('reply_to' in row)) return null;
+  const quote: unknown = (row as { reply_to?: unknown }).reply_to;
+  if (typeof quote !== 'object' || quote === null) return null;
+  const { id, type, body, is_mine: mine, available } = quote as Record<string, unknown>;
+  if (typeof id !== 'string' || (type !== 'text' && type !== 'photo' && type !== 'vehicle') || typeof mine !== 'boolean') return null;
+  return { id, kind: type, mine, excerpt: typeof body === 'string' ? body : null, ...(available === false ? { available: false } : {}) };
 }
 
 /** `cannot_message_reason` codes as MSG-03 says them. */
@@ -1044,7 +1099,7 @@ async function sendMessage({
 }: SendRequest): Promise<ThreadMessage> {
   const body =
     draft.kind === 'text'
-      ? { type: 'text' as const, body: draft.body, client_id: clientId }
+      ? { type: 'text' as const, body: draft.body, client_id: clientId, ...(draft.replyTo ? { reply_to_id: draft.replyTo.id } : {}) }
       : draft.kind === 'photo'
         ? { type: 'photo' as const, media_id: mediaId, client_id: clientId }
         : { type: 'vehicle' as const, vehicle_id: draft.vehicle.id, client_id: clientId };

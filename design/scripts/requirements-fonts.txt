@@ -1,0 +1,11 @@
+# Tools for design/scripts/build-fonts.py (Design System 2.0 fonts, ADR-402). Pinned: the output bytes depend on
+# these exact versions, and the pins must equal "tools.requirements" in design/fonts/fonts.lock.json
+# (node design/scripts/check-fonts.mjs compares them).
+# Install into the venv outside the repo (wheels only):
+#   python3 -I design/scripts/build-fonts.py --setup
+# or by hand:
+#   python3 -m venv "$HOME/.cache/speedclub/fonts-venv"
+#   "$HOME/.cache/speedclub/fonts-venv/bin/python" -I -m pip install --only-binary=:all: -r design/scripts/requirements-fonts.txt
+fonttools==4.68.0
+brotli==1.2.1
+skia-pathops==0.9.2

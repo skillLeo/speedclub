@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Costs are private unless cost_public is set; Resources must honour that for non-owners.
+ * Costs are private to the owner, always (09 §11, M4.9 ruling); cost_public is a dead column kept false.
  *
  * @property string $vehicle_id
  * @property Vehicle $vehicle

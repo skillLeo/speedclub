@@ -37,11 +37,16 @@ export type ThreadHeaderProps = {
   testID: string;
 };
 
-/** FS-7 header: back, avatar 32 with the name in `headline` and @username in `caption` stacked beside it, info at the end. */
+/**
+ * FS-7 header: back, avatar 32 with the name in `headline` and "fährt BMW M3" (else @username) in `caption` stacked beside it,
+ * info at the end.
+ */
 export function ThreadHeader({ member, name, onBack, onOpenMember, onInfo, loading = false, testID }: ThreadHeaderProps) {
   const { t } = useTranslation('messages');
   const styles = useStyles();
   const handle = member ? `@${member.username}` : null;
+  // DQ-1086 / 09 §7.8: who and what they drive. "fährt BMW M3" from the main build, the @handle without a public one.
+  const subtitle = member?.mainVehicle ? t('thread.drives', { car: member.mainVehicle.title }) : handle;
   const identity = (
     <>
       <Avatar
@@ -55,7 +60,7 @@ export function ThreadHeader({ member, name, onBack, onOpenMember, onInfo, loadi
         <Text variant="headline" numberOfLines={1} hyphenate={false} role="heading" testID={`${testID}.name`}>
           {name}
         </Text>
-        {handle ? (
+        {subtitle ? (
           <Text
             variant="caption"
             color="text.secondary"
@@ -63,12 +68,14 @@ export function ThreadHeader({ member, name, onBack, onOpenMember, onInfo, loadi
             hyphenate={false}
             testID={`${testID}.username`}
           >
-            {handle}
+            {subtitle}
           </Text>
         ) : null}
       </View>
     </>
   );
+  // 09 §7.8: the identity (avatar, name, "fährt …") opens MSG-05, which leads on to the profile; the profile without it.
+  const onIdentity = member ? (onInfo ?? onOpenMember) : undefined;
   const whoStyle = [styles.who, onBack ? null : styles.noBack];
   // DQ-415: without a member (empty, error, gone) the bar holds back (and info) only, never an anonymous avatar disk.
   const skeleton = (
@@ -94,13 +101,13 @@ export function ThreadHeader({ member, name, onBack, onOpenMember, onInfo, loadi
         titleContent={
           loading ? (
             skeleton
-          ) : name === '' ? undefined : onOpenMember ? (
+          ) : name === '' ? undefined : onIdentity ? (
             <PressableScale
               role="link"
               // For native. On web the visible name and handle name the link (WCAG 2.5.3): the avatar's initials are visible
               // text as well, which a label would leave out.
-              aria-label={isWeb ? undefined : handle ? `${name}, ${handle}` : name}
-              onPress={onOpenMember}
+              aria-label={isWeb ? undefined : subtitle ? `${name}, ${subtitle}` : name}
+              onPress={onIdentity}
               contentStyle={whoStyle}
               testID={`${testID}.member`}
             >

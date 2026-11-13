@@ -8,9 +8,9 @@ return [
         'hp' => 'hp',
     ],
     'power_source' => [
-        'factory' => 'Factory figure',
-        'claimed' => 'Owner figure',
-        'measured' => 'Measured',
+        'factory' => 'Manufacturer',
+        'claimed' => 'Estimated',
+        'measured' => 'Dyno',
     ],
     'vehicle_status' => [
         'draft' => 'Draft',
@@ -32,7 +32,7 @@ return [
         'parts_certificate' => 'Parts certificate',
         'registered' => 'Registered',
         'individual_approval' => 'Individual approval',
-        'not_required' => 'Not required',
+        'not_required' => 'Approval-free',
         'unknown' => 'Unknown',
     ],
     'media_category' => [
@@ -79,7 +79,7 @@ return [
         'naturally_aspirated' => 'Naturally aspirated',
         'turbo' => 'Turbo',
         'biturbo' => 'Twin turbo',
-        'supercharged' => 'Supercharged',
+        'supercharged' => 'Supercharged', // design-lint-disable-line DL09 -- engine aspiration term (Aufladung), not marketing copy
         'twincharged' => 'Twincharged',
         'none' => 'None (electric)',
     ],
@@ -133,6 +133,11 @@ return [
         'specs_changed' => 'Specs changed',
         'photos_added' => 'New photos',
         'note' => 'Note',
+        'post' => 'Update',
+    ],
+    'social_provider' => [
+        'apple' => 'Apple',
+        'google' => 'Google',
     ],
     'device_platform' => [
         'ios' => 'iOS',
@@ -206,5 +211,86 @@ return [
     'session_kind' => [
         'app' => 'App',
         'web' => 'Browser',
+    ],
+    'reaction_type' => [
+        'strong' => 'Strong',
+        'clean' => 'Clean',
+        'low' => 'Low',
+        'loud' => 'Loud',
+    ],
+    'build_update_audience' => [
+        'vehicle' => 'Like the vehicle',
+        'followers' => 'Followers only',
+    ],
+    'comment_status' => [
+        'visible' => 'Visible',
+        'removed' => 'Removed',
+    ],
+    'mention_privacy' => [
+        'everyone' => 'Everyone',
+        'followers' => 'Followers',
+        'nobody' => 'Nobody',
+    ],
+    'event_type' => [
+        'meet' => 'Meet',
+        'cruise' => 'Cruise',
+        'track_day' => 'Track day',
+        'show' => 'Show',
+    ],
+    'event_status' => [
+        'draft' => 'Draft',
+        'pending_review' => 'In review',
+        'published' => 'Published',
+        'cancelled' => 'Cancelled',
+        'rejected' => 'Rejected',
+    ],
+    'event_visibility' => [
+        'public' => 'Public',
+        'followers' => 'Followers only',
+        'unlisted' => 'Link only',
+    ],
+    'event_location_visibility' => [
+        'public' => 'Public',
+        'after_rsvp' => 'After RSVP',
+    ],
+    'rsvp_status' => [
+        'going' => 'Going',
+        'interested' => 'Interested',
+        'waitlist' => 'Waitlist',
+    ],
+    'event_rule' => [
+        'legal_only' => 'Legal only: no racing, no dangerous driving on public roads',
+        'no_racing' => 'No burnouts, no drifting, no racing',
+        'respect_residents' => 'Respect residents: engines off, no loud music',
+        'no_litter' => 'Leave no rubbish behind',
+        'permits_arranged' => 'Permits and the venue owner\'s consent are in place',
+    ],
+    // M4.13 Garage pro (09 §8.8, §8.11).
+    'maintenance_type' => [
+        'hu_au' => 'MOT (HU/AU)',
+        'service' => 'Service',
+        'oil_change' => 'Oil change',
+        'brake_fluid' => 'Brake fluid',
+        'tyre_change' => 'Tyre change',
+        'insurance' => 'Car insurance',
+        'custom' => 'Custom',
+    ],
+    'maintenance_due_state' => [
+        'unknown' => 'No date',
+        'ok' => 'OK',
+        'soon' => 'Due soon',
+        'overdue' => 'Overdue',
+    ],
+    'distance_unit' => [
+        'km' => 'km',
+        'mi' => 'mi',
+    ],
+    'torque_unit' => [
+        'nm' => 'Nm',
+        'lbft' => 'lb-ft',
+    ],
+    'weight_unit' => [
+        'kg' => 'kg',
+        'lb' => 'lb',
     ],
 ];

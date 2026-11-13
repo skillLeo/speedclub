@@ -1,8 +1,8 @@
-import { useRef, useState, type ComponentRef, type Ref } from 'react';
+import { useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { TextInput as RNTextInput, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { isWeb } from '@/lib/platform';
-import { createStyles, resolveColor, space, typography, useBreakpoint, useTheme } from '@/theme';
+import { createStyles, resolveColor, space, useBreakpoint, useTheme } from '@/theme';
 
 import { FieldSurface } from './FieldSurface';
 import { IconButton } from './IconButton';
@@ -11,11 +11,15 @@ import { PressableScale } from './PressableScale';
 import { useForcedVisualState, WithoutForcedState } from './qaVisualState';
 import { Spinner } from './Spinner';
 import { Text, typeStyle } from './Text';
+import { InputLineMeasure, MEASURE_MIRROR, multilineMaxHeight, resolveRows, useDrawnLine } from './TextInput';
 import { NO_BROWSER_OUTLINE } from './useFocusRing';
 
 type InputRef = ComponentRef<typeof RNTextInput>;
 
 const HIT_WRAPPER = { qaHitWrapper: 'true' } as const;
+
+/** The type role of the field and of the web mirror that sizes it (ADR-420 `input`). They must be one role (DQ-803). */
+export const COMPOSER_TEXT_ROLE = 'input' as const;
 
 export type ComposerProps = {
   value: string;
@@ -32,6 +36,8 @@ export type ComposerProps = {
   /** The message is on its way: a spinner replaces the send glyph and presses are ignored. */
   sending?: boolean;
   maxLength?: number;
+  /** Above the field, inside the composer's ground: the reply quote bar (09 §7.8 swipe-to-reply). */
+  header?: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
   ref?: Ref<InputRef>;
@@ -81,7 +87,8 @@ const useStyles = createStyles((t) => {
     send: { alignItems: 'center', height: t.size.touchMin, justifyContent: 'center', width: t.size.touchMin },
     sendVisual: {
       alignItems: 'center',
-      backgroundColor: t.color.bg.inverse,
+      // 09 §7.8: the send button is an accent-filled circle while it can send (a 44 disc, far under the 5 % red budget).
+      backgroundColor: t.color.accent.fill,
       borderRadius: t.radius.full,
       flexGrow: 0,
       height: t.size.touchMin,
@@ -119,6 +126,7 @@ export function Composer({
   disabled = false,
   sending = false,
   maxLength,
+  header,
   style,
   testID,
   ref,
@@ -139,9 +147,13 @@ export function Composer({
   };
 
   const scale = theme.fontScale;
-  // 16/24 and not body.dense: Safari on iOS zooms the page when a focused field has text below 16.
-  const body = typeStyle('body', isWeb ? scale : 1, undefined, false);
-  const maxHeight = typography.body.lineHeight * scale * theme.size.composerMaxLines;
+  // 16/24 (input) and not body: Safari on iOS zooms the page when a focused field has text below 16.
+  const body = typeStyle(COMPOSER_TEXT_ROLE, isWeb ? scale : 1, undefined, false);
+  // At most `composerMaxLines` whole drawn lines (A7, round-3 review): web scales the role linearly (24 × the QA scale); native
+  // measures one line of the role, as Android 14+ draws the 24 sp line at 36 at font scale 2.0, not 48. A cap in unscaled dp
+  // (24 × 2 × 5 = 240) would then end inside the seventh line and show it cut.
+  const { drawnLine, onMeasure } = useDrawnLine(scale);
+  const maxHeight = multilineMaxHeight(drawnLine, resolveRows(theme.size.composerMaxLines, drawnLine));
   const inputRef = useRef<InputRef | null>(null);
   const attachRef = (node: InputRef | null) => {
     inputRef.current = node;
@@ -149,8 +161,8 @@ export function Composer({
     else if (ref) ref.current = node;
   };
 
-  return (
-    <View testID={testID} style={[styles.root, { paddingLeft: canAttach ? gutter - space[12] : gutter, paddingRight: gutter }, style]}>
+  const row = (
+    <View testID={header ? undefined : testID} style={[styles.root, { paddingLeft: canAttach ? gutter - space[12] : gutter, paddingRight: gutter }, header ? null : style]}>
       {onAttach && attachLabel ? (
         <WithoutForcedState>
           <IconButton icon="plus" label={attachLabel} onPress={onAttach} disabled={disabled} color="text.secondary" testID={part('attach')} />
@@ -164,7 +176,8 @@ export function Composer({
                 field is as tall as its placeholder, which may wrap at a large font, so that one is not cut either. */}
             {isWeb ? (
               <View aria-hidden style={[styles.mirror, { maxHeight }]}>
-                <Text variant="body" hyphenate={false}>{`${value || placeholder}​`}</Text>
+                {/* DQ-803: the textarea's own role (input, 16/24), so one line is 24 and the hit box 44, as on native. */}
+                <Text variant={COMPOSER_TEXT_ROLE} hyphenate={false} dataSet={MEASURE_MIRROR}>{`${value || placeholder}​`}</Text>
               </View>
             ) : null}
             <RNTextInput
@@ -200,6 +213,7 @@ export function Composer({
                 isWeb ? styles.inputOverMirror : null,
               ]}
             />
+            {isWeb ? null : <InputLineMeasure onMeasure={onMeasure} />}
           </View>
         </View>
         {focused ? <View style={[StyleSheet.absoluteFill, styles.frame]} /> : null}
@@ -216,12 +230,20 @@ export function Composer({
           contentStyle={[styles.sendVisual, canSend || sending ? null : styles.sendDisabled]}
         >
           {sending ? (
-            <Spinner decorative size={20} color="text.inverse" />
+            <Spinner decorative size={20} color="text.onAccent" />
           ) : (
-            <Icon name="arrow-right" size={20} color={canSend ? 'text.inverse' : 'text.disabled'} />
+            <Icon name="arrow-right" size={20} color={canSend ? 'text.onAccent' : 'text.disabled'} />
           )}
         </PressableScale>
       </WithoutForcedState>
     </View>
+  );
+  return header ? (
+    <View testID={testID} style={style}>
+      {header}
+      {row}
+    </View>
+  ) : (
+    row
   );
 }

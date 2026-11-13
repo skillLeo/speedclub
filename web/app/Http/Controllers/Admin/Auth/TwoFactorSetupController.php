@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureStaffTwoFactor;
 use App\Models\Staff;
 use BaconQrCode\Renderer\Color\Rgb;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
@@ -16,7 +17,7 @@ use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * ADM-03 mandatory enrolment. The page gets no secret: it asks for the password, then fetches the QR code and the key from Fortify,
+ * ADM-03 enrolment (mandatory unless STAFF_2FA_REQUIRED=false, then skippable per session). The page gets no secret: it asks for the password, then fetches the QR code and the key from Fortify,
  * one request after the other (SEC-P1-41), and shows the recovery codes once after the confirmation.
  */
 class TwoFactorSetupController extends Controller
@@ -33,6 +34,8 @@ class TwoFactorSetupController extends Controller
             'passwordConfirmed' => $request->session()->has('auth.password_confirmed_at')
                 && time() - (int) $request->session()->get('auth.password_confirmed_at') < config()->integer('auth.password_timeout', 10800),
             'qaSample' => self::qaSample($request),
+            // STAFF_2FA_REQUIRED=false: the page offers "Später einrichten" (route admin.two-factor.skip).
+            'skippable' => EnsureStaffTwoFactor::skippable(),
         ])->toResponse($request);
 
         $response->headers->set('Cache-Control', 'no-store, private');

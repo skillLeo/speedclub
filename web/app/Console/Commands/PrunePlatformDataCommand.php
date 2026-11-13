@@ -4,8 +4,10 @@ namespace App\Console\Commands;
 
 use App\Actions\Auth\DeleteUnverifiedAccount;
 use App\Enums\UserStatus;
+use App\Models\DeviceInstall;
 use App\Models\IdempotencyKey;
 use App\Models\KnownDevice;
+use App\Models\SecurityEvent;
 use App\Models\User;
 use App\Models\VerificationCode;
 use App\Services\Privacy\RetentionPolicy;
@@ -34,9 +36,18 @@ class PrunePlatformDataCommand extends Command
             ->where('last_seen_at', '<', now()->subMonthsNoOverflow(app(RetentionPolicy::class)->value('known_devices_months')))
             ->delete();
 
+        // M4.7 (09 §8.4): app installs unseen for as long as known devices are kept and without a token, and SET-21 rows after 12 months.
+        $installs = DeviceInstall::query()
+            ->where('last_seen_at', '<', now()->subMonthsNoOverflow(app(RetentionPolicy::class)->value('known_devices_months')))
+            ->whereNotExists(fn ($tokens) => $tokens->selectRaw('1')->from('personal_access_tokens')->whereColumn('personal_access_tokens.device_install_id', 'device_installs.id'))
+            ->delete();
+        $events = SecurityEvent::query()
+            ->where('created_at', '<', now()->subMonthsNoOverflow((int) app(RetentionPolicy::class)->fixed('security_events')))
+            ->delete();
+
         $accounts = $this->pruneUnverifiedAccounts($unverifiedAccounts);
 
-        $this->info("Pruned $keys idempotency keys, $codes verification codes, $devices known devices, $accounts never-verified accounts, {$this->pruneCache()} cache rows and {$this->pruneSessions()} sessions.");
+        $this->info("Pruned $keys idempotency keys, $codes verification codes, $devices known devices, $installs app installs, $events security events, $accounts never-verified accounts, {$this->pruneCache()} cache rows and {$this->pruneSessions()} sessions.");
 
         return self::SUCCESS;
     }

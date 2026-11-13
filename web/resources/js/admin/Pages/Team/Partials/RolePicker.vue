@@ -19,8 +19,8 @@ const isDisabled = (name: string) => props.disabled.includes(name);
 
 <template>
     <fieldset class="flex flex-col gap-8" :data-testid="testId">
-        <legend class="mb-4 text-label-s text-ink">{{ legend }}</legend>
-        <p v-if="hint" class="text-helper text-ink-3">{{ hint }}</p>
+        <legend class="mb-4 text-admin-base-strong text-ink">{{ legend }}</legend>
+        <p v-if="hint" class="text-admin-base text-ink-3">{{ hint }}</p>
         <ul class="flex flex-col rounded-sm border border-line-subtle">
             <li v-for="option in options" :key="option.name" class="flex flex-col gap-2 border-b border-line-subtle px-12 py-4 last:border-b-0">
                 <div class="flex items-center justify-between gap-8">
@@ -35,7 +35,7 @@ const isDisabled = (name: string) => props.disabled.includes(name);
                         <PhEyes :size="16" aria-hidden="true" />{{ trans('team.four_eyes') }}
                     </span>
                 </div>
-                <p v-if="roleDescription(option.name, option.description)" class="pb-4 pl-24 text-helper text-ink-3">{{ roleDescription(option.name, option.description) }}</p>
+                <p v-if="roleDescription(option.name, option.description)" class="pb-4 pl-24 text-admin-base text-ink-3">{{ roleDescription(option.name, option.description) }}</p>
             </li>
         </ul>
     </fieldset>

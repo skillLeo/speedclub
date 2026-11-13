@@ -13,10 +13,15 @@ use App\Http\Controllers\Api\V1\Social\BlockController;
 use App\Http\Controllers\Api\V1\Social\FollowerController;
 use App\Http\Controllers\Api\V1\Social\SaveController;
 use App\Http\Middleware\EnsureFeatureEnabled;
+use App\Http\Middleware\RequireRecentAuthentication;
 use App\Support\Auth\DeviceInfo;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('me')->name('me.')->middleware('member')->group(function (): void {
+// M4.6 (09 §8.1): the security writes below need a recent sign-in or POST me/reauth; a member with a password may still send it in the
+// body instead (or-password), as M2.5 clients do. A passwordless account has only the recent proof.
+$recentOrPassword = RequireRecentAuthentication::class.':10,or-password';
+
+Route::prefix('me')->name('me.')->middleware('member')->group(function () use ($recentOrPassword): void {
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
     // throttle:account-edits (SEC-P1-04) is shared with PATCH settings.
     Route::patch('profile', [ProfileController::class, 'update'])->middleware(['not-restricted:publishing', 'throttle:account-edits'])->name('profile.update');
@@ -39,22 +44,22 @@ Route::prefix('me')->name('me.')->middleware('member')->group(function (): void 
     Route::get('blocks', [BlockController::class, 'index'])->name('blocks.index');
 
     // M2.5 account and security (SET-03 to SET-06). Each write re-checks the password; throttle:account-security bounds the guesses.
-    Route::middleware('throttle:account-security')->group(function (): void {
-        Route::post('email', [AccountSecurityController::class, 'requestEmail'])->name('email.request');
+    Route::middleware('throttle:account-security')->group(function () use ($recentOrPassword): void {
+        Route::post('email', [AccountSecurityController::class, 'requestEmail'])->middleware($recentOrPassword)->name('email.request');
         Route::post('email/confirm', [AccountSecurityController::class, 'confirmEmail'])->name('email.confirm');
-        Route::post('password', [AccountSecurityController::class, 'password'])->name('password');
+        Route::post('password', [AccountSecurityController::class, 'password'])->middleware($recentOrPassword)->name('password');
 
-        Route::post('two-factor', [TwoFactorController::class, 'store'])->name('two-factor.store');
+        Route::post('two-factor', [TwoFactorController::class, 'store'])->middleware($recentOrPassword)->name('two-factor.store');
         Route::post('two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
-        Route::delete('two-factor', [TwoFactorController::class, 'destroy'])->name('two-factor.destroy');
-        Route::post('two-factor/recovery-codes', [TwoFactorController::class, 'recoveryCodes'])->name('two-factor.recovery-codes');
+        Route::delete('two-factor', [TwoFactorController::class, 'destroy'])->middleware($recentOrPassword)->name('two-factor.destroy');
+        Route::post('two-factor/recovery-codes', [TwoFactorController::class, 'recoveryCodes'])->middleware($recentOrPassword)->name('two-factor.recovery-codes');
 
-        Route::delete('sessions', [DeviceSessionController::class, 'destroyOthers'])->name('sessions.destroy-others');
+        Route::delete('sessions', [DeviceSessionController::class, 'destroyOthers'])->middleware($recentOrPassword)->name('sessions.destroy-others');
         Route::delete('sessions/{session}', [DeviceSessionController::class, 'destroy'])->where('session', '[A-Za-z0-9]{1,65}')->name('sessions.destroy');
 
         // M2.5 data rights (SET-12, SET-13), open under every restriction (GDPR).
-        Route::post('export', [DataExportController::class, 'store'])->middleware('idempotent')->name('exports.store');
-        Route::post('delete', [AccountDeletionController::class, 'store'])->name('delete');
+        Route::post('export', [DataExportController::class, 'store'])->middleware([$recentOrPassword, 'idempotent'])->name('exports.store');
+        Route::post('delete', [AccountDeletionController::class, 'store'])->middleware($recentOrPassword)->name('delete');
     });
 
     Route::get('sessions', [DeviceSessionController::class, 'index'])->name('sessions.index');

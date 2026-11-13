@@ -169,8 +169,8 @@ describe('Sheet', () => {
     expect(panel.props['aria-modal']).toBe(true);
     expect(panel.props['aria-label']).toBe('Kraftstoff');
     const style = flat(panel.props.style);
-    expect(style.borderTopLeftRadius).toBe(radius.lg);
-    expect(style.borderTopRightRadius).toBe(16);
+    expect(style.borderTopLeftRadius).toBe(radius.xl);
+    expect(style.borderTopRightRadius).toBe(radius.xl);
     expect(screen.getByTestId('s.title')).toHaveTextContent('Kraftstoff');
     expect(screen.getByText('Benzin')).toBeTruthy();
   });

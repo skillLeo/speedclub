@@ -193,6 +193,7 @@ class TextSearch
             ->whereNotNull('u.email_verified_at');
 
         MemberNameFilter::apply($query, $words, withCity: true);
+        $this->builds->withoutSamples($query, 'u.is_sample');
 
         return $this->builds->withoutBlocks($query, $viewer, 'u.id');
     }

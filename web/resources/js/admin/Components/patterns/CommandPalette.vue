@@ -161,7 +161,7 @@ const optionId = (option: Option): string => `palette-${option.id.replace(/[^a-z
         <DialogPortal>
             <DialogOverlay class="sc-fade fixed inset-0 z-40 bg-scrim" />
             <div class="pointer-events-none fixed inset-0 z-50 flex items-start justify-center px-16 pt-64">
-                <DialogContent class="sc-pop pointer-events-auto flex max-h-560 w-full max-w-640 flex-col overflow-hidden rounded-md border border-line bg-overlay text-ink shadow-sheet" data-testid="ADM-07.palette">
+                <DialogContent class="sc-pop pointer-events-auto flex max-h-560 w-full max-w-640 flex-col overflow-hidden rounded-sm border border-line bg-overlay text-ink shadow-sheet" data-testid="ADM-07.palette">
                     <DialogTitle class="sr-only">{{ trans('shell.palette.title') }}</DialogTitle>
                     <DialogDescription class="sr-only">{{ trans('shell.palette.description') }}</DialogDescription>
                     <div class="flex h-48 shrink-0 items-center gap-12 border-b border-line-subtle px-16">
@@ -181,7 +181,7 @@ const optionId = (option: Option): string => `palette-${option.id.replace(/[^a-z
                             :aria-label="trans('shell.palette.input')"
                             :placeholder="trans('shell.palette.placeholder')"
                             maxlength="120"
-                            class="h-full min-w-0 flex-1 bg-transparent text-body text-ink placeholder:text-ink-3 focus:outline-none"
+                            class="h-full min-w-0 flex-1 bg-transparent text-admin-base text-ink placeholder:text-ink-3 focus:outline-none"
                             data-testid="ADM-07.palette.input"
                             @keydown="onKeydown"
                         />
@@ -189,7 +189,7 @@ const optionId = (option: Option): string => `palette-${option.id.replace(/[^a-z
                         <Kbd>{{ trans('shell.palette.esc') }}</Kbd>
                     </div>
                     <ul id="palette-list" role="listbox" :aria-label="trans('shell.palette.results')" class="min-h-0 flex-1 overflow-y-auto p-8">
-                        <li v-if="options.length === 0 && !searching" class="px-8 py-12 text-supporting text-ink-3" role="presentation">
+                        <li v-if="options.length === 0 && !searching" class="px-8 py-12 text-admin-base text-ink-3" role="presentation">
                             {{ failed ? trans('shell.palette.failed') : trans('shell.palette.empty') }}
                         </li>
                         <li
@@ -205,7 +205,7 @@ const optionId = (option: Option): string => `palette-${option.id.replace(/[^a-z
                             @click="go(option)"
                         >
                             <component :is="option.icon ?? PhArrowRight" :size="16" class="shrink-0 text-ink-3" aria-hidden="true" />
-                            <span class="min-w-0 flex-1 truncate text-supporting text-ink" :title="option.label">{{ option.label }}</span>
+                            <span class="min-w-0 flex-1 truncate text-admin-base text-ink" :title="option.label">{{ option.label }}</span>
                             <span v-if="option.hint" class="max-w-200 truncate text-caption" :class="index === activeIndex ? 'text-ink' : 'text-ink-2'" :title="option.hint">{{ option.hint }}</span>
                             <button
                                 v-if="option.kind === 'record' && option.url"

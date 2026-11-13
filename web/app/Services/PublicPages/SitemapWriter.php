@@ -172,7 +172,9 @@ class SitemapWriter
         return Vehicle::query()
             ->where('status', VehicleStatus::Published)
             ->where('visibility', Visibility::Public)
-            ->whereHas('owner', fn ($owner) => $owner->where('indexable', true))
+            // Sample pages are noindex (09 §8.19), so never in the sitemap, whatever editorial_samples says.
+            ->where('is_sample', false)
+            ->whereHas('owner', fn ($owner) => $owner->where('indexable', true)->where('is_sample', false))
             ->with(['owner', 'make', 'vehicleModel', 'generation'])
             ->orderByDesc('updated_at')
             ->orderBy('id')
@@ -188,6 +190,7 @@ class SitemapWriter
     {
         return User::query()
             ->where('indexable', true)
+            ->where('is_sample', false)
             ->whereNotNull('username')
             ->whereNotNull('email_verified_at')
             ->lazyById(500);

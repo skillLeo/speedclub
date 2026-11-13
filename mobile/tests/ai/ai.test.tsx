@@ -78,10 +78,10 @@ describe('helpers', () => {
     expect(aiErrorMessage(t, error('ai_budget_exhausted', 'server', 503))).toMatch(/Für heute/);
     expect(aiErrorMessage(t, error('ai_unverifiable', 'validation', 422))).toMatch(/nicht mit deinen Angaben belegen/);
     expect(aiErrorMessage(t, error('rate_limited', 'rate_limited', 429))).toMatch(/viele Vorschläge/);
-    expect(aiErrorMessage(t, error('ai_opt_in_required', 'forbidden', 403))).toMatch(/KI-Vorschläge/);
+    expect(aiErrorMessage(t, error('ai_opt_in_required', 'forbidden', 403))).toMatch(/KI-\u2060Vorschläge/);
     // ADR-252: the member's share of the daily budget, and the verified address, each in their own words.
     expect(aiErrorMessage(t, error('ai_daily_limit', 'rate_limited', 429))).toMatch(/Tageskontingent/);
-    expect(aiErrorMessage(t, error('email_not_verified', 'forbidden', 403))).toMatch(/bestätigte E-Mail-Adresse/);
+    expect(aiErrorMessage(t, error('email_not_verified', 'forbidden', 403))).toMatch(/bestätigte E-\u2060Mail-Adresse/);
     expect(aiErrorMessage(i18n.getFixedT('en', 'common'), error('ai_daily_limit', 'rate_limited', 429))).toMatch(/allowance/);
     expect(aiErrorMessage(t, new Error('x'))).toMatch(/nicht geklappt/);
   });
@@ -238,7 +238,7 @@ describe('verified address and daily share (ADR-252)', () => {
     const refused = { status: 403, body: { message: 'x', code: 'email_not_verified', errors: {} } };
     await show(<PhotoCategoryAssist mediaId="01med" current="exterior" onAccept={jest.fn()} testID="GAR-08.ai" />, { '/category': refused });
     await fireEvent.press(screen.getByTestId('GAR-08.ai.action'));
-    expect(await screen.findByTestId('GAR-08.ai.note')).toHaveTextContent(/bestätigte E-Mail-Adresse/);
+    expect(await screen.findByTestId('GAR-08.ai.note')).toHaveTextContent(/bestätigte E-\u2060Mail-Adresse/);
     await fireEvent.press(screen.getByTestId('GAR-08.ai.verify'));
     expect(mockPush).toHaveBeenCalledWith('/verify-email');
 
@@ -259,8 +259,8 @@ describe('verified address and daily share (ADR-252)', () => {
     await fireEvent.press(screen.getByTestId('MSG-02.m.translate.action'));
     await waitFor(() => expect(shown).toHaveBeenCalled());
     const [message, options] = shown.mock.calls.at(-1)!;
-    expect(message).toMatch(/bestätigte E-Mail-Adresse/);
-    expect(options?.action?.label).toBe('E-Mail-Adresse bestätigen');
+    expect(message).toMatch(/bestätigte E-\u2060Mail-Adresse/);
+    expect(options?.action?.label).toBe('E-\u2060Mail-Adresse bestätigen');
     options?.action?.onPress();
     expect(mockPush).toHaveBeenCalledWith('/verify-email');
     shown.mockRestore();

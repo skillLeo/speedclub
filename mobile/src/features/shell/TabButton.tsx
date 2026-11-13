@@ -103,8 +103,9 @@ export function TabButton({
   const styles = useStyles();
   const theme = useTheme();
   const focused = Boolean(isFocused);
-  // Native caps through the prop; web scales the type itself, in the QA font scale.
-  const capped = labelCap === undefined ? undefined : typeStyle(variant === 'sidebar' ? 'label' : 'tab', isWeb ? Math.min(theme.fontScale, labelCap) : 1);
+  // Native caps through the prop, which Text turns into its capped scale (nativeFixedScale, N4); web scales the type itself,
+  // in the QA font scale. A native style here would overwrite the capped size with the unscaled one.
+  const capped = labelCap === undefined || !isWeb ? undefined : typeStyle(variant === 'sidebar' ? 'bodyStrong' : 'webTab', Math.min(theme.fontScale, labelCap));
   const color = focused ? 'text.primary' : 'text.secondary';
   // The figure on the pill, so a voice-control user can say what they see.
   const hasCount = Boolean(count && count > 0);
@@ -120,6 +121,8 @@ export function TabButton({
 
   return (
     <PressableScale
+      // Rail and sidebar draw their own state.pressed fill; the bar item presses by scale only, like a native tab.
+      toneShift={false}
       {...trigger}
       role="tab"
       aria-selected={focused}
@@ -136,7 +139,7 @@ export function TabButton({
       </View>
       {variant === 'sidebar' ? (
         <Text
-          variant="label"
+          variant="bodyStrong"
           color={color}
           selectable={false}
           {...(labelCap === undefined ? {} : { maxFontSizeMultiplier: labelCap })}
@@ -147,7 +150,7 @@ export function TabButton({
       ) : (
         <View style={[styles.barLabelBox, edge ? styles.barLabelBoxEdge : null]} testID={`${testID}.labelBox`}>
           <Text
-            variant="tab"
+            variant="webTab"
             color={color}
             numberOfLines={1}
             selectable={false}

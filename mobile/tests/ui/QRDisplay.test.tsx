@@ -25,7 +25,7 @@ describe('QRDisplay', () => {
     expect(card.props.dataSet).toEqual({ qaExempt: 'qr' });
     const style = flat(card.props.style);
     expect(style.backgroundColor).toBe(themes.carbon.color.qr.bg);
-    expect(style.borderRadius).toBe(radius.lg);
+    expect(style.borderRadius).toBe(radius.md);
     expect(style.padding).toBe(space[24]);
   });
 
@@ -46,7 +46,7 @@ describe('QRDisplay', () => {
     await renderUi(<QRDisplay svg={svg} label="QR-Code für R34" code="7H2K QXMB" url="speedclub.de/c/7H2KQXMB" testID="q" />);
     expect(screen.getByTestId('q.code').props['aria-label']).toBe('QR-Code für R34');
     const code = flat(screen.getByTestId('q.shortCode').props.style);
-    expect(code.fontSize).toBe(typography.code.fontSize);
+    expect(code.fontSize).toBe(typography.headline.fontSize);
     expect(code.color).toBe(themes.carbon.color.qr.fg);
     const url = flat(screen.getByTestId('q.url').props.style);
     expect(url.fontSize).toBe(typography.caption.fontSize);

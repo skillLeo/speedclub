@@ -2,6 +2,36 @@
 
 return [
     'code_note' => 'The code is valid for :minutes minutes. Didn’t ask for it? Then you can ignore this e-mail.',
+    // M4.6 passwordless e-mail codes (09 §8.1).
+    'email_code' => [
+        'action' => 'Sign in',
+        'same_device' => 'The button only works on the device where you asked for the code.',
+        'sign_in' => [
+            'subject' => ':code is your SPEED CLUB code',
+            'heading' => 'Your sign-in code',
+            'intro' => 'Enter this code in the app or tap “Sign in”.',
+        ],
+        'sign_up' => [
+            'subject' => ':code is your SPEED CLUB code',
+            'heading' => 'Welcome to SPEED CLUB',
+            'intro' => 'Use this code to create your account. Enter it in the app or tap “Sign in”.',
+        ],
+        'link' => [
+            'subject' => ':code confirms the connection',
+            'heading' => 'Connect :provider to your account',
+            'intro' => 'Someone wants to connect :provider to your SPEED CLUB account. If that was you, enter this code in the app. Otherwise ignore this e-mail and nothing changes.',
+        ],
+        'reauth' => [
+            'subject' => ':code is your confirmation code',
+            'heading' => 'Confirm it is you',
+            'intro' => 'You are changing a security setting of your account. Enter this code in the app.',
+        ],
+        'change_email' => [
+            'subject' => ':code confirms your new e-mail address',
+            'heading' => 'Confirm your new e-mail address',
+            'intro' => 'Enter this code in the app to confirm your new address.',
+        ],
+    ],
     'verification' => [
         'subject' => ':code is your SPEED CLUB code',
         'heading' => 'Confirm your e-mail address',
@@ -59,7 +89,51 @@ return [
     'security' => [
         'browser' => 'a browser',
         'action' => 'Reset password',
-        'note' => 'If this wasn\'t you, reset your password right away. That signs you out on all devices.',
+        'note' => 'Wasn’t you? In the app, go to Settings › Security and tap “This wasn’t me”. We’ll sign out every device and our support team will get in touch.',
+        // M4.7 (09 §8.4): login alerts and new ways in.
+        'when' => 'Time: :time',
+        'when_where' => 'Time: :time · near :place',
+        'secure_action' => 'This wasn\'t me',
+        'secure_note' => 'Wasn’t you? Tap “This wasn’t me”. We’ll sign out every device and our support team will get in touch. If it was you, there’s nothing to do.',
+        'removed' => 'We removed what was added after the reported sign-in: :items. If any of it was yours, set it up again once you are signed in.',
+        'account_secured' => [
+            'subject' => 'Your account has been secured',
+            'heading' => 'We secured your account',
+            'intro' => 'You reported a sign-in as “This wasn’t me”. Every device and browser is now signed out. Your request number is :reference; our support team will get in touch.',
+            'after' => 'Sign in again and change your password if you have one. Check under Settings › Sign-in & passkeys which sign-in methods are connected to your account.',
+            'note' => 'Questions? Write to us at :support.',
+            'action' => 'Contact support',
+        ],
+        'email_code_locked' => [
+            'subject' => 'Too many wrong codes',
+            'heading' => 'Code sign-in paused for now',
+            'intro' => 'A wrong sign-in code was entered for your account too often. To protect you, we accept no codes for 15 minutes.',
+        ],
+        'provider_linked' => [
+            'subject' => 'New sign-in method connected',
+            'heading' => 'A sign-in method was connected',
+            'intro' => 'A new sign-in method is now connected to your account (:device).',
+        ],
+        'provider_unlinked' => [
+            'subject' => 'Sign-in method removed',
+            'heading' => 'A sign-in method was removed',
+            'intro' => 'A sign-in method was removed from your account (:device).',
+        ],
+        'passkey_added' => [
+            'subject' => 'New passkey for your account',
+            'heading' => 'A passkey was added',
+            'intro' => 'A passkey was just added to your account (:device).',
+        ],
+        'passkey_removed' => [
+            'subject' => 'Passkey removed',
+            'heading' => 'A passkey was removed',
+            'intro' => 'A passkey was just removed from your account (:device).',
+        ],
+        'passkey_rejected' => [
+            'subject' => 'Passkey sign-in refused',
+            'heading' => 'We refused a passkey sign-in',
+            'intro' => 'A sign-in with your passkey :device looked like it came from a copy of the key. We refused it. Remove the passkey in settings and create a new one.',
+        ],
         'new_device' => [
             'subject' => 'New sign-in to SPEED CLUB',
             'heading' => 'New sign-in on a device',
@@ -79,7 +153,7 @@ return [
             // M3.2: support changed it after checking the member's identity; both addresses get this.
             'intro_staff' => 'Our support team changed the e-mail address of your account at your request after checking your identity. This message goes to the previous and the new address.',
             // The reset code would go to the new, maybe hijacked address: this mail sends the member to support instead.
-            'note' => 'If this wasn\'t you, write to us at :support right away. We will secure your account. Don\'t reset your password yourself in this case: the code would go to the new address.',
+            'note' => 'Wasn’t you? Don’t reset your password yourself in this case: the code would go to the new address. Instead, go to Settings › Security in the app and tap “This wasn’t me”, or write to us at :support. We will secure your account.',
             'action' => 'Write to support',
         ],
         'two_factor_changed' => [
@@ -87,9 +161,9 @@ return [
             'heading' => 'Your two-factor protection was changed',
             'intro' => 'Two-factor protection for your account was just turned on or off.',
             // M3.2: support reset it (four-eyes) after checking the member's identity.
-            'intro_reset_by_staff' => 'Our support team reset the two-factor protection of your account at your request. Your password is now enough to sign in; you can set the protection up again under Settings › Security.',
+            'intro_reset_by_staff' => 'Our support team reset the two-factor protection of your account at your request. Signing in no longer asks for a code; you can set the protection up again under Settings › Security.',
             'intro_enabled' => 'Two-factor protection is now on for your account. Every sign-in asks for a code from your authenticator app.',
-            'intro_disabled' => 'Two-factor protection was just turned off for your account. From now on, your password alone is enough to sign in.',
+            'intro_disabled' => 'Two-factor protection was just turned off for your account. From now on, signing in no longer asks for a code.',
             'intro_recovery_codes' => 'New recovery codes were just created for your account. The old ones no longer work.',
         ],
         'verification_failed' => [
@@ -110,14 +184,14 @@ return [
             'heading' => 'Devices were signed out of your account',
             'intro' => 'Other devices or browsers were just signed out of your account on :device.',
             // M3.2: support signed every device out.
-            'intro_staff' => 'Our team signed your account out on every device and browser for your protection. Sign in again with your password.',
+            'intro_staff' => 'Our team signed your account out on every device and browser for your protection. Please sign in again.',
         ],
         'deletion_requested' => [
             'subject' => 'Your account will be deleted',
             'heading' => 'Deletion of your account was requested',
             'intro' => 'Your account is now deactivated: your profile and vehicles can no longer be seen, your QR stickers no longer work and all devices are signed out. We will delete the account and all photos for good within :days days.',
             'after' => 'The deletion cannot be undone. In conversations, the other person still sees your messages, shown as from “Deleted member”. If you requested a data export before, you can still download it for up to 7 days through the link in the export e-mail.',
-            'note' => 'If this wasn\'t you, write to us at :support right away.',
+            'note' => 'Wasn’t you? Write to us at :support right away.',
             'action' => 'Write to support',
         ],
     ],

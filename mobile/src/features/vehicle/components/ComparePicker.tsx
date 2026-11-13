@@ -102,7 +102,7 @@ function PickerBody({ current, onPick, testID }: Pick<ComparePickerProps, 'curre
   } else {
     content = (
       <>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {member ? t('compare.picker.hint') : t('compare.picker.hintGuest')}
         </Text>
         {own.length > 0 ? <Group title={t('compare.picker.garage')} rows={own} onPick={onPick} testID={`${testID}.garage`} /> : null}

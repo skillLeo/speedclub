@@ -21,20 +21,22 @@ export type FormNoticeProps = {
   message: string;
   /** `error` for what went wrong, `info` for what the member should know. */
   tone?: 'error' | 'info';
+  /** Tabular figures, for a notice with a running time ("Wieder möglich in 14:52"). */
+  numeric?: boolean;
   testID?: string;
 };
 
 /** An answer that belongs to the whole form, not to one field. Icon and text, never colour alone. */
-export function FormNotice({ message, tone = 'error', testID }: FormNoticeProps) {
+export function FormNotice({ message, tone = 'error', numeric = false, testID }: FormNoticeProps) {
   const styles = useStyles();
-  const iconBox = useFirstLineBox('supporting');
+  const iconBox = useFirstLineBox('callout');
   const error = tone === 'error';
   return (
     <View style={styles.root} role={error ? 'alert' : 'status'} testID={testID}>
       <View style={iconBox}>
         <Icon name={error ? 'warning' : 'info'} size={20} color={error ? 'accent.fg' : 'text.secondary'} />
       </View>
-      <Text variant="supporting" style={styles.text}>
+      <Text variant="callout" numeric={numeric} style={styles.text}>
         {message}
       </Text>
     </View>

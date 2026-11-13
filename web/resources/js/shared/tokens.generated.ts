@@ -7,12 +7,14 @@ export const accentPalette = {
     "dark": {
       "fg": "#EC5A5F",
       "fill": "#C8102E",
-      "fillPressed": "#A90D27"
+      "fillPressed": "#A90D27",
+      "bubbleOwnBg": "#521618"
     },
     "light": {
       "fg": "#C8102E",
       "fill": "#C8102E",
-      "fillPressed": "#A90D27"
+      "fillPressed": "#A90D27",
+      "bubbleOwnBg": "#FCE1DF"
     }
   },
   "emberOrange": {
@@ -20,12 +22,14 @@ export const accentPalette = {
     "dark": {
       "fg": "#F0884A",
       "fill": "#B4470C",
-      "fillPressed": "#963A09"
+      "fillPressed": "#963A09",
+      "bubbleOwnBg": "#511A00"
     },
     "light": {
       "fg": "#A8420B",
       "fill": "#B4470C",
-      "fillPressed": "#963A09"
+      "fillPressed": "#963A09",
+      "bubbleOwnBg": "#FAE2D8"
     }
   },
   "racingBlue": {
@@ -33,12 +37,14 @@ export const accentPalette = {
     "dark": {
       "fg": "#6EA8FE",
       "fill": "#1F5FBF",
-      "fillPressed": "#1A4FA0"
+      "fillPressed": "#1A4FA0",
+      "bubbleOwnBg": "#0E2C5A"
     },
     "light": {
       "fg": "#1F5FBF",
       "fill": "#1F5FBF",
-      "fillPressed": "#1A4FA0"
+      "fillPressed": "#1A4FA0",
+      "bubbleOwnBg": "#DCE9FD"
     }
   },
   "pitGreen": {
@@ -46,80 +52,53 @@ export const accentPalette = {
     "dark": {
       "fg": "#4CC38A",
       "fill": "#1A7347",
-      "fillPressed": "#145C39"
+      "fillPressed": "#145C39",
+      "bubbleOwnBg": "#00381E"
     },
     "light": {
       "fg": "#1A7347",
       "fill": "#1A7347",
-      "fillPressed": "#145C39"
+      "fillPressed": "#145C39",
+      "bubbleOwnBg": "#D9EEE0"
     }
   }
 } as const;
 export const motion = {
-  "duration": {
-    "press": 90,
-    "micro": 140,
-    "small": 200,
-    "medium": 260,
-    "large": 340,
-    "qrReveal": 600,
-    "skeletonCycle": 1200,
-    "reducedCrossfade": 120
-  },
-  "easing": {
-    "standard": [
-      0.2,
-      0,
-      0,
-      1
-    ],
-    "decelerate": [
-      0.05,
-      0.7,
-      0.1,
-      1
-    ],
-    "accelerate": [
-      0.3,
-      0,
-      0.8,
-      0.15
-    ]
-  },
-  "spring": {
-    "snappy": {
-      "damping": 26,
-      "stiffness": 380,
-      "mass": 1
+  "css": {
+    "effect.fast": {
+      "easing": [
+        0.31,
+        0.94,
+        0.34,
+        1
+      ],
+      "duration": 150
     },
-    "sheet": {
-      "damping": 30,
-      "stiffness": 300,
-      "mass": 1,
-      "overshootClamping": true
-    },
-    "hero": {
-      "damping": 24,
-      "stiffness": 200,
-      "mass": 1
+    "effect.default": {
+      "easing": [
+        0.34,
+        0.8,
+        0.34,
+        1
+      ],
+      "duration": 200
     }
-  },
-  "press": {
-    "scale": 0.98,
-    "opacity": 0.92
-  },
-  "rules": "Exits ~20% faster than entrances. Overshoot ≤2%. Nothing loops except skeleton shimmer (off with reduced motion). Animate transform/opacity only."
+  }
 } as const;
 export const layout = {
   "gutter": {
-    "compact": 16,
-    "regular": 20,
+    "phone": 20,
+    "phoneLarge": 24,
     "tablet": 24,
     "desktop": 24
   },
-  "compactMaxWidth": 389,
+  "phoneLargeMinWidth": 430,
   "cardPadding": 16,
   "sectionGap": 32,
+  "sectionGapWeb": {
+    "min": 48,
+    "max": 64
+  },
   "breakpoints": {
     "tablet": 768,
     "desktop": 1280
@@ -139,17 +118,19 @@ export const layout = {
     }
   },
   "contentMax": 1200,
+  "fullBleedMax": 1320,
   "feedColumn": 640,
   "rail": 72,
   "sidebar": 240,
   "inboxPane": 360,
   "settingsPane": 280,
   "vehicleDesktop": {
-    "galleryCols": 7,
-    "specCols": 5
+    "galleryCols": 8,
+    "specCols": 4
   },
   "adminSidebar": 248,
   "adminTableRow": 40,
+  "adminTableRowDense": 32,
   "adminContentMax": 1440
 } as const;
 /** Read a resolved colour at runtime (charts): cssColor('text.secondary') */

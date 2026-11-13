@@ -46,14 +46,17 @@ describe('what FS-3 shows', () => {
 
   it('joins the sub-line and keeps the four strip columns, with "–" for a value not entered', () => {
     expect(sublineOf(R34)).toBe('2002 · 2,6 l R6 Biturbo (RB26DETT) · Bayside Blue');
-    expect(specStripItems(R34)).toEqual([
-      { value: '500', label: 'PS' },
-      { value: '540', label: 'Nm' },
+    const names = { power: 'Leistung', torque: 'Drehmoment' };
+    // SpecStrip 2.0 (09 §5): power and torque by name with their unit and the provenance of the spec tables, as WEB-01.
+    expect(specStripItems(R34, names)).toEqual([
+      { value: '500', unit: 'PS', label: 'Leistung', provenance: 'Prüfstand' },
+      { value: '540', unit: 'Nm', label: 'Drehmoment', provenance: 'Prüfstand' },
       { value: '2002', label: 'Baujahr' },
       { value: 'AWD', label: 'Antrieb' },
     ]);
-    const empty = { spec_strip: R34.spec_strip.map((item) => ({ ...item, value: item.key === 'torque' ? null : item.value })) };
-    expect(specStripItems(empty)[1]).toEqual({ value: '–', label: 'Nm' });
+    const empty = { ...R34, spec_strip: R34.spec_strip.map((item) => ({ ...item, value: item.key === 'torque' ? null : item.value })) };
+    // A value not entered has no provenance.
+    expect(specStripItems(empty, names)[1]).toEqual({ value: '–', unit: 'Nm', label: 'Drehmoment', provenance: null });
   });
 
   it('keeps each part of the sub-line whole and no line starts with its separator (DQ-167)', () => {
@@ -89,14 +92,16 @@ describe('what FS-3 shows', () => {
 
   it('shows provenance under every value that is not the factory figure', () => {
     const power = R34.spec_groups.find((group) => group.key === 'power')!.rows[0]!;
-    expect(provenanceOf(power)).toBe('Gemessen');
-    expect(provenanceOf({ ...power, source: 'factory', source_label: 'Werksangabe' })).toBeUndefined();
+    expect(provenanceOf(power)).toBe('Prüfstand');
+    expect(provenanceOf({ ...power, source: 'factory', source_label: 'Herstellerangabe' })).toBeUndefined();
     expect(provenanceOf({ ...power, source: null, source_label: null })).toBeUndefined();
     expect(specGroupsOf({ spec_groups: [...R34.spec_groups, { key: 'x', label: 'Leer', rows: [] }] })).toHaveLength(4);
   });
 
-  it('previews the photos after the hero, at most four', () => {
-    expect(previewPhotos(R34).map((photo) => photo.sort)).toEqual([2, 3]);
+  it('previews one 3-up row: the photos after the hero, or from the first when there are fewer than four (DQ-1078)', () => {
+    expect(previewPhotos(R34).map((photo) => photo.sort)).toEqual([1, 2, 3]);
+    const many = { photos: [1, 2, 3, 4, 5].map((sort) => ({ ...R34.photos[0]!, id: `p${sort}`, sort })) };
+    expect(previewPhotos(many).map((photo) => photo.sort)).toEqual([2, 3, 4]);
   });
 
   it('accepts only the four content tabs', () => {
@@ -138,12 +143,13 @@ describe('Verlauf', () => {
     expect(changeLine(update.changes[0]!, update.type_label, 0)).toEqual({
       key: `${update.changes[0]!.modification_id}-0`,
       label: 'Bremsen',
-      diff: 'Brembo Serie → AP Racing Radi-CAL · 356 mm',
+      // DQ-977 (a): a short last word stays with the one before it ("356 mm", "Legalis R").
+      diff: 'Brembo Serie → AP Racing Radi-CAL · 356\u00A0mm',
     });
     const removed = { ...update.changes[0]!, before: 'KW V3', after: null, text: 'Fahrwerk: KW V3 entfernt', label: '' };
     expect(changeLine(removed, 'Modifikation entfernt', 1)).toMatchObject({ label: 'Modifikation entfernt', diff: 'Fahrwerk: KW V3 entfernt' });
     const added = { ...update.changes[0]!, before: null };
-    expect(changeLine(added, '', 0).diff).toBe('AP Racing Radi-CAL · 356 mm');
+    expect(changeLine(added, '', 0).diff).toBe('AP Racing Radi-CAL · 356\u00A0mm');
   });
 
   it('counts the changes a list leaves out', () => {

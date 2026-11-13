@@ -3,6 +3,8 @@
 namespace App\Services\Messaging;
 
 use App\Enums\MessageReaction;
+use App\Enums\MessageType;
+use App\Models\ConversationParticipant;
 use App\Models\Message;
 use App\Models\MessageReactionRow;
 use App\Models\User;
@@ -32,9 +34,10 @@ class MessageViews
 
         $messages->load(['sender.avatar', 'media', 'vehicle' => fn ($query) => $query->with(ConversationViews::VEHICLE_RELATIONS)]);
         $reactions = $this->reactions($reader, array_values($messages->map(fn (Message $message): string => $message->id)->all()));
+        $quotes = $this->quotes($reader, $messages);
         $allowed = [];
 
-        return array_values($messages->map(function (Message $message) use ($reader, $reactions, &$allowed): MessageView {
+        return array_values($messages->map(function (Message $message) use ($reader, $reactions, $quotes, &$allowed): MessageView {
             $vehicle = $message->vehicle;
 
             if ($vehicle instanceof Vehicle && ! array_key_exists($vehicle->id, $allowed)) {
@@ -46,6 +49,7 @@ class MessageViews
                 mine: $message->sender_id === $reader->id,
                 vehicle: $vehicle instanceof Vehicle && $allowed[$vehicle->id] ? $vehicle : null,
                 reactions: $reactions[$message->id] ?? [],
+                replyTo: $message->reply_to_id === null ? null : ($quotes[$message->reply_to_id] ?? null),
             );
         })->all());
     }
@@ -56,7 +60,50 @@ class MessageViews
     }
 
     /**
-     * [SIG sig.msg_reactions] Per message, in the fixed order of the six keys: count and whether one is the reader's.
+     * SM11 (ADR-445): the quoted messages of a page, keyed by id, in two queries. A quote the reader no longer sees (removed, deleted for
+     * the reader, before the reader's clearing point, or gone) keeps its id and type with `available` false and no text, so the app
+     * shows "Nachricht nicht mehr verfügbar" instead of the text.
+     *
+     * @param  Collection<int, Message>  $messages
+     * @return array<string, array{id: string, type: MessageType, body: string|null, is_mine: bool, available: bool}>
+     */
+    private function quotes(User $reader, Collection $messages): array
+    {
+        $ids = array_values(array_unique(array_filter($messages->map(fn (Message $message): ?string => $message->reply_to_id)->all(), is_string(...))));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $quoted = Message::withTrashed()->whereKey($ids)->get(['id', 'conversation_id', 'sender_id', 'type', 'body', 'deleted_at']);
+        $sides = ConversationParticipant::query()->where('user_id', $reader->id)
+            ->whereIn('conversation_id', $quoted->pluck('conversation_id')->unique()->values()->all())->get()->keyBy('conversation_id');
+        $visible = [];
+
+        foreach ($sides as $side) {
+            foreach (app(Conversations::class)->visibleMessages($side)->whereKey($ids)->pluck('messages.id') as $id) {
+                $visible[(string) $id] = true;
+            }
+        }
+
+        $quotes = [];
+
+        foreach ($quoted as $quote) {
+            $available = isset($visible[$quote->id]);
+            $quotes[$quote->id] = [
+                'id' => $quote->id,
+                'type' => $quote->type,
+                'body' => $available && $quote->type === MessageType::Text ? $quote->body : null,
+                'is_mine' => $quote->sender_id === $reader->id,
+                'available' => $available,
+            ];
+        }
+
+        return $quotes;
+    }
+
+    /**
+     * [SIG sig.msg_reactions] Per message, in the fixed order of the keys (MessageReaction): count and whether one is the reader's.
      *
      * @param  list<string>  $ids
      * @return array<string, list<array{key: string, count: int, mine: bool}>>

@@ -1,16 +1,16 @@
-import { FlashList } from '@shopify/flash-list';
-import { useCallback, useMemo } from 'react';
-import { View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, View, type LayoutChangeEvent } from 'react-native';
 
 import type { FeedVehicle } from '@/api/queries/home';
-import { createStyles, space, useTheme } from '@/theme';
-import { SectionHeader } from '@/ui';
+import { railSpec } from '@/features/home/components/NewInGarageRail';
+import { photoFields } from '@/features/profile/media';
+import { createStyles, layout as layoutTokens, useBreakpoint, useTheme } from '@/theme';
+import { MediaCard, SectionHeader } from '@/ui';
 
-import { ResultTile } from './ResultTile';
+import { railCardWidth, railGridWidth } from './DiscoverSections';
 
-/** A tile of the strip at font scale 1; a larger font widens it so the name keeps its two lines. */
-export const STRIP_TILE_WIDTH = space[64] * 3;
-const MAX_TILE_SCALE = 1.5;
+/** Desktop shows the first three as a grid inside the column: a sideways rail cut at the column edge reads as broken (DQ-974). */
+const GRID_COUNT = 3;
 
 export type SimilarBuildsListProps = {
   title: string;
@@ -25,43 +25,58 @@ export type SimilarBuildsListProps = {
 
 const useStyles = createStyles((t) => ({
   header: { paddingBottom: t.space[12] },
-  gap: { width: t.space[12] },
+  row: { flexDirection: 'row', gap: t.space[12] },
 }));
 
-function Gap() {
-  const styles = useStyles();
-  return <View style={styles.gap} />;
-}
-
-/** FS-3 [SIG] "Ähnliche Builds": up to eight grid tiles in one row that scrolls sideways (§8 grid tile). */
+/**
+ * FS-3 [SIG] "Ähnliche Builds" (M4.9, DQ-974): the MediaCard rail of 09 §5 — 3:4 photo, radius 12, name and the key value —
+ * sideways on phones and tablets, a row of three inside the column on a desktop.
+ */
 export function SimilarBuildsList({ title, label, vehicles, onOpen, bleed, testID }: SimilarBuildsListProps) {
   const styles = useStyles();
   const { fontScale } = useTheme();
-  const tileWidth = Math.round(STRIP_TILE_WIDTH * Math.min(MAX_TILE_SCALE, Math.max(1, fontScale)));
-  const tileStyle = useMemo(() => ({ width: tileWidth }), [tileWidth]);
-  const renderItem = useCallback(
-    ({ item }: { item: FeedVehicle }) => (
-      <View style={tileStyle}>
-        <ResultTile vehicle={item} width={tileWidth} onOpen={onOpen} testID={`${testID}.${item.id}`} />
-      </View>
-    ),
-    [onOpen, testID, tileStyle, tileWidth],
-  );
+  const desktop = useBreakpoint().kind === 'desktop';
+  const [column, setColumn] = useState<number>(layoutTokens.feedColumn);
+  const width = desktop ? railGridWidth(column) : railCardWidth(column + 2 * bleed, fontScale);
+  const shown = desktop ? vehicles.slice(0, GRID_COUNT) : vehicles;
+  const cards = shown.map((vehicle) => (
+    <View key={vehicle.id} role="listitem" style={{ width }}>
+      <MediaCard
+        variant="rail"
+        title={vehicle.full_title}
+        spec={railSpec(vehicle)}
+        photo={photoFields(vehicle.cover, width)}
+        sample={{ is_sample: vehicle.is_sample, is_editorial: vehicle.owner?.is_editorial ?? false }}
+        onPress={() => onOpen(vehicle)}
+        testID={`${testID}.${vehicle.id}`}
+      />
+    </View>
+  ));
   return (
-    <View role="region" aria-label={label} testID={testID}>
+    <View
+      role="region"
+      aria-label={label}
+      testID={testID}
+      onLayout={(event: LayoutChangeEvent) => setColumn(event.nativeEvent.layout.width)}
+    >
       <SectionHeader title={title} style={styles.header} testID={`${testID}.header`} />
-      <View style={{ marginHorizontal: -bleed }}>
-        <FlashList
-          horizontal
-          data={vehicles}
-          keyExtractor={(vehicle: FeedVehicle) => vehicle.id}
-          renderItem={renderItem}
-          ItemSeparatorComponent={Gap}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: bleed }}
-          testID={`${testID}.list`}
-        />
-      </View>
+      {desktop ? (
+        <View style={styles.row} role="list" testID={`${testID}.list`}>
+          {cards}
+        </View>
+      ) : (
+        <View style={{ marginHorizontal: -bleed }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[styles.row, { paddingHorizontal: bleed }]}
+            role="list"
+            testID={`${testID}.list`}
+          >
+            {cards}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 }

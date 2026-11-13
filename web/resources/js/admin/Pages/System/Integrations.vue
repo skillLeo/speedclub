@@ -62,12 +62,12 @@ function lastText(key: string): string | null {
             </template>
             <li v-for="item in rows" v-else :key="item.key" class="flex min-h-64 flex-wrap items-center gap-x-24 gap-y-8 border-b border-line-subtle px-16 py-12 last:border-b-0" :data-testid="`ADM-50.item.${item.key}`">
                 <span class="flex min-w-240 flex-1 flex-col gap-2">
-                    <span class="text-label text-ink">{{ trans(`system.integrations.keys.${item.key}.name`) }}</span>
-                    <span class="text-helper text-ink-3">{{ trans(`system.integrations.keys.${item.key}.about`) }}</span>
-                    <span v-if="lastText(item.key)" class="text-helper tabular-nums" :class="lastTest?.ok ? 'text-ink-2' : 'text-danger'" :data-testid="`ADM-50.last.${item.key}`">{{ lastText(item.key) }}</span>
+                    <span class="text-admin-base-strong text-ink">{{ trans(`system.integrations.keys.${item.key}.name`) }}</span>
+                    <span class="text-admin-base text-ink-3">{{ trans(`system.integrations.keys.${item.key}.about`) }}</span>
+                    <span v-if="lastText(item.key)" class="text-admin-base tabular-nums" :class="lastTest?.ok ? 'text-ink-2' : 'text-danger'" :data-testid="`ADM-50.last.${item.key}`">{{ lastText(item.key) }}</span>
                 </span>
                 <span class="flex w-200 flex-col gap-2">
-                    <span class="inline-flex items-center gap-4 text-supporting" :class="item.configured ? 'text-ink' : 'text-ink-3'" :data-testid="`ADM-50.state.${item.key}`">
+                    <span class="inline-flex items-center gap-4 text-admin-base" :class="item.configured ? 'text-ink' : 'text-ink-3'" :data-testid="`ADM-50.state.${item.key}`">
                         <PhCheckCircle v-if="item.configured" :size="16" class="text-success" aria-hidden="true" />
                         <PhCircleDashed v-else :size="16" aria-hidden="true" />
                         {{ item.configured ? trans('system.integrations.configured') : trans('system.integrations.not_configured') }}
@@ -88,7 +88,7 @@ function lastText(key: string): string | null {
                     >
                         {{ trans(`system.integrations.keys.${item.key}.test`) }}
                     </Button>
-                    <span v-if="!item.test.available && item.test.reason" :id="`adm50-reason-${item.key}`" class="text-helper text-ink-3">{{ trans(`system.integrations.reasons.${item.test.reason}`) }}</span>
+                    <span v-if="!item.test.available && item.test.reason" :id="`adm50-reason-${item.key}`" class="text-admin-base text-ink-3">{{ trans(`system.integrations.reasons.${item.test.reason}`) }}</span>
                 </span>
             </li>
         </ul>

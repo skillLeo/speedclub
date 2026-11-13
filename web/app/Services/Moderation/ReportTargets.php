@@ -6,7 +6,9 @@ use App\Enums\ErrorCode;
 use App\Enums\ReportTargetType;
 use App\Exceptions\ApiException;
 use App\Models\BuildUpdate;
+use App\Models\Comment;
 use App\Models\ConversationParticipant;
+use App\Models\Event;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\Modification;
@@ -50,6 +52,10 @@ class ReportTargets
             ReportTargetType::BuildUpdate => $this->ulid($id) ? BuildUpdate::query()->with('vehicle.owner')->find(strtolower($id)) : null,
             ReportTargetType::Modification => $this->ulid($id) ? Modification::query()->with('vehicle.owner')->find(strtolower($id)) : null,
             ReportTargetType::Message => $this->ulid($id) ? Message::query()->with('sender')->find(strtolower($id)) : null,
+            // M4.11 [build_comments]: a comment the reporter can see (CommentPolicy::view).
+            ReportTargetType::Comment => $this->ulid($id) ? Comment::query()->with('buildUpdate.vehicle.owner')->find(strtolower($id)) : null,
+            // M4.12: an event the reporter can see (EventPolicy::view).
+            ReportTargetType::Event => $this->ulid($id) ? Event::query()->with('organiser')->find(strtolower($id)) : null,
         };
 
         if ($target === null) {
@@ -172,7 +178,7 @@ class ReportTargets
     /**
      * Photos of builds, mods and profiles. A message photo is reported with its message, so the context comes along.
      */
-    private function isReportablePhoto(User|Vehicle|Media|BuildUpdate|Modification|Message $target): bool
+    private function isReportablePhoto(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): bool
     {
         if (! $target instanceof Media) {
             return true;
@@ -180,7 +186,7 @@ class ReportTargets
 
         $parent = $target->mediable;
 
-        return $parent instanceof Vehicle || $parent instanceof Modification || $parent instanceof User;
+        return $parent instanceof Vehicle || $parent instanceof Modification || $parent instanceof User || $parent instanceof BuildUpdate;
     }
 
     /**
@@ -192,7 +198,7 @@ class ReportTargets
             && ConversationParticipant::query()->where('conversation_id', $message->conversation_id)->where('user_id', $reporter->id)->exists();
     }
 
-    private function subjectOf(User|Vehicle|Media|BuildUpdate|Modification|Message $target): ?string
+    private function subjectOf(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): ?string
     {
         return match (true) {
             $target instanceof User => $target->id,
@@ -201,13 +207,15 @@ class ReportTargets
             $target instanceof BuildUpdate => $target->vehicle->owner_id,
             $target instanceof Modification => $target->vehicle->owner_id,
             $target instanceof Message => $target->sender_id,
+            $target instanceof Comment => $target->user_id,
+            $target instanceof Event => $target->organiser_id,
         };
     }
 
     /**
      * A target staff act on without a report (own-initiative case, M3.2): its type, member and label, as a report would have them.
      */
-    public function forStaff(User|Vehicle|Media|BuildUpdate|Modification|Message $target): ResolvedTarget
+    public function forStaff(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): ResolvedTarget
     {
         $type = match (true) {
             $target instanceof User => ReportTargetType::Member,
@@ -216,12 +224,14 @@ class ReportTargets
             $target instanceof BuildUpdate => ReportTargetType::BuildUpdate,
             $target instanceof Modification => ReportTargetType::Modification,
             $target instanceof Message => ReportTargetType::Message,
+            $target instanceof Comment => ReportTargetType::Comment,
+            $target instanceof Event => ReportTargetType::Event,
         };
 
         return $this->resolved($type, $target, $this->subjectOf($target));
     }
 
-    private function resolved(ReportTargetType $type, User|Vehicle|Media|BuildUpdate|Modification|Message $target, ?string $subjectId): ResolvedTarget
+    private function resolved(ReportTargetType $type, User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target, ?string $subjectId): ResolvedTarget
     {
         return new ResolvedTarget($type, $target, $subjectId, $this->label($target), $this->snapshot($target));
     }
@@ -229,7 +239,7 @@ class ReportTargets
     /**
      * Language-free: the member's @name, or the build's title for the build and everything on it; the client adds "Foto von …".
      */
-    private function label(User|Vehicle|Media|BuildUpdate|Modification|Message $target): string
+    private function label(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): string
     {
         $label = match (true) {
             $target instanceof User => '@'.$target->username,
@@ -237,6 +247,8 @@ class ReportTargets
             $target instanceof Media => $this->photoLabel($target),
             $target instanceof BuildUpdate, $target instanceof Modification => $this->presenter->fullTitle($target->vehicle),
             $target instanceof Message => $target->sender?->username === null ? '' : '@'.$target->sender->username,
+            $target instanceof Comment => $target->user?->username === null ? '' : '@'.$target->user->username,
+            $target instanceof Event => $target->title,
         };
 
         return mb_substr($label, 0, 200);
@@ -250,6 +262,7 @@ class ReportTargets
             $parent instanceof Vehicle => $this->presenter->fullTitle($parent),
             $parent instanceof Modification => $this->presenter->fullTitle($parent->vehicle),
             $parent instanceof User => '@'.$parent->username,
+            $parent instanceof BuildUpdate => $this->presenter->fullTitle($parent->vehicle),
             default => '',
         };
     }
@@ -259,7 +272,7 @@ class ReportTargets
      *
      * @return array<string, mixed>
      */
-    private function snapshot(User|Vehicle|Media|BuildUpdate|Modification|Message $target): array
+    private function snapshot(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target): array
     {
         return match (true) {
             $target instanceof User => [
@@ -295,6 +308,22 @@ class ReportTargets
                 // SEC-P3-17: never the owner-only notes (ADR-142 a); they are not what was reported.
             ],
             $target instanceof Message => ['conversation_id' => $target->conversation_id],
+            $target instanceof Comment => [
+                'build_update_id' => $target->build_update_id,
+                'parent_id' => $target->parent_id,
+                'body' => $target->body,
+            ],
+            // What was public when reported; the exact place of an after_rsvp event too, as staff review it (ADM-54).
+            $target instanceof Event => [
+                'slug' => $target->slug,
+                'title' => $target->title,
+                'type' => $target->type->value,
+                'starts_at' => $target->starts_at?->toIso8601String(),
+                'city' => $target->city,
+                'venue_name' => $target->getAttribute('venue_name'),
+                'description' => $target->getAttribute('description'),
+                'organiser_rules' => $target->getAttribute('organiser_rules'),
+            ],
         };
     }
 }

@@ -69,3 +69,39 @@ describe('a paragraph sign and its number (DQ-221)', function () {
             ->and($result['toc'][0]['title'])->toBe("Hinweis nach \u{00A7}\u{00A0}36 VSBG");
     });
 });
+
+describe('a short part of a compound (r5 name-hyphen-break, joinShortCompounds of mobile/src/lib/format.ts)', function () {
+    $joiner = "\u{2060}";
+
+    it('joins a hyphen with a part of fewer than 3 letters or figures on either side', function (string $text, string $joined) {
+        expect(SafeMarkdown::joinShortCompounds($text))->toBe($joined);
+    })->with([
+        'a short prefix' => ['Bei einem RB-Spezialisten in Mönchengladbach.', "Bei einem RB-{$joiner}Spezialisten in Mönchengladbach."],
+        'two short parts' => ['mit GT-SS-Ladern', "mit GT-{$joiner}SS-{$joiner}Ladern"],
+        'a short part after a long one' => ['die Datenschutz-E-Mail', "die Datenschutz-{$joiner}E-{$joiner}Mail"],
+        'figures and short suffixes' => ['6-stelligen Code, Plug-in, sign-in', "6-{$joiner}stelligen Code, Plug-{$joiner}in, sign-{$joiner}in"],
+        'IP-Adressen' => ['deine IP-Adressen', "deine IP-{$joiner}Adressen"],
+    ]);
+
+    it('keeps a hyphen between two longer parts, an existing joiner and an address as they are', function (string $text) {
+        expect(SafeMarkdown::joinShortCompounds($text))->toBe($text);
+    })->with([
+        'two longer parts' => ['Nismo Aero-Seitenschweller'],
+        'already joined' => ["E-{$joiner}Mail-Adresse"],
+        'addresses' => ['info@sc-x.de und https://sc-x.de/e-mail'],
+        'a dash between words' => ['Ölwechsel – erledigt'],
+        'no hyphen' => ['Aus Japan importiert.'],
+    ]);
+
+    it('keeps the text it cannot read', function () {
+        $text = "Deine E-Mail \xC3\x28";
+
+        expect(SafeMarkdown::joinShortCompounds($text))->toBe($text);
+    });
+
+    it('applies the same step to rendered documents, after the short prefix, never to a tag, a link target or code', function () use ($joiner) {
+        $html = SafeMarkdown::render('Schreib an [[DSA-Kontakt-E-Mail]] oder die Export-E-Mail, nicht an `E-Mail` oder [GT-SS](https://sc-x.de/gt-ss). Aero-Seitenschweller bleiben.')->toHtml();
+
+        expect($html)->toBe("<p>Schreib an [[DSA-{$joiner}Kontakt-{$joiner}E-{$joiner}Mail]] oder die Export-{$joiner}E-{$joiner}Mail, nicht an <code>E-Mail</code> oder <a href=\"https://sc-x.de/gt-ss\">GT-{$joiner}SS</a>. Aero-Seitenschweller bleiben.</p>\n");
+    });
+});

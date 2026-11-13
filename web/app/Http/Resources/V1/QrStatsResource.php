@@ -9,7 +9,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * [SIG] Scans of QR-02. Counts only: nothing about who.
  *
- * @property array{days: list<array{date: string, count: int}>, total: int, total_14_days: int} $resource
+ * @property array{days: list<array{date: string, count: int}>, total: int, total_14_days: int, total_30_days: int} $resource
  */
 class QrStatsResource extends JsonResource
 {
@@ -20,7 +20,7 @@ class QrStatsResource extends JsonResource
     {
         return [
             /**
-             * Exactly 14 entries, oldest first. `date` is YYYY-MM-DD in German time.
+             * Exactly 30 entries since M4.9 (14 before), oldest first. `date` is YYYY-MM-DD in German time.
              *
              * @var list<array{date: string, count: int}>
              */
@@ -33,6 +33,8 @@ class QrStatsResource extends JsonResource
             'total' => $this->resource['total'],
             /** @var int */
             'total_14_days' => $this->resource['total_14_days'],
+            /** M4.9: the sum of `days`. */
+            'total_30_days' => $this->resource['total_30_days'],
             /**
              * The milestones of the in-app `qr_milestone` notification the total has reached, ascending: of 10, 50, 100, 500, 1000.
              *

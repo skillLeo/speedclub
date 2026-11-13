@@ -35,8 +35,9 @@ class ModificationRequest extends FormRequest
             'status' => ['sometimes', Rule::enum(ModStatus::class)],
             /** Month of installation as YYYY-MM. Dropped for a planned part. */
             'installed_on' => ['sometimes', 'nullable', 'date_format:Y-m'],
-            /** Private unless cost_public is true. */
+            /** Private, always: only the owner reads it (09 §11). */
             'cost_cents' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100000000'],
+            /** Ignored since M4.9 (costs are never public); accepted so older apps keep working. */
             'cost_public' => ['sometimes', 'boolean'],
             /** Ignored while the flag sig.mod_legal_status is off. */
             'legal_status' => ['sometimes', 'nullable', Rule::enum(LegalStatus::class)],

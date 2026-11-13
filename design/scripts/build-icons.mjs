@@ -10,6 +10,7 @@
  * Usage:   node design/scripts/build-icons.mjs                    # validate + generate
  *          node design/scripts/build-icons.mjs --check            # CI/verify: fail if a source breaks the rules or outputs are stale
  *          node design/scripts/build-icons.mjs --out-root <dir>   # write into another root (testing)
+ *          node design/scripts/build-icons.mjs --ink              # print every regular glyph's ink coverage (optical weight)
  *
  * Exit codes: 0 ok · 1 invalid source · 2 stale/missing/orphaned outputs (--check)
  */
@@ -25,8 +26,14 @@ const repoRoot = resolve(here, '..', '..');
 const outRoot = outRootIdx >= 0 ? resolve(args[outRootIdx + 1]) : repoRoot;
 const srcDir = join(repoRoot, 'design', 'icons', 'auto');
 
-/** The glyph set is a contract (docs/03_DESIGN_SYSTEM.md §6): order here is the order in every output. */
+/**
+ * The glyph set is a contract (docs/03_DESIGN_SYSTEM.md §6, 09 §4.5 and Appendix C): order here is the order in every output.
+ * The first 16 keep their v1 names (Appendix C: "existing 16 keep their names"), so `ecu-chip` is the ECU tune, `coilover`
+ * the suspension, `wing` the aero wing and `light` the lighting glyph. `garage-bay` is Appendix C's "garage": the bare name
+ * belongs to the Phosphor garage that the tab destinations use, and one name must not draw two glyphs.
+ */
 const NAMES = [
+  // v1 (16), each with a fill variant
   'wheel',
   'tyre',
   'coilover',
@@ -43,7 +50,55 @@ const NAMES = [
   'audio',
   'gearbox',
   'drivetrain',
+  // 2.0 systems (build sheet)
+  'supercharger',
+  'intercooler',
+  'fuel',
+  'cooling',
+  'oil',
+  'brake-caliper',
+  'splitter-diffuser',
+  'body-kit',
+  'wrap-paint',
+  'steering-wheel',
+  'roll-cage',
+  'electronics',
+  'clutch',
+  'differential',
+  'chassis-brace',
+  'ev-battery',
+  'ev-plug',
+  // 2.0 domain
+  'garage-bay',
+  'qr-sticker',
+  'dyno',
+  'hu-plakette',
+  'service-wrench',
+  'tyre-season',
+  'insurance',
+  'workshop',
+  'part-box',
+  'meet',
+  'cruise-route',
+  'track-day',
+  // 2.0 reactions (Stark · Sauber · Tief · Laut), filled for the selected state
+  'strong',
+  'clean',
+  'low',
+  'loud',
 ];
+
+/**
+ * Appendix C: "filled variants only where a selected state needs one". The v1 glyphs keep theirs (selected mod-system chips),
+ * the reactions need one for the chosen reaction; every other 2.0 glyph is regular only and draws its regular form when a
+ * caller asks for `weight="fill"`.
+ */
+const WITH_FILL = new Set([...NAMES.slice(0, 16), 'strong', 'clean', 'low', 'loud']);
+
+/** Appendix C's groups, for the DEV-01 review sheet (each glyph at 16/20/24 in every theme). */
+const DOMAIN = ['garage-bay', 'qr-sticker', 'dyno', 'hu-plakette', 'service-wrench', 'tyre-season', 'insurance', 'workshop', 'part-box', 'meet', 'cruise-route', 'track-day'];
+const REACTIONS = ['strong', 'clean', 'low', 'loud'];
+const groupOf = (name) => (REACTIONS.includes(name) ? 'reactions' : DOMAIN.includes(name) ? 'domain' : 'systems');
 
 const VIEWBOX = '0 0 256 256';
 const STROKE_WIDTH = '16';
@@ -138,8 +193,11 @@ function arcPoints(x0, y0, rxIn, ryIn, large, sweep, x1, y1) {
   return pts;
 }
 
-/** Tokenises arc flags correctly: they may be written without separators. */
-function pathPoints(d, where, errors) {
+/**
+ * Tokenises arc flags correctly: they may be written without separators. `breaks` (optional) collects the index in the result
+ * where each subpath starts, so the ink measure can stroke subpaths separately; a close (Z) adds the start point again.
+ */
+function pathPoints(d, where, errors, breaks = []) {
   if (!/^[MmLlHhVvCcSsQqTtAaZz0-9,.\-eE\s]+$/.test(d)) {
     errors.push(`${where}: path data contains invalid characters`);
     return [];
@@ -167,6 +225,7 @@ function pathPoints(d, where, errors) {
     if (CMD === 'Z') {
       x = sx;
       y = sy;
+      pts.push([sx, sy]);
       prev = CMD;
       continue;
     }
@@ -186,6 +245,7 @@ function pathPoints(d, where, errors) {
         if (CMD === 'M' && i === 0) {
           sx = nx;
           sy = ny;
+          breaks.push(pts.length);
         }
         pts.push([nx, ny]);
       } else if (CMD === 'H') {
@@ -262,6 +322,94 @@ function elementPoints({ tag, attrs }, where, errors) {
   return [];
 }
 
+/* ---------------------------------------------------------------- ink (DQ-949) */
+/**
+ * Optical weight: the share of the 256 grid a regular glyph's 16 stroke covers (round caps and joins), measured on a 1-unit
+ * grid of pixel centres. The v1 sixteen cover 16–29 %; a glyph outside INK_MIN..INK_MAX reads lighter or heavier than its
+ * neighbours and the Phosphor icons beside it (09 Appendix C "optical match to Phosphor Regular", design QA M4.4 r1).
+ */
+const INK_MIN = 16;
+const INK_MAX = 30;
+const GRID = 256;
+
+function circlePolyline(cx, cy, r, steps = 96) {
+  const pts = [];
+  for (let i = 0; i <= steps; i++) pts.push([cx + r * Math.cos((2 * Math.PI * i) / steps), cy + r * Math.sin((2 * Math.PI * i) / steps)]);
+  return pts;
+}
+
+function rectPolyline(x, y, w, h, rxIn, ryIn) {
+  const rx = Math.min(rxIn ?? ryIn ?? 0, w / 2);
+  const ry = Math.min(ryIn ?? rxIn ?? 0, h / 2);
+  if (!rx || !ry) return [[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y]];
+  const corner = (cx, cy, from) => Array.from({ length: 13 }, (_, i) => {
+    const a = from + (Math.PI / 2) * (i / 12);
+    return [cx + rx * Math.cos(a), cy + ry * Math.sin(a)];
+  });
+  const pts = [
+    ...corner(x + w - rx, y + ry, -Math.PI / 2),
+    ...corner(x + w - rx, y + h - ry, 0),
+    ...corner(x + rx, y + h - ry, Math.PI / 2),
+    ...corner(x + rx, y + ry, Math.PI),
+  ];
+  return [...pts, pts[0]];
+}
+
+/** The polylines a regular element strokes. */
+function elementPolylines({ tag, attrs }) {
+  const n = (k) => (attrs[k] === undefined ? undefined : Number(attrs[k]));
+  if (tag === 'circle') return [circlePolyline(n('cx'), n('cy'), n('r'))];
+  if (tag === 'rect') return [rectPolyline(n('x'), n('y'), n('width'), n('height'), n('rx'), n('ry'))];
+  if (tag === 'line') return [[[n('x1'), n('y1')], [n('x2'), n('y2')]]];
+  if (tag === 'polyline') {
+    const v = nums(attrs.points ?? '');
+    const pts = [];
+    for (let i = 0; i + 1 < v.length; i += 2) pts.push([v[i], v[i + 1]]);
+    return [pts];
+  }
+  if (tag === 'path') {
+    const breaks = [];
+    const pts = pathPoints(attrs.d ?? '', 'ink', [], breaks);
+    const starts = [...new Set([0, ...breaks])].sort((a, b) => a - b);
+    return starts.map((start, i) => pts.slice(start, starts[i + 1] ?? pts.length)).filter((line) => line.length > 0);
+  }
+  return [];
+}
+
+/** Ink coverage of a regular glyph, in % of the grid. */
+function inkCoverage(children) {
+  const r = Number(STROKE_WIDTH) / 2;
+  const mask = new Uint8Array(GRID * GRID);
+  const stamp = (ax, ay, bx, by) => {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const len2 = dx * dx + dy * dy;
+    const x0 = Math.max(0, Math.floor(Math.min(ax, bx) - r));
+    const x1 = Math.min(GRID - 1, Math.ceil(Math.max(ax, bx) + r));
+    const y0 = Math.max(0, Math.floor(Math.min(ay, by) - r));
+    const y1 = Math.min(GRID - 1, Math.ceil(Math.max(ay, by) + r));
+    for (let py = y0; py <= y1; py++) {
+      for (let px = x0; px <= x1; px++) {
+        const cx = px + 0.5;
+        const cy = py + 0.5;
+        const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((cx - ax) * dx + (cy - ay) * dy) / len2));
+        const ex = ax + t * dx - cx;
+        const ey = ay + t * dy - cy;
+        if (ex * ex + ey * ey <= r * r) mask[py * GRID + px] = 1;
+      }
+    }
+  };
+  for (const el of children) {
+    for (const line of elementPolylines(el)) {
+      if (line.length === 1) stamp(line[0][0], line[0][1], line[0][0], line[0][1]);
+      for (let i = 1; i < line.length; i++) stamp(line[i - 1][0], line[i - 1][1], line[i][0], line[i][1]);
+    }
+  }
+  let ink = 0;
+  for (const v of mask) ink += v;
+  return (100 * ink) / (GRID * GRID);
+}
+
 /* ---------------------------------------------------------------- source gate */
 function validate(file, weight, parsed, errors) {
   const required = REQUIRED_ROOT[weight];
@@ -310,13 +458,14 @@ function validate(file, weight, parsed, errors) {
 
 function loadSources(errors) {
   const icons = [];
-  const expected = new Set(NAMES.flatMap((n) => [`${n}.svg`, `${n}-fill.svg`]));
+  const expected = new Set(NAMES.flatMap((n) => (WITH_FILL.has(n) ? [`${n}.svg`, `${n}-fill.svg`] : [`${n}.svg`])));
   for (const file of existsSync(srcDir) ? readdirSync(srcDir) : []) {
     if (file.endsWith('.svg') && !expected.has(file)) errors.push(`${file}: not part of the glyph set`);
   }
   for (const name of NAMES) {
     const icon = { name, component: pascal(name) };
-    for (const [weight, file] of [['regular', `${name}.svg`], ['fill', `${name}-fill.svg`]]) {
+    const weights = WITH_FILL.has(name) ? [['regular', `${name}.svg`], ['fill', `${name}-fill.svg`]] : [['regular', `${name}.svg`]];
+    for (const [weight, file] of weights) {
       const path = join(srcDir, file);
       if (!existsSync(path)) {
         errors.push(`${file}: missing`);
@@ -329,6 +478,11 @@ function loadSources(errors) {
       if (parsed) {
         validate(file, weight, parsed, errors);
         icon[weight] = parsed.children;
+        // DQ-949: the optical weight of a regular glyph stays in the band of the v1 set (`--ink` prints all of them).
+        if (weight === 'regular') {
+          const ink = inkCoverage(parsed.children);
+          if (ink < INK_MIN || ink > INK_MAX) errors.push(`${file}: ink ${ink.toFixed(1)} % is outside ${INK_MIN}–${INK_MAX} % (optical weight of the set)`);
+        }
       }
     }
     icons.push(icon);
@@ -352,7 +506,7 @@ const htmlElement = ({ tag, attrs }) =>
   `<${tag} ${Object.entries(attrs).map(([k, v]) => `${k}="${v}"`).join(' ')} />`;
 
 function rnComponent(icon) {
-  const tags = [...new Set([...icon.regular, ...icon.fill].map((el) => RN_TAG[el.tag]))].sort();
+  const tags = [...new Set([...icon.regular, ...(icon.fill ?? [])].map((el) => RN_TAG[el.tag]))].sort();
   const body = (els) => els.map((el) => `      ${rnElement(el)}`).join('\n');
   const fillBody = (els) => els.map((el) => `        ${rnElement(el)}`).join('\n');
   return `/* ${NOTICE} */
@@ -360,14 +514,7 @@ import Svg, { ${tags.join(', ')} } from 'react-native-svg';
 
 import type { AutoIconProps } from './types';
 
-export function ${icon.component}({ size = 24, color, weight = 'regular', testID }: AutoIconProps) {
-  if (weight === 'fill') {
-    return (
-      <Svg width={size} height={size} viewBox="${VIEWBOX}" fill={color} testID={testID}>
-${fillBody(icon.fill)}
-      </Svg>
-    );
-  }
+${icon.fill ? rnFillHead(icon, fillBody) : rnRegularOnlyHead(icon)}
   return (
     <Svg
       width={size}
@@ -386,6 +533,18 @@ ${body(icon.regular)}
 }
 `;
 }
+
+const rnFillHead = (icon, fillBody) => `export function ${icon.component}({ size = 24, color, weight = 'regular', testID }: AutoIconProps) {
+  if (weight === 'fill') {
+    return (
+      <Svg width={size} height={size} viewBox="${VIEWBOX}" fill={color} testID={testID}>
+${fillBody(icon.fill)}
+      </Svg>
+    );
+  }`;
+
+/** A regular-only glyph (Appendix C): \`weight\` is accepted and ignored, so every glyph takes the same props. */
+const rnRegularOnlyHead = (icon) => `export function ${icon.component}({ size = 24, color, testID }: AutoIconProps) {`;
 
 const rnTypes = () => `/* ${NOTICE} */
 export type AutoIconSize = 16 | 20 | 24 | 48;
@@ -418,21 +577,23 @@ ${icons.map((i) => `  | '${i.name}'`).join('\n')};
 export const autoIcons: Record<AutoIconName, ComponentType<AutoIconProps>> = {
 ${icons.map((i) => `  ${mapKey(i.name)}: ${i.component},`).join('\n')}
 };
+
+/** The glyphs with a fill variant (selected states); the others draw their regular form for \`weight="fill"\`. */
+export const autoIconsWithFill: readonly AutoIconName[] = [
+${icons.filter((i) => i.fill).map((i) => `  '${i.name}',`).join('\n')}
+];
+
+/** Appendix C's groups: build-sheet systems, domain concepts, reactions. */
+export const autoIconGroups: Readonly<Record<'systems' | 'domain' | 'reactions', readonly AutoIconName[]>> = {
+${['systems', 'domain', 'reactions'].map((g) => `  ${g}: [${icons.filter((i) => groupOf(i.name) === g).map((i) => `'${i.name}'`).join(', ')}],`).join('\n')}
+};
 `;
 }
 
 function vueComponent(icon) {
   const body = (els) => els.map((el) => `    ${htmlElement(el)}`).join('\n');
-  return `<!-- ${NOTICE} -->
-<script setup lang="ts">
-withDefaults(defineProps<{ size?: 16 | 20 | 24 | 48; weight?: 'regular' | 'fill' }>(), {
-  size: 24,
-  weight: 'regular',
-});
-</script>
-
-<template>
-  <svg
+  const fill = icon.fill
+    ? `  <svg
     v-if="weight === 'fill'"
     xmlns="http://www.w3.org/2000/svg"
     :width="size"
@@ -444,9 +605,19 @@ withDefaults(defineProps<{ size?: 16 | 20 | 24 | 48; weight?: 'regular' | 'fill'
   >
 ${body(icon.fill)}
   </svg>
-  <svg
-    v-else
-    xmlns="http://www.w3.org/2000/svg"
+`
+    : '';
+  return `<!-- ${NOTICE} -->
+<script setup lang="ts">
+withDefaults(defineProps<{ size?: 16 | 20 | 24 | 48; weight?: 'regular' | 'fill' }>(), {
+  size: 24,
+  weight: 'regular',
+});
+</script>
+
+<template>
+${fill}  <svg
+${icon.fill ? '    v-else\n' : ''}    xmlns="http://www.w3.org/2000/svg"
     :width="size"
     :height="size"
     viewBox="${VIEWBOX}"
@@ -483,9 +654,10 @@ function bladeSprite(icons) {
   const symbol = (id, attrs, els) =>
     `  <symbol id="${id}" viewBox="${VIEWBOX}" ${attrs}>\n${els.map((el) => `    ${htmlElement(el)}`).join('\n')}\n  </symbol>`;
   const regular = `fill="none" stroke="currentColor" stroke-width="${STROKE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"`;
+  // A regular-only glyph has no `-fill` symbol: Blade asks for `#auto-<name>` and uses `-fill` only for the WITH_FILL set.
   const symbols = icons.flatMap((i) => [
     symbol(`auto-${i.name}`, regular, i.regular),
-    symbol(`auto-${i.name}-fill`, 'fill="currentColor"', i.fill),
+    ...(i.fill ? [symbol(`auto-${i.name}-fill`, 'fill="currentColor"', i.fill)] : []),
   ]);
   return `{{-- ${NOTICE} Usage: <svg width="20" height="20" aria-hidden="true"><use href="#auto-wheel"/></svg> --}}
 <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" focusable="false">
@@ -497,6 +669,12 @@ ${symbols.join('\n')}
 /* ---------------------------------------------------------------- run */
 const errors = [];
 const icons = loadSources(errors);
+if (args.includes('--ink')) {
+  // The optical-weight report (DQ-949): every regular glyph's ink, lightest first.
+  const rows = icons.filter((icon) => icon.regular).map((icon) => [icon.name, inkCoverage(icon.regular)]).sort((a, b) => a[1] - b[1]);
+  for (const [name, ink] of rows) console.log(`${ink.toFixed(1).padStart(5)} %  ${name}${ink < INK_MIN || ink > INK_MAX ? '  (outside ' + INK_MIN + '–' + INK_MAX + ' %)' : ''}`);
+  process.exit(0);
+}
 if (errors.length > 0) {
   console.error(`✖ Icon sources break the rules (${errors.length}):`);
   for (const e of errors) console.error(`  ${e}`);

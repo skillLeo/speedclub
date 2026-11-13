@@ -21,7 +21,7 @@ function homeMods(): array
 
 it('answers guests the exact shape, empty lists included', function () {
     $this->getJson('/api/v1/home/modules')->assertOk()
-        ->assertExactJson(['data' => ['build_updates' => [], 'active_members' => [], 'popular_mods' => []]])
+        ->assertExactJson(['data' => ['build_of_week' => null, 'nearby_events' => [], 'brands_in_focus' => [], 'build_updates' => [], 'active_members' => [], 'popular_mods' => []]])
         ->assertHeader('ETag');
 });
 
@@ -43,7 +43,7 @@ describe('build_updates', function () {
         $rows = $this->withHeader('Accept-Language', 'de')->getJson('/api/v1/home/modules')->assertOk()->json('data.build_updates');
 
         expect(array_column($rows, 'id'))->toBe([$newestOfA->id, $ofB->id, $ofD->id])
-            ->and(array_keys($rows[0]))->toBe(['id', 'vehicle', 'type_label', 'summary', 'created_at'])
+            ->and(array_keys($rows[0]))->toBe(['id', 'vehicle', 'type', 'type_label', 'summary', 'created_at', 'media', 'viewer'])
             ->and($rows[0]['vehicle']['id'])->toBe($a->id)
             ->and($rows[0]['type_label'])->toBe('Modifikation hinzugefügt');
     });
@@ -109,8 +109,8 @@ describe('active_members', function () {
             ->and($members[1]['car_line'])->toBe(app(VehiclePresenter::class)->fullTitle($main->fresh(['make', 'vehicleModel', 'generation'])))
             ->and($members[0]['is_following'])->toBeFalse()
             ->and($members[1]['car_short'])->toBe(app(VehiclePresenter::class)->shortTitle($main->fresh(['make', 'vehicleModel', 'generation'])))
-            // DQ-293 adds car_short after car_line.
-            ->and(array_keys($members[0]))->toBe(['username', 'display_name', 'city', 'avatar', 'car_line', 'car_short', 'is_following']);
+            // DQ-293 adds car_short after car_line; M4.2 the Beispiel and Editorial badges of the member summary.
+            ->and(array_keys($members[0]))->toBe(['username', 'display_name', 'city', 'avatar', 'is_sample', 'is_editorial', 'car_line', 'car_short', 'is_following']);
     });
 
     it('leaves out members who are not discoverable, hide their name, are blocked or have only private builds', function () {

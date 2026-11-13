@@ -29,7 +29,7 @@ class StartConversation
     ) {}
 
     /**
-     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string}  $draft
+     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string, reply_to_id?: string|null}  $draft
      */
     public function handle(User $sender, User $recipient, ?string $contextVehicleId, array $draft, ?string $key): Delivery
     {
@@ -59,7 +59,7 @@ class StartConversation
     }
 
     /**
-     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string}  $draft
+     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string, reply_to_id?: string|null}  $draft
      */
     private function start(User $sender, User $recipient, ?Vehicle $context, array $draft, ?string $key): Delivery
     {

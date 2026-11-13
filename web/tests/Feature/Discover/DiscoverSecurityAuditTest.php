@@ -176,13 +176,17 @@ describe('documented shape only', function () {
             'id', 'public_id', 'slug', 'status', 'visibility', 'is_main', 'eyebrow', 'make', 'model', 'generation', 'title',
             'full_title', 'nickname', 'color', 'model_year', 'subline_parts', 'spec_strip', 'cover', 'photo_count', 'mod_count',
             'published_at', 'updated_at', 'wizard', 'completeness', 'qr', 'owner', 'latest_update',
+            // M4.8: the reader's own state (null for guests); M4.9: the owner's Verlauf count (null for anybody else).
+            'viewer', 'updates_count',
+            // M4.2 (09 §8.19): the Beispiel badge.
+            'is_sample',
         ])
-            ->and(array_keys($card['owner']))->toEqualCanonicalizing(['username', 'display_name', 'city', 'avatar'])
+            ->and(array_keys($card['owner']))->toEqualCanonicalizing(['username', 'display_name', 'city', 'avatar', 'is_sample', 'is_editorial'])
             ->and(array_keys($card['cover']))->toEqualCanonicalizing([
-                'id', 'status', 'category', 'width', 'height', 'blurhash', 'focal_x', 'focal_y', 'alt', 'sort', 'variants', 'created_at',
+                'id', 'status', 'category', 'width', 'height', 'blurhash', 'thumbhash', 'focal_x', 'focal_y', 'alt', 'sort', 'variants', 'created_at',
             ])
-            // M2.4 MSG-03 adds the viewer's own can_message and its reason.
-            ->and(array_keys($member))->toEqualCanonicalizing(['username', 'display_name', 'city', 'avatar', 'garage', 'is_self', 'is_following', 'can_message', 'cannot_message_reason'])
+            // M2.4 MSG-03 adds the viewer's own can_message and its reason; M4.2 the Beispiel and Editorial badges.
+            ->and(array_keys($member))->toEqualCanonicalizing(['username', 'display_name', 'city', 'avatar', 'is_sample', 'is_editorial', 'garage', 'is_self', 'is_following', 'can_message', 'cannot_message_reason'])
             ->and(array_keys($member['garage']))->toEqualCanonicalizing(['vehicles', 'makes', 'line']);
 
         foreach (discSecRoutes() as $url) {

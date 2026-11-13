@@ -27,8 +27,10 @@ beforeAll(hydrateThemePreference);
 
 describe('StickyCTABar', () => {
   it.each([
-    [360, space[16]],
+    // 09 §4.3: 20 on phones below 430, 24 from 430 and on tablets and desktop.
+    [360, space[20]],
     [390, space[20]],
+    [430, space[24]],
     [1280, space[24]],
   ])('has the screen gutter at %i, so it lines up with the form', async (width, gutter) => {
     (useWindowDimensions as jest.Mock).mockReturnValue({ width, height: 844, scale: 1, fontScale: 1 });
@@ -88,7 +90,7 @@ describe('StickyCTABar', () => {
 
   it('lets both actions take their own line when they no longer fit side by side', async () => {
     await renderUi(<StickyCTABar label="Weiter" onPress={jest.fn()} secondary={{ label: 'Entwurf speichern', onPress: jest.fn() }} testID="c" />);
-    const row = screen.getByTestId('c').children[0];
+    const row = screen.getByTestId('c').children[1];
     expect(flat(typeof row === 'string' ? undefined : row?.props.style).flexWrap).toBe('wrap');
   });
 

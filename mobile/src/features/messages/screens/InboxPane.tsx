@@ -13,10 +13,11 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { clearAuthIntent, useSessionStore } from '@/state/session';
-import { createStyles, useBreakpoint, useMotion } from '@/theme';
+import { isWeb } from '@/lib/platform';
+import { createStyles, useBreakpoint } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import {
   CollapsingFlashList,
-  ContentTabs,
   Dialog,
   EmptyState,
   ErrorState,
@@ -25,18 +26,21 @@ import {
   ListRow,
   OfflineBanner,
   SearchBar,
+  SegmentedControl,
   Spinner,
   toast,
   useCollapsingHeader,
   type HeaderAction,
 } from '@/ui';
+import { SwipeRow, type SwipeAction } from '@/ui/motion/kit';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { ConversationRow, ConversationRowsSkeleton } from '../components/ConversationRow';
+import { SampleConversations } from '../components/SampleConversations';
 import { MuteSheet, muteChange, OrganiseSheet } from '../components/Sheets';
 import { useMessaging, type OrganisePatch } from '../data';
 import { MESSAGE_GLYPHS } from '../glyphs';
-import { compareConversations, type ConversationSummary, type Folder } from '../model';
+import { compareConversations, isMuted, type ConversationSummary, type Folder } from '../model';
 import { INBOX_POLL_MS } from '../pollScheduler';
 import { realtimeHub } from '../realtime';
 import { useMessagingMember, useRealtimeSession } from '../session';
@@ -89,7 +93,7 @@ export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: Inbo
   const styles = useStyles();
   const router = useRouter();
   const format = useFormat();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const qaState = useQaState();
   const online = useOnline();
   // M3.5: a list behind another screen or tab loads no pages for nobody (code review M2.8 nit 4).
@@ -183,6 +187,25 @@ export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: Inbo
       .catch(() => toast(t('organise.failed'), { haptic: 'warning', testID: `${ROUTE}.toast` }));
   };
 
+  // SM11 (09 §7.8): Stummschalten · Archivieren · Löschen behind a left swipe, native only (ADR-438 c: on the web the hidden
+  // actions overlapped the row); the more button and the organise sheet stay the way there and for screen readers.
+  const swipeActions = (conversation: ConversationSummary): SwipeAction[] => {
+    const muted = isMuted(conversation, now());
+    const archived = Boolean(conversation.archivedAt);
+    return [
+      muted
+        ? { key: 'unmute', label: t('swipe.unmute'), icon: 'bell', onPress: () => organise(conversation, { mute: 'off' }, 'organise.unmuted') }
+        : { key: 'mute', label: t('swipe.mute'), icon: MESSAGE_GLYPHS.muted, onPress: () => setMuting(conversation) },
+      {
+        key: 'archive',
+        label: archived ? t('swipe.unarchive') : t('swipe.archive'),
+        icon: MESSAGE_GLYPHS.archive,
+        onPress: () => organise(conversation, { archived: !archived }, archived ? 'organise.unarchived' : 'organise.archived', { archived }),
+      },
+      { key: 'delete', label: t('swipe.delete'), icon: MESSAGE_GLYPHS.delete, tone: 'destructive', onPress: () => setDeleting(conversation) },
+    ];
+  };
+
   let state: ReactNode = null;
   // The folder is empty, not failed or loading: "Archiviert" stays under its empty state, the only way to chats that were all
   // archived (M2.8).
@@ -197,7 +220,7 @@ export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: Inbo
           label: t('inbox.signIn'),
           onPress: () => {
             clearAuthIntent();
-            router.push({ pathname: '/sign-in', params: { returnTo: '/messages' } });
+            router.push({ pathname: '/auth/email', params: { returnTo: '/messages' } });
           },
         }}
         testID={`${ROUTE}.guest`}
@@ -226,7 +249,9 @@ export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: Inbo
         <EmptyState icon="magnifying-glass" title={t('inbox.noResults', { q })} body={t('inbox.noResultsBody')} testID={`${ROUTE}.noResults`} />
       ) : (
         <EmptyState
-          icon="chats"
+          // DQ-1033: the empty inbox previews two badged sample rows; requests and the archive keep their quiet line.
+          icon={key === 'emptyChats' ? undefined : 'chats'}
+          preview={key === 'emptyChats' ? <SampleConversations testID={`${ROUTE}.emptyChats.sample`} /> : undefined}
           title={t(`inbox.${key}.title`)}
           body={t(`inbox.${key}.body`)}
           action={key === 'emptyChats' ? { label: t('inbox.emptyChats.action'), onPress: () => router.navigate('/discover'), variant: 'secondary', size: 'm' } : undefined}
@@ -252,22 +277,22 @@ export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: Inbo
       {onBack ? null : <HeaderLargeTitle title={title} scroll={header} testID={`${ROUTE}.title`} />}
       {showControls ? (
         <View style={[styles.controls, { paddingHorizontal: gutter }]}>
+          {organiseFlag && folder !== 'requests' ? (
+            <SearchBar value={text} onChangeText={setText} onCancel={() => setText('')} placeholder={t('inbox.search')} maxLength={SEARCH_MAX} testID={`${ROUTE}.search`} />
+          ) : null}
           {folder !== 'archived' ? (
-            <ContentTabs
-              tabs={[
+            // 09 §7.8: SearchField, then the SegmentedControl "Chats · Anfragen (2)".
+            <SegmentedControl
+              options={[
                 { value: 'chats' as const, label: t('inbox.chats') },
                 { value: 'requests' as const, label: requestsLabel },
               ]}
               value={folder === 'requests' ? 'requests' : 'chats'}
               onChange={onFolder}
               label={t('inbox.tabsLabel')}
-              gutter={false}
-              bleed
+              role="tablist"
               testID={`${ROUTE}.tabs`}
             />
-          ) : null}
-          {organiseFlag && folder !== 'requests' ? (
-            <SearchBar value={text} onChangeText={setText} onCancel={() => setText('')} placeholder={t('inbox.search')} maxLength={SEARCH_MAX} testID={`${ROUTE}.search`} />
           ) : null}
         </View>
       ) : null}
@@ -323,16 +348,25 @@ export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: Inbo
               testID={`${ROUTE}.archived`}
             />
           ) : (
-            <ConversationRow
+            <SwipeableConversation
               conversation={item.conversation}
-              selected={item.conversation.id === selectedId}
-              divider={index < conversations.length - 1}
-              inset={gutter}
-              organise={organiseFlag}
+              swipe={organiseFlag && !isWeb && folder !== 'requests'}
+              actions={swipeActions(item.conversation)}
+              label={otherName(item.conversation, t)}
               onOpen={onOpen}
-              onMore={setOrganising}
               testID={`${ROUTE}.row.${item.conversation.id}`}
-            />
+            >
+              <ConversationRow
+                conversation={item.conversation}
+                selected={item.conversation.id === selectedId}
+                divider={index < conversations.length - 1}
+                inset={gutter}
+                organise={organiseFlag}
+                onOpen={onOpen}
+                onMore={setOrganising}
+                testID={`${ROUTE}.row.${item.conversation.id}`}
+              />
+            </SwipeableConversation>
           )
         }
         testID={`${ROUTE}.list`}
@@ -370,5 +404,31 @@ export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: Inbo
         ]}
       />
     </View>
+  );
+}
+
+/** A conversation row behind SM11 swipe actions where they apply; otherwise the row as it is. */
+function SwipeableConversation({
+  conversation,
+  swipe,
+  actions,
+  label,
+  onOpen,
+  children,
+  testID,
+}: {
+  conversation: ConversationSummary;
+  swipe: boolean;
+  actions: readonly SwipeAction[];
+  label: string;
+  onOpen: (conversation: ConversationSummary) => void;
+  children: ReactNode;
+  testID: string;
+}) {
+  if (!swipe) return <>{children}</>;
+  return (
+    <SwipeRow actions={actions} label={label} onPress={() => onOpen(conversation)} ground="canvas" testID={`${testID}.swipe`}>
+      {children}
+    </SwipeRow>
   );
 }

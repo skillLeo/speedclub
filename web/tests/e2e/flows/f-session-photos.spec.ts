@@ -144,7 +144,9 @@ test.describe('a save under way at sign-out (SEC-S-04)', () => {
     await id(page, 'PROF-01.settings').click();
     await id(page, 'SET-01.signOut').click();
     await id(page, 'SET-01.signOutDialog.confirm').click();
-    await id(page, 'AUTH-02.signIn').click();
+    // M4.6: the password sign-in is one step behind "Mit E-Mail fortfahren" (AUTH-12).
+    await id(page, 'AUTH-02.provider.email').click();
+    await id(page, 'AUTH-12.withPassword').click();
     await id(page, 'AUTH-03.email').fill(b.email);
     await id(page, 'AUTH-03.password').fill(GARAGE_PASSWORD);
     const login = page.waitForResponse(isPost('auth/login'));

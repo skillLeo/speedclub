@@ -1,10 +1,10 @@
 import NetInfo from '@react-native-community/netinfo';
 import { act, configure, fireEvent, screen, waitFor } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { PixelRatio, StyleSheet, Text } from 'react-native';
 
 import { VisibilityScreen } from '@/features/garage/screens/VisibilityScreen';
 import { useSessionStore } from '@/state/session';
-import { hydrateThemePreference } from '@/theme';
+import { hydrateThemePreference, typography } from '@/theme';
 import { dismissToast, useCurrentToast } from '@/ui/toast';
 
 import { vehicle, VEHICLE_ID } from './fixtures';
@@ -291,6 +291,14 @@ describe('GAR-12 loading', () => {
     await waitFor(() => expect(screen.getByTestId('GAR-12.skeleton')).toBeTruthy());
     expect(screen.getByTestId('GAR-12.skeleton.choice')).toBeTruthy();
     expect(screen.getByTestId('GAR-12.skeleton.ownerOnQr')).toBeTruthy();
+    // ADR-426 e: each section header's line is as tall as the header (callout 14/20), not a 17 headline.
+    for (const header of ['thisVehicle', 'ownerOnQr', 'share']) {
+      const line = screen.getByTestId(`GAR-12.skeleton.header.${header}`, { includeHiddenElements: true });
+      const box = line.children.find((child) => typeof child !== 'string');
+      expect(box && typeof box !== 'string' ? StyleSheet.flatten(box.props.style).height : null).toBe(
+        typography.callout.lineHeight * PixelRatio.getFontScale(),
+      );
+    }
     expect(screen.queryByTestId('GAR-12.choice')).toBeNull();
     expect(screen.queryByTestId(SWITCH)).toBeNull();
   });

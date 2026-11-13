@@ -1,29 +1,40 @@
 #!/usr/bin/env node
 /**
- * SPEED CLUB — design token build + contrast gate.
+ * SPEED CLUB — design token build + contrast gate, Design System 2.0 (09_PREMIUM_2_0 §4; ADR-419, ADR-420).
  *
- * Source:  design/tokens/tokens.json   (the ONLY place colours/type/spacing are defined)
- * Outputs: mobile/src/theme/tokens.generated.ts          (React Native / Expo, incl. web export)
- *          web/resources/css/tokens.generated.css         (CSS custom properties + .t-* type classes for Blade/admin)
- *          web/resources/css/tailwind-theme.generated.css (Tailwind v4 @theme — default palette RESET)
- *          web/resources/js/shared/tokens.generated.ts    (typed values for Vue admin, charts)
+ * Source:  design/tokens/tokens.json   (the ONLY place colours/type/spacing/motion are defined)
+ * Outputs: mobile/src/theme/tokens.generated.ts                 (React Native / Expo, incl. web export)
+ *          web/resources/css/tokens.generated.css                (CSS custom properties + .t-* type classes for Blade/admin)
+ *          web/resources/css/tailwind-theme.generated.css        (Tailwind v4 @theme for Blade public pages — default palette RESET)
+ *          web/resources/css/tailwind-admin-theme.generated.css  (Tailwind v4 @theme for the admin: admin type, radii 6/8, effect motion only)
+ *          web/resources/js/shared/tokens.generated.ts           (typed values for Vue admin, charts; PHP AccentSets reads accentPalette from it)
  *
- * Usage:   node design/scripts/build-tokens.mjs            # generate + contrast gate
- *          node design/scripts/build-tokens.mjs --check    # CI/verify: fail if outputs stale or contrast fails
- *          node design/scripts/build-tokens.mjs --out-root <dir>   # write into another root (testing)
+ * Usage:   node design/scripts/build-tokens.mjs                  # generate + contrast gate
+ *          node design/scripts/build-tokens.mjs --check          # CI/verify: fail if outputs stale, contrast fails or a retired token is still used
+ *          node design/scripts/build-tokens.mjs --out-root <dir> # write into another root (testing)
+ *          node design/scripts/build-tokens.mjs --report         # print every contrast pair
+ *          node design/scripts/build-tokens.mjs --consumers <root> # (with --check) scan another checkout for retired spellings
  *
- * Exit codes: 0 ok · 1 contrast failure · 2 stale/missing outputs (--check) · 3 invalid tokens.json
+ * Exit codes: 0 ok · 1 contrast failure · 2 stale/missing outputs (--check) · 3 invalid tokens.json · 4 retired token still used (--check)
+ *
+ * Differences to v1: (1) rgba colours are composited over the bases declared in `composite` and gated — never skipped;
+ * (2) typography: tracking in % of size, web-desktop sizes, inherit roles, responsive CSS custom properties;
+ * (3) motion springs/effects (+ CSS easing/duration), haptics, materials, bubble and admin groups; (4) an admin Tailwind theme;
+ * (5) `meta.retired` spellings are refused in consumers by --check.
+ * Output formats that PHP parses are kept: `[data-theme="light"] {` block with --sc-color-* and :root --sc-font-ui
+ * (web/app/Support/Mail/MailTheme.php), `export const accentPalette = {JSON} as const;` (web/app/Services/Brand/AccentSets.php).
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { dirname, join, resolve, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const CHECK = args.includes('--check');
-const outRootIdx = args.indexOf('--out-root');
+const opt = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
 const repoRoot = resolve(here, '..', '..');
-const outRoot = outRootIdx >= 0 ? resolve(args[outRootIdx + 1]) : repoRoot;
+const outRoot = opt('--out-root') ? resolve(opt('--out-root')) : repoRoot;
+const consumersRoot = opt('--consumers') ? resolve(opt('--consumers')) : repoRoot;
 
 const tokensPath = join(repoRoot, 'design', 'tokens', 'tokens.json');
 let T;
@@ -48,123 +59,214 @@ const nest = (flat) => {
   }
   return out;
 };
+const round = (n, d = 3) => Math.round(n * 10 ** d) / 10 ** d;
 const hexRe = /^#[0-9A-Fa-f]{6}$/;
-function luminance(hex) {
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
-  const f = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+const rgbaRe = /^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(0|1|0?\.\d+)\s*\)$/;
+function parseColor(v) {
+  if (hexRe.test(v)) return { r: parseInt(v.slice(1, 3), 16), g: parseInt(v.slice(3, 5), 16), b: parseInt(v.slice(5, 7), 16), a: 1 };
+  const m = rgbaRe.exec(v);
+  if (m) return { r: +m[1], g: +m[2], b: +m[3], a: +m[4] };
+  return null;
 }
+const over = (fg, base) => ({ r: fg.r * fg.a + base.r * (1 - fg.a), g: fg.g * fg.a + base.g * (1 - fg.a), b: fg.b * fg.a + base.b * (1 - fg.a), a: 1 });
+const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+const luminance = (c) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
 function contrast(a, b) {
   const [la, lb] = [luminance(a), luminance(b)];
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
+const hexOf = (c) => '#' + [c.r, c.g, c.b].map((x) => Math.round(x).toString(16).padStart(2, '0')).join('').toUpperCase();
+/** "-1%" → -0.01 × size; numbers are absolute */
+const trackingAt = (tracking, size) => (typeof tracking === 'string' && tracking.endsWith('%') ? round((parseFloat(tracking) / 100) * size, 3) : tracking ?? 0);
 
 /* ------------------------------------------------------------ validation */
 const problems = [];
 const themeNames = T.themeOrder;
 const requiredColorKeys = Object.keys(T.themes[T.defaultTheme].color);
+const compositeOf = T.composite?.tokens ?? {};
+const compositeBases = T.composite?.bases ?? {};
 for (const name of themeNames) {
   const th = T.themes[name];
   if (!th) { problems.push(`theme "${name}" missing`); continue; }
   for (const k of requiredColorKeys) if (!(k in th.color)) problems.push(`theme ${name}: missing color ${k}`);
   for (const [k, v] of Object.entries(th.color)) {
-    if (!(hexRe.test(v) || /^rgba\(/.test(v))) problems.push(`theme ${name}: ${k} has invalid value ${v}`);
+    const c = parseColor(v);
+    if (!c) problems.push(`theme ${name}: ${k} has invalid value ${v}`);
+    if (k.split('.').length !== 2) problems.push(`theme ${name}: colour key ${k} must be exactly group.key (theme.ts ColorToken)`);
+    if (c && c.a < 1 && !compositeOf[k]) problems.push(`theme ${name}: ${k} is translucent (${v}) — declare its bases in composite.tokens`);
   }
 }
+for (const [k, list] of Object.entries(compositeOf)) {
+  for (const b of list) if (!(b in compositeBases) && !(b in T.themes[T.defaultTheme].color)) problems.push(`composite.tokens.${k}: unknown base ${b}`);
+}
+for (const [key, s] of Object.entries(T.typography)) {
+  if (!T.font[s.font]) problems.push(`typography.${key}: unknown font ${s.font}`);
+  else if (!T.font[s.font].native[String(s.weight)]) problems.push(`typography.${key}: font ${s.font} has no weight ${s.weight}`);
+  const inherit = s.size === 'inherit';
+  if (!inherit && !(Number.isFinite(s.size) && Number.isFinite(s.lineHeight))) problems.push(`typography.${key}: size/lineHeight must be numbers or "inherit"`);
+  if (s.web && !(Number.isFinite(s.web.size) && Number.isFinite(s.web.lineHeight))) problems.push(`typography.${key}: web size/lineHeight must be numbers`);
+  if (s.tracking !== undefined && typeof s.tracking !== 'number' && !/^-?\d+(\.\d+)?%$/.test(s.tracking)) problems.push(`typography.${key}: tracking must be a number or "n%"`);
+}
+for (const group of ['spring', 'effect']) {
+  for (const [k, s] of Object.entries(T.motion[group] ?? {})) {
+    const m = s.mass ?? NaN;
+    if (m !== 1) problems.push(`motion.${group}.${k}: mass must be 1 and explicit (Reanimated 4.7 defaults mass to 4)`);
+    const expected = 2 * s.zeta * Math.sqrt(s.stiffness * m);
+    if (Math.abs(expected - s.damping) > 1) problems.push(`motion.${group}.${k}: damping ${s.damping} does not match 2·ζ·√(k·m) = ${expected.toFixed(1)}`);
+  }
+}
+for (const [intent, kind] of Object.entries(T.haptics?.map ?? {})) if (!T.haptics.kinds[kind]) problems.push(`haptics.map.${intent}: unknown kind ${kind}`);
 if (problems.length) {
   console.error('✖ tokens.json invalid:\n  ' + problems.join('\n  '));
   process.exit(3);
 }
 
 /* ---------------------------------------------------------- contrast gate */
-// [foreground, background, minimum, purpose]
+// [foreground, background, minimum, purpose]. Translucent colours are composited over every declared base; the worst case counts.
 const TEXT = 4.5, UI = 3.0;
 const surfaces = ['bg.canvas', 'bg.surface', 'bg.raised', 'bg.overlay'];
+const has = (k) => k in T.themes[T.defaultTheme].color;
 const rules = [];
-for (const fg of ['text.primary', 'text.secondary', 'text.tertiary', 'accent.fg', 'status.danger']) {
-  for (const bg of surfaces) rules.push([fg, bg, TEXT, 'text on surface']);
-}
-for (const fg of ['status.success', 'status.warning', 'status.info']) {
-  for (const bg of ['bg.canvas', 'bg.surface', 'bg.raised']) rules.push([fg, bg, TEXT, 'status text']);
-}
+for (const fg of ['text.primary', 'text.secondary', 'text.tertiary', 'accent.fg']) for (const bg of surfaces) rules.push([fg, bg, TEXT, 'text on surface']);
+for (const fg of ['state.success', 'state.warning', 'state.info']) if (has(fg)) for (const bg of [...surfaces, 'chrome.opaque']) rules.push([fg, bg, TEXT, 'state signal text/icon']);
 rules.push(['text.onAccent', 'accent.fill', TEXT, 'label on filled accent button']);
 rules.push(['text.onAccent', 'accent.fillPressed', TEXT, 'label on pressed accent button']);
 rules.push(['text.inverse', 'bg.inverse', TEXT, 'label on primary (inverse) button']);
+if (has('state.pressedInverse')) rules.push(['text.inverse', 'state.pressedInverse', TEXT, 'label on a pressed inverse fill (primary button, selected chip; SM7 tone, ADR-421 c)']);
 for (const bg of ['bg.canvas', 'bg.surface', 'bg.raised']) rules.push(['border.control', bg, UI, 'input/checkbox outline (WCAG 1.4.11)']);
 rules.push(['accent.fill', 'bg.canvas', UI, 'filled accent shape vs canvas']);
-rules.push(['focus.ring', 'bg.canvas', UI, 'focus ring']);
+for (const bg of [...surfaces, 'chrome.translucent']) if (has(bg)) rules.push(['focus.ring', bg, UI, 'focus ring']);
 rules.push(['qr.fg', 'qr.bg', 15, 'QR code modules']);
 rules.push(['qr.caption', 'qr.bg', TEXT, 'caption on QR card']);
+if (has('bubble.ownBg')) {
+  rules.push(['bubble.ownText', 'bubble.ownBg', TEXT, 'own chat bubble text']);
+  rules.push(['text.secondary', 'bubble.ownBg', TEXT, 'own chat bubble timestamp']);
+  rules.push(['bubble.otherText', 'bubble.otherBg', TEXT, 'other chat bubble text']);
+  rules.push(['text.secondary', 'bubble.otherBg', TEXT, 'other chat bubble timestamp']);
+}
+if (has('admin.primaryBg')) {
+  rules.push(['admin.primaryText', 'admin.primaryBg', TEXT, 'admin primary button label']);
+  rules.push(['admin.primaryText', 'admin.primaryPressed', TEXT, 'admin primary button label, pressed']);
+}
+if (has('chrome.translucent')) {
+  rules.push(['text.primary', 'chrome.translucent', TEXT, 'text on translucent chrome']);
+  rules.push(['text.secondary', 'chrome.translucent', TEXT, 'text on translucent chrome']);
+  rules.push(['accent.fg', 'chrome.translucent', UI, 'glyph/indicator on translucent chrome (accent text is not allowed there)']);
+}
+// Photos sit on a dark stage in every theme (ADR-421 b): glyphs and text over a photo scrim are onPhoto.* in Hell too.
+if (has('scrim.topStart')) rules.push(['onPhoto.primary', 'scrim.topStart', UI, 'glyphs over scrim.top (every theme, ADR-421 b)']);
+rules.push(['onPhoto.primary', 'onPhoto.chipBg', TEXT, 'label/glyph on the photo chip']);
+for (const st of ['state.selected', 'state.pressed']) rules.push(['text.primary', st, TEXT, 'text on a selected/pressed row']);
+
+function layersFor(themeName, token) {
+  const c = T.themes[themeName].color;
+  const raw = c[token] ?? compositeBases[token];
+  const col = parseColor(raw);
+  if (col.a >= 1) return [{ via: token, color: col }];
+  return compositeOf[token].flatMap((b) => layersFor(themeName, b).map((l) => ({ via: `${token}/${l.via}`, color: over(col, l.color) })));
+}
+function fgColor(themeName, token, bg) {
+  const col = parseColor(T.themes[themeName].color[token]);
+  return col.a >= 1 ? col : over(col, bg);
+}
 
 const failures = [];
 const report = [];
+let pairCount = 0;
 for (const name of themeNames) {
-  const c = T.themes[name].color;
   for (const [fg, bg, min, why] of rules) {
-    const a = c[fg], b = c[bg];
-    if (!hexRe.test(a) || !hexRe.test(b)) continue;
-    const r = contrast(a, b);
-    const line = `${name.padEnd(6)} ${fg.padEnd(18)} on ${bg.padEnd(18)} ${r.toFixed(2).padStart(5)} (min ${min}) ${why}`;
+    let worst = null;
+    for (const l of layersFor(name, bg)) {
+      const r = contrast(fgColor(name, fg, l.color), l.color);
+      if (!worst || r < worst.r) worst = { r, via: l.via };
+    }
+    pairCount++;
+    const line = `${name.padEnd(6)} ${fg.padEnd(18)} on ${worst.via.padEnd(40)} ${worst.r.toFixed(2).padStart(5)} (min ${min}) ${why}`;
     report.push(line);
-    if (r < min) failures.push(line);
+    if (worst.r < min) failures.push(line);
   }
 }
-// Accent palette sets — must satisfy the same accent rules on every theme.
+// Accent palette sets — must satisfy the same accent rules on every theme (+ the set's own-bubble tint).
 for (const [setName, set] of Object.entries(T.accentPalette.sets)) {
   for (const name of themeNames) {
     const th = T.themes[name];
     const v = th.colorScheme === 'dark' ? set.dark : set.light;
     const c = th.color;
+    const P = (x) => parseColor(x);
     const checks = [
       ...surfaces.map((bg) => [v.fg, c[bg], TEXT, `accent ${setName}.fg on ${bg}`]),
       [c['text.onAccent'], v.fill, TEXT, `onAccent on ${setName}.fill`],
       [c['text.onAccent'], v.fillPressed, TEXT, `onAccent on ${setName}.fillPressed`],
       [v.fill, c['bg.canvas'], UI, `${setName}.fill vs canvas`],
     ];
+    if (v.bubbleOwnBg) {
+      checks.push([c['bubble.ownText'], v.bubbleOwnBg, TEXT, `bubble.ownText on ${setName}.bubbleOwnBg`]);
+      checks.push([c['text.secondary'], v.bubbleOwnBg, TEXT, `text.secondary on ${setName}.bubbleOwnBg`]);
+    }
     for (const [a, b, min, why] of checks) {
-      const r = contrast(a, b);
-      const line = `${name.padEnd(6)} ${why.padEnd(44)} ${r.toFixed(2).padStart(5)} (min ${min})`;
+      const r = contrast(P(a), P(b));
+      pairCount++;
+      const line = `${name.padEnd(6)} ${why.padEnd(58)} ${r.toFixed(2).padStart(5)} (min ${min})`;
       report.push(line);
       if (r < min) failures.push(line);
     }
   }
 }
+// Photo scrim: the alpha text needs over the worst photo pixel, mapped onto the gradient → text-safe zone (reported; components consume it).
+const scrimSafe = {};
+if (T.material?.scrim?.photo && has('scrim.photoEnd')) {
+  const { start, end } = T.material.scrim.photo;
+  for (const name of themeNames) {
+    const th = T.themes[name];
+    const scrim = parseColor(th.color['scrim.photoEnd']);
+    const textRole = 'onPhoto.primary'; // dark photo stage in every theme (ADR-421 b)
+    scrimSafe[name] = {};
+    for (const [label, min] of [['text', TEXT], ['large', UI]]) {
+      let need = null;
+      for (let a = 0; a <= 1.00001 && need === null; a += 0.005) {
+        const worst = Math.min(...Object.values(compositeBases).map((p) => {
+          const bg = over({ ...scrim, a }, parseColor(p));
+          return contrast(fgColor(name, textRole, bg), bg);
+        }));
+        if (worst >= min) need = a;
+      }
+      scrimSafe[name][label] = need === null ? null : round(start + (end - start) * need, 3);
+      report.push(`${name.padEnd(6)} scrim.photo text-safe from ${scrimSafe[name][label]} of the height (${textRole}, ${label} ${min}:1)`);
+    }
+  }
+}
 
 /* ---------------------------------------------------------- generate: RN */
-const fontNative = (font, weight) => {
-  const map = T.font[font].native;
-  const name = map[String(weight)];
-  if (!name) throw new Error(`No native font for ${font} ${weight}`);
-  return name;
-};
+const fontNative = (font, weight) => T.font[font].native[String(weight)];
 const typeNative = {};
+const typeDesktop = {};
 const typeRaw = {};
 for (const [key, s] of Object.entries(T.typography)) {
   const k = camel(key);
   typeRaw[k] = s;
-  const style = { fontFamily: fontNative(s.font, s.weight), fontSize: s.size, lineHeight: s.lineHeight, letterSpacing: s.tracking };
+  const style = { fontFamily: fontNative(s.font, s.weight) };
+  if (s.size !== 'inherit') Object.assign(style, { fontSize: s.size, lineHeight: s.lineHeight, letterSpacing: trackingAt(s.tracking, s.size) });
   if (s.numeric === 'tabular') style.fontVariant = ['tabular-nums'];
   if (s.case === 'upper') style.textTransform = 'uppercase';
   typeNative[k] = style;
+  if (s.web) typeDesktop[k] = { fontSize: s.web.size, lineHeight: s.web.lineHeight, letterSpacing: trackingAt(s.tracking, s.web.size) };
 }
 const shadowCss = (s) => `${s.x}px ${s.y}px ${s.blur}px ${s.spread}px ${s.color}`;
 const shadowsLight = Object.fromEntries(Object.entries(T.shadow.light).map(([k, v]) => [k, shadowCss(v)]));
-
 const rnThemes = {};
 for (const name of themeNames) {
   const th = T.themes[name];
-  rnThemes[name] = {
-    name,
-    label: th.label,
-    colorScheme: th.colorScheme,
-    color: nest(th.color),
-    shadow: th.elevation === 'shadows' ? shadowsLight : { e1: 'none', e2: 'none', sheet: 'none' },
-  };
+  rnThemes[name] = { name, label: th.label, colorScheme: th.colorScheme, color: nest(th.color), shadow: th.elevation === 'shadows' ? shadowsLight : { e1: 'none', e2: 'none', sheet: 'none' } };
 }
 const fontScaleCaps = Object.fromEntries(Object.entries(T.typography).filter(([, s]) => s.maxFontScale).map(([k, s]) => [camel(k), s.maxFontScale]));
+const radiusValues = Object.fromEntries(Object.entries(T.radius).filter(([k, v]) => typeof v === 'number' && k !== 'concentricMin'));
+const strip = (o) => JSON.parse(JSON.stringify(o, (k, v) => (k === 'rule' || k === 'use' || k === 'note' || k === 'conflict' ? undefined : v)));
+const springs = Object.fromEntries(Object.entries(T.motion.spring).map(([k, s]) => [k, { stiffness: s.stiffness, damping: s.damping, mass: s.mass }]));
+const effects = Object.fromEntries(Object.entries(T.motion.effect).map(([k, s]) => [k, { stiffness: s.stiffness, damping: s.damping, mass: s.mass }]));
+const cssMotion = Object.fromEntries([...Object.entries(T.motion.spring).map(([k, s]) => [`spring.${k}`, s.css]), ...Object.entries(T.motion.effect).map(([k, s]) => [`effect.${k}`, s.css])]);
 
 const ts = `${HEADER}
-// Import ONLY through src/theme (useTheme / tokens). Never hard-code colours, sizes or fonts in components.
+// Import ONLY through src/theme (useTheme / tokens). Never hard-code colours, sizes, fonts, durations or easing in components.
 export const themeNames = ${JSON.stringify(themeNames)} as const;
 export type ThemeName = (typeof themeNames)[number];
 export type ThemePreference = ThemeName | 'system';
@@ -175,22 +277,38 @@ export const themes = ${JSON.stringify(rnThemes, null, 2)} as const;
 export type Theme = (typeof themes)[ThemeName];
 export type ThemeColors = Theme['color'];
 
+/** Mobile and tablet type (09 §4.2). Web at layout.breakpoints.desktop and wider overlays typographyDesktop. */
 export const typography = ${JSON.stringify(typeNative, null, 2)} as const;
 export type TypeVariant = keyof typeof typography;
-export const typeScale = ${JSON.stringify(typeRaw, null, 2)} as const;
+export const typographyDesktop = ${JSON.stringify(typeDesktop, null, 2)} as const;
+export const typeScale = ${JSON.stringify(strip(typeRaw), null, 2)} as const;
 export const maxFontScale = ${JSON.stringify(fontScaleCaps)} as const;
+export const fontScaleCap = ${JSON.stringify(strip(T.fontScaleCap))} as const;
 
 export const fonts = ${JSON.stringify(T.font, null, 2)} as const;
 export const space = ${JSON.stringify(T.space)} as const;
 export type SpaceToken = keyof typeof space;
-export const radius = ${JSON.stringify(Object.fromEntries(Object.entries(T.radius).filter(([k]) => k !== 'rule')))} as const;
-export const size = ${JSON.stringify(T.size, null, 2)} as const;
+export const radius = ${JSON.stringify(radiusValues)} as const;
+export type RadiusToken = keyof typeof radius;
+/** Concentric nesting (09 §4.3): inner = max(${T.radius.concentricMin}, outer − padding). Never write the literal. */
+export function concentric(outer: number, padding: number): number {
+  return Math.max(${T.radius.concentricMin}, outer - padding);
+}
+export const size = ${JSON.stringify(strip(T.size), null, 2)} as const;
+export const bubble = ${JSON.stringify(strip(T.bubble))} as const;
 export const layout = ${JSON.stringify(T.layout, null, 2)} as const;
-export const aspect = ${JSON.stringify(T.aspect)} as const;
-export const motion = ${JSON.stringify(T.motion, null, 2)} as const;
+export const aspect = ${JSON.stringify(strip(T.aspect))} as const;
+/** Reanimated 4 withSpring configs — mass is explicit because the installed default is 4 (springConfigs.ts). */
+export const motion = ${JSON.stringify({ spring: springs, effect: effects, css: cssMotion, stagger: strip(T.motion.stagger), press: T.motion.press, skeleton: T.motion.skeleton, signature: T.motion.signature }, null, 2)} as const;
+export type SpringToken = keyof typeof motion.spring;
+export type EffectToken = keyof typeof motion.effect;
+export const haptics = ${JSON.stringify(strip(T.haptics), null, 2)} as const;
+export type HapticIntent = keyof typeof haptics.map;
+export const material = ${JSON.stringify(strip(T.material), null, 2)} as const;
+export const scrimSafe = ${JSON.stringify(scrimSafe)} as const;
 export const zIndex = ${JSON.stringify(T.zIndex)} as const;
 export const opacity = ${JSON.stringify(T.opacity)} as const;
-export const accentPalette = ${JSON.stringify(T.accentPalette, null, 2)} as const;
+export const accentPalette = ${JSON.stringify(strip(T.accentPalette), null, 2)} as const;
 export type AccentSet = keyof typeof accentPalette.sets;
 `;
 
@@ -206,27 +324,77 @@ const themeBlock = (name) => {
 };
 const ms = (n) => `${n}ms`;
 const bez = (a) => `cubic-bezier(${a.join(', ')})`;
+const fontVar = (f) => `--sc-font-${kebab(f)}`;
+const typeVars = (key, s, size, line) => {
+  const cap = s.maxFontScale ? `min(var(--sc-type-scale, 1), ${s.maxFontScale})` : 'var(--sc-type-scale, 1)';
+  return [
+    `  --sc-type-${kebab(key)}-size: calc(${size}px * ${cap});`,
+    `  --sc-type-${kebab(key)}-line: calc(${line}px * ${cap});`,
+    `  --sc-type-${kebab(key)}-tracking: calc(${trackingAt(s.tracking, size)}px * ${cap});`,
+  ];
+};
+const sized = Object.entries(T.typography).filter(([, s]) => s.size !== 'inherit');
+const scrimGradient = (name, g) => `linear-gradient(${g.direction}, var(--sc-color-scrim-${name}-start) ${round(g.start * 100, 1)}%, var(--sc-color-scrim-${name}-end) ${round(g.end * 100, 1)}%)`;
+/** `motion.signature` flattened to CSS custom properties: `--sc-motion-<group>-<key>`. Times (ms) get a unit, distances px. */
+const SIGNATURE_MS = new Set(['duration', 'katakanaDelay', 'hold', 'maxHold', 'longPress', 'autoDismiss', 'liveCountDebounce']);
+const SIGNATURE_PX = new Set(['radiusFrom', 'radiusTo', 'slide']);
+const signatureVars = Object.entries(T.motion.signature).flatMap(([group, v]) => {
+  const one = (key, value) => {
+    const unit = SIGNATURE_MS.has(key) ? 'ms' : SIGNATURE_PX.has(key) ? 'px' : '';
+    return `  --sc-motion-${kebab(group)}${key === group ? '' : '-' + kebab(key)}: ${value}${unit};`;
+  };
+  return typeof v === 'object' ? Object.entries(v).map(([k, x]) => one(k, x)) : [one(group, v)];
+});
+// Reduced motion (ADR-405): every spatial spring becomes the effect.default crossfade, as springTo() does in the app.
+const reducedMotion = `@media (prefers-reduced-motion: reduce) {\n  :root {\n${Object.keys(T.motion.spring).flatMap((k) => [`    --sc-spring-${k}-easing: var(--sc-effect-default-easing);`, `    --sc-spring-${k}-duration: var(--sc-effect-default-duration);`]).join('\n')}\n    --sc-motion-reduced: 1;\n  }\n}`;
 const rootVars = [
-  `  --sc-font-ui: ${T.font.ui.css};`,
-  `  --sc-font-display: ${T.font.display.css};`,
+  ...Object.keys(T.font).map((f) => `  ${fontVar(f)}: ${T.font[f].css};`),
   ...Object.entries(T.space).map(([k, v]) => `  --sc-space-${k}: ${v}px;`),
-  ...Object.entries(T.radius).filter(([k]) => k !== 'rule').map(([k, v]) => `  --sc-radius-${k}: ${k === 'full' ? '9999px' : v + 'px'};`),
-  ...Object.entries(T.motion.duration).map(([k, v]) => `  --sc-dur-${kebab(k)}: ${ms(v)};`),
-  ...Object.entries(T.motion.easing).map(([k, v]) => `  --sc-ease-${k}: ${bez(v)};`),
+  ...Object.entries(radiusValues).map(([k, v]) => `  --sc-radius-${k}: ${k === 'full' ? '9999px' : v + 'px'};`),
+  `  --sc-radius-concentric-min: ${T.radius.concentricMin}px;`,
+  ...Object.entries(cssMotion).flatMap(([k, c]) => [`  --sc-${kebab(k)}-easing: ${bez(c.easing)};`, `  --sc-${kebab(k)}-duration: ${ms(c.duration)};`]),
+  ...['s', 'm'].map((k) => `  --sc-stagger-${k}: ${ms(T.motion.stagger[k])};`),
+  // Signature motion values (09 §4.7 SM1–SM20) for CSS: scales and ratios unitless, distances in px, times in ms (M4.3).
+  `  --sc-motion-press-scale: ${T.motion.press.scale};`,
+  ...signatureVars,
+  `  --sc-chrome-blur: ${T.material.chrome.blur}px;`,
+  `  --sc-chrome-backdrop: ${T.material.chrome.webBackdrop};`,
+  `  --sc-scrim-photo: ${scrimGradient('photo', T.material.scrim.photo)};`,
+  `  --sc-scrim-top: ${scrimGradient('top', T.material.scrim.top)};`,
+  `  --sc-bubble-radius: ${T.bubble.radius}px;`,
+  `  --sc-bubble-tail-radius: ${T.bubble.tailRadius}px;`,
   `  --sc-touch-min: ${T.size.touchMin}px;`,
   `  --sc-tabbar: ${T.size.tabBar}px;`,
   `  --sc-header: ${T.size.header}px;`,
   `  --sc-content-max: ${T.layout.contentMax}px;`,
+  `  --sc-full-bleed-max: ${T.layout.fullBleedMax}px;`,
   `  --sc-feed-column: ${T.layout.feedColumn}px;`,
   `  --sc-rail: ${T.layout.rail}px;`,
   `  --sc-sidebar: ${T.layout.sidebar}px;`,
+  `  --sc-gutter: ${T.layout.gutter.phone}px;`,
   ...Object.entries(T.zIndex).map(([k, v]) => `  --sc-z-${kebab(k)}: ${v};`),
+  ...sized.flatMap(([key, s]) => typeVars(key, s, s.size, s.lineHeight)),
+  // The phone/tablet pair of a role that grows on the web desktop, at every width (a title in a card, ADR-426 b).
+  ...sized.filter(([, s]) => s.web).flatMap(([key, s]) => typeVars(`${key}.base`, s, s.size, s.lineHeight)),
+  // The pair a role shrinks to when that saves a line (display.title 24/28, 09 §4.2, ADR-426 a).
+  ...sized.filter(([, s]) => s.minSize).flatMap(([key, s]) => typeVars(`${key}.shrink`, s, s.minSize, s.minLineHeight)),
 ];
+const largePhone = `@media (min-width: ${T.layout.phoneLargeMinWidth}px) {\n  :root { --sc-gutter: ${T.layout.gutter.phoneLarge}px; }\n}`;
+const desktopType = `@media (min-width: ${T.layout.breakpoints.desktop}px) {\n  :root {\n${sized.filter(([, s]) => s.web).flatMap(([key, s]) => typeVars(key, s, s.web.size, s.web.lineHeight).map((l) => '  ' + l)).join('\n')}\n  }\n}`;
+for (const [key, s] of sized) if (s.minSize && !Number.isFinite(s.minLineHeight)) throw new Error(`typography ${key}: minSize needs a minLineHeight`);
 const typeClasses = Object.entries(T.typography).map(([key, s]) => {
-  const fam = s.font === 'display' ? 'var(--sc-font-display)' : 'var(--sc-font-ui)';
+  const fam = `var(${fontVar(s.font)})`;
+  const k = kebab(key);
   const extra = [s.numeric === 'tabular' ? 'font-variant-numeric: tabular-nums;' : '', s.case === 'upper' ? 'text-transform: uppercase;' : ''].filter(Boolean).join(' ');
-  return `.t-${kebab(key)} { font-family: ${fam}; font-size: ${s.size}px; line-height: ${s.lineHeight}px; font-weight: ${s.weight}; letter-spacing: ${s.tracking}px; ${extra}}`.replace(/\s+}/, ' }');
+  const metrics = s.size === 'inherit' ? '' : ` font-size: var(--sc-type-${k}-size); line-height: var(--sc-type-${k}-line); letter-spacing: var(--sc-type-${k}-tracking);`;
+  return `.t-${k} { font-family: ${fam};${metrics} font-weight: ${s.weight}; ${extra}}`.replace(/\s+}/, ' }');
 });
+// `.t-<role>-base`: the phone/tablet pair at every width, for roles that grow on the web desktop (a title in a card, ADR-426 b).
+for (const [key, s] of sized.filter(([, x]) => x.web)) {
+  const k = kebab(key);
+  const extra = [s.numeric === 'tabular' ? 'font-variant-numeric: tabular-nums;' : '', s.case === 'upper' ? 'text-transform: uppercase;' : ''].filter(Boolean).join(' ');
+  typeClasses.push(`.t-${k}-base { font-family: var(${fontVar(s.font)}); font-size: var(--sc-type-${k}-base-size); line-height: var(--sc-type-${k}-base-line); letter-spacing: var(--sc-type-${k}-base-tracking); font-weight: ${s.weight}; ${extra}}`.replace(/\s+}/, ' }'));
+}
 const css = `${HEADER}
 /* Themes: set <html data-theme="carbon|black|light|system"> BEFORE first paint (inline head script). Default = carbon. */
 :root,
@@ -244,9 +412,13 @@ ${themeBlock(T.systemMapping.dark).replace(/^/gm, '  ')}
 ${themeBlock(T.systemMapping.light).replace(/^/gm, '  ')}
   }
 }
+/* --sc-type-scale (default 1) multiplies every type size; capped roles stop at their maxFontScale. QA sets it to 2. */
 :root {
 ${rootVars.join('\n')}
 }
+${largePhone}
+${desktopType}
+${reducedMotion}
 /* Type styles (Blade + admin). Use these or the Tailwind text-* utilities — never ad-hoc sizes. */
 ${typeClasses.join('\n')}
 `;
@@ -254,40 +426,45 @@ ${typeClasses.join('\n')}
 /* --------------------------------------------------- generate: Tailwind v4 */
 const twColor = {
   canvas: 'bg.canvas', surface: 'bg.surface', raised: 'bg.raised', overlay: 'bg.overlay', inverse: 'bg.inverse',
-  'line-subtle': 'border.subtle', line: 'border.default', 'line-strong': 'border.strong', 'line-control': 'border.control',
+  'line-subtle': 'border.subtle', line: 'border.default', 'line-strong': 'border.strong', 'line-control': 'border.control', hairline: 'border.hairline',
   ink: 'text.primary', 'ink-2': 'text.secondary', 'ink-3': 'text.tertiary', 'ink-disabled': 'text.disabled', 'ink-inverse': 'text.inverse', 'on-accent': 'text.onAccent',
   accent: 'accent.fg', 'accent-fill': 'accent.fill', 'accent-fill-pressed': 'accent.fillPressed',
-  success: 'status.success', warning: 'status.warning', danger: 'status.danger', info: 'status.info',
-  hover: 'state.hover', pressed: 'state.pressed', selected: 'state.selected', focus: 'focus.ring', scrim: 'overlay.scrim',
+  success: 'state.success', warning: 'state.warning', danger: 'accent.fg', info: 'state.info', // 09 §5: destructive = accent text (status.* retired, ADR-421 d)
+  hover: 'state.hover', pressed: 'state.pressed', 'pressed-inverse': 'state.pressedInverse', selected: 'state.selected', focus: 'focus.ring', scrim: 'overlay.scrim',
+  chrome: 'chrome.translucent', 'chrome-opaque': 'chrome.opaque',
   skeleton: 'skeleton.base', 'skeleton-hi': 'skeleton.highlight', 'qr-fg': 'qr.fg', 'qr-bg': 'qr.bg', 'qr-caption': 'qr.caption',
   'on-photo': 'onPhoto.primary', 'on-photo-2': 'onPhoto.secondary', 'on-photo-line': 'onPhoto.border', 'on-photo-chip': 'onPhoto.chipBg',
 };
-const tw = `${HEADER}
-/* Import AFTER "tailwindcss" in each entry CSS:  @import "tailwindcss"; @import "./tokens.generated.css"; @import "./tailwind-theme.generated.css";
-   The default Tailwind palette, fonts, radii, shadows and type scale are RESET so only SPEED CLUB tokens exist.
-   Spacing base is 1px → utilities read in px: p-16 = 16px, gap-12 = 12px, h-52 = 52px. Allowed spacing: ${Object.keys(T.space).join(', ')}. */
-@theme inline {
+const twAdminColor = { ...twColor, 'admin-primary': 'admin.primaryBg', 'admin-primary-text': 'admin.primaryText', 'admin-primary-pressed': 'admin.primaryPressed' };
+const twText = (roles) => roles.map(([key, s]) => {
+  const k = kebab(key);
+  return [`  --text-${k}: var(--sc-type-${k}-size);`, `  --text-${k}--line-height: var(--sc-type-${k}-line);`, `  --text-${k}--letter-spacing: var(--sc-type-${k}-tracking);`, `  --text-${k}--font-weight: ${s.weight};`].join('\n');
+}).join('\n');
+/**
+ * `motion-<token>`: duration and curve of one motion token in one class (`motion-spring-fast`, `motion-effect-default`), so a
+ * transition never pairs a token's duration with another token's curve. `press-scale` is the SM7 press scale (public only;
+ * the admin has no press scale, 09 §10.2). Reduced motion is handled by the root variables (tokens.generated.css).
+ */
+const motionUtilities = (keys, press) => [
+  ...keys.map((k) => `@utility motion-${kebab(k)} {\n  transition-duration: var(--sc-${kebab(k)}-duration);\n  transition-timing-function: var(--sc-${kebab(k)}-easing);\n}`),
+  ...(press ? ['@utility press-scale {\n  scale: var(--sc-motion-press-scale);\n}'] : []),
+].join('\n') + '\n';
+const twTheme = ({ colors, fontKeys, roles, radii, motionKeys }) => `@theme inline {
   --color-*: initial;
   --color-transparent: transparent;
   --color-current: currentColor;
   --color-white: #FFFFFF;
   --color-black: #000000;
-${Object.entries(twColor).map(([k, v]) => `  --color-${k}: var(${cssVarName(v)});`).join('\n')}
+${Object.entries(colors).map(([k, v]) => `  --color-${k}: var(${cssVarName(v)});`).join('\n')}
 
   --font-*: initial;
-  --font-ui: var(--sc-font-ui);
-  --font-display: var(--sc-font-display);
+${fontKeys.map((f) => `  --font-${kebab(f)}: var(${fontVar(f)});`).join('\n')}
 
   --text-*: initial;
-${Object.entries(T.typography).map(([key, s]) => [
-    `  --text-${kebab(key)}: ${s.size}px;`,
-    `  --text-${kebab(key)}--line-height: ${s.lineHeight}px;`,
-    `  --text-${kebab(key)}--letter-spacing: ${s.tracking}px;`,
-    `  --text-${kebab(key)}--font-weight: ${s.weight};`,
-  ].join('\n')).join('\n')}
+${twText(roles)}
 
   --radius-*: initial;
-${Object.entries(T.radius).filter(([k]) => k !== 'rule').map(([k, v]) => `  --radius-${k}: ${k === 'full' ? '9999px' : v + 'px'};`).join('\n')}
+${Object.entries(radii).map(([k, v]) => `  --radius-${k}: ${k === 'full' ? '9999px' : v + 'px'};`).join('\n')}
 
   --shadow-*: initial;
   --shadow-e1: var(--sc-shadow-e1);
@@ -295,21 +472,37 @@ ${Object.entries(T.radius).filter(([k]) => k !== 'rule').map(([k, v]) => `  --ra
   --shadow-sheet: var(--sc-shadow-sheet);
 
   --breakpoint-*: initial;
+  --breakpoint-phone-large: ${T.layout.phoneLargeMinWidth}px;
   --breakpoint-tablet: ${T.layout.breakpoints.tablet}px;
   --breakpoint-desktop: ${T.layout.breakpoints.desktop}px;
   --breakpoint-wide: 1440px;
 
   --ease-*: initial;
-${Object.entries(T.motion.easing).map(([k, v]) => `  --ease-${k}: ${bez(v)};`).join('\n')}
+${motionKeys.map((k) => `  --ease-${kebab(k)}: var(--sc-${kebab(k)}-easing);`).join('\n')}
+  --transition-duration-*: initial;
+${motionKeys.map((k) => `  --transition-duration-${kebab(k)}: var(--sc-${kebab(k)}-duration);`).join('\n')}
 
   --spacing: 1px;
 }
 `;
+const publicRoles = Object.entries(T.typography).filter(([, s]) => s.size !== 'inherit' && s.platform !== 'admin');
+const adminRoles = Object.entries(T.typography).filter(([k, s]) => s.size !== 'inherit' && (s.platform === 'admin' || T.admin.type.includes(k)));
+const tw = `${HEADER}
+/* Blade public pages. Import AFTER "tailwindcss":  @import "tailwindcss"; @import "./tokens.generated.css"; @import "./tailwind-theme.generated.css";
+   The default Tailwind palette, fonts, radii, shadows, easings and type scale are RESET so only SPEED CLUB tokens exist.
+   Type utilities read responsive custom properties (web-desktop sizes from ${T.layout.breakpoints.desktop}px, QA scale via --sc-type-scale).
+   Spacing base is 1px → utilities read in px: p-16 = 16px. Allowed spacing: ${Object.keys(T.space).join(', ')}. */
+${twTheme({ colors: twColor, fontKeys: ['ui', 'uiDisplay', 'numeral', 'marque'], roles: publicRoles, radii: radiusValues, motionKeys: Object.keys(cssMotion) })}${motionUtilities(Object.keys(cssMotion), true)}`;
+const twAdmin = `${HEADER}
+/* Super-admin. Import AFTER "tailwindcss":  @import "tailwindcss"; @import "./tokens.generated.css"; @import "./tailwind-admin-theme.generated.css";
+   Admin by construction (09 §10, SKILL §11): admin type roles + caption/label.caps/headline/titles/KPI numerals, radii ${Object.entries(T.admin.radius).map(([k, v]) => `${k} ${v}`).join(' · ')},
+   effect motion only (${T.admin.motion.join(', ')}). */
+${twTheme({ colors: twAdminColor, fontKeys: ['ui', 'numeral', 'marque'], roles: adminRoles, radii: T.admin.radius, motionKeys: T.admin.motion })}${motionUtilities(T.admin.motion, false)}`;
 
 const vueTs = `${HEADER}
 export const themeNames = ${JSON.stringify(themeNames)} as const;
-export const accentPalette = ${JSON.stringify(T.accentPalette.sets, null, 2)} as const;
-export const motion = ${JSON.stringify(T.motion, null, 2)} as const;
+export const accentPalette = ${JSON.stringify(strip(T.accentPalette.sets), null, 2)} as const;
+export const motion = ${JSON.stringify({ css: Object.fromEntries(T.admin.motion.map((k) => [k, cssMotion[k]])) }, null, 2)} as const;
 export const layout = ${JSON.stringify(T.layout, null, 2)} as const;
 /** Read a resolved colour at runtime (charts): cssColor('text.secondary') */
 export function cssColor(token: string): string {
@@ -317,15 +510,60 @@ export function cssColor(token: string): string {
 }
 `;
 
+/* ------------------------------------------------- retired consumer scan */
+function retiredPatterns() {
+  const R = T.meta?.retired ?? {};
+  const out = [];
+    for (const key of Object.keys(R.typography ?? {})) {
+    const c = camel(key), k = kebab(key);
+    out.push([`typography ${key}`, new RegExp(`\\b(?:typography|typeScale|maxFontScale)\\.${c}\\b|\\bvariant\\s*[=:]\\s*\\{?\\s*['"]${c}['"]|typeStyle\\(\\s*['"]${c}['"]`)]);
+    // bare quoted names are NOT scanned: 'eyebrow', 'supporting' … are also API fields and i18n keys. In TS the shrunken
+    // TypeVariant union makes tsc reject every retired literal, so this scan only covers what no compiler sees (CSS, Blade, Vue, PHP).
+    out.push([`typography ${key}`, new RegExp(`(?<![\\w-])(?:[a-z0-9-]+:)*!?(?:text|t)-${k}(?![\\w-])|--text-${k}(?![\\w-])`)]);
+  }
+  for (const key of Object.keys(R.radius ?? {})) out.push([`radius ${key}`, new RegExp(`\\bradius\\.${key}\\b|\\bcorner\\s*[=:]\\s*\\{?\\s*['"]${key}['"]|(?<![\\w-])(?:[a-z0-9-]+:)*rounded-(?:[trblse]{1,2}-)?${key}(?![\\w-])|--(?:sc-)?radius-${key}(?![\\w-])`)]);
+  out.push(['motion v1', /\bmotion(?:Tokens)?\.(?:duration|easing)\b|\bduration\.(?:press|micro|small|medium|large|qrReveal|skeletonCycle|reducedCrossfade)\b|\btimingTo\(|springTo\([^)]*['"](?:snappy|sheet|hero)['"]|--sc-dur-|--(?:sc-)?ease-(?:standard|decelerate|accelerate)\b|(?<![\w-])ease-(?:standard|decelerate|accelerate)(?![\w-])/]);
+  out.push(['font display', /\bfonts\.display\b|(?<![\w-])(?:[a-z0-9-]+:)*font-display(?![\w:-])(?!\s*:)|--(?:sc-)?font-display(?![\w-])|Barlow/]);
+  for (const key of Object.keys(R.size ?? {})) out.push([`size ${key}`, new RegExp(`\\bsize\\.${key}\\b`)]);
+  for (const key of Object.keys(R.color ?? {})) {
+    const [group, name] = key.split('.');
+    // TS paths (color.status.success, color="status.success") and the CSS custom property; Tailwind keeps role names (success, danger).
+    out.push([`color ${key}`, new RegExp(`\\bcolor\\.${group}\\.${name}\\b|\\bcolor\\s*[=:]\\s*\\{?\\s*['"]${group}\\.${name}['"]|--sc-color-${kebab(key)}(?![\\w-])`)]);
+  }
+  for (const key of Object.keys(R.layout ?? {})) out.push([`layout ${key}`, new RegExp(`\\b(?:layout\\.)?${key.replace('.', '\\.')}\\b`)]);
+  return out;
+}
+function scanConsumers(root) {
+  const dirs = ['mobile/src', 'mobile/tests', 'web/resources', 'web/tests', 'web/app', 'scripts/dev'];
+  const exts = /\.(ts|tsx|js|mjs|vue|css|php)$/;
+  const skip = new Set(['node_modules', 'vendor', '__screenshots__', 'playwright-report', 'test-results']);
+  const pats = retiredPatterns();
+  const hits = [];
+  const walk = (abs) => {
+    let st; try { st = statSync(abs); } catch { return; }
+    if (st.isDirectory()) { for (const e of readdirSync(abs)) if (!skip.has(e)) walk(join(abs, e)); return; }
+    if (!exts.test(abs)) return;
+    const text = readFileSync(abs, 'utf8');
+    if (/AUTO-GENERATED|DO NOT EDIT BY HAND/.test(text.slice(0, 400))) return;
+    text.split(/\r?\n/).forEach((ln, i) => {
+      if (/^\s*(\/\/|\*|\/\*|#)/.test(ln)) return; // comments are documentation, not consumers
+      for (const [name, re] of pats) if (re.test(ln)) hits.push(`${relative(root, abs).split(sep).join('/')}:${i + 1}  ${name}`);
+    });
+  };
+  for (const d of dirs) walk(join(root, ...d.split('/')));
+  return hits;
+}
+
 /* ------------------------------------------------------------ write/check */
 const outputs = [
   [join(outRoot, 'mobile', 'src', 'theme', 'tokens.generated.ts'), ts],
   [join(outRoot, 'web', 'resources', 'css', 'tokens.generated.css'), css],
   [join(outRoot, 'web', 'resources', 'css', 'tailwind-theme.generated.css'), tw],
+  [join(outRoot, 'web', 'resources', 'css', 'tailwind-admin-theme.generated.css'), twAdmin],
   [join(outRoot, 'web', 'resources', 'js', 'shared', 'tokens.generated.ts'), vueTs],
 ];
 
-console.log(`SPEED CLUB tokens v${T.meta.version} — ${themeNames.length} themes, ${Object.keys(T.typography).length} type styles, ${rules.length * themeNames.length} contrast checks + accent palette`);
+console.log(`SPEED CLUB tokens v${T.meta.version} — ${themeNames.length} themes, ${Object.keys(T.typography).length} type roles, ${pairCount} contrast checks (composited)`);
 if (args.includes('--report')) console.log(report.join('\n'));
 if (failures.length) {
   console.error(`\n✖ CONTRAST GATE FAILED (${failures.length}):\n  ` + failures.join('\n  '));
@@ -346,4 +584,11 @@ for (const [file, content] of outputs) {
   }
 }
 if (stale) process.exit(2);
-console.log(CHECK ? '✔ generated token files are up to date' : '✔ done');
+if (CHECK) {
+  const hits = scanConsumers(consumersRoot);
+  if (hits.length) {
+    console.error(`✖ ${hits.length} consumer line(s) still use retired tokens (meta.retired):\n  ` + hits.slice(0, 400).join('\n  ') + (hits.length > 400 ? `\n  … ${hits.length - 400} more` : ''));
+    process.exit(4);
+  }
+}
+console.log(CHECK ? '✔ generated token files are up to date, no retired token in use' : '✔ done');

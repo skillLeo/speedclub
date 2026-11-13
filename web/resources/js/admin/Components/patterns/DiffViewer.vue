@@ -64,9 +64,9 @@ const markers = { added: '+', removed: '−', changed: '~', same: '' } as const;
 
 <template>
     <div :data-testid="testId">
-        <p v-if="changes.length === 0" class="text-supporting text-ink-3">{{ trans('ui.diff.empty') }}</p>
-        <p v-else-if="rows.length === 0" class="text-supporting text-ink-3" :data-testid="testId ? `${testId}.none` : undefined">{{ trans('ui.diff.none_changed') }}</p>
-        <table v-if="rows.length > 0" class="w-full border-collapse text-supporting">
+        <p v-if="changes.length === 0" class="text-admin-base text-ink-3">{{ trans('ui.diff.empty') }}</p>
+        <p v-else-if="rows.length === 0" class="text-admin-base text-ink-3" :data-testid="testId ? `${testId}.none` : undefined">{{ trans('ui.diff.none_changed') }}</p>
+        <table v-if="rows.length > 0" class="w-full border-collapse text-admin-base">
             <thead>
                 <tr class="h-32 border-b border-line text-caption text-ink-2">
                     <th scope="col" class="w-24"><span class="sr-only">{{ trans('ui.diff.change') }}</span></th>
@@ -77,7 +77,7 @@ const markers = { added: '+', removed: '−', changed: '~', same: '' } as const;
             </thead>
             <tbody>
                 <tr v-for="change in rows" :key="change.path" class="border-b border-line-subtle align-top" :data-diff="change.kind">
-                    <td class="py-8 text-center font-ui text-label-s" :class="change.kind === 'added' ? 'text-success' : change.kind === 'removed' ? 'text-danger' : 'text-warning'">
+                    <td class="py-8 text-center font-ui text-admin-base-strong" :class="change.kind === 'added' ? 'text-success' : change.kind === 'removed' ? 'text-danger' : 'text-warning'">
                         <span aria-hidden="true">{{ markers[change.kind] }}</span>
                         <span class="sr-only">{{ change.kind === 'same' ? '' : trans(`ui.diff.kind_${change.kind}`) }}</span>
                     </td>
@@ -90,7 +90,7 @@ const markers = { added: '+', removed: '−', changed: '~', same: '' } as const;
             </tbody>
         </table>
         <div v-if="changedOnly && unchanged > 0" class="mt-8 flex flex-wrap items-center gap-8">
-            <p class="text-helper text-ink-3">{{ transChoice(showAll ? 'ui.diff.unchanged_shown' : 'ui.diff.unchanged_hidden', unchanged, { count: String(unchanged) }) }}</p>
+            <p class="text-admin-base text-ink-3">{{ transChoice(showAll ? 'ui.diff.unchanged_shown' : 'ui.diff.unchanged_hidden', unchanged, { count: String(unchanged) }) }}</p>
             <Button size="sm" variant="ghost" :aria-expanded="showAll" :data-testid="testId ? `${testId}.toggle` : undefined" @click="showAll = !showAll">
                 {{ showAll ? trans('ui.diff.show_changed') : trans('ui.diff.show_all') }}
             </Button>

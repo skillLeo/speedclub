@@ -6,8 +6,10 @@ use App\Enums\UserStatus;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
 use App\Http\Resources\V1\FeedVehicleResource;
+use App\Models\BuildUpdate;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Showcase\SampleContent;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\AbstractCursorPaginator;
@@ -22,13 +24,16 @@ use Illuminate\Support\Facades\DB;
  * - the owner active and verified, read from users live: a suspension shows at once, although is_public only follows at the next
  *   rebuild (M1.6 handover). A suspension whose end has passed but whose status is still "suspended" stays out of lists until
  *   the status changes: lists fail closed, the vehicle page decides by the date (UserPolicy);
- * - no block in either direction between the viewer and the owner (§3.5).
+ * - no block in either direction between the viewer and the owner (§3.5);
+ * - no sample build or sample owner while editorial_samples is off (09 §8.19, SampleContent).
  *
  * Plain SQL that runs the same on MySQL 8, MariaDB 10.6+ and the local MariaDB 10.4: joins (STRAIGHT_JOIN), NOT EXISTS, LIKE, CASE,
  * COALESCE.
  */
 class VisibleBuilds
 {
+    public function __construct(private readonly SampleContent $samples) {}
+
     /**
      * From vehicle_search as vs, joined to vehicles as v and users as u. No columns selected yet.
      *
@@ -56,6 +61,9 @@ class VisibleBuilds
             ->join('vehicle_search as vs', 'vs.vehicle_id', '=', 'bu.vehicle_id', $join)
             ->where('bu.hidden', false);
 
+        // M4.11 (09 §8.5): a followers-only update reaches only the owner and followers of the owner or the vehicle.
+        BuildUpdate::audienceFor($query, $viewer, 'bu.audience', 'bu.vehicle_id', 'vs.owner_id');
+
         return $this->constrain($query, $viewer, $join);
     }
 
@@ -75,7 +83,24 @@ class VisibleBuilds
             ->where('u.status', UserStatus::Active->value)
             ->whereNotNull('u.email_verified_at');
 
+        $this->samples->constrain($query, 'v.is_sample', 'u.is_sample');
+
         return $this->withoutBlocks($query, $viewer, 'vs.owner_id');
+    }
+
+    /**
+     * Drops sample rows (their is_sample columns, qualified) while editorial_samples is off: for member lists that do not read through
+     * query() (search, followers/following).
+     */
+    public function withoutSamples(Builder $query, string ...$columns): Builder
+    {
+        return $this->samples->constrain($query, ...$columns);
+    }
+
+    /** Whether sample content is shown (editorial_samples), for queries that add the owner's sample column inside a whereHas. */
+    public function samplesVisible(): bool
+    {
+        return $this->samples->visible();
     }
 
     /**

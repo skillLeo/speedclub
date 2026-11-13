@@ -127,7 +127,9 @@ type Stored = { owner: string | null; items: UploadItem[] };
 
 export function sameTarget(a: UploadTarget, b: UploadTarget): boolean {
   if (a.kind !== b.kind || a.vehicleId !== b.vehicleId) return false;
-  return a.kind === 'vehicle' || (b.kind === 'mod' && a.modId === b.modId);
+  if (a.kind === 'mod') return b.kind === 'mod' && a.modId === b.modId;
+  if (a.kind === 'update') return b.kind === 'update' && a.updateId === b.updateId;
+  return true;
 }
 
 /** Items that still occupy a place: everything but what arrived. */

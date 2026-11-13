@@ -11,7 +11,7 @@ import { memberKeys, type MemberProfile } from '@/api/queries/social';
 import { ConnectionsScreen } from '@/features/profile/screens/ConnectionsScreen';
 import { MemberProfileScreen } from '@/features/profile/screens/MemberProfileScreen';
 import { ProfileScreen } from '@/features/profile/screens/ProfileScreen';
-import { SavedScreen } from '@/features/profile/screens/SavedScreen';
+import { SavedScreen, savedTarget } from '@/features/profile/screens/SavedScreen';
 import { BlockedAccountsScreen } from '@/features/settings/screens/BlockedAccountsScreen';
 import { SettingsScreen } from '@/features/settings/screens/SettingsScreen';
 import { VehicleProfile } from '@/features/vehicle/components/VehicleProfile';
@@ -85,6 +85,8 @@ const JANN: MemberProfile = {
   cover: null,
   member_since: '2024-02-18T10:00:00+00:00',
   stats: { vehicles: 2, followers: 4, following: 5 },
+  is_sample: false,
+  is_editorial: false,
   is_self: false,
   is_following: false,
   follows_you: true,
@@ -137,7 +139,7 @@ const render = (element: Parameters<typeof renderScreen>[0]) => renderScreen(ele
 const text = (testID: string) => screen.getByTestId(testID);
 
 function flags(on: boolean) {
-  client.setQueryData(appConfigKey, { config: { ...BUNDLED_APP_CONFIG, flags: { 'sig.saved_builds': on } }, confirmed: true });
+  client.setQueryData(appConfigKey, { config: { ...BUNDLED_APP_CONFIG, flags: { 'sig.saved_builds': on, collections: on } }, confirmed: true });
 }
 
 beforeAll(hydrateThemePreference);
@@ -529,37 +531,6 @@ describe('SET-08 blocked accounts', () => {
   });
 });
 
-const SAVED = {
-  id: 'v-m4',
-  public_id: 'F3PQXPJB',
-  slug: 'bmw-m4-g82-f3pqxpjb',
-  status: 'published',
-  visibility: 'public',
-  is_main: true,
-  eyebrow: 'BMW',
-  make: 'BMW',
-  model: 'M4',
-  generation: 'G82',
-  title: 'M4 G82',
-  full_title: 'BMW M4 G82',
-  nickname: null,
-  color: null,
-  model_year: 2022,
-  subline_parts: ['2022'],
-  spec_strip: [],
-  cover: null,
-  photo_count: 0,
-  mod_count: 0,
-  published_at: null,
-  updated_at: null,
-  wizard: null,
-  completeness: null,
-  qr: null,
-  owner: { username: 'jann.ptrs', display_name: 'Jann Petersen', city: 'Hamburg', avatar: null },
-  latest_update: null,
-  saved_at: '2026-11-08T10:00:00+01:00',
-};
-
 describe('PROF-05 saved builds [SIG]', () => {
   it('does not exist without the flag', async () => {
     signIn();
@@ -569,77 +540,23 @@ describe('PROF-05 saved builds [SIG]', () => {
     expect(text('SYS-03.screen')).toBeTruthy();
   });
 
-  it('lists saved builds and takes one out with Rückgängig in the toast', async () => {
+  it('opens the "Gespeichert" collection instead of a list of its own (DQ-1087)', async () => {
     signIn();
     flags(true);
-    const calls = stub({
-      'GET /me/saved': { body: PAGE([{ ...SAVED, updated_at: '2026-05-19T10:00:00+02:00' }]) },
-      'DELETE /vehicles/v-m4/save': { body: { data: { vehicle_id: 'v-m4', is_saved: false } } },
-      'POST /vehicles/v-m4/save': { body: { data: { vehicle_id: 'v-m4', is_saved: true } } },
-    });
+    const saved = { id: 'k0', name: 'Gespeichert', is_default: true, position: 1, items_count: 1, covers: [], contains: null, created_at: null, updated_at: null };
+    const other = { ...saved, id: 'k1', name: 'JDM', is_default: false, position: 2 };
+    stub({ 'GET /me/collections': { body: { data: [other, saved] } } });
     await render(<SavedScreen />);
-    await waitFor(() => expect(text('PROF-05.card.v-m4')).toHaveTextContent(/BMW M4 G82/));
-    // DQ-268: one date per card, the save date; the owner row carries none.
-    expect(text('PROF-05.card.v-m4.savedAt')).toHaveTextContent('Gespeichert am 08.11.2026');
-    expect(text('PROF-05.card.v-m4')).toHaveTextContent(/@jann\.ptrs/);
-    expect(text('PROF-05.card.v-m4')).not.toHaveTextContent(/19\.05\.2026|vor /);
-    await act(async () => fireEvent.press(text('PROF-05.card.v-m4.remove')));
-    await waitFor(() => expect(screen.queryByTestId('PROF-05.card.v-m4')).toBeNull());
-    await waitFor(() => expect(sent(calls, 'DELETE', '/vehicles/v-m4/save')).toHaveLength(1));
-    await waitFor(() => expect(toastSpy).toHaveBeenCalledWith('BMW M4 G82 aus „Gespeichert“ entfernt', expect.objectContaining({ undo: expect.any(Function) })));
-    const undo = (toastSpy.mock.calls.at(-1)?.[1] as { undo: () => void }).undo;
-    await act(async () => undo());
-    await waitFor(() => expect(sent(calls, 'POST', '/vehicles/v-m4/save')).toHaveLength(1));
-    await waitFor(() => expect(text('PROF-05.card.v-m4')).toBeTruthy());
+    expect(text('PROF-05.skeleton')).toBeTruthy();
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/profile/collections/k0'));
+    expect(screen.queryByTestId(/^PROF-05\.card\./)).toBeNull();
   });
 
-  it('brings the card back and says why when the unsave fails', async () => {
-    signIn();
-    flags(true);
-    stub({
-      'GET /me/saved': { body: PAGE([SAVED]) },
-      'DELETE /vehicles/v-m4/save': { status: 429, body: { message: 'Du hast heute schon sehr oft gespeichert.', code: 'rate_limited', errors: {} } },
-    });
-    await render(<SavedScreen />);
-    await waitFor(() => expect(text('PROF-05.card.v-m4')).toBeTruthy());
-    await act(async () => fireEvent.press(text('PROF-05.card.v-m4.remove')));
-    await waitFor(() => expect(toastSpy).toHaveBeenCalledWith('Du hast heute schon sehr oft gespeichert.', expect.objectContaining({ haptic: 'warning' })));
-    await waitFor(() => expect(text('PROF-05.card.v-m4')).toBeTruthy());
-  });
-
-  it('puts an unsaved card back at its own place with Rückgängig, not at the top', async () => {
-    signIn();
-    flags(true);
-    const second = { ...SAVED, id: 'v-911', slug: 'porsche-911-964-aaaa1111', full_title: 'Porsche 911 964', title: '911 964' };
-    const third = { ...SAVED, id: 'v-r34', slug: 'nissan-skyline-r34-bbbb2222', full_title: 'Nissan Skyline GT-R R34', title: 'Skyline GT-R R34' };
-    let release: (() => void) | null = null;
-    const calls: string[] = [];
-    globalThis.fetch = jest.fn(async (input: Request | string) => {
-      const request = typeof input === 'string' ? new Request(input) : input;
-      calls.push(`${request.method} ${new URL(request.url).pathname}`);
-      if (request.method === 'POST') await new Promise<void>((resolve) => (release = resolve));
-      const body = request.method === 'GET' ? PAGE([SAVED, second, third]) : { data: { vehicle_id: 'v-911', is_saved: request.method === 'POST' } };
-      return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    }) as unknown as typeof fetch;
-    await render(<SavedScreen />);
-    await waitFor(() => expect(text('PROF-05.card.v-911')).toBeTruthy());
-    await act(async () => fireEvent.press(text('PROF-05.card.v-911.remove')));
-    await waitFor(() => expect(screen.queryByTestId('PROF-05.card.v-911')).toBeNull());
-    const undo = (toastSpy.mock.calls.at(-1)?.[1] as { undo: () => void }).undo;
-    await act(async () => undo());
-    // While the save is on its way (and before the list is read again), the card stands where it stood.
-    await waitFor(() => expect(text('PROF-05.card.v-911')).toBeTruthy());
-    const order = screen.getAllByTestId(/^PROF-05\.card\.[^.]+$/).map((node) => node.props.testID as string);
-    expect(order).toEqual(['PROF-05.card.v-m4', 'PROF-05.card.v-911', 'PROF-05.card.v-r34']);
-    await act(async () => release?.());
-  });
-
-  it('invites to save the first build', async () => {
-    signIn();
-    flags(true);
-    stub({ 'GET /me/saved': { body: PAGE([]) } });
-    await render(<SavedScreen />);
-    await waitFor(() => expect(text('PROF-05.empty')).toHaveTextContent(/Noch nichts gespeichert/));
+  it('leads to the collections without a default one, and a guest there too', async () => {
+    expect(savedTarget('member', [])).toBe('/profile/collections');
+    expect(savedTarget('guest', undefined)).toBe('/profile/collections');
+    expect(savedTarget('loading', undefined)).toBeNull();
+    expect(savedTarget('member', undefined)).toBeNull();
   });
 });
 
@@ -722,15 +639,20 @@ describe('entry points', () => {
       stats: { vehicles: 0, followers: 5, following: 3 },
       restrictions: { suspended: false, messaging: { restricted: false, until: null }, publishing: { restricted: false, until: null } },
     };
-    stub({ 'GET /auth/me': { body: { data: me } }, 'GET /me/vehicles': { body: { data: [] } } });
+    const saved = { id: 'k0', name: 'Gespeichert', is_default: true, position: 1, items_count: 1, covers: [], contains: null, created_at: null, updated_at: null };
+    stub({ 'GET /auth/me': { body: { data: me } }, 'GET /me/vehicles': { body: { data: [] } }, 'GET /me/collections': { body: { data: [saved] } } });
     await render(<ProfileScreen />);
     await waitFor(() => expect(text('PROF-01.stats.followers')).toBeTruthy());
     expect(screen.getByLabelText('3\u00A0Folge\u00A0ich – Konten anzeigen, denen du folgst')).toBeTruthy();
     expect(screen.getByLabelText('5\u00A0Follower – Liste anzeigen')).toBeTruthy();
     await fireEvent.press(text('PROF-01.stats.followers'));
     expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/profile/connections', params: { tab: 'followers' } });
-    await fireEvent.press(text('PROF-01.saved.body'));
-    expect(mockRouter.push).toHaveBeenCalledWith('/profile/saved');
+    // 09 §7.7: Gespeichert is the profile's fourth tab: the collections (COL-01), "Gespeichert" among them (DQ-1087/1094).
+    await fireEvent.press(text('PROF-01.tabs.saved'));
+    expect(screen.queryByTestId('PROF-01.saved')).toBeNull();
+    await waitFor(() => expect(text('PROF-01.collection.k0')).toBeTruthy());
+    await fireEvent.press(text('PROF-01.collection.k0'));
+    expect(mockRouter.push).toHaveBeenCalledWith('/profile/collections/k0');
   });
 
   it('SET-01 leads a member to the blocked accounts, and shows a guest no such row', async () => {

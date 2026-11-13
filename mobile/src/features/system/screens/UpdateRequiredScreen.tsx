@@ -8,6 +8,7 @@ import { toast } from '@/ui';
 
 import { currentAppVersion } from '../AppConfigGate';
 import { storeLinkFor } from '../storeLink';
+import { UPDATE_PHOTO } from '../photos';
 import { GateScreen } from './GateScreen';
 
 /**
@@ -37,6 +38,7 @@ export function UpdateRequiredScreen() {
   return (
     <GateScreen
       routeId="SYS-01"
+      photo={UPDATE_PHOTO}
       title={t('gate.updateTitle')}
       // M3.5 ADM-37: the published force-update text in the request's language, else the bundled one.
       body={config.force_update_message?.trim() || t('gate.updateBody')}

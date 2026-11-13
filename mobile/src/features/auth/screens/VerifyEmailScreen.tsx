@@ -10,12 +10,14 @@ import { useMe, useResendCode, useSignOut, useVerifyEmail } from '@/api/queries/
 import { dropBareReturnTo, useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
 import { Button, Text, toast } from '@/ui';
+import { slot } from '@/ui/SlotText';
+import { identifierText } from '@/ui/textBreaks';
 
 import { AuthScreen, FooterLink } from '../components/AuthScreen';
 import { CodeInput, CodeInputSkeleton } from '../components/CodeInput';
 import { FormField } from '../components/FormField';
 import { FormNotice } from '../components/FormNotice';
-import { applyServerErrors, breakableEmail, fieldMessage, firstParam, formatClock, isCode, useCountdown } from '../forms';
+import { applyServerErrors, fieldMessage, firstParam, formatClock, isCode, useCountdown } from '../forms';
 import { handEmailTo, useHandedEmail } from '../emailHandoff';
 import { holdTwoFactorChallenge } from '../twoFactorChallenge';
 import { clearRegistrationPassword, registrationPasswordFor } from '../pendingRegistration';
@@ -160,7 +162,8 @@ export function VerifyEmailScreen() {
       routeId="AUTH-05"
       // Only an arrival from AUTH-04 follows a mail just sent; any other says what to do, not that a mail is waiting.
       title={t(fromRegistration ? 'verify.title' : 'verify.titleNoMail')}
-      subtitle={t(fromRegistration ? 'verify.subtitle' : 'verify.subtitleNoMail', { email: breakableEmail(email) })}
+      subtitle={t(fromRegistration ? 'verify.subtitle' : 'verify.subtitleNoMail', { email: slot('email') })}
+      subtitleSlots={{ email: identifierText(email) }}
       skeletonFields={0}
       skeleton={<CodeInputSkeleton />}
       onBack={signedIn ? leaveAsMember : undefined}
@@ -233,7 +236,7 @@ export function VerifyEmailScreen() {
         />
       ) : null}
       <View style={styles.resend}>
-        <Text variant="supporting" color="text.secondary" style={styles.hint} testID="AUTH-05.spamHint">
+        <Text variant="callout" color="text.secondary" style={styles.hint} testID="AUTH-05.spamHint">
           {t('verify.spamHint')}
         </Text>
         <Button
@@ -248,7 +251,7 @@ export function VerifyEmailScreen() {
         />
         {/* DQ-121: the wait is information, so it stands in readable text, not only in the disabled label. */}
         {timer.remaining > 0 ? (
-          <Text variant="helper" color="text.tertiary" style={styles.wait} testID="AUTH-05.resendWait">
+          <Text variant="caption" color="text.tertiary" style={styles.wait} testID="AUTH-05.resendWait">
             {t('verify.resendWait', { time: formatClock(timer.remaining) })}
           </Text>
         ) : null}

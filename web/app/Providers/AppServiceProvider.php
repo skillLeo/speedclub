@@ -10,12 +10,17 @@ use App\Models\Block;
 use App\Models\Brand;
 use App\Models\BuildUpdate;
 use App\Models\CatalogRequest;
+use App\Models\Comment;
 use App\Models\ConfigVersion;
 use App\Models\Conversation;
 use App\Models\ConversationParticipant;
 use App\Models\DataExport;
 use App\Models\Decision;
+use App\Models\DeviceInstall;
 use App\Models\DiscoverCollection;
+use App\Models\Event as ClubEvent;
+use App\Models\EventRsvp;
+use App\Models\EventUpdate;
 use App\Models\FeatureFlag;
 use App\Models\Follow;
 use App\Models\Generation;
@@ -23,8 +28,16 @@ use App\Models\HelpArticle;
 use App\Models\IdempotencyKey;
 use App\Models\KnownDevice;
 use App\Models\LegalDocument;
+use App\Models\LoginAttempt;
+use App\Models\MaintenanceItem;
+use App\Models\MaintenanceLog;
+use App\Models\MaintenanceReminder;
 use App\Models\Make;
 use App\Models\Media;
+use App\Models\MemberCollection;
+use App\Models\MemberCollectionItem;
+use App\Models\MemberPasskey;
+use App\Models\Mention;
 use App\Models\Message;
 use App\Models\MessageReactionRow;
 use App\Models\ModCategory;
@@ -32,19 +45,25 @@ use App\Models\ModCategoryField;
 use App\Models\ModerationCase;
 use App\Models\Modification;
 use App\Models\Notification;
+use App\Models\PasskeyChallenge;
 use App\Models\Permission;
 use App\Models\PersonalAccessToken;
 use App\Models\PushToken;
 use App\Models\QrCode;
 use App\Models\QrScanDaily;
+use App\Models\Reaction;
 use App\Models\Report;
 use App\Models\Role;
 use App\Models\Save;
+use App\Models\SecurityEvent;
+use App\Models\SocialAccount;
 use App\Models\Staff;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\VehicleFollow;
+use App\Models\VehicleHighlight;
 use App\Models\VehicleModel;
 use App\Models\VehicleSearch;
 use App\Models\VehicleSpec;
@@ -122,7 +141,10 @@ class AppServiceProvider extends ServiceProvider
         /** @var list<string> $previewEnvironments */
         $previewEnvironments = config()->array('speedclub.dev_mail.environments');
 
-        if ($this->app->environment($previewEnvironments)) {
+        // M4.6 ADM-61: the staff Mail-Vorschau records on every non-production host (staging without SMTP), never in production.
+        $staffPreview = ! $this->app->isProduction() && config()->boolean('speedclub.mail_preview.enabled');
+
+        if ($this->app->environment($previewEnvironments) || $staffPreview) {
             Event::listen(MessageSent::class, RecordDevMail::class);
         }
 
@@ -140,12 +162,17 @@ class AppServiceProvider extends ServiceProvider
             'brand' => Brand::class,
             'build_update' => BuildUpdate::class,
             'catalog_request' => CatalogRequest::class,
+            'comment' => Comment::class,
             'config_version' => ConfigVersion::class,
             'conversation' => Conversation::class,
             'conversation_participant' => ConversationParticipant::class,
-            'decision' => Decision::class,
             'data_export' => DataExport::class,
+            'decision' => Decision::class,
+            'device_install' => DeviceInstall::class,
             'discover_collection' => DiscoverCollection::class,
+            'event' => ClubEvent::class,
+            'event_rsvp' => EventRsvp::class,
+            'event_update' => EventUpdate::class,
             'feature_flag' => FeatureFlag::class,
             'follow' => Follow::class,
             'generation' => Generation::class,
@@ -153,28 +180,42 @@ class AppServiceProvider extends ServiceProvider
             'idempotency_key' => IdempotencyKey::class,
             'known_device' => KnownDevice::class,
             'legal_document' => LegalDocument::class,
+            'login_attempt' => LoginAttempt::class,
+            'maintenance_item' => MaintenanceItem::class,
+            'maintenance_log' => MaintenanceLog::class,
+            'maintenance_reminder' => MaintenanceReminder::class,
             'make' => Make::class,
+            'member_collection' => MemberCollection::class,
+            'member_collection_item' => MemberCollectionItem::class,
+            'mention' => Mention::class,
             'media' => Media::class,
+            'member_passkey' => MemberPasskey::class,
             'message' => Message::class,
             'message_reaction' => MessageReactionRow::class,
             'mod_category' => ModCategory::class,
             'mod_category_field' => ModCategoryField::class,
-            'modification' => Modification::class,
             'moderation_case' => ModerationCase::class,
+            'modification' => Modification::class,
             'notification' => Notification::class,
+            'passkey_challenge' => PasskeyChallenge::class,
             'permission' => Permission::class,
             'personal_access_token' => PersonalAccessToken::class,
             'push_token' => PushToken::class,
             'qr_code' => QrCode::class,
             'qr_scan_daily' => QrScanDaily::class,
+            'reaction' => Reaction::class,
             'report' => Report::class,
             'role' => Role::class,
             'save' => Save::class,
+            'security_event' => SecurityEvent::class,
+            'social_account' => SocialAccount::class,
             'staff' => Staff::class,
             'support_ticket' => SupportTicket::class,
             'ticket_message' => TicketMessage::class,
             'user' => User::class,
             'vehicle' => Vehicle::class,
+            'vehicle_follow' => VehicleFollow::class,
+            'vehicle_highlight' => VehicleHighlight::class,
             'vehicle_model' => VehicleModel::class,
             'vehicle_search' => VehicleSearch::class,
             'vehicle_spec' => VehicleSpec::class,

@@ -14,6 +14,7 @@
         "chillerlan/php-qrcode": "^6.0",
         "dedoc/scramble": "^0.13.52",
         "dompdf/php-font-lib": "^1.0",
+        "firebase/php-jwt": "^7.2",
         "inertiajs/inertia-laravel": "^3.0",
         "intervention/image": "^4.0",
         "kornrunner/blurhash": "^1.2",

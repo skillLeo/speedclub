@@ -1,19 +1,21 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { variantUrl } from '@/features/profile/media';
+import { photoFields, variantUrl } from '@/features/profile/media';
 import { now } from '@/lib/clock';
 import { isWeb } from '@/lib/platform';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Avatar, Icon, IconButton, PressableScale, Skeleton, SkeletonBlock, SkeletonText, Text, UnreadBadge } from '@/ui';
+import { Icon, IconButton, PressableScale, Skeleton, SkeletonBlock, SkeletonText, Text, UnreadBadge } from '@/ui';
 import { joinLabel, RowDivider } from '@/ui/rowParts';
 
 import { inboxTime } from '../dates';
 import { MESSAGE_GLYPHS } from '../glyphs';
 import { isMuted, type ConversationSummary } from '../model';
 import { otherName, previewText } from '../text';
+
+import { CarBadgeAvatar } from './CarBadgeAvatar';
 
 /** §5 row with a 56 thumb: 72. The contract's avatar 48 is not on the avatar scale; 56 keeps the row on the 72 grid. */
 const AVATAR = size.avatar.lg;
@@ -50,6 +52,8 @@ const useStyles = createStyles((t) => ({
   time: { flexShrink: 0 },
   preview: { flex: 1, minWidth: 0 },
   more: { flexShrink: 0 },
+  // DQ-1106 a: on web the "···" keeps its place but shows only on hover, keyboard focus or the selected row.
+  moreHidden: { opacity: 0 },
 }));
 
 export type ConversationRowProps = {
@@ -95,6 +99,12 @@ export const ConversationRow = memo(function ConversationRow({
   // The theme's font scale: the QA scale on web, the system setting on native (ThemeProvider), one source for both.
   const scale = useTheme().fontScale;
   const pinned = Boolean(conversation.pinnedAt);
+  // DQ-1106 a: phones (native) organise by long-press, or the row's accessibility action, with no permanent "···". Web keeps the
+  // button for mouse and keyboard, shown on hover and focus.
+  const moreButton = organise && isWeb;
+  const [hovered, setHovered] = useState(false);
+  const [moreFocused, setMoreFocused] = useState(false);
+  const moreLabel = t('inbox.more', { name });
   const label = joinLabel([
     name,
     pinned ? t('inbox.pinned') : null,
@@ -125,8 +135,15 @@ export const ConversationRow = memo(function ConversationRow({
 
   return (
     // DQ-418: the selection fills the whole row, the "…" button included.
-    <View style={[styles.root, selected ? styles.selected : null, style]} testID={testID}>
+    <View
+      style={[styles.root, selected ? styles.selected : null, style]}
+      onPointerEnter={moreButton ? () => setHovered(true) : undefined}
+      onPointerLeave={moreButton ? () => setHovered(false) : undefined}
+      testID={testID}
+    >
       <PressableScale
+        // Draws its own pressed fill from state.pressed: no second tone layer (SM7).
+        toneShift={false}
         role="link"
         // The label is for native, where the row reads as one element. On web the visible texts name the link (WCAG 2.5.3, as
         // RowBody): the avatar's initials are visible text too, and a label could never hold them. The glyphs and the pill
@@ -137,22 +154,25 @@ export const ConversationRow = memo(function ConversationRow({
         ring="none"
         onPress={() => onOpen(conversation)}
         onLongPress={organise ? () => onMore(conversation) : undefined}
+        accessibilityActions={organise && !isWeb ? [{ name: 'longpress', label: moreLabel }] : undefined}
+        onAccessibilityAction={(event) => {
+          if (organise && event.nativeEvent.actionName === 'longpress') onMore(conversation);
+        }}
         delayLongPress={400}
         style={styles.box}
         contentStyle={(state) => [
           styles.body,
-          { paddingLeft: inset, paddingRight: organise ? space[4] : inset },
+          { paddingLeft: inset, paddingRight: moreButton ? space[4] : inset },
           selected ? null : state.pressed ? styles.pressed : state.hovered ? styles.hover : null,
           state.focused ? styles.ring : null,
         ]}
         testID={`${testID}.open`}
       >
-        <Avatar
-          decorative
+        <CarBadgeAvatar
           name={name}
           uri={variantUrl(conversation.other?.avatar, AVATAR)}
           blurhash={conversation.other?.avatar?.blurhash}
-          size={AVATAR}
+          car={conversation.other?.carCover ? photoFields(conversation.other.carCover, AVATAR) : null}
         />
         <View style={styles.text} aria-hidden={!isWeb}>
           {stacked ? (
@@ -177,7 +197,7 @@ export const ConversationRow = memo(function ConversationRow({
           )}
           <View style={styles.line}>
             <Text
-              variant="supporting"
+              variant="callout"
               color={unread > 0 ? 'text.primary' : 'text.secondary'}
               numberOfLines={1}
               style={styles.preview}
@@ -196,9 +216,13 @@ export const ConversationRow = memo(function ConversationRow({
           </View>
         </View>
       </PressableScale>
-      {organise ? (
-        <View style={[styles.more, { paddingRight: inset - space[12] }]}>
-          <IconButton icon="dots-three" label={t('inbox.more', { name })} color="text.secondary" onPress={() => onMore(conversation)} testID={`${testID}.more`} />
+      {moreButton ? (
+        <View
+          style={[styles.more, { paddingRight: inset - space[12] }, selected || hovered || moreFocused ? null : styles.moreHidden]}
+          onFocus={() => setMoreFocused(true)}
+          onBlur={() => setMoreFocused(false)}
+        >
+          <IconButton icon="dots-three" label={moreLabel} color="text.secondary" onPress={() => onMore(conversation)} testID={`${testID}.more`} />
         </View>
       ) : null}
       {divider ? <RowDivider inset={inset} lead={AVATAR + space[12]} /> : null}
@@ -216,7 +240,7 @@ export function ConversationRowsSkeleton({ inset, rows = 7, testID }: { inset: n
           <SkeletonBlock width={AVATAR} height={AVATAR} corner="full" />
           <View style={styles.text}>
             <SkeletonText variant="bodyStrong" width="45%" />
-            <SkeletonText variant="supporting" width="75%" />
+            <SkeletonText variant="callout" width="75%" />
           </View>
         </View>
       ))}

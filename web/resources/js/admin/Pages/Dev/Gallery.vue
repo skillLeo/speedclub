@@ -176,7 +176,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- buttons -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.buttons') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.buttons') }}</h2>
             <div class="grid grid-cols-1 gap-16 wide:grid-cols-2">
                 <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                     <div v-for="size in (['md', 'sm'] as const)" :key="size" class="flex flex-wrap items-center gap-8">
@@ -197,7 +197,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- inputs -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.inputs') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.inputs') }}</h2>
             <div class="grid grid-cols-1 gap-16 wide:grid-cols-2">
                 <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                     <div class="grid grid-cols-1 gap-16 tablet:grid-cols-2">
@@ -225,7 +225,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- choices -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.choices') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.choices') }}</h2>
             <div class="grid grid-cols-1 gap-16 wide:grid-cols-2">
                 <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                     <div class="grid grid-cols-1 gap-16 tablet:grid-cols-2">
@@ -250,7 +250,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- status -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.status') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.status') }}</h2>
             <div class="grid grid-cols-1 gap-16 wide:grid-cols-2">
                 <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                     <div class="flex flex-wrap items-center gap-8">
@@ -275,12 +275,12 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- navigation -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.navigation') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.navigation') }}</h2>
             <div class="grid grid-cols-1 gap-16 wide:grid-cols-2">
                 <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                     <Tabs v-model="tab" :items="tabs" :label="trans('gallery.sections.navigation')">
                         <template v-for="item in tabs" :key="item.value" #[item.value]>
-                            <p class="text-supporting text-ink-2">{{ trans('gallery.tabs.panel', { tab: item.label }) }}</p>
+                            <p class="text-admin-base text-ink-2">{{ trans('gallery.tabs.panel', { tab: item.label }) }}</p>
                         </template>
                     </Tabs>
                     <div class="flex flex-wrap items-center gap-12">
@@ -298,7 +298,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- feedback -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.feedback') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.feedback') }}</h2>
             <div class="grid grid-cols-1 gap-16 wide:grid-cols-2">
                 <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                     <EmptyQueue variant="clear" :title="trans('gallery.feedback.clear')" :body="trans('gallery.feedback.clear_body')" />
@@ -324,7 +324,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- overlays -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.overlays') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.overlays') }}</h2>
             <div class="flex flex-wrap gap-8">
                 <Button size="sm" data-testid="ADM-DEV.open-dialog" @click="dialogOpen = true">{{ trans('gallery.overlays.dialog') }}</Button>
                 <Button size="sm" data-testid="ADM-DEV.open-drawer" @click="drawerOpen = true">{{ trans('gallery.overlays.drawer') }}</Button>
@@ -366,10 +366,10 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- KPIs & charts -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.kpis') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.kpis') }}</h2>
             <div class="grid grid-cols-1 gap-16 wide:grid-cols-2">
                 <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
-                    <div data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line-subtle bg-line-subtle tablet:grid-cols-3">
+                    <div data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-line-subtle bg-line-subtle tablet:grid-cols-3">
                         <KpiTile :label="trans('gallery.kpis.members')" :value="284" :previous="241" :series="series" :period="trans('dashboard.kpis.series')" />
                         <KpiTile :label="trans('gallery.kpis.members')" :value="198" :previous="241" :series="[...series].reverse()" :period="trans('dashboard.kpis.series')" />
                         <KpiTile :label="trans('gallery.kpis.members')" :value="null" loading />
@@ -387,7 +387,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- diff & activity -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.diff') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.diff') }}</h2>
             <div class="grid grid-cols-1 gap-16 wide:grid-cols-2">
                 <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                     <DiffViewer :before="before" :after="after" />
@@ -403,7 +403,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- table -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.table') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.table') }}</h2>
             <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                 <DataTable :id="`gallery-${frame.theme}`" :columns="columns" :rows="rows" :query="query" :caption="trans('gallery.table.caption')" :empty-title="trans('gallery.table.empty')" selectable :bulk-actions="bulkActions" export-url="/admin/dev/gallery" :test-id="`ADM-DEV.table.${frame.theme}`">
                     <template #cell-username="{ row }"><span class="font-semibold text-ink">{{ row.username }}</span></template>
@@ -420,7 +420,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
 
         <!-- record -->
         <section class="flex flex-col gap-12">
-            <h2 class="text-title-s text-ink">{{ trans('gallery.sections.record') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('gallery.sections.record') }}</h2>
             <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                 <RecordLayout
                     v-model:tab="recordTab"
@@ -432,7 +432,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
                     :activity="timeline"
                     :test-id="`ADM-DEV.record.${frame.theme}`"
                 >
-                    <template #meta><p class="text-supporting text-ink-2">{{ trans('gallery.record.meta') }}</p></template>
+                    <template #meta><p class="text-admin-base text-ink-2">{{ trans('gallery.record.meta') }}</p></template>
                     <template #actions>
                         <Button size="sm" :icon="PhPencilSimple">{{ trans('gallery.record.edit') }}</Button>
                         <Button size="sm" variant="danger" :icon="PhProhibit">{{ trans('gallery.table.restrict') }}</Button>

@@ -20,8 +20,8 @@ function submit(): void {
     <Head :title="trans('auth.confirm.title')" />
     <div class="flex flex-col gap-24" data-testid="ADM-01.confirm" :data-qa-state="state">
         <div class="flex flex-col gap-8">
-            <h1 class="text-title-m text-ink">{{ trans('auth.confirm.title') }}</h1>
-            <p class="text-supporting text-ink-2">{{ trans('auth.confirm.intro') }}</p>
+            <h1 class="text-title-2 text-ink">{{ trans('auth.confirm.title') }}</h1>
+            <p class="text-admin-base text-ink-2">{{ trans('auth.confirm.intro') }}</p>
         </div>
         <form class="flex flex-col gap-16" novalidate @submit.prevent="submit">
             <Field :label="trans('auth.fields.password')" :error="form.errors.password" required>

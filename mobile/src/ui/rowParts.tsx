@@ -92,6 +92,8 @@ export function RowBody({ onPress, disabled = false, role = 'link', label, curre
   }
   return (
     <PressableScale
+      // Draws its own pressed fill from state.pressed: no second tone layer (SM7).
+      toneShift={false}
       role={role}
       aria-label={isWeb ? undefined : label}
       {...(current ? (isWeb ? ({ 'aria-current': 'page' } as object) : { 'aria-selected': true }) : {})}

@@ -208,13 +208,14 @@ it('documents the auth and profile endpoints precisely enough for the mobile typ
         ->and($schemas['AuthSessionResource']['properties']['token']['type'])->toBe(['string', 'null'])
         ->and($schemas['NextStepResource']['properties']['next'])->toBe(['$ref' => '#/components/schemas/AuthNextStep'])
         ->and($schemas['AuthNextStep']['enum'])->toBe(['verify_email', 'reset_password', 'sign_in'])
-        ->and($schemas['OnboardingStep']['enum'])->toBe(['verify_email', 'choose_username', 'profile_setup'])
+        ->and($schemas['OnboardingStep']['enum'])->toBe(['verify_email', 'accept_terms', 'choose_username', 'profile_setup'])
         ->and($schemas['UsernameUnavailableReason']['enum'])->toContain('taken', 'reserved', 'length')
         ->and($me['theme'])->toBe(['$ref' => '#/components/schemas/ThemePreference'])
         ->and($me['power_display'])->toBe(['$ref' => '#/components/schemas/PowerDisplay'])
         ->and($me['display_name']['type'])->toBe(['string', 'null'])
         ->and($me['username']['type'])->toBe(['string', 'null'])
         ->and($me['email_verified']['type'])->toBe('boolean')
-        ->and($me['stats']['properties']['followers']['type'])->toBe('integer')
+        // M4.2 (09 §8.19): null for a sample account.
+        ->and($me['stats']['properties']['followers']['type'])->toBe(['integer', 'null'])
         ->and($me['restrictions']['properties']['publishing']['properties']['until']['type'])->toBe(['string', 'null']);
 });

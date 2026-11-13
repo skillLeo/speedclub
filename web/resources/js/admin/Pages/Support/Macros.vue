@@ -105,12 +105,12 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('support.macros.error')" :body="trans('ui.state.error_body')" test-id="ADM-27.error" />
         <EmptyQueue v-else-if="pageState !== 'loading' && list.length === 0" variant="first" :title="trans('support.macros.empty_title')" :body="trans('support.macros.empty_body')" data-testid="ADM-27.empty" />
         <ScrollRegion v-else :label="trans('support.macros.caption')">
-            <table class="w-full min-w-960 table-fixed text-supporting">
+            <table class="w-full min-w-960 table-fixed text-admin-base">
                 <caption class="sr-only">{{ trans('support.macros.caption') }}</caption>
                 <!-- DQ-555: fixed widths but for the text, the same while loading and with rows, so "Text" does not move. -->
                 <colgroup><col class="w-240" /><col class="w-96" /><col /><col class="w-120" /><col v-if="editable" class="w-96" /></colgroup>
                 <thead>
-                    <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                    <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                         <th scope="col" class="px-12">{{ trans('support.macros.columns.title') }}</th>
                         <th scope="col" class="px-12">{{ trans('support.macros.columns.locale') }}</th>
                         <th scope="col" class="px-12">{{ trans('support.macros.columns.body') }}</th>

@@ -43,6 +43,8 @@ export const OptionRow = memo(function OptionRow({ label, countLabel, formattedC
   return (
     <View>
       <PressableScale
+        // Draws its own pressed fill from state.pressed: no second tone layer (SM7).
+        toneShift={false}
         role={role}
         aria-checked={selected}
         aria-label={isWeb ? undefined : joinLabel([label, countLabel])}
@@ -55,7 +57,7 @@ export const OptionRow = memo(function OptionRow({ label, countLabel, formattedC
           {keepNameTogether(label)}
         </Text>
         {formattedCount !== undefined ? (
-          <Text variant="supporting" color="text.tertiary" style={styles.count} aria-label={countLabel} testID={testID ? `${testID}.count` : undefined}>
+          <Text variant="callout" color="text.tertiary" style={styles.count} aria-label={countLabel} testID={testID ? `${testID}.count` : undefined}>
             {formattedCount}
           </Text>
         ) : null}

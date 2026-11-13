@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
  * - a message route (conversations, messages, chat media, the realtime channel auth, the unread counts that hold message counts, and the
  *   data export, which carries the member's messages): 403 `view_as_no_messages`, whatever the method;
  * - any other method than GET, HEAD or OPTIONS: 403 `view_as_read_only`; the one exception is `DELETE api/v1/view-as`, which ends it;
+ * - a read of the member's maintenance, service log, odometer or private cost totals (M4.13 ruling, ADR-441): 403 `view_as_private`;
  * - first of all, a token whose staff member is no longer active: 401 `unauthenticated` (SEC-P3-07).
  *
  * Writers that run on GETs skip a view-as request themselves (ViewAs::active(): activity counters, QR scans, reset codes).
@@ -30,6 +31,15 @@ class RestrictViewAs
         'api/v1/broadcasting/*',
         'api/v1/notifications/unread-count',
         'api/v1/me/exports', 'api/v1/me/exports/*', 'api/v1/me/export',
+    ];
+
+    /** M4.13 (ADR-441): maintenance and private costs, which view-as never shows. */
+    public const PRIVATE_PATHS = [
+        'api/v1/me/maintenance', 'api/v1/me/maintenance/*',
+        'api/v1/vehicles/*/maintenance-items', 'api/v1/vehicles/*/maintenance-items/*',
+        'api/v1/vehicles/*/maintenance-logs', 'api/v1/vehicles/*/maintenance-logs/*',
+        'api/v1/vehicles/*/costs', 'api/v1/vehicles/*/odometer',
+        'api/v1/maintenance-media/*',
     ];
 
     /**
@@ -54,6 +64,10 @@ class RestrictViewAs
 
         if (! in_array($request->getMethod(), ['GET', 'HEAD', 'OPTIONS'], true) && ! ($request->isMethod('DELETE') && $request->is('api/v1/view-as'))) {
             throw new ApiException(ErrorCode::ViewAsReadOnly);
+        }
+
+        if ($request->is(...self::PRIVATE_PATHS)) {
+            throw new ApiException(ErrorCode::ViewAsPrivate);
         }
 
         return $next($request);

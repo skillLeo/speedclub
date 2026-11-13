@@ -1,19 +1,23 @@
 import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  ReduceMotion,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  type SharedValue,
-} from 'react-native-reanimated';
+import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
-import { createStyles, maxFontScale, motion as motionTokens, radius, typography, useMotion, useTheme, type TypeVariant } from '@/theme';
+import {
+  createStyles,
+  maxFontScale,
+  motion as motionTokens,
+  radius,
+  typography,
+  typographyDesktop,
+  useTheme,
+  type SizedTypeVariant,
+  type TypeVariant,
+} from '@/theme';
 
+import { shimmerLoop, useMotionPreference } from './motion';
 import { useScreenFocused } from './SkeletonFocus';
+import { useDesktopType } from './Text';
 
 /** §8: a skeleton shows only after 300 ms, so fast responses never flash it. */
 export const SKELETON_DELAY_MS = 300;
@@ -36,44 +40,39 @@ export type SkeletonProps = {
 };
 
 /**
- * The state wrapper of a screen or block. It keeps the final geometry from the first frame, stays invisible for
- * 300 ms and drives one shimmer (1.2 s, the only loop in the product) for all blocks inside. No shimmer under
- * reduced motion; with `qaMotion=off` it shows at once and still. The loop pauses while its screen is not on show (a tab left
+ * The state wrapper of a screen or block. It keeps the final geometry from the first frame and stays invisible for 300 ms.
+ * SM15: it stands still by default; only a load that runs past `skeleton.shimmerAfter` (1.5 s) starts one shimmer
+ * (`skeleton.shimmerCycle`, 1.2 s) for all blocks inside. No shimmer under reduced motion; with `qaMotion=off` it shows at once and still. The loop pauses while its screen is not on show (a tab left
  * behind, a screen under the top of its stack) and starts again when it is.
  */
 export function Skeleton({ children, label, style, testID }: SkeletonProps) {
   const { t } = useTranslation('common');
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const [delayed, setDelayed] = useState(false);
+  const [slow, setSlow] = useState(false);
   const shimmer = useSharedValue(0);
   const visible = delayed || !motion.enabled;
   const focused = useScreenFocused();
-  const shimmering = visible && focused && motion.enabled && !motion.reduced;
+  const shimmering = visible && slow && focused && motion.enabled && !motion.reduced;
 
   useEffect(() => {
     const timer = setTimeout(() => setDelayed(true), SKELETON_DELAY_MS);
-    return () => clearTimeout(timer);
+    const late = setTimeout(() => setSlow(true), motionTokens.skeleton.shimmerAfter);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(late);
+    };
   }, []);
 
   useEffect(() => {
     if (!shimmering) return undefined;
-    shimmer.set(
-      withRepeat(
-        withTiming(1, {
-          duration: motionTokens.duration.skeletonCycle / 2,
-          easing: motion.easing.standard,
-          reduceMotion: ReduceMotion.Never,
-        }),
-        -1,
-        true,
-      ),
-    );
+    shimmer.set(shimmerLoop());
     return () => {
       cancelAnimation(shimmer);
       shimmer.set(0);
     };
-  }, [motion.easing.standard, shimmer, shimmering]);
+  }, [shimmer, shimmering]);
 
   return (
     <ShimmerContext value={shimmer}>
@@ -129,13 +128,20 @@ function Block({ width, height, aspectRatio, corner = 'xs', style, testID }: Ske
 }
 
 export type SkeletonTextProps = {
-  /** The Text variant it stands in for: each line takes that line height. */
-  variant?: TypeVariant;
+  /** The Text variant it stands in for: each line takes that line height (a role with its own size). */
+  variant?: SizedTypeVariant;
   lines?: number;
   /** Width of the last line. */
   lastLineWidth?: DimensionValue;
   /** Width of the other lines. */
   width?: DimensionValue;
+  /**
+   * The role's web desktop size and line height on the web desktop (body and body.strong 16/24, the titles, the numerals), as the
+   * Text it stands for takes them. On by default, as on Text, so a skeleton's line boxes equal its content's at 1280 too (DQ-064:
+   * BuildUpdateRow's body.strong title is 24 high there, a 22 skeleton line was 4 short at 200 %). False where the Text is
+   * false: a display.title that is not a page title (`DisplayTitle` placement card or rail), a shrunk title (title.2's 28).
+   */
+  desktopSize?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
@@ -143,17 +149,18 @@ export type SkeletonTextProps = {
 /**
  * Inter is about this wide per character, in em, across German copy with figures, measured in Chromium on the gallery's
  * rows and cards. A skeleton must never be longer than its content, so the figures stay close to the real widths. A
- * caption has more narrow glyphs ("@", ".", "·", spaces); a card title at 18 size has tighter tracking; display.m is
- * Barlow Semi Condensed, a narrow face (HOME-01's featured title).
+ * caption has more narrow glyphs ("@", ".", "·", spaces); a headline has tighter tracking. display.title is Archivo
+ * SemiExpanded, a wide face: M4.1 measured 0.556–0.626 em per character over car names (TTF advances, −1 % tracking), and
+ * the floor keeps the skeleton no longer than the shortest-reading name (HOME-01's featured title).
  */
 const AVERAGE_CHAR_EM = 0.55;
-const CHAR_EM: Partial<Record<TypeVariant, number>> = { caption: 0.47, titleS: 0.52, displayM: 0.42 };
+const CHAR_EM: Partial<Record<SizedTypeVariant, number>> = { caption: 0.47, headline: 0.52, displayTitle: 0.55 };
 
 /**
  * How many lines a text of about `chars` characters takes at this width and font scale. For skeletons of copy that wraps
  * at a large font: they must not jump when the real text arrives (§8, also at 200 %).
  */
-export function estimateLines(chars: number, variant: TypeVariant, fontScale: number, width: number): number {
+export function estimateLines(chars: number, variant: SizedTypeVariant, fontScale: number, width: number): number {
   if (width <= 0) return 1;
   const cap = (maxFontScale as Partial<Record<TypeVariant, number>>)[variant];
   const scale = Math.min(fontScale, cap ?? fontScale);
@@ -180,14 +187,17 @@ function Lines({
   lines = 1,
   width = FULL_WIDTH,
   lastLineWidth = LAST_LINE_WIDTH,
+  desktopSize = true,
   style,
   testID,
 }: SkeletonTextProps) {
   const styles = useStyles();
   const theme = useTheme();
+  const desktop = useDesktopType() && desktopSize;
   const cap = (maxFontScale as Partial<Record<TypeVariant, number>>)[variant];
   const scale = Math.min(theme.fontScale, cap ?? theme.fontScale);
-  const type = typography[variant];
+  const desktopType = desktop ? (typographyDesktop as Partial<Record<SizedTypeVariant, { fontSize: number; lineHeight: number }>>)[variant] : undefined;
+  const type = desktopType ?? typography[variant];
   return (
     <View testID={testID} style={style}>
       {Array.from({ length: lines }, (_, index) => (

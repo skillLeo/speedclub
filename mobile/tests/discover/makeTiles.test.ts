@@ -1,23 +1,49 @@
-import { columnsFor } from '@/features/discover/components/MakeTiles';
+import { wallCellWidth, wallRows } from '@/features/discover/components/BuildWall';
+import { columnsFor, wordmarkScale, widestWordmarkWord } from '@/features/discover/components/MakeTiles';
 import { frameOf } from '@/features/home/screens/HomeScreen';
 
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
 jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.resolve(null)) }));
 jest.mock('expo-router', () => ({ useRouter: () => ({}), useFocusEffect: () => undefined }));
 
-describe('DISC-01 make tiles (DQ-186)', () => {
-  it('takes three columns where the widest word fits a tile beside its padding, then two, then one row per make', () => {
-    // 360 phone: 328 of content. A third of it is 101, 77 inside the padding.
-    expect(columnsFor(328, 77)).toBe(3);
-    expect(columnsFor(328, 78)).toBe(2);
-    // Half of it is 158, 134 inside the padding: "Mercedes-Benz" at 200 % no longer fits.
-    expect(columnsFor(328, 134)).toBe(2);
-    expect(columnsFor(328, 135)).toBe(1);
+describe('DISC-01 BrandTiles (09 §7.5, DQ-186)', () => {
+  it('takes three columns where the widest wordmark word fits a tile beside its padding, then two, then one row per make', () => {
+    // A 640 column: a third is 208, 192 inside the padding; a half 316, 300 inside.
+    expect(columnsFor(640, 192)).toBe(3);
+    expect(columnsFor(640, 193)).toBe(2);
+    expect(columnsFor(640, 300)).toBe(2);
+    expect(columnsFor(640, 301)).toBe(1);
   });
 
-  it('keeps three columns until the grid and the words are measured', () => {
+  it('decides from the estimate before the first paint: wordmarks of real makes at phone and desktop widths', () => {
+    const makes = ['BMW', 'Volkswagen', 'Porsche', 'Mercedes-Benz', 'Toyota', 'Nissan', 'Lamborghini', 'Alfa Romeo'];
+    // ADR-436 display.wordmark (17/22): on 360 and 390 phones every make fits two columns ("Mercedes-" / "Benz" breaks after its
+    // hyphen, "Alfa" / "Romeo" at its space), never one column of full-width rows.
+    expect(columnsFor(320, widestWordmarkWord(makes, 1))).toBe(2);
+    expect(columnsFor(350, widestWordmarkWord(makes, 1))).toBe(2);
+    expect(columnsFor(350, widestWordmarkWord(makes, wordmarkScale(2)))).toBe(2);
+    // A tablet or desktop column fits three.
+    expect(columnsFor(640, widestWordmarkWord(makes, 1))).toBe(3);
+    // Short makes take three on a phone too.
+    expect(columnsFor(350, widestWordmarkWord(['BMW', 'Audi', 'Mazda'], 1))).toBe(3);
+    // The estimate grows with the font scale up to the 1.3 cap, then stays.
+    expect(widestWordmarkWord(makes, wordmarkScale(2))).toBe(widestWordmarkWord(makes, 1.3));
+    expect(widestWordmarkWord(makes, wordmarkScale(2))).toBeGreaterThan(widestWordmarkWord(makes, 1));
+    expect(wordmarkScale(0.85)).toBe(1);
+  });
+
+  it('keeps three columns while the width is unknown', () => {
     expect(columnsFor(0, 90)).toBe(3);
     expect(columnsFor(328, 0)).toBe(3);
+  });
+});
+
+describe('DISC photo wall', () => {
+  it('splits the cells by 2 px and the builds into rows of the column count', () => {
+    expect(wallCellWidth(390, 2)).toBe(194);
+    expect(wallCellWidth(0, 2)).toBe(0);
+    expect(wallRows([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
+    expect(wallRows([], 2)).toEqual([]);
   });
 });
 

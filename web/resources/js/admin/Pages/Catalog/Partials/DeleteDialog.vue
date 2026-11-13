@@ -85,14 +85,14 @@ const formId = `${props.testId}-form`;
             <div v-if="loadState === 'loading'" class="flex flex-col gap-8" aria-busy="true"><Skeleton shape="text" class="w-full" /><Skeleton shape="text" class="w-240" /><Skeleton class="h-40 w-full" /></div>
             <StateBlock v-else-if="loadState === 'error'" kind="error" :title="trans('catalog.delete.load_error')" :body="trans('catalog.error_body')" @retry="load" />
             <template v-else-if="impact && !impact.deletable">
-                <p class="text-supporting text-ink-2" :data-testid="`${testId}.referenced`">{{ trans('catalog.delete.referenced') }}</p>
+                <p class="text-admin-base text-ink-2" :data-testid="`${testId}.referenced`">{{ trans('catalog.delete.referenced') }}</p>
                 <ul class="flex flex-col rounded-sm border border-line-subtle">
                     <li v-for="r in references" :key="r.kind" class="flex h-40 items-center justify-between gap-12 border-t border-line-subtle px-12 first:border-t-0">
-                        <span class="text-supporting text-ink-2">{{ trans(`catalog.references.labels.${r.kind}`) }}</span>
-                        <span class="text-label-s text-ink tabular-nums">{{ formatNumber(r.count) }}</span>
+                        <span class="text-admin-base text-ink-2">{{ trans(`catalog.references.labels.${r.kind}`) }}</span>
+                        <span class="text-admin-base-strong text-ink tabular-nums">{{ formatNumber(r.count) }}</span>
                     </li>
                 </ul>
-                <p class="text-supporting text-ink-2">{{ trans(level === 'brand' ? 'catalog.delete.instead_brand' : 'catalog.delete.instead') }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans(level === 'brand' ? 'catalog.delete.instead_brand' : 'catalog.delete.instead') }}</p>
                 <!-- DQ-592: the two ways out sit with their explanation; the footer only closes. -->
                 <div class="flex flex-wrap items-center gap-8">
                     <Button v-if="level !== 'brand'" size="sm" variant="secondary" :icon="PhPower" :data-testid="`${testId}.deactivate`" @click="emit('deactivate')">{{ trans('catalog.actions.deactivate') }}</Button>
@@ -100,8 +100,8 @@ const formId = `${props.testId}-form`;
                 </div>
             </template>
             <template v-else-if="impact">
-                <p class="text-supporting text-ink-2" :data-testid="`${testId}.unreferenced`">{{ trans('catalog.delete.body') }}</p>
-                <p v-if="children" class="rounded-sm border border-line px-12 py-8 text-supporting text-ink-2">{{ children }}</p>
+                <p class="text-admin-base text-ink-2" :data-testid="`${testId}.unreferenced`">{{ trans('catalog.delete.body') }}</p>
+                <p v-if="children" class="rounded-sm border border-line px-12 py-8 text-admin-base text-ink-2">{{ children }}</p>
                 <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="reasonError ?? write.errors.value.reason ?? null" required>
                     <Textarea v-model="reason" :rows="3" :maxlength="1000" show-count :data-testid="`${testId}.reason`" />
                 </Field>

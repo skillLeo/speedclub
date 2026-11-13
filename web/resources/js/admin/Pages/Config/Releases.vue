@@ -80,7 +80,7 @@ function sync(): void {
 
 // DQ-614: the full note of a build.
 const notesOf = ref<ReleaseRow | null>(null);
-const prose = 'max-w-720 text-supporting text-ink-2 [&_code]:font-ui [&_code]:text-ink [&_li]:mb-4 [&_p]:mb-12 [&_ul]:list-disc [&_ul]:pl-20';
+const prose = 'max-w-720 text-admin-base text-ink-2 [&_code]:font-ui [&_code]:text-ink [&_li]:mb-4 [&_p]:mb-12 [&_ul]:list-disc [&_ul]:pl-20';
 if (qaDialog() === 'notes') notesOf.value = props.rows.data.find((row) => row.notes_html !== null) ?? null;
 
 // Manual entry and correction.
@@ -190,7 +190,7 @@ async function copy(text: string): Promise<void> {
             <template #cell-source="{ row }">{{ row.source === 'sync' ? trans('config.releases.sources.sync') : trans('config.releases.sources.manual', { name: row.created_by ?? trans('config.draft.person') }) }}</template>
             <template #cell-actions="{ row }"><IconButton :icon="PhPencilSimple" size="sm" :label="trans('config.releases.edit', { version: row.version_name })" data-testid="ADM-38.edit" @click.stop="open(row)" /></template>
         </DataTable>
-        <p v-if="action.error.value && !drawerOpen" class="text-helper text-danger" role="alert">{{ action.error.value }}</p>
+        <p v-if="action.error.value && !drawerOpen" class="text-admin-base text-danger" role="alert">{{ action.error.value }}</p>
 
         <Drawer
             :open="notesOf !== null"

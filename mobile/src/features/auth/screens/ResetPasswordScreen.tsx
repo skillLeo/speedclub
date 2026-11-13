@@ -10,6 +10,7 @@ import { endLocalSessionAfterReset, useForgotPassword, useResetPassword } from '
 import { isWeb } from '@/lib/platform';
 import { createStyles } from '@/theme';
 import { Button, Text, toast } from '@/ui';
+import { identifierText } from '@/ui/textBreaks';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { sanitizeCode } from '../code';
@@ -98,7 +99,7 @@ export function ResetPasswordScreen() {
       const session = await endLocalSessionAfterReset(values.email);
       if (session === 'kept') {
         // Signing in with the new password would first need a sign-out here, so the toast only names the account that changed.
-        toast(t('reset.successOther', { email: values.email }), { haptic: 'success', testID: 'AUTH-07.successToast' });
+        toast(t('reset.successOther', { email: identifierText(values.email) }), { haptic: 'success', testID: 'AUTH-07.successToast' });
         setKeptSession(true);
         return;
       }
@@ -150,7 +151,7 @@ export function ResetPasswordScreen() {
         name="code"
         render={({ field, fieldState }) => (
           <View>
-            <Text variant="labelS" color="text.secondary" style={styles.codeLabel}>
+            <Text variant="callout" color="text.secondary" style={styles.codeLabel}>
               {t('reset.codeLabel')}
             </Text>
             <CodeInput
@@ -177,7 +178,7 @@ export function ResetPasswordScreen() {
           testID="AUTH-07.resend"
         />
         {timer.remaining > 0 ? (
-          <Text variant="helper" color="text.tertiary" style={styles.wait} testID="AUTH-07.resendWait">
+          <Text variant="caption" color="text.tertiary" style={styles.wait} testID="AUTH-07.resendWait">
             {t('verify.resendWait', { time: formatClock(timer.remaining) })}
           </Text>
         ) : null}

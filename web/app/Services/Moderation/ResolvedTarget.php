@@ -4,6 +4,8 @@ namespace App\Services\Moderation;
 
 use App\Enums\ReportTargetType;
 use App\Models\BuildUpdate;
+use App\Models\Comment;
+use App\Models\Event;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\Modification;
@@ -21,7 +23,7 @@ final readonly class ResolvedTarget
      */
     public function __construct(
         public ReportTargetType $type,
-        public User|Vehicle|Media|BuildUpdate|Modification|Message $model,
+        public User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $model,
         public ?string $subjectId,
         public string $label,
         public array $snapshot,

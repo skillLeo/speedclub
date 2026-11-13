@@ -102,8 +102,8 @@ const locale = getActiveLanguage();
     <article class="flex flex-col gap-12 rounded-sm border border-line bg-surface p-16" :data-testid="`ADM-28.hero.${slotKey}`">
         <header class="flex flex-wrap items-start justify-between gap-8">
             <div class="flex min-w-0 flex-col gap-2">
-                <h3 class="text-title-s text-ink">{{ trans(`brand.heroes.${slotKey}`) }}</h3>
-                <p class="text-supporting text-ink-2">{{ trans(`brand.heroes.${slotKey}_hint`) }}</p>
+                <h3 class="text-headline text-ink">{{ trans(`brand.heroes.${slotKey}`) }}</h3>
+                <p class="text-admin-base text-ink-2">{{ trans(`brand.heroes.${slotKey}_hint`) }}</p>
             </div>
             <div v-if="!readOnly" class="flex gap-8">
                 <Button v-if="value" size="sm" variant="ghost" @click="emit('remove')">{{ trans('brand.remove') }}</Button>
@@ -130,23 +130,23 @@ const locale = getActiveLanguage();
                         <PhCrosshair :size="20" />
                     </span>
                 </div>
-                <p class="mt-8 text-helper text-ink-3">{{ readOnly ? trans('brand.focal.read_only') : trans('brand.focal.hint') }}</p>
+                <p class="mt-8 text-admin-base text-ink-3">{{ readOnly ? trans('brand.focal.read_only') : trans('brand.focal.hint') }}</p>
             </div>
             <figure class="flex shrink-0 flex-col gap-4">
                 <span :class="[cropClass, 'block overflow-hidden rounded-xs bg-black']" :data-testid="`ADM-28.hero.${slotKey}.crop`">
                     <img :src="asset.url" alt="" :width="asset.width" :height="asset.height" class="block size-full object-cover" :style="objectPosition" />
                 </span>
-                <figcaption class="text-helper text-ink-3">{{ trans('brand.focal.crop') }}</figcaption>
+                <figcaption class="text-admin-base text-ink-3">{{ trans('brand.focal.crop') }}</figcaption>
             </figure>
         </div>
         <div v-else-if="bundled" class="flex flex-wrap items-start gap-16" :data-testid="`ADM-28.hero.${slotKey}.bundled`">
             <div class="relative min-w-240 flex-1 basis-320 overflow-hidden rounded-xs bg-raised">
                 <img :src="bundled.url" alt="" :width="bundled.width" :height="bundled.height" class="block h-auto max-h-320 w-full object-cover opacity-60 grayscale" />
-                <span class="absolute left-8 top-8 rounded-xs bg-surface px-8 py-2 text-label-s text-ink">{{ trans('brand.heroes.bundled_badge') }}</span>
+                <span class="absolute left-8 top-8 rounded-xs bg-surface px-8 py-2 text-admin-base-strong text-ink">{{ trans('brand.heroes.bundled_badge') }}</span>
             </div>
-            <p class="max-w-240 text-supporting text-ink-2">{{ trans(`brand.heroes.${slotKey}_bundled`) }}</p>
+            <p class="max-w-240 text-admin-base text-ink-2">{{ trans(`brand.heroes.${slotKey}_bundled`) }}</p>
         </div>
-        <div v-else class="flex min-h-120 items-center justify-center rounded-xs border border-dashed border-line px-16 py-24 text-center text-supporting text-ink-2">
+        <div v-else class="flex min-h-120 items-center justify-center rounded-xs border border-dashed border-line px-16 py-24 text-center text-admin-base text-ink-2">
             {{ trans(`brand.heroes.${slotKey}_bundled`) }}
         </div>
 
@@ -156,18 +156,18 @@ const locale = getActiveLanguage();
             </template>
             <template v-else-if="failed">
                 <PhWarningCircle :size="20" class="shrink-0 text-warning" aria-hidden="true" />
-                <p class="text-supporting text-ink-2">{{ trans('brand.contrast.failed') }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans('brand.contrast.failed') }}</p>
             </template>
             <template v-else-if="contrast">
                 <component :is="contrast.passes ? PhCheckCircle : PhWarningCircle" :size="20" class="shrink-0" :class="contrast.passes ? 'text-success' : 'text-danger'" aria-hidden="true" />
                 <div class="flex flex-col gap-2">
-                    <p class="text-label-s text-ink">{{ contrast.passes ? trans('brand.contrast.passes') : trans('brand.contrast.fails') }}</p>
-                    <p class="text-supporting tabular-nums text-ink-2">
+                    <p class="text-admin-base-strong text-ink">{{ contrast.passes ? trans('brand.contrast.passes') : trans('brand.contrast.fails') }}</p>
+                    <p class="text-admin-base tabular-nums text-ink-2">
                         {{ trans('brand.contrast.ratios', { logo: ratioText(contrast.logo_ratio, locale), text: ratioText(contrast.text_ratio, locale), minimum: ratioText(contrast.minimum, locale) }) }}
                     </p>
                 </div>
             </template>
         </div>
-        <p v-if="error" class="text-helper text-danger" role="alert">{{ error }}</p>
+        <p v-if="error" class="text-admin-base text-danger" role="alert">{{ error }}</p>
     </article>
 </template>

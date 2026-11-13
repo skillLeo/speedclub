@@ -72,3 +72,11 @@ export function carLabel(member: { car_line: string | null } & object): string |
   const label = typeof short === 'string' && short.trim() !== '' ? short : member.car_line;
   return label?.trim() || null;
 }
+
+/**
+ * DQ-1044 (App. B `offline.banner`, 09 §5 OfflineBanner): "Offline – zuletzt aktualisiert vor 5 Min." from the query's last
+ * successful read; without one (nothing loaded yet) the plain offline line.
+ */
+export function offlineLine(t: (key: string, options?: Record<string, string>) => string, updatedAt: number, relative: (date: Date) => string): string {
+  return updatedAt > 0 ? t('offlineSince', { time: relative(new Date(updatedAt)) }) : t('offline');
+}

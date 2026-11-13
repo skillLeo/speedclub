@@ -14,7 +14,10 @@ final class PasswordProof
 {
     public function check(?User $user, string $password): bool
     {
-        return Hash::check($password, $user === null ? $this->dummyHash() : $user->getAuthPassword()) && $user !== null;
+        // M4.6: a passwordless account does the same work as an unknown address, and never matches.
+        $hash = $user?->hasPassword() === true ? $user->getAuthPassword() : $this->dummyHash();
+
+        return Hash::check($password, $hash) && $user?->hasPassword() === true;
     }
 
     /**

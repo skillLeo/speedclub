@@ -19,7 +19,8 @@ export const ASPIRATIONS: readonly Aspiration[] = ['naturally_aspirated', 'turbo
 export const DRIVETRAINS = ['front', 'rear', 'all'] as const satisfies readonly Drivetrain[];
 export const GEARBOXES: readonly Gearbox[] = ['manual', 'automatic', 'dual_clutch', 'sequential', 'cvt', 'single_speed'];
 export const POWER_UNITS = ['ps', 'kw', 'hp'] as const satisfies readonly PowerUnit[];
-export const SOURCES = ['factory', 'claimed', 'measured'] as const satisfies readonly PowerSource[];
+// DQ-1071: the order of the SpecStrip captions (ADR-431 c): Herstellerangabe · Prüfstand · Geschätzt.
+export const SOURCES = ['factory', 'measured', 'claimed'] as const satisfies readonly PowerSource[];
 export const VISIBILITIES = ['public', 'unlisted', 'private'] as const satisfies readonly Visibility[];
 
 function isOneOf<T extends string>(values: readonly T[], value: unknown): value is T {

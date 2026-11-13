@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { ScrollView, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
+// design-lint-disable-next-line DL04 -- the scroll-edge masks of a clipped tab row (DQ-1089), see below
+import { LinearGradient } from 'expo-linear-gradient';
+import { ScrollView, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
-import { isWeb } from '@/lib/platform';
-import { createStyles, useBreakpoint, useMotion, useTheme } from '@/theme';
+import { createStyles, useBreakpoint, useTheme } from '@/theme';
 
+import { useMotionPreference } from './motion';
 import { Hairline } from './Hairline';
 import { PressableScale } from './PressableScale';
 import { WithoutForcedState } from './qaVisualState';
@@ -33,8 +35,33 @@ export type ContentTabsProps<T extends string> = {
 
 type Box = { x: number; width: number };
 
+/** The same colour fully transparent (a fade to plain "transparent" passes through black, a grey band on Hell). */
+function clearOf(colour: string): string {
+  return /^#[0-9a-f]{6}$/i.test(colour) ? `${colour}00` : 'transparent';
+}
+
+/**
+ * DQ-1089/1115: where a scrolling row starts so that the selected tab is whole with the trailing inset, and the first tab in
+ * view is whole as well (never "ugesagt" cut at the edge). Tries the tab starts from the first one; a start puts that tab's
+ * visual edge where the row's leading padding ends. Pure, for the unit tests.
+ */
+export function tabRowOffset(boxes: readonly (Box | undefined)[], selected: number, viewport: number, inset: number): number {
+  const target = boxes[selected];
+  if (!target || viewport <= 0) return 0;
+  const end = target.x + target.width;
+  for (let index = 0; index <= selected; index += 1) {
+    const start = boxes[index]?.x;
+    if (start === undefined) continue;
+    if (end - start <= viewport - 2 * inset) return start;
+  }
+  return target.x;
+}
+
 /** DQ-192: up to this many tabs share the width equally once their labels overflow, instead of scrolling. */
 const EQUAL_MAX_TABS = 2;
+const SCROLL_THROTTLE = 32;
+const HORIZONTAL_START = { x: 0, y: 0 };
+const HORIZONTAL_END = { x: 1, y: 0 };
 
 const useStyles = createStyles((t) => ({
   scroller: { flexGrow: 0 },
@@ -46,6 +73,10 @@ const useStyles = createStyles((t) => ({
   labelEqual: { textAlign: 'center' },
   // Measures the labels on one line each. Invisible, and out of the layout and the accessibility tree.
   measure: { alignItems: 'flex-start', left: 0, opacity: 0, pointerEvents: 'none', position: 'absolute', top: 0 },
+  // DQ-1089: a cue that more tabs follow (or precede) beyond the edge of a scrolling row.
+  mask: { bottom: t.size.border.control, pointerEvents: 'none', position: 'absolute', top: 0, width: t.space[24] },
+  maskEnd: { right: 0 },
+  maskStart: { left: 0 },
   visual: {
     alignItems: 'center',
     borderRadius: t.radius.sm,
@@ -55,11 +86,6 @@ const useStyles = createStyles((t) => ({
     paddingHorizontal: t.space[12],
   },
   hover: { backgroundColor: t.color.state.hover },
-  // §8 asks for 15/20 at 600: the size of bodyDense, the line and semi-bold family of labelS.
-  label: {
-    fontSize: t.typography.bodyDense.fontSize * (isWeb ? t.fontScale : 1),
-    lineHeight: t.typography.labelS.lineHeight * (isWeb ? t.fontScale : 1),
-  },
   // One unit wide, scaled to the label: the slide uses transform only.
   underline: {
     backgroundColor: t.color.accent.fg,
@@ -83,13 +109,15 @@ export function ContentTabs<T extends string>({
   testID,
 }: ContentTabsProps<T>) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const theme = useTheme();
   const breakpoint = useBreakpoint();
   const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const [boxes, setBoxes] = useState<Record<string, Box>>({});
   const [rowWidth, setRowWidth] = useState(0);
   const [labelWidths, setLabelWidths] = useState<Record<string, number>>({});
+  const [contentWidth, setContentWidth] = useState(0);
+  const [scrollX, setScrollX] = useState(0);
   const selectedIndex = Math.max(
     0,
     tabs.findIndex((tab) => tab.value === value),
@@ -113,22 +141,31 @@ export function ContentTabs<T extends string>({
   const width = useSharedValue(0);
   const placed = useRef(false);
 
+  // The offset that shows the selected tab whole with a gutter after it, starting at a whole tab (DQ-1089, DQ-1115).
+  const offset = tabRowOffset(
+    tabs.map((tab) => boxes[tab.value]),
+    selectedIndex,
+    // The scroller's own width (bleed reaches the label padding past both edges) less its leading and trailing padding.
+    (bleed && !gutter ? rowWidth + padding * 2 : rowWidth) - 2 * edge,
+    0,
+  );
+
   useEffect(() => {
     if (!box) return;
     const labelWidth = Math.max(0, Math.min(box.width - padding * 2, equal ? (labelWidths[selectedKey ?? ''] ?? box.width) : box.width));
     const centre = box.x + box.width / 2;
     if (placed.current) {
-      x.set(motion.timingTo(centre, 'micro'));
-      width.set(motion.timingTo(labelWidth, 'micro'));
-      scroller.current?.scrollTo({ x: Math.max(0, box.x - breakpoint.gutter), animated: motion.enabled && !motion.reduced });
+      x.set(motion.springTo(centre, 'fast'));
+      width.set(motion.springTo(labelWidth, 'fast'));
+      scroller.current?.scrollTo({ x: offset, animated: motion.enabled && !motion.reduced });
     } else {
       x.set(centre);
       width.set(labelWidth);
       placed.current = true;
       // DQ-192: a tab chosen before the first frame (the one that opened by itself) is in view from the start.
-      scroller.current?.scrollTo({ x: Math.max(0, box.x - breakpoint.gutter), animated: false });
+      scroller.current?.scrollTo({ x: offset, animated: false });
     }
-  }, [box, breakpoint.gutter, equal, labelWidths, motion, padding, selectedKey, width, x]);
+  }, [box, equal, labelWidths, motion, offset, padding, selectedKey, width, x]);
 
   const underline = useAnimatedStyle(() => ({
     opacity: width.get() > 0 ? 1 : 0,
@@ -144,6 +181,16 @@ export function ContentTabs<T extends string>({
     selectedIndex,
     select,
   );
+
+  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const next = Math.round(event.nativeEvent.contentOffset.x);
+    setScrollX((current) => (current === next ? current : next));
+  };
+  const scrollable = !equal && rowWidth > 0 && contentWidth > rowWidth + 1;
+  const overflowStart = scrollable && scrollX > 1;
+  const overflowEnd = scrollable && scrollX + rowWidth < contentWidth - 1;
+  const canvas = theme.color.bg.canvas;
+  const transparentCanvas = clearOf(canvas);
 
   const list = (
         <View
@@ -178,7 +225,7 @@ export function ContentTabs<T extends string>({
                   style={[styles.tab, equal ? styles.tabEqual : null]}
                   contentStyle={(state) => [styles.visual, state.hovered ? styles.hover : null]}
                 >
-                  <Text variant="labelS" color={color} selectable={false} hyphenate={false} style={[styles.label, equal ? styles.labelEqual : null]}>
+                  <Text variant="bodyStrong" color={color} selectable={false} hyphenate={false} style={equal ? styles.labelEqual : null}>
                     {/* DQ-282: sharing the row equally, a label may wrap between its words, so a no-break space (label + count,
                         DQ-279) turns back into a normal one here; the measuring copy keeps it to measure the one-line width. */}
                     {equal ? tab.label.replace(/\u00A0/g, ' ') : tab.label}
@@ -198,21 +245,34 @@ export function ContentTabs<T extends string>({
           {list}
         </View>
       ) : (
-        <ScrollView
-          ref={scroller}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={[styles.scroller, bleed && !gutter ? styles.scrollerBleed : null]}
-          contentContainerStyle={{ paddingHorizontal: edge }}
-        >
-          {list}
-        </ScrollView>
+        <View>
+          <ScrollView
+            ref={scroller}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={SCROLL_THROTTLE}
+            onScroll={onScroll}
+            onContentSizeChange={(next) => setContentWidth(next)}
+            style={[styles.scroller, bleed && !gutter ? styles.scrollerBleed : null]}
+            contentContainerStyle={{ paddingHorizontal: edge }}
+          >
+            {list}
+          </ScrollView>
+          {overflowStart ? (
+            // design-lint-disable-next-line DL04 -- scroll-edge mask of a clipped tab row (DQ-1089): canvas to transparent, a cue, not decoration
+            <LinearGradient aria-hidden colors={[canvas, transparentCanvas]} start={HORIZONTAL_START} end={HORIZONTAL_END} style={[styles.mask, styles.maskStart]} testID={testID ? `${testID}.maskStart` : undefined} />
+          ) : null}
+          {overflowEnd ? (
+            // design-lint-disable-next-line DL04 -- scroll-edge mask of a clipped tab row (DQ-1089): transparent to canvas, a cue, not decoration
+            <LinearGradient aria-hidden colors={[transparentCanvas, canvas]} start={HORIZONTAL_START} end={HORIZONTAL_END} style={[styles.mask, styles.maskEnd]} testID={testID ? `${testID}.maskEnd` : undefined} />
+          ) : null}
+        </View>
       )}
       <Hairline />
       {tabs.length <= EQUAL_MAX_TABS ? (
         <View aria-hidden style={styles.measure}>
           {tabs.map((tab) => (
-            <Text key={tab.value} variant="labelS" hyphenate={false} selectable={false} style={styles.label} onLayout={measureLabel(tab.value)}>
+            <Text key={tab.value} variant="bodyStrong" hyphenate={false} selectable={false} onLayout={measureLabel(tab.value)}>
               {tab.label}
             </Text>
           ))}

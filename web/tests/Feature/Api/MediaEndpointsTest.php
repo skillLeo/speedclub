@@ -124,7 +124,7 @@ describe('POST vehicles/{id}/media', function () {
         ], ['Accept' => 'application/json'])->assertCreated();
 
         $response->assertExactJsonStructure(['data' => [
-            'id', 'status', 'category', 'width', 'height', 'blurhash', 'focal_x', 'focal_y', 'alt', 'sort', 'created_at',
+            'id', 'status', 'category', 'width', 'height', 'blurhash', 'thumbhash', 'focal_x', 'focal_y', 'alt', 'sort', 'created_at',
             'variants' => ['*' => ['width', 'height', 'url']],
         ]]);
 

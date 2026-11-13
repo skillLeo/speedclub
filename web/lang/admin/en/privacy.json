@@ -315,6 +315,10 @@
                 "label": "Audit events",
                 "note": "With the daily exports of the hash chain."
             },
+            "security_events": {
+                "label": "Security activity",
+                "note": "Sign-ins, failed attempts and sign-in changes members see under Security activity. Without IP addresses."
+            },
             "audit_archive": {
                 "label": "Audit log archive",
                 "note": "Then an archived export, up to this age."

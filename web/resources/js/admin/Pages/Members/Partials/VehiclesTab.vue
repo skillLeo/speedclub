@@ -22,7 +22,7 @@ const qrHref = (code: string): string | null => (hasRoute('admin.qr.show') ? rou
 <template>
     <EmptyQueue v-if="vehicles.length === 0" variant="first" :title="trans('members.vehicles.empty_title')" :body="trans('members.vehicles.empty_body')" data-testid="ADM-10.vehicles.empty" />
     <ScrollRegion v-else :label="trans('members.vehicles.caption')" test-id="ADM-10.vehicles">
-        <table class="w-full border-collapse text-supporting">
+        <table class="w-full border-collapse text-admin-base">
             <caption class="sr-only">{{ trans('members.vehicles.caption') }}</caption>
             <thead>
                 <tr class="h-40 border-b border-line text-left text-caption text-ink-2">

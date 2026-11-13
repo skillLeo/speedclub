@@ -17,7 +17,7 @@ const tones: Record<Tone, string> = {
 </script>
 
 <template>
-    <span class="inline-flex h-20 items-center gap-4 whitespace-nowrap rounded-xs border px-4 text-badge" :class="[tones[tone], tnum ? 'tabular-nums' : '']">
+    <span class="inline-flex h-20 items-center gap-4 whitespace-nowrap rounded-xs border px-4 text-caption" :class="[tones[tone], tnum ? 'tabular-nums' : '']">
         <slot />
     </span>
 </template>

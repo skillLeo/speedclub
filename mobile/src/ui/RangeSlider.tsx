@@ -7,8 +7,9 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { isWeb } from '@/lib/platform';
 import { parseNumber } from '@/lib/format';
 import { useFormat } from '@/lib/useFormat';
-import { createStyles, motion as motionTokens, size, space, useMotion } from '@/theme';
+import { createStyles, motion as motionTokens, size, space } from '@/theme';
 
+import { useMotionPreference } from './motion';
 import { HitArea } from './PressableScale';
 import { useForcedVisualState, WithoutForcedState } from './qaVisualState';
 import { bubbleOffsets, clampHigh, clampLow, offsetToValue, snapValue, valueToOffset } from './rangeSliderMath';
@@ -340,8 +341,8 @@ function Thumb({
   const focus = useFocusRing();
   const forced = useForcedVisualState();
   const start = useSharedValue(0);
-  // §10 press: scale and opacity while the thumb is held, spring.snappy.
-  const motion = useMotion();
+  // SM7 press: the held thumb scales to 0.97 on spring.fast; no opacity (an opacity press is banned, DL13).
+  const motion = useMotionPreference();
   const { springTo } = motion;
   const held = useSharedValue(forced?.pressed ? 1 : 0);
   const isLow = kind === 'low';
@@ -354,7 +355,7 @@ function Thumb({
     onBegin: () => {
       'worklet';
       dragging.set(true);
-      held.set(springTo(1));
+      held.set(springTo(1, 'fast'));
       start.set(own.get());
     },
     onUpdate: (event) => {
@@ -371,7 +372,7 @@ function Thumb({
     onFinalize: () => {
       'worklet';
       dragging.set(false);
-      held.set(springTo(0));
+      held.set(springTo(0, 'fast'));
       if (own.get() === start.get()) return;
       scheduleOnRN(onEnd, isLow ? own.get() : other.get(), isLow ? other.get() : own.get());
     },
@@ -381,7 +382,6 @@ function Thumb({
     transform: [{ translateX: valueToOffset(own.get(), Math.max(0, width.get() - THUMB), min, max) }],
   }));
   const visualStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(held.get(), [0, 1], [1, motionTokens.press.opacity]),
     transform: [{ scale: interpolate(held.get(), [0, 1], [1, motionTokens.press.scale]) }],
   }));
 

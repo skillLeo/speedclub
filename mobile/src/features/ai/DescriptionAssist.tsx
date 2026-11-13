@@ -79,9 +79,9 @@ export function DescriptionAssist({ vehicleId, value, disabled = false, onSugges
         />
       )}
       {shownNote ? (
-        <AiNote note={shownNote} variant="helper" testID={testID} />
+        <AiNote note={shownNote} variant="caption" testID={testID} />
       ) : (
-        <Text variant="helper" color="text.secondary">
+        <Text variant="caption" color="text.secondary">
           {t('ai.describeHint')}
         </Text>
       )}

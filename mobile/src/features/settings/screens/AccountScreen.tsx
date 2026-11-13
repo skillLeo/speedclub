@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import type { Me } from '@/api/queries/auth';
-import { breakableEmail } from '@/features/auth/forms';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size } from '@/theme';
 import { ListRow, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { identifierText } from '@/ui/textBreaks';
 
 import { twoFactorEnabledOf } from '../account';
 import { MemberGate } from '../components/MemberGate';
@@ -32,7 +32,7 @@ function AccountSkeleton() {
       <View style={styles.groups}>
         {[2, 3].map((rows) => (
           <View key={rows} style={styles.skeletonGroup}>
-            <SkeletonText variant="labelS" width="25%" style={styles.skeletonLabel} />
+            <SkeletonText variant="callout" width="25%" style={styles.skeletonLabel} />
             <SkeletonBlock height={size.row.withThumb * rows} corner="md" />
           </View>
         ))}
@@ -51,11 +51,11 @@ function AccountRows({ me }: { me: Me }) {
     <View style={styles.groups}>
       <RestrictionNotice routeId={ROUTE} />
       <RowGroup title={t('account.groupAccount')} testID={`${ROUTE}.account`}>
-        {/* The address may be long; it takes the subtitle line, where it can wrap at "@" and dots. */}
+        {/* The address may be long; it takes the subtitle line, where it can wrap after "@", "." and "/", never at its own hyphen (DQ-927). */}
         <ListRow
           icon="user"
           title={t('account.email')}
-          subtitle={breakableEmail(me.email)}
+          subtitle={identifierText(me.email)}
           hyphenate={false}
           onPress={() => router.push('/settings/account/email')}
           inset={ROW_INSET}
@@ -108,7 +108,7 @@ function AccountRows({ me }: { me: Me }) {
           testID={`${ROUTE}.sessions`}
         />
       </RowGroup>
-      <Text variant="supporting" color="text.secondary" style={styles.since} testID={`${ROUTE}.since`}>
+      <Text variant="callout" color="text.secondary" style={styles.since} testID={`${ROUTE}.since`}>
         {t('account.memberSince', { date: format.monthYear(new Date(me.member_since)) })}
       </Text>
     </View>

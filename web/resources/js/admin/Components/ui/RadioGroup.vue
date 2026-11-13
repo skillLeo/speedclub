@@ -21,9 +21,9 @@ const id = useId();
 
 <template>
     <fieldset class="flex flex-col gap-8">
-        <legend class="mb-4 text-label-s text-ink" :class="hideLegend ? 'sr-only' : ''">{{ legend }}</legend>
+        <legend class="mb-4 text-admin-base-strong text-ink" :class="hideLegend ? 'sr-only' : ''">{{ legend }}</legend>
         <RadioGroupRoot v-model="model" :disabled="disabled" :orientation="orientation" class="flex gap-12" :class="orientation === 'vertical' ? 'flex-col' : 'flex-row flex-wrap'">
-            <label v-for="option in options" :key="option.value" :for="`${id}-${option.value}`" class="flex min-h-32 cursor-pointer gap-8 text-supporting text-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:text-ink-3" :class="option.hint ? 'items-start' : 'items-center'">
+            <label v-for="option in options" :key="option.value" :for="`${id}-${option.value}`" class="flex min-h-32 cursor-pointer gap-8 text-admin-base text-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:text-ink-3" :class="option.hint ? 'items-start' : 'items-center'">
                 <RadioGroupItem
                     :id="`${id}-${option.value}`"
                     :value="option.value"
@@ -34,7 +34,7 @@ const id = useId();
                 </RadioGroupItem>
                 <span class="flex flex-col">
                     <span>{{ option.label }}</span>
-                    <span v-if="option.hint" class="text-helper text-ink-3">{{ option.hint }}</span>
+                    <span v-if="option.hint" class="text-admin-base text-ink-3">{{ option.hint }}</span>
                 </span>
             </label>
         </RadioGroupRoot>

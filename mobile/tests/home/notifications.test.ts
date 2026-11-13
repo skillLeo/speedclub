@@ -1,4 +1,4 @@
-import { groupByDay, msUntilNextBerlinDay, notificationIcon, notificationTarget, notificationText } from '@/features/home/notifications';
+import { emphasisRuns, groupByDay, groupBySection, matchesFilter, msUntilNextBerlinDay, notificationCategory, notificationHyphenates, notificationIcon, notificationTarget, notificationText, notificationThumb, sectionOf } from '@/features/home/notifications';
 import i18n from '@/i18n';
 
 import { notification } from './fixtures';
@@ -11,8 +11,8 @@ const de = i18n.getFixedT('de', 'home');
 const plain = (text: string) => text.replace(/\u00A0/g, ' ').replace(/\u2060/g, '');
 const text = (...args: Parameters<typeof notificationText>) => plain(notificationText(...args));
 const en = i18n.getFixedT('en', 'home');
-const actor = (username: string) => ({ username, display_name: null, city: null, avatar: null });
-const R34 = { id: '01r34', slug: 'nissan-skyline-gt-r-r34-xmeypf41', full_title: 'Nissan Skyline GT-R R34', cover: null };
+const actor = (username: string) => ({ username, display_name: null, city: null, avatar: null, is_sample: false, is_editorial: false, main_vehicle_cover: null });
+const R34 = { id: '01r34', slug: 'nissan-skyline-gt-r-r34-xmeypf41', full_title: 'Nissan Skyline GT-R R34', cover: null, is_sample: false };
 
 describe('HOME-02 text, made in the app from type, actors and actor_count', () => {
   it('names new followers: one, two, and one plus the rest', () => {
@@ -50,9 +50,23 @@ describe('HOME-02 text, made in the app from type, actors and actor_count', () =
     const security = (details: Record<string, string | null>) => notification({ type: 'security', actors: [], actor_count: 0, details });
     expect(text(security({ event: 'password_changed', device_name: null }), de)).toBe('Dein Passwort wurde geändert. Warst du das nicht? Dann setz es über „Passwort vergessen“ zurück.');
     expect(text(security({ event: 'new_device', device_name: 'Pixel 9' }), de)).toBe(
-      'Neue Anmeldung auf Pixel 9. Warst du das nicht? Dann ändere sofort dein Passwort.',
+      'Neue Anmeldung auf Pixel 9. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.',
     );
-    expect(text(security({ event: 'something_new', device_name: null }), de)).toBe('Eine Sicherheitseinstellung deines Kontos wurde geändert. Warst du das nicht? Dann ändere sofort dein Passwort.');
+    expect(text(security({ event: 'something_new', device_name: null }), de)).toBe('Eine Sicherheitseinstellung deines Kontos wurde geändert. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.');
+  });
+
+  it('keeps a device name whole and sets its sentence without hyphenation (DQ-910)', () => {
+    const security = (details: Record<string, string | null>) => notification({ type: 'security', actors: [], actor_count: 0, details });
+    const emulator = security({ event: 'new_device', device_name: 'sdk_gphone64_arm64' });
+    expect(notificationHyphenates(emulator)).toBe(false);
+    expect(text(emulator, de)).toBe('Neue Anmeldung auf sdk_gphone64_arm64. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.');
+    // A short name keeps its spaces from breaking, a hyphenated one its hyphen.
+    expect(notificationText(security({ event: 'new_device', device_name: 'iPhone 15 Pro' }), de)).toContain('iPhone\u00A015\u00A0Pro');
+    expect(notificationText(security({ event: 'new_device', device_name: 'Galaxy S24-Ultra' }), en)).toContain('S24-\u2060Ultra');
+    // Without a device name, and for every other type, the sentence hyphenates as running text.
+    expect(notificationHyphenates(security({ event: 'new_device', device_name: null }))).toBe(true);
+    expect(notificationHyphenates(security({ event: 'password_changed', device_name: 'Pixel 9' }))).toBe(true);
+    expect(notificationHyphenates(notification())).toBe(true);
   });
 
   it('names "Ein Mitglied" when the actor is gone', () => {
@@ -76,6 +90,11 @@ describe('HOME-02 targets', () => {
     expect(notificationTarget({ ...update, details: { kind: 'update', update_id: 'u3', vehicles: 0, updates: 3 } }, null)).toBe('/u/lukas.sc');
     expect(notificationTarget(notification({ type: 'build_saved', actors: [], vehicle: R34, details: { count: 2 } }), null)).toBe(`/garage/${R34.id}`);
     expect(notificationTarget(notification({ type: 'security', actors: [], details: { event: 'email_changed' } }), null)).toBe('/settings');
+    // M4.7: a row with its SET-21 event opens the security log on that event (`security_event_id`, not in the OpenAPI type yet).
+    expect(
+      notificationTarget(notification({ type: 'security', actors: [], details: { event: 'new_device', security_event_id: '01jcz8q3m5w6x7y8z9a0b1c2d3' } as never }), null),
+    ).toEqual({ pathname: '/settings/security/activity', params: { event: '01jcz8q3m5w6x7y8z9a0b1c2d3' } });
+    expect(notificationTarget(notification({ type: 'security', actors: [], details: { event: 'email_changed', security_event_id: '../x' } as never }), null)).toBe('/settings');
   });
 });
 
@@ -179,5 +198,56 @@ describe('HOME-02 signature rows (M2.7)', () => {
     const odd = notification({ type: 'support_reply', actors: [], actor_count: 0, vehicle: null, details: { ticket_id: '../x', reference: '<b>' } });
     expect(text(odd, de)).toBe('Das Team hat auf deine Support-Anfrage geantwortet');
     expect(notificationTarget(odd, 'lukas.sc')).toBe('/settings/help/requests');
+  });
+});
+
+describe('09 §7.4 HOME-02 2.0: chips, sections, bold names, the car photo', () => {
+  const at = (iso: string) => notification({ created_at: iso });
+  const now = new Date('2026-11-12T12:00:00+01:00');
+
+  it('sorts every type into one chip: Builds, Social, Treffen or System', () => {
+    expect(notificationCategory({ type: 'followed_published' })).toBe('builds');
+    expect(notificationCategory({ type: 'build_saved' })).toBe('builds');
+    expect(notificationCategory({ type: 'new_follower' })).toBe('social');
+    expect(notificationCategory({ type: 'reaction' })).toBe('social');
+    expect(notificationCategory({ type: 'event_reminder' })).toBe('events');
+    expect(notificationCategory({ type: 'security' })).toBe('system');
+    expect(notificationCategory({ type: 'support_reply' })).toBe('system');
+    expect(matchesFilter({ type: 'security' }, 'all')).toBe(true);
+    expect(matchesFilter({ type: 'security' }, 'builds')).toBe(false);
+  });
+
+  it('groups into Heute, Gestern, Diese Woche and Früher by the Berlin day', () => {
+    const rows = groupBySection(
+      [at('2026-11-12T09:00:00+01:00'), at('2026-11-11T23:30:00+01:00'), at('2026-11-08T10:00:00+01:00'), at('2026-11-05T10:00:00+01:00'), at('2026-10-01T10:00:00+02:00')],
+      now,
+      de,
+    );
+    expect(rows.filter((row) => row.kind === 'day').map((row) => row.kind === 'day' && row.label)).toEqual(['Heute', 'Gestern', 'Diese Woche', 'Früher']);
+    expect(sectionOf(new Date('2026-11-06T10:00:00+01:00'), now)).toBe('week');
+    expect(sectionOf(new Date('2026-11-05T10:00:00+01:00'), now)).toBe('earlier');
+  });
+
+  it('sets the members and the vehicle in bold, the rest plain', () => {
+    const row = notification({ type: 'followed_published', vehicle: R34, details: { kind: 'vehicle', update_id: null, vehicles: 1, updates: 0 } });
+    const sentence = notificationText(row, de);
+    const runs = emphasisRuns(sentence, row);
+    expect(runs.map((run) => run.text).join('')).toBe(sentence);
+    expect(runs.filter((run) => run.strong).map((run) => plain(run.text))).toEqual(['@lukas.sc', 'Nissan Skyline GT-R R34']);
+    expect(emphasisRuns('Kein Name hier', row)).toEqual([{ text: 'Kein Name hier', strong: false }]);
+  });
+
+  it('shows the car photo of the object, never on a security row', () => {
+    const cover = { id: 'm', blurhash: null } as unknown as NonNullable<typeof R34.cover>;
+    expect(notificationThumb({ type: 'followed_published', vehicle: { ...R34, cover } })).toBe(cover);
+    expect(notificationThumb({ type: 'security', vehicle: { ...R34, cover } })).toBeNull();
+    expect(notificationThumb({ type: 'followed_published', vehicle: null })).toBeNull();
+  });
+
+  it('never quotes the generic passkey name (DQ-999)', () => {
+    const generic = text(notification({ type: 'security', actors: [], actor_count: 0, details: { event: 'passkey_added', device_name: 'Passkey' } }), de);
+    expect(generic).not.toMatch(/„Passkey“/);
+    const named = text(notification({ type: 'security', actors: [], actor_count: 0, details: { event: 'passkey_added', device_name: 'iCloud-Schlüsselbund' } }), de);
+    expect(named).toMatch(/iCloud/);
   });
 });

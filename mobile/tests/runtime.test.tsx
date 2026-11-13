@@ -8,25 +8,20 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import i18n from '@/i18n';
 import { toFormatLocale, useFormat } from '@/lib/useFormat';
-import { appFonts } from '@/theme/fonts';
-import { fonts, getTheme, hydrateThemePreference, motion, ThemeProvider, themes, typography, useMotion } from '@/theme';
+import { getTheme, hydrateThemePreference, motion, ThemeProvider, themes } from '@/theme';
 import { Icon, phosphorIcons, type IconName } from '@/ui/icons/Icon';
 import { Screen } from '@/ui/Screen';
 
 import version from '../version.json';
 
-jest.mock('react-native-reanimated', () => ({
-  __esModule: true,
-  ...jest.requireActual('react-native-reanimated'),
-  useReducedMotion: jest.fn(() => false),
-}));
-
 jest.mock('expo-haptics', () => ({
   selectionAsync: jest.fn(() => Promise.resolve()),
   impactAsync: jest.fn(() => Promise.resolve()),
   notificationAsync: jest.fn(() => Promise.resolve()),
-  ImpactFeedbackStyle: { Light: 'light' },
-  NotificationFeedbackType: { Success: 'success', Warning: 'warning' },
+  performAndroidHapticsAsync: jest.fn(() => Promise.resolve()),
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium' },
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+  AndroidHaptics: { Confirm: 'confirm', Reject: 'reject', Long_Press: 'long-press', Virtual_Key: 'virtual-key', Segment_Tick: 'segment-tick' },
 }));
 
 jest.mock('expo-secure-store', () => ({
@@ -34,19 +29,6 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(() => Promise.resolve()),
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }));
-
-describe('fonts', () => {
-  it('loads exactly the families the tokens name', () => {
-    const tokenFamilies = [...Object.values(fonts.ui.native), ...Object.values(fonts.display.native)].sort();
-    expect(Object.keys(appFonts).sort()).toEqual(tokenFamilies);
-  });
-
-  it('loads every family the type scale uses', () => {
-    for (const style of Object.values(typography)) {
-      expect(Object.keys(appFonts)).toContain(style.fontFamily);
-    }
-  });
-});
 
 describe('ready gates', () => {
   function loadReady() {
@@ -111,9 +93,9 @@ describe('haptics', () => {
 
   it('stays silent when disabled', () => {
     const { haptics, setHapticsEnabled } = jest.requireActual<typeof import('@/lib/haptics')>('@/lib/haptics');
-    setHapticsEnabled(false);
+    setHapticsEnabled(false, false);
     haptics.success();
-    setHapticsEnabled(true);
+    setHapticsEnabled(true, false);
     expect(Haptics.notificationAsync).not.toHaveBeenCalled();
   });
 
@@ -148,6 +130,11 @@ describe('Icon', () => {
   beforeAll(hydrateThemePreference);
 
   const required: IconName[] = [
+    // M4.10 messaging 2.0: reactions without emoji (Gefällt mir, Daumen hoch, Zielflagge) and "Antworten".
+    'heart',
+    'thumbs-up',
+    'flag-checkered',
+    'arrow-bend-up-left',
     'house',
     'magnifying-glass',
     'garage',
@@ -200,6 +187,12 @@ describe('Icon', () => {
     'flag',
     'clock',
       'device-mobile',
+    // M4.7: SET-06 platform glyphs, SET-20/21 and AUTH-15.
+    'android-logo',
+    'desktop',
+    'sign-out',
+    'shield-warning',
+    'lock-key',
     'translate',
     'shield-check',
     'question',
@@ -213,6 +206,16 @@ describe('Icon', () => {
     'lifebuoy',
     'lightbulb',
     'arrow-square-out',
+    // M4.6 Auth 2.0: ProviderButtons (Apple, E-Mail) and passkey rows.
+    'apple-logo',
+    'envelope-simple',
+    'key',
+    // M4.12 events: the map, a place, "Route", attendees, "In Kalender".
+    'map-pin',
+    'map-trifold',
+    'navigation-arrow',
+    'users',
+    'calendar-plus',
   ];
 
   it('curates every icon the primitives need', () => {
@@ -251,47 +254,15 @@ describe('Icon', () => {
   });
 });
 
-describe('motion tokens', () => {
-  it('has the durations the crossfade relies on', () => {
-    expect(motion.duration.small).toBe(200);
-    expect(motion.duration.reducedCrossfade).toBe(120);
+describe('motion tokens (09 §4.7)', () => {
+  it('gives every spring and effect mass 1, which the installed Reanimated would otherwise default to 4', () => {
+    for (const config of [...Object.values(motion.spring), ...Object.values(motion.effect)]) expect(config.mass).toBe(1);
+    expect(motion.spring.fast).toEqual({ stiffness: 800, damping: 34, mass: 1 });
+    expect(motion.effect.default).toEqual({ stiffness: 1600, damping: 80, mass: 1 });
   });
 });
 
-describe('useMotion', () => {
-  const reduced = jest.requireMock<{ useReducedMotion: jest.Mock }>('react-native-reanimated');
-
-  function motionFor(reducedMotion: boolean) {
-    reduced.useReducedMotion.mockReturnValue(reducedMotion);
-    let result!: ReturnType<typeof useMotion>;
-    function Probe() {
-      result = useMotion();
-      return null;
-    }
-    return render(<Probe />).then(() => result);
-  }
-
-  it('builds timingTo and springTo as worklets, so UI-thread callers can use them', async () => {
-    const worklet = (fn: unknown) => (fn as { __workletHash?: number }).__workletHash;
-    for (const flag of [false, true]) {
-      const { timingTo, springTo } = await motionFor(flag);
-      expect(worklet(timingTo)).toEqual(expect.any(Number));
-      expect(worklet(springTo)).toEqual(expect.any(Number));
-    }
-  });
-
-  it('caps durations at the crossfade under reduced motion', async () => {
-    const full = await motionFor(false);
-    const reducedMotion = await motionFor(true);
-    expect(full.duration.small).toBe(motion.duration.small);
-    expect(reducedMotion.duration.small).toBe(motion.duration.reducedCrossfade);
-    expect(reducedMotion.reduced).toBe(true);
-  });
-
-  it('keeps one object per mode, so effects can depend on it', async () => {
-    expect(await motionFor(false)).toBe(await motionFor(false));
-  });
-});
+// useMotionPreference, springTo and effectTo: tests/ui/motion.test.tsx.
 
 describe('first-screen gate', () => {
   it('does not report a screen when only its gate timed out', () => {

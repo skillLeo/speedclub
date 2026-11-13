@@ -899,9 +899,9 @@ describe('the Verlauf toggle hides the whole entry', () => {
     await waitFor(() => expect(screen.getByTestId('GAR-11.entry.01upd.toggle')).toBeTruthy());
   }
 
-  it('takes the name of the only change', async () => {
+  it('takes the name of the only change, as its title says it (DQ-1059)', async () => {
     await show(update({}));
-    expect(screen.getByTestId('GAR-11.entry.01upd.toggle')).toHaveAccessibleName('Fahrwerk ausblenden');
+    expect(screen.getByTestId('GAR-11.entry.01upd.toggle')).toHaveAccessibleName('KW V3 statt Serie ausblenden');
   });
 
   it('with two changes takes the kind and the date, not the first change', async () => {

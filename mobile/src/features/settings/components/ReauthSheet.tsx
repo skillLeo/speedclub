@@ -96,7 +96,7 @@ export function ReauthSheet({ visible, onClose, title, body, confirmLabel, needs
       footer={<Button label={confirmLabel} size="l" fullWidth loading={busy} disabled={locked} onPress={() => void submit()} testID={`${testID}.confirm`} />}
     >
       <View style={styles.body}>
-        <Text variant="bodyDense" color="text.secondary">
+        <Text variant="body" color="text.secondary">
           {body}
         </Text>
         {notice ? (

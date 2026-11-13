@@ -45,7 +45,7 @@ it('documents the safety routes with typed resources and their error bodies', fu
         ->and($schemas['CaseOrigin']['enum'])->toBe(['report', 'staff'])
         ->and($schemas['ReportReason']['enum'])->toBe(['illegal', 'harassment', 'nudity', 'spam', 'impersonation', 'other'])
         ->and($schemas['IllegalSubReason']['enum'])->toBe(['street_racing', 'hate_speech', 'privacy', 'copyright', 'other_illegal'])
-        ->and($schemas['ReportTargetType']['enum'])->toBe(['member', 'vehicle', 'photo', 'message', 'build_update', 'modification'])
+        ->and($schemas['ReportTargetType']['enum'])->toBe(['member', 'vehicle', 'photo', 'message', 'build_update', 'modification', 'comment', 'event'])
         ->and($schemas['ReportStatus']['enum'])->toBe(['received', 'in_review', 'decided'])
         ->and($schemas['AppealStatus']['enum'])->toBe(['open', 'upheld', 'reversed'])
         ->and($schemas['GroundDocument']['enum'])->toBe(['community', 'terms', 'law'])

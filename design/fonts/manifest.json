@@ -1,0 +1,1432 @@
+{
+  "schema": 1,
+  "generator": "design/scripts/build-fonts.py",
+  "spec": "docs/09_PREMIUM_2_0.md §4.2, ADR-402",
+  "tools": {
+    "python": "3.15.2",
+    "fonttools": "4.68.0",
+    "brotli": "1.2.1",
+    "skia-pathops": "0.9.2"
+  },
+  "build": {
+    "charsets": {
+      "spec": "U+0020-007E, U+00A0-00FF, U+2013-2014, U+201C-201E, U+20AC",
+      "copy": "U+2010-2011, U+2018-201A, U+2022, U+2026, U+2032-2033, U+2039-203A, U+2190, U+2192, U+2212, U+2248, U+2264-2265, U+2318",
+      "latinExt": "U+0100-024F, U+1E9E"
+    },
+    "primaryCharsets": ["spec", "copy"],
+    "latinExtFiles": true,
+    "keepFeatures": ["tnum", "pnum", "lnum", "case", "zero", "cv11"],
+    "webNameIds": [0, 1, 2, 3, 4, 5, 6, 13, 14, 16, 17],
+    "webHinting": false,
+    "archivoOverlaps": "remove",
+    "cssUrlPrefix": "../fonts/2.0/"
+  },
+  "unicodeRanges": {
+    "primary": "U+0020-007E, U+00A0-00FF, U+2010-2011, U+2013-2014, U+2018-201A, U+201C-201E, U+2022, U+2026, U+2032-2033, U+2039-203A, U+20AC, U+2190, U+2192, U+2212, U+2248, U+2264-2265, U+2318",
+    "latinExt": "U+0100-024F, U+1E9E"
+  },
+  "sources": {
+    "inter": {
+      "version": "4.1",
+      "url": "https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip",
+      "sha256": "9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e",
+      "licenceName": "SIL Open Font License 1.1 (no Reserved Font Name)",
+      "licence": {
+        "member": "LICENSE.txt",
+        "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+        "as": "OFL-Inter.txt"
+      }
+    },
+    "archivo": {
+      "version": "2.001",
+      "commit": "6c70c829f09ea345d3590406693220ea35c6553f",
+      "file": "Archivo[wdth,wght].ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/6c70c829f09ea345d3590406693220ea35c6553f/ofl/archivo/Archivo%5Bwdth%2Cwght%5D.ttf",
+      "sha256": "0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053",
+      "licenceName": "SIL Open Font License 1.1 (no Reserved Font Name)",
+      "licence": {
+        "url": "https://raw.githubusercontent.com/google/fonts/6c70c829f09ea345d3590406693220ea35c6553f/ofl/archivo/OFL.txt",
+        "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b",
+        "as": "OFL-Archivo.txt"
+      }
+    }
+  },
+  "faces": [
+    {
+      "postScriptName": "Inter-Regular",
+      "cssFamily": "Inter",
+      "weight": 400,
+      "widthClass": 5,
+      "origin": "Inter-4.1.zip:extras/ttf/Inter-Regular.ttf",
+      "files": {
+        "ttf": "ttf/Inter-Regular.ttf",
+        "woff2": "web/Inter-Regular.woff2",
+        "woff2LatinExt": "web/Inter-Regular-latin-ext.woff2"
+      }
+    },
+    {
+      "postScriptName": "Inter-Medium",
+      "cssFamily": "Inter",
+      "weight": 500,
+      "widthClass": 5,
+      "origin": "Inter-4.1.zip:extras/ttf/Inter-Medium.ttf",
+      "files": {
+        "ttf": "ttf/Inter-Medium.ttf",
+        "woff2": "web/Inter-Medium.woff2",
+        "woff2LatinExt": "web/Inter-Medium-latin-ext.woff2"
+      }
+    },
+    {
+      "postScriptName": "Inter-SemiBold",
+      "cssFamily": "Inter",
+      "weight": 600,
+      "widthClass": 5,
+      "origin": "Inter-4.1.zip:extras/ttf/Inter-SemiBold.ttf",
+      "files": {
+        "ttf": "ttf/Inter-SemiBold.ttf",
+        "woff2": "web/Inter-SemiBold.woff2",
+        "woff2LatinExt": "web/Inter-SemiBold-latin-ext.woff2"
+      }
+    },
+    {
+      "postScriptName": "Inter-Bold",
+      "cssFamily": "Inter",
+      "weight": 700,
+      "widthClass": 5,
+      "origin": "Inter-4.1.zip:extras/ttf/Inter-Bold.ttf",
+      "files": {
+        "ttf": "ttf/Inter-Bold.ttf",
+        "woff2": "web/Inter-Bold.woff2",
+        "woff2LatinExt": "web/Inter-Bold-latin-ext.woff2"
+      }
+    },
+    {
+      "postScriptName": "InterDisplay-SemiBold",
+      "cssFamily": "Inter Display",
+      "weight": 600,
+      "widthClass": 5,
+      "origin": "Inter-4.1.zip:extras/ttf/InterDisplay-SemiBold.ttf",
+      "files": {
+        "ttf": "ttf/InterDisplay-SemiBold.ttf",
+        "woff2": "web/InterDisplay-SemiBold.woff2",
+        "woff2LatinExt": "web/InterDisplay-SemiBold-latin-ext.woff2"
+      }
+    },
+    {
+      "postScriptName": "InterDisplay-Bold",
+      "cssFamily": "Inter Display",
+      "weight": 700,
+      "widthClass": 5,
+      "origin": "Inter-4.1.zip:extras/ttf/InterDisplay-Bold.ttf",
+      "files": {
+        "ttf": "ttf/InterDisplay-Bold.ttf",
+        "woff2": "web/InterDisplay-Bold.woff2",
+        "woff2LatinExt": "web/InterDisplay-Bold-latin-ext.woff2"
+      }
+    },
+    {
+      "postScriptName": "ArchivoCondensed-SemiBold",
+      "cssFamily": "Archivo Condensed",
+      "weight": 600,
+      "widthClass": 3,
+      "origin": "Archivo[wdth,wght].ttf @ wdth=75 wght=600",
+      "files": {
+        "ttf": "ttf/ArchivoCondensed-SemiBold.ttf",
+        "woff2": "web/ArchivoCondensed-SemiBold.woff2",
+        "woff2LatinExt": "web/ArchivoCondensed-SemiBold-latin-ext.woff2"
+      }
+    },
+    {
+      "postScriptName": "ArchivoCondensed-Bold",
+      "cssFamily": "Archivo Condensed",
+      "weight": 700,
+      "widthClass": 3,
+      "origin": "Archivo[wdth,wght].ttf @ wdth=75 wght=700",
+      "files": {
+        "ttf": "ttf/ArchivoCondensed-Bold.ttf",
+        "woff2": "web/ArchivoCondensed-Bold.woff2",
+        "woff2LatinExt": "web/ArchivoCondensed-Bold-latin-ext.woff2"
+      }
+    },
+    {
+      "postScriptName": "ArchivoSemiExpanded-SemiBold",
+      "cssFamily": "Archivo SemiExpanded",
+      "weight": 600,
+      "widthClass": 6,
+      "origin": "Archivo[wdth,wght].ttf @ wdth=112.5 wght=600",
+      "files": {
+        "ttf": "ttf/ArchivoSemiExpanded-SemiBold.ttf",
+        "woff2": "web/ArchivoSemiExpanded-SemiBold.woff2",
+        "woff2LatinExt": "web/ArchivoSemiExpanded-SemiBold-latin-ext.woff2"
+      }
+    },
+    {
+      "postScriptName": "ArchivoSemiExpanded-Bold",
+      "cssFamily": "Archivo SemiExpanded",
+      "weight": 700,
+      "widthClass": 6,
+      "origin": "Archivo[wdth,wght].ttf @ wdth=112.5 wght=700",
+      "files": {
+        "ttf": "ttf/ArchivoSemiExpanded-Bold.ttf",
+        "woff2": "web/ArchivoSemiExpanded-Bold.woff2",
+        "woff2LatinExt": "web/ArchivoSemiExpanded-Bold-latin-ext.woff2"
+      }
+    }
+  ],
+  "totals": {
+    "ttfBytes": 2991680,
+    "woff2Bytes": 159172,
+    "woff2LatinExtBytes": 121412
+  },
+  "files": [
+    {
+      "path": "fonts.css",
+      "kind": "css",
+      "bytes": 6229,
+      "sha256": "83dd5b01829aca629026339e1c9b2735d5194910b065243937e546fc0660c0e1"
+    },
+    {
+      "path": "fonts.lock.json",
+      "kind": "lock",
+      "bytes": 4848,
+      "sha256": "8fe6dda7642930e53417d14b1b236f2cdac6615be9982a5e0c3a0594e34e79e8"
+    },
+    {
+      "path": "licences/OFL-Archivo.txt",
+      "kind": "licence",
+      "bytes": 4388,
+      "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+    },
+    {
+      "path": "licences/OFL-Inter.txt",
+      "kind": "licence",
+      "bytes": 4380,
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    {
+      "path": "ttf/ArchivoCondensed-Bold.ttf",
+      "kind": "ttf",
+      "bytes": 120864,
+      "sha256": "6a3e673260431fbe1e70e2847791f410663f0eb3230e2759b1f972c36859a224",
+      "font": {
+        "names": {
+          "family": "Archivo Condensed",
+          "style": "Bold",
+          "legacyFamily": "Archivo Condensed",
+          "legacyStyle": "Bold",
+          "fullName": "Archivo Condensed Bold",
+          "postScriptName": "ArchivoCondensed-Bold",
+          "uniqueId": "2.001;OMNI;ArchivoCondensed-Bold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 3,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 834,
+        "codePoints": 653,
+        "hinted": true,
+        "features": ["aalt", "case", "ccmp", "dnom", "frac", "kern", "liga", "lnum", "locl", "mark", "mkmk", "numr", "onum", "ordn", "pnum", "rvrn", "sinf", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 482
+        }
+      },
+      "archivo": {
+        "axes": {
+          "wdth": 75,
+          "wght": 700
+        },
+        "rvrnBakedIntoCmap": {
+          "U+0024": "dollar.BRACKET.110",
+          "U+00A2": "cent.BRACKET.110",
+          "U+20A1": "colonmonetary.BRACKET.110",
+          "U+20A6": "uni20A6.BRACKET.110",
+          "U+20A9": "uni20A9.BRACKET.110",
+          "U+20B2": "uni20B2.BRACKET.110",
+          "U+20B5": "uni20B5.BRACKET.110"
+        },
+        "unusedNameIdsRemoved": [256, 257, 264, 277, 282, 283]
+      }
+    },
+    {
+      "path": "ttf/ArchivoCondensed-SemiBold.ttf",
+      "kind": "ttf",
+      "bytes": 120868,
+      "sha256": "4d141617fb413c8198de4b6ab07df73dc53f4fbb900efa90e0115d010b9fe39d",
+      "font": {
+        "names": {
+          "family": "Archivo Condensed",
+          "style": "SemiBold",
+          "legacyFamily": "Archivo Condensed SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Archivo Condensed SemiBold",
+          "postScriptName": "ArchivoCondensed-SemiBold",
+          "uniqueId": "2.001;OMNI;ArchivoCondensed-SemiBold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 3,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 834,
+        "codePoints": 653,
+        "hinted": true,
+        "features": ["aalt", "case", "ccmp", "dnom", "frac", "kern", "liga", "lnum", "locl", "mark", "mkmk", "numr", "onum", "ordn", "pnum", "rvrn", "sinf", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 472
+        }
+      },
+      "archivo": {
+        "axes": {
+          "wdth": 75,
+          "wght": 600
+        },
+        "rvrnBakedIntoCmap": {
+          "U+0024": "dollar.BRACKET.110",
+          "U+00A2": "cent.BRACKET.110",
+          "U+20A1": "colonmonetary.BRACKET.110",
+          "U+20A6": "uni20A6.BRACKET.110",
+          "U+20A9": "uni20A9.BRACKET.110",
+          "U+20B2": "uni20B2.BRACKET.110",
+          "U+20B5": "uni20B5.BRACKET.110"
+        },
+        "unusedNameIdsRemoved": [256, 257, 263, 277, 282, 283]
+      }
+    },
+    {
+      "path": "ttf/ArchivoSemiExpanded-Bold.ttf",
+      "kind": "ttf",
+      "bytes": 121784,
+      "sha256": "d94cc43dffb83996b6d72d5ba38b351a419a53958d55bf83ac27cbae3b22a5b8",
+      "font": {
+        "names": {
+          "family": "Archivo SemiExpanded",
+          "style": "Bold",
+          "legacyFamily": "Archivo SemiExpanded",
+          "legacyStyle": "Bold",
+          "fullName": "Archivo SemiExpanded Bold",
+          "postScriptName": "ArchivoSemiExpanded-Bold",
+          "uniqueId": "2.001;OMNI;ArchivoSemiExpanded-Bold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 6,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 834,
+        "codePoints": 653,
+        "hinted": true,
+        "features": ["aalt", "case", "ccmp", "dnom", "frac", "kern", "liga", "lnum", "locl", "mark", "mkmk", "numr", "onum", "ordn", "pnum", "rvrn", "sinf", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 678
+        }
+      },
+      "archivo": {
+        "axes": {
+          "wdth": 112.5,
+          "wght": 700
+        },
+        "rvrnBakedIntoCmap": {
+          "U+0024": "dollar.BRACKET.110",
+          "U+00A2": "cent.BRACKET.110",
+          "U+20A1": "colonmonetary.BRACKET.110",
+          "U+20A6": "uni20A6.BRACKET.110",
+          "U+20A9": "uni20A9.BRACKET.110",
+          "U+20B2": "uni20B2.BRACKET.110",
+          "U+20B5": "uni20B5.BRACKET.110"
+        },
+        "unusedNameIdsRemoved": [256, 257, 264, 280, 282, 283]
+      }
+    },
+    {
+      "path": "ttf/ArchivoSemiExpanded-SemiBold.ttf",
+      "kind": "ttf",
+      "bytes": 121656,
+      "sha256": "100d9792bf83bffd4a581eda9e780a21b0fa47bcdafa8f529f07adff27e4fe03",
+      "font": {
+        "names": {
+          "family": "Archivo SemiExpanded",
+          "style": "SemiBold",
+          "legacyFamily": "Archivo SemiExpanded SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Archivo SemiExpanded SemiBold",
+          "postScriptName": "ArchivoSemiExpanded-SemiBold",
+          "uniqueId": "2.001;OMNI;ArchivoSemiExpanded-SemiBold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 6,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 834,
+        "codePoints": 653,
+        "hinted": true,
+        "features": ["aalt", "case", "ccmp", "dnom", "frac", "kern", "liga", "lnum", "locl", "mark", "mkmk", "numr", "onum", "ordn", "pnum", "rvrn", "sinf", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 661
+        }
+      },
+      "archivo": {
+        "axes": {
+          "wdth": 112.5,
+          "wght": 600
+        },
+        "rvrnBakedIntoCmap": {
+          "U+0024": "dollar.BRACKET.110",
+          "U+00A2": "cent.BRACKET.110",
+          "U+20A1": "colonmonetary.BRACKET.110",
+          "U+20A6": "uni20A6.BRACKET.110",
+          "U+20A9": "uni20A9.BRACKET.110",
+          "U+20B2": "uni20B2.BRACKET.110",
+          "U+20B5": "uni20B5.BRACKET.110"
+        },
+        "unusedNameIdsRemoved": [256, 257, 263, 280, 282, 283]
+      }
+    },
+    {
+      "path": "ttf/Inter-Bold.ttf",
+      "kind": "ttf",
+      "bytes": 420428,
+      "sha256": "288316099b1e0a47a4716d159098005eef7c0066921f34e3200393dbdb01947f",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "Bold",
+          "legacyFamily": "Inter",
+          "legacyStyle": "Bold",
+          "fullName": "Inter Bold",
+          "postScriptName": "Inter-Bold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-Bold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 2937,
+        "codePoints": 2852,
+        "hinted": true,
+        "features": ["aalt", "calt", "case", "ccmp", "cpsp", "cv01", "cv02", "cv03", "cv04", "cv05", "cv06", "cv07", "cv08", "cv09", "cv10", "cv11", "cv12", "cv13", "cv14", "dlig", "dnom", "frac", "kern", "locl", "mark", "mkmk", "numr", "ordn", "pnum", "salt", "sinf", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1324
+        }
+      }
+    },
+    {
+      "path": "ttf/Inter-Medium.ttf",
+      "kind": "ttf",
+      "bytes": 417300,
+      "sha256": "97ad806f526e41546d46365bb3a393145f75b7b1568913db74549ad8b8dba872",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "Medium",
+          "legacyFamily": "Inter Medium",
+          "legacyStyle": "Regular",
+          "fullName": "Inter Medium",
+          "postScriptName": "Inter-Medium",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-Medium",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 500,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 2937,
+        "codePoints": 2852,
+        "hinted": true,
+        "features": ["aalt", "calt", "case", "ccmp", "cpsp", "cv01", "cv02", "cv03", "cv04", "cv05", "cv06", "cv07", "cv08", "cv09", "cv10", "cv11", "cv12", "cv13", "cv14", "dlig", "dnom", "frac", "kern", "locl", "mark", "mkmk", "numr", "ordn", "pnum", "salt", "sinf", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1327
+        }
+      }
+    },
+    {
+      "path": "ttf/Inter-Regular.ttf",
+      "kind": "ttf",
+      "bytes": 411640,
+      "sha256": "40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "Regular",
+          "legacyFamily": "Inter",
+          "legacyStyle": "Regular",
+          "fullName": "Inter Regular",
+          "postScriptName": "Inter-Regular",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-Regular",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 400,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 2937,
+        "codePoints": 2852,
+        "hinted": true,
+        "features": ["aalt", "calt", "case", "ccmp", "cpsp", "cv01", "cv02", "cv03", "cv04", "cv05", "cv06", "cv07", "cv08", "cv09", "cv10", "cv11", "cv12", "cv13", "cv14", "dlig", "dnom", "frac", "kern", "locl", "mark", "mkmk", "numr", "ordn", "pnum", "salt", "sinf", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1328
+        }
+      }
+    },
+    {
+      "path": "ttf/Inter-SemiBold.ttf",
+      "kind": "ttf",
+      "bytes": 419744,
+      "sha256": "78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "SemiBold",
+          "legacyFamily": "Inter SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Inter SemiBold",
+          "postScriptName": "Inter-SemiBold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-SemiBold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 2937,
+        "codePoints": 2852,
+        "hinted": true,
+        "features": ["aalt", "calt", "case", "ccmp", "cpsp", "cv01", "cv02", "cv03", "cv04", "cv05", "cv06", "cv07", "cv08", "cv09", "cv10", "cv11", "cv12", "cv13", "cv14", "dlig", "dnom", "frac", "kern", "locl", "mark", "mkmk", "numr", "ordn", "pnum", "salt", "sinf", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1325
+        }
+      }
+    },
+    {
+      "path": "ttf/InterDisplay-Bold.ttf",
+      "kind": "ttf",
+      "bytes": 418856,
+      "sha256": "b74c8e0dd744b3347faca4c96bc7b2e32f7d6f62300a79b1d1a99331e44a5bc4",
+      "font": {
+        "names": {
+          "family": "Inter Display",
+          "style": "Bold",
+          "legacyFamily": "Inter Display",
+          "legacyStyle": "Bold",
+          "fullName": "Inter Display Bold",
+          "postScriptName": "InterDisplay-Bold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;InterDisplay-Bold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 2937,
+        "codePoints": 2852,
+        "hinted": true,
+        "features": ["aalt", "calt", "case", "ccmp", "cpsp", "cv01", "cv02", "cv03", "cv04", "cv05", "cv06", "cv07", "cv08", "cv09", "cv10", "cv11", "cv12", "cv13", "cv14", "dlig", "dnom", "frac", "kern", "locl", "mark", "mkmk", "numr", "ordn", "pnum", "salt", "sinf", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1320
+        }
+      }
+    },
+    {
+      "path": "ttf/InterDisplay-SemiBold.ttf",
+      "kind": "ttf",
+      "bytes": 418540,
+      "sha256": "0310d7a325896129730c6c8cf9a6e0f81ee258bedf77b1ff059b2a7b75f74e02",
+      "font": {
+        "names": {
+          "family": "Inter Display",
+          "style": "SemiBold",
+          "legacyFamily": "Inter Display SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Inter Display SemiBold",
+          "postScriptName": "InterDisplay-SemiBold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;InterDisplay-SemiBold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 2937,
+        "codePoints": 2852,
+        "hinted": true,
+        "features": ["aalt", "calt", "case", "ccmp", "cpsp", "cv01", "cv02", "cv03", "cv04", "cv05", "cv06", "cv07", "cv08", "cv09", "cv10", "cv11", "cv12", "cv13", "cv14", "dlig", "dnom", "frac", "kern", "locl", "mark", "mkmk", "numr", "ordn", "pnum", "salt", "sinf", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "subs", "sups", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1320
+        }
+      }
+    },
+    {
+      "path": "web/ArchivoCondensed-Bold-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 8624,
+      "sha256": "02e9f6bd5437b828894b0da8d6c4ca813c23a4149c71154d9cc89dc19f703cab",
+      "font": {
+        "names": {
+          "family": "Archivo Condensed",
+          "style": "Bold",
+          "legacyFamily": "Archivo Condensed",
+          "legacyStyle": "Bold",
+          "fullName": "Archivo Condensed Bold",
+          "postScriptName": "ArchivoCondensed-Bold",
+          "uniqueId": "2.001;OMNI;ArchivoCondensed-Bold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 3,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 222,
+        "codePoints": 208,
+        "hinted": false,
+        "features": ["kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0180-018E, U+0190-0191, U+0193-019C, U+019E-019F, U+01A2-01AE, U+01B1-01C3, U+01DD-01E5, U+01E8-01E9, U+01EC-01F9, U+021C-0229, U+022E-022F, U+0234-0236, U+0238-024F"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/ArchivoCondensed-Bold.ttf"
+    },
+    {
+      "path": "web/ArchivoCondensed-Bold.woff2",
+      "kind": "woff2",
+      "bytes": 12560,
+      "sha256": "89ad3c55f209a6c32a5fc8a146db108c19444da9e9545290c30d7259cfed4b63",
+      "font": {
+        "names": {
+          "family": "Archivo Condensed",
+          "style": "Bold",
+          "legacyFamily": "Archivo Condensed",
+          "legacyStyle": "Bold",
+          "fullName": "Archivo Condensed Bold",
+          "postScriptName": "ArchivoCondensed-Bold",
+          "uniqueId": "2.001;OMNI;ArchivoCondensed-Bold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 3,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 287,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["case", "ccmp", "dnom", "frac", "kern", "liga", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": "U+2318"
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 482
+        },
+        "featuresDroppedAsNoop": ["lnum", "rvrn"]
+      },
+      "subsetOf": "ttf/ArchivoCondensed-Bold.ttf"
+    },
+    {
+      "path": "web/ArchivoCondensed-SemiBold-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 8564,
+      "sha256": "99b31a116a2e7fca769c886326907835306fe17a36304875d96a4be36e09dfcd",
+      "font": {
+        "names": {
+          "family": "Archivo Condensed",
+          "style": "SemiBold",
+          "legacyFamily": "Archivo Condensed SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Archivo Condensed SemiBold",
+          "postScriptName": "ArchivoCondensed-SemiBold",
+          "uniqueId": "2.001;OMNI;ArchivoCondensed-SemiBold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 3,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 222,
+        "codePoints": 208,
+        "hinted": false,
+        "features": ["kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0180-018E, U+0190-0191, U+0193-019C, U+019E-019F, U+01A2-01AE, U+01B1-01C3, U+01DD-01E5, U+01E8-01E9, U+01EC-01F9, U+021C-0229, U+022E-022F, U+0234-0236, U+0238-024F"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/ArchivoCondensed-SemiBold.ttf"
+    },
+    {
+      "path": "web/ArchivoCondensed-SemiBold.woff2",
+      "kind": "woff2",
+      "bytes": 12464,
+      "sha256": "b54f717b5690db04c5a39d23f089c3bf2fa64adca49eb4cbafaf94e3182d59eb",
+      "font": {
+        "names": {
+          "family": "Archivo Condensed",
+          "style": "SemiBold",
+          "legacyFamily": "Archivo Condensed SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Archivo Condensed SemiBold",
+          "postScriptName": "ArchivoCondensed-SemiBold",
+          "uniqueId": "2.001;OMNI;ArchivoCondensed-SemiBold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 3,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 287,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["case", "ccmp", "dnom", "frac", "kern", "liga", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": "U+2318"
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 472
+        },
+        "featuresDroppedAsNoop": ["lnum", "rvrn"]
+      },
+      "subsetOf": "ttf/ArchivoCondensed-SemiBold.ttf"
+    },
+    {
+      "path": "web/ArchivoSemiExpanded-Bold-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 8720,
+      "sha256": "0319678a311c8d0127cd11a2d883b8a3a238e89dc574bce1e54d314b9891572b",
+      "font": {
+        "names": {
+          "family": "Archivo SemiExpanded",
+          "style": "Bold",
+          "legacyFamily": "Archivo SemiExpanded",
+          "legacyStyle": "Bold",
+          "fullName": "Archivo SemiExpanded Bold",
+          "postScriptName": "ArchivoSemiExpanded-Bold",
+          "uniqueId": "2.001;OMNI;ArchivoSemiExpanded-Bold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 6,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 222,
+        "codePoints": 208,
+        "hinted": false,
+        "features": ["kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0180-018E, U+0190-0191, U+0193-019C, U+019E-019F, U+01A2-01AE, U+01B1-01C3, U+01DD-01E5, U+01E8-01E9, U+01EC-01F9, U+021C-0229, U+022E-022F, U+0234-0236, U+0238-024F"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/ArchivoSemiExpanded-Bold.ttf"
+    },
+    {
+      "path": "web/ArchivoSemiExpanded-Bold.woff2",
+      "kind": "woff2",
+      "bytes": 12716,
+      "sha256": "50db0c49fed090df07af65d968063a418aa3de8df97d8d819054b41a80d155a7",
+      "font": {
+        "names": {
+          "family": "Archivo SemiExpanded",
+          "style": "Bold",
+          "legacyFamily": "Archivo SemiExpanded",
+          "legacyStyle": "Bold",
+          "fullName": "Archivo SemiExpanded Bold",
+          "postScriptName": "ArchivoSemiExpanded-Bold",
+          "uniqueId": "2.001;OMNI;ArchivoSemiExpanded-Bold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 6,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 287,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["case", "ccmp", "dnom", "frac", "kern", "liga", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": "U+2318"
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 678
+        },
+        "featuresDroppedAsNoop": ["lnum", "rvrn"]
+      },
+      "subsetOf": "ttf/ArchivoSemiExpanded-Bold.ttf"
+    },
+    {
+      "path": "web/ArchivoSemiExpanded-SemiBold-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 8420,
+      "sha256": "7f063f390155999d57a966d54db2e6560e27a309377f3f9b029d3ebdbd4e0693",
+      "font": {
+        "names": {
+          "family": "Archivo SemiExpanded",
+          "style": "SemiBold",
+          "legacyFamily": "Archivo SemiExpanded SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Archivo SemiExpanded SemiBold",
+          "postScriptName": "ArchivoSemiExpanded-SemiBold",
+          "uniqueId": "2.001;OMNI;ArchivoSemiExpanded-SemiBold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 6,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 222,
+        "codePoints": 208,
+        "hinted": false,
+        "features": ["kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0180-018E, U+0190-0191, U+0193-019C, U+019E-019F, U+01A2-01AE, U+01B1-01C3, U+01DD-01E5, U+01E8-01E9, U+01EC-01F9, U+021C-0229, U+022E-022F, U+0234-0236, U+0238-024F"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/ArchivoSemiExpanded-SemiBold.ttf"
+    },
+    {
+      "path": "web/ArchivoSemiExpanded-SemiBold.woff2",
+      "kind": "woff2",
+      "bytes": 12608,
+      "sha256": "77c6bbe109a76ffe17f937f622801c2f4dd76f17298e970550d4b5dc452a2787",
+      "font": {
+        "names": {
+          "family": "Archivo SemiExpanded",
+          "style": "SemiBold",
+          "legacyFamily": "Archivo SemiExpanded SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Archivo SemiExpanded SemiBold",
+          "postScriptName": "ArchivoSemiExpanded-SemiBold",
+          "uniqueId": "2.001;OMNI;ArchivoSemiExpanded-SemiBold",
+          "version": "Version 2.001"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 6,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 287,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["case", "ccmp", "dnom", "frac", "kern", "liga", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": "U+2318"
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 661
+        },
+        "featuresDroppedAsNoop": ["lnum", "rvrn"]
+      },
+      "subsetOf": "ttf/ArchivoSemiExpanded-SemiBold.ttf"
+    },
+    {
+      "path": "web/Inter-Bold-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 14520,
+      "sha256": "8e7f08a63cf3d8fa9433c4b18c0a0b3b5c4d0511667e918d40158753948a0a0d",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "Bold",
+          "legacyFamily": "Inter",
+          "legacyStyle": "Bold",
+          "fullName": "Inter Bold",
+          "postScriptName": "Inter-Bold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-Bold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 438,
+        "codePoints": 335,
+        "hinted": false,
+        "features": ["cv11", "kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0149, U+01C4"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/Inter-Bold.ttf"
+    },
+    {
+      "path": "web/Inter-Bold.woff2",
+      "kind": "woff2",
+      "bytes": 18336,
+      "sha256": "3d80b4e576f72b65c05429c64584d19663faaafc6e3d7c7ee8370f3a88a26c0c",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "Bold",
+          "legacyFamily": "Inter",
+          "legacyStyle": "Bold",
+          "fullName": "Inter Bold",
+          "postScriptName": "Inter-Bold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-Bold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 388,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["calt", "case", "cv11", "dnom", "frac", "kern", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1324
+        },
+        "featuresDroppedAsNoop": []
+      },
+      "subsetOf": "ttf/Inter-Bold.ttf"
+    },
+    {
+      "path": "web/Inter-Medium-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 14824,
+      "sha256": "685dcb3156aad224bce5a1cc21281495d3d0669c3045eecb6c08005d1c0a2c6d",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "Medium",
+          "legacyFamily": "Inter Medium",
+          "legacyStyle": "Regular",
+          "fullName": "Inter Medium",
+          "postScriptName": "Inter-Medium",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-Medium",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 500,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 438,
+        "codePoints": 335,
+        "hinted": false,
+        "features": ["cv11", "kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0149, U+01C4"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/Inter-Medium.ttf"
+    },
+    {
+      "path": "web/Inter-Medium.woff2",
+      "kind": "woff2",
+      "bytes": 18288,
+      "sha256": "3257511c16b8643646f8311de1a8d40fe5aaa10359a8235f2d8e4bbc67725294",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "Medium",
+          "legacyFamily": "Inter Medium",
+          "legacyStyle": "Regular",
+          "fullName": "Inter Medium",
+          "postScriptName": "Inter-Medium",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-Medium",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 500,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 388,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["calt", "case", "cv11", "dnom", "frac", "kern", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1327
+        },
+        "featuresDroppedAsNoop": []
+      },
+      "subsetOf": "ttf/Inter-Medium.ttf"
+    },
+    {
+      "path": "web/Inter-Regular-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 14356,
+      "sha256": "414c7f7ab2bcc4671c80f0a390d713c6e99d206e5fc54c7b23f355199b18718a",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "Regular",
+          "legacyFamily": "Inter",
+          "legacyStyle": "Regular",
+          "fullName": "Inter Regular",
+          "postScriptName": "Inter-Regular",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-Regular",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 400,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 438,
+        "codePoints": 335,
+        "hinted": false,
+        "features": ["cv11", "kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0149, U+01C4"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/Inter-Regular.ttf"
+    },
+    {
+      "path": "web/Inter-Regular.woff2",
+      "kind": "woff2",
+      "bytes": 18112,
+      "sha256": "19aaef44a5c913d14a5747b3b3c6e0a2c822635bf237628f71add8f2afab2b4a",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "Regular",
+          "legacyFamily": "Inter",
+          "legacyStyle": "Regular",
+          "fullName": "Inter Regular",
+          "postScriptName": "Inter-Regular",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-Regular",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 400,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 388,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["calt", "case", "cv11", "dnom", "frac", "kern", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1328
+        },
+        "featuresDroppedAsNoop": []
+      },
+      "subsetOf": "ttf/Inter-Regular.ttf"
+    },
+    {
+      "path": "web/Inter-SemiBold-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 14652,
+      "sha256": "cfd794187936327843506f638b6bed3263161d887083fce3ba5bbdf5eaea9509",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "SemiBold",
+          "legacyFamily": "Inter SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Inter SemiBold",
+          "postScriptName": "Inter-SemiBold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-SemiBold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 438,
+        "codePoints": 335,
+        "hinted": false,
+        "features": ["cv11", "kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0149, U+01C4"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/Inter-SemiBold.ttf"
+    },
+    {
+      "path": "web/Inter-SemiBold.woff2",
+      "kind": "woff2",
+      "bytes": 18256,
+      "sha256": "c6f6a909e152a292a74cfe4830f496740db63c64966c2243bcfb49be934b0794",
+      "font": {
+        "names": {
+          "family": "Inter",
+          "style": "SemiBold",
+          "legacyFamily": "Inter SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Inter SemiBold",
+          "postScriptName": "Inter-SemiBold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;Inter-SemiBold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 388,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["calt", "case", "cv11", "dnom", "frac", "kern", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1325
+        },
+        "featuresDroppedAsNoop": []
+      },
+      "subsetOf": "ttf/Inter-SemiBold.ttf"
+    },
+    {
+      "path": "web/InterDisplay-Bold-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 14336,
+      "sha256": "ae794828405466deb889da606a590ae3ad101c2ff9684ba2f020d3484cf3dcd7",
+      "font": {
+        "names": {
+          "family": "Inter Display",
+          "style": "Bold",
+          "legacyFamily": "Inter Display",
+          "legacyStyle": "Bold",
+          "fullName": "Inter Display Bold",
+          "postScriptName": "InterDisplay-Bold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;InterDisplay-Bold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 438,
+        "codePoints": 335,
+        "hinted": false,
+        "features": ["cv11", "kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0149, U+01C4"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/InterDisplay-Bold.ttf"
+    },
+    {
+      "path": "web/InterDisplay-Bold.woff2",
+      "kind": "woff2",
+      "bytes": 17888,
+      "sha256": "7f8ca13f8981d9a9029f954bb97ac8524563a1c41bb35e188e98acd4a1ae6716",
+      "font": {
+        "names": {
+          "family": "Inter Display",
+          "style": "Bold",
+          "legacyFamily": "Inter Display",
+          "legacyStyle": "Bold",
+          "fullName": "Inter Display Bold",
+          "postScriptName": "InterDisplay-Bold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;InterDisplay-Bold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 700,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": true,
+          "italic": false,
+          "regular": false
+        },
+        "glyphs": 388,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["calt", "case", "cv11", "dnom", "frac", "kern", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1320
+        },
+        "featuresDroppedAsNoop": []
+      },
+      "subsetOf": "ttf/InterDisplay-Bold.ttf"
+    },
+    {
+      "path": "web/InterDisplay-SemiBold-latin-ext.woff2",
+      "kind": "woff2-latin-ext",
+      "bytes": 14396,
+      "sha256": "a61341b2f95378c998b0a65c9455e98e2e6ccb376c485a7cd45272645f4ce87a",
+      "font": {
+        "names": {
+          "family": "Inter Display",
+          "style": "SemiBold",
+          "legacyFamily": "Inter Display SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Inter Display SemiBold",
+          "postScriptName": "InterDisplay-SemiBold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;InterDisplay-SemiBold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 438,
+        "codePoints": 335,
+        "hinted": false,
+        "features": ["cv11", "kern", "locl"],
+        "coverage": {
+          "charset": "latinExt",
+          "missing": "",
+          "notInSource": "U+0149, U+01C4"
+        },
+        "variationTables": []
+      },
+      "subsetOf": "ttf/InterDisplay-SemiBold.ttf"
+    },
+    {
+      "path": "web/InterDisplay-SemiBold.woff2",
+      "kind": "woff2",
+      "bytes": 17944,
+      "sha256": "73cfdb7882d9a82a19a1cf347b6b37a9ed1c282adfe7e7724f987c95bdd55946",
+      "font": {
+        "names": {
+          "family": "Inter Display",
+          "style": "SemiBold",
+          "legacyFamily": "Inter Display SemiBold",
+          "legacyStyle": "Regular",
+          "fullName": "Inter Display SemiBold",
+          "postScriptName": "InterDisplay-SemiBold",
+          "uniqueId": "4.001;git-9221beed3;RSMS;InterDisplay-SemiBold",
+          "version": "Version 4.001;git-9221beed3"
+        },
+        "usWeightClass": 600,
+        "usWidthClass": 5,
+        "fsSelection": {
+          "bold": false,
+          "italic": false,
+          "regular": true
+        },
+        "glyphs": 388,
+        "codePoints": 214,
+        "hinted": false,
+        "features": ["calt", "case", "cv11", "dnom", "frac", "kern", "locl", "numr", "pnum", "tnum", "zero"],
+        "coverage": {
+          "charset": "spec+copy",
+          "missing": "",
+          "notInSource": ""
+        },
+        "variationTables": [],
+        "tnum": {
+          "functional": true,
+          "advance": 1320
+        },
+        "featuresDroppedAsNoop": []
+      },
+      "subsetOf": "ttf/InterDisplay-SemiBold.ttf"
+    }
+  ]
+}

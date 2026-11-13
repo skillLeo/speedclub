@@ -38,7 +38,7 @@ const diff = computed(() => (current.value === null ? null : schemaDiff(previous
                         :data-testid="`${testId}.version`"
                         @click="selected = v.version"
                     >
-                        <span class="flex items-center gap-8 text-label-s text-ink tabular-nums">
+                        <span class="flex items-center gap-8 text-admin-base-strong text-ink tabular-nums">
                             {{ trans('catalog.history.version', { n: String(v.version) }) }}
                             <span v-if="v === versions[0]" class="text-caption text-ink-3">{{ trans('catalog.history.current') }}</span>
                         </span>
@@ -47,10 +47,10 @@ const diff = computed(() => (current.value === null ? null : schemaDiff(previous
                 </li>
             </ol>
             <section v-if="current" class="flex min-w-0 grow flex-col gap-12" :aria-label="trans('catalog.history.version', { n: String(current.version) })">
-                <h3 class="text-title-s text-ink">{{ trans('catalog.history.version', { n: String(current.version) }) }}</h3>
-                <p class="text-supporting text-ink-2">{{ current.reason ?? trans('catalog.history.initial_body') }}</p>
+                <h3 class="text-headline text-ink">{{ trans('catalog.history.version', { n: String(current.version) }) }}</h3>
+                <p class="text-admin-base text-ink-2">{{ current.reason ?? trans('catalog.history.initial_body') }}</p>
                 <DiffViewer v-if="previous && diff" :before="diff.before" :after="diff.after" :test-id="`${testId}.diff`" />
-                <p v-else class="text-supporting text-ink-3">{{ transChoice('catalog.history.first', current.schema.length, { count: String(current.schema.length) }) }}</p>
+                <p v-else class="text-admin-base text-ink-3">{{ transChoice('catalog.history.first', current.schema.length, { count: String(current.schema.length) }) }}</p>
             </section>
         </div>
     </div>

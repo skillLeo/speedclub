@@ -1,0 +1,97 @@
+# M4.7 SET-20 App-Sperre and AUTH-15 on Android (09 §8.3, §13 "app lock covering cold start, resume and deep links, manual on the
+# Android emulator"). Needs a build with expo-local-authentication and an emulator with a fingerprint enrolled:
+#   adb -e shell locksettings set-pin 1234        # a device code first, Android asks for one before a fingerprint
+#   Settings › Security › Fingerprint: enrol, and touch the sensor with `adb -e emu finger touch 1` when asked
+# Run with the demo member's password from the command line (never written here):
+#   maestro --device emulator-5554 test -e DEMO_MEMBER_PASSWORD=... mobile/e2e/maestro/m47-app-lock.yaml
+# Maestro cannot run adb: at each "Touch the sensor" step, run `adb -e emu finger touch 1` on the host within 30 s.
+appId: de.speedclub.app
+name: m47-app-lock
+env:
+  EMAIL: lukas.sc@speedclub.test
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: AUTH-02.root
+    timeout: 60000
+- tapOn:
+    id: AUTH-02.provider.email
+- tapOn:
+    id: AUTH-12.withPassword
+- tapOn:
+    id: AUTH-03.email
+- inputText: ${EMAIL}
+- tapOn:
+    id: AUTH-03.password
+- inputText: ${DEMO_MEMBER_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: AUTH-03.cta.primary
+- extendedWaitUntil:
+    visible:
+      id: HOME-01.root
+    timeout: 30000
+
+# SET-20: switch the lock on; the system asks for the fingerprint once.
+- openLink: speedclub://settings/security/app-lock
+- extendedWaitUntil:
+    visible:
+      id: SET-20.toggle.switch
+    timeout: 30000
+- takeScreenshot: m47-set20-off
+- tapOn:
+    id: SET-20.toggle.switch
+# Touch the sensor now from the host: adb -e emu finger touch 1
+- extendedWaitUntil:
+    visible:
+      id: SET-20.after
+    timeout: 30000
+- tapOn:
+    id: SET-20.after.0
+- takeScreenshot: m47-set20-on
+
+# Resume: to the background and back, the lock stands in front, the fingerprint opens it.
+- pressKey: Home
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: AUTH-15.root
+    timeout: 30000
+- takeScreenshot: m47-auth15-resume
+# Touch the sensor now from the host: adb -e emu finger touch 1
+- extendedWaitUntil:
+    notVisible:
+      id: AUTH-15.root
+    timeout: 30000
+
+# Cold start: locked before anything of the member shows.
+- stopApp
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: AUTH-15.root
+    timeout: 60000
+# Touch the sensor now from the host: adb -e emu finger touch 1
+- extendedWaitUntil:
+    notVisible:
+      id: AUTH-15.root
+    timeout: 30000
+
+# Deep link entry: the link opens behind the lock.
+- stopApp
+- openLink: speedclub://settings/security/activity
+- extendedWaitUntil:
+    visible:
+      id: AUTH-15.root
+    timeout: 60000
+- takeScreenshot: m47-auth15-deeplink
+# Touch the sensor now from the host: adb -e emu finger touch 1
+- extendedWaitUntil:
+    visible:
+      id: SET-21.root
+    timeout: 30000

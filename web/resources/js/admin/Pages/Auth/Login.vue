@@ -33,8 +33,8 @@ function submit(): void {
     <Head :title="trans('auth.login.title')" />
     <div class="flex flex-col gap-24" data-testid="ADM-01" :data-qa-state="state">
         <div class="flex flex-col gap-8">
-            <h1 class="text-title-m text-ink">{{ trans('auth.login.title') }}</h1>
-            <p class="text-supporting text-ink-2">{{ trans('auth.login.intro') }}</p>
+            <h1 class="text-title-2 text-ink">{{ trans('auth.login.title') }}</h1>
+            <p class="text-admin-base text-ink-2">{{ trans('auth.login.intro') }}</p>
         </div>
 
         <AuthNotice v-if="notice" :tone="notice.tone" :text="notice.text" test-id="ADM-01.notice" />
@@ -52,7 +52,7 @@ function submit(): void {
             </Button>
         </form>
 
-        <Link :href="routeOr('password.request', '/admin/forgot-password')" class="inline-flex h-32 items-center self-start rounded-xs text-label-s text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" data-testid="ADM-01.forgot">
+        <Link :href="routeOr('password.request', '/admin/forgot-password')" class="inline-flex h-32 items-center self-start rounded-xs text-admin-base-strong text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" data-testid="ADM-01.forgot">
             {{ trans('auth.login.forgot') }}
         </Link>
     </div>

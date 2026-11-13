@@ -13,7 +13,7 @@ import Toaster from '../Components/ui/Toaster.vue';
     <TooltipProvider :delay-duration="400">
         <div class="flex min-h-dvh flex-col bg-canvas text-ink">
             <header class="flex h-56 items-center gap-8 px-16 tablet:px-24">
-                <span class="font-display text-title-s text-ink">{{ trans('shell.brand') }}</span>
+                <span class="font-marque text-headline text-ink">{{ trans('shell.brand') }}</span>
                 <span class="text-caption text-ink-3">{{ trans('shell.brand_suffix') }}</span>
                 <div class="ml-auto flex items-center gap-8">
                     <EnvBadge />

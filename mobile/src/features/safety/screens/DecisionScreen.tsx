@@ -34,9 +34,10 @@ import { AppealSheet } from '../components/AppealSheet';
 import { SafetySignIn, useAccountRestricted, useAccountRestrictionKind } from '../components/states';
 import { isUnavailable, useSafety } from '../data';
 import { affectedOutcome, automatedKeys, decisionSections, isReversal, reporterOutcome, scopeLine, type DecisionSection } from '../decisionView';
-import { targetLabel } from '../labels';
+import { labelText, targetLabel } from '../labels';
 import type { DecisionDetail } from '../model';
 import { REPORTS_PATH } from '../ReportSheet';
+import { SlotText, slot } from '@/ui/SlotText';
 
 const ROUTE = 'SAFE-01';
 
@@ -69,13 +70,13 @@ function DecisionSkeleton() {
     <Skeleton testID={`${ROUTE}.skeleton`}>
       <View style={styles.head}>
         <SkeletonText variant="caption" width="35%" />
-        <SkeletonText variant="titleL" width="80%" />
+        <SkeletonText variant="title1" width="80%" />
       </View>
       {[2, 1, 3].map((lines, index) => (
         <View key={index} testID={`${ROUTE}.skeleton.section`}>
           {index === 0 ? null : <Hairline />}
           <View style={styles.section}>
-            <SkeletonText variant="titleS" width="45%" />
+            <SkeletonText variant="headline" width="45%" />
             <SkeletonText variant="body" lines={lines} />
           </View>
         </View>
@@ -90,7 +91,7 @@ function Section({ title, children, first, testID }: { title: string; children: 
     <View testID={testID}>
       {first ? null : <Hairline />}
       <View style={styles.section}>
-        <Text variant="titleS" role="heading" {...({ 'aria-level': 2 } as object)}>
+        <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)}>
           {title}
         </Text>
         {children}
@@ -152,7 +153,7 @@ function Redress({ decision, onAppeal }: { decision: DecisionDetail; onAppeal: (
             />
           ) : null}
           {showButton && readOnly ? (
-            <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.appealViewAs`}>
+            <Text variant="callout" color="text.secondary" testID={`${ROUTE}.appealViewAs`}>
               {authT('viewAs.readOnly')}
             </Text>
           ) : null}
@@ -208,7 +209,9 @@ function DecisionBody({ decision, onAppeal, onLegal, onOriginal }: DecisionBodyP
   const reporter = decision.viewer === 'reporter';
   const sections = decisionSections(decision);
   const statement = decision.statement;
-  const label = targetLabel(t, decision.target);
+  // NH-R4-2: the target's name in its own span that never hyphenates ("Nissan Skyline GT-R R34"); the copy around it may.
+  const label = targetLabel(t, decision.target, () => slot('label'));
+  const labelSlots = decision.target.label ? { label: labelText(decision.target.label) } : undefined;
   const groundDocument = decision.groundDocument;
 
   const render = (section: DecisionSection): ReactNode => {
@@ -217,10 +220,8 @@ function DecisionBody({ decision, onAppeal, onLegal, onOriginal }: DecisionBodyP
         if (reporter) {
           return (
             <>
-              <Text variant="body" testID={`${ROUTE}.outcome`}>
-                {t(reporterOutcome(decision) as never, { label })}
-              </Text>
-              <Text variant="bodyDense" color="text.secondary" testID={`${ROUTE}.reporterNote`}>
+              <SlotText variant="body" text={t(reporterOutcome(decision) as never, { label })} slots={labelSlots} testID={`${ROUTE}.outcome`} />
+              <Text variant="body" color="text.secondary" testID={`${ROUTE}.reporterNote`}>
                 {t('decision.reporterNote')}
               </Text>
             </>
@@ -232,17 +233,15 @@ function DecisionBody({ decision, onAppeal, onLegal, onOriginal }: DecisionBodyP
         const day = (at: string | null) => (at ? format.date(new Date(at)) : '');
         return (
           <>
-            <Text variant="body" testID={`${ROUTE}.outcome`}>
-              {t(outcome.key as never, { label, until: day(outcome.until) })}
-            </Text>
+            <SlotText variant="body" text={t(outcome.key as never, { label, until: day(outcome.until) })} slots={labelSlots} testID={`${ROUTE}.outcome`} />
             {scope ? (
-              <Text variant="bodyDense" color="text.secondary" testID={`${ROUTE}.scope`}>
+              <Text variant="body" color="text.secondary" testID={`${ROUTE}.scope`}>
                 {t(scope.key as never, { date: day(scope.until) })}
               </Text>
             ) : null}
             {isReversal(decision) ? (
               <>
-                <Text variant="bodyDense" color="text.secondary" testID={`${ROUTE}.reverseNote`}>
+                <Text variant="body" color="text.secondary" testID={`${ROUTE}.reverseNote`}>
                   {t('decision.reverseNote')}
                 </Text>
                 {decision.reversesDecisionId ? (
@@ -268,9 +267,7 @@ function DecisionBody({ decision, onAppeal, onLegal, onOriginal }: DecisionBodyP
             <Text variant="caption" color="text.tertiary">
               {t(`targets.${decision.target.type}`)}
             </Text>
-            <Text variant="bodyStrong" hyphenate={false} testID={`${ROUTE}.target`}>
-              {label}
-            </Text>
+            <SlotText variant="bodyStrong" hyphenate={false} text={label} slots={labelSlots} testID={`${ROUTE}.target`} />
           </>
         );
       case 'facts':
@@ -327,7 +324,7 @@ function DecisionBody({ decision, onAppeal, onLegal, onOriginal }: DecisionBodyP
         <Text variant="caption" color="text.secondary" testID={`${ROUTE}.eyebrow`}>
           {t('decision.eyebrow', { date: format.date(new Date(decision.decidedAt)) })}
         </Text>
-        <Text variant="titleL" role="heading" {...({ 'aria-level': 1 } as object)} testID={`${ROUTE}.title`}>
+        <Text variant="title1" role="heading" {...({ 'aria-level': 1 } as object)} testID={`${ROUTE}.title`}>
           {reporter || !decision.action ? t('decision.titleReporter') : t(`decision.titleAffected.${decision.action}`)}
         </Text>
       </View>

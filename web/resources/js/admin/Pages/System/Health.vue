@@ -91,7 +91,7 @@ function run(): void {
                 <StatusPill :tone="tones[report.status] ?? 'neutral'" :label="trans(`system.status.${report.status}`)" data-testid="ADM-48.status" />
             </template>
             <template #meta>
-                <p class="flex flex-wrap gap-x-16 gap-y-4 text-supporting text-ink-2 tabular-nums" data-testid="ADM-48.meta">
+                <p class="flex flex-wrap gap-x-16 gap-y-4 text-admin-base text-ink-2 tabular-nums" data-testid="ADM-48.meta">
                     <span>{{ report.finished_at && !empty ? trans('system.health.last', { date: formatDateTime(report.finished_at) }) : trans('system.status.unknown') }}</span>
                     <span v-if="!empty && state === 'ready' && summary.length > 0" class="flex flex-wrap gap-x-8" data-testid="ADM-48.summary">
                         <template v-for="(part, i) in summary" :key="part.key"><span v-if="i > 0" aria-hidden="true">·</span><span :class="summaryTone[part.key]">{{ part.text }}</span></template>
@@ -122,12 +122,12 @@ function run(): void {
         <EmptyQueue v-else-if="empty" variant="first" :title="trans('system.health.never_title')" :body="trans('system.health.never_body')" data-testid="ADM-48.empty" />
         <div v-else class="flex flex-col gap-24" data-testid="ADM-48.checks">
             <section class="flex flex-col gap-12" aria-labelledby="adm48-open" data-testid="ADM-48.open">
-                <h2 id="adm48-open" class="text-title-s text-ink">{{ trans('system.health.problems_title') }}</h2>
-                <p v-if="open.length === 0" class="text-supporting text-ink-2">{{ trans('system.health.nothing_open') }}</p>
+                <h2 id="adm48-open" class="text-headline text-ink">{{ trans('system.health.problems_title') }}</h2>
+                <p v-if="open.length === 0" class="text-admin-base text-ink-2">{{ trans('system.health.nothing_open') }}</p>
                 <ScrollRegion v-else :label="trans('system.health.caption')">
-                    <table class="w-full border-collapse text-supporting">
+                    <table class="w-full border-collapse text-admin-base">
                         <caption class="sr-only">{{ trans('system.health.caption') }}</caption>
-                        <thead class="bg-surface text-left text-label-s text-ink-2">
+                        <thead class="bg-surface text-left text-admin-base-strong text-ink-2">
                             <tr class="h-40 border-b border-line">
                                 <th scope="col" class="px-12">{{ trans('system.health.columns.check') }}</th>
                                 <th scope="col" class="px-12">{{ trans('system.health.columns.status') }}</th>
@@ -141,7 +141,7 @@ function run(): void {
                                 <td class="px-12"><StatusPill :tone="tones[check.status] ?? 'neutral'" :label="trans(`system.status.${check.status}`)" /></td>
                                 <td class="px-12 py-8 text-ink-2 tabular-nums">{{ reasonText(check.reason) }}</td>
                                 <td class="whitespace-nowrap px-12 py-4 text-right">
-                                    <Link v-if="check.todo" :href="check.todo.href" :class="[focusRing, 'inline-flex h-32 items-center gap-4 rounded-xs text-label-s text-ink hover:underline']" :data-testid="`ADM-48.todo.${check.name}`">
+                                    <Link v-if="check.todo" :href="check.todo.href" :class="[focusRing, 'inline-flex h-32 items-center gap-4 rounded-xs text-admin-base-strong text-ink hover:underline']" :data-testid="`ADM-48.todo.${check.name}`">
                                         {{ trans(`system.health.todo_targets.${check.todo.target}`) }}<PhArrowRight :size="16" aria-hidden="true" />
                                     </Link>
                                 </td>
@@ -151,12 +151,12 @@ function run(): void {
                 </ScrollRegion>
             </section>
             <section v-if="fine.length > 0" class="flex flex-col gap-12" aria-labelledby="adm48-ok" data-testid="ADM-48.ok">
-                <h2 id="adm48-ok" class="text-title-s text-ink">{{ trans('system.health.ok_title') }}</h2>
+                <h2 id="adm48-ok" class="text-headline text-ink">{{ trans('system.health.ok_title') }}</h2>
                 <ul class="grid grid-cols-1 gap-8 tablet:grid-cols-2 wide:grid-cols-3" :aria-label="trans('system.health.ok_list')">
                     <li v-for="check in fine" :key="check.name" class="flex min-h-40 items-start gap-8 rounded-sm border border-line-subtle bg-surface px-12 py-8" :data-testid="`ADM-48.check.${check.name}`">
                         <PhCheckCircle :size="16" class="mt-2 shrink-0 text-success" role="img" :aria-label="trans(`system.status.${check.status}`)" />
                         <span class="flex min-w-0 flex-col">
-                            <span class="text-label-s text-ink">{{ checkLabel(check) }}</span>
+                            <span class="text-admin-base-strong text-ink">{{ checkLabel(check) }}</span>
                             <span v-if="check.reason" class="text-caption text-ink-3 tabular-nums">{{ reasonText(check.reason) }}</span>
                         </span>
                     </li>

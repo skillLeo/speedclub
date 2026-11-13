@@ -13,13 +13,13 @@
     <x-public.top-bar />
     <main id="main" class="sc-form-page flex-1" data-testid="WEB-07.root" data-action="{{ $action }}">
         <div class="sc-form-measure">
-            <h1 class="text-title-l text-ink" data-testid="WEB-07.title">{{ __('public.email_action.'.$action.'.title') }}</h1>
+            <h1 class="t-title-1 text-ink" data-testid="WEB-07.title">{{ __('public.email_action.'.$action.'.title') }}</h1>
             <p class="mt-8 text-body text-ink-2" data-testid="WEB-07.body">{{ $body }}</p>
             <div class="mt-24 flex flex-wrap gap-8">
                 <x-public.button :href="$browser" variant="primary" size="l" data-email-link data-testid="WEB-07.browser">{{ __('public.email_action.browser') }}</x-public.button>
                 <x-public.button :href="$app" variant="secondary" size="l" :data-email-link="$appCarriesCode" data-testid="WEB-07.app">{{ __('public.email_action.app') }}</x-public.button>
             </div>
-            <p class="mt-16 text-supporting text-ink-3" data-testid="WEB-07.hint">{{ __('public.email_action.hint') }}</p>
+            <p class="mt-16 text-callout text-ink-3" data-testid="WEB-07.hint">{{ __('public.email_action.hint') }}</p>
         </div>
     </main>
     <script nonce="{{ Vite::cspNonce() }}">

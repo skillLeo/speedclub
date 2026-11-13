@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 
 import { ApiError } from '@/api/client';
 import { useForgotPassword } from '@/api/queries/auth';
+import { slot } from '@/ui/SlotText';
+import { identifierText } from '@/ui/textBreaks';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { EMAIL_INPUT, FormField } from '../components/FormField';
@@ -44,8 +46,10 @@ export function ForgotPasswordScreen() {
     return (
       <AuthScreen
         routeId="AUTH-06"
+        skeletonFields={0}
         title={t('forgot.sentTitle')}
-        subtitle={t('forgot.sentBody', { email: sentTo.email })}
+        subtitle={t('forgot.sentBody', { email: slot('email') })}
+        subtitleSlots={{ email: identifierText(sentTo.email) }}
         cta={{
           label: t('forgot.enterCode'),
           onPress: () => {

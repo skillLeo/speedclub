@@ -54,3 +54,11 @@ export function useReplaceWizardWithPublished() {
   const router = useRouter();
   return useCallback((vehicleId: string) => router.replace({ pathname: '/published/[vehicleId]', params: { vehicleId } }), [router]);
 }
+
+/**
+ * UPD-01 "Update posten" for one vehicle (09 §7.6). The modal route `/post-update` is built by the lead in M4.9; until its file
+ * exists the typed routes do not know it, hence the cast (the shape is the one the route reads: `vehicleId`).
+ */
+export function postUpdateHref(vehicleId: string): Href {
+  return { pathname: '/post-update', params: { vehicleId } } as unknown as Href;
+}

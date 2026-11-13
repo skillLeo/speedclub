@@ -168,6 +168,9 @@ final class DeviceSessions
             ->orderByDesc('id')
             ->get();
 
+        // M4.7: the installs of these tokens, in one query.
+        $installs = $user->deviceInstalls()->get()->keyBy('id');
+
         $rows = [];
 
         foreach ($tokens as $token) {
@@ -180,6 +183,10 @@ final class DeviceSessions
             $platform = $token->getAttribute('platform');
             $version = $token->getAttribute('app_version');
             $used = $token->getAttribute('last_used_at') ?? $token->getAttribute('created_at');
+            $installId = $token->getAttribute('device_install_id');
+            $install = is_string($installId) ? $installs->get($installId) : null;
+            $city = $token->getAttribute('approx_city');
+            $created = $token->getAttribute('created_at');
 
             $rows[$key] = new DeviceSession(
                 't'.$token->getKey(),
@@ -189,6 +196,10 @@ final class DeviceSessions
                 is_string($version) ? $version : null,
                 CarbonImmutable::parse($used ?? now()),
                 $token->getKey() === $currentId || $key === $currentDevice,
+                $install?->os_version,
+                is_string($city) ? $city : $install?->approx_city,
+                // M4.7: when this install signed in (first seen), else the token's own start.
+                $install !== null ? CarbonImmutable::parse($install->first_seen_at) : ($created === null ? null : CarbonImmutable::parse($created)),
             );
         }
 

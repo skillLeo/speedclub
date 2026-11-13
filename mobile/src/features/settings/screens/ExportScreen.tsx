@@ -6,7 +6,6 @@ import { Linking, View } from 'react-native';
 import { ApiError } from '@/api/client';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { formatWait } from '@/features/auth/forms';
-import { GuestInvitation } from '@/features/profile/components/GuestInvitation';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
@@ -22,6 +21,7 @@ import { RowGroup } from '@/ui/RowGroup';
 import { SettingsPage } from '../components/SettingsPage';
 import { ROW_INSET } from '../components/ValueRow';
 import { settingsKeys, useDataExports, useRequestExport, type DataExport } from '@/api/queries/settings';
+import { SettingsGuest } from '../components/SettingsGuest';
 
 const ROUTE = 'SET-12';
 /** What the ZIP holds (contract §3), in the order of the README. */
@@ -56,7 +56,7 @@ function ExportSkeleton() {
         <RowGroup>
           <View style={styles.skeletonList}>
             {EXPORT_CONTENTS.map((item) => (
-              <SkeletonText key={item} variant="bodyDense" width="80%" />
+              <SkeletonText key={item} variant="body" width="80%" />
             ))}
           </View>
         </RowGroup>
@@ -85,7 +85,7 @@ function ExportRow({ item, divider }: { item: DataExport; divider: boolean }) {
       <View style={styles.statusRow} testID={`${ROUTE}.export.${item.id}`}>
         <View style={styles.statusText}>
           <Text variant="body">{t('export.requestedAt', { date: when(item.requestedAt) })}</Text>
-          <Text variant="supporting" color="text.secondary">
+          <Text variant="callout" color="text.secondary">
             {detail}
           </Text>
         </View>
@@ -173,7 +173,7 @@ export function ExportScreen() {
     );
   } else if (exports.length === 0) {
     statusBlock = (
-      <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.empty`}>
+      <Text variant="callout" color="text.secondary" testID={`${ROUTE}.empty`}>
         {t('export.none')}
       </Text>
     );
@@ -191,7 +191,7 @@ export function ExportScreen() {
   if (viewAs) {
     body = <ViewAsUnavailable kind="export" testID={`${ROUTE}.viewAs`} />;
   } else if (status === 'guest') {
-    body = <GuestInvitation routeId={ROUTE} returnTo="/settings/data/export" />;
+    body = <SettingsGuest routeId={ROUTE} returnTo="/settings/data/export" />;
   } else if (status === 'loading' || qaState === 'loading') {
     body = <ExportSkeleton />;
   } else {
@@ -206,14 +206,14 @@ export function ExportScreen() {
             {EXPORT_CONTENTS.map((item) => (
               <View key={item} style={styles.item} testID={`${ROUTE}.contents.${item}`}>
                 <Icon name="check" size={20} color="text.secondary" />
-                <Text variant="bodyDense" style={styles.itemText}>
+                <Text variant="body" style={styles.itemText}>
                   {t(`export.contents.${item}`)}
                 </Text>
               </View>
             ))}
           </View>
         </RowGroup>
-        <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.notIncluded`}>
+        <Text variant="callout" color="text.secondary" testID={`${ROUTE}.notIncluded`}>
           {t('export.notIncluded')}
         </Text>
         {notice ? <FormNotice message={notice} tone="info" testID={`${ROUTE}.notice`} /> : null}
@@ -233,7 +233,7 @@ export function ExportScreen() {
           />
         ) : null}
         {statusBlock}
-        <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.retention`}>
+        <Text variant="callout" color="text.secondary" testID={`${ROUTE}.retention`}>
           {t('export.retentionNote')}
         </Text>
       </View>

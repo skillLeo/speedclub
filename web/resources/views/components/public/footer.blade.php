@@ -16,7 +16,7 @@
         </div>
         <nav aria-label="{{ __('public.footer.label') }}" class="sc-footer-links">
             @foreach ($links as $key => $path)
-                <a href="{{ \App\Support\PublicUrl::to($path) }}" class="sc-focus inline-flex min-h-44 min-w-44 items-center justify-center rounded-xs text-supporting text-ink-2 hover:text-ink" data-testid="WEB.footer.{{ $key }}">{{ __('public.footer.'.$key) }}</a>
+                <a href="{{ \App\Support\PublicUrl::to($path) }}" class="sc-focus inline-flex min-h-44 min-w-44 items-center justify-center rounded-xs text-callout text-ink-2 hover:text-ink" data-testid="WEB.footer.{{ $key }}">{{ __('public.footer.'.$key) }}</a>
             @endforeach
         </nav>
         <div class="sc-footer-prefs">
@@ -27,14 +27,14 @@
                         hreflang="{{ $language }}"
                         lang="{{ $language }}"
                         @if (app()->getLocale() === $language) aria-current="true" @endif
-                        class="sc-focus sc-seg text-label-s"
+                        class="sc-focus sc-seg text-callout"
                         data-testid="WEB.footer.lang.{{ $language }}"
                     >{{ strtoupper($language) }}</a>
                 @endforeach
             </div>
             <div class="sc-js-flex flex-wrap items-center gap-4" role="group" aria-label="{{ __('public.footer.theme') }}" data-theme-picker>
                 @foreach ($themes as $theme)
-                    <button type="button" class="sc-focus sc-seg text-label-s" data-theme-value="{{ $theme }}" aria-pressed="false" data-testid="WEB.footer.theme.{{ $theme }}">{{ __('public.footer.theme_'.$theme) }}</button>
+                    <button type="button" class="sc-focus sc-seg text-callout" data-theme-value="{{ $theme }}" aria-pressed="false" data-testid="WEB.footer.theme.{{ $theme }}">{{ __('public.footer.theme_'.$theme) }}</button>
                 @endforeach
             </div>
         </div>

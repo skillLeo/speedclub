@@ -10,7 +10,9 @@ import {
   forgetEtags,
   messagingKeys,
   muteBody,
+  readMainVehicle,
   searchCandidate,
+  toChatVehicle,
   toDetail,
   toMessage,
   toSummary,
@@ -77,7 +79,16 @@ function conversationData(overrides: Partial<ConversationData> = {}): Conversati
   return {
     id: CONVERSATION,
     folder: 'chats',
-    other: { username: 'jann.ptrs', display_name: 'Jann Peters', city: 'Hamburg', avatar: null },
+    other: {
+      username: 'jann.ptrs',
+      display_name: 'Jann Peters',
+      city: 'Hamburg',
+      avatar: null,
+      is_sample: false,
+      is_editorial: false,
+      main_vehicle_cover: null,
+      main_vehicle: null,
+    },
     other_deleted: false,
     vehicle: null,
     last_message: { id: '01J3', type: 'text', body: 'Samstag um 10?', is_mine: false, created_at: '2026-10-29T18:00:00Z' },
@@ -101,9 +112,10 @@ function messageData(overrides: Partial<MessageData> & { id: string }): MessageD
     body: 'Passt, ich bring die Felgen mit.',
     media: null,
     vehicle: null,
-    sender: { username: 'jann.ptrs', display_name: 'Jann Peters', city: null, avatar: null },
+    sender: { username: 'jann.ptrs', display_name: 'Jann Peters', city: null, avatar: null, is_sample: false, is_editorial: false },
     sender_deleted: false,
     is_mine: false,
+    reply_to: null,
     reactions: [],
     created_at: '2026-10-29T18:00:00Z',
     ...overrides,
@@ -150,12 +162,24 @@ describe('mapping', () => {
     });
     const detail = toDetail({
       ...conversationData(),
-      context_vehicle: { id: 'v1', slug: 'nissan-skyline-gt-r-r34-5tf974vj', full_title: 'Nissan Skyline GT-R R34', cover: null, owner_username: 'lukas.sc' },
+      context_vehicle: { id: 'v1', slug: 'nissan-skyline-gt-r-r34-5tf974vj', full_title: 'Nissan Skyline GT-R R34', cover: null, is_sample: false, owner_username: 'lukas.sc', power_ps: null, torque_nm: null },
       other_typing: true,
       other_read_message_id: '01J3',
     });
     expect(detail.contextVehicle).toEqual({ id: 'v1', slug: 'nissan-skyline-gt-r-r34-5tf974vj', title: 'Nissan Skyline GT-R R34', cover: null, ownerUsername: 'lukas.sc' });
     expect(detail).toMatchObject({ otherTyping: true, otherReadMessageId: '01J3' });
+  });
+
+  it('reads the main build and the spec mini-line once the server sends them (DQ-1086), and falls back without them', () => {
+    expect(readMainVehicle({ username: 'jann.ptrs', main_vehicle: { slug: 'bmw-m4', title: 'BMW M4', full_title: 'BMW M4 G82', is_sample: false } })).toEqual({
+      slug: 'bmw-m4',
+      title: 'BMW M4',
+    });
+    expect(readMainVehicle({ username: 'jann.ptrs', main_vehicle: null })).toBeNull();
+    expect(readMainVehicle({ username: 'jann.ptrs' })).toBeNull();
+    const vehicle = { id: 'v1', slug: 's', full_title: 'BMW M4 G82', cover: null, is_sample: false, owner_username: null, power_ps: null as number | null, torque_nm: null as number | null };
+    expect(toChatVehicle({ ...vehicle, power_ps: 510, torque_nm: 650 })).toMatchObject({ powerPs: 510, torqueNm: 650 });
+    expect(toChatVehicle(vehicle)).not.toHaveProperty('powerPs');
   });
 
   it('keys your own message by client_id, so the server copy takes the optimistic bubble\'s place', () => {
@@ -186,7 +210,7 @@ describe('mapping', () => {
   });
 
   it('says why a member cannot be written to in MSG-03', () => {
-    const row = { username: 'lena.911', display_name: 'Lena', city: null, avatar: null, garage: { vehicles: 1, makes: ['Porsche'], line: '1 Fahrzeug · Porsche' }, is_self: false, is_following: false };
+    const row = { username: 'lena.911', display_name: 'Lena', city: null, avatar: null, is_sample: false, is_editorial: false, garage: { vehicles: 1, makes: ['Porsche'], line: '1 Fahrzeug · Porsche' }, is_self: false, is_following: false };
     expect(searchCandidate({ ...row, can_message: false, cannot_message_reason: 'recipient_closed' }, null)).toMatchObject({
       canMessage: false,
       reason: 'Nimmt gerade keine Nachrichten von dir an',

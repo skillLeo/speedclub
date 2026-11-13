@@ -225,7 +225,8 @@ describe('ThemeProvider', () => {
 
     const expectFadedOut = async () => {
       await act(async () => {
-        jest.advanceTimersByTime(motion.duration.small + motion.duration.medium);
+        // The theme crossfade is effect.slow (09 §4.7); it settles within its CSS duration, effect.default's on top is the margin.
+        jest.advanceTimersByTime(motion.css['effect.default'].duration + motion.css['effect.slow'].duration);
       });
       expect(overlay()).toHaveAnimatedStyle({ opacity: 0 });
     };
@@ -426,11 +427,12 @@ describe('hydrateThemePreference', () => {
 
 describe('breakpointFor', () => {
   it.each([
-    [360, 'phone', 16, 4],
-    [389, 'phone', 16, 4],
-    [389.5, 'phone', 16, 4],
+    // 09 §4.3: 20 below 430 pt, 24 from 430. Android dp widths are fractional, so 429.5 is still a phone margin.
+    [360, 'phone', 20, 4],
     [390, 'phone', 20, 4],
-    [767, 'phone', 20, 4],
+    [429.5, 'phone', 20, 4],
+    [430, 'phone', 24, 4],
+    [767, 'phone', 24, 4],
     [768, 'tablet', 24, 8],
     [1279, 'tablet', 24, 8],
     [1280, 'desktop', 24, 12],

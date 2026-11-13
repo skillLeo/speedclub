@@ -152,7 +152,7 @@ export function ModAssist({ categoryKey, fields, locale, disabled = false, onAcc
           {rows.map((row, index) => (
             <View key={row.field.key} style={styles.row} testID={`${testID}.row.${row.field.key}`}>
               {index > 0 ? <Hairline /> : null}
-              <Text variant="supporting" color="text.secondary">
+              <Text variant="callout" color="text.secondary">
                 {row.field.label}
               </Text>
               <Text variant="bodyStrong">{suggestionText(row.field, row.value, locale, yesNo)}</Text>

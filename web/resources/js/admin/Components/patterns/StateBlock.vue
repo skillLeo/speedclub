@@ -25,8 +25,8 @@ const tones = { error: 'text-danger', forbidden: 'text-ink-3', partial: 'text-wa
             <div class="flex min-w-0 flex-1 items-start gap-12">
                 <component :is="icons[kind]" :size="20" class="mt-2 shrink-0" :class="tones[kind]" aria-hidden="true" />
                 <div class="flex min-w-0 flex-1 flex-col gap-4">
-                    <p class="text-label-s text-ink">{{ title }}</p>
-                    <p v-if="body" class="text-supporting text-ink-2">{{ body }}</p>
+                    <p class="text-admin-base-strong text-ink">{{ title }}</p>
+                    <p v-if="body" class="text-admin-base text-ink-2">{{ body }}</p>
                     <slot />
                 </div>
             </div>

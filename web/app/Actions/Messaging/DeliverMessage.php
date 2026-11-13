@@ -54,7 +54,7 @@ class DeliverMessage
     /**
      * The sender's earlier copy of this message, or null. Throws 409 idempotency_key_reused for the same ids with another payload.
      *
-     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string}  $draft
+     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string, reply_to_id?: string|null}  $draft
      */
     public function replay(User $sender, array $draft, ?string $key, ?string $conversationId = null): ?Message
     {
@@ -73,7 +73,8 @@ class DeliverMessage
             && $existing->type === $draft['type']
             && $existing->body === $draft['body']
             && $existing->media_id === $draft['media_id']
-            && $existing->vehicle_id === $draft['vehicle_id'];
+            && $existing->vehicle_id === $draft['vehicle_id']
+            && $existing->reply_to_id === ($draft['reply_to_id'] ?? null);
 
         if (! $same) {
             throw new ApiException(ErrorCode::IdempotencyKeyReused);
@@ -86,7 +87,7 @@ class DeliverMessage
      * Checks what the draft points at before any lock: the photo is the sender's upload to this conversation and finished; the vehicle is
      * one the sender may view.
      *
-     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string}  $draft
+     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string, reply_to_id?: string|null}  $draft
      */
     public function assertAttachable(User $sender, string $conversationId, array $draft): void
     {
@@ -122,7 +123,7 @@ class DeliverMessage
     /**
      * Inside the caller's transaction, with $conversation, $mine and $theirs locked in that order.
      *
-     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string}  $draft
+     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string, reply_to_id?: string|null}  $draft
      */
     public function deliver(
         User $sender,
@@ -165,6 +166,7 @@ class DeliverMessage
             'body' => $draft['type'] === MessageType::Text ? $draft['body'] : null,
             'media_id' => $draft['media_id'],
             'vehicle_id' => $draft['vehicle_id'],
+            'reply_to_id' => $draft['reply_to_id'] ?? null,
             'created_at' => $now,
         ]);
         $message->save();

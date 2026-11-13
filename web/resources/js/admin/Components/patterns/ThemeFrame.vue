@@ -7,7 +7,7 @@ defineProps<{ theme: 'carbon' | 'black' | 'light'; label: string }>();
 </script>
 
 <template>
-    <section :data-theme="theme" class="flex min-w-0 flex-col gap-16 rounded-md border border-line-subtle bg-canvas px-16 py-16 text-ink" :aria-label="label">
+    <section :data-theme="theme" class="flex min-w-0 flex-col gap-16 rounded-sm border border-line-subtle bg-canvas px-16 py-16 text-ink" :aria-label="label">
         <p class="text-caption text-ink-3">{{ label }}</p>
         <slot />
     </section>

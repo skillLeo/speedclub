@@ -94,7 +94,8 @@ test.describe('F5 messaging: start and request', () => {
     await useSession(context, writer.session);
 
     await open(page, `/app/v/${vehicle.slug}`);
-    await id(page, 'VEH-01.ownerRow.message').first().click();
+    // M4.9: Nachricht sits in the action row under the owner row (09 §7.6 (4)).
+    await id(page, 'VEH-01.actions.message').first().click();
     await expect(id(page, 'MSG-03.root')).toBeVisible();
     expect(new URL(page.url()).searchParams.get('about')).toBe(vehicle.slug);
     // Titles carry a word joiner after the hyphen ("GT-\u2060R"); expectTextContaining compares what a reader sees.

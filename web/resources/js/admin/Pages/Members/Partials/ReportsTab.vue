@@ -20,10 +20,10 @@ const tone = (status: string | null) => (status === 'new' ? 'info' : status === 
 <template>
     <div class="flex flex-col gap-32" data-testid="ADM-10.reports">
         <section class="flex flex-col gap-12" :aria-label="trans('members.reports.as_target')">
-            <h2 class="text-title-s text-ink">{{ trans('members.reports.as_target') }}</h2>
-            <p v-if="reports.as_target.length === 0" class="text-supporting text-ink-2">{{ trans('members.reports.none_target') }}</p>
+            <h2 class="text-headline text-ink">{{ trans('members.reports.as_target') }}</h2>
+            <p v-if="reports.as_target.length === 0" class="text-admin-base text-ink-2">{{ trans('members.reports.none_target') }}</p>
             <ScrollRegion v-else :label="trans('members.reports.as_target')">
-                <table class="w-full border-collapse text-supporting">
+                <table class="w-full border-collapse text-admin-base">
                     <caption class="sr-only">{{ trans('members.reports.as_target') }}</caption>
                     <thead>
                         <tr class="h-40 border-b border-line text-left text-caption text-ink-2">
@@ -55,10 +55,10 @@ const tone = (status: string | null) => (status === 'new' ? 'info' : status === 
         </section>
 
         <section class="flex flex-col gap-12" :aria-label="trans('members.reports.as_reporter')">
-            <h2 class="text-title-s text-ink">{{ trans('members.reports.as_reporter') }}</h2>
-            <p v-if="reports.as_reporter.length === 0" class="text-supporting text-ink-2">{{ trans('members.reports.none_reporter') }}</p>
+            <h2 class="text-headline text-ink">{{ trans('members.reports.as_reporter') }}</h2>
+            <p v-if="reports.as_reporter.length === 0" class="text-admin-base text-ink-2">{{ trans('members.reports.none_reporter') }}</p>
             <ScrollRegion v-else :label="trans('members.reports.as_reporter')">
-                <table class="w-full border-collapse text-supporting">
+                <table class="w-full border-collapse text-admin-base">
                     <caption class="sr-only">{{ trans('members.reports.as_reporter') }}</caption>
                     <thead>
                         <tr class="h-40 border-b border-line text-left text-caption text-ink-2">

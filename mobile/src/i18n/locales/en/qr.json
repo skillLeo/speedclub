@@ -24,7 +24,6 @@
     "detail": {
         "title": "QR code",
         "cardLabel": "QR code for {{vehicle}}",
-        "download": "Download",
         "share": "Share",
         "shareTitle": "{{vehicle}} on SPEED CLUB",
         "linkCopied": "Link copied",
@@ -36,7 +35,14 @@
         "privateNotice": "Your vehicle is private. Anyone scanning the code sees “This vehicle is private”.",
         "suspendedNotice": "Your account is suspended. While the suspension lasts, you can't replace the QR code.",
         "errorTitle": "The QR code could not be loaded",
-        "cardErrorTitle": "The code could not be shown"
+        "cardErrorTitle": "The code could not be shown",
+        "savePhoto": "Save to Photos",
+        "saveImage": "Save as image",
+        "stickerPdf": "Sticker PDF",
+        "moreFormats": "More formats",
+        "orderSticker": "Order stickers",
+        "shopFailed": "The sticker shop couldn't be opened. Please try again.",
+        "downloadFailed": "The file couldn't be loaded. Please try again."
     },
     "reissue": {
         "title": "Replace QR code?",

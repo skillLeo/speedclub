@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Enums\RestrictionType;
 use App\Models\User;
+use App\Services\Showcase\SampleContent;
 
 class UserPolicy
 {
@@ -17,7 +18,8 @@ class UserPolicy
     }
 
     /**
-     * Guests may browse member pages. Blocks hide both sides from each other (02_PRODUCT_SPEC §3.1, §3.5).
+     * Guests may browse member pages. Blocks hide both sides from each other (02_PRODUCT_SPEC §3.1, §3.5). A sample member is nobody
+     * while editorial_samples is off (09 §8.19).
      */
     public function view(?User $viewer, User $member): bool
     {
@@ -25,7 +27,9 @@ class UserPolicy
             return ! $member->isDeactivated();
         }
 
-        return $member->isPubliclyVisible() && ($viewer === null || ! $viewer->hasBlockWith($member));
+        return $member->isPubliclyVisible()
+            && ! app(SampleContent::class)->hides($member, $viewer)
+            && ($viewer === null || ! $viewer->hasBlockWith($member));
     }
 
     /**

@@ -145,6 +145,7 @@
             "reviewed": "Foto freigegeben"
         },
         "member": {
+            "apple_revoked": "Apple-Freigabe widerrufen",
             "bulk_executed": "Sammelaktion ausgeführt",
             "consent_accepted": "Neuer Fassung der Rechtstexte zugestimmt",
             "data_export_downloaded": "Datenexport heruntergeladen",
@@ -154,6 +155,7 @@
             "email_change_requested": "E‑Mail‑Änderung angefordert",
             "email_changed": "E‑Mail‑Adresse geändert",
             "email_changed_by_staff": "E‑Mail‑Adresse durch das Team geändert",
+            "email_code_locked": "Anmeldung per Code gesperrt",
             "email_verified": "E‑Mail‑Adresse bestätigt",
             "export_downloaded": "Team-Export heruntergeladen",
             "export_started": "Team-Export gestartet",
@@ -162,13 +164,21 @@
             "login_new_device": "Anmeldung auf neuem Gerät",
             "logout_all": "Überall abgemeldet",
             "message_metadata_viewed": "Nachrichten-Metadaten angesehen",
+            "passkey_added": "Passkey hinzugefügt",
+            "passkey_removed": "Passkey entfernt",
+            "passkey_renamed": "Passkey umbenannt",
+            "passkey_sign_count_regressed": "Passkey abgelehnt: Zähler lief rückwärts",
             "password_change_forced": "Passwortänderung erzwungen",
             "password_changed": "Passwort geändert",
             "password_check_failed": "Falsches Passwort",
             "password_reset": "Passwort zurückgesetzt",
             "pii_viewed": "Persönliche Daten angezeigt",
             "profile_edited": "Profil durch das Team bearbeitet",
+            "provider_link_requested": "Verknüpfung angefragt",
+            "provider_linked": "Anmeldemethode verbunden",
+            "provider_unlinked": "Anmeldemethode entfernt",
             "qr_reissued": "QR-Code neu ausgegeben",
+            "reauthenticated": "Identität bestätigt",
             "recovery_code_used": "Wiederherstellungscode benutzt",
             "recovery_codes_regenerated": "Neue Wiederherstellungscodes",
             "registered": "Registriert",
@@ -176,6 +186,7 @@
             "second_factor_locked": "Zweiter Faktor gesperrt",
             "session_revoked": "Sitzung beendet",
             "sessions_revoked_by_staff": "Alle Sitzungen durch das Team beendet",
+            "terms_accepted": "AGB und Datenschutz akzeptiert",
             "token_replayed": "Altes Token erneut benutzt",
             "token_rotation_retried": "Token-Erneuerung wiederholt",
             "two_factor_disabled": "Zwei-Faktor-Anmeldung aus",
@@ -183,7 +194,11 @@
             "two_factor_reset": "Zwei-Faktor-Anmeldung zurückgesetzt",
             "username_changed": "Benutzername geändert",
             "view_as_ended": "Ansicht als Mitglied beendet",
-            "view_as_started": "Ansicht als Mitglied gestartet"
+            "view_as_started": "Ansicht als Mitglied gestartet",
+            "unproven_data_cleared": "Unbestätigte Anmeldewege entfernt",
+            "signed_in": "Angemeldet",
+            "sign_in_failed": "Fehlgeschlagene Anmeldeversuche",
+            "account_secured": "Konto gesichert („Das war ich nicht“)"
         },
         "membership": {
             "entitlement_granted": "Mitgliedschaft vergeben",
@@ -269,7 +284,8 @@
             "two_factor_reset": "Zwei-Faktor-Anmeldung zurückgesetzt",
             "two_factor_rotated": "Neuer Authenticator bestätigt",
             "two_factor_rotation_cancelled": "Authenticator-Wechsel abgebrochen",
-            "two_factor_rotation_started": "Authenticator-Wechsel begonnen"
+            "two_factor_rotation_started": "Authenticator-Wechsel begonnen",
+            "two_factor_skipped": "Zwei-Faktor-Einrichtung übersprungen"
         },
         "support": {
             "bulk_status": "Ticketstatus gesammelt geändert",
@@ -287,7 +303,8 @@
             "jobs_retried": "Fehlgeschlagene Jobs neu gestartet",
             "test_ai_run": "KI-Verbindung getestet",
             "test_mail_sent": "Test-E‑Mail verschickt",
-            "test_pusher_sent": "Echtzeit-Verbindung getestet"
+            "test_pusher_sent": "Echtzeit-Verbindung getestet",
+            "mail_preview_opened": "Mail-Vorschau geöffnet"
         },
         "template": {
             "reset": "Vorlage zurückgesetzt",
@@ -298,6 +315,13 @@
             "bulk_hidden": "Fahrzeuge gesammelt ausgeblendet",
             "deleted_by_staff": "Fahrzeug durch das Team gelöscht",
             "edited_by_staff": "Fahrzeug durch das Team bearbeitet"
+        },
+        "event": {
+            "approved": "Treffen freigegeben",
+            "rejected": "Treffen abgelehnt",
+            "cancelled_by_staff": "Treffen vom Team abgesagt",
+            "reopened": "Treffen zurück in die Prüfung",
+            "private_place_viewed": "Genauen Ort eines Treffens angesehen"
         }
     }
 }

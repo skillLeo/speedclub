@@ -2,33 +2,29 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PixelRatio, ScrollView, StyleSheet, useWindowDimensions, View, type LayoutChangeEvent, type TextStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
+import { AppState, PixelRatio, ScrollView, StyleSheet, useWindowDimensions, View, type LayoutChangeEvent, type TextStyle } from 'react-native';
+import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withDelay } from 'react-native-reanimated';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { useAppConfig } from '@/api/queries/appConfig';
 import { isWeb } from '@/lib/platform';
 import { setStored } from '@/lib/storage';
+import { useOnline } from '@/state/online';
 import { clearAuthIntent } from '@/state/session';
-import {
-  createStyles,
-  motion as motionTokens,
-  space,
-  ThemeScope,
-  useBreakpoint,
-  useMotion,
-  useTheme,
-  type ThemeName,
-} from '@/theme';
-import { Button, Screen, Text, wordmarkBox } from '@/ui';
+import { createStyles, motion as motionTokens, space, ThemeScope, useBreakpoint, useTheme, type ThemeName } from '@/theme';
+import { kenBurnsLoop, motionDuration, useMotionPreference } from '@/ui/motion';
+import { Button, DisplayTitle, PressableScale, ProviderButtons, providerOrder, Screen, Text, wordmarkBox, type ProviderKey } from '@/ui';
 import { useImagePlaceholder } from '@/ui/imagePlaceholder';
+import { PhotoStageScrim } from '@/ui/PhotoStageScrim';
 import { focalToPosition } from '@/ui/Photo';
 import { useSafeEdge } from '@/ui/safeArea';
 
 import { AppWordmark, useCustomWordmarks } from '../AppWordmark';
+import { FORM_MAX_WIDTH } from '../components/AuthScreen';
 import { welcomeHero } from '../brand';
+import { useProviderAvailability, useProviderSignIn } from '../providers/useProviderSignIn';
 
 const HERO = require('../../../../assets/brand/welcome-hero.jpg') as number;
 /** Where the car of the bundled photo sits; a crop keeps it. Wide windows show a slice of it, tall ones all of it. */
@@ -37,16 +33,26 @@ const EDGES: readonly Edge[] = ['left', 'right'];
 /** §2 brand layer: the Welcome is dark in every theme, so its tokens, the focus ring included, come from a dark theme. */
 const BRAND_THEME: ThemeName = 'carbon';
 
-/** FS-1, top of the logo as a share of the height, and its width. */
-const LOGO_TOP = 0.28;
-const LOGO_WIDTH_SHARE = 0.72;
-const LOGO_MAX_WIDTH = 320;
-const BRAND_POSITION = { qaExempt: 'brand-position' } as const;
+/** DQ-985 (09 §7.2): the brush logo wide and white, top-left, 28 high; its width follows the bundled file's ratio. */
+export const LOGO_HEIGHT = space[24] + space[4];
+const BUNDLED_LOGO_RATIO = 1200 / 359;
+const LOGO_WIDTH = LOGO_HEIGHT * BUNDLED_LOGO_RATIO;
+/**
+ * DQ-985: below 1024 the photo takes the top of the window, edge to edge, cropped from its focal point, and fades into the dark stage
+ * (scrim.photo) that holds the block, as the HOME-01 FeaturedHero stacks (ADR-426 d). So the car stands alone in the upper middle and
+ * the headline starts below its bumper line.
+ */
+export const PHOTO_SHARE = 0.68;
+/** DQ-986: from here on the photo and the form share the window side by side (7 + 5 columns), so no control lies on the car. */
+export const SPLIT_FROM = 1024;
+const PHOTO_COLUMNS = 7;
+const FORM_COLUMNS = 5;
+const KEN_BURNS = motionTokens.signature.kenBurns;
 /**
  * DQ-149: the body never ends on one word ("Build." alone at 430 × 1.3). Web lets the browser weigh the last lines (CSS
  * `text-wrap: pretty`), iOS uses its standard strategy, which avoids orphans, and Android's Text already breaks balanced.
  */
-const BODY_WRAP = isWeb ? ({ textWrap: 'pretty' } as unknown as TextStyle) : undefined;
+const BODY_WRAP = isWeb ? ({ textWrapStyle: 'pretty' } as unknown as TextStyle) : undefined;
 /** FS-1: the photo settles from this scale. */
 const PHOTO_START_SCALE = 1.04;
 /** FS-1: the block rises this far. */
@@ -56,37 +62,35 @@ const BLOCK_RISE = space[12];
 export const SCRIM_FADE = space[48];
 
 const useStyles = createStyles((t) => ({
-  // A night photo fades in from black in every theme.
-  root: { backgroundColor: t.color.media.ground, overflow: 'hidden' },
+  // The dark stage the photo fades into, in every theme (ADR-421 b).
+  root: { backgroundColor: t.color.scrim.photoEnd, overflow: 'hidden' },
   photo: { height: '100%', width: '100%' },
+  photoFrame: { left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 0 },
   scrim: { left: 0, pointerEvents: 'none', position: 'absolute', right: 0 },
   scroll: { flex: 1 },
   content: { flexGrow: 1 },
-  logoSlot: { alignItems: 'center' },
+  logoSlot: { alignItems: 'flex-start' },
+  logoBox: { height: LOGO_HEIGHT, width: LOGO_WIDTH },
+  // ≥ 1024: the photo pane and the form pane.
+  split: { flex: 1, flexDirection: 'row' },
+  photoPane: { flexBasis: 0, flexGrow: PHOTO_COLUMNS, overflow: 'hidden' },
+  formPane: { backgroundColor: t.color.bg.canvas, flexBasis: 0, flexGrow: FORM_COLUMNS },
+  formContent: { flexGrow: 1, justifyContent: 'center', paddingVertical: t.space[48] },
+  formColumn: { alignSelf: 'center', gap: t.space[32], maxWidth: FORM_MAX_WIDTH, width: '100%' },
+  // Tablets keep the photo behind the block, in the form's column.
+  stackColumn: { maxWidth: FORM_MAX_WIDTH, width: '100%' },
   // DQ-109, DQ-139: a photo chosen in the admin can be bright where the logo stands. Its own shadow keeps it readable.
   logoShadowClip: { left: 0, overflow: 'hidden', pointerEvents: 'none', position: 'absolute', right: 0 },
   logoShadow: { bottom: 0, position: 'absolute', top: 0 },
   spacer: { flexGrow: 1, minHeight: t.space[32] },
   block: { gap: t.space[24] },
-  blockRow: { alignItems: 'flex-end', flexDirection: 'row', flexWrap: 'wrap', gap: t.space[24] },
   copy: { gap: t.space[8] },
-  copyRow: { flexBasis: '45%', flexGrow: 1, flexShrink: 1 },
   actions: { gap: t.space[12] },
-  // DQ-107: on a line of its own it takes the block's width at most, so the buttons wrap inside it, never into the gutter.
-  actionsRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexShrink: 1,
-    flexWrap: 'wrap',
-    gap: t.space[12],
-    maxWidth: '100%',
-    minWidth: 0,
-  },
-  // DQ-108: a hugging button aligns itself to the top; in the row the M button centres on the two L buttons.
-  rowButton: { alignSelf: 'center' },
-  // FS-1: 8 above the tertiary button, against the 12 of the two big ones.
+  // FS-1: 8 above the tertiary button, against the 12 of the big ones.
   browse: { marginTop: -t.space[4] },
-  browseRow: { alignSelf: 'center', marginTop: 0 },
+  // DQ-989: "Datenschutz · AGB" as small print (caption), each link a 44 target.
+  legal: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: t.space[4] },
+  legalLink: { justifyContent: 'center', minHeight: t.size.touchMin, minWidth: t.size.touchMin, paddingHorizontal: t.space[4] },
 }));
 
 /** FS-1: the scrim's share of the height. */
@@ -119,7 +123,7 @@ export const LOGO_SHADOW_PAD = 0.3;
 
 export type ShadowFrame = { left: number; top: number; width: number; height: number };
 
-/** Where the shadow lies in the logo's slot: centred on the logo, LOGO_SHADOW_PAD of its width further out on every side. */
+/** Where the shadow lies in the logo's box: centred on the logo, LOGO_SHADOW_PAD of its width further out on every side. */
 export function logoShadowFrame(slotWidth: number, logoWidth: number, logoHeight: number): ShadowFrame {
   const pad = logoWidth * LOGO_SHADOW_PAD;
   const width = logoWidth + 2 * pad;
@@ -140,7 +144,7 @@ function LogoShadow({ slot, logoWidth }: { slot: { width: number; height: number
   );
 }
 
-/** AUTH-02: the brand moment of §13 FS-1, in the brand layer's theme. */
+/** AUTH-02: the brand moment of 09 §7.2, in the brand layer's theme. */
 export function WelcomeScreen() {
   return (
     <ThemeScope name={BRAND_THEME}>
@@ -149,40 +153,99 @@ export function WelcomeScreen() {
   );
 }
 
+/** Logo and block follow the photo once its first crossfade has passed (effect.default). */
+const ENTRANCE_DELAY = motionDuration('effect.default');
+
+/**
+ * DQ-990: the photo drifts from `kenBurns.from` to `.to` and back while the screen is in front with full motion; it stops in the
+ * background and for good on the first press. Reduced motion never starts it.
+ */
+function useKenBurns(run: boolean) {
+  const drift = useSharedValue(0);
+  const stopped = useRef(false);
+  useEffect(() => {
+    if (!run) return;
+    const start = () => {
+      if (!stopped.current) drift.set(withDelay(motionDuration('spring.slow'), kenBurnsLoop()));
+    };
+    start();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') start();
+      else cancelAnimation(drift);
+    });
+    return () => {
+      subscription.remove();
+      cancelAnimation(drift);
+    };
+  }, [drift, run]);
+  const stop = () => {
+    stopped.current = true;
+    cancelAnimation(drift);
+  };
+  return { drift, stop };
+}
+
 function Welcome() {
   const { t } = useTranslation('auth');
   const styles = useStyles();
   const theme = useTheme();
   const router = useRouter();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const { gutter, kind, width } = useBreakpoint();
   const window = useWindowDimensions();
   const { config } = useAppConfig();
+  const online = useOnline();
+  const available = useProviderAvailability();
+  const providers = providerOrder(available);
+  const signIn = useProviderSignIn('AUTH-02');
+  const split = width >= SPLIT_FROM;
+  const { enabled, reduced, springTo, effectTo } = motion;
+  const kenBurns = useKenBurns(enabled && !reduced);
+  const choose = (provider: ProviderKey) => {
+    kenBurns.stop();
+    if (provider === 'email') router.push('/auth/email');
+    else void signIn.run(provider);
+  };
+  const go = (path: '/' | '/settings/legal/privacy' | '/settings/legal/terms') => {
+    kenBurns.stop();
+    if (path === '/') router.replace(path);
+    else router.push(path);
+  };
+  const topPadding = useSafeEdge('top', space[16]);
   const bottomPadding = useSafeEdge('bottom', space[16]);
   const [screenHeight, setScreenHeight] = useState(window.height);
   const [blockFrame, setBlockFrame] = useState({ y: window.height * (1 - FS1_SCRIM_COVERAGE), height: 0 });
   const [heroFailed, setHeroFailed] = useState(false);
-  const [logoSlot, setLogoSlot] = useState({ width: 0, height: 0 });
-  const wide = kind !== 'phone';
+  /** The copy column's width as laid out, with the window width it was laid out at (a stale one never decides). */
+  const [copyFrame, setCopyFrame] = useState<{ window: number; width: number } | null>(null);
+  // SF-R3-3 / MF-R2-1: the headline's width at every layout. On a phone the block spans the page between its gutters; in a column
+  // its own layout gives the width. Until then the headline is laid out invisibly, never painted at a size it may not keep.
+  const headlineWidth = kind === 'phone' ? width - 2 * gutter : copyFrame?.window === width ? copyFrame.width : undefined;
+  const onCopyLayout = (event: LayoutChangeEvent) => {
+    const copyWidth = event.nativeEvent.layout.width;
+    setCopyFrame((current) => (current?.window === width && current.width === copyWidth ? current : { window: width, width: copyWidth }));
+  };
 
-  const photo = useSharedValue(motion.enabled ? 0 : 1);
-  const logo = useSharedValue(motion.enabled ? 0 : 1);
-  const block = useSharedValue(motion.enabled ? 0 : 1);
-  const { enabled, reduced, timingTo } = motion;
+  const photo = useSharedValue(enabled ? 0 : 1);
+  const logo = useSharedValue(enabled ? 0 : 1);
+  const block = useSharedValue(enabled ? 0 : 1);
 
   useEffect(() => {
     void setStored('sc.welcomeSeen', '1');
     clearAuthIntent();
     if (!enabled) return;
     // Reduced motion: all of it as one crossfade, no scale and no rise (§10).
-    photo.set(timingTo(1, 'large', 'decelerate'));
-    logo.set(reduced ? timingTo(1, 'small') : withDelay(motionTokens.duration.reducedCrossfade, timingTo(1, 'small')));
-    block.set(reduced ? timingTo(1, 'medium') : withDelay(motionTokens.duration.small, timingTo(1, 'medium', 'decelerate')));
-  }, [block, enabled, logo, photo, reduced, timingTo]);
+    // The photo reveal is a full-screen brand moment (spring.slow); springTo is the effect.default crossfade under reduced motion.
+    photo.set(springTo(1, 'slow'));
+    logo.set(reduced ? effectTo(1, 'default') : withDelay(ENTRANCE_DELAY, effectTo(1, 'default')));
+    block.set(reduced ? effectTo(1, 'default') : withDelay(ENTRANCE_DELAY, effectTo(1, 'slow')));
+  }, [block, effectTo, enabled, logo, photo, reduced, springTo]);
 
   const photoStyle = useAnimatedStyle(() => ({
     opacity: photo.get(),
-    transform: reduced ? [] : [{ scale: PHOTO_START_SCALE + (1 - PHOTO_START_SCALE) * photo.get() }],
+    transform: reduced
+      ? []
+      : [{ scale: (PHOTO_START_SCALE + (1 - PHOTO_START_SCALE) * photo.get()) * (KEN_BURNS.from + (KEN_BURNS.to - KEN_BURNS.from) * kenBurns.drift.get()) }],
   }));
   const logoStyle = useAnimatedStyle(() => ({ opacity: logo.get() }));
   const blockStyle = useAnimatedStyle(() => ({
@@ -199,10 +262,9 @@ function Welcome() {
   const contentHeight = Math.max(screenHeight, blockFrame.y + blockFrame.height);
   const scrim = scrimGeometry(screenHeight, blockFrame.y, contentHeight);
   const end = theme.color.overlay.photoScrimEnd;
-  const logoWidth = Math.min(width * LOGO_WIDTH_SHARE, LOGO_MAX_WIDTH);
   // ADM-28: a published wordmark of another ratio is drawn narrower or lower; its shadow follows the width really drawn.
   const ownLogo = useCustomWordmarks().white;
-  const drawnLogoWidth = ownLogo ? wordmarkBox(logoWidth, ownLogo.ratio).width : logoWidth;
+  const drawnLogoWidth = ownLogo ? wordmarkBox(LOGO_WIDTH, ownLogo.ratio).width : LOGO_WIDTH;
 
   const onRootLayout = (event: LayoutChangeEvent) => setScreenHeight(event.nativeEvent.layout.height);
   const onBlockLayout = (event: LayoutChangeEvent) => {
@@ -212,24 +274,150 @@ function Welcome() {
 
   // A data: URL on web, not expo-image's blob: placeholder, which WebKit fails to load when the screen unmounts (E2E A3, ADM-34 frames).
   const placeholder = useImagePlaceholder(custom ? pick?.blurhash : null, 'cover');
+  const onPhoto = !split;
+
+  const image = (
+    <Image
+      source={source}
+      contentFit="cover"
+      contentPosition={focalToPosition(focal)}
+      {...placeholder}
+      onError={() => setHeroFailed(true)}
+      accessible={false}
+      alt=""
+      accessibilityLabel=""
+      style={styles.photo}
+      testID="AUTH-02.photo"
+    />
+  );
+
+  const logoMark = (
+    <Animated.View style={[styles.logoSlot, logoStyle]} testID="AUTH-02.logoSlot">
+      <View style={styles.logoBox}>
+        {/* The bundled photo is dark behind the logo; a photo chosen in the admin may not be. The pane of the split is canvas. */}
+        {custom && onPhoto ? <LogoShadow slot={{ width: LOGO_WIDTH, height: LOGO_HEIGHT }} logoWidth={drawnLogoWidth} /> : null}
+        <AppWordmark width={LOGO_WIDTH} height={LOGO_HEIGHT} tone="white" testID="AUTH-02.logo" />
+      </View>
+    </Animated.View>
+  );
+
+  const copy = (
+    <View style={styles.copy} onLayout={onCopyLayout} testID="AUTH-02.copy">
+      <DisplayTitle
+        kind="copy"
+        // ADR-426 a: the page's headline at its brand moment: full size up to two lines.
+        placement="page"
+        color={onPhoto ? 'onPhoto.primary' : 'text.primary'}
+        role="heading"
+        layoutWidth={headlineWidth}
+        testID="AUTH-02.headline"
+      >
+        {t('welcome.headline')}
+      </DisplayTitle>
+      <Text
+        variant="body"
+        color={onPhoto ? 'onPhoto.secondary' : 'text.secondary'}
+        style={BODY_WRAP}
+        lineBreakStrategyIOS="standard"
+        testID="AUTH-02.body"
+      >
+        {t('welcome.body')}
+      </Text>
+    </View>
+  );
+
+  const linkColor = onPhoto ? 'onPhoto.primary' : 'text.secondary';
+  const actions = (
+    <View style={styles.actions}>
+      <ProviderButtons
+        providers={providers}
+        onPress={choose}
+        busy={signIn.busy}
+        disabled={!online}
+        disabledReason={t('welcome.offline')}
+        labels={{
+          apple: t('providers.continue.apple'),
+          google: t('providers.continue.google'),
+          email: t('providers.continue.email'),
+          passkey: t('providers.continue.passkey'),
+        }}
+        onPhoto={onPhoto}
+        testID="AUTH-02.provider"
+      />
+      <Button
+        label={t('welcome.browse')}
+        variant={onPhoto ? 'onPhotoText' : 'tertiary'}
+        size="m"
+        fullWidth
+        role="link"
+        onPress={() => go('/')}
+        style={styles.browse}
+        testID="AUTH-02.browse"
+      />
+      <View style={styles.legal} testID="AUTH-02.legal">
+        <PressableScale
+          role="link"
+          aria-label={t('welcome.privacy')}
+          onPress={() => go('/settings/legal/privacy')}
+          ring={onPhoto ? 'onPhoto' : 'default'}
+          contentStyle={styles.legalLink}
+          testID="AUTH-02.privacy"
+        >
+          <Text variant="caption" color={linkColor} selectable={false}>
+            {t('welcome.privacy')}
+          </Text>
+        </PressableScale>
+        <Text variant="caption" color={linkColor} aria-hidden>
+          ·
+        </Text>
+        <PressableScale
+          role="link"
+          aria-label={t('welcome.terms')}
+          onPress={() => go('/settings/legal/terms')}
+          ring={onPhoto ? 'onPhoto' : 'default'}
+          contentStyle={styles.legalLink}
+          testID="AUTH-02.terms"
+        >
+          <Text variant="caption" color={linkColor} selectable={false}>
+            {t('welcome.terms')}
+          </Text>
+        </PressableScale>
+      </View>
+    </View>
+  );
+
+  if (split) {
+    return (
+      <Screen edges={EDGES} style={styles.root} testID="AUTH-02.root">
+        <StatusBar style="light" />
+        <View style={styles.split}>
+          <Animated.View style={[styles.photoPane, photoStyle]} dataSet={{ qaExempt: 'photo' }} testID="AUTH-02.photoPane">
+            {image}
+          </Animated.View>
+          <ScrollView
+            style={styles.formPane}
+            contentContainerStyle={[styles.formContent, { paddingHorizontal: gutter * 2 }]}
+            showsVerticalScrollIndicator={false}
+            testID="AUTH-02.scroller"
+          >
+            <Animated.View style={[styles.formColumn, blockStyle]} testID="AUTH-02.block">
+              {logoMark}
+              {copy}
+              {actions}
+            </Animated.View>
+          </ScrollView>
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen edges={EDGES} style={styles.root} testID="AUTH-02.root">
       <View style={StyleSheet.absoluteFill} onLayout={onRootLayout} />
       <StatusBar style="light" />
-      <Animated.View style={[StyleSheet.absoluteFill, photoStyle]} dataSet={{ qaExempt: 'photo' }}>
-        <Image
-          source={source}
-          contentFit="cover"
-          contentPosition={focalToPosition(focal)}
-          {...placeholder}
-          onError={() => setHeroFailed(true)}
-          accessible={false}
-          alt=""
-          accessibilityLabel=""
-          style={styles.photo}
-          testID="AUTH-02.photo"
-        />
+      <Animated.View style={[styles.photoFrame, { height: screenHeight * PHOTO_SHARE }, photoStyle]} dataSet={{ qaExempt: 'photo' }}>
+        {image}
+        <PhotoStageScrim testID="AUTH-02.stage" />
       </Animated.View>
       <ScrollView
         style={styles.scroll}
@@ -246,71 +434,16 @@ function Welcome() {
           style={[styles.scrim, { height: scrim.height, top: scrim.top }]}
           testID="AUTH-02.scrim"
         />
-        <Animated.View
-          onLayout={(event) => {
-            const { width: slotWidth, height } = event.nativeEvent.layout;
-            setLogoSlot((current) => (current.width === slotWidth && current.height === height ? current : { width: slotWidth, height }));
-          }}
-          // ADR-149: FS-1's share of the height is no step of the spacing scale; the audit accepts it on this slot only.
-          dataSet={BRAND_POSITION}
-          style={[styles.logoSlot, { marginTop: screenHeight * LOGO_TOP }, logoStyle]}
-          testID="AUTH-02.logoSlot"
-        >
-          {/* The bundled photo is dark behind the logo (16.9:1); a photo chosen in the admin may not be. */}
-          {custom ? <LogoShadow slot={logoSlot} logoWidth={drawnLogoWidth} /> : null}
-          <AppWordmark width={logoWidth} tone="white" testID="AUTH-02.logo" />
-        </Animated.View>
+        <View style={[topPadding, { paddingHorizontal: gutter }]}>{logoMark}</View>
         <View style={styles.spacer} />
         <Animated.View
           onLayout={onBlockLayout}
-          style={[wide ? styles.blockRow : styles.block, { paddingHorizontal: gutter }, bottomPadding, blockStyle]}
+          style={[styles.block, { paddingHorizontal: gutter }, bottomPadding, blockStyle]}
           testID="AUTH-02.block"
         >
-          <View style={[styles.copy, wide ? styles.copyRow : null]}>
-            <Text variant="displayL" color="onPhoto.primary" role="heading" testID="AUTH-02.headline">
-              {t('welcome.headline')}
-            </Text>
-            <Text
-              variant="body"
-              color="onPhoto.secondary"
-              style={BODY_WRAP}
-              lineBreakStrategyIOS="standard"
-              testID="AUTH-02.body"
-            >
-              {t('welcome.body')}
-            </Text>
-          </View>
-          <View style={wide ? styles.actionsRow : styles.actions}>
-            <Button
-              label={t('welcome.signUp')}
-              variant="brand"
-              size="l"
-              fullWidth={!wide}
-              role="link"
-              style={wide ? styles.rowButton : undefined}
-              onPress={() => router.push('/sign-up')}
-              testID="AUTH-02.signUp"
-            />
-            <Button
-              label={t('welcome.signIn')}
-              variant="onPhoto"
-              size="l"
-              fullWidth={!wide}
-              role="link"
-              style={wide ? styles.rowButton : undefined}
-              onPress={() => router.push('/sign-in')}
-              testID="AUTH-02.signIn"
-            />
-            <Button
-              label={t('welcome.browse')}
-              variant="onPhotoText"
-              size="m"
-              fullWidth={!wide}
-              role="link"
-              onPress={() => router.replace('/')}
-              style={wide ? styles.browseRow : styles.browse}
-              testID="AUTH-02.browse"
-            />
+          <View style={[styles.block, kind === 'phone' ? null : styles.stackColumn]}>
+            {copy}
+            {actions}
           </View>
         </Animated.View>
       </ScrollView>

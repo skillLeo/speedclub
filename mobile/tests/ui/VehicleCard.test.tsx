@@ -59,12 +59,14 @@ describe('VehicleCardSkeleton', () => {
 });
 
 describe('VehicleCardSkeleton title', () => {
-  // A typical title of 18 characters, measured live on DEV-01.cards.noPhoto: 332 wide at 200 %, so it wraps only at 360.
-  // 328, 350 and 390 are the card widths at 360, 390 and 430.
+  // A typical title of 18 characters, measured live on DEV-01.cards.noPhoto: 332 wide at 200 % in v1 title.s (18). The 2.0
+  // headline is 17, so it is about 314 wide and fits even the narrowest card. 328, 350 and 390 are the card widths at 360,
+  // 390 and 430; 300 is a narrower column, where it wraps.
   it.each([
     [1, 328, 1],
     [1.5, 328, 1],
-    [2, 328, 2],
+    [2, 300, 2],
+    [2, 328, 1],
     [2, 350, 1],
     [2, 390, 1],
     [2, 640, 1],
@@ -81,14 +83,14 @@ describe('VehicleCardSkeleton title', () => {
 });
 
 describe('VehicleCard', () => {
-  it('has a 4:3 photo radius 12, title.s, supporting sub-line and spec chips', async () => {
+  it('has a 4:3 photo radius 12, headline, callout sub-line and spec chips', async () => {
     await renderUi(<VehicleCard {...base} testID="c" />);
     const photo = flat(screen.getByTestId('c.photo').props.style);
     expect(photo.aspectRatio).toBeCloseTo(4 / 3);
     expect(photo.borderRadius).toBe(radius.md);
-    expect(flat(screen.getByText(base.title).props.style).fontSize).toBe(typography.titleS.fontSize);
+    expect(flat(screen.getByText(base.title).props.style).fontSize).toBe(typography.headline.fontSize);
     const sub = flat(screen.getByText(base.subtitle).props.style);
-    expect(sub.fontSize).toBe(typography.supporting.fontSize);
+    expect(sub.fontSize).toBe(typography.callout.fontSize);
     expect(sub.color).toBe(themes.carbon.color.text.secondary);
     expect(screen.getByText('540 Nm')).toBeTruthy();
   });
@@ -106,12 +108,15 @@ describe('VehicleCard', () => {
     expect(screen.queryByRole('link')).toBeNull();
   });
 
-  it('shows the Hauptfahrzeug badge 12 from the corner, with the accent outline', async () => {
+  it('shows the Hauptfahrzeug badge 12 from the corner, neutral like every badge (ADR-431 f)', async () => {
     await renderUi(<VehicleCard {...base} isMain onPress={jest.fn()} testID="c" />);
     const badge = flat(screen.getByTestId('c.badge').props.style);
-    expect(badge.top).toBe(space[12]);
-    expect(badge.left).toBe(space[12]);
-    expect(badge.borderColor).toBe(themes.carbon.color.accent.fg);
+    // The badge row (Hauptfahrzeug, then Beispiel/Editorial of 09 §8.19) sits 12 from the corner.
+    const row = flat(screen.getByTestId('c.badges').props.style);
+    expect(row.top).toBe(space[12]);
+    expect(row.left).toBe(space[12]);
+    expect(badge.borderColor).toBeUndefined();
+    expect(badge.borderWidth).toBeUndefined();
     expect(badge.backgroundColor).toBe(themes.carbon.color.onPhoto.chipBg);
     expect(screen.getByRole('link', { name: /^Hauptfahrzeug, Nissan/ })).toBeTruthy();
   });

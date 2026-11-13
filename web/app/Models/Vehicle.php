@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BuildUpdateAudience;
 use App\Enums\QrStatus;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
@@ -49,12 +50,16 @@ class Vehicle extends Model
             'status' => VehicleStatus::class,
             'visibility' => Visibility::class,
             'is_main' => 'boolean',
+            'is_sample' => 'boolean',
+            'comments_enabled' => 'boolean',
             'wizard_step' => 'integer',
             'sort' => 'integer',
             'model_year' => 'integer',
             'hu_au_due' => 'date',
             'qr_milestone' => 'integer',
             'hu_au_reminded_for' => 'date',
+            'odometer_km' => 'integer',
+            'odometer_at' => 'datetime',
             'published_at' => 'datetime',
             'archived_at' => 'datetime',
         ];
@@ -175,6 +180,26 @@ class Vehicle extends Model
     }
 
     /**
+     * M4.13 (09 §8.8): owner-only.
+     *
+     * @return HasMany<MaintenanceItem, $this>
+     */
+    public function maintenanceItems(): HasMany
+    {
+        return $this->hasMany(MaintenanceItem::class);
+    }
+
+    /**
+     * M4.13 (09 §8.8): owner-only, costs included.
+     *
+     * @return HasMany<MaintenanceLog, $this>
+     */
+    public function maintenanceLogs(): HasMany
+    {
+        return $this->hasMany(MaintenanceLog::class);
+    }
+
+    /**
      * @return MorphMany<Media, $this>
      */
     public function media(): MorphMany
@@ -187,7 +212,8 @@ class Vehicle extends Model
      */
     public function buildUpdates(): HasMany
     {
-        return $this->hasMany(BuildUpdate::class);
+        // M4.11: each update knows its vehicle without a query of its own (BuildUpdateResource asks who owns it).
+        return $this->hasMany(BuildUpdate::class)->chaperone('vehicle');
     }
 
     /**
@@ -197,7 +223,8 @@ class Vehicle extends Model
      */
     public function latestVisibleUpdate(): HasOne
     {
-        return $this->hasOne(BuildUpdate::class)->ofMany(['created_at' => 'max', 'id' => 'max'], fn ($query) => $query->where('hidden', false));
+        // M4.11: a followers-only update is not on a card anybody may see.
+        return $this->hasOne(BuildUpdate::class)->ofMany(['created_at' => 'max', 'id' => 'max'], fn ($query) => $query->where('hidden', false)->where('audience', BuildUpdateAudience::Vehicle->value));
     }
 
     /**
@@ -222,6 +249,26 @@ class Vehicle extends Model
     public function saves(): HasMany
     {
         return $this->hasMany(Save::class);
+    }
+
+    /**
+     * M4.11 (09 §8.6): members following this build.
+     *
+     * @return HasMany<VehicleFollow, $this>
+     */
+    public function follows(): HasMany
+    {
+        return $this->hasMany(VehicleFollow::class);
+    }
+
+    /**
+     * M4.11 (09 §8.5): the owner's Highlights rail, in order.
+     *
+     * @return HasMany<VehicleHighlight, $this>
+     */
+    public function highlights(): HasMany
+    {
+        return $this->hasMany(VehicleHighlight::class)->orderBy('position')->orderBy('id');
     }
 
     /**

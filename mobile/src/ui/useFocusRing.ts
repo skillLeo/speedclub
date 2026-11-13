@@ -20,7 +20,7 @@ const useStyles = createStyles((t) => ({
     outlineWidth: t.size.border.focusRing,
   },
   // DQ-054, ADR-161: a card has no inner padding, so its text and chips need more air before the ring than a shaped control does.
-  // It reaches 6 outside the card: a scroller around cards needs that room (GarageStrip).
+  // It reaches 6 outside the card: a scroller around cards needs that room (the profile strip of v1).
   ringCard: {
     outlineColor: t.color.focus.ring,
     outlineOffset: t.space[4],

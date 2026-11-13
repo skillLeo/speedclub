@@ -43,7 +43,7 @@ export function ViewAsEndedScreen({ reason }: { reason: ViewAsEndReason }) {
             action={{ label: t('viewAs.closeTab'), onPress: closeTab, variant: 'secondary', size: 'm' }}
             testID={`VIEWAS.ended.${reason}`}
           />
-          <Text variant="supporting" color="text.secondary" style={styles.hint} testID="VIEWAS.ended.hint">
+          <Text variant="callout" color="text.secondary" style={styles.hint} testID="VIEWAS.ended.hint">
             {t('viewAs.closeHint')}
           </Text>
         </View>

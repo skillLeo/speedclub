@@ -4,7 +4,8 @@ import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-na
 import type { Edge } from 'react-native-safe-area-context';
 
 import { useOnline } from '@/state/online';
-import { createStyles, layout, space, useBreakpoint, useMotion } from '@/theme';
+import { createStyles, layout, space, useBreakpoint } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import { Hairline, Header, OfflineBanner, Screen, useCollapsingHeader } from '@/ui';
 
 import { useTabScrollToTop } from './retap';
@@ -43,6 +44,8 @@ export type PushedListPageProps = {
   /** Absent where the page's parent stands beside it (the settings split): then there is no back (DQ-420). */
   onBack?: () => void;
   offlineLabel?: string;
+  /** The header's trailing control (HOME-02: the "···" menu). */
+  trailing?: ReactNode;
   /** Fixed under the header, in the column: tabs and a search field. It does not scroll with the list. */
   top?: ReactNode;
   renderList: (frame: PushedListFrame) => ReactNode;
@@ -56,10 +59,10 @@ export type PushedListPageProps = {
  * A pushed page inside a tab whose body is one virtualised list (§9, §16): back, the offline banner, optional fixed controls,
  * then the FlashList that clears the tab bar. PROF-04, PROF-05 and SET-08 use it.
  */
-export function PushedListPage({ routeId, title, onBack, offlineLabel, top, renderList, onScrollToTop, overlays }: PushedListPageProps) {
+export function PushedListPage({ routeId, title, onBack, offlineLabel, trailing, top, renderList, onScrollToTop, overlays }: PushedListPageProps) {
   const styles = useStyles();
   const online = useOnline();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const { gutter, kind } = useBreakpoint();
   const padding = useTabBarPadding();
   const header = useCollapsingHeader();
@@ -82,6 +85,7 @@ export function PushedListPage({ routeId, title, onBack, offlineLabel, top, rend
         title={title}
         scroll={header}
         onBack={onBack}
+        trailing={trailing}
         hairline={!top}
         contentMaxWidth={kind === 'phone' ? undefined : layout.feedColumn}
         testID={`${routeId}.header`}

@@ -12,6 +12,8 @@
             "followers": "int",
             "following": "int"
         },
+        "is_sample": "bool",
+        "is_editorial": "bool",
         "is_self": "bool",
         "is_following": "bool",
         "follows_you": "bool",

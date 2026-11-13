@@ -38,7 +38,9 @@ class NotificationController extends Controller
         $member = $this->member($request);
         Gate::authorize('viewAny', Notification::class);
 
-        return NotificationResource::collection($this->feed->page($member, $request->pageSize()));
+        $category = $request->validated('category');
+
+        return NotificationResource::collection($this->feed->page($member, $request->pageSize(), is_string($category) ? $category : null));
     }
 
     /**

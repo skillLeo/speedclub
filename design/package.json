@@ -7,9 +7,12 @@
     "tokens": "node scripts/build-tokens.mjs",
     "tokens:check": "node scripts/build-tokens.mjs --check",
     "brand": "node scripts/build-brand.mjs",
-    "icons": "node scripts/build-icons.mjs"
+    "icons": "node scripts/build-icons.mjs",
+    "photos": "node scripts/process-photos.mjs",
+    "test:photos": "node --test scripts/process-photos.test.mjs"
   },
   "devDependencies": {
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "thumbhash": "^0.1.1"
   }
 }

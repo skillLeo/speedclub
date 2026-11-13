@@ -11,9 +11,9 @@ defineProps<{ events: FeedEntry[]; more: boolean; logHref: string | null }>();
 
 <template>
     <div class="flex flex-col gap-12" data-testid="ADM-10.audit">
-        <p v-if="events.length === 0" class="text-supporting text-ink-2">{{ trans('members.audit.empty') }}</p>
+        <p v-if="events.length === 0" class="text-admin-base text-ink-2">{{ trans('members.audit.empty') }}</p>
         <ScrollRegion v-else :label="trans('members.audit.caption')">
-            <table class="w-full border-collapse text-supporting">
+            <table class="w-full border-collapse text-admin-base">
                 <caption class="sr-only">{{ trans('members.audit.caption') }}</caption>
                 <thead>
                     <tr class="h-40 border-b border-line text-left text-caption text-ink-2">
@@ -34,7 +34,7 @@ defineProps<{ events: FeedEntry[]; more: boolean; logHref: string | null }>();
                 </tbody>
             </table>
         </ScrollRegion>
-        <a v-if="logHref" :href="logHref" class="inline-flex h-32 items-center self-start rounded-xs text-label-s text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+        <a v-if="logHref" :href="logHref" class="inline-flex h-32 items-center self-start rounded-xs text-admin-base-strong text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
             {{ more ? trans('members.audit.more') : trans('members.audit.open_log') }}
         </a>
     </div>

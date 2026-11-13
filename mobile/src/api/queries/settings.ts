@@ -11,7 +11,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, apiData, ApiError, withIdempotency } from '@/api/client';
 import { isViewAsTab } from '@/api/clientViewAs';
 import { meKey, refreshMe, type Me, type MemberSettings } from '@/api/queries/auth';
+import { withRecentAuth } from '@/api/queries/recentAuth';
 import type { components } from '@/api/schema';
+import { setDisplayUnits } from '@/lib/displayUnits';
 import { setPowerDisplay } from '@/lib/powerDisplay';
 import { useSessionStore } from '@/state/session';
 
@@ -31,8 +33,9 @@ export function useMemberSettings() {
     queryKey: memberSettingsKey,
     queryFn: async ({ signal }) => {
       const settings = (await apiData(api.GET('/me/settings', { signal }))).data;
-      // The account's display applies on every screen (SET-11, §3.9).
+      // The account's display applies on every screen (SET-11, §3.9; M4.13 units).
       setPowerDisplay(settings.power_display);
+      setDisplayUnits({ distance: settings.distance_unit, torque: settings.torque_unit, weight: settings.weight_unit });
       return settings;
     },
     enabled: signedIn,
@@ -72,10 +75,20 @@ export function useSetShowOwnerOnQr() {
 export type SettingsPatch = components['schemas']['UpdateSettingsRequest'];
 export type NotificationPrefs = MemberSettings['notification_prefs'];
 
-/** The settings after a patch: `notification_prefs` merges level by level, as the server does under its row lock (M2.2). */
+/** A patched home region: null clears it, a complete one replaces it, an incomplete or missing one keeps the current. */
+function homeRegion(current: MemberSettings['home_region'], patch: SettingsPatch['home_region']): MemberSettings['home_region'] {
+  if (patch === null) return null;
+  if (patch && typeof patch.label === 'string' && typeof patch.lat === 'number' && typeof patch.lng === 'number') {
+    return { label: patch.label, lat: patch.lat, lng: patch.lng };
+  }
+  return current;
+}
+
+/** The settings after a patch: `notification_prefs` and `maintenance` merge level by level, as the server does under its row lock (M2.2, M4.13). */
 export function mergeSettings(settings: MemberSettings, patch: SettingsPatch): MemberSettings {
-  const { notification_prefs: prefs, ...rest } = patch;
-  const next: MemberSettings = { ...settings, ...rest };
+  const { notification_prefs: prefs, maintenance, home_region: region, ...rest } = patch;
+  // M4.13 SET-23: like the server, a part of `maintenance` merges over the rest.
+  const next: MemberSettings = { ...settings, ...rest, home_region: homeRegion(settings.home_region, region), maintenance: { ...settings.maintenance, ...maintenance } };
   if (!prefs) return next;
   const current = settings.notification_prefs;
   const types = { ...current.types };
@@ -88,6 +101,7 @@ export function mergeSettings(settings: MemberSettings, patch: SettingsPatch): M
       types,
       quiet_hours: { ...current.quiet_hours, ...prefs.quiet_hours },
       message_previews: prefs.message_previews ?? current.message_previews,
+      digest_frequency: prefs.digest_frequency ?? current.digest_frequency,
     },
   };
 }
@@ -125,7 +139,9 @@ export function useUpdateMemberSettings() {
 
 export type WhoCanMessage = MemberSettings['who_can_message'];
 /** SET-07: the privacy fields of `PATCH me/settings` (contract §2). */
-export type PrivacyPatch = Pick<SettingsPatch, 'who_can_message' | 'discoverable' | 'indexable' | 'read_receipts' | 'ai_suggestions'>;
+export type PrivacyPatch = Pick<SettingsPatch, 'who_can_message' | 'mention_privacy' | 'discoverable' | 'indexable' | 'read_receipts' | 'ai_suggestions'>;
+/** M4.11 "Wer darf mich erwähnen" (ADR-436 b). */
+export type MentionPrivacy = MemberSettings['mention_privacy'];
 export type PrivacyValues = Pick<MemberSettings, 'who_can_message' | 'discoverable' | 'indexable' | 'read_receipts'>;
 
 /** The defaults of 08_LEGAL_COMPLIANCE §1: reachable, findable and indexable (a community), read receipts on. */
@@ -149,6 +165,12 @@ export type DeviceSession = {
   appVersion: string | null;
   lastUsedAt: string;
   current: boolean;
+  /** M4.7: "26.1" on iOS, "16" on Android; null for a browser. */
+  osVersion: string | null;
+  /** M4.7: when this install signed in (ISO 8601); null for a browser. */
+  signedInAt: string | null;
+  /** M4.7: "München", approximate, only with a GeoLite2 database (OA-33); null until then, and then nothing is shown. */
+  approxCity: string | null;
 };
 
 export type DataExportStatus = DataExportResource['status'];
@@ -186,6 +208,9 @@ const toDeviceSession = (row: DeviceSessionResource): DeviceSession => ({
   appVersion: row.app_version,
   lastUsedAt: row.last_used_at,
   current: row.current,
+  osVersion: row.os_version,
+  signedInAt: row.signed_in_at,
+  approxCity: row.approx_city,
 });
 
 const toDataExport = (row: DataExportResource): DataExport => ({
@@ -251,11 +276,11 @@ export function useRevokeSession() {
   });
 }
 
-/** `DELETE me/sessions`: every device but this one. */
+/** `DELETE me/sessions`: every device but this one. M4.6: needs recent authentication, so the reauth sheet may come first. */
 export function useRevokeOtherSessions() {
   return useMutation({
     mutationFn: async () => {
-      await apiData(api.DELETE('/me/sessions'));
+      await withRecentAuth(() => apiData(api.DELETE('/me/sessions')));
     },
     retry: false,
   });

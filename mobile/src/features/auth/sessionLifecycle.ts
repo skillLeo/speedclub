@@ -46,10 +46,21 @@ export const RESTORE_WAIT_MS = 6000;
 export const RESUME_DELAYS_MS = [5000, 30000, 120000] as const;
 
 let welcomeSeen = true;
+let onboardingSeen = true;
 
 /** Native: whether the first launch has shown Welcome. Known by the time the session is restored. */
 export function hasSeenWelcome(): boolean {
   return welcomeSeen;
+}
+
+/** Whether this device has shown ONB-01…03. Known by the time the session is restored. */
+export function hasSeenOnboarding(): boolean {
+  return onboardingSeen;
+}
+
+/** ONB: the pages were shown; the next start goes on as before. */
+export function markOnboardingSeen(): void {
+  onboardingSeen = true;
 }
 
 class RestoreTimeout extends Error {}
@@ -168,7 +179,9 @@ export async function restoreViewAs(): Promise<SessionMember | null> {
 export async function restoreMember(): Promise<SessionMember | null> {
   if (isViewAsTab()) return restoreViewAs();
   const [token, cached] = await Promise.all([storedToken(), readCachedMember(), hydrateLocale()]);
-  welcomeSeen = (await getStored('sc.welcomeSeen')) !== null;
+  const [welcome, onboarding] = await Promise.all([getStored('sc.welcomeSeen'), getStored('sc.onboardingSeen')]);
+  welcomeSeen = welcome !== null;
+  onboardingSeen = onboarding !== null;
   if (!token && !cached) {
     void retryPendingLogout();
     return null;

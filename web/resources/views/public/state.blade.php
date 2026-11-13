@@ -22,7 +22,7 @@
         <div class="sc-state-copy">
             <div class="sc-state-measure">
                 <x-public.icon :name="$icon" :size="24" class="text-ink-2" />
-                <h1 class="mt-12 text-title-l text-ink" data-testid="{{ $id }}.title">{{ $title }}</h1>
+                <h1 class="mt-12 t-title-1 text-ink" data-testid="{{ $id }}.title">{{ $title }}</h1>
                 <p class="mt-8 text-body text-ink-2" data-testid="{{ $id }}.body">{{ $text }}</p>
                 <div class="mt-24 flex flex-wrap gap-8">
                     <x-public.button :href="url('/app/discover')" variant="primary" size="l" data-testid="{{ $id }}.discover">{{ __('public.state.discover') }}</x-public.button>

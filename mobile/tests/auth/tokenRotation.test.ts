@@ -127,8 +127,8 @@ describe('rotating the token', () => {
     const [rotate] = callsTo('/api/v1/auth/token/rotate');
     expect(rotate?.method).toBe('POST');
     expect(bearer(rotate!)).toBe('Bearer old-token');
-    // This install's id, as at sign-in: the successor token belongs to this device alone.
-    expect(await rotate!.json()).toEqual({ device_id: 'uuid-1' });
+    // This install's id, as at sign-in: the successor token belongs to this device alone. M4.7: and the versions now.
+    expect(await rotate!.json()).toEqual(expect.objectContaining({ device_id: 'uuid-1', app_version: expect.any(String) }));
     expect(mockKeychain.get('sc.authToken')).toBe('new-token');
     expect(mockKeychain.get('sc.authTokenExpiresAt')).toBe(NEW_EXPIRY);
   });

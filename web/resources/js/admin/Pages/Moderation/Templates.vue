@@ -110,15 +110,15 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
             </template>
         </PageHeader>
 
-        <p class="max-w-720 text-supporting text-ink-2" data-testid="ADM-24.redress">{{ trans('moderation.templates.redress') }}</p>
+        <p class="max-w-720 text-admin-base text-ink-2" data-testid="ADM-24.redress">{{ trans('moderation.templates.redress') }}</p>
 
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('moderation.templates.error')" :body="trans('ui.state.error_body')" test-id="ADM-24.error" />
         <EmptyQueue v-else-if="pageState !== 'loading' && list.length === 0" variant="first" :title="trans('moderation.templates.empty_title')" :body="trans('moderation.templates.empty_body')" data-testid="ADM-24.empty" />
         <ScrollRegion v-else :label="trans('moderation.templates.caption')">
-            <table class="w-full text-supporting">
+            <table class="w-full text-admin-base">
                 <caption class="sr-only">{{ trans('moderation.templates.caption') }}</caption>
                 <thead>
-                    <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                    <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                         <th scope="col" class="px-12">{{ trans('moderation.templates.columns.label') }}</th>
                         <th scope="col" class="px-12">{{ trans('moderation.templates.columns.locale') }}</th>
                         <th scope="col" class="px-12">{{ trans('moderation.templates.columns.action') }}</th>
@@ -175,7 +175,7 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                     <div class="w-160"><Field :label="trans('moderation.templates.fields.section')" optional><Input v-model="form.ground_section" maxlength="100" /></Field></div>
                     <div class="w-160"><Field :label="trans('moderation.templates.fields.sort')" optional><Input v-model="form.sort" inputmode="numeric" maxlength="3" /></Field></div>
                 </div>
-                <p class="text-helper text-ink-3">{{ trans('moderation.templates.redress') }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('moderation.templates.redress') }}</p>
             </form>
             <template #footer>
                 <DialogError :message="serverError" />

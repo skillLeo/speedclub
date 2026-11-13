@@ -203,8 +203,8 @@ describe('WEB-05 /konto-loeschen', function () {
         $wrong = $this->post('/konto-loeschen', ['email' => $member->email, 'password' => 'falsch-falsch', 'confirm' => '1'])->assertUnprocessable();
         $unknown = $this->post('/konto-loeschen', ['email' => 'niemand@example.de', 'password' => 'falsch-falsch', 'confirm' => '1'])->assertUnprocessable();
 
-        $wrong->assertSee('E-Mail-Adresse oder Passwort stimmen nicht.');
-        $unknown->assertSee('E-Mail-Adresse oder Passwort stimmen nicht.');
+        $wrong->assertSee("E-\u{2060}Mail-Adresse oder Passwort stimmen nicht.");
+        $unknown->assertSee("E-\u{2060}Mail-Adresse oder Passwort stimmen nicht.");
         expect($member->fresh()->isPendingDeletion())->toBeFalse();
     });
 

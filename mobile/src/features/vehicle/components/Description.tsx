@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { joinShortCompounds } from '@/lib/format';
 import { createStyles } from '@/theme';
 import { PressableScale, Text } from '@/ui';
 
-/** FS-3: six lines, then "Mehr anzeigen". */
-export const DESCRIPTION_LINES = 6;
+/** 09 §7.6 Übersicht (DQ-1056): four lines at every font scale, then "Mehr anzeigen". */
+export const DESCRIPTION_LINES = 4;
 
 const useStyles = createStyles((t) => ({
   // The full text, laid out at the same width and never seen, so the clamp knows whether it hides anything. Measuring
@@ -26,11 +27,13 @@ export type DescriptionProps = {
   moreTestID?: string;
 };
 
-/** The owner's description (≤ 500): line breaks kept, clamped to six lines with a toggle when it is longer. */
+/** The owner's description (≤ 500): line breaks kept, clamped to four lines with a toggle when it is longer. */
 export function Description({ text, style, testID, moreTestID }: DescriptionProps) {
   const { t } = useTranslation('common');
   const styles = useStyles();
   const [expanded, setExpanded] = useState(false);
+  // r5 VEH-01: the owner's words never break beside a short part of a compound ("GT-SS- / Ladern"); display only.
+  const shown = joinShortCompounds(text);
   const [clampedHeight, setClampedHeight] = useState(0);
   const [fullHeight, setFullHeight] = useState(0);
   // One point of tolerance for rounding between the two layouts.
@@ -47,11 +50,11 @@ export function Description({ text, style, testID, moreTestID }: DescriptionProp
           }}
           testID={testID}
         >
-          {text}
+          {shown}
         </Text>
         {expanded ? null : (
           <Text variant="body" aria-hidden style={styles.probe} onLayout={(event) => setFullHeight(event.nativeEvent.layout.height)}>
-            {text}
+            {shown}
           </Text>
         )}
       </View>
@@ -64,7 +67,7 @@ export function Description({ text, style, testID, moreTestID }: DescriptionProp
           contentStyle={styles.toggleVisual}
           testID={moreTestID}
         >
-          <Text variant="labelS" color="text.secondary" selectable={false}>
+          <Text variant="bodyStrong" color="text.secondary" selectable={false}>
             {expanded ? t('actions.showLess') : t('actions.showMore')}
           </Text>
         </PressableScale>

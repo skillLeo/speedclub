@@ -99,16 +99,16 @@ function rollout(flag: Flag): string {
 
         <div v-if="!aiAvailable && (pageState === 'ready' || pageState === 'loading')" class="flex items-start gap-12 rounded-sm border border-line px-16 py-12" role="note" data-testid="ADM-36.ai-note">
             <PhWarning :size="20" class="mt-2 shrink-0 text-warning" aria-hidden="true" />
-            <p class="text-supporting text-ink-2">{{ trans('config.flags.ai_note') }}</p>
+            <p class="text-admin-base text-ink-2">{{ trans('config.flags.ai_note') }}</p>
         </div>
 
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('config.flags.error')" :body="trans('ui.state.error_body')" test-id="ADM-36.error" @retry="router.reload()" />
         <EmptyQueue v-else-if="pageState !== 'loading' && list.length === 0" variant="first" :icon="PhToggleRight" :title="trans('config.flags.empty_title')" :body="trans('config.flags.empty_body')" data-testid="ADM-36.empty" />
         <ScrollRegion v-else :label="trans('config.flags.caption')">
-            <table class="w-full text-supporting" data-testid="ADM-36.table">
+            <table class="w-full text-admin-base" data-testid="ADM-36.table">
                 <caption class="sr-only">{{ trans('config.flags.caption') }}</caption>
                 <thead>
-                    <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                    <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                         <th scope="col" class="px-12">{{ trans('config.flags.columns.flag') }}</th>
                         <th scope="col" class="px-12">{{ trans('config.flags.columns.here') }}</th>
                         <th scope="col" class="whitespace-nowrap px-12">
@@ -134,7 +134,7 @@ function rollout(flag: Flag): string {
                                 <span class="block max-w-360 truncate text-ink" :title="flag.description ?? flag.key">{{ flag.description ?? flag.key }}</span>
                                 <Badge v-if="flag.critical" tone="warning">{{ trans('config.flags.critical') }}</Badge>
                                 <Badge v-if="flag.ai" tone="neutral">{{ trans('config.flags.ai') }}</Badge>
-                                <span v-if="flag.pending" class="inline-flex items-center gap-4 whitespace-nowrap text-helper text-info"><PhSealCheck :size="16" aria-hidden="true" />{{ trans('config.flags.pending') }}</span>
+                                <span v-if="flag.pending" class="inline-flex items-center gap-4 whitespace-nowrap text-admin-base text-info"><PhSealCheck :size="16" aria-hidden="true" />{{ trans('config.flags.pending') }}</span>
                             </span>
                             <span v-if="flag.description" class="sc-key block text-caption text-ink-3">{{ flag.key }}</span>
                         </td>
@@ -168,28 +168,28 @@ function rollout(flag: Flag): string {
             <form id="adm36-form" class="flex flex-col gap-16" novalidate @submit.prevent="save">
                 <Field :label="trans('config.flags.fields.description')" optional><Textarea v-model="form.description" :rows="2" :maxlength="500" /></Field>
                 <fieldset class="flex flex-col gap-8">
-                    <legend class="mb-4 text-label-s text-ink">{{ trans('config.flags.fields.environments') }}</legend>
+                    <legend class="mb-4 text-admin-base-strong text-ink">{{ trans('config.flags.fields.environments') }}</legend>
                     <div v-for="env in ENVIRONMENTS" :key="env" class="flex items-center justify-between gap-12 rounded-sm border border-line px-12 py-8">
                         <span class="flex flex-col">
-                            <span class="text-supporting text-ink">{{ envLabel(env) }}</span>
-                            <span class="text-helper text-ink-3">{{ env === environment ? trans('config.flags.this_environment') : trans('config.flags.other_environment') }}</span>
+                            <span class="text-admin-base text-ink">{{ envLabel(env) }}</span>
+                            <span class="text-admin-base text-ink-3">{{ env === environment ? trans('config.flags.this_environment') : trans('config.flags.other_environment') }}</span>
                         </span>
                         <Switch v-model="form.environments[env]" :aria-label="trans('config.flags.switch_for', { environment: envLabel(env) })" :disabled="aiBlocked && !editing?.environments[env]" :data-testid="`ADM-36.form.${env}`" />
                     </div>
-                    <p v-if="aiBlocked" class="text-helper text-warning" role="note">{{ trans('config.refused.ai_provider_missing') }}</p>
+                    <p v-if="aiBlocked" class="text-admin-base text-warning" role="note">{{ trans('config.refused.ai_provider_missing') }}</p>
                 </fieldset>
                 <Switch v-model="form.staff_only" :label="trans('config.flags.fields.staff_only')" />
-                <p class="-mt-8 text-helper text-ink-3">{{ trans('config.flags.staff_only_hint') }}</p>
+                <p class="-mt-8 text-admin-base text-ink-3">{{ trans('config.flags.staff_only_hint') }}</p>
                 <div class="w-200">
                     <Field :label="trans('config.flags.fields.percentage')" :hint="trans('config.flags.percentage_hint')" :error="errors.percentage">
                         <Input v-model="form.percentage" inputmode="numeric" maxlength="3" tnum :disabled="form.staff_only">
-                            <template #trailing><span class="text-supporting text-ink-3">%</span></template>
+                            <template #trailing><span class="text-admin-base text-ink-3">%</span></template>
                         </Input>
                     </Field>
                 </div>
                 <Switch v-model="form.critical" :label="trans('config.flags.fields.critical')" />
-                <p class="-mt-8 text-helper text-ink-3">{{ trans('config.flags.critical_hint') }}</p>
-                <p v-if="fourEyes" class="rounded-sm border border-line px-12 py-8 text-supporting text-ink-2" data-testid="ADM-36.four-eyes">{{ trans('config.flags.four_eyes') }}</p>
+                <p class="-mt-8 text-admin-base text-ink-3">{{ trans('config.flags.critical_hint') }}</p>
+                <p v-if="fourEyes" class="rounded-sm border border-line px-12 py-8 text-admin-base text-ink-2" data-testid="ADM-36.four-eyes">{{ trans('config.flags.four_eyes') }}</p>
                 <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="errors.reason ?? errors.changes" required>
                     <Textarea v-model="form.reason" :rows="3" :maxlength="1000" show-count data-testid="ADM-36.form.reason" />
                 </Field>

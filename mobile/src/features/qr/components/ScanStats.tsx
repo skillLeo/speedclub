@@ -79,7 +79,7 @@ export function ScanStats({ vehicleId, routeId }: Props) {
             <View key={stats.data.days[index]?.date ?? index} style={[styles.bar, { height }]} />
           ))}
         </View>
-        <Text variant="supporting" color="text.secondary" testID={`${testID}.summary`}>
+        <Text variant="callout" color="text.secondary" testID={`${testID}.summary`}>
           {summary}
         </Text>
         <Text variant="caption" color="text.tertiary" testID={`${testID}.milestone`}>
@@ -93,7 +93,7 @@ export function ScanStats({ vehicleId, routeId }: Props) {
   } else if (stats.isError || stats.fetchStatus === 'paused') {
     body = (
       <View style={styles.error} role="alert" testID={`${testID}.error`}>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {t('stats.errorTitle')}
         </Text>
         <Button
@@ -115,7 +115,7 @@ export function ScanStats({ vehicleId, routeId }: Props) {
             <SkeletonBlock key={index} height={BAR_SCALE.max} corner="xs" style={styles.bar} />
           ))}
         </View>
-        <SkeletonText variant="supporting" width="60%" />
+        <SkeletonText variant="callout" width="60%" />
         <SkeletonText variant="caption" width="45%" />
       </Skeleton>
     );

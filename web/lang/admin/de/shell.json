@@ -96,5 +96,12 @@
         "esc": "Esc",
         "copied": "Link kopiert",
         "copy_failed": "Der Link konnte nicht kopiert werden."
+    },
+    "two_factor": {
+        "required_for_action": "Für diesen Schritt brauchst du einen Code aus der Authenticator-App. Richte die Zwei-Faktor-Anmeldung zuerst ein.",
+        "reminder": "Schütze dein Konto mit einem Code aus der Authenticator-App.",
+        "reminder_link": "Jetzt einrichten",
+        "reminder_dismiss": "Hinweis ausblenden",
+        "reminder_label": "Zwei-Faktor-Anmeldung fehlt"
     }
 }

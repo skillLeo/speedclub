@@ -12,6 +12,7 @@ import { now } from '@/lib/clock';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
 import { Button, Dialog, toast } from '@/ui';
+import { nameInText } from '@/ui/textBreaks';
 
 import { FormGroup } from '../components/fields';
 import { EditorForm, EditorLoading, EditorScreen, RestrictedNotice } from '../components/frames';
@@ -97,7 +98,7 @@ function BasicsForm({ vehicle, restriction }: { vehicle: GarageVehicle; restrict
   const confirmDelete = () => {
     const done = () => {
       setConfirming(false);
-      toast(t('basics.deleted', { vehicle: vehicle.full_title }), { testID: `${ROUTE}.deleted` });
+      toast(t('basics.deleted', { vehicle: nameInText(vehicle.full_title) }), { testID: `${ROUTE}.deleted` });
       setDeleted(true);
     };
     remove.mutate(vehicle, {
@@ -150,7 +151,7 @@ function BasicsForm({ vehicle, restriction }: { vehicle: GarageVehicle; restrict
       <Dialog
         visible={confirming}
         onClose={() => setConfirming(false)}
-        title={t('basics.deleteTitle', { vehicle: vehicle.full_title })}
+        title={t('basics.deleteTitle', { vehicle: nameInText(vehicle.full_title) })}
         body={vehicle.status === 'published' ? t('basics.deleteBodyPublished') : t('basics.deleteBodyDraft')}
         testID={`${ROUTE}.deleteDialog`}
         actions={[

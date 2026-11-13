@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<{ code: string | null; href?: string | nu
 const text = computed(() => formatQrCode(props.code));
 const classes = computed(() => [
     'sc-key inline-flex min-w-96 items-center whitespace-nowrap tabular-nums',
-    props.size === 'md' ? 'font-ui text-code' : 'text-supporting',
+    props.size === 'md' ? 'font-ui text-admin-base tabular-nums' : 'text-admin-base',
     props.muted ? 'text-ink-2' : 'text-ink',
 ]);
 </script>

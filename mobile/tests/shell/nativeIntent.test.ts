@@ -182,3 +182,49 @@ describe('the site hosts of a build', () => {
 it('the route file exports what expo-router calls', () => {
   expect(redirectSystemPath({ path: '/app/C/X1', initial: true })).toBe('/c/X1');
 });
+
+describe('the magic and secure links (M4.6, M4.7)', () => {
+  const SITE = ['speedclub.de'];
+  const map = (incoming: string) => mapIncomingPath(incoming, SITE);
+  const paramsOf = (path: string) => Object.fromEntries(new URL(path, 'file:').searchParams);
+  const MAGIC = 'kq3V9mX2pL7rT1sB8nW4yZ6cD0fG5hJ2aE9uQ7iO3x_';
+  const SECURE = '01JCZ8Q3M5W6X7Y8Z9A0B1C2D3.0f1e2d3c4b5a69788796a5b4c3d2e1f0';
+
+  it.each([
+    ['the mail link on the site root', `https://speedclub.de/auth/magic#t=${MAGIC}`, '/auth/magic'],
+    ['the web route', `https://speedclub.de/app/auth/magic#t=${MAGIC}`, '/auth/magic'],
+    ['a bare path', `/app/auth/magic#t=${MAGIC}`, '/auth/magic'],
+  ])('the magic link from %s hands its token to the screen', (_name, incoming, route) => {
+    const path = map(incoming);
+    expect(path.split('?')[0]).toBe(route);
+    expect(paramsOf(path)).toEqual({ t: MAGIC });
+  });
+
+  it('the secure link hands its token to the screen', () => {
+    const path = map(`https://speedclub.de/auth/secure#t=${SECURE}`);
+    expect(path.split('?')[0]).toBe('/auth/secure');
+    expect(paramsOf(path)).toEqual({ t: SECURE });
+  });
+
+  it.each([
+    ['the app scheme', `speedclub://auth/magic#t=${MAGIC}`],
+    ['another host', `https://evil.example/auth/magic#t=${MAGIC}`],
+    ['the query', `/app/auth/magic?t=${MAGIC}`],
+    ['a token given twice', `/app/auth/magic#t=${MAGIC}&t=${MAGIC}`],
+    ['a token of another shape', '/app/auth/magic#t=short'],
+  ])('carries no magic token from %s', (_name, incoming) => {
+    expect(map(incoming)).toBe('/auth/magic');
+  });
+
+  it.each([
+    ['the app scheme', `speedclub://auth/secure#t=${SECURE}`],
+    ['a magic token', `/app/auth/secure#t=${MAGIC}`],
+    ['the query', `/app/auth/secure?t=${SECURE}`],
+  ])('carries no secure token from %s', (_name, incoming) => {
+    expect(map(incoming)).toBe('/auth/secure');
+  });
+
+  it('takes nothing else from the fragment', () => {
+    expect(paramsOf(map(`/app/auth/magic#t=${MAGIC}&returnTo=https%3A%2F%2Fevil.example&code=482913`))).toEqual({ t: MAGIC });
+  });
+});

@@ -136,6 +136,6 @@ return [
     |
     */
 
-    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 300),
+    'password_timeout' => (int) env('AUTH_PASSWORD_TIMEOUT', 300),
 
 ];

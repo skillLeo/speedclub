@@ -36,7 +36,7 @@ const options = computed(() => props.perPageOptions.map((n) => ({ value: String(
 </script>
 
 <template>
-    <nav class="flex flex-wrap items-center justify-between gap-12 text-supporting text-ink-2" :aria-label="trans('ui.pagination.label')" :data-testid="testId">
+    <nav class="flex flex-wrap items-center justify-between gap-12 text-admin-base text-ink-2" :aria-label="trans('ui.pagination.label')" :data-testid="testId">
         <p class="tabular-nums" aria-live="polite">
             <Skeleton v-if="pending" shape="text" class="w-160" />
             <template v-else>{{ meta.total === 0 ? trans('ui.pagination.none') : trans('ui.pagination.range', { from: formatNumber(meta.from), to: formatNumber(meta.to), total: formatNumber(meta.total) }) }}</template>

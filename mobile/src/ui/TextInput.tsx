@@ -5,6 +5,7 @@ import {
   StyleSheet,
   useWindowDimensions,
   View,
+  type LayoutChangeEvent,
   type StyleProp,
   type TextInputProps as RNTextInputProps,
   type ViewStyle,
@@ -36,7 +37,11 @@ export type TextInputProps = Omit<RNTextInputProps, 'style' | 'editable' | 'secu
   secure?: boolean;
   /** Grows with the content up to `maxRows`, then scrolls. */
   multiline?: boolean;
-  maxRows?: number;
+  /**
+   * Whole lines a multiline field grows to before it scrolls. A function gets the height one line of the field is drawn at
+   * (the OS font scale applied, see `useDrawnLine`), for a cap that is a share of the window at any font scale (DQ-133).
+   */
+  maxRows?: number | ((drawnLine: number) => number);
   disabled?: boolean;
   /** A spinner at the end of the field, for example while a value is checked. */
   loading?: boolean;
@@ -51,7 +56,93 @@ export type TextInputProps = Omit<RNTextInputProps, 'style' | 'editable' | 'secu
 };
 
 const DEFAULT_MAX_ROWS = 6;
+
+/**
+ * The type role of the field and of the web mirror that sizes a multiline field (ADR-420 `input` 16/24). They must be one
+ * role with one hyphenation and tracking: a mirror in a smaller role wraps to fewer lines and the field clips the text
+ * (DQ-803 in the composer, DQ-902 here).
+ */
+export const TEXT_INPUT_ROLE = 'input' as const;
 const HIT_WRAPPER = { qaHitWrapper: 'true' } as const;
+/** The measuring line draws nothing: a no-break space has the role's full line box. */
+const MEASURE_TEXT = '\u00A0';
+
+/**
+ * N12 (Build 12, DQ-133, DQ-153): one line of a multiline field as it is drawn, in dp. The web scales the role itself (the QA
+ * font scale, linear), so a line is 24 × scale there. Native lets the OS scale the input's line height: iOS linearly, but
+ * Android 14+ converts sp non-linearly (React Native 0.88 `TextAttributes.effectiveLineHeight` → `PixelUtil.toPixelFromSP` →
+ * `TypedValue.applyDimension(COMPLEX_UNIT_SP)`), so the 24 of `input` is drawn at 36 at font scale 2.0, not 48. Native
+ * therefore measures one line of the same role (`Text` converts its line height through the same `toPixelFromSP`). Until the
+ * first measurement at a font scale arrives the linear value stands in, which is exact on iOS and below Android 14.
+ */
+const drawnLines = new Map<number, number>();
+
+export function linearInputLine(fontScale: number): number {
+  return typography[TEXT_INPUT_ROLE].lineHeight * fontScale;
+}
+
+/** The field's text box: whole drawn lines, so a text longer than the cap never shows a cut line (the padding sits outside). */
+export function multilineMaxHeight(drawnLine: number, rows: number): number {
+  return drawnLine * rows;
+}
+
+/** `maxRows` as whole lines, at least one. */
+export function resolveRows(maxRows: number | ((drawnLine: number) => number), drawnLine: number): number {
+  const rows = typeof maxRows === 'function' ? maxRows(drawnLine) : maxRows;
+  return Math.max(1, Math.floor(rows));
+}
+
+/**
+ * The drawn line of the input role and the handler for the native measuring line (InputLineMeasure). Shared with the
+ * composer, so both cap their text at whole drawn lines (A7 note, round-3 review).
+ */
+export function useDrawnLine(fontScale: number): { drawnLine: number; onMeasure: (event: LayoutChangeEvent) => void } {
+  const [measured, setMeasured] = useState<{ scale: number; height: number } | null>(null);
+  const known = measured?.scale === fontScale ? measured.height : drawnLines.get(fontScale);
+  const drawnLine = isWeb ? linearInputLine(fontScale) : (known ?? linearInputLine(fontScale));
+  const onMeasure = (event: LayoutChangeEvent) => {
+    const { height } = event.nativeEvent.layout;
+    if (!(height > 0)) return;
+    drawnLines.set(fontScale, height);
+    if (height !== known) setMeasured({ scale: fontScale, height });
+  };
+  return { drawnLine, onMeasure };
+}
+
+/**
+ * Markers of the hidden measuring copies (`data-qa-measure` on web). They carry no test ID: `<field>.mirror` or `<field>.line`
+ * would extend the control's prefix, so a flow that lists controls by prefix would count a copy that is never shown.
+ */
+export const MEASURE_MIRROR = { qaMeasure: 'mirror' } as const;
+const MEASURE_LINE = { qaMeasure: 'line' } as const;
+
+const measureStyles = createStyles(() => ({
+  // One invisible line of the field's role: it takes no space and is never read or pressed.
+  measureLine: { left: 0, opacity: 0, pointerEvents: 'none', position: 'absolute', right: 0, top: 0 },
+}));
+
+/**
+ * Native only: one invisible line of the input role, measured by its height (useDrawnLine's `onMeasure`). It takes no space;
+ * put it inside the positioned box of the text. Screen readers skip it.
+ */
+export function InputLineMeasure({ onMeasure }: { onMeasure: (event: LayoutChangeEvent) => void }) {
+  const styles = measureStyles();
+  return (
+    <Text
+      variant={TEXT_INPUT_ROLE}
+      hyphenate={false}
+      desktopSize={false}
+      aria-hidden
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      onLayout={onMeasure}
+      style={styles.measureLine}
+      dataSet={MEASURE_LINE}
+    >
+      {MEASURE_TEXT}
+    </Text>
+  );
+}
 
 const useStyles = createStyles((t) => ({
   root: { gap: t.space[8] },
@@ -152,10 +243,12 @@ export function TextInput({
   };
 
   const scale = isWeb ? theme.fontScale : 1;
-  const body = typeStyle('body', scale, undefined, false);
-  const rowHeight = typography.body.lineHeight * scale;
-  // The text's own box: the field's vertical padding sits outside it (inputBoxMultiline).
-  const maxHeight = rowHeight * maxRows;
+  // input (16/24): a field keeps 16 so iOS Safari does not zoom into it (09 §4.2 token mapping).
+  const body = typeStyle(TEXT_INPUT_ROLE, scale, undefined, false);
+  const { drawnLine, onMeasure } = useDrawnLine(theme.fontScale);
+  // The text's own box in whole drawn lines: the field's vertical padding sits outside it (inputBoxMultiline).
+  const maxHeight = multilineMaxHeight(drawnLine, resolveRows(maxRows, drawnLine));
+  const measured = multiline && !isWeb;
   // A single-line iOS field misplaces its text when it has a line height.
   const textStyle = isIOS && !multiline ? { ...body, lineHeight: undefined } : body;
   const color = disabled ? 'text.disabled' : 'text.primary';
@@ -213,7 +306,7 @@ export function TextInput({
 
   return (
     <View style={[styles.root, containerStyle]}>
-      <Text variant="labelS" color="text.secondary">
+      <Text variant="callout" color="text.secondary">
         {label}
       </Text>
       <FieldSurface
@@ -231,13 +324,18 @@ export function TextInput({
             // The textarea covers the copy's box exactly: the copy sizes it, and both end at the content box.
             <View style={styles.mirrorBox}>
               <View aria-hidden style={[styles.mirror, { maxHeight }]}>
-                <Text variant="body" hyphenate={false}>{`${mirrorText}​`}</Text>
+                {/* The field's role, hyphenation (none) and tracking at the field's size (no desktop step). */}
+                <Text variant={TEXT_INPUT_ROLE} hyphenate={false} desktopSize={false} dataSet={MEASURE_MIRROR}>{`${mirrorText}​`}</Text>
               </View>
               {input}
             </View>
           ) : (
             input
           )}
+          {measured ? (
+            // The field's role with its hyphenation (none) and the OS scaling of the field; one line, measured by its height.
+            <InputLineMeasure onMeasure={onMeasure} />
+          ) : null}
         </View>
         {suffix || loading || hasToggle || trailing ? (
           <View style={styles.end}>
@@ -281,7 +379,7 @@ export function TextInput({
             </View>
           ) : null}
           <Text
-            variant="helper"
+            variant="caption"
             color={error ? 'accent.fg' : 'text.secondary'}
             role={error ? 'alert' : undefined}
             testID={testID ? `${testID}.${error ? 'error' : 'helper'}` : undefined}

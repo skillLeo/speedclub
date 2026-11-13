@@ -51,7 +51,7 @@ export function VisibilityChoice({ value, onChange, disabled = false, onlyPrivat
               <View style={styles.bodyRow}>
                 {/* A spacer and not a padding: the inset is off the spacing scale by design. */}
                 <View style={{ width: TEXT_INSET }} />
-                <Text variant="supporting" color={off ? 'text.disabled' : 'text.secondary'} style={styles.body}>
+                <Text variant="callout" color={off ? 'text.disabled' : 'text.secondary'} style={styles.body}>
                   {t(`visibility.options.${option}.body`)}
                 </Text>
               </View>

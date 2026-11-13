@@ -159,7 +159,7 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
     <div class="flex flex-col gap-24" data-testid="ADM-25" :data-qa-state="pageState">
         <PageHeader :title="trans('support.tickets.title')" :crumbs="[{ label: trans('shell.groups.support') }]" :description="trans('support.tickets.intro')">
             <template v-if="counts" #meta>
-                <p class="flex flex-wrap gap-x-16 gap-y-4 text-supporting text-ink-2 tabular-nums" data-testid="ADM-25.counts">
+                <p class="flex flex-wrap gap-x-16 gap-y-4 text-admin-base text-ink-2 tabular-nums" data-testid="ADM-25.counts">
                     <span>{{ `${trans('support.status.open')}: ${formatNumber(pageState === 'empty' ? 0 : counts.open)}` }}</span>
                     <span>{{ `${trans('support.status.pending')}: ${formatNumber(pageState === 'empty' ? 0 : counts.pending)}` }}</span>
                     <span>{{ `${trans('support.tickets.presets.mine')}: ${formatNumber(pageState === 'empty' ? 0 : counts.mine)}` }}</span>

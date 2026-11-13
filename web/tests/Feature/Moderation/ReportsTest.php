@@ -187,7 +187,7 @@ describe('POST reports', function () {
             ->assertStatus(422)->assertJsonPath('code', 'validation_failed')->assertJsonValidationErrors($field);
     })->with([
         'no target type' => [['target_type' => null], 'target_type'],
-        'unknown target type' => [['target_type' => 'comment'], 'target_type'],
+        'unknown target type' => [['target_type' => 'business'], 'target_type'],
         'no target id' => [['target_id' => ''], 'target_id'],
         'long target id' => [['target_id' => str_repeat('a', 65)], 'target_id'],
         'no reason' => [['reason' => null], 'reason'],

@@ -13,19 +13,11 @@
  */
 
 :root {
-  --sc-gutter: 16px;
+  /* --sc-gutter comes from tokens.generated.css (20, 24 from 430: layout.gutter). */
   --sc-bar: 56px;
   --sc-type-scale: 1;
   --sc-nav: 44px;
   --sc-frame: 1248px;
-}
-
-@media (min-width: 390px) {
-  :root { --sc-gutter: 20px; }
-}
-
-@media (min-width: 768px) {
-  :root { --sc-gutter: 24px; }
 }
 
 html {
@@ -45,28 +37,17 @@ html {
 
 body { overflow-wrap: break-word; }
 
+/*
+ * DQ-934: running text breaks for an even rag instead of stacking dictionary hyphens ("Foto-/alben", "Bild-/unterschrift"). The
+ * longhand only: the shorthand text-wrap also resets text-wrap-mode and would undo a white-space: nowrap (DQ-922). No
+ * hyphenate-limit-lines (WebKit then breaks a long compound without a hyphen, DQ-925). Zero specificity, so any component wins.
+ */
+:where(p, li, dd, blockquote) { text-wrap-style: pretty; }
+
 /* The QA contract of tests/e2e/README.md: the matrix asks for twice the text and no motion. */
 :root[data-qa-motion="off"], :root[data-qa-motion="off"] * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 :root[data-qa-font-scale="2"] { --sc-type-scale: 2; }
-:root[data-qa-font-scale="2"] .text-display-xl { font-size: calc(var(--text-display-xl) * 2); line-height: calc(var(--text-display-xl--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-display-l { font-size: calc(var(--text-display-l) * 2); line-height: calc(var(--text-display-l--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-display-m { font-size: calc(var(--text-display-m) * 2); line-height: calc(var(--text-display-m--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-title-l { font-size: calc(var(--text-title-l) * 2); line-height: calc(var(--text-title-l--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-title-m { font-size: calc(var(--text-title-m) * 2); line-height: calc(var(--text-title-m--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-title-s { font-size: calc(var(--text-title-s) * 2); line-height: calc(var(--text-title-s--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-body,
-:root[data-qa-font-scale="2"] .text-body-strong { font-size: calc(var(--text-body) * 2); line-height: calc(var(--text-body--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-body-dense { font-size: calc(var(--text-body-dense) * 2); line-height: calc(var(--text-body-dense--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-label { font-size: calc(var(--text-label) * 2); line-height: calc(var(--text-label--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-label-s { font-size: calc(var(--text-label-s) * 2); line-height: calc(var(--text-label-s--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-supporting { font-size: calc(var(--text-supporting) * 2); line-height: calc(var(--text-supporting--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-helper { font-size: calc(var(--text-helper) * 2); line-height: calc(var(--text-helper--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-caption { font-size: calc(var(--text-caption) * 2); line-height: calc(var(--text-caption--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-eyebrow { font-size: calc(var(--text-eyebrow) * 2); line-height: calc(var(--text-eyebrow--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-badge { font-size: calc(var(--text-badge) * 1.3); line-height: calc(var(--text-badge--line-height) * 1.3); }
-:root[data-qa-font-scale="2"] .text-spec-strip { font-size: calc(var(--text-spec-strip) * 2); line-height: calc(var(--text-spec-strip--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-spec-value { font-size: calc(var(--text-spec-value) * 2); line-height: calc(var(--text-spec-value--line-height) * 2); }
-:root[data-qa-font-scale="2"] .text-code { font-size: calc(var(--text-code) * 2); line-height: calc(var(--text-code--line-height) * 2); }
+/* Nothing else: every text-* utility and t-* class reads the generated --sc-type-* vars, which scale with --sc-type-scale and stop at the role's maxFontScale. */
 
 /* Elements with JavaScript only: the script marks each one it has wired up, so the rest of the page keeps its styles (no restyle of the whole document). */
 .sc-js-flex { display: none; }
@@ -105,10 +86,10 @@ body { overflow-wrap: break-word; }
 
 .sc-skip:focus { top: 8px; }
 
-/* §10 press: a little scale, transform and opacity only. */
+/* SKILL §10 press: scale 0.97 on spring.fast (motion.press.scale), transform only (never opacity). */
 @media (prefers-reduced-motion: no-preference) {
-  .sc-press { transition: transform 140ms var(--ease-standard), opacity 140ms var(--ease-standard); }
-  .sc-press:active { transform: scale(0.98); opacity: 0.92; }
+  .sc-press { transition: transform var(--sc-spring-fast-duration) var(--sc-spring-fast-easing); }
+  .sc-press:active { transform: scale(0.97); }
 }
 
 .sc-photo { background-color: var(--color-raised); background-size: cover; background-position: center; }
@@ -137,8 +118,8 @@ body { overflow-wrap: break-word; }
   z-index: 30;
   container-type: inline-size;
   padding-top: env(safe-area-inset-top, 0px);
-  border-bottom: 1px solid var(--color-line-subtle);
-  background: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline);
+  background: var(--sc-color-chrome-opaque);
 }
 
 .sc-topbar-row {
@@ -160,12 +141,41 @@ body { overflow-wrap: break-word; }
 
 /* ---- WEB-01 ---- */
 .sc-veh { display: grid; grid-template-columns: minmax(0, 1fr); }
+/*
+ * WEB-01 draws its text as VEH-01 does on the member web (parity, 07 §3): the body's `antialiased` (grayscale smoothing on macOS)
+ * thins light text on the dark hero stage against the app's default smoothing; small white text (the owner chip) differed by ~3 %.
+ * iOS Safari ignores both, so the phone renders the same either way.
+ */
+.sc-veh { -webkit-font-smoothing: auto; -moz-osx-font-smoothing: auto; }
 
-.sc-veh-summary { padding: 20px var(--sc-gutter) 0; }
+/*
+ * DQ-1047/1048 (09 §7.6, §4.6, ADR-421 b): the hero is the opener at every width. It fades into its dark stage (scrim.photo, from 60 %
+ * of its height), and the identity starts at the strictest text-safe line of the three themes, 0.824 of the photo's height: its top
+ * margin is −(1 − 0.824) × height, as a share of the width (a margin percentage counts in the width), −22 % at 4:5 and −9.9 % at 16:9.
+ * The same numbers as the app's heroIdentityOverlap (mobile/src/features/vehicle/layout.ts).
+ */
+.sc-veh-stage { position: relative; width: 100%; max-width: var(--sc-full-bleed-max); margin-inline: auto; background: var(--sc-color-scrim-photo-end); }
+.sc-veh-stage.is-empty { background: transparent; }
+.sc-hero-scrim {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 40%;
+  pointer-events: none;
+  /* design-lint-disable-next-line DL04 -- scrim.photo, the one gradient 2.0 allows (09 §4.1), as the app's PhotoStageScrim */
+  background: linear-gradient(to bottom, var(--sc-color-scrim-photo-start), var(--sc-color-scrim-photo-end));
+}
+.sc-hero-identity { position: relative; display: flex; flex-direction: column; align-items: flex-start; margin-top: -22%; padding: 0 var(--sc-gutter) 24px; pointer-events: none; }
+/* As the app's box-none: the block lets swipes through to the pager, its texts and the chip stay hit-testable and selectable. */
+.sc-hero-identity > * { pointer-events: auto; }
+.sc-veh-identity .sc-ident-line { -webkit-hyphens: none; hyphens: none; }
+/* 09 §7.6 (2): the owner chip, avatar 32 + @handle in a 44 target, 8 under the sub-line (the app's VehicleIdentity chip). */
+.sc-hero-owner { display: inline-flex; max-width: 100%; min-height: 44px; align-items: center; gap: var(--sc-space-8); border-radius: 8px; }
+
+.sc-veh-summary { padding: 24px var(--sc-gutter) 0; }
 .sc-veh-content { padding-inline: var(--sc-gutter); padding-bottom: 32px; }
 .sc-veh-cta { display: none; }
 
-.sc-hero { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--color-surface); }
+.sc-hero { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--color-surface); }
 
 .sc-pager {
   display: flex;
@@ -180,6 +190,8 @@ body { overflow-wrap: break-word; }
 .sc-slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
 
 .sc-counter { position: absolute; right: 12px; bottom: 12px; }
+/* The counter rides above the identity: the text-safe line + 8 (17.6 % of the hero's height). */
+.sc-veh-stage:not(.is-empty) .sc-counter { bottom: calc(17.6% + 8px); }
 
 /* [SIG] Speichern on the hero, where VEH-01's photo header puts it on a phone: a 44 target with a 36 chip (IconButton onPhoto), in the
    trailing slot before Teilen and Mehr (2 × 44), the slot inset by the gutter minus the 12 of air inside a target. */
@@ -193,7 +205,7 @@ body { overflow-wrap: break-word; }
   align-items: center;
   justify-content: center;
 }
-.sc-hero-chip { display: flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 9999px; }
+.sc-hero-chip { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: 9999px; }
 
 /* From the tablet on, VEH-01 has a solid header instead of controls on the photo: Speichern sits next to Teilen in the title row. */
 .sc-save-row { display: none; }
@@ -221,6 +233,23 @@ body { overflow-wrap: break-word; }
 /* A hyphenated word of a vehicle name ("GT-R", "RX-7") or a value with a slash ("265/35") stays on one line (App\Support\KeepTogether). */
 .sc-keep { white-space: nowrap; }
 
+/*
+ * DQ-927: an e-mail address, handle or URL (KeepTogether::identifier) is never hyphenated, so the page never shows an address that
+ * is not the one on file; it wraps only at its <wbr> points (after "." "_" and an inner "@") and, wider than a whole line, anywhere.
+ */
+.sc-ident { -webkit-hyphens: none; hyphens: none; overflow-wrap: anywhere; }
+
+/*
+ * ADR-426: display.title (x-public.display-title). Its size per width comes from container queries on its .sc-title-box, the
+ * container named sc-title (N-R3-1: a query names it, so no other size container in between can take it), pushed per title by
+ * App\Support\DisplayTitleLayout (the rule of mobile/src/ui/displayTitleLayout.ts). Balanced lines keep the greedy line count
+ * the rule counts with; a car name or claim never takes an automatic hyphen. A car name's trailing pair ("GT-R R34") sits in a
+ * .sc-bind span, which the same pushed queries set to nowrap only where the rule binds the pair (ADR-426 c as amended); without
+ * them it wraps like the text around it.
+ */
+.sc-title-box { container: sc-title / inline-size; }
+.sc-display-title { text-wrap: balance; -webkit-hyphens: manual; hyphens: manual; }
+
 /* DQ-229: a run of values ("18″ × 9,5J ET22") moves to the next line whole; wider than a line, at a 200 % font, it wraps at its spaces. */
 .sc-run { display: inline-block; max-width: 100%; }
 
@@ -230,47 +259,76 @@ body { overflow-wrap: break-word; }
   flex-direction: column;
   justify-content: flex-end;
   padding: var(--sc-gutter);
-  border-bottom: 1px solid var(--color-line-subtle);
+  border-bottom: 1px solid var(--color-hairline);
   background: var(--color-surface);
 }
 
-.sc-thumbs { display: none; }
-
-.sc-thumb { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 8px; background: var(--color-raised); }
-.sc-thumb-more { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 
 .sc-preview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+/* DQ-1078: VEH-01's photo preview is one 3-up row of 1:1 tiles, 2 apart, no radius. */
+.sc-veh-preview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-space-2); }
+.sc-veh-preview .sc-preview-tile { aspect-ratio: 1 / 1; border-radius: 0; }
 .sc-preview-tile { display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 8px; background: var(--color-raised); }
 
-/* FS-3 strip. */
-.sc-strip-box { container-type: inline-size; }
+/* FS-3 strip (DQ-801; 09 §5 SpecStrip 2.0: data label, numeral + unit, provenance; no ground, hairlines only, ADR-431 b). Without its own rules: all items in one row. The columns follow the fit, by the rule of the app
+   (mobile/src/ui/specStripLayout.ts, mirrored in App\Support\SpecStripLayout): every strip pushes container queries for its
+   own values into the nonced style block (x-public.spec-strip), in em of this box's body text, for scale 1 and the QA scale 2,
+   below and from 1280. Those rules set the columns, the hairlines between cells and rows, and the empty slot (::after). */
+.sc-strip-box { container: sc-strip / inline-size; }
 
 .sc-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   overflow: hidden;
-  border-radius: 12px;
-  background: var(--color-surface);
 }
 
 .sc-strip-cell {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  align-items: flex-start;
+  gap: 4px;
   min-width: 0;
-  padding: 16px 4px;
-  text-align: center;
+  padding: 16px 12px;
+  text-align: start;
   hyphens: none;
-  border-left: 1px solid var(--color-line-subtle);
+  border: 0 solid var(--color-hairline);
+  border-left-width: 1px;
 }
 
-.sc-strip-cell:first-child { border-left: 0; }
+.sc-strip-cell:first-child { border-left-width: 0; padding-left: 0; }
 
-@container (max-width: 15em) {
-  .sc-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sc-strip-cell:nth-child(odd) { border-left: 0; }
-  .sc-strip-cell:nth-child(n + 3) { border-top: 1px solid var(--color-line-subtle); }
+/* ADR-431 b: hero.numeral on the page, hero.numeral.s in the side card from 1280 (SpecStripLayout::NUMERAL_SIZE*). */
+.sc-strip-numeral {
+  font-family: var(--sc-font-numeral);
+  font-size: var(--sc-type-hero-numeral-size);
+  line-height: var(--sc-type-hero-numeral-line);
+  letter-spacing: var(--sc-type-hero-numeral-tracking);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 1280px) {
+  .sc-strip-numeral {
+    font-size: var(--sc-type-hero-numeral-s-size);
+    line-height: var(--sc-type-hero-numeral-s-line);
+    letter-spacing: var(--sc-type-hero-numeral-s-tracking);
+  }
+}
+
+/* SpecStrip 2.0: the unit (label.unit) sits on the numeral's baseline, 4 after it, as in SpecStrip.tsx. */
+.sc-strip-value { display: flex; align-items: baseline; gap: var(--sc-space-4); }
+
+/* No line of a cell wraps: the rule only keeps columns in which each fits on one line with 12 on both sides. */
+.sc-strip-cell span { white-space: nowrap; }
+
+/* The empty slot of a short last row (3 or 5 items in two columns): a hairline on its left and above it, as in the app. */
+.sc-strip::after {
+  content: "";
+  display: none;
+  border: 0 solid var(--color-hairline);
+  border-top-width: 1px;
+  border-left-width: 1px;
 }
 
 /* FS-3 owner row: inline from the width OwnerRow.tsx uses, stacked below. */
@@ -282,6 +340,14 @@ body { overflow-wrap: break-word; }
   .sc-owner-id { flex: 1 1 0; }
 }
 
+/* N-7: the identity link is RowBody (rowParts.tsx): its focus ring sits inside its box (2 ring + 2 offset, inset) and it fills
+   on hover and press. Its box ends 4 from the actions (gap 12, margin -8), so a ring outside it would touch the Follow button. */
+.sc-owner-id:focus, .sc-owner-id:focus-visible { outline-offset: -4px; }
+.sc-owner-id:active { background: var(--color-pressed); }
+@media (hover: hover) {
+  .sc-owner-id:hover:not(:active) { background: var(--color-hover); }
+}
+
 /* §8 content tabs, as anchors. Below the top bar, flush with both edges on a phone. */
 .sc-tabs {
   position: sticky;
@@ -289,8 +355,8 @@ body { overflow-wrap: break-word; }
   z-index: 20;
   margin-top: 24px;
   margin-inline: calc(var(--sc-gutter) * -1);
-  border-bottom: 1px solid var(--color-line-subtle);
-  background: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline);
+  background: var(--sc-color-chrome-opaque);
 }
 
 .sc-tabs-row { display: flex; gap: 20px; overflow-x: auto; padding-inline: var(--sc-gutter); scrollbar-width: none; }
@@ -316,14 +382,14 @@ body { overflow-wrap: break-word; }
 
 .sc-section { padding-top: 32px; }
 
-.sc-clamp.is-clamped:not(.is-open) { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 6; line-clamp: 6; }
+.sc-clamp.is-clamped:not(.is-open) { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; }
 
 .sc-more { display: inline-flex; align-items: center; min-height: 44px; }
 .sc-more[hidden] { display: none; }
 
 /* §12 Black theme asks for scrolling content on bg.surface; the same group reads right on every theme. */
 .sc-group { overflow: hidden; border-radius: 12px; background: var(--color-surface); }
-.sc-group > * + * { border-top: 1px solid var(--color-line-subtle); }
+.sc-group > * + * { border-top: 1px solid var(--color-hairline); }
 
 .sc-spec-box { container-type: inline-size; }
 
@@ -354,9 +420,10 @@ body { overflow-wrap: break-word; }
 .sc-update + .sc-update { margin-top: 16px; }
 .sc-update > * + * { margin-top: 2px; }
 
-.sc-closing { margin-top: 32px; padding: 16px; border-radius: 12px; background: var(--color-surface); }
+.sc-closing { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sc-space-4); margin-top: 32px; }
+.sc-closing-link { margin-left: -12px; }
 
-/* FS-10 bottom bar: bg.surface at 92 % + blur, 12 padding + inset. Phone and tablet only. */
+/* FS-10 bottom bar: chrome (.sc-chrome), 12 padding + inset. Phone and tablet only. */
 .sc-sticky-cta {
   position: sticky;
   bottom: 0;
@@ -366,56 +433,51 @@ body { overflow-wrap: break-word; }
   gap: 8px;
   padding: 12px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--color-line-subtle);
-  background: var(--sc-color-tab-bar-background);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--color-hairline);
+  background: var(--sc-color-chrome-opaque);
 }
 
 .sc-grow { flex: 1 1 auto; }
 
 @media (min-width: 768px) {
-  .sc-veh { max-width: 768px; margin-inline: auto; }
-  .sc-hero { border-radius: 12px; }
-  .sc-veh-gallery { padding: 24px var(--sc-gutter) 0; }
+  /* DQ-1048: 16:9 across the content (at most 1320), no radius; the summary and the sections in the 768 column under it. */
+  .sc-hero { aspect-ratio: 16 / 9; }
+  .sc-hero-identity { margin-top: -9.9%; }
+  .sc-veh-summary, .sc-veh-content { width: 100%; max-width: 768px; margin-inline: auto; }
   .sc-tabs { margin-inline: 0; }
   .sc-tabs-row { padding-inline: 0; }
 }
 
-/* FS-10 desktop: gallery 7/12, sticky 5/12 card, sections under the gallery. */
+/* DQ-1048 (09 §7.6 "web ≥ 1280: hero full width; below, 8/4 grid"): the full-width hero, then the sections in 8 columns beside the
+   sticky 4-column card (strip, actions). */
 @media (min-width: 1280px) {
   .sc-veh {
     max-width: var(--sc-frame);
-    padding: 24px var(--sc-gutter) 48px;
+    margin-inline: auto;
+    padding: 0 var(--sc-gutter) 48px;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto 1fr;
     column-gap: 24px;
   }
 
-  .sc-veh-gallery { grid-column: 1 / span 7; grid-row: 1; padding: 0; }
-  .sc-veh-content { grid-column: 1 / span 7; grid-row: 2; padding: 0; }
+  .sc-veh-stage { grid-column: 1 / -1; grid-row: 1; width: calc(100% + 2 * var(--sc-gutter)); margin-inline: calc(-1 * var(--sc-gutter)); max-width: none; }
+  .sc-veh-content { grid-column: 1 / span 8; grid-row: 2 / span 2; padding: 24px 0 0; max-width: none; }
 
   .sc-veh-summary {
     position: sticky;
     top: calc(var(--sc-bar) + 24px);
-    grid-column: 8 / span 5;
-    grid-row: 1 / span 2;
+    grid-column: 9 / span 4;
+    grid-row: 2;
     align-self: start;
+    margin-top: 24px;
     padding: 24px;
+    max-width: none;
     border-radius: 12px;
     background: var(--color-surface);
   }
 
-  .sc-veh-summary .sc-strip { background: var(--color-raised); }
-  .sc-veh-cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--color-line-subtle); }
+  .sc-veh-cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--color-hairline); }
   .sc-sticky-cta { display: none; }
-  .sc-veh-photos { display: none; }
-
-  .sc-thumbs { display: grid; gap: 8px; margin-top: 8px; }
-  .sc-thumbs-1 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sc-thumbs-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sc-thumbs-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .sc-thumbs-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 /* ---- WEB-02 ---- */
@@ -460,7 +522,7 @@ body { overflow-wrap: break-word; }
 .sc-state-copy { max-width: 608px; padding: 24px var(--sc-gutter) 48px; }
 .sc-state-measure { max-width: 608px; }
 /* DQ-211: a narrow title at a 200 % font ends on a full line, not on one short word. */
-.sc-state-measure h1 { text-wrap: pretty; }
+.sc-state-measure h1 { text-wrap-style: pretty; }
 
 /*
  * Desktop: the copy starts on the shared left edge of the 1248 frame (top bar, footer, WEB-01/02/03), DQ-217. A percentage padding of a
@@ -478,7 +540,7 @@ body { overflow-wrap: break-word; }
 .sc-legal-toc { padding: 16px; border-radius: 12px; background: var(--color-surface); }
 /* DQ-233: a wrapped entry keeps the air of a one-line entry, which is 44 high with 12 above and below its 20 line. */
 .sc-toc-link { display: flex; align-items: center; min-height: 44px; padding-block: 12px; }
-.sc-legal-toc li + li { border-top: 1px solid var(--color-line-subtle); }
+.sc-legal-toc li + li { border-top: 1px solid var(--color-hairline); }
 
 @media (min-width: 1280px) {
   .sc-legal { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; padding-block: 48px 64px; }
@@ -490,9 +552,9 @@ body { overflow-wrap: break-word; }
 .sc-prose { max-width: 680px; }
 .sc-prose > :first-child { margin-top: 0; }
 .sc-prose h1,
-.sc-prose h2 { scroll-margin-top: calc(var(--sc-bar) + 16px); font-size: calc(var(--text-title-s) * var(--sc-type-scale)); line-height: calc(var(--text-title-s--line-height) * var(--sc-type-scale)); font-weight: var(--text-title-s--font-weight); margin-top: 32px; }
+.sc-prose h2 { scroll-margin-top: calc(var(--sc-bar) + 16px); font-size: var(--sc-type-headline-size); line-height: var(--sc-type-headline-line); letter-spacing: var(--sc-type-headline-tracking); font-weight: var(--text-headline--font-weight); margin-top: 32px; }
 .sc-prose h3,
-.sc-prose h4 { font-size: calc(var(--text-headline) * var(--sc-type-scale)); line-height: calc(var(--text-headline--line-height) * var(--sc-type-scale)); font-weight: var(--text-headline--font-weight); margin-top: 24px; }
+.sc-prose h4 { font-size: var(--sc-type-body-strong-size); line-height: var(--sc-type-body-strong-line); letter-spacing: var(--sc-type-body-strong-tracking); font-weight: var(--text-body-strong--font-weight); margin-top: 24px; }
 .sc-prose p,
 .sc-prose ul,
 .sc-prose ol { margin-top: 12px; }
@@ -505,7 +567,7 @@ body { overflow-wrap: break-word; }
 .sc-prose table { width: 100%; margin-top: 16px; border-collapse: collapse; overflow-wrap: break-word; }
 
 
-.sc-prose th, .sc-prose td { padding: 8px 12px 8px 0; vertical-align: top; text-align: left; font-size: calc(var(--text-supporting) * var(--sc-type-scale)); line-height: calc(var(--text-supporting--line-height) * var(--sc-type-scale)); border-top: 1px solid var(--color-line-subtle); }
+.sc-prose th, .sc-prose td { padding: 8px 12px 8px 0; vertical-align: top; text-align: left; font-size: var(--sc-type-callout-size); line-height: var(--sc-type-callout-line); border-top: 1px solid var(--color-hairline); }
 .sc-prose th { font-weight: 600; color: var(--color-ink); border-top: 0; }
 /* DQ-232: the body is text.primary, and a table cell is body too. The first column names the row, on every width. */
 .sc-prose td { color: var(--color-ink); }
@@ -515,11 +577,11 @@ body { overflow-wrap: break-word; }
 @media (max-width: 767px) {
   .sc-prose table, .sc-prose tbody, .sc-prose tr, .sc-prose td { display: block; width: 100%; }
   .sc-prose thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .sc-prose tr { padding-block: 8px; border-top: 1px solid var(--color-line-subtle); }
+  .sc-prose tr { padding-block: 8px; border-top: 1px solid var(--color-hairline); }
   .sc-prose td { padding: 2px 0; border-top: 0; }
 }
 
-.sc-prose hr { margin-top: 32px; border-color: var(--color-line-subtle); }
+.sc-prose hr { margin-top: 32px; border-color: var(--color-hairline); }
 
 /* ---- WEB-03 ---- */
 .sc-land-hero { position: relative; display: flex; min-height: calc(100svh - var(--sc-bar)); overflow: hidden; background: var(--color-black); isolation: isolate; }
@@ -571,7 +633,7 @@ body { overflow-wrap: break-word; }
 .sc-step-qr .sc-step-copy { padding-top: 0; }
 .sc-step-stage { position: relative; display: flex; justify-content: center; margin-top: 16px; padding: 32px var(--sc-gutter); overflow: hidden; background: var(--color-black); isolation: isolate; }
 .sc-step-stage-img { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; }
-.sc-qr { width: 100%; max-width: 256px; padding: 24px; border-radius: 16px; background: var(--color-qr-bg); }
+.sc-qr { width: 100%; max-width: 256px; padding: 24px; border-radius: var(--sc-radius-md); background: var(--color-qr-bg); }
 .sc-qr-code svg { display: block; width: 100%; height: auto; }
 .sc-qr-code:focus-visible { outline-color: var(--color-black); }
 
@@ -615,7 +677,7 @@ body { overflow-wrap: break-word; }
   .sc-feature-body > :last-child { grid-column: 7 / span 6; }
 }
 
-.sc-app { border-top: 1px solid var(--color-line-subtle); display: grid; grid-template-columns: minmax(0, 1fr); }
+.sc-app { border-top: 1px solid var(--color-hairline); display: grid; grid-template-columns: minmax(0, 1fr); }
 .sc-app-texture { aspect-ratio: 16 / 9; overflow: hidden; background: var(--color-black); }
 .sc-app-copy { padding: 32px var(--sc-gutter) 64px; max-width: 608px; }
 .sc-store { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 16px; }
@@ -627,7 +689,7 @@ body { overflow-wrap: break-word; }
 }
 
 /* ---- Footer ---- */
-.sc-footer { padding: 24px var(--sc-gutter); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--color-line-subtle); }
+.sc-footer { padding: 24px var(--sc-gutter); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--color-hairline); }
 .sc-footer-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: calc(var(--sc-frame) - var(--sc-gutter) * 2); margin-inline: auto; }
 .sc-footer-links { display: flex; flex-wrap: wrap; column-gap: 16px; }
 .sc-footer-prefs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
@@ -657,7 +719,7 @@ body { overflow-wrap: break-word; }
 /* ---- WEB-09 /melden (M2.6). The form controls of 03_DESIGN_SYSTEM §8 (input: surface, control line, radius 8, 48 high); a page of one 608 column. ---- */
 .sc-form-page { width: 100%; max-width: var(--sc-frame); margin-inline: auto; padding: 32px var(--sc-gutter) 48px; }
 .sc-form-measure { max-width: 608px; }
-.sc-form-measure h1 { text-wrap: pretty; }
+.sc-form-measure h1 { text-wrap-style: pretty; }
 .sc-form-field { display: grid; gap: 4px; min-width: 0; border: 0; margin: 0; padding: 0; }
 .sc-form-field > legend { padding: 0; margin-bottom: 4px; }
 .sc-form-input {
@@ -725,4 +787,28 @@ body { overflow-wrap: break-word; }
 
 @media (min-width: 1280px) {
   .sc-form-page { padding-block: 48px 64px; }
+}
+
+/* ---- Chrome material, last so it wins over each bar's opaque background. ---- */
+/* 09 §4.4 web chrome: the bars over scrolling content (top bar, section tabs, bottom CTA bar) are chrome.translucent with the
+   backdrop where the browser has it, and chrome.opaque otherwise or when the reader asks for less transparency. */
+/* design-lint-disable-next-line DL11 -- feature query that gates the 09 §4.4 web chrome material */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .sc-chrome {
+    background: var(--sc-color-chrome-translucent);
+    /* design-lint-disable-next-line DL11 -- navigation chrome (top bar, section tabs, bottom CTA bar), 09 §4.4 web material */
+    -webkit-backdrop-filter: var(--sc-chrome-backdrop);
+    /* design-lint-disable-next-line DL11 -- navigation chrome (top bar, section tabs, bottom CTA bar), 09 §4.4 web material */
+    backdrop-filter: var(--sc-chrome-backdrop);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .sc-chrome {
+    background: var(--sc-color-chrome-opaque);
+    /* design-lint-disable-next-line DL11 -- switches the chrome material off for reduced transparency */
+    -webkit-backdrop-filter: none;
+    /* design-lint-disable-next-line DL11 -- switches the chrome material off for reduced transparency */
+    backdrop-filter: none;
+  }
 }

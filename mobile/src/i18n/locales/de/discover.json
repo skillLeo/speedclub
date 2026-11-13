@@ -3,7 +3,11 @@
   "search": {
     "placeholder": "Marke, Modell, Mods oder Mitglieder",
     "submit": "Nach „{{query}}“ suchen",
-    "placeholderShort": "Marke, Modell, Mitglied"
+    "placeholderShort": "Marke, Modell, Mitglied",
+    "submitScoped": {
+      "vehicles": "Builds zu „{{query}}“ suchen",
+      "members": "Mitglieder zu „{{query}}“ suchen"
+    }
   },
   "recent": {
     "title": "Zuletzt gesucht",
@@ -20,7 +24,9 @@
     "emptyTitle": "Noch keine Marken",
     "emptyBody": "Sobald Builds öffentlich sind, findest du ihre Marken hier.",
     "emptyAction": "Fahrzeug hinzufügen",
-    "errorTitle": "Marken konnten nicht geladen werden"
+    "errorTitle": "Marken konnten nicht geladen werden",
+    "all": "Alle {{count}}",
+    "allLabel": "Alle {{count}} Marken zeigen"
   },
   "start": {
     "title": "Wonach suchst du?",
@@ -66,7 +72,12 @@
     "yearTo": "bis Baujahr {{value}}",
     "yearBetween": "Baujahr {{min}}–{{max}}",
     "yearExact": "Baujahr {{value}}",
-    "wheelDiameter": "{{value}}″"
+    "wheelDiameter": "{{value}}″",
+    "power": "Leistung",
+    "powerValue": "Leistung {{value}}",
+    "mods": "Mods",
+    "modsLabel_one": "Mods, {{count}} aktiv",
+    "modsLabel_other": "Mods, {{count}} aktiv"
   },
   "results": {
     "count_one": "{{formatted}} Build",
@@ -172,7 +183,10 @@
     "notFoundBody": "Zu dieser Marke gibt es keine öffentlichen Builds. Wähle in Entdecken eine andere Marke.",
     "errorTitle": "Die Marke konnte nicht geladen werden",
     "back": "Zu Entdecken",
-    "since": "seit {{year}}"
+    "since": "seit {{year}}",
+    "newTitle": "Neu bei {{make}}",
+    "newAllLabel": "Alle neuen Builds von {{make}}",
+    "moreModels": "Weitere Modelle:"
   },
   "model": {
     "count_one": "{{formatted}} öffentlicher Build",
@@ -215,5 +229,15 @@
     "action": "Mit KI suchen",
     "nothing": "Dazu haben wir keine passenden Filter gefunden. Die Suche nach deinem Text läuft weiter.",
     "applied": "Filter aus deiner Suche"
+  },
+  "scopes": {
+    "label": "Suchen in",
+    "all": "Alles",
+    "vehicles": "Builds",
+    "members": "Mitglieder"
+  },
+  "newest": {
+    "title": "Neu entdeckt",
+    "allLabel": "Alle neuen Builds"
   }
 }

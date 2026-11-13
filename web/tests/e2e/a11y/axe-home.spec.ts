@@ -11,7 +11,7 @@ import { THEMES } from '../support/tokens.mjs';
 type Screen = { name: string; path: string; auth: string; ready: string };
 
 const SCREENS: Screen[] = [
-  { name: 'HOME-01 Folge ich member', path: '/app/?tab=following', auth: 'member', ready: '[data-testid^="HOME-01.card."]' },
+  { name: 'HOME-01 Folge ich member', path: '/app/?tab=following', auth: 'member', ready: '[data-testid^="HOME-01."][data-testid$=".open.0"]' },
   { name: 'HOME-01 Folge ich guest', path: '/app/?tab=following', auth: 'guest', ready: '[data-testid="HOME-01.following.guest"]' },
   { name: 'HOME-01 Folge ich suggestions', path: '/app/?tab=following', auth: 'member-empty', ready: '[data-testid^="HOME-01.suggestion."]' },
   { name: 'HOME-02 member', path: '/app/notifications', auth: 'member', ready: '[data-testid^="HOME-02.row."]' },

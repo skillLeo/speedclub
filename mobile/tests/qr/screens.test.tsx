@@ -203,6 +203,20 @@ describe('QR-02 QR detail (FS-9)', () => {
     expect(mockShareFile).not.toHaveBeenCalled();
   });
 
+  it('saves the PNG at once from "In Fotos sichern", on the blurred stage of SM13, with no shop link while the flag is off', async () => {
+    mockParams = { vehicleId: VEHICLE };
+    stubDetail();
+    await renderScreen(<QrDetailScreen />);
+    await waitFor(() => expect(screen.getByTestId('QR-02.card')).toBeTruthy());
+    expect(screen.getByTestId('QR-02.stage')).toBeTruthy();
+    expect(screen.getByTestId('QR-02.savePhoto')).toHaveTextContent('In Fotos sichern');
+    expect(screen.getByTestId('QR-02.stickerPdf')).toHaveTextContent('Sticker-PDF');
+    expect(screen.queryByTestId('QR-02.orderSticker')).toBeNull();
+    await fireEvent.press(screen.getByTestId('QR-02.savePhoto'));
+    await waitFor(() => expect(mockShareFile).toHaveBeenCalled());
+    expect(mockDownloadFile.mock.calls[0]![0]).toBe(`https://speedclub.test/api/v1/vehicles/${VEHICLE}/qr.png?size=1024`);
+  });
+
   it('shares the public page, not the sticker address, so a share is never counted as a scan', async () => {
     mockParams = { vehicleId: VEHICLE };
     stubDetail();

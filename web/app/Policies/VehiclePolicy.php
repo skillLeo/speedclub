@@ -11,6 +11,7 @@ use App\Enums\Visibility;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Moderation\ModerationHolds;
+use App\Services\Showcase\SampleContent;
 use Illuminate\Auth\Access\Response;
 
 /**
@@ -26,7 +27,8 @@ class VehiclePolicy
     }
 
     /**
-     * Owner sees everything of theirs. Others: published, not private, owner visible, no block in either direction.
+     * Owner sees everything of theirs. Others: published, not private, owner visible, no block in either direction, and no sample
+     * build while editorial_samples is off (09 §8.19: the same 404 as a missing one).
      */
     public function view(?User $user, Vehicle $vehicle): bool
     {
@@ -40,7 +42,7 @@ class VehiclePolicy
 
         $owner = $vehicle->owner;
 
-        if ($owner === null || ! $vehicle->isReachable() || ! $owner->isPubliclyVisible()) {
+        if ($owner === null || ! $vehicle->isReachable() || ! $owner->isPubliclyVisible() || app(SampleContent::class)->hides($vehicle, $user)) {
             return false;
         }
 
@@ -124,6 +126,15 @@ class VehiclePolicy
         return $latest?->getAttribute('revoked_reason') === QrRevocationReason::Moderation
             ? Response::deny(code: ErrorCode::QrRevokedByStaff->value)
             : true;
+    }
+
+    /**
+     * M4.13 (09 §8.8): maintenance, the service log, its photos and the cost totals are the owner's alone. Private data, not publishing:
+     * no restriction stops it (a suspended member still keeps their service history); a closed account does.
+     */
+    public function maintain(User $user, Vehicle $vehicle): bool
+    {
+        return $vehicle->isOwnedBy($user) && ! $vehicle->trashed() && ! $user->isDeactivated();
     }
 
     private function canWriteContent(User $user): bool

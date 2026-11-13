@@ -4,8 +4,9 @@ import { ScrollView, StyleSheet, View, type NativeScrollEvent, type NativeSynthe
 
 import type { VehicleMedia } from '@/api/queries/vehicles';
 import { isWeb } from '@/lib/platform';
-import { createStyles, radius, useBreakpoint, useMotion } from '@/theme';
-import { Icon, Photo, PressableScale, Text } from '@/ui';
+import { createStyles, radius, space, useBreakpoint } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
+import { Icon, Photo, PhotoStageScrim, PressableScale, Text, type PhotoAspect } from '@/ui';
 
 import { photoFields } from '../media';
 
@@ -27,6 +28,15 @@ export type ProfileHeroProps = {
   ownerUsername?: string | null;
   onOpen: (index: number) => void;
   onIndexChange?: (index: number) => void;
+  /** Width / height: 4:5 edge to edge on a phone (09 §7.6), 16:9 across the content from 768 (DQ-1048). */
+  ratio?: number;
+  /** The photo's aspect token, matching `ratio`. */
+  aspect?: PhotoAspect;
+  /**
+   * DQ-1047: the photo fades into the dark stage (`scrim.photo`) and the identity sits over its bottom; the counter then rides
+   * this far above the bottom edge (the text-safe line + 8) instead of 12.
+   */
+  identityOverlap?: number;
   /** `<routeId>.hero`, `.photoCount`, `.heroEmpty`, `.hero.<n>`. */
   routeId: string;
   ref?: Ref<ProfileHeroHandle>;
@@ -63,18 +73,18 @@ const useStyles = createStyles((t) => ({
 }));
 
 /**
- * FS-3 hero: edge-to-edge 4:3 pager with the counter "1/12" bottom right. Each photo opens the viewer. Without photos the
+ * FS-3 hero: edge-to-edge pager (4:5 on a phone, 4:3 in the columns) with the counter "1/12" bottom right. Each photo opens the viewer. Without photos the
  * same 4:3 box holds the designed empty state of WEB-01, so nothing below moves when the first photo arrives.
  */
-export function ProfileHero({ photos, width, corner, vehicleTitle, ownerUsername, onOpen, onIndexChange, routeId, ref }: ProfileHeroProps) {
+export function ProfileHero({ photos, width, corner, vehicleTitle, ownerUsername, onOpen, onIndexChange, ratio = HERO_RATIO, aspect = '4:3', identityOverlap, routeId, ref }: ProfileHeroProps) {
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const { gutter } = useBreakpoint();
   const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const [index, setIndex] = useState(0);
   const count = photos.length;
-  const height = width / HERO_RATIO;
+  const height = width / ratio;
   const box = useMemo(
     () => ({ width, height, borderRadius: corner === 'none' ? 0 : radius[corner] }),
     [corner, height, width],
@@ -107,10 +117,10 @@ export function ProfileHero({ photos, width, corner, vehicleTitle, ownerUsername
       <View style={[styles.hero, box]} testID={`${routeId}.hero`}>
         <View style={[styles.empty, { padding: gutter }]} testID={`${routeId}.heroEmpty`}>
           <Icon name="image" size={48} color="text.tertiary" />
-          <Text variant="titleS" style={styles.emptyTitle}>
+          <Text variant="headline" style={styles.emptyTitle}>
             {t('hero.noPhotoTitle')}
           </Text>
-          <Text variant="supporting" color="text.secondary" style={styles.emptyBody}>
+          <Text variant="callout" color="text.secondary" style={styles.emptyBody}>
             {ownerUsername ? t('hero.noPhotoOwner', { username: ownerUsername }) : t('hero.noPhotoBody')}
           </Text>
         </View>
@@ -142,14 +152,15 @@ export function ProfileHero({ photos, width, corner, vehicleTitle, ownerUsername
                 testID={`${routeId}.hero.${position}`}
                 style={slideBox}
               >
-                <Photo {...photoFields(photo, width)} aspect="4:3" style={slideBox} />
+                <Photo {...photoFields(photo, width)} aspect={aspect} style={slideBox} />
               </PressableScale>
             )}
           </View>
         ))}
       </ScrollView>
+      {identityOverlap !== undefined ? <PhotoStageScrim /> : null}
       {count > 1 ? (
-        <View style={styles.counter} testID={`${routeId}.photoCount`}>
+        <View style={[styles.counter, identityOverlap !== undefined ? { bottom: identityOverlap + space[8] } : null]} testID={`${routeId}.photoCount`}>
           <Text variant="caption" color="onPhoto.primary" selectable={false} hyphenate={false} style={styles.counterText}>
             {`${index + 1}/${count}`}
           </Text>

@@ -27,17 +27,24 @@ describe('robots.txt', function () {
         expect($response->headers->get('Content-Type'))->toBe('text/plain; charset=UTF-8')
             ->and($response->getContent())
             ->toContain('Disallow: /app/')
-            ->toContain('Disallow: /admin/')
+            ->toContain('Disallow: /admin')
             ->toContain('Disallow: /api/')
             ->toContain('Disallow: /C/')
             ->toContain('Sitemap: https://speedclub.de/sitemap.xml')
             ->and($response->headers->getCookies())->toBe([]);
     });
 
-    it('forbids everything where indexing is off', function () {
+    it('forbids everything to search engines where indexing is off, and opens only shared pages to link previews', function () {
         config(['speedclub.public_pages.allow_indexing' => false]);
 
-        expect($this->get('/robots.txt')->getContent())->toBe("User-agent: *\nDisallow: /\n");
+        $robots = (string) $this->get('/robots.txt')->getContent();
+        [$previews, $everybody] = explode("\n\n", $robots);
+
+        expect($everybody)->toBe("User-agent: *\nDisallow: /\n")
+            ->and($previews)->toStartWith("User-agent: Twitterbot\n")->toEndWith("\nDisallow: /")
+            ->toContain("Allow: /v/\n")->toContain("Allow: /og/\n")
+            ->not->toContain('Allow: /app/garage')->not->toContain('Allow: /admin')
+            ->and($robots)->not->toContain('Sitemap:');
     });
 
     it('is not shadowed by a static file', function () {
@@ -246,7 +253,8 @@ describe('.well-known', function () {
         expect($response->headers->get('Content-Type'))->toBe('application/json')
             ->and($response->headers->getCookies())->toBe([])
             ->and($response->json())->toBe([[
-                'relation' => ['delegate_permission/common.handle_all_urls'],
+                // M4.6 (09 §8.2): get_login_creds shares the site's passkeys with the app.
+                'relation' => ['delegate_permission/common.handle_all_urls', 'delegate_permission/common.get_login_creds'],
                 'target' => [
                     'namespace' => 'android_app',
                     'package_name' => 'de.speedclub.app',
@@ -279,12 +287,21 @@ describe('.well-known', function () {
             ->and($response->json('applinks.details.0.appIDs'))->toBe(['ABCDE12345.de.speedclub.app'])
             ->and($response->json('applinks.details.0.components'))->toBe([
                 ['/' => '/v/*'], ['/' => '/u/*'], ['/' => '/c/*'], ['/' => '/C/*'], ['/' => '/app/reset-password'], ['/' => '/app/verify-email'],
-            ]);
+                // M4.6: the same-device magic link of the e-mail code (09 §6.5).
+                ['/' => '/auth/magic'],
+                // M4.7: "Das war ich nicht" of a login alert (09 §8.4).
+                ['/' => '/auth/secure'],
+                // The same two screens of the member web, which mails may open under /app (app lane, M4.6/M4.7).
+                ['/' => '/app/auth/magic'],
+                ['/' => '/app/auth/secure'],
+            ])
+            // M4.6 (09 §8.2): passkeys of this site in the app.
+            ->and($response->json('webcredentials'))->toBe(['apps' => ['ABCDE12345.de.speedclub.app']]);
     });
 
     it('links nothing without a team id', function () {
         config(['speedclub.mobile.ios_team_id' => null]);
 
-        $this->get('/.well-known/apple-app-site-association')->assertOk()->assertExactJson(['applinks' => ['details' => []]]);
+        $this->get('/.well-known/apple-app-site-association')->assertOk()->assertExactJson(['applinks' => ['details' => []], 'webcredentials' => ['apps' => []]]);
     });
 });

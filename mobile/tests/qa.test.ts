@@ -54,6 +54,8 @@ describe('outside production', () => {
   it('opens the report sheet for a capture with qaOpen=report, and nothing else (M2.8)', () => {
     const { parseQa } = load<QaModule>('@/lib/qa', 'local', '');
     expect(parseQa('?qaOpen=report').open).toBe('report');
+    // MSG-02-translate: the message actions sheet, which the matrix cannot long-press open.
+    expect(parseQa('?qaOpen=actions').open).toBe('actions');
     expect(parseQa('?qaOpen=menu')).toEqual({});
   });
 

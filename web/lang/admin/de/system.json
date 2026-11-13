@@ -2,7 +2,8 @@
     "nav": {
         "health": "Systemzustand",
         "jobs": "Jobs",
-        "integrations": "Integrationen"
+        "integrations": "Integrationen",
+        "mail_preview": "Mail-Vorschau"
     },
     "status": {
         "ok": "In Ordnung",
@@ -216,5 +217,18 @@
         "test_ok_ai": "Der KI-Aufruf hat geantwortet.",
         "test_ok_push": "Test-Push gesendet.",
         "test_failed": "Der Test ist fehlgeschlagen."
+    },
+    "mail_preview": {
+        "title": "Mail-Vorschau",
+        "intro": "Die letzten 50 E‑Mails dieses Servers (Versand: :mailer). Nur außerhalb der Produktion, damit Anmeldecodes ohne SMTP vorgeführt werden können.",
+        "error": "Die Mail-Vorschau konnte nicht geladen werden",
+        "empty": "Noch keine E‑Mails",
+        "empty_body": "Sobald der Server eine E‑Mail verschickt, zum Beispiel einen Anmeldecode, erscheint sie hier.",
+        "code": "Code :code",
+        "detail": "Ausgewählte E‑Mail",
+        "choose": "Wähl links eine E‑Mail aus.",
+        "format": "Darstellung",
+        "text": "Text",
+        "html": "HTML"
     }
 }

@@ -69,7 +69,7 @@ function pick(vehicle: VehicleSummary): void {
                     <template #leading><PhMagnifyingGlass :size="16" aria-hidden="true" /></template>
                 </Input>
             </Field>
-            <p v-if="failed" class="text-helper text-danger" role="alert">{{ trans('content.picker.failed') }}</p>
+            <p v-if="failed" class="text-admin-base text-danger" role="alert">{{ trans('content.picker.failed') }}</p>
             <ul v-else-if="loading && results.length === 0" class="flex flex-col" aria-hidden="true">
                 <li v-for="n in 5" :key="n" class="flex h-40 items-center gap-12 border-b border-line-subtle"><Skeleton class="h-24 w-32 rounded-xs" /><Skeleton shape="text" class="w-240" /></li>
             </ul>
@@ -85,8 +85,8 @@ function pick(vehicle: VehicleSummary): void {
                     >
                         <VehicleThumb :src="vehicle.thumb" />
                         <span class="flex min-w-0 flex-1 flex-col">
-                            <span class="text-supporting text-ink">{{ vehicle.title }}</span>
-                            <span class="text-helper text-ink-3">{{ vehicle.owner ? `@${vehicle.owner}` : trans('content.home.no_owner') }}<template v-if="exclude.includes(vehicle.id)"> · {{ trans('content.picker.taken') }}</template></span>
+                            <span class="text-admin-base text-ink">{{ vehicle.title }}</span>
+                            <span class="text-admin-base text-ink-3">{{ vehicle.owner ? `@${vehicle.owner}` : trans('content.home.no_owner') }}<template v-if="exclude.includes(vehicle.id)"> · {{ trans('content.picker.taken') }}</template></span>
                         </span>
                     </button>
                 </li>

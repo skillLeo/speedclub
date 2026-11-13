@@ -15,7 +15,9 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
-import { createStyles, layout, size, useBreakpoint, useMotion } from '@/theme';
+import { createStyles, layout, size, useBreakpoint } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
+import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
 import {
   DiscardGuardDialog,
   EmptyState,
@@ -33,6 +35,8 @@ import {
 const EDGES: readonly Edge[] = ['left', 'right'];
 /** The column of a form: FS-5's 560 on wide screens, the full width minus the gutters on phones. */
 export const FORM_MAX_WIDTH = 560;
+/** 09 §6.2 c: a modal form presented as a centred sheet from 768 (DQ-1066 b). */
+export const SHEET_MAX_WIDTH = 640;
 /** A focused field keeps this much air above the keyboard and the sticky bar. */
 const KEYBOARD_OFFSET = size.button.l + size.touchMin;
 
@@ -41,9 +45,13 @@ const useStyles = createStyles((t) => ({
   content: { flexGrow: 1, paddingBottom: t.space[32], paddingTop: t.space[16] },
   // DQ-156: from 768 the column starts on the gutter under back, as on PROF-03 and the settings pages (DQ-135, DQ-136).
   column: { alignSelf: 'flex-start', gap: t.space[24], maxWidth: FORM_MAX_WIDTH, width: '100%' },
+  // DQ-1066 b: a modal composer (UPD-01) from 768 is a centred sheet of at most 640, its sticky bar inside the same width.
+  columnSheet: { alignSelf: 'center', maxWidth: SHEET_MAX_WIDTH },
   centred: { flexGrow: 1, justifyContent: 'center' },
   skeletonField: { gap: t.space[8] },
-  skeletonGroup: { gap: t.space[16] },
+  // FormGroup's rhythm (fields.tsx): space.8 above each group, its header space.8 above the first field.
+  skeletonGroup: { gap: t.space[16], marginTop: t.space[8] },
+  skeletonHeader: { marginBottom: t.space[8] - t.space[16] },
 }));
 
 export type GarageAccess = {
@@ -122,12 +130,27 @@ export function GoneState({ routeId, title, body }: { routeId: string; title: st
 }
 
 /** Offline without a copy, or an error, with the retry. */
-export function LoadErrorState({ routeId, onRetry, retrying, offline }: { routeId: string; onRetry: () => void; retrying: boolean; offline: boolean }) {
+export function LoadErrorState({
+  routeId,
+  onRetry,
+  retrying,
+  offline,
+  title,
+  message,
+}: {
+  routeId: string;
+  onRetry: () => void;
+  retrying: boolean;
+  offline: boolean;
+  /** The page's own failure title and cause (DQ-1078); the offline wording stays the same everywhere. */
+  title?: string;
+  message?: string;
+}) {
   const { t } = useTranslation('garage');
   return (
     <ErrorState
-      title={offline ? t('error.offlineTitle') : t('error.title')}
-      message={offline ? t('error.offlineBody') : undefined}
+      title={offline ? t('error.offlineTitle') : (title ?? t('error.title'))}
+      message={offline ? t('error.offlineBody') : message}
       onRetry={onRetry}
       retrying={retrying}
       testID={`${routeId}.${offline ? 'offline' : 'error'}`}
@@ -143,10 +166,10 @@ export function FormSkeleton({ routeId, groups = [3, 2] }: { routeId: string; gr
       <View style={styles.column}>
         {groups.map((fields, group) => (
           <View key={group} style={styles.skeletonGroup}>
-            <SkeletonText variant="eyebrow" width="25%" />
+            <SkeletonText variant={SECTION_HEADER_ROLE} width="25%" style={styles.skeletonHeader} testID={`${routeId}.skeleton.header.${group}`} />
             {Array.from({ length: fields }, (_, index) => (
               <View key={index} style={styles.skeletonField}>
-                <SkeletonText variant="labelS" width="35%" />
+                <SkeletonText variant="callout" width="35%" />
                 <SkeletonBlock height={size.input} corner="sm" />
               </View>
             ))}
@@ -250,15 +273,17 @@ export type EditorFormProps = {
    * to the scroller's edge and leaves its error under the sticky bar; the end shows the field, its error and what follows.
    */
   revealEnd?: unknown;
+  /** A modal composer (UPD-01): from 768 the column is a centred 640 sheet instead of the pushed page's 560 at the gutter. */
+  sheet?: boolean;
 };
 
 /**
  * The scrolling form with the sticky CTA bar riding above the keyboard (§9) and the discard guard. The column is 560 wide
  * at most and centred; the bar lines its button up with it.
  */
-export function EditorForm({ routeId, children, cta, dirty, onDiscard, revealTop = null, revealEnd = null }: EditorFormProps) {
+export function EditorForm({ routeId, children, cta, dirty, onDiscard, revealTop = null, revealEnd = null, sheet = false }: EditorFormProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const scroll = useRef<KeyboardAwareScrollViewRef>(null);
   const animated = motion.enabled && !motion.reduced;
   useEffect(() => {
@@ -275,7 +300,11 @@ export function EditorForm({ routeId, children, cta, dirty, onDiscard, revealTop
   const paneWidth = pane || estimatedPaneWidth(width, kind);
   // The bar's own view is exempt from the spacing audit (safe area): its button row starts on the gutter and ends where
   // the column ends (DQ-156).
-  const barPadding = { paddingLeft: gutter, paddingRight: Math.max(gutter, paneWidth - gutter - FORM_MAX_WIDTH) };
+  const centredSheet = sheet && kind !== 'phone';
+  const sheetSide = Math.max(gutter, (paneWidth - SHEET_MAX_WIDTH) / 2);
+  const barPadding = centredSheet
+    ? { paddingLeft: sheetSide, paddingRight: sheetSide }
+    : { paddingLeft: gutter, paddingRight: Math.max(gutter, paneWidth - gutter - FORM_MAX_WIDTH) };
   return (
     <>
       <KeyboardAwareScrollView
@@ -287,7 +316,7 @@ export function EditorForm({ routeId, children, cta, dirty, onDiscard, revealTop
         bottomOffset={KEYBOARD_OFFSET}
         testID={`${routeId}.scroll`}
       >
-        <View style={styles.column}>{children}</View>
+        <View style={[styles.column, centredSheet ? styles.columnSheet : null]}>{children}</View>
       </KeyboardAwareScrollView>
       <StickyCTABar
         label={cta.label}

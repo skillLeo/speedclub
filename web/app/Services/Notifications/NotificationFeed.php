@@ -7,16 +7,19 @@ use App\Enums\UserStatus;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
 use App\Models\BuildUpdate;
+use App\Models\Event;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Discover\VisibleBuilds;
+use App\Services\Garage\VehiclePresenter;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * HOME-02: the member's rows, newest first (created_at is a row's latest event). A row of a type with actors shows only actors the member
@@ -30,10 +33,11 @@ class NotificationFeed
     /**
      * @return CursorPaginator<int, Notification>
      */
-    public function page(User $member, int $perPage): CursorPaginator
+    public function page(User $member, int $perPage, ?string $category = null): CursorPaginator
     {
         /** @var AbstractCursorPaginator<int, Notification> $page */
         $page = $this->visible($member)
+            ->when($category !== null, fn (Builder $query) => $query->whereIn('type', NotificationType::inCategory((string) $category)))
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->cursorPaginate($perPage, ['*'], 'cursor');
@@ -104,8 +108,10 @@ class NotificationFeed
         $top = DB::query()->fromSub($ranked, 'ranked')->where('position', '<=', $shown)->orderBy('position')->get();
 
         $members = User::query()->whereKey($top->pluck('actor_id')->unique()->values()->all())->with('avatar')->get()->keyBy('id');
+        $this->mainVehicleCovers($member, $members);
         $vehicles = $this->vehicles($member, $rows);
         $visibleUpdates = $this->visibleUpdates($rows);
+        $events = $this->events($member, $rows);
 
         foreach ($rows as $row) {
             $mine = $top->where('notification_id', $row->id);
@@ -118,7 +124,32 @@ class NotificationFeed
             $row->setRelation('vehicle', $vehicle);
             $updateIds = is_array($row->data['update_ids'] ?? null) ? $row->data['update_ids'] : [];
             $row->visibleUpdateIds = array_values(array_filter($updateIds, fn (mixed $id): bool => is_string($id) && isset($visibleUpdates[$id])));
+            $eventId = $row->data['event_id'] ?? null;
+            $row->setRelation('event', is_string($eventId) ? ($events[$eventId] ?? null) : null);
         }
+    }
+
+    /**
+     * M4.12: the events of event rows the member may still see (EventPolicy::view, so a draft, a hidden sample or a blocked organiser's
+     * event is null and the row opens HOME-02). One query per page.
+     *
+     * @param  Collection<int, Notification>  $rows
+     * @return array<string, Event>
+     */
+    private function events(User $member, Collection $rows): array
+    {
+        $ids = $rows->map(fn (Notification $row): mixed => $row->data['event_id'] ?? null)->filter(fn (mixed $id): bool => is_string($id))->unique()->values()->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $gate = Gate::forUser($member);
+
+        return Event::query()->whereKey($ids)->with('organiser')->get()
+            ->filter(fn (Event $event): bool => $gate->allows('view', $event))
+            ->keyBy(fn (Event $event): string => $event->id)
+            ->all();
     }
 
     /**
@@ -149,8 +180,33 @@ class NotificationFeed
             ->whereNull('au.deleted_at')
             ->where('au.status', UserStatus::Active->value)
             ->whereNotNull('au.email_verified_at');
+        // 09 §8.19: a sample actor ("@sebastian.demo folgt dir") disappears with the samples.
+        $this->builds->withoutSamples($query, 'au.is_sample');
 
         return $this->builds->withoutBlocks($query, $member, 'na.actor_id');
+    }
+
+    /**
+     * M4.8: the cover of each actor's main build (the car badge on the avatar), only a build the member may see (VisibleBuilds: blocks,
+     * private builds, hidden samples); an actor without one gets null. Two queries per page.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<string, User>  $actors
+     */
+    private function mainVehicleCovers(User $member, \Illuminate\Database\Eloquent\Collection $actors): void
+    {
+        if ($actors->isEmpty()) {
+            return;
+        }
+
+        $mains = $this->builds->query($member)->whereIn('vs.owner_id', $actors->keys()->all())->where('v.is_main', true)
+            ->pluck('vs.vehicle_id', 'vs.owner_id')->map(strval(...))->all();
+        $vehicles = $this->builds->vehicles(array_values($mains));
+        $presenter = app(VehiclePresenter::class);
+
+        foreach ($actors as $id => $actor) {
+            $vehicle = isset($mains[$id]) ? ($vehicles[$mains[$id]] ?? null) : null;
+            $actor->setRelation('mainVehicleCover', $vehicle instanceof Vehicle ? $presenter->cover($vehicle, false) : null);
+        }
     }
 
     /**
@@ -175,7 +231,10 @@ class NotificationFeed
                 ->orWhere(fn (Builder $others) => $others
                     ->where('vehicles.status', VehicleStatus::Published->value)
                     ->whereIn('vehicles.visibility', [Visibility::Public->value, Visibility::Unlisted->value])
-                    ->whereHas('owner', fn (Builder $owner) => $owner->whereNull('deleted_at')->where('status', UserStatus::Active->value)->whereNotNull('email_verified_at'))));
+                    // As VehiclePolicy::view: another member's sample build is hidden while editorial_samples is off.
+                    ->when(! $this->builds->samplesVisible(), fn (Builder $hidden) => $hidden->where('vehicles.is_sample', false))
+                    ->whereHas('owner', fn (Builder $owner) => $owner->whereNull('deleted_at')->where('status', UserStatus::Active->value)->whereNotNull('email_verified_at')
+                        ->when(! $this->builds->samplesVisible(), fn (Builder $hidden) => $hidden->where('is_sample', false)))));
         $this->builds->withoutBlocks($query->getQuery(), $member, 'vehicles.owner_id');
 
         return $query

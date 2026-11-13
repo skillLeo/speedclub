@@ -197,6 +197,16 @@ const COOKIE_PATHS: ReadonlySet<string> = new Set([
   '/auth/password/reset',
   // AUTH-11 (M2.5): the SPA answer of a sign-in with two-factor is the session, so the challenge needs the XSRF cookie too.
   '/auth/two-factor/challenge',
+  // M4.6 Auth 2.0: the passwordless sign-ins answer with the SPA session as well (09 §8.1, §8.2).
+  '/auth/email/start',
+  '/auth/nonce',
+  '/auth/apple',
+  '/auth/google',
+  '/auth/link/confirm',
+  '/auth/passkeys/options',
+  '/auth/passkeys/verify',
+  // M4.7: "Das war ich nicht" from the alert link runs without a session, under the CSRF check of every SPA post.
+  '/auth/secure-account',
   '/auth/logout',
 ]);
 

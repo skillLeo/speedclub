@@ -31,6 +31,8 @@ class VehicleRefResource extends JsonResource
             /** "Nissan Skyline GT-R R34" */
             'full_title' => $presenter->fullTitle($vehicle),
             'cover' => $cover instanceof Media ? new MediaResource($cover) : null,
+            /** Sample content (09 §8.19): the "Beispiel" badge. */
+            'is_sample' => $vehicle->getAttribute('is_sample') === true,
         ];
     }
 }

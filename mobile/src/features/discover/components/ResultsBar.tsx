@@ -36,11 +36,13 @@ export function ResultsBar({ countLabel, sort, onOpenSort, view, onChangeView, t
     <View style={styles.bar} testID={testID}>
       <View style={styles.summary}>
         {countLabel ? (
-          <Text variant="supporting" color="text.secondary" style={styles.count} testID={`${testID}.count`}>
+          <Text variant="callout" color="text.secondary" style={styles.count} testID={`${testID}.count`}>
             {`${countLabel}\u00A0·\u00A0`}
           </Text>
         ) : null}
         <PressableScale
+          // Draws its own pressed fill from state.pressed: no second tone layer (SM7).
+          toneShift={false}
           role="button"
           aria-label={t('results.sortLabel', { sort: sortName })}
           aria-haspopup="dialog"
@@ -50,7 +52,7 @@ export function ResultsBar({ countLabel, sort, onOpenSort, view, onChangeView, t
           testID={`${testID}.sort`}
         >
           {/* DQ-335: the control reads as one, the count beside it as information. */}
-          <Text variant="labelS" color="text.primary" hyphenate={false}>
+          <Text variant="bodyStrong" color="text.primary" hyphenate={false}>
             {sortName}
           </Text>
           <Icon name="caret-down" size={16} color="text.primary" />

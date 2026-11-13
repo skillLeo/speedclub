@@ -92,7 +92,7 @@ onMounted(async () => {
     <div class="flex flex-col gap-24" data-testid="ADM-49" :data-qa-state="pageState">
         <PageHeader :title="trans('system.jobs.title')" :crumbs="[{ label: trans('shell.groups.system') }]" :description="trans('system.jobs.intro')">
             <template #meta>
-                <p class="text-supporting tabular-nums" :class="heartbeat ? 'text-ink-2' : 'text-warning'" data-testid="ADM-49.heartbeat">{{ heartbeat ? trans('system.jobs.heartbeat', { date: formatDateTime(heartbeat) }) : trans('system.jobs.heartbeat_never') }}</p>
+                <p class="text-admin-base tabular-nums" :class="heartbeat ? 'text-ink-2' : 'text-warning'" data-testid="ADM-49.heartbeat">{{ heartbeat ? trans('system.jobs.heartbeat', { date: formatDateTime(heartbeat) }) : trans('system.jobs.heartbeat_never') }}</p>
             </template>
         </PageHeader>
 
@@ -101,19 +101,19 @@ onMounted(async () => {
             <template #failed>
                 <div class="flex flex-col gap-12 pt-16">
                     <div v-if="manage && failedRows.length > 0" class="flex min-h-40 flex-wrap items-center gap-12" data-testid="ADM-49.bulk">
-                        <span class="text-supporting text-ink-2 tabular-nums" aria-live="polite">{{ selected.length > 0 ? transChoice('system.jobs.selected', selected.length, { count: formatNumber(selected.length) }) : trans('system.jobs.limit') }}</span>
+                        <span class="text-admin-base text-ink-2 tabular-nums" aria-live="polite">{{ selected.length > 0 ? transChoice('system.jobs.selected', selected.length, { count: formatNumber(selected.length) }) : trans('system.jobs.limit') }}</span>
                         <Button size="sm" variant="secondary" :icon="PhArrowsClockwise" :disabled="selected.length === 0" data-testid="ADM-49.retry" @click="(action.reset(), (confirm = 'retry'))">{{ trans('system.jobs.retry') }}</Button>
                         <Button size="sm" variant="destructive" :icon="PhTrash" :disabled="selected.length === 0" data-testid="ADM-49.forget" @click="(action.reset(), (confirm = 'forget'))">{{ trans('system.jobs.forget') }}</Button>
                     </div>
-                    <p v-else-if="!manage && failedRows.length > 0" class="text-supporting text-ink-2">{{ trans('system.jobs.view_only') }}</p>
+                    <p v-else-if="!manage && failedRows.length > 0" class="text-admin-base text-ink-2">{{ trans('system.jobs.view_only') }}</p>
                     <div v-if="pageState === 'loading'" class="flex flex-col rounded-sm border border-line-subtle" aria-busy="true" data-testid="ADM-49.loading">
                         <div v-for="n in 6" :key="n" class="flex h-40 items-center gap-24 border-b border-line-subtle px-12 last:border-b-0"><Skeleton class="size-16" /><Skeleton shape="text" class="w-200" /><Skeleton shape="text" class="w-80" /><Skeleton shape="text" class="w-160" /><Skeleton shape="text" class="w-120" /></div>
                     </div>
                     <EmptyQueue v-else-if="failedRows.length === 0" :title="trans('system.jobs.failed_empty')" :body="trans('system.jobs.failed_empty_body')" data-testid="ADM-49.failed-empty" />
                     <ScrollRegion v-else :label="trans('system.jobs.caption_failed')" test-id="ADM-49.failed">
-                        <table class="w-full border-collapse text-supporting">
+                        <table class="w-full border-collapse text-admin-base">
                             <caption class="sr-only">{{ trans('system.jobs.caption_failed') }}</caption>
-                            <thead class="bg-surface text-left text-label-s text-ink-2">
+                            <thead class="bg-surface text-left text-admin-base-strong text-ink-2">
                                 <tr class="h-40 border-b border-line">
                                     <th v-if="manage" scope="col" class="w-48 px-12"><Checkbox :model-value="all" :aria-label="trans('system.jobs.select_all')" @update:model-value="toggleAll" /></th>
                                     <th scope="col" class="px-12">{{ trans('system.jobs.columns.job') }}</th>
@@ -145,9 +145,9 @@ onMounted(async () => {
                     </div>
                     <EmptyQueue v-else-if="pendingRows.length === 0" :title="trans('system.jobs.pending_empty')" :body="trans('system.jobs.pending_empty_body')" data-testid="ADM-49.pending-empty" />
                     <ScrollRegion v-else :label="trans('system.jobs.caption_pending')" test-id="ADM-49.pending">
-                        <table class="w-full border-collapse text-supporting">
+                        <table class="w-full border-collapse text-admin-base">
                             <caption class="sr-only">{{ trans('system.jobs.caption_pending') }}</caption>
-                            <thead class="bg-surface text-left text-label-s text-ink-2">
+                            <thead class="bg-surface text-left text-admin-base-strong text-ink-2">
                                 <tr class="h-40 border-b border-line">
                                     <th scope="col" class="px-12">{{ trans('system.jobs.columns.job') }}</th>
                                     <th scope="col" class="px-12">{{ trans('system.jobs.columns.queue') }}</th>

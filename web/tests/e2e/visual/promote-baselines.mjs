@@ -5,7 +5,8 @@
 //
 //   node tests/e2e/visual/promote-baselines.mjs --approval=FILE.json            (dry run: checks everything, writes nothing)
 //   node tests/e2e/visual/promote-baselines.mjs --approval=FILE.json --write    (copies the approved cells)
-//   options: --baselines=DIR (default tests/e2e/__screenshots__)  --routes-file=FILE.json (other registry, for the self-test)
+//   options: --baselines=DIR (default tests/e2e/__screenshots__, and tests/e2e/__screenshots__/p4 for the cells of the p4 tier, whose
+//            names carry a device; --baselines puts every approved cell there)  --routes-file=FILE.json (other registry, for the self-test)
 //
 // Approval file (paths relative to the repo root or absolute; `from` is the folder holding the run's summary.json):
 //   { "approvals": [
@@ -28,9 +29,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import sharp from 'sharp';
 import { isVolatileCell } from './matrix.mjs';
+import { P4_DEVICE_IDS } from './p4-devices.mjs';
 
 const REPO_ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 const DEFAULT_BASELINES = fileURLToPath(new URL('../__screenshots__/', import.meta.url));
+/** The baselines of the p4 tier (docs/09_PREMIUM_2_0.md §14.1), apart from the module and phase ones (same default as run.mjs). */
+export const DEFAULT_P4_BASELINES = join(DEFAULT_BASELINES, 'p4');
 
 /** The origin whose host the hostDependent baselines show (same default as run.mjs). */
 export function baselineOrigin(env = process.env) {
@@ -38,16 +42,30 @@ export function baselineOrigin(env = process.env) {
 }
 
 /**
- * @param {string} name cell name `<route>__<w>x<h>__<theme>__<locale>[__fsN][__zoomN][__state]`
- * @returns {{routeId: string, width: number, height: number, zoom: number, state: string} | null}
+ * @param {string} name cell name `<route>__<w>x<h>__<theme>__<locale>[__<p4 device>][__fsN][__zoomN][__state]`
+ * @returns {{routeId: string, width: number, height: number, zoom: number, state: string, device?: string} | null} `device` only for a
+ *   p4 cell
  */
 export function parseCell(name) {
   const match = /^(.+?)__(\d+)x(\d+)__[a-z]+__[a-z]{2}((?:__.+)?)$/.exec(name);
   if (!match || !match[1]) return null;
-  const rest = (match[4] ?? '').split('__').filter(Boolean);
+  const parts = (match[4] ?? '').split('__').filter(Boolean);
+  const device = parts.find((p) => P4_DEVICE_IDS.includes(p));
+  const rest = parts.filter((p) => p !== device);
   const zoom = Number(rest.find((p) => /^zoom\d+$/.test(p))?.slice(4) ?? 1);
   const state = rest.find((p) => !/^(fs|zoom)\d+$/.test(p)) ?? 'default';
-  return { routeId: match[1], width: Number(match[2]), height: Number(match[3]), zoom, state };
+  return { routeId: match[1], width: Number(match[2]), height: Number(match[3]), zoom, state, ...(device === undefined ? {} : { device }) };
+}
+
+/**
+ * The baseline folder of an approved cell when no --baselines is given: p4 cells (named with a device) into the p4 baselines,
+ * every other cell into the module/phase baselines as before.
+ * @param {string} name
+ * @param {{baselines?: string|null, p4Baselines?: string}} [o]
+ */
+export function baselineDirOf(name, { baselines = null, p4Baselines = DEFAULT_P4_BASELINES } = {}) {
+  if (baselines) return baselines;
+  return parseCell(name)?.device === undefined ? DEFAULT_BASELINES : p4Baselines;
 }
 
 /**
@@ -174,7 +192,8 @@ async function main() {
     ? JSON.parse(await readFile(resolve(values['routes-file']), 'utf8'))
     : (await import('./routes.mjs')).routes;
   const origin = baselineOrigin();
-  const baselines = values.baselines ? resolve(values.baselines) : DEFAULT_BASELINES;
+  const given = values.baselines ? resolve(values.baselines) : null;
+  const dirOf = (/** @type {string} */ name) => baselineDirOf(name, { baselines: given });
 
   const { cells, problems, skipped } = await planPromotion(approval, { routes, origin });
   if (skipped.length) console.log(`Skipped ${skipped.length} volatile cell(s) (ADR-223, never baselines): ${skipped.join(', ')}`);
@@ -184,15 +203,18 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  const existing = cells.filter((c) => existsSync(join(baselines, `${c.name}.png`))).length;
+  const existing = cells.filter((c) => existsSync(join(dirOf(c.name), `${c.name}.png`))).length;
   console.log(`${cells.length} approved cell(s) of ${new Set(cells.map((c) => c.routeId)).size} route(s): ${existing} replace a baseline, ${cells.length - existing} new. Baseline host ${origin}.`);
   if (!values.write) {
     for (const cell of cells) console.log(`  ${cell.name}  <-  ${cell.from}`);
     console.log('Dry run: nothing written. Add --write to copy them.');
     return;
   }
-  const { replaced, added } = await promote(cells, baselines);
-  console.log(`Wrote ${replaced.length + added.length} baseline(s) to ${baselines}: ${replaced.length} replaced, ${added.length} new.`);
+  // One folder per tier when --baselines is not given (p4 cells apart, baselineDirOf); a single folder otherwise, as before.
+  for (const baselines of [...new Set(cells.map((c) => dirOf(c.name)))]) {
+    const { replaced, added } = await promote(cells.filter((c) => dirOf(c.name) === baselines), baselines);
+    console.log(`Wrote ${replaced.length + added.length} baseline(s) to ${baselines}: ${replaced.length} replaced, ${added.length} new.`);
+  }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {

@@ -199,6 +199,57 @@ export async function waitForStablePage(page, { network, timeoutMs = 15000 } = {
 }
 
 /**
+ * DQ-910: right before a screenshot every rendered image is decoded. A lazy image (`loading="lazy"`) that has not started, such as a
+ * photo below the fold of a full-page capture (WEB-03 on phones) or one an inner scroller expansion revealed, is switched to `eager`
+ * first, so the picture never shows its placeholder or a black box. Only images in the capture's columns count (a pager's next
+ * photo to the right is never on the picture and stays lazy), and only rendered ones (a lazy image under a hidden screen of a stack
+ * never loads). Nothing waits when every image is already decoded: decode() of a decoded image settles at once.
+ * Bounded by `timeoutMs`: what has not settled by then is returned as `undecoded`, never waited for longer.
+ * @param {import('@playwright/test').Page} page
+ * @param {number} timeoutMs
+ * @returns {Promise<{eager:number, failed:string[], undecoded:string[]}>} `failed`: images switched to eager whose decode failed (a
+ *          broken image the stable-page wait had not reached); `undecoded`: images still not decoded after `timeoutMs`
+ */
+export async function decodeImagesForCapture(page, timeoutMs) {
+  return page.evaluate(async (maxWait) => {
+    const inColumns = (/** @type {HTMLImageElement} */ img) => {
+      const r = img.getBoundingClientRect();
+      return r.right > 0 && r.left < innerWidth && r.width > 0 && r.height > 0;
+    };
+    const images = [...document.images].filter((img) => img.checkVisibility() && inColumns(img) && img.getAttribute('src'));
+    /** @type {Set<HTMLImageElement>} */
+    const forced = new Set();
+    for (const img of images) {
+      if (img.loading === 'lazy' && !img.complete) {
+        img.loading = 'eager';
+        forced.add(img);
+      }
+    }
+    const urlOf = (/** @type {HTMLImageElement} */ img) => img.currentSrc || img.src;
+    /** @type {Map<HTMLImageElement, 'ok'|'failed'>} */
+    const settled = new Map();
+    const all = Promise.all(
+      images.map((img) =>
+        img.decode().then(
+          () => void settled.set(img, 'ok'),
+          () => void settled.set(img, 'failed'),
+        ),
+      ),
+    );
+    /** @type {ReturnType<typeof setTimeout>|undefined} */
+    let timer;
+    await Promise.race([all, new Promise((resolve) => (timer = setTimeout(resolve, maxWait)))]);
+    clearTimeout(timer);
+    if (forced.size > 0) await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(null))));
+    return {
+      eager: forced.size,
+      failed: [...forced].filter((img) => settled.get(img) === 'failed').map(urlOf),
+      undecoded: images.filter((img) => !settled.has(img)).map(urlOf),
+    };
+  }, timeoutMs);
+}
+
+/**
  * The contract between harness and app shell: while an override is active, the root element states
  * what was actually applied. Without this the matrix could screenshot the wrong theme forever
  * and nobody would notice.

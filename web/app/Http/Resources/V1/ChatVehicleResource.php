@@ -5,6 +5,7 @@ namespace App\Http\Resources\V1;
 use App\Models\Media;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\VehicleSpec;
 use App\Services\Garage\VehiclePresenter;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
@@ -28,6 +29,8 @@ class ChatVehicleResource extends JsonResource
         $owned = $vehicle->isOwnedBy($viewer instanceof User ? $viewer : null);
         $cover = $presenter->cover($vehicle, $owned);
         $owner = $vehicle->owner;
+        $specs = $vehicle->specs;
+        $specs = $specs instanceof VehicleSpec ? $specs : null;
 
         return [
             'id' => $vehicle->id,
@@ -35,6 +38,17 @@ class ChatVehicleResource extends JsonResource
             /** "Nissan Skyline GT-R R34" */
             'full_title' => $presenter->fullTitle($vehicle),
             'cover' => $cover instanceof Media ? new MediaResource($cover) : null,
+            /**
+             * DQ-1086: the spec line of the MSG-02 card ("510 PS · 650 Nm"), in whole PS as normalised from what the owner entered; the
+             * app converts to the reader's unit. Null when unknown.
+             *
+             * @var int|null
+             */
+            'power_ps' => $specs?->power_ps === null ? null : (int) round($specs->power_ps),
+            /** @var int|null */
+            'torque_nm' => $specs?->getAttribute('torque_nm') === null ? null : (int) $specs->getAttribute('torque_nm'),
+            /** Sample content (09 §8.19): the "Beispiel" badge. */
+            'is_sample' => $vehicle->getAttribute('is_sample') === true,
             /**
              * "Fahrzeug von @lukas.sc". Null when the owner asked not to be named on the vehicle page (ADR-148 a), unless it is the reader.
              *

@@ -39,7 +39,7 @@ export const OwnerLink = memo(function OwnerLink({ owner, label, onPress, testID
     >
       <Avatar decorative name={owner.username} uri={owner.avatarUri} blurhash={owner.avatarBlurhash} size={size.avatar.sm} />
       <View style={styles.meta}>
-        <Text hyphenate={false} variant="supporting" style={styles.name}>
+        <Text hyphenate={false} variant="callout" style={styles.name}>
           {owner.username}
         </Text>
         {owner.time ? (
@@ -59,7 +59,7 @@ export function OwnerLinkSkeleton() {
     <View style={[styles.root, styles.body]}>
       <SkeletonBlock width={size.avatar.sm} height={size.avatar.sm} corner="full" />
       <View style={styles.line}>
-        <SkeletonText variant="supporting" width="45%" />
+        <SkeletonText variant="callout" width="45%" />
       </View>
     </View>
   );

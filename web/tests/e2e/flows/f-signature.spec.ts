@@ -110,7 +110,10 @@ test.describe('QR-02 signature parts', () => {
     const vehicle = await buildVehicle(owner.api);
     await useSession(context, owner.session);
     await open(page, `/app/qr/${vehicle.id}`);
-    await page.locator('[data-testid="QR-02.download"]:visible').click();
+    // "Weitere Formate" waits for the code's SVG (a click before it lands does nothing); under load that can take a while.
+    const more = page.locator('[data-testid="QR-02.download"]:visible');
+    await expect(more).toBeEnabled({ timeout: 30_000 });
+    await more.click();
     await expect(id(page, 'QR-02.downloadSheet')).toBeVisible();
     await expect(id(page, 'QR-02.download.placardA4')).toBeVisible();
     await flowShot(page, testInfo, 'QR-02-downloadSheet');
@@ -136,7 +139,8 @@ test.describe('QR-02 signature parts', () => {
     await open(page, `/app/qr/${vehicle.id}`);
     await expect(id(page, 'QR-02.scans.bars')).toBeVisible();
     const before = expectStatus(await owner.api.get(`vehicles/${vehicle.id}/qr/stats`), 200, 'GET qr/stats').data;
-    expect(before.days).toHaveLength(14);
+    // QrStatsResource: exactly 30 days since M4.9 (QR-02 shows the 30-day bars), 14 before.
+    expect(before.days).toHaveLength(30);
 
     const stranger = await browserOf(browser, null, { pageErrors, blockedRequests, expected: [] });
     try {

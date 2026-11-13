@@ -37,13 +37,14 @@ class WheelSetupResource extends JsonResource
             /**
              * Tap opens VEH-01 (`public/vehicles/{slug}`). `owner` is null when the owner hides the name (ADR-148 a).
              *
-             * @var array{id: string, slug: string, full_title: string, cover: MediaResource|null, owner: MemberSummaryResource|null}
+             * @var array{id: string, slug: string, full_title: string, cover: MediaResource|null, is_sample: bool, owner: MemberSummaryResource|null}
              */
             'vehicle' => [
                 'id' => $vehicle->id,
                 'slug' => $vehicle->slug,
                 'full_title' => $presenter->fullTitle($vehicle),
                 'cover' => $cover instanceof Media ? new MediaResource($cover) : null,
+                'is_sample' => $vehicle->getAttribute('is_sample') === true,
                 'owner' => $owner instanceof User && ($vehicle->isOwnedBy($viewer) || $owner->getAttribute('show_owner_on_qr') !== false)
                     ? new MemberSummaryResource($owner)
                     : null,

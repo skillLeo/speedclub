@@ -8,9 +8,11 @@ import { View } from 'react-native';
 import { ApiError } from '@/api/client';
 import type { Me } from '@/api/queries/auth';
 import { FormNotice } from '@/features/auth/components/FormNotice';
-import { applyServerErrors, breakableEmail } from '@/features/auth/forms';
+import { applyServerErrors } from '@/features/auth/forms';
 import { createStyles, size } from '@/theme';
 import { Skeleton, SkeletonBlock, SkeletonText, Text, TextInput, toast } from '@/ui';
+import { SlotText, slot } from '@/ui/SlotText';
+import { identifierText } from '@/ui/textBreaks';
 
 import { useMemberGate } from '../components/MemberGate';
 import { RestrictionNotice } from '../components/RestrictionNotice';
@@ -38,7 +40,7 @@ function ContactSkeleton() {
         <SkeletonText variant="body" lines={2} />
         <SkeletonBlock height={size.row.single * SUPPORT_CATEGORIES.length} corner="md" />
         <View style={styles.field}>
-          <SkeletonText variant="labelS" width="30%" />
+          <SkeletonText variant="callout" width="30%" />
           <SkeletonBlock height={size.input} corner="sm" />
         </View>
       </View>
@@ -114,9 +116,8 @@ function ContactForm({ me }: { me: Me }) {
     >
       <View style={styles.body}>
         <RestrictionNotice routeId={ROUTE} scope="support" />
-        <Text variant="body" color="text.secondary" testID={`${ROUTE}.intro`}>
-          {t('contact.intro', { email: breakableEmail(me.email) })}
-        </Text>
+        {/* DQ-927: the address as on file, never hyphenated. */}
+        <SlotText variant="body" color="text.secondary" text={t('contact.intro', { email: slot('email') })} slots={{ email: identifierText(me.email) }} testID={`${ROUTE}.intro`} />
         {notice ? <FormNotice message={notice} testID={`${ROUTE}.notice`} /> : null}
         <Controller
           control={control}
@@ -133,7 +134,7 @@ function ContactForm({ me }: { me: Me }) {
                 />
               </RowGroup>
               {fieldState.error ? (
-                <Text variant="helper" color="accent.fg" role="alert" testID={`${ROUTE}.category.error`}>
+                <Text variant="caption" color="accent.fg" role="alert" testID={`${ROUTE}.category.error`}>
                   {fieldMessage(fieldState.error)}
                 </Text>
               ) : null}
@@ -177,7 +178,7 @@ function ContactForm({ me }: { me: Me }) {
               />
             )}
           />
-          <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.privacy`}>
+          <Text variant="callout" color="text.secondary" testID={`${ROUTE}.privacy`}>
             {t('contact.privacyNote')}
           </Text>
         </View>

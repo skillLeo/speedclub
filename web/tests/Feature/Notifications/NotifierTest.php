@@ -87,7 +87,7 @@ describe('the matrix', function () {
             ->and($this->notifier->buildSaved($this->lena, $vehicle, 0, '2026-W45'))->toBeNull();
     });
 
-    it('security: an in-app row and the mandatory mail, whatever the preferences, never a push', function (SecurityNotice $notice) {
+    it('security: an in-app row and the mandatory mail, whatever the preferences, never a push (the login alert aside)', function (SecurityNotice $notice) {
         ntfPushOn($this->lena);
         $this->lena->forceFill(['notification_prefs' => ['types' => ['new_follower' => ['push' => false]], 'quiet_hours' => ['enabled' => true, 'from' => '00:00', 'to' => '23:59']]])->save();
 
@@ -98,7 +98,17 @@ describe('the matrix', function () {
             ->and($row?->data)->toBe(['event' => $notice->value, 'device_name' => 'iPhone 15'])
             ->and(ntfPushes())->toBe([]);
         Mail::assertSent(SecurityNoticeMail::class, fn (SecurityNoticeMail $mail): bool => $mail->notice === $notice && $mail->hasTo($this->lena->email));
-    })->with(SecurityNotice::cases());
+    })->with(array_values(array_filter(SecurityNotice::cases(), fn (SecurityNotice $notice): bool => $notice !== SecurityNotice::NewDevice)));
+
+    it('security: the login alert (new device) pushes, whatever the switches and quiet hours (09 §8.4)', function () {
+        ntfPushOn($this->lena);
+        $this->lena->forceFill(['notification_prefs' => ['types' => ['new_follower' => ['push' => false]], 'quiet_hours' => ['enabled' => true, 'from' => '00:00', 'to' => '23:59']]])->save();
+
+        $row = $this->notifier->security($this->lena, SecurityNotice::NewDevice, 'iPhone 15');
+
+        expect($row?->data)->toBe(['event' => 'new_device', 'device_name' => 'iPhone 15'])
+            ->and(ntfPushes())->not->toBe([]);
+    });
 
     it('security rows never group: two events are two rows', function () {
         $this->notifier->security($this->lena, SecurityNotice::NewDevice, 'Pixel 9');
@@ -388,7 +398,8 @@ describe('what triggers notifications', function () {
 
         $row = Notification::query()->where('notifiable_id', $member->id)->sole();
         expect($row->type)->toBe(NotificationType::Security)
-            ->and($row->data)->toBe(['event' => 'new_device', 'device_name' => 'Pixel 9']);
+            ->and($row->data)->toMatchArray(['event' => 'new_device', 'device_name' => 'Pixel 9'])
+            ->and($row->data['security_event_id'] ?? null)->toBeString();
         Mail::assertSent(SecurityNoticeMail::class, 1);
     });
 });

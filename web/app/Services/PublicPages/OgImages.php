@@ -12,67 +12,145 @@ use App\Services\AppConfig\AppConfig;
 use App\Services\AppConfig\FeatureFlags;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Media\MediaService;
+use App\Services\Qr\QrCodes;
+use App\Services\Qr\QrRenderer;
+use App\Services\Showcase\SampleContent;
 use App\Services\Signature\DrawShareCards;
 use App\Services\Signature\ShareCards;
+use App\Support\PublicUrl;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * Open Graph images: a JPEG per public vehicle and member, named after a keyed hash of what it shows. So a changed title, photo or focal
- * point gets a new file by itself, an old link cannot be derived from the id, and the file can be cached forever.
+ * Link previews (Open Graph, X cards): a 1200 × 630 JPEG and a 1080 × 1080 square per public vehicle and member, and the brand card
+ * for the landing page and everything without a picture of its own.
  *
- * Drawn in the queue (DrawVehicleOgImage, DrawMemberOgImage), never during a page view: a stranger who scans a sticker must not wait for GD (F4). The Actions
- * that change what a picture shows queue a draw after their commit, so the file is usually there before the first link is shared.
- * The page names a file only while it shows the current state, and answers the default otherwise; that read also queues the draw,
- * so no missing hook leaves a page without its picture for long. Taking things down cannot wait, so hiding, deleting and removing
- * a photo call purge() directly, and og:prune sweeps up daily for whatever changed elsewhere, such as a suspension.
+ * Files lie on the media disk under og/v, og/u and og/site, named after a keyed hash of what they show, so a changed title, photo or
+ * focal point gets new files by itself. Pages name them through /og/v/{slug}-{hash}.jpg (OgImageController): the hash in the address
+ * changes with the card, so the address can be cached forever, and the route draws a missing card on the spot (bounded, one draw per
+ * card at a time). So the first crawler that sees a link gets the real card, also when the cron has not run the queue yet; a page view
+ * itself never waits for GD (F4: LCP < 2.0 s). The Actions that change what a card shows still queue a draw after their commit, so the
+ * crawler usually finds the file ready.
  *
- * Nothing hidden ever gets a file: forVehicle, forMember and draw answer the default for anything the public may not see.
+ * Nothing hidden ever gets a file and its route answers 404: cards(), draw() and serve() answer the default or nothing for anything the
+ * public may not see. Taking things down cannot wait, so hiding, deleting and removing a photo call purge() directly, and og:prune
+ * sweeps up daily for whatever changed elsewhere, such as a suspension.
  */
 class OgImages
 {
     /** What the drawing of a vehicle reads. */
-    public const VEHICLE_RELATIONS = ['owner', 'make', 'vehicleModel', 'generation', 'specs', 'cover', 'media'];
+    public const VEHICLE_RELATIONS = ['owner', 'make', 'vehicleModel', 'generation', 'specs', 'cover', 'media', 'activeQrCode'];
 
     public const MEMBER_RELATIONS = ['avatar', 'cover'];
 
     /** Part of the hash: raising it redraws everything after a change to the drawing. */
-    private const VERSION = 3;
+    private const VERSION = 7;
 
     private const VEHICLES = 'og/v';
 
     private const MEMBERS = 'og/u';
 
+    private const SITE = 'og/site';
+
+    /** Characters of the file hash in the public address: enough to tell versions apart, nothing to guess from. */
+    private const URL_HASH = 16;
+
+    /** The brand photo of the default card and the line under the wordmark (German, as every card: no viewer is known when it is drawn). */
+    private const SITE_PHOTO = 'state-garage';
+
+    private const SITE_LINE = 'Autos. Builds. Treffen.';
+
     /** A file younger than this may belong to a draw that has not written its row yet. */
     private const ORPHAN_AGE_SECONDS = 3600;
+
+    /** How long a crawler waits for a draw that another request is doing, and how long a draw may hold the card. */
+    private const LOCK_WAIT_SECONDS = 10;
+
+    private const LOCK_SECONDS = 30;
 
     public function __construct(
         private readonly OgImageCanvas $canvas,
         private readonly VehiclePresenter $presenter,
         private readonly MediaService $media,
+        private readonly QrCodes $codes,
+        private readonly QrRenderer $renderer,
     ) {}
 
+    /**
+     * The landscape default: the OG default staff published (ADM-28), else the drawn brand card.
+     */
     public function defaultUrl(): string
     {
-        // ADM-28: the published OG default, else config (AppConfig).
-        return app(AppConfig::class)->ogDefaultUrl();
+        return $this->defaultCards()[OgImageCanvas::LANDSCAPE];
     }
 
     /**
-     * For the page: the file while it shows the current state, the default otherwise, and then a draw is queued. Never draws.
+     * @return array{landscape: string, square: string}
      */
+    public function defaultCards(): array
+    {
+        $hash = $this->hash($this->siteSpec());
+        $published = app(AppConfig::class)->publishedOgDefaultUrl();
+
+        return [
+            OgImageCanvas::LANDSCAPE => $published ?? $this->address('/og/site', $hash, OgImageCanvas::LANDSCAPE),
+            OgImageCanvas::SQUARE => $this->address('/og/site', $hash, OgImageCanvas::SQUARE),
+        ];
+    }
+
+    /**
+     * For a page: the subject's own cards while it may have them, the default otherwise. Never draws; queues a draw while the files
+     * do not show the current state yet (the address already names that state, and its route draws it for the first crawler).
+     *
+     * @return array{landscape: string, square: string}
+     */
+    public function cards(Vehicle|User|null $subject): array
+    {
+        if ($subject === null) {
+            return $this->defaultCards();
+        }
+
+        try {
+            $path = $this->currentPath($subject);
+
+            if ($path === null) {
+                $this->purge($subject);
+
+                return $this->defaultCards();
+            }
+
+            if ($subject->getAttribute('og_image_path') !== $path) {
+                $this->dispatch($subject);
+            }
+
+            $hash = $this->hashOf($path);
+            $base = $subject instanceof Vehicle ? '/og/v/'.$subject->canonicalSlug() : '/og/u/'.$subject->username;
+
+            return [
+                OgImageCanvas::LANDSCAPE => $this->address($base, $hash, OgImageCanvas::LANDSCAPE),
+                OgImageCanvas::SQUARE => $this->address($base, $hash, OgImageCanvas::SQUARE),
+            ];
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        return $this->defaultCards();
+    }
+
     public function forVehicle(Vehicle $vehicle): string
     {
-        return $this->forPage($vehicle);
+        return $this->cards($vehicle)[OgImageCanvas::LANDSCAPE];
     }
 
     public function forMember(User $member): string
     {
-        return $this->forPage($member);
+        return $this->cards($member)[OgImageCanvas::LANDSCAPE];
     }
 
     /**
@@ -91,31 +169,17 @@ class OgImages
     }
 
     /**
-     * The queue's work (OgImageJob): draws the file when it is missing or outdated and returns its address, removes it when the subject is
-     * no longer public.
+     * The queue's work (OgImageJob): draws both formats when they are missing or outdated and returns the landscape card's address,
+     * removes them when the subject is no longer public.
      */
     public function draw(Vehicle|User $subject): string
     {
         try {
-            if ($subject instanceof Vehicle) {
-                $photo = $this->vehiclePhoto($subject);
-
-                if (! $this->vehicleIsPublic($subject) || $photo === null) {
-                    $this->purge($subject);
-
-                    return $this->defaultUrl();
-                }
-
-                return $this->stored($subject, self::VEHICLES, $this->vehicleSpec($subject, $photo), fn (): string => $this->drawVehicle($subject, $photo), fn (): bool => $this->vehicleIsPublic($subject->fresh() ?? $subject));
-            }
-
-            if (! $this->memberIsPublic($subject)) {
-                $this->purge($subject);
-
+            if ($this->ensure($subject) === null) {
                 return $this->defaultUrl();
             }
 
-            return $this->stored($subject, self::MEMBERS, $this->memberSpec($subject), fn (): string => $this->drawMember($subject), fn (): bool => $this->memberIsPublic($subject->fresh() ?? $subject));
+            return $this->cards($subject)[OgImageCanvas::LANDSCAPE];
         } catch (Throwable $exception) {
             report($exception);
 
@@ -123,27 +187,51 @@ class OgImages
         }
     }
 
-    private function forPage(Vehicle|User $subject): string
+    /**
+     * For OgImageController: the JPEG behind a public address, drawn now when it is missing. Null for an address that names nothing
+     * public. An address with an outdated hash gets the current card, marked as not current so it is not cached forever.
+     *
+     * @return array{bytes: string, current: bool, etag: string}|null
+     */
+    public function serve(string $type, string $file): ?array
     {
-        try {
-            $path = $this->currentPath($subject);
-
-            if ($path === null) {
-                $this->purge($subject);
-
-                return $this->defaultUrl();
-            }
-
-            if ($subject->getAttribute('og_image_path') === $path) {
-                return $this->url($path);
-            }
-
-            $this->dispatch($subject);
-        } catch (Throwable $exception) {
-            report($exception);
+        if (preg_match('/\A(?<key>[A-Za-z0-9._-]+?)-(?<hash>[0-9a-f]{16})(?<square>-square)?\.jpg\z/', $file, $match) !== 1) {
+            return null;
         }
 
-        return $this->defaultUrl();
+        $format = ($match['square'] ?? '') === '' ? OgImageCanvas::LANDSCAPE : OgImageCanvas::SQUARE;
+        $subject = match ($type) {
+            'v' => Vehicle::findBySlug($match['key'])?->load(self::VEHICLE_RELATIONS),
+            'u' => User::query()->where('username', $match['key'])->with(self::MEMBER_RELATIONS)->first(),
+            default => $match['key'] === 'site' ? 'site' : null,
+        };
+
+        // A sample while editorial_samples is off names nothing public (09 §8.19); its files stay for when the flag comes back on.
+        if ($subject === null || ($subject !== 'site' && app(SampleContent::class)->hides($subject))) {
+            return null;
+        }
+        // A sample's card must not outlive the flag in caches: never `immutable`, an hour at most (the not-current branch).
+        $sample = $subject !== 'site' && SampleContent::isSample($subject);
+
+        try {
+            $paths = $subject === 'site' ? $this->ensureSite() : $this->ensure($subject);
+
+            if ($paths === null) {
+                return null;
+            }
+
+            $bytes = $this->disk()->get($paths[$format]) ?? throw new \RuntimeException('A drawn card is missing.');
+
+            return ['bytes' => $bytes, 'current' => hash_equals($this->hashOf($paths[OgImageCanvas::LANDSCAPE]), $match['hash']) && ! $sample, 'etag' => basename($paths[$format], '.jpg')];
+        } catch (LockTimeoutException) {
+            // Another request is drawing this card: this one draws it too, without storing.
+            return ['bytes' => $this->drawFormat($subject, $format), 'current' => false, 'etag' => 'pending'];
+        } catch (Throwable $exception) {
+            report($exception);
+
+            // The client's delivered card, never a broken image.
+            return ['bytes' => (string) file_get_contents(public_path(config()->string('speedclub.public_pages.og_default'))), 'current' => false, 'etag' => 'fallback'];
+        }
     }
 
     private function dispatch(Vehicle|User $subject): void
@@ -160,21 +248,130 @@ class OgImages
     }
 
     /**
-     * Where the file showing the current state lies, or null when the subject may have none.
+     * Where the landscape file showing the current state lies, or null when the subject may have none.
      */
     private function currentPath(Vehicle|User $subject): ?string
     {
+        $spec = $this->spec($subject);
+
+        return $spec === null ? null : $this->path($subject instanceof Vehicle ? self::VEHICLES : self::MEMBERS, $spec);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function spec(Vehicle|User $subject): ?array
+    {
         if ($subject instanceof User) {
-            return $this->memberIsPublic($subject) ? $this->path(self::MEMBERS, $this->memberSpec($subject)) : null;
+            return $this->memberIsPublic($subject) ? $this->memberSpec($subject) : null;
         }
 
         $photo = $this->vehiclePhoto($subject);
 
-        return $this->vehicleIsPublic($subject) && $photo !== null ? $this->path(self::VEHICLES, $this->vehicleSpec($subject, $photo)) : null;
+        return $this->vehicleIsPublic($subject) && $photo !== null ? $this->vehicleSpec($subject, $photo) : null;
     }
 
     /**
-     * Removes the file at once. The next read of a page that is still public draws it again.
+     * Both files for the current state, drawn when one is missing; one draw per card at a time. Null (and the files gone) when the
+     * subject may have none.
+     *
+     * @return array{landscape: string, square: string}|null
+     */
+    private function ensure(Vehicle|User $subject): ?array
+    {
+        $path = $this->currentPath($subject);
+
+        if ($path === null) {
+            $this->purge($subject);
+
+            return null;
+        }
+
+        $paths = $this->pair($path);
+
+        if ($subject->getAttribute('og_image_path') === $path && $this->drawn($paths)) {
+            return $paths;
+        }
+
+        return Cache::lock('og-draw:'.$path, self::LOCK_SECONDS)->block(self::LOCK_WAIT_SECONDS, function () use ($subject, $path, $paths): ?array {
+            $current = $subject::query()->withoutGlobalScopes()->whereKey($subject->getKey())->toBase()->value('og_image_path');
+
+            if ($current === $path && $this->drawn($paths)) {
+                $subject->setAttribute('og_image_path', $path);
+
+                return $paths;
+            }
+
+            return $this->store($subject, $paths, is_string($current) ? $current : null);
+        });
+    }
+
+    /**
+     * @return array{landscape: string, square: string}
+     */
+    private function ensureSite(): array
+    {
+        $paths = $this->pair($this->path(self::SITE, $this->siteSpec()));
+
+        if ($this->drawn($paths)) {
+            return $paths;
+        }
+
+        return Cache::lock('og-draw:'.$paths[OgImageCanvas::LANDSCAPE], self::LOCK_SECONDS)->block(self::LOCK_WAIT_SECONDS, function () use ($paths): array {
+            if (! $this->drawn($paths)) {
+                foreach ($paths as $format => $path) {
+                    $this->put($path, $this->drawFormat('site', $format));
+                }
+            }
+
+            return $paths;
+        });
+    }
+
+    /**
+     * @param  array{landscape: string, square: string}  $paths
+     * @return array{landscape: string, square: string}|null
+     */
+    private function store(Vehicle|User $subject, array $paths, ?string $previous): ?array
+    {
+        foreach ($paths as $format => $path) {
+            $this->put($path, $this->drawFormat($subject, $format));
+        }
+
+        // Hidden while this was drawing: the purge of that request found nothing yet, so this one has to clean up.
+        $fresh = $subject->fresh($subject instanceof Vehicle ? self::VEHICLE_RELATIONS : self::MEMBER_RELATIONS);
+
+        if ($fresh === null || $this->spec($fresh) === null) {
+            $this->disk()->delete(array_values($paths));
+
+            return null;
+        }
+
+        $subject::query()->withoutGlobalScopes()->whereKey($subject->getKey())->toBase()->update(['og_image_path' => $paths[OgImageCanvas::LANDSCAPE]]);
+        $subject->setAttribute('og_image_path', $paths[OgImageCanvas::LANDSCAPE]);
+
+        if ($previous !== null && $previous !== $paths[OgImageCanvas::LANDSCAPE]) {
+            $this->disk()->delete(array_values($this->pair($previous)));
+        }
+
+        return $paths;
+    }
+
+    private function put(string $path, string $jpeg): void
+    {
+        $this->disk()->put($path, $jpeg, ['visibility' => 'public', 'CacheControl' => 'public, max-age=31536000, immutable']);
+    }
+
+    /**
+     * @param  array{landscape: string, square: string}  $paths
+     */
+    private function drawn(array $paths): bool
+    {
+        return $this->disk()->exists($paths[OgImageCanvas::LANDSCAPE]) && $this->disk()->exists($paths[OgImageCanvas::SQUARE]);
+    }
+
+    /**
+     * Removes the files at once. The next read of a page that is still public names them again, and their route draws them.
      */
     public function purge(Vehicle|User $subject): void
     {
@@ -191,7 +388,7 @@ class OgImages
         }
 
         try {
-            $this->disk()->delete($path);
+            $this->disk()->delete(array_values($this->pair($path)));
             $subject::query()->withoutGlobalScopes()->whereKey($subject->getKey())->toBase()->update(['og_image_path' => null]);
             $subject->setAttribute('og_image_path', null);
         } catch (Throwable $exception) {
@@ -233,20 +430,29 @@ class OgImages
 
     /**
      * One query per table for the paths in use, then the files are compared in memory: a query per file would scan the table once
-     * for every file, since nothing filters on og_image_path otherwise.
+     * for every file, since nothing filters on og_image_path otherwise. The square lies beside its landscape file; the brand card keeps
+     * only its current pair.
      */
     private function removeOrphans(): int
     {
         $disk = $this->disk();
         $removed = 0;
         $cutoff = now()->getTimestamp() - self::ORPHAN_AGE_SECONDS;
+        $site = array_flip(array_values($this->pair($this->path(self::SITE, $this->siteSpec()))));
 
-        foreach ([self::VEHICLES => Vehicle::class, self::MEMBERS => User::class] as $directory => $model) {
+        foreach ([self::VEHICLES => Vehicle::class, self::MEMBERS => User::class, self::SITE => null] as $directory => $model) {
+            $inUse = $site;
+
             // Read before the files are listed: a file whose row is written later is younger than the cutoff.
-            $inUse = array_flip(array_filter(
-                $model::query()->withoutGlobalScopes()->whereNotNull('og_image_path')->toBase()->pluck('og_image_path')->all(),
-                is_string(...),
-            ));
+            if ($model !== null) {
+                $inUse = [];
+
+                foreach ($model::query()->withoutGlobalScopes()->whereNotNull('og_image_path')->toBase()->pluck('og_image_path') as $path) {
+                    if (is_string($path)) {
+                        $inUse += array_flip(array_values($this->pair($path)));
+                    }
+                }
+            }
 
             foreach ($disk->files($directory) as $file) {
                 if (! isset($inUse[$file]) && $disk->lastModified($file) < $cutoff) {
@@ -261,56 +467,39 @@ class OgImages
 
     /**
      * @param  array<string, mixed>  $spec
-     * @param  callable(): string  $draw
-     * @param  callable(): bool  $stillPublic
      */
-    private function stored(Vehicle|User $subject, string $directory, array $spec, callable $draw, callable $stillPublic): string
+    private function path(string $directory, array $spec): string
     {
-        $path = $this->path($directory, $spec);
-        $current = $subject->getAttribute('og_image_path');
-
-        if ($current === $path) {
-            return $this->url($path);
-        }
-
-        $disk = $this->disk();
-        $disk->put($path, $draw(), ['visibility' => 'public', 'CacheControl' => 'public, max-age=31536000, immutable']);
-
-        // Hidden while this was drawing: the purge of that request found nothing yet, so this one has to clean up.
-        if (! $stillPublic()) {
-            $disk->delete($path);
-
-            return $this->defaultUrl();
-        }
-
-        $subject::query()->withoutGlobalScopes()->whereKey($subject->getKey())->toBase()->update(['og_image_path' => $path]);
-        $subject->setAttribute('og_image_path', $path);
-
-        if (is_string($current) && $current !== $path) {
-            $disk->delete($current);
-        }
-
-        return $this->url($path);
+        return $directory.'/'.$this->hash($spec).'.jpg';
     }
 
     /**
      * @param  array<string, mixed>  $spec
      */
-    private function path(string $directory, array $spec): string
+    private function hash(array $spec): string
     {
-        $hash = hash_hmac('sha256', (string) json_encode(['v' => self::VERSION, ...$spec]), config()->string('app.key'));
-
-        return $directory.'/'.substr($hash, 0, 40).'.jpg';
+        return substr(hash_hmac('sha256', (string) json_encode(['v' => self::VERSION, ...$spec]), config()->string('app.key')), 0, 40);
     }
 
     /**
-     * As media: local disks answer on the host of the request.
+     * @return array{landscape: string, square: string}
      */
-    private function url(string $path): string
+    private function pair(string $landscape): array
     {
-        $disk = config()->string('speedclub.media.disk');
+        return [OgImageCanvas::LANDSCAPE => $landscape, OgImageCanvas::SQUARE => substr($landscape, 0, -4).'-square.jpg'];
+    }
 
-        return config('filesystems.disks.'.$disk.'.driver') === 'local' ? url('storage/'.$path) : Storage::disk($disk)->url($path);
+    private function hashOf(string $path): string
+    {
+        return substr(basename($path, '.jpg'), 0, self::URL_HASH);
+    }
+
+    /**
+     * "https://speedclub.de/og/v/nissan-skyline-gt-r-r34-5tf974vj-3f9c…-square.jpg"
+     */
+    private function address(string $base, string $hash, string $format): string
+    {
+        return PublicUrl::absolute($base.'-'.substr($hash, 0, self::URL_HASH).($format === OgImageCanvas::SQUARE ? '-square' : '').'.jpg');
     }
 
     private function disk(): Filesystem
@@ -352,8 +541,10 @@ class OgImages
             ...($blurred instanceof \DateTimeInterface ? ['blurred' => $blurred->getTimestamp()] : []),
             'focal' => [$photo->getAttribute('focal_x'), $photo->getAttribute('focal_y')],
             'eyebrow' => $this->presenter->eyebrow($vehicle),
-            'title' => $this->presenter->title($vehicle),
-            'specs' => $this->specLine($vehicle),
+            'title' => $this->vehicleTitle($vehicle),
+            'specs' => $this->cardSpecs($vehicle),
+            'handle' => $this->handle($vehicle),
+            'qr' => $vehicle->activeQrCode?->code,
         ];
     }
 
@@ -372,7 +563,19 @@ class OgImages
             'name' => $member->getAttribute('display_name') ?? $member->username,
             'username' => $member->username,
             'city' => $member->getAttribute('city'),
+            'builds' => $this->builds($member),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function siteSpec(): array
+    {
+        $photo = PublicPhoto::brand(self::SITE_PHOTO);
+        $largest = end($photo['variants']);
+
+        return ['site' => self::SITE_PHOTO, 'file' => $largest === false ? null : $largest['path'], 'line' => self::SITE_LINE];
     }
 
     private function usable(?Media $media): ?Media
@@ -381,35 +584,89 @@ class OgImages
     }
 
     /**
-     * "500 PS · 540 Nm · 2002 · AWD"
+     * What WEB-02 lists: the member's published public builds.
      */
-    private function specLine(Vehicle $vehicle): string
+    private function builds(User $member): int
     {
-        $parts = [];
+        return $member->vehicles()->where('status', VehicleStatus::Published)->where('visibility', Visibility::Public)->count();
+    }
+
+    private function vehicleTitle(Vehicle $vehicle): string
+    {
+        $title = $this->presenter->title($vehicle);
+
+        return $title !== '' ? $title : $this->presenter->fullTitle($vehicle);
+    }
+
+    /**
+     * ADR-148 a: the handle only when the owner shows themselves on the pages a link or a code leads to.
+     */
+    private function handle(Vehicle $vehicle): ?string
+    {
+        $owner = $vehicle->owner;
+
+        return $owner !== null && $owner->getAttribute('show_owner_on_qr') !== false && is_string($owner->username) ? '@'.$owner->username : null;
+    }
+
+    /**
+     * The first three entered of the strip: Leistung and Drehmoment first, then Baujahr and Antrieb.
+     *
+     * @return list<array{value: string, unit: string|null, label: string}>
+     */
+    public function cardSpecs(Vehicle $vehicle): array
+    {
+        $specs = [];
+        $labels = ['power' => 'garage.spec.power', 'torque' => 'garage.spec.torque', 'model_year' => 'garage.spec.model_year', 'drivetrain' => 'garage.spec.drivetrain'];
 
         foreach ($this->presenter->specStrip($vehicle, PowerDisplay::PsKw, 'de') as $entry) {
-            if ($entry['value'] !== null) {
-                $parts[] = trim($entry['value'].' '.$entry['unit']);
+            if ($entry['value'] !== null && count($specs) < 3) {
+                $specs[] = [
+                    'value' => $entry['value'],
+                    'unit' => in_array($entry['key'], ['power', 'torque'], true) ? $entry['unit'] : null,
+                    'label' => (string) __($labels[$entry['key']] ?? 'garage.spec.'.$entry['key'], [], 'de'),
+                ];
             }
         }
 
-        return implode(' · ', $parts);
+        return $specs;
     }
 
-    private function drawVehicle(Vehicle $vehicle, Media $photo): string
+    private function drawFormat(Vehicle|User|string $subject, string $format): string
     {
-        return $this->canvas->vehicle(
-            $this->media->largestVariant($photo) ?? throw new \RuntimeException('A ready photo has no variant.'),
-            $this->floatOrNull($photo->getAttribute('focal_x')),
-            $this->floatOrNull($photo->getAttribute('focal_y')),
-            // OgImageCanvas skips a line with nothing left to draw.
-            $this->presenter->eyebrow($vehicle),
-            $this->presenter->title($vehicle),
-            $this->specLine($vehicle),
-        );
+        if ($subject instanceof Vehicle) {
+            $photo = $this->vehiclePhoto($subject) ?? throw new \RuntimeException('A vehicle card needs a photo.');
+            $qr = $subject->activeQrCode;
+
+            return $this->canvas->vehicle(
+                $this->media->largestVariant($photo) ?? throw new \RuntimeException('A ready photo has no variant.'),
+                $this->floatOrNull($photo->getAttribute('focal_x')),
+                $this->floatOrNull($photo->getAttribute('focal_y')),
+                // OgImageCanvas skips a line with nothing left to draw.
+                $this->presenter->eyebrow($subject),
+                $this->vehicleTitle($subject),
+                $this->cardSpecs($subject),
+                $this->handle($subject),
+                $qr === null ? null : $this->renderer->png($this->codes->payload($qr), $format === OgImageCanvas::SQUARE ? 152 : 112),
+                $format,
+            );
+        }
+
+        if ($subject instanceof User) {
+            return $this->drawMember($subject, $format);
+        }
+
+        $photo = PublicPhoto::brand(self::SITE_PHOTO);
+        $largest = end($photo['variants']);
+        $bytes = $largest === false ? false : @file_get_contents(public_path($largest['path']));
+
+        if ($bytes === false) {
+            throw new \RuntimeException('The brand photo of the default card is missing.');
+        }
+
+        return $this->canvas->site($bytes, $photo['focal_x'], $photo['focal_y'], self::SITE_LINE, $format);
     }
 
-    private function drawMember(User $member): string
+    private function drawMember(User $member, string $format): string
     {
         $cover = $this->usable($member->cover);
         $avatar = $this->usable($member->avatar);
@@ -426,6 +683,8 @@ class OgImages
             $drawable !== '' ? $drawable : (string) $member->username,
             '@'.$member->username,
             is_string($city) ? $city : null,
+            $this->builds($member),
+            $format,
         );
     }
 

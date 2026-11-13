@@ -89,6 +89,14 @@ class VehicleCardResource extends JsonResource
             'photo_count' => $this->photosFor($viewer)->count(),
             /** @var int */
             'mod_count' => $vehicle->getAttribute('modifications_count') ?? $vehicle->modifications()->count(),
+            /**
+             * M4.9: the owner's own count of Verlauf entries (hidden ones included); null for anybody else, so no number reaches others.
+             *
+             * @var int|null
+             */
+            'updates_count' => $this->ownerUpdatesCount($vehicle, $viewer),
+            /** Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            'is_sample' => $vehicle->getAttribute('is_sample') === true,
             /** @var string|null */
             'published_at' => $vehicle->getAttribute('published_at')?->toIso8601String(),
             'updated_at' => $vehicle->updated_at?->toIso8601String(),
@@ -135,5 +143,20 @@ class VehicleCardResource extends JsonResource
         $cover = $this->resource->cover;
 
         return $cover !== null && app(VehiclePresenter::class)->photoVisibleTo($cover, $this->resource->isOwnedBy($viewer)) ? $cover : $this->photosFor($viewer)->first();
+    }
+
+    /**
+     * M4.9: the owner's Verlauf count (loaded with withCount('buildUpdates') for lists); null for anybody else. PublicVehicleResource has
+     * its own public count under the same key and skips this.
+     */
+    protected function ownerUpdatesCount(Vehicle $vehicle, ?User $viewer): ?int
+    {
+        if (! $vehicle->isOwnedBy($viewer)) {
+            return null;
+        }
+
+        $loaded = $vehicle->getAttribute('build_updates_count');
+
+        return is_numeric($loaded) ? (int) $loaded : $vehicle->buildUpdates()->count();
     }
 }

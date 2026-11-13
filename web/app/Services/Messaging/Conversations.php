@@ -11,6 +11,7 @@ use App\Models\Message;
 use App\Models\User;
 use App\Services\Discover\MemberNameFilter;
 use App\Services\Search\SearchTerms;
+use App\Services\Showcase\SampleContent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\JoinClause;
@@ -114,6 +115,9 @@ class Conversations
             ->whereNotExists(fn (QueryBuilder $blocks) => $blocks->selectRaw('1')->from('blocks')
                 ->where(fn (QueryBuilder $pair) => $pair->whereColumn('blocks.blocker_id', 'p.user_id')->whereColumn('blocks.blocked_id', 'o.user_id'))
                 ->orWhere(fn (QueryBuilder $pair) => $pair->whereColumn('blocks.blocker_id', 'o.user_id')->whereColumn('blocks.blocked_id', 'p.user_id')))
+            // 09 §8.19: threads with a sample member leave the inbox while editorial_samples is off (they come back with it).
+            ->when(! app(SampleContent::class)->visible(), fn (Builder $hidden) => $hidden->whereNotExists(fn (QueryBuilder $samples) => $samples
+                ->selectRaw('1')->from('users as su')->whereColumn('su.id', 'o.user_id')->where('su.is_sample', true)))
             ->select('p.*')
             ->addSelect(['o.user_id as other_user_id'])
             ->selectSub($this->previewIdQuery(), 'preview_id');

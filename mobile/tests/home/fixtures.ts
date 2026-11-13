@@ -12,6 +12,7 @@ export function feedVehicle(overrides: Partial<FeedVehicle> = {}): FeedVehicle {
     status: 'published',
     visibility: 'public',
     is_main: true,
+    is_sample: false,
     eyebrow: 'NISSAN',
     make: 'Nissan',
     model: 'Skyline GT-R',
@@ -35,6 +36,7 @@ export function feedVehicle(overrides: Partial<FeedVehicle> = {}): FeedVehicle {
       width: 1600,
       height: 1200,
       blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
+      thumbhash: null,
       focal_x: 0.5,
       focal_y: 0.6,
       alt: null,
@@ -44,12 +46,14 @@ export function feedVehicle(overrides: Partial<FeedVehicle> = {}): FeedVehicle {
     },
     photo_count: 6,
     mod_count: 9,
+    updates_count: null,
+    viewer: null,
     published_at: '2026-03-01T10:00:00+00:00',
     updated_at: '2026-11-04T09:00:00+00:00',
     wizard: null,
     completeness: null,
     qr: null,
-    owner: { username: 'kenji.r34', display_name: 'Kenji Tanaka', city: 'Düsseldorf', avatar: null },
+    owner: { username: 'kenji.r34', display_name: 'Kenji Tanaka', city: 'Düsseldorf', avatar: null, is_sample: false, is_editorial: false },
     latest_update: {
       id: 'update-1',
       type_label: 'Modifikation hinzugefügt',
@@ -91,7 +95,7 @@ export const GTI = feedVehicle({
   latest_update: null,
 });
 
-export const FEATURED: FeaturedBuild[] = [{ source: 'editorial', vehicle: GTI }];
+export const FEATURED: FeaturedBuild[] = [{ source: 'editorial', vehicle: GTI, quote: null }];
 
 export const MAKES: MakeTile[] = [
   { id: 1, name: 'BMW', slug: 'bmw', vehicle_count: 12 },
@@ -103,6 +107,8 @@ export const KENJI: SearchMember = {
   display_name: 'Kenji Tanaka',
   city: 'Düsseldorf',
   avatar: null,
+  is_sample: false,
+  is_editorial: false,
   garage: { vehicles: 4, makes: ['Nissan', 'Toyota'], line: '4 Fahrzeuge · Nissan, Toyota' },
   is_self: false,
   is_following: false,
@@ -129,15 +135,18 @@ export function buildUpdate(overrides: Partial<BuildUpdateRowData> = {}): BuildU
   return {
     id: 'update-kw',
     vehicle: M4,
+    type: 'mod_changed',
     type_label: 'Fahrwerk geändert',
     summary: 'Serie → KW V3 · −35 mm',
     created_at: '2026-11-07T18:00:00+00:00',
+    media: [],
+    viewer: null,
     ...overrides,
   };
 }
 
 export function activeMember(overrides: Partial<ActiveMember> = {}): ActiveMember {
-  return { username: 'jann.ptrs', display_name: 'Jann Peters', city: 'Hamburg', avatar: null, car_line: 'BMW M4 Competition', car_short: null, is_following: false, ...overrides };
+  return { username: 'jann.ptrs', display_name: 'Jann Peters', city: 'Hamburg', avatar: null, is_sample: false, is_editorial: false, car_line: 'BMW M4 Competition', car_short: null, is_following: false, ...overrides };
 }
 
 export const MODS: PopularMod[] = [
@@ -147,6 +156,9 @@ export const MODS: PopularMod[] = [
 
 export function modules(overrides: Partial<HomeModules> = {}): HomeModules {
   return {
+    build_of_week: null,
+    nearby_events: [],
+    brands_in_focus: [],
     build_updates: [buildUpdate()],
     active_members: [activeMember()],
     popular_mods: MODS,
@@ -166,9 +178,10 @@ export function notification(overrides: Partial<AppNotification> = {}): AppNotif
     id: 'n-1',
     type: 'new_follower',
     group_key: 'new_follower:2026-11-08',
-    actors: [{ username: 'lukas.sc', display_name: 'Lukas Scholz', city: 'Stuttgart', avatar: null }],
+    actors: [{ username: 'lukas.sc', display_name: 'Lukas Scholz', city: 'Stuttgart', avatar: null, is_sample: false, is_editorial: false, main_vehicle_cover: null }],
     actor_count: 1,
     vehicle: null,
+    event: null,
     details: {},
     read_at: null,
     created_at: '2026-11-08T09:00:00+00:00',

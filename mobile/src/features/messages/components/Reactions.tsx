@@ -3,23 +3,25 @@ import { View } from 'react-native';
 
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, space, typography } from '@/theme';
-import { PressableScale, Text } from '@/ui';
+import { Icon, PressableScale, Text, type IconName } from '@/ui';
 
 import { REACTION_KEYS, type MessageReaction, type ReactionKey } from '../model';
 
 /**
- * [SIG] `sig.msg_reactions`: six fixed reactions (02 §3.6). They are the message's content, drawn as the characters the spec
- * names, since Phosphor has no faces for "laugh" and "wow" and a mixed set would read worse than one consistent set; every one
- * carries its spoken name. The chrome around them stays Phosphor.
+ * [SIG] `sig.msg_reactions` without emoji (09 §7.8, skill §5, M4.11 carry-over): every reaction is a glyph from the icon map, with
+ * its spoken name. 09 §7.8 asks for "Gefällt mir" (Phosphor Heart) + Stark · Sauber · Tief · Laut (the build reaction glyphs); the
+ * API still takes the six v1 keys only (lane B gap: add `stark`, `sauber`, `tief`, `laut` to `MessageReaction`). Until then the
+ * picker offers the v1 keys that have a fitting glyph (Herz, Daumen hoch, Zielflagge); a v1 reaction without one (Feuer, Lachen,
+ * Staunen: an emoji face or a banned glyph) still shows on a message as its word, never as an emoji.
  */
-export const REACTION_GLYPH: Record<ReactionKey, string> = {
-  thumbs_up: '👍', // i18n-ignore
-  heart: '❤️', // i18n-ignore
-  fire: '🔥', // i18n-ignore
-  laugh: '😂', // i18n-ignore
-  wow: '😮', // i18n-ignore
-  flag: '🏁', // i18n-ignore
+export const REACTION_GLYPH: Partial<Record<ReactionKey, IconName>> = {
+  heart: 'heart',
+  thumbs_up: 'thumbs-up',
+  flag: 'flag-checkered',
 };
+
+/** The picker's reactions in 09 §7.8 order: "Gefällt mir" first. */
+export const PICKER_KEYS: readonly ReactionKey[] = (['heart', 'thumbs_up', 'flag'] as const).filter((key) => REACTION_KEYS.includes(key));
 
 /** Caption line, 2 above and below, the 1 border: the hit area grows from here to 44. */
 const CHIP_HEIGHT = typography.caption.lineHeight + space[2] * 2 + size.border.control * 2;
@@ -78,9 +80,7 @@ export function ReactionChips({ reactions, onToggle, testID }: ReactionChipsProp
               contentStyle={[styles.chip, reaction.mine ? styles.chipMine : null]}
               testID={`${testID}.${reaction.key}`}
             >
-              <Text variant="caption" aria-hidden>
-                {REACTION_GLYPH[reaction.key]}
-              </Text>
+              <ReactionGlyph reactionKey={reaction.key} size={16} label={name} />
               {reaction.count > 1 ? (
                 <Text variant="caption" color="text.secondary" aria-hidden>
                   {format.number(reaction.count)}
@@ -106,7 +106,7 @@ export function ReactionPicker({ mine, onPick, testID }: ReactionPickerProps) {
   const styles = useStyles();
   return (
     <View style={styles.picker} role="toolbar" aria-label={t('actions.react')} testID={testID}>
-      {REACTION_KEYS.map((key) => (
+      {PICKER_KEYS.map((key) => (
         <PressableScale
           key={key}
           role="button"
@@ -116,11 +116,26 @@ export function ReactionPicker({ mine, onPick, testID }: ReactionPickerProps) {
           contentStyle={[styles.pick, key === mine ? styles.pickMine : null]}
           testID={`${testID}.${key}`}
         >
-          <Text variant="titleM" aria-hidden>
-            {REACTION_GLYPH[key]}
-          </Text>
+          <ReactionGlyph reactionKey={key} size={24} label={t(`reactions.${key}`)} />
         </PressableScale>
       ))}
     </View>
+  );
+}
+
+/** The glyph of a reaction, or its word where it has none (a v1 key from before 2.0). Hidden from readers: the control names it. */
+function ReactionGlyph({ reactionKey, size: glyphSize, label }: { reactionKey: ReactionKey; size: 16 | 24; label: string }) {
+  const glyph = REACTION_GLYPH[reactionKey];
+  if (glyph) {
+    return (
+      <View aria-hidden>
+        <Icon name={glyph} size={glyphSize} weight={reactionKey === 'heart' ? 'fill' : 'regular'} color="text.primary" />
+      </View>
+    );
+  }
+  return (
+    <Text variant="caption" aria-hidden numberOfLines={1} hyphenate={false}>
+      {label}
+    </Text>
   );
 }

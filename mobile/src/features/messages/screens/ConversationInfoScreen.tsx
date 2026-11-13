@@ -129,7 +129,7 @@ export function ConversationInfoScreen({ onReport }: ConversationInfoScreenProps
             <SkeletonBlock width={size.avatar.md} height={size.avatar.md} corner="full" />
             <View style={styles.skeletonText}>
               <SkeletonText variant="bodyStrong" width="50%" />
-              <SkeletonText variant="supporting" width="30%" />
+              <SkeletonText variant="callout" width="30%" />
             </View>
           </View>
         </View>

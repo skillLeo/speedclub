@@ -112,15 +112,15 @@ const composerOpen = ref(qaDialog() === 'decide');
                 </DataTable>
             </div>
 
-            <section v-if="sel !== null || (pageState === 'ready' && rows.data.length > 0)" class="flex min-w-0 grow flex-col gap-20" :class="sel === null ? '' : 'rounded-md border border-line-subtle bg-surface px-20 py-20'" :aria-label="trans('moderation.messages.title')" data-testid="ADM-22.detail">
+            <section v-if="sel !== null || (pageState === 'ready' && rows.data.length > 0)" class="flex min-w-0 grow flex-col gap-20" :class="sel === null ? '' : 'rounded-sm border border-line-subtle bg-surface px-20 py-20'" :aria-label="trans('moderation.messages.title')" data-testid="ADM-22.detail">
                 <EmptyQueue v-if="sel === null || pageState !== 'ready'" variant="quiet" :icon="PhChatsCircle" :title="trans('moderation.messages.select')" :body="trans('moderation.messages.select_body')" data-testid="ADM-22.none" />
                 <template v-else>
                     <header class="flex flex-wrap items-start justify-between gap-12">
                         <div class="flex min-w-0 flex-col gap-4">
-                            <h2 class="sc-key text-title-s text-ink" data-testid="ADM-22.participants">
+                            <h2 class="sc-key text-headline text-ink" data-testid="ADM-22.participants">
                                 {{ trans('moderation.messages.participants', { reported: (sel.case.target_label ?? '').replace(/^@/, '') || '–', reporter: reporter ?? '–' }) }}
                             </h2>
-                            <p class="flex flex-wrap items-center gap-8 text-supporting text-ink-2 tabular-nums">
+                            <p class="flex flex-wrap items-center gap-8 text-admin-base text-ink-2 tabular-nums">
                                 <StatusPill :tone="statusTones[sel.case.status]" :label="trans(`moderation.status.${sel.case.status}`)" />
                                 <span>{{ trans('moderation.case.title', { reference: sel.case.reference }) }}</span>
                                 <span v-if="reporter">{{ trans('moderation.messages.reported_by', { reporter }) }}</span>
@@ -128,7 +128,7 @@ const composerOpen = ref(qaDialog() === 'decide');
                             </p>
                         </div>
                         <div class="flex flex-wrap items-center gap-8">
-                            <Link :href="caseHref(sel.case.id)" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 rounded-xs text-label-s text-ink hover:underline']">{{ trans('moderation.messages.open_case') }}<PhArrowSquareOut :size="16" aria-hidden="true" /></Link>
+                            <Link :href="caseHref(sel.case.id)" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 rounded-xs text-admin-base-strong text-ink hover:underline']">{{ trans('moderation.messages.open_case') }}<PhArrowSquareOut :size="16" aria-hidden="true" /></Link>
                             <Button v-if="canDecide" size="sm" variant="primary" :icon="PhGavel" data-testid="ADM-22.decide" @click="composerOpen = true">{{ trans('moderation.case.actions.decide') }}</Button>
                         </div>
                     </header>
@@ -136,7 +136,7 @@ const composerOpen = ref(qaDialog() === 'decide');
                     <ul class="flex flex-col" data-testid="ADM-22.reports">
                         <li v-for="r in sel.reports" :key="r.id" class="flex flex-col gap-4 border-t border-line-subtle py-8 first:border-t-0 first:pt-0">
                             <p class="text-caption text-ink-3 tabular-nums">{{ [reasonText(r.reason, r.sub_reason), formatDateTime(r.created_at), r.reporter ? `@${r.reporter.username}` : null].filter(Boolean).join(' · ') }}</p>
-                            <p v-if="r.details" class="whitespace-pre-line text-supporting text-ink">{{ r.details }}</p>
+                            <p v-if="r.details" class="whitespace-pre-line text-admin-base text-ink">{{ r.details }}</p>
                         </li>
                     </ul>
 
@@ -144,7 +144,7 @@ const composerOpen = ref(qaDialog() === 'decide');
 
                     <div v-if="sel.decision" class="flex flex-wrap items-center gap-8 border-t border-line-subtle pt-16" data-testid="ADM-22.decision">
                         <StatusPill :tone="outcomeTones[sel.decision.action]" :label="trans(`moderation.outcomes.${sel.decision.action}`)" />
-                        <span class="text-supporting text-ink-2 tabular-nums">{{ sel.decision.decided_by ? trans('moderation.case.decision.by', { name: sel.decision.decided_by.name, date: formatDateTime(sel.decision.decided_at) }) : trans('moderation.case.decision.by_system', { date: formatDateTime(sel.decision.decided_at) }) }}</span>
+                        <span class="text-admin-base text-ink-2 tabular-nums">{{ sel.decision.decided_by ? trans('moderation.case.decision.by', { name: sel.decision.decided_by.name, date: formatDateTime(sel.decision.decided_at) }) : trans('moderation.case.decision.by_system', { date: formatDateTime(sel.decision.decided_at) }) }}</span>
                     </div>
                 </template>
             </section>

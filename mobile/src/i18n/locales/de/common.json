@@ -51,7 +51,7 @@
     },
     "a11y": {
         "photoCounter": "Foto {{current}} von {{total}}",
-        "unreadCount": "{{count}} ungelesen",
+        "unreadCount": "{{count}} ungelesen",
         "sheetGrabber": "Ziehen, um die Größe zu ändern",
         "imageViewer": "Bildansicht",
         "mainVehicle": "Hauptfahrzeug",
@@ -62,7 +62,13 @@
         "mainVehicle": "Hauptfahrzeug",
         "installed": "Verbaut",
         "planned": "Geplant",
-        "removed": "Entfernt"
+        "removed": "Ausgebaut",
+        "sample": "Beispiel",
+        "editorial": "Editorial",
+        "verified": "Verifiziert",
+        "business": "Betrieb",
+        "founding": "Gründungsmitglied",
+        "dyno": "Prüfstand"
     },
     "auth": {
         "signIn": "Anmelden",
@@ -159,8 +165,8 @@
                     "tabs": "Bereiche"
                 },
                 "empty": "Nichts gefunden für „{{query}}“",
-                "results_one": "{{count}} Treffer",
-                "results_other": "{{count}} Treffer",
+                "results_one": "{{count}} Treffer",
+                "results_other": "{{count}} Treffer",
                 "hint": "Pfeiltasten wählen, Enter öffnet, Esc schließt.",
                 "settings": "Einstellungen"
             }
@@ -180,17 +186,24 @@
         "errors": {
             "refused": "Dazu können wir keinen Vorschlag machen.",
             "unverifiable": "Der Vorschlag ließ sich nicht mit deinen Angaben belegen, deshalb zeigen wir ihn nicht.",
-            "unavailable": "KI-Vorschläge sind gerade nicht erreichbar. Versuch es später noch einmal.",
-            "budget": "Für heute sind keine KI-Vorschläge mehr möglich. Morgen geht es wieder.",
-            "optIn": "Schalte zuerst „KI-Vorschläge“ unter Privatsphäre & Kontakt ein.",
+            "unavailable": "KI-⁠Vorschläge sind gerade nicht erreichbar. Versuch es später noch einmal.",
+            "budget": "Für heute sind keine KI-⁠Vorschläge mehr möglich. Morgen geht es wieder.",
+            "optIn": "Schalte zuerst „KI-⁠Vorschläge“ unter Privatsphäre & Kontakt ein.",
             "disabled": "Diese Funktion ist gerade nicht verfügbar.",
             "rateLimited": "Du hast gerade viele Vorschläge angefragt. Versuch es in einer Weile noch einmal.",
             "network": "Keine Verbindung. Versuch es noch einmal, sobald du online bist.",
             "processing": "Das Foto wird noch verarbeitet. Versuch es gleich noch einmal.",
             "failed": "Das hat gerade nicht geklappt. Versuch es gleich noch einmal.",
-            "emailNotVerified": "Für KI-Funktionen brauchst du eine bestätigte E-Mail-Adresse.",
-            "dailyLimit": "Dein Tageskontingent für diese KI-Funktion ist aufgebraucht. Morgen geht es wieder."
+            "emailNotVerified": "Für KI-⁠Funktionen brauchst du eine bestätigte E-⁠Mail-Adresse.",
+            "dailyLimit": "Dein Tageskontingent für diese KI-⁠Funktion ist aufgebraucht. Morgen geht es wieder."
         },
-        "verifyEmail": "E-Mail-Adresse bestätigen"
+        "verifyEmail": "E-⁠Mail-Adresse bestätigen"
+    },
+    "mediaCard": {
+        "more": "mehr"
+    },
+    "buildSheet": {
+        "expand": "Details zu {{name}} anzeigen",
+        "collapse": "Details zu {{name}} ausblenden"
     }
 }

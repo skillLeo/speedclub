@@ -7,6 +7,7 @@ use App\Enums\ModerationStatus;
 use App\Models\Media;
 use App\Models\User;
 use App\Services\Auth\MemberStats;
+use App\Services\Showcase\SampleContent;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -40,8 +41,14 @@ class MemberPublicResource extends JsonResource
             'cover' => $cover === null ? null : new MediaResource($cover),
             /** @var string */
             'member_since' => $member->created_at?->toIso8601String(),
-            /** @var array{vehicles: int, followers: int, following: int} */
-            'stats' => app(MemberStats::class)->for($member, asOwner: false),
+            /**
+             * Each count is null for a sample member (09 §8.19: counts on samples are hidden).
+             */
+            'stats' => SampleContent::stats($member, app(MemberStats::class)->for($member, asOwner: false)),
+            /** Sample content (09 §8.19): the "Beispiel" badge. */
+            'is_sample' => $member->getAttribute('is_sample') === true,
+            /** The SPEED CLUB Editorial account: the "Editorial" badge. */
+            'is_editorial' => $member->getAttribute('is_editorial') === true,
         ];
     }
 

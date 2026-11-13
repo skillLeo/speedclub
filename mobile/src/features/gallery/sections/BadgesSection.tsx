@@ -6,11 +6,11 @@ import { TAB_DESTINATIONS, type TabName } from '@/features/shell/destinations';
 import { useRailWidth } from '@/features/shell/Rail';
 import { tabLabelCap } from '@/features/shell/TabBar';
 import { TabButton, type TabButtonVariant } from '@/features/shell/TabButton';
-import { createStyles, useBreakpoint } from '@/theme';
-import { Photo, Progress, SpecChip, StatusPill, UnreadBadge } from '@/ui';
+import { createStyles, radius, size, useBreakpoint } from '@/theme';
+import { Badge, GridTile, MemberRow, Photo, Progress, SampleBadges, SpecChip, StatusPill, UnreadBadge, VehicleCard, type BadgeKind } from '@/ui';
 import { ForcedVisualStateProvider, type ForcedVisualState } from '@/ui/qaVisualState';
 
-import { PHOTOS } from '../data';
+import { E46, LUKAS, noop, PHOTOS, R34 } from '../data';
 import { FullBleed, Group, SectionScreen, Specimen, Wrap } from '../parts';
 
 const useStyles = createStyles((t) => ({
@@ -69,11 +69,76 @@ function TabBadgeSpecimen({ variant, count, focusedTab }: { variant: TabButtonVa
   );
 }
 
+const BADGE_KINDS: readonly { kind: BadgeKind; label: string }[] = [
+  { kind: 'sample', label: 'Beispiel' },
+  { kind: 'editorial', label: 'Editorial' },
+  { kind: 'verified', label: 'Verifiziert' },
+  { kind: 'business', label: 'Betrieb' },
+  { kind: 'founding', label: 'Gründungsmitglied' },
+  { kind: 'dyno', label: 'Prüfstand' },
+];
+
+/** M4.2 / 09 §8.19: where the app draws sample content, it says so. Counts on samples come null and are not drawn. */
+function SampleSurfaces() {
+  const styles = useStyles();
+  return (
+    <Group title="Beispielinhalte" note="is_sample und is_editorial aus der API. Zähler sind bei Beispielen null und bleiben unsichtbar, nie 0.">
+      <Specimen label="Fahrzeugkarte · Beispiel und Hauptfahrzeug" fill>
+        <VehicleCard
+          title={R34.title}
+          subtitle={R34.subtitle}
+          photo={PHOTOS.r34}
+          specs={R34.specs}
+          isMain
+          sample={{ is_sample: true }}
+          onPress={noop}
+          testID="DEV-01.badges.sample.card"
+        />
+      </Specimen>
+      <Wrap>
+        <Specimen label="Ergebnis-Kachel" style={styles.tile}>
+          <GridTile title={E46.title} spec="343 PS · RWD" photo={PHOTOS.e46} sample={{ is_sample: true }} onPress={noop} testID="DEV-01.badges.sample.tile" />
+        </Specimen>
+      </Wrap>
+      <Specimen label="Mitglied · Editorial-Konto" fill>
+        <MemberRow
+          name="SPEED CLUB Editorial"
+          meta="@speedclub · Beispiel-Builds"
+          sample={{ is_sample: true, is_editorial: true }}
+          onPress={noop}
+          inset={0}
+          testID="DEV-01.badges.sample.member"
+        />
+      </Specimen>
+      <Specimen label={`Echtes Mitglied · ${LUKAS.name}, kein Badge`} fill>
+        <MemberRow name={LUKAS.name} meta={LUKAS.meta} sample={{ is_sample: false, is_editorial: false }} inset={0} testID="DEV-01.badges.sample.real" />
+      </Specimen>
+    </Group>
+  );
+}
+
 export function BadgesSection() {
   const styles = useStyles();
   return (
     <SectionScreen section="badges" focusableScroll>
-      <Group title="Spec-Chip" note="24 hoch, Radius 4, statisch.">
+      <Group title="Badge" note="Höhe 20, Radius 4, label.badge 11/14 600, Satzschreibung, auf Carbon und Schwarz surface-3, auf Hell border.subtle, Schrift text.secondary (ADR-431 d). Nie rot. Beispiel ist Pflicht auf Beispielinhalten, Editorial markiert das Konto der Beispiel-Builds, Verifiziert führt mit dem Haken.">
+        <Wrap>
+          {BADGE_KINDS.map(({ kind, label }) => (
+            <Specimen key={kind} label={label}>
+              <Badge kind={kind} testID={`DEV-01.badges.badge.${kind}`} />
+            </Specimen>
+          ))}
+        </Wrap>
+        <Specimen label="Auf dem Foto · onPhoto-Grund" fill>
+          <View style={styles.tile}>
+            <Photo aspect="4:3" corner="sm" {...PHOTOS.wheels} label="Mehrteilige Felge vor Bremssattel">
+              <SampleBadges flags={{ is_sample: true, is_editorial: true }} tone="onPhoto" style={styles.ring} testID="DEV-01.badges.badge.onPhoto" />
+            </Photo>
+          </View>
+        </Specimen>
+      </Group>
+      <SampleSurfaces />
+      <Group title="Spec-Chip" note={`${size.specChip} hoch, Radius ${radius.xs}, statisch.`}>
         <Wrap>
           <SpecChip label="500 PS" testID="DEV-01.badges.specChip" />
           <SpecChip label="540 Nm" />
@@ -82,15 +147,15 @@ export function BadgesSection() {
           <SpecChip label="6-Gang manuell" testID="DEV-01.badges.specChipHyphen" />
         </Wrap>
       </Group>
-      <Group title="Status-Pill" note="20 hoch, Radius 4, auch für den Rechtsstatus.">
+      <Group title="Statusanzeige" note={`${size.statusPill} hoch, Radius ${radius.xs}, auch für den Rechtsstatus.`}>
         <Wrap>
           <StatusPill label="Verbaut" testID="DEV-01.badges.status" />
           <StatusPill label="Geplant" />
-          <StatusPill label="Entfernt" />
+          <StatusPill label="Ausgebaut" />
           <StatusPill label="TÜV eingetragen" />
         </Wrap>
       </Group>
-      <Group title="Unread-Badge" note="Punkt 8 oder Pill 18, accent.fill mit weißem Text.">
+      <Group title="Ungelesen-Zähler" note={`Punkt ${size.unreadDot} oder Zähler ${size.unreadPill} hoch, accent.fill mit weißem Text.`}>
         <Wrap>
           <Specimen label="Punkt">
             <UnreadBadge label="Neue Benachrichtigungen" testID="DEV-01.badges.dot" />
@@ -106,7 +171,7 @@ export function BadgesSection() {
           </Specimen>
         </Wrap>
       </Group>
-      <Group title="Unread in der Navigation" note="Zähler auf Nachrichten, Punkt auf Start. Leiste und Rail am Icon, Sidebar am Zeilenende.">
+      <Group title="Ungelesen in der Navigation" note="Zähler auf Nachrichten, Punkt auf Start. Leiste und Rail am Icon, Sidebar am Zeilenende.">
         {BADGE_COUNTS.map((count) => (
           <Specimen key={count} label={`Leiste · ${count > 99 ? '99+' : count}`} fill>
             <BarSpecimen count={count} />
@@ -128,26 +193,26 @@ export function BadgesSection() {
           <BarSpecimen count={1} focusedTab="garage" />
         </Specimen>
       </Group>
-      <Group title="Fortschritt" note="2 hoch; Wizard mit vier Segmenten; Upload als Ring 20 auf der Kachel.">
-        <Specimen label="Balken · Build zu 70 % vollständig" fill>
-          <Progress label="Build zu 70 % vollständig" value={0.7} testID="DEV-01.badges.bar" />
+      <Group title="Fortschritt" note={`${size.progress.height} hoch; Wizard mit vier Segmenten; Upload als Ring ${size.progress.ring} auf der Kachel.`}>
+        <Specimen label={'Balken · Build zu 70\u00a0% vollständig'} fill>
+          <Progress label={'Build zu 70\u00a0% vollständig'} value={0.7} testID="DEV-01.badges.bar" />
         </Specimen>
         <Specimen label="Wizard · Schritt 2 von 4" fill>
           <Progress variant="wizard" label="Schritt 2 von 4" step={2} total={4} testID="DEV-01.badges.wizard" />
         </Specimen>
         <Wrap>
-          <Specimen label="Ring 25 %">
-            <Progress variant="ring" label="Upload zu 25 %" value={0.25} testID="DEV-01.badges.ring" />
+          <Specimen label={'Ring 25\u00a0%'}>
+            <Progress variant="ring" label={'Upload zu 25\u00a0%'} value={0.25} testID="DEV-01.badges.ring" />
           </Specimen>
-          <Specimen label="Ring 75 %">
-            <Progress variant="ring" label="Upload zu 75 %" value={0.75} />
+          <Specimen label={'Ring 75\u00a0%'}>
+            <Progress variant="ring" label={'Upload zu 75\u00a0%'} value={0.75} />
           </Specimen>
         </Wrap>
         <Specimen label="Ring auf der Foto-Kachel" fill>
           <View style={styles.tile}>
             <Photo aspect="4:3" corner="sm" {...PHOTOS.e46}>
               <View style={styles.ring}>
-                <Progress variant="ring" label="Upload zu 60 %" value={0.6} onPhoto />
+                <Progress variant="ring" label={'Upload zu 60\u00a0%'} value={0.6} onPhoto />
               </View>
             </Photo>
           </View>

@@ -85,15 +85,19 @@ class HomeStream
             ->where($at, '<', $after[0])
             ->orWhere(fn (Builder $tie) => $tie->where($at, '=', $after[0])->where($id, '<', $after[1])));
 
-        $vehicles = $bound($this->builds->query($viewer, fromSearch: false)
-            ->join('follows as f', fn ($join) => $join->on('f.followee_id', '=', 'vs.owner_id')->where('f.follower_id', '=', $viewer->id))
+        // M4.11 (09 §8.6): followed members and followed builds; EXISTS, not a join, so a build of a followed member that is also
+        // followed by itself shows once.
+        $followed = fn (Builder $query): Builder => $query->where(fn (Builder $either) => $either
+            ->whereExists(fn (Builder $members) => $members->selectRaw('1')->from('follows', 'f')->where('f.follower_id', $viewer->id)->whereColumn('f.followee_id', 'vs.owner_id'))
+            ->orWhereExists(fn (Builder $builds) => $builds->selectRaw('1')->from('vehicle_follows', 'vf')->where('vf.user_id', $viewer->id)->whereColumn('vf.vehicle_id', 'vs.vehicle_id')));
+
+        $vehicles = $bound($followed($this->builds->query($viewer, fromSearch: false))
             ->whereNotNull('v.published_at')
             ->selectRaw("v.published_at as at, 'vehicle' as kind, v.id as id"), 'v.published_at', 'v.id')
             ->orderByDesc('v.published_at')
             ->orderByDesc('v.id')
             ->limit($perPage + 1);
-        $updates = $bound($this->builds->updates($viewer, straight: false)
-            ->join('follows as f', fn ($join) => $join->on('f.followee_id', '=', 'vs.owner_id')->where('f.follower_id', '=', $viewer->id))
+        $updates = $bound($followed($this->builds->updates($viewer, straight: false))
             ->selectRaw("bu.created_at as at, 'update' as kind, bu.id as id"), 'bu.created_at', 'bu.id')
             ->orderByDesc('bu.created_at')
             ->orderByDesc('bu.id')
@@ -136,10 +140,7 @@ class HomeStream
     private function start(?User $viewer): StreamState
     {
         // HOME-01 shows the first featured build as the hero and the first two Neue Builds; the other featured slots are not on the page,
-        // so they stay in the stream. Build-Updates leaves the same builds out (DQ-308).
-        $shown = $this->modules->shownAbove($viewer);
-        $updates = array_map(fn (BuildUpdate $update): string => (string) $update->getKey(), $this->modules->buildUpdates($viewer, $shown));
-
-        return new StreamState(excludedVehicles: $shown, excludedUpdates: $updates);
+        // so they stay in the stream. M4.8: the 2.0 Home has no Build-Updates module any more, so its updates belong to the stream again.
+        return new StreamState(excludedVehicles: $this->modules->shownAbove($viewer), excludedUpdates: []);
     }
 }

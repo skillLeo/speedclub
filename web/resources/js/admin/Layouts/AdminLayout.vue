@@ -8,6 +8,7 @@ import IdleWarning from '../Components/shell/IdleWarning.vue';
 import PasswordConfirmDialog from '../Components/shell/PasswordConfirmDialog.vue';
 import Sidebar from '../Components/shell/Sidebar.vue';
 import TopBar from '../Components/shell/TopBar.vue';
+import TwoFactorReminder from '../Components/shell/TwoFactorReminder.vue';
 import Toaster from '../Components/ui/Toaster.vue';
 import { trackWrites } from '../composables/recentPassword';
 
@@ -41,7 +42,7 @@ onBeforeUnmount(() => {
 <template>
     <TooltipProvider :delay-duration="400">
         <div class="flex min-h-dvh min-w-0 bg-canvas text-ink">
-            <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-16 focus:top-16 focus:z-50 focus:inline-flex focus:h-40 focus:items-center focus:rounded-sm focus:bg-inverse focus:px-16 focus:text-label-s focus:text-ink-inverse focus:outline-2 focus:outline-offset-2 focus:outline-focus">
+            <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-16 focus:top-16 focus:z-50 focus:inline-flex focus:h-40 focus:items-center focus:rounded-sm focus:bg-inverse focus:px-16 focus:text-admin-base-strong focus:text-ink-inverse focus:outline-2 focus:outline-offset-2 focus:outline-focus">
                 {{ trans('shell.skip') }}
             </a>
             <aside class="hidden w-248 shrink-0 border-r border-line-subtle bg-surface shell:block" :aria-label="trans('shell.sidebar')">
@@ -64,6 +65,7 @@ onBeforeUnmount(() => {
                 <TopBar class="sticky top-0 z-30" :shortcut="shortcut" @menu="drawer = true" @search="palette = true" />
                 <main id="main" tabindex="-1" class="min-w-0 flex-1 focus:outline-none">
                     <div class="mx-auto w-full max-w-1440 px-16 py-24 tablet:px-24 desktop:px-32">
+                        <TwoFactorReminder />
                         <FlashCenter />
                         <slot />
                     </div>

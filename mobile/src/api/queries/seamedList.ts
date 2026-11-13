@@ -97,6 +97,8 @@ export type SeamedList<P> = {
   isFetchNextPageError: boolean;
   fetchNextPage: () => Promise<void>;
   refetch: () => Promise<unknown>;
+  /** When the first page last loaded (ms), 0 before: the offline banner's "zuletzt aktualisiert" (DQ-1044). */
+  dataUpdatedAt: number;
 };
 
 export function useSeamedList<T, P extends CursorPage<T>>({ headKey, tailKey, fetchPage, idOf, enabled = true, isStaleCursor }: SeamedListOptions<T, P>): SeamedList<P> {
@@ -169,6 +171,7 @@ export function useSeamedList<T, P extends CursorPage<T>>({ headKey, tailKey, fe
     isFetchNextPageError: tail.isFetchNextPageError,
     fetchNextPage,
     refetch,
+    dataUpdatedAt: head.dataUpdatedAt,
   };
 }
 

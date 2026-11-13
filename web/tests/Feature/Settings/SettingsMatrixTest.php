@@ -23,7 +23,12 @@ function setMemberRoutes(): array
 {
     return [
         'GET me/sessions' => ['GET', '/api/v1/me/sessions', []],
-        'DELETE me/sessions' => ['DELETE', '/api/v1/me/sessions', []],
+        // M4.7 (09 §8.4): recent authentication, or the password.
+        'DELETE me/sessions' => ['DELETE', '/api/v1/me/sessions', ['password' => 'password']],
+        // M4.7 SET-19, SET-21.
+        'GET me/sign-in-methods' => ['GET', '/api/v1/me/sign-in-methods', []],
+        'GET me/security-events' => ['GET', '/api/v1/me/security-events', []],
+        'POST me/security/secure' => ['POST', '/api/v1/me/security/secure', []],
         'DELETE me/sessions/{id}' => ['DELETE', '/api/v1/me/sessions/t1', []],
         'GET me/exports' => ['GET', '/api/v1/me/exports', []],
         'POST me/export' => ['POST', '/api/v1/me/export', ['password' => 'password']],

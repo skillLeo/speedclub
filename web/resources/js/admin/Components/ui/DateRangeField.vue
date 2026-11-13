@@ -88,14 +88,14 @@ function onBlur(which: 'from' | 'to'): void {
 const reversed = computed(() => from.value !== '' && to.value !== '' && from.value > to.value);
 const anyInvalid = computed(() => field.invalid.value || fromBad.value || toBad.value || reversed.value);
 // The frame is an inset ring, not a border, so each half is as tall as the control: a full 32/40 target (ADR-212).
-const inputClass = computed(() => ['h-full w-full min-w-0 bg-transparent text-supporting text-ink tabular-nums placeholder:text-ink-3 focus:outline-none disabled:cursor-not-allowed']);
+const inputClass = computed(() => ['h-full w-full min-w-0 bg-transparent text-admin-base text-ink tabular-nums placeholder:text-ink-3 focus:outline-none disabled:cursor-not-allowed']);
 </script>
 
 <template>
     <div
         :class="[
             controlSize[size],
-            'flex w-full items-center gap-4 rounded-sm bg-raised ring-1 ring-inset transition-colors duration-150 ease-standard hover:ring-line-strong',
+            'flex w-full items-center gap-4 rounded-sm bg-raised ring-1 ring-inset transition-colors duration-effect-fast ease-effect-fast hover:ring-line-strong',
             'focus-within:ring-ink has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus has-[:disabled]:cursor-not-allowed',
             anyInvalid ? 'ring-danger' : 'ring-line-control',
         ]"

@@ -13,8 +13,8 @@
  * --summary  the gate's own phase-tier run (default docs/reports/visual/phase-<N>/summary.json). The "checked" line comes only
  *            from a passed phase-tier run of this phase and is left out otherwise.
  * Colours and layout values come from design/tokens/tokens.json, the logo from design/brand (the client's white version, only
- * scaled), the photo from design/seed-photos (licence in its CREDITS.md), fonts from @fontsource in web/node_modules, WebP from
- * sharp, the public page's path from the visual route registry.
+ * scaled), the photo from design/seed-photos (licence in its CREDITS.md), fonts from the 2.0 font build in design/fonts/web
+ * (ADR-402), WebP from sharp, the public page's path from the visual route registry.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -367,9 +367,8 @@ async function identical(/** @type {string[]} */ files) {
   return raws.every((r) => r.equals(/** @type {Buffer} */ (raws[0])));
 }
 
-/** @param {string} pkg @param {string} file */
-const font = (pkg, file) =>
-  `data:font/woff2;base64,${readFileSync(join(root, 'web', 'node_modules', '@fontsource', pkg, 'files', file)).toString('base64')}`;
+/** @param {string} file a face of the 2.0 font build (design/fonts/web) */
+const font = (file) => `data:font/woff2;base64,${readFileSync(join(root, 'design', 'fonts', 'web', file)).toString('base64')}`;
 
 const escapeHtml = (/** @type {string} */ s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -524,21 +523,21 @@ const html = `<!doctype html>
 <meta name="generator" content="scripts/dev/build-client-preview.mjs, commit ${commit}">
 <title>SPEED CLUB · Phase ${phase} · Vorschau</title>
 <style>
-@font-face { font-family: 'Inter'; font-weight: 400; font-display: swap; src: url(${font('inter', 'inter-latin-400-normal.woff2')}) format('woff2'); }
-@font-face { font-family: 'Inter'; font-weight: 600; font-display: swap; src: url(${font('inter', 'inter-latin-600-normal.woff2')}) format('woff2'); }
-@font-face { font-family: 'Barlow Semi Condensed'; font-weight: 700; font-display: swap; src: url(${font('barlow-semi-condensed', 'barlow-semi-condensed-latin-700-normal.woff2')}) format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 400; font-display: swap; src: url(${font('Inter-Regular.woff2')}) format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 600; font-display: swap; src: url(${font('Inter-SemiBold.woff2')}) format('woff2'); }
+@font-face { font-family: 'Archivo SemiExpanded'; font-weight: 600; font-display: swap; src: url(${font('ArchivoSemiExpanded-SemiBold.woff2')}) format('woff2'); }
 :root {
   --canvas: ${carbon['bg.canvas']}; --surface: ${carbon['bg.surface']}; --raised: ${carbon['bg.raised']}; --overlay: ${carbon['bg.overlay']};
   --border: ${carbon['border.subtle']}; --border-strong: ${carbon['border.default']};
   --ink: ${carbon['text.primary']}; --ink-2: ${carbon['text.secondary']}; --ink-3: ${carbon['text.tertiary']};
   --focus: ${carbon['focus.ring']}; --scrim: ${carbon['overlay.photoScrimEnd']}; --photo-ground: ${carbon['media.ground']};
   --ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-  --display: 'Barlow Semi Condensed', 'Arial Narrow', var(--ui);
-  --gutter: ${layout.gutter.compact}px;
+  --display: ${tokens.font.marque.css};
+  --gutter: ${layout.gutter.phone}px;
   --content: ${layout.contentMax}px;
   color-scheme: dark;
 }
-@media (min-width: ${layout.compactMaxWidth + 1}px) { :root { --gutter: ${layout.gutter.regular}px; } }
+@media (min-width: ${layout.phoneLargeMinWidth}px) { :root { --gutter: ${layout.gutter.phoneLarge}px; } }
 @media (min-width: ${layout.breakpoints.tablet}px) { :root { --gutter: ${layout.gutter.tablet}px; } }
 * { box-sizing: border-box; }
 html { background: var(--canvas); }
@@ -548,7 +547,7 @@ a { color: inherit; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .wrap { max-width: calc(var(--content) + 2 * var(--gutter)); margin: 0 auto; padding-left: var(--gutter); padding-right: var(--gutter); }
 .eyebrow { margin: 0 0 8px; font: 600 .75rem/1rem var(--ui); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: -.01em; margin: 0; text-wrap: balance; overflow-wrap: break-word; }
+h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; overflow-wrap: break-word; }
 h1, h2, .lead, .caption, .single-note, footer p { hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 10 4 4; }
 .keep { white-space: nowrap; }
 

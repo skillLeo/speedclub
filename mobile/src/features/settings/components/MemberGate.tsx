@@ -2,11 +2,11 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useMe, type Me } from '@/api/queries/auth';
-import { GuestInvitation } from '@/features/profile/components/GuestInvitation';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { ErrorState } from '@/ui';
+import { SettingsGuest } from './SettingsGuest';
 
 export type MemberGateInput = {
   routeId: string;
@@ -28,7 +28,7 @@ export function useMemberGate({ routeId, returnTo, skeleton }: MemberGateInput):
   const me = useMe();
   const reachable = online && me.fetchStatus !== 'paused';
 
-  if (status === 'guest') return { me: null, fallback: <GuestInvitation routeId={routeId} returnTo={returnTo} /> };
+  if (status === 'guest') return { me: null, fallback: <SettingsGuest routeId={routeId} returnTo={returnTo} /> };
   if (qaState === 'loading' || status === 'loading' || (me.isPending && me.fetchStatus !== 'paused' && qaState !== 'error')) {
     return { me: null, fallback: skeleton };
   }

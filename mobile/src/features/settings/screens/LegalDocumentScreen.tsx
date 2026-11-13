@@ -25,13 +25,13 @@ function DocumentSkeleton() {
   return (
     <Skeleton testID="SET-18.skeleton">
       <View style={styles.heading}>
-        <SkeletonText variant="titleL" width="55%" />
-        <SkeletonText variant="supporting" width="35%" />
+        <SkeletonText variant="title1" width="55%" />
+        <SkeletonText variant="callout" width="35%" />
       </View>
       <SkeletonText variant="body" lines={3} />
       {[3, 4].map((lines) => (
         <View key={lines} style={styles.skeletonSection}>
-          <SkeletonText variant="titleS" width="40%" />
+          <SkeletonText variant="headline" width="40%" />
           <SkeletonText variant="body" lines={lines} />
         </View>
       ))}
@@ -95,7 +95,7 @@ export function LegalDocumentScreen() {
       <View testID={`SET-18.document.${document.key}`} onLayout={(event) => offset('document')(event.nativeEvent.layout.y)}>
         <View style={styles.heading}>
           <Text
-            variant="titleL"
+            variant="title1"
             role="heading"
             {...({ 'aria-level': 1 } as object)}
             // SettingsPage puts 8 above the content: the title is gone under the header after its height and those 8.
@@ -104,7 +104,7 @@ export function LegalDocumentScreen() {
           >
             {title}
           </Text>
-          <Text variant="supporting" color="text.secondary" testID="SET-18.meta">
+          <Text variant="callout" color="text.secondary" testID="SET-18.meta">
             {meta(document)}
           </Text>
         </View>

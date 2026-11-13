@@ -45,7 +45,7 @@ export function OwnerOnQrSkeletonRow() {
       </View>
       <View style={styles.text}>
         <KnownTextSkeleton text={t('visibility.ownerOnQr.label')} variant="body" />
-        <KnownTextSkeleton text={t('visibility.ownerOnQr.helper')} variant="supporting" />
+        <KnownTextSkeleton text={t('visibility.ownerOnQr.helper')} variant="callout" />
       </View>
       <View style={[styles.firstLine, firstLine]}>
         <SkeletonBlock width={size.switch.width} height={size.switch.height} corner="full" />
@@ -91,7 +91,7 @@ export function OwnerOnQrSetting({ routeId }: { routeId: string }) {
           <Text variant="body" color={online ? 'text.primary' : 'text.disabled'}>
             {label}
           </Text>
-          <Text variant="supporting" color={color}>
+          <Text variant="callout" color={color}>
             {t('visibility.ownerOnQr.helper')}
           </Text>
         </View>
@@ -106,7 +106,7 @@ export function OwnerOnQrSetting({ routeId }: { routeId: string }) {
         <Icon name={OWNER_ICON} size={20} color="text.secondary" />
         <View style={styles.problemText}>
           <Text variant="body">{label}</Text>
-          <Text variant="supporting" color="text.secondary">
+          <Text variant="callout" color="text.secondary">
             {t('visibility.ownerOnQr.loadFailed')}
           </Text>
           <Button
@@ -131,7 +131,7 @@ export function OwnerOnQrSetting({ routeId }: { routeId: string }) {
           <Text variant="body" color="text.disabled">
             {label}
           </Text>
-          <Text variant="supporting" color="text.secondary">
+          <Text variant="callout" color="text.secondary">
             {t('visibility.ownerOnQr.offline')}
           </Text>
         </View>

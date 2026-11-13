@@ -15,7 +15,7 @@ const dots: Record<Tone, string> = {
 </script>
 
 <template>
-    <span class="inline-flex h-20 items-center gap-4 whitespace-nowrap rounded-xs border border-line px-8 text-badge text-ink">
+    <span class="inline-flex h-20 items-center gap-4 whitespace-nowrap rounded-xs border border-line px-8 text-caption text-ink">
         <span class="size-8 shrink-0 rounded-full" :class="dots[tone]" aria-hidden="true" />
         {{ label }}
     </span>

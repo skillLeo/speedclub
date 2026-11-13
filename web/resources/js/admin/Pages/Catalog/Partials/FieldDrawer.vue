@@ -168,8 +168,8 @@ const formId = `${props.testId}-form`;
             </div>
 
             <fieldset v-if="form.type === 'select'" class="flex flex-col gap-8" :data-testid="`${testId}.options`">
-                <legend class="mb-4 text-label-s text-ink">{{ trans('catalog.field.options') }}</legend>
-                <p class="text-helper text-ink-3">{{ locked ? trans('catalog.field.options_locked') : trans('catalog.field.options_hint') }}</p>
+                <legend class="mb-4 text-admin-base-strong text-ink">{{ trans('catalog.field.options') }}</legend>
+                <p class="text-admin-base text-ink-3">{{ locked ? trans('catalog.field.options_locked') : trans('catalog.field.options_hint') }}</p>
                 <div class="flex items-center gap-8" aria-hidden="true">
                     <span class="w-120 shrink-0 text-caption text-ink-3">{{ trans('catalog.field.option_value') }}</span>
                     <span class="min-w-0 grow basis-0 text-caption text-ink-3">{{ trans('catalog.field.option_de') }}</span>
@@ -197,15 +197,15 @@ const formId = `${props.testId}-form`;
                 <div class="flex h-40 items-center"><Switch v-model="form.required" :disabled="archived" :label="trans('catalog.field.required')" :data-testid="`${testId}.required`" /></div>
                 <div class="w-120"><Field :label="trans('catalog.fields.sort')" :error="err('sort')" optional><Input v-model="form.sort" inputmode="numeric" maxlength="6" tnum /></Field></div>
             </div>
-            <p v-if="archived" class="text-helper text-ink-3">{{ trans('catalog.field.archived_required') }}</p>
+            <p v-if="archived" class="text-admin-base text-ink-3">{{ trans('catalog.field.archived_required') }}</p>
 
             <section class="flex flex-col gap-8 rounded-sm border border-line-subtle px-16 py-12" :data-testid="`${testId}.discover`">
-                <h3 class="flex items-center gap-8 text-label-s text-ink"><PhInfo :size="16" class="text-ink-3" aria-hidden="true" />{{ trans('catalog.field.discover_title') }}</h3>
-                <dl class="flex flex-wrap gap-x-24 gap-y-4 text-supporting">
+                <h3 class="flex items-center gap-8 text-admin-base-strong text-ink"><PhInfo :size="16" class="text-ink-3" aria-hidden="true" />{{ trans('catalog.field.discover_title') }}</h3>
+                <dl class="flex flex-wrap gap-x-24 gap-y-4 text-admin-base">
                     <div class="flex gap-8"><dt class="text-ink-3">{{ trans('catalog.field.searchable') }}</dt><dd class="text-ink">{{ trans(field?.searchable ? 'catalog.field.yes' : 'catalog.field.no') }}</dd></div>
                     <div class="flex gap-8"><dt class="text-ink-3">{{ trans('catalog.field.facet') }}</dt><dd class="text-ink">{{ trans(field?.facet ? 'catalog.field.yes' : 'catalog.field.no') }}</dd></div>
                 </dl>
-                <p class="text-helper text-ink-3">{{ trans('catalog.field.discover_body') }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('catalog.field.discover_body') }}</p>
             </section>
 
             <Field :label="trans('catalog.fields.reason')" :hint="trans('catalog.field.reason_hint')" :error="err('reason')" required>

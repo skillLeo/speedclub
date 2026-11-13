@@ -158,7 +158,7 @@ describe('power in the history', function () {
 
         $this->withHeader('Accept-Language', 'de')->getJson('/api/v1/public/vehicles/'.$vehicle->canonicalSlug().'/updates')
             ->assertOk()
-            ->assertJsonPath('data.0.summary', "Leistung: 510 PS (375 kW) · Besitzerangabe \u{2192} 510 PS (375 kW) · Gemessen");
+            ->assertJsonPath('data.0.summary', "Leistung: 510 PS (375 kW) · Geschätzt \u{2192} 510 PS (375 kW) · Prüfstand");
     });
 
     it('makes no entry when only the unit of the same power changed', function () {
@@ -198,7 +198,7 @@ describe('power in the history', function () {
         $this->putJson("/api/v1/vehicles/{$vehicle->id}/specs", ['power_value' => 380, 'power_unit' => 'kw', 'power_source' => 'measured'])->assertOk();
 
         $this->withHeader('Accept-Language', 'de')->getJson('/api/v1/public/vehicles/'.$vehicle->canonicalSlug().'/updates')
-            ->assertJsonPath('data.0.changes.0.after', '517 PS (380 kW) · Gemessen');
+            ->assertJsonPath('data.0.changes.0.after', '517 PS (380 kW) · Prüfstand');
     });
 });
 

@@ -8,6 +8,9 @@ use Symfony\Component\Mime\Email;
 
 /**
  * Registered by AppServiceProvider in the preview environments only. A failure here must not break the mail itself.
+ *
+ * SEC-M46-04: outside the developer environments (speedclub.dev_mail.environments) a mail is recorded only while the host sends to the
+ * log mailer, i.e. while no mail reaches anybody anyway. A staging host with real SMTP records nothing for ADM-61.
  */
 final class RecordDevMail
 {
@@ -15,6 +18,13 @@ final class RecordDevMail
 
     public function handle(MessageSent $event): void
     {
+        /** @var list<string> $developer */
+        $developer = config()->array('speedclub.dev_mail.environments');
+
+        if (! app()->environment($developer) && config('mail.default') !== 'log') {
+            return;
+        }
+
         $message = $event->sent->getOriginalMessage();
 
         if (! $message instanceof Email) {

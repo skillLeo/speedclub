@@ -6,7 +6,10 @@ import type { Href } from 'expo-router';
 import type { TFunction } from 'i18next';
 
 import type { AppNotification } from '@/api/queries/notifications';
+import '@/features/events/i18n';
 import { formatDueMonth } from '@/features/garage/huAu';
+import { deviceNameText } from '@/features/settings/deviceLines';
+import { passkeyOwnName } from '@/features/settings/passkeyName';
 import i18n from '@/i18n';
 import { formatNumber, keepNameTogether, type FormatLocale } from '@/lib/format';
 import type { IconName } from '@/ui';
@@ -78,6 +81,91 @@ export function groupByDay(
   return list;
 }
 
+/** 09 §7.4 filter chips: Alle · Builds · Social · Treffen · System. */
+export const NOTIFICATION_FILTERS = ['all', 'builds', 'social', 'events', 'system'] as const;
+export type NotificationFilter = (typeof NOTIFICATION_FILTERS)[number];
+
+const BUILD_TYPES = new Set<string>(['followed_published', 'build_saved', 'qr_milestone', 'hu_au_reminder', 'catalog_request']);
+const SOCIAL_TYPES = new Set<string>(['new_follower', 'reaction', 'mention', 'comment', 'vehicle_follower']);
+
+/** The chip a row belongs to: builds, people, meets, or the system (security, moderation, support and anything unknown). */
+export function notificationCategory(notification: Pick<AppNotification, 'type'>): Exclude<NotificationFilter, 'all'> {
+  if (BUILD_TYPES.has(notification.type)) return 'builds';
+  if (SOCIAL_TYPES.has(notification.type)) return 'social';
+  if (notification.type.startsWith('event_')) return 'events';
+  return 'system';
+}
+
+export function matchesFilter(notification: Pick<AppNotification, 'type'>, filter: NotificationFilter): boolean {
+  return filter === 'all' || notificationCategory(notification) === filter;
+}
+
+/** 09 §7.4 sections: Heute · Gestern · Diese Woche (2–6 days ago) · Früher, by the Berlin day. */
+export type NotificationSection = 'today' | 'yesterday' | 'week' | 'earlier';
+
+export function sectionOf(date: Date, now: Date): NotificationSection {
+  const ago = daysBetween(berlinDayKey(date), berlinDayKey(now));
+  if (ago <= 0) return 'today';
+  if (ago === 1) return 'yesterday';
+  if (ago < 7) return 'week';
+  return 'earlier';
+}
+
+const SECTION_KEYS: Record<NotificationSection, string> = {
+  today: 'notifications.today',
+  yesterday: 'notifications.yesterday',
+  week: 'notifications.thisWeek',
+  earlier: 'notifications.earlier',
+};
+
+/**
+ * Newest first, a section header before the first row of each section. A row without a valid date joins the section before it (or
+ * Früher when it is the first). Header keys stay `day.<section>` for the screen's testIDs.
+ */
+export function groupBySection(rows: readonly AppNotification[], now: Date, t: TFunction): NotificationListRow[] {
+  const list: NotificationListRow[] = [];
+  let current: NotificationSection | null = null;
+  for (const notification of rows) {
+    const date = notification.created_at ? new Date(notification.created_at) : null;
+    const section: NotificationSection = date && !Number.isNaN(date.getTime()) ? sectionOf(date, now) : (current ?? 'earlier');
+    if (section !== current) {
+      current = section;
+      list.push({ kind: 'day', key: `day.${section}`, label: t(SECTION_KEYS[section]) });
+    }
+    list.push({ kind: 'row', key: notification.id, notification });
+  }
+  return list;
+}
+
+/**
+ * The parts of a row's sentence set in bold (09 §7.4: "**Lukas** hat ein Update zu seinem **E46 M3** gepostet."): the members it names
+ * and the vehicle, as `notificationText` writes them. Splits the sentence into runs; a name not found leaves the text plain.
+ */
+export function emphasisRuns(text: string, notification: Pick<AppNotification, 'actors' | 'vehicle' | 'type'>): { text: string; strong: boolean }[] {
+  const names = [...notification.actors.slice(0, 2).map(handle)];
+  const title = notification.vehicle?.full_title?.trim();
+  if (title && notification.type !== 'security') names.push(keepLastWordWithNext(title));
+  const found = names
+    .map((name) => ({ name, at: text.indexOf(name) }))
+    .filter((entry) => entry.at >= 0)
+    .sort((a, b) => a.at - b.at);
+  const runs: { text: string; strong: boolean }[] = [];
+  let cursor = 0;
+  for (const { name, at } of found) {
+    if (at < cursor) continue;
+    if (at > cursor) runs.push({ text: text.slice(cursor, at), strong: false });
+    runs.push({ text: name, strong: true });
+    cursor = at + name.length;
+  }
+  if (cursor < text.length) runs.push({ text: text.slice(cursor), strong: false });
+  return runs;
+}
+
+/** The car photo at the row's end (09 §7.4: the object, never an icon); null without a vehicle or its cover. */
+export function notificationThumb(notification: Pick<AppNotification, 'vehicle' | 'type'>) {
+  return notification.type === 'security' ? null : (notification.vehicle?.cover ?? null);
+}
+
 /**
  * DQ-305: a vehicle name in a sentence keeps its last two words on one line ("Nissan Silvia S15", never "Silvia / S15" with the code
  * alone), and a hyphenated name stays whole.
@@ -127,7 +215,31 @@ const SECURITY_EVENTS = new Set([
   'sessions_revoked',
   'verification_failed',
   'recovery_code_used',
+  // M4.6 Auth 2.0 (SecurityNotice): the e-mail code lock, linked providers and passkeys.
+  'email_code_locked',
+  'provider_linked',
+  'provider_unlinked',
+  'passkey_added',
+  'passkey_removed',
+  'passkey_rejected',
 ]);
+
+/** M4.6: the events whose `device_name` carries a label (the provider's name, the passkey's name) for a sentence of its own. */
+/** A member_security_events id (ULID), as the server puts it in `security_event_id`. */
+const SECURITY_EVENT_ID = /^[0-9A-Za-z]{26}$/;
+
+const LABELLED_EVENTS = new Set(['provider_linked', 'provider_unlinked', 'passkey_added', 'passkey_removed', 'passkey_rejected']);
+
+/**
+ * DQ-910: whether the sentence may hyphenate. A sentence that names a device ("Neue Anmeldung auf sdk_gphone64_arm64") is set
+ * without hyphenation, so the device name never splits ("sdk_gpho-/ne64_arm64"); its words are short enough to wrap whole.
+ * One flag for the whole text, because Android hyphenates a paragraph, not a span.
+ */
+export function notificationHyphenates(notification: Pick<AppNotification, 'type' | 'details'>): boolean {
+  if (notification.type !== 'security') return true;
+  const data = dataOf(notification);
+  return !(stringIn(data, 'event') === 'new_device' && stringIn(data, 'device_name'));
+}
 
 /**
  * The sentence of a row, in the app's language:
@@ -176,7 +288,12 @@ export function notificationText(notification: AppNotification, t: TFunction): s
     case 'security': {
       const event = stringIn(data, 'event');
       const device = stringIn(data, 'device_name');
-      if (event === 'new_device' && device) return t('notifications.text.security.new_device_named', { device });
+      if (event === 'new_device' && device) return t('notifications.text.security.new_device_named', { device: deviceNameText(device) });
+      // DQ-999: a passkey with only the generic fallback name ("Passkey") gets the sentence without a name, never „Passkey“ quoted.
+      const label = event?.startsWith('passkey_') ? passkeyOwnName(device) : device;
+      if (event && LABELLED_EVENTS.has(event) && label) {
+        return t(`notifications.text.security.${event}_named`, { name: keepNameTogether(label.trim().slice(0, 64)) });
+      }
       return event && SECURITY_EVENTS.has(event) ? t(`notifications.text.security.${event}`) : t('notifications.text.security.other');
     }
     case 'moderation_decision': {
@@ -220,8 +337,38 @@ export function notificationText(notification: AppNotification, t: TFunction): s
         ? t('notifications.text.supportReply', { reference })
         : t('notifications.text.supportReplyAny');
     }
+    case 'event_review':
+    case 'event_promoted':
+    case 'event_reminder':
+    case 'event_update':
+    case 'event_cancelled':
+      return eventText(notification, data, t);
     default:
       return t('notifications.text.other');
+  }
+}
+
+/**
+ * M4.12 (ADR-437, ADR-439): the sentences of the event rows. The title comes from `event` (EventRefResource); never the text of an
+ * organiser update and never the place (the push and the row say only that something changed).
+ */
+function eventText(notification: AppNotification, data: Record<string, unknown>, t: TFunction): string {
+  const tx = (key: string, values: Record<string, string>) => (t as unknown as (name: string, options: Record<string, string>) => string)(`events:notifications.${key}`, values);
+  const title = keepNameTogether(notification.event?.title?.trim() || tx('anEvent', {}));
+  switch (notification.type) {
+    case 'event_review': {
+      if (stringIn(data, 'outcome') === 'approved') return tx('reviewApproved', { title });
+      const reason = stringIn(data, 'reason')?.trim();
+      return reason ? tx('reviewRejectedReason', { title, reason }) : tx('reviewRejected', { title });
+    }
+    case 'event_promoted':
+      return tx('promoted', { title });
+    case 'event_reminder':
+      return stringIn(data, 'kind') === '2h' ? tx('reminder2h', { title }) : tx('reminder24h', { title });
+    case 'event_update':
+      return stringIn(data, 'kind') === 'changed' ? tx('changed', { title }) : tx('update', { title });
+    default:
+      return data.by_staff === true ? tx('cancelledByStaff', { title }) : tx('cancelled', { title });
   }
 }
 
@@ -254,6 +401,12 @@ export function notificationIcon(notification: Pick<AppNotification, 'type'>): I
       return 'garage';
     case 'support_reply':
       return 'lifebuoy';
+    case 'event_review':
+    case 'event_promoted':
+    case 'event_reminder':
+    case 'event_update':
+    case 'event_cancelled':
+      return 'meet';
     default:
       return 'bell';
   }
@@ -283,8 +436,14 @@ export function notificationTarget(notification: AppNotification, own: string | 
     }
     case 'build_saved':
       return notification.vehicle ? `/garage/${notification.vehicle.id}` : '/garage';
-    case 'security':
-      return '/settings';
+    case 'security': {
+      // M4.7: a row of the SET-21 log opens it there, highlighted, with "Das war ich nicht" (lead ruling on the HOME-02 copy).
+      const eventId = stringIn(data, 'security_event_id');
+      if (eventId && SECURITY_EVENT_ID.test(eventId)) return { pathname: '/settings/security/activity', params: { event: eventId } };
+      // M4.6: a passkey, a linked provider or the e-mail code lock opens SET-19, where it can be checked or undone.
+      const event = stringIn(data, 'event');
+      return event && (LABELLED_EVENTS.has(event) || event === 'email_code_locked') ? '/settings/security/sign-in' : '/settings';
+    }
     case 'moderation_decision':
     case 'report_decided': {
       // SAFE-01; without the id, the list of SET-16.
@@ -306,6 +465,14 @@ export function notificationTarget(notification: AppNotification, own: string | 
         ? { pathname: '/settings/help/requests/[ticket]', params: { ticket: ticketId } }
         : '/settings/help/requests';
     }
+    // M4.12: EVT-02 of the event; a review outcome opens EVT-05 Organisiert when the event is gone.
+    case 'event_review':
+      return notification.event ? `/events/${notification.event.slug}` : { pathname: '/profile/events', params: { tab: 'organised' } };
+    case 'event_promoted':
+    case 'event_reminder':
+    case 'event_update':
+    case 'event_cancelled':
+      return notification.event ? `/events/${notification.event.slug}` : '/profile/events';
     default:
       return null;
   }

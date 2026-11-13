@@ -1,10 +1,9 @@
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { View, type TextInput } from 'react-native';
 
 import { useFlag } from '@/api/queries/appConfig';
 import { pickPhotos, preparePhoto } from '@/features/garage/photos';
@@ -13,11 +12,11 @@ import { useRestrictionDecision } from '@/features/safety/components/DecisionLin
 import { conversationTarget, messageTarget } from '@/features/safety/targets';
 import { useReport } from '@/features/safety/useReport';
 import { now } from '@/lib/clock';
-import { useQaState } from '@/lib/qa';
+import { qa, useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, size, useBreakpoint } from '@/theme';
-import { Composer, Dialog, EmptyState, ErrorState, ImageViewer, OfflineBanner, Spinner, Text, toast, type ViewerImage } from '@/ui';
+import { Composer, Dialog, EmptyState, ErrorState, ImageViewer, KeyboardInsetView, OfflineBanner, Spinner, Text, toast, type ViewerImage } from '@/ui';
 import { useSafeEdge, useSafeInset } from '@/ui/safeArea';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 import { AI_FLAGS } from '@/api/queries/ai';
@@ -27,12 +26,15 @@ import { useTranslations } from '@/features/ai/translations';
 import { chatPhotoUrl } from '../components/ChatPhoto';
 import { MessageBubble } from '../components/MessageBubble';
 import { AttachSheet, MessageActionsSheet, VehiclePickerSheet } from '../components/Sheets';
+import { ReplyBar } from '../components/ReplyQuote';
 import { ThreadHeader } from '../components/ThreadHeader';
+import { rememberSendOrigin, sendOriginFor } from '../sendMorph';
+import type { Rect } from '@/ui/motion/math';
 import { ComposerNote, ContextCard, DaySeparator, RequestBanner, ThreadSkeleton, TypingIndicator } from '../components/ThreadParts';
 import { isConversationGone, useMessaging } from '../data';
 import { threadItems, type ThreadItem } from '../grouping';
 import { mergeThread, serverClientIds } from '../merge';
-import type { ChatVehicle, ConversationDetail, ReactionKey, ThreadMessage } from '../model';
+import { newestReceivedText, type ChatVehicle, type ConversationDetail, type ReactionKey, type ReplyQuote, type ThreadMessage } from '../model';
 import { readReceiptKey, readToSend } from '../receipts';
 import { THREAD_POLL_MS } from '../pollScheduler';
 import { realtimeHub } from '../realtime';
@@ -52,7 +54,12 @@ export const MESSAGING_FLAGS = {
   receipts: 'sig.msg_read_receipts',
   reactions: 'sig.msg_reactions',
   organise: 'sig.msg_organize',
+  /** 09 §7.8 swipe-to-reply; off until the API carries `reply_to` (lane B gap). */
+  replies: 'msg_replies',
 } as const;
+
+/** A reply quotes at most this much of the answered text (the bar and the bubble show 1–2 lines of it). */
+const QUOTE_CHARS = 140;
 
 /** Contract §2: the server keeps `typing_until` 5 s; one signal every 4 s keeps it alive while the member types. */
 const TYPING_EVERY_MS = 4_000;
@@ -196,6 +203,12 @@ function ThreadView({
   const typingFlag = useFlag(MESSAGING_FLAGS.typing);
   const receiptsFlag = useFlag(MESSAGING_FLAGS.receipts);
   const reactionsFlag = useFlag(MESSAGING_FLAGS.reactions);
+  const repliesFlag = useFlag(MESSAGING_FLAGS.replies);
+  const [replyTo, setReplyTo] = useState<ReplyQuote | null>(null);
+  // SM12: the composer's window rect, kept current on layout (the keyboard inset moves it), read at the moment of sending.
+  const composerBox = useRef<ComponentRef<typeof View>>(null);
+  const composerRect = useRef<Rect | null>(null);
+  const composerInput = useRef<ComponentRef<typeof TextInput>>(null);
   // M3.7 ai.translate: "Übersetzen" in a message's actions, the translation in its bubble with "Übersetzt · Original anzeigen".
   const translateOn = useAiAvailable(AI_FLAGS.translate);
   const translations = useTranslations('message', `${routeId}.message`);
@@ -254,6 +267,16 @@ function ThreadView({
     if (target) report.openFor(target);
   } : undefined);
   const requestTarget = request ? conversationTarget(server, otherUsername) : null;
+  // QA only (qaOpen=actions, compiled out of production with the other overrides): once the thread has loaded, the actions sheet
+  // of the newest received text message is open, until it is closed once, so the visual matrix, which cannot long-press,
+  // captures it (MSG-02-translate).
+  const [qaActionsPending, setQaActionsPending] = useState(qa.open === 'actions');
+  const qaActing = qaActionsPending && thread.data ? newestReceivedText(server) : null;
+  const shownActing = acting ?? qaActing;
+  const closeActions = () => {
+    setActing(null);
+    setQaActionsPending(false);
+  };
   // The server's copy is here: the outbox entry is done, whatever state it was in.
   useEffect(() => {
     outbox?.reconcile(id, serverClientIds(server));
@@ -325,7 +348,9 @@ function ThreadView({
   const scrollToNewest = () => listRef.current?.scrollToOffset({ offset: 0, animated: true });
   const send = (body: string) => {
     if (!outbox) return;
-    outbox.enqueue(id, { kind: 'text', body: takeChars(body, MESSAGE_MAX_LENGTH) });
+    const entry = outbox.enqueue(id, { kind: 'text', body: takeChars(body, MESSAGE_MAX_LENGTH), ...(replyTo ? { replyTo } : {}) });
+    rememberSendOrigin(entry.clientId, composerRect.current);
+    setReplyTo(null);
     setText('');
     lastTyping.current = 0;
     scrollToNewest();
@@ -375,6 +400,11 @@ function ThreadView({
     },
     [thread],
   );
+  const startReply = useCallback((message: ThreadMessage) => {
+    if (!message.id) return;
+    setReplyTo({ id: message.id, mine: message.mine, kind: message.kind, excerpt: message.body ? takeChars(message.body, QUOTE_CHARS) : null });
+    composerInput.current?.focus();
+  }, []);
   const retry = useCallback((clientId: string) => outbox?.retry(clientId), [outbox]);
   const remove = useCallback((clientId: string) => outbox?.remove(clientId), [outbox]);
 
@@ -419,8 +449,20 @@ function ThreadView({
     );
   } else {
     composer = (
-      <View style={[styles.composer, bottom]}>
+      <View
+        ref={composerBox}
+        style={[styles.composer, bottom]}
+        onLayout={() =>
+          composerBox.current?.measureInWindow((x, y, width, height) => {
+            composerRect.current = width > 0 && height > 0 ? { x, y, width, height } : null;
+          })
+        }
+      >
         <Composer
+          ref={composerInput}
+          header={
+            replyTo ? <ReplyBar quote={replyTo} otherName={name} gutter={gutter} onCancel={() => setReplyTo(null)} testID={`${routeId}.reply`} /> : undefined
+          }
           value={text}
           onChangeText={onChangeText}
           onSend={send}
@@ -507,7 +549,7 @@ function ThreadView({
               </View>
             ) : thread.error && thread.hasMore ? (
               <View style={styles.older}>
-                <Text variant="supporting" color="text.secondary">
+                <Text variant="callout" color="text.secondary">
                   {t('thread.olderError')}
                 </Text>
               </View>
@@ -516,7 +558,7 @@ function ThreadView({
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text variant="supporting" color="text.secondary" testID={`${routeId}.empty`}>
+            <Text variant="callout" color="text.secondary" testID={`${routeId}.empty`}>
               {/* DQ-450: a request has no composer yet, so its empty line does not invite a first message. */}
               {t(request ? 'thread.emptyRequest' : 'thread.empty')}
             </Text>
@@ -541,6 +583,8 @@ function ThreadView({
               onPhotoFailed={photoFailed}
               translation={item.message.id ? translations.states[item.message.id] : undefined}
               onToggleTranslation={toggleTranslation}
+              onReply={repliesFlag && canWrite ? startReply : undefined}
+              enterFrom={item.message.delivery === 'sent' ? null : sendOriginFor(item.message.clientId)}
               testID={`${routeId}.message.${item.key}`}
             />
           )
@@ -551,7 +595,7 @@ function ThreadView({
   }
 
   return (
-    <KeyboardAvoidingView behavior="padding" automaticOffset keyboardVerticalOffset={-inset} style={styles.list}>
+    <KeyboardInsetView bottomInset={inset} style={styles.list}>
       {header}
       {body}
       {composer}
@@ -564,8 +608,8 @@ function ThreadView({
       />
       <VehiclePickerSheet visible={pickVehicle} onClose={() => setPickVehicle(false)} vehicles={vehicles} onPick={sendVehicle} testID={`${routeId}.vehicles`} />
       <MessageActionsSheet
-        message={acting}
-        onClose={() => setActing(null)}
+        message={shownActing}
+        onClose={closeActions}
         reactions={reactionsFlag}
         onReact={react}
         onCopy={(message) => {
@@ -582,6 +626,7 @@ function ThreadView({
         onReport={reportMessage}
         onOpenPhoto={openPhoto}
         onOpenVehicle={onOpenVehicle}
+        onReply={repliesFlag && canWrite ? startReply : undefined}
         testID={`${routeId}.actions`}
       />
       <Dialog
@@ -598,6 +643,6 @@ function ThreadView({
       <BlockDialog username={blocking} onClose={() => setBlocking(null)} onBlocked={() => onLeave()} testID={`${routeId}.blockDialog`} />
       {report.element}
       <ImageViewer visible={viewer !== null} images={viewer ? [viewer] : []} onClose={() => setViewer(null)} testID={`${routeId}.viewer`} />
-    </KeyboardAvoidingView>
+    </KeyboardInsetView>
   );
 }

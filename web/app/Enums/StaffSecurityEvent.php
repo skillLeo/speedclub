@@ -18,6 +18,9 @@ enum StaffSecurityEvent: string
     /** A session that signed in without a code, ended by EnsureStaffTwoFactor once the account has confirmed TOTP (SEC-P1-32). */
     case SessionEndedWithoutCode = 'staff.session_ended_without_code';
 
+    /** ADM-03 "Später einrichten" while speedclub.staff.two_factor_required is off: this session only, never stored on the account. */
+    case TwoFactorSkipped = 'staff.two_factor_skipped';
+
     // M3.1 (SEC-P1-03): sign-in and the password steps.
     case SignedIn = 'staff.signed_in';
     case SignedOut = 'staff.signed_out';

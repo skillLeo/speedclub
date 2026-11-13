@@ -166,7 +166,7 @@ const authorText = (m: ThreadMessage): string => (m.author_type === 'staff' ? (m
                 </div>
             </template>
             <template #meta>
-                <p class="flex flex-wrap items-center gap-x-8 gap-y-4 text-supporting text-ink-2 tabular-nums" data-testid="ADM-26.meta">
+                <p class="flex flex-wrap items-center gap-x-8 gap-y-4 text-admin-base text-ink-2 tabular-nums" data-testid="ADM-26.meta">
                     {{ [trans('support.ticket.meta.reference', { reference: t.reference }), trans(`support.categories.${t.category}`), trans(t.source === 'app' ? 'support.ticket.meta.source_app' : 'support.ticket.meta.source_web'), trans('support.ticket.meta.created', { date: formatDateTime(t.created_at) })].join(' · ') }}
                 </p>
             </template>
@@ -180,11 +180,11 @@ const authorText = (m: ThreadMessage): string => (m.author_type === 'staff' ? (m
                 <div class="flex flex-col gap-24">
                     <section class="flex flex-col gap-4 rounded-sm border border-line-subtle px-16 py-12" data-testid="ADM-26.from">
                         <p class="text-caption text-ink-3">{{ trans('support.ticket.from_title') }}</p>
-                        <p class="sc-key text-body-strong text-ink">{{ recipient }}</p>
-                        <p v-if="t.from.kind === 'web' && t.from.email" class="flex flex-wrap items-center gap-8 text-supporting text-ink-2">
+                        <p class="sc-key text-admin-base-strong text-ink">{{ recipient }}</p>
+                        <p v-if="t.from.kind === 'web' && t.from.email" class="flex flex-wrap items-center gap-8 text-admin-base text-ink-2">
                             <span class="sc-key" data-testid="ADM-26.email">{{ trans('support.ticket.email', { email: revealed ?? t.from.email }) }}</span>
                             <Button v-if="revealed === null && can('members.view_pii')" size="sm" variant="ghost" :icon="PhEye" :loading="revealing" data-testid="ADM-26.reveal" @click="reveal">{{ trans('support.ticket.reveal') }}</Button>
-                            <span v-if="revealError" class="text-helper text-danger" role="alert">{{ revealError }}</span>
+                            <span v-if="revealError" class="text-admin-base text-danger" role="alert">{{ revealError }}</span>
                         </p>
                         <p class="text-caption text-ink-3">{{ trans(t.from.kind === 'member' ? 'support.ticket.channel_app' : 'support.ticket.channel_email') }}</p>
                     </section>
@@ -198,15 +198,15 @@ const authorText = (m: ThreadMessage): string => (m.author_type === 'staff' ? (m
                             :data-testid="m.internal ? 'ADM-26.note' : 'ADM-26.message'"
                         >
                             <p class="flex flex-wrap items-center gap-8 text-caption text-ink-3 tabular-nums">
-                                <span class="sc-key text-label-s text-ink">{{ authorText(m) }}</span>
+                                <span class="sc-key text-admin-base-strong text-ink">{{ authorText(m) }}</span>
                                 <time :datetime="m.created_at">{{ formatDateTime(m.created_at) }}</time>
                                 <Badge v-if="m.internal" tone="neutral"><PhLockSimple :size="16" aria-hidden="true" />{{ trans('support.ticket.thread.internal') }}</Badge>
                                 <span v-else-if="m.author_type === 'staff' && t.from.kind === 'web'">{{ m.mailed_at ? trans('support.ticket.thread.mailed', { date: formatDateTime(m.mailed_at) }) : trans('support.ticket.thread.queued') }}</span>
                             </p>
-                            <p class="whitespace-pre-line text-supporting text-ink">{{ m.body }}</p>
+                            <p class="whitespace-pre-line text-admin-base text-ink">{{ m.body }}</p>
                         </li>
                     </ol>
-                    <p v-if="thread.length === 0" class="text-supporting text-ink-3">{{ trans('support.ticket.thread.empty') }}</p>
+                    <p v-if="thread.length === 0" class="text-admin-base text-ink-3">{{ trans('support.ticket.thread.empty') }}</p>
 
                     <form v-if="can('support.reply')" class="flex flex-col gap-12 border-t border-line-subtle pt-16" novalidate data-testid="ADM-26.composer" @submit.prevent="send">
                         <div class="flex flex-wrap items-end justify-between gap-12">
@@ -228,7 +228,7 @@ const authorText = (m: ThreadMessage): string => (m.author_type === 'staff' ? (m
                             <div v-if="mode === 'reply'" class="w-200"><Field :label="trans('support.ticket.composer.status_after')"><Select v-model="after" :options="statusOptions" size="sm" data-testid="ADM-26.after" /></Field></div>
                             <div v-else />
                             <div class="flex items-center gap-8">
-                                <p v-if="serverError" class="text-helper text-danger" role="alert">{{ serverError }}</p>
+                                <p v-if="serverError" class="text-admin-base text-danger" role="alert">{{ serverError }}</p>
                                 <Button v-if="body !== ''" variant="ghost" size="sm" :disabled="action.processing.value" @click="body = ''">{{ trans('support.ticket.composer.discard') }}</Button>
                                 <Button type="submit" size="sm" :variant="mode === 'reply' ? 'primary' : 'secondary'" :icon="mode === 'reply' ? PhPaperPlaneTilt : PhLockSimple" :loading="action.processing.value" :data-testid="`ADM-26.${mode}.submit`">
                                     {{ mode === 'reply' ? trans('support.ticket.composer.send') : trans('support.ticket.composer.save_note') }}

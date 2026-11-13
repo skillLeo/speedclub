@@ -11,6 +11,8 @@ return [
         'message' => 'einer Nachricht von dir',
         'build_update' => 'einem Update deines Builds :label',
         'modification' => 'einer Modifikation an deinem Build :label',
+        'comment' => 'einem Kommentar von dir',
+        'event' => 'deinem Treffen „:label“',
     ],
     'target_unnamed' => [
         'member' => 'deinem Profil',
@@ -19,6 +21,8 @@ return [
         'message' => 'einer Nachricht von dir',
         'build_update' => 'einem deiner Updates',
         'modification' => 'einer deiner Modifikationen',
+        'comment' => 'einem Kommentar von dir',
+        'event' => 'einem deiner Treffen',
     ],
 
     'outcome' => [

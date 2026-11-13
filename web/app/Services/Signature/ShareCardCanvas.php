@@ -19,9 +19,11 @@ final class ShareCardCanvas
 
     private const MARGIN = 72;
 
-    private const FONT_DISPLAY = 'BarlowSemiCondensed-Bold.ttf';
+    /** display.title (09 §4.2, §8.5): the make and the name in Archivo SemiExpanded. */
+    private const FONT_DISPLAY = 'ArchivoSemiExpanded-SemiBold.ttf';
 
-    private const FONT_EYEBROW = 'BarlowSemiCondensed-SemiBold.ttf';
+    /** The spec numerals in Archivo Condensed, as the SpecStrip. */
+    private const FONT_NUMERALS = 'ArchivoCondensed-SemiBold.ttf';
 
     private const FONT_TEXT = 'Inter-Medium.ttf';
 
@@ -68,7 +70,7 @@ final class ShareCardCanvas
         }
 
         if ($specs !== '') {
-            $this->text($image, self::FONT_TEXT, $specs, 36, 24, self::MARGIN, $baseline, $textRight, $white);
+            $this->text($image, self::FONT_NUMERALS, $specs, 36, 24, self::MARGIN, $baseline, $textRight, $white);
             $baseline -= 72;
         }
 
@@ -79,7 +81,7 @@ final class ShareCardCanvas
         }
 
         if ($eyebrow !== '') {
-            $this->text($image, self::FONT_EYEBROW, $eyebrow, 38, 28, self::MARGIN, $baseline, $textRight, $white);
+            $this->text($image, self::FONT_DISPLAY, $eyebrow, 38, 28, self::MARGIN, $baseline, $textRight, $white);
         }
 
         ob_start();
@@ -161,11 +163,11 @@ final class ShareCardCanvas
     }
 
     /**
-     * Shrinks to $minSize first, then ends in an ellipsis; a line stays in one font, Inter when Barlow lacks a letter of it.
+     * Shrinks to $minSize first, then ends in an ellipsis; a line stays in one font, Inter when Archivo lacks a letter of it.
      */
     private function text(GdImage $image, string $font, string $text, int $size, int $minSize, int $x, int $baseline, int $right, int $color): void
     {
-        if ($font !== self::FONT_TEXT && ! $this->barlowCovers($text)) {
+        if ($font !== self::FONT_TEXT && ! $this->archivoCovers($text)) {
             $font = self::FONT_TEXT;
         }
 
@@ -187,13 +189,13 @@ final class ShareCardCanvas
         imagettftext($image, $size, 0, $x, $baseline, $color, $path, str_replace('&', '&#38;', $text));
     }
 
-    private function barlowCovers(string $text): bool
+    private function archivoCovers(string $text): bool
     {
         foreach (mb_str_split($text) as $character) {
             $codePoint = mb_ord($character);
             $covered = false;
 
-            foreach (OgImageCanvas::BARLOW_RANGES as [$from, $to]) {
+            foreach (OgImageCanvas::ARCHIVO_RANGES as [$from, $to]) {
                 if ($codePoint >= $from && $codePoint <= $to) {
                     $covered = true;
 

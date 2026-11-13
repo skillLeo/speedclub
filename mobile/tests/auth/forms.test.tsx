@@ -36,7 +36,7 @@ describe('server errors', () => {
   });
 
   it('translates a schema key and shows a server message as it came', () => {
-    expect(fieldMessage(t, { type: 'too_small', message: 'validation.passwordLength' })).toBe('Dein Passwort braucht mindestens 10 Zeichen.');
+    expect(fieldMessage(t, { type: 'too_small', message: 'validation.passwordLength' })).toBe('Dein Passwort braucht mindestens 10\u00A0Zeichen.');
     expect(fieldMessage(t, { type: 'server', message: 'Vom Server.' })).toBe('Vom Server.');
     expect(fieldMessage(t, undefined)).toBeUndefined();
   });
@@ -44,9 +44,9 @@ describe('server errors', () => {
 
 describe('waiting', () => {
   it('says how long in words, never in raw seconds', () => {
-    expect(formatWait(t, 1)).toBe('1 Sekunde');
-    expect(formatWait(t, 42)).toBe('42 Sekunden');
-    expect(formatWait(t, 61)).toBe('2 Minuten');
+    expect(formatWait(t, 1)).toBe('1\u00A0Sekunde');
+    expect(formatWait(t, 42)).toBe('42\u00A0Sekunden');
+    expect(formatWait(t, 61)).toBe('2\u00A0Minuten');
     expect(formatClock(65)).toBe('1:05');
     expect(formatClock(0)).toBe('0:00');
   });

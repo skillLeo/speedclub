@@ -2,14 +2,18 @@
 
 namespace App\Services\Moderation;
 
+use App\Enums\CommentStatus;
 use App\Enums\DecisionAction;
 use App\Enums\DecisionRestriction;
+use App\Enums\EventStatus;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportTargetType;
 use App\Enums\UserStatus;
 use App\Enums\Visibility;
 use App\Models\BuildUpdate;
+use App\Models\Comment;
 use App\Models\Decision;
+use App\Models\Event;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\ModerationCase;
@@ -64,6 +68,8 @@ class ContentRestoration
             ReportTargetType::Vehicle => ($vehicle = Vehicle::query()->find($id)) instanceof Vehicle ? ['visibility' => $vehicle->getRawOriginal('visibility')] : null,
             ReportTargetType::BuildUpdate => ($update = BuildUpdate::query()->find($id)) instanceof BuildUpdate ? ['hidden' => (bool) $update->getAttribute('hidden')] : null,
             ReportTargetType::Modification, ReportTargetType::Message => [],
+            ReportTargetType::Comment => ($comment = Comment::withTrashed()->find($id)) instanceof Comment ? ['status' => $comment->status->value] : null,
+            ReportTargetType::Event => ($event = Event::query()->find($id)) instanceof Event ? ['status' => $event->status->value, 'removed' => $event->getAttribute('removed_at') !== null] : null,
         };
     }
 
@@ -135,6 +141,8 @@ class ContentRestoration
             ReportTargetType::BuildUpdate => ($update = BuildUpdate::query()->find($id)) instanceof BuildUpdate ? $this->buildUpdate($update, $snapshot) : [],
             ReportTargetType::Modification => ($mod = Modification::withTrashed()->find($id)) instanceof Modification ? $this->modification($mod) : [],
             ReportTargetType::Message => ($message = Message::withTrashed()->find($id)) instanceof Message ? $this->message($message) : [],
+            ReportTargetType::Comment => ($comment = Comment::withTrashed()->find($id)) instanceof Comment ? $this->comment($comment, $snapshot) : [],
+            ReportTargetType::Event => ($event = Event::query()->find($id)) instanceof Event ? $this->event($event, $snapshot) : [],
         };
     }
 
@@ -264,6 +272,36 @@ class ContentRestoration
     {
         if (($snapshot['hidden'] ?? false) !== true) {
             $update->forceFill(['hidden' => false])->save();
+        }
+
+        return [];
+    }
+
+    /**
+     * M4.12: an event removed by the decision gets its status back (unless it was already removed before it).
+     *
+     * @param  array<string, mixed>  $snapshot
+     * @return list<Closure(): void>
+     */
+    private function event(Event $event, array $snapshot): array
+    {
+        $before = EventStatus::tryFrom((string) $event->getAttribute('status_before_removal'));
+
+        if (($snapshot['removed'] ?? false) !== true && $event->getAttribute('removed_at') !== null && $before !== null) {
+            $event->forceFill(['status' => $before, 'removed_at' => null, 'status_before_removal' => null])->save();
+        }
+
+        return [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshot
+     * @return list<Closure(): void>
+     */
+    private function comment(Comment $comment, array $snapshot): array
+    {
+        if (($snapshot['status'] ?? CommentStatus::Visible->value) !== CommentStatus::Removed->value) {
+            $comment->forceFill(['status' => CommentStatus::Visible])->save();
         }
 
         return [];

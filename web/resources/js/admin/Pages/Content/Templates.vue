@@ -188,7 +188,7 @@ const shownFields = computed(() => {
                 </template>
                 <div v-else class="flex flex-col gap-16">
                     <section v-for="group in groups" :key="group.channel" class="flex flex-col gap-8">
-                        <h2 class="flex items-center gap-8 text-label-s text-ink-2">
+                        <h2 class="flex items-center gap-8 text-admin-base-strong text-ink-2">
                             <component :is="group.channel === 'mail' ? PhEnvelopeSimple : PhBell" :size="16" aria-hidden="true" />
                             {{ trans(`content.templates.channels.${group.channel}`) }}
                         </h2>
@@ -200,11 +200,11 @@ const shownFields = computed(() => {
                                     :aria-current="selected?.key === row.key ? 'page' : undefined"
                                     data-testid="ADM-33.template"
                                 >
-                                    <span class="flex items-center gap-8 text-supporting text-ink">
+                                    <span class="flex items-center gap-8 text-admin-base text-ink">
                                         <PhLockSimple v-if="!row.editable" :size="16" class="shrink-0 text-ink-3" :aria-label="trans('content.templates.fixed')" />
                                         {{ nameOf(row.key) }}
                                     </span>
-                                    <span class="text-helper text-ink-3">
+                                    <span class="text-admin-base text-ink-3">
                                         {{ !row.editable ? trans('content.templates.fixed') : row.customised.length > 0 ? trans('content.templates.customised', { locales: row.customised.map((l) => l.toUpperCase()).join(', '), date: formatDate(row.updated_at) }) : trans('content.templates.default') }}
                                     </span>
                                 </Link>
@@ -223,8 +223,8 @@ const shownFields = computed(() => {
                 <template v-else>
                     <div class="flex flex-wrap items-start justify-between gap-12">
                         <div class="flex min-w-0 flex-col gap-4">
-                            <h2 class="text-title-s text-ink">{{ nameOf(selected.key) }}</h2>
-                            <p class="text-supporting text-ink-2">{{ editable ? trans('content.templates.editable_hint') : trans('content.templates.fixed_hint') }}</p>
+                            <h2 class="text-headline text-ink">{{ nameOf(selected.key) }}</h2>
+                            <p class="text-admin-base text-ink-2">{{ editable ? trans('content.templates.editable_hint') : trans('content.templates.fixed_hint') }}</p>
                         </div>
                         <SegmentedControl v-model="localeModel" :label="trans('content.templates.locale')" :options="[{ value: 'de', label: trans('content.locales.de') }, { value: 'en', label: trans('content.locales.en') }]" />
                     </div>
@@ -236,17 +236,17 @@ const shownFields = computed(() => {
                                     <Field :label="fieldLabel(field.name)" :hint="field.variables.length > 0 ? trans('content.templates.variables', { list: field.variables.map((v) => `:${v}`).join(', ') }) : trans('content.templates.no_variables')" :error="fieldError(field.name)" optional>
                                         <Textarea v-model="values[field.name]" :rows="field.name === 'subject' || field.default.length < 80 ? 2 : 4" :maxlength="field.name === 'subject' ? 200 : 2000" :placeholder="field.default" />
                                     </Field>
-                                    <p v-if="field.plural" class="text-helper text-ink-3">{{ trans('content.templates.plural_hint') }}</p>
+                                    <p v-if="field.plural" class="text-admin-base text-ink-3">{{ trans('content.templates.plural_hint') }}</p>
                                 </template>
                                 <template v-else>
-                                    <p class="flex items-center gap-8 text-label-s text-ink">
+                                    <p class="flex items-center gap-8 text-admin-base-strong text-ink">
                                         {{ fieldLabel(field.name) }}
                                         <Badge tone="neutral"><PhLockSimple :size="12" class="mr-4 inline" aria-hidden="true" />{{ trans('content.templates.fixed_field') }}</Badge>
                                     </p>
-                                    <p class="whitespace-pre-line rounded-xs bg-raised px-12 py-8 text-supporting text-ink-2">{{ field.default }}</p>
+                                    <p class="whitespace-pre-line rounded-xs bg-raised px-12 py-8 text-admin-base text-ink-2">{{ field.default }}</p>
                                 </template>
                             </div>
-                            <p v-if="errors.refused && !testOpen && !resetOpen" class="text-helper text-danger" role="alert">{{ errors.refused }}</p>
+                            <p v-if="errors.refused && !testOpen && !resetOpen" class="text-admin-base text-danger" role="alert">{{ errors.refused }}</p>
                             <div v-if="editable" class="flex flex-wrap items-center justify-end gap-8 border-t border-line-subtle pt-16">
                                 <Button v-if="customised && !dirty" size="sm" variant="destructive" :icon="PhArrowCounterClockwise" data-testid="ADM-33.reset" @click="resetOpen = true">{{ trans('content.templates.reset') }}</Button>
                                 <Button size="sm" variant="secondary" :icon="PhPaperPlaneTilt" data-testid="ADM-33.test" @click="testOpen = true">{{ trans('content.templates.test') }}</Button>
@@ -256,17 +256,17 @@ const shownFields = computed(() => {
 
                         <aside class="flex w-full flex-col gap-12 wide:w-360" :aria-label="trans('content.templates.preview')" data-testid="ADM-33.preview">
                             <div class="flex flex-col gap-8 rounded-sm border border-line bg-surface p-16" :aria-busy="previewing">
-                                <h3 class="text-label-s text-ink-2">{{ trans('content.templates.preview') }}</h3>
+                                <h3 class="text-admin-base-strong text-ink-2">{{ trans('content.templates.preview') }}</h3>
                                 <!-- DQ-629: one outcome at a time, as a member gets it; never both variants stacked. -->
                                 <SegmentedControl v-if="hasVariants" v-model="variant" class="self-start" :options="variantOptions" :label="trans('content.templates.variant')" data-testid="ADM-33.variant" />
                                 <template v-for="field in shownFields" :key="field.name">
-                                    <p v-if="rendered[field.name]" :class="field.name.endsWith('subject') || field.name.endsWith('heading') ? 'text-label text-ink' : 'text-supporting text-ink-2'">{{ rendered[field.name] }}</p>
+                                    <p v-if="rendered[field.name]" :class="field.name.endsWith('subject') || field.name.endsWith('heading') ? 'text-admin-base-strong text-ink' : 'text-admin-base text-ink-2'">{{ rendered[field.name] }}</p>
                                 </template>
-                                <p v-if="previewError" class="text-helper text-danger" role="alert">{{ previewError }}</p>
+                                <p v-if="previewError" class="text-admin-base text-danger" role="alert">{{ previewError }}</p>
                             </div>
                             <details class="rounded-sm border border-line px-16 py-12">
-                                <summary :class="[focusRing, 'flex min-h-32 cursor-pointer items-center text-label-s text-ink-2']">{{ trans('content.templates.samples') }}</summary>
-                                <dl class="mt-8 flex flex-col gap-4 text-helper">
+                                <summary :class="[focusRing, 'flex min-h-32 cursor-pointer items-center text-admin-base-strong text-ink-2']">{{ trans('content.templates.samples') }}</summary>
+                                <dl class="mt-8 flex flex-col gap-4 text-admin-base">
                                     <div v-for="[name, value] in sampleList" :key="name" class="flex gap-8"><dt class="w-96 shrink-0 text-ink-3">:{{ name }}</dt><dd class="min-w-0 break-all text-ink-2">{{ value }}</dd></div>
                                 </dl>
                             </details>

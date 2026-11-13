@@ -3,8 +3,11 @@
  * sticky CTA bar of a form (§9) and the keyboard. The toast clears the highest of them, so it never sits on the primary
  * action and a hover cannot hold it there either.
  *
- * StickyCTABar reports its height here while its screen is focused. The shell toast host reads it. Hosts inside an
- * overlay do not, because the overlay covers the bar.
+ * StickyCTABar reports its height here while its screen is focused. The shell toast host reads it.
+ *
+ * DQ-1006: a host inside an overlay clears what is at the bottom there: the footer of an open sheet (its primary action),
+ * which the sheet reports with `reportOverlayFooter`, and otherwise what the shell host cleared (the tab bar under a context
+ * menu), which the shell host publishes with `reportShellClearance`.
  */
 import { useSyncExternalStore } from 'react';
 
@@ -44,6 +47,106 @@ export function useStickyBarHeight(): number {
     () => tallest,
     () => 0,
   );
+}
+
+/** A tiny store of numbers by key; the largest counts. */
+function heightStore() {
+  const values = new Map<string, number>();
+  let largest = 0;
+  const listeners = new Set<() => void>();
+  return {
+    report(key: string, height: number | null) {
+      if (height !== null && height > 0) values.set(key, height);
+      else values.delete(key);
+      const next = values.size > 0 ? Math.max(...values.values()) : 0;
+      if (next === largest) return;
+      largest = next;
+      listeners.forEach((listener) => listener());
+    },
+    subscribe(listener: () => void) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    get: () => largest,
+  };
+}
+
+const overlayFooters = heightStore();
+const shellTabBar = heightStore();
+const shellStickyBar = heightStore();
+
+/**
+ * DQ-1006: the footer of an open sheet, from the bottom of the window to its hairline (safe inset included). `null` takes it
+ * out when the sheet closes. A toast raised inside the overlay then sits 8 above the sheet's primary action.
+ */
+export function reportOverlayFooter(key: string, height: number | null): void {
+  overlayFooters.report(key, height);
+}
+
+/**
+ * DQ-1006 r3: an open sheet, as a toast inside its overlay must see it. `height` runs from the bottom of the window to the sheet's
+ * visible top edge (safe inset included); `column` is the width of its content column. A toast then sits 8 above the sheet, never
+ * on its text field or its primary action, and no wider than its column. `null` takes it out when the sheet closes.
+ */
+export type OverlayPanel = { height: number; column: number };
+
+const panels = new Map<string, OverlayPanel>();
+let panel: OverlayPanel | null = null;
+const panelListeners = new Set<() => void>();
+
+export function reportOverlayPanel(key: string, next: OverlayPanel | null): void {
+  if (next && next.height > 0) panels.set(key, next);
+  else panels.delete(key);
+  // The tallest open sheet is the one on top of the others.
+  let tallest: OverlayPanel | null = null;
+  panels.forEach((entry) => {
+    if (!tallest || entry.height > tallest.height) tallest = entry;
+  });
+  const before = panel;
+  const after = tallest as OverlayPanel | null;
+  if (before?.height === after?.height && before?.column === after?.column) return;
+  panel = after;
+  panelListeners.forEach((listener) => listener());
+}
+
+function subscribePanel(listener: () => void) {
+  panelListeners.add(listener);
+  return () => {
+    panelListeners.delete(listener);
+  };
+}
+
+/** The open sheet a toast inside the overlay sits above, or null. */
+export function useOverlayPanel(): OverlayPanel | null {
+  return useSyncExternalStore(
+    subscribePanel,
+    () => panel,
+    () => null,
+  );
+}
+
+/**
+ * DQ-1006 r3: whether a toast above a sheet `panelHeight` high still fits under the safe top of a `windowHeight` window. When it
+ * does not (a sheet at its full snap), the toast goes to the top of the screen instead, never into the sheet's content.
+ */
+export function toastFitsAbovePanel(panelHeight: number, windowHeight: number, safeTop: number, toastHeight: number): boolean {
+  return windowHeight - panelHeight - TOAST_GAP - toastHeight >= safeTop + TOAST_GAP;
+}
+
+/** The shell host's clearance, so a host inside an overlay that has no footer (a context menu) still clears the tab bar. */
+export function reportShellClearance(tabBar: number, stickyBar: number): void {
+  shellTabBar.report('shell', tabBar);
+  shellStickyBar.report('shell', stickyBar);
+}
+
+/** What a toast inside an overlay clears: the shell's tab bar, and the higher of the shell's sticky bar and a sheet footer. */
+export function useOverlayClearance(): { tabBar: number; stickyBar: number } {
+  const footer = useSyncExternalStore(overlayFooters.subscribe, overlayFooters.get, () => 0);
+  const tabBar = useSyncExternalStore(shellTabBar.subscribe, shellTabBar.get, () => 0);
+  const stickyBar = useSyncExternalStore(shellStickyBar.subscribe, shellStickyBar.get, () => 0);
+  return { tabBar, stickyBar: Math.max(stickyBar, footer) };
 }
 
 export type ToastClearance = {

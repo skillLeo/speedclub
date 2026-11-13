@@ -41,8 +41,8 @@ function submit(): void {
     <Head :title="trans('auth.reset.title')" />
     <div class="flex flex-col gap-24" data-testid="ADM-04" :data-qa-state="state">
         <div class="flex flex-col gap-8">
-            <h1 class="text-title-m text-ink">{{ trans('auth.reset.title') }}</h1>
-            <p class="text-supporting text-ink-2">{{ trans('auth.reset.intro') }}</p>
+            <h1 class="text-title-2 text-ink">{{ trans('auth.reset.title') }}</h1>
+            <p class="text-admin-base text-ink-2">{{ trans('auth.reset.intro') }}</p>
         </div>
 
         <!-- The form's own geometry: three fields (label, 40 control, the hint of the new password), then the button (DQ-514). -->
@@ -74,7 +74,7 @@ function submit(): void {
             <AuthNotice v-if="form.errors.token" tone="error" :text="form.errors.token" />
             <Button type="submit" variant="primary" block :loading="form.processing" data-testid="ADM-04.reset-submit">{{ trans('auth.reset.submit') }}</Button>
         </form>
-        <Link :href="loginUrl()" class="inline-flex h-32 items-center self-start rounded-xs text-label-s text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+        <Link :href="loginUrl()" class="inline-flex h-32 items-center self-start rounded-xs text-admin-base-strong text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
             {{ trans('auth.common.back_to_login') }}
         </Link>
     </div>

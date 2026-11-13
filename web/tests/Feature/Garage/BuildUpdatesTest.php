@@ -147,12 +147,12 @@ describe('automatic updates', function () {
         $response = $this->withHeader('Accept-Language', 'de')->getJson("/api/v1/vehicles/{$this->vehicle->id}/updates")->assertOk();
 
         expect($response->json('data.0.type'))->toBe('specs_changed')
-            ->and($response->json('data.0.summary'))->toBe("Leistung: 400 PS (294 kW) · Werksangabe \u{2192} 500 PS (368 kW) · Gemessen");
+            ->and($response->json('data.0.summary'))->toBe("Leistung: 400 PS (294 kW) · Herstellerangabe \u{2192} 500 PS (368 kW) · Prüfstand");
 
         $this->owner->forceFill(['power_display' => 'kw_ps'])->save();
 
         expect($this->withHeader('Accept-Language', 'de')->getJson("/api/v1/vehicles/{$this->vehicle->id}/updates")->json('data.0.summary'))
-            ->toBe("Leistung: 294 kW (400 PS) · Werksangabe \u{2192} 368 kW (500 PS) · Gemessen");
+            ->toBe("Leistung: 294 kW (400 PS) · Herstellerangabe \u{2192} 368 kW (500 PS) · Prüfstand");
 
         $this->putJson("/api/v1/vehicles/{$this->vehicle->id}/specs", ['power_value' => 400, 'power_unit' => 'ps', 'power_source' => 'factory'])->assertOk();
 

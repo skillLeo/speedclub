@@ -8,6 +8,7 @@ use App\Enums\RestrictionType;
 use App\Enums\ThemePreference;
 use App\Models\User;
 use App\Services\Auth\MemberStats;
+use App\Services\Showcase\SampleContent;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -58,10 +59,18 @@ class MeResource extends JsonResource
             'power_display' => $member->getAttribute('power_display'),
             /** @var string */
             'member_since' => $member->created_at?->toIso8601String(),
-            /** @var array{vehicles: int, followers: int, following: int} */
-            'stats' => $stats,
+            /**
+             * Each count is null for a sample account (09 §8.19: counts on samples are hidden).
+             */
+            'stats' => SampleContent::stats($member, $stats),
+            /** A sample account of the showcase (09 §8.19). */
+            'is_sample' => $member->getAttribute('is_sample') === true,
+            /** The SPEED CLUB Editorial account. */
+            'is_editorial' => $member->getAttribute('is_editorial') === true,
             /** M2.5 SET-05: two-factor is on, so sign-in, SET-13 and switching it off ask for a code. */
             'two_factor_enabled' => $member->hasTwoFactor(),
+            /** M4.6: false for a passwordless account (e-mail code, Apple, Google); SET-04 then sets one instead of changing it. */
+            'password_set' => $member->hasPassword(),
             'restrictions' => [
                 'suspended' => $member->isSuspended(),
                 'messaging' => $this->restriction(RestrictionType::Messaging),

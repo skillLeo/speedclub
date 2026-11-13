@@ -5,15 +5,19 @@ namespace App\Actions\Auth;
 use App\Enums\ErrorCode;
 use App\Enums\MemberSecurityEvent;
 use App\Enums\SecurityNotice;
+use App\Enums\SignInMethod;
 use App\Exceptions\ApiException;
 use App\Http\RateLimits;
+use App\Models\User;
 use App\Services\Audit\Audit;
+use App\Services\Auth\IdTokens\SocialAccounts;
 use App\Services\Auth\SecondFactorGuard;
 use App\Services\Auth\TwoFactor;
 use App\Services\Auth\TwoFactorChallenges;
 use App\Services\Notifications\Notifier;
 use App\Support\Auth\AuthResult;
 use App\Support\Auth\DeviceInfo;
+use App\Support\Auth\PendingProviderLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
@@ -32,6 +36,7 @@ class PassTwoFactorChallenge
         private readonly SignInMember $signIn,
         private readonly SecondFactorGuard $guard,
         private readonly Notifier $notifier,
+        private readonly SocialAccounts $social,
     ) {}
 
     public function handle(string $challenge, ?string $code, ?string $recoveryCode, ?DeviceInfo $device, Request $request): AuthResult
@@ -80,7 +85,12 @@ class PassTwoFactorChallenge
 
         RateLimiter::clear($keys[1]);
 
-        $result = $this->signIn->handle($user, $device, $request);
+        // SEC-M46-02: a provider link of AUTH-16, or the first sign-in of a linked provider, takes effect only now.
+        $pending = TwoFactorChallenges::pending($taken['entry']);
+        $this->applyPending($user, $pending);
+        $method = SignInMethod::tryFrom(is_string($pending['method'] ?? null) ? $pending['method'] : '');
+
+        $result = $this->signIn->handle($user, $device, $request, secondFactorPassed: true, method: $method);
 
         if ($usedRecovery) {
             $left = $this->twoFactor->remainingRecoveryCodes($user);
@@ -90,5 +100,33 @@ class PassTwoFactorChallenge
         }
 
         return $result;
+    }
+
+    /**
+     * @param  array<string, mixed>  $pending
+     */
+    private function applyPending(User $user, array $pending): void
+    {
+        $link = $pending['link'] ?? null;
+
+        if (is_array($link)) {
+            $identity = PendingProviderLink::identity($link);
+
+            if ($identity !== null) {
+                $account = $this->social->link($user, $identity, notify: true, authorizationCode: PendingProviderLink::authorizationCode($link));
+                $account->forceFill(['second_factor_at' => now()])->save();
+            }
+        }
+
+        $accountId = $pending['provider_account'] ?? null;
+
+        if (is_string($accountId)) {
+            $account = $user->socialAccounts()->whereKey($accountId)->first();
+
+            if ($account !== null) {
+                $account->forceFill(['second_factor_at' => now()])->save();
+                $this->social->touch($account);
+            }
+        }
     }
 }

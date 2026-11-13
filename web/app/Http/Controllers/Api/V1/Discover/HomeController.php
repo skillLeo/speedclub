@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Api\V1\Discover;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Discover\NewBuildsRequest;
+use App\Http\Requests\Api\V1\Home\HomeModulesRequest;
 use App\Http\Resources\V1\FeaturedBuildResource;
 use App\Http\Resources\V1\FeedVehicleResource;
 use App\Http\Resources\V1\HomeModulesResource;
 use App\Models\VehicleSearch;
+use App\Services\Discover\CatalogHighlights;
 use App\Services\Discover\HomeFeed;
+use App\Services\Events\NearbyEvents;
+use App\Services\Home\BuildOfWeek;
 use App\Services\Home\HomeModules;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
@@ -65,12 +69,17 @@ class HomeController extends Controller
      *
      * @unauthenticated
      */
-    public function modules(Request $request): HomeModulesResource
+    public function modules(HomeModulesRequest $request, BuildOfWeek $buildOfWeek, CatalogHighlights $highlights, NearbyEvents $nearby): HomeModulesResource
     {
         $viewer = Viewer::from($request);
         Gate::forUser($viewer)->authorize('viewAny', VehicleSearch::class);
+        $hero = $this->feed->featured($viewer)[0] ?? null;
 
         return new HomeModulesResource([
+            'build_of_week' => $buildOfWeek->for($viewer, $hero === null ? [] : [(string) $hero->vehicle->id]),
+            // The device location of this request, else the region the member chose in SET-11 (09 §8.7).
+            'nearby_events' => $nearby->near($viewer, $request->point() ?? $viewer?->homeRegionPoint()),
+            'brands_in_focus' => $highlights->brandsInFocus($viewer),
             'build_updates' => $this->modules->buildUpdates($viewer),
             'active_members' => $this->modules->activeMembers($viewer, config()->integer('speedclub.home.active_members')),
             'popular_mods' => $this->modules->popularMods($viewer),

@@ -86,7 +86,7 @@ onMounted(async () => {
     <div class="flex flex-col gap-24" data-testid="ADM-52" :data-qa-state="pageState">
         <PageHeader :title="trans('settings.title')" :crumbs="[{ label: trans('shell.groups.settings') }]" :description="trans('settings.intro')">
             <template #meta>
-                <p class="flex flex-wrap gap-x-16 gap-y-4 text-supporting text-ink-2 tabular-nums" data-testid="ADM-52.last">
+                <p class="flex flex-wrap gap-x-16 gap-y-4 text-admin-base text-ink-2 tabular-nums" data-testid="ADM-52.last">
                     <span>{{ lastPublished ? trans('settings.last', { version: formatNumber(lastPublished.version), date: formatDateTime(lastPublished.at), name: lastPublished.by ?? '–' }) : trans('settings.never') }}</span>
                     <span v-if="missing > 0 && pageState === 'ready'" class="text-warning">{{ transChoice('settings.missing', missing, { count: formatNumber(missing) }) }}</span>
                 </p>
@@ -96,7 +96,7 @@ onMounted(async () => {
                 <Button size="sm" variant="primary" :icon="PhFloppyDisk" :disabled="changed.length === 0 || invalid" data-testid="ADM-52.save" @click="(action.reset(), (confirmOpen = true))">{{ trans('settings.save') }}</Button>
             </template>
         </PageHeader>
-        <p v-if="!canEdit" class="text-supporting text-ink-2" data-testid="ADM-52.view-only">{{ trans('settings.owner_only') }}</p>
+        <p v-if="!canEdit" class="text-admin-base text-ink-2" data-testid="ADM-52.view-only">{{ trans('settings.owner_only') }}</p>
 
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('settings.error')" :body="trans('ui.state.error_body')" test-id="ADM-52.error" @retry="router.reload()" />
         <div v-else-if="pageState === 'loading'" class="flex flex-col gap-32" aria-busy="true" data-testid="ADM-52.loading">
@@ -109,7 +109,7 @@ onMounted(async () => {
         </div>
         <form v-else class="flex flex-col gap-32" novalidate @submit.prevent="confirmOpen = true">
             <section v-for="g in GROUPS" :key="g.key" class="flex flex-col gap-16" :data-testid="`ADM-52.group.${g.key}`" :aria-labelledby="`adm52-${g.key}`">
-                <h2 :id="`adm52-${g.key}`" class="text-title-s text-ink">{{ trans(`settings.groups.${g.key}`) }}</h2>
+                <h2 :id="`adm52-${g.key}`" class="text-headline text-ink">{{ trans(`settings.groups.${g.key}`) }}</h2>
                 <div class="grid grid-cols-1 gap-x-24 gap-y-16 tablet:grid-cols-2">
                     <Field v-for="f in g.fields" :key="f" :label="label(f)" :hint="hint(f)" :error="fieldError(f)">
                         <Select v-if="f === 'default_locale'" v-model="draft[f]" :options="localeOptions" :disabled="!canEdit" :data-testid="`ADM-52.field.${f}`" />

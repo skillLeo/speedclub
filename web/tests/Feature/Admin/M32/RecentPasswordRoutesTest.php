@@ -22,6 +22,7 @@ const ADMIN_WRITES_WITHOUT_RECENT_PASSWORD = [
     'two-factor.login.store' => 'the code step of the sign-in',
     'two-factor.enable' => 'Fortify confirms the password itself (password.confirm on the route)',
     'two-factor.confirm' => 'enrolment: confirms the new key with a code',
+    'admin.two-factor.skip' => 'ADR-427: enrolment step before any code exists; marks only this session, audited, rate-limited',
     'two-factor.disable' => 'Fortify confirms the password itself (password.confirm on the route)',
     'two-factor.regenerate-recovery-codes' => 'Fortify confirms the password itself (password.confirm on the route)',
     // Shell and personal settings: nothing of a member or the platform changes.
@@ -108,6 +109,7 @@ const ADMIN_WRITES_WITHOUT_ATOM = [
     'two-factor.login.store' => 'signed out (code step)',
     'two-factor.enable' => 'the staff member\'s own second factor',
     'two-factor.confirm' => 'the staff member\'s own second factor',
+    'admin.two-factor.skip' => 'the staff member\'s own enrolment (ADR-427)',
     'two-factor.disable' => 'the staff member\'s own second factor',
     'two-factor.regenerate-recovery-codes' => 'the staff member\'s own second factor',
     'admin.session.keep-alive' => 'every signed-in staff member',

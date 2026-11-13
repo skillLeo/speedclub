@@ -5,6 +5,7 @@ import { hydrateThemePreference, motion, size, themes, typography } from '@/them
 import { Avatar, initialsOf, initialsVariant } from '@/ui/Avatar';
 import { Hairline } from '@/ui/Hairline';
 import { Progress } from '@/ui/Progress';
+import { __setAccessibilityForTests } from '@/ui/motion';
 import { UnreadBadge } from '@/ui/UnreadBadge';
 
 import { flat, renderUi } from './helpers';
@@ -14,13 +15,7 @@ jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
   default: jest.fn(() => ({ width: 390, height: 844, scale: 1, fontScale: 1 })),
 }));
 
-jest.mock('react-native-reanimated', () => {
-  const actual = jest.requireActual<typeof import('react-native-reanimated')>('react-native-reanimated');
-  return { ...actual, __esModule: true, default: actual.default, useReducedMotion: jest.fn(() => false) };
-});
-
 const dimensions = useWindowDimensions as jest.Mock;
-const { useReducedMotion: reducedMotion } = jest.requireMock<{ useReducedMotion: jest.Mock }>('react-native-reanimated');
 
 beforeAll(hydrateThemePreference);
 beforeEach(() => dimensions.mockReturnValue({ width: 390, height: 844, scale: 1, fontScale: 1 }));
@@ -40,7 +35,7 @@ describe('UnreadBadge', () => {
     await renderUi(<UnreadBadge count={7} testID="b" />);
     expect(flat(screen.getByTestId('b').props.style).minHeight).toBe(size.unreadPill);
     expect(screen.getByText('7')).toBeTruthy();
-    expect(screen.getByTestId('b').props['aria-label']).toBe('7 ungelesen');
+    expect(screen.getByTestId('b').props['aria-label']).toBe('7\u00A0ungelesen');
   });
 
   it('caps at 99+, renders nothing at zero', async () => {
@@ -72,12 +67,18 @@ describe('Progress', () => {
     expect(root.props['aria-valuemax']).toBe(4);
     const segments = root.children.filter((child) => typeof child !== 'string');
     expect(segments).toHaveLength(4);
-    const colour = (i: number) => {
-      const segment = segments[i];
-      return flat(segment && typeof segment !== 'string' ? segment.props.style : undefined).backgroundColor;
+    // Every segment is the track; its fill scales in X from the left (spring.default, M4.9): full when done, empty after.
+    const fill = (i: number) => {
+      const segment = screen.getByTestId(`p.segment.${i}`);
+      expect(flat(segment.props.style).backgroundColor).toBe(carbon.border.default);
+      const child = segment.children[0];
+      const style = flat(child && typeof child !== 'string' ? child.props.style : undefined);
+      expect(style.backgroundColor).toBe(carbon.text.primary);
+      const transform = (style.transform ?? []) as { scaleX?: number }[];
+      return transform.find((entry) => entry.scaleX !== undefined)?.scaleX;
     };
-    expect(colour(1)).toBe(carbon.text.primary);
-    expect(colour(2)).toBe(carbon.border.default);
+    expect(fill(1)).toBe(1);
+    expect(fill(2)).toBe(0);
   });
 
   it('ring is exposed as a progressbar', async () => {
@@ -98,7 +99,7 @@ describe('Avatar', () => {
     expect(initialsOf('Özge Yıldız', 1)).toBe('Ö');
   });
 
-  it.each([24, 32, 40, 56, 96] as const)('size %s has exact dimensions', async (value) => {
+  it.each([24, 32, 40, 56, 88] as const)('size %s has exact dimensions', async (value) => {
     await renderUi(<Avatar name="Lukas Schneider" size={value} testID="a" />);
     const avatar = flat(screen.getByTestId('a').props.style);
     expect(avatar.width).toBe(value);
@@ -110,17 +111,17 @@ describe('Avatar', () => {
     expect(screen.getByTestId('a').props['aria-label']).toBe('Lukas Schneider');
     expect(flat(screen.getByTestId('a').props.style).backgroundColor).toBe(carbon.bg.raised);
     const text = flat(screen.getByText('LS', { includeHiddenElements: true }).props.style);
-    expect(text.fontSize).toBe(typography.label.fontSize);
+    expect(text.fontSize).toBe(typography.bodyStrong.fontSize);
     expect(text.color).toBe(carbon.text.secondary);
   });
 
   // ADR-150: the initials take the type style of their circle (DQ-134), never the font scale (DQ-106).
   const BY_SIZE = [
     [24, 'caption'],
-    [32, 'labelS'],
-    [40, 'label'],
-    [56, 'titleS'],
-    [96, 'titleM'],
+    [32, 'callout'],
+    [40, 'bodyStrong'],
+    [56, 'headline'],
+    [88, 'title2'],
   ] as const;
 
   it.each(BY_SIZE)('a %s circle sets its initials in %s', (value, variant) => {
@@ -128,7 +129,7 @@ describe('Avatar', () => {
   });
 
   it('marks the initials as the fixed glyph the DOM audit accepts on avatars only', async () => {
-    await renderUi(<Avatar name="Max Weber" size={96} testID="a" />);
+    await renderUi(<Avatar name="Max Weber" size={88} testID="a" />);
     expect(screen.getByText('MW', { includeHiddenElements: true }).props.dataSet).toEqual({ qaExempt: 'fixed-glyph' });
   });
 
@@ -160,19 +161,20 @@ describe('Avatar', () => {
     expect(screen.queryByText('L', { includeHiddenElements: true })).toBeNull();
   });
 
-  it('fades the image in over 200 ms', async () => {
+  it('fades the image in over effect.default (200 ms)', async () => {
     await renderUi(<Avatar name="Lukas" uri="https://example.test/a.webp" testID="a" />);
     const image = screen.getByTestId('a.image', { includeHiddenElements: true });
-    expect(image.props.transition).toEqual(expect.objectContaining({ duration: motion.duration.small }));
+    expect(image.props.transition).toEqual(expect.objectContaining({ duration: motion.css['effect.default'].duration }));
   });
 
   it('shows the image without a fade under reduced motion', async () => {
-    reducedMotion.mockReturnValue(true);
+    // The device setting as useMotionPreference reads it (AccessibilityInfo, live).
+    __setAccessibilityForTests({ reduceMotion: true });
     try {
       await renderUi(<Avatar name="Lukas" uri="https://example.test/a.webp" testID="a" />);
       expect(screen.getByTestId('a.image', { includeHiddenElements: true }).props.transition).toBeFalsy();
     } finally {
-      reducedMotion.mockReturnValue(false);
+      __setAccessibilityForTests({ reduceMotion: false });
     }
   });
 

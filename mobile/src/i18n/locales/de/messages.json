@@ -57,7 +57,13 @@
     "guestBody": "Frag Besitzer nach ihrem Setup, verabrede dich zum Treffen oder teile deinen Build.",
     "signIn": "Anmelden",
     "selectTitle": "Wähle eine Unterhaltung",
-    "selectBody": "Oder beginne eine neue über „Neue Nachricht“."
+    "selectBody": "Oder beginne eine neue über „Neue Nachricht“.",
+    "sample": {
+      "sampleQuestion": "Welche Federn fährst du an der Hinterachse?",
+      "sampleMeet": "Bist du Samstag beim Treffen in Ludwigsburg?",
+      "timeQuestion": "19:42",
+      "timeMeet": "Gestern"
+    }
   },
   "organise": {
     "title": "Unterhaltung mit {{name}}",
@@ -87,6 +93,8 @@
   },
   "thread": {
     "info": "Infos zur Unterhaltung",
+    "drives": "fährt {{car}}",
+    "vehicleView": "Ansehen",
     "contextOwner": "Fahrzeug von @{{username}}",
     "contextOpen": "Fahrzeug öffnen: {{title}}",
     "read": "Gelesen",
@@ -99,7 +107,7 @@
     "emptyRequest": "Diese Anfrage enthält keine Nachrichten mehr.",
     "closed": "Du kannst in dieser Unterhaltung nicht mehr schreiben.",
     "requestPending": "Anfrage gesendet. Bis {{name}} sie annimmt, kannst du keine weitere Nachricht senden.",
-    "notVerified": "Bestätige deine E-Mail-Adresse, um Nachrichten zu schreiben.",
+    "notVerified": "Bestätige deine E-⁠Mail-Adresse, um Nachrichten zu schreiben.",
     "restricted": "Nachrichten schreiben ist für dein Konto gerade eingeschränkt.",
     "sending": "Wird gesendet",
     "queued": "Wartet auf Verbindung",
@@ -133,11 +141,15 @@
   },
   "reactions": {
     "thumbs_up": "Daumen hoch",
-    "heart": "Herz",
+    "heart": "Gefällt mir",
     "fire": "Feuer",
     "laugh": "Lachen",
     "wow": "Staunen",
     "flag": "Zielflagge",
+    "stark": "Stark",
+    "sauber": "Sauber",
+    "tief": "Tief",
+    "laut": "Laut",
     "count": "{{label}}: {{formatted}}",
     "mine": "{{label}}, deine Reaktion",
     "remove": "Reaktion entfernen"
@@ -207,7 +219,7 @@
     "keep": "Weiterschreiben",
     "reasons": {
       "recipient_closed": "Nimmt gerade keine Nachrichten von dir an",
-      "not_verified": "Bestätige zuerst deine E-Mail-Adresse",
+      "not_verified": "Bestätige zuerst deine E-⁠Mail-Adresse",
       "restricted": "Nachrichten schreiben ist für dein Konto eingeschränkt"
     },
     "about": "Es geht um dieses Fahrzeug",
@@ -215,5 +227,19 @@
   },
   "entry": {
     "sendVehicle": "Fahrzeug senden"
+  },
+  "reply": {
+    "action": "Antworten",
+    "to": "Antwort an {{name}}",
+    "cancel": "Antwort verwerfen",
+    "vehicle": "Fahrzeug",
+    "unavailable": "Nachricht nicht mehr verfügbar"
+  },
+  "swipe": {
+    "mute": "Stumm",
+    "unmute": "Ton an",
+    "archive": "Archivieren",
+    "unarchive": "Zurückholen",
+    "delete": "Löschen"
   }
 }

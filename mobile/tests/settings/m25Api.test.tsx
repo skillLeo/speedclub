@@ -58,10 +58,13 @@ const ME: Me = {
   id: '01m6f7ztzfs0gd39t08rs9zmmp',
   email: EMAIL,
   email_verified: true,
+  is_sample: false,
+  is_editorial: false,
   has_username: true,
   profile_complete: true,
   next_step: null,
   force_password_change: false,
+  password_set: true,
   two_factor_enabled: true,
   username: 'lukas.sc',
   username_change_available_at: null,
@@ -166,7 +169,7 @@ describe('M2.5 settings answers', () => {
         body: {
           data: [
             { id: 't1', kind: 'app', device_name: 'iPhone 15 Pro', platform: 'ios', app_version: '0.4.0', last_used_at: '2026-11-08T10:00:00Z', current: true },
-            { id: 'w9', kind: 'web', device_name: 'Chrome auf macOS', platform: 'web', app_version: null, last_used_at: '2026-11-07T10:00:00Z', current: false },
+            { id: 'w9', kind: 'web', device_name: 'Chrome auf macOS', platform: 'web', app_version: null, last_used_at: '2026-11-07T10:00:00Z', current: false, os_version: null, approx_city: null, signed_in_at: null },
           ],
         },
       },
@@ -181,6 +184,9 @@ describe('M2.5 settings answers', () => {
       appVersion: null,
       lastUsedAt: '2026-11-07T10:00:00Z',
       current: false,
+      osVersion: null,
+      signedInAt: null,
+      approxCity: null,
     });
   });
 

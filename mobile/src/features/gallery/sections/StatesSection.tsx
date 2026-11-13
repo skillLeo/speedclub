@@ -6,7 +6,7 @@ import { FullBleed, Group, Panel, SectionScreen, Specimen, Wrap } from '../parts
 export function StatesSection() {
   return (
     <SectionScreen section="states">
-      <Group title="Skeleton" note="bg.raised in der Geometrie des Inhalts, auch bei großer Schrift, Shimmer 1,2 s, erst nach 300 ms.">
+      <Group title="Skeleton" note={'bg.raised in der Geometrie des Inhalts, auch bei großer Schrift, Shimmer 1,2\u00a0s, erst nach 300\u00a0ms.'}>
         <Specimen label="Fahrzeugkarte" fill>
           <Skeleton testID="DEV-01.states.skeletonCard">
             <VehicleCardSkeleton />

@@ -188,8 +188,9 @@ if (!existsSync(manifestPath)) die('vite produced no public/build/manifest.json'
 const manifestKeys = Object.keys(JSON.parse(readFileSync(manifestPath, 'utf8')));
 const outsideKeys = manifestKeys.filter((key) => key.startsWith('../'));
 if (outsideKeys.length > 0) die(`public/build/manifest.json has ${outsideKeys.length} key(s) outside web/, for example ${outsideKeys[0]}: Vite::asset() would answer 500`);
-// The two fonts components/font-preload.blade.php asks for on every public page.
-for (const key of ['node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2', 'node_modules/@fontsource/inter/files/inter-latin-600-normal.woff2']) {
+// The faces components/font-preload.blade.php asks for: Inter Regular + Archivo SemiExpanded SemiBold on every public page, Inter
+// Regular + Medium in the admin (fonts 2.0, ADR-402).
+for (const key of ['resources/fonts/2.0/Inter-Regular.woff2', 'resources/fonts/2.0/ArchivoSemiExpanded-SemiBold.woff2', 'resources/fonts/2.0/Inter-Medium.woff2']) {
   if (!manifestKeys.includes(key)) die(`public/build/manifest.json has no key ${key}: Vite::asset() would answer 500`);
 }
 // The four Vite inputs (vite.config.ts): the admin (Inertia) and the public Blade pages load them through @vite.
@@ -298,7 +299,7 @@ const named = new Set(bundleFiles.flatMap((full) => [...readFileSync(full, 'utf8
 const absent = [...named].filter((asset) => !packed.has(`public/app/assets/${asset}`));
 if (absent.length > 0) die(`the member web names ${absent.length} asset(s) the package does not hold, for example ${absent[0]}`);
 const fontsPacked = [...packed].filter((rel) => /^public\/app\/assets\/.*\.(ttf|otf|woff2?)$/.test(rel)).length;
-if (fontsPacked === 0) die('no font file under public/app/assets: Inter and Barlow Semi Condensed would not load');
+if (fontsPacked === 0) die('no font file under public/app/assets: Inter, Inter Display and Archivo would not load');
 console.log(`    contents checked: every built file packed, ${named.size} asset(s) named by the bundle all present, ${fontsPacked} font file(s)`);
 
 function dosTime(date) {

@@ -30,6 +30,8 @@ class ModelCountResource extends JsonResource
             /** The DISC-04 route key, "bmw--m4". */
             'key' => ModelKey::of($model),
             'vehicle_count' => $this->resource->count,
+            /** M4.9: the newest visible build's cover of the model (make page only), or null. */
+            'cover' => $this->resource->cover === null ? null : new MediaResource($this->resource->cover),
             /**
              * Generations with at least one build, oldest first.
              *

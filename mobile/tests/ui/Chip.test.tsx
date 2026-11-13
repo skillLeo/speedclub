@@ -1,16 +1,20 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
+import { Dimensions } from 'react-native';
 
-import { hydrateThemePreference, radius, size, themes } from '@/theme';
+import { hydrateThemePreference, maxFontScale, radius, size, themes, typography } from '@/theme';
 import { Chip } from '@/ui/Chip';
 
-import { flat, renderUi, visualOf } from './helpers';
+import { flat, renderUi, toneLayerOf, toneLayersIn, visualOf } from './helpers';
 
 jest.mock('expo-haptics', () => ({
   selectionAsync: jest.fn(() => Promise.resolve()),
 }));
 
 beforeAll(hydrateThemePreference);
+
+/** N4: a capped role is set at min(font scale, cap) by Text itself on native, with OS scaling off (the jest window is at 2). */
+const badgeScale = () => Math.min(Dimensions.get('window').fontScale, maxFontScale.labelBadge);
 
 const carbon = themes.carbon.color;
 
@@ -30,7 +34,8 @@ describe('Chip', () => {
     expect(visualOf('c').minHeight).toBe(size.chip);
     expect(visualOf('c').borderRadius).toBe(radius.full);
     expect(visualOf('c').borderColor).toBe(carbon.border.default);
-    expect(screen.getByTestId('c').props.hitSlop.top).toBe(4);
+    // 09 §5: the pill is 32, so 6 above and below reach the 44 target.
+    expect(screen.getByTestId('c').props.hitSlop.top).toBe(6);
   });
 
   it('a plain chip is a button', async () => {
@@ -60,9 +65,38 @@ describe('Chip', () => {
     expect(onRemove).toHaveBeenCalledTimes(1);
   });
 
+  it('SM7: the pressed tone is state.pressed, state.pressedInverse on the inverted selected fill (ADR-421 c)', async () => {
+    const { ForcedVisualStateProvider } = jest.requireActual<typeof import('@/ui/qaVisualState')>('@/ui/qaVisualState');
+    await renderUi(
+      <ForcedVisualStateProvider value={{ pressed: true }}>
+        <Chip label="BMW" onPress={jest.fn()} selected={false} testID="off" />
+        <Chip label="Audi" onPress={jest.fn()} selected testID="on" />
+        <Chip label="Porsche" onPress={jest.fn()} selected onRemove={jest.fn()} testID="rm" />
+      </ForcedVisualStateProvider>,
+    );
+    const tone = (id: string) => flat(toneLayerOf(id).props.style);
+    expect(tone('off').backgroundColor).toBe(carbon.state.pressed);
+    expect(tone('on').backgroundColor).toBe(carbon.state.pressedInverse);
+    // The fill itself never changes on press: the tone layer is the only pressed colour, so it cannot double.
+    expect(visualOf('off').backgroundColor).toBeUndefined();
+    expect(visualOf('on').backgroundColor).toBe(carbon.bg.inverse);
+    // Removable: one layer on the pill, with its full radius, over its border; the two targets draw none.
+    const shell = flat(screen.getByTestId('rm').props.style);
+    expect(tone('rm').backgroundColor).toBe(carbon.state.pressedInverse);
+    expect(tone('rm').borderRadius).toBe(radius.full);
+    expect(tone('rm').top).toBe(-(shell.borderWidth as number));
+    expect(toneLayersIn('rm.body')).toHaveLength(0);
+    expect(toneLayersIn('rm.remove')).toHaveLength(0);
+  });
+
   it('shows the count', async () => {
     await renderUi(<Chip label="Filter" count={3} />);
-    expect(screen.getByText('3')).toBeTruthy();
+    const count = screen.getByText('3');
+    // DQ-806: label.badge in its 18 pill, capped by its role, with tabular figures.
+    expect(flat(count.props.style).fontSize).toBeCloseTo(typography.labelBadge.fontSize * badgeScale());
+    expect(count.props.allowFontScaling).toBe(false);
+    expect((flat(count.props.style) as { fontVariant?: string[] }).fontVariant).toEqual(['tabular-nums']);
+    expect(count.props.maxFontSizeMultiplier).toBe(maxFontScale.labelBadge);
     expect(screen.getByRole('button', { name: 'Filter 3' })).toBeTruthy();
   });
 

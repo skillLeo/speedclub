@@ -10,6 +10,7 @@ use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Services\Audit\Audit;
 use App\Services\Auth\DeviceSessions;
+use App\Services\Auth\Reauthentication;
 use App\Services\Notifications\Notifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ class RevokeDeviceSessions
     public function __construct(
         private readonly DeviceSessions $sessions,
         private readonly Notifier $notifier,
+        private readonly Reauthentication $reauthentication,
     ) {}
 
     public function one(User $user, string $id, Request $request): void
@@ -48,8 +50,13 @@ class RevokeDeviceSessions
         $this->notify($user);
     }
 
-    public function others(User $user, Request $request): void
+    /**
+     * M4.7 (09 §8.4): recent authentication, or the password of a member who has one (Reauthentication::password).
+     */
+    public function others(User $user, Request $request, string $password = ''): void
     {
+        $this->reauthentication->password($user, $password);
+
         $revoked = DB::transaction(function () use ($user, $request): array {
             $revoked = $this->sessions->revokeOthers($user, $request);
 

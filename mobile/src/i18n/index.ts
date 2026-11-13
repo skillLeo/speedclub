@@ -8,6 +8,7 @@ import discoverDe from './locales/de/discover.json';
 import errorsDe from './locales/de/errors.json';
 import garageDe from './locales/de/garage.json';
 import homeDe from './locales/de/home.json';
+import eventsDe from './locales/de/events.json';
 import messagesDe from './locales/de/messages.json';
 import profileDe from './locales/de/profile.json';
 import qrDe from './locales/de/qr.json';
@@ -20,6 +21,7 @@ import discoverEn from './locales/en/discover.json';
 import errorsEn from './locales/en/errors.json';
 import garageEn from './locales/en/garage.json';
 import homeEn from './locales/en/home.json';
+import eventsEn from './locales/en/events.json';
 import messagesEn from './locales/en/messages.json';
 import profileEn from './locales/en/profile.json';
 import qrEn from './locales/en/qr.json';
@@ -36,6 +38,7 @@ export const namespaces = [
   'vehicle',
   'qr',
   'messages',
+  'events',
   'profile',
   'settings',
   'safety',
@@ -52,6 +55,7 @@ export const resources = {
     vehicle: vehicleDe,
     qr: qrDe,
     messages: messagesDe,
+    events: eventsDe,
     profile: profileDe,
     settings: settingsDe,
     safety: safetyDe,
@@ -66,6 +70,7 @@ export const resources = {
     vehicle: vehicleEn,
     qr: qrEn,
     messages: messagesEn,
+    events: eventsEn,
     profile: profileEn,
     settings: settingsEn,
     safety: safetyEn,

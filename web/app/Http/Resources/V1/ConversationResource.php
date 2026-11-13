@@ -32,7 +32,7 @@ class ConversationResource extends JsonResource
                 $me->folder === ConversationFolder::Requests => InboxFolder::Requests,
                 default => InboxFolder::Chats,
             },
-            'other' => $view->otherDeleted() || $view->otherUser === null ? null : new MemberSummaryResource($view->otherUser),
+            'other' => $view->otherDeleted() || $view->otherUser === null ? null : new ConversationMemberResource($view->otherUser),
             /** The other account is gone: "Gelöschtes Mitglied". */
             'other_deleted' => $view->otherDeleted(),
             /** The context card: the vehicle of the latest start from a vehicle page, while you may view it. */

@@ -74,8 +74,8 @@ class BuildUpdatePresenter
         $first = is_array($payload['changes'] ?? null) && is_array($payload['changes'][0] ?? null) ? $payload['changes'][0] : $payload;
         $kind = BuildUpdateType::tryFrom(is_string($first['kind'] ?? null) ? $first['kind'] : '') ?? $update->type;
 
-        if ($update->type === BuildUpdateType::Note) {
-            $kind = BuildUpdateType::Note;
+        if ($update->type->isAuthored()) {
+            $kind = $update->type;
         }
 
         if (! in_array($kind, [BuildUpdateType::ModAdded, BuildUpdateType::ModChanged, BuildUpdateType::ModRemoved], true)) {
@@ -115,7 +115,7 @@ class BuildUpdatePresenter
     {
         $note = $update->getAttribute('note');
 
-        if ($update->type === BuildUpdateType::Note && is_string($note)) {
+        if ($update->type->isAuthored() && is_string($note)) {
             return $note;
         }
 

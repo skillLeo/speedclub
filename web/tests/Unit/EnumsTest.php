@@ -35,9 +35,9 @@ it('has a German and an English label for every case of every enum', function ()
 
 it('follows the app locale', function () {
     app()->setLocale('de');
-    expect(PowerSource::Claimed->label())->toBe('Besitzerangabe');
+    expect(PowerSource::Claimed->label())->toBe('Geschätzt');
 
     app()->setLocale('en');
-    expect(PowerSource::Claimed->label())->toBe('Owner figure')
+    expect(PowerSource::Claimed->label())->toBe('Estimated')
         ->and(Visibility::Private->label('de'))->toBe('Privat');
 });

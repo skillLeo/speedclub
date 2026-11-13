@@ -19,8 +19,8 @@
         html, body { margin: 0; padding: 0; background: #ffffff; color: #000000; font-family: 'Inter', sans-serif; font-weight: 400; }
         .sheet { padding: {{ $mm(7) }} {{ $mm(9) }}; }
         .photo img { width: 100%; height: {{ $mm(44) }}; display: block; }
-        .eyebrow { font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: {{ $pt(9) }}; letter-spacing: {{ $pt(1) }}; margin: {{ $mm(4) }} 0 0; }
-        .title { font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: {{ $pt(22) }}; line-height: {{ $pt(24) }}; margin: {{ $mm(0.5) }} 0 0; }
+        .eyebrow { font-family: 'Archivo SemiExpanded', 'Inter', sans-serif; font-weight: 600; font-size: {{ $pt(9) }}; letter-spacing: {{ $pt(1) }}; margin: {{ $mm(4) }} 0 0; }
+        .title { font-family: 'Archivo SemiExpanded', 'Inter', sans-serif; font-weight: 600; font-size: {{ $pt(22) }}; line-height: {{ $pt(24) }}; margin: {{ $mm(0.5) }} 0 0; }
         .subline { font-size: {{ $pt(8.5) }}; line-height: {{ $pt(11) }}; margin: {{ $mm(1) }} 0 0; }
         table { border-collapse: collapse; width: 100%; }
         td { padding: 0; vertical-align: top; }
@@ -28,7 +28,7 @@
         .column { width: 50%; }
         .column-left { padding-right: {{ $mm(3) }}; }
         .column-right { padding-left: {{ $mm(3) }}; }
-        h2 { font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: {{ $pt(10) }}; margin: 0 0 {{ $mm(1) }}; padding-bottom: {{ $mm(0.8) }}; border-bottom: 0.75pt solid #000000; }
+        h2 { font-weight: 700; font-size: {{ $pt(10) }}; margin: 0 0 {{ $mm(1) }}; padding-bottom: {{ $mm(0.8) }}; border-bottom: 0.75pt solid #000000; }
         h3 { font-weight: 700; font-size: {{ $pt(7) }}; margin: {{ $mm(1.5) }} 0 {{ $mm(0.3) }}; }
         .row td { font-size: {{ $pt(7) }}; line-height: {{ $pt(9) }}; padding: {{ $mm(0.2) }} 0; border-bottom: 0.25pt solid #999999; }
         .row .value { text-align: right; font-weight: 700; padding-left: {{ $mm(2) }}; }

@@ -9,6 +9,7 @@ use App\Exceptions\ApiException;
 use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Services\Audit\Audit;
+use App\Services\Auth\DeviceInstalls;
 use App\Support\Auth\AuthResult;
 use App\Support\Auth\DeviceInfo;
 use Illuminate\Support\Carbon;
@@ -35,7 +36,7 @@ class RotateMemberToken
      *
      * @throws ApiException 409 conflict for a cookie session, a token gone or a token already replaced and claimed
      */
-    public function handle(User $user, ?string $deviceId = null): AuthResult
+    public function handle(User $user, ?string $deviceId = null, ?string $appVersion = null, ?string $osVersion = null): AuthResult
     {
         SignInMember::ensureMayEnter($user);
 
@@ -45,7 +46,7 @@ class RotateMemberToken
             throw new ApiException(ErrorCode::Conflict, (string) __('errors.token_required'));
         }
 
-        $result = DB::transaction(function () use ($user, $current, $deviceId): ?AuthResult {
+        $result = DB::transaction(function () use ($user, $current, $deviceId, $appVersion, $osVersion): ?AuthResult {
             $owner = User::query()->whereKey($user->getKey())->lockForUpdate()->firstOrFail();
 
             SignInMember::ensureMayEnter($owner);
@@ -70,7 +71,8 @@ class RotateMemberToken
 
             // Before the replacements are looked up, so a retry from an install that sent its id finds them by that id.
             if ($token->deviceId() === null && $deviceId !== null) {
-                $token->forceFill(['device_id' => $deviceId])->save();
+                // SEC-M47-03: stored keyed only (DeviceInstalls::key).
+                $token->forceFill(['device_id' => DeviceInstalls::key((string) $owner->getKey(), $deviceId)])->save();
             }
 
             // What a rotation leaves always has a device_name. A later token with only the same name is an older sign-in, not a replacement.
@@ -98,9 +100,10 @@ class RotateMemberToken
             return $this->tokens->create($owner, new DeviceInfo(
                 $token->deviceName(),
                 $platform instanceof DevicePlatform ? $platform : null,
-                is_string($version) ? $version : null,
+                $appVersion ?? (is_string($version) ? $version : null),
                 $token->deviceId(),
-            ));
+                $osVersion,
+            ), secondFactor: $token->getAttribute('second_factor_at') !== null);
         });
 
         return $result ?? throw new ApiException(ErrorCode::Conflict);

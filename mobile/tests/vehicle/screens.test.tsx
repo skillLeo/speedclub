@@ -103,12 +103,20 @@ describe('VEH-02 modification detail', () => {
     expect(mockRouter.replace).toHaveBeenCalledWith(`/v/${SLUG}`);
   });
 
-  it('opens the mod photos in the viewer', async () => {
-    const photo = R34.photos[0]!;
-    stubFetch({ [`/mods/${R34_WHEELS.id}`]: { body: { data: { ...R34_WHEELS, photos: [photo] } } } });
+  it('opens the mod photos in the viewer: the first as the 4:5 hero (DQ-1070), the rest from the wall', async () => {
+    const [first, second] = [R34.photos[0]!, R34.photos[1]!];
+    stubFetch({ [`/mods/${R34_WHEELS.id}`]: { body: { data: { ...R34_WHEELS, photos: [first, second] } } } });
     await renderWithProviders(<ModDetailScreen />);
-    await fireEvent.press(await screen.findByTestId('VEH-02.photo.0'));
-    expect(await screen.findByTestId('VEH-04.viewer.counter')).toHaveTextContent('1/1');
+    await fireEvent.press(await screen.findByTestId('VEH-02.hero'));
+    expect(await screen.findByTestId('VEH-04.viewer.counter')).toHaveTextContent('1/2');
+    expect(screen.getByTestId('VEH-02.photo.1')).toBeTruthy();
+  });
+
+  it('draws a glyph header for a mod without photos and never a cost (DQ-1070, GAR-10 ruling)', async () => {
+    stubFetch({ [`/mods/${R34_WHEELS.id}`]: { body: { data: { ...R34_WHEELS, photos: [], cost: { cents: 120000, label: '1.200 €' } } } } });
+    await renderWithProviders(<ModDetailScreen />);
+    expect(await screen.findByTestId('VEH-02.glyphHeader')).toBeTruthy();
+    expect(screen.queryByText('1.200 €')).toBeNull();
   });
 });
 
@@ -184,14 +192,16 @@ describe('VEH-05 build update detail', () => {
 
   beforeEach(() => setParams({ slug: SLUG, updateId: brakes.id }));
 
-  it('shows each change before → after with its fields, and opens the mod', async () => {
+  it('shows each change before → after with its fields, and opens the mod; the kind once (DQ-1059)', async () => {
     stubFetch({ [`/updates/${brakes.id}`]: { body: { data: detailed } } });
     await renderWithProviders(<UpdateDetailScreen />);
+    // The title names the change, the meta carries its system, and the card does not repeat "Bremsen".
     expect(await screen.findByTestId('VEH-05.change.0')).toHaveTextContent(
-      'BremsenVorherBrembo SerieNachherAP Racing Radi-CAL · 356 mmScheibe vorne324 mm → 356 mmModifikation ansehen',
+      'VorherBrembo SerieNachherAP Racing Radi-CAL · 356 mmScheibe vorne324 mm → 356 mmModifikation ansehen',
+      { exact: true },
     );
-    expect(text('VEH-05.title')).toHaveTextContent('Bremsen');
-    expect(text('VEH-05.meta')).toHaveTextContent('Modifikation geändert · 03.09.2024');
+    expect(text('VEH-05.title')).toHaveTextContent('AP Racing Radi-\u2060CAL statt Brembo Serie');
+    expect(text('VEH-05.meta')).toHaveTextContent('Bremsen · 03.09.2024');
     await fireEvent.press(text('VEH-05.openMod.0'));
     expect(mockRouter.push).toHaveBeenCalledWith(`/v/${SLUG}/mods/${brakes.changes[0]!.modification_id}`);
   });

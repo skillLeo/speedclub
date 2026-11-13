@@ -17,7 +17,7 @@ function toggle(atom: string, on: boolean | 'indeterminate'): void {
 
 <template>
     <fieldset class="flex flex-col gap-12" :data-testid="testId">
-        <legend class="mb-4 text-label-s text-ink">{{ legend }}</legend>
+        <legend class="mb-4 text-admin-base-strong text-ink">{{ legend }}</legend>
         <div v-for="group in groups" :key="group.group" class="flex flex-col gap-2">
             <p class="text-caption text-ink-3">{{ atomGroupLabel(group.group) }}</p>
             <div class="grid grid-cols-1 gap-x-16 tablet:grid-cols-2">

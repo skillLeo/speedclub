@@ -3,10 +3,12 @@
  * file itself is under test, because expo-router only picks up the name src/app/+not-found.tsx. expo-router
  * is stubbed because its entry point does not load in Jest (standard-navigation ships ESM only).
  */
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { appConfigKey, BUNDLED_APP_CONFIG } from '@/api/queries/appConfig';
 import NotFoundRoute from '@/app/+not-found';
 import i18n from '@/i18n';
 import { isFirstScreenMounted, registerFirstScreenGate } from '@/lib/ready';
@@ -22,18 +24,31 @@ jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
 
 jest.mock('expo-router', () => ({
   Link: ({ children }: { children: unknown }) => children,
-  useRouter: () => ({ canGoBack: () => false }),
+  useRouter: () => ({ canGoBack: () => false, back: jest.fn(), replace: jest.fn() }),
 }));
+
+jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.resolve(null)) }));
+jest.mock('expo-crypto', () => ({ randomUUID: () => 'uuid-1' }));
+jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
 
 const metrics = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
 
+/** The bundled config is enough: the wordmark reads it, nothing fetches. */
+function client() {
+  const next = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: Infinity } } });
+  next.setQueryData(appConfigKey, { config: BUNDLED_APP_CONFIG, confirmed: true });
+  return next;
+}
+
 function renderRoute() {
   return render(
-    <SafeAreaProvider initialMetrics={metrics}>
-      <ThemeProvider>
-        <NotFoundRoute />
-      </ThemeProvider>
-    </SafeAreaProvider>,
+    <QueryClientProvider client={client()}>
+      <SafeAreaProvider initialMetrics={metrics}>
+        <ThemeProvider>
+          <NotFoundRoute />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -48,28 +63,25 @@ it('renders through Screen, so the first-screen gate opens', async () => {
   expect(isFirstScreenMounted()).toBe(true);
 });
 
-it('offers one primary button, medium, hugging its label, not red text', async () => {
+it('offers one filled way home and a back control over the photo (DQ-1088)', async () => {
   await renderRoute();
-  const home = screen.getByTestId('SYS-03.home');
-  const pressable = StyleSheet.flatten(home.props.style);
-  expect(pressable.alignSelf).toBe('flex-start');
-  const content = visualOf('SYS-03.home');
-  expect(content.minHeight).toBe(size.button.m);
-  expect(content.backgroundColor).toBe(themes.carbon.color.bg.inverse);
+  expect(visualOf('SYS-03.home').backgroundColor).toBe(themes.carbon.color.bg.inverse);
+  expect(visualOf('SYS-03.home').minHeight).toBe(size.button.l);
+  expect(screen.getByTestId('SYS-03.header')).toBeTruthy();
+  expect(screen.getByTestId('SYS-03.photo')).toBeTruthy();
 });
 
 it.each([
-  [360, undefined],
-  [390, undefined],
-  [767, undefined],
-  [768, 480],
-  [1280, 480],
-])('at %i the text block has the column limit %s, and stays on the left inside it', async (width, maxWidth) => {
+  [360, false],
+  [390, false],
+  [767, false],
+  [768, true],
+  [1280, true],
+])('at %i the photo and the copy split the window: %s', async (width, split) => {
   mockDimensions.mockReturnValue({ width, height: 800, scale: 1, fontScale: 1 });
   await renderRoute();
-  const block = StyleSheet.flatten(screen.getByTestId('SYS-03.block').props.style);
-  expect(block.maxWidth).toBe(maxWidth);
-  expect(block.alignSelf).toBe(maxWidth ? 'center' : undefined);
+  const column = StyleSheet.flatten(screen.getByTestId('SYS-03.state').props.style);
+  expect(column.maxWidth).toBe(split ? 480 : undefined);
   mockDimensions.mockReturnValue({ width: 390, height: 844, scale: 1, fontScale: 1 });
 });
 

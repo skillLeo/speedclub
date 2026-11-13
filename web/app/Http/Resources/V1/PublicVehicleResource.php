@@ -6,10 +6,13 @@ use App\Enums\ModStatus;
 use App\Models\BuildUpdate;
 use App\Models\Modification;
 use App\Models\Save;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppConfig\FeatureFlags;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Signature\ShareCards;
+use App\Services\Social\VehicleHighlights;
+use App\Support\PublicUrl;
 use App\Support\Viewer;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
@@ -48,8 +51,8 @@ class PublicVehicleResource extends VehicleCardResource
 
         return [
             ...parent::toArray($request),
-            /** The web page of this vehicle, for sharing. */
-            'canonical_url' => url('/v/'.$vehicle->slug),
+            /** The web page of this vehicle, for sharing: the canonical address (no redirect for a link preview), HTTPS where the site is. */
+            'canonical_url' => PublicUrl::absolute('/v/'.$vehicle->canonicalSlug()),
             /** @var string|null */
             'description' => $vehicle->getAttribute('description'),
             /**
@@ -71,6 +74,13 @@ class PublicVehicleResource extends VehicleCardResource
             /** @var array<int, ModificationRowResource> */
             'highlights' => ModificationRowResource::collection($this->highlights($mods)),
             /**
+             * M4.9 VEH-01 "Highlights": the owner's pinned rail (build updates and photos, in their order) the reader may see. `highlights`
+             * above stays the top mods per category for older apps.
+             *
+             * @var list<HighlightResource>
+             */
+            'highlights_rail' => HighlightResource::collection(app(VehicleHighlights::class)->visible($vehicle, Viewer::from($request))),
+            /**
              * Groups by category, in the order of the catalogue. count is what "Alle Mods (14)" shows.
              *
              * @var array{count: int, groups: list<array{category: array{key: string, name: string, icon: string|null}, count: int, items: array<int, ModificationRowResource>}>}
@@ -79,14 +89,14 @@ class PublicVehicleResource extends VehicleCardResource
                 'count' => $mods->count(),
                 'groups' => $this->groups($mods, $locale),
             ],
-            'updates_count' => $this->updatesQuery($isOwner)->count(),
+            'updates_count' => $this->updatesQuery($viewer)->count(),
             /**
              * The latest entries of Verlauf; the rest through public/vehicles/{slug}/updates.
              *
              * @var array<int, BuildUpdateResource>
              */
             'updates' => BuildUpdateResource::collection(
-                $this->updatesQuery($isOwner)
+                $this->updatesQuery($viewer)
                     ->latest('created_at')
                     ->latest('id')
                     ->limit(config()->integer('speedclub.garage.public_updates_on_page'))
@@ -112,17 +122,22 @@ class PublicVehicleResource extends VehicleCardResource
             'is_saved' => $viewer === null || $isOwner || ! app(FeatureFlags::class)->enabled('sig.saved_builds')
                 ? null
                 : Save::query()->where('user_id', $viewer->id)->where('vehicle_id', $vehicle->id)->exists(),
+            /**
+             * M4.11 (09 §8.5, §8.6): the viewer's own reaction and build follow. Counts (reactions by kind, followers) only for the owner;
+             * nobody else ever receives them. Each part is null while its flag is off.
+             */
+            'social' => new VehicleSocialResource($vehicle),
         ];
     }
 
     /**
-     * Hidden entries stay with the owner.
+     * Hidden entries stay with the owner; M4.11: followers-only posts reach followers of the owner or the vehicle (BuildUpdate::visibleTo).
      *
      * @return HasMany<BuildUpdate, Vehicle>
      */
-    private function updatesQuery(bool $isOwner): HasMany
+    private function updatesQuery(?User $viewer): HasMany
     {
-        return $this->resource->buildUpdates()->when(! $isOwner, fn ($query) => $query->where('hidden', false));
+        return $this->resource->buildUpdates()->visibleTo($viewer, $this->resource);
     }
 
     /**
@@ -170,5 +185,13 @@ class PublicVehicleResource extends VehicleCardResource
         }
 
         return $groups;
+    }
+
+    /**
+     * This page has its own count of the entries the reader may see (`updates_count` below), so the card's owner count is not read.
+     */
+    protected function ownerUpdatesCount(Vehicle $vehicle, ?User $viewer): ?int
+    {
+        return null;
     }
 }

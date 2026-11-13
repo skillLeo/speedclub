@@ -18,16 +18,25 @@ export type ListRowProps = {
   /** Trailing value, for example the current language. */
   value?: string;
   /**
-   * DQ-103, DQ-152: the row measures itself, and `value` takes its own line under the title and subtitle once one of them
-   * would break inside a word beside it, or the value would not fit its half of the row, and always from font scale 1.5.
-   * Off by default, where the value always trails.
+   * DQ-103, DQ-152, DQ-987: the row measures itself, and `value` takes its own line under the title and subtitle once one of them
+   * would break inside a word beside it, or the value would not fit its half of the row, and always from font scale 1.3 (as iOS
+   * does). On by default for every row with a value; false keeps the value trailing.
    */
   adaptiveValue?: boolean;
   /**
-   * False for names, which must never split inside the word (a make, "@paul.roadster"): title and subtitle then break
-   * only at their spaces (§4, DQ-152, DQ-186). On by default, for German copy.
+   * False for names and addresses, which must never split inside the word (a make, "@paul.roadster", an e-mail address): the
+   * subtitle then breaks only at its spaces and set break points (§4, DQ-152, DQ-186). On by default, for German copy. The title
+   * hyphenates only when one of its words cannot fit a phone's row whole at the font scale (`titleHyphenates`): a short label keeps
+   * its words whole (DQ-987), a long compound ("Nachrichtenanfragen" at 200 %) gets a hyphen instead of a raw break inside the word.
    */
   hyphenate?: boolean;
+  /**
+   * DQ-1017: the subtitle (and a value) on this many lines at most, ending in an ellipsis: for a handle or an address that must
+   * never wrap inside itself. The row's accessible name keeps the whole text.
+   */
+  subtitleLines?: number;
+  /** DQ-1018: the row's name for screen readers when the visible title leans on its group header ("Aktivität" under "Sicherheit"). */
+  accessibilityTitle?: string;
   /** A switch or button. It sits beside the pressable part, because controls must not nest. */
   control?: ReactNode;
   onPress?: () => void;
@@ -66,8 +75,23 @@ const useStyles = createStyles((t) => ({
   measure: { alignItems: 'flex-start', left: 0, opacity: 0, pointerEvents: 'none', position: 'absolute', top: 0 },
 }));
 
-/** From this font scale an adaptive value always takes its own line. */
-const STACKED_VALUE_FONT_SCALE = 1.5;
+/** The characters of `body` a phone's row column holds whole (see `titleHyphenates`). */
+export const TITLE_WORD_BUDGET = 26;
+
+/**
+ * DQ-987 reach check (design QA M4.6 r2): with hyphenation off, the web cuts a compound wider than the column anywhere
+ * ("Nachrichtenanf / ragen" at 360 and 200 %). A row title hyphenates when its longest part between spaces and hyphens, scaled by
+ * the font, exceeds the characters of `body` a phone's row column holds beside its glyph and switch at 360 (about 26 at 100 %,
+ * 13 at 200 %, read from the r2 reach-check cells). Short labels ("E-Mail-Code", "Sitzungen") never hyphenate.
+ */
+export function titleHyphenates(title: string, fontScale: number): boolean {
+  const parts = title.split(/[\s\u00A0]+/).flatMap((word) => word.split(/[-\u2010\u2011]/));
+  const longest = Math.max(0, ...parts.map((part) => [...part.replace(/[\u00AD\u200B\u2060]/g, '')].length));
+  return longest * Math.max(1, fontScale) > TITLE_WORD_BUDGET;
+}
+
+/** From this font scale an adaptive value always takes its own line (DQ-987: 200 % squeezed "E-Mail-Code" beside "Immer an"). */
+export const STACKED_VALUE_FONT_SCALE = 1.3;
 
 export type AdaptiveValueGeometry = {
   /** The width of the pressable part, its side padding excluded. */
@@ -112,8 +136,10 @@ export function ListRow({
   icon,
   thumb,
   value,
-  adaptiveValue = false,
+  adaptiveValue = true,
   hyphenate = true,
+  subtitleLines,
+  accessibilityTitle,
   control,
   onPress,
   role = 'link',
@@ -155,9 +181,11 @@ export function ListRow({
   };
   const valueText = value ? (
     <Text
-      variant="supporting"
+      variant="callout"
       color={disabled ? 'text.disabled' : 'text.secondary'}
       style={stacked ? null : styles.value}
+      hyphenate={hyphenate}
+      numberOfLines={subtitleLines}
       testID={testID ? `${testID}.value` : undefined}
     >
       {value}
@@ -171,7 +199,7 @@ export function ListRow({
         role={role}
         disabled={disabled}
         current={selected}
-        label={joinLabel([title, subtitle, value])}
+        label={joinLabel([accessibilityTitle ?? title, subtitle, value])}
         boxStyle={styles.box}
         style={[styles.row, tall ? styles.tall : styles.single, padding]}
         testID={testID ? `${testID}.body` : undefined}
@@ -182,13 +210,13 @@ export function ListRow({
           <Icon name={icon} size={20} color={iconColor} />
         ) : null}
         <View style={styles.text}>
-          <Text variant="body" color={titleColor} hyphenate={hyphenate}>
+          <Text variant="body" color={titleColor} hyphenate={titleHyphenates(title, theme.fontScale)}>
             {title}
           </Text>
           {subtitle ? (
             // DQ-318: on a disabled row the subtitle is often the reason it is inert ("Wähle zuerst eine Marke."), so it stays
             // readable (text.tertiary passes AA) while the title shows the state.
-            <Text variant="supporting" color={disabled ? 'text.tertiary' : 'text.secondary'} hyphenate={hyphenate}>
+            <Text variant="callout" color={disabled ? 'text.tertiary' : 'text.secondary'} hyphenate={hyphenate} numberOfLines={subtitleLines}>
               {subtitle}
             </Text>
           ) : null}
@@ -213,11 +241,11 @@ export function ListRow({
             {longestWord(title)}
           </Text>
           {subtitle ? (
-            <Text variant="supporting" hyphenate={false} selectable={false} onLayout={measured('subtitleWord')} testID={testID ? `${testID}.measure.subtitle` : undefined}>
+            <Text variant="callout" hyphenate={false} selectable={false} onLayout={measured('subtitleWord')} testID={testID ? `${testID}.measure.subtitle` : undefined}>
               {longestWord(subtitle)}
             </Text>
           ) : null}
-          <Text variant="supporting" hyphenate={false} selectable={false} onLayout={measured('value')} testID={testID ? `${testID}.measure.value` : undefined}>
+          <Text variant="callout" hyphenate={false} selectable={false} onLayout={measured('value')} testID={testID ? `${testID}.measure.value` : undefined}>
             {value}
           </Text>
         </View>

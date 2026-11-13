@@ -6,7 +6,9 @@ use App\Enums\CaseOrigin;
 use App\Enums\CaseStatus;
 use App\Models\Appeal;
 use App\Models\BuildUpdate;
+use App\Models\Comment;
 use App\Models\Decision;
+use App\Models\Event;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\ModerationCase;
@@ -33,7 +35,7 @@ class OwnInitiativeCases
 {
     public function __construct(private readonly ReportTargets $targets) {}
 
-    public function forTarget(User|Vehicle|Media|BuildUpdate|Modification|Message $target, Staff $by): ModerationCase
+    public function forTarget(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target, Staff $by): ModerationCase
     {
         $resolved = $this->targets->forStaff($target);
         $key = ModerationCase::openKey($resolved->type, $resolved->id());
@@ -73,7 +75,7 @@ class OwnInitiativeCases
      * (its reporters hear the outcome too), else a new own-initiative case; either names the appeal, so the appellant and the original
      * reporters are told (DecideCase::notifyAppealAudience).
      */
-    public function forAppeal(User|Vehicle|Media|BuildUpdate|Modification|Message $target, Staff $by, Appeal $appeal): ModerationCase
+    public function forAppeal(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event $target, Staff $by, Appeal $appeal): ModerationCase
     {
         $case = $this->forTarget($target, $by);
 

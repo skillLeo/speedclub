@@ -3,6 +3,7 @@
 namespace App\Services\Qr;
 
 use App\Models\QrCode;
+use App\Services\Pdf\PdfFonts;
 use Barryvdh\DomPDF\PDF;
 use FontLib\Font;
 use FontLib\TrueType\File as TrueType;
@@ -10,9 +11,8 @@ use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 /**
- * The A6 sticker sheet of QR-02: the logo beside the code, never inside it (02_PRODUCT_SPEC §3.4). Fonts are registered once:
- * dompdf parses a TTF again on every registerFont call, and that takes seconds, so the check below is what keeps a download quick;
- * it also re-registers a font whose cached metrics are missing.
+ * The A6 sticker sheet of QR-02: the logo beside the code, never inside it (02_PRODUCT_SPEC §3.4). Fonts are registered once per host
+ * (PdfFonts): dompdf parses a TTF on every registerFont call, and that takes seconds.
  */
 class QrSticker
 {
@@ -20,10 +20,11 @@ class QrSticker
     private const FONTS = [
         ['family' => 'Inter', 'weight' => '400', 'variant' => 'normal', 'file' => 'Inter-Regular.ttf'],
         ['family' => 'Inter', 'weight' => '700', 'variant' => 'bold', 'file' => 'Inter-SemiBold.ttf'],
-        ['family' => 'Barlow Semi Condensed', 'weight' => '700', 'variant' => 'bold', 'file' => 'BarlowSemiCondensed-Bold.ttf'],
+        ['family' => 'Inter Display', 'weight' => '600', 'variant' => '600', 'file' => 'InterDisplay-SemiBold.ttf'],
     ];
 
-    private const USERNAME_FONT = 'BarlowSemiCondensed-Bold.ttf';
+    /** People speak Inter (09 §4.2): the handle in Inter Display 600, the cut of title.1. */
+    private const USERNAME_FONT = 'InterDisplay-SemiBold.ttf';
 
     private const USERNAME_SIZE_PT = 22;
 
@@ -42,7 +43,7 @@ class QrSticker
         /** @var PDF $pdf */
         $pdf = app('dompdf.wrapper');
         $pdf->setOption('isFontSubsettingEnabled', true);
-        $this->registerFonts($pdf);
+        PdfFonts::register($pdf, self::FONTS);
 
         $pdf->loadView('pdf.qr-sticker', $this->viewData($qr));
         $pdf->setPaper('a6', 'portrait');
@@ -73,7 +74,7 @@ class QrSticker
 
     /**
      * The printed handle is always whole: a name near the 24-character limit with wide letters shrinks, as dompdf neither wraps it on
-     * one page nor breaks it inside the word. About 13 pt at worst (24 m), and the line height stays, so the sheet does not move.
+     * one page nor breaks it inside the word. About 11 pt at worst (24 m in Inter Display), and the line height stays, so the sheet does not move.
      */
     private function usernameSize(string $handle): int
     {
@@ -111,23 +112,5 @@ class QrSticker
         $font->close();
 
         return $units * self::USERNAME_SIZE_PT / $unitsPerEm;
-    }
-
-    private function registerFonts(PDF $pdf): void
-    {
-        $metrics = $pdf->getDomPDF()->getFontMetrics();
-        $families = $metrics->getFontFamilies();
-
-        foreach (self::FONTS as $font) {
-            $installed = $families[mb_strtolower($font['family'])][$font['variant']] ?? null;
-
-            // An entry whose metrics file is gone (storage/fonts copied from another host or path) would fall back to a core font.
-            if (! is_string($installed) || ! is_file($installed.'.ufm')) {
-                $metrics->registerFont(
-                    ['family' => $font['family'], 'weight' => $font['weight'], 'style' => 'normal'],
-                    resource_path('fonts/'.$font['file']),
-                );
-            }
-        }
     }
 }

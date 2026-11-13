@@ -81,15 +81,15 @@ export function ViewAsBanner() {
         <Icon name="eye" size={16} color="text.onAccent" />
         {oneLine ? (
           <View style={styles.line} testID="VIEWAS.banner.text">
-            <Text variant="labelS" color="text.onAccent" hyphenate={false} numberOfLines={1} style={styles.name}>
+            <Text variant="callout" color="text.onAccent" hyphenate={false} numberOfLines={1} style={styles.name}>
               {name}
             </Text>
-            <Text variant="labelS" color="text.onAccent" hyphenate={false} numberOfLines={1} style={styles.suffix}>
+            <Text variant="callout" color="text.onAccent" hyphenate={false} numberOfLines={1} style={styles.suffix}>
               {suffix}
             </Text>
           </View>
         ) : (
-          <Text variant="labelS" color="text.onAccent" hyphenate={false} style={styles.text} testID="VIEWAS.banner.text">
+          <Text variant="callout" color="text.onAccent" hyphenate={false} style={styles.text} testID="VIEWAS.banner.text">
             {name}
             {wrappedSuffix}
           </Text>
@@ -111,7 +111,7 @@ export function ViewAsBanner() {
           {ending ? (
             <Spinner size={16} color="text.onAccent" decorative />
           ) : (
-            <Text variant="labelS" color="text.onAccent" selectable={false}>
+            <Text variant="bodyStrong" color="text.onAccent" selectable={false}>
               {t('viewAs.end')}
             </Text>
           )}

@@ -65,47 +65,124 @@ export function spacingScale() {
     .sort((a, b) => a - b);
 }
 
+/** The width from which the web applies the desktop type sizes (09 §4.2; the generated CSS and Text.tsx use the same min-width). */
+export const DESKTOP_MIN_WIDTH = Number(tokens.layout.breakpoints.desktop);
+
 /**
- * The type scale as expected on screen: `scale x token`, capped at the token's maxFontScale.
+ * The type scale as expected on screen at one viewport width: `scale x token`, capped at the token's maxFontScale. A role with a
+ * desktop size (09 §4.2, `web: {size, lineHeight}`) yields that pair as well (`variant: 'web'`), but only where the page applies it:
+ * at a viewport at least `layout.breakpoints.desktop` wide. Below that the audit accepts the mobile pairs only, so hero.numeral 88/88
+ * fails at 360. A role that inherits its size from the parent role (numeric.inline, `size: 'inherit'`) yields none, as the parent's pair
+ * is the one on screen.
+ * A role with a `minSize` (display.title, 09 §4.2 "max 2 lines, shrink to 24") also yields its shrink pair (`variant: 'shrink'`) at
+ * every width: `minSize`/`minLineHeight` (ADR-426 g, 24/28), falling back to minSize + lineHeight − size when the token has no
+ * `minLineHeight`, as DisplayTitle.tsx `shrunkStyle` sets it on phone and desktop alike, scaled like the role's other pairs.
  * @param {number} fontScale
+ * @param {number} viewportWidth the CSS viewport width (window.innerWidth, what min-width media queries compare)
+ * @returns {{name:string,variant:'base'|'web'|'shrink',size:number,lineHeight:number}[]}
  */
-export function typePairs(fontScale = 1) {
-  return Object.entries(tokens.typography).map(([name, raw]) => {
-    const t = /** @type {{size:number,lineHeight:number,maxFontScale?:number}} */ (raw);
+export function typePairs(fontScale, viewportWidth) {
+  if (!Number.isFinite(fontScale) || !Number.isFinite(viewportWidth)) {
+    throw new Error(`typePairs(fontScale, viewportWidth) needs two numbers, got ${fontScale}, ${viewportWidth}`);
+  }
+  const desktop = viewportWidth >= DESKTOP_MIN_WIDTH;
+  /** @type {{name:string,variant:'base'|'web'|'shrink',size:number,lineHeight:number}[]} */
+  const pairs = [];
+  for (const [name, raw] of Object.entries(tokens.typography)) {
+    const t = /** @type {{size:number|'inherit',lineHeight:number|'inherit',maxFontScale?:number,minSize?:number,minLineHeight?:number,web?:{size:number,lineHeight:number}}} */ (raw);
+    if (t.size === 'inherit' || t.lineHeight === 'inherit') continue;
+    if (typeof t.size !== 'number' || typeof t.lineHeight !== 'number') {
+      throw new Error(`typography.${name}: size and lineHeight must be numbers or 'inherit'`);
+    }
     const effective = Math.min(fontScale, t.maxFontScale ?? fontScale);
-    return { name, size: t.size * effective, lineHeight: t.lineHeight * effective };
-  });
+    pairs.push({ name, variant: 'base', size: t.size * effective, lineHeight: t.lineHeight * effective });
+    if (t.web) {
+      if (typeof t.web.size !== 'number' || typeof t.web.lineHeight !== 'number') {
+        throw new Error(`typography.${name}.web: size and lineHeight must be numbers`);
+      }
+      if (desktop) pairs.push({ name, variant: 'web', size: t.web.size * effective, lineHeight: t.web.lineHeight * effective });
+    }
+    if (t.minSize !== undefined) {
+      if (typeof t.minSize !== 'number' || !(t.minSize > 0 && t.minSize < t.size)) {
+        throw new Error(`typography.${name}.minSize must be a number between 0 and the role's size`);
+      }
+      // ADR-426 g: the token states the shrink leading (`minLineHeight`); without it the role's mobile leading is kept.
+      const shrunkLine = t.minLineHeight ?? t.minSize + t.lineHeight - t.size;
+      if (typeof shrunkLine !== 'number' || !(shrunkLine >= t.minSize)) {
+        throw new Error(`typography.${name}.minLineHeight must be a number of at least minSize`);
+      }
+      pairs.push({ name, variant: 'shrink', size: t.minSize * effective, lineHeight: shrunkLine * effective });
+    }
+  }
+  return pairs;
+}
+
+/**
+ * The first-choice names of one font group: its CSS family (the first of the stack) and its per-weight native family names.
+ * @param {string} group a key of tokens.font
+ * @returns {string[]}
+ */
+export function familiesOf(group) {
+  const g = /** @type {{css:string,native:Record<string,string>}|undefined} */ (tokens.font[group]);
+  if (!g) throw new Error(`Unknown font group "${group}". Known: ${Object.keys(tokens.font).join(', ')}`);
+  const first = g.css.split(',')[0]?.trim().replace(/^['"]|['"]$/g, '');
+  return [...new Set([...(first ? [first] : []), ...Object.values(g.native)])];
 }
 
 /** First-choice font families: the CSS family names plus the per-weight native family names. */
 export function fontFamilies() {
-  /** @type {Set<string>} */
-  const families = new Set();
-  for (const group of Object.values(tokens.font)) {
-    const g = /** @type {{css:string,native:Record<string,string>}} */ (group);
-    const first = g.css.split(',')[0]?.trim().replace(/^['"]|['"]$/g, '');
-    if (first) families.add(first);
-    for (const n of Object.values(g.native)) families.add(n);
+  return [...new Set(Object.keys(tokens.font).flatMap(familiesOf))];
+}
+
+/**
+ * The roles with a line cap (`maxLines`, 09 §4.2: display.title "max 2 lines, shrink to 24"), as the DOM audit checks them at one
+ * font scale and viewport width: the faces the role is set in, its full-size pairs (the mobile pair, + the desktop pair where the page
+ * applies it, both scaled like typePairs) and its shrink pair. At a full-size pair the role may take at most `maxLines` lines
+ * (ADR-426 a: past that it shrinks); at the shrink pair any line count is allowed, as the title is never truncated.
+ * @param {number} fontScale
+ * @param {number} viewportWidth
+ * @returns {{name:string,maxLines:number,families:string[],full:{size:number,lineHeight:number}[],shrink:{size:number,lineHeight:number}[]}[]}
+ */
+export function lineCappedRoles(fontScale, viewportWidth) {
+  const pairs = typePairs(fontScale, viewportWidth);
+  /** @type {ReturnType<typeof lineCappedRoles>} */
+  const roles = [];
+  for (const [name, raw] of Object.entries(tokens.typography)) {
+    const t = /** @type {{font:string,maxLines?:number}} */ (raw);
+    if (t.maxLines === undefined) continue;
+    if (!(Number.isInteger(t.maxLines) && t.maxLines > 0)) throw new Error(`typography.${name}.maxLines must be a whole number above 0`);
+    const own = pairs.filter((p) => p.name === name);
+    const pick = (/** @type {(p: (typeof own)[number]) => boolean} */ keep) =>
+      own.filter(keep).map(({ size, lineHeight }) => ({ size, lineHeight }));
+    roles.push({
+      name,
+      maxLines: t.maxLines,
+      families: familiesOf(t.font),
+      full: pick((p) => p.variant !== 'shrink'),
+      shrink: pick((p) => p.variant === 'shrink'),
+    });
   }
-  return [...families];
+  return roles;
 }
 
 /**
  * Serialisable configuration for the in-browser DOM audit.
- * @param {{theme?:string,fontScale?:number}} [opts]
+ * @param {{theme?:string,fontScale?:number,viewportWidth:number}} opts `viewportWidth` decides whether the desktop type pairs apply
  */
-export function auditConfig({ theme = DEFAULT_THEME, fontScale = 1 } = {}) {
+export function auditConfig({ theme = DEFAULT_THEME, fontScale = 1, viewportWidth }) {
   const colors = themeColors(theme);
   return {
     theme,
     fontScale,
+    viewportWidth,
     colors: colors.general,
     qrColors: colors.qr,
     spacing: spacingScale(),
-    typePairs: typePairs(fontScale),
+    typePairs: typePairs(fontScale, viewportWidth),
     // Scaled values get rounded by the layout engine; 1x values must match exactly.
     typeTolerance: fontScale === 1 ? 0.01 : 0.5,
     fontFamilies: fontFamilies(),
+    lineCapped: lineCappedRoles(fontScale, viewportWidth),
     touchMin: Number(tokens.size.touchMin),
   };
 }

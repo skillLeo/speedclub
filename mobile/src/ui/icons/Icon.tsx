@@ -13,7 +13,14 @@
  * `dataSet={{ qaExempt: '…' }}` (web/tests/e2e/README.md).
  */
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
+import { AppleLogoIcon } from 'phosphor-react-native/src/icons/AppleLogo';
+import { AndroidLogoIcon } from 'phosphor-react-native/src/icons/AndroidLogo';
+import { DesktopIcon } from 'phosphor-react-native/src/icons/Desktop';
+import { SignOutIcon } from 'phosphor-react-native/src/icons/SignOut';
+import { ShieldWarningIcon } from 'phosphor-react-native/src/icons/ShieldWarning';
+import { LockKeyIcon } from 'phosphor-react-native/src/icons/LockKey';
 import { ArchiveIcon } from 'phosphor-react-native/src/icons/Archive';
+import { ArrowBendUpLeftIcon } from 'phosphor-react-native/src/icons/ArrowBendUpLeft';
 import { ArrowClockwiseIcon } from 'phosphor-react-native/src/icons/ArrowClockwise';
 import { ArrowRightIcon } from 'phosphor-react-native/src/icons/ArrowRight';
 import { ArrowSquareOutIcon } from 'phosphor-react-native/src/icons/ArrowSquareOut';
@@ -36,16 +43,20 @@ import { CopyIcon } from 'phosphor-react-native/src/icons/Copy';
 import { DeviceMobileIcon } from 'phosphor-react-native/src/icons/DeviceMobile';
 import { DotsThreeIcon } from 'phosphor-react-native/src/icons/DotsThree';
 import { DownloadSimpleIcon } from 'phosphor-react-native/src/icons/DownloadSimple';
+import { EnvelopeSimpleIcon } from 'phosphor-react-native/src/icons/EnvelopeSimple';
 import { EyeIcon } from 'phosphor-react-native/src/icons/Eye';
 import { EyeSlashIcon } from 'phosphor-react-native/src/icons/EyeSlash';
 import { FlagIcon } from 'phosphor-react-native/src/icons/Flag';
+import { FlagCheckeredIcon } from 'phosphor-react-native/src/icons/FlagCheckered';
 import { FunnelIcon } from 'phosphor-react-native/src/icons/Funnel';
 import { GarageIcon } from 'phosphor-react-native/src/icons/Garage';
 import { GearSixIcon } from 'phosphor-react-native/src/icons/GearSix';
 import { GridFourIcon } from 'phosphor-react-native/src/icons/GridFour';
+import { HeartIcon } from 'phosphor-react-native/src/icons/Heart';
 import { HouseIcon } from 'phosphor-react-native/src/icons/House';
 import { ImageIcon } from 'phosphor-react-native/src/icons/Image';
 import { InfoIcon } from 'phosphor-react-native/src/icons/Info';
+import { KeyIcon } from 'phosphor-react-native/src/icons/Key';
 import { KeyboardIcon } from 'phosphor-react-native/src/icons/Keyboard';
 import { LifebuoyIcon } from 'phosphor-react-native/src/icons/Lifebuoy';
 import { LightbulbIcon } from 'phosphor-react-native/src/icons/Lightbulb';
@@ -69,10 +80,16 @@ import { ShieldCheckIcon } from 'phosphor-react-native/src/icons/ShieldCheck';
 import { SignInIcon } from 'phosphor-react-native/src/icons/SignIn';
 import { SortAscendingIcon } from 'phosphor-react-native/src/icons/SortAscending';
 import { StarIcon } from 'phosphor-react-native/src/icons/Star';
+import { ThumbsUpIcon } from 'phosphor-react-native/src/icons/ThumbsUp';
 import { TranslateIcon } from 'phosphor-react-native/src/icons/Translate';
 import { TrashIcon } from 'phosphor-react-native/src/icons/Trash';
 import { UserIcon } from 'phosphor-react-native/src/icons/User';
 import { WarningIcon } from 'phosphor-react-native/src/icons/Warning';
+import { MapPinIcon } from 'phosphor-react-native/src/icons/MapPin';
+import { MapTrifoldIcon } from 'phosphor-react-native/src/icons/MapTrifold';
+import { NavigationArrowIcon } from 'phosphor-react-native/src/icons/NavigationArrow';
+import { UsersIcon } from 'phosphor-react-native/src/icons/Users';
+import { CalendarPlusIcon } from 'phosphor-react-native/src/icons/CalendarPlus';
 import { WifiSlashIcon } from 'phosphor-react-native/src/icons/WifiSlash';
 import { WrenchIcon } from 'phosphor-react-native/src/icons/Wrench';
 import { XIcon } from 'phosphor-react-native/src/icons/X';
@@ -83,7 +100,14 @@ import { resolveColor, useTheme, type ColorToken } from '@/theme';
 import { autoIcons, type AutoIconName } from './auto';
 
 export const phosphorIcons = {
+  'android-logo': AndroidLogoIcon,
+  'desktop': DesktopIcon,
+  'sign-out': SignOutIcon,
+  'shield-warning': ShieldWarningIcon,
+  'lock-key': LockKeyIcon,
+  'apple-logo': AppleLogoIcon,
   archive: ArchiveIcon,
+  'arrow-bend-up-left': ArrowBendUpLeftIcon,
   'arrow-clockwise': ArrowClockwiseIcon,
   'arrow-right': ArrowRightIcon,
   'arrow-square-out': ArrowSquareOutIcon,
@@ -106,16 +130,20 @@ export const phosphorIcons = {
   'device-mobile': DeviceMobileIcon,
   'dots-three': DotsThreeIcon,
   'download-simple': DownloadSimpleIcon,
+  'envelope-simple': EnvelopeSimpleIcon,
   eye: EyeIcon,
   'eye-slash': EyeSlashIcon,
   flag: FlagIcon,
+  'flag-checkered': FlagCheckeredIcon,
   funnel: FunnelIcon,
   garage: GarageIcon,
   'gear-six': GearSixIcon,
   'grid-four': GridFourIcon,
+  heart: HeartIcon,
   house: HouseIcon,
   image: ImageIcon,
   info: InfoIcon,
+  key: KeyIcon,
   keyboard: KeyboardIcon,
   lifebuoy: LifebuoyIcon,
   lightbulb: LightbulbIcon,
@@ -139,11 +167,18 @@ export const phosphorIcons = {
   'sign-in': SignInIcon,
   'sort-ascending': SortAscendingIcon,
   star: StarIcon,
+  'thumbs-up': ThumbsUpIcon,
   translate: TranslateIcon,
   trash: TrashIcon,
   user: UserIcon,
   warning: WarningIcon,
   'wifi-slash': WifiSlashIcon,
+  // M4.12 events: the map, a place, "Route", attendees, "In Kalender".
+  'map-pin': MapPinIcon,
+  'map-trifold': MapTrifoldIcon,
+  'navigation-arrow': NavigationArrowIcon,
+  users: UsersIcon,
+  'calendar-plus': CalendarPlusIcon,
   wrench: WrenchIcon,
   x: XIcon,
 } satisfies Record<string, PhosphorIcon>;

@@ -119,7 +119,7 @@ function submit(): void {
                     </Field>
                 </div>
             </div>
-            <p v-if="errors.until && form.duration !== 'date'" class="text-helper text-danger" role="alert">{{ errors.until }}</p>
+            <p v-if="errors.until && form.duration !== 'date'" class="text-admin-base text-danger" role="alert">{{ errors.until }}</p>
             <StatementFields v-model="statement" subject="member" :errors="errors" :test-id="`${testId}.statement`" />
             <Field :label="trans('ui.confirm.reason')" :hint="trans('decisions.reason_hint')" :error="errors.reason" required>
                 <Textarea v-model="form.reason" :rows="3" :maxlength="1000" show-count :data-testid="`${testId}.reason`" />
@@ -127,7 +127,7 @@ function submit(): void {
         </form>
         <template #footer>
             <!-- The server error sits next to the buttons, so a long sheet never hides it below the fold. -->
-            <p v-if="error" class="flex basis-full items-start gap-8 rounded-sm border border-line px-12 py-8 text-supporting text-ink" role="alert">
+            <p v-if="error" class="flex basis-full items-start gap-8 rounded-sm border border-line px-12 py-8 text-admin-base text-ink" role="alert">
                 <PhWarningCircle :size="20" class="shrink-0 text-danger" aria-hidden="true" />{{ error }}
             </p>
             <Button variant="ghost" :disabled="processing" data-dialog-cancel @click="open = false">{{ trans('ui.actions.cancel') }}</Button>

@@ -1,0 +1,883 @@
+{
+ "scripts": {
+  "fahrwerk": [
+   [
+    0,
+    0,
+    "Hi! Dein {b_car} sieht richtig gut aus. Welches Fahrwerk fährst du da?"
+   ],
+   [
+    1,
+    95,
+    "Danke dir! Gewindefahrwerk, vorne 30 mm tiefer, hinten 25. Dämpfung auf Straße eingestellt."
+   ],
+   [
+    0,
+    12,
+    "Und wie ist das auf schlechten Landstraßen? Ich überlege das Gleiche für meinen {a_car}."
+   ],
+   [
+    1,
+    40,
+    "Straff, aber nicht unangenehm. Wichtig ist die Achsvermessung danach, sonst fährt er wie auf Schienen."
+   ],
+   [
+    0,
+    6,
+    "Wo hast du vermessen lassen?"
+   ],
+   [
+    1,
+    25,
+    "Bei einem Fahrwerksspezialisten in der Nähe, die machen das mit Fahrergewicht. Kann ich dir empfehlen."
+   ],
+   [
+    0,
+    3,
+    "Super, danke! Dann mache ich das im Frühjahr."
+   ]
+  ],
+  "treffen": [
+   [
+    0,
+    0,
+    "Bist du am Samstag beim Treffen dabei?"
+   ],
+   [
+    1,
+    30,
+    "Wenn das Wetter hält, ja. Wann wollt ihr los?"
+   ],
+   [
+    0,
+    8,
+    "Treffpunkt um neun an der Tankstelle, dann zusammen hin."
+   ],
+   [
+    1,
+    15,
+    "Passt. Ich bringe den {b_car} mit."
+   ],
+   [
+    0,
+    2,
+    {
+     "vehicle": "own"
+    }
+   ],
+   [
+    0,
+    1,
+    "Ich komme mit dem hier, frisch aus der Winterpause."
+   ],
+   [
+    1,
+    20,
+    "Sehr schön! Bis Samstag."
+   ]
+  ],
+  "track": [
+   [
+    0,
+    0,
+    "Fährst du nächsten Monat auch zu den Trackdays am {track}?"
+   ],
+   [
+    1,
+    180,
+    "Ich habe mich für den zweiten Tag angemeldet. Du auch?"
+   ],
+   [
+    0,
+    14,
+    "Ja, Gruppe zwei. Mit welchen Reifen fährst du dort?"
+   ],
+   [
+    1,
+    22,
+    "Semislicks. Auf der Straße hat man die nach drei Turns durch."
+   ],
+   [
+    0,
+    5,
+    "Habe ich befürchtet. Dann nehme ich einen zweiten Satz mit."
+   ],
+   [
+    1,
+    9,
+    "Gute Idee. Und Bremsflüssigkeit vorher wechseln, die Serie kocht da schnell."
+   ],
+   [
+    0,
+    4,
+    "Danke für den Tipp!"
+   ]
+  ],
+  "teile": [
+   [
+    0,
+    0,
+    "Hey, hast du für deinen {b_car} noch die originalen Teile vom Auspuff?"
+   ],
+   [
+    1,
+    240,
+    "Ja, liegen noch im Keller. Wofür brauchst du sie?"
+   ],
+   [
+    0,
+    20,
+    "Für die HU. Mein Sportauspuff ist nicht eingetragen, ich will auf Nummer sicher gehen."
+   ],
+   [
+    1,
+    35,
+    "Verständlich. Du kannst sie dir gern ausleihen, solange sie heil zurückkommen."
+   ],
+   [
+    0,
+    6,
+    "Auf jeden Fall. Danke dir, das ist mega!"
+   ]
+  ],
+  "foto": [
+   [
+    0,
+    0,
+    "Hab am Wochenende endlich neue Fotos gemacht."
+   ],
+   [
+    0,
+    1,
+    {
+     "photo": "own"
+    }
+   ],
+   [
+    0,
+    1,
+    "So sieht er jetzt aus. Was meinst du?"
+   ],
+   [
+    1,
+    50,
+    "Richtig stark! Die Felgen passen perfekt."
+   ],
+   [
+    0,
+    10,
+    "Danke! Hat lange gedauert, bis ich mich entschieden habe."
+   ],
+   [
+    1,
+    12,
+    "Hat sich gelohnt. Vor allem in der Farbe."
+   ]
+  ],
+  "leistung": [
+   [
+    0,
+    0,
+    "Wie viel Leistung hat dein {b_car} auf dem Prüfstand gebracht?"
+   ],
+   [
+    1,
+    70,
+    "Bei der letzten Messung etwas mehr als vom Tuner angegeben. Die Kurve ist schön gleichmäßig."
+   ],
+   [
+    0,
+    15,
+    "Klingt gut. Welche Software fährst du?"
+   ],
+   [
+    1,
+    25,
+    "Steht alles in meinem Build unter Motor. Abgestimmt auf dem Prüfstand, nicht von der Stange."
+   ],
+   [
+    0,
+    3,
+    "Dann schaue ich da mal rein, danke!"
+   ]
+  ],
+  "kauf": [
+   [
+    0,
+    0,
+    "Ich überlege, mir auch einen {b_car} zu kaufen. Worauf sollte ich achten?"
+   ],
+   [
+    1,
+    120,
+    "Auf jeden Fall Wartungshistorie prüfen und den Unterboden anschauen. Und eine Probefahrt mit kaltem Motor."
+   ],
+   [
+    0,
+    18,
+    "Gibt es typische Schwachstellen?"
+   ],
+   [
+    1,
+    30,
+    "Lager, Fahrwerksbuchsen und die Elektrik. Nichts Dramatisches, aber teuer, wenn alles auf einmal kommt."
+   ],
+   [
+    0,
+    7,
+    "Danke, das hilft mir sehr."
+   ],
+   [
+    1,
+    5,
+    "Gern! Wenn du einen findest, schick mir die Anzeige, dann schaue ich mit drüber."
+   ]
+  ],
+  "winter": [
+   [
+    0,
+    0,
+    "Wie lagerst du deinen {b_car} über den Winter?"
+   ],
+   [
+    1,
+    60,
+    "Trocken in einer Halle, Batterie am Ladegerät, Reifen mit etwas mehr Luftdruck."
+   ],
+   [
+    0,
+    12,
+    "Und abmelden oder Saisonkennzeichen?"
+   ],
+   [
+    1,
+    18,
+    "Saisonkennzeichen von März bis Oktober. Spart Versicherung und Steuer."
+   ],
+   [
+    0,
+    4,
+    "Mache ich nächstes Jahr auch so."
+   ]
+  ],
+  "sound": [
+   [
+    0,
+    0,
+    "Wie klingt dein Auspuff im Innenraum? Brummt das auf der Autobahn?"
+   ],
+   [
+    1,
+    45,
+    "Mit geschlossenen Klappen kaum lauter als Serie. Offen ist es ein ganz anderes Auto."
+   ],
+   [
+    0,
+    9,
+    "Perfekt, genau so etwas suche ich."
+   ],
+   [
+    1,
+    6,
+    "Schreib mir, wenn du ihn mal hören willst. Wir können uns gern treffen."
+   ]
+  ],
+  "bremse": [
+   [
+    0,
+    0,
+    "Welche Beläge fährst du auf der Rennstrecke?"
+   ],
+   [
+    1,
+    55,
+    "Pagid RSL29. Auf der Straße quietschen sie etwas, aber auf der Strecke sind sie top."
+   ],
+   [
+    0,
+    11,
+    "Und die Scheiben halten das aus?"
+   ],
+   [
+    1,
+    20,
+    "Bis jetzt ja. Nach jedem Trackday prüfe ich sie auf Risse."
+   ],
+   [
+    0,
+    3,
+    "Gut zu wissen, danke!"
+   ]
+  ],
+  "import": [
+   [
+    0,
+    0,
+    "Du hast deinen {b_car} doch selbst importiert, oder? Wie lief das mit der Zulassung?"
+   ],
+   [
+    1,
+    300,
+    "Ja, aus Japan. Vollabnahme beim TÜV, Datenblatt vom Hersteller, Zoll und Einfuhrumsatzsteuer."
+   ],
+   [
+    0,
+    25,
+    "Wie lange hat das insgesamt gedauert?"
+   ],
+   [
+    1,
+    40,
+    "Vom Kauf bis zum Kennzeichen ungefähr vier Monate. Das Schiff allein sechs Wochen."
+   ],
+   [
+    0,
+    6,
+    "Wow. Lohnt es sich?"
+   ],
+   [
+    1,
+    10,
+    "Für ein Auto, das man hier nicht bekommt: jeden einzelnen Tag."
+   ]
+  ],
+  "kurz": [
+   [
+    0,
+    0,
+    "Starker Build! Hut ab."
+   ],
+   [
+    1,
+    90,
+    "Danke dir, freut mich sehr!"
+   ]
+  ],
+  "werkstatt": [
+   [
+    0,
+    0,
+    "Kannst du mir eine Werkstatt für Klimaservice und Achsvermessung empfehlen?"
+   ],
+   [
+    1,
+    80,
+    "Ich bin seit Jahren bei einer freien Werkstatt bei mir um die Ecke. Faire Preise, kennen sich mit Tuning aus."
+   ],
+   [
+    0,
+    14,
+    "Klingt gut, schickst du mir die Adresse?"
+   ],
+   [
+    1,
+    6,
+    "Mache ich gleich, bin gerade unterwegs."
+   ]
+  ],
+  "ausfahrt": [
+   [
+    0,
+    0,
+    "Wir planen eine Ausfahrt am Sonntag, kleine Runde mit Kaffeestopp. Lust?"
+   ],
+   [
+    1,
+    25,
+    "Klingt gut! Wie viele seid ihr?"
+   ],
+   [
+    0,
+    7,
+    "Bis jetzt fünf Autos. Abfahrt um zehn."
+   ],
+   [
+    1,
+    10,
+    "Ich bin dabei, bringe den {b_car} mit."
+   ],
+   [
+    0,
+    2,
+    "Top!"
+   ]
+  ]
+ },
+ "requests": [
+  "Hi, mir ist dein {b_car} auf dem letzten Treffen aufgefallen. Darf ich fragen, wo du die Felgen her hast?",
+  "Hallo! Ich suche für meinen {a_car} genau dein Fahrwerk. Bist du zufrieden damit?",
+  "Hey, ich fotografiere Autos und würde deinen {b_car} gern mal shooten. Interesse?",
+  "Moin, verkaufst du eventuell die alten Teile, die in deinem Build als ausgebaut stehen?"
+ ],
+ "conversations": [
+  {
+   "starter": "lars.skyline",
+   "recipient": "sebastian.demo",
+   "script": "import",
+   "days_ago": 3,
+   "kind": "chat"
+  },
+  {
+   "starter": "sebastian.demo",
+   "recipient": "jonas.e46",
+   "script": "track",
+   "days_ago": 2,
+   "kind": "chat"
+  },
+  {
+   "starter": "felix.gt3",
+   "recipient": "sebastian.demo",
+   "script": "bremse",
+   "days_ago": 5,
+   "kind": "chat"
+  },
+  {
+   "starter": "sebastian.demo",
+   "recipient": "maxi.g82",
+   "script": "fahrwerk",
+   "days_ago": 9,
+   "kind": "chat"
+  },
+  {
+   "starter": "ben.m2",
+   "recipient": "sebastian.demo",
+   "script": "treffen",
+   "days_ago": 1,
+   "kind": "chat"
+  },
+  {
+   "starter": "sebastian.demo",
+   "recipient": "david.supra",
+   "script": "leistung",
+   "days_ago": 12,
+   "kind": "chat"
+  },
+  {
+   "starter": "anna.964",
+   "recipient": "sebastian.demo",
+   "script": "winter",
+   "days_ago": 20,
+   "kind": "chat"
+  },
+  {
+   "starter": "sebastian.demo",
+   "recipient": "jana.718",
+   "script": "ausfahrt",
+   "days_ago": 4,
+   "kind": "chat"
+  },
+  {
+   "starter": "moritz.rx7",
+   "recipient": "sebastian.demo",
+   "script": "foto",
+   "days_ago": 6,
+   "kind": "chat"
+  },
+  {
+   "starter": "sebastian.demo",
+   "recipient": "fabian.e92",
+   "script": "sound",
+   "days_ago": 15,
+   "kind": "chat"
+  },
+  {
+   "starter": "luca.r35",
+   "recipient": "sebastian.demo",
+   "script": "kurz",
+   "days_ago": 8,
+   "kind": "chat"
+  },
+  {
+   "starter": "sebastian.demo",
+   "recipient": "emma.typer",
+   "script": "werkstatt",
+   "days_ago": 26,
+   "kind": "chat"
+  },
+  {
+   "starter": "clara.ae86",
+   "recipient": "sebastian.demo",
+   "script": 0,
+   "days_ago": 1,
+   "kind": "request"
+  },
+  {
+   "starter": "kathi.rx8",
+   "recipient": "sebastian.demo",
+   "script": 2,
+   "days_ago": 2,
+   "kind": "request"
+  },
+  {
+   "starter": "jonas.e46",
+   "recipient": "hannah.mx5",
+   "script": "treffen",
+   "days_ago": 33,
+   "kind": "chat"
+  },
+  {
+   "starter": "lea.gti",
+   "recipient": "lars.skyline",
+   "script": "track",
+   "days_ago": 22,
+   "kind": "chat"
+  },
+  {
+   "starter": "timo.rs",
+   "recipient": "elias.amg",
+   "script": "teile",
+   "days_ago": 29,
+   "kind": "chat"
+  },
+  {
+   "starter": "mia.s2k",
+   "recipient": "emma.typer",
+   "script": "foto",
+   "days_ago": 11,
+   "kind": "chat"
+  },
+  {
+   "starter": "felix.gt3",
+   "recipient": "david.supra",
+   "script": "leistung",
+   "days_ago": 23,
+   "kind": "chat"
+  },
+  {
+   "starter": "hannah.mx5",
+   "recipient": "sophie.quattro",
+   "script": "kauf",
+   "days_ago": 16,
+   "kind": "chat"
+  },
+  {
+   "starter": "lars.skyline",
+   "recipient": "niklas.z33",
+   "script": "winter",
+   "days_ago": 41,
+   "kind": "chat"
+  },
+  {
+   "starter": "elias.amg",
+   "recipient": "julia.boxer",
+   "script": "sound",
+   "days_ago": 12,
+   "kind": "chat"
+  },
+  {
+   "starter": "emma.typer",
+   "recipient": "ben.m2",
+   "script": "bremse",
+   "days_ago": 36,
+   "kind": "chat"
+  },
+  {
+   "starter": "david.supra",
+   "recipient": "anna.964",
+   "script": "import",
+   "days_ago": 22,
+   "kind": "chat"
+  },
+  {
+   "starter": "sophie.quattro",
+   "recipient": "moritz.rx7",
+   "script": "werkstatt",
+   "days_ago": 41,
+   "kind": "chat"
+  },
+  {
+   "starter": "niklas.z33",
+   "recipient": "laura.golf2",
+   "script": "ausfahrt",
+   "days_ago": 7,
+   "kind": "chat"
+  },
+  {
+   "starter": "julia.boxer",
+   "recipient": "kai.c63",
+   "script": 2,
+   "days_ago": 9,
+   "kind": "request"
+  },
+  {
+   "starter": "ben.m2",
+   "recipient": "marie.gr86",
+   "script": "treffen",
+   "days_ago": 13,
+   "kind": "chat"
+  },
+  {
+   "starter": "anna.964",
+   "recipient": "tim.sti",
+   "script": "track",
+   "days_ago": 22,
+   "kind": "chat"
+  },
+  {
+   "starter": "moritz.rx7",
+   "recipient": "lina.rs6",
+   "script": "teile",
+   "days_ago": 39,
+   "kind": "chat"
+  },
+  {
+   "starter": "laura.golf2",
+   "recipient": "fabian.e92",
+   "script": "foto",
+   "days_ago": 20,
+   "kind": "chat"
+  },
+  {
+   "starter": "kai.c63",
+   "recipient": "jana.718",
+   "script": "leistung",
+   "days_ago": 21,
+   "kind": "chat"
+  },
+  {
+   "starter": "marie.gr86",
+   "recipient": "luca.r35",
+   "script": "kauf",
+   "days_ago": 12,
+   "kind": "chat"
+  },
+  {
+   "starter": "tim.sti",
+   "recipient": "clara.ae86",
+   "script": "winter",
+   "days_ago": 6,
+   "kind": "chat"
+  },
+  {
+   "starter": "lina.rs6",
+   "recipient": "philipp.rs4",
+   "script": "sound",
+   "days_ago": 23,
+   "kind": "chat"
+  },
+  {
+   "starter": "fabian.e92",
+   "recipient": "sarah.fk8",
+   "script": "bremse",
+   "days_ago": 41,
+   "kind": "chat"
+  },
+  {
+   "starter": "jana.718",
+   "recipient": "jan.s15",
+   "script": "import",
+   "days_ago": 25,
+   "kind": "chat"
+  },
+  {
+   "starter": "luca.r35",
+   "recipient": "nele.scirocco",
+   "script": "werkstatt",
+   "days_ago": 36,
+   "kind": "chat"
+  },
+  {
+   "starter": "clara.ae86",
+   "recipient": "maxi.g82",
+   "script": "ausfahrt",
+   "days_ago": 7,
+   "kind": "chat"
+  },
+  {
+   "starter": "philipp.rs4",
+   "recipient": "johanna.civic",
+   "script": 3,
+   "days_ago": 7,
+   "kind": "request"
+  },
+  {
+   "starter": "sarah.fk8",
+   "recipient": "dominik.r32",
+   "script": "treffen",
+   "days_ago": 6,
+   "kind": "chat"
+  },
+  {
+   "starter": "jan.s15",
+   "recipient": "alina.a45",
+   "script": "track",
+   "days_ago": 25,
+   "kind": "chat"
+  },
+  {
+   "starter": "nele.scirocco",
+   "recipient": "robin.e30",
+   "script": "teile",
+   "days_ago": 20,
+   "kind": "chat"
+  },
+  {
+   "starter": "maxi.g82",
+   "recipient": "selin.yaris",
+   "script": "foto",
+   "days_ago": 29,
+   "kind": "chat"
+  },
+  {
+   "starter": "johanna.civic",
+   "recipient": "florian.997",
+   "script": "leistung",
+   "days_ago": 1,
+   "kind": "chat"
+  },
+  {
+   "starter": "dominik.r32",
+   "recipient": "kathi.rx8",
+   "script": "kauf",
+   "days_ago": 7,
+   "kind": "chat"
+  },
+  {
+   "starter": "alina.a45",
+   "recipient": "erik.corrado",
+   "script": "winter",
+   "days_ago": 33,
+   "kind": "chat"
+  },
+  {
+   "starter": "robin.e30",
+   "recipient": "nora.m3",
+   "script": "sound",
+   "days_ago": 45,
+   "kind": "chat"
+  },
+  {
+   "starter": "selin.yaris",
+   "recipient": "yusuf.r33",
+   "script": "bremse",
+   "days_ago": 29,
+   "kind": "chat"
+  },
+  {
+   "starter": "florian.997",
+   "recipient": "jonas.e46",
+   "script": "import",
+   "days_ago": 37,
+   "kind": "chat"
+  },
+  {
+   "starter": "kathi.rx8",
+   "recipient": "lea.gti",
+   "script": "werkstatt",
+   "days_ago": 13,
+   "kind": "chat"
+  },
+  {
+   "starter": "erik.corrado",
+   "recipient": "timo.rs",
+   "script": "ausfahrt",
+   "days_ago": 33,
+   "kind": "chat"
+  },
+  {
+   "starter": "nora.m3",
+   "recipient": "mia.s2k",
+   "script": 0,
+   "days_ago": 4,
+   "kind": "request"
+  },
+  {
+   "starter": "yusuf.r33",
+   "recipient": "felix.gt3",
+   "script": "treffen",
+   "days_ago": 5,
+   "kind": "chat"
+  },
+  {
+   "starter": "jonas.e46",
+   "recipient": "niklas.z33",
+   "script": "track",
+   "days_ago": 29,
+   "kind": "chat"
+  },
+  {
+   "starter": "lea.gti",
+   "recipient": "julia.boxer",
+   "script": "teile",
+   "days_ago": 36,
+   "kind": "chat"
+  },
+  {
+   "starter": "timo.rs",
+   "recipient": "ben.m2",
+   "script": "foto",
+   "days_ago": 18,
+   "kind": "chat"
+  },
+  {
+   "starter": "mia.s2k",
+   "recipient": "anna.964",
+   "script": "leistung",
+   "days_ago": 33,
+   "kind": "chat"
+  },
+  {
+   "starter": "felix.gt3",
+   "recipient": "moritz.rx7",
+   "script": "kauf",
+   "days_ago": 8,
+   "kind": "chat"
+  },
+  {
+   "starter": "hannah.mx5",
+   "recipient": "laura.golf2",
+   "script": "winter",
+   "days_ago": 32,
+   "kind": "chat"
+  },
+  {
+   "starter": "lars.skyline",
+   "recipient": "kai.c63",
+   "script": "sound",
+   "days_ago": 20,
+   "kind": "chat"
+  },
+  {
+   "starter": "elias.amg",
+   "recipient": "marie.gr86",
+   "script": "bremse",
+   "days_ago": 31,
+   "kind": "chat"
+  },
+  {
+   "starter": "emma.typer",
+   "recipient": "tim.sti",
+   "script": "import",
+   "days_ago": 12,
+   "kind": "chat"
+  },
+  {
+   "starter": "david.supra",
+   "recipient": "lina.rs6",
+   "script": "werkstatt",
+   "days_ago": 8,
+   "kind": "chat"
+  },
+  {
+   "starter": "sophie.quattro",
+   "recipient": "fabian.e92",
+   "script": "ausfahrt",
+   "days_ago": 40,
+   "kind": "chat"
+  },
+  {
+   "starter": "niklas.z33",
+   "recipient": "jana.718",
+   "script": 1,
+   "days_ago": 12,
+   "kind": "request"
+  }
+ ],
+ "reactions": [
+  "thumbs_up",
+  "heart",
+  "fire",
+  "laugh",
+  "wow"
+ ]
+}

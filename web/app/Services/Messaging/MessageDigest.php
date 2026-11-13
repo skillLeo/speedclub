@@ -3,6 +3,7 @@
 namespace App\Services\Messaging;
 
 use App\Enums\ConversationFolder;
+use App\Enums\DigestFrequency;
 use App\Enums\UserStatus;
 use App\Mail\MessageDigestMail;
 use App\Models\ConversationParticipant;
@@ -17,7 +18,8 @@ use Illuminate\Support\Facades\Mail;
  * The daily e-mail digest (m2.4-contract §4): one mail to a member who turned `new_message.email_digest` on, when a chat holds a message
  * of the other side that has stayed unread for more than digest_after_hours, counted per conversation. A conversation is told about
  * once per new message: digested_message_id remembers the last message a mail covered. Muted, archived, deleted, blocked chats and
- * requests are left out. The mail is queued and holds a count only.
+ * requests are left out. The mail is queued and holds a count only. A member who chose a weekly digest (SET-09) is mailed by the Monday
+ * run only.
  */
 class MessageDigest
 {
@@ -51,7 +53,18 @@ class MessageDigest
     {
         $user = User::query()->find($userId);
 
-        if (! $user instanceof User || ! $user->isActive() || ! $user->hasVerifiedEmail() || ! (NotificationPrefs::for($user)['types']['new_message']['email_digest'] ?? false)) {
+        if (! $user instanceof User || ! $user->isActive() || ! $user->hasVerifiedEmail()) {
+            return 0;
+        }
+
+        $prefs = NotificationPrefs::for($user);
+
+        if (! ($prefs['types']['new_message']['email_digest'] ?? false)) {
+            return 0;
+        }
+
+        // SET-09 "Zusammenfassung wöchentlich": only the Monday run mails; what waits until then is covered in one mail.
+        if ($prefs['digest_frequency'] === DigestFrequency::Weekly->value && ! now(config()->string('speedclub.notifications.timezone'))->isMonday()) {
             return 0;
         }
 

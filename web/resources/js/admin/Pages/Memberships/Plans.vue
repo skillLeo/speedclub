@@ -71,7 +71,7 @@ onMounted(async () => {
     <Head :title="trans('memberships.plans.title')" />
     <div class="flex flex-col gap-24" data-testid="ADM-F1" :data-qa-state="pageState">
         <PageHeader :title="trans('memberships.plans.title')" :crumbs="[{ label: trans('shell.groups.settings') }]" :description="trans('memberships.plans.intro')">
-            <template #meta><p class="text-supporting text-ink-3">{{ trans('memberships.scaffold') }}</p></template>
+            <template #meta><p class="text-admin-base text-ink-3">{{ trans('memberships.scaffold') }}</p></template>
             <template #actions>
                 <Button size="sm" variant="primary" :icon="PhPlus" data-testid="ADM-F1.create" @click="openDrawer(null)">{{ trans('memberships.plans.create') }}</Button>
             </template>
@@ -83,9 +83,9 @@ onMounted(async () => {
         </div>
         <EmptyQueue v-else-if="rows.length === 0" variant="first" :title="trans('memberships.plans.empty_title')" :body="trans('memberships.plans.empty_body')" data-testid="ADM-F1.empty" />
         <ScrollRegion v-else :label="trans('memberships.plans.caption')" test-id="ADM-F1.table">
-            <table class="w-full border-collapse text-supporting">
+            <table class="w-full border-collapse text-admin-base">
                 <caption class="sr-only">{{ trans('memberships.plans.caption') }}</caption>
-                <thead class="bg-surface text-left text-label-s text-ink-2">
+                <thead class="bg-surface text-left text-admin-base-strong text-ink-2">
                     <tr class="h-40 border-b border-line">
                         <th scope="col" class="px-12">{{ trans('memberships.plans.columns.plan') }}</th>
                         <th scope="col" class="px-12">{{ trans('memberships.plans.columns.features') }}</th>
@@ -96,7 +96,7 @@ onMounted(async () => {
                 </thead>
                 <tbody>
                     <tr v-for="plan in rows" :key="plan.id" class="border-b border-line-subtle align-top last:border-b-0" :data-testid="`ADM-F1.plan.${plan.key}`">
-                        <td class="px-12 py-8"><span class="block text-label text-ink">{{ planName(plan) }}</span><span class="sc-key block text-caption text-ink-3">{{ plan.key }}</span></td>
+                        <td class="px-12 py-8"><span class="block text-admin-base-strong text-ink">{{ planName(plan) }}</span><span class="sc-key block text-caption text-ink-3">{{ plan.key }}</span></td>
                         <td class="px-12 py-8 text-ink-2">
                             <ul v-if="plan.features.de.length > 0" class="flex flex-col gap-2"><li v-for="f in (locale() === 'en' && plan.features.en.length > 0 ? plan.features.en : plan.features.de)" :key="f">{{ f }}</li></ul>
                             <span v-else class="text-ink-3">{{ transChoice('memberships.plans.features_count', 0) }}</span>

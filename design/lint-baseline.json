@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "generated": "2026-11-11T01:24:08.630Z",
+  "total": 58,
+  "counts": {
+    "mobile/src/features/auth/screens/WelcomeScreen.tsx::DL04": 2,
+    "mobile/src/features/gallery/qrSample.ts::DL01": 2,
+    "mobile/src/features/messages/components/Reactions.tsx::DL03": 6,
+    "mobile/src/ui/ImageViewer.tsx::DL01": 1,
+    "mobile/src/ui/icons/Icon.tsx::DL02": 2,
+    "web/resources/js/admin/Components/data-table/DataTable.vue::DL04": 1,
+    "web/resources/js/admin/Components/patterns/ChartCard.vue::DL08": 2,
+    "web/resources/js/admin/Components/shell/Sidebar.vue::DL04": 1,
+    "web/resources/js/admin/Pages/Brand/Index.vue::DL05": 2,
+    "web/resources/js/admin/Pages/Brand/Partials/AssetPicker.vue::DL05": 2,
+    "web/resources/js/admin/Pages/Brand/Partials/HeroSlot.vue::DL05": 4,
+    "web/resources/css/public.css::DL04": 3,
+    "web/resources/css/public.css::DL08": 30
+  }
+}

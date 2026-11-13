@@ -197,30 +197,30 @@ const title = computed(() => trans('catalog.import.title'));
         <StateBlock v-if="state === 'error'" kind="error" :title="trans('catalog.import.error')" :body="trans('catalog.error_body')" test-id="ADM-17.error" />
         <template v-else>
             <!-- upload -->
-            <section class="flex flex-col gap-16 rounded-md border border-line px-24 py-24" :aria-label="trans('catalog.import.upload_title')" data-testid="ADM-17.upload">
+            <section class="flex flex-col gap-16 rounded-sm border border-line px-24 py-24" :aria-label="trans('catalog.import.upload_title')" data-testid="ADM-17.upload">
                 <div v-if="state === 'loading'" class="flex flex-col gap-12" aria-busy="true">
                     <Skeleton shape="text" class="w-160" /><Skeleton class="h-32 w-240" /><Skeleton class="h-40 w-full" />
                 </div>
                 <template v-else>
-                    <h2 class="text-title-s text-ink">{{ trans('catalog.import.upload_title') }}</h2>
+                    <h2 class="text-headline text-ink">{{ trans('catalog.import.upload_title') }}</h2>
                     <form class="flex flex-wrap items-end gap-16" novalidate @submit.prevent="analyse">
                         <div class="flex flex-col gap-4">
-                            <span id="adm17-kind" class="text-label-s text-ink">{{ trans('catalog.import.kind') }}</span>
+                            <span id="adm17-kind" class="text-admin-base-strong text-ink">{{ trans('catalog.import.kind') }}</span>
                             <SegmentedControl v-model="kindModel" class="self-start" size="field-md" :options="kindOptions" aria-labelledby="adm17-kind" :label="trans('catalog.import.kind')" data-testid="ADM-17.kind" />
                         </div>
                         <div class="min-w-240 grow basis-0">
                             <Field :label="trans('catalog.import.file')" :error="uploadError" required>
                                 <span class="flex h-40 items-center gap-12 rounded-sm border border-line-control bg-raised px-12">
                                     <PhFileCsv :size="20" class="shrink-0 text-ink-3" aria-hidden="true" />
-                                    <span class="min-w-0 grow truncate text-supporting" :class="file ? 'text-ink' : 'text-ink-3'">{{ file ? file.name : trans('catalog.import.no_file') }}</span>
+                                    <span class="min-w-0 grow truncate text-admin-base" :class="file ? 'text-ink' : 'text-ink-3'">{{ file ? file.name : trans('catalog.import.no_file') }}</span>
                                     <input id="adm17-file" ref="fileInput" type="file" accept=".csv,text/csv,text/plain" class="peer sr-only" data-testid="ADM-17.file" @change="pick" />
-                                    <label for="adm17-file" :class="['inline-flex h-32 shrink-0 cursor-pointer items-center rounded-sm border border-line-control px-12 text-label-s text-ink hover:bg-hover peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus']">{{ trans('catalog.import.choose') }}</label>
+                                    <label for="adm17-file" :class="['inline-flex h-32 shrink-0 cursor-pointer items-center rounded-sm border border-line-control px-12 text-admin-base-strong text-ink hover:bg-hover peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus']">{{ trans('catalog.import.choose') }}</label>
                                 </span>
                             </Field>
                         </div>
                         <Button type="submit" variant="primary" :icon="PhUploadSimple" :loading="upload.processing.value" data-testid="ADM-17.analyse">{{ trans('catalog.import.analyse') }}</Button>
                     </form>
-                    <p class="text-helper text-ink-3">{{ trans('catalog.import.rules') }}</p>
+                    <p class="text-admin-base text-ink-3">{{ trans('catalog.import.rules') }}</p>
                 </template>
             </section>
 
@@ -228,11 +228,11 @@ const title = computed(() => trans('catalog.import.title'));
             <section v-if="current" class="flex flex-col gap-16" :aria-label="trans('catalog.import.dry_run_title')" data-testid="ADM-17.dry-run">
                 <div class="flex flex-wrap items-start justify-between gap-16">
                     <div class="flex min-w-0 flex-col gap-4">
-                        <h2 class="flex flex-wrap items-center gap-12 text-title-s text-ink">
+                        <h2 class="flex flex-wrap items-center gap-12 text-headline text-ink">
                             <span class="truncate">{{ trans(current.status === 'analysed' || current.status === 'awaiting_approval' || current.status === 'expired' ? 'catalog.import.dry_run_of' : 'catalog.import.import_of', { file: current.file }) }}</span>
                             <StatusPill :tone="importTones[current.status]" :label="trans(`catalog.import.statuses.${current.status}`)" data-testid="ADM-17.status" />
                         </h2>
-                        <p class="text-supporting text-ink-2 tabular-nums">
+                        <p class="text-admin-base text-ink-2 tabular-nums">
                             {{
                                 [
                                     trans(`catalog.import.kinds.${current.kind}`),
@@ -252,18 +252,18 @@ const title = computed(() => trans('catalog.import.title'));
                 </div>
 
                 <ApprovalNotice v-if="current.can_apply && changed > limits.four_eyes_above" test-id="ADM-17.four-eyes" />
-                <p v-if="waiting" class="rounded-sm border border-line bg-raised px-16 py-12 text-supporting text-ink-2" role="status" data-testid="ADM-17.waiting">
+                <p v-if="waiting" class="rounded-sm border border-line bg-raised px-16 py-12 text-admin-base text-ink-2" role="status" data-testid="ADM-17.waiting">
                     {{ trans('catalog.import.waiting', { until: formatDateTime(current.approval?.expires_at) }) }}
                 </p>
                 <StateBlock v-if="current.expired && current.status !== 'applied'" kind="forbidden" :retryable="false" :title="trans('catalog.import.expired_title')" :body="trans('catalog.import.expired_body')" test-id="ADM-17.expired" />
 
                 <div v-if="running" class="flex flex-col gap-8" role="status" aria-live="polite" data-testid="ADM-17.progress">
-                    <p class="text-supporting text-ink tabular-nums">{{ trans('catalog.import.progress', { done: formatNumber(current.progress), total: formatNumber(current.rows), percent: String(progress) }) }}</p>
+                    <p class="text-admin-base text-ink tabular-nums">{{ trans('catalog.import.progress', { done: formatNumber(current.progress), total: formatNumber(current.rows), percent: String(progress) }) }}</p>
                     <div class="h-8 w-full overflow-hidden rounded-full bg-raised" role="progressbar" :aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100" :aria-label="trans('catalog.import.progress_label')">
                         <div class="h-full rounded-full bg-inverse" :style="{ width: `${progress}%` }" />
                     </div>
                 </div>
-                <p v-if="current.status === 'applied'" class="flex items-center gap-8 text-supporting text-ink-2" data-testid="ADM-17.applied">
+                <p v-if="current.status === 'applied'" class="flex items-center gap-8 text-admin-base text-ink-2" data-testid="ADM-17.applied">
                     <PhCheckCircle :size="16" class="text-success" aria-hidden="true" />{{ trans('catalog.import.applied', { date: formatDateTime(current.finished_at), name: current.applied_by ?? '–' }) }}
                 </p>
                 <StateBlock
@@ -277,7 +277,7 @@ const title = computed(() => trans('catalog.import.title'));
                 <StateBlock v-if="current.status === 'failed'" kind="error" :retryable="false" :title="trans('catalog.import.failed_title')" :body="trans('catalog.import.failed_body')" test-id="ADM-17.failed" />
 
                 <!-- DQ-590: without the rows (not stored for this import) no counts above an empty list: one sentence instead. -->
-                <p v-if="noLines" class="rounded-sm border border-line-subtle px-16 py-12 text-supporting text-ink-2" data-testid="ADM-17.no-lines">
+                <p v-if="noLines" class="rounded-sm border border-line-subtle px-16 py-12 text-admin-base text-ink-2" data-testid="ADM-17.no-lines">
                     {{ trans(running ? 'catalog.import.lines_later' : 'catalog.import.lines_missing') }}
                 </p>
                 <SegmentedControl v-if="!noLines" v-model="showModel" class="self-start" :options="showOptions" :label="trans('catalog.import.show.label')" data-testid="ADM-17.show" />
@@ -285,10 +285,10 @@ const title = computed(() => trans('catalog.import.title'));
                 <EmptyQueue v-else-if="filtered.length === 0" variant="quiet" :title="trans(`catalog.import.none.${show}`)" />
                 <template v-else>
                     <ScrollRegion :label="trans('catalog.import.rows_caption')" test-id="ADM-17.rows">
-                        <table class="w-full text-supporting">
+                        <table class="w-full text-admin-base">
                             <caption class="sr-only">{{ trans('catalog.import.rows_caption') }}</caption>
                             <thead>
-                                <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                                <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                                     <th scope="col" class="w-px whitespace-nowrap px-12 text-right">{{ trans('catalog.columns.line') }}</th>
                                     <th scope="col" class="w-px whitespace-nowrap px-12">{{ trans('catalog.columns.status') }}</th>
                                     <th scope="col" class="w-px whitespace-nowrap px-12">{{ trans('catalog.columns.level') }}</th>
@@ -332,17 +332,17 @@ const title = computed(() => trans('catalog.import.title'));
 
             <!-- history -->
             <section class="flex flex-col gap-12" :aria-label="trans('catalog.import.history_title')" data-testid="ADM-17.history">
-                <h2 class="text-title-s text-ink">{{ trans('catalog.import.history_title') }}</h2>
+                <h2 class="text-headline text-ink">{{ trans('catalog.import.history_title') }}</h2>
                 <EmptyQueue v-if="state !== 'loading' && history.length === 0" variant="first" :title="trans('catalog.import.history_empty_title')" :body="trans('catalog.import.history_empty_body')" data-testid="ADM-17.history-empty" />
                 <ScrollRegion v-else :label="trans('catalog.import.history_caption')">
-                    <table class="w-full text-supporting" :aria-busy="state === 'loading' || undefined">
+                    <table class="w-full text-admin-base" :aria-busy="state === 'loading' || undefined">
                         <caption class="sr-only">{{ trans('catalog.import.history_caption') }}</caption>
                         <!-- DQ-593: fixed widths for every column but the file, the same while loading and with rows. -->
                         <colgroup>
                             <col class="w-120" /><col /><col class="w-80" /><col class="w-120" /><col class="w-80" /><col class="w-160" /><col class="w-200" />
                         </colgroup>
                         <thead>
-                            <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                            <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                                 <th scope="col" class="whitespace-nowrap px-12">{{ trans('catalog.columns.uploaded') }}</th>
                                 <th scope="col" class="px-12">{{ trans('catalog.columns.file') }}</th>
                                 <th scope="col" class="whitespace-nowrap px-12 text-right">{{ trans('catalog.import.row_statuses.new') }}</th>

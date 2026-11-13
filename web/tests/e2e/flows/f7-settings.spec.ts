@@ -47,7 +47,8 @@ test.describe('F7 privacy and appearance', () => {
     await named(me, 'Nele Krüger');
     await useSession(context, me.session);
     await open(page, '/app/profile');
-    await row(page, 'PROF-01.settings').click();
+    // 09 §7.7: the settings gear floats in PROF-01's header (pattern b).
+    await id(page, 'PROF-01.settings').click();
     await expect.poll(() => pathOf(page)).toBe('/app/settings');
     await row(page, 'SET-01.privacyRow').click();
     await expect.poll(() => pathOf(page)).toBe('/app/settings/privacy');
@@ -277,7 +278,9 @@ test.describe('F7 security', () => {
       await open(page, '/app/settings/security/sessions');
       const rows = page.locator('[data-testid^="SET-06.row."][data-testid$=".revoke"]:visible');
       await expect(rows).toHaveCount(2);
-      await expect(page.locator('[data-testid^="SET-06.row."][data-testid$=".current"]:visible')).toHaveCount(1);
+      // M4.7: this device stands alone in "Dieses Gerät" (SET-06.current), and it cannot be ended from here.
+      await expect(id(page, 'SET-06.current')).toBeVisible();
+      await expect(page.locator('[data-testid="SET-06.current"] [data-testid$=".revoke"]')).toHaveCount(0);
       await flowShot(page, testInfo, 'SET-06-sessions');
 
       await rows.first().click();

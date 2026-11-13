@@ -62,8 +62,8 @@ function initialFocus(event: Event): void {
             >
                 <header class="flex items-start gap-16 border-b border-line-subtle px-24 py-16">
                     <div class="flex min-w-0 flex-1 flex-col gap-4">
-                        <DialogTitle class="text-title-s text-ink">{{ title }}</DialogTitle>
-                        <DialogDescription v-if="description" class="text-supporting text-ink-2">{{ description }}</DialogDescription>
+                        <DialogTitle class="text-headline text-ink">{{ title }}</DialogTitle>
+                        <DialogDescription v-if="description" class="text-admin-base text-ink-2">{{ description }}</DialogDescription>
                     </div>
                     <slot name="header-actions" />
                     <DialogClose :class="[focusRing, '-mr-8 inline-flex size-32 items-center justify-center rounded-sm text-ink-2 hover:bg-hover hover:text-ink']" :aria-label="trans('ui.dialog.close')">

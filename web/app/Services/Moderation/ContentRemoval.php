@@ -2,10 +2,14 @@
 
 namespace App\Services\Moderation;
 
+use App\Enums\CommentStatus;
+use App\Enums\EventStatus;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportTargetType;
 use App\Enums\Visibility;
 use App\Models\BuildUpdate;
+use App\Models\Comment;
+use App\Models\Event;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\ModerationCase;
@@ -56,6 +60,8 @@ class ContentRemoval
             ReportTargetType::BuildUpdate => ($update = BuildUpdate::query()->find($id)) instanceof BuildUpdate ? $this->buildUpdate($update) : [],
             ReportTargetType::Modification => ($mod = Modification::query()->find($id)) instanceof Modification ? $this->modification($mod) : [],
             ReportTargetType::Message => ($message = Message::query()->find($id)) instanceof Message ? $this->message($message) : [],
+            ReportTargetType::Comment => ($comment = Comment::query()->find($id)) instanceof Comment ? $this->comment($comment) : [],
+            ReportTargetType::Event => ($event = Event::query()->find($id)) instanceof Event ? $this->event($event) : [],
         };
     }
 
@@ -138,6 +144,33 @@ class ContentRemoval
     private function buildUpdate(BuildUpdate $update): array
     {
         $update->forceFill(['hidden' => true, 'open_until' => null])->save();
+
+        return [];
+    }
+
+    /**
+     * M4.12: a removed event shows to nobody but staff and its organiser (status rejected, removed_at); the status before is kept so an
+     * appeal can bring it back (ContentRestoration). Attendees are not told: the event is gone for them as for everybody.
+     *
+     * @return list<Closure(): void>
+     */
+    private function event(Event $event): array
+    {
+        if ($event->getAttribute('removed_at') === null) {
+            $event->forceFill(['status_before_removal' => $event->status->value, 'status' => EventStatus::Rejected, 'removed_at' => now()])->save();
+        }
+
+        return [];
+    }
+
+    /**
+     * M4.11 [build_comments]: removed comments show to nobody but staff; an appeal can bring them back (ContentRestoration).
+     *
+     * @return list<Closure(): void>
+     */
+    private function comment(Comment $comment): array
+    {
+        $comment->forceFill(['status' => CommentStatus::Removed])->save();
 
         return [];
     }

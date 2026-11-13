@@ -24,7 +24,8 @@ const SCREENS: Screen[] = [
   { name: 'PROF-04 own followers', path: '/app/profile/connections?tab=followers', auth: 'member', ready: '[data-testid^="PROF-04.row."]' },
   { name: 'PROF-04 member following', path: '/app/u/jann.ptrs/connections?tab=following', auth: 'member', ready: '[data-testid^="PROF-04.row."]' },
   { name: 'PROF-04 guest followers', path: '/app/u/jann.ptrs/connections?tab=followers', auth: 'guest', ready: '[data-testid^="PROF-04.row."]' },
-  { name: 'PROF-05 saved', path: '/app/profile/saved', auth: 'member', ready: '[data-testid^="PROF-05.card."]' },
+  // DQ-1087: PROF-05 opens the "Gespeichert" collection (COL-02).
+  { name: 'PROF-05 saved', path: '/app/profile/saved', auth: 'member', ready: '[data-testid^="COL-02.item."]' },
   { name: 'SET-08 blocked', path: '/app/settings/privacy/blocked', auth: 'member-blocker', ready: '[data-testid="SET-08.row.nina.neu"]' },
   { name: 'SET-08 empty', path: '/app/settings/privacy/blocked', auth: 'member', ready: '[data-testid="SET-08.empty"]' },
 ];
@@ -47,7 +48,7 @@ const STATES: { route: string; path: string; auth: string; states: Record<string
     route: 'PROF-05',
     path: '/app/profile/saved',
     auth: 'member',
-    states: { loading: 'PROF-05.skeleton', empty: 'PROF-05.empty', error: 'PROF-05.error', offline: 'PROF-05.offline' },
+    states: { loading: 'PROF-05.skeleton', error: 'PROF-05.error', offline: 'PROF-05.error' },
   },
   {
     route: 'SET-08',

@@ -107,8 +107,8 @@ const serverError = computed(() => (props.failed ? trans('ui.state.server_error'
     <Dialog v-model:open="open" :title="trans('moderation.appeal.title')" size="lg" :dismissible="!action.processing.value" :test-id="testId">
         <form :id="`${testId}-form`" class="flex flex-col gap-16" novalidate @submit.prevent="submit">
             <div v-if="appeal?.text" class="flex flex-col gap-4">
-                <p class="text-label-s text-ink">{{ trans('moderation.appeal.text') }}</p>
-                <blockquote class="border-l-2 border-line pl-12 text-supporting text-ink" :data-testid="`${testId}.text`">{{ appeal.text }}</blockquote>
+                <p class="text-admin-base-strong text-ink">{{ trans('moderation.appeal.text') }}</p>
+                <blockquote class="border-l-2 border-line pl-12 text-admin-base text-ink" :data-testid="`${testId}.text`">{{ appeal.text }}</blockquote>
             </div>
             <RadioGroup v-model="outcomeModel" :legend="trans('moderation.appeal.outcome')" :options="outcomeOptions" :data-testid="`${testId}.outcome`" />
             <Field :label="trans('moderation.appeal.explanation')" :hint="trans('moderation.appeal.explanation_hint')" :error="errors.explanation" required>
@@ -116,7 +116,7 @@ const serverError = computed(() => (props.failed ? trans('ui.state.server_error'
             </Field>
 
             <fieldset v-if="newMeasure" class="flex flex-col gap-16" :data-testid="`${testId}.measure`">
-                <legend class="mb-4 text-label-s text-ink">{{ trans('moderation.appeal.measure') }}</legend>
+                <legend class="mb-4 text-admin-base-strong text-ink">{{ trans('moderation.appeal.measure') }}</legend>
                 <RadioGroup v-model="measureModel" :legend="trans('moderation.composer.action')" :options="measureOptions" />
                 <div v-if="form.action === 'restrict'" class="flex flex-wrap gap-12">
                     <div class="min-w-160 grow basis-0"><Field :label="trans('moderation.composer.restriction')"><Select v-model="restrictionModel" :options="restrictionOptions" /></Field></div>

@@ -20,8 +20,9 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { isWeb } from '@/lib/platform';
-import { createStyles, space, useBreakpoint, useMotion } from '@/theme';
+import { createStyles, space, useBreakpoint } from '@/theme';
 
+import { motionDuration, useMotionPreference } from './motion';
 import { IconButton } from './IconButton';
 import { useImagePlaceholder } from './imagePlaceholder';
 import {
@@ -115,20 +116,20 @@ const useStyles = createStyles((t) => ({
  * Web adds arrows and Escape on the keyboard, and previous / next buttons from tablet width up.
  */
 export function ImageViewer(props: ImageViewerProps) {
-  const motion = useMotion();
-  const mounted = usePresence(props.visible, motion.duration.micro);
+  const motion = useMotionPreference();
+  const mounted = usePresence(props.visible, motion.enabled ? motionDuration('effect.fast') : 0);
   return mounted && props.images.length > 0 ? <ViewerStage {...props} /> : null;
 }
 
 function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose, actions, notice, testID }: ImageViewerProps) {
   const { t } = useTranslation('common');
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const dimensions = useWindowDimensions();
   const { gutter, kind } = useBreakpoint();
   const safeTop = useSafeEdge('top');
   const safeBottom = useSafeEdge('bottom');
-  const { springTo, timingTo, reduced } = motion;
+  const { springTo, effectTo, reduced } = motion;
 
   const count = images.length;
   const [stage, setStage] = useState({ width: dimensions.width, height: dimensions.height });
@@ -156,8 +157,8 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
   const { width: fittedW, height: fittedH } = fitted;
 
   useEffect(() => {
-    presence.set(visible ? timingTo(1, 'small') : timingTo(0, 'micro'));
-  }, [visible, presence, timingTo]);
+    presence.set(visible ? effectTo(1, 'default') : effectTo(0, 'fast'));
+  }, [visible, presence, effectTo]);
 
   useEffect(() => {
     fittedWidth.set(fittedW);
@@ -195,13 +196,13 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
       if (reduced) {
         pageX.set(-next * stageWidth);
         pageFade.set(0);
-        pageFade.set(timingTo(1, 'small'));
+        pageFade.set(effectTo(1, 'default'));
       } else {
-        pageX.set(timingTo(-next * stageWidth, 'medium'));
+        pageX.set(springTo(-next * stageWidth, 'calm'));
       }
       settlePage(next);
     },
-    [count, index, pageFade, pageX, reduced, resetZoom, settlePage, stageWidth, timingTo],
+    [count, index, effectTo, pageFade, pageX, reduced, resetZoom, settlePage, springTo, stageWidth],
   );
 
   useEffect(() => {
@@ -220,10 +221,10 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
     if (visible) onClose();
   };
 
-  // spring.sheet clamps its overshoot; the snappy spring would swing a whole page past its rest (§10: at most 2 %).
+  // A pager must not bounce (09 §4.7): spring.calm (ζ 0.9) settles without a visible swing past the page.
   const glide = (value: number) => {
     'worklet';
-    return springTo(value, 'sheet');
+    return springTo(value, 'calm');
   };
 
   const settleZoom = () => {
@@ -456,7 +457,7 @@ type SlideProps = {
 
 function Slide({ image, active, left, width, scale, translateX, translateY, onAspect }: SlideProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const placeholder = useImagePlaceholder(image.blurhash, 'contain');
   const zoomStyle = useAnimatedStyle(() =>
     active
@@ -472,7 +473,7 @@ function Slide({ image, active, left, width, scale, translateX, translateY, onAs
           {...placeholder}
           {...(image.cachePolicy ? { cachePolicy: image.cachePolicy } : {})}
           contentFit="contain"
-          transition={motion.reduced ? null : motion.duration.small}
+          transition={motion.reduced ? null : motionDuration('effect.default')}
           accessibilityLabel={image.alt}
           accessible={Boolean(image.alt) && active}
           onLoad={(event) => {

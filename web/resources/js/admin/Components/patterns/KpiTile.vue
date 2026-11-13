@@ -35,7 +35,7 @@ const deltaTone = computed(() => (delta.value === null || delta.value === 0 ? 't
         </template>
         <template v-else>
             <div class="flex items-baseline gap-8">
-                <p class="font-display text-display-m text-ink tabular-nums">{{ formatNumber(value) }}</p>
+                <p class="font-numeral text-hero-numeral-s text-ink tabular-nums">{{ formatNumber(value) }}</p>
                 <p v-if="delta !== null" class="text-caption tabular-nums" :class="deltaTone">
                     <span class="sr-only">{{ trans('ui.kpi.delta') }}</span>{{ formatPercent(delta) }}
                 </p>

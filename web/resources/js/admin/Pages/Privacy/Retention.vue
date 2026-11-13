@@ -74,19 +74,19 @@ onMounted(async () => {
     <div class="flex flex-col gap-24" data-testid="ADM-47" :data-qa-state="pageState">
         <PageHeader :title="trans('privacy.retention.title')" :crumbs="[{ label: trans('shell.groups.audit_privacy') }]" :description="trans('privacy.retention.intro')">
             <template #meta>
-                <p class="text-supporting text-ink-2 tabular-nums" data-testid="ADM-47.last">{{ lastPublished ? trans('privacy.retention.last', { version: formatNumber(lastPublished.version), date: formatDateTime(lastPublished.at), name: lastPublished.by ?? '–' }) : trans('privacy.retention.never') }}</p>
+                <p class="text-admin-base text-ink-2 tabular-nums" data-testid="ADM-47.last">{{ lastPublished ? trans('privacy.retention.last', { version: formatNumber(lastPublished.version), date: formatDateTime(lastPublished.at), name: lastPublished.by ?? '–' }) : trans('privacy.retention.never') }}</p>
             </template>
             <template v-if="canEdit && pageState === 'ready'" #actions>
                 <Button size="sm" variant="ghost" :icon="PhArrowCounterClockwise" :disabled="changed.length === 0 && !anyInvalid" data-testid="ADM-47.discard" @click="reset()">{{ trans('privacy.retention.discard') }}</Button>
                 <Button size="sm" variant="primary" :icon="PhFloppyDisk" :disabled="changed.length === 0 || anyInvalid" data-testid="ADM-47.save" @click="(action.reset(), (confirmOpen = true))">{{ trans('privacy.retention.save') }}</Button>
             </template>
         </PageHeader>
-        <p v-if="!canEdit" class="text-supporting text-ink-2" data-testid="ADM-47.view-only">{{ trans('privacy.retention.view_only') }}</p>
+        <p v-if="!canEdit" class="text-admin-base text-ink-2" data-testid="ADM-47.view-only">{{ trans('privacy.retention.view_only') }}</p>
 
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('privacy.retention.error')" :body="trans('ui.state.error_body')" test-id="ADM-47.error" @retry="router.reload()" />
         <template v-else>
             <section class="flex flex-col gap-12" data-testid="ADM-47.editable">
-                <h2 class="text-title-s text-ink">{{ trans('privacy.retention.editable_title') }}</h2>
+                <h2 class="text-headline text-ink">{{ trans('privacy.retention.editable_title') }}</h2>
                 <div v-if="pageState === 'loading'" class="flex flex-col rounded-sm border border-line-subtle" aria-busy="true">
                     <div v-for="n in 8" :key="n" class="flex min-h-64 items-center gap-24 border-b border-line-subtle px-12 py-8 last:border-b-0">
                         <span class="flex flex-1 flex-col gap-4"><Skeleton shape="text" class="w-160" /><Skeleton shape="text" class="w-full" /></span>
@@ -94,9 +94,9 @@ onMounted(async () => {
                     </div>
                 </div>
                 <ScrollRegion v-else :label="trans('privacy.retention.caption')">
-                    <table class="w-full border-collapse text-supporting">
+                    <table class="w-full border-collapse text-admin-base">
                         <caption class="sr-only">{{ trans('privacy.retention.caption') }}</caption>
-                        <thead class="bg-surface text-left text-label-s text-ink-2">
+                        <thead class="bg-surface text-left text-admin-base-strong text-ink-2">
                             <tr class="h-40 border-b border-line">
                                 <th scope="col" class="px-12">{{ trans('privacy.retention.columns.area') }}</th>
                                 <th scope="col" class="w-160 px-12">{{ trans('privacy.retention.columns.period') }}</th>
@@ -108,8 +108,8 @@ onMounted(async () => {
                             <tr v-for="p in editable" :key="p.key" class="border-b border-line-subtle align-top last:border-b-0" :data-testid="`ADM-47.row.${p.key}`">
                                 <th scope="row" class="px-12 py-8 text-left font-normal">
                                     <!-- DQ-642: every cell's first line sits on the 32 px line of the input. -->
-                                    <label :for="`adm47-${p.key}`" class="flex min-h-32 items-center text-label text-ink">{{ label(p.key) }}</label>
-                                    <span :id="`adm47-${p.key}-note`" class="block max-w-560 text-helper text-ink-3">{{ note(p.key) }}</span>
+                                    <label :for="`adm47-${p.key}`" class="flex min-h-32 items-center text-admin-base-strong text-ink">{{ label(p.key) }}</label>
+                                    <span :id="`adm47-${p.key}-note`" class="block max-w-560 text-admin-base text-ink-3">{{ note(p.key) }}</span>
                                 </th>
                                 <td class="px-12 py-8">
                                     <span class="flex items-center gap-8">
@@ -127,8 +127,8 @@ onMounted(async () => {
                                         />
                                         <span class="text-ink-2">{{ p.unit ? trans(`privacy.retention.unit_names.${p.unit}`) : '' }}</span>
                                     </span>
-                                    <span v-if="invalid(p)" class="mt-4 block text-helper text-danger" role="alert">{{ trans('privacy.retention.out_of_bounds', { min: formatNumber(p.min), max: formatNumber(p.max) }) }}</span>
-                                    <span v-else-if="parsed(p) !== p.value" class="mt-4 block text-helper text-ink-3">{{ trans('privacy.retention.changed') }}</span>
+                                    <span v-if="invalid(p)" class="mt-4 block text-admin-base text-danger" role="alert">{{ trans('privacy.retention.out_of_bounds', { min: formatNumber(p.min), max: formatNumber(p.max) }) }}</span>
+                                    <span v-else-if="parsed(p) !== p.value" class="mt-4 block text-admin-base text-ink-3">{{ trans('privacy.retention.changed') }}</span>
                                 </td>
                                 <td class="whitespace-nowrap px-12 py-8 text-ink-2 tabular-nums"><span class="flex min-h-32 items-center">{{ trans('privacy.retention.bounds', { min: formatNumber(p.min), max: amount(p.unit, p.max) }) }}</span></td>
                                 <td class="whitespace-nowrap px-12 py-8 text-ink-2 tabular-nums"><span class="flex min-h-32 items-center">{{ amount(p.unit, p.default) }}</span></td>
@@ -140,8 +140,8 @@ onMounted(async () => {
 
             <section class="flex flex-col gap-12" data-testid="ADM-47.fixed">
                 <div class="flex flex-col gap-4">
-                    <h2 class="text-title-s text-ink">{{ trans('privacy.retention.fixed_title') }}</h2>
-                    <p class="max-w-720 text-supporting text-ink-2">{{ trans('privacy.retention.fixed_body') }}</p>
+                    <h2 class="text-headline text-ink">{{ trans('privacy.retention.fixed_title') }}</h2>
+                    <p class="max-w-720 text-admin-base text-ink-2">{{ trans('privacy.retention.fixed_body') }}</p>
                 </div>
                 <div v-if="pageState === 'loading'" class="flex flex-col rounded-sm border border-line-subtle" aria-hidden="true">
                     <div v-for="n in 10" :key="n" class="flex min-h-48 items-center gap-24 border-b border-line-subtle px-12 py-8 last:border-b-0"><span class="flex flex-1 flex-col gap-4"><Skeleton shape="text" class="w-160" /><Skeleton shape="text" class="w-320" /></span><Skeleton shape="text" class="w-96" /></div>
@@ -149,10 +149,10 @@ onMounted(async () => {
                 <ul v-else class="flex flex-col rounded-sm border border-line-subtle">
                     <li v-for="p in fixed" :key="p.key" class="flex flex-wrap items-start gap-x-24 gap-y-4 border-b border-line-subtle px-12 py-8 last:border-b-0" :data-testid="`ADM-47.fixed.${p.key}`">
                         <span class="flex min-w-0 flex-1 flex-col">
-                            <span class="text-label text-ink">{{ label(p.key) }}</span>
-                            <span class="max-w-560 text-helper text-ink-3">{{ note(p.key) }}</span>
+                            <span class="text-admin-base-strong text-ink">{{ label(p.key) }}</span>
+                            <span class="max-w-560 text-admin-base text-ink-3">{{ note(p.key) }}</span>
                         </span>
-                        <span class="inline-flex items-center gap-4 whitespace-nowrap text-supporting text-ink-2 tabular-nums"><PhLockSimple :size="16" aria-hidden="true" />{{ fixedValue(p) }}</span>
+                        <span class="inline-flex items-center gap-4 whitespace-nowrap text-admin-base text-ink-2 tabular-nums"><PhLockSimple :size="16" aria-hidden="true" />{{ fixedValue(p) }}</span>
                     </li>
                 </ul>
             </section>

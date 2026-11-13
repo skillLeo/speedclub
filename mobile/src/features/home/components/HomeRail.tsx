@@ -1,20 +1,21 @@
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 
 import { useDiscover, type MakeTile } from '@/api/queries/discover';
 import { useMyVehicles } from '@/api/queries/profile';
+import { MakeTiles, MakeTilesSkeleton } from '@/features/discover/components/MakeTiles';
 import { searchPath } from '@/features/discover/navigation';
 import { profileVehicles } from '@/features/profile/media';
-import { keepNameTogether } from '@/lib/format';
 import { useFormat } from '@/lib/useFormat';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, size, space, typography, useTheme } from '@/theme';
 import { Button, estimateLines, ListRow, SectionHeader, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
 
 const ROUTE = 'HOME-01';
-/** Discover shortcuts on the rail (§5): the makes with the most public builds. */
-export const RAIL_MAKES = 5;
+/** 09 §7.3 web "Marken im Fokus": three BrandTiles, the makes with the most public builds (DQ-1034). */
+export const RAIL_MAKES = 3;
 /** ListRow's own rule: from this font scale an adaptive value always takes its own line. */
 const STACKED_VALUE_FONT_SCALE = 1.5;
 
@@ -25,7 +26,7 @@ const STACKED_VALUE_FONT_SCALE = 1.5;
 export function railRowHeight(fontScale: number): number {
   const lines =
     fontScale >= STACKED_VALUE_FONT_SCALE
-      ? (typography.body.lineHeight + typography.supporting.lineHeight) * fontScale
+      ? (typography.body.lineHeight + typography.callout.lineHeight) * fontScale
       : typography.body.lineHeight * fontScale;
   return Math.max(fontScale >= STACKED_VALUE_FONT_SCALE ? size.row.withThumb : size.row.single, lines + 2 * space[8]);
 }
@@ -79,35 +80,23 @@ export function HomeRail({ inPage = false, top }: HomeRailProps) {
   const vehicleCount = garage.data && profileVehicles(garage.data).length;
   // The makes answer after the feed: their place is held, so the garage below does not jump when they arrive.
   const makesPending = discover.isPending && discover.fetchStatus !== 'paused';
+  const [width, setWidth] = useState(0);
 
   const content = (
     <>
-      {makesPending ? <MakesSkeleton /> : null}
+      {makesPending ? <MakesSkeleton width={width} /> : null}
       {makes.length > 0 ? (
         <View>
           <SectionHeader
-            title={t('rail.makes')}
+            title={t('rail.makesFocus')}
             actionLabel={t('rail.allMakes')}
             actionAccessibilityLabel={t('rail.allMakesLabel')}
             onAction={() => router.navigate('/discover')}
             style={styles.header}
             testID={`${ROUTE}.rail.makes`}
           />
-          <View style={styles.group}>
-            {makes.map((make, index) => (
-              <ListRow
-                key={make.id}
-                title={keepNameTogether(make.name)}
-                hyphenate={false}
-                adaptiveValue
-                value={t('rail.makeCount', { count: make.vehicle_count, formatted: format.number(make.vehicle_count) })}
-                onPress={() => router.navigate(searchPath(make.name))}
-                inset={space[16]}
-                divider={index < makes.length - 1}
-                testID={`${ROUTE}.rail.make.${make.slug}`}
-              />
-            ))}
-          </View>
+          {/* The same BrandTiles as DISC-01 (wordmark, real count); the grid takes the columns the names fit, else a 1 × 3 stack. */}
+          <MakeTiles makes={makes} width={width} onOpen={(make) => router.navigate(searchPath(make.name))} testID={`${ROUTE}.rail.make`} />
         </View>
       ) : null}
       {status === 'member' ? (
@@ -135,7 +124,7 @@ export function HomeRail({ inPage = false, top }: HomeRailProps) {
       {status === 'guest' ? (
         <View style={styles.about} testID={`${ROUTE}.rail.about`}>
           <SectionHeader title={t('rail.aboutTitle')} />
-          <Text variant="bodyDense" color="text.secondary">
+          <Text variant="body" color="text.secondary">
             {t('rail.aboutBody')}
           </Text>
           <Button
@@ -154,7 +143,9 @@ export function HomeRail({ inPage = false, top }: HomeRailProps) {
   const body = (
     <>
       {top === undefined ? null : <View style={{ height: top }} />}
-      <View style={[styles.content, top === undefined ? null : styles.fromTop]}>{content}</View>
+      <View style={[styles.content, top === undefined ? null : styles.fromTop]} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+        {content}
+      </View>
     </>
   );
   return inPage ? (
@@ -167,14 +158,15 @@ export function HomeRail({ inPage = false, top }: HomeRailProps) {
 }
 
 /** The makes group of the rail, in its loaded geometry. */
-function MakesSkeleton() {
+function MakesSkeleton({ width }: { width: number }) {
   const styles = useStyles();
-  const { fontScale } = useTheme();
   return (
-    <Skeleton testID={`${ROUTE}.rail.makes.skeleton`}>
-      <SkeletonText variant="titleS" width="30%" style={styles.skeletonTitle} />
-      <SkeletonBlock height={RAIL_MAKES * railRowHeight(fontScale)} corner="md" />
-    </Skeleton>
+    <View>
+      <Skeleton testID={`${ROUTE}.rail.makes.skeleton`}>
+        <SkeletonText variant="headline" width="30%" style={styles.skeletonTitle} />
+      </Skeleton>
+      <MakeTilesSkeleton width={width} count={RAIL_MAKES} testID={`${ROUTE}.rail.makes.tiles.skeleton`} />
+    </View>
   );
 }
 
@@ -183,25 +175,25 @@ export function HomeRailSkeleton({ width, top }: HomeRailSkeletonProps) {
   const styles = useStyles();
   const { fontScale } = useTheme();
   const status = useSessionStore((state) => state.status);
-  const aboutLines = estimateLines(ABOUT_CHARS, 'bodyDense', fontScale, width);
+  const aboutLines = estimateLines(ABOUT_CHARS, 'body', fontScale, width);
   return (
     <Skeleton testID={`${ROUTE}.rail.skeleton`} style={styles.scroll}>
       {top === undefined ? null : <View style={{ height: top }} />}
       <View style={[styles.content, top === undefined ? null : styles.fromTop]}>
         <View>
-          <SkeletonText variant="titleS" width="30%" style={styles.skeletonTitle} />
-          <SkeletonBlock height={RAIL_MAKES * railRowHeight(fontScale)} corner="md" />
+          <SkeletonText variant="headline" width="30%" style={styles.skeletonTitle} />
+          <MakeTilesSkeleton width={width} count={RAIL_MAKES} testID={`${ROUTE}.rail.skeleton.makes`} />
         </View>
         {status === 'member' ? (
           <View>
-            <SkeletonText variant="titleS" width="45%" style={styles.skeletonTitle} />
+            <SkeletonText variant="headline" width="45%" style={styles.skeletonTitle} />
             {/* "Zur Garage" with its count. "Fahrzeug hinzufügen" is the sidebar's, beside this rail on every width that has one (DQ-206). */}
             <SkeletonBlock height={railRowHeight(fontScale)} corner="md" />
           </View>
         ) : status === 'guest' ? (
           <View style={styles.about}>
-            <SkeletonText variant="titleS" width="50%" />
-            <SkeletonText variant="bodyDense" lines={aboutLines} />
+            <SkeletonText variant="headline" width="50%" />
+            <SkeletonText variant="body" lines={aboutLines} />
             <SkeletonBlock width="45%" height={size.button.m} corner="sm" style={styles.skeletonAction} />
           </View>
         ) : null}

@@ -54,7 +54,7 @@ export function ContextCard({ vehicle, gutter, onOpen, testID }: ContextCardProp
             {keepNameTogether(vehicle.title)}
           </Text>
           {vehicle.ownerUsername ? (
-            <Text variant="supporting" color="text.secondary" hyphenate={false} numberOfLines={1}>
+            <Text variant="callout" color="text.secondary" hyphenate={false} numberOfLines={1}>
               {t('thread.contextOwner', { username: vehicle.ownerUsername })}
             </Text>
           ) : null}
@@ -117,7 +117,7 @@ export function RequestBanner({ username, name, gutter, busy, onAccept, onDeclin
         <Text variant="bodyStrong" role="heading" hyphenate={false} testID={`${testID}.title`}>
           {username ? t('request.banner', { username }) : t('request.bannerDeleted')}
         </Text>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {username ? t('request.body', { name }) : t('request.bodyDeleted')}
         </Text>
         <View style={styles.bannerActions}>
@@ -159,7 +159,7 @@ export function ComposerNote({ text, gutter, decisionId, testID }: { text: strin
     <View testID={testID}>
       <Hairline />
       <View style={[styles.note, { paddingHorizontal: gutter }]}>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {text}
         </Text>
         {decisionId ? <DecisionLink decisionId={decisionId} testID={`${testID}.decision`} /> : null}
@@ -176,7 +176,7 @@ export function ThreadSkeleton({ gutter, testID }: { gutter: number; testID: str
     <Skeleton testID={testID} style={[styles.skeleton, { paddingHorizontal: gutter }]}>
       {widths.map((width, index) => (
         <View key={index} style={index % 2 === 1 ? styles.skeletonOwn : styles.skeletonRow}>
-          <SkeletonBlock width={width} height={size.composerMin} corner="lg" />
+          <SkeletonBlock width={width} height={size.composerMin} corner="md" />
         </View>
       ))}
       <SkeletonText variant="caption" width="20%" />

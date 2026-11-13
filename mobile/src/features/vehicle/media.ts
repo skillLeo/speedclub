@@ -25,7 +25,7 @@ export function variantUrl(media: VehicleMedia | null | undefined, width: number
 export function photoFields(media: VehicleMedia | null | undefined, width: number): PhotoFields {
   if (!media) return { source: null };
   const focal = media.focal_x !== null && media.focal_y !== null ? { x: media.focal_x, y: media.focal_y } : null;
-  return { source: variantUrl(media, width), blurhash: media.blurhash, focal };
+  return { source: variantUrl(media, width), blurhash: media.blurhash, thumbhash: media.thumbhash, focal };
 }
 
 /** Only photos with a file can be shown; the owner alone sees the others, in GAR-07. */

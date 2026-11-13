@@ -50,7 +50,16 @@ class MessageResource extends JsonResource
             'sender_deleted' => $senderDeleted,
             'is_mine' => $view->mine,
             /**
-             * [SIG sig.msg_reactions] In the fixed order thumbs_up, heart, fire, laugh, wow, flag; only keys somebody used.
+             * SM11 (ADR-445): the message this one answers, for the quote above the bubble. `available` false when you no longer see the
+             * quoted message (removed, deleted for you, cleared): then `body` is null and the app shows "Nachricht nicht mehr verfügbar".
+             * `body` is the text of a text message only. Null when this message is no reply.
+             *
+             * @var array{id: string, type: MessageType, body: string|null, is_mine: bool, available: bool}|null
+             */
+            'reply_to' => $view->replyTo,
+            /**
+             * [SIG sig.msg_reactions] In the fixed order thumbs_up, heart, fire, laugh, wow, flag, stark, sauber, tief, laut; only keys
+             * somebody used.
              *
              * @var list<array{key: MessageReaction, count: int, mine: bool}>
              */

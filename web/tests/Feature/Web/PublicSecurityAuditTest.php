@@ -183,7 +183,8 @@ describe('output encoding of member text', function () {
         foreach (['og:title', 'twitter:title', 'og:description', 'description', 'og:image:alt'] as $name) {
             $meta = $xpath->query('//meta[@property="'.$name.'" or @name="'.$name.'"]');
 
-            expect($meta->length)->toBe(1, $name);
+            // One alt per og:image: the 1200 × 630 card and the square.
+            expect($meta->length)->toBe($name === 'og:image:alt' ? 2 : 1, $name);
         }
 
         expect($xpath->query('//meta[@property="og:title"]')->item(0)->getAttribute('content'))->toContain('<script>alert(1)</script>')
@@ -351,7 +352,7 @@ describe('a revoked, private or unknown code reveals nothing', function () {
                     ->and($response->headers->has('Link'))->toBeFalse()
                     ->and($response->headers->has('ETag'))->toBeFalse()
                     ->and($response->headers->get('Cache-Control'))->toContain('no-store')
-                    ->and(sec17Xpath((string) $response->getContent())->query('//meta[@property="og:image"]')->item(0)->getAttribute('content'))->toBe(url('/brand/og-default.jpg'))
+                    ->and(sec17Xpath((string) $response->getContent())->query('//meta[@property="og:image"]')->item(0)->getAttribute('content'))->toBe(app(OgImages::class)->defaultUrl())
                     ->and($response->getContent())->not->toContain('Skyline')->not->toContain('Supra')->not->toContain('NSX')->not->toContain('RX-7')->not->toContain('Z8 Roadster')
                     ->not->toContain('lukas.sc')->not->toContain('kenji.r34')->not->toContain('/v/')->not->toContain('Besitzer');
 
@@ -507,6 +508,8 @@ describe('hidden, unlisted and noindex hold on every public surface', function (
         (new DrawVehicleOgImage($this->vehicle->id))->handle(app(OgImages::class));
         $og = (string) Vehicle::query()->whereKey($this->vehicle->id)->value('og_image_path');
         Storage::disk('public')->assertExists($og);
+        $card = app(OgImages::class)->forVehicle(Vehicle::query()->with(OgImages::VEHICLE_RELATIONS)->findOrFail($this->vehicle->id));
+        expect($card)->toContain('/og/v/');
 
         $hide($this->vehicle, $this->owner);
         $vehicle = Vehicle::withTrashed()->with('owner')->findOrFail($this->vehicle->id);
@@ -532,7 +535,11 @@ describe('hidden, unlisted and noindex hold on every public surface', function (
             ->and($landing->getContent())->not->toContain($id)->not->toContain($this->qr->code)
             ->and(app(SitemapWriter::class)->render())->not->toContain($id)
             ->and(Storage::disk('public')->files('og/v'))->toBe([])
-            ->and(app(OgImages::class)->forVehicle($vehicle))->toBe(url('/brand/og-default.jpg'));
+            ->and(app(OgImages::class)->forVehicle($vehicle))->toBe(app(OgImages::class)->defaultUrl());
+
+        // The address the build's card had answers nothing any more, in both formats.
+        $this->get($card)->assertNotFound();
+        $this->get(str_replace('.jpg', '-square.jpg', $card))->assertNotFound();
     })->with([
         'private' => [fn (Vehicle $vehicle) => $vehicle->forceFill(['visibility' => 'private'])->save()],
         'draft' => [fn (Vehicle $vehicle) => $vehicle->forceFill(['status' => 'draft'])->save()],
@@ -553,7 +560,7 @@ describe('hidden, unlisted and noindex hold on every public surface', function (
         $page = sec17Xpath((string) $this->get('/v/'.$this->vehicle->canonicalSlug())->assertOk()->getContent());
 
         expect($page->query('//meta[@name="robots"]')->item(0)?->getAttribute('content'))->toBe('noindex')
-            ->and($page->query('//meta[@property="og:image"]')->item(0)->getAttribute('content'))->toContain('/storage/og/v/');
+            ->and($page->query('//meta[@property="og:image"]')->item(0)->getAttribute('content'))->toContain('/og/v/'.$this->vehicle->canonicalSlug().'-');
 
         $this->get('/c/'.$this->qr->code)->assertRedirect('/v/'.$this->vehicle->canonicalSlug());
 
@@ -758,7 +765,8 @@ describe('well-known and machine files', function () {
 
         expect(array_keys($links[0]))->toBe(['relation', 'target'])
             ->and(array_keys($links[0]['target']))->toBe(['namespace', 'package_name', 'sha256_cert_fingerprints'])
-            ->and(array_keys($aasa))->toBe(['applinks'])
+            ->and(array_keys($aasa))->toBe(['applinks', 'webcredentials'])
+            ->and($aasa['webcredentials'])->toBe(['apps' => ['ABCDE12345.de.speedclub.app']])
             ->and(array_keys($aasa['applinks']['details'][0]))->toBe(['appIDs', 'components']);
 
         $secrets = collect(Arr::dot(config()->all()))

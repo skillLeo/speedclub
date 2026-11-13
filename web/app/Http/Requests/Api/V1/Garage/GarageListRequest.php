@@ -21,6 +21,7 @@ class GarageListRequest extends FormRequest
         'api.v1.vehicles.mods.index' => ['sort', 'id'],
         'api.v1.vehicles.updates.index' => ['created_at', 'id'],
         'api.v1.public.vehicles.updates.index' => ['created_at', 'id'],
+        'api.v1.public.users.updates' => ['created_at', 'id'],
     ];
 
     /**

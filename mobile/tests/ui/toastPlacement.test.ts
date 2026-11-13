@@ -2,11 +2,14 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import { size, space } from '@/theme';
 import {
+  reportOverlayFooter,
+  reportShellClearance,
   reportStickyBar,
   TOAST_GAP,
   toastBottom,
   toastBottomCss,
   toastKeyboardLift,
+  useOverlayClearance,
   useStickyBarHeight,
   type ToastClearance,
 } from '@/ui/toastPlacement';
@@ -138,5 +141,22 @@ describe('the registry of sticky bars', () => {
       reportStickyBar('b', 40);
     });
     expect(renders).toBe(after);
+  });
+});
+
+describe('a toast inside an overlay (DQ-1006)', () => {
+  it('clears an open sheet footer, and the shell tab bar under a menu', async () => {
+    const { result } = await renderHook(() => useOverlayClearance());
+    await act(async () => reportShellClearance(size.tabBar, 0));
+    // A context menu: no footer, the toast keeps the tab-bar offset.
+    expect(result.current).toEqual({ tabBar: size.tabBar, stickyBar: 0 });
+    // The reauth sheet reports its footer: the toast sits 8 above "Mit Passkey bestätigen".
+    const footer = bar(INSET);
+    await act(async () => reportOverlayFooter('sheet', footer));
+    expect(result.current.stickyBar).toBe(footer);
+    expect(toastBottom({ ...result.current, inset: INSET })).toBe(footer + TOAST_GAP);
+    await act(async () => reportOverlayFooter('sheet', null));
+    expect(result.current.stickyBar).toBe(0);
+    await act(async () => reportShellClearance(0, 0));
   });
 });

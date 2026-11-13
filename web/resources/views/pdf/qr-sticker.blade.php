@@ -14,7 +14,7 @@
         .code-cell img { width: 56mm; height: 56mm; display: block; }
         .logo-cell { padding-left: 4mm; text-align: center; }
         .logo-cell img { width: 23mm; height: auto; }
-        .username { font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 22pt; line-height: 26pt; margin: 3mm 0 0; }
+        .username { font-family: 'Inter Display', sans-serif; font-weight: 600; font-size: 22pt; line-height: 26pt; margin: 3mm 0 0; }
         .short-code { font-weight: 700; font-size: 15pt; line-height: 19pt; letter-spacing: 1pt; margin: 1mm 0 0; }
         .url { font-size: 8pt; line-height: 11pt; margin: 1mm 0 0; }
         /* Placement, print and disclaimer sentences of QR-03 (08_LEGAL §7) word for word as in the app; 8pt lines keep one page with about 3 mm to spare. */

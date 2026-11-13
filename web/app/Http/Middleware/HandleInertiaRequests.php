@@ -45,7 +45,11 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
-            'staff' => fn (): ?array => $staff === null ? null : self::staff($staff, $session?->get('auth.password_confirmed_at')),
+            'staff' => fn (): ?array => $staff === null ? null : [
+                ...self::staff($staff, $session?->get('auth.password_confirmed_at')),
+                // ADM-03 skipped for this session (STAFF_2FA_REQUIRED=false): every admin page shows the reminder banner.
+                'two_factor_skipped' => EnsureStaffTwoFactor::skippedBy($request, $staff),
+            ],
             'app' => fn (): array => [
                 'env' => app()->environment(),
                 'version' => substr((string) $this->version($request), 0, 8) ?: null,

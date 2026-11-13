@@ -4,6 +4,8 @@ namespace App\Services\Moderation;
 
 use App\Enums\ReportTargetType;
 use App\Models\BuildUpdate;
+use App\Models\Comment;
+use App\Models\Event;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\ModerationCase;
@@ -16,7 +18,7 @@ use App\Models\Vehicle;
  */
 final class CaseTargets
 {
-    public static function model(ModerationCase $case): User|Vehicle|Media|BuildUpdate|Modification|Message|null
+    public static function model(ModerationCase $case): User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|null
     {
         $id = $case->target_id;
 
@@ -27,6 +29,8 @@ final class CaseTargets
             ReportTargetType::BuildUpdate => BuildUpdate::query()->withoutGlobalScopes()->find($id),
             ReportTargetType::Modification => Modification::query()->withoutGlobalScopes()->find($id),
             ReportTargetType::Message => Message::query()->withoutGlobalScopes()->find($id),
+            ReportTargetType::Comment => Comment::query()->withoutGlobalScopes()->find($id),
+            ReportTargetType::Event => Event::query()->find($id),
         };
     }
 }

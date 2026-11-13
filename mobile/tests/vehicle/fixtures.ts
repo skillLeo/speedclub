@@ -11,6 +11,7 @@ export const R34: PublicVehicle = {
   "status": "published",
   "visibility": "public",
   "is_main": true,
+  "is_sample": false,
   "eyebrow": "NISSAN",
   "make": "Nissan",
   "model": "Skyline GT-R",
@@ -58,6 +59,7 @@ export const R34: PublicVehicle = {
     "width": 1440,
     "height": 1920,
     "blurhash": "ToGb||x]jY_Nt7ayM{j?ofIUofjs",
+    "thumbhash": null,
     "focal_x": 0.54,
     "focal_y": 0.66,
     "alt": "Blauer Nissan Skyline GT-R R34 von hinten unter Gewitterwolken",
@@ -101,13 +103,13 @@ export const R34: PublicVehicle = {
     "unit": "ps",
     "ps": 500,
     "source": "measured",
-    "source_label": "Gemessen"
+    "source_label": "Prüfstand"
   },
   "torque": {
     "label": "540 Nm",
     "nm": 540,
     "source": "measured",
-    "source_label": "Gemessen"
+    "source_label": "Prüfstand"
   },
   "spec_groups": [
     {
@@ -201,14 +203,14 @@ export const R34: PublicVehicle = {
           "label": "Leistung",
           "value": "500 PS (368 kW)",
           "source": "measured",
-          "source_label": "Gemessen"
+          "source_label": "Prüfstand"
         },
         {
           "key": "torque",
           "label": "Drehmoment",
           "value": "540 Nm",
           "source": "measured",
-          "source_label": "Gemessen"
+          "source_label": "Prüfstand"
         }
       ]
     },
@@ -241,6 +243,7 @@ export const R34: PublicVehicle = {
       "width": 1440,
       "height": 1920,
       "blurhash": "ToGb||x]jY_Nt7ayM{j?ofIUofjs",
+      "thumbhash": null,
       "focal_x": 0.54,
       "focal_y": 0.66,
       "alt": "Blauer Nissan Skyline GT-R R34 von hinten unter Gewitterwolken",
@@ -276,6 +279,7 @@ export const R34: PublicVehicle = {
       "width": 1280,
       "height": 1920,
       "blurhash": "TWAn7Mt7M{_Mt7RP%ftQRjayt7af",
+      "thumbhash": null,
       "focal_x": 0.45,
       "focal_y": 0.61,
       "alt": "Tiefes Sportlenkrad vor rot leuchtenden Instrumenten",
@@ -311,6 +315,7 @@ export const R34: PublicVehicle = {
       "width": 1920,
       "height": 1280,
       "blurhash": "L6Ad4NOr?uxtXm-:x]-:tl_M?b?a",
+      "thumbhash": null,
       "focal_x": 0.5,
       "focal_y": 0.55,
       "alt": "Aufwendig getunter Motorraum mit Carbon-Ansaugbrücke",
@@ -340,6 +345,7 @@ export const R34: PublicVehicle = {
       "created_at": "2026-11-03T00:58:22+00:00"
     }
   ],
+  "highlights_rail": [],
   "highlights": [
     {
       "id": "01m6f7zv69mmmre4xrm2nn1tcw",
@@ -504,7 +510,7 @@ export const R34: PublicVehicle = {
             "brand": "Fujitsubo",
             "summary_line": "Fujitsubo Legalis R",
             "status": "removed",
-            "status_label": "Entfernt",
+            "status_label": "Ausgebaut",
             "installed_on": "2021-09",
             "installed_label": "September 2021",
             "cost_public": false,
@@ -620,7 +626,7 @@ export const R34: PublicVehicle = {
             "cost_public": false,
             "cost": null,
             "legal_status": "not_required",
-            "legal_status_label": "Nicht erforderlich",
+            "legal_status_label": "Eintragungsfrei",
             "thumb": null
           },
           {
@@ -640,7 +646,7 @@ export const R34: PublicVehicle = {
             "cost_public": false,
             "cost": null,
             "legal_status": "not_required",
-            "legal_status_label": "Nicht erforderlich",
+            "legal_status_label": "Eintragungsfrei",
             "thumb": null
           }
         ]
@@ -720,7 +726,7 @@ export const R34: PublicVehicle = {
             "cost_public": false,
             "cost": null,
             "legal_status": "not_required",
-            "legal_status_label": "Nicht erforderlich",
+            "legal_status_label": "Eintragungsfrei",
             "thumb": null
           },
           {
@@ -770,7 +776,7 @@ export const R34: PublicVehicle = {
             "cost_public": false,
             "cost": null,
             "legal_status": "not_required",
-            "legal_status_label": "Nicht erforderlich",
+            "legal_status_label": "Eintragungsfrei",
             "thumb": null
           }
         ]
@@ -789,7 +795,17 @@ export const R34: PublicVehicle = {
       "changes_count": 0,
       "hidden": false,
       "created_at": "2026-05-10T20:15:00+00:00",
-      "month_label": "Mai 2026"
+      "month_label": "Mai 2026",
+      "vehicle_id": "01m6f7zv1vs5e2xw9a96cbqzyp",
+      "mileage_km": null,
+      "happened_on": null,
+      "audience": "vehicle",
+      "edited_at": null,
+      "photos": [],
+      "photo_pairs": [],
+      "modifications": [],
+      "mentions": [],
+      "my_reaction": null
     },
     {
       "id": "01m6f7zvcwrtkg3g94hhf8gw34",
@@ -812,7 +828,17 @@ export const R34: PublicVehicle = {
       "changes_count": 1,
       "hidden": false,
       "created_at": "2024-09-03T19:00:00+00:00",
-      "month_label": "September 2024"
+      "month_label": "September 2024",
+      "vehicle_id": "01m6f7zv1vs5e2xw9a96cbqzyp",
+      "mileage_km": null,
+      "happened_on": null,
+      "audience": "vehicle",
+      "edited_at": null,
+      "photos": [],
+      "photo_pairs": [],
+      "modifications": [],
+      "mentions": [],
+      "my_reaction": null
     },
     {
       "id": "01m6f7zvj8xs0qxevp48wn44s4",
@@ -835,7 +861,17 @@ export const R34: PublicVehicle = {
       "changes_count": 1,
       "hidden": false,
       "created_at": "2024-04-03T19:00:00+00:00",
-      "month_label": "April 2024"
+      "month_label": "April 2024",
+      "vehicle_id": "01m6f7zv1vs5e2xw9a96cbqzyp",
+      "mileage_km": null,
+      "happened_on": null,
+      "audience": "vehicle",
+      "edited_at": null,
+      "photos": [],
+      "photo_pairs": [],
+      "modifications": [],
+      "mentions": [],
+      "my_reaction": null
     },
     {
       "id": "01m6f7zvc1r7gdrqv4cmb6zmwt",
@@ -858,7 +894,17 @@ export const R34: PublicVehicle = {
       "changes_count": 1,
       "hidden": false,
       "created_at": "2024-04-03T19:00:00+00:00",
-      "month_label": "April 2024"
+      "month_label": "April 2024",
+      "vehicle_id": "01m6f7zv1vs5e2xw9a96cbqzyp",
+      "mileage_km": null,
+      "happened_on": null,
+      "audience": "vehicle",
+      "edited_at": null,
+      "photos": [],
+      "photo_pairs": [],
+      "modifications": [],
+      "mentions": [],
+      "my_reaction": null
     },
     {
       "id": "01m6f7zv9s3b45ns4xh8cxhhqm",
@@ -881,7 +927,17 @@ export const R34: PublicVehicle = {
       "changes_count": 1,
       "hidden": false,
       "created_at": "2023-03-13T10:00:00+00:00",
-      "month_label": "März 2023"
+      "month_label": "März 2023",
+      "vehicle_id": "01m6f7zv1vs5e2xw9a96cbqzyp",
+      "mileage_km": null,
+      "happened_on": null,
+      "audience": "vehicle",
+      "edited_at": null,
+      "photos": [],
+      "photo_pairs": [],
+      "modifications": [],
+      "mentions": [],
+      "my_reaction": null
     },
     {
       "id": "01m6f7zv90erynn1b80t2r1pja",
@@ -904,7 +960,17 @@ export const R34: PublicVehicle = {
       "changes_count": 1,
       "hidden": false,
       "created_at": "2023-03-13T10:00:00+00:00",
-      "month_label": "März 2023"
+      "month_label": "März 2023",
+      "vehicle_id": "01m6f7zv1vs5e2xw9a96cbqzyp",
+      "mileage_km": null,
+      "happened_on": null,
+      "audience": "vehicle",
+      "edited_at": null,
+      "photos": [],
+      "photo_pairs": [],
+      "modifications": [],
+      "mentions": [],
+      "my_reaction": null
     },
     {
       "id": "01m6f7zv80z8dt0ghf8sthntwa",
@@ -927,7 +993,17 @@ export const R34: PublicVehicle = {
       "changes_count": 1,
       "hidden": false,
       "created_at": "2023-03-13T10:00:00+00:00",
-      "month_label": "März 2023"
+      "month_label": "März 2023",
+      "vehicle_id": "01m6f7zv1vs5e2xw9a96cbqzyp",
+      "mileage_km": null,
+      "happened_on": null,
+      "audience": "vehicle",
+      "edited_at": null,
+      "photos": [],
+      "photo_pairs": [],
+      "modifications": [],
+      "mentions": [],
+      "my_reaction": null
     }
   ],
   "owner": {
@@ -936,6 +1012,8 @@ export const R34: PublicVehicle = {
     "city": "Stuttgart",
     "bio": "KFZ-Mechatroniker aus Stuttgart. Der R34 war zehn Jahre ein Traum, seit 2021 steht er in der Garage. Schraube fast alles selbst.",
     "avatar": null,
+    "is_sample": false,
+    "is_editorial": false,
     "cover": {
       "id": "01m6f807bc8x62twbhd9r3hz9h",
       "status": "ready",
@@ -943,6 +1021,7 @@ export const R34: PublicVehicle = {
       "width": 1440,
       "height": 1920,
       "blurhash": "ToGb||x]jY_Nt7ayM{j?ofIUofjs",
+      "thumbhash": null,
       "focal_x": 0.54,
       "focal_y": 0.66,
       "alt": "Blauer Nissan Skyline GT-R R34 von hinten unter Gewitterwolken",
@@ -984,7 +1063,12 @@ export const R34: PublicVehicle = {
   },
   "share_card_url": null,
   "is_owner": false,
-  "is_saved": null
+  "is_saved": null,
+  "social": {
+    "my_reaction": null,
+    "is_following": null,
+    "comments_enabled": true
+  }
 };
 
 export const R34_WHEELS: PublicMod = {

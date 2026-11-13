@@ -43,6 +43,8 @@ final class RetentionPolicy
         'sanctum_tokens' => ['value' => null, 'unit' => null],
         'messages_of_deleted_members' => ['value' => null, 'unit' => null],
         'audit_events' => ['value' => 24, 'unit' => 'months'],
+        // M4.7 (09 §13): SET-21 security activity.
+        'security_events' => ['value' => 12, 'unit' => 'months'],
         'audit_archive' => ['value' => 36, 'unit' => 'months'],
         'moderation_cases' => ['value' => 36, 'unit' => 'months'],
         'qr_scans' => ['value' => null, 'unit' => null],

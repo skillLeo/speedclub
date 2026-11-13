@@ -25,8 +25,52 @@
     "deleteDraftBody": "Der Entwurf und seine Fotos werden gelöscht.",
     "deleteDraftConfirm": "Entwurf löschen",
     "draftDeleted": "Entwurf gelöscht",
-    "emptyTitle": "Füge dein erstes Auto hinzu",
-    "emptyBody": "Dokumentiere Technik und Mods und erhalte deinen persönlichen QR-⁠Code."
+    "emptyTitle": "Deine Garage wartet.",
+    "emptyBody": "Leg dein Auto an, dokumentiere Technik und Mods und hol dir deinen QR-⁠Sticker für die Scheibe.",
+    "emptyAction": "Auto hinzufügen",
+    "sampleTitle": "So sieht ein Build aus",
+    "sample": {
+      "title": "Nissan Skyline GT-R R34",
+      "subtitle": "2002 · 2,6 l R6 Biturbo",
+      "power": "500 PS",
+      "torque": "540 Nm",
+      "drive": "Allrad",
+      "caption": "Nissan · Skyline GT-R · R34 · 2002"
+    },
+    "actionsFor": "Aktionen für {{vehicle}}",
+    "quick": {
+      "update": "Update posten",
+      "updateLabel": "Update posten für {{vehicle}}",
+      "mods": "Mods",
+      "modsLabel": "Mods von {{vehicle}}",
+      "photos": "Fotos",
+      "photosLabel": "Fotos von {{vehicle}}",
+      "qr": "QR-⁠Code",
+      "qrLabel": "QR-⁠Code für {{vehicle}}"
+    },
+    "statsVehicles_one": "{{formatted}} Fahrzeug",
+    "statsVehicles_other": "{{formatted}} Fahrzeuge",
+    "statsMods_one": "{{formatted}} Mod",
+    "statsMods_other": "{{formatted}} Mods",
+    "statsPhotos_one": "{{formatted}} Foto",
+    "statsPhotos_other": "{{formatted}} Fotos",
+    "statsPrivate": "Nur für dich sichtbar",
+    "mainStays": "Dein Hauptfahrzeug bleibt an erster Stelle.",
+    "sortOffline": "Offline kannst du die Reihenfolge nicht ändern.",
+    "page": "Fahrzeug {{index}} von {{count}}",
+    "card": {
+      "power": "Leistung",
+      "torque": "Drehmoment",
+      "model_year": "Baujahr"
+    },
+    "status": {
+      "public": "Öffentlich",
+      "unlisted": "Nicht gelistet",
+      "private": "Privat",
+      "draft": "Entwurf"
+    },
+    "loadErrorTitle": "Deine Garage konnte nicht geladen werden.",
+    "loadErrorBody": "Der Server hat nicht geantwortet. Deine Fahrzeuge sind sicher – versuch es gleich noch einmal."
   },
   "guest": {
     "title": "Deine Garage wartet",
@@ -126,7 +170,7 @@
   "specs": {
     "title": "Technik",
     "groups": {
-      "engine": "Motor",
+      "engine": "Aggregat",
       "power": "Leistung",
       "torque": "Drehmoment",
       "drivetrain": "Antrieb",
@@ -142,25 +186,25 @@
     "aspiration": "Aufladung",
     "choose": "Auswählen",
     "noAnswer": "Keine Angabe",
-    "power": "Leistung",
+    "power": "Max. Leistung",
     "powerPlaceholder": "z. B. 500",
     "powerUnit": "Einheit",
     "powerSource": "Herkunft der Leistungsangabe",
-    "torque": "Drehmoment",
+    "torque": "Max. Drehmoment",
     "torquePlaceholder": "z. B. 540",
     "torqueSource": "Herkunft der Drehmomentangabe",
-    "drivetrain": "Antrieb",
+    "drivetrain": "Antriebsart",
     "gearbox": "Getriebe",
     "source": {
-      "factory": "Werksangabe",
-      "claimed": "Besitzerangabe",
-      "measured": "Gemessen"
+      "factory": "Herstellerangabe",
+      "claimed": "Geschätzt",
+      "measured": "Prüfstand"
     },
     "fuels": {
       "petrol": "Benzin",
       "diesel": "Diesel",
       "hybrid": "Hybrid",
-      "plug_in_hybrid": "Plug-in-Hybrid",
+      "plug_in_hybrid": "Plug-⁠in-⁠Hybrid",
       "electric": "Elektro",
       "lpg": "Autogas (LPG)",
       "cng": "Erdgas (CNG)",
@@ -186,9 +230,9 @@
       "dual_clutch": "Doppelkupplung",
       "sequential": "Sequenziell",
       "cvt": "CVT",
-      "single_speed": "1-Gang-Getriebe"
+      "single_speed": "1-⁠Gang-Getriebe"
     },
-    "huAu": "HU/AU fällig (Monat/Jahr)",
+    "huAu": "Nächster Termin (Monat/Jahr)",
     "huAuPlaceholder": "MM/JJJJ",
     "huAuHelperEmpty": "Trag den Monat von der Prüfplakette ein. Wir erinnern dich 30 Tage vorher. Nur du siehst ihn.",
     "huAuHelper": "Wir erinnern dich am {{date}}, 30 Tage vorher. Nur du siehst den Termin.",
@@ -236,7 +280,9 @@
     "noSpecs": "Noch keine technischen Daten",
     "photoCount_one": "{{count}} Foto",
     "photoCount_other": "{{count}} Fotos",
-    "photosUploading": "Fotos werden noch hochgeladen"
+    "photosUploading": "Fotos werden noch hochgeladen",
+    "publishNeeds": "Zum Veröffentlichen fehlt noch: {{items}}.",
+    "previewLabel": "Vorschau deiner Fahrzeugseite"
   },
   "visibility": {
     "title": "Sichtbarkeit",
@@ -409,7 +455,7 @@
     "statuses": {
       "installed": "Verbaut",
       "planned": "Geplant",
-      "removed": "Entfernt"
+      "removed": "Ausgebaut"
     },
     "groups": {
       "rims": "Felgen",
@@ -417,7 +463,6 @@
       "details": "Angaben",
       "install": "Einbau",
       "photos": "Fotos",
-      "notes": "Notizen",
       "more": "Weitere Angaben"
     },
     "rangePlaceholder": "{{min}} bis {{max}}",
@@ -432,8 +477,7 @@
     "installedOnPlaceholder": "MM/JJJJ",
     "cost": "Kosten",
     "costPlaceholder": "z. B. 2.400",
-    "costPublic": "Kosten öffentlich zeigen",
-    "costPublicHelper": "Ist der Schalter aus, siehst nur du die Kosten.",
+    "costPrivate": "Nur du siehst die Kosten.",
     "notes": "Notizen",
     "notesPlaceholder": "Abstimmung, Erfahrungen, Bezugsquelle",
     "notesPrivate": "Nur für dich sichtbar.",
@@ -460,7 +504,7 @@
       "parts_certificate": "Teilegutachten",
       "registered": "Eingetragen",
       "individual_approval": "Einzelabnahme",
-      "not_required": "Nicht erforderlich",
+      "not_required": "Eintragungsfrei",
       "unknown": "Unbekannt"
     },
     "legalStatusDetails": {
@@ -499,15 +543,17 @@
     "draftBody": "Änderungen an einem Entwurf erscheinen nicht im Verlauf."
   },
   "published": {
-    "title": "Dein Build ist online",
+    "title": "Dein Build ist live.",
     "body": "{{vehicle}} hat jetzt einen eigenen QR-⁠Code. Wer ihn scannt, landet direkt auf deiner Build-Seite.",
     "bodyFallback": "Dein Fahrzeug hat jetzt einen eigenen QR-⁠Code. Wer ihn scannt, landet direkt auf deiner Build-Seite.",
     "qrLabel": "QR-⁠Code für {{vehicle}}",
-    "addMods": "Mods hinzufügen",
-    "downloadSticker": "Sticker herunterladen",
-    "viewPage": "Öffentliche Seite ansehen",
     "goneTitle": "Dieses Fahrzeug ist noch nicht veröffentlicht",
-    "goneBody": "In deiner Garage kannst du den Entwurf fortsetzen."
+    "goneBody": "In deiner Garage kannst du den Entwurf fortsetzen.",
+    "viewQr": "QR-⁠Code ansehen",
+    "share": "Teilen",
+    "toGarage": "Zur Garage",
+    "linkCopied": "Link kopiert",
+    "shareFailed": "Teilen hat nicht geklappt. Versuch es noch einmal."
   },
   "sort": {
     "handle": "{{name}} verschieben",
@@ -583,5 +629,234 @@
     "retry": "Erneut versuchen",
     "describeReplaced": "Vorschlag eingesetzt. Dein bisheriger Text ist ersetzt.",
     "photoSuggest": "Kategorie vorschlagen"
+  },
+  "maintenance": {
+    "title": "Wartung",
+    "private": "Nur für dich sichtbar",
+    "next": "Als Nächstes",
+    "items": "Wartungspunkte",
+    "history": "Verlauf",
+    "add": "Hinzufügen",
+    "addItem": "Wartungspunkt hinzufügen",
+    "addLog": "Service eintragen",
+    "addSheetTitle": "Was möchtest du eintragen?",
+    "addItemHelper": "HU/AU, Ölwechsel, Reifenwechsel – mit Erinnerung",
+    "addLogHelper": "Was gemacht wurde, mit Kilometerstand und Kosten",
+    "open": "Wartung",
+    "type": {
+      "hu_au": "HU/AU",
+      "service": "Inspektion",
+      "oil_change": "Ölwechsel",
+      "brake_fluid": "Bremsflüssigkeit",
+      "tyre_change": "Reifenwechsel",
+      "insurance": "Kfz-Versicherung",
+      "custom": "Eigener Punkt"
+    },
+    "typeHelper": {
+      "hu_au": "Monat auf der Plakette",
+      "service": "Nach Zeit oder Kilometern",
+      "oil_change": "Nach Zeit oder Kilometern",
+      "brake_fluid": "Alle 24 Monate",
+      "tyre_change": "Von O bis O: Oktober bis Ostern",
+      "insurance": "Stichtag 30. November",
+      "custom": "Zahnriemen, Klimaservice und mehr"
+    },
+    "due": {
+      "month": "Fällig im {{month}}",
+      "date": "Fällig am {{date}}",
+      "dateOrKm": "Fällig am {{date}} oder bei {{distance}}",
+      "km": "Fällig bei {{distance}}",
+      "deadline": "Stichtag {{date}}",
+      "none": "Noch kein Termin. Trag ein, wann es zuletzt gemacht wurde."
+    },
+    "countdown": {
+      "untilDue": "bis zur Fälligkeit",
+      "days_one": "in {{days}} Tag",
+      "days_other": "in {{days}} Tagen",
+      "today": "heute fällig",
+      "tomorrow": "morgen fällig",
+      "overdue_one": "seit {{count}} Tag überfällig",
+      "overdue_other": "seit {{count}} Tagen überfällig",
+      "km": "noch {{distance}}",
+      "overKm": "{{distance}} drüber"
+    },
+    "unit": {
+      "daysOverdue_one": "Tag überfällig",
+      "daysOverdue_other": "Tage überfällig",
+      "over": "{{unit}} drüber",
+      "days_one": "Tag",
+      "days_other": "Tage"
+    },
+    "last": "Zuletzt {{when}}",
+    "season": {
+      "winter": "Als Nächstes: Winterreifen",
+      "summer": "Als Nächstes: Sommerreifen"
+    },
+    "off": "Erinnerung aus",
+    "odometer": {
+      "title": "Kilometerstand",
+      "recorded": "Stand vom {{date}}",
+      "unknown": "Noch nicht eingetragen",
+      "update": "Aktualisieren",
+      "updateLabel": "Kilometerstand aktualisieren",
+      "sheetTitle": "Kilometerstand aktualisieren",
+      "label": "Aktueller Kilometerstand ({{unit}})",
+      "helper": "Erinnerungen nach Kilometern zählen ab hier.",
+      "save": "Speichern",
+      "saved": "Kilometerstand gespeichert."
+    },
+    "costs": {
+      "title": "Kosten",
+      "total": "Gesamt",
+      "line": "{{maintenance}} Wartung · {{mods}} Umbauten",
+      "note": "Wartung und Umbauten zusammen. Nur du siehst diese Zahlen.",
+      "empty": "Noch keine Kosten eingetragen."
+    },
+    "log": {
+      "workshop": "Werkstatt: {{name}}",
+      "cost": "Kosten: {{cost}}",
+      "costLabel": "Kosten",
+      "emptyTitle": "Noch nichts im Verlauf",
+      "emptyBody": "Trag ein, was gemacht wurde, mit Datum, Kilometerstand und Kosten.",
+      "more": "Mehr laden",
+      "deleted": "Eintrag gelöscht.",
+      "edit": "{{title}} bearbeiten"
+    },
+    "empty": {
+      "title": "Behalte HU, Service und Reifen im Blick.",
+      "body": "Wir erinnern dich rechtzeitig. Ob per Push oder E‑Mail, legst du in den Mitteilungen fest.",
+      "action": "HU/AU eintragen"
+    },
+    "state": {
+      "sending": "Wird gesendet …",
+      "waiting": "Wartet auf Verbindung",
+      "failed": "Fehlgeschlagen"
+    },
+    "outbox": {
+      "conflict": "Das wurde auf einem anderen Gerät geändert. Du siehst jetzt den neuesten Stand.",
+      "failedToast": "Eine Änderung an der Wartung konnte nicht gespeichert werden.",
+      "queued": "Gespeichert. Wird gesendet, sobald du wieder online bist.",
+      "retry": "Erneut versuchen",
+      "discard": "Verwerfen",
+      "pendingTitle": "Noch nicht gesendet",
+      "deleteItem": "{{title}} wird gelöscht",
+      "deleteLog": "Eintrag wird gelöscht",
+      "odometer": "Kilometerstand {{distance}}",
+      "log": "Service vom {{date}}"
+    },
+    "restricted": {
+      "viewAs": "Wartung und Kosten sind privat und in der Ansicht als Mitglied nicht zu sehen."
+    },
+    "unavailableTitle": "Wartung ist gerade nicht verfügbar",
+    "unavailableBody": "Versuch es später noch einmal.",
+    "errorTitle": "Wartung konnte nicht geladen werden",
+    "editor": {
+      "newItem": "Neuer Wartungspunkt",
+      "editItem": "{{title}} bearbeiten",
+      "newLog": "Service eintragen",
+      "editLog": "Eintrag bearbeiten",
+      "close": "Schließen",
+      "save": "Speichern",
+      "typeLabel": "Was willst du im Blick behalten?",
+      "titleLabel": "Bezeichnung",
+      "titlePlaceholder": "z. B. Zahnriemen",
+      "dueMonthLabel": "Nächste HU/AU (Monat auf der Plakette)",
+      "monthPlaceholder": "MM/JJJJ",
+      "intervalTitle": "Intervall",
+      "intervalMonths": "Alle … Monate",
+      "intervalKm": "Alle … {{unit}}",
+      "lastTitle": "Zuletzt gemacht",
+      "date": "Datum",
+      "km": "Kilometerstand ({{unit}})",
+      "nextTitle": "Nächster Termin",
+      "nextHelper": "Leer lassen: Wir rechnen ihn aus dem Intervall aus.",
+      "nextDate": "Datum laut Serviceheft",
+      "nextKm": "Kilometerstand laut Serviceheft ({{unit}})",
+      "datePlaceholder": "TT.MM.JJJJ",
+      "leadTitle": "Erinnern",
+      "leadHelper": "Bis zu drei Zeitpunkte. Ob per Push oder E‑Mail, legst du in den Mitteilungen fest.",
+      "lead_one": "{{count}} Tag vorher",
+      "lead_other": "{{count}} Tage vorher",
+      "leadSameDay": "Am Tag selbst",
+      "enabled": "Erinnerungen für diesen Punkt",
+      "notesLabel": "Notizen",
+      "notesPlaceholder": "z. B. Ölsorte, Teilenummer",
+      "seasonInfo": "Wir erinnern dich Anfang Oktober an die Winterreifen und zu Ostern an die Sommerreifen.",
+      "insuranceInfo": "Wechseln geht bis zum 30. November. Wir erinnern dich am 1. November.",
+      "delete": "Wartungspunkt löschen",
+      "deleteTitle": "{{title}} löschen?",
+      "deleteBody": "Die Einträge im Verlauf bleiben.",
+      "deleteConfirm": "Löschen",
+      "deleteKeep": "Behalten",
+      "deleted": "{{title}} gelöscht.",
+      "saved": "Gespeichert.",
+      "conflict": "Das wurde inzwischen woanders geändert. Wir haben den neuesten Stand geladen.",
+      "gone": "Den Eintrag gibt es nicht mehr.",
+      "limit": "Mehr als 30 Wartungspunkte gehen nicht.",
+      "failed": "Speichern hat nicht geklappt. Versuch es noch einmal.",
+      "offline": "Du bist offline. Was du speicherst, wird gesendet, sobald du wieder online bist.",
+      "logWhat": "Was wurde gemacht?",
+      "logOwn": "Etwas anderes",
+      "logCost": "Kosten in Euro",
+      "logCostHelper": "Nur für dich sichtbar.",
+      "costPlaceholder": "z. B. 189,50",
+      "logWorkshop": "Werkstatt",
+      "logWorkshopPlaceholder": "z. B. Werkstatt am Ring",
+      "logNotesPlaceholder": "Was wurde gemacht, welche Teile?",
+      "photos": "Belege und Fotos",
+      "photosHelper": "Bis zu 6, zum Beispiel Rechnung oder Serviceheft. Nur für dich.",
+      "addPhoto": "Foto hinzufügen",
+      "photoOffline": "Fotos kannst du hinzufügen, sobald du online bist.",
+      "photoLater": "Fotos kannst du nach dem Speichern hinzufügen.",
+      "photoFailed": "Das Foto konnte nicht hochgeladen werden.",
+      "removePhoto": "Foto {{index}} entfernen",
+      "photoAlt": "Beleg {{index}}",
+      "deleteLog": "Eintrag löschen",
+      "deleteLogTitle": "Eintrag löschen?",
+      "deleteLogBody": "Datum, Kosten und Fotos dieses Eintrags gehen verloren.",
+      "goneTitle": "Nicht mehr da"
+    },
+    "validation": {
+      "titleRequired": "Gib eine Bezeichnung ein.",
+      "tooLong": "Höchstens {{max}} Zeichen.",
+      "monthRequired": "Gib den Monat ein, z. B. 03/2027.",
+      "month": "Bitte als MM/JJJJ eingeben, z. B. 03/2027.",
+      "months": "Zwischen 1 und {{max}} Monaten.",
+      "distance": "Gib eine ganze Zahl ein, z. B. 15000.",
+      "date": "Bitte als TT.MM.JJJJ eingeben.",
+      "dateRequired": "Gib das Datum ein.",
+      "future": "Das Datum liegt in der Zukunft.",
+      "cost": "Gib einen Betrag ein, z. B. 189,50.",
+      "leads": "Höchstens {{max}} Erinnerungen."
+    },
+    "notification": {
+      "title": "{{what}} steht an",
+      "body_one": "{{what}} ist in {{count}} Tag fällig.",
+      "body_other": "{{what}} ist in {{count}} Tagen fällig.",
+      "today": "{{what}} ist heute fällig."
+    },
+    "upcoming": {
+      "title": "Nächste Fälligkeiten",
+      "open": "Wartung von {{vehicle}} öffnen"
+    },
+    "defaults": {
+      "title": "Garage & Erinnerungen",
+      "huGroup": "HU/AU",
+      "huHelper": "Damit startet jeder neue HU/AU-Termin. Pro Fahrzeug kannst du es ändern.",
+      "typesGroup": "Erinnerungen",
+      "tyres": "Reifenwechsel (O bis O)",
+      "tyresHelper": "Anfang Oktober und zu Ostern",
+      "insurance": "Kfz-Versicherung",
+      "insuranceHelper": "Stichtag 30. November, Erinnerung am 1. November",
+      "service": "Service, Öl und Bremsflüssigkeit",
+      "serviceHelper": "Auch für eigene Wartungspunkte",
+      "channels": "Ob per Push oder E‑Mail, stellst du unter Mitteilungen › Fälligkeiten ein.",
+      "channelsLink": "Mitteilungen öffnen",
+      "errorTitle": "Einstellungen konnten nicht geladen werden",
+      "leadsMax": "Höchstens drei. Nimm erst einen anderen heraus.",
+      "failed": "Die Einstellung konnte nicht gespeichert werden."
+    },
+    "huChip": "Nächste HU: {{month}}",
+    "huChipOverdue": "HU überfällig seit {{month}}"
   }
 }

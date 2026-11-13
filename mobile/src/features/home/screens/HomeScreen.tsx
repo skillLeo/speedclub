@@ -14,13 +14,16 @@ import {
   useNewBuildsPreview,
   type ActiveMember,
   type BuildUpdateRowData,
+  type FeaturedBuild,
   type FeedItem,
   type FeedSuggestion,
   type FeedTab,
   type FeedVehicle,
   type PopularMod,
 } from '@/api/queries/home';
+import { useHomeEvents, type EventCard } from '@/api/queries/events';
 import { searchPath } from '@/features/discover/navigation';
+import { EventsModule } from '@/features/events/components/EventsModule';
 import { useTabScrollToTop } from '@/features/shell/retap';
 import { AnnouncementBanner } from '@/features/announcements/AnnouncementBanner';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
@@ -30,16 +33,17 @@ import { useRetainedListScroll } from '@/features/shell/useRetainedListScroll';
 import { useTabBadges } from '@/features/shell/useTabBadges';
 import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
+import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
-import { createStyles, layout, space, useBreakpoint, useMotion, useTheme } from '@/theme';
+import { createStyles, layout, space, useBreakpoint, useTheme } from '@/theme';
+import { motionDuration, useMotionPreference } from '@/ui/motion';
 import {
-  BuildUpdateRowSkeleton,
+  BrandHeader,
   Button,
   CollapsingFlashList,
   EmptyState,
-  Header,
-  HeaderLargeTitle,
+  MediaCardSkeleton,
   Screen,
   SectionHeader,
   SegmentedControl,
@@ -53,14 +57,17 @@ import {
 import { LARGE_FONT_SCALE } from '@/ui/rowParts';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
-import { ActiveMembersStrip, ActiveMembersStripSkeleton } from '../components/ActiveMembersStrip';
+import { ActiveMembersStrip } from '../components/ActiveMembersStrip';
 import { BrowseErrorState, RestrictionNotice, useBrowseRestriction } from '../components/BrowseStates';
-import { FeaturedHero, FeaturedHeroSkeleton } from '../components/FeaturedHero';
-import { FeedVehicleCard, FeedVehicleCardSkeleton } from '../components/FeedVehicleCard';
-import { FollowingEmpty, FollowingGuest } from '../components/FollowingStates';
+import { buildSuggestions, FollowingEmpty, FollowingGuest } from '../components/FollowingStates';
+import { HomeFeedCard, HomeFeedCardSkeleton } from '../components/HomeFeedCard';
+import { HomeLead, HomeLeadActionsSkeleton, leadMinHeight } from '../components/HomeLead';
 import { HomeRail, HomeRailSkeleton } from '../components/HomeRail';
-import { PopularModsChips, PopularModsChipsSkeleton } from '../components/PopularModsChips';
-import { UpdateRow } from '../components/UpdateRow';
+import { SampleLead } from '../components/SampleLead';
+import { UpdateGroupCard, UpdateGroupCardSkeletonRows } from '../components/UpdateGroupCard';
+import { NewInGarageRail, NewInGarageRailSkeleton } from '../components/NewInGarageRail';
+import { PopularModsChips } from '../components/PopularModsChips';
+import { offlineLine } from '../model';
 import { updatePath, useOpenMember, vehiclePath } from '../navigation';
 
 const ROUTE = 'HOME-01';
@@ -69,18 +76,27 @@ const COLUMN = layout.feedColumn;
 const RAIL_GAP = layout.sectionGap;
 const NO_ANCHOR = { disabled: true } as const;
 const NEWEST_PATH = { pathname: '/discover/search', params: { sort: 'updated' } } as const;
+/** 09 §7.3: a module after every ~6 items of the stream. */
+export const MODULE_EVERY = 6;
+/** 09 §7.3 "Treffen in deiner Nähe": two EventCards and "Alle Treffen". */
+const HOME_EVENT_CARDS = 2;
 
-type Section = 'newBuilds' | 'updates' | 'members' | 'mods';
+type Module = 'weekly' | 'members' | 'mods';
+type Section = 'newBuilds' | Module;
 
-/** The rows of the list. FS-2 order: hero → Neue Builds → Build-Updates → Aktive Mitglieder → Beliebte Mods → the stream. */
+/** The rows of the list. 09 §7.3 order: lead → Neu in der Garage → the stream, with a module after every 6 items. */
 export type HomeRow =
   | { kind: 'hero'; vehicle: FeedVehicle }
-  | { kind: 'section'; section: Section; first: boolean }
-  | { kind: 'card'; vehicle: FeedVehicle; key: string; last: boolean; showLatest?: boolean }
-  | { kind: 'updates'; updates: readonly BuildUpdateRowData[] }
+  | { kind: 'section'; section: Section }
+  | { kind: 'rail'; vehicles: readonly FeedVehicle[] }
+  | { kind: 'card'; vehicle: FeedVehicle; key: string; showLatest?: boolean }
+  | { kind: 'update'; update: BuildUpdateRowData; key: string }
+  | { kind: 'updates'; updates: readonly [BuildUpdateRowData, ...BuildUpdateRowData[]]; key: string }
+  | { kind: 'weekly'; vehicle: FeedVehicle }
   | { kind: 'members'; members: readonly ActiveMember[] }
   | { kind: 'mods'; mods: readonly PopularMod[] }
-  | { kind: 'streamUpdates'; updates: readonly BuildUpdateRowData[]; key: string };
+  /** M4.12 "Treffen in deiner Nähe": the module brings its own header and "Alle Treffen". */
+  | { kind: 'events'; events: readonly EventCard[] };
 
 /** Remembered while the app runs, so coming back to Start keeps the segment the member chose. */
 let lastTab: FeedTab = 'for_you';
@@ -90,25 +106,60 @@ export function rememberHomeTab(tab: FeedTab): void {
   lastTab = tab;
 }
 
+/**
+ * "Build der Woche": an editorially chosen featured build other than the lead (ADM-29). A build only ranked by completeness is never
+ * called that, so without an editorial pick the module hides (09 §7.3: never an empty or invented module).
+ */
+export function weeklyBuild(featured: readonly FeaturedBuild[] | undefined): FeedVehicle | undefined {
+  return featured?.slice(1).find((build) => build.source === 'editorial')?.vehicle;
+}
+
+/**
+ * DQ-1032: the one-line owner quote of "Build der Woche", from the editorial pick (ADM-29). Lane B gap: `quote` on
+ * FeaturedBuildResource; until the types have it, it is read only when present. Null: the module says why it was picked instead.
+ */
+export function weeklyQuote(featured: readonly FeaturedBuild[] | undefined): string | null {
+  const pick = featured?.slice(1).find((build) => build.source === 'editorial');
+  const quote = pick && 'quote' in pick ? (pick as { quote?: unknown }).quote : undefined;
+  return typeof quote === 'string' && quote.trim() !== '' ? quote.trim() : null;
+}
+
+/**
+ * DQ-1027 (09 §7.3 Folge ich): the chronological stream with consecutive updates of one build as one compact card, so the tab never
+ * shows the same cover card after card. A build (its first publish) keeps the full feed card.
+ */
+export function followingRows(stream: readonly FeedItem[]): HomeRow[] {
+  const rows: HomeRow[] = [];
+  for (const row of streamRows(stream)) {
+    const last = rows.at(-1);
+    if (row.kind === 'update') {
+      if (last?.kind === 'updates' && last.updates[0].vehicle.id === row.update.vehicle.id) {
+        rows[rows.length - 1] = { ...last, updates: [...last.updates, row.update] };
+      } else {
+        rows.push({ kind: 'updates', updates: [row.update], key: row.key });
+      }
+    } else {
+      rows.push(row);
+    }
+  }
+  return rows;
+}
+
 const useStyles = createStyles((t) => ({
   list: { flex: 1 },
   body: { flex: 1 },
-  segments: { paddingBottom: t.space[16] },
-  heroGap: { paddingBottom: t.space[32] },
+  segments: { paddingBottom: t.space[12], paddingTop: t.space[4] },
+  heroGap: { paddingBottom: t.space[24] },
   section: { paddingBottom: t.space[12] },
-  // Without a featured build the first section follows the segmented control.
-  sectionFirst: { paddingTop: t.space[8] },
-  cardGap: { paddingBottom: t.space[24] },
+  cardGap: { paddingBottom: t.space[32] },
+  // 09 §4.3: 32 between the stream's modules, as between its cards (DQ-1032).
   moduleEnd: { paddingBottom: t.space[32] },
-  // DQ-288: a block of update rows keeps the rhythm of the cards around it. Its rows have 12 of padding of their own, so the block
-  // takes 12 back from the gap above (a card's 24, a module's 32, the 16 under the segments) and adds 12 below: 24 between a card and
-  // the thumb above and below, as between two cards.
-  streamUpdates: { marginTop: -t.space[12], paddingBottom: t.space[12] },
-  // DQ-309: under its header the first update row's own 12 would add to the header's 12, so the module takes it back and its first
-  // thumb sits 12 under "Build-Updates", like the strip and the chips under theirs.
-  updatesModule: { marginTop: -t.space[12] },
+  // A compact update card is a row of the column: 24 to the next item.
+  updateGap: { paddingBottom: t.space[24] },
+  weeklyQuote: { paddingTop: t.space[8] },
   notice: { paddingBottom: t.space[16] },
   announcement: { marginBottom: t.space[16] },
+  listTop: { paddingTop: t.space[8] },
   // RESULT 11: on the cards' column and its start edge, as the rest of the column (§15 left-aligned hierarchy).
   footer: { alignItems: 'flex-start', minHeight: t.size.touchMin, paddingBottom: t.space[32], paddingTop: t.space[8] },
   footerError: { alignItems: 'flex-start', gap: t.space[8], paddingBottom: t.space[32] },
@@ -120,9 +171,7 @@ const useStyles = createStyles((t) => ({
   railInPage: { position: 'absolute', right: 0, top: 0 },
   // The rail hangs out of the list header next to the rows, which come later in the document: this keeps it above them, for the pointer too.
   headerOverRows: { zIndex: 1 },
-  skeletonGap: { gap: t.space[24] },
-  skeletonModule: { paddingBottom: t.space[32] },
-  flush: { paddingHorizontal: 0 },
+  skeletonGap: { gap: t.space[32] },
 }));
 
 /**
@@ -144,73 +193,61 @@ export function frameOf(pane: number, gutter: number, desktop: boolean): HomeFra
 }
 
 /**
- * Für dich (FS-2): the modules, then the stream. Only the hero (featured[0]) is drawn of the featured builds, so the server leaves only
- * that one out of the stream's first page (M2.2 review 2); featured builds 2 and 3 may come in the stream like any build. A build drawn
- * above (the hero, the two Neue Builds) is never repeated in the stream.
+ * Für dich (09 §7.3): the lead, "Neu in der Garage", then the stream with the modules interleaved after every `MODULE_EVERY` items
+ * (Build der Woche, Aktive Mitglieder, Beliebte Mods, in that order). A module without content is left out; modules the stream is too
+ * short for follow its end. A build drawn above (the lead, the rail, Build der Woche) is never repeated as a card of the stream.
  */
 export function forYouRows(input: {
   hero: FeedVehicle | undefined;
   newBuilds: readonly FeedVehicle[];
-  updates: readonly BuildUpdateRowData[];
+  weekly?: FeedVehicle | undefined;
   members: readonly ActiveMember[];
   mods: readonly PopularMod[];
+  /** M4.12: the next meets, the first module of the stream (09 §7.3 order: Treffen, Build der Woche, …). */
+  events?: readonly EventCard[];
   stream: readonly FeedItem[];
 }): HomeRow[] {
   const rows: HomeRow[] = [];
   const shown = new Set<string>();
-  let first = true;
-  const section = (name: Section) => {
-    rows.push({ kind: 'section', section: name, first: first && !input.hero });
-    first = false;
-  };
   if (input.hero) {
     rows.push({ kind: 'hero', vehicle: input.hero });
     shown.add(input.hero.id);
   }
-  // DQ-308: a change Build-Updates lists is not repeated by a card's latest-change block, above it or in the stream below.
-  const moduleUpdates = new Set(input.updates.map((update) => update.id));
-  const repeatsModule = (vehicle: FeedVehicle) => (vehicle.latest_update ? moduleUpdates.has(vehicle.latest_update.id) : false);
-  const newBuilds = input.newBuilds.filter((vehicle) => !shown.has(vehicle.id)).slice(0, NEW_BUILDS_PREVIEW);
-  if (newBuilds.length > 0) {
-    section('newBuilds');
-    newBuilds.forEach((vehicle, index) => {
-      shown.add(vehicle.id);
-      rows.push({ kind: 'card', vehicle, key: `new.${vehicle.id}`, last: index === newBuilds.length - 1, ...(repeatsModule(vehicle) ? { showLatest: false } : {}) });
-    });
+  const rail = input.newBuilds.filter((vehicle) => !shown.has(vehicle.id)).slice(0, NEW_BUILDS_PREVIEW);
+  if (rail.length > 0) {
+    rows.push({ kind: 'section', section: 'newBuilds' }, { kind: 'rail', vehicles: rail });
+    rail.forEach((vehicle) => shown.add(vehicle.id));
   }
-  if (input.updates.length > 0) {
-    section('updates');
-    rows.push({ kind: 'updates', updates: input.updates });
+  const modules: HomeRow[][] = [];
+  if (input.events && input.events.length > 0) modules.push([{ kind: 'events', events: input.events }]);
+  if (input.weekly && !shown.has(input.weekly.id)) {
+    shown.add(input.weekly.id);
+    modules.push([{ kind: 'section', section: 'weekly' }, { kind: 'weekly', vehicle: input.weekly }]);
   }
-  if (input.members.length > 0) {
-    section('members');
-    rows.push({ kind: 'members', members: input.members });
-  }
-  if (input.mods.length > 0) {
-    section('mods');
-    rows.push({ kind: 'mods', mods: input.mods });
-  }
-  rows.push(...streamRows(input.stream, shown, moduleUpdates));
+  if (input.members.length > 0) modules.push([{ kind: 'section', section: 'members' }, { kind: 'members', members: input.members }]);
+  if (input.mods.length > 0) modules.push([{ kind: 'section', section: 'mods' }, { kind: 'mods', mods: input.mods }]);
+  streamRows(input.stream, shown).forEach((row, index) => {
+    rows.push(row);
+    if ((index + 1) % MODULE_EVERY === 0) rows.push(...(modules.shift() ?? []));
+  });
+  rows.push(...modules.flat());
   return rows;
 }
 
 /**
- * The stream as rows: vehicle cards and update rows in the server's order. Consecutive update rows form one block with the §8
- * hairlines between them, as Build-Updates does (DQ-288). A card whose latest change is an update row of the stream does not repeat it
- * (DQ-289), nor one of `elsewhere`, the rows of Build-Updates above (DQ-308).
+ * The stream as feed cards in the server's order: a build, or one change of a build. A build's card does not repeat its latest change
+ * when that change has a card of its own in the stream (DQ-289). Builds of `shown` (drawn above) are left out.
  */
-export function streamRows(stream: readonly FeedItem[], shown: ReadonlySet<string> = new Set(), elsewhere: ReadonlySet<string> = new Set()): HomeRow[] {
+export function streamRows(stream: readonly FeedItem[], shown: ReadonlySet<string> = new Set()): HomeRow[] {
   const rows: HomeRow[] = [];
-  const updateIds = new Set([...elsewhere, ...stream.flatMap((item) => (item.type === 'update' && item.update ? [item.update.id] : []))]);
+  const updateIds = new Set(stream.flatMap((item) => (item.type === 'update' && item.update ? [item.update.id] : [])));
   for (const item of stream) {
     if (item.type === 'vehicle' && item.vehicle) {
       if (shown.has(item.vehicle.id)) continue;
       const repeats = item.vehicle.latest_update ? updateIds.has(item.vehicle.latest_update.id) : false;
-      rows.push({ kind: 'card', vehicle: item.vehicle, key: `stream.${item.key}`, last: false, ...(repeats ? { showLatest: false } : {}) });
+      rows.push({ kind: 'card', vehicle: item.vehicle, key: `stream.${item.key}`, ...(repeats ? { showLatest: false } : {}) });
     } else if (item.type === 'update' && item.update) {
-      const previous = rows.at(-1);
-      if (previous?.kind === 'streamUpdates') rows[rows.length - 1] = { ...previous, updates: [...previous.updates, item.update] };
-      else rows.push({ kind: 'streamUpdates', updates: [item.update], key: `stream.${item.key}` });
+      rows.push({ kind: 'update', update: item.update, key: `stream.${item.key}` });
     }
   }
   return rows;
@@ -222,8 +259,11 @@ function rowKey(row: HomeRow): string {
       return `hero.${row.vehicle.id}`;
     case 'section':
       return `section.${row.section}`;
+    case 'weekly':
+      return `weekly.${row.vehicle.id}`;
     case 'card':
-    case 'streamUpdates':
+    case 'update':
+    case 'updates':
       return row.key;
     default:
       return row.kind;
@@ -253,91 +293,78 @@ function InColumn({
   );
 }
 
-/**
- * The loaded column's geometry: the 16:9 featured build, Neue Builds with its two cards and Build-Updates. DQ-205: most cards have no
- * latest change, so none is drawn: the skeleton never runs longer than the page (§8).
- */
-function ForYouSkeleton({ bleed, gutter, column, pane }: { bleed: boolean; gutter: number; column: number; pane: number }) {
+/** 09 §7.3 skeleton: the lead block, the rail and two feed cards, in their geometry (SM15). */
+function ForYouSkeleton({ bleed, gutter, column, leadWidth }: { bleed: boolean; gutter: number; column: number; leadWidth: number }) {
   const styles = useStyles();
+  const { kind } = useBreakpoint();
+  const { fontScale } = useTheme();
+  const edge = bleed ? { marginHorizontal: -gutter } : null;
+  // DQ-1030: a lead name ("Volkswagen Golf GTI VII (5G)") takes two display lines in a phone's width, one in the wider columns.
+  const titleLines = kind === 'phone' || fontScale >= LARGE_FONT_SCALE ? 2 : 1;
   return (
     <Skeleton testID={`${ROUTE}.skeleton`}>
-      <View style={[styles.heroGap, bleed ? { marginHorizontal: -gutter } : null]}>
-        <FeaturedHeroSkeleton width={bleed ? pane : column} bleed={bleed} gutter={gutter} />
+      <View style={[styles.heroGap, edge]}>
+        <View style={{ minHeight: leadMinHeight(leadWidth, kind === 'desktop') }}>
+          <MediaCardSkeleton variant="lead" lines={titleLines} testID={`${ROUTE}.skeleton.featured`} />
+        </View>
+        <HomeLeadActionsSkeleton />
       </View>
-      {/* DQ-298: "Neue Builds" is as tall as its title line; its "Alle" overhangs that line (SectionHeader). */}
       <View style={styles.section}>
-        <SkeletonText variant="titleS" width="40%" />
+        <SkeletonText variant="headline" width="45%" />
       </View>
-      <View style={styles.skeletonGap}>
-        <FeedVehicleCardSkeleton width={column} ownerLink latest={false} testID={`${ROUTE}.skeleton.card`} />
-        <FeedVehicleCardSkeleton width={column} ownerLink latest={false} />
+      <View style={styles.moduleEnd}>
+        <NewInGarageRailSkeleton column={column} bleed={bleed ? gutter : 0} />
+      </View>
+      <View style={[styles.skeletonGap, edge]}>
+        <HomeFeedCardSkeleton testID={`${ROUTE}.skeleton.card`} />
+        <HomeFeedCardSkeleton />
       </View>
     </Skeleton>
   );
 }
 
-/** Folge ich while it loads: the stream's cards. */
-function FollowingSkeleton({ column }: { column: number }) {
+/**
+ * Folge ich while it loads (DQ-1083): the stream opens with compact update cards (DQ-1027), so two of those come first, then one
+ * feed card, in the loaded stream's geometry.
+ */
+function FollowingSkeleton({ bleed, gutter }: { bleed: boolean; gutter: number }) {
   const styles = useStyles();
   return (
     <Skeleton testID={`${ROUTE}.following.skeleton`}>
-      <View style={[styles.skeletonGap, styles.sectionFirst]}>
-        <FeedVehicleCardSkeleton width={column} ownerLink latest={false} />
-        <FeedVehicleCardSkeleton width={column} ownerLink latest={false} />
-      </View>
-    </Skeleton>
-  );
-}
-
-/** The modules that answer after the stream, in their place, so the page does not jump when they arrive. */
-function ModulesSkeleton({ width, inset }: { width: number; inset: number }) {
-  const styles = useStyles();
-  return (
-    <Skeleton testID={`${ROUTE}.modules.skeleton`}>
-      <View style={styles.skeletonModule}>
-        <View style={styles.section}>
-          <SkeletonText variant="titleS" width="40%" />
+      {/* DQ-1030: the list header carries the top padding already; the cards start where the loaded ones do. */}
+      <View style={styles.skeletonGap}>
+        <UpdateGroupCardSkeletonRows />
+        <UpdateGroupCardSkeletonRows />
+        <View style={bleed ? { marginHorizontal: -gutter } : null}>
+          <HomeFeedCardSkeleton />
         </View>
-        <View style={styles.updatesModule}>
-          <BuildUpdateRowSkeleton inset={space[0]} />
-          <BuildUpdateRowSkeleton inset={space[0]} />
-          <BuildUpdateRowSkeleton inset={space[0]} divider={false} />
-        </View>
-      </View>
-      <View style={styles.skeletonModule}>
-        <View style={styles.section}>
-          <SkeletonText variant="titleS" width="45%" />
-        </View>
-        <ActiveMembersStripSkeleton width={width} inset={inset} />
-      </View>
-      <View style={styles.skeletonModule}>
-        <View style={styles.section}>
-          <SkeletonText variant="titleS" width="60%" />
-        </View>
-        <PopularModsChipsSkeleton />
       </View>
     </Skeleton>
   );
 }
 
 /**
- * HOME-01 "/", FS-2: large title "Start" with the bell, the segmented Für dich · Folge ich, then for Für dich the featured build, Neue
- * Builds, Build-Updates, Aktive Mitglieder, Beliebte Mods and the ranked stream; for Folge ich the chronological stream of followed
- * members. From 1280 the rail beside the column holds the Discover shortcuts and the garage (§5).
+ * HOME-01 "/", 09 §7.3 ★: the brand header (§6.2 d: brush wordmark, bell) with the sticky "Für dich · Folge ich" under it, then for
+ * Für dich the lead build, "Neu in der Garage" and the stream of feed cards with Build der Woche, Aktive Mitglieder and Beliebte Mods
+ * between them; for Folge ich the chronological stream of followed members and builds. From 1280 the rail beside the column holds the
+ * Discover shortcuts and the garage.
  */
 export function HomeScreen() {
   const { t } = useTranslation('home');
+  const format = useFormat();
   const tabs = useTranslation('common').t;
+  const tEvents = useTranslation('events').t;
   const styles = useStyles();
   const router = useRouter();
   const pathname = usePathname();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const online = useOnline();
   // M3.5: Start behind a pushed screen or another tab loads no further pages.
   const shown = useScreenFocused();
   const qaState = useQaState();
   const session = useSessionStore((state) => state.status);
   const member = session === 'member';
+  const me = useSessionStore((state) => state.member?.username ?? null);
   const requireAuth = useRequireAuth();
   const restriction = useBrowseRestriction();
   const addVehicle = useAddVehicle();
@@ -353,19 +380,25 @@ export function HomeScreen() {
   const featured = useFeaturedBuilds();
   const preview = useNewBuildsPreview();
   const modules = useHomeModules();
+  const homeEvents = useHomeEvents();
   const forYou = useFeed('for_you');
   const following = useFeed('following', tab === 'following');
   const feed = tab === 'for_you' ? forYou : following;
   const listRef = useRef<FlashListRef<HomeRow>>(null);
   const retained = useRetainedListScroll(listRef);
   const [refreshing, setRefreshing] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const desktop = kind === 'desktop';
   const [pane, setPane] = useState(desktop ? windowWidth - layout.sidebar : kind === 'tablet' ? windowWidth - layout.rail : windowWidth);
   const frame = frameOf(pane, gutter, desktop);
   const bleed = kind === 'phone';
   const qaEmpty = qaState === 'empty';
+  // A phone runs photos edge to edge; wider, they stay in the column.
+  const mediaWidth = bleed ? pane : frame.column;
 
   const hero = qaEmpty ? undefined : featured.data?.[0]?.vehicle;
+  const weekly = qaEmpty ? undefined : weeklyBuild(featured.data);
+  const quote = weeklyQuote(featured.data);
   const stream = useMemo(() => (qaEmpty ? [] : flattenFeed(feed.data?.pages)), [feed.data?.pages, qaEmpty]);
   const suggestions = useMemo<readonly FeedSuggestion[]>(
     () => (qaEmpty ? [] : (following.data?.pages[0]?.meta.suggestions ?? [])),
@@ -373,34 +406,37 @@ export function HomeScreen() {
   );
 
   const rows = useMemo<HomeRow[]>(() => {
-    if (tab === 'following') return streamRows(stream);
+    if (tab === 'following') return followingRows(stream);
     const data = modules.data;
     return forYouRows({
       hero,
       newBuilds: qaEmpty ? [] : (preview.data ?? []),
-      updates: qaEmpty ? [] : (data?.build_updates ?? []),
+      weekly,
       members: qaEmpty ? [] : (data?.active_members ?? []),
       mods: qaEmpty ? [] : (data?.popular_mods ?? []),
+      events: qaEmpty ? [] : (homeEvents.data ?? []),
       stream,
     });
-  }, [hero, modules.data, preview.data, qaEmpty, stream, tab]);
+  }, [hero, homeEvents.data, modules.data, preview.data, qaEmpty, stream, tab, weekly]);
 
   const guestFollowing = tab === 'following' && session === 'guest';
   const hasData = feed.data !== undefined;
   const offline = !online || feed.fetchStatus === 'paused';
+  // The lead and the rail are requests of their own above the stream: the skeleton holds until they answer (or fail), so the page
+  // never jumps down when they arrive after the stream.
+  const pending = (query: { isPending: boolean; fetchStatus: string }) => query.isPending && query.fetchStatus !== 'paused';
+  const topPending = tab === 'for_you' && !qaEmpty && (pending(featured) || pending(preview));
   const loading =
-    !guestFollowing && (qaState === 'loading' || (!hasData && feed.isPending && feed.fetchStatus !== 'paused' && qaState === 'default'));
-  // The modules answer on their own: until then their place is held under the Neue Builds.
-  const modulesPending = tab === 'for_you' && !qaEmpty && modules.isPending && modules.fetchStatus !== 'paused';
+    !guestFollowing && (qaState === 'loading' || (qaState === 'default' && ((!hasData && pending(feed)) || (hasData && topPending))));
   let state: ReactNode = null;
   if (guestFollowing) {
     state = <FollowingGuest routeId={ROUTE} />;
   } else if (loading) {
     state =
       tab === 'for_you' ? (
-        <ForYouSkeleton bleed={bleed} gutter={gutter} column={frame.column} pane={pane} />
+        <ForYouSkeleton bleed={bleed} gutter={gutter} column={frame.column} leadWidth={mediaWidth} />
       ) : (
-        <FollowingSkeleton column={frame.column} />
+        <FollowingSkeleton bleed={bleed} gutter={gutter} />
       );
   } else if (qaState === 'error' || !hasData) {
     state = (
@@ -418,11 +454,17 @@ export function HomeScreen() {
       />
     );
   } else if (tab === 'following' && rows.length === 0) {
-    state = <FollowingEmpty suggestions={suggestions} routeId={ROUTE} />;
-  } else if (rows.length === 0 && !modulesPending) {
+    state = (
+      <FollowingEmpty
+        suggestions={suggestions}
+        builds={qaEmpty ? [] : buildSuggestions([featured.data?.map((build) => build.vehicle), preview.data], me)}
+        routeId={ROUTE}
+      />
+    );
+  } else if (rows.length === 0 && !pending(modules)) {
     state = (
       <EmptyState
-        icon="garage"
+        preview={<SampleLead routeId={ROUTE} />}
         title={t('empty.title')}
         body={t('empty.body')}
         action={session === 'loading' ? undefined : { label: t('empty.action'), onPress: addVehicle }}
@@ -448,7 +490,7 @@ export function HomeScreen() {
       // WebKit ignores element.scroll() on an element that was display:none, until something else scrolls it.
       setTimeout(() => {
         if (node.scrollTop === before) node.scrollTop = 0;
-      }, motion.duration.small);
+      }, motionDuration('effect.default'));
     }
     return true;
   });
@@ -457,18 +499,15 @@ export function HomeScreen() {
     if (next === tab) return;
     lastTab = next;
     setTabState(next);
-    // The other segment starts at its top; the segmented control stays in reach under the title.
+    // The other segment starts at its top, under the segmented control that stays in reach.
     scrollToTop(false);
   };
 
   const open = useCallback((vehicle: FeedVehicle) => router.push(vehiclePath(vehicle.slug)), [router]);
-  const openLatest = useCallback(
-    (vehicle: FeedVehicle) => {
-      if (vehicle.latest_update) router.push(updatePath(vehicle.slug, vehicle.latest_update.id));
-    },
+  const openCard = useCallback(
+    (vehicle: FeedVehicle, updateId?: string) => router.push(updateId ? updatePath(vehicle.slug, updateId) : vehiclePath(vehicle.slug)),
     [router],
   );
-  const openUpdate = useCallback((update: BuildUpdateRowData) => router.push(updatePath(update.vehicle.slug, update.id)), [router]);
   const openMod = useCallback((mod: PopularMod) => router.navigate(searchPath(mod.query)), [router]);
   const openNotifications = () => requireAuth(() => router.push('/notifications'), { returnTo: pathname });
 
@@ -504,19 +543,10 @@ export function HomeScreen() {
 
   const frameStyle = useMemo(() => [styles.frame, { width: frame.width }], [frame.width, styles.frame]);
   const columnStyle = useMemo(() => ({ width: frame.column }), [frame.column]);
-  const heroColumnStyle = useMemo(() => [styles.heroGap, columnStyle], [columnStyle, styles.heroGap]);
   const cardColumnStyle = useMemo(() => [styles.cardGap, columnStyle], [columnStyle, styles.cardGap]);
-  const lastCardColumnStyle = useMemo(() => [styles.moduleEnd, columnStyle], [columnStyle, styles.moduleEnd]);
   const moduleColumnStyle = useMemo(() => [styles.moduleEnd, columnStyle], [columnStyle, styles.moduleEnd]);
-  const updatesColumnStyle = useMemo(() => [styles.moduleEnd, styles.updatesModule, columnStyle], [columnStyle, styles.moduleEnd, styles.updatesModule]);
-  const streamUpdatesStyle = useMemo(() => [styles.streamUpdates, columnStyle], [columnStyle, styles.streamUpdates]);
-
-  // DQ-297: the rail starts on the segmented control's top edge, under the large title, whatever height the title has at this font.
-  const [titleHeight, setTitleHeight] = useState<number | undefined>(undefined);
-  const onTitleLayout = (event: LayoutChangeEvent) => {
-    const next = event.nativeEvent.layout.height;
-    if (next > 0 && next !== titleHeight) setTitleHeight(next);
-  };
+  const gutterStyle = useMemo(() => ({ paddingHorizontal: gutter }), [gutter]);
+  const updateColumnStyle = useMemo(() => [styles.updateGap, columnStyle], [columnStyle, styles.updateGap]);
 
   const onPaneLayout = (event: LayoutChangeEvent) => {
     const next = event.nativeEvent.layout.width;
@@ -525,12 +555,12 @@ export function HomeScreen() {
     if (next <= 0) return;
     if (Math.abs(next - pane) >= 1) setPane(next);
   };
+  const onHeaderHeight = (next: number) => {
+    if (next > 0 && Math.abs(next - headerHeight) >= 1) setHeaderHeight(next);
+  };
 
-  // DQ-199: on web the rail at a large font is taller than a desktop window, with "Konto erstellen" below the fold of its own
-  // scroller, so it is part of the page and everything in it is reached by the one scroller. Native keeps its own scroller: a touch
-  // outside the bounds of its parent, the list header, would not reach it on Android.
-  // DQ-287: the rail is part of the desktop page in every state that has a page: Folge ich for a guest or with nothing yet, and an
-  // empty Start. Only a full-page error or offline state leaves it out, and the skeleton draws its own.
+  // DQ-199: on web the rail at a large font is taller than a desktop window, so it is part of the page and everything in it is reached
+  // by the one scroller. Native keeps its own scroller. DQ-287: the rail is part of the desktop page in every state that has a page.
   const fullPageError = !loading && !guestFollowing && (qaState === 'error' || !hasData);
   const railShown = frame.rail !== null && !fullPageError;
   const railInPage = isWeb && railShown && !loading && fontScale >= LARGE_FONT_SCALE;
@@ -544,24 +574,19 @@ export function HomeScreen() {
     [t],
   );
 
-  // The large title pads itself with the gutter; in the column it starts on the column's edge instead.
-  const titleBlock = (
-    <View style={frameStyle}>
+  const listHeader = (
+    <View style={[frameStyle, styles.listTop]}>
+      {/* The floating brand header's own height: a spacer, so the list starts under it (its padding stays on the scale). */}
+      <View style={{ height: headerHeight }} />
       <View style={columnStyle}>
-        <View onLayout={onTitleLayout}>
-          <HeaderLargeTitle title={tabs('tabs.home')} scroll={header} style={styles.flush} testID={`${ROUTE}.title`} />
-        </View>
-        {/* DQ-281: the 16 to the hero belongs outside the control, whose own style is its 36 track. */}
-        <View style={styles.segments}>
-          <SegmentedControl options={segments} value={tab} onChange={setTab} label={t('tabs.label')} role="tablist" testID={`${ROUTE}.tabs`} />
-        </View>
+        <ShellOfflineBanner label={offlineLine(t, feed.dataUpdatedAt, format.relative)} />
         {restriction ? <RestrictionNotice message={restriction} style={styles.notice} testID={`${ROUTE}.restricted`} /> : null}
         {/* M3.5 ADM-30: the current announcement, under the segments on both tabs. */}
         <AnnouncementBanner routeId={ROUTE} style={styles.announcement} />
       </View>
       {railInPage ? (
         <View style={[styles.railInPage, { width: frame.rail ?? 0 }]}>
-          <HomeRail inPage top={titleHeight} />
+          <HomeRail inPage top={headerHeight} />
         </View>
       ) : null}
     </View>
@@ -572,13 +597,7 @@ export function HomeScreen() {
   const footerErrorColumnStyle = useMemo(() => [styles.footerError, columnStyle], [columnStyle, styles.footerError]);
   const footerFrameID = `${ROUTE}.footer`;
   let footer: ReactNode = null;
-  if (!state && modulesPending && stream.length === 0) {
-    footer = (
-      <InColumn frame={frameStyle} style={columnStyle}>
-        <ModulesSkeleton width={bleed ? pane : frame.column} inset={bleed ? gutter : 0} />
-      </InColumn>
-    );
-  } else if (!state && feed.isFetchingNextPage) {
+  if (!state && feed.isFetchingNextPage) {
     footer = (
       <InColumn frame={frameStyle} style={footerColumnStyle} frameTestID={footerFrameID} testID={`${ROUTE}.loadingMore`}>
         <Spinner label={t('list.loadingMore')} />
@@ -587,7 +606,7 @@ export function HomeScreen() {
   } else if (!state && feed.isFetchNextPageError) {
     footer = (
       <InColumn frame={frameStyle} style={footerErrorColumnStyle} frameTestID={footerFrameID} testID={`${ROUTE}.moreError`}>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {t('list.moreError')}
         </Text>
         <Button label={tabs('actions.retry')} variant="secondary" size="m" onPress={() => void feed.fetchNextPage()} testID={`${ROUTE}.moreRetry`} />
@@ -624,8 +643,8 @@ export function HomeScreen() {
             testID={`${ROUTE}.newBuilds`}
           />
         );
-      case 'updates':
-        return <SectionHeader title={t('updates.title')} testID={`${ROUTE}.updates`} />;
+      case 'weekly':
+        return <SectionHeader title={t('weekly.title')} testID={`${ROUTE}.weekly`} />;
       case 'members':
         return <SectionHeader title={t('members.title')} testID={`${ROUTE}.members`} />;
       default:
@@ -633,52 +652,69 @@ export function HomeScreen() {
     }
   };
 
+  /** A photo row: edge to edge on a phone, in the column wider. */
+  const media = (children: ReactNode, style: StyleProp<ViewStyle>, testID?: string) =>
+    bleed ? (
+      <View style={style} testID={testID}>
+        {children}
+      </View>
+    ) : (
+      <InColumn frame={frameStyle} style={[style, columnStyle]} testID={testID}>
+        {children}
+      </InColumn>
+    );
+
   const renderItem = ({ item }: { item: HomeRow }) => {
     switch (item.kind) {
       case 'hero':
-        return bleed ? (
-          <View style={styles.heroGap}>
-            <FeaturedHero vehicle={item.vehicle} width={pane} bleed gutter={gutter} onOpen={open} testID={`${ROUTE}.featured`} />
-          </View>
-        ) : (
-          <InColumn frame={frameStyle} style={heroColumnStyle}>
-            <FeaturedHero vehicle={item.vehicle} width={frame.column} bleed={false} gutter={gutter} onOpen={open} testID={`${ROUTE}.featured`} />
-          </InColumn>
-        );
+        return media(<HomeLead vehicle={item.vehicle} width={mediaWidth} onOpen={open} testID={`${ROUTE}.featured`} />, styles.heroGap);
       case 'section':
         return (
-          <InColumn frame={frameStyle} style={[columnStyle, styles.section, item.first ? styles.sectionFirst : null]}>
+          <InColumn frame={frameStyle} style={[columnStyle, styles.section]}>
             {sectionTitle(item.section)}
           </InColumn>
         );
-      case 'card':
+      case 'rail':
         return (
-          <InColumn frame={frameStyle} style={item.last ? lastCardColumnStyle : cardColumnStyle}>
-            <FeedVehicleCard
-              vehicle={item.vehicle}
-              width={frame.column}
-              onOpen={open}
-              onOpenUpdate={openLatest}
-              onOpenOwner={openMember}
-              showLatest={item.showLatest ?? true}
-              testID={`${ROUTE}.card.${item.vehicle.id}`}
-            />
+          <InColumn frame={frameStyle} style={moduleColumnStyle}>
+            <NewInGarageRail vehicles={item.vehicles} column={frame.column} bleed={bleed ? gutter : 0} onOpen={open} testID={`${ROUTE}.newBuilds`} />
           </InColumn>
+        );
+      case 'card':
+        return media(
+          <HomeFeedCard
+            vehicle={item.vehicle}
+            width={mediaWidth}
+            showLatest={item.showLatest ?? true}
+            onOpen={openCard}
+            onOpenOwner={openMember}
+            testID={`${ROUTE}.card.${item.vehicle.id}`}
+          />,
+          bleed ? styles.cardGap : cardColumnStyle,
+        );
+      case 'update':
+        return media(
+          <HomeFeedCard vehicle={item.update.vehicle} update={item.update} width={mediaWidth} onOpen={openCard} onOpenOwner={openMember} testID={`${ROUTE}.stream.update.${item.update.id}`} />,
+          bleed ? styles.cardGap : cardColumnStyle,
         );
       case 'updates':
         return (
-          <InColumn frame={frameStyle} style={updatesColumnStyle} testID={`${ROUTE}.updates.list`}>
-            {item.updates.map((update, index) => (
-              <UpdateRow
-                key={update.id}
-                update={update}
-                onOpen={openUpdate}
-                inset={space[0]}
-                divider={index < item.updates.length - 1}
-                testID={`${ROUTE}.update.${update.id}`}
-              />
-            ))}
+          <InColumn frame={frameStyle} style={updateColumnStyle}>
+            <UpdateGroupCard updates={item.updates} onOpen={openCard} testID={`${ROUTE}.stream.update.${item.updates[0].id}`} />
           </InColumn>
+        );
+      case 'weekly':
+        return media(
+          <>
+            <HomeLead vehicle={item.vehicle} width={mediaWidth} wide onOpen={open} testID={`${ROUTE}.weekly.card`} />
+            {/* DQ-1032: the owner's one line in German quotes, or why the editors picked it. */}
+            <View style={[styles.weeklyQuote, bleed ? gutterStyle : null]}>
+              <Text variant="body" color="text.secondary" numberOfLines={fontScale >= LARGE_FONT_SCALE ? undefined : 1} testID={`${ROUTE}.weekly.quote`}>
+                {quote ? t('weekly.quote', { quote }) : t('weekly.reason')}
+              </Text>
+            </View>
+          </>,
+          styles.moduleEnd,
         );
       case 'members':
         // A phone runs the strip to the screen edge, starting on the gutter; wider, it stays in the column.
@@ -691,25 +727,16 @@ export function HomeScreen() {
             <ActiveMembersStrip members={item.members} width={frame.column} inset={space[0]} onOpen={openMember} testID={`${ROUTE}.activeMembers`} />
           </InColumn>
         );
+      case 'events':
+        return (
+          <InColumn frame={frameStyle} style={moduleColumnStyle}>
+            <EventsModule title={tEvents('home.titleAll')} events={item.events} limit={HOME_EVENT_CARDS} width={frame.column} routeId={ROUTE} />
+          </InColumn>
+        );
       case 'mods':
         return (
           <InColumn frame={frameStyle} style={moduleColumnStyle}>
             <PopularModsChips mods={item.mods} width={frame.column} onOpen={openMod} testID={`${ROUTE}.mods.list`} />
-          </InColumn>
-        );
-      case 'streamUpdates':
-        return (
-          <InColumn frame={frameStyle} style={streamUpdatesStyle}>
-            {item.updates.map((update, position) => (
-              <UpdateRow
-                key={update.id}
-                update={update}
-                onOpen={openUpdate}
-                inset={space[0]}
-                divider={position < item.updates.length - 1}
-                testID={`${ROUTE}.stream.update.${update.id}`}
-              />
-            ))}
           </InColumn>
         );
       default:
@@ -721,22 +748,12 @@ export function HomeScreen() {
     icon: 'bell',
     label: t('bell.label'),
     onPress: openNotifications,
-    ...(member && badges.home ? { unread: { label: t('bell.unread', { count: badges.notifications }) } } : {}),
+    ...(member && badges.home ? { unread: { count: badges.notifications, label: t('bell.unread', { count: badges.notifications }) } } : {}),
     testID: `${ROUTE}.bell`,
   };
 
   return (
     <Screen edges={EDGES} testID={`${ROUTE}.root`}>
-      <Header
-        variant="large"
-        title={tabs('tabs.home')}
-        scroll={header}
-        actions={[bell]}
-        contentMaxWidth={bleed ? undefined : frame.width + 2 * gutter}
-        contentAlign="center"
-        testID={`${ROUTE}.header`}
-      />
-      <ShellOfflineBanner label={t('offline')} />
       <View style={styles.body} onLayout={onPaneLayout}>
         <CollapsingFlashList
           ref={listRef}
@@ -750,10 +767,9 @@ export function HomeScreen() {
           // The skeleton is taller than a phone and holds nothing to focus: a scroll region nobody can reach by keyboard
           // (axe scrollable-region-focusable). There is nothing to scroll to before the builds arrive.
           scrollEnabled={!loading}
-          // FlashList keeps the visible rows in place when rows arrive above them. The featured build and the modules are requests
-          // of their own: answering after the stream, they were inserted above the first card and Start opened scrolled down.
+          // FlashList keeps the visible rows in place when rows arrive above them; Start must open at its top.
           maintainVisibleContentPosition={NO_ANCHOR}
-          ListHeaderComponent={titleBlock}
+          ListHeaderComponent={listHeader}
           ListHeaderComponentStyle={railInPage ? styles.headerOverRows : undefined}
           ListEmptyComponent={
             state ? (
@@ -766,19 +782,35 @@ export function HomeScreen() {
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           refreshing={isWeb ? undefined : refreshing}
+          progressViewOffset={headerHeight}
           onRefresh={isWeb || (state && !hasData) || guestFollowing ? undefined : () => void refresh()}
           renderItem={renderItem}
           testID={`${ROUTE}.list`}
         />
         {railShown && frame.rail !== null && !railInPage ? (
-          <View style={[StyleSheet.absoluteFill, styles.railLayer]}>
+          <View style={[StyleSheet.absoluteFill, styles.railLayer, { top: headerHeight }]}>
             <View style={[styles.railFrame, { width: frame.width }]}>
               <View style={[styles.railColumn, { width: frame.rail }]}>
-                {loading ? <HomeRailSkeleton width={frame.rail} top={titleHeight} /> : <HomeRail top={titleHeight} />}
+                {loading ? <HomeRailSkeleton width={frame.rail} top={0} /> : <HomeRail top={0} />}
               </View>
             </View>
           </View>
         ) : null}
+        {/* 09 §6.2 d: the wordmark and the bell float over the list and hide on scroll down; the segments stay (§7.3 sticky). */}
+        <BrandHeader
+          scroll={header}
+          actions={[bell]}
+          title={tabs('tabs.home')}
+          logo={desktop ? false : undefined}
+          contentWidth={bleed ? undefined : frame.width}
+          onHeight={onHeaderHeight}
+          accessory={
+            <View style={[styles.segments, bleed ? null : { width: frame.column }]}>
+              <SegmentedControl options={segments} value={tab} onChange={setTab} label={t('tabs.label')} role="tablist" testID={`${ROUTE}.tabs`} />
+            </View>
+          }
+          testID={`${ROUTE}.header`}
+        />
       </View>
     </Screen>
   );

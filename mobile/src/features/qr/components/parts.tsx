@@ -33,7 +33,7 @@ export function QrRowGroup({ children, style, testID }: { children: ReactNode; s
 /** The 20 glyph sits on the first line of `supporting` text, whatever the font scale. */
 function useFirstLineBox(): ViewStyle {
   const { fontScale } = useTheme();
-  return { height: typography.supporting.lineHeight * fontScale, justifyContent: 'center' };
+  return { height: typography.callout.lineHeight * fontScale, justifyContent: 'center' };
 }
 
 export type QrNoticeProps = {
@@ -55,7 +55,7 @@ export function QrNotice({ message, tone = 'info', icon, style, testID }: QrNoti
       <View style={iconBox}>
         <Icon name={icon ?? (error ? 'warning' : 'info')} size={20} color={error ? 'accent.fg' : 'text.secondary'} />
       </View>
-      <Text variant="supporting" style={styles.noticeText}>
+      <Text variant="callout" style={styles.noticeText}>
         {message}
       </Text>
     </View>

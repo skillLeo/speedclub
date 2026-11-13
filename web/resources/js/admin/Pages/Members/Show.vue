@@ -392,7 +392,7 @@ async function endViewAs(): Promise<void> {
         >
             <template #meta>
                 <!-- One meta line, its parts separated by "·" (DQ-546); 32 high like the other record headers. -->
-                <p class="flex min-h-32 flex-wrap items-center gap-8 text-supporting text-ink-2 tabular-nums">
+                <p class="flex min-h-32 flex-wrap items-center gap-8 text-admin-base text-ink-2 tabular-nums">
                     <img v-if="member.avatar" :src="member.avatar" alt="" width="24" height="24" class="size-24 rounded-full object-cover" />
                     <template v-if="member.display_name">
                         <span class="text-ink">{{ member.display_name }}</span>
@@ -419,11 +419,11 @@ async function endViewAs(): Promise<void> {
                 <div class="flex flex-col gap-16">
                     <!-- four-eyes requests about this member -->
                     <ul v-if="name === current && pendingApprovals.length > 0" class="flex flex-col gap-4 rounded-sm border border-line px-12 py-8" data-testid="ADM-10.pending">
-                        <li v-for="item in pendingApprovals" :key="item.id" class="text-supporting text-ink-2 tabular-nums">
+                        <li v-for="item in pendingApprovals" :key="item.id" class="text-admin-base text-ink-2 tabular-nums">
                             {{ trans('members.record.pending', { title: trans(item.title), until: formatDateTime(item.expires_at) }) }}
                         </li>
                     </ul>
-                    <p v-if="name === current && (viewAs || viewAsStarted)" class="flex items-center gap-8 text-supporting text-ink-2" data-testid="ADM-10.view-as-running">
+                    <p v-if="name === current && (viewAs || viewAsStarted)" class="flex items-center gap-8 text-admin-base text-ink-2" data-testid="ADM-10.view-as-running">
                         <PhArrowSquareOut :size="16" aria-hidden="true" />{{ trans('members.view_as.running', { until: formatDateTime(viewAs?.expires_at ?? viewAsStarted) }) }}
                     </p>
 
@@ -480,10 +480,10 @@ async function endViewAs(): Promise<void> {
                 <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="editErrors.reason" required>
                     <Textarea v-model="edit.reason" :rows="3" :maxlength="1000" show-count data-testid="ADM-10.edit.reason" />
                 </Field>
-                <p class="text-helper text-ink-3">{{ trans('members.edit.never_password') }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('members.edit.never_password') }}</p>
             </form>
             <template #footer>
-                <p v-if="editErrors.form || action.error.value" class="flex basis-full items-start gap-8 rounded-sm border border-line px-12 py-8 text-supporting text-ink" role="alert">
+                <p v-if="editErrors.form || action.error.value" class="flex basis-full items-start gap-8 rounded-sm border border-line px-12 py-8 text-admin-base text-ink" role="alert">
                     <PhWarningCircle :size="20" class="shrink-0 text-danger" aria-hidden="true" />{{ editErrors.form ?? action.error.value }}
                 </p>
                 <Button variant="ghost" :disabled="action.processing.value" data-dialog-cancel @click="close">{{ trans('ui.actions.cancel') }}</Button>
@@ -536,12 +536,12 @@ async function endViewAs(): Promise<void> {
                 </Field>
                 <div class="flex flex-col gap-4">
                     <Checkbox v-model="email.verified" :label="trans('members.email.identity')" :invalid="Boolean(emailErrors.identity)" data-testid="ADM-10.email.identity" />
-                    <p v-if="emailErrors.identity" class="text-helper text-danger" role="alert">{{ emailErrors.identity }}</p>
+                    <p v-if="emailErrors.identity" class="text-admin-base text-danger" role="alert">{{ emailErrors.identity }}</p>
                 </div>
                 <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="emailErrors.reason" required>
                     <Textarea v-model="email.reason" :rows="3" :maxlength="1000" show-count data-testid="ADM-10.email.reason" />
                 </Field>
-                <p v-if="action.error.value" class="text-helper text-danger" role="alert">{{ action.error.value }}</p>
+                <p v-if="action.error.value" class="text-admin-base text-danger" role="alert">{{ action.error.value }}</p>
             </form>
             <template #footer>
                 <Button variant="ghost" :disabled="action.processing.value" data-dialog-cancel @click="close">{{ trans('ui.actions.cancel') }}</Button>
@@ -557,11 +557,11 @@ async function endViewAs(): Promise<void> {
                 </Field>
                 <div class="flex flex-col gap-4">
                     <Checkbox v-model="viewAsForm.consent" :label="trans(supportOnly ? 'members.view_as.consent' : 'members.view_as.consent_optional')" :invalid="Boolean(viewAsErrors.consent)" data-testid="ADM-10.view-as.consent" />
-                    <p v-if="viewAsErrors.consent" class="text-helper text-danger" role="alert">{{ viewAsErrors.consent }}</p>
+                    <p v-if="viewAsErrors.consent" class="text-admin-base text-danger" role="alert">{{ viewAsErrors.consent }}</p>
                 </div>
-                <p class="text-helper text-ink-3">{{ trans('members.view_as.read_only') }}</p>
-                <p v-if="viewAsNote" class="text-helper text-ink-2" role="status" data-testid="ADM-10.view-as.note">{{ viewAsNote }}</p>
-                <p v-if="viewAsErrors.form" class="text-helper text-danger" role="alert">{{ viewAsErrors.form }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('members.view_as.read_only') }}</p>
+                <p v-if="viewAsNote" class="text-admin-base text-ink-2" role="status" data-testid="ADM-10.view-as.note">{{ viewAsNote }}</p>
+                <p v-if="viewAsErrors.form" class="text-admin-base text-danger" role="alert">{{ viewAsErrors.form }}</p>
             </form>
             <template #footer>
                 <Button variant="ghost" :disabled="viewAsBusy" data-dialog-cancel @click="close">{{ trans('ui.actions.cancel') }}</Button>

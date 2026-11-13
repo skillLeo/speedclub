@@ -16,8 +16,10 @@ import { useOnline } from '@/state/online';
 import { isInternalPath, useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
 import { Button, Dialog, Hairline, Icon, ListRow, Sheet, Text, TextInput } from '@/ui';
+import { SlotText, slot } from '@/ui/SlotText';
 
 import { useSafety } from './data';
+import { labelText } from './labels';
 import { ILLEGAL_SUB_REASONS, REPORT_REASONS, type ReportTarget } from './model';
 import {
   blockOffer,
@@ -179,9 +181,13 @@ export function ReportSheet({ visible, target, onClose, onBlock, blocked = false
   } else if (flow.step === 'reason') {
     content = (
       <View style={styles.body}>
-        <Text variant="supporting" color="text.secondary" testID={`${testID}.target`}>
-          {t('report.target', { label: target.label })}
-        </Text>
+        <SlotText
+          variant="callout"
+          color="text.secondary"
+          text={t('report.target', { label: slot('label') })}
+          slots={{ label: labelText(target.label) }}
+          testID={`${testID}.target`}
+        />
         <View style={styles.rows} role="list">
           {REPORT_REASONS.map((reason, index) => (
             <View key={reason} role="listitem">
@@ -316,7 +322,7 @@ export function ReportSheet({ visible, target, onClose, onBlock, blocked = false
             <Text variant="bodyStrong" role="heading" {...({ 'aria-level': 3 } as object)}>
               {t('report.blockOfferTitle')}
             </Text>
-            <Text variant="bodyDense" color="text.secondary">
+            <Text variant="body" color="text.secondary">
               {t('report.blockOfferBody')}
             </Text>
             <Button
@@ -427,7 +433,7 @@ function GuestStep({ testID, onLeave }: { testID: string; onLeave: () => void })
       {isWeb ? (
         <View style={styles.offer}>
           <Hairline style={styles.rule} />
-          <Text variant="bodyDense" color="text.secondary">
+          <Text variant="body" color="text.secondary">
             {t('report.guestWebFormHint')}
           </Text>
           <Button

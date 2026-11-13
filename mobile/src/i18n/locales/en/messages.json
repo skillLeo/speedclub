@@ -57,7 +57,13 @@
     "guestBody": "Ask owners about their setup, arrange a meet or share your build.",
     "signIn": "Sign in",
     "selectTitle": "Choose a conversation",
-    "selectBody": "Or start a new one with “New message”."
+    "selectBody": "Or start a new one with “New message”.",
+    "sample": {
+      "sampleQuestion": "Which springs are you running on the rear axle?",
+      "sampleMeet": "Are you coming to the meet in Ludwigsburg on Saturday?",
+      "timeQuestion": "19:42",
+      "timeMeet": "Yesterday"
+    }
   },
   "organise": {
     "title": "Conversation with {{name}}",
@@ -87,6 +93,8 @@
   },
   "thread": {
     "info": "Conversation info",
+    "drives": "{{car}} driver",
+    "vehicleView": "View",
     "contextOwner": "@{{username}}'s vehicle",
     "contextOpen": "Open vehicle: {{title}}",
     "read": "Read",
@@ -133,11 +141,15 @@
   },
   "reactions": {
     "thumbs_up": "Thumbs up",
-    "heart": "Heart",
+    "heart": "Like",
     "fire": "Fire",
     "laugh": "Laugh",
     "wow": "Wow",
     "flag": "Chequered flag",
+    "stark": "Strong",
+    "sauber": "Clean",
+    "tief": "Low",
+    "laut": "Loud",
     "count": "{{label}}: {{formatted}}",
     "mine": "{{label}}, your reaction",
     "remove": "Remove reaction"
@@ -215,5 +227,19 @@
   },
   "entry": {
     "sendVehicle": "Send vehicle"
+  },
+  "reply": {
+    "action": "Reply",
+    "to": "Replying to {{name}}",
+    "cancel": "Discard reply",
+    "vehicle": "Vehicle",
+    "unavailable": "Message no longer available"
+  },
+  "swipe": {
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "archive": "Archive",
+    "unarchive": "Restore",
+    "delete": "Delete"
   }
 }

@@ -27,6 +27,9 @@ import { flat, visualOf } from '../ui/helpers';
 
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
 jest.mock('expo-haptics', () => ({}));
+// The JS shell (web, and native's fallback while nav.native_tabs is off): the real (tabs) route file resolves to
+// _layout.native.tsx under Jest's iOS preset, so the chrome is held at 'js' here. Native tabs: tests/shell/nativeTabs.test.tsx.
+jest.mock('@/features/shell/navMode', () => ({ ...jest.requireActual('@/features/shell/navMode'), useTabChrome: () => 'js' }));
 
 const mockDimensions = jest.fn(() => ({ width: 390, height: 844, scale: 1, fontScale: 1 }));
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
@@ -182,7 +185,7 @@ describe('tab bar', () => {
     // Its bottom edge sits 6 above the icon, whose top is at 12.
     expect((indicator.top as number) + (indicator.height as number) + 6).toBe(space[12]);
     const label = screen.getByText('Nachrichten');
-    expect(flat(label.props.style).fontSize).toBe(typography.tab.fontSize);
+    expect(flat(label.props.style).fontSize).toBe(typography.webTab.fontSize);
     expect(label.props.maxFontSizeMultiplier).toBe(1.3);
   });
 
@@ -434,6 +437,8 @@ describe('auth intent', () => {
     ...tree(),
     '(auth)/_layout': { default: AuthLayout },
     '(auth)/sign-in': () => <RoutePlaceholder routeId="AUTH-03" titleKey="routes.signIn" headerTestID="signIn" />,
+    // M4.6: the guest entries open the passwordless start (AUTH-12).
+    '(auth)/auth/email': () => <RoutePlaceholder routeId="AUTH-12" titleKey="routes.signIn" headerTestID="signIn" />,
     '(auth)/sign-up': () => <RoutePlaceholder routeId="AUTH-04" titleKey="routes.signUp" headerTestID="signUp" />,
   });
 
@@ -443,7 +448,7 @@ describe('auth intent', () => {
     await screen.findByTestId('screen.home');
     useSessionStore.setState({ intent: { returnTo: '/garage' } });
     await fireEvent.press(screen.getByTestId('shell.sidebar.signIn'));
-    await waitFor(() => expect(router.getPathname()).toBe('/sign-in'));
+    await waitFor(() => expect(router.getPathname()).toBe('/auth/email'));
     expect(useSessionStore.getState().intent).toBeNull();
   });
 
@@ -492,7 +497,7 @@ describe('auth intent', () => {
     await screen.findByTestId('screen.home');
     await act(async () => openAuthPrompt({ returnTo: '/garage' }));
     await fireEvent.press(await screen.findByTestId('shell.authRequired.signIn'));
-    await waitFor(() => expect(router.getPathname()).toBe('/sign-in'));
+    await waitFor(() => expect(router.getPathname()).toBe('/auth/email'));
     expect(router.getSearchParams().returnTo).toBe('/garage');
   });
 

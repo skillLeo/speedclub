@@ -8,7 +8,8 @@ import { useTabScrollToTop } from '@/features/shell/retap';
 import { TabBarOverlayContext, useTabBarPadding } from '@/features/shell/tabBarLayout';
 import { isWeb } from '@/lib/platform';
 import { useOnline } from '@/state/online';
-import { createStyles, size, space, useBreakpoint, useMotion } from '@/theme';
+import { createStyles, layout, size, space, useBreakpoint } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import { Header, OfflineBanner, Screen, SkeletonText, Text, useCollapsingHeader } from '@/ui';
 import { NO_BROWSER_OUTLINE, useFocusRing } from '@/ui/useFocusRing';
 
@@ -24,6 +25,8 @@ const useStyles = createStyles((t) => ({
   // starts on the gutter under back, and the header's controls keep to it (DQ-156, M1.5's DQ-135 and DQ-136). On a phone
   // it is the screen minus the gutters, and the card stretches to it, in line with the title (DQ-035).
   column: { alignSelf: 'flex-start', maxWidth: QR_COLUMN, width: '100%' },
+  // DQ-1065: QR-02 from 768 uses the content width (stage left, actions right) instead of one 368 column at the edge.
+  columnWide: { alignSelf: 'flex-start', maxWidth: layout.contentMax, width: '100%' },
   columnPhone: { alignSelf: 'stretch' },
   end: { paddingBottom: t.space[32] },
   // As HeaderLargeTitle: at least 52, the title on its lower edge, the sub-line 4 below it.
@@ -63,6 +66,8 @@ export type QrPageProps = {
    * focusable box under the bar's buttons would overlap them. The same as SettingsPage.
    */
   focusableScroll?: boolean;
+  /** From 768 the page takes the content width (QR-02's two columns, DQ-1065) instead of the QR column. */
+  wide?: boolean;
   children?: ReactNode;
 };
 
@@ -80,12 +85,13 @@ export function QrPage({
   renderList,
   onListScrollToTop,
   focusableScroll = false,
+  wide = false,
   children,
 }: QrPageProps) {
   const styles = useStyles();
   const router = useRouter();
   const online = useOnline();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const { gutter, kind } = useBreakpoint();
   const padding = useTabBarPadding();
   const header = useCollapsingHeader();
@@ -108,19 +114,20 @@ export function QrPage({
     header.collapseAt.set(CONTENT_TOP + y + height);
   };
 
-  const columnStyle = kind === 'phone' ? styles.columnPhone : styles.column;
+  const columnStyle = kind === 'phone' ? styles.columnPhone : wide ? styles.columnWide : styles.column;
+  const headerMax = wide ? layout.contentMax : QR_COLUMN;
   const contentContainerStyle = [styles.content, { paddingHorizontal: gutter }, above ? null : padding];
   const titleBlock = (
     <View style={[columnStyle, styles.titleBlock]}>
-      <Text variant="titleL" role="heading" aria-level={1} onLayout={onTitleLayout} testID={`${routeId}.title`}>
+      <Text variant="title1" role="heading" aria-level={1} onLayout={onTitleLayout} testID={`${routeId}.title`}>
         {title}
       </Text>
       {subtitle ? (
-        <Text variant="supporting" color="text.secondary" testID={`${routeId}.subtitle`}>
+        <Text variant="callout" color="text.secondary" testID={`${routeId}.subtitle`}>
           {subtitle}
         </Text>
       ) : subtitlePending ? (
-        <SkeletonText variant="supporting" width="50%" testID={`${routeId}.subtitleSkeleton`} />
+        <SkeletonText variant="callout" width="50%" testID={`${routeId}.subtitleSkeleton`} />
       ) : null}
     </View>
   );
@@ -132,7 +139,7 @@ export function QrPage({
         title={title}
         scroll={header}
         onBack={() => (router.canGoBack() ? router.back() : router.replace(fallback))}
-        contentMaxWidth={kind === 'phone' ? undefined : QR_COLUMN + 2 * gutter}
+        contentMaxWidth={kind === 'phone' ? undefined : headerMax + 2 * gutter}
         testID={`${routeId}.header`}
       />
       {online ? null : <OfflineBanner label={offlineLabel} testID={`${routeId}.offline`} />}

@@ -123,9 +123,9 @@ onMounted(async () => {
         </div>
         <template v-else>
             <ScrollRegion :label="trans('team.roles_page.caption')">
-                <table class="w-full border-collapse text-supporting" data-testid="ADM-41.table">
+                <table class="w-full border-collapse text-admin-base" data-testid="ADM-41.table">
                     <caption class="sr-only">{{ trans('team.roles_page.caption') }}</caption>
-                    <thead class="bg-surface text-left text-label-s text-ink-2">
+                    <thead class="bg-surface text-left text-admin-base-strong text-ink-2">
                         <tr class="h-40 border-b border-line-subtle">
                             <th scope="col" class="px-12">{{ trans('team.roles_page.columns.role') }}</th>
                             <th scope="col" class="px-12 text-right">{{ trans('team.roles_page.columns.atoms') }}</th>
@@ -137,8 +137,8 @@ onMounted(async () => {
                     <tbody>
                         <tr v-for="role in shown" :key="role.name" class="border-b border-line-subtle last:border-b-0" :data-testid="`ADM-41.role.${role.name}`">
                             <td class="px-12 py-8 align-top">
-                                <span class="block text-label text-ink">{{ roleLabel(role.name) }}</span>
-                                <span v-if="roleDescription(role.name, role.description)" class="block max-w-640 text-helper text-ink-3">{{ roleDescription(role.name, role.description) }}</span>
+                                <span class="block text-admin-base-strong text-ink">{{ roleLabel(role.name) }}</span>
+                                <span v-if="roleDescription(role.name, role.description)" class="block max-w-640 text-admin-base text-ink-3">{{ roleDescription(role.name, role.description) }}</span>
                             </td>
                             <td class="whitespace-nowrap px-12 py-8 text-right align-top text-ink tabular-nums">{{ role.locked ? trans('team.matrix.locked') : formatNumber(role.atoms.length) }}</td>
                             <td class="whitespace-nowrap px-12 py-8 text-right align-top text-ink tabular-nums">{{ transChoice('team.roles_page.staff_count', role.staff, { count: formatNumber(role.staff) }) }}</td>
@@ -170,7 +170,7 @@ onMounted(async () => {
                 <Field :label="trans('team.role_form.description')" :hint="trans('team.role_form.description_hint')" optional>
                     <Textarea v-model="form.description" :rows="2" :maxlength="500" show-count data-testid="ADM-41.drawer.description" />
                 </Field>
-                <p class="text-helper text-ink-2">{{ transChoice('team.role_form.atoms_count', form.atoms.length, { count: formatNumber(form.atoms.length) }) }} · {{ trans('team.role_form.sensitive') }}</p>
+                <p class="text-admin-base text-ink-2">{{ transChoice('team.role_form.atoms_count', form.atoms.length, { count: formatNumber(form.atoms.length) }) }} · {{ trans('team.role_form.sensitive') }}</p>
                 <AtomPicker v-model="form.atoms" :atoms="matrix.atoms" :sensitive="matrix.sensitive" :legend="trans('team.role_form.atoms')" test-id="ADM-41.drawer.atoms" />
                 <template v-if="fourEyes">
                     <ApprovalNotice test-id="ADM-41.drawer.four-eyes" />

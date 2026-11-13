@@ -62,6 +62,7 @@ class Staff extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password_proof_required' => 'boolean',
+            'is_sample' => 'boolean',
             'deactivated_at' => 'datetime',
             'anonymised_at' => 'datetime',
             'two_factor_pending_secret' => 'encrypted',

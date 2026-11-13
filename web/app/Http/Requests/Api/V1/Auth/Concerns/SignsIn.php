@@ -25,6 +25,8 @@ trait SignsIn
             'app_version' => ['nullable', 'string', 'max:32'],
             // The app's per-install id (a UUID kept in secure storage). Tells two devices of the same model apart; ignored without device_name.
             'device_id' => ['nullable', 'string', 'regex:'.DeviceInfo::ID_PATTERN],
+            // M4.7 (09 §8.4): the system version, for SET-06 ("Android 16").
+            'os_version' => ['nullable', 'string', 'max:40'],
         ];
     }
 
@@ -38,12 +40,14 @@ trait SignsIn
 
         $version = $this->validated('app_version');
         $id = $this->validated('device_id');
+        $os = $this->validated('os_version');
 
         return new DeviceInfo(
             $name,
             $this->enum('platform', DevicePlatform::class),
             is_string($version) ? $version : null,
             is_string($id) && $id !== '' ? $id : null,
+            is_string($os) && $os !== '' ? $os : null,
         );
     }
 

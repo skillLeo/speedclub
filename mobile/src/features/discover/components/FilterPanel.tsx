@@ -277,7 +277,7 @@ export function FilterPanel({
   const statusBlock =
     status === 'error' || status === 'offline' ? (
       <View style={styles.status} testID={`${testID}.status`}>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {status === 'offline' ? t('filters.offline') : t('filters.loadError')}
         </Text>
         {status === 'error' ? (
@@ -297,7 +297,7 @@ export function FilterPanel({
     <View style={[styles.root, surface === 'sheet' ? styles.rootSheet : null]} testID={testID}>
       {statusBlock}
       <View style={styles.group} testID={`${testID}.vehicle`}>
-        <Text variant="titleS" role="heading" {...({ 'aria-level': 3 } as object)}>
+        <Text variant="headline" role="heading" {...({ 'aria-level': 3 } as object)}>
           {t('filters.groups.vehicle')}
         </Text>
         <View style={[styles.rows, surface === 'sheet' ? styles.rowsSheet : null]}>
@@ -328,7 +328,7 @@ export function FilterPanel({
         </View>
         {filters.model && (generations.length > 0 || loading) ? (
           <View style={styles.field}>
-            <Text variant="labelS" color="text.secondary">
+            <Text variant="callout" color="text.secondary">
               {t('filters.fields.generation')}
             </Text>
             {loading && listed.length === 0 && !active ? (
@@ -366,7 +366,7 @@ export function FilterPanel({
       </View>
 
       <View style={styles.group} testID={`${testID}.power`}>
-        <Text variant="titleS" role="heading" {...({ 'aria-level': 3 } as object)}>
+        <Text variant="headline" role="heading" {...({ 'aria-level': 3 } as object)}>
           {t('filters.groups.power')}
         </Text>
         <PowerRange range={filters.power} onCommit={(range) => onChange(setRange(filters, 'power', range))} testID={testID} />
@@ -377,7 +377,7 @@ export function FilterPanel({
         if (fields.length === 0) return null;
         return (
           <View key={group.key} style={styles.group} testID={`${testID}.${group.key}`}>
-            <Text variant="titleS" role="heading" {...({ 'aria-level': 3 } as object)}>
+            <Text variant="headline" role="heading" {...({ 'aria-level': 3 } as object)}>
               {group.title}
             </Text>
             {fields.map(({ field, title }) => {
@@ -389,7 +389,7 @@ export function FilterPanel({
               const shown = [...list, ...missing];
               return (
                 <View key={field} style={styles.field}>
-                  <Text variant="labelS" color="text.secondary">
+                  <Text variant="callout" color="text.secondary">
                     {title}
                   </Text>
                   {loading && shown.length === 0 ? (

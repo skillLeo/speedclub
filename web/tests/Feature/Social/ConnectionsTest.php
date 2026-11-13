@@ -25,7 +25,7 @@ describe('GET public/users/{username}/followers and /following', function () {
 
         expect(array_column($response->json('data'), 'username'))->toBe(['neu.fan', 'alt.fan'])
             ->and($response->json('data.0'))->toBe([
-                'username' => 'neu.fan', 'display_name' => 'Neu Fan', 'city' => 'Ulm', 'avatar' => null, 'is_self' => false, 'is_following' => false,
+                'username' => 'neu.fan', 'display_name' => 'Neu Fan', 'city' => 'Ulm', 'avatar' => null, 'is_sample' => false, 'is_editorial' => false, 'is_self' => false, 'is_following' => false,
             ])
             ->and($response->json('meta.next_cursor'))->toBeNull();
 

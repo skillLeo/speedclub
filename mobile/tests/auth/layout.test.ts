@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { authHeaderInset, barNeedsStack } from '@/features/auth/components/AuthScreen';
 import { layout, space } from '@/theme';
-import { breakableEmail } from '@/features/auth/forms';
+import { identifierText } from '@/ui/textBreaks';
 import { plainSentence, splitClosingPunctuation, splitDocLink } from '@/features/auth/screens/SignUpScreen';
 import { LOGO_SHADOW_PAD, logoShadowFrame, SCRIM_FADE, scrimGeometry } from '@/features/auth/screens/WelcomeScreen';
 
@@ -155,15 +155,14 @@ describe('sticky bar of the auth stack (DQ-112)', () => {
   });
 });
 
-describe('addresses in running text (DQ-130)', () => {
-  it('may break after "@" and after a dot, never inside a part', () => {
-    expect(breakableEmail('nina.neu@speedclub.test')).toBe(
-      ['nina.', 'neu@', 'speedclub.', 'test'].join(ZERO_WIDTH_SPACE),
-    );
+describe('addresses in running text (DQ-130, DQ-927)', () => {
+  it('may break after "@" and after a dot, never inside a part or at its own hyphen', () => {
+    expect(identifierText('nina.neu@speedclub.test')).toBe(['nina.', 'neu@', 'speedclub.', 'test'].join(ZERO_WIDTH_SPACE));
+    expect(identifierText('lukas.sc@speed-club.test')).toBe(`lukas.${ZERO_WIDTH_SPACE}sc@${ZERO_WIDTH_SPACE}speed-\u2060club.${ZERO_WIDTH_SPACE}test`);
   });
 
   it('leaves an address without parts as it is', () => {
-    expect(breakableEmail('')).toBe('');
-    expect(breakableEmail('nina')).toBe('nina');
+    expect(identifierText('')).toBe('');
+    expect(identifierText('nina')).toBe('nina');
   });
 });

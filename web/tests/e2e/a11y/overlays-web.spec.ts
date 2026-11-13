@@ -233,7 +233,7 @@ test.describe('dialog double-tap guard', () => {
 });
 
 test.describe('toast on web', () => {
-  const MESSAGE = 'Fahrzeug aus deiner Garage entfernt.';
+  const MESSAGE = 'Aus deiner Garage entfernt.';
 
   test('is announced: its live region exists before it, holds its text and outlives it', async ({ page, qaGoto, byTestId }) => {
     await qaGoto(OVERLAYS);

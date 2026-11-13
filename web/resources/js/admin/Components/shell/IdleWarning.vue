@@ -48,10 +48,10 @@ function signOut(): void {
 
 <template>
     <Dialog v-model:open="open" :title="trans('shell.idle.title')" :dismissible="false" size="sm" role="alertdialog" test-id="shell.idle">
-        <p class="text-supporting text-ink-2" aria-live="polite">
+        <p class="text-admin-base text-ink-2" aria-live="polite">
             {{ trans('shell.idle.body', { time: remaining }) }}
         </p>
-        <p v-if="failed" class="mt-8 text-helper text-danger" role="alert">{{ trans('shell.idle.failed') }}</p>
+        <p v-if="failed" class="mt-8 text-admin-base text-danger" role="alert">{{ trans('shell.idle.failed') }}</p>
         <template #footer>
             <Button variant="ghost" data-testid="shell.idle.sign-out" @click="signOut">{{ trans('shell.staff.sign_out') }}</Button>
             <Button variant="primary" :loading="extending" data-testid="shell.idle.extend" @click="extend">{{ trans('shell.idle.extend') }}</Button>

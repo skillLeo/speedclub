@@ -253,6 +253,10 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('staff-two-factor-confirm', fn (Request $request): Limit => Limit::perMinute(config()->integer('speedclub.staff.two_factor_confirm_per_minute'))
             ->by('staff-two-factor-confirm|'.(string) $request->user('staff')?->getAuthIdentifier()));
 
+        // ADM-03 "Später einrichten", per account.
+        RateLimiter::for('staff-two-factor-skip', fn (Request $request): Limit => Limit::perMinute(config()->integer('speedclub.staff.two_factor_skips_per_minute', 5))
+            ->by('staff-two-factor-skip|'.(string) ($request->user('staff')?->getAuthIdentifier() ?? ClientAddress::key($request))));
+
         // Per IP only. The per-address bound counts links really sent (Staff::sendPasswordResetNotification, SEC-P1-21). A throttled
         // link request gets the neutral answer, so the limiter tells nothing either.
         RateLimiter::for('staff-password-email', fn (Request $request): array => array_map(

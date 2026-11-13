@@ -330,7 +330,7 @@ const photoTone = (photo: Photo): Tone => (photo.moderation_status === 'rejected
             test-id="ADM-12"
         >
             <template #meta>
-                <p class="flex min-h-32 flex-wrap items-center gap-8 text-supporting text-ink-2 tabular-nums">
+                <p class="flex min-h-32 flex-wrap items-center gap-8 text-admin-base text-ink-2 tabular-nums">
                     <Link v-if="vehicle.owner" :href="memberHref(vehicle.owner.id)" :class="[focusRing, 'sc-key inline-flex h-32 items-center rounded-xs text-ink hover:underline']">{{ vehicle.owner.username ? `@${vehicle.owner.username}` : '–' }}</Link>
                     <span>·</span>
                     <span class="sc-key">{{ vehicle.public_id }}</span>
@@ -392,11 +392,11 @@ v-for="item in [
                             ['updated', formatDateTime(vehicle.updated_at)],
                         ]" :key="String(item[0])" class="flex flex-col gap-2">
                             <dt class="text-caption text-ink-3">{{ trans(`vehicles.fields.${item[0]}`) }}</dt>
-                            <dd class="sc-key text-supporting text-ink tabular-nums">{{ item[1] ?? '–' }}</dd>
+                            <dd class="sc-key text-admin-base text-ink tabular-nums">{{ item[1] ?? '–' }}</dd>
                         </div>
                         <div class="flex flex-col gap-2 tablet:col-span-2">
                             <dt class="text-caption text-ink-3">{{ trans('vehicles.fields.description') }}</dt>
-                            <dd class="max-w-720 text-supporting text-ink">{{ vehicle.description ?? '–' }}</dd>
+                            <dd class="max-w-720 text-admin-base text-ink">{{ vehicle.description ?? '–' }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -423,7 +423,7 @@ v-for="item in [
                     <EmptyQueue v-if="mods.length === 0" variant="first" :title="trans('vehicles.mods.empty')" data-testid="ADM-12.mods.empty" />
                     <!-- Mod with its category (glyph + label) under the name, so no column wraps or is cut (DQ-535). -->
                     <ScrollRegion v-else :label="trans('vehicles.tabs.mods')" test-id="ADM-12.mods">
-                        <table class="w-full border-collapse text-supporting">
+                        <table class="w-full border-collapse text-admin-base">
                             <caption class="sr-only">{{ trans('vehicles.tabs.mods') }}</caption>
                             <thead>
                                 <tr class="h-40 border-b border-line text-left text-caption text-ink-2">
@@ -458,7 +458,7 @@ v-for="item in [
                 <template v-else-if="name === 'qr' && qr">
                     <EmptyQueue v-if="qr.length === 0" variant="first" :title="trans('vehicles.qr.empty')" :body="trans('vehicles.qr.empty_body')" data-testid="ADM-12.qr.empty" />
                     <ul v-else class="flex flex-col rounded-sm border border-line-subtle bg-surface" data-testid="ADM-12.qr">
-                        <li v-for="code in qr" :key="code.id" class="flex h-40 items-center gap-12 border-b border-line-subtle px-12 text-supporting last:border-b-0">
+                        <li v-for="code in qr" :key="code.id" class="flex h-40 items-center gap-12 border-b border-line-subtle px-12 text-admin-base last:border-b-0">
                             <QrCodeText :code="code.code" :href="qrHref(code.id)" />
                             <StatusPill :tone="code.status === 'active' ? 'success' : 'neutral'" :label="trans(`qr.status.${code.status}`)" />
                             <span class="min-w-0 flex-1 truncate text-ink-2" :title="code.revoked_reason ? trans(`qr.reasons.${code.revoked_reason}`) : undefined">{{ code.revoked_reason ? trans(`qr.reasons.${code.revoked_reason}`) : '' }}</span>
@@ -474,18 +474,18 @@ v-for="item in [
                     <ol v-else class="flex flex-col gap-16" data-testid="ADM-12.history">
                         <li v-for="item in history" :key="item.id" class="flex flex-col gap-2 border-l border-line pl-12">
                             <span class="text-caption text-ink-3 tabular-nums">{{ formatDate(item.created_at) }}<template v-if="item.hidden"> · {{ trans('vehicles.history.hidden') }}</template></span>
-                            <p class="text-supporting text-ink">{{ item.label ?? trans(`vehicles.history.type_${item.type}`) }}</p>
-                            <p v-if="item.before || item.after" class="text-helper text-ink-2">{{ trans('vehicles.history.change', { before: item.before ?? '–', after: item.after ?? '–' }) }}</p>
-                            <p v-if="item.note" class="text-helper text-ink-2">{{ item.note }}</p>
+                            <p class="text-admin-base text-ink">{{ item.label ?? trans(`vehicles.history.type_${item.type}`) }}</p>
+                            <p v-if="item.before || item.after" class="text-admin-base text-ink-2">{{ trans('vehicles.history.change', { before: item.before ?? '–', after: item.after ?? '–' }) }}</p>
+                            <p v-if="item.note" class="text-admin-base text-ink-2">{{ item.note }}</p>
                         </li>
                     </ol>
                 </template>
 
                 <!-- reports -->
                 <template v-else-if="name === 'reports' && reports">
-                    <p v-if="reports.length === 0" class="text-supporting text-ink-2" data-testid="ADM-12.reports.empty">{{ trans('vehicles.reports.empty') }}</p>
+                    <p v-if="reports.length === 0" class="text-admin-base text-ink-2" data-testid="ADM-12.reports.empty">{{ trans('vehicles.reports.empty') }}</p>
                     <ul v-else class="flex flex-col rounded-sm border border-line-subtle bg-surface" data-testid="ADM-12.reports">
-                        <li v-for="item in reports" :key="item.case_id" class="flex h-40 items-center gap-12 border-b border-line-subtle px-12 text-supporting last:border-b-0">
+                        <li v-for="item in reports" :key="item.case_id" class="flex h-40 items-center gap-12 border-b border-line-subtle px-12 text-admin-base last:border-b-0">
                             <component :is="caseHref(item.case_id) ? Link : 'span'" :href="caseHref(item.case_id) ?? undefined" :class="[caseHref(item.case_id) ? `${focusRing} underline underline-offset-4` : '', 'sc-key inline-flex h-32 items-center rounded-xs text-ink tabular-nums']">{{ item.case_id.slice(-8).toUpperCase() }}</component>
                             <StatusPill :tone="item.status === 'new' ? 'info' : item.status === 'in_review' ? 'warning' : 'neutral'" :label="trans(`members.reports.status_${item.status}`)" />
                             <span class="min-w-0 flex-1 truncate text-ink-2">{{ trans(`members.reports.type_${item.target_type}`) }} · {{ trans(`members.reports.origin_${item.origin}`) }}<template v-if="item.decision"> · {{ trans(`members.reports.action_${item.decision.action}`) }}</template></span>
@@ -572,7 +572,7 @@ v-for="item in [
                 </Field>
             </form>
             <template #footer>
-                <p v-if="action.error.value" class="flex basis-full items-start gap-8 rounded-sm border border-line px-12 py-8 text-supporting text-ink" role="alert">
+                <p v-if="action.error.value" class="flex basis-full items-start gap-8 rounded-sm border border-line px-12 py-8 text-admin-base text-ink" role="alert">
                     <PhWarningCircle :size="20" class="shrink-0 text-danger" aria-hidden="true" />{{ action.error.value }}
                 </p>
                 <Button variant="ghost" :disabled="action.processing.value" data-dialog-cancel @click="editOpen = false">{{ trans('ui.actions.cancel') }}</Button>

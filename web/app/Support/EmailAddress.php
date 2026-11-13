@@ -41,4 +41,18 @@ final class EmailAddress
 
         return is_string($ascii) && $ascii !== '' ? $ascii : $domain;
     }
+
+    /**
+     * M4.6 AUTH-13/AUTH-16: "s•••@gmail.com" — the first character of the local part and the domain, for "Gesendet an …".
+     */
+    public static function mask(string $email): string
+    {
+        $at = mb_strrpos($email, '@');
+
+        if ($at === false || $at === 0) {
+            return '•••';
+        }
+
+        return mb_substr($email, 0, 1).'•••'.mb_substr($email, $at);
+    }
 }

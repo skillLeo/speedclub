@@ -24,20 +24,20 @@ function deviceLabel(item: SignIn, index: number): string {
 <template>
     <div class="flex flex-col gap-32" data-testid="ADM-10.security">
         <section class="flex flex-col gap-12" :aria-label="trans('members.security.two_factor')">
-            <h2 class="text-title-s text-ink">{{ trans('members.security.two_factor') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('members.security.two_factor') }}</h2>
             <div class="flex flex-wrap items-center gap-12">
                 <StatusPill :tone="security.two_factor.on ? 'success' : 'neutral'" :label="trans(security.two_factor.on ? 'members.security.two_factor_on' : 'members.security.two_factor_off')" />
-                <span v-if="security.two_factor.confirmed_at" class="text-supporting text-ink-2 tabular-nums">{{ trans('members.security.confirmed_at', { date: formatDateTime(security.two_factor.confirmed_at) }) }}</span>
+                <span v-if="security.two_factor.confirmed_at" class="text-admin-base text-ink-2 tabular-nums">{{ trans('members.security.confirmed_at', { date: formatDateTime(security.two_factor.confirmed_at) }) }}</span>
                 <StatusPill v-if="security.two_factor.locked_at" tone="warning" :label="trans('members.security.locked', { date: formatDateTime(security.two_factor.locked_at) })" />
                 <StatusPill v-if="security.force_password_change" tone="warning" :label="trans('members.security.force_password_change')" />
             </div>
         </section>
 
         <section class="flex flex-col gap-12" :aria-label="trans('members.security.devices')">
-            <h2 class="text-title-s text-ink">{{ trans('members.security.devices') }}</h2>
-            <p v-if="security.devices.length === 0" class="text-supporting text-ink-2">{{ trans('members.security.no_devices') }}</p>
+            <h2 class="text-headline text-ink">{{ trans('members.security.devices') }}</h2>
+            <p v-if="security.devices.length === 0" class="text-admin-base text-ink-2">{{ trans('members.security.no_devices') }}</p>
             <ScrollRegion v-else :label="trans('members.security.devices')">
-                <table class="w-full border-collapse text-supporting">
+                <table class="w-full border-collapse text-admin-base">
                     <caption class="sr-only">{{ trans('members.security.devices') }}</caption>
                     <thead>
                         <tr class="h-40 border-b border-line text-left text-caption text-ink-2">
@@ -67,11 +67,11 @@ function deviceLabel(item: SignIn, index: number): string {
         </section>
 
         <section class="flex flex-col gap-12" :aria-label="trans('members.security.sign_ins')">
-            <h2 class="text-title-s text-ink">{{ trans('members.security.sign_ins') }}</h2>
-            <p class="text-helper text-ink-3">{{ trans('members.security.sign_ins_note') }}</p>
-            <p v-if="security.sign_ins.length === 0" class="text-supporting text-ink-2">{{ trans('members.security.no_sign_ins') }}</p>
+            <h2 class="text-headline text-ink">{{ trans('members.security.sign_ins') }}</h2>
+            <p class="text-admin-base text-ink-3">{{ trans('members.security.sign_ins_note') }}</p>
+            <p v-if="security.sign_ins.length === 0" class="text-admin-base text-ink-2">{{ trans('members.security.no_sign_ins') }}</p>
             <ol v-else class="flex flex-col rounded-sm border border-line-subtle bg-surface">
-                <li v-for="(item, index) in security.sign_ins" :key="index" class="flex h-40 items-center justify-between gap-12 border-b border-line-subtle px-12 text-supporting last:border-b-0">
+                <li v-for="(item, index) in security.sign_ins" :key="index" class="flex h-40 items-center justify-between gap-12 border-b border-line-subtle px-12 text-admin-base last:border-b-0">
                     <span class="text-ink">{{ deviceLabel(item, index) }}</span>
                     <span class="text-ink-2 tabular-nums">{{ trans('members.security.seen', { first: formatDateTime(item.first_seen_at), last: formatDateTime(item.last_seen_at) }) }}</span>
                 </li>

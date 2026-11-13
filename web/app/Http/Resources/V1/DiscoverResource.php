@@ -46,6 +46,25 @@ class DiscoverResource extends JsonResource
              * @var list<MemberSearchResource>|null
              */
             'similar_members' => $page->similarMembers === null ? null : MemberSearchResource::collection($page->similarMembers),
+            /**
+             * M4.8 "Beliebte Modelle": at most 8 models with the most builds the reader may see. Empty hides the section.
+             *
+             * @var list<PopularModelResource>
+             */
+            'popular_models' => PopularModelResource::collection($page->popularModels),
+            /**
+             * M4.8 "Treffen am Wochenende": at most 6 events of the coming Saturday and Sunday (Europe/Berlin), soonest first; empty while
+             * `events` is off.
+             *
+             * @var list<EventCardResource>
+             */
+            'weekend_events' => EventCardResource::collection($page->weekendEvents),
+            /**
+             * M4.8 "Neu": the 8 newest builds the reader may see (as `home/new-builds`).
+             *
+             * @var list<FeedVehicleResource>
+             */
+            'newest' => FeedVehicleResource::collection($page->newest),
         ];
     }
 }

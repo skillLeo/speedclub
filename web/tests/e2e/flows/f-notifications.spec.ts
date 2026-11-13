@@ -82,6 +82,21 @@ async function expectStartBadges(page: Page, unread: number): Promise<void> {
   }
 }
 
+/** "Alle als gelesen markieren" lives in the header menu (09 §7.4): opened, checked, closed again. */
+async function expectReadAll(page: Page, state: 'enabled' | 'disabled'): Promise<void> {
+  await id(page, 'HOME-02.menu').click();
+  const item = id(page, 'HOME-02.menu.menu.readAll');
+  if (state === 'enabled') await expect(item).toBeEnabled();
+  else await expect(item).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await expect(anyWithId(page, 'HOME-02.menu.menu.readAll')).toHaveCount(0);
+}
+
+async function readAllFromMenu(page: Page): Promise<void> {
+  await id(page, 'HOME-02.menu').click();
+  await id(page, 'HOME-02.menu.menu.readAll').click();
+}
+
 test.describe('F-notifications: HOME-02', () => {
   test('a new follower: the row, the bell dot and the Start badge; opening it reads it and opens PROF-02; a second follower the same day joins the row; Alle als gelesen clears the dots', async ({
     page,
@@ -97,7 +112,8 @@ test.describe('F-notifications: HOME-02', () => {
     await open(page, '/app/notifications');
     await expect(id(page, 'HOME-02.empty')).toBeVisible();
     await expect(id(page, 'HOME-02.empty.title')).toHaveText(de('home', 'notifications.emptyTitle'));
-    await expect(anyWithId(page, 'HOME-02.readAll')).toHaveCount(0);
+    await expect(anyWithId(page, 'HOME-02.filters')).toHaveCount(0);
+    await expectReadAll(page, 'disabled');
     await expectStartBadges(page, 0);
 
     // The first follow writes one unread new_follower row.
@@ -117,7 +133,7 @@ test.describe('F-notifications: HOME-02', () => {
     await expect.poll(() => pathOf(page)).toBe('/app/notifications');
     await expectText(id(page, `HOME-02.row.${row.id}.text`), de('home', 'notifications.text.newFollower', { actor: `@${first.username}` }));
     await expect(id(page, `HOME-02.row.${row.id}.unread`)).toBeVisible();
-    await expect(id(page, 'HOME-02.readAll')).toBeEnabled();
+    await expectReadAll(page, 'enabled');
 
     // Opening the row marks it read and opens the follower's PROF-02.
     const marked = page.waitForResponse(isCall('PATCH', `notifications/${row.id}`));
@@ -131,7 +147,7 @@ test.describe('F-notifications: HOME-02', () => {
     await page.goBack();
     await expect(id(page, `HOME-02.row.${row.id}`)).toBeVisible();
     await expect(anyWithId(page, `HOME-02.row.${row.id}.unread`)).toHaveCount(0);
-    await expect(id(page, 'HOME-02.readAll')).toBeDisabled();
+    await expectReadAll(page, 'disabled');
 
     // A second follower the same Berlin day joins the same row, newest first, and makes it unread again.
     await follow(second, recipient.username);
@@ -150,10 +166,10 @@ test.describe('F-notifications: HOME-02', () => {
 
     // "Alle als gelesen markieren": the mark goes, the button turns off, and Start has no dot left.
     const readAll = page.waitForResponse(isCall('POST', 'notifications/read-all'));
-    await id(page, 'HOME-02.readAll').click();
+    await readAllFromMenu(page);
     expect((await readAll).status()).toBe(204);
     await expect(anyWithId(page, `HOME-02.row.${row.id}.unread`)).toHaveCount(0);
-    await expect(id(page, 'HOME-02.readAll')).toBeDisabled();
+    await expectReadAll(page, 'disabled');
     state = await inbox(recipient);
     expect(state.unread).toBe(0);
     expect(state.rows.every((r) => r.read_at !== null)).toBe(true);
@@ -226,7 +242,9 @@ test.describe('F-notifications: HOME-02', () => {
     await expect(id(page, 'HOME-02.guest')).toBeVisible();
     await expect(id(page, 'HOME-02.guest.title')).toHaveText(de('home', 'notifications.guest.title'));
     await id(page, 'HOME-02.guest.action').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
+    // M4.6 (09 §7.2): signing in starts passwordless, at AUTH-12 Mit E-Mail fortfahren.
+    await expect(id(page, 'AUTH-12.root')).toBeVisible();
+    await page.waitForLoadState('networkidle');
     expect(new URL(page.url()).searchParams.get('returnTo')).toBe('/notifications');
   });
 });

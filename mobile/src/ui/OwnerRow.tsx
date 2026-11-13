@@ -6,6 +6,7 @@ import { createStyles, size, space, useBreakpoint } from '@/theme';
 
 import { Avatar } from './Avatar';
 import { WithoutForcedState } from './qaVisualState';
+import { SampleBadges, useSampleBadgeLabels, type SampleFlags } from './Badge';
 import { joinLabel, RowBody, useRowInset, useStacksAtFontScale, type RowInset } from './rowParts';
 import { Text } from './Text';
 
@@ -15,6 +16,8 @@ export type OwnerRowProps = {
   meta?: string;
   avatarUri?: string | null;
   avatarBlurhash?: string | null;
+  /** API flags of the owner (09 §8.19): "Editorial" for the account that owns the sample builds. */
+  sample?: SampleFlags;
   /** Opens the profile. */
   onPress?: () => void;
   /** FS-3: "Folgen" (secondary M) and "Nachricht" (primary M). */
@@ -49,6 +52,7 @@ const useStyles = createStyles((t) => ({
   // DQ-053: the pressed fill has the corners of the focus ring around it.
   identity: { alignItems: 'center', borderRadius: t.radius.sm, flexDirection: 'row', gap: t.space[12], padding: t.space[8] },
   text: { flex: 1, minWidth: 0 },
+  badges: { marginTop: t.space[4] },
   actions: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
   actionsInline: { flexShrink: 0 },
   // Stacked, the box keeps the width of its buttons, so the measure does not change with the layout it decides.
@@ -62,7 +66,8 @@ const useStyles = createStyles((t) => ({
  * FS-3 owner row: avatar 40, `body.strong` name, `supporting` meta, the two actions trailing. In a narrow row or at a
  * large font the actions move under the name, because beside them the username would break inside the word.
  */
-export function OwnerRow({ name, meta, avatarUri, avatarBlurhash, onPress, actions, widestActions, inset, style, testID }: OwnerRowProps) {
+export function OwnerRow({ name, meta, avatarUri, avatarBlurhash, sample, onPress, actions, widestActions, inset, style, testID }: OwnerRowProps) {
+  const sampleLabels = useSampleBadgeLabels(sample);
   const styles = useStyles();
   const side = useRowInset(inset);
   const { width } = useBreakpoint();
@@ -85,7 +90,7 @@ export function OwnerRow({ name, meta, avatarUri, avatarBlurhash, onPress, actio
     >
       <RowBody
         onPress={onPress}
-        label={joinLabel([name, meta])}
+        label={joinLabel([name, ...sampleLabels, meta])}
         boxStyle={[styles.box, stacked ? null : styles.boxInline]}
         style={styles.identity}
         testID={testID ? `${testID}.identity` : undefined}
@@ -94,10 +99,11 @@ export function OwnerRow({ name, meta, avatarUri, avatarBlurhash, onPress, actio
         <View style={styles.text}>
           <Text variant="bodyStrong">{name}</Text>
           {meta ? (
-            <Text variant="supporting" color="text.secondary" hyphenate={false}>
+            <Text variant="callout" color="text.secondary" hyphenate={false}>
               {keepValuesTogether(meta, !largeFont)}
             </Text>
           ) : null}
+          <SampleBadges flags={sample} style={styles.badges} testID={testID ? `${testID}.sample` : undefined} />
         </View>
       </RowBody>
       {actions ? (

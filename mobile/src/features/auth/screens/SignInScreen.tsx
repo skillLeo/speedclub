@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { View, type TextInput as RNTextInput } from 'react-native';
 
 import { ApiError } from '@/api/client';
+import { useFlag } from '@/api/queries/appConfig';
 import { useLogin } from '@/api/queries/auth';
 import { Button } from '@/ui';
 
@@ -13,6 +14,7 @@ import { AuthScreen, FooterLink } from '../components/AuthScreen';
 import { EMAIL_INPUT, FormField } from '../components/FormField';
 import { FormNotice } from '../components/FormNotice';
 import { handEmailTo, useHandedEmail } from '../emailHandoff';
+import { armPasskeyOffer, disarmPasskeyOffer } from '../passkeyOffer';
 import { holdTwoFactorChallenge } from '../twoFactorChallenge';
 import { applyServerErrors, formatWait, isCode, onlyEmailDirty, useCountdown, useLeaveForm, useReturnToParam } from '../forms';
 import { signInSchema, type SignInValues } from '../schemas';
@@ -26,6 +28,7 @@ export function SignInScreen() {
   const handedEmail = useHandedEmail('/sign-in', params.email);
   const passwordRef = useRef<ComponentRef<typeof RNTextInput>>(null);
   const login = useLogin();
+  const passkeysOn = useFlag('auth.passkeys');
   const [notice, setNotice] = useState<string | null>(null);
   const wait = useCountdown();
   const { leaving, leave } = useLeaveForm();
@@ -40,6 +43,8 @@ export function SignInScreen() {
 
   const onSubmit = handleSubmit(async (values) => {
     setNotice(null);
+    // M4.6 AUTH-14: a device that can hold a passkey gets the offer after this sign-in.
+    await armPasskeyOffer(passkeysOn);
     try {
       const answer = await login.mutateAsync(values);
       if (answer.kind === 'two_factor') {
@@ -48,6 +53,7 @@ export function SignInScreen() {
         leave('/two-factor');
       }
     } catch (error) {
+      disarmPasskeyOffer();
       if (isCode(error, 'password_change_required')) {
         // A mandatory way on (ADR-137): whatever was typed, nothing asks.
         handEmailTo('/reset-password', values.email);
@@ -76,6 +82,7 @@ export function SignInScreen() {
     <AuthScreen
       routeId="AUTH-03"
       signInStep
+      skeletonFields={2}
       title={t('signIn.title')}
       dirty={isDirty && !leaving && !login.isPending && !login.isSuccess}
       cta={{ label: t('signIn.submit'), onPress: () => void onSubmit(), loading: login.isPending, disabled: wait.remaining > 0 }}

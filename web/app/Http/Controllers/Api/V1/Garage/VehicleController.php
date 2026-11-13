@@ -51,7 +51,7 @@ class VehicleController extends Controller
         return VehicleCardResource::collection(
             $user->vehicles()
                 ->with(VehicleCardResource::RELATIONS)
-                ->withCount('modifications')
+                ->withCount(['modifications', 'buildUpdates'])
                 ->orderByDesc('is_main')
                 ->orderBy('sort')
                 ->orderBy('id')
@@ -191,7 +191,7 @@ class VehicleController extends Controller
         $action->handle($user, $ids);
 
         return VehicleCardResource::collection(
-            $user->vehicles()->with(VehicleCardResource::RELATIONS)->withCount('modifications')->orderByDesc('is_main')->orderBy('sort')->orderBy('id')->get()
+            $user->vehicles()->with(VehicleCardResource::RELATIONS)->withCount(['modifications', 'buildUpdates'])->orderByDesc('is_main')->orderBy('sort')->orderBy('id')->get()
         );
     }
 

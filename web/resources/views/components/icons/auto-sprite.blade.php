@@ -202,4 +202,254 @@
     <path d="M64,208L192,208A8,8,0,0,0,192,192L64,192A8,8,0,0,0,64,208Z" />
     <path d="M120,56L120,200A8,8,0,0,0,136,200L136,56A8,8,0,0,0,120,56Z" />
   </symbol>
+  <symbol id="auto-supercharger" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="48" y="72" width="160" height="88" rx="12" />
+    <circle cx="100" cy="116" r="20" />
+    <circle cx="156" cy="116" r="20" />
+    <path d="M104,72V40H152V72" />
+    <path d="M80,160L72,200M176,160L184,200" />
+    <line x1="48" y1="208" x2="208" y2="208" />
+  </symbol>
+  <symbol id="auto-intercooler" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="48" y="64" width="160" height="128" rx="12" />
+    <line x1="80" y1="64" x2="80" y2="192" />
+    <line x1="176" y1="64" x2="176" y2="192" />
+    <line x1="80" y1="96" x2="176" y2="96" />
+    <line x1="80" y1="128" x2="176" y2="128" />
+    <line x1="80" y1="160" x2="176" y2="160" />
+    <line x1="48" y1="96" x2="32" y2="96" />
+    <line x1="208" y1="160" x2="224" y2="160" />
+  </symbol>
+  <symbol id="auto-fuel" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="48" y="40" width="96" height="176" rx="12" />
+    <rect x="72" y="72" width="48" height="40" rx="4" />
+    <path d="M144,96h24a16,16,0,0,1,16,16v64a16,16,0,0,0,32,0V88L192,64" />
+    <line x1="32" y1="216" x2="160" y2="216" />
+  </symbol>
+  <symbol id="auto-cooling" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M108,124V52a20,20,0,0,1,40,0v72" />
+    <circle cx="128" cy="148" r="28" />
+    <line x1="164" y1="64" x2="192" y2="64" />
+    <line x1="164" y1="96" x2="192" y2="96" />
+    <path d="M40,208c12-10,24-10,36,0s24,10,36,0s24-10,36,0s24,10,36,0s24-10,36,0" />
+  </symbol>
+  <symbol id="auto-oil" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M40,112H148l32,24 44-32-36,88H40Z" />
+    <path d="M80,112V80h40v32" />
+    <line x1="40" y1="112" x2="32" y2="80" />
+    <circle cx="216" cy="180" r="6" />
+  </symbol>
+  <symbol id="auto-brake-caliper" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="112" cy="144" r="56" />
+    <circle cx="112" cy="144" r="16" />
+    <path d="M174,70A96,96,0,0,1,174,218L158,199A72,72,0,0,0,158,89Z" />
+  </symbol>
+  <symbol id="auto-splitter-diffuser" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M224,72H136L72,120H48a16,16,0,0,0-16,16v32H224" />
+    <line x1="32" y1="208" x2="176" y2="208" />
+    <line x1="72" y1="168" x2="72" y2="208" />
+    <line x1="136" y1="168" x2="136" y2="208" />
+  </symbol>
+  <symbol id="auto-body-kit" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M52,176H32V136l40-16 32-40h56l32,40h24v56h-8" />
+    <circle cx="76" cy="176" r="24" />
+    <circle cx="184" cy="176" r="24" />
+    <line x1="100" y1="176" x2="160" y2="176" />
+    <line x1="108" y1="208" x2="152" y2="208" />
+  </symbol>
+  <symbol id="auto-wrap-paint" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="48" y="104" width="104" height="120" rx="16" />
+    <rect x="80" y="64" width="40" height="40" rx="6" />
+    <line x1="48" y1="148" x2="152" y2="148" />
+    <line x1="144" y1="72" x2="192" y2="40" />
+    <line x1="144" y1="84" x2="216" y2="84" />
+    <line x1="144" y1="96" x2="192" y2="128" />
+  </symbol>
+  <symbol id="auto-steering-wheel" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="128" cy="128" r="96" />
+    <circle cx="128" cy="128" r="24" />
+    <line x1="40" y1="128" x2="104" y2="128" />
+    <line x1="152" y1="128" x2="216" y2="128" />
+    <line x1="128" y1="152" x2="128" y2="216" />
+    <line x1="128" y1="32" x2="128" y2="48" />
+  </symbol>
+  <symbol id="auto-roll-cage" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48,208V112L96,48H160L208,112V208" />
+    <line x1="48" y1="112" x2="208" y2="112" />
+    <line x1="48" y1="208" x2="208" y2="112" />
+    <line x1="96" y1="48" x2="128" y2="112" />
+  </symbol>
+  <symbol id="auto-electronics" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="56" y="40" width="144" height="96" rx="12" />
+    <line x1="96" y1="136" x2="96" y2="216" />
+    <line x1="128" y1="136" x2="128" y2="216" />
+    <line x1="160" y1="136" x2="160" y2="216" />
+    <line x1="100" y1="88" x2="156" y2="88" />
+  </symbol>
+  <symbol id="auto-clutch" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="128" cy="128" r="96" />
+    <circle cx="128" cy="128" r="28" />
+    <circle cx="128" cy="68" r="12" />
+    <circle cx="188" cy="128" r="12" />
+    <circle cx="128" cy="188" r="12" />
+    <circle cx="68" cy="128" r="12" />
+  </symbol>
+  <symbol id="auto-differential" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="128" cy="136" r="64" />
+    <circle cx="128" cy="136" r="24" />
+    <line x1="40" y1="136" x2="64" y2="136" />
+    <line x1="192" y1="136" x2="216" y2="136" />
+    <line x1="128" y1="72" x2="128" y2="40" />
+    <line x1="104" y1="40" x2="152" y2="40" />
+  </symbol>
+  <symbol id="auto-chassis-brace" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="64" cy="96" r="28" />
+    <circle cx="192" cy="96" r="28" />
+    <line x1="92" y1="96" x2="164" y2="96" />
+    <line x1="64" y1="124" x2="64" y2="184" />
+    <line x1="192" y1="124" x2="192" y2="184" />
+    <line x1="36" y1="184" x2="92" y2="184" />
+    <line x1="164" y1="184" x2="220" y2="184" />
+    <line x1="64" y1="152" x2="192" y2="152" />
+    <circle cx="64" cy="96" r="4" />
+    <circle cx="192" cy="96" r="4" />
+  </symbol>
+  <symbol id="auto-ev-battery" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="40" y="72" width="176" height="120" rx="12" />
+    <line x1="80" y1="72" x2="80" y2="48" />
+    <line x1="176" y1="72" x2="176" y2="48" />
+    <line x1="64" y1="132" x2="96" y2="132" />
+    <line x1="80" y1="116" x2="80" y2="148" />
+    <line x1="160" y1="132" x2="192" y2="132" />
+  </symbol>
+  <symbol id="auto-ev-plug" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="128" cy="144" r="80" />
+    <circle cx="96" cy="120" r="4" />
+    <circle cx="160" cy="120" r="4" />
+    <circle cx="128" cy="152" r="4" />
+    <circle cx="96" cy="176" r="4" />
+    <circle cx="160" cy="176" r="4" />
+    <line x1="128" y1="64" x2="128" y2="32" />
+  </symbol>
+  <symbol id="auto-garage-bay" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32,216V104L128,48L224,104V216" />
+    <path d="M64,216V136H192V216" />
+    <line x1="64" y1="168" x2="192" y2="168" />
+    <line x1="64" y1="192" x2="192" y2="192" />
+  </symbol>
+  <symbol id="auto-qr-sticker" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M160,216H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200a16,16,0,0,1,16,16V160Z" />
+    <path d="M160,216V176a16,16,0,0,1,16-16h40" />
+    <rect x="72" y="72" width="40" height="40" rx="4" />
+    <rect x="144" y="72" width="40" height="40" rx="4" />
+    <rect x="72" y="144" width="40" height="40" rx="4" />
+  </symbol>
+  <symbol id="auto-dyno" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M40,40V216H216" />
+    <path d="M72,184C112,176 136,96 208,72" />
+    <path d="M72,144C120,128 160,120 208,136" />
+  </symbol>
+  <symbol id="auto-hu-plakette" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="128" cy="128" r="96" />
+    <circle cx="128" cy="128" r="32" />
+    <line x1="128" y1="70" x2="128" y2="54" />
+    <line x1="157" y1="77.8" x2="165" y2="63.9" />
+    <line x1="178.2" y1="99" x2="192.1" y2="91" />
+    <line x1="186" y1="128" x2="202" y2="128" />
+    <line x1="178.2" y1="157" x2="192.1" y2="165" />
+    <line x1="157" y1="178.2" x2="165" y2="192.1" />
+    <line x1="128" y1="186" x2="128" y2="202" />
+    <line x1="99" y1="178.2" x2="91" y2="192.1" />
+    <line x1="77.8" y1="157" x2="63.9" y2="165" />
+    <line x1="70" y1="128" x2="54" y2="128" />
+    <line x1="77.8" y1="99" x2="63.9" y2="91" />
+    <line x1="99" y1="77.8" x2="91" y2="63.9" />
+  </symbol>
+  <symbol id="auto-service-wrench" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M157,32a53,53,0,0,0-48,73L39,175a22,22,0,0,0,31,31l70-70a53,53,0,0,0,73-48l-35,35-26-9-9-26Z" />
+    <path d="M216,192l-12,20.8H180L168,192l12-20.8H204Z" />
+  </symbol>
+  <symbol id="auto-tyre-season" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="104" cy="152" r="64" />
+    <circle cx="104" cy="152" r="28" />
+    <path d="M144,96L180,40L216,96Z" />
+  </symbol>
+  <symbol id="auto-insurance" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48,64v48c0,64,48,96,80,104c32-8,80-40,80-104V64L128,40Z" />
+    <path d="M96,128l24,24 48-48" />
+  </symbol>
+  <symbol id="auto-workshop" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32,216V96L80,64V96L128,64V96L176,64V96L224,64V216Z" />
+    <path d="M96,216V160H160V216" />
+  </symbol>
+  <symbol id="auto-part-box" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128,32L216,80V176L128,224L40,176V80Z" />
+    <path d="M40,80L128,128L216,80" />
+    <line x1="128" y1="128" x2="128" y2="224" />
+    <line x1="84" y1="56" x2="172" y2="104" />
+  </symbol>
+  <symbol id="auto-meet" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128,224s-72-56-72-120a72,72,0,0,1,144,0c0,64-72,120-72,120Z" />
+    <path d="M96,124V104l12-20h40l12,20v20Z" />
+  </symbol>
+  <symbol id="auto-cruise-route" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="48" cy="200" r="16" />
+    <circle cx="48" cy="56" r="16" />
+    <path d="M64,200H176a24,24,0,0,0,0-48H80a24,24,0,0,1,0-48H176a24,24,0,0,0,0-48H64" />
+  </symbol>
+  <symbol id="auto-track-day" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="56" y1="224" x2="56" y2="40" />
+    <path d="M56,48H200v96H56" />
+    <line x1="104" y1="48" x2="104" y2="144" />
+    <line x1="152" y1="48" x2="152" y2="144" />
+    <line x1="56" y1="96" x2="200" y2="96" />
+  </symbol>
+  <symbol id="auto-strong" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M46,168A88,88,0,1,1,210,168" />
+    <line x1="128" y1="136" x2="184" y2="92" />
+    <circle cx="128" cy="136" r="16" />
+    <line x1="72" y1="208" x2="184" y2="208" />
+    <line x1="68" y1="128" x2="84" y2="128" />
+    <line x1="128" y1="68" x2="128" y2="84" />
+    <line x1="88" y1="88" x2="98" y2="98" />
+  </symbol>
+  <symbol id="auto-strong-fill" viewBox="0 0 256 256" fill="currentColor">
+    <path d="M39,172A96,96,0,1,1,217,172Z M114,136a14,14,0,1,0,28,0a14,14,0,1,0,-28,0Z M151.3,127L189.4,97.7L180.8,86.6L142.7,115.9Z" fill-rule="evenodd" />
+    <rect x="64" y="192" width="128" height="16" rx="8" />
+  </symbol>
+  <symbol id="auto-clean" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M112,40C92,60 36,104 36,148a76,76,0,0,0,152,0C188,104,132,60,112,40Z" />
+    <path d="M76,148a36,36,0,0,0,36,36" />
+    <path d="M200,40c-6,9-20,26-20,38a20,20,0,0,0,40,0c0-12-14-29-20-38Z" />
+  </symbol>
+  <symbol id="auto-clean-fill" viewBox="0 0 256 256" fill="currentColor">
+    <path d="M112,32C90,54 28,100 28,148a84,84,0,0,0,168,0C196,100,134,54,112,32Z M68,148A44,44,0,0,0,112,192V176A28,28,0,0,1,84,148Z" fill-rule="evenodd" />
+    <path d="M200,32c-7,10-28,30-28,46a28,28,0,0,0,56,0c0-16-21-36-28-46Z" />
+  </symbol>
+  <symbol id="auto-low" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M52,168H32V144L72,128L104,96H168L200,128H216a8,8,0,0,1,8,8v32H204a24,24,0,0,0-48,0H100a24,24,0,0,0-48,0Z" />
+    <circle cx="76" cy="176" r="14" />
+    <circle cx="180" cy="176" r="14" />
+    <line x1="32" y1="208" x2="224" y2="208" />
+  </symbol>
+  <symbol id="auto-low-fill" viewBox="0 0 256 256" fill="currentColor">
+    <path d="M48,176H24V138L68,120L100,88H172L204,120H216a16,16,0,0,1,16,16v40H208a28,28,0,0,0-56,0H104a28,28,0,0,0-56,0Z" />
+    <circle cx="76" cy="180" r="20" />
+    <circle cx="180" cy="180" r="20" />
+    <rect x="24" y="204" width="208" height="12" rx="6" />
+  </symbol>
+  <symbol id="auto-loud" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="32" y1="104" x2="88" y2="104" />
+    <line x1="32" y1="152" x2="88" y2="152" />
+    <path d="M88,104A12,24,0,0,1,88,152A12,24,0,0,1,88,104Z" />
+    <path d="M136.1,92.3A48,48,0,0,1,136.1,163.7" />
+    <path d="M157.5,68.5A80,80,0,0,1,157.5,187.5" />
+    <path d="M178.9,44.8A112,112,0,0,1,178.9,211.2" />
+  </symbol>
+  <symbol id="auto-loud-fill" viewBox="0 0 256 256" fill="currentColor">
+    <path d="M24,96H88A20,32,0,0,1,88,160H24Z M88,108A8,20,0,0,0,88,148A8,20,0,0,0,88,108Z" fill-rule="evenodd" />
+    <path d="M141.5,86.4A56,56,0,0,1,141.5,169.6L130.8,157.7A40,40,0,0,0,130.8,98.3Z" />
+    <path d="M162.9,62.6A88,88,0,0,1,162.9,193.4L152.2,181.5A72,72,0,0,0,152.2,74.5Z" />
+    <path d="M184.3,38.8A120,120,0,0,1,184.3,217.2L173.6,205.3A104,104,0,0,0,173.6,50.7Z" />
+  </symbol>
 </svg>

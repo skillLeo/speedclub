@@ -28,7 +28,7 @@ function ArticleSkeleton() {
   return (
     <Skeleton testID={`${ROUTE}.article.skeleton`}>
       <View style={styles.heading}>
-        <SkeletonText variant="titleL" width="60%" />
+        <SkeletonText variant="title1" width="60%" />
       </View>
       <SkeletonText variant="body" lines={4} />
       <View style={styles.skeletonSection}>
@@ -83,7 +83,7 @@ export function HelpArticleScreen() {
     body = (
       <View testID={`${ROUTE}.article.${article.key}`}>
         <Text
-          variant="titleL"
+          variant="title1"
           role="heading"
           {...({ 'aria-level': 1 } as object)}
           style={styles.heading}

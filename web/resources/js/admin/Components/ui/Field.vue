@@ -28,12 +28,12 @@ provideField({
 
 <template>
     <div class="flex flex-col gap-4">
-        <label :for="id" class="flex items-baseline gap-4 text-label-s text-ink" :class="hideLabel ? 'sr-only' : ''">
+        <label :for="id" class="flex items-baseline gap-4 text-admin-base-strong text-ink" :class="hideLabel ? 'sr-only' : ''">
             {{ label }}
-            <span v-if="optional" class="text-helper text-ink-3">{{ trans('ui.field.optional') }}</span>
+            <span v-if="optional" class="text-admin-base text-ink-3">{{ trans('ui.field.optional') }}</span>
         </label>
         <slot :id="id" :described-by="describedBy" :invalid="Boolean(error)" />
-        <p v-if="hint && !error" :id="`${id}-hint`" class="text-helper text-ink-3">{{ hint }}</p>
-        <p v-if="error" :id="`${id}-error`" class="text-helper text-danger" role="alert">{{ error }}</p>
+        <p v-if="hint && !error" :id="`${id}-hint`" class="text-admin-base text-ink-3">{{ hint }}</p>
+        <p v-if="error" :id="`${id}-error`" class="text-admin-base text-danger" role="alert">{{ error }}</p>
     </div>
 </template>

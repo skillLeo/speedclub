@@ -13,11 +13,11 @@ require_once dirname(__DIR__).'/Garage/GarageTestHelpers.php';
 const STICKER_TEXT_WIDTH_PT = 252.3;
 
 /**
- * The width of a text in Barlow Semi Condensed Bold, read from the font, not from what the code under test measures.
+ * The width of a text in Inter Display SemiBold, read from the font, not from what the code under test measures.
  */
 function stickerHandleWidth(string $text, float $size): float
 {
-    $font = Font::load(resource_path('fonts/BarlowSemiCondensed-Bold.ttf'));
+    $font = Font::load(resource_path('fonts/InterDisplay-SemiBold.ttf'));
     $font->parse();
     $map = $font->getUnicodeCharMap();
     $advances = $font->getData('hmtx');
@@ -66,10 +66,11 @@ it('shrinks the widest name until it fits, on one page, in both languages', func
     $data = app(QrSticker::class)->viewData($qr);
     $pdf = app(QrSticker::class)->pdf($qr);
 
-    expect($data['username_size'])->toBe(13)
+    expect($data['username_size'])->toBe(11)
         ->and(stickerHandleWidth('@'.str_repeat('m', 24), $data['username_size']))->toBeLessThanOrEqual(STICKER_TEXT_WIDTH_PT)
+        ->and(stickerHandleWidth('@'.str_repeat('m', 24), $data['username_size'] + 1))->toBeGreaterThan(STICKER_TEXT_WIDTH_PT)
         ->and(preg_match_all('~/Type\s*/Page\b(?!s)~', $pdf))->toBe(1)
-        ->and(stickerFontSizes($pdf))->toContain(13.0)
+        ->and(stickerFontSizes($pdf))->toContain(11.0)
         ->and(stickerFontSizes($pdf))->not->toContain(22.0);
 })->with(['de', 'en']);
 
@@ -81,9 +82,9 @@ it('fits a realistic long name, by as little as it needs', function (string $use
     expect($data['username_size'])->toBe($size)
         ->and(stickerHandleWidth('@'.$username, $size))->toBeLessThanOrEqual(STICKER_TEXT_WIDTH_PT);
 })->with([
-    'wide letters' => ['wwwwwwwwwwwwwwwwwwwwwwww', 14],
-    'cut off before' => ['bmw_m_power_werkstatt_mw', 18],
-    'past the margin before' => ['wolfgang.mmw.werkstatt_w', 20],
+    'wide letters' => ['wwwwwwwwwwwwwwwwwwwwwwww', 12],
+    'cut off before' => ['bmw_m_power_werkstatt_mw', 16],
+    'past the margin before' => ['wolfgang.mmw.werkstatt_w', 18],
 ]);
 
 it('leaves a normal name at 22 pt', function (string $username) {
@@ -99,7 +100,7 @@ it('keeps the line height of 26 pt, so the sheet does not move', function () {
     $html = view('pdf.qr-sticker', app(QrSticker::class)->viewData($qr))->render();
 
     expect($html)->toContain('line-height: 26pt')
-        ->and($html)->toContain('class="username" style="font-size: 13pt"');
+        ->and($html)->toContain('class="username" style="font-size: 11pt"');
 });
 
 it('needs no size without a name on the sheet', function () {

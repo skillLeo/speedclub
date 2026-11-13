@@ -23,7 +23,7 @@ const useStyles = createStyles((t) => ({
 export function RuleList({ rules, testID }: { rules: readonly Rule[]; testID?: string }) {
   const { t } = useTranslation('auth');
   const styles = useStyles();
-  const iconBox = useFirstLineBox('helper');
+  const iconBox = useFirstLineBox('caption');
   return (
     <View style={styles.list} role="list" testID={testID}>
       {rules.map((rule) => (
@@ -38,7 +38,7 @@ export function RuleList({ rules, testID }: { rules: readonly Rule[]; testID?: s
           <View style={iconBox}>
             <Icon name={rule.met ? 'check' : 'minus'} size={16} color={rule.met ? 'text.primary' : 'text.tertiary'} />
           </View>
-          <Text variant="helper" color={rule.met ? 'text.primary' : 'text.secondary'} style={styles.text}>
+          <Text variant="caption" color={rule.met ? 'text.primary' : 'text.secondary'} style={styles.text}>
             {rule.label}
           </Text>
         </View>

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { formatDistance, formatTorqueIn, formatWeight, useDisplayUnits, type DisplayUnits } from './displayUnits';
 import * as format from './format';
 import { usePowerDisplayPreference } from './powerDisplay';
 import * as units from './units';
@@ -11,19 +12,25 @@ export function toFormatLocale(language: string | undefined): Locale {
   return language?.toLowerCase().startsWith('en') ? 'en' : 'de';
 }
 
-function createFormatters(locale: Locale, powerDisplay: units.PowerDisplay) {
+function createFormatters(locale: Locale, powerDisplay: units.PowerDisplay, display: DisplayUnits) {
   return {
     locale,
     number: (value: number, options?: format.NumberOptions) => format.formatNumber(value, locale, options),
     monthYear: (date: Date) => format.formatMonthYear(date, locale),
     date: (date: Date) => format.formatDate(date, locale),
+    longDate: (date: Date) => format.formatLongDate(date, locale),
     time: (date: Date) => format.formatTime(date, locale),
     dateTime: (date: Date) => format.formatDateTime(date, locale),
     relative: (date: Date, reference?: Date) => format.formatRelative(date, locale, reference),
     /** In the member's SET-11 display unless a call names one. */
     power: (value: number, unit: units.PowerUnit, display?: units.PowerDisplay) =>
       units.formatPower(value, unit, display ?? powerDisplay, locale),
-    torque: (nm: number) => units.formatTorque(nm, locale),
+    /** In the member's SET-11 units (Nm or lb-ft). */
+    torque: (nm: number) => formatTorqueIn(nm, display.torque, locale),
+    /** From kilometres, in the member's SET-11 unit (km or mi). */
+    distance: (km: number) => formatDistance(km, display.distance, locale),
+    /** From kilograms, in the member's SET-11 unit (kg or lb). */
+    weight: (kg: number) => formatWeight(kg, display.weight, locale),
     wheel: (wheel: units.WheelSize) => units.formatWheel(wheel, locale),
     tyre: (tyre: units.TyreSize) => units.formatTyre(tyre, locale),
     lowering: (mm: number) => units.formatLowering(mm, locale),
@@ -42,5 +49,9 @@ export function useFormat() {
   const { i18n } = useTranslation();
   const locale = toFormatLocale(i18n.language);
   const powerDisplay = usePowerDisplayPreference();
-  return useMemo(() => createFormatters(locale, powerDisplay), [locale, powerDisplay]);
+  const { distance, torque, weight } = useDisplayUnits();
+  return useMemo(
+    () => createFormatters(locale, powerDisplay, { distance, torque, weight }),
+    [locale, powerDisplay, distance, torque, weight],
+  );
 }

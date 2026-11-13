@@ -7,10 +7,13 @@ use App\Http\Resources\V1\DiscoverResource;
 use App\Models\DiscoverCollection;
 use App\Models\VehicleSearch;
 use App\Services\AppConfig\FeatureFlags;
+use App\Services\Discover\CatalogHighlights;
 use App\Services\Discover\Collections;
 use App\Services\Discover\DiscoverPage;
+use App\Services\Discover\HomeFeed;
 use App\Services\Discover\MakeTiles;
 use App\Services\Discover\SimilarMembers;
+use App\Services\Events\NearbyEvents;
 use App\Services\Home\HomeModules;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
@@ -21,6 +24,9 @@ use Illuminate\Support\Facades\Gate;
  */
 class DiscoverController extends Controller
 {
+    /** M4.8 DISC-01 "Neu": the newest builds shown. */
+    private const NEWEST = 8;
+
     /**
      * Read the discover page.
      *
@@ -29,7 +35,7 @@ class DiscoverController extends Controller
      *
      * @unauthenticated
      */
-    public function index(Request $request, MakeTiles $tiles, Collections $collections, HomeModules $modules, SimilarMembers $similar, FeatureFlags $flags): DiscoverResource
+    public function index(Request $request, MakeTiles $tiles, Collections $collections, HomeModules $modules, SimilarMembers $similar, FeatureFlags $flags, CatalogHighlights $highlights, NearbyEvents $events, HomeFeed $feed): DiscoverResource
     {
         $viewer = Viewer::from($request);
         Gate::forUser($viewer)->authorize('viewAny', VehicleSearch::class);
@@ -40,6 +46,9 @@ class DiscoverController extends Controller
             collections: $collections->for($viewer),
             popularMods: $modules->popularMods($viewer),
             similarMembers: $flags->enabled('sig.similar_builds') ? $similar->for($viewer) : null,
+            popularModels: $highlights->popularModels($viewer),
+            weekendEvents: $events->weekend($viewer),
+            newest: array_values($feed->newBuilds($viewer, self::NEWEST)->items()),
         ));
     }
 }

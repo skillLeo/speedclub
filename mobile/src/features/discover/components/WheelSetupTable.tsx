@@ -92,7 +92,7 @@ function BuildLink({ row, onOpen, testID }: BuildLinkProps) {
     >
       <Photo {...row.thumb} aspect="1:1" corner="sm" style={styles.thumb} />
       <View style={styles.buildText}>
-        <Text variant="labelS" hyphenate={false}>
+        <Text variant="callout" hyphenate={false}>
           {keepNameTogether(row.title)}
         </Text>
         {row.owner ? (
@@ -123,11 +123,11 @@ export const WheelSetupCard = memo(function WheelSetupCard({ row, onOpen, testID
         {WHEEL_COLUMNS.map((column, index) => (
           <View key={column} role="listitem" style={stacked ? styles.fieldStacked : styles.field} testID={`${id}.${column}.row`}>
             {stacked && index > 0 ? <Hairline /> : null}
-            <Text variant="supporting" color="text.secondary" hyphenate={false} style={stacked ? null : styles.fieldLabel} testID={`${id}.${column}.label`}>
+            <Text variant="callout" color="text.secondary" hyphenate={false} style={stacked ? null : styles.fieldLabel} testID={`${id}.${column}.label`}>
               {t(`wheelTable.${column}`)}
             </Text>
             <View style={stacked ? null : styles.fieldValue} testID={`${id}.${column}`}>
-              <ValueText variant="supporting" values={row.cells[column]} hyphenate={false} wholeValues={!NAME_COLUMNS.has(column)} />
+              <ValueText variant="callout" values={row.cells[column]} hyphenate={false} wholeValues={!NAME_COLUMNS.has(column)} />
             </View>
           </View>
         ))}
@@ -145,7 +145,7 @@ export function WheelSetupCardSkeleton({ testID }: { testID?: string }) {
       <View style={[styles.build, styles.buildTarget]}>
         <SkeletonBlock width={size.avatar.md} height={size.avatar.md} corner="sm" />
         <View style={styles.buildText}>
-          <SkeletonText variant="labelS" width="60%" />
+          <SkeletonText variant="callout" width="60%" />
           <SkeletonText variant="caption" width="35%" />
         </View>
       </View>
@@ -153,8 +153,8 @@ export function WheelSetupCardSkeleton({ testID }: { testID?: string }) {
         {WHEEL_COLUMNS.map((column, index) => (
           <View key={column} style={stacked ? styles.fieldStacked : styles.field}>
             {stacked && index > 0 ? <Hairline /> : null}
-            <SkeletonText variant="supporting" width="30%" style={stacked ? null : styles.fieldLabel} />
-            <SkeletonText variant="supporting" width="45%" style={stacked ? null : styles.fieldValue} />
+            <SkeletonText variant="callout" width="30%" style={stacked ? null : styles.fieldLabel} />
+            <SkeletonText variant="callout" width="45%" style={stacked ? null : styles.fieldValue} />
           </View>
         ))}
       </View>
@@ -238,7 +238,7 @@ const TableRow = memo(function TableRow({ row, layout, scrollX, divider, onOpen,
         </Animated.View>
         {WHEEL_COLUMNS.map((column) => (
           <View key={column} role="cell" style={[styles.cell, { width: layout.widths[column] }]} testID={`${id}.${column}`}>
-            <ValueText variant="supporting" values={row.cells[column]} hyphenate={false} wholeValues={!NAME_COLUMNS.has(column)} />
+            <ValueText variant="callout" values={row.cells[column]} hyphenate={false} wholeValues={!NAME_COLUMNS.has(column)} />
           </View>
         ))}
       </Pressable>

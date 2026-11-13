@@ -1,12 +1,14 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { haptics } from '@/lib/haptics';
 import { isWeb } from '@/lib/platform';
 import { createStyles, size, type ColorToken } from '@/theme';
 
 import { Icon, type IconName } from './icons/Icon';
-import { PressableScale, type PressableVisualState } from './PressableScale';
+import { PressableScale, PressToneLayer, usePressTone, type PressableVisualState } from './PressableScale';
+import { useForcedVisualState } from './qaVisualState';
 import { endsWord } from './rowParts';
 import { Text } from './Text';
 
@@ -55,7 +57,6 @@ const useStyles = createStyles((t) => ({
   selected: { backgroundColor: t.color.bg.inverse, borderColor: t.color.bg.inverse },
   disabled: { borderColor: t.color.border.subtle },
   hover: { backgroundColor: t.color.state.hover },
-  pressed: { backgroundColor: t.color.state.pressed },
   removableShell: { alignItems: 'center', flexDirection: 'row', paddingHorizontal: 0 },
   body: { flexShrink: 1, minWidth: 0 },
   bodyVisual: {
@@ -105,24 +106,27 @@ export function Chip({
     ? ({ role: selectionRole, 'aria-checked': isSelected } as const)
     : ({ role: 'button' } as const);
 
+  // SM7 tone (ADR-421 c): state.pressed, or state.pressedInverse on the inverted fill of a selected chip; it fades on effect.fast.
+  const tone = isSelected ? 'inverse' : 'default';
+
   const press = () => {
     if (toggle) haptics.selection();
     onPress?.();
   };
 
-  const visualState = (state: PressableVisualState): StyleProp<ViewStyle> =>
-    isSelected ? null : state.pressed ? styles.pressed : state.hovered ? styles.hover : null;
+  // Hover only; the pressed tone is the press base's layer (or the shell's) above it.
+  const visualState = (state: PressableVisualState): StyleProp<ViewStyle> => (isSelected || !state.hovered ? null : styles.hover);
 
   const content = (
     <>
       {icon ? <Icon name={icon} size={16} color={color} /> : null}
-      <Text variant="labelS" color={color} selectable={false} hyphenate={false} numberOfLines={1} style={styles.label}>
+      <Text variant="callout" color={color} selectable={false} hyphenate={false} numberOfLines={1} style={styles.label}>
         {/* "Filter" and its count are separate boxes: their visible text must read "Filter 3", not "Filter3" (WCAG 2.5.3). */}
         {endsWord(label, count !== undefined)}
       </Text>
       {count !== undefined ? (
         <View style={[styles.count, isSelected ? styles.countSelected : null]}>
-          <Text variant="badge" color={isSelected ? 'text.primary' : 'text.secondary'} selectable={false}>
+          <Text variant="labelBadge" numeric color={isSelected ? 'text.primary' : 'text.secondary'} selectable={false}>
             {count}
           </Text>
         </View>
@@ -133,6 +137,7 @@ export function Chip({
   if (!onRemove) {
     return (
       <PressableScale
+        tone={tone}
         {...a11y}
         aria-label={accessibilityLabel ?? (isWeb ? undefined : count === undefined ? label : `${label} ${count}`)}
         disabled={disabled}
@@ -153,39 +158,94 @@ export function Chip({
   }
 
   return (
-    <View
+    <RemovableChip
+      label={label}
+      onPress={onPress ? press : undefined}
+      onRemove={onRemove}
+      removeLabel={removeLabel ?? `${label}: ${t('actions.remove')}`}
+      a11y={a11y}
+      accessibilityLabel={accessibilityLabel}
+      selected={isSelected}
+      tone={tone}
+      color={color}
+      disabled={disabled}
+      style={style}
       testID={testID}
-      style={[
-        styles.hug,
-        styles.chip,
-        styles.removableShell,
-        isSelected ? styles.selected : null,
-        disabled ? styles.disabled : null,
-        style,
-      ]}
     >
+      {content}
+    </RemovableChip>
+  );
+}
+
+type RemovableChipProps = {
+  label: string;
+  onPress?: () => void;
+  onRemove: () => void;
+  removeLabel: string;
+  a11y: { role: 'checkbox' | 'radio'; 'aria-checked': boolean } | { role: 'button' };
+  accessibilityLabel?: string;
+  selected: boolean;
+  tone: 'default' | 'inverse';
+  color: ColorToken;
+  disabled: boolean;
+  style?: StyleProp<ViewStyle>;
+  testID?: string;
+  children: ReactNode;
+};
+
+/**
+ * A removable chip is two targets in one pill: the shell draws their tone, so it keeps the pill's rounded ends. Its own
+ * component (NH-5), so only these chips own the shell's tone value and its animated style; a plain chip has none.
+ */
+function RemovableChip({
+  label,
+  onPress,
+  onRemove,
+  removeLabel,
+  a11y,
+  accessibilityLabel,
+  selected,
+  tone,
+  color,
+  disabled,
+  style,
+  testID,
+  children,
+}: RemovableChipProps) {
+  const styles = useStyles();
+  const forced = useForcedVisualState();
+  const shellTone = usePressTone(Boolean(forced?.pressed) && !disabled);
+  const shell = [styles.hug, styles.chip, styles.removableShell, selected ? styles.selected : null, disabled ? styles.disabled : null, style];
+  return (
+    <View testID={testID} style={shell}>
       {onPress ? (
         <PressableScale
           {...a11y}
           aria-label={accessibilityLabel ?? label}
           disabled={disabled}
           visualHeight={REMOVABLE_INNER_HEIGHT}
-          onPress={press}
+          toneShift={false}
+          onPressIn={shellTone.pressIn}
+          onPressOut={shellTone.pressOut}
+          onPress={onPress}
           testID={testID ? `${testID}.body` : undefined}
           style={styles.body}
           contentStyle={styles.bodyVisual}
         >
-          {content}
+          {children}
         </PressableScale>
       ) : (
-        <View style={styles.bodyVisual}>{content}</View>
+        <View style={styles.bodyVisual}>{children}</View>
       )}
       <PressableScale
         role="button"
-        aria-label={removeLabel ?? `${label}: ${t('actions.remove')}`}
+        aria-label={removeLabel}
         disabled={disabled}
         visualHeight={REMOVABLE_INNER_HEIGHT}
         visualWidth={REMOVE_VISUAL_WIDTH}
+        toneShift={false}
+        onPressIn={shellTone.pressIn}
+        onPressOut={shellTone.pressOut}
         onPress={onRemove}
         testID={testID ? `${testID}.remove` : undefined}
         style={[styles.remove, { minWidth: REMOVE_VISUAL_WIDTH }]}
@@ -193,6 +253,13 @@ export function Chip({
       >
         <Icon name="x" size={16} color={color} />
       </PressableScale>
+      {disabled ? null : (
+        <PressToneLayer
+          tone={tone}
+          animatedStyle={shellTone.style}
+          shape={StyleSheet.flatten(shell) ?? undefined}
+        />
+      )}
     </View>
   );
 }

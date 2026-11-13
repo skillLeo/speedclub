@@ -173,8 +173,8 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
                             :aria-current="isSelected(row) ? 'page' : undefined"
                             data-testid="ADM-31.document"
                         >
-                            <span class="text-supporting text-ink">{{ docLabel(row) }}</span>
-                            <span class="text-helper text-ink-3">
+                            <span class="text-admin-base text-ink">{{ docLabel(row) }}</span>
+                            <span class="text-admin-base text-ink-3">
                                 {{ row.version ? trans('content.legal.version_short', { version: row.version }) : trans('content.legal.unpublished') }}<template v-if="row.draft"> · {{ trans('content.legal.has_draft') }}</template>
                             </span>
                         </Link>
@@ -191,8 +191,8 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
                 <template v-else>
                     <div class="flex flex-wrap items-start justify-between gap-12">
                         <div class="flex min-w-0 flex-col gap-4">
-                            <h2 class="text-title-s text-ink">{{ docLabel(selected) }}</h2>
-                            <p class="text-supporting text-ink-2">
+                            <h2 class="text-headline text-ink">{{ docLabel(selected) }}</h2>
+                            <p class="text-admin-base text-ink-2">
                                 {{ current && pageState !== 'empty' ? trans('content.legal.current', { version: current.version }) : trans('content.legal.none_published') }}
                             </p>
                         </div>
@@ -205,7 +205,7 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
                         <div class="flex flex-wrap items-center gap-8">
                             <StatusPill tone="warning" :label="draft ? trans('content.legal.draft_version', { version: draft.version }) : trans('content.legal.new_draft')" />
                             <Badge v-if="dirty" tone="info">{{ trans('config.draft.unsaved') }}</Badge>
-                            <span v-if="draft" class="text-helper text-ink-3">{{ trans('content.legal.draft_by', { name: draft.author ?? trans('config.draft.someone'), date: formatDateTime(draft.updated_at) }) }}</span>
+                            <span v-if="draft" class="text-admin-base text-ink-3">{{ trans('content.legal.draft_by', { name: draft.author ?? trans('config.draft.someone'), date: formatDateTime(draft.updated_at) }) }}</span>
                         </div>
                         <StateBlock v-if="saveError" kind="error" :title="saveError" :retryable="false" test-id="ADM-31.refused" />
                         <div class="w-200">
@@ -215,7 +215,7 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
                         </div>
                         <template v-if="selected.reconsentable">
                             <Checkbox v-model="form.requires_reconsent" :label="trans('content.legal.reconsent')" :disabled="locked" data-testid="ADM-31.reconsent" />
-                            <p class="-mt-8 pl-24 text-helper text-ink-3">{{ trans('content.legal.reconsent_hint') }}</p>
+                            <p class="-mt-8 pl-24 text-admin-base text-ink-3">{{ trans('content.legal.reconsent_hint') }}</p>
                             <Field v-if="form.requires_reconsent" :label="trans('content.legal.summary')" :hint="trans('content.legal.summary_hint')" :error="errors.summary" required>
                                 <Textarea v-model="form.summary" :rows="3" :maxlength="1000" show-count :disabled="locked" data-testid="ADM-31.summary" />
                             </Field>
@@ -226,17 +226,17 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
                             <Button v-if="can.edit && !locked" size="sm" :variant="dirty || !draft ? 'primary' : 'secondary'" :icon="PhFloppyDisk" :disabled="!dirty && draft !== null" :loading="processing === 'save'" data-testid="ADM-31.save" @click="save">{{ trans('config.draft.save') }}</Button>
                             <Button v-if="can.publish && draft && !dirty && !draft.approval" size="sm" variant="primary" :icon="PhRocketLaunch" data-testid="ADM-31.publish" @click="publishOpen = true">{{ fourEyes ? trans('config.draft.request') : trans('config.draft.publish') }}</Button>
                         </div>
-                        <p v-if="!can.publish && draft" class="text-helper text-ink-3">{{ trans('content.legal.editor_only') }}</p>
+                        <p v-if="!can.publish && draft" class="text-admin-base text-ink-3">{{ trans('content.legal.editor_only') }}</p>
                     </section>
 
                     <section class="flex flex-col gap-12" :aria-label="trans('content.legal.versions')" data-testid="ADM-31.versions">
-                        <h3 class="text-title-s text-ink">{{ trans('content.legal.versions') }}</h3>
+                        <h3 class="text-headline text-ink">{{ trans('content.legal.versions') }}</h3>
                         <EmptyQueue v-if="versions.length === 0" variant="first" :icon="PhScales" :title="trans('content.legal.versions_empty')" :body="trans('content.legal.versions_empty_body')" />
                         <ScrollRegion v-else :label="trans('content.legal.versions')">
-                            <table class="w-full text-supporting">
+                            <table class="w-full text-admin-base">
                                 <caption class="sr-only">{{ trans('content.legal.versions') }}</caption>
                                 <thead>
-                                    <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                                    <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                                         <th scope="col" class="px-12">{{ trans('content.legal.columns.version') }}</th>
                                         <th scope="col" class="px-12">{{ trans('content.legal.columns.published') }}</th>
                                         <th scope="col" class="px-12">{{ trans('content.legal.columns.by') }}</th>

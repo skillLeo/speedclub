@@ -141,7 +141,7 @@ test.describe('open overlays', () => {
 
   test('VEH-01 with the auth sheet of Folgen', async ({ page, qaGoto, byTestId }) => {
     await qaGoto(V);
-    await byTestId('VEH-01.ownerRow.follow').click();
+    await byTestId('VEH-01.actions.follow').click();
     await expect(byTestId('shell.authRequired')).toBeVisible();
     await assertNoSeriousAxeViolations(page);
   });

@@ -44,7 +44,7 @@ describe('Markdown renderer', () => {
   it('shows placeholders as written', async () => {
     await renderMarkdown('E-Mail: [[Kontakt-E-Mail]]');
     // As written, with the word joiner every text gets after a short prefix (DQ-220).
-    expect(screen.getByText('[[Kontakt-E-\u2060Mail]]')).toBeTruthy();
+    expect(screen.getByText('[[Kontakt-\u2060E-\u2060Mail]]')).toBeTruthy();
   });
 
   it('gives a script link no link at all', async () => {
@@ -96,8 +96,8 @@ describe('Markdown renderer', () => {
   it('sets the first cell of a pair in body.strong, as public.css does: the first column names the row (DQ-232)', async () => {
     await renderMarkdown('| Dienst | Zweck |\n|---|---|\n| Hosting | Betrieb |');
     expect(flat(screen.getByText('Hosting').props.style).fontFamily).toBe(typography.bodyStrong.fontFamily);
-    expect(flat(screen.getByText('Betrieb').props.style).fontFamily).toBe(typography.supporting.fontFamily);
-    expect(flat(screen.getByText('Dienst').props.style).fontFamily).toBe(typography.labelS.fontFamily);
+    expect(flat(screen.getByText('Betrieb').props.style).fontFamily).toBe(typography.callout.fontFamily);
+    expect(flat(screen.getByText('Dienst').props.style).fontFamily).toBe(typography.callout.fontFamily);
   });
 
   it('keeps strong emphasis in that cell strong, through its Inlines variant (DQ-232)', async () => {

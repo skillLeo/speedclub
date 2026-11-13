@@ -17,11 +17,12 @@ use Throwable;
  * One number per code and day: no IP, no user id, no user agent (02_PRODUCT_SPEC §3.4, ADR-029). The day is the German one, so the
  * bars in QR-02 change at midnight for the people reading them.
  *
- * @phpstan-type QrStats array{days: list<array{date: string, count: int}>, total: int, total_14_days: int}
+ * @phpstan-type QrStats array{days: list<array{date: string, count: int}>, total: int, total_14_days: int, total_30_days: int}
  */
 class QrScans
 {
-    public const STATS_DAYS = 14;
+    // M4.9 (09 QR-02): thirty days.
+    public const STATS_DAYS = 30;
 
     /**
      * Never throws: a lost count must not cost a stranger the page (F4).
@@ -39,7 +40,7 @@ class QrScans
     }
 
     /**
-     * Fourteen days, oldest first, also those without a scan, over all codes the vehicle ever had: replacing a sticker does not
+     * Thirty days, oldest first, also those without a scan, over all codes the vehicle ever had: replacing a sticker does not
      * start the count over.
      *
      * @return QrStats
@@ -70,7 +71,8 @@ class QrScans
         return [
             'days' => $days,
             'total' => (int) QrScanDaily::query()->whereIn('qr_code_id', $codes)->sum('count'),
-            'total_14_days' => array_sum(array_column($days, 'count')),
+            'total_14_days' => array_sum(array_column(array_slice($days, -14), 'count')),
+            'total_30_days' => array_sum(array_column($days, 'count')),
         ];
     }
 

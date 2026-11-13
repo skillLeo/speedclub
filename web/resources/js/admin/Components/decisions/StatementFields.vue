@@ -32,7 +32,7 @@ const documentModel = computed({
 
 <template>
     <fieldset class="flex flex-col gap-16" :data-testid="testId">
-        <legend class="mb-4 text-label-s text-ink">{{ trans('decisions.legend') }}</legend>
+        <legend class="mb-4 text-admin-base-strong text-ink">{{ trans('decisions.legend') }}</legend>
         <Field :label="trans('decisions.template')" :hint="trans('decisions.template_hint')" optional>
             <Select v-model="templateModel" :options="templates" :placeholder="trans('decisions.template_placeholder')" :data-testid="`${testId}.template`" />
         </Field>
@@ -54,6 +54,6 @@ const documentModel = computed({
                 </Field>
             </div>
         </div>
-        <p class="text-helper text-ink-3">{{ trans('decisions.redress_note') }}</p>
+        <p class="text-admin-base text-ink-3">{{ trans('decisions.redress_note') }}</p>
     </fieldset>
 </template>

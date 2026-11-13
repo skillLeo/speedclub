@@ -1,5 +1,5 @@
 @props(['card', 'sizes' => '(min-width: 1280px) 400px, (min-width: 768px) 50vw, 78vw', 'testid' => 'WEB-02.vehicle', 'eager' => false])
-{{-- §8 vehicle card: 4:3 photo radius 12, title.s, supporting sub-line, spec chips, Hauptfahrzeug badge on the photo. --}}
+{{-- §8 vehicle card: 4:3 photo radius 12, title.s, supporting sub-line, spec chips, Hauptfahrzeug badge on the photo in label.badge (as the app's Badge, DQ-923). --}}
 @php
     $chips = collect($card['spec_strip'] ?? [])
         ->filter(fn (array $entry): bool => $entry['value'] !== null && $entry['value'] !== (string) ($card['model_year'] ?? ''))
@@ -13,13 +13,16 @@
         @else
             <span class="absolute inset-0 flex items-center justify-center text-ink-3"><x-public.icon name="device-mobile" :size="24" /></span>
         @endif
+        @if ($card['is_sample'] ?? false)
+            <x-public.sample-badges :sample="true" :on-photo="true" class="absolute top-12 right-12" testid="{{ $testid }}.sample" />
+        @endif
         @if ($card['is_main'])
-            <span class="absolute top-12 left-12 inline-flex min-h-20 items-center rounded-xs border border-accent bg-on-photo-chip px-8 text-badge text-on-photo">{{ __('public.vehicle.main') }}</span>
+            <span class="absolute top-12 left-12 inline-flex min-h-20 items-center rounded-xs bg-on-photo-chip px-8 text-label-badge whitespace-nowrap hyphens-none text-on-photo" data-testid="{{ $testid }}.main">{{ __('public.vehicle.main') }}</span>
         @endif
     </span>
-    <span class="mt-12 block text-title-s text-ink">{{ \App\Support\KeepTogether::name($card['full_title']) }}</span>
+    <span class="mt-12 block text-headline text-ink">{{ \App\Support\KeepTogether::name($card['full_title']) }}</span>
     @if ($subline !== [])
-        <span class="block text-supporting text-ink-2">{{ implode(' · ', $subline) }}</span>
+        <span class="block text-callout text-ink-2">{{ \App\Support\KeepTogether::words(implode(' · ', $subline)) }}</span>
     @endif
     @if ($chips->isNotEmpty())
         <span class="mt-8 flex flex-wrap gap-4">

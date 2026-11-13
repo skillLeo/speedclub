@@ -10,7 +10,9 @@ use App\Http\Controllers\Admin\Support\ActivityFeed;
 use App\Http\Controllers\Admin\Support\MediaUrls;
 use App\Models\Appeal;
 use App\Models\BuildUpdate;
+use App\Models\Comment;
 use App\Models\Decision;
+use App\Models\Event;
 use App\Models\Media;
 use App\Models\ModerationCase;
 use App\Models\Modification;
@@ -139,6 +141,30 @@ class CaseRecord
                 'note' => $target->getAttribute('note'),
                 'hidden' => (bool) $target->getAttribute('hidden'),
                 'created_at' => $target->created_at?->toIso8601String(),
+            ],
+            $target instanceof Comment => [
+                'kind' => 'comment',
+                'build_update_id' => $target->build_update_id,
+                // M4.17: where the comment stands (the build of the update) and whether it answers another comment.
+                'vehicle_id' => $target->buildUpdate()->withoutGlobalScopes()->value('vehicle_id'),
+                'reply' => $target->getAttribute('parent_id') !== null,
+                'body' => $target->body,
+                'status' => $target->status->value,
+                'deleted' => $target->trashed(),
+                'created_at' => $target->created_at?->toIso8601String(),
+            ],
+            $target instanceof Event => [
+                'kind' => 'event',
+                'id' => $target->id,
+                'slug' => $target->slug,
+                'title' => $target->title,
+                'type' => $target->type->value,
+                'status' => $target->status->value,
+                'starts_at' => $target->starts_at?->toIso8601String(),
+                'city' => $target->city,
+                'description' => $target->getAttribute('description'),
+                'cover' => MediaUrls::at($target->cover, 640),
+                'removed' => $target->getAttribute('removed_at') !== null,
             ],
             $target instanceof Modification => [
                 'kind' => 'modification',

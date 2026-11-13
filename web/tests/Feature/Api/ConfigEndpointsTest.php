@@ -30,7 +30,7 @@ describe('GET app-config', function () {
                 'legal_versions' => ['imprint', 'privacy', 'terms', 'community', 'licenses'],
                 // M3.5 ADM-31: the versions that ask members to accept again.
                 'legal_reconsent' => ['terms', 'privacy'],
-                'links' => ['imprint', 'privacy', 'terms', 'community', 'help', 'support_email', 'store_ios', 'store_android', 'get_app'],
+                'links' => ['imprint', 'privacy', 'terms', 'community', 'help', 'support_email', 'store_ios', 'store_android', 'get_app', 'sticker_shop'],
                 // M2.4: Pusher's public values, or enabled false.
                 'realtime' => ['enabled', 'key', 'cluster'],
             ]])

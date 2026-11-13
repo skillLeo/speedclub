@@ -9,7 +9,6 @@ import { canonicalMove, useModelBuilds, useModelPage, useWheelSetups } from '@/a
 import type { FeedVehicle } from '@/api/queries/home';
 import { mergeResults } from '@/api/queries/search';
 import { BrowseErrorState, RestrictionNotice, useBrowseRestriction } from '@/features/home/components/BrowseStates';
-import { FeedVehicleCard, FeedVehicleCardSkeleton } from '@/features/home/components/FeedVehicleCard';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarInset } from '@/features/shell/tabBarLayout';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
@@ -18,12 +17,15 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, layout, size, space, useBreakpoint, useTheme } from '@/theme';
-import { Button, Chip, CollapsingFlashList, EmptyState, Header, Screen, SegmentedControl, Skeleton, SkeletonBlock, SkeletonText, Spinner, Text, useCollapsingHeader } from '@/ui';
+import { Button, Chip, CollapsingFlashList, DisplayTitle, EmptyState, Header, Screen, SegmentedControl, Skeleton, SkeletonBlock, SkeletonText, Spinner, Text, useCollapsingHeader } from '@/ui';
+import { nameInText } from '@/ui/textBreaks';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { rememberLabel } from '../chipLabels';
+import { BuildWallSkeleton, WALL_GAP, wallCellWidth, WallRow, wallRows } from '../components/BuildWall';
 import { WheelSetupCard, WheelSetupCardSkeleton, WheelSetupTable, wheelTableFits, type WheelTableRow } from '../components/WheelSetupTable';
-import { useDiscoverColumn } from '../layout';
+import { SampleWall } from '../components/SampleWall';
+import { useDiscoverColumn, WALL_COLUMNS_BY_KIND, wideWallWidth } from '../layout';
 import { wheelTableRow } from '../wheelRows';
 import { generationYears } from './MakeScreen';
 
@@ -43,7 +45,7 @@ const SKELETON_CARDS = 2;
 export type ModelSegment = 'builds' | 'wheels';
 
 type Row =
-  | { kind: 'vehicle'; vehicle: FeedVehicle }
+  | { kind: 'wall'; key: string; vehicles: readonly FeedVehicle[] }
   | { kind: 'setup'; row: WheelTableRow }
   | { kind: 'setupPair'; rows: readonly WheelTableRow[] }
   | { kind: 'table'; rows: readonly WheelTableRow[] };
@@ -51,11 +53,13 @@ type Row =
 const useStyles = createStyles((t) => ({
   list: { flex: 1 },
   head: { gap: t.space[4], paddingTop: t.space[16] },
-  count: { fontVariant: ['tabular-nums'] },
   chips: { flexDirection: 'row', gap: t.space[8] },
   chipsScroll: { marginTop: t.space[16] },
   segments: { marginBottom: t.space[24], marginTop: t.space[16] },
   cardGap: { paddingBottom: t.space[24] },
+  // 09 §5 photo wall: 2 px between the rows as between the cells.
+  wallRow: { paddingBottom: WALL_GAP },
+  wallBleed: { alignSelf: 'center', width: '100%' },
   states: { paddingTop: t.space[8] },
   footer: { alignItems: 'flex-start', gap: t.space[8], minHeight: t.size.touchMin, paddingBottom: t.space[32], paddingTop: t.space[8] },
   table: { paddingBottom: t.space[16] },
@@ -71,9 +75,9 @@ function HeadSkeleton() {
   return (
     <>
       <View style={styles.head}>
-        <SkeletonText variant="eyebrow" width="20%" />
-        <SkeletonText variant="titleL" width="50%" />
-        <SkeletonText variant="supporting" width="30%" />
+        <SkeletonText variant="labelCaps" width="20%" />
+        <SkeletonText variant="displayTitle" width="50%" />
+        <SkeletonText variant="callout" width="30%" />
       </View>
       <SkeletonBlock width="60%" height={size.chip} corner="full" style={styles.chipsScroll} />
       <SkeletonBlock width="100%" height={size.segmented} corner="sm" style={styles.segments} />
@@ -160,13 +164,17 @@ export function ModelScreen() {
   );
   const title = data ? `${data.make.name} ${data.model.name}` : '';
   const openVehicle = useCallback((vehicle: { slug: string }) => router.push(`/v/${vehicle.slug}`), [router]);
-  const openUpdate = useCallback(
-    (vehicle: FeedVehicle) => {
-      if (vehicle.latest_update) router.push(`/v/${vehicle.slug}/updates/${vehicle.latest_update.id}`);
-    },
-    [router],
-  );
   const offline = !online || page.fetchStatus === 'paused';
+  // 09 §7.5 photo wall (DQ-1038): 2 columns run to the screen edges on a phone, 3 from 768 and 4 from 1280 in the pane up to
+  // the content width, so the wall uses the canvas beside the 640 column.
+  const phone = column.kind === 'phone';
+  const wallColumns = WALL_COLUMNS_BY_KIND[column.kind];
+  const wallWidth = phone ? Math.min(windowWidth, column.inner + 2 * column.gutter) : wideWallWidth(pane, column.gutter);
+  const wallCell = wallCellWidth(wallWidth, wallColumns);
+  const wallStyle = useMemo(
+    () => (phone ? [styles.wallBleed, { maxWidth: wallWidth }] : paneStyle),
+    [paneStyle, phone, styles.wallBleed, wallWidth],
+  );
 
   // The page: not found, loading, failed. Then the segment's own states under the header.
   let pageState: ReactNode = null;
@@ -174,10 +182,10 @@ export function ModelScreen() {
   if (notFound) {
     pageState = (
       <EmptyState
-        icon="magnifying-glass"
+        preview={<SampleWall testID={`${ROUTE}.notFound.sample`} />}
         title={t('model.notFoundTitle')}
         body={t('model.notFoundBody')}
-        action={{ label: t('make.back'), onPress: () => router.navigate('/discover') }}
+        action={{ label: t('make.back'), onPress: () => router.navigate('/discover'), variant: 'secondary', size: 'm' }}
         testID={`${ROUTE}.notFound`}
       />
     );
@@ -204,9 +212,8 @@ export function ModelScreen() {
       segmentState =
         segment === 'builds' ? (
           <Skeleton testID={`${ROUTE}.skeleton`}>
-            <View style={styles.skeleton}>
-              <FeedVehicleCardSkeleton width={column.inner} />
-              <FeedVehicleCardSkeleton width={column.inner} latest={false} />
+            <View style={phone ? { marginHorizontal: -column.gutter } : null}>
+              <BuildWallSkeleton width={wallWidth} columns={wallColumns} count={wallColumns * 3} />
             </View>
           </Skeleton>
         ) : (
@@ -240,8 +247,9 @@ export function ModelScreen() {
     } else if (empty) {
       segmentState =
         segment === 'builds' ? (
+          // DQ-1033 (09 §5): two badged sample builds as the wall will look, then the copy and the one way out.
           <EmptyState
-            icon="garage"
+            preview={<SampleWall testID={`${ROUTE}.empty.sample`} />}
             title={t('model.buildsEmptyTitle')}
             body={t('model.buildsEmptyBody')}
             action={generation ? { label: t('model.showAllGenerations'), onPress: () => router.setParams({ generation: undefined }) } : undefined}
@@ -270,7 +278,7 @@ export function ModelScreen() {
     pageState || segmentState
       ? []
       : segment === 'builds'
-        ? vehicles.map((vehicle) => ({ kind: 'vehicle', vehicle }))
+        ? wallRows(vehicles, wallColumns).map((row) => ({ kind: 'wall', key: `w.${row[0]?.id ?? ''}`, vehicles: row }))
         : // DQ-322/323/436: the table across the pane only where every column fits; cards to read down elsewhere, two abreast
           // from 768.
           showTable
@@ -333,13 +341,14 @@ export function ModelScreen() {
       ) : data ? (
         <>
           <View style={styles.head} onLayout={collapseOn}>
-            <Text variant="eyebrow" color="text.secondary" hyphenate={false}>
+            <Text variant="labelCaps" color="text.secondary" hyphenate={false}>
               {data.make.name}
             </Text>
-            <Text variant="titleL" role="heading" {...({ 'aria-level': 1 } as object)} hyphenate={false} testID={`${ROUTE}.title`}>
-              {keepNameTogether(data.model.name)}
-            </Text>
-            <Text variant="supporting" color="text.secondary" style={styles.count} testID={`${ROUTE}.count`}>
+            {/* 09 §7.5: the model in display.title (cars speak Archivo), its real count in tnum. */}
+            <DisplayTitle placement="page" layoutWidth={column.inner} role="heading" {...({ 'aria-level': 1 } as object)} testID={`${ROUTE}.title`}>
+              {data.model.name}
+            </DisplayTitle>
+            <Text variant="callout" color="text.secondary" numeric testID={`${ROUTE}.count`}>
               {t('model.count', { count: data.model.vehicle_count, formatted: format.number(data.model.vehicle_count) })}
             </Text>
           </View>
@@ -371,7 +380,7 @@ export function ModelScreen() {
     } else if (list.isFetchNextPageError) {
       footer = (
         <View style={[column.style, styles.footer]} testID={`${ROUTE}.moreError`}>
-          <Text variant="supporting" color="text.secondary">
+          <Text variant="callout" color="text.secondary">
             {t('list.moreError')}
           </Text>
           <Button label={common('actions.retry')} variant="secondary" size="m" onPress={() => void list.fetchNextPage()} testID={`${ROUTE}.moreRetry`} />
@@ -395,7 +404,7 @@ export function ModelScreen() {
           {...header.scrollProps}
           data={rows}
           keyExtractor={(row: Row) =>
-            row.kind === 'vehicle' ? row.vehicle.id : row.kind === 'setup' ? `s.${row.row.id}` : row.kind === 'setupPair' ? `p.${row.rows[0]?.id ?? ''}` : 'table'
+            row.kind === 'wall' ? row.key : row.kind === 'setup' ? `s.${row.row.id}` : row.kind === 'setupPair' ? `p.${row.rows[0]?.id ?? ''}` : 'table'
           }
           getItemType={(row: Row) => row.kind}
           style={styles.list}
@@ -405,7 +414,7 @@ export function ModelScreen() {
           ListEmptyComponent={
             pageState || segmentState ? (
               // DQ-451: a skeleton starts where the first card will, 24 under the segmented control; the 8 is for the states.
-              <View role="tabpanel" aria-label={segment === 'builds' ? t('model.builds') : t('model.wheels')} style={[column.style, loading ? null : styles.states]}>
+              <View role="tabpanel" aria-label={segment === 'builds' ? t('model.builds') : t('model.wheels')} style={[loading && segment === 'builds' && !phone ? paneStyle : column.style, loading ? null : styles.states]}>
                 {pageState ?? segmentState}
               </View>
             ) : null
@@ -417,9 +426,9 @@ export function ModelScreen() {
           }}
           onEndReachedThreshold={0.5}
           renderItem={({ item }: { item: Row }) =>
-            item.kind === 'vehicle' ? (
-              <View style={[styles.cardGap, column.style]}>
-                <FeedVehicleCard vehicle={item.vehicle} width={column.inner} onOpen={openVehicle} onOpenUpdate={openUpdate} testID={`${ROUTE}.vehicle.${item.vehicle.id}`} />
+            item.kind === 'wall' ? (
+              <View style={[styles.wallRow, wallStyle]}>
+                <WallRow vehicles={item.vehicles} cell={wallCell} onOpen={openVehicle} testID={`${ROUTE}.vehicle`} />
               </View>
             ) : item.kind === 'setup' ? (
               <View style={[styles.cardGap, column.style]}>
@@ -438,7 +447,7 @@ export function ModelScreen() {
               </View>
             ) : (
               <View role="tabpanel" aria-label={t('model.wheels')} style={[paneStyle, styles.table]}>
-                <WheelSetupTable rows={item.rows} caption={t('wheelTable.caption', { model: title })} onOpen={openVehicle} testID={`${ROUTE}.wheels`} />
+                <WheelSetupTable rows={item.rows} caption={t('wheelTable.caption', { model: nameInText(title) })} onOpen={openVehicle} testID={`${ROUTE}.wheels`} />
               </View>
             )
           }

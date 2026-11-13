@@ -188,9 +188,9 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
         <div class="flex flex-col gap-12">
             <Tabs v-model="tabModel" :items="tabs" :label="trans('approvals.tabs.label')" :panels="false" />
             <div class="flex min-h-32 flex-wrap items-center justify-between gap-12" data-testid="ADM-43.toolbar">
-                <p class="text-supporting text-ink-2">{{ trans(`approvals.toolbar.${tab}`) }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans(`approvals.toolbar.${tab}`) }}</p>
                 <div v-if="tab !== 'for_me'" class="flex items-center gap-8">
-                    <span class="text-supporting text-ink-2" aria-hidden="true">{{ trans('approvals.filters.status') }}</span>
+                    <span class="text-admin-base text-ink-2" aria-hidden="true">{{ trans('approvals.filters.status') }}</span>
                     <div class="w-200">
                         <Select v-model="statusModel" :options="statusOptions" size="sm" :placeholder="trans('approvals.filters.any')" :aria-label="trans('approvals.filters.status')" data-testid="ADM-43.filter.status" />
                     </div>
@@ -199,7 +199,7 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
         </div>
 
         <div v-if="state === 'loading' || loading" class="flex flex-col gap-12" aria-busy="true" data-testid="ADM-43.loading">
-            <div v-for="n in 3" :key="n" class="flex flex-col gap-12 rounded-md border border-line-subtle bg-surface px-16 py-16">
+            <div v-for="n in 3" :key="n" class="flex flex-col gap-12 rounded-sm border border-line-subtle bg-surface px-16 py-16">
                 <div class="flex justify-between gap-12"><Skeleton shape="text" class="w-240" /><Skeleton shape="text" class="w-120" /></div>
                 <Skeleton shape="text" class="w-320" />
                 <Skeleton class="h-64 w-full" />
@@ -209,14 +209,14 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
         <EmptyQueue v-else-if="list.length === 0" :variant="tab === 'for_me' ? 'clear' : 'quiet'" :icon="emptyIcon" :title="trans(`approvals.empty.${emptyKey}_title`)" :body="trans(`approvals.empty.${emptyKey}_body`)" data-testid="ADM-43.empty" />
 
         <ul v-else class="flex flex-col gap-12" data-testid="ADM-43.list">
-            <li v-for="r in list" :key="r.id" class="flex flex-col gap-12 rounded-md border border-line-subtle bg-surface px-16 py-16" data-testid="ADM-43.request" :data-action="r.action">
+            <li v-for="r in list" :key="r.id" class="flex flex-col gap-12 rounded-sm border border-line-subtle bg-surface px-16 py-16" data-testid="ADM-43.request" :data-action="r.action">
                 <div class="flex flex-wrap items-start justify-between gap-12">
                     <div class="flex min-w-0 flex-col gap-4">
                         <h2 class="flex flex-wrap items-center gap-8 text-headline text-ink">
                             {{ title(r) }}
-                            <span v-if="r.subject_label" class="sc-key text-supporting text-ink-2">{{ r.subject_label }}</span>
+                            <span v-if="r.subject_label" class="sc-key text-admin-base text-ink-2">{{ r.subject_label }}</span>
                         </h2>
-                        <p class="text-supporting text-ink-2 tabular-nums">
+                        <p class="text-admin-base text-ink-2 tabular-nums">
                             {{ trans('approvals.requested', { name: r.requested_by ?? '–', time: formatDateTime(r.created_at) }) }}
                         </p>
                     </div>
@@ -228,10 +228,10 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
                     </div>
                 </div>
 
-                <blockquote class="border-l-2 border-line pl-12 text-supporting text-ink">{{ r.reason }}</blockquote>
+                <blockquote class="border-l-2 border-line pl-12 text-admin-base text-ink">{{ r.reason }}</blockquote>
                 <DiffViewer v-if="r.lines.length > 0" :before="diff(r).before" :after="diff(r).after" :test-id="`ADM-43.diff`" />
-                <p v-if="r.decision_comment" class="text-supporting text-ink-2">{{ trans('approvals.comment', { comment: r.decision_comment }) }}</p>
-                <p v-if="r.status === 'executed' && r.result.done !== null && !r.result.failed" class="text-supporting text-ink-2 tabular-nums">{{ trans('approvals.result', { done: formatNumber(r.result.done), failed: formatNumber(0) }) }}</p>
+                <p v-if="r.decision_comment" class="text-admin-base text-ink-2">{{ trans('approvals.comment', { comment: r.decision_comment }) }}</p>
+                <p v-if="r.status === 'executed' && r.result.done !== null && !r.result.failed" class="text-admin-base text-ink-2 tabular-nums">{{ trans('approvals.result', { done: formatNumber(r.result.done), failed: formatNumber(0) }) }}</p>
                 <!-- an executed bulk run where some records failed: the partial result with the records and why (04 §5 "bulk partial failure") -->
                 <StateBlock
                     v-if="r.status === 'executed' && r.result.done !== null && (r.result.failed ?? 0) > 0"
@@ -241,7 +241,7 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
                     test-id="ADM-43.partial"
                 >
                     <ul v-if="r.result.failed_rows && r.result.failed_rows.length > 0" class="mt-4 flex flex-col">
-                        <li v-for="row in r.result.failed_rows" :key="row.id" class="flex flex-wrap items-center gap-8 border-t border-line-subtle py-4 text-supporting first:border-t-0">
+                        <li v-for="row in r.result.failed_rows" :key="row.id" class="flex flex-wrap items-center gap-8 border-t border-line-subtle py-4 text-admin-base first:border-t-0">
                             <span class="sc-key text-ink">{{ row.label }}</span>
                             <span class="text-ink-2">{{ trans(`members.bulk.codes.${row.code ?? 'failed'}`) }}</span>
                         </li>
@@ -261,11 +261,11 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
 
         <Dialog v-model:open="decideOpen" :title="trans(decision === 'approve' ? 'approvals.approve.title' : 'approvals.deny.title')" :description="target ? title(target) : undefined" test-id="ADM-43.decide">
             <form id="adm43-decide" class="flex flex-col gap-16" novalidate @submit.prevent="submitDecision">
-                <p class="text-supporting text-ink-2">{{ trans(decision === 'approve' ? 'approvals.approve.body' : 'approvals.deny.body') }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans(decision === 'approve' ? 'approvals.approve.body' : 'approvals.deny.body') }}</p>
                 <Field :label="trans('approvals.comment_label')" :hint="trans(decision === 'approve' ? 'approvals.comment_optional' : 'approvals.comment_required')" :error="commentError" :required="decision === 'deny'" :optional="decision === 'approve'">
                     <Textarea v-model="comment" :rows="3" :maxlength="1000" show-count data-testid="ADM-43.comment" />
                 </Field>
-                <p v-if="action.error.value" class="text-helper text-danger" role="alert">{{ action.error.value }}</p>
+                <p v-if="action.error.value" class="text-admin-base text-danger" role="alert">{{ action.error.value }}</p>
             </form>
             <template #footer>
                 <Button variant="ghost" :disabled="action.processing.value" data-dialog-cancel @click="decideOpen = false">{{ trans('ui.actions.cancel') }}</Button>

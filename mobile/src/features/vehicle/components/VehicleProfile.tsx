@@ -6,36 +6,35 @@ import { View, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useFlag } from '@/api/queries/appConfig';
-import { forgetBlockedMember, useSaveBuild } from '@/api/queries/social';
-import { readPublicVehicleNow, type BuildUpdate, type PublicModRow, type PublicVehicle } from '@/api/queries/vehicles';
-import { SimilarBuildsStrip } from '@/features/discover/components/SimilarBuildsStrip';
+import { forgetBlockedMember } from '@/api/queries/social';
+import { type BuildUpdate, type PublicModRow, type PublicVehicle } from '@/api/queries/vehicles';
 import { newMessageHref } from '@/features/messages/entry';
-import { FollowButton } from '@/features/profile/components/FollowButton';
 import { useReport } from '@/features/safety/useReport';
-import { haptics } from '@/lib/haptics';
+import { useFormat } from '@/lib/useFormat';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, layout as layoutTokens, space, useBreakpoint } from '@/theme';
-import { Button, ContentTabs, toast, type HeaderAction } from '@/ui';
+import { ContentTabs, OwnerCapsule, type ContextMenuItem, type HeaderAction, type OwnerCapsuleAction } from '@/ui';
+import { StretchyHero } from '@/ui/motion/kit';
 import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
-import { useViewAsLock } from '@/features/viewAs/useViewAs';
 
-import { DESKTOP_CARD_FLEX, DESKTOP_GALLERY_FLEX, TABLET_COLUMN, useProfileLayout, useSticky } from '../layout';
+import { DESKTOP_CARD_FLEX, DESKTOP_GALLERY_FLEX, heroBox, heroIdentityOverlap, heroIdentityWidth, profileSummaryWidth, TABLET_COLUMN, useProfileLayout, useSticky } from '../layout';
 import { visiblePhotos } from '../media';
 import { PROFILE_TABS, type ProfileTab } from '../model';
 import { COMPARE_FLAG } from '../compare';
-import { SAVE_ICON, SAVED_BUILDS_FLAG } from '../save';
 import { SHARE_CARD_FLAG } from '../shareCard';
 import { useVehicleShare } from '../share';
 import { ComparePicker } from './ComparePicker';
-import { DesktopThumbs } from './DesktopThumbs';
+import { HighlightsRail } from './HighlightsRail';
+import { LatestUpdate } from './LatestUpdate';
 import { MoreSheet, type MoreAction } from './MoreSheet';
 import { PhotoViewer } from './PhotoViewer';
 import { ProfileFrame, useContentWidth, useEstimatedOverlayHeight } from './ProfileFrame';
 import { ProfileHero, type ProfileHeroHandle } from './ProfileHero';
 import { HistorySection, ModsSection, OverviewSection, SpecsSection } from './ProfileSections';
-import { ProfileSummary } from './ProfileSummary';
+import { ProfileSummary, VehicleIdentity } from './ProfileSummary';
+import { SimilarBuilds } from './SimilarBuilds';
+import { VehicleActions } from './VehicleActions';
 
-const HERO_RATIO = 4 / 3;
 
 export type VehicleProfileProps = {
   /** `PublicVehicleResource` as the API renders it for this viewer. */
@@ -53,18 +52,29 @@ export type VehicleProfileProps = {
    * toolbar the owner row has no actions.
    */
   ownerToolbar?: ReactNode;
+  /** DQ-1062: GAR-02's capsule (its glyph actions and the extra "Mehr" items) instead of VEH-01's owner capsule. */
+  capsule?: { actions: readonly OwnerCapsuleAction[]; more: readonly ContextMenuItem[] };
   /** GAR-02 owner-only content, first in Übersicht: completeness hints and the like. */
   ownerContent?: ReactNode;
+  /** When the page's data was read (ms), for the offline line "zuletzt aktualisiert vor 5 Min." (DQ-1068). */
+  updatedAt?: number;
   /** Controlled content tab, for a route that keeps it in the URL. */
   tab?: ProfileTab;
   onTabChange?: (tab: ProfileTab) => void;
 };
 
 const useStyles = createStyles((t) => ({
-  summaryPhone: { paddingTop: t.space[20] },
+  // DQ-1047/1048: the photo fades into the dark stage (every theme, ADR-421 b), the identity on it; full width, at most fullBleedMax.
+  stage: { alignSelf: 'center', backgroundColor: t.color.scrim.photoEnd, maxWidth: layoutTokens.fullBleedMax, width: '100%' },
+  heroIdentity: { paddingBottom: t.space[24] },
+  // On the canvas, so the hero trailing behind at half speed (SM5) slides under it. 24 from the hero to the strip (DQ-1047).
+  summaryPhone: { backgroundColor: t.color.bg.canvas, paddingTop: t.space[24] },
+  sectionGap: { marginTop: t.space[32] },
+  sectionGapBelow: { marginBottom: t.space[32] },
+  capsule: { alignSelf: 'flex-start' },
   tabs: { backgroundColor: t.color.bg.canvas, marginTop: t.space[24] },
   panel: { paddingBottom: t.space[32], paddingTop: t.space[24] },
-  tabletColumn: { alignSelf: 'center', maxWidth: TABLET_COLUMN, paddingTop: t.space[24], width: '100%' },
+  tabletColumn: { alignSelf: 'center', maxWidth: TABLET_COLUMN, width: '100%' },
   desktopRow: {
     alignItems: 'stretch',
     alignSelf: 'center',
@@ -91,11 +101,12 @@ export function VehicleProfile({
   headerActions,
   ownerToolbar,
   ownerContent,
+  capsule,
   tab,
   onTabChange,
+  updatedAt,
 }: VehicleProfileProps) {
   const { t } = useTranslation('vehicle');
-  const { t: tProfile } = useTranslation('profile');
   const { t: tMessages } = useTranslation('messages');
   const styles = useStyles();
   const router = useRouter();
@@ -119,115 +130,42 @@ export function VehicleProfile({
   const shareCardEnabled = useFlag(SHARE_CARD_FLAG);
   const { share, copy, sharing } = useVehicleShare(routeId);
 
+  const format = useFormat();
+  const offlineLabel = updatedAt ? t('offline.read', { time: format.relative(new Date(updatedAt)) }) : t('offline.readNoTime');
   const current = tab ?? ownTab;
   const slug = vehicle.slug;
   const photos = useMemo(() => visiblePhotos(vehicle.photos), [vehicle.photos]);
   const overHero = layout === 'phone' && photos.length > 0;
   const barHeight = overlayHeight ?? estimatedOverlay;
 
-  const desktopInner = Math.min(width, layoutTokens.contentMax + 2 * space[24]) - 2 * space[24];
-  const desktopGallery = ((desktopInner - space[24]) * DESKTOP_GALLERY_FLEX) / (DESKTOP_GALLERY_FLEX + DESKTOP_CARD_FLEX);
-  const tabletInner = Math.min(width, TABLET_COLUMN) - 2 * gutter;
-  const heroWidth = layout === 'phone' ? width : layout === 'tablet' ? tabletInner : desktopGallery;
-  const heroHeight = heroWidth / HERO_RATIO;
+  // DQ-1047/1048: the hero at every width (4:5 on a phone, 16:9 across the content from 768) with the identity on its scrim.
+  const { width: heroWidth, ratio: heroRatio } = heroBox(layout, width);
+  const heroHeight = heroWidth / heroRatio;
+  const onPhoto = photos.length > 0;
+  const overlap = onPhoto ? heroIdentityOverlap(heroWidth, heroRatio) : 0;
 
   // The tabs stick under the floating bar on a phone, at the top of the scroller under a bar above it everywhere else.
-  const sticky = useSticky(header.scrollY, overHero ? barHeight : 0, layout === 'desktop' ? space[24] : 0);
-  const cardSticky = useSticky(header.scrollY, space[24]);
+  // From 768 the tabs' parent starts under the stage (the hero and the identity under it), whose height comes from its layout.
+  const [stageHeight, setStageHeight] = useState(0);
+  const stageOffset = onPhoto ? stageHeight : heroHeight;
+  const sticky = useSticky(header.scrollY, overHero ? barHeight : 0, layout === 'desktop' ? stageOffset + space[24] : layout === 'tablet' ? stageOffset : 0);
+  const cardSticky = useSticky(header.scrollY, space[24], stageOffset + space[24]);
 
+  const client = useQueryClient();
   const owner = vehicle.owner;
   const ownVehicle = vehicle.is_owner || Boolean(owner?.is_self);
-  // Guests get Folgen and Nachricht, which open the auth-required sheet and come back here. A member follows from the row
-  // (M2.1) and writes from it (M2.4) when `can_message` allows it: MSG-03 with this vehicle as the conversation's context.
-  const guestContact = Boolean(owner) && !ownVehicle && status !== 'member' && !ownerToolbar;
-  const memberFollow = Boolean(owner?.username) && !ownVehicle && status === 'member' && !ownerToolbar;
-  const memberMessage = memberFollow && owner?.can_message === true;
-  const askToSignIn = () => {
-    requireAuth(undefined, { returnTo: pathname });
-  };
-  const writeLock = useViewAsLock();
-  const messageLock = useViewAsLock('messages');
-  const writeToOwner = () => router.push(newMessageHref({ to: owner?.username ?? undefined, about: vehicle.slug }));
-
-  let ownerActions: ReactNode;
-  // DQ-262: the row is laid out for "✓ Folge ich", its widest state, so following never moves the button under the name.
-  let ownerWidestActions: ReactNode;
-  if (guestContact) {
-    ownerActions = (
-      <>
-        <Button label={t('actions.follow')} variant="secondary" size="m" onPress={askToSignIn} testID={`${routeId}.ownerRow.follow`} />
-        <Button label={t('actions.message')} variant="primary" size="m" onPress={askToSignIn} testID={`${routeId}.ownerRow.message`} />
-      </>
-    );
-  } else if (memberFollow && owner?.username) {
-    const messageButton = memberMessage ? (
-      <Button label={t('actions.message')} variant="primary" size="m" onPress={writeToOwner} locked={messageLock} testID={`${routeId}.ownerRow.message`} />
-    ) : null;
-    ownerActions = (
-      <>
-        <FollowButton
-          username={owner.username}
-          following={owner.is_following}
-          variant="secondary"
-          name={owner.display_name || `@${owner.username}`}
-          testID={`${routeId}.ownerRow.follow`}
-        />
-        {messageButton}
-      </>
-    );
-    ownerWidestActions = (
-      <>
-        <Button label={tProfile('follow.following')} icon="check" variant="secondary" size="m" disabled />
-        {memberMessage ? <Button label={t('actions.message')} variant="primary" size="m" disabled /> : null}
-      </>
-    );
-  }
   const openOwner =
     owner?.username && !ownerToolbar
       ? () => (owner.is_self ? router.navigate('/profile') : router.push({ pathname: '/u/[username]', params: { username: owner.username ?? '' } }))
       : undefined;
-
-  // [SIGNATURE sig.saved_builds] The server sends null for a guest, the owner and without the flag; a guest still gets the
-  // control, which asks to sign in. Never on your own vehicle.
-  const saveFlag = useFlag(SAVED_BUILDS_FLAG);
-  const showSave = saveFlag && !ownVehicle && !headerActions && (status !== 'member' || typeof vehicle.is_saved === 'boolean');
-  const saved = status === 'member' && vehicle.is_saved === true;
-  const client = useQueryClient();
-  const save = useSaveBuild(vehicle.id);
-  const sendSave = (next: boolean) => {
-    haptics.light();
-    save.mutate(
-      { vehicleId: vehicle.id, save: next },
-      {
-        onSuccess: () => toast(next ? t('save.saved') : t('save.removed'), { testID: `${routeId}.saveToast` }),
-        onError: (error) => toast(error.message || t('save.failed'), { haptic: 'warning', testID: `${routeId}.saveToast` }),
-      },
-    );
+  const askToSignIn = () => {
+    requireAuth(undefined, { returnTo: pathname });
   };
-  const toggleSave = () => {
-    if (useSessionStore.getState().status === 'member') {
-      sendSave(!saved);
-      return;
-    }
-    // A guest wants to save. After sign-in the page is read again as the member: your own build, or one saved already, sends nothing.
-    requireAuth(
-      () => {
-        void readPublicVehicleNow(client, slug)
-          .then((fresh) => {
-            if (fresh.is_owner || fresh.owner?.is_self || fresh.is_saved !== false) return;
-            sendSave(true);
-          })
-          .catch(() => undefined);
-      },
-      { returnTo: pathname },
-    );
-  };
+  const guestContact = Boolean(owner) && !ownVehicle && status !== 'member' && !ownerToolbar;
 
+  // DQ-942: at most two floating controls over the hero — back and "Mehr". Speichern and Teilen live in the action row
+  // (09 §7.6 (4)); "Link kopieren" stays in the sheet.
   const actions: readonly HeaderAction[] = headerActions ?? [
-    ...(showSave
-      ? [{ icon: SAVE_ICON, label: t('actions.save'), onPress: toggleSave, selected: saved, locked: writeLock, testID: `${routeId}.save` } satisfies HeaderAction]
-      : []),
-    { icon: 'share-network', label: t('actions.share'), onPress: () => void share(vehicle), disabled: sharing, testID: `${routeId}.share` },
     { icon: 'dots-three', label: t('actions.more'), onPress: () => setMoreOpen(true), testID: `${routeId}.moreActions` },
   ];
 
@@ -245,6 +183,7 @@ export function VehicleProfile({
   const reportable = report.available && !ownVehicle && !ownerToolbar;
 
   const moreActions: MoreAction[] = [
+    ...(ownVehicle || ownerToolbar ? [{ key: 'share', icon: 'share-network', label: t('actions.share'), onPress: () => void share(vehicle) } satisfies MoreAction] : []),
     { key: 'copyLink', icon: 'link', label: t('more.copyLink'), onPress: () => void copy(vehicle) },
     ...(vehicle.is_owner
       ? [{ key: 'garage', icon: 'garage', label: t('more.openGarage'), onPress: () => router.push(`/garage/${vehicle.id}`) } satisfies MoreAction]
@@ -281,35 +220,99 @@ export function VehicleProfile({
   // The bar of a tablet shows the title once the page title has passed under it.
   const onTitleLayout = (event: LayoutChangeEvent) => {
     const { y, height } = event.nativeEvent.layout;
-    header.collapseAt.set(summaryY.current + y + height);
+    // On the hero the identity starts `overlap` above the photo's bottom edge; without photos it is the summary's first block.
+    header.collapseAt.set((onPhoto ? heroHeight - overlap : summaryY.current) + y + height);
   };
   const trackSummary = (offset: number) => (event: LayoutChangeEvent) => {
     summaryY.current = offset + event.nativeEvent.layout.y;
   };
 
-  const hero = (
+  const heroBody = (
     <ProfileHero
       ref={heroRef}
       photos={photos}
       width={heroWidth}
-      corner={layout === 'phone' ? 'none' : 'md'}
+      corner="none"
       vehicleTitle={vehicle.full_title}
       ownerUsername={owner?.username}
       onOpen={setViewerIndex}
+      ratio={heroRatio}
+      aspect={layout === 'phone' ? '4:5' : '16:9'}
+      identityOverlap={onPhoto ? overlap : undefined}
       routeId={routeId}
     />
   );
+  // SM5 on the phone's edge-to-edge hero: it stretches on pull-down and trails at half speed; reduced motion keeps it still.
+  const hero = overHero ? (
+    <StretchyHero scrollY={header.scrollY} headerHeight={barHeight} testID={`${routeId}.stretchy`}>
+      {heroBody}
+    </StretchyHero>
+  ) : (
+    heroBody
+  );
+  const stage = onPhoto ? (
+    <View style={styles.stage} onLayout={(event) => setStageHeight(event.nativeEvent.layout.height)} testID={`${routeId}.stage`}>
+      {hero}
+      <VehicleIdentity
+        vehicle={vehicle}
+        routeId={routeId}
+        tone="photo"
+        layoutWidth={heroIdentityWidth(layout, width, gutter)}
+        onOpenOwner={openOwner}
+        onTitleLayout={onTitleLayout}
+        headMinHeight={overlap}
+        style={[styles.heroIdentity, { marginTop: -overlap, paddingHorizontal: gutter }]}
+      />
+    </View>
+  ) : (
+    hero
+  );
+
+  // DQ-1049: on phones and tablets the capsule floats above the tab bar (ProfileFrame `floating`); the desktop card keeps it in place.
+  const capsuleFloats = layout !== 'desktop';
+  // 09 §7.6 (4): visitors get the action row, the owner the capsule (DQ-1062: GAR-02 too, with its own glyph actions).
+  // At large text the capsule keeps "Update posten" and the QR glyph; the rest moves into "Mehr" so no label breaks inside a word.
+  const capsuleActions = capsule?.actions ?? [
+    { key: 'qr', icon: 'qr-code', label: t('actions.qr'), onPress: () => router.push(`/qr/${vehicle.id}`), priority: 0 },
+    { key: 'edit', icon: 'pencil-simple', label: t('actions.edit'), onPress: () => router.push(`/garage/${vehicle.id}`), priority: 1 },
+    { key: 'mods', icon: 'wrench', label: t('actions.mods'), onPress: () => router.push(`/garage/${vehicle.id}/mods`), priority: 2 },
+    { key: 'photos', icon: 'image', label: t('actions.photos'), onPress: () => router.push(`/garage/${vehicle.id}/photos`), priority: 3 },
+  ] satisfies OwnerCapsuleAction[];
+  const shareItem = { key: 'share', label: t('actions.share'), icon: 'share-network' as const, onSelect: () => void share(vehicle) };
+  // DQ-1049 / f2: the capsule keeps the glyphs that fit (by priority) beside the one-line primary and moves the rest into "Mehr",
+  // on a phone, at large text and in the desktop's side card alike (OwnerCapsule measures it), so a priority-0 tool never hides.
+  const capsuleMore: ContextMenuItem[] = [...(capsule?.more ?? [shareItem])];
+  const ownerCapsule =
+    (vehicle.is_owner || capsule) && !ownerToolbar ? (
+      <OwnerCapsule
+        primary={{ label: t('actions.postUpdate'), onPress: () => router.push({ pathname: '/post-update', params: { vehicleId: vehicle.id } }) }}
+        actions={capsuleActions}
+        more={{ label: t('actions.more'), items: capsuleMore }}
+        label={t('actions.ownerLabel')}
+        style={capsuleFloats ? undefined : styles.capsule}
+        availableWidth={capsuleFloats ? undefined : profileSummaryWidth(layout, width, gutter)}
+        testID={`${routeId}.ownerCapsule`}
+      />
+    ) : null;
+  const actionRow =
+    ownVehicle || ownerToolbar
+      ? capsuleFloats
+        ? null
+        : ownerCapsule
+      : <VehicleActions vehicle={vehicle} routeId={routeId} onShare={() => void share(vehicle)} sharing={sharing} />;
 
   const summary = (variant: 'page' | 'card') => (
     <ProfileSummary
       vehicle={vehicle}
       routeId={routeId}
       variant={variant}
-      ownerActions={ownerActions}
-      ownerWidestActions={ownerWidestActions}
+      identity={onPhoto ? 'none' : 'canvas'}
+      // N1b: the strip knows its width before its own layout, so its first frame already has its final columns.
+      layoutWidth={profileSummaryWidth(layout, width, gutter)}
       onOpenOwner={openOwner}
+      actions={actionRow}
       ownerToolbar={ownerToolbar}
-      onTitleLayout={onTitleLayout}
+      onTitleLayout={onPhoto ? undefined : onTitleLayout}
     />
   );
 
@@ -334,11 +337,26 @@ export function VehicleProfile({
         vehicle={vehicle}
         routeId={routeId}
         ownerContent={ownerContent}
-        closingAction={
-          guestContact ? { label: t('actions.messageSend'), onPress: askToSignIn } : memberMessage ? { label: t('actions.messageSend'), onPress: writeToOwner } : null
+        // DQ-1057: only a guest gets the line ("Melde dich an, um Lukas zu schreiben."); a member writes from the action row.
+        closingAction={guestContact ? { label: t('overview.closingSignIn'), onPress: askToSignIn } : null}
+        pins={(first) => (
+          // DQ-1056: the rail brings its own gap, so a rail that has nothing to show leaves no ghost space.
+          <HighlightsRail
+            vehicle={vehicle}
+            routeId={routeId}
+            bleed={layout === 'phone' ? gutter : 0}
+            onOpenUpdate={(id) => router.push(`/v/${slug}/updates/${id}`)}
+            onOpenPhoto={setViewerIndex}
+            style={first ? styles.sectionGapBelow : styles.sectionGap}
+          />
+        )}
+        latest={
+          vehicle.updates[0] ? (
+            // DQ-1122: the hero opens on the first photo, so the fallback is the second one and the same frame is not shown twice; with a single photo it is that one (DQ-1054).
+            <LatestUpdate update={vehicle.updates[0]} routeId={routeId} onOpen={openUpdate} onShowAll={() => changeTab('history')} fallbackPhoto={photos[1] ?? photos[0] ?? null} />
+          ) : undefined
         }
-        showPhotoPreview={layout !== 'desktop'}
-        similar={<SimilarBuildsStrip vehicleId={vehicle.id} title={vehicle.full_title} bleed={layout === 'desktop' ? 0 : gutter} testID={`${routeId}.similar`} />}
+        similar={<SimilarBuilds vehicleId={vehicle.id} title={vehicle.full_title} bleed={layout === 'desktop' ? 0 : gutter} testID={`${routeId}.similar`} />}
         onShowMods={() => changeTab('mods')}
         onOpenGallery={openGallery}
         onOpenPhoto={setViewerIndex}
@@ -365,36 +383,40 @@ export function VehicleProfile({
 
   let body: ReactNode;
   if (layout === 'desktop') {
+    // DQ-1048: the full-width 16:9 hero, then 8 columns (tabs + content) beside the sticky 4-column card (strip, actions).
     body = (
-      <View style={styles.desktopRow}>
-        <View style={styles.desktopGallery}>
-          {hero}
-          <DesktopThumbs photos={photos} fallbackAlt={vehicle.full_title} onSelect={(index) => heroRef.current?.show(index)} testID={`${routeId}.thumbs`} />
-          {tabsBlock}
-          {panel}
-        </View>
-        <View style={styles.desktopAside}>
-          <Animated.View style={[styles.card, cardSticky.style]} onLayout={cardSticky.onLayout} testID={`${routeId}.card`}>
-            {summary('card')}
-          </Animated.View>
+      <View>
+        {stage}
+        <View style={styles.desktopRow}>
+          <View style={styles.desktopGallery}>
+            {tabsBlock}
+            {panel}
+          </View>
+          <View style={styles.desktopAside}>
+            <Animated.View style={[styles.card, cardSticky.style]} onLayout={cardSticky.onLayout} testID={`${routeId}.card`}>
+              {summary('card')}
+            </Animated.View>
+          </View>
         </View>
       </View>
     );
   } else if (layout === 'tablet') {
     body = (
-      <View style={[styles.tabletColumn, { paddingHorizontal: gutter }]}>
-        {hero}
-        <View style={styles.summaryPhone} onLayout={trackSummary(0)}>
-          {summary('page')}
+      <View>
+        {stage}
+        <View style={[styles.tabletColumn, { paddingHorizontal: gutter }]}>
+          <View style={styles.summaryPhone} onLayout={trackSummary(heroHeight)}>
+            {summary('page')}
+          </View>
+          {tabsBlock}
+          {panel}
         </View>
-        {tabsBlock}
-        {panel}
       </View>
     );
   } else {
     body = (
       <View>
-        {hero}
+        {stage}
         <View style={[styles.summaryPhone, { paddingHorizontal: gutter }]} onLayout={trackSummary(0)}>
           {summary('page')}
         </View>
@@ -417,6 +439,8 @@ export function VehicleProfile({
       scrollRef={scrollRef}
       onWidth={setWidth}
       onOverlayHeight={setOverlayHeight}
+      offlineLabel={offlineLabel}
+      floating={capsuleFloats ? ownerCapsule : undefined}
       overlays={
         <>
           <PhotoViewer photos={photos} fallbackAlt={vehicle.full_title} index={viewerIndex} onClose={() => setViewerIndex(null)} />

@@ -34,8 +34,8 @@ function submit(): void {
     <Head :title="trans('auth.challenge.title')" />
     <div class="flex flex-col gap-24" data-testid="ADM-02" :data-qa-state="state">
         <div class="flex flex-col gap-8">
-            <h1 class="text-title-m text-ink">{{ trans('auth.challenge.title') }}</h1>
-            <p class="text-supporting text-ink-2">{{ mode === 'code' ? trans('auth.challenge.intro_code') : trans('auth.challenge.intro_recovery') }}</p>
+            <h1 class="text-title-2 text-ink">{{ trans('auth.challenge.title') }}</h1>
+            <p class="text-admin-base text-ink-2">{{ mode === 'code' ? trans('auth.challenge.intro_code') : trans('auth.challenge.intro_recovery') }}</p>
         </div>
         <AuthNotice v-if="state === 'error'" tone="error" :text="trans('auth.common.server_error')" />
 
@@ -53,13 +53,13 @@ function submit(): void {
         <div class="flex flex-col items-start gap-12">
             <button
                 type="button"
-                class="inline-flex h-32 items-center rounded-xs text-label-s text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                class="inline-flex h-32 items-center rounded-xs text-admin-base-strong text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                 data-testid="ADM-02.toggle"
                 @click="toggle"
             >
                 {{ mode === 'code' ? trans('auth.challenge.use_recovery') : trans('auth.challenge.use_code') }}
             </button>
-            <Link :href="loginUrl()" class="inline-flex h-32 items-center rounded-xs text-label-s text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+            <Link :href="loginUrl()" class="inline-flex h-32 items-center rounded-xs text-admin-base-strong text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
                 {{ trans('auth.common.back_to_login') }}
             </Link>
         </div>

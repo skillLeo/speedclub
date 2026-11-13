@@ -57,7 +57,7 @@ const mockToast = jest.requireMock<{ toast: jest.Mock }>('@/ui/toast').toast;
 const mockClock = { now: new Date('2026-11-08T12:00:00+01:00') };
 jest.mock('@/lib/clock', () => ({ now: () => mockClock.now }));
 
-const R34 = { id: '01r34', slug: 'nissan-skyline-gt-r-r34-xmeypf41', full_title: 'Nissan Skyline GT-R R34', cover: null };
+const R34 = { id: '01r34', slug: 'nissan-skyline-gt-r-r34-xmeypf41', full_title: 'Nissan Skyline GT-R R34', cover: null, is_sample: false };
 const ROWS = [
   notification({ id: 'n-new', created_at: '2026-11-08T09:00:00+01:00' }),
   notification({
@@ -93,8 +93,22 @@ beforeEach(() => {
   useSessionStore.setState({ status: 'guest', member: null, intent: null, promptOpen: false });
 });
 
+/** "Alle als gelesen markieren" sits in the header menu (09 §7.4). */
+async function openMenu() {
+  // The jest mocks never report the trigger's place: give it one.
+  const native = jest.requireActual<{ default: { measureInWindow: jest.Mock } }>('@react-native/jest-preset/jest/MockNativeMethods');
+  native.default.measureInWindow.mockImplementation((done: (x: number, y: number, width: number, height: number) => void) => done(300, 40, 44, 44));
+  await fireEvent.press(screen.getByTestId('HOME-02.menu'));
+  await screen.findByTestId('HOME-02.menu.menu.readAll');
+}
+
+async function readAll() {
+  await openMenu();
+  await fireEvent.press(screen.getByTestId('HOME-02.menu.menu.readAll'));
+}
+
 describe('HOME-02 Mitteilungen', () => {
-  it('groups by day, marks unread rows in text and weight, and opens a row as read', async () => {
+  it('groups into Heute · Gestern · Diese Woche · Früher, marks unread rows, and opens a row as read', async () => {
     signIn();
     const { calls } = stubFetch({
       '/notifications': { body: page(ROWS) },
@@ -103,9 +117,12 @@ describe('HOME-02 Mitteilungen', () => {
     });
     await renderWithProviders(<NotificationsScreen />);
 
-    expect(await screen.findByTestId('HOME-02.day.2026-11-08')).toHaveTextContent('Heute');
-    expect(screen.getByTestId('HOME-02.day.2026-11-07')).toHaveTextContent('Gestern');
+    expect(await screen.findByTestId('HOME-02.day.today')).toHaveTextContent('Heute');
+    expect(screen.getByTestId('HOME-02.day.yesterday')).toHaveTextContent('Gestern');
     expect(screen.getByTestId('HOME-02.row.n-new.text')).toHaveTextContent('@lukas.sc folgt dir jetzt');
+    // 09 §7.4: the actor and the object in bold.
+    expect(screen.getAllByText('@lukas.sc').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^Nissan Skyline GT.*R34$/).length).toBeGreaterThan(0);
     expect(screen.getByTestId('HOME-02.row.n-new.unread', HIDDEN)).toBeTruthy();
     expect(screen.getByTestId('HOME-02.row.n-new.body')).toHaveAccessibleName(/^Ungelesen, @lukas\.sc folgt dir jetzt/);
     expect(screen.queryByTestId('HOME-02.row.n-pub.unread', HIDDEN)).toBeNull();
@@ -113,6 +130,9 @@ describe('HOME-02 Mitteilungen', () => {
     expect(screen.getByTestId('HOME-02.row.n-new')).toHaveTextContent(/vor 3 Std\./);
     expect(screen.getByTestId('HOME-02.row.n-pub')).toHaveTextContent(/19:00/);
     expect(screen.getByTestId('HOME-02.row.n-pub')).not.toHaveTextContent(/07\.11\.2026|gestern/);
+    // SM11: only an unread row swipes to "Gelesen".
+    expect(screen.getByTestId('HOME-02.row.n-new.swipe')).toBeTruthy();
+    expect(screen.queryByTestId('HOME-02.row.n-pub.swipe')).toBeNull();
 
     await fireEvent.press(screen.getByTestId('HOME-02.row.n-new.body'));
     expect(mockRouter.push).toHaveBeenCalledWith('/u/lukas.sc');
@@ -143,18 +163,19 @@ describe('HOME-02 Mitteilungen', () => {
     await screen.findByTestId('HOME-02.row.n-new.unread', HIDDEN);
 
     fail = true;
-    await fireEvent.press(screen.getByTestId('HOME-02.readAll'));
+    await readAll();
     await waitFor(() => expect(screen.getByTestId('HOME-02.row.n-new.unread', HIDDEN)).toBeTruthy());
     await waitFor(() => expect(mockToast).toHaveBeenCalledWith('Serverfehler', expect.objectContaining({ testID: 'HOME-02.toast' })));
     expect(client.getQueryData(notificationKeys.unread('m1'))).toMatchObject({ notifications: 1 });
 
     fail = false;
-    await fireEvent.press(screen.getByTestId('HOME-02.readAll'));
+    await readAll();
     await waitFor(() => expect(screen.queryByTestId('HOME-02.row.n-new.unread', HIDDEN)).toBeNull());
     expect(client.getQueryData(notificationKeys.unread('m1'))).toMatchObject({ notifications: 0 });
     expect(callsTo(calls, '/notifications/read-all').every((request) => request.method === 'POST')).toBe(true);
     // Nothing unread: the action rests.
-    await waitFor(() => expect(screen.getByTestId('HOME-02.readAll')).toBeDisabled());
+    await openMenu();
+    await waitFor(() => expect(screen.getByTestId('HOME-02.menu.menu.readAll')).toBeDisabled());
   });
 
   // M2.2 review 25: a screen left open over midnight must not keep calling yesterday "Heute".
@@ -162,25 +183,52 @@ describe('HOME-02 Mitteilungen', () => {
     signIn();
     stubFetch({ '/notifications': { body: page(ROWS) }, '/notifications/unread-count': UNREAD });
     await renderWithProviders(<NotificationsScreen />);
-    expect(await screen.findByTestId('HOME-02.day.2026-11-08')).toHaveTextContent('Heute');
+    expect(await screen.findByTestId('HOME-02.day.today')).toHaveTextContent('Heute');
 
     mockClock.now = new Date('2026-11-09T07:30:00+01:00');
     await act(async () => listeners.forEach((listener) => listener('active')));
-    expect(screen.getByTestId('HOME-02.day.2026-11-08')).toHaveTextContent('Gestern');
-    expect(screen.getByTestId('HOME-02.day.2026-11-07')).toHaveTextContent('Sa., 7. Nov.');
+    expect(screen.queryByTestId('HOME-02.day.today')).toBeNull();
+    expect(screen.getByTestId('HOME-02.day.yesterday')).toHaveTextContent('Gestern');
+    expect(screen.getByTestId('HOME-02.day.week')).toHaveTextContent('Diese Woche');
+    expect(screen.getByTestId('HOME-02.row.n-pub')).toHaveTextContent(/Sa\., 7\. Nov\., 19:00/);
   });
 
-  it('waits with "Alle als gelesen markieren" while offline, and lines it up with the column (DQ-301, DQ-284)', async () => {
+  it('waits with "Alle als gelesen markieren" in the menu while offline', async () => {
     signIn();
     stubFetch({ '/notifications': { body: page(ROWS) }, '/notifications/unread-count': UNREAD });
     await renderWithProviders(<NotificationsScreen />);
     await screen.findByTestId('HOME-02.row.n-new');
-    expect(screen.getByTestId('HOME-02.readAll')).toBeEnabled();
+    await openMenu();
+    expect(screen.getByTestId('HOME-02.menu.menu.readAll')).toBeEnabled();
     await setNetwork(false, mockNetListeners);
-    expect(screen.getByTestId('HOME-02.readAll')).toBeDisabled();
-    // Back online while mounted: the network state lives on after the screen.
+    expect(screen.getByTestId('HOME-02.menu.menu.readAll')).toBeDisabled();
     await setNetwork(true, mockNetListeners);
-    expect(screen.getByTestId('HOME-02.readAll')).toBeEnabled();
+    expect(screen.getByTestId('HOME-02.menu.menu.readAll')).toBeEnabled();
+  });
+
+  it('filters by Builds · Social · Treffen · System, and says when a chip has nothing', async () => {
+    signIn();
+    stubFetch({ '/notifications': { body: page(ROWS) }, '/notifications/unread-count': UNREAD });
+    await renderWithProviders(<NotificationsScreen />);
+    await screen.findByTestId('HOME-02.row.n-new');
+    await fireEvent.press(screen.getByTestId('HOME-02.filter.builds'));
+    expect(screen.queryByTestId('HOME-02.row.n-new')).toBeNull();
+    expect(screen.getByTestId('HOME-02.row.n-pub')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('HOME-02.filter.social'));
+    expect(screen.getByTestId('HOME-02.row.n-new')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('HOME-02.filter.events'));
+    expect(screen.getByTestId('HOME-02.filterEmpty')).toHaveTextContent('In dieser Auswahl ist noch nichts.');
+    expect(screen.getByTestId('HOME-02.filter.all')).toBeTruthy();
+  });
+
+  it('opens the notification settings from the menu', async () => {
+    signIn();
+    stubFetch({ '/notifications': { body: page(ROWS) }, '/notifications/unread-count': UNREAD });
+    await renderWithProviders(<NotificationsScreen />);
+    await screen.findByTestId('HOME-02.row.n-new');
+    await openMenu();
+    await fireEvent.press(screen.getByTestId('HOME-02.menu.menu.settings'));
+    expect(mockRouter.push).toHaveBeenCalledWith('/settings/notifications');
   });
 
   it('says what still works for a restricted member: the notifications, not the builds (DQ-300)', async () => {
@@ -199,7 +247,7 @@ describe('HOME-02 Mitteilungen', () => {
     globalThis.fetch = jest.fn(() => new Promise<Response>(() => undefined)) as unknown as typeof fetch;
     await renderWithProviders(<NotificationsScreen />);
     expect(await screen.findByTestId('HOME-02.skeleton')).toBeTruthy();
-    expect(screen.getByTestId('HOME-02.skeleton.readAll')).toBeTruthy();
+    expect(screen.getByTestId('HOME-02.skeleton.filters')).toBeTruthy();
     expect(StyleSheet.flatten(screen.getByTestId('HOME-02.skeleton').parent?.props.style)?.paddingTop).toBeUndefined();
   });
 
@@ -208,8 +256,10 @@ describe('HOME-02 Mitteilungen', () => {
     stubFetch({ '/notifications': { body: page([]) }, '/notifications/unread-count': UNREAD });
     await renderWithProviders(<NotificationsScreen />);
     expect(await screen.findByTestId('HOME-02.empty')).toBeTruthy();
-    expect(screen.getByTestId('HOME-02.empty.title')).toHaveTextContent('Noch keine Mitteilungen');
-    expect(screen.queryByTestId('HOME-02.readAll')).toBeNull();
+    expect(screen.getByTestId('HOME-02.empty.title')).toHaveTextContent('Noch nichts Neues.');
+    expect(screen.queryByTestId('HOME-02.filters')).toBeNull();
+    await fireEvent.press(screen.getByTestId('HOME-02.empty.action'));
+    expect(mockRouter.navigate).toHaveBeenCalledWith('/discover');
   });
 
   it('shows the error with a retry, and the offline state without a copy', async () => {
@@ -241,7 +291,7 @@ describe('HOME-02 Mitteilungen', () => {
     await renderWithProviders(<NotificationsScreen />);
     expect(screen.getByTestId('HOME-02.guest')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('HOME-02.guest.action'));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/sign-in', params: { returnTo: '/notifications' } });
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/auth/email', params: { returnTo: '/notifications' } });
     await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
     expect(callsTo(calls, '/notifications')).toHaveLength(0);
   });

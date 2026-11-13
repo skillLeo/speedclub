@@ -177,13 +177,13 @@ else if (dialog === 'merge') {
                     <div class="flex items-center justify-between gap-12 bg-raised px-16 py-12">
                         <span class="flex min-w-0 flex-col">
                             <span class="text-caption text-ink-3">{{ trans('catalog.normalise.survivor') }}</span>
-                            <span class="truncate text-label-s text-ink">{{ s.survivor.name }}</span>
+                            <span class="truncate text-admin-base-strong text-ink">{{ s.survivor.name }}</span>
                         </span>
-                        <span class="whitespace-nowrap text-supporting text-ink-2 tabular-nums">{{ transChoice('catalog.normalise.usage', s.survivor.usage, { count: formatNumber(s.survivor.usage) }) }}</span>
+                        <span class="whitespace-nowrap text-admin-base text-ink-2 tabular-nums">{{ transChoice('catalog.normalise.usage', s.survivor.usage, { count: formatNumber(s.survivor.usage) }) }}</span>
                     </div>
                     <div v-for="d in s.duplicates" :key="d.id" class="flex min-h-48 items-center justify-between gap-12 border-t border-line-subtle px-16 py-8">
                         <span class="flex min-w-0 flex-col">
-                            <span class="truncate text-supporting text-ink">{{ d.name }}</span>
+                            <span class="truncate text-admin-base text-ink">{{ d.name }}</span>
                             <span class="text-caption text-ink-3 tabular-nums">{{ transChoice('catalog.normalise.usage', d.usage, { count: formatNumber(d.usage) }) }}</span>
                         </span>
                         <Button v-if="manage" size="sm" variant="secondary" :icon="PhArrowsMerge" :data-testid="`ADM-16.suggestion.${d.id}`" @click="mergeSuggestion(d, s.survivor)">

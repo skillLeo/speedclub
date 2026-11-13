@@ -77,10 +77,13 @@ const ME: Me = {
   id: '01m6f7ztzfs0gd39t08rs9zmmp',
   email: EMAIL,
   email_verified: true,
+  is_sample: false,
+  is_editorial: false,
   has_username: true,
   profile_complete: false,
   next_step: 'profile_setup',
   force_password_change: false,
+  password_set: true,
   two_factor_enabled: false,
   username: 'lukas.sc',
   username_change_available_at: null,
@@ -246,7 +249,7 @@ describe('AUTH-03 sign-in', () => {
     stubFetch({ '/auth/login': error(401, 'invalid_credentials') });
     await renderScreen(<SignInScreen />);
     await submit();
-    await waitFor(() => expect(screen.getByTestId('AUTH-03.notice')).toHaveTextContent('E-Mail-Adresse oder Passwort stimmen nicht.'));
+    await waitFor(() => expect(screen.getByTestId('AUTH-03.notice')).toHaveTextContent('E-\u2060Mail-Adresse oder Passwort stimmen nicht.'));
   });
 });
 
@@ -280,7 +283,17 @@ describe('AUTH-05 verify email', () => {
     expect(code().props.value).toBe('123456');
     // device_id: this install's own id, so two phones of the same model keep a token each (recheck, server keys on it).
     expect(await bodiesTo(calls, '/auth/email/verify')).toEqual([
-      { email: EMAIL, code: '123456', password: PASSWORD, device_name: expect.any(String), platform: expect.any(String), app_version: expect.any(String), device_id: 'uuid-1' },
+      {
+        email: EMAIL,
+        code: '123456',
+        password: PASSWORD,
+        device_name: expect.any(String),
+        platform: expect.any(String),
+        app_version: expect.any(String),
+        // M4.7: the system version too, for SET-06.
+        os_version: expect.any(String),
+        device_id: 'uuid-1',
+      },
     ]);
   });
 });
@@ -483,7 +496,8 @@ describe('AUTH-07 reset password', () => {
     expect(useSessionStore.getState()).toMatchObject({ status: 'member', member: { id: ME.id } });
     expect(mockKeychain.get('sc.authToken')).toBe('token-1');
     const { result, unmount } = await renderHook(() => useCurrentToast());
-    expect(result.current?.message).toBe('Das Passwort für someone.else@speedclub.test ist geändert.');
+    // DQ-927: the address breaks only after "@" and "." (zero-width spaces, skipped by screen readers).
+    expect(result.current?.message).toBe('Das Passwort für someone.\u200Belse@\u200Bspeedclub.\u200Btest ist geändert.');
     await unmount();
     dismissToast();
   });

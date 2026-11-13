@@ -1,0 +1,192 @@
+{
+    "title": "Treffen",
+    "queue_title": "Treffen-Queue",
+    "nav": {
+        "title": "Treffen"
+    },
+    "intro": "Treffen, die vor der Veröffentlichung geprüft werden: die ersten zwei eines Organisators und jedes mit Ort nach Zusage. Das älteste steht oben.",
+    "tabs": {
+        "label": "Treffen nach Status",
+        "pending": "In Prüfung",
+        "published": "Veröffentlicht",
+        "rejected": "Abgelehnt",
+        "cancelled": "Abgesagt",
+        "all": "Alle"
+    },
+    "caption": "Treffen mit Wartezeit, Beginn, Organisator, Ort und Meldungen",
+    "columns": {
+        "waiting": "Wartet",
+        "event": "Treffen",
+        "starts": "Beginn",
+        "organiser": "Organisator",
+        "location": "Ort",
+        "going": "Zusagen",
+        "reports": "Meldungen",
+        "status": "Status"
+    },
+    "filters": {
+        "label": "Treffen filtern",
+        "q": "Suche",
+        "q_placeholder": "Titel, Stadt oder @Organisator",
+        "type": "Art",
+        "location": "Genauer Ort",
+        "any": "Alle",
+        "apply": "Anwenden"
+    },
+    "types": {
+        "meet": "Treffen",
+        "cruise": "Ausfahrt",
+        "track_day": "Trackday",
+        "show": "Messe"
+    },
+    "location": {
+        "public": "Für alle",
+        "after_rsvp": "Nach Zusage"
+    },
+    "status": {
+        "draft": "Entwurf",
+        "pending_review": "In Prüfung",
+        "published": "Veröffentlicht",
+        "cancelled": "Abgesagt",
+        "rejected": "Abgelehnt",
+        "removed": "Entfernt"
+    },
+    "waiting": {
+        "minutes": ":count Min.",
+        "hours": ":count Std.",
+        "days": ":count Tg.",
+        "label": "Wartet seit :date"
+    },
+    "organiser": {
+        "first": "Erstes Treffen",
+        "approved": ":count freigegeben",
+        "since": "Mitglied seit :date"
+    },
+    "empty": {
+        "pending_title": "Keine Treffen in der Prüfung",
+        "pending_body": "Neue Treffen erscheinen hier, sobald ein Organisator sie zur Prüfung sendet.",
+        "published_title": "Noch keine veröffentlichten Treffen",
+        "published_body": "Freigegebene Treffen und Treffen etablierter Organisatoren stehen hier.",
+        "rejected_title": "Keine abgelehnten Treffen",
+        "rejected_body": "Abgelehnte Treffen bleiben hier zwölf Monate mit ihrem Grund.",
+        "cancelled_title": "Keine abgesagten Treffen",
+        "cancelled_body": "Abgesagte Treffen bleiben hier zwölf Monate mit ihrem Grund.",
+        "all_title": "Noch keine Treffen",
+        "all_body": "Sobald Mitglieder Treffen anlegen und zur Prüfung senden, stehen sie hier."
+    },
+    "pane": {
+        "label": "Ausgewähltes Treffen",
+        "select_body": "Wähle ein Treffen: Es öffnet sich rechts mit Ort, Organisator und Beschreibung. j und k wechseln, a gibt frei, r lehnt ab.",
+        "gone": "Dieses Treffen gibt es nicht mehr oder es ist wieder ein Entwurf.",
+        "open": "Treffen öffnen"
+    },
+    "detail": {
+        "organiser": "Organisator",
+        "place": "Ort",
+        "place_private": "Den genauen Ort sehen nur der Organisator und Mitglieder mit Zusage. Dein erster Blick am Tag steht im Audit-Log.",
+        "place_public": "Der Ort ist für alle sichtbar.",
+        "no_place": "Kein genauer Ort angegeben",
+        "time": "Zeit",
+        "description": "Beschreibung",
+        "no_description": "Keine Beschreibung",
+        "organiser_rules": "Regeln des Organisators",
+        "rules": "Bestätigte Regeln",
+        "capacity": "Plätze",
+        "unlimited": "Ohne Begrenzung",
+        "answers": "Antworten",
+        "going": "Zusagen",
+        "interested": "Interessiert",
+        "waitlist": "Warteliste",
+        "visibility": "Sichtbar für",
+        "changed": "Geändert seit der Freigabe",
+        "sample": "Beispiel",
+        "cover": "Titelbild von „:title“",
+        "no_cover": "Kein Titelbild",
+        "review": "Entscheidung",
+        "reviewed": ":name, :date",
+        "cancellation": "Absage",
+        "cancelled_by_staff": "Abgesagt vom Team, :date",
+        "cancelled_by_organiser": "Abgesagt vom Organisator, :date",
+        "removed": "Durch eine Moderationsentscheidung entfernt, :date",
+        "reports": "Offene Meldungen"
+    },
+    "visibility": {
+        "public": "Alle",
+        "followers": "Follower",
+        "unlisted": "Nur mit Link"
+    },
+    "fields": {
+        "title": "Titel",
+        "description": "Beschreibung",
+        "venue_name": "Ortsname",
+        "street": "Straße",
+        "postcode": "PLZ",
+        "city": "Stadt",
+        "lat": "Kartenpunkt",
+        "lng": "Kartenpunkt",
+        "cover": "Titelbild"
+    },
+    "rules": {
+        "legal_only": "Nur legale Treffen",
+        "no_racing": "Keine Rennen auf öffentlichen Straßen",
+        "respect_residents": "Rücksicht auf Anwohner und Lärm",
+        "no_litter": "Kein Müll bleibt zurück",
+        "permits_arranged": "Genehmigungen sind eingeholt"
+    },
+    "actions": {
+        "approve": "Freigeben",
+        "reject": "Ablehnen",
+        "cancel": "Absagen",
+        "reopen": "Zurück in die Prüfung",
+        "undo": "Rückgängig",
+        "reload": "Neu laden",
+        "member": "Mitglied öffnen"
+    },
+    "reject_dialog": {
+        "title": "„:title“ ablehnen?",
+        "body": "Der Organisator liest den Grund und kann das Treffen geändert erneut senden.",
+        "reason": "Grund für den Organisator"
+    },
+    "cancel_dialog": {
+        "title": "„:title“ absagen?",
+        "body": "Alle mit einer Antwort werden benachrichtigt und lesen den Grund. Das Treffen bleibt mit der Absage sichtbar.",
+        "reason": "Grund für die Teilnehmenden"
+    },
+    "reopen_dialog": {
+        "title": "„:title“ zurück in die Prüfung?",
+        "body": "Das Treffen ist nicht mehr öffentlich, bis es wieder freigegeben ist. Das geht nur, solange niemand geantwortet hat."
+    },
+    "conflict": {
+        "title": "Inzwischen geändert",
+        "changed": "Das Treffen wurde inzwischen geändert. Lade es neu und prüfe die aktuelle Fassung."
+    },
+    "undo": {
+        "approved": "„:title“ freigegeben.",
+        "rejected": "„:title“ abgelehnt.",
+        "cancelled": "„:title“ abgesagt.",
+        "reopened": "„:title“ ist wieder in der Prüfung."
+    },
+    "view_only": "Nur Ansicht: Entscheiden dürfen Rollen mit „Moderation entscheiden“.",
+    "keys": "Tastatur: j und k wechseln, a gibt frei, r lehnt ab, u macht rückgängig.",
+    "record": {
+        "crumb": "Treffen",
+        "tabs": {
+            "label": "Bereiche des Treffens",
+            "overview": "Überblick",
+            "answers": "Antworten & Updates",
+            "reports": "Meldungen"
+        },
+        "updates": "Updates des Organisators",
+        "no_updates": "Der Organisator hat noch keine Updates geschrieben.",
+        "no_cases": "Zu diesem Treffen gibt es keine Meldungen.",
+        "case": "Fall vom :date",
+        "error": "Das Treffen konnte nicht geladen werden."
+    },
+    "flash": {
+        "approved": "Treffen freigegeben.",
+        "rejected": "Treffen abgelehnt. Der Organisator bekommt den Grund.",
+        "cancelled": "Treffen abgesagt. Alle mit Zusage werden benachrichtigt.",
+        "reopened": "Treffen ist wieder in der Prüfung.",
+        "not_possible": "Das geht gerade nicht mehr: Das Treffen wurde inzwischen geändert oder entschieden."
+    }
+}

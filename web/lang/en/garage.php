@@ -106,6 +106,7 @@ return [
         'specs_changed' => 'Specs updated',
         'photos_added' => 'Photos added',
         'note' => 'Note',
+        'post' => 'Update',
         'parts' => [
             'wheels_tires' => 'Wheels',
             'suspension' => 'Suspension',

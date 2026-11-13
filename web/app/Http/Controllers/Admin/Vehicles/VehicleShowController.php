@@ -21,6 +21,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleModel;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Moderation\ModerationHolds;
+use App\Support\SafeMarkdown;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -61,6 +62,7 @@ class VehicleShowController extends Controller
     private static function details(Vehicle $vehicle, VehiclePresenter $presenter, ModerationHolds $holds): array
     {
         $removal = $holds->activeRemoval(ReportTargetType::Vehicle, $vehicle->id);
+        $description = $vehicle->getAttribute('description');
 
         return [
             'id' => $vehicle->id,
@@ -78,7 +80,8 @@ class VehicleShowController extends Controller
             'model_year' => $vehicle->model_year,
             'nickname' => $vehicle->getAttribute('nickname'),
             'color' => $vehicle->getAttribute('color'),
-            'description' => $vehicle->getAttribute('description'),
+            // Shown, never edited here: the owner's words do not break beside a short part of a compound ("GT- / SS-Ladern", r5 ADM-12).
+            'description' => is_string($description) ? SafeMarkdown::joinShortCompounds($description) : null,
             'status' => $vehicle->status->value,
             'visibility' => $vehicle->visibility->value,
             'deleted' => $vehicle->trashed(),

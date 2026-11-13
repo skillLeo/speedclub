@@ -17,10 +17,43 @@ import { Light } from './Light';
 import { Audio } from './Audio';
 import { Gearbox } from './Gearbox';
 import { Drivetrain } from './Drivetrain';
+import { Supercharger } from './Supercharger';
+import { Intercooler } from './Intercooler';
+import { Fuel } from './Fuel';
+import { Cooling } from './Cooling';
+import { Oil } from './Oil';
+import { BrakeCaliper } from './BrakeCaliper';
+import { SplitterDiffuser } from './SplitterDiffuser';
+import { BodyKit } from './BodyKit';
+import { WrapPaint } from './WrapPaint';
+import { SteeringWheel } from './SteeringWheel';
+import { RollCage } from './RollCage';
+import { Electronics } from './Electronics';
+import { Clutch } from './Clutch';
+import { Differential } from './Differential';
+import { ChassisBrace } from './ChassisBrace';
+import { EvBattery } from './EvBattery';
+import { EvPlug } from './EvPlug';
+import { GarageBay } from './GarageBay';
+import { QrSticker } from './QrSticker';
+import { Dyno } from './Dyno';
+import { HuPlakette } from './HuPlakette';
+import { ServiceWrench } from './ServiceWrench';
+import { TyreSeason } from './TyreSeason';
+import { Insurance } from './Insurance';
+import { Workshop } from './Workshop';
+import { PartBox } from './PartBox';
+import { Meet } from './Meet';
+import { CruiseRoute } from './CruiseRoute';
+import { TrackDay } from './TrackDay';
+import { Strong } from './Strong';
+import { Clean } from './Clean';
+import { Low } from './Low';
+import { Loud } from './Loud';
 import type { AutoIconProps } from './types';
 
 export type { AutoIconProps, AutoIconSize, AutoIconWeight } from './types';
-export { Wheel, Tyre, Coilover, AirSuspension, Exhaust, Turbo, Intake, Engine, EcuChip, BrakeDisc, Wing, Seat, Light, Audio, Gearbox, Drivetrain };
+export { Wheel, Tyre, Coilover, AirSuspension, Exhaust, Turbo, Intake, Engine, EcuChip, BrakeDisc, Wing, Seat, Light, Audio, Gearbox, Drivetrain, Supercharger, Intercooler, Fuel, Cooling, Oil, BrakeCaliper, SplitterDiffuser, BodyKit, WrapPaint, SteeringWheel, RollCage, Electronics, Clutch, Differential, ChassisBrace, EvBattery, EvPlug, GarageBay, QrSticker, Dyno, HuPlakette, ServiceWrench, TyreSeason, Insurance, Workshop, PartBox, Meet, CruiseRoute, TrackDay, Strong, Clean, Low, Loud };
 
 export type AutoIconName =
   | 'wheel'
@@ -38,7 +71,40 @@ export type AutoIconName =
   | 'light'
   | 'audio'
   | 'gearbox'
-  | 'drivetrain';
+  | 'drivetrain'
+  | 'supercharger'
+  | 'intercooler'
+  | 'fuel'
+  | 'cooling'
+  | 'oil'
+  | 'brake-caliper'
+  | 'splitter-diffuser'
+  | 'body-kit'
+  | 'wrap-paint'
+  | 'steering-wheel'
+  | 'roll-cage'
+  | 'electronics'
+  | 'clutch'
+  | 'differential'
+  | 'chassis-brace'
+  | 'ev-battery'
+  | 'ev-plug'
+  | 'garage-bay'
+  | 'qr-sticker'
+  | 'dyno'
+  | 'hu-plakette'
+  | 'service-wrench'
+  | 'tyre-season'
+  | 'insurance'
+  | 'workshop'
+  | 'part-box'
+  | 'meet'
+  | 'cruise-route'
+  | 'track-day'
+  | 'strong'
+  | 'clean'
+  | 'low'
+  | 'loud';
 
 export const autoIcons: Record<AutoIconName, ComponentType<AutoIconProps>> = {
   wheel: Wheel,
@@ -57,4 +123,68 @@ export const autoIcons: Record<AutoIconName, ComponentType<AutoIconProps>> = {
   audio: Audio,
   gearbox: Gearbox,
   drivetrain: Drivetrain,
+  supercharger: Supercharger,
+  intercooler: Intercooler,
+  fuel: Fuel,
+  cooling: Cooling,
+  oil: Oil,
+  'brake-caliper': BrakeCaliper,
+  'splitter-diffuser': SplitterDiffuser,
+  'body-kit': BodyKit,
+  'wrap-paint': WrapPaint,
+  'steering-wheel': SteeringWheel,
+  'roll-cage': RollCage,
+  electronics: Electronics,
+  clutch: Clutch,
+  differential: Differential,
+  'chassis-brace': ChassisBrace,
+  'ev-battery': EvBattery,
+  'ev-plug': EvPlug,
+  'garage-bay': GarageBay,
+  'qr-sticker': QrSticker,
+  dyno: Dyno,
+  'hu-plakette': HuPlakette,
+  'service-wrench': ServiceWrench,
+  'tyre-season': TyreSeason,
+  insurance: Insurance,
+  workshop: Workshop,
+  'part-box': PartBox,
+  meet: Meet,
+  'cruise-route': CruiseRoute,
+  'track-day': TrackDay,
+  strong: Strong,
+  clean: Clean,
+  low: Low,
+  loud: Loud,
+};
+
+/** The glyphs with a fill variant (selected states); the others draw their regular form for `weight="fill"`. */
+export const autoIconsWithFill: readonly AutoIconName[] = [
+  'wheel',
+  'tyre',
+  'coilover',
+  'air-suspension',
+  'exhaust',
+  'turbo',
+  'intake',
+  'engine',
+  'ecu-chip',
+  'brake-disc',
+  'wing',
+  'seat',
+  'light',
+  'audio',
+  'gearbox',
+  'drivetrain',
+  'strong',
+  'clean',
+  'low',
+  'loud',
+];
+
+/** Appendix C's groups: build-sheet systems, domain concepts, reactions. */
+export const autoIconGroups: Readonly<Record<'systems' | 'domain' | 'reactions', readonly AutoIconName[]>> = {
+  systems: ['wheel', 'tyre', 'coilover', 'air-suspension', 'exhaust', 'turbo', 'intake', 'engine', 'ecu-chip', 'brake-disc', 'wing', 'seat', 'light', 'audio', 'gearbox', 'drivetrain', 'supercharger', 'intercooler', 'fuel', 'cooling', 'oil', 'brake-caliper', 'splitter-diffuser', 'body-kit', 'wrap-paint', 'steering-wheel', 'roll-cage', 'electronics', 'clutch', 'differential', 'chassis-brace', 'ev-battery', 'ev-plug'],
+  domain: ['garage-bay', 'qr-sticker', 'dyno', 'hu-plakette', 'service-wrench', 'tyre-season', 'insurance', 'workshop', 'part-box', 'meet', 'cruise-route', 'track-day'],
+  reactions: ['strong', 'clean', 'low', 'loud'],
 };

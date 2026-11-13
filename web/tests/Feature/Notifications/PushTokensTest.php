@@ -5,6 +5,7 @@ use App\Enums\RestrictionType;
 use App\Http\RateLimits;
 use App\Models\PushToken;
 use App\Models\User;
+use App\Services\Auth\DeviceInstalls;
 use App\Services\Auth\MemberSessions;
 use App\Services\Notifications\ExpoPush;
 use App\Services\Notifications\Notifier;
@@ -41,10 +42,11 @@ describe('POST me/push-tokens', function () {
         ntfRegister(['token' => 'ExponentPushToken[yyyyyyyyyyyyyyyyyyyyyy]'])->assertNoContent();
         ntfRegister(['token' => 'ExpoPushToken[zzzzzzzzzzzzzzzzzzzzzz]', 'device_id' => 'install-b', 'platform' => 'android'])->assertNoContent();
 
-        expect(PushToken::query()->where('user_id', $this->member->id)->orderBy('device_id')->get()->map(fn (PushToken $token) => [$token->device_id, $token->getAttribute('token'), $token->platform])->all())
+        // SEC-M47-03: the install id is stored keyed to the member only.
+        expect(PushToken::query()->where('user_id', $this->member->id)->orderBy('platform')->get()->map(fn (PushToken $token) => [$token->device_id, $token->getAttribute('token'), $token->platform])->all())
             ->toBe([
-                ['install-a', 'ExponentPushToken[yyyyyyyyyyyyyyyyyyyyyy]', DevicePlatform::Ios],
-                ['install-b', 'ExpoPushToken[zzzzzzzzzzzzzzzzzzzzzz]', DevicePlatform::Android],
+                [DeviceInstalls::key($this->member->id, 'install-b'), 'ExpoPushToken[zzzzzzzzzzzzzzzzzzzzzz]', DevicePlatform::Android],
+                [DeviceInstalls::key($this->member->id, 'install-a'), 'ExponentPushToken[yyyyyyyyyyyyyyyyyyyyyy]', DevicePlatform::Ios],
             ]);
     });
 
@@ -109,16 +111,16 @@ describe('POST me/push-tokens', function () {
 describe('DELETE me/push-tokens/{device_id}', function () {
     it('removes the member\'s token of that install only, and an unknown install is no error', function () {
         $other = ntfMember('lukas.sc');
-        PushToken::factory()->create(['user_id' => $this->member->id, 'device_id' => 'install-a']);
-        PushToken::factory()->create(['user_id' => $this->member->id, 'device_id' => 'install-b']);
-        PushToken::factory()->create(['user_id' => $other->id, 'device_id' => 'install-c']);
+        PushToken::factory()->create(['user_id' => $this->member->id, 'device_id' => DeviceInstalls::key($this->member->id, 'install-a')]);
+        PushToken::factory()->create(['user_id' => $this->member->id, 'device_id' => DeviceInstalls::key($this->member->id, 'install-b')]);
+        PushToken::factory()->create(['user_id' => $other->id, 'device_id' => DeviceInstalls::key($other->id, 'install-c')]);
         Sanctum::actingAs($this->member);
 
         $this->deleteJson('/api/v1/me/push-tokens/install-a')->assertNoContent();
         $this->deleteJson('/api/v1/me/push-tokens/install-c')->assertNoContent();
         $this->deleteJson('/api/v1/me/push-tokens/nichts-da')->assertNoContent();
 
-        expect(PushToken::query()->orderBy('device_id')->pluck('device_id')->all())->toBe(['install-b', 'install-c']);
+        expect(PushToken::query()->pluck('device_id')->sort()->values()->all())->toBe(collect([DeviceInstalls::key($this->member->id, 'install-b'), DeviceInstalls::key($other->id, 'install-c')])->sort()->values()->all());
     });
 
     it('applies the authorisation matrix', function (Closure $who, int $status) {
@@ -135,13 +137,13 @@ describe('DELETE me/push-tokens/{device_id}', function () {
 describe('signing out', function () {
     it('deletes the push token of the device it signs out, not of the others', function () {
         $phone = $this->member->createToken('iPhone 15');
-        $phone->accessToken->forceFill(['device_id' => 'install-a'])->save();
-        PushToken::factory()->create(['user_id' => $this->member->id, 'device_id' => 'install-a']);
-        PushToken::factory()->create(['user_id' => $this->member->id, 'device_id' => 'install-b']);
+        $phone->accessToken->forceFill(['device_id' => DeviceInstalls::key($this->member->id, 'install-a')])->save();
+        PushToken::factory()->create(['user_id' => $this->member->id, 'device_id' => DeviceInstalls::key($this->member->id, 'install-a')]);
+        PushToken::factory()->create(['user_id' => $this->member->id, 'device_id' => DeviceInstalls::key($this->member->id, 'install-b')]);
 
         $this->withToken($phone->plainTextToken)->postJson('/api/v1/auth/logout')->assertNoContent();
 
-        expect(PushToken::query()->pluck('device_id')->all())->toBe(['install-b']);
+        expect(PushToken::query()->pluck('device_id')->all())->toBe([DeviceInstalls::key($this->member->id, 'install-b')]);
     });
 
     it('deletes every push token when a password reset signs out every device', function () {

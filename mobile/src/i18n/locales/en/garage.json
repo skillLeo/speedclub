@@ -25,8 +25,52 @@
     "deleteDraftBody": "The draft and its photos will be deleted.",
     "deleteDraftConfirm": "Delete draft",
     "draftDeleted": "Draft deleted",
-    "emptyTitle": "Add your first car",
-    "emptyBody": "Document specs and mods and get your personal QR code."
+    "emptyTitle": "Your garage is waiting.",
+    "emptyBody": "Add your car, log its specs and mods and get your QR sticker for the window.",
+    "emptyAction": "Add car",
+    "sampleTitle": "What a build looks like",
+    "sample": {
+      "title": "Nissan Skyline GT-R R34",
+      "subtitle": "2002 · 2.6 l I6 twin-turbo",
+      "power": "500 PS",
+      "torque": "540 Nm",
+      "drive": "AWD",
+      "caption": "Nissan · Skyline GT-R · R34 · 2002"
+    },
+    "actionsFor": "Actions for {{vehicle}}",
+    "quick": {
+      "update": "Post update",
+      "updateLabel": "Post update for {{vehicle}}",
+      "mods": "Mods",
+      "modsLabel": "Mods of {{vehicle}}",
+      "photos": "Photos",
+      "photosLabel": "Photos of {{vehicle}}",
+      "qr": "QR code",
+      "qrLabel": "QR code for {{vehicle}}"
+    },
+    "statsVehicles_one": "{{formatted}} vehicle",
+    "statsVehicles_other": "{{formatted}} vehicles",
+    "statsMods_one": "{{formatted}} mod",
+    "statsMods_other": "{{formatted}} mods",
+    "statsPhotos_one": "{{formatted}} photo",
+    "statsPhotos_other": "{{formatted}} photos",
+    "statsPrivate": "Only visible to you",
+    "mainStays": "Your main vehicle stays first.",
+    "sortOffline": "You can't change the order while offline.",
+    "page": "Vehicle {{index}} of {{count}}",
+    "card": {
+      "power": "Power",
+      "torque": "Torque",
+      "model_year": "Year"
+    },
+    "status": {
+      "public": "Public",
+      "unlisted": "Unlisted",
+      "private": "Private",
+      "draft": "Draft"
+    },
+    "loadErrorTitle": "Your garage could not be loaded.",
+    "loadErrorBody": "The server did not answer. Your vehicles are safe – try again in a moment."
   },
   "guest": {
     "title": "Your garage is waiting",
@@ -126,7 +170,7 @@
   "specs": {
     "title": "Specs",
     "groups": {
-      "engine": "Engine",
+      "engine": "Power unit",
       "power": "Power",
       "torque": "Torque",
       "drivetrain": "Drivetrain",
@@ -142,25 +186,25 @@
     "aspiration": "Aspiration",
     "choose": "Choose",
     "noAnswer": "Not specified",
-    "power": "Power",
+    "power": "Peak power",
     "powerPlaceholder": "e.g. 500",
     "powerUnit": "Unit",
     "powerSource": "Source of the power figure",
-    "torque": "Torque",
+    "torque": "Peak torque",
     "torquePlaceholder": "e.g. 540",
     "torqueSource": "Source of the torque figure",
-    "drivetrain": "Drivetrain",
+    "drivetrain": "Driven wheels",
     "gearbox": "Gearbox",
     "source": {
-      "factory": "Factory",
-      "claimed": "Owner claim",
-      "measured": "Measured"
+      "factory": "Manufacturer",
+      "claimed": "Estimated",
+      "measured": "Dyno"
     },
     "fuels": {
       "petrol": "Petrol",
       "diesel": "Diesel",
       "hybrid": "Hybrid",
-      "plug_in_hybrid": "Plug-in hybrid",
+      "plug_in_hybrid": "Plug-⁠in hybrid",
       "electric": "Electric",
       "lpg": "LPG",
       "cng": "CNG",
@@ -188,7 +232,7 @@
       "cvt": "CVT",
       "single_speed": "Single speed"
     },
-    "huAu": "HU/AU inspection due (month/year)",
+    "huAu": "Next due date (month/year)",
     "huAuPlaceholder": "MM/YYYY",
     "huAuHelperEmpty": "Enter the month on the inspection sticker. We remind you 30 days before. Only you can see it.",
     "huAuHelper": "We remind you on {{date}}, 30 days before. Only you can see the date.",
@@ -236,7 +280,9 @@
     "noSpecs": "No specs yet",
     "photoCount_one": "{{count}} photo",
     "photoCount_other": "{{count}} photos",
-    "photosUploading": "Photos are still uploading"
+    "photosUploading": "Photos are still uploading",
+    "publishNeeds": "Still needed to publish: {{items}}.",
+    "previewLabel": "Preview of your vehicle page"
   },
   "visibility": {
     "title": "Visibility",
@@ -417,7 +463,6 @@
       "details": "Details",
       "install": "Installation",
       "photos": "Photos",
-      "notes": "Notes",
       "more": "More details"
     },
     "rangePlaceholder": "{{min}} to {{max}}",
@@ -432,8 +477,7 @@
     "installedOnPlaceholder": "MM/YYYY",
     "cost": "Cost",
     "costPlaceholder": "e.g. 2,400",
-    "costPublic": "Show cost publicly",
-    "costPublicHelper": "When it's off, only you see the cost.",
+    "costPrivate": "Only you see the cost.",
     "notes": "Notes",
     "notesPlaceholder": "Setup, experience, where you got it",
     "notesPrivate": "Only visible to you.",
@@ -460,7 +504,7 @@
       "parts_certificate": "Parts certificate",
       "registered": "Registered",
       "individual_approval": "Individual approval",
-      "not_required": "Not required",
+      "not_required": "Approval-free",
       "unknown": "Unknown"
     },
     "legalStatusDetails": {
@@ -499,15 +543,17 @@
     "draftBody": "Changes to a draft don't appear in the history."
   },
   "published": {
-    "title": "Your build is live",
+    "title": "Your build is live.",
     "body": "{{vehicle}} now has its own QR code. Anyone who scans it lands right on your build page.",
     "bodyFallback": "Your vehicle now has its own QR code. Anyone who scans it lands right on your build page.",
     "qrLabel": "QR code for {{vehicle}}",
-    "addMods": "Add mods",
-    "downloadSticker": "Download sticker",
-    "viewPage": "View public page",
     "goneTitle": "This vehicle isn't published yet",
-    "goneBody": "You can continue the draft in your garage."
+    "goneBody": "You can continue the draft in your garage.",
+    "viewQr": "View QR code",
+    "share": "Share",
+    "toGarage": "Go to garage",
+    "linkCopied": "Link copied",
+    "shareFailed": "Sharing didn't work. Please try again."
   },
   "sort": {
     "handle": "Move {{name}}",
@@ -583,5 +629,234 @@
     "retry": "Try again",
     "describeReplaced": "Suggestion inserted. It replaced your previous text.",
     "photoSuggest": "Suggest a category"
+  },
+  "maintenance": {
+    "title": "Maintenance",
+    "private": "Only visible to you",
+    "next": "Up next",
+    "items": "Maintenance items",
+    "history": "History",
+    "add": "Add",
+    "addItem": "Add maintenance item",
+    "addLog": "Log a service",
+    "addSheetTitle": "What would you like to add?",
+    "addItemHelper": "Inspection, oil change, tyre change – with a reminder",
+    "addLogHelper": "What was done, with mileage and cost",
+    "open": "Maintenance",
+    "type": {
+      "hu_au": "Inspection (HU/AU)",
+      "service": "Service",
+      "oil_change": "Oil change",
+      "brake_fluid": "Brake fluid",
+      "tyre_change": "Tyre change",
+      "insurance": "Car insurance",
+      "custom": "Custom item"
+    },
+    "typeHelper": {
+      "hu_au": "Month on the inspection sticker",
+      "service": "By time or mileage",
+      "oil_change": "By time or mileage",
+      "brake_fluid": "Every 24 months",
+      "tyre_change": "Winter tyres from October to Easter",
+      "insurance": "Switching deadline 30 November",
+      "custom": "Timing belt, air-con service and more"
+    },
+    "due": {
+      "month": "Due in {{month}}",
+      "date": "Due on {{date}}",
+      "dateOrKm": "Due on {{date}} or at {{distance}}",
+      "km": "Due at {{distance}}",
+      "deadline": "Deadline {{date}}",
+      "none": "No date yet. Add when it was last done."
+    },
+    "countdown": {
+      "untilDue": "until due",
+      "days_one": "in {{days}} day",
+      "days_other": "in {{days}} days",
+      "today": "due today",
+      "tomorrow": "due tomorrow",
+      "overdue_one": "{{count}} day overdue",
+      "overdue_other": "{{count}} days overdue",
+      "km": "{{distance}} to go",
+      "overKm": "{{distance}} over"
+    },
+    "unit": {
+      "daysOverdue_one": "day overdue",
+      "daysOverdue_other": "days overdue",
+      "over": "{{unit}} over",
+      "days_one": "day",
+      "days_other": "days"
+    },
+    "last": "Last done {{when}}",
+    "season": {
+      "winter": "Next: winter tyres",
+      "summer": "Next: summer tyres"
+    },
+    "off": "Reminder off",
+    "odometer": {
+      "title": "Mileage",
+      "recorded": "As of {{date}}",
+      "unknown": "Not entered yet",
+      "update": "Update",
+      "updateLabel": "Update mileage",
+      "sheetTitle": "Update mileage",
+      "label": "Current mileage ({{unit}})",
+      "helper": "Mileage reminders count from here.",
+      "save": "Save",
+      "saved": "Mileage saved."
+    },
+    "costs": {
+      "title": "Costs",
+      "total": "Total",
+      "line": "{{maintenance}} maintenance · {{mods}} modifications",
+      "note": "Maintenance and modifications together. Only you can see these figures.",
+      "empty": "No costs logged yet."
+    },
+    "log": {
+      "workshop": "Workshop: {{name}}",
+      "cost": "Cost: {{cost}}",
+      "costLabel": "Cost",
+      "emptyTitle": "Nothing logged yet",
+      "emptyBody": "Add what was done, with date, mileage and cost.",
+      "more": "Load more",
+      "deleted": "Entry deleted.",
+      "edit": "Edit {{title}}"
+    },
+    "empty": {
+      "title": "Keep track of inspections, services and tyres.",
+      "body": "We remind you in good time. Choose push or email in Notifications.",
+      "action": "Add inspection date"
+    },
+    "state": {
+      "sending": "Sending …",
+      "waiting": "Waiting for a connection",
+      "failed": "Failed"
+    },
+    "outbox": {
+      "conflict": "This was changed on another device. You are now seeing the latest version.",
+      "failedToast": "A maintenance change could not be saved.",
+      "queued": "Saved. It will be sent as soon as you are back online.",
+      "retry": "Try again",
+      "discard": "Discard",
+      "pendingTitle": "Not sent yet",
+      "deleteItem": "Deleting {{title}}",
+      "deleteLog": "Deleting entry",
+      "odometer": "Mileage {{distance}}",
+      "log": "Service on {{date}}"
+    },
+    "restricted": {
+      "viewAs": "Maintenance and costs are private and not shown when viewing as a member."
+    },
+    "unavailableTitle": "Maintenance is not available right now",
+    "unavailableBody": "Please try again later.",
+    "errorTitle": "Could not load maintenance",
+    "editor": {
+      "newItem": "New maintenance item",
+      "editItem": "Edit {{title}}",
+      "newLog": "Log a service",
+      "editLog": "Edit entry",
+      "close": "Close",
+      "save": "Save",
+      "typeLabel": "What do you want to keep track of?",
+      "titleLabel": "Name",
+      "titlePlaceholder": "e.g. timing belt",
+      "dueMonthLabel": "Next inspection (month on the sticker)",
+      "monthPlaceholder": "MM/YYYY",
+      "intervalTitle": "Interval",
+      "intervalMonths": "Every … months",
+      "intervalKm": "Every … {{unit}}",
+      "lastTitle": "Last done",
+      "date": "Date",
+      "km": "Mileage ({{unit}})",
+      "nextTitle": "Next due",
+      "nextHelper": "Leave empty and we work it out from the interval.",
+      "nextDate": "Date from the service book",
+      "nextKm": "Mileage from the service book ({{unit}})",
+      "datePlaceholder": "DD.MM.YYYY",
+      "leadTitle": "Remind me",
+      "leadHelper": "Up to three times. Choose push or email in Notifications.",
+      "lead_one": "{{count}} day before",
+      "lead_other": "{{count}} days before",
+      "leadSameDay": "On the day",
+      "enabled": "Reminders for this item",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "e.g. oil grade, part number",
+      "seasonInfo": "We remind you about winter tyres in early October and about summer tyres around Easter.",
+      "insuranceInfo": "You can switch until 30 November. We remind you on 1 November.",
+      "delete": "Delete maintenance item",
+      "deleteTitle": "Delete {{title}}?",
+      "deleteBody": "Logged entries stay in the history.",
+      "deleteConfirm": "Delete",
+      "deleteKeep": "Keep",
+      "deleted": "{{title}} deleted.",
+      "saved": "Saved.",
+      "conflict": "This was changed elsewhere in the meantime. We loaded the latest version.",
+      "gone": "This entry no longer exists.",
+      "limit": "You cannot add more than 30 maintenance items.",
+      "failed": "Saving did not work. Please try again.",
+      "offline": "You are offline. What you save is sent as soon as you are back online.",
+      "logWhat": "What was done?",
+      "logOwn": "Something else",
+      "logCost": "Cost in euros",
+      "logCostHelper": "Only visible to you.",
+      "costPlaceholder": "e.g. 189.50",
+      "logWorkshop": "Workshop",
+      "logWorkshopPlaceholder": "e.g. the garage round the corner",
+      "logNotesPlaceholder": "What was done, which parts?",
+      "photos": "Receipts and photos",
+      "photosHelper": "Up to 6, such as the invoice or service book. Only for you.",
+      "addPhoto": "Add photo",
+      "photoOffline": "You can add photos once you are online.",
+      "photoLater": "You can add photos after saving.",
+      "photoFailed": "The photo could not be uploaded.",
+      "removePhoto": "Remove photo {{index}}",
+      "photoAlt": "Receipt {{index}}",
+      "deleteLog": "Delete entry",
+      "deleteLogTitle": "Delete this entry?",
+      "deleteLogBody": "The date, cost and photos of this entry will be lost.",
+      "goneTitle": "No longer there"
+    },
+    "validation": {
+      "titleRequired": "Enter a name.",
+      "tooLong": "No more than {{max}} characters.",
+      "monthRequired": "Enter the month, e.g. 03/2027.",
+      "month": "Please enter it as MM/YYYY, e.g. 03/2027.",
+      "months": "Between 1 and {{max}} months.",
+      "distance": "Enter a whole number, e.g. 15000.",
+      "date": "Please enter it as DD.MM.YYYY.",
+      "dateRequired": "Enter the date.",
+      "future": "This date is in the future.",
+      "cost": "Enter an amount, e.g. 189.50.",
+      "leads": "No more than {{max}} reminders."
+    },
+    "notification": {
+      "title": "{{what}} coming up",
+      "body_one": "{{what}} is due in {{count}} day.",
+      "body_other": "{{what}} is due in {{count}} days.",
+      "today": "{{what}} is due today."
+    },
+    "upcoming": {
+      "title": "Coming up",
+      "open": "Open maintenance of {{vehicle}}"
+    },
+    "defaults": {
+      "title": "Garage & reminders",
+      "huGroup": "Inspection (HU/AU)",
+      "huHelper": "Every new inspection date starts with these. You can change them per vehicle.",
+      "typesGroup": "Reminders",
+      "tyres": "Tyre change (October to Easter)",
+      "tyresHelper": "Early October and at Easter",
+      "insurance": "Car insurance",
+      "insuranceHelper": "Deadline 30 November, reminder on 1 November",
+      "service": "Service, oil and brake fluid",
+      "serviceHelper": "Also for custom items",
+      "channels": "Choose push or email under Notifications › Due dates.",
+      "channelsLink": "Open notifications",
+      "errorTitle": "Could not load the settings",
+      "leadsMax": "Three at most. Remove another one first.",
+      "failed": "The setting could not be saved."
+    },
+    "huChip": "Next inspection: {{month}}",
+    "huChipOverdue": "Inspection overdue since {{month}}"
   }
 }

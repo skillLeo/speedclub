@@ -59,7 +59,7 @@ function submit(): void {
             <Field :label="trans('privacy.create.type')" required><Select v-model="form.type" :options="typeOptions" data-testid="ADM-45.create.type" /></Field>
             <Field :label="trans('privacy.create.source')" required><Select v-model="form.source" :options="sourceOptions" data-testid="ADM-45.create.source" /></Field>
             <div class="flex flex-col gap-8">
-                <span class="text-label-s text-ink">{{ trans('privacy.create.who') }}</span>
+                <span class="text-admin-base-strong text-ink">{{ trans('privacy.create.who') }}</span>
                 <SegmentedControl v-model="form.who" :options="whoOptions" :label="trans('privacy.create.who')" data-testid="ADM-45.create.who" />
             </div>
             <Field v-if="form.who === 'member'" :label="trans('privacy.create.member')" :hint="trans('privacy.create.member_hint')" :error="errors.member" required>

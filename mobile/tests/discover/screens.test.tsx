@@ -176,6 +176,25 @@ describe('DISC-02 Suche', () => {
     expect(screen.queryByTestId(`DISC-02.vehicle.${R34.id}`)).toBeNull();
   });
 
+  it('puts the members in front when DISC-01 searched with the Mitglieder scope (09 §7.5)', async () => {
+    setParams({ q: 'r34', scope: 'members' });
+    stubFetch({ '/search': { body: { data: overview() } }, '/discover': { body: { data: { makes: MAKES } } } });
+    await renderWithProviders(<SearchScreen />);
+    expect(await screen.findByTestId(`DISC-02.member.${KENJI.username}.garage`)).toBeTruthy();
+    expect(screen.queryByTestId(`DISC-02.vehicle.${R34.id}`)).toBeNull();
+    // The member can still switch.
+    await fireEvent.press(screen.getByTestId('DISC-02.tab.vehicles'));
+    expect(await screen.findByTestId(`DISC-02.vehicle.${R34.id}`)).toBeTruthy();
+  });
+
+  it('draws the grid view as the photo wall: the builds as 1:1 cells, 2 px apart (09 §5)', async () => {
+    setParams({ q: 'r34', view: 'grid' });
+    stubFetch({ '/search': { body: { data: overview() } }, '/discover': { body: { data: { makes: MAKES } } } });
+    await renderWithProviders(<SearchScreen />);
+    expect(await screen.findByTestId(`DISC-02.tile.${R34.id}.photo`)).toBeTruthy();
+    expect(screen.queryByTestId(`DISC-02.vehicle.${R34.id}`)).toBeNull();
+  });
+
   it('does not scroll while only the skeleton is shown, because nothing in it can take keyboard focus', async () => {
     setParams({ q: 'r34' });
     const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -190,7 +209,7 @@ describe('DISC-02 Suche', () => {
     expect(await screen.findByTestId('DISC-02.skeleton')).toBeTruthy();
     expect(mockLastList.props?.scrollEnabled).toBe(false);
     // DQ-205: a result usually carries a change, so the first card keeps its place for one.
-    expect(screen.getByTestId('DISC-02.skeleton.card.latest')).toBeTruthy();
+    expect(screen.getByTestId('DISC-02.skeleton.card')).toBeTruthy();
     await act(async () => answer(json({ data: overview() })));
     expect(await screen.findByTestId(`DISC-02.vehicle.${R34.id}`)).toBeTruthy();
     expect(mockLastList.props?.scrollEnabled).toBe(true);
@@ -201,7 +220,7 @@ describe('DISC-02 Suche', () => {
     stubFetch({ '/search': { body: { data: overview() } }, '/discover': { body: { data: { makes: MAKES } } } });
     await renderWithProviders(<SearchScreen />);
 
-    await fireEvent.press(await screen.findByTestId(`DISC-02.vehicle.${R34.id}.body`));
+    await fireEvent.press(await screen.findByTestId(`DISC-02.vehicle.${R34.id}.header`));
     expect(mockRouter.push).toHaveBeenCalledWith(`/v/${R34.slug}`);
   });
 

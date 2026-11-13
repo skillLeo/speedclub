@@ -1,13 +1,14 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { createStyles, size as sizeTokens, useMotion, type TypeVariant } from '@/theme';
+import { createStyles, size as sizeTokens, type TypeVariant } from '@/theme';
 
+import { motionDuration, useMotionPreference } from './motion';
 import { useImagePlaceholder } from './imagePlaceholder';
 import { useEagerImages } from './qaVisualState';
 import { Text, typeStyle } from './Text';
 
-export type AvatarSize = 24 | 32 | 40 | 56 | 96;
+export type AvatarSize = 24 | 32 | 40 | 56 | 88;
 
 export type AvatarProps = {
   /** Display name or username: the accessible name and the source of the initials. */
@@ -47,13 +48,13 @@ export function initialsVariant(size: AvatarSize): TypeVariant {
     case sizeTokens.avatar.xs:
       return 'caption';
     case sizeTokens.avatar.sm:
-      return 'labelS';
+      return 'callout';
     case sizeTokens.avatar.lg:
-      return 'titleS';
+      return 'headline';
     case sizeTokens.avatar.xl:
-      return 'titleM';
+      return 'title2';
     default:
-      return 'label';
+      return 'bodyStrong';
   }
 }
 
@@ -74,10 +75,10 @@ export function initialsOf(name: string, limit: number): string {
     .join('');
 }
 
-/** §8 avatar: 24/32/40/56/96, 1 inner border, initials on bg.raised as the fallback. */
+/** 09 §5 avatar: 24/32/40/56/88, 1 inner border, initials on bg.raised as the fallback. */
 export function Avatar({ name, uri, blurhash, size = 40, decorative = false, style, testID }: AvatarProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const eager = useEagerImages();
   const placeholder = useImagePlaceholder(blurhash, 'cover');
   const box = { width: size, height: size };
@@ -99,7 +100,7 @@ export function Avatar({ name, uri, blurhash, size = 40, decorative = false, sty
           loading={eager ? 'eager' : undefined}
           {...placeholder}
           contentFit="cover"
-          transition={motion.reduced ? null : motion.duration.small}
+          transition={motion.reduced ? null : motionDuration('effect.default')}
           recyclingKey={uri}
           alt=""
           accessibilityLabel=""

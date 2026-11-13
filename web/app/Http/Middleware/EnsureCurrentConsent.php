@@ -66,6 +66,22 @@ class EnsureCurrentConsent
     ];
 
     /**
+     * M4.6 (09 §8.1): a passwordless account before AUTH-09b may also accept the terms and set up how it signs in (sudo mode, passkeys,
+     * linked providers); everything else waits, so nothing public exists before the acceptance. Answer 403 terms_required.
+     */
+    public const PENDING_TERMS_EXEMPT = [
+        'api.v1.me.onboarding.accept',
+        'api.v1.me.reauth',
+        'api.v1.me.reauth.email',
+        'api.v1.me.reauth.passkey-options',
+        'api.v1.me.passkeys.options',
+        'api.v1.me.passkeys.store',
+        'api.v1.me.passkeys.update',
+        'api.v1.me.passkeys.destroy',
+        'api.v1.me.providers.destroy',
+    ];
+
+    /**
      * Writes that stay open while every key of the payload is listed here with a value that only restricts: a list of allowed
      * values, or `narrow` for an ordered setting (WHO_CAN_MESSAGE_ORDER) that may not be widened beyond the member's current value.
      *
@@ -100,6 +116,16 @@ class EnsureCurrentConsent
         }
 
         $user = $request->user();
+
+        if ($user instanceof User && $user->isPendingTerms()) {
+            if (in_array($request->route()?->getName(), self::PENDING_TERMS_EXEMPT, true)) {
+                return $next($request);
+            }
+
+            SetLocaleFromHeader::apply($request);
+
+            throw new ApiException(ErrorCode::TermsRequired);
+        }
 
         if ($user instanceof User && ! $this->restrictsOnly($request, $user) && $this->consents->outstanding($user)) {
             // Ahead of SetLocaleFromHeader (priority after authentication): the message is built now, in the request's language.

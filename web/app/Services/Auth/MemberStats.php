@@ -6,6 +6,7 @@ use App\Enums\UserStatus;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
 use App\Models\User;
+use App\Services\Showcase\SampleContent;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
@@ -45,7 +46,10 @@ final class MemberStats
      */
     public static function visible(BelongsToMany $relation): BelongsToMany
     {
-        // With a username, as Connections lists only those (M2.1 review #2).
-        return $relation->where('users.status', UserStatus::Active)->whereNotNull('users.email_verified_at')->whereNotNull('users.username');
+        // With a username, as Connections lists only those (M2.1 review #2); no sample member while samples are hidden (09 §8.19).
+        $relation->where('users.status', UserStatus::Active)->whereNotNull('users.email_verified_at')->whereNotNull('users.username');
+        app(SampleContent::class)->constrain($relation->getQuery()->getQuery(), 'users.is_sample');
+
+        return $relation;
     }
 }

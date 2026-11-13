@@ -90,17 +90,17 @@ const liveMaintenance = computed(() => props.editor.payload.maintenance.enabled 
             <DraftBar :editor="editor" :draft="draft" test-id="ADM-37" :previewable="false" :changes="publishChanges" />
             <div v-if="liveMaintenance" class="flex items-start gap-12 rounded-sm border border-warning px-16 py-12" role="status" data-testid="ADM-37.live-maintenance">
                 <PhWarning :size="20" class="mt-2 shrink-0 text-warning" aria-hidden="true" />
-                <p class="text-supporting text-ink">{{ trans('config.remote.maintenance_live') }}</p>
+                <p class="text-admin-base text-ink">{{ trans('config.remote.maintenance_live') }}</p>
             </div>
 
             <section class="flex flex-col gap-16 rounded-sm border border-line bg-surface p-16" aria-labelledby="adm37-versions" data-testid="ADM-37.versions">
                 <div class="flex flex-col gap-4">
-                    <h2 id="adm37-versions" class="text-title-s text-ink">{{ trans('config.remote.versions_title') }}</h2>
-                    <p class="max-w-720 text-supporting text-ink-2">{{ trans('config.remote.versions_intro') }}</p>
+                    <h2 id="adm37-versions" class="text-headline text-ink">{{ trans('config.remote.versions_title') }}</h2>
+                    <p class="max-w-720 text-admin-base text-ink-2">{{ trans('config.remote.versions_intro') }}</p>
                 </div>
                 <div class="grid grid-cols-1 gap-16 tablet:grid-cols-2">
                     <fieldset v-for="platform in PLATFORMS" :key="platform" class="flex flex-col gap-12">
-                        <legend class="mb-4 text-label-s text-ink">{{ trans(`config.remote.platforms.${platform}`) }}</legend>
+                        <legend class="mb-4 text-admin-base-strong text-ink">{{ trans(`config.remote.platforms.${platform}`) }}</legend>
                         <div class="flex flex-wrap gap-12">
                             <div class="w-160">
                                 <Field :label="trans('config.remote.min_version')" :error="draft.errorAt(`min_version.${platform}`)" required>
@@ -115,13 +115,13 @@ const liveMaintenance = computed(() => props.editor.payload.maintenance.enabled 
                         </div>
                     </fieldset>
                 </div>
-                <p class="flex items-start gap-8 text-helper text-ink-3"><PhInfo :size="16" class="mt-2 shrink-0" aria-hidden="true" />{{ latestRelease ? trans('config.remote.latest_release', { version: latestRelease }) : trans('config.remote.no_release') }}</p>
+                <p class="flex items-start gap-8 text-admin-base text-ink-3"><PhInfo :size="16" class="mt-2 shrink-0" aria-hidden="true" />{{ latestRelease ? trans('config.remote.latest_release', { version: latestRelease }) : trans('config.remote.no_release') }}</p>
             </section>
 
             <section class="flex flex-col gap-16 rounded-sm border border-line bg-surface p-16" aria-labelledby="adm37-force" data-testid="ADM-37.force">
                 <div class="flex flex-col gap-4">
-                    <h2 id="adm37-force" class="text-title-s text-ink">{{ trans('config.remote.force_title') }}</h2>
-                    <p class="max-w-720 text-supporting text-ink-2">{{ trans('config.remote.force_intro') }}</p>
+                    <h2 id="adm37-force" class="text-headline text-ink">{{ trans('config.remote.force_title') }}</h2>
+                    <p class="max-w-720 text-admin-base text-ink-2">{{ trans('config.remote.force_intro') }}</p>
                 </div>
                 <div class="grid grid-cols-1 gap-12 tablet:grid-cols-2">
                     <Field :label="trans('config.remote.message_de')" :error="draft.errorAt('force_update_message.de')" optional><Textarea v-model="forceDe" :rows="3" :maxlength="300" show-count :disabled="draft.readOnly.value" /></Field>
@@ -132,8 +132,8 @@ const liveMaintenance = computed(() => props.editor.payload.maintenance.enabled 
             <section class="flex flex-col gap-16 rounded-sm border border-line bg-surface p-16" aria-labelledby="adm37-maintenance" data-testid="ADM-37.maintenance">
                 <div class="flex flex-wrap items-start justify-between gap-12">
                     <div class="flex min-w-0 flex-col gap-4">
-                        <h2 id="adm37-maintenance" class="text-title-s text-ink">{{ trans('config.remote.maintenance_title') }}</h2>
-                        <p class="max-w-720 text-supporting text-ink-2">{{ trans('config.remote.maintenance_intro') }}</p>
+                        <h2 id="adm37-maintenance" class="text-headline text-ink">{{ trans('config.remote.maintenance_title') }}</h2>
+                        <p class="max-w-720 text-admin-base text-ink-2">{{ trans('config.remote.maintenance_intro') }}</p>
                     </div>
                     <Switch v-model="form.maintenance.enabled" :label="trans(form.maintenance.enabled ? 'config.remote.maintenance_switch_on' : 'config.remote.maintenance_switch_off')" :disabled="draft.readOnly.value || (!maintenanceAtom && !form.maintenance.enabled)" data-testid="ADM-37.maintenance.switch" />
                 </div>
@@ -141,7 +141,7 @@ const liveMaintenance = computed(() => props.editor.payload.maintenance.enabled 
                     <Field :label="trans('config.remote.message_de')" :hint="trans('config.remote.maintenance_message_hint')" :error="draft.errorAt('maintenance.message.de')" :required="form.maintenance.enabled" :optional="!form.maintenance.enabled"><Textarea v-model="maintenanceDe" :rows="3" :maxlength="300" show-count :disabled="draft.readOnly.value" data-testid="ADM-37.maintenance.de" /></Field>
                     <Field :label="trans('config.remote.message_en')" optional><Textarea v-model="maintenanceEn" :rows="3" :maxlength="300" show-count :disabled="draft.readOnly.value" /></Field>
                 </div>
-                <p class="text-helper text-ink-3">{{ trans('config.remote.bypass') }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('config.remote.bypass') }}</p>
                 <ApprovalNotice v-if="turningOn" test-id="ADM-37.four-eyes" />
             </section>
         </template>

@@ -217,13 +217,13 @@ const options = computed(() => {
 <template>
     <figure
         ref="root"
-        class="flex min-w-0 flex-col gap-16 rounded-md border border-line-subtle bg-surface px-16 py-16"
+        class="flex min-w-0 flex-col gap-16 rounded-sm border border-line-subtle bg-surface px-16 py-16"
         :data-testid="testId"
         :data-chart-state="view"
     >
         <figcaption class="flex flex-col gap-4">
             <h3 class="text-headline text-ink">{{ title }}</h3>
-            <p v-if="description" class="text-supporting text-ink-2">
+            <p v-if="description" class="text-admin-base text-ink-2">
                 {{ description }}
             </p>
             <!-- The legend row is always reserved, so the plots of a row share their x-axis (DQ-506). -->
@@ -265,7 +265,7 @@ const options = computed(() => {
             role="alert"
             data-chart-message="error"
         >
-            <p class="flex items-center gap-8 text-label-s text-ink">
+            <p class="flex items-center gap-8 text-admin-base-strong text-ink">
                 <PhWarningCircle :size="16" class="shrink-0 text-danger" aria-hidden="true" />{{ trans("ui.chart.error") }}
             </p>
             <Button v-if="retryable" size="sm" variant="secondary" :icon="PhArrowClockwise" @click="emit('retry')">{{ trans("ui.state.retry") }}</Button>
@@ -275,7 +275,7 @@ const options = computed(() => {
             class="mt-auto flex h-240 flex-col items-start gap-4 border-t border-line-subtle pt-16"
             data-chart-message="empty"
         >
-            <p class="text-label-s text-ink-2">{{ emptyTitle ?? trans("ui.chart.empty") }}</p>
+            <p class="text-admin-base-strong text-ink-2">{{ emptyTitle ?? trans("ui.chart.empty") }}</p>
         </div>
         <template v-else>
             <!-- mt-auto: a two-line description does not push this plot below its neighbour (DQ-506). -->
@@ -292,7 +292,7 @@ const options = computed(() => {
                 />
                 <p
                     v-if="allZero && zeroText"
-                    class="absolute left-48 top-16 max-w-320 rounded-xs bg-surface px-4 text-supporting text-ink-2"
+                    class="absolute left-48 top-16 max-w-320 rounded-xs bg-surface px-4 text-admin-base text-ink-2"
                     data-chart-message="zero"
                 >
                     {{ zeroText }}

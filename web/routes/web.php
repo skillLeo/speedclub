@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\LegalDocumentKey;
+use App\Http\Controllers\Api\V1\Events\EventCalendarController;
 use App\Http\Controllers\Web\AccountDeletionPageController;
 use App\Http\Controllers\Web\ContactPageController;
 use App\Http\Controllers\Web\DevMailController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Web\EmailActionPageController;
 use App\Http\Controllers\Web\GetAppPageController;
 use App\Http\Controllers\Web\LandingController;
 use App\Http\Controllers\Web\LegalPageController;
+use App\Http\Controllers\Web\OgImageController;
 use App\Http\Controllers\Web\PlatformFilesController;
 use App\Http\Controllers\Web\PublicMemberController;
 use App\Http\Controllers\Web\PublicVehicleController;
@@ -32,6 +34,8 @@ Route::withoutMiddleware(PublicPages::WITHOUT_SESSION)->group(function (): void 
             Route::get('/v/{slug}', PublicVehicleController::class)->middleware(RedirectMembersToApp::class)->name('public.vehicle');
             // Signed-in members read PROF-02 in the member web app since M2.1 (ADR-148 i, ADR-176 f); ?view=public stays here.
             Route::get('/u/{username}', PublicMemberController::class)->middleware(RedirectMembersToApp::class)->name('public.member');
+            // M4.12 (09 §8.7, WEB-09): the calendar file of an event, public or signed for one member; the page /e/{slug} comes in M4.16.
+            Route::get('/e/{slug}.ics', [EventCalendarController::class, 'web'])->where('slug', '[A-Za-z0-9-]{3,140}')->name('public.event.ics');
         });
 
         Route::middleware('throttle:public-read')->name('legal.')->group(function (): void {
@@ -57,6 +61,20 @@ Route::withoutMiddleware(PublicPages::WITHOUT_SESSION)->group(function (): void 
         Route::get('/app-laden', GetAppPageController::class)->middleware('throttle:public-read')->name('get-app');
         Route::get('/email/{action}', EmailActionPageController::class)->whereIn('action', array_keys(EmailActionPageController::ACTIONS))->middleware('throttle:public-read')->name('email-action');
         Route::post('/kontakt', [ContactPageController::class, 'store'])->middleware('throttle:contact-form')->name('contact.store');
+
+        // M4.6 WEB-12 (09 §8.1): the magic link of the e-mail code. The installed app claims the path (APP_PATHS); a browser lands in the
+        // member web, which signs in only where its attempt id is stored and otherwise asks for the code. The token stays in the fragment,
+        // which a redirect keeps and no server sees (ADR-138).
+        Route::redirect('/auth/magic', '/app/auth/magic', 302)->middleware('throttle:public-read')->name('auth.magic');
+        // M4.7 (09 §8.4): "Das war ich nicht" of a login alert, the same way (token in the fragment, POST auth/secure-account).
+        Route::redirect('/auth/secure', '/app/auth/secure', 302)->middleware('throttle:public-read')->name('auth.secure');
+    });
+
+    // Link previews (og:image, twitter:image): a versioned JPEG, drawn on the first request when the queue has not drawn it yet.
+    // Later routes (/e, /b, /brands) add their letter to whereIn and a card to OgImages.
+    Route::middleware('throttle:public-read')->group(function (): void {
+        Route::get('/og/{type}/{file}', OgImageController::class)->whereIn('type', ['v', 'u'])->where('file', '[A-Za-z0-9._-]+\.jpg')->name('og.image');
+        Route::get('/og/{file}', OgImageController::class)->where('file', 'site-[0-9a-f]{16}(-square)?\.jpg')->name('og.site');
     });
 
     Route::get('/robots.txt', [PlatformFilesController::class, 'robots'])->name('robots');

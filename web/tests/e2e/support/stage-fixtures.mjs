@@ -21,6 +21,7 @@ import {
   restoreSeededDrafts,
   runHealthFixture,
 } from './backend.mjs';
+import { maintenanceFixture } from './maintenance.mjs';
 
 /**
  * @typedef {object} StageFixture
@@ -148,6 +149,8 @@ export const STAGE_FIXTURES = {
     teardown: () => removeHealthFixture(),
     teardownSync: () => backendSync(['remove-health-fixture']),
   },
+  // M4.13: MNT-01/02 and GAR-01-due over lukas.sc's R34 (support/maintenance.mjs).
+  maintenance: maintenanceFixture,
   'support-tickets': {
     what: 'support.fixture with two support requests, one answered by the team',
     setup: () => ensureSupportFixture(),

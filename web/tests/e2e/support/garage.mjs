@@ -209,14 +209,14 @@ export async function buildVehicle(api, { car = SKYLINE, photos = 1, specs = SKY
   return { id: vehicle.id, slug: vehicle.slug, qr: vehicle.qr ?? null, photos: uploaded, mods: madeMods };
 }
 
-/** @typedef {{r34:string, r34Photo:string, r34Mod:string, r34Update:string, draft:string, s15:string, decision:string}} DemoIds */
+/** @typedef {{r34:string, r34Photo:string, r34Mod:string, r34Update:string, draft:string, s15:string, decision:string, savedCollection:string|undefined}} DemoIds */
 
 /** @type {Promise<DemoIds>|null} */
 let demo = null;
 
 /**
  * Ids of the seeded demo data the registry and specs open: lukas.sc's vehicles (ULIDs are new after every seed), the
- * R34's photos, mods and build updates, and the E30 draft. Read once per process as lukas.sc, with the session the
+ * R34's photos, mods and build updates, the E30 draft and the default collection. Read once per process as lukas.sc, with the session the
  * `member` strategy uses, and never written. `decision` is the seeded decision of ModerationDemoSeeder (its id is new after
  * every seed), read as tobi.quattro, the member it affects.
  * @returns {Promise<DemoIds>}
@@ -240,6 +240,8 @@ async function readDemoIds() {
     const mods = expectStatus(await api.get(`vehicles/${r34.id}/mods?per_page=100`), 200, 'GET R34 mods').data;
     const updates = expectStatus(await api.get(`vehicles/${r34.id}/updates?per_page=30`), 200, 'GET R34 updates').data;
     const decision = await seededDecision();
+    // COL-02: lukas.sc's "Gespeichert" (a GET creates it on first use, ADR-436 a).
+    const collections = expectStatus(await api.get('me/collections'), 200, 'GET me/collections').data;
     const wheels = mods.find((/** @type {{category:{key:string}|string}} */ m) => (typeof m.category === 'string' ? m.category : m.category?.key) === 'wheels_tires');
     const update = updates.find((/** @type {{hidden:boolean,changes_count:number}} */ u) => !u.hidden && u.changes_count > 0) ?? updates[0];
     return {
@@ -250,6 +252,7 @@ async function readDemoIds() {
       draft: draft.id,
       s15: garage.find((/** @type {{slug:string,status:string}} */ v) => v.status !== 'draft' && v.slug !== R34.slug)?.id,
       decision,
+      savedCollection: collections.find((/** @type {{is_default:boolean}} */ c) => c.is_default)?.id,
     };
   } finally {
     await api.dispose();

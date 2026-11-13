@@ -59,12 +59,12 @@ export function ValueRow({ value, ...row }: ValueRowProps) {
 
   return (
     <View onLayout={measured('width')}>
-      <ListRow {...row} {...(stacks ? { subtitle: value } : { value })} inset={ROW_INSET} />
+      <ListRow {...row} {...(stacks ? { subtitle: value } : { value })} adaptiveValue={false} inset={ROW_INSET} />
       <View aria-hidden style={styles.measure}>
         <Text variant="body" hyphenate={false} selectable={false} onLayout={measured('title')}>
           {row.title}
         </Text>
-        <Text variant="supporting" hyphenate={false} selectable={false} onLayout={measured('value')}>
+        <Text variant="callout" hyphenate={false} selectable={false} onLayout={measured('value')}>
           {value}
         </Text>
       </View>

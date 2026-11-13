@@ -130,7 +130,7 @@ One cron entry, every minute (host panel "Cron jobs", or `crontab -e`):
 * * * * * cd /home/<user>/speedclub && /usr/bin/php artisan speedclub:schedule-inline >> /dev/null 2>&1
 ```
 
-It runs the same due tasks, time zones, maintenance rule and overlap locks one after the other in its own PHP process, the queue worker last. The app's own backups need `proc_open` for the database dump, so they stay off there; the host's daily backups apply (12). On Hostinger the cron entry is made in hPanel → Advanced → Cron Jobs (there is no `crontab` over SSH), and a missing PHP extension such as `sodium` is switched on with `selectorctl --enable-user-extensions=sodium --version=8.3` or in hPanel → PHP Configuration.
+It runs the same due tasks, time zones, maintenance rule and overlap locks one after the other in its own PHP process, the queue worker last. Because that process is shared, the worker gets its usual 128 MB memory budget on top of what the earlier tasks of the minute already use (it would otherwise stop at once with exit code 12 after a heavy task). The app's own backups need `proc_open` for the database dump, so they stay off there; the host's daily backups apply (12). On Hostinger the cron entry is made in hPanel → Advanced → Cron Jobs (there is no `crontab` over SSH), and a missing PHP extension such as `sodium` is switched on with `selectorctl --enable-user-extensions=sodium --version=8.3` or in hPanel → PHP Configuration.
 
 The scheduler (`routes/console.php`) is everything. **There is no separate queue daemon:** the last scheduled entry runs `queue:work --stop-when-empty --max-time=50 --tries=3` every minute (without overlapping, lock expires after 2 minutes), with the queue in the database (`QUEUE_CONNECTION=database`). Mail (except sign-in codes, ADR-130), push and the search projection therefore lag by up to one minute. If the host kills long PHP processes, lower the 50 s worker limit in `routes/console.php` (a code change, not an `.env` setting).
 
@@ -254,7 +254,7 @@ Smoke test in a browser or with curl:
 | `/up` | 200 |
 | `/` | the public landing page (German) |
 | `/app` | 301 to `/app/`, then the member web app (Welcome / sign-in) |
-| `/app/assets/node_modules/@expo-google-fonts/inter/400Regular/<file>.ttf` (name from `unzip -l speedclub-web-….zip \| grep Inter_400Regular`) | **200**, a font file |
+| `/app/assets/assets/fonts/web/Inter-Regular.<hash>.woff2` (name from `unzip -l speedclub-web-….zip \| grep 'fonts/web/Inter-Regular'`) | **200**, a font file (`font/woff2`) |
 | `/api/v1/app-config` | 200 (JSON) |
 | `/admin/login` from an **allow-listed** address | 200, the German staff sign-in |
 | `/admin`, `/admin/login`, `/index.php/admin/login`, `POST /admin/login` from **any other** address (phone on mobile data) | **404**, empty body |

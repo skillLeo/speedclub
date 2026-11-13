@@ -80,12 +80,15 @@ describe('parseMarkdown: the subset of the legal drafts', () => {
     expect(parseInline('QR-Code, E-Mail, KI-Anbieter, GPS-Position, App-Kennung, USt-IdNr., HU/AU-Monat')).toEqual([
       text(joined('QR-Code, E-Mail, KI-Anbieter, GPS-Position, App-Kennung, USt-IdNr., HU/AU-Monat')),
     ]);
+    // A short part after the hyphen stays with the word before it too (r5 SET-18 "Datenschutz- / E-Mail").
     expect(parseInline('Kontakt-E-Mail und [[Melde-E-Mail]]')).toEqual([
-      text('Kontakt-E-\u2060Mail und '),
-      { type: 'placeholder', text: '[[Melde-E-\u2060Mail]]' },
+      text('Kontakt-\u2060E-\u2060Mail und '),
+      { type: 'placeholder', text: '[[Melde-\u2060E-\u2060Mail]]' },
     ]);
-    // Longer words, words that only end in capitals and figures keep their plain hyphen, and so does an existing joiner.
-    expect(parseInline('Zwei-Faktor-Anmeldung, two-factor, 4A-GE, QR-\u2060Code')).toEqual([text('Zwei-Faktor-Anmeldung, two-factor, 4A-GE, QR-\u2060Code')]);
+    // An engine code with a short part ("4A-GE") stays whole as well.
+    expect(parseInline('4A-GE')).toEqual([text('4A-\u2060GE')]);
+    // Longer words keep their plain hyphen, and so does an existing joiner.
+    expect(parseInline('Zwei-Faktor-Anmeldung, two-factor, QR-\u2060Code')).toEqual([text('Zwei-Faktor-Anmeldung, two-factor, QR-\u2060Code')]);
     const [mail, web] = parseInline('<x@e-mail.de> und https://e-mail.de/E-Mail').filter((node) => node.type === 'link');
     expect(mail).toEqual({ type: 'link', href: 'mailto:x@e-mail.de', children: [text('x@e-mail.de')] });
     expect(web).toEqual({ type: 'link', href: 'https://e-mail.de/E-Mail', children: [text('https://e-mail.de/E-Mail')] });

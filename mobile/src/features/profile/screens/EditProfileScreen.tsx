@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Controller, useForm, useWatch, type FieldError } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +21,8 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
-import { createStyles, layout, size, typography, useBreakpoint, useMotion, useTheme } from '@/theme';
+import { createStyles, layout, size, useBreakpoint } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import {
   Button,
   DiscardGuardDialog,
@@ -41,7 +42,7 @@ import {
   type CollapsingHeader,
 } from '@/ui';
 
-import { GuestInvitation } from '../components/GuestInvitation';
+import { GuestPrompt } from '../components/GuestPrompt';
 import { ProfileImagesEditor } from '../components/ProfileImagesEditor';
 import {
   BIO_MAX_LENGTH,
@@ -64,6 +65,15 @@ const FORM_MAX_WIDTH = layout.feedColumn;
 const BIO_ROWS = 5;
 /** DQ-133: the bio grows with its text up to this share of the window before it scrolls inside, at any font scale. */
 const BIO_MAX_SHARE = 0.4;
+
+/**
+ * DQ-133 in whole lines of the field as it is drawn (N12, Build 12): Android 14+ scales sp non-linearly, so a line of `input`
+ * is 36 at font scale 2.0, not 2 × 24. The field hands its measured line in (TextInput `maxRows` as a function), so the share
+ * holds on every platform, and never fewer than BIO_ROWS.
+ */
+export function bioRowsFor(windowHeight: number, drawnLine: number): number {
+  return Math.max(BIO_ROWS, Math.floor((windowHeight * BIO_MAX_SHARE) / drawnLine));
+}
 
 const useStyles = createStyles((t) => ({
   scroll: { flex: 1 },
@@ -112,7 +122,7 @@ function EditSkeleton() {
         <View style={styles.fields}>
           {[0, 1, 2, 3].map((index) => (
             <View key={index} style={styles.skeletonField}>
-              <SkeletonText variant="labelS" width="30%" />
+              <SkeletonText variant="callout" width="30%" />
               <SkeletonBlock height={size.input} corner="sm" />
             </View>
           ))}
@@ -132,11 +142,25 @@ export function endedWithSession(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
 }
 
+/**
+ * CARRY-M4.8/9: leave PROF-03 so that the discard guard sees it. With PROF-01 under it in its stack, back pops this screen. As the
+ * first route of its stack (a deep link to `speedclub://profile/edit` before the anchor applied), `router.back()` would only switch
+ * tabs and keep the screen, so `usePreventRemove` never fired: then this screen is replaced by PROF-01, which removes it and asks.
+ */
+export function useLeaveEditProfile(): () => void {
+  const router = useRouter();
+  const navigation = useNavigation();
+  return () => {
+    const state = navigation.getState();
+    if (state && state.index > 0) router.back();
+    else router.replace('/profile');
+  };
+}
+
 function EditProfileForm({ me, header, held }: { me: Me; header: CollapsingHeader; held: boolean }) {
   const { t } = useTranslation('profile');
   const authT = useTranslation('auth').t;
   const styles = useStyles();
-  const router = useRouter();
   const online = useOnline();
   const format = useFormat();
   const fieldMessage = useFieldMessage();
@@ -144,8 +168,7 @@ function EditProfileForm({ me, header, held }: { me: Me; header: CollapsingHeade
   // DQ-136: from the tablet on, "Speichern" stands right under the form, as on the forms of the auth stack (DQ-115).
   const wide = kind !== 'phone';
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const theme = useTheme();
-  const bioRows = Math.max(BIO_ROWS, Math.floor((windowHeight * BIO_MAX_SHARE) / (typography.body.lineHeight * theme.fontScale)));
+  const bioRows = (drawnLine: number) => bioRowsFor(windowHeight, drawnLine);
   // M3.5: a read-only view as the member locks the form like a restriction, with the view-as reason.
   const viewAsLock = useViewAsLock();
   const profileRestriction = useProfileRestriction(me);
@@ -189,18 +212,19 @@ function EditProfileForm({ me, header, held }: { me: Me; header: CollapsingHeade
 
   // DQ-249, as GAR-05's revealTop: the held notice stands at the top, and a member who saved from the bottom would not see it.
   const scroll = useRef<KeyboardAwareScrollViewRef>(null);
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const animated = motion.enabled && !motion.reduced;
   useEffect(() => {
     if (held) scroll.current?.scrollTo({ y: 0, animated });
   }, [animated, held]);
 
   // After a save the guard must be off before leaving: this effect runs after the guard's own in the same commit.
+  const leave = useLeaveEditProfile();
   useEffect(() => {
-    if (!saved) return;
-    if (router.canGoBack()) router.back();
-    else router.replace('/profile');
-  }, [router, saved]);
+    if (saved) leave();
+    // `leave` is a new function every render; the save is what this waits for.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved]);
 
   const onSubmit = handleSubmit(async (values) => {
     setNotice(null);
@@ -306,14 +330,14 @@ function EditProfileForm({ me, header, held }: { me: Me; header: CollapsingHeade
               />
               {available ? (
                 <View style={styles.available} role="status" testID="PROF-03.username.available">
-                  <Icon name="check" size={16} color="status.success" />
-                  <Text variant="helper" color="status.success">
+                  <Icon name="check" size={16} color="state.success" />
+                  <Text variant="caption" color="state.success">
                     {t('edit.fields.usernameAvailable')}
                   </Text>
                 </View>
               ) : null}
               {check.isError && checkable ? (
-                <Text variant="helper" color="text.secondary" role="status" testID="PROF-03.username.checkFailed">
+                <Text variant="caption" color="text.secondary" role="status" testID="PROF-03.username.checkFailed">
                   {t('edit.fields.usernameCheckFailed')}
                 </Text>
               ) : null}
@@ -393,7 +417,7 @@ export function EditProfileScreen() {
   useHideTabBar();
   const { t } = useTranslation('profile');
   const styles = useStyles();
-  const router = useRouter();
+  const leave = useLeaveEditProfile();
   const qaState = useQaState();
   const online = useOnline();
   const { gutter, kind } = useBreakpoint();
@@ -428,7 +452,7 @@ export function EditProfileScreen() {
     body = (
       <View style={[styles.content, { paddingHorizontal: gutter }]}>
         <View style={styles.column}>
-          <GuestInvitation routeId="PROF-03" returnTo="/profile/edit" />
+          <GuestPrompt routeId="PROF-03" returnTo="/profile/edit" />
         </View>
       </View>
     );
@@ -443,7 +467,7 @@ export function EditProfileScreen() {
       <Header
         title={t('edit.title')}
         scroll={header}
-        onBack={() => (router.canGoBack() ? router.back() : router.replace('/profile'))}
+        onBack={leave}
         contentMaxWidth={kind === 'phone' ? undefined : FORM_MAX_WIDTH + 2 * gutter}
         testID="PROF-03.header"
       />

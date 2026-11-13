@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, useWindowDimensions, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
@@ -9,14 +9,16 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { keepShortNamesTogether } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
 import { isWeb } from '@/lib/platform';
-import { createStyles, size, space, useBreakpoint, useMotion } from '@/theme';
+import { createStyles, layout, size, space, useBreakpoint } from '@/theme';
 
+import { motionDuration, useMotionPreference } from './motion';
 import { Hairline } from './Hairline';
 import { OverlayModal, Scrim, usePresence } from './overlay';
 import { PressableScale } from './PressableScale';
 import { useSafeEdge, useSafeInset } from './safeArea';
 import { contentOffset, footerTranslate, moveFocusIntoSheet, panelTranslate, settleTarget, type SheetTarget } from './sheetMath';
 import { Text } from './Text';
+import { reportOverlayPanel } from './toastPlacement';
 import { NO_BROWSER_OUTLINE } from './useFocusRing';
 
 export type SheetSnap = 'content' | 'full';
@@ -57,8 +59,8 @@ const useStyles = createStyles((t) => ({
   anchor: { alignItems: 'center', bottom: 0, left: 0, pointerEvents: 'box-none', position: 'absolute', right: 0 },
   panel: {
     backgroundColor: t.color.bg.raised,
-    borderTopLeftRadius: t.radius.lg,
-    borderTopRightRadius: t.radius.lg,
+    borderTopLeftRadius: t.radius.xl,
+    borderTopRightRadius: t.radius.xl,
     boxShadow: t.colorScheme === 'light' ? t.shadow.sheet : undefined,
     maxWidth: t.layout.feedColumn,
     width: '100%',
@@ -93,13 +95,14 @@ const useStyles = createStyles((t) => ({
 }));
 
 /**
- * §8 bottom sheet: top radius 16, grabber 36 × 4, snap points content and 90 %, spring.sheet, scrim fade 200.
+ * Bottom sheet (SM10): top radius 20, grabber 36 × 4, snap points content and 90 %, spring.default, scrim fade effect.default.
  * Motion stays on transform and opacity: the panel is always 90 % high and rests partly below the screen at the
  * content snap, with the footer counter-translated to the visible edge.
  */
 export function Sheet(props: SheetProps) {
-  const motion = useMotion();
-  const mounted = usePresence(props.visible, motion.duration.medium);
+  const motion = useMotionPreference();
+  // The exit is the spring.default slide (or the reduced crossfade); its CSS twin's 500 ms covers the settle.
+  const mounted = usePresence(props.visible, motion.enabled ? motionDuration('spring.default') : 0);
   return mounted ? <SheetPanel {...props} /> : null;
 }
 
@@ -119,12 +122,12 @@ function SheetPanel({
 }: SheetProps) {
   const { t } = useTranslation('common');
   const styles = useStyles();
-  const motion = useMotion();
-  const { height: windowHeight } = useWindowDimensions();
+  const motion = useMotionPreference();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const { gutter, kind } = useBreakpoint();
   const safeInset = useSafeInset('bottom');
   const { height: keyboardHeight, progress: keyboardProgress } = useReanimatedKeyboardAnimation();
-  const { springTo, timingTo, reduced } = motion;
+  const { springTo, effectTo, reduced } = motion;
 
   const [stageHeight, setStageHeight] = useState(windowHeight);
   const panelHeight = Math.round(stageHeight * size.sheetMaxHeightRatio);
@@ -139,6 +142,7 @@ function SheetPanel({
     setScrolledUnder((current) => (current === under ? current : under));
   };
 
+
   const measured = headerHeight !== null && bodyHeight !== null && (!footer || footerHeight !== null);
   const footerSpace = footer ? (footerHeight ?? 0) : 0;
   const contentHeight = (headerHeight ?? 0) + (bodyHeight ?? 0) + footerSpace;
@@ -146,6 +150,16 @@ function SheetPanel({
   const canExpand = expandable && contentY > 0;
   const scrollable = measured && contentHeight > panelHeight;
   const restingY = snap === 'full' ? 0 : contentY;
+
+  // DQ-1006 r3: a toast raised while the sheet is open sits above the sheet's visible top edge, never on its text field or its
+  // primary action, and as wide as its content column at most.
+  const panelKey = useId();
+  const visibleHeight = measured && visible ? panelHeight - restingY : null;
+  const column = Math.min(windowWidth, narrow ? (layout.feedColumn * 3) / 4 : layout.feedColumn) - 2 * gutter;
+  useEffect(() => {
+    reportOverlayPanel(panelKey, visibleHeight === null ? null : { height: visibleHeight, column });
+    return () => reportOverlayPanel(panelKey, null);
+  }, [column, panelKey, visibleHeight]);
 
   // Starts below the screen; reduced motion shows it in place through a crossfade instead.
   const y = useSharedValue(windowHeight);
@@ -174,21 +188,21 @@ function SheetPanel({
   useEffect(() => {
     visibleRef.current = visible;
     if (!visible) {
-      scrim.set(timingTo(0, 'small'));
-      if (reduced) fade.set(timingTo(0, 'small'));
-      else y.set(springTo(panelHeight, 'sheet'));
+      scrim.set(effectTo(0, 'default'));
+      if (reduced) fade.set(effectTo(0, 'default'));
+      else y.set(springTo(panelHeight, 'default'));
       return;
     }
     if (!measured) return;
-    scrim.set(timingTo(1, 'small'));
+    scrim.set(effectTo(1, 'default'));
     contentYShared.set(contentY);
     panelHeightShared.set(panelHeight);
     restingYShared.set(restingY);
     if (reduced) {
       y.set(restingY);
-      fade.set(timingTo(1, 'small'));
+      fade.set(effectTo(1, 'default'));
     } else {
-      y.set(springTo(restingY, 'sheet'));
+      y.set(springTo(restingY, 'default'));
     }
   }, [
     visible,
@@ -198,7 +212,7 @@ function SheetPanel({
     panelHeight,
     reduced,
     springTo,
-    timingTo,
+    effectTo,
     y,
     fade,
     scrim,
@@ -221,7 +235,7 @@ function SheetPanel({
     onClose();
     // A parent that keeps the sheet open, for example behind a guard, gets it back at its resting point.
     requestAnimationFrame(() => {
-      if (visibleRef.current) y.set(springTo(restingY, 'sheet'));
+      if (visibleRef.current) y.set(springTo(restingY, 'default'));
     });
   };
 
@@ -248,7 +262,7 @@ function SheetPanel({
       expandable,
       dismissable,
     );
-    if (target !== 'close') y.set(springTo(target === 'full' ? 0 : contentYShared.get(), 'sheet'));
+    if (target !== 'close') y.set(springTo(target === 'full' ? 0 : contentYShared.get(), 'default'));
     scheduleOnRN(onDragEnd, target);
   };
   const headerPan = usePanGesture({
@@ -320,7 +334,7 @@ function SheetPanel({
                   <Text
                     ref={setFocusStart}
                     {...FOCUS_TARGET}
-                    variant="titleM"
+                    variant="title2"
                     role="heading"
                     style={[styles.title, { paddingHorizontal: gutter }]}
                     testID={testID ? `${testID}.title` : undefined}

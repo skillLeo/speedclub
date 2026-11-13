@@ -70,6 +70,8 @@ export function Stepper({
 
   const control = (icon: IconName, name: string, delta: number, blocked: boolean, id: string) => (
     <PressableScale
+      // Draws its own pressed fill from state.pressed: no second tone layer (SM7).
+      toneShift={false}
       role="button"
       aria-label={`${label}: ${name}`}
       disabled={disabled || blocked}
@@ -90,7 +92,7 @@ export function Stepper({
     <View role="group" aria-label={label} testID={testID} style={[styles.root, style]}>
       <WithoutForcedState>{control('minus', decreaseLabel ?? t('actions.decrease'), -step, value <= min, 'decrease')}</WithoutForcedState>
       <Text
-        variant="specValue"
+        variant="bodyStrong" numeric
         color={disabled ? 'text.disabled' : 'text.primary'}
         aria-live="polite"
         selectable={false}

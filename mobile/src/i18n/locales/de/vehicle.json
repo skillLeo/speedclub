@@ -21,7 +21,19 @@
     "follow": "Folgen",
     "message": "Nachricht",
     "messageSend": "Nachricht senden",
-    "save": "Build speichern"
+    "save": "Build speichern",
+    "followBuild": "Folgen",
+    "followingBuild": "Folge ich",
+    "followBuildLabel": "{{title}} folgen",
+    "saveShort": "Speichern",
+    "rowLabel": "Aktionen zu diesem Build",
+    "postUpdate": "Update posten",
+    "edit": "Bearbeiten",
+    "photos": "Fotos",
+    "mods": "Mods",
+    "qr": "QR-Code",
+    "ownerLabel": "Aktionen für deinen Build",
+    "savedShort": "Gespeichert"
   },
   "more": {
     "copyLink": "Link kopieren",
@@ -36,13 +48,13 @@
     "copyFailed": "Kopieren hat nicht geklappt. Hier ist der Link: {{url}}"
   },
   "overview": {
-    "highlights": "Highlights",
+    "highlights": "Top-Mods",
     "allMods": "Alle Mods ({{count}})",
     "photos": "Fotos",
     "allPhotos": "Alle Fotos ({{count}})",
     "empty": "Zu diesem Fahrzeug gibt es noch keine Beschreibung.",
-    "closingTitle": "Fragen an {{name}}?",
-    "closingBody": "Teile, Abstimmung, Erfahrungen: Melde dich an und schreib direkt."
+    "closingGuest": "Melde dich an, um {{name}} zu schreiben.",
+    "closingSignIn": "Anmelden"
   },
   "specs": {
     "empty": "Noch keine technischen Daten eingetragen."
@@ -59,7 +71,13 @@
     "loadOlder_other": "{{count}} ältere Einträge laden",
     "loadError": "Ältere Einträge konnten nicht geladen werden. Versuche es noch einmal.",
     "moreChanges_one": "und {{count}} weitere Änderung",
-    "moreChanges_other": "und {{count}} weitere Änderungen"
+    "moreChanges_other": "und {{count}} weitere Änderungen",
+    "title": {
+      "added": "{{name}} verbaut",
+      "replaced": "{{name}} statt {{before}}",
+      "changed": "{{name}} geändert",
+      "removed": "{{name}} ausgebaut"
+    }
   },
   "unavailable": {
     "title": "Fahrzeug nicht verfügbar",
@@ -109,7 +127,27 @@
     "openMod": "Modifikation ansehen",
     "notFoundTitle": "Diesen Eintrag gibt es nicht mehr",
     "notFoundBody": "Er ist im Verlauf nicht mehr zu sehen.",
-    "reportLabel": "Update zu {{vehicle}}"
+    "reportLabel": "Update zu {{vehicle}}",
+    "edited": "bearbeitet",
+    "mileage": "{{value}} km",
+    "linkedMods": "Verknüpfte Mods",
+    "photos": "Fotos",
+    "beforeAfter": "Vorher / Nachher-Vergleich",
+    "audienceFollowers": "Nur Follower",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteTitle": "Update löschen?",
+    "deleteBody": "Fotos, Reaktionen und Highlights dieses Updates verschwinden mit. Das lässt sich nicht rückgängig machen.",
+    "deleteConfirm": "Löschen",
+    "cancel": "Abbrechen",
+    "deleted": "Update gelöscht",
+    "deleteFailed": "Das Update konnte nicht gelöscht werden.",
+    "comments": "Kommentare",
+    "commentsOff": "Kommentare kommen bald.",
+    "reportComment": "Kommentar melden",
+    "reply": "Antworten",
+    "galleryPhoto": "Foto aus der Galerie",
+    "modPhoto": "Foto der Modifikation"
   },
   "viewer": {
     "loading": "Foto wird geladen",
@@ -118,7 +156,8 @@
   "save": {
     "saved": "Gespeichert",
     "removed": "Aus „Gespeichert“ entfernt",
-    "failed": "Das hat gerade nicht geklappt. Versuch es gleich noch einmal."
+    "failed": "Das hat gerade nicht geklappt. Versuch es gleich noch einmal.",
+    "chooseCollection": "Sammlung wählen"
   },
   "compare": {
     "title": "Vergleich",
@@ -169,5 +208,115 @@
     "errorTitle": "Die Karte konnte nicht geladen werden",
     "unavailableTitle": "Karte nicht verfügbar",
     "unavailableBody": "Dieses Fahrzeug ist nicht öffentlich sichtbar."
+  },
+  "strip": {
+    "power": "Leistung",
+    "torque": "Drehmoment"
+  },
+  "follow": {
+    "followed": "Du folgst jetzt diesem Build.",
+    "unfollowed": "Du folgst diesem Build nicht mehr.",
+    "failed": "Folgen hat gerade nicht geklappt. Versuch es gleich noch einmal."
+  },
+  "collections": {
+    "title": "Speichern in",
+    "private": "Sammlungen sind privat. Nur du siehst, was du speicherst.",
+    "items_one": "{{count}} Eintrag",
+    "items_other": "{{count}} Einträge",
+    "new": "Neue Sammlung",
+    "newName": "Name der Sammlung",
+    "create": "Anlegen",
+    "created": "„{{name}}“ angelegt und gespeichert",
+    "failed": "Speichern hat gerade nicht geklappt. Versuch es gleich noch einmal."
+  },
+  "reactions": {
+    "label": "Reagieren",
+    "strong": "Stark",
+    "clean": "Sauber",
+    "low": "Tief",
+    "loud": "Laut",
+    "failed": "Deine Reaktion kam nicht an. Versuch es gleich noch einmal.",
+    "ownerTitle": "Reaktionen",
+    "ownerHint": "Nur du siehst, wer wie reagiert hat.",
+    "ownerNone": "Noch keine Reaktionen.",
+    "ownerTotal_one": "{{count}} Reaktion",
+    "ownerTotal_other": "{{count}} Reaktionen",
+    "showAll": "Alle ansehen",
+    "listTitle": "Reaktionen auf dein Update",
+    "removedMember": "Gelöschtes Konto",
+    "loadError": "Die Liste konnte nicht geladen werden.",
+    "react": "Reagieren"
+  },
+  "highlights": {
+    "title": "Highlights",
+    "edit": "Bearbeiten",
+    "editorTitle": "Highlights wählen",
+    "editorHint": "Bis zu {{max}} Updates oder Fotos, dauerhaft oben im Build.",
+    "editorFull": "Mehr als {{max}} gehen nicht. Nimm erst eins heraus.",
+    "save": "Speichern",
+    "saved": "Highlights gespeichert",
+    "failed": "Die Highlights konnten nicht gespeichert werden.",
+    "emptyOwner": "Pinne deine besten Updates und Fotos als Highlights.",
+    "pick": "Highlights auswählen",
+    "updates": "Updates",
+    "photos": "Fotos",
+    "photoAlt": "Foto {{n}}",
+    "update": "Update vom {{date}}",
+    "selected": "ausgewählt"
+  },
+  "latest": {
+    "title": "Neuestes Update",
+    "all": "Ganzer Verlauf"
+  },
+  "composer": {
+    "title": "Update posten",
+    "vehicle": "Fahrzeug",
+    "text": "Was hat sich getan?",
+    "textHelper": "Mit @ erwähnst du jemanden.",
+    "textTooLong": "Höchstens {{max}} Zeichen.",
+    "empty": "Schreib etwas oder füge Fotos hinzu.",
+    "photos": "Fotos",
+    "addPhotos": "Fotos hinzufügen",
+    "photosCount": "{{count}} von {{max}}",
+    "removePhoto": "Foto entfernen",
+    "pair": "Als Vorher/Nachher koppeln",
+    "pairHint": "Tippe zwei Fotos an: zuerst Vorher, dann Nachher.",
+    "paired": "Vorher/Nachher",
+    "unpair": "Paar lösen",
+    "before": "Vorher",
+    "after": "Nachher",
+    "details": "Details",
+    "mileage": "Kilometerstand",
+    "mileageInvalid": "Bitte eine Zahl bis 2.000.000 eingeben.",
+    "date": "Datum",
+    "dateInvalid": "Bitte ein Datum im Format TT.MM.JJJJ.",
+    "dateFuture": "Das Datum liegt in der Zukunft.",
+    "audience": "Wer sieht das?",
+    "audienceVehicle": "Wie das Fahrzeug",
+    "audienceVehicleHint": "Alle, die deinen Build sehen dürfen",
+    "audienceFollowers": "Nur Follower",
+    "audienceFollowersHint": "Deine Follower und die des Builds",
+    "mods": "Mods verknüpfen",
+    "modsNone": "Dieser Build hat noch keine Mods.",
+    "post": "Posten",
+    "posting": "Wird gepostet …",
+    "posted": "Update gepostet",
+    "uploading_one": "Update gepostet, {{count}} Foto wird hochgeladen",
+    "uploading_other": "Update gepostet, {{count}} Fotos werden hochgeladen",
+    "failed": "Das Update konnte nicht gepostet werden.",
+    "offline": "Du bist offline. Posten geht wieder, sobald du verbunden bist.",
+    "noVehicle": "Du brauchst zuerst ein veröffentlichtes Fahrzeug.",
+    "noVehicleAction": "Zur Garage",
+    "suggestions": "Vorschläge",
+    "noSuggestions": "Niemand gefunden, den du erwähnen kannst.",
+    "close": "Schließen",
+    "saved": "Update gespeichert"
+  },
+  "owner": {
+    "open": "Profil von {{name}} öffnen"
+  },
+  "offline": {
+    "read": "Offline – zuletzt aktualisiert {{time}}.",
+    "readNoTime": "Offline – du siehst den zuletzt geladenen Stand."
   }
 }

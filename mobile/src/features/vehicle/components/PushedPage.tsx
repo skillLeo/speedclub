@@ -7,7 +7,8 @@ import { useTabScrollToTop } from '@/features/shell/retap';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { TabBarOverlayContext, useTabBarPadding } from '@/features/shell/tabBarLayout';
 import { isWeb } from '@/lib/platform';
-import { createStyles, layout, useBreakpoint, useMotion } from '@/theme';
+import { createStyles, layout, useBreakpoint } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import { Header, Screen, type HeaderAction } from '@/ui';
 import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 import { NO_BROWSER_OUTLINE, useFocusRing } from '@/ui/useFocusRing';
@@ -42,7 +43,7 @@ export type PushedPageProps = {
  */
 export function PushedPage({ routeId, title, onBack, children, overlays, actions }: PushedPageProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const { gutter, kind } = useBreakpoint();
   const padding = useTabBarPadding();
   const header = useCollapsingHeader();

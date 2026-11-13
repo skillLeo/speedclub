@@ -27,7 +27,7 @@ use Throwable;
 class ShareCards
 {
     /** Part of the hash: raising it redraws every card after a change to the drawing. */
-    private const VERSION = 1;
+    private const VERSION = 2;
 
     private const DIRECTORY = 'share';
 

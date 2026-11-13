@@ -26,8 +26,8 @@ const failed = ref(false);
 let rendered: string | null = null;
 // The long-form type of the legal and help screens (03 §4), on the rendered elements.
 const prose =
-    'sc-prose max-w-720 text-body text-ink-2 [&_a]:text-ink [&_a]:underline [&_h1]:mb-12 [&_h1]:text-title-m [&_h1]:text-ink [&_h2]:mb-8 [&_h2]:mt-24 [&_h2]:text-title-s [&_h2]:text-ink ' +
-    '[&_h3]:mb-4 [&_h3]:mt-16 [&_h3]:text-label [&_h3]:text-ink [&_li]:mb-4 [&_ol]:mb-12 [&_ol]:list-decimal [&_ol]:pl-20 [&_p]:mb-12 [&_strong]:text-ink [&_ul]:mb-12 [&_ul]:list-disc [&_ul]:pl-20';
+    'sc-prose max-w-720 text-admin-base text-ink-2 [&_a]:text-ink [&_a]:underline [&_h1]:mb-12 [&_h1]:text-title-2 [&_h1]:text-ink [&_h2]:mb-8 [&_h2]:mt-24 [&_h2]:text-headline [&_h2]:text-ink ' +
+    '[&_h3]:mb-4 [&_h3]:mt-16 [&_h3]:text-headline [&_h3]:text-ink [&_li]:mb-4 [&_ol]:mb-12 [&_ol]:list-decimal [&_ol]:pl-20 [&_p]:mb-12 [&_strong]:text-ink [&_ul]:mb-12 [&_ul]:list-disc [&_ul]:pl-20';
 
 function render(): void {
     if (rendered === model.value && html.value !== null) return;
@@ -48,7 +48,7 @@ watch(view, (value) => value === 'preview' && render(), { immediate: true });
 <template>
     <div class="flex flex-col gap-8" :data-testid="testId">
         <div class="flex items-center justify-between gap-12">
-            <span class="text-label-s text-ink">{{ label }}</span>
+            <span class="text-admin-base-strong text-ink">{{ label }}</span>
             <SegmentedControl v-model="view" :label="trans('content.markdown.view')" :options="[{ value: 'write', label: trans('content.markdown.write') }, { value: 'preview', label: trans('content.markdown.preview') }]" />
         </div>
         <Field v-show="view === 'write'" :label="label" :hint="hint" :error="error" hide-label>
@@ -56,7 +56,7 @@ watch(view, (value) => value === 'preview' && render(), { immediate: true });
         </Field>
         <div v-if="view === 'preview'" class="min-h-240 rounded-sm border border-line bg-surface px-24 py-16" :data-testid="`${testId}.preview`" aria-live="polite">
             <div v-if="loading" class="flex flex-col gap-8" aria-hidden="true"><Skeleton shape="text" class="w-240" /><Skeleton shape="text" class="w-full" /><Skeleton shape="text" class="w-full" /><Skeleton shape="text" class="w-480" /></div>
-            <p v-else-if="failed" class="text-supporting text-danger" role="alert">{{ trans('content.markdown.failed') }}</p>
+            <p v-else-if="failed" class="text-admin-base text-danger" role="alert">{{ trans('content.markdown.failed') }}</p>
             <!-- SafeMarkdown output: source HTML escaped, unsafe links removed on the server. -->
             <!-- eslint-disable-next-line vue/no-v-html -->
             <div v-else :class="prose" v-html="html" />

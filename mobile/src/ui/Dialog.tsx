@@ -6,8 +6,9 @@ import Animated, { interpolate, useAnimatedStyle, useSharedValue } from 'react-n
 import { keepShortNamesTogether } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
 import { isWeb } from '@/lib/platform';
-import { createStyles, motion as motionTokens, space, useBreakpoint, useMotion } from '@/theme';
+import { createStyles, motion as motionTokens, space, useBreakpoint } from '@/theme';
 
+import { motionDuration, useMotionPreference } from './motion';
 import { Button } from './Button';
 import { Hairline } from './Hairline';
 import { OverlayModal, Scrim, usePresence } from './overlay';
@@ -52,9 +53,10 @@ const useStyles = createStyles((t) => ({
   },
   panel: {
     backgroundColor: t.color.bg.overlay,
-    borderRadius: t.radius.md,
+    // 09 §5: dialogs take the sheet radius (20) and, on the member web, up to 400 wide.
+    borderRadius: t.radius.xl,
     boxShadow: t.colorScheme === 'light' ? t.shadow.e2 : undefined,
-    maxWidth: t.size.dialogMaxWidth,
+    maxWidth: isWeb ? t.size.dialogMaxWidthWeb : t.size.dialogMaxWidth,
     padding: t.space[24],
     width: '100%',
   },
@@ -91,14 +93,14 @@ export function orderActions(actions: readonly DialogAction[]): DialogAction[] {
  * scroll inside the panel when they do not fit, at 200 % or above the keyboard, so the actions always stay on screen.
  */
 export function Dialog(props: DialogProps) {
-  const motion = useMotion();
-  const mounted = usePresence(props.visible, motion.duration.micro);
+  const motion = useMotionPreference();
+  const mounted = usePresence(props.visible, motion.enabled ? motionDuration('effect.fast') : 0);
   return mounted ? <DialogPanel {...props} /> : null;
 }
 
 function DialogPanel({ visible, onClose, title, body, children, actions, testID }: DialogProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const { gutter, kind } = useBreakpoint();
   const { height: windowHeight } = useWindowDimensions();
   const { height: keyboardLift } = useReanimatedKeyboardAnimation();
@@ -107,7 +109,7 @@ function DialogPanel({ visible, onClose, title, body, children, actions, testID 
   const safeBottom = useSafeInset('bottom');
   const bodyId = useId();
   const progress = useSharedValue(0);
-  const { timingTo, reduced } = motion;
+  const { effectTo, reduced } = motion;
   const scrollRing = useFocusRing('inset');
   const [box, setBox] = useState({ height: 0, content: 0, offset: 0 });
   const moreBelow = box.height > 0 && box.content > box.height + 1 && box.offset + box.height < box.content - 1;
@@ -117,8 +119,9 @@ function DialogPanel({ visible, onClose, title, body, children, actions, testID 
   };
 
   useEffect(() => {
-    progress.set(visible ? timingTo(1, 'small', 'decelerate') : timingTo(0, 'micro', 'accelerate'));
-  }, [visible, progress, timingTo]);
+    // Enter with the effect.default crossfade, leave with effect.fast: exits are quick (09 §4.7).
+    progress.set(visible ? effectTo(1, 'default') : effectTo(0, 'fast'));
+  }, [visible, progress, effectTo]);
 
   const panelStyle = useAnimatedStyle(() => ({
     opacity: progress.get(),
@@ -168,12 +171,12 @@ function DialogPanel({ visible, onClose, title, body, children, actions, testID 
               testID={testID ? `${testID}.scroll` : undefined}
             >
               <View style={styles.text}>
-                <Text variant="titleS" role="heading" testID={testID ? `${testID}.title` : undefined}>
+                <Text variant="headline" role="heading" testID={testID ? `${testID}.title` : undefined}>
                   {keepShortNamesTogether(title)}
                 </Text>
                 {body ? (
                   <Text
-                    variant="bodyDense"
+                    variant="body"
                     color="text.secondary"
                     nativeID={bodyId}
                     testID={testID ? `${testID}.body` : undefined}

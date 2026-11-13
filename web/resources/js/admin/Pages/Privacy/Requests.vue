@@ -100,7 +100,7 @@ const count = (n: number | undefined) => formatNumber(zero.value ? 0 : (n ?? 0))
     <div class="flex flex-col gap-24" data-testid="ADM-45" :data-qa-state="pageState">
         <PageHeader :title="trans('privacy.requests.title')" :crumbs="[{ label: trans('shell.groups.audit_privacy') }]" :description="trans('privacy.requests.intro')">
             <template v-if="counts" #meta>
-                <p class="flex flex-wrap gap-x-16 gap-y-4 text-supporting text-ink-2 tabular-nums" data-testid="ADM-45.counts">
+                <p class="flex flex-wrap gap-x-16 gap-y-4 text-admin-base text-ink-2 tabular-nums" data-testid="ADM-45.counts">
                     <span>{{ trans('privacy.requests.counts.open', { count: count(counts.open) }) }}</span>
                     <span :class="!zero && counts.due_soon > 0 ? 'text-warning' : ''">{{ trans('privacy.requests.counts.due_soon', { days: formatNumber(dueSoonDays), count: count(counts.due_soon) }) }}</span>
                     <span :class="!zero && counts.overdue > 0 ? 'text-danger' : ''">{{ trans('privacy.requests.counts.overdue', { count: count(counts.overdue) }) }}</span>
@@ -160,17 +160,17 @@ const count = (n: number | undefined) => formatNumber(zero.value ? 0 : (n ?? 0))
 
         <section class="flex flex-col gap-12" data-testid="ADM-45.self-service" :aria-labelledby="'adm45-self'">
             <div class="flex flex-col gap-4">
-                <h2 id="adm45-self" class="text-title-s text-ink">{{ trans('privacy.requests.self_title') }}</h2>
-                <p class="max-w-720 text-supporting text-ink-2">{{ trans('privacy.requests.self_body') }}</p>
+                <h2 id="adm45-self" class="text-headline text-ink">{{ trans('privacy.requests.self_title') }}</h2>
+                <p class="max-w-720 text-admin-base text-ink-2">{{ trans('privacy.requests.self_body') }}</p>
             </div>
             <div v-if="pageState === 'loading'" class="flex flex-col rounded-sm border border-line-subtle" aria-hidden="true">
                 <div v-for="n in 3" :key="n" class="flex h-40 items-center gap-24 border-b border-line-subtle px-12 last:border-b-0"><Skeleton shape="text" class="w-120" /><Skeleton shape="text" class="w-160" /><Skeleton shape="text" class="w-120" /></div>
             </div>
             <EmptyQueue v-else-if="selfRows.length === 0 || pageState === 'error'" variant="quiet" compact :title="trans('privacy.requests.self_empty')" />
             <ScrollRegion v-else :label="trans('privacy.requests.self_caption')">
-                <table class="w-full border-collapse text-supporting">
+                <table class="w-full border-collapse text-admin-base">
                     <caption class="sr-only">{{ trans('privacy.requests.self_caption') }}</caption>
-                    <thead class="bg-surface text-left text-label-s text-ink-2">
+                    <thead class="bg-surface text-left text-admin-base-strong text-ink-2">
                         <tr class="h-40 border-b border-line">
                             <th scope="col" class="px-12">{{ trans('privacy.requests.self_columns.kind') }}</th>
                             <th scope="col" class="px-12">{{ trans('privacy.requests.self_columns.member') }}</th>

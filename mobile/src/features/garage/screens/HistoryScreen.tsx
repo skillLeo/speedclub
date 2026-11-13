@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { newIdempotencyKey } from '@/api/client';
@@ -15,15 +15,17 @@ import { useTabScrollToTop } from '@/features/shell/retap';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarInset } from '@/features/shell/tabBarLayout';
 import { HISTORY_CHANGES_SHOWN } from '@/features/vehicle/components/ProfileSections';
-import { changeLines } from '@/features/vehicle/model';
+import { changeLines, historyMetaLine, historyTitle } from '@/features/vehicle/model';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
 import { keepFiguresTogether } from '@/lib/format';
+import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
-import { createStyles, space, useBreakpoint } from '@/theme';
-import { Button, Dialog, EmptyState, Hairline, Header, IconButton, Screen, Sheet, Skeleton, SkeletonText, StatusPill, Text, TextInput, toast, type HeaderAction } from '@/ui';
+import { createStyles, useBreakpoint } from '@/theme';
+import { Button, Dialog, EmptyState, Header, IconButton, Screen, Sheet, Skeleton, SkeletonText, StatusPill, Text, TextInput, toast, type HeaderAction } from '@/ui';
 import { RowBody, useStacksAtFontScale } from '@/ui/rowParts';
+import { WEB_HAIRLINE } from '@/ui/specStripLayout';
 import { ValueText } from '@/ui/ValueText';
 
 import { useCharCount } from '../components/fields';
@@ -32,6 +34,8 @@ import { isGone, isKeyReused, saveErrorMessage } from '../errors';
 import { fieldMessage, NOTE_MAX_LENGTH, noteSchema } from '../schemas';
 
 const ROUTE = 'GAR-11';
+/** Timeline's spine: a device hairline on native, the web's 1 px. */
+const SPINE = isWeb ? WEB_HAIRLINE : StyleSheet.hairlineWidth;
 const EDGES: readonly Edge[] = ['left', 'right'];
 const NOTE_ROWS = 6;
 
@@ -67,9 +71,20 @@ const useStyles = createStyles((t) => ({
   top: { gap: t.space[16], paddingBottom: t.space[8], paddingTop: t.space[16] },
   month: { paddingBottom: t.space[12], paddingTop: t.space[24] },
   monthFirst: { paddingTop: t.space[8] },
-  card: { backgroundColor: t.color.bg.surface, overflow: 'hidden' },
-  first: { borderTopLeftRadius: t.radius.md, borderTopRightRadius: t.radius.md },
-  last: { borderBottomLeftRadius: t.radius.md, borderBottomRightRadius: t.radius.md },
+  // DQ-1072: the Timeline anatomy of VEH-01's Verlauf (ui/Timeline) — a hairline spine with a node per entry, no boxed cards —
+  // plus the owner's trailing eye. Timeline has no trailing slot yet, so the owner page draws the same spine itself.
+  card: { borderLeftColor: t.color.border.default, borderLeftWidth: SPINE, marginLeft: t.space[4] },
+  first: { marginTop: t.space[8] },
+  last: { paddingBottom: t.space[8] },
+  node: {
+    backgroundColor: t.color.text.tertiary,
+    borderRadius: t.radius.full,
+    height: t.space[8],
+    left: -(t.space[8] + SPINE) / 2,
+    position: 'absolute',
+    top: t.space[12] + (t.typography.bodyStrong.lineHeight - t.space[8]) / 2,
+    width: t.space[8],
+  },
   entry: { alignItems: 'center', flexDirection: 'row' },
   body: { flex: 1, minWidth: 0 },
   text: { gap: t.space[2], paddingLeft: t.space[16], paddingRight: t.space[8], paddingVertical: t.space[12] },
@@ -93,33 +108,46 @@ const Entry = memo(function Entry({ update, first, last, onToggle, onOpen, disab
   const note = update.type === 'note';
   const largeFont = useStacksAtFontScale();
   // DQ-175: as VEH-01's Verlauf, each change under its own title ("Fahrwerk: Serie → KW V3"), and what kind of entry it is in
-  // the meta line. A note, and an entry without changes, has only its kind to title it, and then says what the API sends.
-  const { lines, more } = note ? { lines: [], more: 0 } : changeLines(update, HISTORY_CHANGES_SHOWN);
+  // the meta line. DQ-1059: an entry with one named change takes VEH-01's title ("AP Racing Radi-CAL statt Brembo Serie") and only
+  // the system and key value under it ("Bremsen · 356 mm"), so the kind is printed once. A note is titled by its own text, never
+  // "Notiz" (DQ-1085).
+  const named = note ? null : historyMetaLine(update);
+  const { lines, more } = note || named ? { lines: [], more: 0 } : changeLines(update, HISTORY_CHANGES_SHOWN);
+  const noteText = note ? (update.note ?? update.summary)?.trim() || null : null;
   const head = note ? t('history.note') : update.type_label;
-  const title = lines[0]?.label ?? head;
+  const title = named
+    ? historyTitle(update, (key, values) => vehicleT(`history.title.${key}`, values))
+    : (noteText ?? lines[0]?.label ?? head);
+  const namedLine = named ? [named.label, named.diff].filter(Boolean).join(' · ') : null;
   // The toggle hides the whole entry: it takes the name of a change only when that is all there is, else the kind and its date.
-  const onlyChange = lines.length === 1 && more === 0 ? lines[0]?.label : undefined;
+  const onlyChange = named ? title : lines.length === 1 && more === 0 ? lines[0]?.label : undefined;
   const toggleName = onlyChange ?? [head, created].filter(Boolean).join(', ');
-  const line = lines.length > 0 ? null : note ? (update.note ?? update.summary) : update.summary;
+  const line = lines.length > 0 || named || note ? null : update.summary;
   const added = note ? null : update.note?.trim();
   const moreText = more > 0 ? vehicleT('history.moreChanges', { count: more }) : null;
   const meta = [lines.length > 0 ? head : null, created].filter(Boolean).join(' · ');
   // A change's diff or a summary can be wider than the card: its words wrap and only figures stay together (DQ-216). A note
   // is the member's own sentence and may hyphenate.
   const valueLine = (text: string) => (
-    <ValueText variant="supporting" color="text.secondary" hyphenate={note || largeFont} values={keepFiguresTogether(text, !largeFont)} wholeValues={false} />
+    <ValueText variant="callout" color="text.secondary" hyphenate={note || largeFont} values={keepFiguresTogether(text, !largeFont)} wholeValues={false} />
   );
   return (
     <View style={[styles.card, first ? styles.first : null, last ? styles.last : null]}>
+      <View aria-hidden style={styles.node} />
       <View style={styles.entry}>
         <RowBody
           onPress={update.hidden ? undefined : () => onOpen(update)}
-          label={[...lines.flatMap((entry) => [entry.label, entry.diff]), lines.length > 0 ? null : title, line, added, moreText, meta].filter(Boolean).join(', ')}
+          label={[...lines.flatMap((entry) => [entry.label, entry.diff]), lines.length > 0 ? null : title, namedLine, line, added, moreText, meta].filter(Boolean).join(', ')}
           boxStyle={styles.body}
           style={[styles.text, update.hidden ? styles.hidden : null]}
           testID={`${ROUTE}.entry.${update.id}`}
         >
-          {lines.length === 0 ? <Text variant="bodyStrong">{title}</Text> : null}
+          {lines.length === 0 ? (
+            <Text variant="bodyStrong" hyphenate={note}>
+              {title}
+            </Text>
+          ) : null}
+          {namedLine ? valueLine(namedLine) : null}
           {lines.map((entry) => (
             <View key={entry.key} style={styles.change}>
               <Text variant="bodyStrong">{entry.label}</Text>
@@ -128,7 +156,7 @@ const Entry = memo(function Entry({ update, first, last, onToggle, onOpen, disab
           ))}
           {line ? valueLine(line) : null}
           {added ? (
-            <Text variant="supporting" color="text.secondary">
+            <Text variant="callout" color="text.secondary">
               {added}
             </Text>
           ) : null}
@@ -157,7 +185,6 @@ const Entry = memo(function Entry({ update, first, last, onToggle, onOpen, disab
           />
         </View>
       </View>
-      {last ? null : <Hairline inset={space[16]} />}
     </View>
   );
 });
@@ -167,13 +194,13 @@ function HistorySkeleton() {
   return (
     <Skeleton testID={`${ROUTE}.skeleton`}>
       <View style={styles.month}>
-        <SkeletonText variant="titleS" width="30%" />
+        <SkeletonText variant="headline" width="30%" />
       </View>
       <View style={[styles.card, styles.first, styles.last]}>
         {[0, 1, 2].map((index) => (
           <View key={index} style={styles.text}>
             <SkeletonText variant="bodyStrong" width="50%" />
-            <SkeletonText variant="supporting" width="70%" />
+            <SkeletonText variant="callout" width="70%" />
             <SkeletonText variant="caption" width="40%" />
           </View>
         ))}
@@ -284,7 +311,7 @@ export function HistoryScreen() {
         ListHeaderComponent={
           <View style={[styles.column, styles.top]}>
             {access.restriction ? <RestrictedNotice message={access.restriction} testID={`${ROUTE}.restricted`} /> : null}
-            <Text variant="supporting" color="text.secondary">
+            <Text variant="callout" color="text.secondary">
               {t('history.intro')}
             </Text>
           </View>
@@ -309,7 +336,7 @@ export function HistoryScreen() {
         renderItem={({ item }: { item: Row }) => (
           <View style={styles.column}>
             {item.kind === 'month' ? (
-              <Text variant="titleS" role="heading" {...({ 'aria-level': 2 } as object)} style={[styles.month, item.first ? styles.monthFirst : null]}>
+              <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)} style={[styles.month, item.first ? styles.monthFirst : null]}>
                 {item.label}
               </Text>
             ) : (

@@ -4,11 +4,14 @@ import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyl
 
 import { createStyles, size, space, useTheme } from '@/theme';
 import { Chip, Icon, PressableScale, Radio, SegmentedControl, Switch, Text, type SegmentedControlProps } from '@/ui';
+import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 
 const useStyles = createStyles((t) => ({
-  group: { gap: t.space[16] },
-  groupTitle: { marginBottom: -t.space[4] },
+  // ADR-426 e: space.32 above a group (the form column's space.24 + space.8; the first group sits space.24 below the column's
+  // space.16 top padding), space.16 between fields, space.8 below the header (pulled up from the fields' 16).
+  group: { gap: t.space[16], marginTop: t.space[8] },
+  groupTitle: { marginBottom: t.space[8] - t.space[16] },
   pair: { flexDirection: 'row', gap: t.space[12] },
   pairStacked: { gap: t.space[16] },
   pairItem: { flex: 1, minWidth: 0 },
@@ -41,20 +44,34 @@ const useStyles = createStyles((t) => ({
 }));
 
 export type FormGroupProps = {
-  /** Eyebrow header: one or two short words ("MOTOR", "LEISTUNG"), uppercased by the type style. */
+  /** Section header in sentence case: one or two short words ("Motor", "Dieses Fahrzeug"). */
   title?: string;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
 
-/** FS-5: eyebrow headers, 16 between fields. Groups sit 24 apart in their parent. */
+/**
+ * FS-5: a section header, 16 between fields. The header is the grouped-list role (ADR-426 e, `SECTION_HEADER_ROLE`:
+ * callout.strong 14/20 600, text.secondary), the same as RowGroup's, one weight step above the field labels (DQ-928); v1's
+ * caps eyebrow became a 17 headline in the M4.1 mapping, which grew to near title size at 200 % (DQ-906). Every group, with
+ * or without a header, adds space.8 above itself to its parent's space.24: space.32 between groups (ADR-426 e). A group of
+ * one field whose label says it all has no header (it would repeat the label).
+ */
 export function FormGroup({ title, children, style, testID }: FormGroupProps) {
   const styles = useStyles();
   return (
     <View style={[styles.group, style]} testID={testID}>
       {title ? (
-        <Text variant="eyebrow" color="text.secondary" role="heading" {...({ 'aria-level': 2 } as object)} hyphenate={false} style={styles.groupTitle}>
+        <Text
+          variant={SECTION_HEADER_ROLE}
+          color="text.secondary"
+          role="heading"
+          {...({ 'aria-level': 2 } as object)}
+          hyphenate={false}
+          style={styles.groupTitle}
+          testID={testID ? `${testID}.title` : undefined}
+        >
           {title}
         </Text>
       ) : null}
@@ -90,7 +107,7 @@ export function FieldNote({ helper, error, testID }: FieldNoteProps) {
         </View>
       ) : null}
       <Text
-        variant="helper"
+        variant="caption"
         color={error ? 'accent.fg' : 'text.secondary'}
         role={error ? 'alert' : undefined}
         style={styles.noteText}
@@ -123,7 +140,7 @@ export function PickerField({ label, value, placeholder, onPress, helper, error,
   const shown = value && value.trim() !== '' ? value : null;
   return (
     <View style={styles.field}>
-      <Text variant="labelS" color="text.secondary" aria-hidden>
+      <Text variant="callout" color="text.secondary" aria-hidden>
         {label}
       </Text>
       <PressableScale
@@ -196,7 +213,7 @@ export function evenChipLayout(track: number, labels: readonly number[]): 'row' 
   return Math.max(...chips) <= (track - CHIP_GAP) / 2 ? 'columns' : 'wrap';
 }
 
-/** FS-5's provenance chips (Werksangabe · Besitzerangabe · Gemessen): a radio group of chips that can also be left empty. */
+/** FS-5's provenance chips (Herstellerangabe · Geschätzt · Prüfstand): a radio group of chips that can also be left empty. */
 export function ChoiceChips<T extends string>({ label, options, value, onChange, disabled = false, evenRows = false, testID }: ChoiceChipsProps<T>) {
   const styles = useStyles();
   const [track, setTrack] = useState(0);
@@ -230,7 +247,7 @@ export function ChoiceChips<T extends string>({ label, options, value, onChange,
       {evenRows ? (
         <View aria-hidden style={styles.measure}>
           {options.map((option) => (
-            <Text key={option.value} variant="labelS" hyphenate={false} selectable={false} onLayout={measured(option.value)}>
+            <Text key={option.value} variant="callout" hyphenate={false} selectable={false} onLayout={measured(option.value)}>
               {option.label}
             </Text>
           ))}
@@ -259,7 +276,7 @@ export function SwitchRow({ label, helper, value, onChange, disabled = false, te
           {label}
         </Text>
         {helper ? (
-          <Text variant="helper" color="text.secondary">
+          <Text variant="caption" color="text.secondary">
             {helper}
           </Text>
         ) : null}
@@ -332,7 +349,7 @@ export function FittingSegmented<T extends string>(props: Omit<SegmentedControlP
       )}
       <View aria-hidden style={styles.measure}>
         {options.map((option) => (
-          <Text key={option.value} variant="labelS" hyphenate={false} selectable={false} onLayout={measured(option.value)}>
+          <Text key={option.value} variant="callout" hyphenate={false} selectable={false} onLayout={measured(option.value)}>
             {option.label}
           </Text>
         ))}

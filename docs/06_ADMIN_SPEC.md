@@ -25,6 +25,8 @@
 
 **Re-authentication:** sensitive actions require a password confirmation within the last 5 minutes (Fortify `password.confirm`), and TOTP is mandatory for all staff (ADM-03 blocks everything until enrolled).
 
+**Owner-only atom (M4.6, ADR-432):** `system.mail_preview` (ADM-61 Mail-Vorschau) belongs to the Owner role only. It is outside the grantable atom list, so ADM-42 cannot give it to another role, and invitations cannot carry it. **Skippable TOTP (ADR-427):** with `STAFF_2FA_REQUIRED=false` (staging) a staff member may skip enrolment for one session; code-gated steps stay closed.
+
 ## 3. Modules
 **Access (ADM-01…05).** Staff login (separate guard + cookie path `/admin`), TOTP challenge, mandatory enrolment, password reset, 403. Optional IP allow-list (`ADMIN_IP_ALLOWLIST`) and admin subdomain (`ADMIN_DOMAIN`). Session idle timeout 30 min with "Sitzung läuft ab" warning at 25 min.
 
@@ -52,6 +54,8 @@
 **Audit & privacy (ADM-44…47).** Audit log with filters (actor, action, target, date), event drawer with before/after diff, chain status ("Integrität geprüft: 02:00 ✓"), export* (CSV/JSONL). GDPR requests (Auskunft, Export, Löschung, Berichtigung, Widerspruch) with due date (1 month; extension + 2 months with reason), status, evidence of completion, templates. Retention settings (defaults below).
 
 **System (ADM-48…50).** Health (spatie/laravel-health: DB, cache, queue backlog, failed jobs, cron heartbeat, disk usage, storage link, GD WebP support, PHP version/extensions, mail config, Pusher reachability, AI provider reachability, last backup, audit chain). Jobs: pending/failed with retry/forget. Integrations: status only — **never show secrets**; test buttons (send test e-mail to me, test push to my device token, test Pusher event, test AI call).
+
+**Mail-Vorschau (ADM-61, M4.6, non-production only).** The last 50 outgoing mails of a host whose mailer is `log`, so demos work without SMTP. Owner only (`system.mail_preview`); the list shows metadata only (recipient, subject with codes masked, time, type); opening a mail is audited (`system.mail_preview_opened`). The route is not registered in production and the controller refuses there too.
 
 **Settings (ADM-51/52).** My staff account (password, 2FA, sessions). Org settings: company identity for Impressum and e-mails (name, address, representative, contact, register, VAT ID), support e-mail, default locale.
 

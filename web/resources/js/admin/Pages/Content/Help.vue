@@ -111,10 +111,10 @@ const categoryLabel = (category: string | null): string => category ?? '–';
             <SegmentedControl v-model="locale" :options="localeOptions" :label="trans('content.help.filter')" class="self-start" />
             <EmptyQueue v-if="pageState !== 'loading' && list.length === 0" variant="first" :icon="PhLifebuoy" :title="trans('content.help.empty_title')" :body="trans('content.help.empty_body')" data-testid="ADM-32.empty" />
             <ScrollRegion v-else :label="trans('content.help.caption')">
-                <table class="w-full text-supporting" data-testid="ADM-32.table">
+                <table class="w-full text-admin-base" data-testid="ADM-32.table">
                     <caption class="sr-only">{{ trans('content.help.caption') }}</caption>
                     <thead>
-                        <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                        <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                             <th scope="col" class="px-12">{{ trans('content.help.columns.title') }}</th>
                             <th scope="col" class="px-12">{{ trans('content.help.columns.locale') }}</th>
                             <th scope="col" class="px-12">{{ trans('content.help.columns.category') }}</th>
@@ -133,7 +133,7 @@ const categoryLabel = (category: string | null): string => category ?? '–';
                         <tr v-for="article in pageState === 'loading' ? [] : list" :key="article.id" class="h-40 border-b border-line-subtle last:border-b-0" data-testid="ADM-32.row">
                             <td class="px-12 py-4">
                                 <span class="block text-ink">{{ article.title }}</span>
-                                <span class="sc-key block text-helper text-ink-3">{{ article.key }}</span>
+                                <span class="sc-key block text-admin-base text-ink-3">{{ article.key }}</span>
                             </td>
                             <td class="px-12"><Badge tone="neutral">{{ article.locale.toUpperCase() }}</Badge></td>
                             <td class="whitespace-nowrap px-12" :class="article.category ? 'text-ink-2' : 'text-ink-3'">{{ categoryLabel(article.category) }}</td>

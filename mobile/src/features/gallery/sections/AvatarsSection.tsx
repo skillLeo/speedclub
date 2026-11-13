@@ -3,7 +3,7 @@ import { Avatar, type AvatarSize } from '@/ui';
 import { PHOTOS, LUKAS, photoUri } from '../data';
 import { Group, SectionScreen, Specimen, Wrap } from '../parts';
 
-const SIZES: readonly AvatarSize[] = [24, 32, 40, 56, 96];
+const SIZES: readonly AvatarSize[] = [24, 32, 40, 56, 88];
 
 export function AvatarsSection() {
   const uri = photoUri(PHOTOS.wheels);

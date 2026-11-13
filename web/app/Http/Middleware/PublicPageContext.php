@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\Privacy\OrgIdentity;
+use App\Support\KnownBots;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -73,8 +74,13 @@ class PublicPageContext
         $asked = app()->environment('production') ? null : $request->query('qaLocale');
         $asked ??= $request->query('lang');
 
-        // ADR-239: without a matching browser language the org's default locale.
-        $locale = in_array($asked, $supported, true) ? $asked : app(OrgIdentity::class)->forRequest($request);
+        // ADR-239: without a matching browser language the org's default locale. A link-preview fetcher (KnownBots) speaks for whoever
+        // shared the link, not for itself: facebookexternalhit asks for en-US, so it gets the org's language unless the link says ?lang=.
+        $locale = match (true) {
+            in_array($asked, $supported, true) => $asked,
+            KnownBots::matches($request->userAgent()) => app(OrgIdentity::class)->defaultLocale(),
+            default => app(OrgIdentity::class)->forRequest($request),
+        };
         app()->setLocale($locale);
 
         return $locale;

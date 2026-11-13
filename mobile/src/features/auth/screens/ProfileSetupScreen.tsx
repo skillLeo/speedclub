@@ -148,7 +148,7 @@ export function ProfileSetupScreen() {
       {notice ? <FormNotice message={notice} testID="AUTH-09.notice" /> : null}
       <View style={styles.avatarRow}>
         <View style={styles.avatarBox}>
-          <Avatar name={name} uri={busy && pending ? pending.photo.uri : avatarUrlOf(me?.avatar ?? null)} size={96} decorative testID="AUTH-09.avatar" />
+          <Avatar name={name} uri={busy && pending ? pending.photo.uri : avatarUrlOf(me?.avatar ?? null)} size={88} decorative testID="AUTH-09.avatar" />
           {busy ? (
             <View style={styles.spinner} testID="AUTH-09.avatarBusy">
               <Spinner decorative size={24} color="onPhoto.primary" />

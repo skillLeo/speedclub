@@ -1,10 +1,10 @@
+import { useRouter } from 'expo-router';
 import type { FlashListRef } from '@shopify/flash-list';
 import { memo, useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useBlockedMembers, useUnblockMember, type BlockedMember } from '@/api/queries/social';
-import { GuestInvitation } from '@/features/profile/components/GuestInvitation';
 import { PushedListPage } from '@/features/shell/PushedListPage';
 import { useRetainedListScroll } from '@/features/shell/useRetainedListScroll';
 import { useBack } from '@/features/vehicle/navigation';
@@ -31,6 +31,7 @@ import {
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { SettingsSplit, useSettingsSplit } from '../components/SettingsSplit';
+import { SettingsGuest } from '../components/SettingsGuest';
 
 const ROUTE = 'SET-08';
 const SKELETON_ROWS = 3;
@@ -99,6 +100,7 @@ export function BlockedAccountsScreen() {
   const online = useOnline();
   const status = useSessionStore((state) => state.status);
   const back = useBack('/settings');
+  const router = useRouter();
   const split = useSettingsSplit();
   const query = useBlockedMembers();
   const focused = useScreenFocused();
@@ -123,7 +125,7 @@ export function BlockedAccountsScreen() {
   // DQ-276: a skeleton stands exactly where the rows will, without the gap that empty, error and offline get.
   let loading = false;
   if (status === 'guest') {
-    state = <GuestInvitation routeId={ROUTE} returnTo="/settings/privacy/blocked" />;
+    state = <SettingsGuest routeId={ROUTE} returnTo="/settings/privacy/blocked" />;
   } else if (qaState === 'loading' || status === 'loading' || (!query.data && query.isPending && query.fetchStatus !== 'paused' && qaState !== 'error')) {
     loading = true;
     state = (
@@ -133,7 +135,7 @@ export function BlockedAccountsScreen() {
             <SkeletonBlock width={size.avatar.md} height={size.avatar.md} corner="full" />
             <View style={styles.skeletonText}>
               <SkeletonText variant="bodyStrong" width="50%" />
-              <SkeletonText variant="supporting" width="40%" />
+              <SkeletonText variant="callout" width="40%" />
             </View>
             <SkeletonBlock width={size.touchMin * 2} height={size.button.m} corner="sm" />
           </View>
@@ -152,7 +154,25 @@ export function BlockedAccountsScreen() {
       />
     );
   } else if (rows.length === 0) {
-    state = <EmptyState icon="prohibit" title={t('blocked.emptyTitle')} body={t('blocked.emptyBody')} testID={`${ROUTE}.empty`} />;
+    // DQ-1033 (09 §5 EmptyState): the row a blocked account gets, badged Beispiel, then the line and the one way on.
+    state = (
+      <EmptyState
+        preview={
+          <MemberRow
+            name={t('blocked.sampleHandle')}
+            meta={t('blocked.since', { date: t('blocked.sampleDate') })}
+            avatarUri={null}
+            sample={{ is_sample: true }}
+            inset={0}
+            testID={`${ROUTE}.sample`}
+          />
+        }
+        title={t('blocked.emptyTitle')}
+        body={t('blocked.emptyBody')}
+        action={{ label: t('blocked.emptyAction'), onPress: () => router.push('/settings/privacy'), variant: 'secondary', size: 'm' }}
+        testID={`${ROUTE}.empty`}
+      />
+    );
   }
 
   const handle = `@${confirming?.username ?? ''}`;
@@ -192,7 +212,7 @@ export function BlockedAccountsScreen() {
           ListHeaderComponent={
             status === 'guest' ? null : (
             <View style={frame.columnStyle}>
-              <Text variant="bodyDense" color="text.secondary" style={styles.intro} testID={`${ROUTE}.intro`}>
+              <Text variant="body" color="text.secondary" style={styles.intro} testID={`${ROUTE}.intro`}>
                 {t('blocked.intro')}
               </Text>
             </View>

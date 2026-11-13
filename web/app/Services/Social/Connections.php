@@ -73,6 +73,7 @@ class Connections
     private function page(Builder $query, ?User $viewer, ?array $words, int $perPage): CursorPaginator
     {
         $this->builds->withoutBlocks($query->getQuery(), $viewer, 'u.id');
+        $this->builds->withoutSamples($query->getQuery(), 'u.is_sample');
 
         if ($words !== null) {
             MemberNameFilter::apply($query->getQuery(), $words);

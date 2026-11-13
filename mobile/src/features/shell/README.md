@@ -26,6 +26,14 @@ Never add a `_layout.tsx` in `(home)`, `(discover)`, `(garage)`, `(messages)` or
 - **Editors pushed inside a tab** (`/garage/[id]/basics` and similar) call `useHideTabBar()` (§9).
 - **Scrolling screens other than tab roots** call `useTabScrollToTop()`, so re-tap scrolls first.
 
+## Tab chrome (M4.5, 09 §6.1)
+
+- One config: `TAB_DESTINATIONS` (`destinations.ts`) — order, label key, test ID, route group, SF Symbol pair, Material Symbol pair, Phosphor icon. Android's native icons are the Phosphor pair as PNGs (`nativeTabIcons.ts`, `mobile/scripts/build-tab-icons.mjs`).
+- `(tabs)/_layout.native.tsx` (iOS, Android): `NativeTabsLayout` (`expo-router/native-tabs`) while `nav.native_tabs` is not `false` (default on, a kill switch, `navMode.ts`), else `JsTabsLayout`. `(tabs)/_layout.tsx` (web) always runs `JsTabsLayout`, so the web never imports native tabs.
+- Under native tabs `useTabBarPadding()` is 0: Android lays the bar below the content, iOS insets the first scroll view itself. The toast host clears the bar through the height `NativeTabContent` measures. `useHideTabBar()` hides either bar. Android re-tap (top, then root) and the selection haptic run from `onNativeTabPress`; iOS re-taps natively.
+- Header patterns (09 §6.2): (a) `Header variant="large"` + `HeaderLargeTitle`, (b) `Header variant="photo"`, (c) `Sheet` / modal stacks with `Header backIcon="close"`, (d) `BrandHeader` (Home: wordmark, bell, hides on scroll down).
+- Links: `linkMap.ts` lists every public path of 09 §6.5 with its app route; `mapIncomingPath` applies the ready rewrites and legacy redirects.
+
 ## Toasts
 
 `toast()` from `@/ui`. The one shell host sits 8 above the tab bar, above the `StickyCTABar` of the focused screen (the bar reports its height through `useFocusEffect`, `src/ui/toastPlacement.ts`) and above the keyboard. A screen does nothing for it. A Jest test that mocks `expo-router` and renders a `StickyCTABar` needs `useFocusEffect` in that mock.

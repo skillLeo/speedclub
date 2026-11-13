@@ -29,7 +29,7 @@ function choose(locale: 'de' | 'en'): void {
             :title="trans(`shell.locale.${locale}_name`)"
             :class="[
                 focusRing,
-                'inline-flex h-32 min-w-32 items-center justify-center rounded-sm border px-8 text-label-s',
+                'inline-flex h-32 min-w-32 items-center justify-center rounded-sm border px-8 text-admin-base-strong',
                 currentLocale === locale ? 'border-line-control bg-selected text-ink' : 'border-transparent text-ink-2 hover:bg-hover hover:text-ink',
             ]"
             :data-testid="`shell.locale.${locale}`"

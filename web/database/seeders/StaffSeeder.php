@@ -50,6 +50,12 @@ class StaffSeeder extends Seeder
         'lists.export',
     ];
 
+    /**
+     * SEC-M46-04: atoms only the Owner holds. Outside ATOMS, so the ADM-42 matrix can neither show nor grant them, and the Admin role
+     * does not get them. system.mail_preview opens a recorded mail of ADM-61, which may hold a member's sign-in code.
+     */
+    public const OWNER_ONLY = ['system.mail_preview'];
+
     public const ROLES = [
         'moderator' => [
             'moderation.view', 'moderation.decide', 'moderation.appeals', 'moderation.messages', 'moderation.rules',
@@ -95,7 +101,7 @@ class StaffSeeder extends Seeder
      */
     public static function specTable(): array
     {
-        return ['owner' => self::ATOMS, 'admin' => self::ATOMS, ...self::ROLES];
+        return ['owner' => [...self::ATOMS, ...self::OWNER_ONLY], 'admin' => self::ATOMS, ...self::ROLES];
     }
 
     /**
@@ -111,7 +117,7 @@ class StaffSeeder extends Seeder
         $known = Permission::query()->where('guard_name', self::GUARD)->pluck('name')->all();
         $baseline = ! $fresh && ! DB::table('staff_seed_grants')->exists();
 
-        foreach (self::ATOMS as $atom) {
+        foreach ([...self::ATOMS, ...self::OWNER_ONLY] as $atom) {
             Permission::findOrCreate($atom, self::GUARD);
         }
 

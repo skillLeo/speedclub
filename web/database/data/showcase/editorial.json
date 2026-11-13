@@ -1,0 +1,4224 @@
+{
+ "_comment": "SPEED CLUB Editorial (09 §8.19, ADR-412): sample builds of the Editorial account, seeded by DemoShowcaseSeeder (local and staging only, flag editorial_samples). Each build names one shoot of design/seed-photos/manifest.json (`car`) that shows exactly its make, model and generation and that no showcase build uses. Specs are the manufacturer's figures for that model; `source` names where they come from; a figure the source does not give is null. Parts are real products of real brands (catalogue brands table), clearly labelled as samples; legal status stays unknown (no legality judgement on samples).",
+ "member": {
+  "username": "speedclub.editorial",
+  "display_name": "SPEED CLUB Editorial",
+  "city": null,
+  "joined_days": 150,
+  "avatar": false,
+  "bio": "Beispiel-Builds der Redaktion: so sieht ein vollständiges Build-Sheet aus. Alle Inhalte dieses Kontos sind als Beispiel markiert."
+ },
+ "notes": [
+  "Neu im Build-Sheet: {mod}. Daten und Quelle stehen in der Teileliste.",
+  "Werksangaben ergänzt: Leistung, Drehmoment und Antrieb kommen aus der Pressemappe des Herstellers.",
+  "Fotos aktualisiert: neues Titelbild aus dem Shooting, Kennzeichen unkenntlich gemacht.",
+  "Teileliste nach Kategorien sortiert, damit du schneller findest, was verbaut ist.",
+  "Beispiel-Build überarbeitet: {mod} mit Größen und Ausführung eingetragen."
+ ],
+ "vehicles": [
+  {
+   "key": "ed-bmw-m4-f82",
+   "car": "bmw-f82-YU9uouKUIQY",
+   "make": "BMW",
+   "model": "M4",
+   "generation": "F82",
+   "year": 2016,
+   "color": "Austin Yellow metallic",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: ein M4 Coupé, wie man ihn oft auf Treffen sieht. Klappenanlage, Gewindefahrwerk und geschmiedete Räder, sonst nah am Werkszustand.",
+   "published_days": 64,
+   "specs": {
+    "engine_code": "S55B30",
+    "engine_text": "3,0 l Reihensechszylinder Biturbo",
+    "displacement_cc": 2979,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 317,
+    "torque_nm": 550,
+    "drivetrain": "rear",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 4.1,
+    "weight_kg": 1497
+   },
+   "source": "BMW Group PressClub, Pressemappe BMW M3 Limousine und M4 Coupé (02/2014): 317 kW, 550 Nm, M DKG 0–100 km/h 4,1 s, DIN-Leergewicht 1.497 kg",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "Akrapovič",
+     "p": "Evolution Line Titan",
+     "cost": 6900,
+     "s": "installed",
+     "f": {
+      "type": "full_system",
+      "brand": "Akrapovič",
+      "model": "Evolution Line Titan",
+      "material": "titanium",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Variante 3",
+     "cost": 2400,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Variante 3",
+      "lowering_front": 25,
+      "lowering_rear": 20,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "BBS",
+     "p": "CH-R II 20 Zoll",
+     "cost": 5200,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "BBS",
+      "wheel_model": "CH-R II",
+      "diameter": 20,
+      "width_front": 9.0,
+      "width_rear": 10.0,
+      "bolt_pattern": "5×120",
+      "finish": "Satin Black",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "255/35 R20",
+      "tyre_size_rear": "285/30 R20"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-4",
+     "c": "engine_performance",
+     "b": "Eventuri",
+     "p": "Carbon-Ansaugsystem",
+     "cost": 2100,
+     "s": "installed",
+     "f": {
+      "tuner": "Eventuri",
+      "intake": "Eventuri Carbon"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Recaro",
+     "p": "Sportster CS",
+     "cost": 3300,
+     "s": "planned",
+     "f": {
+      "part": "seats",
+      "brand": "Recaro",
+      "model": "Sportster CS"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-bmw-m2c-f87",
+   "car": "bmw-f87-_cg-NdDYxbk",
+   "make": "BMW",
+   "model": "M2",
+   "generation": "F87",
+   "year": 2019,
+   "color": "Dunkelgrün metallic",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: M2 Competition für Landstraße und gelegentliche Trackdays. Heckflügel, Semislicks und ein Fahrwerk, das sich einstellen lässt.",
+   "published_days": 58,
+   "specs": {
+    "engine_code": "S55B30T0",
+    "engine_text": "3,0 l Reihensechszylinder Biturbo",
+    "displacement_cc": 2979,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 302,
+    "torque_nm": 550,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 4.4,
+    "weight_kg": 1550
+   },
+   "source": "BMW Group PressClub, BMW M2 Competition (04/2018): 302 kW, 550 Nm, Schaltgetriebe 0–100 km/h 4,4 s, DIN-Leergewicht 1.550 kg",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "Maxton Design",
+     "p": "Heckflügel",
+     "cost": 1450,
+     "s": "installed",
+     "f": {
+      "part": "wing",
+      "brand": "Maxton Design",
+      "material": "carbon"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Öhlins",
+     "p": "Road & Track",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Öhlins",
+      "model": "Road & Track",
+      "lowering_front": 20,
+      "lowering_rear": 15,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "OZ Racing",
+     "p": "Ultraleggera HLT 19 Zoll",
+     "cost": 3600,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "OZ Racing",
+      "wheel_model": "Ultraleggera HLT",
+      "diameter": 19,
+      "width_front": 9.0,
+      "width_rear": 10.0,
+      "bolt_pattern": "5×120",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport Cup 2",
+      "tyre_size_front": "245/35 R19",
+      "tyre_size_rear": "265/35 R19"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-4",
+     "c": "brakes",
+     "b": "Brembo",
+     "p": "GT-Kit 6-Kolben",
+     "cost": 4200,
+     "s": "installed",
+     "f": {
+      "brand": "Brembo",
+      "model": "GT-Kit 6-Kolben",
+      "front_pistons": 6,
+      "front_disc": 380,
+      "pads": "Ferodo DS2500"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Sparco",
+     "p": "QRT-R",
+     "cost": 1900,
+     "s": "installed",
+     "f": {
+      "part": "seats",
+      "brand": "Sparco",
+      "model": "QRT-R"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-bmw-m2-f87",
+   "car": "bmw-f87-wLpTPp2dzsY",
+   "make": "BMW",
+   "model": "M2",
+   "generation": "F87",
+   "year": 2016,
+   "color": "Long Beach Blue metallic",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: der frühe M2 mit N55 und Handschaltung. Dezent tiefer, Cat-Back-Anlage und Räder in Werksoptik.",
+   "published_days": 52,
+   "specs": {
+    "engine_code": "N55B30T0",
+    "engine_text": "3,0 l Reihensechszylinder Turbo",
+    "displacement_cc": 2979,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 272,
+    "torque_nm": 465,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 4.5,
+    "weight_kg": 1495
+   },
+   "source": "BMW Group PressClub, BMW M2 Coupé (10/2015): 272 kW, 465 Nm (500 Nm mit Overboost), Schaltgetriebe 0–100 km/h 4,5 s, DIN-Leergewicht 1.495 kg",
+   "mods": [
+    {
+     "ref": "susp-1",
+     "c": "suspension",
+     "b": "H&R",
+     "p": "Sportfedern",
+     "cost": 320,
+     "s": "installed",
+     "f": {
+      "type": "lowering_springs",
+      "brand": "H&R",
+      "model": "Sportfedern",
+      "lowering_front": 15,
+      "lowering_rear": 10
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "Remus",
+     "p": "Cat-Back Sportauspuff",
+     "cost": 2700,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Remus",
+      "model": "Cat-Back Sportauspuff",
+      "material": "stainless",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "BBS",
+     "p": "CI-R 19 Zoll",
+     "cost": 3900,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "BBS",
+      "wheel_model": "CI-R",
+      "diameter": 19,
+      "width_front": 9.0,
+      "width_rear": 10.0,
+      "bolt_pattern": "5×120",
+      "finish": "Platinum Silver",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "245/35 R19",
+      "tyre_size_rear": "265/35 R19"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-4",
+     "c": "brakes",
+     "b": "Zimmermann",
+     "p": "Sport Z Bremsscheiben",
+     "cost": 540,
+     "s": "installed",
+     "f": {
+      "brand": "Zimmermann",
+      "model": "Sport Z Bremsscheiben",
+      "pads": "Textar Sport"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "drv-5",
+     "c": "drivetrain",
+     "b": "Wavetrac",
+     "p": "Sperrdifferenzial",
+     "cost": 1650,
+     "s": "planned",
+     "f": {
+      "part": "lsd",
+      "brand": "Wavetrac",
+      "model": "Sperrdifferenzial"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-bmw-m4c-g82",
+   "car": "bmw-g82-yoqHLUayUTg",
+   "make": "BMW",
+   "model": "M4",
+   "generation": "G82",
+   "year": 2021,
+   "color": "Toronto Rot metallic",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: M4 Competition mit Achtgang-Automatik. Klappenanlage aus Titan, Carbon-Lippe und Räder einen Zoll größer als ab Werk.",
+   "published_days": 41,
+   "specs": {
+    "engine_code": "S58B30T0",
+    "engine_text": "3,0 l Reihensechszylinder Biturbo",
+    "displacement_cc": 2993,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 375,
+    "torque_nm": 650,
+    "drivetrain": "rear",
+    "gearbox": "automatic"
+   },
+   "factory": {
+    "zero_to_100_s": 3.9,
+    "weight_kg": 1725
+   },
+   "source": "BMW Group PressClub, BMW M3 Limousine und M4 Coupé (09/2020): M4 Competition 375 kW, 650 Nm, 0–100 km/h 3,9 s, DIN-Leergewicht 1.725 kg",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "Akrapovič",
+     "p": "Slip-On Line Titan",
+     "cost": 5400,
+     "s": "installed",
+     "f": {
+      "type": "rear_silencer",
+      "brand": "Akrapovič",
+      "model": "Slip-On Line Titan",
+      "material": "titanium",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-2",
+     "c": "aero_body",
+     "b": "Vorsteiner",
+     "p": "Carbon-Frontlippe",
+     "cost": 1300,
+     "s": "installed",
+     "f": {
+      "part": "front_lip",
+      "brand": "Vorsteiner",
+      "material": "carbon"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "HRE",
+     "p": "FF04 20 Zoll",
+     "cost": 4800,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "HRE",
+      "wheel_model": "FF04",
+      "diameter": 20,
+      "width_front": 9.5,
+      "width_rear": 10.5,
+      "bolt_pattern": "5×112",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "275/35 R20",
+      "tyre_size_rear": "285/30 R20"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-4",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Variante 4",
+     "cost": 4300,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Variante 4",
+      "lowering_front": 20,
+      "lowering_rear": 15,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "el-5",
+     "c": "electronics",
+     "b": "BimmerCode",
+     "p": "Codierung Lichtfunktionen",
+     "cost": 40,
+     "s": "installed",
+     "f": {
+      "part": "coding",
+      "brand": "BimmerCode",
+      "model": "Codierung Lichtfunktionen"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-porsche-911-gt3rs-991",
+   "car": "porsche-991-DM4lUu5YikA",
+   "make": "Porsche",
+   "model": "911",
+   "generation": "991",
+   "year": 2018,
+   "color": "Lavaorange",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: 991.2 GT3 RS mit Manthey-Kit für den Rundstreckeneinsatz. Der Saugmotor bleibt serienmäßig, geändert wurden Fahrwerk und Aerodynamik.",
+   "published_days": 76,
+   "specs": {
+    "engine_code": null,
+    "engine_text": "4,0 l Sechszylinder-Boxer",
+    "displacement_cc": 3996,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 383,
+    "torque_nm": 470,
+    "drivetrain": "rear",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 3.2,
+    "weight_kg": 1430
+   },
+   "source": "Porsche Newsroom, 911 GT3 RS (991.2, 02/2018): 383 kW, 470 Nm, 0–100 km/h 3,2 s, DIN-Leergewicht 1.430 kg",
+   "mods": [
+    {
+     "ref": "susp-1",
+     "c": "suspension",
+     "b": "Manthey Racing",
+     "p": "MR Performance-Kit Fahrwerk",
+     "cost": 7900,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Manthey Racing",
+      "model": "MR Performance-Kit Fahrwerk",
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-2",
+     "c": "aero_body",
+     "b": "Manthey Racing",
+     "p": "Aero-Kit Heckflügel und Diffusor",
+     "cost": 9800,
+     "s": "installed",
+     "f": {
+      "part": "wing",
+      "brand": "Manthey Racing",
+      "material": "carbon"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-3",
+     "c": "brakes",
+     "b": "Pagid",
+     "p": "RSL29 Rennbeläge",
+     "cost": 780,
+     "s": "installed",
+     "f": {
+      "brand": "Pagid",
+      "model": "RSL29 Rennbeläge",
+      "pads": "Pagid RSL29"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-4",
+     "c": "exhaust",
+     "b": "Akrapovič",
+     "p": "Slip-On Line Titan",
+     "cost": 6500,
+     "s": "installed",
+     "f": {
+      "type": "rear_silencer",
+      "brand": "Akrapovič",
+      "model": "Slip-On Line Titan",
+      "material": "titanium",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Schroth",
+     "p": "Profi II 6-Punkt-Gurt",
+     "cost": 620,
+     "s": "installed",
+     "f": {
+      "part": "harness",
+      "brand": "Schroth",
+      "model": "Profi II 6-Punkt-Gurt"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-porsche-911-gt3rs-992",
+   "car": "porsche-992-hzOHodDJUZE",
+   "make": "Porsche",
+   "model": "911",
+   "generation": "992",
+   "year": 2023,
+   "color": "Weiß",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: 992 GT3 RS, fast im Werkszustand. Rote Räder, Folienschutz und ein paar Teile für den nächsten Trackday.",
+   "published_days": 22,
+   "specs": {
+    "engine_code": null,
+    "engine_text": "4,0 l Sechszylinder-Boxer",
+    "displacement_cc": 3996,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 386,
+    "torque_nm": 465,
+    "drivetrain": "rear",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 3.2,
+    "weight_kg": 1450
+   },
+   "source": "Porsche Newsroom, 911 GT3 RS (992, 08/2022): 386 kW, 465 Nm, 0–100 km/h 3,2 s, DIN-Leergewicht 1.450 kg",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "3M",
+     "p": "Lackschutzfolie Vollfront",
+     "cost": 3200,
+     "s": "installed",
+     "f": {
+      "part": "wrap",
+      "brand": "3M",
+      "material": "other"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-2",
+     "c": "aero_body",
+     "b": "Avery Dennison",
+     "p": "Teilfolierung Felgen Rot",
+     "cost": 900,
+     "s": "installed",
+     "f": {
+      "part": "other",
+      "brand": "Avery Dennison",
+      "material": "other"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-3",
+     "c": "brakes",
+     "b": "Pagid",
+     "p": "RSC1 Straßenbeläge",
+     "cost": 690,
+     "s": "installed",
+     "f": {
+      "brand": "Pagid",
+      "model": "RSC1 Straßenbeläge",
+      "pads": "Pagid RSC1"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-4",
+     "c": "interior",
+     "b": "Schroth",
+     "p": "Profi II 6-Punkt-Gurt",
+     "cost": 620,
+     "s": "installed",
+     "f": {
+      "part": "harness",
+      "brand": "Schroth",
+      "model": "Profi II 6-Punkt-Gurt"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "el-5",
+     "c": "electronics",
+     "b": "AiM Sports",
+     "p": "Solo 2 DL Laptimer",
+     "cost": 900,
+     "s": "planned",
+     "f": {
+      "part": "data_logger",
+      "brand": "AiM Sports",
+      "model": "Solo 2 DL Laptimer"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-porsche-911-gt3-997",
+   "car": "porsche-997-pPWZlZ7X4ek",
+   "make": "Porsche",
+   "model": "911",
+   "generation": "997",
+   "year": 2007,
+   "color": "Speedgelb",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: ein 997 GT3 der ersten Serie, aufgebaut für Clubsport-Läufe. Startnummer, Käfig und Cup-Reifen, dazu ein Fahrwerk mit Einstellmöglichkeiten.",
+   "published_days": 88,
+   "specs": {
+    "engine_code": "M97/76",
+    "engine_text": "3,6 l Sechszylinder-Boxer",
+    "displacement_cc": 3600,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 305,
+    "torque_nm": 405,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 4.3,
+    "weight_kg": 1395
+   },
+   "source": "Porsche Presse, 911 GT3 (997, 02/2006): 305 kW, 405 Nm, 0–100 km/h 4,3 s, DIN-Leergewicht 1.395 kg",
+   "mods": [
+    {
+     "ref": "int-1",
+     "c": "interior",
+     "b": "Custom Cages",
+     "p": "Überrollkäfig verschraubt",
+     "cost": 2400,
+     "s": "installed",
+     "f": {
+      "part": "roll_cage",
+      "brand": "Custom Cages",
+      "model": "Überrollkäfig verschraubt"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Clubsport 3-Wege",
+     "cost": 4600,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Clubsport 3-Wege",
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "BBS",
+     "p": "E88 18 Zoll",
+     "cost": 5600,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "BBS",
+      "wheel_model": "E88",
+      "diameter": 18,
+      "width_front": 8.5,
+      "width_rear": 11.0,
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport Cup 2",
+      "tyre_size_front": "235/40 R18",
+      "tyre_size_rear": "305/30 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-4",
+     "c": "interior",
+     "b": "Recaro",
+     "p": "Pole Position",
+     "cost": 1600,
+     "s": "installed",
+     "f": {
+      "part": "seats",
+      "brand": "Recaro",
+      "model": "Pole Position"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-5",
+     "c": "brakes",
+     "b": "Endless",
+     "p": "MX72 Bremsbeläge",
+     "cost": 420,
+     "s": "installed",
+     "f": {
+      "brand": "Endless",
+      "model": "MX72 Bremsbeläge",
+      "pads": "Endless MX72"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-porsche-911-993",
+   "car": "porsche-993-o2JWG6f7Bgs",
+   "make": "Porsche",
+   "model": "911",
+   "generation": "993",
+   "year": 1995,
+   "color": "Polarsilber metallic",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: der letzte luftgekühlte 911 als Carrera, behutsam verbessert. Sportauspuff, neue Buchsen und ein etwas strafferes Fahrwerk.",
+   "published_days": 95,
+   "specs": {
+    "engine_code": "M64/05",
+    "engine_text": "3,6 l Sechszylinder-Boxer, luftgekühlt",
+    "displacement_cc": 3600,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 200,
+    "torque_nm": 330,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 5.6,
+    "weight_kg": 1370
+   },
+   "source": "Porsche AG, technische Daten 911 Carrera (993, Modelljahr 1995): 200 kW, 330 Nm, 0–100 km/h 5,6 s, Leergewicht DIN 1.370 kg",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "Cargraphic",
+     "p": "Sportauspuff mit Klappe",
+     "cost": 3400,
+     "s": "installed",
+     "f": {
+      "type": "rear_silencer",
+      "brand": "Cargraphic",
+      "model": "Sportauspuff mit Klappe",
+      "material": "stainless",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Bilstein",
+     "p": "B16 PSS10",
+     "cost": 2100,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Bilstein",
+      "model": "B16 PSS10",
+      "lowering_front": 20,
+      "lowering_rear": 20,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Fifteen52",
+     "p": "Outlaw 001 18 Zoll",
+     "cost": 2600,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Fifteen52",
+      "wheel_model": "Outlaw 001",
+      "diameter": 18,
+      "width_front": 8.0,
+      "width_rear": 10.0,
+      "bolt_pattern": "5×130",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4",
+      "tyre_size_front": "225/40 R18",
+      "tyre_size_rear": "265/35 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "drv-4",
+     "c": "drivetrain",
+     "b": "Powerflex",
+     "p": "Buchsenkit Achsen",
+     "cost": 540,
+     "s": "installed",
+     "f": {
+      "part": "other",
+      "brand": "Powerflex",
+      "model": "Buchsenkit Achsen"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Momo",
+     "p": "Prototipo Lenkrad",
+     "cost": 380,
+     "s": "installed",
+     "f": {
+      "part": "steering_wheel",
+      "brand": "Momo",
+      "model": "Prototipo Lenkrad"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-porsche-911-964",
+   "car": "porsche-964-ucSx_lPyuh8",
+   "make": "Porsche",
+   "model": "911",
+   "generation": "964",
+   "year": 1991,
+   "color": "Grand-Prix-Weiß",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: 964 Carrera 2 im Stil eines Bergrennwagens. Großer Heckflügel, goldene Kreuzspeichenräder und ein Fahrwerk, das Passstraßen mag.",
+   "published_days": 110,
+   "specs": {
+    "engine_code": "M64/01",
+    "engine_text": "3,6 l Sechszylinder-Boxer, luftgekühlt",
+    "displacement_cc": 3600,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 184,
+    "torque_nm": 310,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 5.7,
+    "weight_kg": 1350
+   },
+   "source": "Porsche AG, technische Daten 911 Carrera 2 (964, 1989): 184 kW, 310 Nm, 0–100 km/h 5,7 s, Leergewicht DIN 1.350 kg",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "RKP Composites",
+     "p": "Heckflügel",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "part": "wing",
+      "brand": "RKP Composites",
+      "material": "carbon"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Bilstein",
+     "p": "B16 Gewindefahrwerk",
+     "cost": 2300,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Bilstein",
+      "model": "B16 Gewindefahrwerk",
+      "lowering_front": 25,
+      "lowering_rear": 25,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-3",
+     "c": "exhaust",
+     "b": "Cargraphic",
+     "p": "Sportauspuff Edelstahl",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "type": "rear_silencer",
+      "brand": "Cargraphic",
+      "model": "Sportauspuff Edelstahl",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-4",
+     "c": "interior",
+     "b": "Recaro",
+     "p": "Classic Pole Position",
+     "cost": 1500,
+     "s": "installed",
+     "f": {
+      "part": "seats",
+      "brand": "Recaro",
+      "model": "Classic Pole Position"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-5",
+     "c": "wheels_tires",
+     "b": "BBS",
+     "p": "RS 17 Zoll",
+     "cost": 3400,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "BBS",
+      "wheel_model": "RS",
+      "diameter": 17,
+      "width_front": 7.5,
+      "width_rear": 9.0,
+      "bolt_pattern": "5×130",
+      "finish": "Gold",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4",
+      "tyre_size_front": "205/50 R17",
+      "tyre_size_rear": "255/40 R17"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-porsche-cayman-gt4-981",
+   "car": "porsche-981-UulhFczHDSY",
+   "make": "Porsche",
+   "model": "Cayman",
+   "generation": "981c",
+   "year": 2016,
+   "color": "Grau mit Rennfolierung",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: Cayman GT4 mit Folierung im Renndesign. Handschalter, Saugmotor und genug Abtrieb für schnelle Runden.",
+   "published_days": 70,
+   "specs": {
+    "engine_code": null,
+    "engine_text": "3,8 l Sechszylinder-Boxer",
+    "displacement_cc": 3800,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 283,
+    "torque_nm": 420,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 4.4,
+    "weight_kg": 1340
+   },
+   "source": "Porsche Newsroom, Cayman GT4 (981, 03/2015): 283 kW, 420 Nm, 0–100 km/h 4,4 s, DIN-Leergewicht 1.340 kg",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "KPMF",
+     "p": "Folierung Renndesign",
+     "cost": 2800,
+     "s": "installed",
+     "f": {
+      "part": "wrap",
+      "brand": "KPMF",
+      "material": "other"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Öhlins",
+     "p": "Road & Track",
+     "cost": 3100,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Öhlins",
+      "model": "Road & Track",
+      "lowering_front": 15,
+      "lowering_rear": 15,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-3",
+     "c": "exhaust",
+     "b": "Akrapovič",
+     "p": "Slip-On Line Titan",
+     "cost": 4300,
+     "s": "installed",
+     "f": {
+      "type": "rear_silencer",
+      "brand": "Akrapovič",
+      "model": "Slip-On Line Titan",
+      "material": "titanium",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-4",
+     "c": "interior",
+     "b": "Sabelt",
+     "p": "Taurus-Gurt 6-Punkt",
+     "cost": 540,
+     "s": "installed",
+     "f": {
+      "part": "harness",
+      "brand": "Sabelt",
+      "model": "Taurus-Gurt 6-Punkt"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-5",
+     "c": "brakes",
+     "b": "Pagid",
+     "p": "RSL29 Rennbeläge",
+     "cost": 560,
+     "s": "installed",
+     "f": {
+      "brand": "Pagid",
+      "model": "RSL29 Rennbeläge",
+      "pads": "Pagid RSL29"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-audi-rs4-b9",
+   "car": "audi-rs4-b9-cGUsmL7ILlw",
+   "make": "Audi",
+   "model": "RS4",
+   "generation": "B9",
+   "year": 2019,
+   "color": "Turboblau",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: RS 4 Avant als schneller Alltagskombi. Klappenanlage, Gewindefahrwerk und geschmiedete 20-Zöller, Platz für Gepäck bleibt.",
+   "published_days": 47,
+   "specs": {
+    "engine_code": null,
+    "engine_text": "2,9 l TFSI V6 Biturbo",
+    "displacement_cc": 2894,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 331,
+    "torque_nm": 600,
+    "drivetrain": "all",
+    "gearbox": "automatic"
+   },
+   "factory": {
+    "zero_to_100_s": 4.1,
+    "weight_kg": 1715
+   },
+   "source": "Audi MediaCenter, RS 4 Avant (B9, 09/2017): 331 kW, 600 Nm, 0–100 km/h 4,1 s, Leergewicht ohne Fahrer 1.715 kg",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "Milltek Sport",
+     "p": "Cat-Back mit Klappen",
+     "cost": 3800,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Milltek Sport",
+      "model": "Cat-Back mit Klappen",
+      "material": "stainless",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Variante 3",
+     "cost": 2800,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Variante 3",
+      "lowering_front": 25,
+      "lowering_rear": 25,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Vossen",
+     "p": "EVO-2R 20 Zoll",
+     "cost": 4900,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Vossen",
+      "wheel_model": "EVO-2R",
+      "diameter": 20,
+      "width_front": 9.5,
+      "width_rear": 9.5,
+      "bolt_pattern": "5×112",
+      "staggered": false,
+      "tyre_brand": "Pirelli",
+      "tyre_model": "P Zero",
+      "tyre_size_front": "275/30 R20",
+      "tyre_size_rear": "275/30 R20"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-4",
+     "c": "engine_performance",
+     "b": "Wagner Tuning",
+     "p": "Ladeluftkühler Competition",
+     "cost": 1400,
+     "s": "installed",
+     "f": {
+      "tuner": "Wagner Tuning",
+      "intercooler": "Wagner Competition"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-5",
+     "c": "aero_body",
+     "b": "Maxton Design",
+     "p": "Frontsplitter",
+     "cost": 420,
+     "s": "installed",
+     "f": {
+      "part": "splitter",
+      "brand": "Maxton Design",
+      "material": "abs"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-audi-rs4-b5",
+   "car": "audi-rs4-b5-DofxK8MgO1g",
+   "make": "Audi",
+   "model": "RS4",
+   "generation": "B5",
+   "year": 2000,
+   "color": "Silber",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: der erste RS 4, ein Biturbo-Kombi aus Neckarsulm. Gepflegt, mit stärkeren Bremsen und Edelstahl-Abgasanlage.",
+   "published_days": 101,
+   "specs": {
+    "engine_code": "ASJ",
+    "engine_text": "2,7 l V6 Biturbo",
+    "displacement_cc": 2671,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 280,
+    "torque_nm": 440,
+    "drivetrain": "all",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 4.9,
+    "weight_kg": 1620
+   },
+   "source": "Audi AG, Pressemappe RS 4 Avant (B5, 1999): 280 kW, 440 Nm, 0–100 km/h 4,9 s, Leergewicht 1.620 kg",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "Milltek Sport",
+     "p": "Cat-Back Edelstahl",
+     "cost": 1900,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Milltek Sport",
+      "model": "Cat-Back Edelstahl",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Bilstein",
+     "p": "B16 PSS10",
+     "cost": 1900,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Bilstein",
+      "model": "B16 PSS10",
+      "lowering_front": 20,
+      "lowering_rear": 20,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-3",
+     "c": "brakes",
+     "b": "Brembo",
+     "p": "GT-Kit 6-Kolben",
+     "cost": 3800,
+     "s": "installed",
+     "f": {
+      "brand": "Brembo",
+      "model": "GT-Kit 6-Kolben",
+      "front_pistons": 6,
+      "front_disc": 365,
+      "pads": "Brembo Sport HP2000"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-4",
+     "c": "wheels_tires",
+     "b": "BBS",
+     "p": "RS-GT 18 Zoll",
+     "cost": 3100,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "BBS",
+      "wheel_model": "RS-GT",
+      "diameter": 18,
+      "width_front": 8.5,
+      "width_rear": 8.5,
+      "bolt_pattern": "5×112",
+      "staggered": false,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4",
+      "tyre_size_front": "235/40 R18",
+      "tyre_size_rear": "235/40 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-5",
+     "c": "engine_performance",
+     "b": "Integrated Engineering",
+     "p": "Ladeluftkühler-Kit",
+     "cost": 900,
+     "s": "planned",
+     "f": {
+      "tuner": "Integrated Engineering",
+      "intercooler": "Integrated Engineering"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-audi-r8-42",
+   "car": "audi-r8-BSNY06a34uo",
+   "make": "Audi",
+   "model": "R8",
+   "generation": "42",
+   "year": 2008,
+   "color": "Phantomschwarz",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: der erste R8 mit V8 und offener Schaltkulisse. Tiefergelegt, mit Klappenanlage und Rädern in Wagenfarbe.",
+   "published_days": 83,
+   "specs": {
+    "engine_code": null,
+    "engine_text": "4,2 l FSI V8",
+    "displacement_cc": 4163,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 309,
+    "torque_nm": 430,
+    "drivetrain": "all",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 4.6,
+    "weight_kg": 1560
+   },
+   "source": "Audi MediaCenter, R8 4.2 FSI quattro (2006): 309 kW, 430 Nm, 0–100 km/h 4,6 s, Leergewicht ohne Fahrer 1.560 kg",
+   "mods": [
+    {
+     "ref": "susp-1",
+     "c": "suspension",
+     "b": "H&R",
+     "p": "Gewindefahrwerk",
+     "cost": 2300,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "H&R",
+      "model": "Gewindefahrwerk",
+      "lowering_front": 35,
+      "lowering_rear": 30
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "Capristo",
+     "p": "Klappenauspuff",
+     "cost": 4800,
+     "s": "installed",
+     "f": {
+      "type": "valved",
+      "brand": "Capristo",
+      "model": "Klappenauspuff",
+      "material": "stainless",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Rotiform",
+     "p": "LAS-R 19 Zoll",
+     "cost": 3200,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Rotiform",
+      "wheel_model": "LAS-R",
+      "diameter": 19,
+      "width_front": 8.5,
+      "width_rear": 11.0,
+      "bolt_pattern": "5×112",
+      "finish": "Glanzschwarz",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "235/35 R19",
+      "tyre_size_rear": "305/30 R19"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-4",
+     "c": "aero_body",
+     "b": "Novitec",
+     "p": "Carbon-Seitenschweller",
+     "cost": 1700,
+     "s": "installed",
+     "f": {
+      "part": "side_skirts",
+      "brand": "Novitec",
+      "material": "carbon"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "el-5",
+     "c": "electronics",
+     "b": "Morimoto",
+     "p": "LED-Tagfahrlicht",
+     "cost": 350,
+     "s": "installed",
+     "f": {
+      "part": "lighting",
+      "brand": "Morimoto",
+      "model": "LED-Tagfahrlicht"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-audi-rs3-8v",
+   "car": "audi-rs3-8v-Hl5WYiziZ3g",
+   "make": "Audi",
+   "model": "RS3",
+   "generation": "8V",
+   "year": 2017,
+   "color": "Limettengrün (Folie)",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: RS 3 Limousine mit Fünfzylinder und auffälliger Folie. Ansaugung, Ladeluftkühler und Abgasanlage lassen ihn noch mehr klingen.",
+   "published_days": 36,
+   "specs": {
+    "engine_code": "DAZA",
+    "engine_text": "2,5 l TFSI Fünfzylinder",
+    "displacement_cc": 2480,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 294,
+    "torque_nm": 480,
+    "drivetrain": "all",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 4.1,
+    "weight_kg": null
+   },
+   "source": "Audi MediaCenter, RS 3 Limousine (8V, 2016): 294 kW, 480 Nm, 0–100 km/h 4,1 s",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "Avery Dennison",
+     "p": "Folierung Limettengrün",
+     "cost": 2600,
+     "s": "installed",
+     "f": {
+      "part": "wrap",
+      "brand": "Avery Dennison",
+      "material": "other"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "Milltek Sport",
+     "p": "Cat-Back mit Klappen",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Milltek Sport",
+      "model": "Cat-Back mit Klappen",
+      "material": "stainless",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-3",
+     "c": "engine_performance",
+     "b": "Wagner Tuning",
+     "p": "Ladeluftkühler Competition",
+     "cost": 1300,
+     "s": "installed",
+     "f": {
+      "tuner": "Wagner Tuning",
+      "intercooler": "Wagner Competition"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-4",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Variante 3",
+     "cost": 2300,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Variante 3",
+      "lowering_front": 30,
+      "lowering_rear": 25,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-5",
+     "c": "wheels_tires",
+     "b": "BBS",
+     "p": "CH-R 19 Zoll",
+     "cost": 3300,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "BBS",
+      "wheel_model": "CH-R",
+      "diameter": 19,
+      "width_front": 8.5,
+      "width_rear": 8.5,
+      "bolt_pattern": "5×112",
+      "staggered": false,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "255/30 R19",
+      "tyre_size_rear": "255/30 R19"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-audi-ttrs-8s",
+   "car": "audi-tt-8s-TP1_8CVYOzU",
+   "make": "Audi",
+   "model": "TT RS",
+   "generation": "8S",
+   "year": 2017,
+   "color": "Catalunyarot",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: TT RS Coupé mit Fünfzylinder, gebaut für kurvige Landstraßen. Fahrwerk, Bremse und Räder wurden angepasst.",
+   "published_days": 44,
+   "specs": {
+    "engine_code": "DAZA",
+    "engine_text": "2,5 l TFSI Fünfzylinder",
+    "displacement_cc": 2480,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 294,
+    "torque_nm": 480,
+    "drivetrain": "all",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 3.7,
+    "weight_kg": 1440
+   },
+   "source": "Audi MediaCenter, TT RS Coupé (8S, 04/2016): 294 kW, 480 Nm, 0–100 km/h 3,7 s, Leergewicht ohne Fahrer 1.440 kg",
+   "mods": [
+    {
+     "ref": "susp-1",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Variante 3",
+     "cost": 2200,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Variante 3",
+      "lowering_front": 25,
+      "lowering_rear": 20,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-2",
+     "c": "wheels_tires",
+     "b": "OZ Racing",
+     "p": "Leggera HLT 19 Zoll",
+     "cost": 2800,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "OZ Racing",
+      "wheel_model": "Leggera HLT",
+      "diameter": 19,
+      "width_front": 9.0,
+      "width_rear": 9.0,
+      "bolt_pattern": "5×112",
+      "staggered": false,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "255/30 R19",
+      "tyre_size_rear": "255/30 R19"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-3",
+     "c": "exhaust",
+     "b": "Remus",
+     "p": "Sportauspuff mit Klappen",
+     "cost": 2500,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Remus",
+      "model": "Sportauspuff mit Klappen",
+      "material": "stainless",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-4",
+     "c": "brakes",
+     "b": "Ferodo",
+     "p": "DS2500 Bremsbeläge",
+     "cost": 320,
+     "s": "installed",
+     "f": {
+      "brand": "Ferodo",
+      "model": "DS2500 Bremsbeläge",
+      "pads": "Ferodo DS2500"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-5",
+     "c": "engine_performance",
+     "b": "Eventuri",
+     "p": "Carbon-Ansaugsystem",
+     "cost": 1700,
+     "s": "installed",
+     "f": {
+      "tuner": "Eventuri",
+      "intake": "Eventuri Carbon"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-vw-golf-r-mk8",
+   "car": "vw-golf8-r-ZhOUJ2D5BYo",
+   "make": "Volkswagen",
+   "model": "Golf R",
+   "generation": "VIII (CD)",
+   "year": 2021,
+   "color": "Lapizblau",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: Golf 8 R als Alltagsauto mit Allrad. Titananlage, etwas tiefer und Räder mit mehr Breite.",
+   "published_days": 29,
+   "specs": {
+    "engine_code": null,
+    "engine_text": "2,0 l TSI Vierzylinder Turbo",
+    "displacement_cc": 1984,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 235,
+    "torque_nm": 420,
+    "drivetrain": "all",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 4.7,
+    "weight_kg": null
+   },
+   "source": "Volkswagen Newsroom, Golf R (11/2020): 235 kW, 420 Nm, 0–100 km/h 4,7 s",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "Akrapovič",
+     "p": "Slip-On Line Titan",
+     "cost": 3900,
+     "s": "installed",
+     "f": {
+      "type": "rear_silencer",
+      "brand": "Akrapovič",
+      "model": "Slip-On Line Titan",
+      "material": "titanium",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Eibach",
+     "p": "Pro-Kit",
+     "cost": 330,
+     "s": "installed",
+     "f": {
+      "type": "lowering_springs",
+      "brand": "Eibach",
+      "model": "Pro-Kit",
+      "lowering_front": 25,
+      "lowering_rear": 20
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "BBS",
+     "p": "CI-R 19 Zoll",
+     "cost": 3500,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "BBS",
+      "wheel_model": "CI-R",
+      "diameter": 19,
+      "width_front": 8.5,
+      "width_rear": 8.5,
+      "bolt_pattern": "5×112",
+      "staggered": false,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "235/35 R19",
+      "tyre_size_rear": "235/35 R19"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-4",
+     "c": "engine_performance",
+     "b": "Integrated Engineering",
+     "p": "Ansaugsystem",
+     "cost": 480,
+     "s": "installed",
+     "f": {
+      "tuner": "Integrated Engineering",
+      "intake": "Integrated Engineering"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Recaro",
+     "p": "Sportster CS",
+     "cost": 3100,
+     "s": "planned",
+     "f": {
+      "part": "seats",
+      "brand": "Recaro",
+      "model": "Sportster CS"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-vw-golf-r-mk7",
+   "car": "vw-golf7-r-1iVJkBGy6OY",
+   "make": "Volkswagen",
+   "model": "Golf R",
+   "generation": "VII (5G)",
+   "year": 2015,
+   "color": "Lapizblau",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: Golf 7 R für alle Jahreszeiten. Ladeluftkühler, Fahrwerk und Winterräder, damit er auch im Schnee Spaß macht.",
+   "published_days": 61,
+   "specs": {
+    "engine_code": "CJXC",
+    "engine_text": "2,0 l TSI Vierzylinder Turbo",
+    "displacement_cc": 1984,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 221,
+    "torque_nm": 380,
+    "drivetrain": "all",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 4.9,
+    "weight_kg": null
+   },
+   "source": "Volkswagen AG, Pressemappe Golf R (2013): 221 kW, 380 Nm, DSG 0–100 km/h 4,9 s",
+   "mods": [
+    {
+     "ref": "eng-1",
+     "c": "engine_performance",
+     "b": "Wagner Tuning",
+     "p": "Ladeluftkühler Competition",
+     "cost": 900,
+     "s": "installed",
+     "f": {
+      "tuner": "Wagner Tuning",
+      "intercooler": "Wagner Competition"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Bilstein",
+     "p": "B14",
+     "cost": 1100,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Bilstein",
+      "model": "B14",
+      "lowering_front": 30,
+      "lowering_rear": 25
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "OZ Racing",
+     "p": "Leggera HLT 18 Zoll",
+     "cost": 2100,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "OZ Racing",
+      "wheel_model": "Leggera HLT",
+      "diameter": 18,
+      "width_front": 8.0,
+      "width_rear": 8.0,
+      "bolt_pattern": "5×112",
+      "staggered": false,
+      "tyre_brand": "Nokian",
+      "tyre_model": "Hakkapeliitta R5",
+      "tyre_size_front": "225/40 R18",
+      "tyre_size_rear": "225/40 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-4",
+     "c": "exhaust",
+     "b": "Milltek Sport",
+     "p": "Cat-Back",
+     "cost": 2100,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Milltek Sport",
+      "model": "Cat-Back",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "el-5",
+     "c": "electronics",
+     "b": "OBDeleven",
+     "p": "Codierung Komfortfunktionen",
+     "cost": 50,
+     "s": "installed",
+     "f": {
+      "part": "coding",
+      "brand": "OBDeleven",
+      "model": "Codierung Komfortfunktionen"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-nissan-350z",
+   "car": "nissan-z33-yJtO7JUORUw",
+   "make": "Nissan",
+   "model": "350Z",
+   "generation": "Z33",
+   "year": 2004,
+   "color": "Weiß",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: 350Z mit VQ35DE und Handschaltung. Ein bezahlbarer Einstieg in Frontmittelmotor und Hinterradantrieb, dezent verbessert.",
+   "published_days": 80,
+   "specs": {
+    "engine_code": "VQ35DE",
+    "engine_text": "3,5 l V6",
+    "displacement_cc": 3498,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 206,
+    "torque_nm": 363,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 5.9,
+    "weight_kg": null
+   },
+   "source": "Nissan Europe, 350Z (2003): 206 kW (280 PS), 363 Nm, 0–100 km/h 5,9 s",
+   "mods": [
+    {
+     "ref": "susp-1",
+     "c": "suspension",
+     "b": "Tein",
+     "p": "Flex Z",
+     "cost": 1100,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Tein",
+      "model": "Flex Z",
+      "lowering_front": 30,
+      "lowering_rear": 30,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "HKS",
+     "p": "Hi-Power Spec-L II",
+     "cost": 1500,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "HKS",
+      "model": "Hi-Power Spec-L II",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Rays",
+     "p": "Volk Racing CE28N 18 Zoll",
+     "cost": 3100,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Rays",
+      "wheel_model": "Volk Racing CE28N",
+      "diameter": 18,
+      "width_front": 9.5,
+      "width_rear": 10.5,
+      "bolt_pattern": "5×114,3",
+      "staggered": true,
+      "tyre_brand": "Bridgestone",
+      "tyre_model": "Potenza Sport",
+      "tyre_size_front": "245/40 R18",
+      "tyre_size_rear": "275/35 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-4",
+     "c": "aero_body",
+     "b": "Nismo",
+     "p": "Frontlippe",
+     "cost": 650,
+     "s": "installed",
+     "f": {
+      "part": "front_lip",
+      "brand": "Nismo",
+      "material": "grp"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "drv-5",
+     "c": "drivetrain",
+     "b": "Exedy",
+     "p": "Stage-1-Kupplung",
+     "cost": 780,
+     "s": "planned",
+     "f": {
+      "part": "clutch",
+      "brand": "Exedy",
+      "model": "Stage-1-Kupplung"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-amg-gt-r",
+   "car": "mercedes-c190-qyfco1nfMtg",
+   "make": "Mercedes-Benz",
+   "model": "AMG GT",
+   "generation": "C190",
+   "year": 2017,
+   "color": "Rot",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: AMG GT R, das Biest aus Affalterbach. Klappenanlage, Fahrwerk für die Nordschleife und Semislicks.",
+   "published_days": 57,
+   "specs": {
+    "engine_code": "M178",
+    "engine_text": "4,0 l V8 Biturbo",
+    "displacement_cc": 3982,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 430,
+    "torque_nm": 700,
+    "drivetrain": "rear",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 3.6,
+    "weight_kg": 1555
+   },
+   "source": "Mercedes-AMG Presse, AMG GT R (06/2016): 430 kW, 700 Nm, 0–100 km/h 3,6 s, DIN-Leergewicht 1.555 kg",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "Capristo",
+     "p": "Klappenauspuff",
+     "cost": 5900,
+     "s": "installed",
+     "f": {
+      "type": "valved",
+      "brand": "Capristo",
+      "model": "Klappenauspuff",
+      "material": "stainless",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Clubsport 3-Wege",
+     "cost": 5200,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Clubsport 3-Wege",
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "BBS",
+     "p": "FI-R 20 Zoll",
+     "cost": 7900,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "BBS",
+      "wheel_model": "FI-R",
+      "diameter": 20,
+      "width_front": 10.0,
+      "width_rear": 12.0,
+      "bolt_pattern": "5×112",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport Cup 2",
+      "tyre_size_front": "275/35 R20",
+      "tyre_size_rear": "325/30 R20"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-4",
+     "c": "interior",
+     "b": "Schroth",
+     "p": "Profi II 6-Punkt-Gurt",
+     "cost": 620,
+     "s": "installed",
+     "f": {
+      "part": "harness",
+      "brand": "Schroth",
+      "model": "Profi II 6-Punkt-Gurt"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-5",
+     "c": "aero_body",
+     "b": "Novitec",
+     "p": "Carbon-Frontsplitter",
+     "cost": 2400,
+     "s": "installed",
+     "f": {
+      "part": "splitter",
+      "brand": "Novitec",
+      "material": "carbon"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-amg-gt-s",
+   "car": "mercedes-c190-am01bO64b8s",
+   "make": "Mercedes-Benz",
+   "model": "AMG GT",
+   "generation": "C190",
+   "year": 2015,
+   "color": "Brillantblau metallic",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: AMG GT S als langer Reisewagen. Nur wenige Änderungen: Klappenanlage, Federn und Folienschutz.",
+   "published_days": 79,
+   "specs": {
+    "engine_code": "M178",
+    "engine_text": "4,0 l V8 Biturbo",
+    "displacement_cc": 3982,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 375,
+    "torque_nm": 650,
+    "drivetrain": "rear",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 3.8,
+    "weight_kg": 1570
+   },
+   "source": "Mercedes-AMG Presse, AMG GT S (09/2014): 375 kW, 650 Nm, 0–100 km/h 3,8 s, DIN-Leergewicht 1.570 kg",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "Capristo",
+     "p": "Klappenauspuff",
+     "cost": 5600,
+     "s": "installed",
+     "f": {
+      "type": "valved",
+      "brand": "Capristo",
+      "model": "Klappenauspuff",
+      "material": "stainless",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "H&R",
+     "p": "Sportfedern",
+     "cost": 450,
+     "s": "installed",
+     "f": {
+      "type": "lowering_springs",
+      "brand": "H&R",
+      "model": "Sportfedern",
+      "lowering_front": 25,
+      "lowering_rear": 20
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-3",
+     "c": "aero_body",
+     "b": "3M",
+     "p": "Lackschutzfolie Vollfront",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "part": "wrap",
+      "brand": "3M",
+      "material": "other"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-4",
+     "c": "wheels_tires",
+     "b": "Vossen",
+     "p": "HF-5 20 Zoll",
+     "cost": 4200,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Vossen",
+      "wheel_model": "HF-5",
+      "diameter": 20,
+      "width_front": 9.5,
+      "width_rear": 11.5,
+      "bolt_pattern": "5×112",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "265/35 R20",
+      "tyre_size_rear": "305/30 R20"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "el-5",
+     "c": "electronics",
+     "b": "Morimoto",
+     "p": "LED-Innenraumbeleuchtung",
+     "cost": 120,
+     "s": "installed",
+     "f": {
+      "part": "lighting",
+      "brand": "Morimoto",
+      "model": "LED-Innenraumbeleuchtung"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-amg-gt",
+   "car": "mercedes-c190-MaraDXSaTho",
+   "make": "Mercedes-Benz",
+   "model": "AMG GT",
+   "generation": "C190",
+   "year": 2016,
+   "color": "Mattschwarz (Folie)",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: AMG GT in mattschwarzer Folie. Weniger Chrom, mehr Carbon, dazu eine Abgasanlage mit Klappen.",
+   "published_days": 50,
+   "specs": {
+    "engine_code": "M178",
+    "engine_text": "4,0 l V8 Biturbo",
+    "displacement_cc": 3982,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 340,
+    "torque_nm": 600,
+    "drivetrain": "rear",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": 4.0,
+    "weight_kg": 1540
+   },
+   "source": "Mercedes-AMG Presse, AMG GT (09/2014): 340 kW, 600 Nm, 0–100 km/h 4,0 s, DIN-Leergewicht 1.540 kg",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "Avery Dennison",
+     "p": "Folierung Mattschwarz",
+     "cost": 3400,
+     "s": "installed",
+     "f": {
+      "part": "wrap",
+      "brand": "Avery Dennison",
+      "material": "other"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "Akrapovič",
+     "p": "Evolution Line Titan",
+     "cost": 8900,
+     "s": "installed",
+     "f": {
+      "type": "full_system",
+      "brand": "Akrapovič",
+      "model": "Evolution Line Titan",
+      "material": "titanium",
+      "valves": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-3",
+     "c": "aero_body",
+     "b": "Prior Design",
+     "p": "Carbon-Diffusor",
+     "cost": 1900,
+     "s": "installed",
+     "f": {
+      "part": "diffuser",
+      "brand": "Prior Design",
+      "material": "carbon"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-4",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Variante 3",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Variante 3",
+      "lowering_front": 20,
+      "lowering_rear": 20,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-5",
+     "c": "wheels_tires",
+     "b": "HRE",
+     "p": "P101 20 Zoll",
+     "cost": 6200,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "HRE",
+      "wheel_model": "P101",
+      "diameter": 20,
+      "width_front": 10.0,
+      "width_rear": 12.0,
+      "bolt_pattern": "5×112",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "275/35 R20",
+      "tyre_size_rear": "325/30 R20"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-toyota-gr-supra",
+   "car": "toyota-a90-HTASJKMg7FE",
+   "make": "Toyota",
+   "model": "Supra",
+   "generation": "A90",
+   "year": 2020,
+   "color": "Lightning Yellow",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: GR Supra mit Reihensechszylinder. Ladeluftkühler, Downpipe-freie Abgasanlage und Gewindefahrwerk.",
+   "published_days": 39,
+   "specs": {
+    "engine_code": "B58B30",
+    "engine_text": "3,0 l Reihensechszylinder Turbo",
+    "displacement_cc": 2998,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 250,
+    "torque_nm": 500,
+    "drivetrain": "rear",
+    "gearbox": "automatic"
+   },
+   "factory": {
+    "zero_to_100_s": 4.3,
+    "weight_kg": 1495
+   },
+   "source": "Toyota Media, GR Supra (01/2019): 250 kW, 500 Nm, 0–100 km/h 4,3 s, Leergewicht 1.495 kg",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "HKS",
+     "p": "Legamax Premium",
+     "cost": 2300,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "HKS",
+      "model": "Legamax Premium",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-2",
+     "c": "engine_performance",
+     "b": "CSF",
+     "p": "Ladeluftkühler",
+     "cost": 1350,
+     "s": "installed",
+     "f": {
+      "tuner": "CSF",
+      "intercooler": "CSF"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-3",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Variante 3",
+     "cost": 2600,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Variante 3",
+      "lowering_front": 25,
+      "lowering_rear": 25,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-4",
+     "c": "wheels_tires",
+     "b": "Rays",
+     "p": "Volk Racing TE37 Ultra 19 Zoll",
+     "cost": 4100,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Rays",
+      "wheel_model": "Volk Racing TE37 Ultra",
+      "diameter": 19,
+      "width_front": 9.5,
+      "width_rear": 10.5,
+      "bolt_pattern": "5×112",
+      "staggered": true,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4 S",
+      "tyre_size_front": "255/35 R19",
+      "tyre_size_rear": "275/35 R19"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-5",
+     "c": "aero_body",
+     "b": "TRD",
+     "p": "Frontspoiler",
+     "cost": 900,
+     "s": "installed",
+     "f": {
+      "part": "front_lip",
+      "brand": "TRD",
+      "material": "abs"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-toyota-supra-a80",
+   "car": "toyota-a80-Lrfuy93_hAc",
+   "make": "Toyota",
+   "model": "Supra",
+   "generation": "A80",
+   "year": 1995,
+   "color": "Super White",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: Supra RZ als Japan-Import mit 2JZ. Großer Heckflügel, Titananlage und Räder, die zur Zeit passen.",
+   "published_days": 120,
+   "specs": {
+    "engine_code": "2JZ-GTE",
+    "engine_text": "3,0 l Reihensechszylinder Biturbo",
+    "displacement_cc": 2997,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 206,
+    "torque_nm": 431,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": null
+   },
+   "source": "Toyota, Katalog Supra RZ (JZA80, 1993, Japan): 206 kW (280 PS), 431 Nm",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "TRD",
+     "p": "Heckflügel",
+     "cost": 1800,
+     "s": "installed",
+     "f": {
+      "part": "wing",
+      "brand": "TRD",
+      "material": "grp"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "Tomei",
+     "p": "Expreme Ti",
+     "cost": 1900,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Tomei",
+      "model": "Expreme Ti",
+      "material": "titanium"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Work Wheels",
+     "p": "Meister S1 3P 18 Zoll",
+     "cost": 3900,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Work Wheels",
+      "wheel_model": "Meister S1 3P",
+      "diameter": 18,
+      "width_front": 9.5,
+      "width_rear": 10.5,
+      "bolt_pattern": "5×114,3",
+      "staggered": true,
+      "tyre_brand": "Toyo",
+      "tyre_model": "Proxes R888R",
+      "tyre_size_front": "255/35 R18",
+      "tyre_size_rear": "275/35 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-4",
+     "c": "suspension",
+     "b": "Tein",
+     "p": "Flex Z",
+     "cost": 1100,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Tein",
+      "model": "Flex Z",
+      "lowering_front": 30,
+      "lowering_rear": 30,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Bride",
+     "p": "Zeta IV",
+     "cost": 1600,
+     "s": "installed",
+     "f": {
+      "part": "seats",
+      "brand": "Bride",
+      "model": "Zeta IV"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-toyota-gr-yaris",
+   "car": "toyota-gr-yaris-qcgzyaa60U4",
+   "make": "Toyota",
+   "model": "GR Yaris",
+   "generation": "GXPA16",
+   "year": 2021,
+   "color": "Weiß mit Streifen-Folierung",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: GR Yaris mit Folie im Stil klassischer Rallye-Lackierungen. Dreizylinder, Allrad und ein paar Teile für Schotter und Asphalt.",
+   "published_days": 31,
+   "specs": {
+    "engine_code": "G16E-GTS",
+    "engine_text": "1,6 l Dreizylinder Turbo",
+    "displacement_cc": 1618,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 192,
+    "torque_nm": 360,
+    "drivetrain": "all",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 5.5,
+    "weight_kg": 1280
+   },
+   "source": "Toyota Media, GR Yaris (01/2020): 192 kW, 360 Nm, 0–100 km/h 5,5 s, Leergewicht ab 1.280 kg",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "KPMF",
+     "p": "Folierung Streifen",
+     "cost": 1400,
+     "s": "installed",
+     "f": {
+      "part": "wrap",
+      "brand": "KPMF",
+      "material": "other"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Öhlins",
+     "p": "Road & Track",
+     "cost": 2400,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Öhlins",
+      "model": "Road & Track",
+      "lowering_front": 15,
+      "lowering_rear": 15,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Enkei",
+     "p": "RPF1 18 Zoll",
+     "cost": 1900,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Enkei",
+      "wheel_model": "RPF1",
+      "diameter": 18,
+      "width_front": 8.0,
+      "width_rear": 8.0,
+      "bolt_pattern": "5×114,3",
+      "staggered": false,
+      "tyre_brand": "Yokohama",
+      "tyre_model": "Advan A052",
+      "tyre_size_front": "235/40 R18",
+      "tyre_size_rear": "235/40 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-4",
+     "c": "exhaust",
+     "b": "HKS",
+     "p": "Hi-Power Spec-L II",
+     "cost": 1500,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "HKS",
+      "model": "Hi-Power Spec-L II",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Bride",
+     "p": "Zeta IV",
+     "cost": 1600,
+     "s": "planned",
+     "f": {
+      "part": "seats",
+      "brand": "Bride",
+      "model": "Zeta IV"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-nissan-r32",
+   "car": "nissan-r32-llV65X0fctk",
+   "make": "Nissan",
+   "model": "Skyline GT-R",
+   "generation": "R32",
+   "year": 1991,
+   "color": "Gun Grey Metallic",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: der R32 GT-R, der den Spitznamen Godzilla bekam. RB26 mit Abgasanlage und Ladeluftkühler, Fahrwerk neu.",
+   "published_days": 130,
+   "specs": {
+    "engine_code": "RB26DETT",
+    "engine_text": "2,6 l Reihensechszylinder Biturbo",
+    "displacement_cc": 2568,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 206,
+    "torque_nm": 353,
+    "drivetrain": "all",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": 1430
+   },
+   "source": "Nissan, Katalog Skyline GT-R (BNR32, 1989, Japan): 206 kW (280 PS), 353 Nm (36,0 kgm), Fahrzeuggewicht 1.430 kg",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "HKS",
+     "p": "Super Turbo Muffler",
+     "cost": 1300,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "HKS",
+      "model": "Super Turbo Muffler",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-2",
+     "c": "engine_performance",
+     "b": "HKS",
+     "p": "Ladeluftkühler R-Type",
+     "cost": 1600,
+     "s": "installed",
+     "f": {
+      "tuner": "HKS",
+      "intercooler": "HKS R-Type"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-3",
+     "c": "suspension",
+     "b": "Tein",
+     "p": "Flex Z",
+     "cost": 1100,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Tein",
+      "model": "Flex Z",
+      "lowering_front": 30,
+      "lowering_rear": 30,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-4",
+     "c": "wheels_tires",
+     "b": "Rays",
+     "p": "Volk Racing TE37 18 Zoll",
+     "cost": 3200,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Rays",
+      "wheel_model": "Volk Racing TE37",
+      "diameter": 18,
+      "width_front": 9.5,
+      "width_rear": 9.5,
+      "bolt_pattern": "5×114,3",
+      "staggered": false,
+      "tyre_brand": "Toyo",
+      "tyre_model": "Proxes R888R",
+      "tyre_size_front": "255/40 R18",
+      "tyre_size_rear": "255/40 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Nismo",
+     "p": "Kombiinstrument 320 km/h",
+     "cost": 900,
+     "s": "installed",
+     "f": {
+      "part": "gauges",
+      "brand": "Nismo",
+      "model": "Kombiinstrument 320 km/h"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-nissan-r33",
+   "car": "nissan-r33-whzzk5Enwss",
+   "make": "Nissan",
+   "model": "Skyline GT-R",
+   "generation": "R33",
+   "year": 1996,
+   "color": "Sonic Silver",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: R33 GT-R mit Nismo-Frontschürze. Der unterschätzte Skyline, sauber und mit dezenten Änderungen.",
+   "published_days": 104,
+   "specs": {
+    "engine_code": "RB26DETT",
+    "engine_text": "2,6 l Reihensechszylinder Biturbo",
+    "displacement_cc": 2568,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 206,
+    "torque_nm": 368,
+    "drivetrain": "all",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": 1530
+   },
+   "source": "Nissan, Katalog Skyline GT-R (BCNR33, 1995, Japan): 206 kW (280 PS), 368 Nm (37,5 kgm), Fahrzeuggewicht 1.530 kg",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "Nismo",
+     "p": "Frontschürze 400R-Stil",
+     "cost": 2100,
+     "s": "installed",
+     "f": {
+      "part": "other",
+      "brand": "Nismo",
+      "material": "grp"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "Nismo",
+     "p": "Titanium Muffler",
+     "cost": 2200,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Nismo",
+      "model": "Titanium Muffler",
+      "material": "titanium"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Nismo",
+     "p": "LM GT4 18 Zoll",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Nismo",
+      "wheel_model": "LM GT4",
+      "diameter": 18,
+      "width_front": 9.5,
+      "width_rear": 9.5,
+      "bolt_pattern": "5×114,3",
+      "staggered": false,
+      "tyre_brand": "Bridgestone",
+      "tyre_model": "Potenza RE-71RS",
+      "tyre_size_front": "265/35 R18",
+      "tyre_size_rear": "265/35 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-4",
+     "c": "suspension",
+     "b": "HKS",
+     "p": "Hipermax IV GT",
+     "cost": 1800,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "HKS",
+      "model": "Hipermax IV GT",
+      "lowering_front": 25,
+      "lowering_rear": 25,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "drv-5",
+     "c": "drivetrain",
+     "b": "Exedy",
+     "p": "Hyper Single Kupplung",
+     "cost": 1100,
+     "s": "installed",
+     "f": {
+      "part": "clutch",
+      "brand": "Exedy",
+      "model": "Hyper Single Kupplung"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-nissan-r34",
+   "car": "nissan-r34-ZNPVwTqhhHo",
+   "make": "Nissan",
+   "model": "Skyline GT-R",
+   "generation": "R34",
+   "year": 2000,
+   "color": "White Pearl",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: R34 GT-R auf bronzefarbenen Rädern. Getrag-Sechsgang, RB26 und ein Satz Teile, die jeder Fan kennt.",
+   "published_days": 92,
+   "specs": {
+    "engine_code": "RB26DETT",
+    "engine_text": "2,6 l Reihensechszylinder Biturbo",
+    "displacement_cc": 2568,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 206,
+    "torque_nm": 392,
+    "drivetrain": "all",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": 1560
+   },
+   "source": "Nissan, Katalog Skyline GT-R (BNR34, 1999, Japan): 206 kW (280 PS), 392 Nm (40,0 kgm), Fahrzeuggewicht 1.560 kg",
+   "mods": [
+    {
+     "ref": "wheels-1",
+     "c": "wheels_tires",
+     "b": "Rays",
+     "p": "Volk Racing TE37 SL 18 Zoll",
+     "cost": 3600,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Rays",
+      "wheel_model": "Volk Racing TE37 SL",
+      "diameter": 18,
+      "width_front": 10.0,
+      "width_rear": 10.0,
+      "bolt_pattern": "5×114,3",
+      "finish": "Bronze",
+      "staggered": false,
+      "tyre_brand": "Yokohama",
+      "tyre_model": "Advan Neova AD09",
+      "tyre_size_front": "265/35 R18",
+      "tyre_size_rear": "265/35 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "Tomei",
+     "p": "Expreme Ti",
+     "cost": 1900,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Tomei",
+      "model": "Expreme Ti",
+      "material": "titanium"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-3",
+     "c": "suspension",
+     "b": "Öhlins",
+     "p": "Road & Track",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Öhlins",
+      "model": "Road & Track",
+      "lowering_front": 20,
+      "lowering_rear": 20,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-4",
+     "c": "engine_performance",
+     "b": "HKS",
+     "p": "Ansaugsystem Super Power Flow",
+     "cost": 420,
+     "s": "installed",
+     "f": {
+      "tuner": "HKS",
+      "intake": "HKS Super Power Flow"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Nismo",
+     "p": "Schaltknauf Titan",
+     "cost": 120,
+     "s": "installed",
+     "f": {
+      "part": "shift_knob",
+      "brand": "Nismo",
+      "model": "Schaltknauf Titan"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-nissan-r35",
+   "car": "nissan-r35-_4ZLmHzwARY",
+   "make": "Nissan",
+   "model": "GT-R",
+   "generation": "R35",
+   "year": 2017,
+   "color": "Mattgrau (Folie)",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: GT-R R35 aus dem Modelljahr 2017. Mattgraue Folie, Titananlage und Räder von Nismo.",
+   "published_days": 55,
+   "specs": {
+    "engine_code": "VR38DETT",
+    "engine_text": "3,8 l V6 Biturbo",
+    "displacement_cc": 3799,
+    "fuel": "petrol",
+    "aspiration": "biturbo",
+    "power_kw": 419,
+    "torque_nm": 637,
+    "drivetrain": "all",
+    "gearbox": "dual_clutch"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": null
+   },
+   "source": "Nissan Newsroom, GT-R Modelljahr 2017 (03/2016): 419 kW (570 PS), 637 Nm",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "Avery Dennison",
+     "p": "Folierung Mattgrau",
+     "cost": 3200,
+     "s": "installed",
+     "f": {
+      "part": "wrap",
+      "brand": "Avery Dennison",
+      "material": "other"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "Akrapovič",
+     "p": "Evolution Line Titan",
+     "cost": 7400,
+     "s": "installed",
+     "f": {
+      "type": "full_system",
+      "brand": "Akrapovič",
+      "model": "Evolution Line Titan",
+      "material": "titanium"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Nismo",
+     "p": "LM GT4 20 Zoll",
+     "cost": 4300,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Nismo",
+      "wheel_model": "LM GT4",
+      "diameter": 20,
+      "width_front": 10.0,
+      "width_rear": 10.5,
+      "bolt_pattern": "5×114,3",
+      "staggered": true,
+      "tyre_brand": "Dunlop",
+      "tyre_model": "SP Sport Maxx GT600",
+      "tyre_size_front": "255/40 R20",
+      "tyre_size_rear": "285/35 R20"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-4",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Variante 3",
+     "cost": 3400,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Variante 3",
+      "lowering_front": 20,
+      "lowering_rear": 20,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-5",
+     "c": "engine_performance",
+     "b": "Cobb Tuning",
+     "p": "Accessport",
+     "cost": 950,
+     "s": "installed",
+     "f": {
+      "tuner": "Cobb Tuning"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-nissan-180sx",
+   "car": "nissan-s13-w9hMpVXu2rc",
+   "make": "Nissan",
+   "model": "180SX",
+   "generation": "S13",
+   "year": 1993,
+   "color": "Mintgrün",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: 180SX im Drift-Look. Kotflügelverbreiterungen, Kreuzspeichenräder und ein SR20DET, der gerne quer fährt.",
+   "published_days": 115,
+   "specs": {
+    "engine_code": "SR20DET",
+    "engine_text": "2,0 l Vierzylinder Turbo",
+    "displacement_cc": 1998,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 151,
+    "torque_nm": 274,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": null
+   },
+   "source": "Nissan, Katalog 180SX Type X (RPS13, 1991, Japan): 151 kW (205 PS), 274 Nm (28,0 kgm)",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "Rocket Bunny",
+     "p": "Kotflügelverbreiterungen",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "part": "widebody",
+      "brand": "Rocket Bunny",
+      "material": "grp"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-2",
+     "c": "wheels_tires",
+     "b": "SSR",
+     "p": "Formula Mesh 17 Zoll",
+     "cost": 2400,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "SSR",
+      "wheel_model": "Formula Mesh",
+      "diameter": 17,
+      "width_front": 9.5,
+      "width_rear": 9.5,
+      "staggered": false,
+      "tyre_brand": "Federal",
+      "tyre_model": "595 RS-R",
+      "tyre_size_front": "235/40 R17",
+      "tyre_size_rear": "235/40 R17"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-3",
+     "c": "suspension",
+     "b": "BC Racing",
+     "p": "BR Series",
+     "cost": 1150,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "BC Racing",
+      "model": "BR Series",
+      "lowering_front": 50,
+      "lowering_rear": 45,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "drv-4",
+     "c": "drivetrain",
+     "b": "Cusco",
+     "p": "Sperrdifferenzial Type RS",
+     "cost": 1100,
+     "s": "installed",
+     "f": {
+      "part": "lsd",
+      "brand": "Cusco",
+      "model": "Sperrdifferenzial Type RS"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Bride",
+     "p": "Zeta IV",
+     "cost": 1600,
+     "s": "installed",
+     "f": {
+      "part": "seats",
+      "brand": "Bride",
+      "model": "Zeta IV"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-nissan-silvia-s14",
+   "car": "nissan-s14-BlImPteYJvw",
+   "make": "Nissan",
+   "model": "Silvia",
+   "generation": "S14",
+   "year": 1997,
+   "color": "Violett",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: Silvia S14 Kouki in Violett. Ein sauberer Street-Build mit Gewindefahrwerk und klassischen japanischen Teilen.",
+   "published_days": 98,
+   "specs": {
+    "engine_code": "SR20DET",
+    "engine_text": "2,0 l Vierzylinder Turbo",
+    "displacement_cc": 1998,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 184,
+    "torque_nm": 275,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": null
+   },
+   "source": "Nissan, Katalog Silvia K's (S14, 1996, Japan): 184 kW (250 PS), 275 Nm (28,0 kgm)",
+   "mods": [
+    {
+     "ref": "susp-1",
+     "c": "suspension",
+     "b": "Tein",
+     "p": "Flex Z",
+     "cost": 1100,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Tein",
+      "model": "Flex Z",
+      "lowering_front": 40,
+      "lowering_rear": 40,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-2",
+     "c": "exhaust",
+     "b": "Fujitsubo",
+     "p": "Legalis R",
+     "cost": 1200,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Fujitsubo",
+      "model": "Legalis R",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Work Wheels",
+     "p": "Emotion CR Kiwami 18 Zoll",
+     "cost": 2300,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Work Wheels",
+      "wheel_model": "Emotion CR Kiwami",
+      "diameter": 18,
+      "width_front": 9.5,
+      "width_rear": 9.5,
+      "bolt_pattern": "5×114,3",
+      "staggered": false,
+      "tyre_brand": "Falken",
+      "tyre_model": "Azenis RT615K+",
+      "tyre_size_front": "235/40 R18",
+      "tyre_size_rear": "235/40 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-4",
+     "c": "engine_performance",
+     "b": "Tomei",
+     "p": "Ansaugsystem",
+     "cost": 280,
+     "s": "installed",
+     "f": {
+      "tuner": "Tomei",
+      "intake": "Tomei"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Nardi",
+     "p": "Classic Lenkrad",
+     "cost": 340,
+     "s": "installed",
+     "f": {
+      "part": "steering_wheel",
+      "brand": "Nardi",
+      "model": "Classic Lenkrad"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-nissan-370z",
+   "car": "nissan-z34-IgoeGMsm2Rs",
+   "make": "Nissan",
+   "model": "370Z",
+   "generation": "Z34",
+   "year": 2010,
+   "color": "Monterey Blue",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: 370Z mit großem Heckflügel und weißen Rädern, wie er auf Tuningmessen steht.",
+   "published_days": 73,
+   "specs": {
+    "engine_code": "VQ37VHR",
+    "engine_text": "3,7 l V6",
+    "displacement_cc": 3696,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 241,
+    "torque_nm": 363,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 5.3,
+    "weight_kg": null
+   },
+   "source": "Nissan Europe, 370Z (2009): 241 kW (328 PS), 363 Nm, 0–100 km/h 5,3 s",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "Voltex",
+     "p": "Heckflügel Type 7",
+     "cost": 2600,
+     "s": "installed",
+     "f": {
+      "part": "wing",
+      "brand": "Voltex",
+      "material": "carbon"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-2",
+     "c": "wheels_tires",
+     "b": "Rays",
+     "p": "Volk Racing TE37 Ultra 19 Zoll",
+     "cost": 3400,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Rays",
+      "wheel_model": "Volk Racing TE37 Ultra",
+      "diameter": 19,
+      "width_front": 9.5,
+      "width_rear": 10.5,
+      "bolt_pattern": "5×114,3",
+      "finish": "Weiß",
+      "staggered": true,
+      "tyre_brand": "Bridgestone",
+      "tyre_model": "Potenza Sport",
+      "tyre_size_front": "255/35 R19",
+      "tyre_size_rear": "285/30 R19"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-3",
+     "c": "suspension",
+     "b": "HKS",
+     "p": "Hipermax IV GT",
+     "cost": 1800,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "HKS",
+      "model": "Hipermax IV GT",
+      "lowering_front": 30,
+      "lowering_rear": 30,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-4",
+     "c": "exhaust",
+     "b": "HKS",
+     "p": "Hi-Power Spec-L II",
+     "cost": 1600,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "HKS",
+      "model": "Hi-Power Spec-L II",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-5",
+     "c": "aero_body",
+     "b": "Seibon",
+     "p": "Carbon-Motorhaube",
+     "cost": 1500,
+     "s": "installed",
+     "f": {
+      "part": "hood",
+      "brand": "Seibon",
+      "material": "carbon"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-honda-nsx",
+   "car": "honda-na1-K848UT9zrKE",
+   "make": "Honda",
+   "model": "NSX",
+   "generation": "NA1/NA2",
+   "year": 1992,
+   "color": "Gelb",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: Honda NSX der ersten Serie, Mittelmotor und Aluminium. Behutsam modernisiert, Charakter unverändert.",
+   "published_days": 125,
+   "specs": {
+    "engine_code": "C30A",
+    "engine_text": "3,0 l V6",
+    "displacement_cc": 2977,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 201,
+    "torque_nm": 284,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": null
+   },
+   "source": "Honda Motor Europe, NSX (NA1, 1990, Europa): 201 kW (274 PS), 284 Nm",
+   "mods": [
+    {
+     "ref": "exh-1",
+     "c": "exhaust",
+     "b": "Mugen",
+     "p": "Sportauspuff",
+     "cost": 2400,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Mugen",
+      "model": "Sportauspuff",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Öhlins",
+     "p": "Road & Track",
+     "cost": 3200,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Öhlins",
+      "model": "Road & Track",
+      "lowering_front": 20,
+      "lowering_rear": 20,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Advan Racing",
+     "p": "GT 17 Zoll",
+     "cost": 2600,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Advan Racing",
+      "wheel_model": "GT",
+      "diameter": 17,
+      "width_front": 8.0,
+      "width_rear": 9.5,
+      "bolt_pattern": "5×114,3",
+      "staggered": true,
+      "tyre_brand": "Yokohama",
+      "tyre_model": "Advan Neova AD09",
+      "tyre_size_front": "225/45 R17",
+      "tyre_size_rear": "255/40 R17"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-4",
+     "c": "brakes",
+     "b": "Spoon Sports",
+     "p": "Monoblock Bremssättel",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "brand": "Spoon Sports",
+      "model": "Monoblock Bremssättel",
+      "front_pistons": 4,
+      "pads": "Spoon Sports"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "interior",
+     "b": "Momo",
+     "p": "Prototipo Lenkrad",
+     "cost": 380,
+     "s": "installed",
+     "f": {
+      "part": "steering_wheel",
+      "brand": "Momo",
+      "model": "Prototipo Lenkrad"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-honda-civic-fk8",
+   "car": "honda-fk8-rQI_8mEnVTs",
+   "make": "Honda",
+   "model": "Civic Type R",
+   "generation": "FK8",
+   "year": 2018,
+   "color": "Flame Red",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: Civic Type R FK8 für Trackdays. Ladeluftkühler, Software und Semislicks, sonst nah an Serie.",
+   "published_days": 45,
+   "specs": {
+    "engine_code": "K20C1",
+    "engine_text": "2,0 l Vierzylinder Turbo",
+    "displacement_cc": 1996,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 235,
+    "torque_nm": 400,
+    "drivetrain": "front",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 5.8,
+    "weight_kg": 1380
+   },
+   "source": "Honda Newsroom, Civic Type R (FK8, 2017): 235 kW (320 PS), 400 Nm, 0–100 km/h 5,8 s, Leergewicht 1.380 kg",
+   "mods": [
+    {
+     "ref": "eng-1",
+     "c": "engine_performance",
+     "b": "Hondata",
+     "p": "FlashPro",
+     "cost": 750,
+     "s": "installed",
+     "f": {
+      "tuner": "Hondata",
+      "software": "Hondata FlashPro"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-2",
+     "c": "engine_performance",
+     "b": "Mishimoto",
+     "p": "Ladeluftkühler",
+     "cost": 780,
+     "s": "installed",
+     "f": {
+      "tuner": "Mishimoto",
+      "intercooler": "Mishimoto"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-3",
+     "c": "wheels_tires",
+     "b": "Enkei",
+     "p": "RPF1 18 Zoll",
+     "cost": 2100,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Enkei",
+      "wheel_model": "RPF1",
+      "diameter": 18,
+      "width_front": 9.5,
+      "width_rear": 9.5,
+      "bolt_pattern": "5×120",
+      "staggered": false,
+      "tyre_brand": "Yokohama",
+      "tyre_model": "Advan A052",
+      "tyre_size_front": "265/35 R18",
+      "tyre_size_rear": "265/35 R18"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-4",
+     "c": "brakes",
+     "b": "Ferodo",
+     "p": "DS2500 Bremsbeläge",
+     "cost": 340,
+     "s": "installed",
+     "f": {
+      "brand": "Ferodo",
+      "model": "DS2500 Bremsbeläge",
+      "pads": "Ferodo DS2500"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-5",
+     "c": "suspension",
+     "b": "Eibach",
+     "p": "Pro-Kit",
+     "cost": 330,
+     "s": "installed",
+     "f": {
+      "type": "lowering_springs",
+      "brand": "Eibach",
+      "model": "Pro-Kit",
+      "lowering_front": 15,
+      "lowering_rear": 15
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-honda-s2000",
+   "car": "honda-s2000-gd4FiUm9LZI",
+   "make": "Honda",
+   "model": "S2000",
+   "generation": "AP1",
+   "year": 2001,
+   "color": "Türkis (Folie)",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: S2000 AP1 mit Hardtop und tiefem Fahrwerk. Der F20C dreht bis 9.000, der Rest ist auf Kurven abgestimmt.",
+   "published_days": 86,
+   "specs": {
+    "engine_code": "F20C",
+    "engine_text": "2,0 l Vierzylinder",
+    "displacement_cc": 1997,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 177,
+    "torque_nm": 208,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 6.2,
+    "weight_kg": null
+   },
+   "source": "Honda Motor Europe, S2000 (AP1, 1999): 177 kW (240 PS), 208 Nm, 0–100 km/h 6,2 s",
+   "mods": [
+    {
+     "ref": "aero-1",
+     "c": "aero_body",
+     "b": "Avery Dennison",
+     "p": "Folierung Türkis",
+     "cost": 2200,
+     "s": "installed",
+     "f": {
+      "part": "wrap",
+      "brand": "Avery Dennison",
+      "material": "other"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-2",
+     "c": "suspension",
+     "b": "Tein",
+     "p": "Flex Z",
+     "cost": 1050,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Tein",
+      "model": "Flex Z",
+      "lowering_front": 40,
+      "lowering_rear": 40,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "aero-3",
+     "c": "aero_body",
+     "b": "Mugen",
+     "p": "Hardtop",
+     "cost": 2600,
+     "s": "installed",
+     "f": {
+      "part": "other",
+      "brand": "Mugen",
+      "material": "grp"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-4",
+     "c": "wheels_tires",
+     "b": "Rays",
+     "p": "Volk Racing CE28N 17 Zoll",
+     "cost": 2900,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Rays",
+      "wheel_model": "Volk Racing CE28N",
+      "diameter": 17,
+      "width_front": 8.0,
+      "width_rear": 9.0,
+      "bolt_pattern": "5×114,3",
+      "staggered": true,
+      "tyre_brand": "Toyo",
+      "tyre_model": "Proxes R888R",
+      "tyre_size_front": "225/45 R17",
+      "tyre_size_rear": "255/40 R17"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-5",
+     "c": "exhaust",
+     "b": "Spoon Sports",
+     "p": "Sportauspuff",
+     "cost": 1700,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Spoon Sports",
+      "model": "Sportauspuff",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-mazda-mx5-na",
+   "car": "mazda-mx5-na-tuZLoKmNacA",
+   "make": "Mazda",
+   "model": "MX-5",
+   "generation": "NA",
+   "year": 1991,
+   "color": "Brilliant Black",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: MX-5 NA mit Klappscheinwerfern, so leicht wie möglich gehalten. Fahrwerk, Sitze und Räder im Stil der Neunziger.",
+   "published_days": 140,
+   "specs": {
+    "engine_code": "B6-ZE",
+    "engine_text": "1,6 l Vierzylinder",
+    "displacement_cc": 1597,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 85,
+    "torque_nm": 136,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": null
+   },
+   "source": "Mazda, Pressemappe MX-5 (NA, 1989): 85 kW (115 PS), 136 Nm",
+   "mods": [
+    {
+     "ref": "susp-1",
+     "c": "suspension",
+     "b": "Bilstein",
+     "p": "B6 mit Eibach-Federn",
+     "cost": 690,
+     "s": "installed",
+     "f": {
+      "type": "sport_dampers",
+      "brand": "Bilstein",
+      "model": "B6 mit Eibach-Federn",
+      "lowering_front": 30,
+      "lowering_rear": 30
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-2",
+     "c": "wheels_tires",
+     "b": "Enkei",
+     "p": "RPF1 15 Zoll",
+     "cost": 1100,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Enkei",
+      "wheel_model": "RPF1",
+      "diameter": 15,
+      "width_front": 7.0,
+      "width_rear": 7.0,
+      "bolt_pattern": "4×100",
+      "staggered": false,
+      "tyre_brand": "Toyo",
+      "tyre_model": "Proxes R888R",
+      "tyre_size_front": "195/50 R15",
+      "tyre_size_rear": "195/50 R15"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-3",
+     "c": "interior",
+     "b": "Nardi",
+     "p": "Classic Lenkrad",
+     "cost": 340,
+     "s": "installed",
+     "f": {
+      "part": "steering_wheel",
+      "brand": "Nardi",
+      "model": "Classic Lenkrad"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-4",
+     "c": "interior",
+     "b": "Bride",
+     "p": "Zeta IV",
+     "cost": 1600,
+     "s": "installed",
+     "f": {
+      "part": "seats",
+      "brand": "Bride",
+      "model": "Zeta IV"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-5",
+     "c": "exhaust",
+     "b": "Remus",
+     "p": "Sportauspuff",
+     "cost": 700,
+     "s": "installed",
+     "f": {
+      "type": "rear_silencer",
+      "brand": "Remus",
+      "model": "Sportauspuff",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-mazda-mx5-nd",
+   "car": "mazda-mx5-nd-_6fMmZbnIIY",
+   "make": "Mazda",
+   "model": "MX-5",
+   "generation": "ND",
+   "year": 2019,
+   "color": "Eternal Blue",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: MX-5 ND mit 2,0-l-Motor aus dem Modelljahr 2019. Fahrwerk, Bremse und Räder für Bergstraßen.",
+   "published_days": 27,
+   "specs": {
+    "engine_code": null,
+    "engine_text": "2,0 l Skyactiv-G Vierzylinder",
+    "displacement_cc": 1998,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 135,
+    "torque_nm": 205,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 6.5,
+    "weight_kg": null
+   },
+   "source": "Mazda Presse, MX-5 Modelljahr 2019: 135 kW (184 PS), 205 Nm, 0–100 km/h 6,5 s",
+   "mods": [
+    {
+     "ref": "susp-1",
+     "c": "suspension",
+     "b": "KW",
+     "p": "Variante 3",
+     "cost": 2000,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "KW",
+      "model": "Variante 3",
+      "lowering_front": 25,
+      "lowering_rear": 25,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-2",
+     "c": "wheels_tires",
+     "b": "Rays",
+     "p": "Volk Racing TE37 Saga 17 Zoll",
+     "cost": 2400,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Rays",
+      "wheel_model": "Volk Racing TE37 Saga",
+      "diameter": 17,
+      "width_front": 8.0,
+      "width_rear": 8.0,
+      "bolt_pattern": "4×100",
+      "staggered": false,
+      "tyre_brand": "Yokohama",
+      "tyre_model": "Advan Neova AD09",
+      "tyre_size_front": "215/40 R17",
+      "tyre_size_rear": "215/40 R17"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-3",
+     "c": "brakes",
+     "b": "Wilwood",
+     "p": "4-Kolben-Bremsanlage",
+     "cost": 1600,
+     "s": "installed",
+     "f": {
+      "brand": "Wilwood",
+      "model": "4-Kolben-Bremsanlage",
+      "front_pistons": 4,
+      "pads": "Wilwood BP-10"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-4",
+     "c": "interior",
+     "b": "Bride",
+     "p": "Zeta IV",
+     "cost": 1600,
+     "s": "planned",
+     "f": {
+      "part": "seats",
+      "brand": "Bride",
+      "model": "Zeta IV"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-5",
+     "c": "exhaust",
+     "b": "Remus",
+     "p": "Sportauspuff",
+     "cost": 900,
+     "s": "installed",
+     "f": {
+      "type": "rear_silencer",
+      "brand": "Remus",
+      "model": "Sportauspuff",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-subaru-wrx-gd",
+   "car": "subaru-gd-t58ZJV50Abc",
+   "make": "Subaru",
+   "model": "Impreza",
+   "generation": "GD",
+   "year": 2001,
+   "color": "WR Blue Mica",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: Impreza WRX Blobeye mit Goldfelgen, wie es sich gehört. Boxer, Allrad und ein paar Teile von STI.",
+   "published_days": 117,
+   "specs": {
+    "engine_code": "EJ205",
+    "engine_text": "2,0 l Boxer Turbo",
+    "displacement_cc": 1994,
+    "fuel": "petrol",
+    "aspiration": "turbo",
+    "power_kw": 160,
+    "torque_nm": 292,
+    "drivetrain": "all",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": null,
+    "weight_kg": null
+   },
+   "source": "Subaru Europe, Impreza WRX (GD, 2001): 160 kW (218 PS), 292 Nm",
+   "mods": [
+    {
+     "ref": "wheels-1",
+     "c": "wheels_tires",
+     "b": "Rays",
+     "p": "Volk Racing TE37 17 Zoll",
+     "cost": 2500,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Rays",
+      "wheel_model": "Volk Racing TE37",
+      "diameter": 17,
+      "width_front": 8.0,
+      "width_rear": 8.0,
+      "bolt_pattern": "5×100",
+      "finish": "Gold",
+      "staggered": false,
+      "tyre_brand": "Bridgestone",
+      "tyre_model": "Potenza RE-71RS",
+      "tyre_size_front": "235/45 R17",
+      "tyre_size_rear": "235/45 R17"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-2",
+     "c": "other",
+     "b": "Subaru Tecnica International",
+     "p": "Domstrebe vorne",
+     "cost": 280,
+     "s": "installed",
+     "f": {},
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-3",
+     "c": "exhaust",
+     "b": "Cobb Tuning",
+     "p": "Cat-Back",
+     "cost": 1100,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "Cobb Tuning",
+      "model": "Cat-Back",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "susp-4",
+     "c": "other",
+     "b": "Whiteline",
+     "p": "Stabilisatoren",
+     "cost": 520,
+     "s": "installed",
+     "f": {},
+     "lg": "unknown"
+    },
+    {
+     "ref": "eng-5",
+     "c": "engine_performance",
+     "b": "Cobb Tuning",
+     "p": "Accessport",
+     "cost": 700,
+     "s": "installed",
+     "f": {
+      "tuner": "Cobb Tuning"
+     },
+     "lg": "unknown"
+    }
+   ]
+  },
+  {
+   "key": "ed-subaru-brz",
+   "car": "subaru-brz-F5MB3NFpPJs",
+   "make": "Subaru",
+   "model": "BRZ",
+   "generation": "ZC6",
+   "year": 2014,
+   "color": "Crystal White Pearl",
+   "nickname": null,
+   "description": "Beispiel-Build der Redaktion: BRZ tS auf einer kurvigen Waldstraße. Wenig Leistung, viel Balance: Reifen, Fahrwerk und Bremse sind die Änderungen.",
+   "published_days": 68,
+   "specs": {
+    "engine_code": "FA20",
+    "engine_text": "2,0 l Boxer",
+    "displacement_cc": 1998,
+    "fuel": "petrol",
+    "aspiration": "naturally_aspirated",
+    "power_kw": 147,
+    "torque_nm": 205,
+    "drivetrain": "rear",
+    "gearbox": "manual"
+   },
+   "factory": {
+    "zero_to_100_s": 7.6,
+    "weight_kg": null
+   },
+   "source": "Subaru Presse, BRZ (2012): 147 kW (200 PS), 205 Nm, 0–100 km/h 7,6 s",
+   "mods": [
+    {
+     "ref": "susp-1",
+     "c": "suspension",
+     "b": "Öhlins",
+     "p": "Road & Track",
+     "cost": 2300,
+     "s": "installed",
+     "f": {
+      "type": "coilover",
+      "brand": "Öhlins",
+      "model": "Road & Track",
+      "lowering_front": 20,
+      "lowering_rear": 20,
+      "adjustable_damping": true
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "wheels-2",
+     "c": "wheels_tires",
+     "b": "Enkei",
+     "p": "RPF1 17 Zoll",
+     "cost": 1600,
+     "s": "installed",
+     "f": {
+      "wheel_brand": "Enkei",
+      "wheel_model": "RPF1",
+      "diameter": 17,
+      "width_front": 8.0,
+      "width_rear": 8.0,
+      "bolt_pattern": "5×100",
+      "staggered": false,
+      "tyre_brand": "Michelin",
+      "tyre_model": "Pilot Sport 4",
+      "tyre_size_front": "225/45 R17",
+      "tyre_size_rear": "225/45 R17"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "brk-3",
+     "c": "brakes",
+     "b": "Project Mu",
+     "p": "Bremsbeläge HC+",
+     "cost": 290,
+     "s": "installed",
+     "f": {
+      "brand": "Project Mu",
+      "model": "Bremsbeläge HC+",
+      "pads": "Project Mu HC+"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "exh-4",
+     "c": "exhaust",
+     "b": "HKS",
+     "p": "Legamax Premium",
+     "cost": 1300,
+     "s": "installed",
+     "f": {
+      "type": "catback",
+      "brand": "HKS",
+      "model": "Legamax Premium",
+      "material": "stainless"
+     },
+     "lg": "unknown"
+    },
+    {
+     "ref": "int-5",
+     "c": "other",
+     "b": "Subaru Tecnica International",
+     "p": "Domstrebe vorne",
+     "cost": 280,
+     "s": "installed",
+     "f": {},
+     "lg": "unknown"
+    }
+   ]
+  }
+ ]
+}

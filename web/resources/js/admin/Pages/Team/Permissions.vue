@@ -125,13 +125,13 @@ onMounted(async () => {
     <div class="flex flex-col gap-24" data-testid="ADM-42" :data-qa-state="pageState">
         <PageHeader :title="trans('team.matrix.title')" :crumbs="[{ label: trans('shell.groups.team') }]" :description="trans('team.matrix.intro')">
             <template v-if="manage && pageState === 'ready'" #actions>
-                <span class="text-supporting text-ink-2 tabular-nums" aria-live="polite" data-testid="ADM-42.changes">{{ transChoice('team.matrix.changes', changeCount, { count: formatNumber(changeCount) }) }}</span>
+                <span class="text-admin-base text-ink-2 tabular-nums" aria-live="polite" data-testid="ADM-42.changes">{{ transChoice('team.matrix.changes', changeCount, { count: formatNumber(changeCount) }) }}</span>
                 <Button size="sm" variant="ghost" :icon="PhArrowCounterClockwise" :disabled="changeCount === 0" data-testid="ADM-42.discard" @click="resetDraft()">{{ trans('team.matrix.discard') }}</Button>
                 <Button size="sm" variant="primary" :icon="PhListChecks" :disabled="changeCount === 0" :loading="diffLoading" data-testid="ADM-42.review" @click="review()">{{ trans('team.matrix.review') }}</Button>
             </template>
         </PageHeader>
 
-        <p v-if="!manage" class="text-supporting text-ink-2" data-testid="ADM-42.view-only">{{ trans('team.matrix.view_only') }}</p>
+        <p v-if="!manage" class="text-admin-base text-ink-2" data-testid="ADM-42.view-only">{{ trans('team.matrix.view_only') }}</p>
         <DialogError v-if="diffError" :message="diffError" test-id="ADM-42.diff-error" />
 
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('team.matrix.error')" :body="trans('ui.state.error_body')" test-id="ADM-42.error" @retry="router.reload()" />
@@ -141,13 +141,13 @@ onMounted(async () => {
         </div>
         <!-- DQ-615: the header stays in view over the 57 rows; it sticks under the top bar while the matrix fits its column. -->
         <ScrollRegion v-else v-slot="{ contained }" :label="trans('team.matrix.scroll')" sticky-header test-id="ADM-42.matrix">
-            <table class="w-full border-collapse text-supporting">
+            <table class="w-full border-collapse text-admin-base">
                 <caption class="sr-only">{{ trans('team.matrix.caption') }}</caption>
                 <thead class="sticky z-10 bg-surface" :class="contained ? 'top-0' : 'top-56'" data-testid="ADM-42.matrix.head">
                     <tr class="border-b border-line">
-                        <th scope="col" class="sticky left-0 z-10 min-w-240 bg-surface px-12 py-8 text-left text-label-s text-ink-2">{{ trans('team.matrix.atom') }}</th>
+                        <th scope="col" class="sticky left-0 z-10 min-w-240 bg-surface px-12 py-8 text-left text-admin-base-strong text-ink-2">{{ trans('team.matrix.atom') }}</th>
                         <th v-for="role in matrix.roles" :key="role.name" scope="col" class="min-w-96 px-8 py-8 text-center align-bottom" :data-testid="`ADM-42.role.${role.name}`">
-                            <span class="block text-label-s text-ink">{{ roleLabel(role.name) }}</span>
+                            <span class="block text-admin-base-strong text-ink">{{ roleLabel(role.name) }}</span>
                             <span class="block whitespace-nowrap text-caption text-ink-3 tabular-nums">{{ transChoice('team.matrix.staff', role.staff, { count: formatNumber(role.staff) }) }}</span>
                         </th>
                     </tr>
@@ -179,25 +179,25 @@ onMounted(async () => {
 
         <Dialog v-model:open="diffOpen" :title="trans('team.matrix.diff_title')" :description="trans('team.matrix.diff_body')" size="lg" :dismissible="!action.processing.value" test-id="ADM-42.diff-dialog">
             <div class="flex flex-col gap-16">
-                <p class="text-label text-ink tabular-nums" data-testid="ADM-42.diff.total">{{ transChoice('team.matrix.diff_total', affected, { count: formatNumber(affected) }) }}</p>
+                <p class="text-admin-base-strong text-ink tabular-nums" data-testid="ADM-42.diff.total">{{ transChoice('team.matrix.diff_total', affected, { count: formatNumber(affected) }) }}</p>
                 <section v-for="(row, role) in diff" :key="role" class="flex flex-col gap-8 rounded-sm border border-line-subtle px-16 py-12" :data-testid="`ADM-42.diff.${role}`">
-                    <h3 class="text-label text-ink">{{ trans('team.matrix.diff_role', { role: roleLabel(String(role)), staff: transChoice('team.matrix.staff', row.staff, { count: formatNumber(row.staff) }) }) }}</h3>
+                    <h3 class="text-headline text-ink">{{ trans('team.matrix.diff_role', { role: roleLabel(String(role)), staff: transChoice('team.matrix.staff', row.staff, { count: formatNumber(row.staff) }) }) }}</h3>
                     <dl class="grid grid-cols-1 gap-12 tablet:grid-cols-2">
                         <div class="flex flex-col gap-2">
                             <dt class="text-caption text-ink-3">{{ trans('team.matrix.diff_added') }}</dt>
-                            <dd v-if="row.added.length === 0" class="text-supporting text-ink-3">–</dd>
-                            <dd v-for="a in row.added" :key="a" class="flex items-center gap-4 text-supporting text-ink">{{ `+ ${atomLabel(a)}` }}<PhEyes v-if="matrix.sensitive.includes(a)" :size="16" class="text-ink-3" role="img" :aria-label="trans('team.matrix.sensitive')" /></dd>
+                            <dd v-if="row.added.length === 0" class="text-admin-base text-ink-3">–</dd>
+                            <dd v-for="a in row.added" :key="a" class="flex items-center gap-4 text-admin-base text-ink">{{ `+ ${atomLabel(a)}` }}<PhEyes v-if="matrix.sensitive.includes(a)" :size="16" class="text-ink-3" role="img" :aria-label="trans('team.matrix.sensitive')" /></dd>
                         </div>
                         <div class="flex flex-col gap-2">
                             <dt class="text-caption text-ink-3">{{ trans('team.matrix.diff_removed') }}</dt>
-                            <dd v-if="row.removed.length === 0" class="text-supporting text-ink-3">–</dd>
-                            <dd v-for="a in row.removed" :key="a" class="text-supporting text-ink-2">{{ `− ${atomLabel(a)}` }}</dd>
+                            <dd v-if="row.removed.length === 0" class="text-admin-base text-ink-3">–</dd>
+                            <dd v-for="a in row.removed" :key="a" class="text-admin-base text-ink-2">{{ `− ${atomLabel(a)}` }}</dd>
                         </div>
                     </dl>
                 </section>
                 <template v-if="fourEyes">
                     <ApprovalNotice test-id="ADM-42.diff.four-eyes" />
-                    <p class="text-helper text-ink-2">{{ trans('team.matrix.diff_four_eyes', { atoms: sensitive.map(atomLabel).join(', ') }) }}</p>
+                    <p class="text-admin-base text-ink-2">{{ trans('team.matrix.diff_four_eyes', { atoms: sensitive.map(atomLabel).join(', ') }) }}</p>
                 </template>
                 <Field :label="trans('ui.confirm.reason')" :hint="fourEyes ? trans('team.invite.reason_hint') : trans('team.matrix.reason_optional')" :error="reasonError" :required="fourEyes" :optional="!fourEyes">
                     <Textarea v-model="reason" :rows="2" :maxlength="1000" show-count data-testid="ADM-42.diff.reason" />

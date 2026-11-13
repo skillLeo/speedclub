@@ -30,7 +30,7 @@ const STATE_ICON: Readonly<Record<QrStateKind, IconName>> = {
 };
 
 /** DQ-211: at a large font the title takes several lines, and "QR-Code" held together must not leave its last word alone, as on WEB-06. */
-const TITLE_WRAP = isWeb ? ({ textWrap: 'balance' } as unknown as TextStyle) : undefined;
+const TITLE_WRAP = isWeb ? ({ textWrapStyle: 'balance' } as unknown as TextStyle) : undefined;
 
 const useStyles = createStyles((t) => ({
   scroll: { flex: 1 },
@@ -53,7 +53,7 @@ function ResolveSkeleton() {
   return (
     <Skeleton label={t('resolve.checking')} style={styles.skeleton} testID={`${ROUTE}.skeleton`}>
       <SkeletonBlock width={size.icon.l} height={size.icon.l} corner="xs" />
-      <SkeletonText variant="titleL" width="80%" />
+      <SkeletonText variant="title1" width="80%" />
       <SkeletonText variant="body" width="90%" />
       <View style={styles.skeletonActions}>
         <SkeletonBlock width="100%" height={size.button.l} corner="sm" />
@@ -77,7 +77,7 @@ function ResolverState({ outcome }: { outcome: Extract<ResolverOutcome, { kind: 
   return (
     <View testID={`${ROUTE}.state.${outcome.state}`}>
       <Icon name={STATE_ICON[outcome.state]} size={24} color="text.secondary" testID={`${ROUTE}.glyph.${STATE_ICON[outcome.state]}`} />
-      <Text variant="titleL" role="heading" aria-level={1} style={[styles.title, TITLE_WRAP]} testID={`${ROUTE}.title`}>
+      <Text variant="title1" role="heading" aria-level={1} style={[styles.title, TITLE_WRAP]} testID={`${ROUTE}.title`}>
         {title}
       </Text>
       <Text color="text.secondary" style={styles.body} testID={`${ROUTE}.body`}>

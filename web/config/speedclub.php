@@ -30,6 +30,11 @@ return [
         'password_check_failures' => ['max' => 5, 'minutes' => 15],
         // SEC-P1-34: guesses at two-factor.confirm per account, as the challenge allows.
         'two_factor_confirm_per_minute' => 5,
+        // ADM-03: with false a staff member without confirmed TOTP may skip enrolment for one session ("Später einrichten"; never stored
+        // on the account, audited). Steps that need a current code stay closed until TOTP is confirmed (EnsureStaffTwoFactor).
+        'two_factor_required' => (bool) env('STAFF_2FA_REQUIRED', true),
+        // Skips per staff member and minute (route admin.two-factor.skip).
+        'two_factor_skips_per_minute' => 5,
     ],
 
     // Four-eyes engine (ADR-214, 06_ADMIN_SPEC §2).
@@ -66,6 +71,15 @@ return [
     'known_devices' => [
         'retention_months' => 12,
         'max_notices_per_hour' => 5,
+        // SEC-M47-02: the member web's browser id (KnownDevices::browserFingerprint), first-party, HttpOnly, SameSite=Lax.
+        'browser_cookie' => 'sc_browser',
+        'browser_cookie_days' => 1825,
+    ],
+
+    // M4.7 (09 §8.4, §13): SET-21 rows are kept 12 months; the "Das war ich nicht" link of an alert works this many days.
+    'security_events' => [
+        'retention_months' => 12,
+        'secure_link_days' => 7,
     ],
 
     // Local-only mail preview (docs/DEPLOY.md §10). Exists only in the environments listed here.
@@ -159,6 +173,63 @@ return [
     // Fix round (review should-fix 5): wrong passwords in re-checks (SET-03 to SET-13) per account and hour, on top of account_security.
     'reauth' => [
         'password_failures_per_hour' => 5,
+        // 09 §8.1 "sudo mode": how long POST me/reauth counts for the sensitive endpoints (middleware RequireRecentAuthentication).
+        'recent_minutes' => 10,
+    ],
+
+    // M4.6 passwordless e-mail code (09 §8.1). Per address: 5 codes an hour, cooldowns 30 → 60 → 120 s between codes, 5 wrong tries per
+    // code, 10 failures an hour → a 15-minute lock with a security mail to the account. Per IP the limiter auth-email-start (20 an hour).
+    'email_code' => [
+        'code_length' => 6,
+        'expires_minutes' => 10,
+        'max_attempts' => 5,
+        'resend_cooldowns' => [30, 60, 120],
+        'max_codes_per_hour' => 5,
+        'max_failures_per_hour' => 10,
+        'lock_minutes' => 15,
+        // Not in the spec: how long a code request waits for a parallel one of the same address (named lock) before answering 503.
+        'lock_wait_seconds' => 5,
+        // Not in the spec: start answers no sooner than this, known address or not, so its duration says nothing (the mail itself
+        // leaves after the response, ADR-130).
+        'min_response_ms' => 250,
+        // Not in the spec: spent rows are kept for the hourly counters, then pruned (auth:prune-login-attempts).
+        'retention_hours' => 24,
+    ],
+
+    // M4.6 Apple and Google ID tokens (ADR-408). Client IDs and keys live in config/services.php.
+    'id_tokens' => [
+        'jwks_cache_hours' => 6,
+        'iat_skew_seconds' => 300,
+        'http_timeout_seconds' => 5,
+        // A token older than this is refused even when exp is later (Apple issues 10 minutes, Google 1 hour).
+        'max_age_seconds' => 3600,
+        // SEC-M46-05: server-issued nonces (POST auth/nonce), single use, for Apple and Google.
+        'nonce_minutes' => 10,
+        // SEC-M46-06: a failed JWKS fetch is not retried for this long; the last good key set keeps working meanwhile.
+        'jwks_failure_cache_seconds' => 60,
+        // The last good key set stays usable this long after its fetch, so an outage of the provider does not stop sign-ins.
+        'jwks_last_good_days' => 7,
+    ],
+
+    // M4.6 passkeys for members (09 §8.2, ADR-409, web-auth/webauthn-lib directly). The RP ID is the host of APP_URL unless PASSKEY_RP_ID
+    // says otherwise; passkeys made on staging never work on production (expected). Allowed origins: https://{rp host}, the extra origins
+    // of PASSKEY_ALLOWED_ORIGINS, and android:apk-key-hash:… derived from ANDROID_CERT_SHA256 (staging and release certificates).
+    'passkeys' => [
+        'rp_id' => env('PASSKEY_RP_ID') ?: parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST),
+        'rp_name' => 'SPEED CLUB',
+        'allowed_origins' => array_values(array_filter(array_map(trim(...), explode(',', (string) env('PASSKEY_ALLOWED_ORIGINS', ''))))),
+        'challenge_ttl_seconds' => 300,
+        // What the client is told to wait for the authenticator (WebAuthn `timeout`, ms); below the challenge TTL.
+        'timeout_ms' => 120000,
+        'max_per_member' => 20,
+        'name_max_length' => 64,
+    ],
+
+    // ADM-61 Mail-Vorschau (09 §8.1): staff-only list of the last 50 outgoing mails. Never in production, whatever this says; the
+    // recording listener runs in the same environments.
+    'mail_preview' => [
+        'enabled' => env('APP_ENV', 'production') !== 'production',
+        'limit' => 50,
     ],
 
     // M2.5 SET-15, WEB-10. Confirmation mails per guest address and day, so the form cannot flood a stranger's inbox.
@@ -176,6 +247,77 @@ return [
     ],
 
     // 02_PRODUCT_SPEC §3.2
+    // M4.11 Social 2.0 (09 §8.5, §8.6).
+    'social_2' => [
+        // An owner edits a posted update within this many hours; hiding and deleting stay open (09 §8.5).
+        'update_edit_hours' => 24,
+        'update_text_max' => 2000,
+        'update_max_photos' => 10,
+        'update_max_mods' => 20,
+        // Mentions stored per text; more are left as plain text (no notification), so one post cannot ping a crowd.
+        'max_mentions' => 10,
+        'mention_suggest_limit' => 8,
+        'comment_max' => 500,
+        'comments_page_size' => 30,
+        'max_highlights' => 8,
+        'max_collections' => 50,
+        'collection_name_max' => 60,
+        'max_collection_items' => 1000,
+    ],
+
+    // M4.12 Events and meets (09 §8.7).
+    'events' => [
+        // Creation rights: verified e-mail, an account at least this old, the event rules accepted.
+        'organiser_min_account_days' => 14,
+        // The first this-many events of an organiser go to pre-moderation (ADM-53), and every event with an after_rsvp place.
+        'premoderate_first' => 2,
+        'title_max' => 120,
+        'description_max' => 5000,
+        'rules_max' => 2000,
+        'update_max' => 1000,
+        'reason_max' => 500,
+        'max_capacity' => 10000,
+        // Not in the spec: bounds the drafts and upcoming events of one organiser.
+        'max_open_per_organiser' => 20,
+        // An event lasts at most this long (a fair over a weekend).
+        'max_duration_hours' => 96,
+        // How far ahead an event can be planned.
+        'max_days_ahead' => 400,
+        'list_page_size' => 30,
+        'pins_max' => 300,
+        'near_default_km' => 50,
+        'near_max_km' => 300,
+        // Reminders 24 h and 2 h before the start (09 §8.7), sent by events:reminders every five minutes; it stops after this many seconds.
+        'reminder_job_seconds' => 40,
+        // Security review SEC-412-02: a moved start re-arms a reminder kind only when its new moment is at least this many hours after the
+        // last one of that kind, so moving an event back and forth cannot repeat the reminders.
+        'reminder_rearm_hours' => 12,
+        // Changes of time or place of a published event (each tells every attendee): at most this many per event and hour (not in the spec).
+        'changes_per_hour' => 5,
+        // Cancelled and rejected events go after 12 months (09 §13 retention), past events after this many months.
+        'cancelled_retention_months' => 12,
+        'past_retention_months' => 24,
+        // ADR-113 (security review note): the exact venue of an after_rsvp event goes this many days after its end.
+        'exact_place_retention_days' => 30,
+        // A signed calendar link of an attendee works this many days after the event ended.
+        'calendar_link_days_after' => 2,
+    ],
+
+    // M4.12 geocoding proxy (09 §8.7, ADR-411): Nominatim (OpenStreetMap) behind the server, search on submit only, 1 request a second
+    // for the whole host, 30-day cache. The upstream host is fixed here, never taken from a request (no SSRF). The usage policy needs a
+    // descriptive User-Agent with a contact address: GEOCODE_CONTACT_EMAIL (owner action); without it the proxy names the site URL only.
+    'geocode' => [
+        'provider' => 'nominatim',
+        'nominatim_url' => env('GEOCODE_NOMINATIM_URL', 'https://nominatim.openstreetmap.org'),
+        'contact_email' => env('GEOCODE_CONTACT_EMAIL'),
+        'countries' => env('GEOCODE_COUNTRIES', 'de,at,ch,nl,be,lu,dk,pl,cz,fr'),
+        'cache_days' => 30,
+        'timeout_seconds' => 5,
+        'limit' => 5,
+        'query_min' => 3,
+        'query_max' => 200,
+    ],
+
     'garage' => [
         'max_vehicles_per_member' => 20,
         'max_photos_per_vehicle' => 30,
@@ -273,6 +415,7 @@ return [
         'search' => ['max' => 60, 'minutes' => 1, 'ip_max' => 240],
         'qr' => ['max' => 120, 'minutes' => 1],
         'public_read' => ['max' => 300, 'minutes' => 1], // anonymous catalogue, config and legal GETs (ADR-115)
+        'client_errors' => ['max' => 10, 'minutes' => 1], // crash reports of the app's error screens (POST /api/v1/client-errors)
         // Not in the spec: Home, Discover and search, which members read signed in. 300 per member, guests per IP; ip_max bounds
         // one address across all accounts behind it (car-meet wifi, carrier NAT) without letting them share one member's bucket.
         'browse' => ['max' => 300, 'minutes' => 1, 'ip_max' => 1200],
@@ -291,6 +434,22 @@ return [
         'blocks' => ['max' => 100, 'minutes' => 1440],
         // Not in the spec (M2.1): saving and unsaving builds [SIG sig.saved_builds].
         'saves' => ['max' => 300, 'minutes' => 1440],
+        // Not in the spec (M4.11): setting and taking back reactions, per member.
+        'reactions' => ['max' => 600, 'minutes' => 1440],
+        // Not in the spec (M4.11) [build_comments]: comments per member and hour.
+        'comments' => ['max' => 30, 'minutes' => 60],
+        // Not in the spec (M4.11): @mention suggestions while typing.
+        'mention_suggest' => ['max' => 120, 'minutes' => 1],
+        // Not in the spec (M4.11): collection and item writes per member.
+        'collections' => ['max' => 600, 'minutes' => 60],
+        // Not in the spec (M4.11): posting build updates, on top of garage_writes; a mention spammer hits this first.
+        'build_updates' => ['max' => 30, 'minutes' => 60],
+        // Not in the spec (M4.12): events created per member and day, RSVP changes per member and hour, organiser updates per hour,
+        // geocoding searches per member and hour (the upstream itself is held to 1 a second for the host, App\Services\Events\Geocoder).
+        'events' => ['max' => 10, 'minutes' => 1440],
+        'rsvps' => ['max' => 120, 'minutes' => 60],
+        'event_updates' => ['max' => 20, 'minutes' => 60],
+        'geocode' => ['max' => 60, 'minutes' => 60],
         // Not in the spec (M2.6): appeals against decisions, one per decision anyway; bounds a flood of attempts.
         'appeals' => ['max' => 10, 'minutes' => 1440],
         // M3.7 [AI] (m3.7 contract §1): every AI endpoint but the translation, and the translation, per member and hour.
@@ -312,6 +471,20 @@ return [
         // Not in the spec (M2.5): re-authenticated security changes per member (e-mail, password, two-factor, sessions, export, deletion).
         // Each checks the password; this bounds guessing with a stolen session far below the login delay.
         'account_security' => ['max' => 10, 'minutes' => 10],
+        // M4.6 (09 §8.1): e-mail code starts, 20 an hour per IP; the per-address limits are in email_code.
+        'auth_email_start' => ['max' => 20, 'minutes' => 60],
+        // Not in the spec: e-mail code verifies and link confirms per IP, on top of 5 tries per code and 10 failures an hour per address.
+        'auth_email_verify' => ['max' => 30, 'minutes' => 1],
+        // Not in the spec: Apple and Google sign-ins per IP.
+        'auth_social' => ['max' => 20, 'minutes' => 1],
+        // Not in the spec: passkey sign-in options and verifies per IP.
+        'auth_passkeys' => ['max' => 30, 'minutes' => 1],
+        // Not in the spec (M4.7): "Das war ich nicht" links per IP; each link works once anyway.
+        'auth_secure_account' => ['max' => 10, 'minutes' => 10],
+        // Not in the spec: POST me/reauth and its options per member; wrong answers count in their own budgets as well.
+        'reauth' => ['max' => 10, 'minutes' => 10],
+        // Not in the spec: passkey and provider changes per member.
+        'auth_methods' => ['max' => 20, 'minutes' => 60],
         // M2.5 AUTH-11, per IP on top of the 5 a minute per challenge and account inside the action.
         'two_factor_challenge' => ['max' => 10, 'minutes' => 1],
         // Not in the spec (M2.5): SET-15 tickets per member.
@@ -374,6 +547,8 @@ return [
             'store_android' => env('STORE_URL_ANDROID'),
             // M2.7 WEB-04: where SYS-01 sends an app without a store listing (before the launch, a staging build for testers).
             'get_app' => '/app-laden',
+            // M4.9 (09 §8.16): the sticker shop the owner runs elsewhere; shown only while the flag sticker_shop is on and this is set.
+            'sticker_shop' => env('STICKER_SHOP_URL'),
         ],
     ],
 
@@ -707,6 +882,9 @@ return [
     'demo' => [
         'member_password' => env('DEMO_MEMBER_PASSWORD'),
         'staff_password' => env('DEMO_STAFF_PASSWORD'),
+        // The TOTP key (base32) of the showcase staff account admin.demo@speedclub.test (DemoShowcaseSeeder), so a crawler can pass the
+        // second factor. Empty: the account is created without TOTP and enrols at its first sign-in like every staff account.
+        'staff_totp_secret' => env('DEMO_STAFF_TOTP_SECRET'),
         // DemoSeeder runs by itself in local; staging only with this on; never in production.
         'seed_on_staging' => (bool) env('DEMO_SEED_ON_STAGING', false),
         // Upper limit of photos DemoSeeder sends through the media pipeline. 0 seeds no photos.

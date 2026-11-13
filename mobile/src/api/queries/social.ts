@@ -95,7 +95,11 @@ export function isMemberUnavailable(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404;
 }
 
-/** PROF-02. Kept for offline reads like every query. */
+/**
+ * PROF-02. Kept for offline reads like every query. `viewer.can_message` (and follow, block) can change from the other side at any
+ * time, so a cached profile is shown at once but is always read again when the screen opens or the app comes back (staleTime 0):
+ * a stale copy kept "Nachricht" enabled for a member who had turned messages off.
+ */
 export function useMemberProfile(username: string | undefined) {
   const viewer = usePublicViewer();
   const value = username ?? '';
@@ -104,6 +108,9 @@ export function useMemberProfile(username: string | undefined) {
     queryFn: ({ signal }) => fetchMemberProfile(value, signal),
     enabled: value !== '',
     retry: retryUnlessAnswered,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
   });
 }
 
@@ -209,6 +216,11 @@ function mapRows<R>(data: InfiniteData<{ data: R[] }>, change: (row: R) => R | n
   };
 }
 
+/** A hidden count (null: a sample member, 09 §8.19) stays hidden; a shown count never drops below 0. */
+function bump(count: number | null, by: number): number | null {
+  return count === null ? null : Math.max(0, count + by);
+}
+
 function sameName(a: string | null | undefined, b: string): boolean {
   return a !== null && a !== undefined && memberIdOf(a) === memberIdOf(b);
 }
@@ -246,7 +258,7 @@ export function useFollow(username: string) {
       const profiles = edit<MemberProfile>(client, (key) => isProfileKey(key, name), (profile) =>
         profile.is_following === follow
           ? profile
-          : { ...profile, is_following: follow, stats: { ...profile.stats, followers: Math.max(0, profile.stats.followers + (follow ? 1 : -1)) } },
+          : { ...profile, is_following: follow, stats: { ...profile.stats, followers: bump(profile.stats.followers, follow ? 1 : -1) } },
       );
       const rows = edit<InfiniteData<ConnectionsPage>>(client, (key) => isConnectionsKey(key), (data) =>
         mapRows(data, (row: Connection) => (sameName(row.username, name) ? { ...row, is_following: follow } : row)) as InfiniteData<ConnectionsPage>,
@@ -294,7 +306,7 @@ export function useRemoveFollower({ onFailed }: WriteOptions = {}) {
       );
       const profiles = edit<MemberProfile>(client, (key) => isProfileKey(key, own), (profile) => ({
         ...profile,
-        stats: { ...profile.stats, followers: Math.max(0, profile.stats.followers - 1) },
+        stats: { ...profile.stats, followers: bump(profile.stats.followers, -1) },
       }));
       const theirs = edit<MemberProfile>(client, (key) => isProfileKey(key, username), (profile) => ({ ...profile, follows_you: false }));
       return { snapshot: [...rows, ...profiles, ...theirs] as Snapshot };

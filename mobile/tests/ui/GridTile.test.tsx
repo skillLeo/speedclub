@@ -27,14 +27,14 @@ describe('GridTile', () => {
     }
   });
 
-  it('has a 4:3 photo radius 8, a two-line label.s title and a caption spec line', async () => {
+  it('has a 4:3 photo radius 8, a two-line callout title and a caption spec line', async () => {
     await renderUi(<GridTile title="BMW M4 G82" spec="510 PS · RWD" photo={{ source: 'https://x/a.webp' }} testID="t" />);
     const photo = flat(screen.getByTestId('t.photo').props.style);
     expect(photo.aspectRatio).toBeCloseTo(4 / 3);
     expect(photo.borderRadius).toBe(radius.sm);
     const title = screen.getByText('BMW M4 G82');
     expect(title.props.numberOfLines).toBe(2);
-    expect(flat(title.props.style).fontSize).toBe(typography.labelS.fontSize);
+    expect(flat(title.props.style).fontSize).toBe(typography.callout.fontSize);
     expect(flat(screen.getByText('510 PS · RWD').props.style).fontSize).toBe(typography.caption.fontSize);
   });
 

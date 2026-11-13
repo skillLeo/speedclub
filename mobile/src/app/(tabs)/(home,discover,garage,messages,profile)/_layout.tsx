@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 
+import { NativeTabContent } from '@/features/shell/NativeTabContent';
 import { RouteErrorBoundary } from '@/features/shell/RouteErrorBoundary';
 import { useCanvasStackOptions } from '@/features/shell/useCanvasStackOptions';
 import { webStackScreenLayout } from '@/features/shell/WebStackTransition';
@@ -22,7 +23,10 @@ export default function TabStackLayout() {
   const screenOptions = useCanvasStackOptions();
   return (
     <RouteErrorBoundary>
-      <Stack screenOptions={screenOptions} screenLayout={isWeb ? webStackScreenLayout : undefined} />
+      {/* Under native tabs (09 §6.1) the stack measures where the bar starts and carries the e-mail notice; otherwise a plain pass-through. */}
+      <NativeTabContent>
+        <Stack screenOptions={screenOptions} screenLayout={isWeb ? webStackScreenLayout : undefined} />
+      </NativeTabContent>
     </RouteErrorBoundary>
   );
 }

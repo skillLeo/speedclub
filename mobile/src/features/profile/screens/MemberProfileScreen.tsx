@@ -1,12 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import type { Edge } from 'react-native-safe-area-context';
+import { useWindowDimensions, View } from 'react-native';
 
-import type { VehicleCardData } from '@/api/queries/profile';
 import {
   forgetBlockedMember,
   isMemberUnavailable,
@@ -21,50 +18,29 @@ import { usePublicViewer } from '@/api/queries/vehicles';
 import { newMessageHref, useMessageBlock } from '@/features/messages/entry';
 import { BlockDialog } from '@/features/safety/BlockDialog';
 import { useReport } from '@/features/safety/useReport';
-import { useTabScrollToTop } from '@/features/shell/retap';
-import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
-import { useTabBarPadding } from '@/features/shell/tabBarLayout';
 import { MoreSheet, type MoreAction } from '@/features/vehicle/components/MoreSheet';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
-import { createStyles, layout, useBreakpoint, useMotion } from '@/theme';
+import { createStyles, size, useBreakpoint } from '@/theme';
 import { useViewAsLock } from '@/features/viewAs/useViewAs';
-import {
-  Button,
-  EmptyState,
-  ErrorState,
-  Header,
-  IconButton,
-  Screen,
-  SectionHeader,
-  Skeleton,
-  Text,
-  toast,
-  useCollapsingHeader,
-  VehicleCardSkeleton,
-} from '@/ui';
+import { Button, EmptyState, ErrorState, IconButton, Text, toast, useCollapsingHeader } from '@/ui';
 
 import { FollowButton } from '../components/FollowButton';
-import { GarageStrip, stripCardWidth } from '../components/GarageStrip';
-import { ProfileIdentity } from '../components/ProfileHeader';
+import { PROFILE_COLUMN_MAX, PROFILE_WIDE_MAX, profileCover, profileCoverHeight, ProfileIdentity } from '../components/ProfileHeader';
+import { ProfileFrame } from '../components/ProfileFrame';
 import { ProfileSkeleton } from '../components/ProfileSkeleton';
+import { GaragePanel, initialProfileTab, ProfileTabBar, profileTabs, UpdatesPanel, useProfileTabFlags, type ProfileTab } from '../components/ProfileTabs';
 import { profileVehicles } from '../media';
 import { publicProfileUrl, shareLink } from '../share';
 
 const ROUTE = 'PROF-02';
-const EDGES: readonly Edge[] = ['left', 'right'];
-/** The column of PROF-01 (DQ-114): 640 plus its gutters, on the start edge; the cover alone runs full width. */
-const COLUMN_MAX = layout.feedColumn + 2 * layout.gutter.desktop;
 
 const useStyles = createStyles((t) => ({
-  scroll: { flex: 1 },
-  content: { flexGrow: 1, paddingBottom: t.space[32] },
-  column: { maxWidth: COLUMN_MAX, width: '100%' },
-  section: { marginTop: t.space[32] },
-  sectionHeader: { marginBottom: t.space[12] },
-  stateBody: { alignItems: 'center', flexGrow: 1, justifyContent: 'center' },
+  column: { maxWidth: PROFILE_COLUMN_MAX, width: '100%' },
+  wideColumn: { maxWidth: PROFILE_WIDE_MAX },
+  stateBody: { flexGrow: 1, justifyContent: 'center', paddingTop: t.space[24] },
 }));
 
 type ScreenState = 'loading' | 'ready' | 'unavailable' | 'error' | 'offline';
@@ -82,63 +58,6 @@ function stateOf(query: ReturnType<typeof useMemberProfile>, online: boolean, qa
   return 'loading';
 }
 
-type GarageProps = {
-  username: string;
-  width: number;
-  empty: boolean;
-  /** The page is being left after a block: it asks for nothing more and shows what it showed. */
-  frozen?: readonly MemberVehicle[];
-};
-
-function MemberGarage({ username, width, empty, frozen }: GarageProps) {
-  const { t } = useTranslation('profile');
-  const styles = useStyles();
-  const router = useRouter();
-  const { gutter, kind } = useBreakpoint();
-  const query = useMemberVehicles(username, !frozen);
-  const data = frozen ?? query.data;
-  const vehicles = empty ? [] : profileVehicles(data);
-  const open = useCallback((vehicle: VehicleCardData) => router.push(`/v/${vehicle.slug}`), [router]);
-  const column = { paddingHorizontal: gutter };
-
-  let body: ReactNode;
-  if (!empty && !data && query.isPending && query.fetchStatus !== 'paused') {
-    body = (
-      <Skeleton testID={`${ROUTE}.garage.skeleton`} style={column}>
-        <View style={{ width: stripCardWidth(width, gutter, kind) }}>
-          <VehicleCardSkeleton />
-        </View>
-      </Skeleton>
-    );
-  } else if (!empty && !data) {
-    body = (
-      <ErrorState
-        title={t('member.garageError')}
-        onRetry={() => void query.refetch()}
-        retrying={query.isFetching}
-        testID={`${ROUTE}.garage.error`}
-      />
-    );
-  } else if (vehicles.length === 0) {
-    body = (
-      <View style={column}>
-        <Text variant="bodyDense" color="text.secondary" testID={`${ROUTE}.garage.empty`}>
-          {t('member.garageEmpty')}
-        </Text>
-      </View>
-    );
-  } else {
-    body = <GarageStrip vehicles={vehicles} width={width} gutter={gutter} kind={kind} onOpen={open} routeId={ROUTE} />;
-  }
-
-  return (
-    <View style={[styles.section, styles.column]} testID={`${ROUTE}.garage`}>
-      <SectionHeader title={t('garage.title')} style={[styles.sectionHeader, column]} testID={`${ROUTE}.garage.header`} />
-      {body}
-    </View>
-  );
-}
-
 /**
  * PROF-02 /u/[username], FS-8 for another member: identity and stats (links to PROF-04), Folgen, Nachricht and more (Teilen,
  * Blockieren), then the public garage. A guest sees all of it; Folgen and Nachricht open the auth-required sheet. Your own name
@@ -149,19 +68,19 @@ export function MemberProfileScreen() {
   const styles = useStyles();
   const router = useRouter();
   const pathname = usePathname();
-  const params = useLocalSearchParams<{ username: string }>();
+  const params = useLocalSearchParams<{ username: string; tab?: string }>();
   const username = paramOf(params.username) ?? '';
   const qaState = useQaState();
   const online = useOnline();
-  const motion = useMotion();
-  const padding = useTabBarPadding();
   const requireAuth = useRequireAuth();
   const status = useSessionStore((state) => state.status);
   const { gutter, kind } = useBreakpoint();
   const back = useBack('/');
   const header = useCollapsingHeader();
-  const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
-  const [width, setWidth] = useState(0);
+  const { width: windowWidth } = useWindowDimensions();
+  const [width, setWidth] = useState(windowWidth);
+  const [tab, setTab] = useState<ProfileTab>(() => initialProfileTab(params.tab));
+  const flags = useProfileTabFlags();
   const [moreOpen, setMoreOpen] = useState(false);
   const [blocking, setBlocking] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
@@ -177,7 +96,19 @@ export function MemberProfileScreen() {
   const profile = loaded && qaState === 'empty' ? { ...loaded, bio: null, stats: { ...loaded.stats, vehicles: 0 } } : loaded;
   const canonical = query.data?.username;
   const isSelf = !left && query.data?.is_self === true;
-  const columnWidth = Math.min(width, COLUMN_MAX);
+  const columnWidth = Math.min(width, PROFILE_COLUMN_MAX);
+  const inner = Math.max(0, columnWidth - 2 * gutter);
+  // Desktop Garage tab: the wide column, the cards side by side (GaragePanel garageColumns).
+  const wideInner = Math.max(0, Math.min(width, PROFILE_WIDE_MAX) - 2 * gutter);
+  const vehiclesQuery = useMemberVehicles(profile?.username ?? username, !left && state === 'ready');
+  const vehicleData = left ? left.vehicles : vehiclesQuery.data;
+  const vehicles = qaState === 'empty' ? [] : profileVehicles(vehicleData);
+  const garageQuery = left
+    ? { data: left.vehicles ?? [], isPending: false, isFetching: false, fetchStatus: 'idle' as const, refetch: () => undefined }
+    : vehiclesQuery;
+  const cover = profile ? profileCover(profile, vehicles.map((vehicle) => vehicle.cover)) : null;
+  const tabs = profileTabs(false, flags);
+  const current = tabs.includes(tab) ? tab : 'garage';
 
   useEffect(() => {
     if (isSelf) {
@@ -195,12 +126,6 @@ export function MemberProfileScreen() {
       router.setParams({ username: canonical });
     }
   }, [canonical, isSelf, router, username]);
-
-  useTabScrollToTop(() => {
-    if (header.scrollY.get() <= 0) return false;
-    scrollRef.current?.scrollTo({ y: 0, animated: motion.enabled && !motion.reduced });
-    return true;
-  });
 
   const name = profile ? profile.display_name || `@${profile.username ?? username}` : '';
   const handle = `@${profile?.username ?? username}`;
@@ -258,6 +183,7 @@ export function MemberProfileScreen() {
   ];
 
   let body: ReactNode;
+  let overPhoto = false;
   if (isSelf && profile) {
     body = (
       <ProfileIdentity
@@ -273,7 +199,7 @@ export function MemberProfileScreen() {
     body = <ProfileSkeleton width={width} columnWidth={columnWidth} variant="member" withMessage routeId={ROUTE} />;
   } else if (state === 'unavailable') {
     body = (
-      <View style={styles.stateBody}>
+      <View style={[styles.stateBody, styles.column, { paddingHorizontal: gutter }]}>
         <EmptyState
           icon="user"
           title={t('member.unavailableTitle')}
@@ -286,7 +212,7 @@ export function MemberProfileScreen() {
   } else if (state !== 'ready' || !profile) {
     const offline = state === 'offline';
     body = (
-      <View style={styles.stateBody}>
+      <View style={[styles.stateBody, styles.column, { paddingHorizontal: gutter }]}>
         <ErrorState
           title={offline ? t('error.offlineTitle') : t('member.errorTitle')}
           message={offline ? t('member.offlineBody') : undefined}
@@ -297,32 +223,30 @@ export function MemberProfileScreen() {
       </View>
     );
   } else {
+    overPhoto = cover !== null;
+    const memberName = profile.username ?? username;
     body = (
       <>
         <ProfileIdentity
           profile={profile}
           routeId={ROUTE}
           width={width}
+          cardCovers={vehicles.map((vehicle) => vehicle.cover)}
           badge={profile.follows_you ? t('member.followsYou') : undefined}
           other
           onFollowers={connections('followers')}
           onFollowing={connections('following')}
-          onNameBottom={(bottom) => header.collapseAt.set(bottom)}
+          onNameBottom={cover ? undefined : (bottom) => header.collapseAt.set(bottom)}
           footer={
             messageHelper ? (
-              <Text variant="helper" color="text.secondary" testID={`${ROUTE}.messageHelper`}>
+              <Text variant="caption" color="text.secondary" testID={`${ROUTE}.messageHelper`}>
                 {messageHelper}
               </Text>
             ) : undefined
           }
           actions={
             <>
-              <FollowButton
-                username={profile.username ?? username}
-                following={status === 'member' && profile.is_following}
-                name={name}
-                testID={`${ROUTE}.follow`}
-              />
+              <FollowButton username={memberName} following={status === 'member' && profile.is_following} name={name} testID={`${ROUTE}.follow`} />
               <Button
                 label={t('member.message')}
                 variant="secondary"
@@ -336,51 +260,41 @@ export function MemberProfileScreen() {
             </>
           }
         />
-        <MemberGarage username={profile.username ?? username} width={columnWidth} empty={qaState === 'empty'} frozen={left ? (left.vehicles ?? []) : undefined} />
+        <View style={[styles.column, kind === 'desktop' ? styles.wideColumn : null, { paddingHorizontal: gutter }]}>
+          <ProfileTabBar routeId={ROUTE} tabs={tabs} value={current} onChange={setTab} />
+          {current === 'updates' ? (
+            <View style={{ maxWidth: inner }}>
+              <UpdatesPanel routeId={ROUTE} own={false} vehicles={vehicles} ready={vehicleData !== undefined} />
+            </View>
+          ) : (
+            <GaragePanel routeId={ROUTE} own={false} vehicles={vehicles} query={garageQuery} width={kind === 'desktop' ? wideInner : inner} />
+          )}
+        </View>
       </>
     );
   }
 
+  const coverHeight = overPhoto ? profileCoverHeight(width, kind) : 0;
+
   return (
-    <Screen edges={EDGES} testID={`${ROUTE}.root`}>
-      <Header
-        variant="large"
-        title={name}
-        scroll={header}
-        onBack={back}
-        contentMaxWidth={kind === 'phone' ? undefined : COLUMN_MAX}
-        testID={`${ROUTE}.header`}
-      />
-      <ShellOfflineBanner label={t('member.offlineBanner')} />
-      {state === 'ready' ? (
-        <Animated.ScrollView
-          ref={scrollRef}
-          {...header.scrollProps}
-          style={styles.scroll}
-          contentContainerStyle={[styles.content, padding]}
-          onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-          testID={`${ROUTE}.scroll`}
-        >
-          {body}
-        </Animated.ScrollView>
-      ) : (
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={[styles.content, padding, state === 'loading' ? null : { paddingHorizontal: gutter }]}
-          onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-          testID={`${ROUTE}.scroll`}
-        >
-          {body}
-        </ScrollView>
-      )}
-      <MoreSheet visible={moreOpen} onClose={() => setMoreOpen(false)} title={handle} actions={moreActions} testID={`${ROUTE}.moreSheet`} />
-      <BlockDialog
-        username={blocking}
-        onClose={() => setBlocking(null)}
-        onBlocked={leaveAfterBlock}
-        testID={`${ROUTE}.blockDialog`}
-      />
-      {report.element}
-    </Screen>
+    <ProfileFrame
+      routeId={ROUTE}
+      overPhoto={overPhoto}
+      title={name}
+      onBack={back}
+      header={header}
+      collapseAt={Math.max(0, coverHeight - size.header)}
+      onWidth={setWidth}
+      offlineLabel={t('member.offlineBanner')}
+      overlays={
+        <>
+          <MoreSheet visible={moreOpen} onClose={() => setMoreOpen(false)} title={handle} actions={moreActions} testID={`${ROUTE}.moreSheet`} />
+          <BlockDialog username={blocking} onClose={() => setBlocking(null)} onBlocked={leaveAfterBlock} testID={`${ROUTE}.blockDialog`} />
+          {report.element}
+        </>
+      }
+    >
+      {body}
+    </ProfileFrame>
   );
 }

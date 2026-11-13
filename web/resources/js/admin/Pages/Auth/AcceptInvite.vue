@@ -39,8 +39,8 @@ function submit(): void {
     <Head :title="trans('team.accept.title')" />
     <div class="flex flex-col gap-24" data-testid="ADM-INVITE" :data-qa-state="state">
         <div class="flex flex-col gap-8">
-            <h1 class="text-title-m text-ink">{{ trans('team.accept.title') }}</h1>
-            <p class="text-supporting text-ink-2">{{ trans('team.accept.intro') }}</p>
+            <h1 class="text-title-2 text-ink">{{ trans('team.accept.title') }}</h1>
+            <p class="text-admin-base text-ink-2">{{ trans('team.accept.intro') }}</p>
         </div>
 
         <!-- The form's own geometry: two fields (label, 40 control, the hint under the first), then the button. -->
@@ -63,7 +63,7 @@ function submit(): void {
             </Field>
             <Button type="submit" variant="primary" block :loading="form.processing" data-testid="ADM-INVITE.submit">{{ trans('team.accept.submit') }}</Button>
         </form>
-        <Link :href="loginUrl()" class="inline-flex h-32 items-center self-start rounded-xs text-label-s text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+        <Link :href="loginUrl()" class="inline-flex h-32 items-center self-start rounded-xs text-admin-base-strong text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
             {{ trans('team.accept.back') }}
         </Link>
     </div>

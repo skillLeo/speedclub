@@ -310,14 +310,16 @@ it('creates roles and atoms on the staff guard with the spec bundles', function 
 
     $this->seed(StaffSeeder::class);
 
-    expect(Permission::query()->where('guard_name', 'staff')->count())->toBe(57) // 56 of 06 §2 + lists.export (ADR-232)
+    expect(Permission::query()->where('guard_name', 'staff')->count())->toBe(58) // 56 of 06 §2 + lists.export (ADR-232) + system.mail_preview (SEC-M46-04)
         ->and(Role::query()->where('guard_name', 'staff')->pluck('name')->sort()->values()->all())
         ->toBe(['admin', 'analyst', 'content_editor', 'moderator', 'owner', 'support']);
 
     $atoms = fn (string $role): array => Role::findByName($role, 'staff')->permissions->pluck('name')->all();
 
-    expect($atoms('owner'))->toHaveCount(57)
+    expect($atoms('owner'))->toHaveCount(58)
+        ->and($atoms('owner'))->toContain('system.mail_preview')
         ->and($atoms('admin'))->toHaveCount(57)
+        ->and($atoms('admin'))->not->toContain('system.mail_preview')
         ->and($atoms('analyst'))->toEqualCanonicalizing(['analytics.view', 'members.view', 'vehicles.view', 'qr.view', 'moderation.view'])
         ->and($atoms('content_editor'))->not->toContain('legal.publish')
         ->and($atoms('moderator'))->not->toContain('members.view_pii')

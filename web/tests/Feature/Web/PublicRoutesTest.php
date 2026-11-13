@@ -295,7 +295,7 @@ describe('/v/{slug}', function () {
             ->assertSee('data-testid="VEH-01.ownerRow"', false)
             ->assertSee('Mein Alltagsauto.')
             ->assertSee('lukas.sc')
-            ->assertSee($mod->getAttribute('title'))
+            ->assertSeeText($mod->getAttribute('title'))
             ->assertSee('fetchpriority="high"', false)
             ->assertSee('srcset=', false)
             ->assertSee('In der App öffnen')
@@ -312,13 +312,16 @@ describe('/v/{slug}', function () {
             ->toContain('<meta property="og:image"')
             ->toContain('<meta property="og:image:width" content="1200">')
             ->toContain('<meta name="twitter:card" content="summary_large_image">')
-            ->toContain('<meta name="description" content="Mein Alltagsauto.">')
+            // A short owner text says less than the generated line (ShareText): figures, mods, the call to look.
+            ->toMatch('~<meta name="description" content="[^"]{20,155}">~')
+            ->not->toContain('<meta name="description" content="Mein Alltagsauto.">')
             ->not->toContain('name="robots"');
 
         preg_match_all('~<script type="application/ld\+json"[^>]*>(.*?)</script>~s', $html, $blocks);
         $types = array_map(fn (string $json): string => json_decode($json, true, 512, JSON_THROW_ON_ERROR)['@type'], $blocks[1]);
 
-        expect($types)->toBe(['Vehicle', 'BreadcrumbList']);
+        // Car is the schema.org Vehicle for passenger cars.
+        expect($types)->toBe(['Car', 'BreadcrumbList']);
     });
 
     it('escapes what a member typed, also inside JSON-LD', function () {

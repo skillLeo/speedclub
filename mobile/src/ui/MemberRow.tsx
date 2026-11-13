@@ -4,6 +4,7 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { createStyles, size, space } from '@/theme';
 
 import { Avatar } from './Avatar';
+import { SampleBadges, useSampleBadgeLabels, type SampleFlags } from './Badge';
 import { WithoutForcedState } from './qaVisualState';
 import { joinLabel, RowBody, RowDivider, useRowInset, useStacksAtFontScale, type RowInset } from './rowParts';
 import { Text } from './Text';
@@ -15,6 +16,8 @@ export type MemberRowProps = {
   meta?: string;
   avatarUri?: string | null;
   avatarBlurhash?: string | null;
+  /** API flags (09 §8.19): "Editorial" / "Beispiel" under the name of the Editorial account or a sample member. */
+  sample?: SampleFlags;
   onPress?: () => void;
   /** §8: the Follow button, size M. It sits beside the pressable part, because controls must not nest. */
   trailing?: ReactNode;
@@ -37,6 +40,7 @@ const useStyles = createStyles((t) => ({
     paddingVertical: t.space[8],
   },
   text: { flex: 1, minWidth: 0 },
+  badges: { marginTop: t.space[4] },
   trailing: { flexShrink: 0 },
   // DQ-053: the pressed fill of the row ends 8 before the button.
   trailingInline: { paddingLeft: t.space[8] },
@@ -57,16 +61,17 @@ export function memberMetaText(meta: string): string {
 const isHandle = (name: string) => name.startsWith('@');
 
 /** §8 member row: avatar 40, `body.strong` name, `supporting` meta, trailing Follow button. */
-export function MemberRow({ name, meta, avatarUri, avatarBlurhash, onPress, trailing, divider = false, inset, style, testID }: MemberRowProps) {
+export function MemberRow({ name, meta, avatarUri, avatarBlurhash, sample, onPress, trailing, divider = false, inset, style, testID }: MemberRowProps) {
   const styles = useStyles();
   const side = useRowInset(inset);
   const largeFont = useStacksAtFontScale();
   const stacked = largeFont && Boolean(trailing);
+  const sampleLabels = useSampleBadgeLabels(sample);
   return (
     <View testID={testID} style={[stacked ? styles.rootStacked : styles.root, style]}>
       <RowBody
         onPress={onPress}
-        label={joinLabel([name, meta])}
+        label={joinLabel([name, ...sampleLabels, meta])}
         boxStyle={stacked ? styles.boxStacked : styles.boxInline}
         style={[styles.body, { paddingLeft: side, paddingRight: side }]}
         testID={testID ? `${testID}.body` : undefined}
@@ -77,10 +82,11 @@ export function MemberRow({ name, meta, avatarUri, avatarBlurhash, onPress, trai
             {isHandle(name) ? handleText(name) : name}
           </Text>
           {meta ? (
-            <Text variant="supporting" color="text.secondary" hyphenate={false}>
+            <Text variant="callout" color="text.secondary" hyphenate={false}>
               {memberMetaText(meta)}
             </Text>
           ) : null}
+          <SampleBadges flags={sample} style={styles.badges} testID={testID ? `${testID}.sample` : undefined} />
         </View>
       </RowBody>
       {trailing ? (

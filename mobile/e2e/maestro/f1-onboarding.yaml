@@ -1,5 +1,5 @@
 # F1 Onboarding on Android, the native counterpart of web/tests/e2e/flows/f1-onboarding.spec.ts:
-# first launch opens Welcome → Konto erstellen → code from the local mailbox → the app is killed and resumes at the
+# first launch opens Welcome → Mit E-Mail fortfahren → Mit Passwort anmelden → Registrieren → code from the local mailbox → the app is killed and resumes at the
 # username step → username → killed again, resumes at profile setup → "Überspringen" → Garage.
 # AUTH-10 (notification primer) is P2 and not built, so profile setup leads straight to the garage.
 #
@@ -28,14 +28,26 @@ env:
       id: AUTH-02.root
     timeout: 60000
 - assertVisible:
-    id: AUTH-02.signUp
-- assertVisible:
-    id: AUTH-02.signIn
+    id: AUTH-02.provider.email
 - assertVisible:
     id: AUTH-02.browse
 - takeScreenshot: f1-1-welcome
+# M4.6 (09 §7.2): Welcome has no password buttons any more. The password sign-up is one step further, as in the web F1:
+# "Mit E-Mail fortfahren" → AUTH-12 "Mit Passwort anmelden" → AUTH-03 "Registrieren" → AUTH-04.
 - tapOn:
-    id: AUTH-02.signUp
+    id: AUTH-02.provider.email
+- extendedWaitUntil:
+    visible:
+      id: AUTH-12.root
+    timeout: 15000
+- tapOn:
+    id: AUTH-12.withPassword
+- extendedWaitUntil:
+    visible:
+      id: AUTH-03.root
+    timeout: 15000
+- tapOn:
+    id: AUTH-03.toSignUp
 
 # AUTH-04
 - extendedWaitUntil:

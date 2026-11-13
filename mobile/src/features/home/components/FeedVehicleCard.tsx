@@ -52,7 +52,7 @@ export function FeedVehicleCardSkeleton({ width, ownerLink = false, latest = tru
   const styles = useStyles();
   const { fontScale } = useTheme();
   const maxLines = useStacksAtFontScale() ? SUMMARY_MAX_LINES_LARGE : SUMMARY_MAX_LINES;
-  const summaryLines = Math.min(maxLines, estimateLines(TYPICAL_SUMMARY_CHARS, 'supporting', fontScale, width));
+  const summaryLines = Math.min(maxLines, estimateLines(TYPICAL_SUMMARY_CHARS, 'callout', fontScale, width));
   return (
     <View testID={testID}>
       <VehicleCardSkeleton owner={!ownerLink} testID={testID ? `${testID}.card` : undefined} />
@@ -60,7 +60,7 @@ export function FeedVehicleCardSkeleton({ width, ownerLink = false, latest = tru
       {latest ? (
         <View style={[styles.change, styles.changeBody]} testID={testID ? `${testID}.latest` : undefined}>
           <SkeletonText variant="caption" width="40%" />
-          <SkeletonText variant="supporting" width="85%" lastLineWidth="50%" lines={summaryLines} />
+          <SkeletonText variant="callout" width="85%" lastLineWidth="50%" lines={summaryLines} />
         </View>
       ) : null}
     </View>
@@ -127,7 +127,7 @@ export const FeedVehicleCard = memo(function FeedVehicleCard({ vehicle, width, o
             // DQ-216: a figure keeps its unit and tnum stays on the numeric segments. A summary can be wider than the card,
             // so its words wrap at their spaces (keepFiguresTogether).
             <ValueText
-              variant="supporting"
+              variant="callout"
               color="text.secondary"
               numberOfLines={largeFont ? SUMMARY_MAX_LINES_LARGE : SUMMARY_MAX_LINES}
               // DQ-230: below this scale the summary wraps at its spaces. At 1.3 a hyphen would split a word that fits the next line whole.

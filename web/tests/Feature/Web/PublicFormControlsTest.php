@@ -21,17 +21,23 @@ function publicCssRule(string $selector): string
     return $rule[1] ?? '';
 }
 
-it('labels every field with label.s in the secondary ink and puts hints and field errors in helper', function (string $uri) {
+it('labels every field in callout in the secondary ink and puts hints and field errors in caption (2.0 roles, ADR-419)', function (string $uri) {
     $html = (string) $this->get($uri)->assertOk()->getContent();
 
     preg_match_all('/<(?:label for|legend)[^>]*class="([^"]*)"/', $html, $labels);
     preg_match_all('/<p id="[^"]+-hint" class="([^"]*)"/', $html, $hints);
 
-    expect($labels[1])->not->toBeEmpty()->each->toContain('text-label-s text-ink-2')
-        ->and($html)->not->toContain('class="text-label text-ink"');
+    preg_match_all('/<p id="[^"]+-error" class="([^"]*)"/', $html, $errors);
+
+    expect($labels[1])->not->toBeEmpty()->each->toContain('text-callout text-ink-2')
+        ->and($html)->not->toContain('class="text-body-strong text-ink"');
 
     foreach ($hints[1] as $hint) {
-        expect($hint)->toBe('text-helper text-ink-3');
+        expect($hint)->toBe('text-caption text-ink-3');
+    }
+
+    foreach ($errors[1] as $error) {
+        expect($error)->toContain('sc-form-error')->toContain('text-caption');
     }
 })->with(['/melden', '/kontakt', '/konto-loeschen']);
 
@@ -89,7 +95,7 @@ it('draws its own focus ring on the controls in the focus token, also where WebK
 it('draws the selects like the input on the type scale, with the caret icon beside them', function (string $uri, string $testId) {
     $html = (string) $this->get($uri)->assertOk()->getContent();
 
-    expect($html)->toMatch('/<div class="sc-form-select-wrap">\s*<select [^>]*class="sc-focus sc-form-input sc-form-select text-body"[^>]*data-testid="'.preg_quote($testId, '/').'"/')
+    expect($html)->toMatch('/<div class="sc-form-select-wrap">\s*<select [^>]*class="sc-focus sc-form-input sc-form-select text-input"[^>]*data-testid="'.preg_quote($testId, '/').'"/')
         ->toContain('class="shrink-0 sc-form-select-caret"');
     expect(publicCssRule('.sc-form-select'))->toContain('appearance: none;');
 })->with([
@@ -104,3 +110,12 @@ it('gives "Passwort vergessen?" a 44 high target that does not stretch over the 
 
     expect($link[0] ?? '')->toContain('inline-flex min-h-44 items-center justify-self-start');
 });
+
+it('sets every text field in the input role (16/24), so iOS Safari never zooms into a form (ADR-420)', function (string $uri) {
+    $html = (string) $this->get($uri)->assertOk()->getContent();
+
+    preg_match_all('/<(?:input|select|textarea)[^>]*class="([^"]*sc-form-input[^"]*)"/', $html, $fields);
+
+    expect($fields[1])->not->toBeEmpty()->each->toContain('text-input')
+        ->and($html)->not->toMatch('/sc-form-input[^"]*text-body/');
+})->with(['/melden', '/kontakt', '/konto-loeschen']);

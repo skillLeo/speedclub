@@ -204,7 +204,7 @@ function ConsentSheet({ required }: { required: readonly RequiredConsent[] }) {
         }
       >
         <View style={styles.body}>
-          <Text variant="bodyDense" color="text.secondary">
+          <Text variant="body" color="text.secondary">
             {t('consent.intro')}
           </Text>
           {notice ? <FormNotice message={notice} testID={`${ID}.notice`} /> : null}
@@ -220,7 +220,7 @@ function ConsentSheet({ required }: { required: readonly RequiredConsent[] }) {
                   ? t('consent.versionDate', { version: item.version, date: format.date(new Date(item.published_at)) })
                   : t('consent.version', { version: item.version })}
               </Text>
-              <Text variant="bodyDense" testID={`${ID}.document.${item.key}.summary`}>
+              <Text variant="body" testID={`${ID}.document.${item.key}.summary`}>
                 {item.summary?.trim() || t('consent.noSummary')}
               </Text>
               <Button

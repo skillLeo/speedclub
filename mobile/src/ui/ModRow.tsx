@@ -73,7 +73,7 @@ export function ModRow({ icon, name, values, status, legalStatus, legalStatusLab
         <Icon name={icon} size={20} color="text.secondary" />
         <View style={styles.text}>
           <Text variant="bodyStrong">{keepShortNamesTogether(name)}</Text>
-          {values ? <ValueText variant="supporting" color="text.secondary" hyphenate={largeFont} values={values} wholeValues={!largeFont} /> : null}
+          {values ? <ValueText variant="callout" color="text.secondary" hyphenate={largeFont} values={values} wholeValues={!largeFont} /> : null}
           {stackedPill || legalPill ? (
             <View style={styles.pills} testID={testID ? `${testID}.pills` : undefined}>
               {stackedPill}

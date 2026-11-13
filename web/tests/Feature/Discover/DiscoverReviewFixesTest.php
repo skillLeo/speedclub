@@ -207,8 +207,10 @@ describe('GET discover', function () {
         }
 
         // Per collection: the make lookup, its count and its cover candidates; the schema and the covers' vehicles are read once.
+        // M4.8 added three strips of a fixed cost whatever the data: popular models (counts, models, covers, their vehicles), weekend
+        // events (list, presenter) and the newest builds (page, vehicles, relations): at most 12 queries more.
         expect($count())->toBe($one)
-            ->and($one)->toBeLessThanOrEqual(8 * 3 + 25);
+            ->and($one)->toBeLessThanOrEqual(8 * 3 + 25 + 12);
     });
 
     it('skips a collection whose stored filters break the parameter rules, and reads an unknown sort as none (review #10)', function () {

@@ -123,7 +123,7 @@ function PhotosBody({
         {locked && restriction ? <RestrictedNotice message={restriction} testID={`${ROUTE}.restricted`} /> : null}
         {sorting ? (
           <>
-            <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.sortHint`}>
+            <Text variant="callout" color="text.secondary" testID={`${ROUTE}.sortHint`}>
               {isWeb ? t('photos.sortHintWeb') : t('photos.sortHint')}
             </Text>
             <Sortable
@@ -179,9 +179,9 @@ function PhotosSkeleton({ known }: { known: KnownVehicle }) {
   // No line longer than its text (§8): a one-line text gets its own width, the count its real words.
   const reminder = t('photos.plateReminder');
   const reminderSpace = width - size.icon.s - space[8];
-  const reminderLines = estimateLines(reminder.length, 'helper', theme.fontScale, reminderSpace);
-  const reminderWidth = reminderLines > 1 ? '100%' : Math.min(reminderSpace, estimatedTextWidth(reminder, 'helper', theme.fontScale));
-  const countWidth = Math.min(width, estimatedTextWidth(t('photos.count', { count: photos, max: VEHICLE_PHOTO_LIMIT }), 'helper', theme.fontScale));
+  const reminderLines = estimateLines(reminder.length, 'caption', theme.fontScale, reminderSpace);
+  const reminderWidth = reminderLines > 1 ? '100%' : Math.min(reminderSpace, estimatedTextWidth(reminder, 'caption', theme.fontScale));
+  const countWidth = Math.min(width, estimatedTextWidth(t('photos.count', { count: photos, max: VEHICLE_PHOTO_LIMIT }), 'caption', theme.fontScale));
   return (
     <Skeleton testID={`${ROUTE}.skeleton`}>
       <View style={styles.column}>
@@ -192,10 +192,10 @@ function PhotosSkeleton({ known }: { known: KnownVehicle }) {
               : null}
             {tile > 0 && photos < VEHICLE_PHOTO_LIMIT ? <SkeletonBlock width={wideAdd ? '100%' : tile} height={addHeight} corner="sm" /> : null}
           </View>
-          <SkeletonText variant="helper" width={countWidth} />
+          <SkeletonText variant="caption" width={countWidth} />
           <View style={styles.skeletonReminder}>
             <SkeletonBlock width={size.icon.s} height={size.icon.s} />
-            <SkeletonText variant="helper" lines={reminderLines} width={reminderWidth} style={styles.skeletonReminderText} />
+            <SkeletonText variant="caption" lines={reminderLines} width={reminderWidth} style={styles.skeletonReminderText} />
           </View>
         </View>
       </View>

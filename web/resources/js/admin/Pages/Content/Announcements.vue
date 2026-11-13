@@ -167,14 +167,14 @@ function scheduleText(item: Announcement): string {
                     <div class="flex min-w-280 flex-1 items-start gap-12 rounded-sm border px-12 py-12" :class="item.severity === 'warning' ? 'border-warning' : 'border-line'">
                         <component :is="item.severity === 'warning' ? PhWarning : PhInfo" :size="20" class="mt-2 shrink-0" :class="item.severity === 'warning' ? 'text-warning' : 'text-info'" aria-hidden="true" />
                         <div class="flex min-w-0 flex-1 flex-col gap-4">
-                            <p class="text-label text-ink">{{ item.title.de }}</p>
-                            <p class="text-supporting text-ink-2">{{ item.body.de }}</p>
-                            <p v-if="item.cta" class="text-label-s text-ink underline">{{ item.cta.label?.de }}</p>
-                            <p v-if="!item.title.en" class="text-helper text-ink-3">{{ trans('content.announcements.no_english') }}</p>
+                            <p class="text-admin-base-strong text-ink">{{ item.title.de }}</p>
+                            <p class="text-admin-base text-ink-2">{{ item.body.de }}</p>
+                            <p v-if="item.cta" class="text-admin-base-strong text-ink underline">{{ item.cta.label?.de }}</p>
+                            <p v-if="!item.title.en" class="text-admin-base text-ink-3">{{ trans('content.announcements.no_english') }}</p>
                         </div>
                     </div>
                     <!-- DQ-624: a fixed-width facts column, so every card's facts start at the same edge. -->
-                    <dl class="flex w-320 shrink-0 flex-col gap-4 text-supporting">
+                    <dl class="flex w-320 shrink-0 flex-col gap-4 text-admin-base">
                         <div class="flex gap-12"><dt class="w-120 shrink-0 text-ink-3">{{ trans('content.announcements.status') }}</dt><dd><StatusPill :tone="tones[scheduleOf(item.starts_at, item.ends_at)]" :label="trans(`content.schedule.${scheduleOf(item.starts_at, item.ends_at)}`)" /></dd></div>
                         <div class="flex gap-12"><dt class="w-120 shrink-0 text-ink-3">{{ trans('content.announcements.schedule') }}</dt><dd class="tabular-nums text-ink">{{ scheduleText(item) }}</dd></div>
                         <div class="flex gap-12"><dt class="w-120 shrink-0 text-ink-3">{{ trans('content.announcements.audience') }}</dt><dd class="text-ink">{{ trans(`content.announcements.audiences.${item.audience}`) }}</dd></div>
@@ -190,10 +190,10 @@ function scheduleText(item: Announcement): string {
                         <IconButton :icon="PhPencilSimple" size="sm" :label="trans('content.announcements.edit', { title: item.title.de })" data-testid="ADM-30.edit" @click="open(index)" />
                         <IconButton :icon="PhTrash" size="sm" variant="ghost" class="hover:text-danger" :label="trans('content.announcements.remove', { title: item.title.de })" @click="form.items.splice(index, 1)" />
                     </span>
-                    <p v-if="draft.errorAt(`items.${index}`)" class="w-full text-helper text-danger" role="alert">{{ draft.errorAt(`items.${index}`) }}</p>
+                    <p v-if="draft.errorAt(`items.${index}`)" class="w-full text-admin-base text-danger" role="alert">{{ draft.errorAt(`items.${index}`) }}</p>
                 </li>
             </ol>
-            <p class="text-helper text-ink-3">{{ trans('content.announcements.limit', { count: formatNumber(form.items.length), max: formatNumber(max) }) }}</p>
+            <p class="text-admin-base text-ink-3">{{ trans('content.announcements.limit', { count: formatNumber(form.items.length), max: formatNumber(max) }) }}</p>
         </template>
 
         <Drawer

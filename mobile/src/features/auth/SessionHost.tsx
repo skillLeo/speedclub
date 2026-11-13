@@ -12,7 +12,8 @@ import { useTranslation } from 'react-i18next';
 import { onApiGateEvent, reloadTab } from '@/api/client';
 import { isViewAsTab } from '@/api/clientViewAs';
 import { adoptMe, releaseExpiredSession, toSessionMember, useMe, useSettingsSync } from '@/api/queries/auth';
-import { isNative } from '@/lib/platform';
+import { isNative, isWeb } from '@/lib/platform';
+import { qa } from '@/lib/qa';
 import { setStored } from '@/lib/storage';
 import {
   clearAuthIntent,
@@ -27,12 +28,16 @@ import {
 } from '@/state/session';
 import { Dialog } from '@/ui';
 import { ConsentHost } from '@/features/consent/ConsentHost';
+import { AppLockHost } from '@/features/settings/appLock/AppLockHost';
 
 import { handEmailTo } from './emailHandoff';
 import { restorePrimer, usePrimerStore } from './primer';
 import { usePushRegistration } from './push';
-import { consumeAfterOnboarding, isAuthRoute, isGuestPath, routeForSession, TABS_ROUTE } from './routing';
-import { hasSeenWelcome } from './sessionLifecycle';
+import { disarmPasskeyOffer, resetPasskeyOffer, usePasskeyOfferStore } from './passkeyOffer';
+import { RecentAuthHost } from './RecentAuthHost';
+import { consumeAfterOnboarding, EMAIL_PATH, firstLaunchRoute, isAuthRoute, isGuestPath, PASSKEY_OFFER_PATH, routeForSession, TABS_ROUTE } from './routing';
+import { useTermsRequiredRefresh } from './termsRequired';
+import { hasSeenOnboarding, hasSeenWelcome } from './sessionLifecycle';
 
 /**
  * A screen of the previous member that still guards a dirty form stops the reset below and asks. The session must not wait for that
@@ -82,6 +87,7 @@ function useSessionRouting() {
     state.status === 'member' ? (state.member?.id ?? null) : null,
   );
   const primerState = usePrimerStore((state) => state.state);
+  const passkeyOffer = usePasskeyOfferStore((state) => state.state);
   const navigation = useNavigationContainerRef();
   /** The root routes of the previous member that are on their way out. */
   const [leaving, setLeaving] = useState<readonly string[] | null>(null);
@@ -134,7 +140,7 @@ function useSessionRouting() {
 
   useEffect(() => {
     if (!ready || passwordChangeEmail !== null) return undefined;
-    const route = routeForSession({ status, nextStep, pathname, primer: isNative, primerState });
+    const route = routeForSession({ status, nextStep, pathname, primer: isNative, primerState, passkeyOffer });
     if (route.type === 'stay') return undefined;
     const timer = setTimeout(() => {
       if (route.type === 'go') {
@@ -142,6 +148,9 @@ function useSessionRouting() {
         router.replace(route.path as Href);
         return;
       }
+      // AUTH-14 was answered, or the way on did not pass it: either way it is done for this sign-in.
+      if (pathname === PASSKEY_OFFER_PATH) resetPasskeyOffer();
+      else disarmPasskeyOffer();
       const held = useSessionStore.getState().expiredFrom !== null;
       useSessionStore.setState({ expiredFrom: null });
       const returnTo = completeAuthIntent();
@@ -152,17 +161,42 @@ function useSessionRouting() {
       if (next) router.push(next as Href);
     }, 0);
     return () => clearTimeout(timer);
-  }, [nextStep, passwordChangeEmail, pathname, primerState, ready, status]);
+  }, [nextStep, passkeyOffer, passwordChangeEmail, pathname, primerState, ready, status]);
 
-  // The first launch of the app opens on Welcome; the web has its landing page, and a cold deep link goes where it points.
+  // ONB-01…03 then Welcome on the first launch of the app; the pages once on the first visit of /app. A cold deep link goes where it
+  // points (firstLaunchRoute).
   useEffect(() => {
-    if (!isNative || !ready || status === 'loading' || welcomeChecked.current) return;
+    if (!ready || status === 'loading' || welcomeChecked.current) return;
     welcomeChecked.current = true;
-    if (status === 'guest' && pathname === '/' && !hasSeenWelcome()) router.replace('/welcome');
+    const route = firstLaunchRoute({
+      native: isNative,
+      status,
+      pathname,
+      onboardingSeen: hasSeenOnboarding(),
+      welcomeSeen: hasSeenWelcome(),
+      skipOnWeb: isWeb && skipsWebOnboarding(),
+    });
+    if (route) router.replace(route as Href);
   }, [pathname, ready, status]);
 }
 
 /** Keeps the store current with what the server says about the member. A failure stays silent here: 401 and 403 end the session through the API gate events, and the rest keeps the cached member. */
+/**
+ * Web: the e2e flows and the visual matrix run an automated browser (`navigator.webdriver`) and open the screen they name; a visitor
+ * who followed a link from the public pages (same origin) came for content (ADR-152 c). Neither gets the onboarding pages.
+ */
+function skipsWebOnboarding(): boolean {
+  if (typeof navigator !== 'undefined' && navigator.webdriver === true) return true;
+  // Any QA override (qaTheme, qaMotion…): a named screen is being looked at.
+  if (Object.keys(qa).length > 0) return true;
+  if (typeof document === 'undefined' || typeof window === 'undefined' || !document.referrer) return false;
+  try {
+    return new URL(document.referrer).origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 function useMemberSync() {
   const { data } = useMe();
   const status = useSessionStore((state) => state.status);
@@ -214,7 +248,8 @@ function SessionNoticeDialog() {
   const signIn = () => {
     setSessionNotice(null);
     const returnTo = isInternalPath(pathname) && !isAuthRoute(pathname) ? pathname : undefined;
-    router.push({ pathname: '/sign-in', params: returnTo ? { returnTo } : {} });
+    // AUTH 2.0 (09 §7.2): sign-in starts passwordless, at AUTH-12 E-Mail; the password way stays one tap away there.
+    router.push({ pathname: EMAIL_PATH, params: returnTo ? { returnTo } : {} });
   };
 
   const expired = notice?.kind === 'expired';
@@ -294,12 +329,17 @@ export function SessionHost() {
   useMemberSync();
   usePushRegistration(ready);
   useSettingsSync();
+  useTermsRequiredRefresh();
   return (
     <>
+      {/* M4.6: the reauth sheet of every sensitive call (403 reauthentication_required, 09 §8.1). */}
+      <RecentAuthHost />
       <SessionNoticeDialog />
       <SessionMovedDialog />
       {/* M3.5 ADM-31: the blocking re-consent sheet, while app-config names a version the member has not accepted. */}
       <ConsentHost />
+      {/* M4.7 SET-20 / AUTH-15 (native only): the privacy cover and the app lock, over every route and every deep link. */}
+      <AppLockHost />
     </>
   );
 }

@@ -177,7 +177,7 @@ const sessionText = (s: Session) => (s.browser || s.os ? trans('team.show.sessio
                 </div>
             </template>
             <template #meta>
-                <p class="flex flex-wrap items-center gap-x-8 gap-y-4 text-supporting text-ink-2 tabular-nums" data-testid="ADM-40.meta">{{ meta.join(' · ') }}</p>
+                <p class="flex flex-wrap items-center gap-x-8 gap-y-4 text-admin-base text-ink-2 tabular-nums" data-testid="ADM-40.meta">{{ meta.join(' · ') }}</p>
             </template>
             <template v-if="anyAction" #actions>
                 <Button v-if="can.roles" size="sm" variant="secondary" :icon="PhUserGear" data-testid="ADM-40.roles" @click="show('roles')">{{ trans('team.actions.roles') }}</Button>
@@ -190,35 +190,35 @@ const sessionText = (s: Session) => (s.browser || s.os ? trans('team.show.sessio
             <template #roles>
                 <div class="flex flex-col gap-24 pt-24">
                     <section v-if="pending.length > 0" class="flex flex-col gap-8 rounded-sm border border-line px-16 py-12" data-testid="ADM-40.pending">
-                        <h2 class="text-label text-ink">{{ trans('team.show.pending_title') }}</h2>
+                        <h2 class="text-headline text-ink">{{ trans('team.show.pending_title') }}</h2>
                         <ul class="flex flex-col gap-4">
-                            <li v-for="p in pending" :key="p.id" class="text-supporting text-ink-2 tabular-nums">{{ trans('team.show.pending_line', { title: trans(p.title), name: p.requested_by ?? '–', date: formatDateTime(p.expires_at) }) }}</li>
+                            <li v-for="p in pending" :key="p.id" class="text-admin-base text-ink-2 tabular-nums">{{ trans('team.show.pending_line', { title: trans(p.title), name: p.requested_by ?? '–', date: formatDateTime(p.expires_at) }) }}</li>
                         </ul>
                     </section>
-                    <p v-if="member.me" class="text-supporting text-ink-2" data-testid="ADM-40.self">{{ trans('team.show.own_account') }}</p>
-                    <p v-else-if="!anyAction && member.state !== 'deleted'" class="text-supporting text-ink-2" data-testid="ADM-40.view-only">{{ member.owner && !can.viewer_is_owner ? trans('team.show.owner_view_only') : trans('team.show.view_only') }}</p>
+                    <p v-if="member.me" class="text-admin-base text-ink-2" data-testid="ADM-40.self">{{ trans('team.show.own_account') }}</p>
+                    <p v-else-if="!anyAction && member.state !== 'deleted'" class="text-admin-base text-ink-2" data-testid="ADM-40.view-only">{{ member.owner && !can.viewer_is_owner ? trans('team.show.owner_view_only') : trans('team.show.view_only') }}</p>
 
                     <section class="flex flex-col gap-8" data-testid="ADM-40.role-list">
-                        <h2 class="text-title-s text-ink">{{ trans('team.show.roles_title') }}</h2>
-                        <p v-if="member.roles.length === 0" class="text-supporting text-ink-2">{{ trans('team.show.no_roles') }}</p>
+                        <h2 class="text-headline text-ink">{{ trans('team.show.roles_title') }}</h2>
+                        <p v-if="member.roles.length === 0" class="text-admin-base text-ink-2">{{ trans('team.show.no_roles') }}</p>
                         <ul v-else class="flex flex-col gap-8">
                             <li v-for="role in member.roles" :key="role" class="flex flex-col gap-2" :data-testid="`ADM-40.role.${role}`">
-                                <span class="text-label text-ink">{{ roleLabel(role) }}</span>
-                                <span v-if="describe(role)" class="max-w-640 text-helper text-ink-3">{{ describe(role) }}</span>
+                                <span class="text-admin-base-strong text-ink">{{ roleLabel(role) }}</span>
+                                <span v-if="describe(role)" class="max-w-640 text-admin-base text-ink-3">{{ describe(role) }}</span>
                             </li>
                         </ul>
                     </section>
 
                     <section class="flex flex-col gap-12" data-testid="ADM-40.atoms">
                         <div class="flex flex-wrap items-baseline gap-x-12 gap-y-4">
-                            <h2 class="text-title-s text-ink">{{ trans('team.show.atoms_title') }}</h2>
-                            <span class="text-supporting text-ink-3 tabular-nums">{{ transChoice('team.show.atoms_count', member.atoms.length, { count: formatNumber(member.atoms.length) }) }}</span>
+                            <h2 class="text-headline text-ink">{{ trans('team.show.atoms_title') }}</h2>
+                            <span class="text-admin-base text-ink-3 tabular-nums">{{ transChoice('team.show.atoms_count', member.atoms.length, { count: formatNumber(member.atoms.length) }) }}</span>
                         </div>
-                        <p v-if="allAtoms" class="text-supporting text-ink-2">{{ trans('team.show.all_atoms') }}</p>
+                        <p v-if="allAtoms" class="text-admin-base text-ink-2">{{ trans('team.show.all_atoms') }}</p>
                         <dl v-else-if="atomGroups.length > 0" class="grid grid-cols-1 gap-x-24 gap-y-12 tablet:grid-cols-2">
                             <div v-for="group in atomGroups" :key="group.group" class="flex flex-col gap-2">
                                 <dt class="text-caption text-ink-3">{{ atomGroupLabel(group.group) }}</dt>
-                                <dd class="text-supporting text-ink">{{ group.atoms.map(atomLabel).join(', ') }}</dd>
+                                <dd class="text-admin-base text-ink">{{ group.atoms.map(atomLabel).join(', ') }}</dd>
                             </div>
                         </dl>
                     </section>
@@ -228,18 +228,18 @@ const sessionText = (s: Session) => (s.browser || s.os ? trans('team.show.sessio
             <template #security>
                 <div class="flex flex-col gap-24 pt-24">
                     <section class="flex flex-col gap-8" data-testid="ADM-40.two-factor">
-                        <h2 class="text-title-s text-ink">{{ trans('team.show.security_title') }}</h2>
-                        <p class="text-supporting text-ink-2 tabular-nums">{{ member.two_factor ? trans('team.show.two_factor_on', { date: formatDate(member.two_factor_confirmed_at) }) : trans('team.show.two_factor_off') }}</p>
+                        <h2 class="text-headline text-ink">{{ trans('team.show.security_title') }}</h2>
+                        <p class="text-admin-base text-ink-2 tabular-nums">{{ member.two_factor ? trans('team.show.two_factor_on', { date: formatDate(member.two_factor_confirmed_at) }) : trans('team.show.two_factor_off') }}</p>
                         <div v-if="can.reset_two_factor" class="flex"><Button size="sm" variant="destructive" :icon="PhKey" data-testid="ADM-40.reset-2fa" @click="show('reset_two_factor')">{{ trans('team.actions.reset_two_factor') }}</Button></div>
                     </section>
                     <section class="flex flex-col gap-8" data-testid="ADM-40.sessions">
                         <div class="flex flex-wrap items-center justify-between gap-12">
-                            <h2 class="text-title-s text-ink">{{ trans('team.show.sessions_title') }}</h2>
+                            <h2 class="text-headline text-ink">{{ trans('team.show.sessions_title') }}</h2>
                             <Button v-if="can.revoke_sessions && sessions.length > 0" size="sm" variant="secondary" :icon="PhSignOut" data-testid="ADM-40.revoke-sessions" @click="show('revoke_sessions')">{{ trans('team.actions.revoke_sessions') }}</Button>
                         </div>
-                        <p v-if="sessions.length === 0" class="text-supporting text-ink-2">{{ trans('team.show.sessions_empty') }}</p>
+                        <p v-if="sessions.length === 0" class="text-admin-base text-ink-2">{{ trans('team.show.sessions_empty') }}</p>
                         <ul v-else class="flex flex-col rounded-sm border border-line-subtle">
-                            <li v-for="s in sessions" :key="s.handle" class="flex min-h-40 flex-wrap items-center gap-x-12 gap-y-2 border-b border-line-subtle px-12 py-8 text-supporting last:border-b-0">
+                            <li v-for="s in sessions" :key="s.handle" class="flex min-h-40 flex-wrap items-center gap-x-12 gap-y-2 border-b border-line-subtle px-12 py-8 text-admin-base last:border-b-0">
                                 <span class="min-w-0 flex-1 text-ink">{{ sessionText(s) }}</span>
                                 <span class="text-ink-3 tabular-nums">{{ trans('team.show.session_active', { date: formatDateTime(s.last_active_at) }) }}</span>
                             </li>
@@ -252,38 +252,38 @@ const sessionText = (s: Session) => (s.browser || s.os ? trans('team.show.sessio
         <Drawer v-model:open="rolesOpen" :title="trans('team.roles_drawer.title', { name: member.name })" :description="trans('team.roles_drawer.body')" :dismissible="!action.processing.value" size="lg" test-id="ADM-40.roles-drawer">
             <div class="flex flex-col gap-16">
                 <StateBlock v-if="action.error.value" kind="error" :title="trans('ui.state.error_title')" :body="action.error.value" :retryable="false" test-id="ADM-40.roles-drawer.server-error" />
-                <p v-if="member.me" class="text-helper text-ink-2">{{ trans('team.roles_drawer.self') }}</p>
+                <p v-if="member.me" class="text-admin-base text-ink-2">{{ trans('team.roles_drawer.self') }}</p>
                 <RolePicker v-model="draftRoles" :options="roles" :disabled="disabledRoles" :legend="trans('team.invite.roles')" :hint="trans('team.invite.roles_hint')" test-id="ADM-40.roles-drawer.roles" />
                 <!-- DQ-633: one permission per line, grouped by area, the "+" in the success tone; an empty side is one quiet line. -->
                 <section class="flex flex-col gap-16" data-testid="ADM-40.roles-drawer.diff" aria-live="polite">
                     <div class="flex flex-col gap-8" data-testid="ADM-40.roles-drawer.added">
                         <template v-if="added.length > 0">
-                            <h3 class="text-label-s text-ink">{{ trans('team.roles_drawer.added') }}</h3>
+                            <h3 class="text-admin-base-strong text-ink">{{ trans('team.roles_drawer.added') }}</h3>
                             <dl class="grid grid-cols-1 gap-x-24 gap-y-8 tablet:grid-cols-2">
                                 <div v-for="g in groupAtoms(added)" :key="g.group" class="flex flex-col gap-2">
                                     <dt class="text-caption text-ink-3">{{ atomGroupLabel(g.group) }}</dt>
-                                    <dd v-for="a in g.atoms" :key="a" class="text-supporting text-ink"><span class="inline-block w-12 text-label-s text-success" aria-hidden="true">+</span> {{ atomLabel(a) }}</dd>
+                                    <dd v-for="a in g.atoms" :key="a" class="text-admin-base text-ink"><span class="inline-block w-12 text-admin-base-strong text-success" aria-hidden="true">+</span> {{ atomLabel(a) }}</dd>
                                 </div>
                             </dl>
                         </template>
-                        <p v-else class="text-supporting text-ink-3">{{ trans('team.roles_drawer.none_added') }}</p>
+                        <p v-else class="text-admin-base text-ink-3">{{ trans('team.roles_drawer.none_added') }}</p>
                     </div>
                     <div class="flex flex-col gap-8" data-testid="ADM-40.roles-drawer.removed">
                         <template v-if="removed.length > 0">
-                            <h3 class="text-label-s text-ink">{{ trans('team.roles_drawer.removed') }}</h3>
+                            <h3 class="text-admin-base-strong text-ink">{{ trans('team.roles_drawer.removed') }}</h3>
                             <dl class="grid grid-cols-1 gap-x-24 gap-y-8 tablet:grid-cols-2">
                                 <div v-for="g in groupAtoms(removed)" :key="g.group" class="flex flex-col gap-2">
                                     <dt class="text-caption text-ink-3">{{ atomGroupLabel(g.group) }}</dt>
-                                    <dd v-for="a in g.atoms" :key="a" class="text-supporting text-ink-2"><span class="inline-block w-12 text-label-s text-ink-3" aria-hidden="true">−</span> {{ atomLabel(a) }}</dd>
+                                    <dd v-for="a in g.atoms" :key="a" class="text-admin-base text-ink-2"><span class="inline-block w-12 text-admin-base-strong text-ink-3" aria-hidden="true">−</span> {{ atomLabel(a) }}</dd>
                                 </div>
                             </dl>
                         </template>
-                        <p v-else class="text-supporting text-ink-3">{{ trans('team.roles_drawer.none_removed') }}</p>
+                        <p v-else class="text-admin-base text-ink-3">{{ trans('team.roles_drawer.none_removed') }}</p>
                     </div>
                 </section>
                 <template v-if="fourEyes">
                     <ApprovalNotice test-id="ADM-40.roles-drawer.four-eyes" />
-                    <div class="flex flex-col gap-4 text-helper text-ink-2">
+                    <div class="flex flex-col gap-4 text-admin-base text-ink-2">
                         <p>{{ trans('team.roles_drawer.four_eyes') }}</p>
                         <ul class="flex flex-col gap-2"><li v-for="why in reasons" :key="why">{{ trans(`team.roles_drawer.why.${why}`) }}</li></ul>
                     </div>

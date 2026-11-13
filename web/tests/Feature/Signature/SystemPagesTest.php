@@ -107,7 +107,11 @@ describe('WEB-07 /email/{action}', function () {
     it('keeps "E-Mail" whole in the German body copy at any width (DQ-442)', function (string $action, string $joined) {
         $html = (string) $this->withHeader('Accept-Language', 'de')->get("/email/$action?lang=de")->assertOk()->getContent();
 
-        expect($html)->toContain($joined)->not->toMatch('/E-Mail(?!-Adresse bestätigen)/u');
+        // The title joins it too (r5 name-hyphen-break); the head carries the plain text (tab title, search snippet).
+        [$head, $body] = explode('</head>', $html, 2);
+
+        expect($body)->toContain($joined)->not->toContain('E-Mail')
+            ->and($head)->not->toContain("\u{2060}");
     })->with([
         'verify' => ['verify', "aus der E-\u{2060}Mail ein."],
         'reset' => ['reset', "Der Code aus der E-\u{2060}Mail ist"],
@@ -144,9 +148,10 @@ describe('WEB-07 /email/{action}', function () {
             ->and($app[0] ?? '')->toContain('bg-raised')
             ->and($html)->toContain("history.replaceState(null, '', location.pathname + location.search)");
         expect((string) file_get_contents(resource_path('css/public.css')))
-            ->toContain('.sc-form-measure h1 { text-wrap: pretty; }')
-            ->toContain('.sc-state-measure h1 { text-wrap: pretty; }')
-            ->not->toContain('text-wrap: balance');
+            // The longhand (DQ-922: the shorthand would also reset text-wrap-mode). Only display.title balances (ADR-426 c).
+            ->toContain('.sc-form-measure h1 { text-wrap-style: pretty; }')
+            ->toContain('.sc-state-measure h1 { text-wrap-style: pretty; }')
+            ->not->toMatch('~\.sc-(?:form|state)-measure h1 \{[^}]*balance~');
     });
 
     it('drops the QA overrides with the rest in production', function () {

@@ -23,4 +23,12 @@ class BuildUpdateFactory extends Factory
             'payload' => ['before' => 'Serie', 'after' => 'KW V3'],
         ];
     }
+
+    /**
+     * M4.11: an update the owner posted (UPD-01).
+     */
+    public function post(string $text = 'Neues Fahrwerk eingetragen, fährt sich wie auf Schienen.'): static
+    {
+        return $this->state(fn (): array => ['type' => BuildUpdateType::Post, 'payload' => null, 'note' => $text]);
+    }
 }

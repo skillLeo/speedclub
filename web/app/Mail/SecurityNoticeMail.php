@@ -2,8 +2,10 @@
 
 namespace App\Mail;
 
+use App\Actions\Security\SecureAccount;
 use App\Enums\SecurityNotice;
 use App\Services\Privacy\RetentionPolicy;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Lang;
 
 class SecurityNoticeMail extends AuthMail
@@ -16,6 +18,13 @@ class SecurityNoticeMail extends AuthMail
         public readonly ?string $deviceName = null,
         public readonly ?string $variant = null,
         public readonly ?int $count = null,
+        // M4.7 (09 §8.4): "Das war ich nicht" (SecureAccountLinks), the approximate place (GeoLite2 only) and the moment, Europe/Berlin.
+        public readonly ?string $secureUrl = null,
+        public readonly ?string $place = null,
+        public readonly ?CarbonImmutable $at = null,
+        public readonly ?string $reference = null,
+        /** @var array{passkeys: int, providers: int, email_change: bool, two_factor: bool}|null SEC-M47-01: what securing the account removed */
+        public readonly ?array $removed = null,
     ) {}
 
     protected function subjectLine(): string
@@ -33,12 +42,25 @@ class SecurityNoticeMail extends AuthMail
         $device = $this->deviceName ?? (string) __('mail.security.browser');
         $base = 'mail.security.'.$this->notice->value;
         $intro = $this->variant !== null && Lang::has($base.'.intro_'.$this->variant) ? $base.'.intro_'.$this->variant : $base.'.intro';
-        $replace = ['device' => $device, 'days' => app(RetentionPolicy::class)->value('accounts_hard_delete_days'), 'count' => $this->count ?? 0];
+        $replace = ['device' => $device, 'days' => app(RetentionPolicy::class)->value('accounts_hard_delete_days'), 'count' => $this->count ?? 0, 'reference' => $this->reference ?? ''];
 
         $lines = [(string) __($intro, $replace)];
 
         if (Lang::has($base.'.after')) {
             $lines[] = (string) __($base.'.after', $replace);
+        }
+
+        $removed = $this->removed === null ? '' : SecureAccount::removedList($this->removed);
+
+        if ($removed !== '') {
+            $lines[] = (string) __('mail.security.removed', ['items' => $removed]);
+        }
+
+        if ($this->at !== null) {
+            $time = $this->at->setTimezone(config()->string('speedclub.notifications.timezone'))->settings(['locale' => app()->getLocale()])->isoFormat('LLL');
+            $lines[] = $this->place === null
+                ? (string) __('mail.security.when', ['time' => $time])
+                : (string) __('mail.security.when_where', ['time' => $time, 'place' => $this->place]);
         }
 
         return $lines;
@@ -50,6 +72,10 @@ class SecurityNoticeMail extends AuthMail
      */
     protected function actions(): array
     {
+        if ($this->secureUrl !== null) {
+            return [['label' => (string) __('mail.security.secure_action'), 'url' => $this->secureUrl]];
+        }
+
         if ($this->pointsToSupport()) {
             return [['label' => (string) __('mail.security.'.$this->notice->value.'.action'), 'url' => 'mailto:'.$this->support()]];
         }
@@ -59,6 +85,10 @@ class SecurityNoticeMail extends AuthMail
 
     protected function note(): string
     {
+        if ($this->secureUrl !== null) {
+            return (string) __('mail.security.secure_note');
+        }
+
         if ($this->pointsToSupport()) {
             return (string) __('mail.security.'.$this->notice->value.'.note', ['support' => $this->support()]);
         }
@@ -68,7 +98,7 @@ class SecurityNoticeMail extends AuthMail
 
     private function pointsToSupport(): bool
     {
-        return in_array($this->notice, [SecurityNotice::EmailChanged, SecurityNotice::DeletionRequested], true);
+        return in_array($this->notice, [SecurityNotice::EmailChanged, SecurityNotice::DeletionRequested, SecurityNotice::AccountSecured], true);
     }
 
     private function support(): string

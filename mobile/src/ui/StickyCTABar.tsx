@@ -4,11 +4,12 @@ import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyl
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
 import { isWeb } from '@/lib/platform';
-import { createStyles, size, space, useBreakpoint } from '@/theme';
+import { createStyles, size, space, typography, useBreakpoint, useTheme } from '@/theme';
 
 import { Button, type ButtonVariant } from './Button';
 import { Hairline } from './Hairline';
 import { useSafeEdge, useSafeInset } from './safeArea';
+import { estimatedInterWidth } from './specLabelMetrics';
 import { reportStickyBar } from './toastPlacement';
 
 export type StickyCTASecondary = {
@@ -51,13 +52,35 @@ const useStyles = createStyles((t) => ({
    */
   primary: { alignSelf: 'auto', flexBasis: '50%', flexGrow: 1, flexShrink: 1, minWidth: 0 },
   primaryAlone: { alignSelf: 'auto', flexGrow: 1, flexShrink: 1, minWidth: 0 },
-  primaryStacked: { alignSelf: 'auto', flexBasis: '100%', flexGrow: 1, flexShrink: 1, minWidth: 0 },
+  stack: { gap: t.space[4] },
+  // Zero high, full width: the row's width for the stacking rule, also while the actions wrap.
+  measure: { alignSelf: 'stretch', height: 0 },
+  // Full width; the label wraps rather than leave the bar at 200 %.
+  primaryStacked: { alignSelf: 'stretch', flexShrink: 1, minWidth: 0 },
 }));
 
 /** One row of actions: hairline, 12, the L button, 12 and the safe inset (CSS pads it on web, where `inset` is 0). */
 export function stickyBarHeight(inset: number): number {
   const hairline = isWeb ? size.border.control : StyleSheet.hairlineWidth;
   return hairline + space[12] + size.button.l + space[12] + inset;
+}
+
+/**
+ * DQ-958: whether the primary goes on a line of its own under the secondary. Side by side the primary gets half the row (FS-5);
+ * when its label at the current font scale, with the L button's padding, does not fit that half on one line, the pair stacks
+ * (primary full width), as a large font already makes it wrap. The estimate is Inter SemiBold's advance table (the spec strip's),
+ * which never claims less than the screen draws.
+ */
+export function stickyCtaStacks(label: string, rowWidth: number, fontScale: number, secondaryLabel?: string): boolean {
+  if (!Number.isFinite(rowWidth) || rowWidth <= 0) return false;
+  const role = typography.bodyStrong;
+  const widthOf = (text: string) => Math.ceil(estimatedInterWidth(text, role.fontSize * fontScale, role.letterSpacing * fontScale, 'semibold'));
+  const half = (rowWidth - space[8]) / 2;
+  const primary = widthOf(label) + 2 * size.buttonPaddingX.l;
+  if (primary > half) return true;
+  // DQ-978: a draft action wider than the other half would wrap the row and leave it above the primary; stack it under instead.
+  if (secondaryLabel === undefined) return false;
+  return widthOf(secondaryLabel) + 2 * size.buttonPaddingX.s + space[8] + Math.max(primary, half) > rowWidth;
 }
 
 /**
@@ -82,7 +105,11 @@ export function StickyCTABar({
   const styles = useStyles();
   const padding = useSafeEdge('bottom', space[12]);
   const inset = useSafeInset('bottom');
-  const { gutter } = useBreakpoint();
+  const { gutter, width } = useBreakpoint();
+  const { fontScale } = useTheme();
+  // The row's own width once laid out (a bar inside a narrower column, as the DEV-01 specimen), the window's until then.
+  const [rowWidth, setRowWidth] = useState<number | null>(null);
+  const stack = stacked || (secondary !== undefined && stickyCtaStacks(label, rowWidth ?? width - 2 * gutter, fontScale, secondary.label));
   const key = useId();
   // The bar's height before its first layout, so the toast stands above it from the first frame. Starting at 0, the toast first
   // sat on the screen's content and moved up once onLayout came in, under a pointer already on a control there (F3: a click on
@@ -112,33 +139,66 @@ export function StickyCTABar({
     >
       <Hairline />
       <View dataSet={{ qaExempt: 'safe-area' }} style={[styles.bar, { paddingHorizontal: gutter }, padding, style]} testID={testID}>
-        <View style={styles.row}>
-          {secondary ? (
+        <View
+          style={styles.measure}
+          onLayout={(event) => {
+            const next = Math.round(event.nativeEvent.layout.width);
+            setRowWidth((current) => (current === next ? current : next));
+          }}
+        />
+        {secondary && stack ? (
+          // DQ-978: stacked, the confirming action comes first and the text action sits centred under it (HIG, M3 stacked
+          // actions). Above the primary, flush left, it read as the primary's heading.
+          <View style={styles.stack}>
+            <Button
+              label={label}
+              size="l"
+              variant={variant}
+              onPress={onPress}
+              loading={loading}
+              disabled={disabled}
+              locked={locked}
+              style={styles.primaryStacked}
+              testID={testID ? `${testID}.primary` : undefined}
+            />
             <Button
               label={secondary.label}
               variant="tertiary"
-              size="s"
-              // Stacked, its text starts on the primary's edge.
-              flush={stacked ? 'start' : undefined}
+              size="m"
+              fullWidth
               onPress={secondary.onPress}
               disabled={secondary.disabled}
               loading={secondary.loading}
-              style={styles.secondary}
               testID={secondary.testID}
             />
-          ) : null}
-          <Button
-            label={label}
-            size="l"
-            variant={variant}
-            onPress={onPress}
-            loading={loading}
-            disabled={disabled}
-            locked={locked}
-            style={secondary ? (stacked ? styles.primaryStacked : styles.primary) : styles.primaryAlone}
-            testID={testID ? `${testID}.primary` : undefined}
-          />
-        </View>
+          </View>
+        ) : (
+          <View style={styles.row}>
+            {secondary ? (
+              <Button
+                label={secondary.label}
+                variant="tertiary"
+                size="s"
+                onPress={secondary.onPress}
+                disabled={secondary.disabled}
+                loading={secondary.loading}
+                style={styles.secondary}
+                testID={secondary.testID}
+              />
+            ) : null}
+            <Button
+              label={label}
+              size="l"
+              variant={variant}
+              onPress={onPress}
+              loading={loading}
+              disabled={disabled}
+              locked={locked}
+              style={secondary ? styles.primary : styles.primaryAlone}
+              testID={testID ? `${testID}.primary` : undefined}
+            />
+          </View>
+        )}
       </View>
     </KeyboardStickyView>
   );

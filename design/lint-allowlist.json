@@ -1,0 +1,29 @@
+[
+  {
+    "file": "web/resources/css/fonts.css",
+    "rules": [
+      "DL08"
+    ],
+    "reason": "The @font-face rules are the one place that names the font families and their files (fonts built in design/fonts, ADR-402); components use the type tokens."
+  },
+  {
+    "file": "mobile/src/i18n/locales/de/garage.json",
+    "keys": [
+      "/specs/aspirations/supercharged"
+    ],
+    "rules": [
+      "DL09"
+    ],
+    "reason": "The key \"supercharged\" is the engine-aspiration enum value of the spec form (turbo, supercharged, naturally aspirated; label \"Kompressor\"), not marketing copy. Only this member is exempt (DQ-814); JSON has no line comments for a per-line suppression."
+  },
+  {
+    "file": "mobile/src/i18n/locales/en/garage.json",
+    "keys": [
+      "/specs/aspirations/supercharged"
+    ],
+    "rules": [
+      "DL09"
+    ],
+    "reason": "\"supercharged\"/\"Supercharged\" is the engine-aspiration enum value and its label in the spec form (turbo, supercharged, naturally aspirated), not marketing copy. Only this member is exempt (DQ-814); JSON has no line comments for a per-line suppression."
+  }
+]

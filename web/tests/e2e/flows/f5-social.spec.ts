@@ -267,8 +267,12 @@ test.describe('F5 social: a guest follows', () => {
     await id(page, 'PROF-02.follow').click();
     await expect(id(page, 'shell.authRequired')).toBeVisible();
     await id(page, 'shell.authRequired.signIn').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
+    // M4.6: the sheet opens "Mit E-Mail fortfahren" (AUTH-12) with returnTo; the password sign-in is one step behind it.
+    await expect(id(page, 'AUTH-12.root')).toBeVisible();
     expect(new URL(page.url()).searchParams.get('returnTo')).toBe(`/u/${member.username}`);
+    await id(page, 'AUTH-12.withPassword').click();
+    // AUTH-03 keeps the way back as the auth intent (not in its address); the landing on the profile below proves it.
+    await expect(id(page, 'AUTH-03.root')).toBeVisible();
 
     await resetAuthLimits([guest.email]);
     await id(page, 'AUTH-03.email').fill(guest.email);
@@ -568,7 +572,7 @@ test.describe('F5 social: blocking', () => {
 });
 
 test.describe('F5 social: saved builds [SIG]', () => {
-  test('save on VEH-01, find it on PROF-05, Rückgängig brings it back, unsave on VEH-01 empties the list', async ({ page, context, browser, pageErrors, blockedRequests }) => {
+  test('save on VEH-01, find it in Gespeichert through PROF-05, unsave on VEH-01 empties it', async ({ page, context, browser, pageErrors, blockedRequests }) => {
     test.setTimeout(150_000);
     const saver = await createGarageMember('f5save');
     const owner = await createGarageMember('f5saveowner');
@@ -579,41 +583,28 @@ test.describe('F5 social: saved builds [SIG]', () => {
     await expect(id(page, 'VEH-01.title')).toBeVisible();
     const save = id(page, 'VEH-01.save');
     await expect(save).toHaveAttribute('aria-pressed', 'false');
-    await expect(save).toHaveAttribute('aria-label', de('vehicle', 'actions.save'));
-    // The owner row follows from here too, for a member.
-    await expect(id(page, 'VEH-01.ownerRow.follow')).toHaveText(de('profile', 'follow.follow'));
+    await expect(save).toHaveAttribute('aria-label', de('vehicle', 'actions.saveShort'));
+    // M4.9: the action row's Folgen follows the build (vehicle_follow) and is the one filled control; Speichern sits beside it.
+    await expect(id(page, 'VEH-01.actions.follow')).toHaveAttribute('aria-label', de('vehicle', 'actions.followBuild'));
+    await expect(id(page, 'VEH-01.actions')).toContainText(de('vehicle', 'actions.saveShort'));
 
     let answer = page.waitForResponse(isWrite('POST', `vehicles/${vehicle.id}/save`));
     await save.click();
     expect((await answer).status()).toBe(200);
     await expect(save).toHaveAttribute('aria-pressed', 'true');
-    await expect(id(page, 'VEH-01.saveToast')).toHaveText(de('vehicle', 'save.saved'));
+    // The toast offers the collection sheet (09 §8.6) as its action.
+    await expect(id(page, 'VEH-01.saveToast')).toContainText(de('vehicle', 'save.saved'));
+    await expect(id(page, 'VEH-01.saveToast.action')).toHaveText(de('vehicle', 'save.chooseCollection'));
 
-    // PROF-01 → Gespeichert → PROF-05 has the card.
-    await open(page, '/app/profile');
-    await id(page, 'PROF-01.saved').click();
-    await expect(id(page, 'PROF-05.root')).toBeVisible();
-    await expect.poll(() => pathOf(page)).toBe('/app/profile/saved');
-    const card = id(page, `PROF-05.card.${vehicle.id}`);
-    await expect(card).toBeVisible();
-    await expect(page.locator('[data-testid^="PROF-05.card."][data-testid$=".remove"]:visible')).toHaveCount(1);
-
-    // Remove: the card goes at once, Rückgängig puts it back on the server too.
-    answer = page.waitForResponse(isWrite('DELETE', `vehicles/${vehicle.id}/save`));
-    await id(page, `PROF-05.card.${vehicle.id}.remove`).click();
-    await expect(anyWithId(page, `PROF-05.card.${vehicle.id}`)).toHaveCount(0);
-    await expect(id(page, 'PROF-05.toast')).toBeVisible();
-    await expect(id(page, 'PROF-05.toast.action')).toHaveText(de('common', 'actions.undo'));
-    expect((await answer).status()).toBe(200);
-    answer = page.waitForResponse(isWrite('POST', `vehicles/${vehicle.id}/save`));
-    await id(page, 'PROF-05.toast.action').click();
-    expect((await answer).status()).toBe(200);
-    await expect(card).toBeVisible();
-    await page.reload();
-    await expect(id(page, `PROF-05.card.${vehicle.id}`)).toBeVisible();
+    // DQ-1087: PROF-05 keeps its address for links and opens the "Gespeichert" collection (COL-02, the 2.0 wall) with the build.
+    await open(page, '/app/profile/saved');
+    await expect(id(page, 'COL-02.root')).toBeVisible();
+    await expect.poll(() => pathOf(page)).toMatch(/^\/app\/profile\/collections\/[0-9a-z]+$/);
+    // One tile, the build (its menu button shares the prefix but is no link).
+    await expect(page.locator('[data-testid^="COL-02.item."][role="link"]:visible')).toHaveCount(1);
     expect((expectStatus(await saver.api.get('me/saved'), 200, 'me/saved').data as { id: string }[]).map((v) => v.id)).toEqual([vehicle.id]);
 
-    // Unsave on VEH-01: the list is empty after it.
+    // Unsave on VEH-01: the collection is empty after it.
     await open(page, `/app/v/${vehicle.slug}`);
     await expect(id(page, 'VEH-01.save')).toHaveAttribute('aria-pressed', 'true');
     answer = page.waitForResponse(isWrite('DELETE', `vehicles/${vehicle.id}/save`));
@@ -622,8 +613,7 @@ test.describe('F5 social: saved builds [SIG]', () => {
     await expect(id(page, 'VEH-01.save')).toHaveAttribute('aria-pressed', 'false');
     await expect(id(page, 'VEH-01.saveToast')).toHaveText(de('vehicle', 'save.removed'));
     await open(page, '/app/profile/saved');
-    await expect(id(page, 'PROF-05.empty')).toBeVisible();
-    await expect(id(page, 'PROF-05.empty')).toContainText(de('profile', 'saved.emptyTitle'));
+    await expect(id(page, 'COL-02.empty')).toBeVisible();
 
     // The owner never gets the action on the own build.
     const own = await browserOf(browser, owner, { pageErrors, blockedRequests, expected: [] });
@@ -643,8 +633,11 @@ test.describe('F5 social: saved builds [SIG]', () => {
     await id(page, 'VEH-01.save').click();
     await expect(id(page, 'shell.authRequired')).toBeVisible();
     await id(page, 'shell.authRequired.signIn').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
+    // M4.6 (09 §7.2): signing in starts passwordless, at AUTH-12 Mit E-Mail fortfahren.
+    await expect(id(page, 'AUTH-12.root')).toBeVisible();
     expect(new URL(page.url()).searchParams.get('returnTo')).toBe(`/v/${vehicle.slug}`);
+    // The sign-in screen's own requests finish before the test ends (a routed fetch after the end fails the test).
+    await page.waitForLoadState('networkidle');
   });
 });
 

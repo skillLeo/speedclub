@@ -47,7 +47,7 @@ const hidden = computed(() => groups.value.length - visible.value.length);
 
 <template>
     <section class="flex flex-col gap-12" :aria-label="title ?? trans('ui.timeline.title')" :data-testid="testId">
-        <h2 class="text-label-s text-ink">{{ title ?? trans('ui.timeline.title') }}</h2>
+        <h2 class="text-admin-base-strong text-ink">{{ title ?? trans('ui.timeline.title') }}</h2>
         <ol v-if="state === 'loading'" class="flex flex-col gap-16">
             <!-- The lines of a ready entry: time, what happened, who (DQ-533). -->
             <li v-for="n in 4" :key="n" class="flex flex-col gap-2 border-l border-line-subtle pl-12">
@@ -57,26 +57,26 @@ const hidden = computed(() => groups.value.length - visible.value.length);
             </li>
         </ol>
         <StateBlock v-else-if="state === 'error'" kind="error" :title="trans('ui.timeline.error')" @retry="emit('retry')" />
-        <p v-else-if="entries.length === 0" class="text-supporting text-ink-3">{{ trans('ui.timeline.empty') }}</p>
+        <p v-else-if="entries.length === 0" class="text-admin-base text-ink-3">{{ trans('ui.timeline.empty') }}</p>
         <ol v-else class="flex flex-col gap-16">
             <li v-for="entry in visible" :key="entry.id" class="flex flex-col gap-2 border-l border-line pl-12">
                 <time :datetime="entry.occurred_at" :title="formatDateTime(entry.occurred_at)" class="text-caption text-ink-3">{{ formatRelative(entry.occurred_at) }}</time>
-                <p class="text-supporting text-ink">
+                <p class="text-admin-base text-ink">
                     {{ entry.label }}<span v-if="entry.count > 1" class="text-ink-3 tabular-nums"> · {{ trans('ui.timeline.times', { count: String(entry.count) }) }}</span>
                 </p>
-                <p class="text-helper text-ink-2">{{ entry.actor ?? trans('ui.timeline.system') }}</p>
-                <p v-if="entry.reason" class="text-helper text-ink-3">{{ entry.reason }}</p>
+                <p class="text-admin-base text-ink-2">{{ entry.actor ?? trans('ui.timeline.system') }}</p>
+                <p v-if="entry.reason" class="text-admin-base text-ink-3">{{ entry.reason }}</p>
             </li>
         </ol>
         <button
             v-if="state === 'ready' && hidden > 0"
             type="button"
-            class="inline-flex h-32 items-center self-start rounded-xs text-label-s text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            class="inline-flex h-32 items-center self-start rounded-xs text-admin-base-strong text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             :data-testid="testId ? `${testId}.expand` : undefined"
             @click="expanded = true"
         >
             {{ trans('ui.timeline.show_more', { count: String(hidden) }) }}
         </button>
-        <a v-if="moreHref && state === 'ready' && entries.length > 0" :href="moreHref" class="inline-flex h-32 items-center self-start rounded-xs text-label-s text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{{ trans('ui.timeline.more') }}</a>
+        <a v-if="moreHref && state === 'ready' && entries.length > 0" :href="moreHref" class="inline-flex h-32 items-center self-start rounded-xs text-admin-base-strong text-ink-2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{{ trans('ui.timeline.more') }}</a>
     </section>
 </template>

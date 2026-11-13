@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
-import { useMotion } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 
 type Props = {
   axis: 'x' | 'y';
@@ -12,9 +12,9 @@ type Props = {
   testID?: string;
 };
 
-/** §10: the indicator slides in 140 ms; under reduced motion it moves at once and crossfades in. Transform only. */
+/** The indicator slides on spring.fast (09 §4.7); under reduced motion it moves at once and crossfades in (effect.default). */
 export function SlidingIndicator({ axis, offset, style, testID }: Props) {
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const position = useSharedValue(offset);
   const opacity = useSharedValue(1);
   const previous = useRef(offset);
@@ -25,9 +25,9 @@ export function SlidingIndicator({ axis, offset, style, testID }: Props) {
     if (motion.reduced) {
       position.set(offset);
       opacity.set(0);
-      opacity.set(motion.timingTo(1, 'reducedCrossfade'));
+      opacity.set(motion.effectTo(1, 'default'));
     } else {
-      position.set(motion.timingTo(offset, 'micro'));
+      position.set(motion.springTo(offset, 'fast'));
     }
   }, [motion, offset, opacity, position]);
 

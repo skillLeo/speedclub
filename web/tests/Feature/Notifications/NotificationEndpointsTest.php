@@ -66,14 +66,14 @@ describe('GET notifications', function () {
                 'details' => ['kind' => 'vehicle', 'update_id' => null, 'vehicles' => 1, 'updates' => 0],
                 'read_at' => null,
             ])
-            ->and($response->json('data.0.actors'))->toBe([['username' => 'lukas.sc', 'display_name' => 'Lukas Schmidt', 'city' => 'Stuttgart', 'avatar' => null]])
-            ->and(array_keys($response->json('data.0.vehicle')))->toBe(['id', 'slug', 'full_title', 'cover'])
+            ->and($response->json('data.0.actors'))->toBe([['username' => 'lukas.sc', 'display_name' => 'Lukas Schmidt', 'city' => 'Stuttgart', 'avatar' => null, 'is_sample' => false, 'is_editorial' => false, 'main_vehicle_cover' => null]])
+            ->and(array_keys($response->json('data.0.vehicle')))->toBe(['id', 'slug', 'full_title', 'cover', 'is_sample'])
             ->and($response->json('data.0.vehicle.id'))->toBe($vehicle->id)
             ->and($response->json('data.0.vehicle.cover'))->not->toBeNull()
             ->and($response->json('data.1'))->toMatchArray(['id' => $saved?->id, 'actors' => [], 'actor_count' => 3, 'details' => ['count' => 3, 'week' => '2026-W45']])
-            ->and($response->json('data.2'))->toMatchArray(['group_key' => null, 'actors' => [], 'actor_count' => 0, 'vehicle' => null, 'details' => ['event' => 'new_device', 'device_name' => 'iPhone 15']])
+            ->and($response->json('data.2'))->toMatchArray(['group_key' => null, 'actors' => [], 'actor_count' => 0, 'vehicle' => null, 'details' => ['event' => 'new_device', 'device_name' => 'iPhone 15', 'security_event_id' => null]])
             ->and($response->json('data.3'))->toMatchArray(['actor_count' => 1, 'vehicle' => null, 'details' => []])
-            ->and(array_keys($response->json('data.3')))->toBe(['id', 'type', 'group_key', 'actors', 'actor_count', 'vehicle', 'details', 'read_at', 'created_at']);
+            ->and(array_keys($response->json('data.3')))->toBe(['id', 'type', 'group_key', 'actors', 'actor_count', 'vehicle', 'event', 'details', 'read_at', 'created_at']);
     });
 
     it('shows at most three actors, newest first, and counts them all', function () {

@@ -11,9 +11,11 @@ import { meKey, type Me } from '@/api/queries/auth';
 import { CodeInput } from '@/features/auth/components/CodeInput';
 import { EMAIL_INPUT, FormField } from '@/features/auth/components/FormField';
 import { FormNotice } from '@/features/auth/components/FormNotice';
-import { applyServerErrors, breakableEmail, isCode } from '@/features/auth/forms';
+import { applyServerErrors, isCode } from '@/features/auth/forms';
 import { createStyles, size } from '@/theme';
 import { Button, Skeleton, SkeletonBlock, SkeletonText, Text, TextInput, toast } from '@/ui';
+import { SlotText, slot } from '@/ui/SlotText';
+import { identifierText } from '@/ui/textBreaks';
 
 import { useMemberGate } from '../components/MemberGate';
 import { RestrictionNotice } from '../components/RestrictionNotice';
@@ -38,7 +40,7 @@ function EmailSkeleton() {
         <SkeletonText variant="body" lines={2} />
         {[0, 1].map((index) => (
           <View key={index} style={styles.field}>
-            <SkeletonText variant="labelS" width="30%" />
+            <SkeletonText variant="callout" width="30%" />
             <SkeletonBlock height={size.input} corner="sm" />
           </View>
         ))}
@@ -143,9 +145,8 @@ function ChangeEmailForm({ me }: { me: Me }) {
       >
         <View style={styles.body}>
           <RestrictionNotice routeId={ROUTE} />
-          <Text variant="body" color="text.secondary" testID={`${ROUTE}.sentTo`}>
-            {t('email.sentTo', { email: breakableEmail(step.email) })}
-          </Text>
+          {/* DQ-927: the address as on file, never hyphenated; it may break after "@", "." and "/". */}
+          <SlotText variant="body" color="text.secondary" text={t('email.sentTo', { email: slot('email') })} slots={{ email: identifierText(step.email) }} testID={`${ROUTE}.sentTo`} />
           {notice ? <FormNotice message={notice} testID={`${ROUTE}.notice`} /> : null}
           <Controller
             control={code.control}
@@ -168,7 +169,7 @@ function ChangeEmailForm({ me }: { me: Me }) {
               />
             )}
           />
-          <Text variant="supporting" color="text.secondary">
+          <Text variant="callout" color="text.secondary">
             {t('email.codeHint')}
           </Text>
           <Button
@@ -202,9 +203,7 @@ function ChangeEmailForm({ me }: { me: Me }) {
     >
       <View style={styles.body}>
         <RestrictionNotice routeId={ROUTE} />
-        <Text variant="body" color="text.secondary" testID={`${ROUTE}.intro`}>
-          {t('email.intro', { email: breakableEmail(me.email) })}
-        </Text>
+        <SlotText variant="body" color="text.secondary" text={t('email.intro', { email: slot('email') })} slots={{ email: identifierText(me.email) }} testID={`${ROUTE}.intro`} />
         {notice ? (
           <FormNotice message={notice} tone={locked ? 'info' : 'error'} testID={`${ROUTE}.notice`} />
         ) : null}

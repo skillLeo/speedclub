@@ -111,7 +111,7 @@ onMounted(async () => {
                 <StatusPill :tone="qr.status === 'active' ? 'success' : 'neutral'" :label="trans(`qr.status.${qr.status}`)" data-testid="ADM-19.status" />
             </template>
             <template #meta>
-                <p class="flex flex-wrap items-center gap-8 text-supporting text-ink-2 tabular-nums">
+                <p class="flex flex-wrap items-center gap-8 text-admin-base text-ink-2 tabular-nums">
                     <Link v-if="qr.vehicle && !qr.vehicle.deleted" :href="vehicleHref(qr.vehicle.id)" :class="[focusRing, 'inline-flex h-32 items-center rounded-xs text-ink hover:underline']">{{ qr.vehicle.title }}</Link>
                     <span v-else>{{ trans('qr.no_vehicle') }}</span>
                     <template v-if="qr.owner">
@@ -137,7 +137,7 @@ onMounted(async () => {
         <div v-else class="flex min-w-0 flex-col gap-32 desktop:flex-row">
             <div class="flex min-w-0 flex-1 flex-col gap-24">
                 <div class="flex flex-wrap items-center justify-between gap-12">
-                    <p class="text-supporting text-ink-2 tabular-nums" aria-live="polite">
+                    <p class="text-admin-base text-ink-2 tabular-nums" aria-live="polite">
                         <template v-if="chartState === 'loading'">{{ trans('qr.detail.loading') }}</template>
                         <template v-else>{{ trans('qr.detail.total', { count: formatNumber(state === 'empty' ? 0 : scans.total), days: formatNumber(days) }) }}</template>
                     </p>
@@ -155,24 +155,24 @@ onMounted(async () => {
                 />
 
                 <section class="flex flex-col gap-12" :aria-label="trans('qr.detail.history')" data-testid="ADM-19.history">
-                    <h2 class="text-title-s text-ink">{{ trans('qr.detail.history') }}</h2>
+                    <h2 class="text-headline text-ink">{{ trans('qr.detail.history') }}</h2>
                     <div v-if="state === 'loading'" class="flex flex-col gap-8" aria-busy="true">
                         <Skeleton v-for="n in 3" :key="n" class="h-40 w-full" />
                     </div>
                     <ol v-else class="flex flex-col rounded-sm border border-line-subtle bg-surface">
-                        <li v-for="(item, index) in history" :key="index" class="flex flex-wrap items-center gap-12 border-b border-line-subtle px-12 py-8 text-supporting last:border-b-0">
+                        <li v-for="(item, index) in history" :key="index" class="flex flex-wrap items-center gap-12 border-b border-line-subtle px-12 py-8 text-admin-base last:border-b-0">
                             <span class="w-160 shrink-0 text-ink-2 tabular-nums">{{ formatDateTime(item.at) }}</span>
                             <span class="min-w-0 flex-1 text-ink">{{ trans(`qr.history.${item.kind}`, { code: item.code ? formatQrCode(item.code) : '' }) }}</span>
                             <span class="sc-key text-ink-2">{{ item.actor ?? (item.kind === 'created' ? trans('qr.history.owner_or_system') : trans('audit.actor.system')) }}</span>
-                            <span v-if="item.reason" class="basis-full text-helper text-ink-3">{{ item.kind === 'revoked' ? trans(`qr.reasons.${item.reason}`) : item.reason }}</span>
+                            <span v-if="item.reason" class="basis-full text-admin-base text-ink-3">{{ item.kind === 'revoked' ? trans(`qr.reasons.${item.reason}`) : item.reason }}</span>
                         </li>
                     </ol>
                 </section>
 
                 <section v-if="siblings.length > 0" class="flex flex-col gap-12" :aria-label="trans('qr.detail.siblings')" data-testid="ADM-19.siblings">
-                    <h2 class="text-title-s text-ink">{{ trans('qr.detail.siblings') }}</h2>
+                    <h2 class="text-headline text-ink">{{ trans('qr.detail.siblings') }}</h2>
                     <ul class="flex flex-col rounded-sm border border-line-subtle bg-surface">
-                        <li v-for="item in siblings" :key="item.id" class="flex h-40 items-center gap-12 border-b border-line-subtle px-12 text-supporting last:border-b-0">
+                        <li v-for="item in siblings" :key="item.id" class="flex h-40 items-center gap-12 border-b border-line-subtle px-12 text-admin-base last:border-b-0">
                             <QrCodeText :code="item.display_code" :href="qrHref(item.id)" />
                             <StatusPill :tone="item.status === 'active' ? 'success' : 'neutral'" :label="trans(`qr.status.${item.status}`)" />
                             <span class="ml-auto text-ink-3 tabular-nums">{{ formatDate(item.created_at) }}</span>

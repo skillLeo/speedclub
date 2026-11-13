@@ -150,28 +150,28 @@ const vehicleTitle = (id: string | null): string => (id === null ? '' : (known[i
             <section class="flex flex-col gap-12" aria-labelledby="adm29-featured" data-testid="ADM-29.featured">
                 <div class="flex flex-wrap items-end justify-between gap-12">
                     <div class="flex min-w-0 flex-col gap-4">
-                        <h2 id="adm29-featured" class="text-title-s text-ink">{{ trans('content.home.featured_title') }}</h2>
-                        <p class="max-w-720 text-supporting text-ink-2">{{ trans('content.home.featured_intro', { max: formatNumber(limits.live) }) }}</p>
+                        <h2 id="adm29-featured" class="text-headline text-ink">{{ trans('content.home.featured_title') }}</h2>
+                        <p class="max-w-720 text-admin-base text-ink-2">{{ trans('content.home.featured_intro', { max: formatNumber(limits.live) }) }}</p>
                     </div>
                     <div class="flex items-center gap-12">
                         <Badge :tone="tooMany ? 'danger' : 'neutral'" tnum data-testid="ADM-29.peak">{{ trans('content.home.peak', { count: formatNumber(peak), max: formatNumber(limits.live) }) }}</Badge>
                         <Button v-if="!draft.readOnly.value" size="sm" variant="secondary" :icon="PhPlus" :disabled="form.featured.length >= limits.featured" data-testid="ADM-29.add-featured" @click="openPicker('featured')">{{ trans('content.home.add_featured') }}</Button>
                     </div>
                 </div>
-                <p v-if="draft.errorAt('featured') && !draft.errors.value['featured.0.vehicle_id']" class="text-helper text-danger" role="alert">{{ draft.errors.value.featured ?? draft.errorAt('featured') }}</p>
+                <p v-if="draft.errorAt('featured') && !draft.errors.value['featured.0.vehicle_id']" class="text-admin-base text-danger" role="alert">{{ draft.errors.value.featured ?? draft.errorAt('featured') }}</p>
 
                 <EmptyQueue v-if="featured.length === 0" variant="first" :icon="PhStar" :title="trans('content.home.featured_empty')" :body="trans('content.home.featured_empty_body')" data-testid="ADM-29.featured-empty" />
                 <ol v-else class="flex flex-col rounded-sm border border-line" :aria-label="trans('content.home.featured_title')">
                     <li v-for="(entry, index) in featured" :key="entry.vehicle_id" class="flex flex-wrap items-center gap-x-16 gap-y-8 border-b border-line-subtle px-12 py-8 last:border-b-0" data-testid="ADM-29.featured-row">
-                        <span class="w-24 text-right text-supporting tabular-nums text-ink-3">{{ index + 1 }}</span>
+                        <span class="w-24 text-right text-admin-base tabular-nums text-ink-3">{{ index + 1 }}</span>
                         <VehicleThumb :src="known[entry.vehicle_id]?.thumb ?? null" />
                         <div class="flex min-w-200 flex-1 flex-col">
-                            <span class="text-supporting text-ink">{{ vehicleTitle(entry.vehicle_id) }}</span>
-                            <span class="text-helper text-ink-3">
+                            <span class="text-admin-base text-ink">{{ vehicleTitle(entry.vehicle_id) }}</span>
+                            <span class="text-admin-base text-ink-3">
                                 {{ known[entry.vehicle_id]?.owner ? `@${known[entry.vehicle_id]?.owner}` : trans('content.home.no_owner') }}
                                 <template v-if="known[entry.vehicle_id] && !known[entry.vehicle_id]?.reachable"> · <span class="text-danger">{{ trans('content.home.not_public') }}</span></template>
                             </span>
-                            <span v-if="draft.errorAt(`featured.${index}`)" class="text-helper text-danger" role="alert">{{ draft.errorAt(`featured.${index}`) }}</span>
+                            <span v-if="draft.errorAt(`featured.${index}`)" class="text-admin-base text-danger" role="alert">{{ draft.errorAt(`featured.${index}`) }}</span>
                         </div>
                         <StatusPill :tone="scheduleTones[scheduleOf(entry.starts_at, entry.ends_at)]" :label="trans(`content.schedule.${scheduleOf(entry.starts_at, entry.ends_at)}`)" />
                         <div class="w-264">
@@ -199,19 +199,19 @@ const vehicleTitle = (id: string | null): string => (id === null ? '' : (known[i
             <section class="flex flex-col gap-12" aria-labelledby="adm29-collections" data-testid="ADM-29.collections">
                 <div class="flex flex-wrap items-end justify-between gap-12">
                     <div class="flex min-w-0 flex-col gap-4">
-                        <h2 id="adm29-collections" class="text-title-s text-ink">{{ trans('content.home.collections_title') }}</h2>
-                        <p class="max-w-720 text-supporting text-ink-2">{{ trans('content.home.collections_intro') }}</p>
+                        <h2 id="adm29-collections" class="text-headline text-ink">{{ trans('content.home.collections_title') }}</h2>
+                        <p class="max-w-720 text-admin-base text-ink-2">{{ trans('content.home.collections_intro') }}</p>
                     </div>
                     <Button v-if="!draft.readOnly.value" size="sm" variant="secondary" :icon="PhPlus" :disabled="form.collections.length >= limits.collections" data-testid="ADM-29.add-collection" @click="openCollection(null)">{{ trans('content.home.add_collection') }}</Button>
                 </div>
                 <EmptyQueue v-if="collections.length === 0" variant="first" :title="trans('content.home.collections_empty')" :body="trans('content.home.collections_empty_body')" data-testid="ADM-29.collections-empty" />
                 <ol v-else class="flex flex-col rounded-sm border border-line" :aria-label="trans('content.home.collections_title')">
                     <li v-for="(collection, index) in collections" :key="collection.key" class="flex flex-wrap items-center gap-x-16 gap-y-8 border-b border-line-subtle px-12 py-8 last:border-b-0" data-testid="ADM-29.collection-row">
-                        <span class="w-24 text-right text-supporting tabular-nums text-ink-3">{{ index + 1 }}</span>
+                        <span class="w-24 text-right text-admin-base tabular-nums text-ink-3">{{ index + 1 }}</span>
                         <div class="flex min-w-240 flex-1 flex-col">
-                            <span class="text-supporting text-ink">{{ collection.title.de }}</span>
-                            <span class="break-all text-helper text-ink-3">{{ collection.mode === 'filter' ? filtersText(collection.filters) : transChoice('content.home.picked', collection.vehicle_ids.length, { count: formatNumber(collection.vehicle_ids.length) }) }}</span>
-                            <span v-if="draft.errorAt(`collections.${index}`)" class="text-helper text-danger" role="alert">{{ draft.errorAt(`collections.${index}`) }}</span>
+                            <span class="text-admin-base text-ink">{{ collection.title.de }}</span>
+                            <span class="break-all text-admin-base text-ink-3">{{ collection.mode === 'filter' ? filtersText(collection.filters) : transChoice('content.home.picked', collection.vehicle_ids.length, { count: formatNumber(collection.vehicle_ids.length) }) }}</span>
+                            <span v-if="draft.errorAt(`collections.${index}`)" class="text-admin-base text-danger" role="alert">{{ draft.errorAt(`collections.${index}`) }}</span>
                         </div>
                         <Badge tone="neutral">{{ trans(`content.home.collection.mode_${collection.mode}`) }}</Badge>
                         <Switch v-model="collection.active" :aria-label="trans('content.home.collection.active_for', { title: collection.title.de })" :disabled="draft.readOnly.value" />
@@ -223,7 +223,7 @@ const vehicleTitle = (id: string | null): string => (id === null ? '' : (known[i
                         </span>
                     </li>
                 </ol>
-                <p class="text-helper text-ink-3">{{ trans('content.home.picked_note') }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('content.home.picked_note') }}</p>
             </section>
         </template>
 
@@ -249,25 +249,25 @@ const vehicleTitle = (id: string | null): string => (id === null ? '' : (known[i
                 </ul>
                 <div v-else class="flex flex-col gap-8">
                     <div class="flex items-center justify-between gap-8">
-                        <p class="text-label-s text-ink">{{ trans('content.home.collection.vehicles') }}</p>
+                        <p class="text-admin-base-strong text-ink">{{ trans('content.home.collection.vehicles') }}</p>
                         <Button size="sm" variant="secondary" :icon="PhPlus" :disabled="editing.vehicle_ids.length >= limits.collection_vehicles" @click="openPicker('collection')">{{ trans('content.home.collection.add_vehicle') }}</Button>
                     </div>
                     <ul v-if="editing.vehicle_ids.length > 0" class="flex flex-col rounded-sm border border-line">
                         <li v-for="(id, i) in editing.vehicle_ids" :key="id" class="flex h-40 items-center gap-12 border-b border-line-subtle px-12 last:border-b-0">
                             <VehicleThumb :src="known[id]?.thumb ?? null" />
-                            <span class="min-w-0 flex-1 truncate text-supporting text-ink">{{ vehicleTitle(id) }}</span>
+                            <span class="min-w-0 flex-1 truncate text-admin-base text-ink">{{ vehicleTitle(id) }}</span>
                             <IconButton :icon="PhTrash" size="sm" variant="ghost" class="hover:text-danger" :label="trans('content.home.remove_featured', { title: vehicleTitle(id) })" @click="editing.vehicle_ids.splice(i, 1)" />
                         </li>
                     </ul>
-                    <p v-if="drawerErrors.vehicles" class="text-helper text-danger" role="alert">{{ drawerErrors.vehicles }}</p>
-                    <p class="text-helper text-ink-3">{{ trans('content.home.picked_note') }}</p>
+                    <p v-if="drawerErrors.vehicles" class="text-admin-base text-danger" role="alert">{{ drawerErrors.vehicles }}</p>
+                    <p class="text-admin-base text-ink-3">{{ trans('content.home.picked_note') }}</p>
                 </div>
                 <div class="w-240"><Field :label="trans('content.home.collection.sort')"><Select v-model="sortModel" :options="sortOptions" /></Field></div>
                 <!-- DQ-621: the cover on its own row, its text wraps instead of being cut. -->
                 <div>
                     <Field :label="trans('content.home.collection.cover')" optional>
                         <div class="flex flex-wrap items-center gap-8">
-                            <span class="min-w-0 flex-1 text-supporting" :class="editing.cover_vehicle_id ? 'text-ink' : 'text-ink-3'">{{ editing.cover_vehicle_id ? vehicleTitle(editing.cover_vehicle_id) : trans('content.home.collection.cover_auto') }}</span>
+                            <span class="min-w-0 flex-1 text-admin-base" :class="editing.cover_vehicle_id ? 'text-ink' : 'text-ink-3'">{{ editing.cover_vehicle_id ? vehicleTitle(editing.cover_vehicle_id) : trans('content.home.collection.cover_auto') }}</span>
                             <Button size="sm" variant="secondary" @click="openPicker('cover')">{{ trans('brand.choose') }}</Button>
                             <Button v-if="editing.cover_vehicle_id" size="sm" variant="ghost" @click="editing.cover_vehicle_id = null">{{ trans('brand.remove') }}</Button>
                         </div>

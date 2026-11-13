@@ -1,7 +1,7 @@
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider as NavigationThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -9,6 +9,8 @@ import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-c
 
 import { persistOptions, queryClient } from '@/api/queryClient';
 import { SessionHost } from '@/features/auth/SessionHost';
+import { useLocalReminderBackups } from '@/features/maintenance/reminders';
+import { SplashOverlay } from '@/features/auth/SplashOverlay';
 import { BrandThemeSync } from '@/features/auth/useBrandTheme';
 import '@/features/auth/sessionLifecycle';
 import { AuthRequiredSheet } from '@/features/shell/AuthRequiredSheet';
@@ -21,11 +23,14 @@ import { qa } from '@/lib/qa';
 import { registerFirstScreenGate, registerReadyGate, useAppReady, useFirstScreenMounted } from '@/lib/ready';
 import { ViewAsFrame } from '@/features/viewAs/ViewAsFrame';
 import { restoreSession } from '@/state/session';
-import { hydrateThemePreference, motion, ThemeProvider, useTheme } from '@/theme';
+import { hydrateThemePreference, ThemeProvider, useTheme } from '@/theme';
 import { useAppFonts } from '@/theme/fonts';
 import { applyLocaleToDocument, markDocumentReady, reportQaSession } from '@/theme/webDocument';
+import { motionDuration } from '@/ui/motion';
+import { FlightLayer } from '@/ui/motion/kit';
 
-SplashScreen.setOptions({ duration: motion.duration.small, fade: true });
+// AUTH-01 (BUG-3): the native splash fades into SplashOverlay, the same canvas, which then plays SM1 over the first screen.
+SplashScreen.setOptions({ duration: motionDuration('effect.default'), fade: true });
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 const releaseFonts = registerReadyGate('fonts');
@@ -54,6 +59,8 @@ function RootStack() {
     return { ...base, colors: { ...base.colors, background: theme.color.bg.canvas } };
   }, [theme]);
   const screenOptions = useCanvasStackOptions();
+  // M4.13 / ADR-441: local reminder backups follow the plan for the whole signed-in session, not only while GAR-01 is open.
+  useLocalReminderBackups();
   return (
     <NavigationThemeProvider value={navigationTheme}>
       <RouteErrorBoundary>
@@ -66,6 +73,8 @@ function RootStack() {
       <BrandThemeSync />
       <AuthRequiredSheet />
       <ShellToastHost />
+      {/* M4.3 SM4/SM12: card → detail and message-send flights draw above every screen. Last, so a clone flies over the toast too. */}
+      <FlightLayer />
     </NavigationThemeProvider>
   );
 }
@@ -79,9 +88,8 @@ export default function RootLayout() {
     if (fontsSettled) releaseFonts();
   }, [fontsSettled]);
 
-  useEffect(() => {
-    if (appReady) SplashScreen.hide();
-  }, [appReady]);
+  // The native splash hides once SplashOverlay covers the window (or, without the overlay, once the app is ready).
+  const hideNativeSplash = useCallback(() => SplashScreen.hide(), []);
 
   // A timed-out gate hides the splash, but the QA harness may only proceed once a screen really exists.
   useEffect(() => {
@@ -99,6 +107,7 @@ export default function RootLayout() {
                   <RootStack />
                 </ViewAsFrame>
               ) : null}
+              <SplashOverlay ready={appReady} onCovered={hideNativeSplash} />
             </PersistQueryClientProvider>
           </ThemeProvider>
         </KeyboardProvider>

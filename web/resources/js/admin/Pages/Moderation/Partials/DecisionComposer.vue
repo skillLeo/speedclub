@@ -209,7 +209,7 @@ const serverError = computed(() => (props.failed ? trans('ui.state.server_error'
             </div>
 
             <fieldset v-if="needsStatement" class="flex flex-col gap-16" :data-testid="`${testId}.statement`">
-                <legend class="mb-4 text-label-s text-ink">{{ trans('decisions.legend') }}</legend>
+                <legend class="mb-4 text-admin-base-strong text-ink">{{ trans('decisions.legend') }}</legend>
                 <Field :label="trans('moderation.composer.template')" :hint="trans('moderation.composer.template_hint', { locale: composer.member_locale.toUpperCase() })" optional>
                     <Select v-model="templateModel" :options="templateOptions" :placeholder="trans('decisions.template_placeholder')" :data-testid="`${testId}.template`" />
                 </Field>
@@ -228,35 +228,35 @@ const serverError = computed(() => (props.failed ? trans('ui.state.server_error'
                     </div>
                 </div>
             </fieldset>
-            <p v-else class="text-supporting text-ink-2">{{ trans('moderation.composer.no_action_note') }}</p>
+            <p v-else class="text-admin-base text-ink-2">{{ trans('moderation.composer.no_action_note') }}</p>
 
             <div class="flex flex-col gap-4" :data-testid="`${testId}.automated`">
-                <p class="text-label-s text-ink">{{ trans('moderation.composer.automated') }}</p>
-                <p class="text-supporting text-ink-2">{{ trans(composer.automated_detection ? 'moderation.composer.automated_detection_yes' : 'moderation.composer.automated_detection_no') }}</p>
-                <p class="text-supporting text-ink-2">{{ trans('moderation.composer.automated_decision') }}</p>
+                <p class="text-admin-base-strong text-ink">{{ trans('moderation.composer.automated') }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans(composer.automated_detection ? 'moderation.composer.automated_detection_yes' : 'moderation.composer.automated_detection_no') }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans('moderation.composer.automated_decision') }}</p>
             </div>
 
             <section class="flex flex-col gap-12 rounded-sm border border-line-subtle px-16 py-16" :aria-busy="previewLoading" :data-testid="`${testId}.preview`">
                 <div class="flex flex-wrap items-center justify-between gap-8">
                     <div class="flex flex-col gap-2">
-                        <h3 class="text-label-s text-ink">{{ trans('moderation.composer.preview') }}</h3>
+                        <h3 class="text-admin-base-strong text-ink">{{ trans('moderation.composer.preview') }}</h3>
                         <p class="text-caption text-ink-3">{{ trans('moderation.composer.preview_hint') }}</p>
                     </div>
                     <Button size="sm" variant="ghost" :loading="previewLoading" :disabled="!previewReady" @click="loadPreview()">{{ trans('moderation.composer.preview_load') }}</Button>
                 </div>
-                <p v-if="previewError" class="text-helper text-danger" role="alert">{{ trans('moderation.composer.preview_error') }}</p>
+                <p v-if="previewError" class="text-admin-base text-danger" role="alert">{{ trans('moderation.composer.preview_error') }}</p>
                 <div v-else-if="preview === null && previewLoading" class="flex flex-col gap-8" aria-hidden="true"><Skeleton v-for="n in 4" :key="n" shape="text" class="w-full" /></div>
-                <p v-else-if="preview === null" class="text-supporting text-ink-3" :data-testid="`${testId}.preview.waiting`">{{ trans('moderation.composer.preview_waiting') }}</p>
+                <p v-else-if="preview === null" class="text-admin-base text-ink-3" :data-testid="`${testId}.preview.waiting`">{{ trans('moderation.composer.preview_waiting') }}</p>
                 <!-- DQ-610: what this member reads, in their language; the other one only on request (if they switch the language). -->
                 <div v-else class="flex flex-col gap-12">
                     <div class="flex min-w-0 flex-col gap-8" :lang="memberLocale" :data-testid="`${testId}.preview.${memberLocale}`">
                         <p class="text-caption text-ink-3">{{ trans(`moderation.composer.preview_${memberLocale}`) }}</p>
-                        <p v-for="(line, index) in preview[memberLocale]" :key="index" class="text-supporting text-ink">{{ line }}</p>
+                        <p v-for="(line, index) in preview[memberLocale]" :key="index" class="text-admin-base text-ink">{{ line }}</p>
                     </div>
                     <details class="rounded-sm border border-line-subtle px-12 py-8" :data-testid="`${testId}.preview.${otherLocale}`">
-                        <summary :class="[focusRing, 'flex min-h-32 cursor-pointer items-center rounded-xs text-label-s text-ink-2']">{{ trans('moderation.composer.preview_other', { language: trans(`moderation.composer.preview_${otherLocale}`) }) }}</summary>
+                        <summary :class="[focusRing, 'flex min-h-32 cursor-pointer items-center rounded-xs text-admin-base-strong text-ink-2']">{{ trans('moderation.composer.preview_other', { language: trans(`moderation.composer.preview_${otherLocale}`) }) }}</summary>
                         <div class="flex flex-col gap-8 pt-8" :lang="otherLocale">
-                            <p v-for="(line, index) in preview[otherLocale]" :key="index" class="text-supporting text-ink-2">{{ line }}</p>
+                            <p v-for="(line, index) in preview[otherLocale]" :key="index" class="text-admin-base text-ink-2">{{ line }}</p>
                         </div>
                     </details>
                 </div>

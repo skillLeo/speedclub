@@ -480,7 +480,8 @@ describe('queries do not grow with the rows', function () {
         $few = pageQueries($this->few);
         $many = pageQueries($this->many);
 
-        expect($many)->toBe($few)->and($many)->toBeLessThan(30);
+        // M4.9 added the pinned highlights rail (one query while nothing is pinned): a fixed cost.
+        expect($many)->toBe($few)->and($many)->toBeLessThan(31);
     });
 
     it('for a member', function () {
@@ -552,9 +553,10 @@ describe('money', function () {
         [0, 'de', '0'],
     ]);
 
-    it('labels a public cost in the viewer\'s language', function (string $locale, string $label) {
+    it('labels the owner\'s cost in the viewer\'s language (M4.9: costs are the owner\'s alone)', function (string $locale, string $label) {
         $vehicle = publishedVehicle($this->owner);
         $mod = modIn($vehicle, 'suspension', [], ['cost_cents' => 123450, 'cost_public' => true]);
+        Sanctum::actingAs($this->owner);
 
         $this->withHeader('Accept-Language', $locale)
             ->getJson('/api/v1/public/vehicles/'.$vehicle->canonicalSlug()."/mods/{$mod->id}")

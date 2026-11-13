@@ -15,7 +15,7 @@ export function variantUrl(media: MediaData | null | undefined, width: number, p
 export function photoFields(media: MediaData | null | undefined, width: number): PhotoFields {
   if (!media) return { source: null };
   const focal = media.focal_x !== null && media.focal_y !== null ? { x: media.focal_x, y: media.focal_y } : null;
-  return { source: variantUrl(media, width), blurhash: media.blurhash, focal };
+  return { source: variantUrl(media, width), blurhash: media.blurhash, thumbhash: media.thumbhash, focal };
 }
 
 /** The chips of §8: power and torque with their unit, then the drivetrain. Values not entered yet stay out. */
@@ -30,7 +30,10 @@ export function specChips(vehicle: Pick<VehicleCardData, 'spec_strip'>): string[
 }
 
 /** "Nissan Skyline GT-R R34", "2002 · 2,6 l R6 Biturbo (RB26DETT)" and the rest of a card. */
-export function vehicleCardProps(vehicle: VehicleCardData, width: number): Pick<VehicleCardProps, 'title' | 'subtitle' | 'photo' | 'specs' | 'isMain'> {
+export function vehicleCardProps(
+  vehicle: VehicleCardData,
+  width: number,
+): Pick<VehicleCardProps, 'title' | 'subtitle' | 'photo' | 'specs' | 'isMain' | 'sample'> {
   return {
     // DQ-147, DQ-047: the name wraps at its spaces, never inside "GT-R".
     title: keepNameTogether(vehicle.full_title),
@@ -38,6 +41,8 @@ export function vehicleCardProps(vehicle: VehicleCardData, width: number): Pick<
     photo: photoFields(vehicle.cover, width),
     specs: specChips(vehicle),
     isMain: vehicle.is_main,
+    // 09 §8.19: the Beispiel badge on every sample build.
+    sample: { is_sample: vehicle.is_sample },
   };
 }
 

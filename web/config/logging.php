@@ -66,6 +66,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Crash reports of the app's error screens (POST /api/v1/client-errors): own file, kept 14 days, never personal data.
+        'client' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/client.log'),
+            'level' => 'warning',
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

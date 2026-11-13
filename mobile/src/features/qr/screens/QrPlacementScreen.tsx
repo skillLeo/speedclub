@@ -86,7 +86,7 @@ export function QrPlacementScreen() {
           testID={`${ROUTE}.rule.print`}
         />
       </QrRowGroup>
-      <Text variant="supporting" color="text.secondary" style={styles.disclaimer} testID={`${ROUTE}.disclaimer`}>
+      <Text variant="callout" color="text.secondary" style={styles.disclaimer} testID={`${ROUTE}.disclaimer`}>
         {t('placement.disclaimer')}
       </Text>
     </QrPage>

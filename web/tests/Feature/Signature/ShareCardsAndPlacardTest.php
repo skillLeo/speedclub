@@ -134,6 +134,50 @@ describe('share cards', function () {
     });
 });
 
+/**
+ * The faces a PDF embeds, by PostScript name without the subset prefix ("ABCDEF+").
+ *
+ * @return list<string>
+ */
+function placardFonts(string $pdf): array
+{
+    preg_match_all('~/BaseFont\s*/(?:[A-Z]{6}\+)?([A-Za-z0-9-]+)~', $pdf, $names);
+    $fonts = array_values(array_unique($names[1]));
+    sort($fonts);
+
+    return $fonts;
+}
+
+/**
+ * The code points each embedded face draws, per CIDFont dictionary (dompdf writes Identity-H, so a CID is the code point), read from /W.
+ *
+ * @return array<string, list<list<int>>>
+ */
+function placardGlyphs(string $pdf): array
+{
+    preg_match_all('~/Subtype /CIDFontType2\s*/BaseFont /(?:[A-Z]{6}\+)?([A-Za-z0-9-]+).*?/W \[(.*?)\]\s*/~s', $pdf, $fonts, PREG_SET_ORDER);
+    $glyphs = [];
+
+    foreach ($fonts as [, $name, $widths]) {
+        $cids = [];
+        // "c [w1 w2 …]" covers c, c+1, …; "first last w" covers the range.
+        preg_match_all('~(\d+)\s*\[([^\]]*)\]|(\d+)\s+(\d+)\s+\d+(?:\.\d+)?~', $widths, $entries, PREG_SET_ORDER);
+
+        foreach ($entries as $entry) {
+            if (($entry[2] ?? '') !== '' || ($entry[1] ?? '') !== '') {
+                $count = count(preg_split('~\s+~', trim($entry[2]), -1, PREG_SPLIT_NO_EMPTY) ?: []);
+                array_push($cids, ...range((int) $entry[1], (int) $entry[1] + max($count, 1) - 1));
+            } else {
+                array_push($cids, ...range((int) $entry[3], (int) $entry[4]));
+            }
+        }
+
+        $glyphs[$name][] = $cids;
+    }
+
+    return $glyphs;
+}
+
 describe('placard PDF', function () {
     it('gives the owner an A5 and an A4 build sheet', function (string $size, float $widthPt) {
         Sanctum::actingAs($this->owner);
@@ -144,11 +188,32 @@ describe('placard PDF', function () {
 
         expect($pdf)->toStartWith('%PDF-')
             ->and($response->headers->get('Content-Disposition'))->toContain('speedclub-placard-'.$size)
-            ->and($pdf)->toMatch('#/MediaBox \[0(\.0+)? 0(\.0+)? '.floor($widthPt).'#');
+            ->and($pdf)->toMatch('#/MediaBox \[0(\.0+)? 0(\.0+)? '.floor($widthPt).'#')
+            // 09 §4.2: the car's name in Archivo SemiExpanded, the rest in Inter, all embedded, and no other face.
+            ->and(placardFonts($pdf))->toBe(['ArchivoSemiExpanded-SemiBold', 'Inter-Regular', 'Inter-SemiBold'])
+            ->and(substr_count($pdf, '/FontFile2'))->toBe(3);
     })->with([
         'a5' => ['a5', 419.53],
         'a4' => ['a4', 595.28],
     ]);
+
+    it('prints a Cyrillic model name in Inter SemiBold, the registered fallback of Archivo at the same weight', function () {
+        // Free text from the member (make_text/model_text): Archivo has no Cyrillic, and the core font after it only WinAnsi.
+        $this->vehicle->forceFill(['make_id' => null, 'model_id' => null, 'generation_id' => null, 'make_text' => 'Lada', 'model_text' => 'Лада 2107'])->save();
+        Sanctum::actingAs($this->owner);
+
+        $pdf = (string) $this->get("/api/v1/vehicles/{$this->vehicle->id}/placard.pdf?size=a5")->assertOk()->getContent();
+        $cyrillic = [mb_ord('Л'), mb_ord('а'), mb_ord('д')];
+        $glyphs = placardGlyphs($pdf);
+
+        // The same three faces, the SemiBold twice (bold for the headings, 600 for the fallback), and the letters drawn from Inter, not left blank.
+        expect(placardFonts($pdf))->toBe(['ArchivoSemiExpanded-SemiBold', 'Inter-Regular', 'Inter-SemiBold'])
+            ->and(substr_count($pdf, '/FontFile2'))->toBe(4)
+            ->and(collect($glyphs['Inter-SemiBold'])->contains(fn (array $cids): bool => array_diff($cyrillic, $cids) === []))->toBeTrue()
+            ->and(array_intersect($cyrillic, ...$glyphs['ArchivoSemiExpanded-SemiBold']))->toBe([])
+            // The Latin part of the title stays in Archivo.
+            ->and(in_array(mb_ord('L'), $glyphs['ArchivoSemiExpanded-SemiBold'][0], true))->toBeTrue();
+    });
 
     it('holds the title, the specs, the mods and the code, and leaves a hidden owner out', function () {
         $qr = $this->vehicle->activeQrCode()->firstOrFail();

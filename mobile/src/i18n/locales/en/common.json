@@ -51,7 +51,7 @@
     },
     "a11y": {
         "photoCounter": "Photo {{current}} of {{total}}",
-        "unreadCount": "{{count}} unread",
+        "unreadCount": "{{count}} unread",
         "sheetGrabber": "Drag to resize the sheet",
         "imageViewer": "Image viewer",
         "mainVehicle": "Main vehicle",
@@ -62,7 +62,13 @@
         "mainVehicle": "Main vehicle",
         "installed": "Installed",
         "planned": "Planned",
-        "removed": "Removed"
+        "removed": "Removed",
+        "sample": "Sample",
+        "editorial": "Editorial",
+        "verified": "Verified",
+        "business": "Business",
+        "founding": "Founding member",
+        "dyno": "Dyno"
     },
     "auth": {
         "signIn": "Sign in",
@@ -159,8 +165,8 @@
                     "tabs": "Sections"
                 },
                 "empty": "Nothing found for “{{query}}”",
-                "results_one": "{{count}} result",
-                "results_other": "{{count}} results",
+                "results_one": "{{count}} result",
+                "results_other": "{{count}} results",
                 "hint": "Arrow keys choose, Enter opens, Esc closes.",
                 "settings": "Settings"
             }
@@ -192,5 +198,12 @@
             "dailyLimit": "You’ve used up today’s allowance for this AI feature. It resets tomorrow."
         },
         "verifyEmail": "Confirm email address"
+    },
+    "mediaCard": {
+        "more": "more"
+    },
+    "buildSheet": {
+        "expand": "Show details of {{name}}",
+        "collapse": "Hide details of {{name}}"
     }
 }

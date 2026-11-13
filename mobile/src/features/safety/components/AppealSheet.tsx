@@ -148,7 +148,7 @@ export function AppealSheet({ visible, decisionId, onClose, onChanged, onDirtyCh
           </View>
         ) : (
           <View style={styles.body}>
-            <Text variant="bodyDense" color="text.secondary">
+            <Text variant="body" color="text.secondary">
               {t('appeal.body')}
             </Text>
             {online ? null : <FormNotice tone="info" message={t('report.offline')} testID={`${testID}.offline`} />}

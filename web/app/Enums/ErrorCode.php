@@ -62,6 +62,8 @@ enum ErrorCode: string
     // M3.2 view-as (m3.2-contract §3): a view-as token reads only, and never messages.
     case ViewAsReadOnly = 'view_as_read_only';
     case ViewAsNoMessages = 'view_as_no_messages';
+    // M4.13 ruling (ADR-441): view-as never shows a member's maintenance, service log, odometer or private costs.
+    case ViewAsPrivate = 'view_as_private';
     // M3.2: a reverse decision lifted a measure; there is nothing to appeal.
     case DecisionNotAppealable = 'decision_not_appealable';
     // M3.4 (ADM-23): the text holds a term of the keyword block list (the message never names it).
@@ -78,25 +80,60 @@ enum ErrorCode: string
     case AiDailyLimit = 'ai_daily_limit';
     // ADR-245: a member write while a re-consent version (AGB or Datenschutz) is not accepted; GET me/consents names it.
     case ConsentRequired = 'consent_required';
+    // M4.6 (09 §8.1): a passwordless account has not accepted AGB, Datenschutz and the age line yet (AUTH-09b, POST me/onboarding/accept).
+    case TermsRequired = 'terms_required';
+    // M4.6 "sudo mode": the endpoint needs POST me/reauth within the last 10 minutes; `methods` names what this member can use.
+    case ReauthenticationRequired = 'reauthentication_required';
+    // M4.6 AUTH-13: the e-mail code is older than 10 minutes; a new one is needed.
+    case CodeExpired = 'code_expired';
+    // M4.6 AUTH-13: 10 wrong codes in an hour for this address; `retry_after` seconds until the 15-minute lock ends.
+    case EmailCodeLocked = 'email_code_locked';
+    // M4.6: an Apple or Google ID token that fails verification (signature, issuer, audience, time, nonce, unverified e-mail).
+    case InvalidIdentityToken = 'invalid_identity_token';
+    // M4.6: this Apple or Google identity already belongs to another SPEED CLUB account.
+    case ProviderAlreadyLinked = 'provider_already_linked';
+    // M4.6: unlinking or deleting this sign-in method would leave the account without any way in.
+    case LastSignInMethod = 'last_sign_in_method';
+    // M4.6: a passkey ceremony that fails (unknown, expired or spent ceremony, wrong origin, bad signature, counter regression).
+    case PasskeyInvalid = 'passkey_invalid';
+    // M4.11 (09 §8.5): a build update can be edited within 24 hours of posting; hiding and deleting stay open.
+    case EditWindowClosed = 'edit_window_closed';
+    // M4.11 [build_comments]: the owner turned comments off for this vehicle.
+    case CommentsDisabled = 'comments_disabled';
+    // M4.11 (09 §8.5/§8.6): the limit of an owner-curated list is reached (8 highlights, collections, items).
+    case LimitReached = 'limit_reached';
+    // M4.12 (09 §8.7): an event that does not exist, or one the reader may not see (draft, pending, rejected, blocked organiser, samples
+    // while hidden, followers-only); the same answer for each, so nothing is learnt about an event one cannot see.
+    case EventUnavailable = 'event_unavailable';
+    // M4.12: the event is cancelled or over (RSVP, updates), or not in a state the action needs (submit a published event, cancel twice).
+    case EventClosed = 'event_closed';
+    // M4.12 (09 §8.7 creation rights): the account is younger than 14 days; `eligible_at` names when it may organise.
+    case OrganiserNotEligible = 'organiser_not_eligible';
+    // M4.12: the geocoding service did not answer in time or is not configured; the organiser can still place the pin by hand.
+    case GeocodeUnavailable = 'geocode_unavailable';
+    // M4.12 security review (SEC-412-01): the event is with staff for review; it cannot be changed until they decided.
+    case EventInReview = 'event_in_review';
+    // M4.13 (09 §8.12 offline outbox): the edit started from an older `version` of the row; the body's `current` holds the server's row.
+    case EditConflict = 'edit_conflict';
 
     public function status(): int
     {
         return match ($this) {
             self::BadRequest => 400,
-            self::Unauthenticated, self::InvalidCredentials => 401,
-            self::Forbidden, self::AccountRestricted, self::EmailNotVerified, self::PasswordChangeRequired, self::QrRevokedByStaff, self::CannotMessage, self::SecondFactorLocked, self::PasswordConfirmationRequired, self::ViewAsReadOnly, self::ViewAsNoMessages, self::AiOptInRequired, self::ConsentRequired => 403,
-            self::NotFound, self::VehicleUnavailable, self::MemberUnavailable, self::FeatureDisabled => 404,
+            self::Unauthenticated, self::InvalidCredentials, self::InvalidIdentityToken => 401,
+            self::Forbidden, self::AccountRestricted, self::EmailNotVerified, self::PasswordChangeRequired, self::QrRevokedByStaff, self::CannotMessage, self::SecondFactorLocked, self::PasswordConfirmationRequired, self::ViewAsReadOnly, self::ViewAsNoMessages, self::ViewAsPrivate, self::AiOptInRequired, self::ConsentRequired, self::TermsRequired, self::ReauthenticationRequired, self::EditWindowClosed, self::CommentsDisabled, self::OrganiserNotEligible => 403,
+            self::NotFound, self::VehicleUnavailable, self::MemberUnavailable, self::FeatureDisabled, self::EventUnavailable => 404,
             self::MethodNotAllowed => 405,
-            self::Conflict, self::UsernameChangeCooldown, self::TokenRotationNotDue, self::TwoFactorRequired, self::IdempotencyKeyReused, self::FeedStale, self::RequestPending, self::AlreadyReported, self::AppealExists => 409,
+            self::Conflict, self::UsernameChangeCooldown, self::TokenRotationNotDue, self::TwoFactorRequired, self::IdempotencyKeyReused, self::FeedStale, self::RequestPending, self::AlreadyReported, self::AppealExists, self::ProviderAlreadyLinked, self::LastSignInMethod, self::LimitReached, self::EventClosed, self::EventInReview, self::EditConflict => 409,
             self::PayloadTooLarge => 413,
             self::UnsupportedMediaType => 415,
             self::SessionExpired => 419,
-            self::ValidationFailed, self::InvalidCode, self::VehicleIncomplete, self::OwnContent, self::AppealPeriodOver, self::ChallengeExpired, self::TwoFactorCodeRequired, self::DecisionNotAppealable, self::ContentBlocked, self::AiRefused, self::AiUnverifiable => 422,
+            self::ValidationFailed, self::InvalidCode, self::VehicleIncomplete, self::OwnContent, self::AppealPeriodOver, self::ChallengeExpired, self::TwoFactorCodeRequired, self::DecisionNotAppealable, self::ContentBlocked, self::AiRefused, self::AiUnverifiable, self::CodeExpired, self::PasskeyInvalid => 422,
             self::Maintenance => 423,
             self::UpgradeRequired => 426,
-            self::RateLimited, self::AiDailyLimit => 429,
+            self::RateLimited, self::AiDailyLimit, self::EmailCodeLocked => 429,
             self::ServerError => 500,
-            self::ServiceUnavailable, self::AiUnavailable, self::AiBudgetExhausted => 503,
+            self::ServiceUnavailable, self::AiUnavailable, self::AiBudgetExhausted, self::GeocodeUnavailable => 503,
         };
     }
 

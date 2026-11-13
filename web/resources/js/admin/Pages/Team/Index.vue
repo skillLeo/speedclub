@@ -114,7 +114,7 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
     <div class="flex flex-col gap-24" data-testid="ADM-39" :data-qa-state="pageState">
         <PageHeader :title="trans('team.index.title')" :crumbs="[{ label: trans('shell.groups.team') }]" :description="trans('team.index.intro')">
             <template #meta>
-                <p class="text-supporting text-ink-2 tabular-nums" data-testid="ADM-39.owners">{{ trans('team.index.owners', { count: formatNumber(owners.active), max: formatNumber(owners.max) }) }}</p>
+                <p class="text-admin-base text-ink-2 tabular-nums" data-testid="ADM-39.owners">{{ trans('team.index.owners', { count: formatNumber(owners.active), max: formatNumber(owners.max) }) }}</p>
             </template>
             <template v-if="can('staff.invite')" #actions>
                 <Button size="sm" variant="primary" :icon="PhUserPlus" data-testid="ADM-39.invite" @click="openInvite()">{{ trans('team.index.invite') }}</Button>
@@ -169,11 +169,11 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                 <Field :label="trans('team.invite.name')" :error="errors.name" required><Input v-model="form.name" maxlength="120" autocomplete="off" data-autofocus data-testid="ADM-39.invite.name" /></Field>
                 <Field :label="trans('team.invite.email')" :error="errors.email" required><Input v-model="form.email" type="email" maxlength="191" autocomplete="off" data-testid="ADM-39.invite.email" /></Field>
                 <RolePicker v-model="form.roles" :options="roles" :disabled="disabledRoles" :legend="trans('team.invite.roles')" :hint="viewerIsOwner ? trans('team.invite.roles_hint') : `${trans('team.invite.roles_hint')} ${trans('team.invite.owner_only')}`" test-id="ADM-39.invite.roles" />
-                <p v-if="errors.roles" class="text-helper text-danger" role="alert">{{ errors.roles }}</p>
+                <p v-if="errors.roles" class="text-admin-base text-danger" role="alert">{{ errors.roles }}</p>
                 <Field :label="trans('team.invite.locale')"><Select v-model="form.locale" :options="localeOptions" data-testid="ADM-39.invite.locale" /></Field>
                 <template v-if="fourEyes">
                     <ApprovalNotice test-id="ADM-39.invite.four-eyes" />
-                    <p class="text-helper text-ink-2">{{ trans('team.invite.elevating') }}</p>
+                    <p class="text-admin-base text-ink-2">{{ trans('team.invite.elevating') }}</p>
                     <Field :label="trans('ui.confirm.reason')" :hint="trans('team.invite.reason_hint')" :error="errors.reason" required><Textarea v-model="form.reason" :rows="2" :maxlength="1000" show-count data-testid="ADM-39.invite.reason" /></Field>
                 </template>
             </form>

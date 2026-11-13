@@ -65,7 +65,8 @@ describe('WEB-01 without JavaScript', function () {
 
         expect($html)
             ->toContain('Aus Japan importiert.')
-            ->toContain('HKS Hi-Power')
+            // DQ-926: the mod's name keeps "Hi-Power" whole (KeepTogether::shortNames, as the app's ModRow).
+            ->toContain('HKS <span class="sc-keep">Hi-Power</span>')
             ->toContain('data-testid="VEH-01.eyebrow"')
             ->toContain('NISSAN')
             ->toContain('Bayside Blue');
@@ -92,16 +93,16 @@ describe('WEB-01 without JavaScript', function () {
             ->not->toContain('play.google.com');
     });
 
-    it('loads only the first photo with priority, and shows the counter and thumbnails of a real gallery', function () {
+    it('loads only the first photo with priority, and shows the counter and the 3-up photo preview of a real gallery (DQ-1048, DQ-1078)', function () {
         Media::factory()->count(5)->forModel($this->vehicle)->create(['owner_id' => $this->owner->id]);
 
         $html = $this->get($this->url)->getContent();
 
         expect(substr_count($html, 'fetchpriority="high"'))->toBe(2) // The image and its preload.
             ->and($html)->toContain('>1/6<')
-            ->toContain('data-testid="WEB-01.thumbs"')
-            ->toContain('sc-thumbs-4')
-            ->toContain('>+1<')
+            ->toContain('data-testid="WEB-01.photoPreview"')
+            ->toContain('sc-veh-preview')
+            ->not->toContain('data-testid="WEB-01.thumbs"')
             ->toContain('loading="lazy"')
             ->toContain('320w')
             ->toContain('1600w');
@@ -126,7 +127,8 @@ describe('WEB-01 without JavaScript', function () {
         expect($this->withHeader('Accept-Language', 'de')->get($this->url)->assertOk()->getContent())
             ->toContain('data-testid="VEH-01.heroEmpty"')
             ->toContain('Noch keine Fotos')
-            ->toContain('@lukas.sc hat für dieses Fahrzeug')
+            // DQ-927: the handle as it is, never hyphenated (KeepTogether::identifier).
+            ->toContain('@<span class="sc-ident">lukas.<wbr>sc</span> hat für dieses Fahrzeug')
             ->toContain('data-testid="VEH-01.hero"')
             ->not->toContain('fetchpriority');
     });
@@ -143,14 +145,17 @@ describe('WEB-01 without JavaScript', function () {
     it('shows provenance under what is not a factory figure', function () {
         $this->vehicle->specs()->firstOrNew()->forceFill(['power_value' => 500, 'power_unit' => 'ps', 'power_ps' => 500, 'power_source' => 'measured'])->save();
 
-        expect($this->withHeader('Accept-Language', 'de')->get($this->url)->getContent())->toMatch('~data-testid="WEB-01.provenance">Gemessen<~');
+        expect($this->withHeader('Accept-Language', 'de')->get($this->url)->getContent())->toMatch('~data-testid="WEB-01.provenance">Prüfstand<~');
     });
 
     it('keeps "GT-R" on one line in the shown name only, never in meta tags, JSON-LD or the share data (DQ-181)', function () {
         $html = $this->withHeader('Accept-Language', 'de')->get($this->url)->assertOk()->getContent();
         $title = (string) $this->vehicle->fresh()?->getAttribute('model_text');
 
-        expect($html)->toMatch('~data-testid="VEH-01.title">Skyline <span class="sc-keep">GT-R</span></h1>~')
+        // ADR-426 (c) as amended: a two-word name keeps its space breakable (no space would remain before "Skyline GT-R"), so
+        // the trailing "GT-R" is not bound; it stays whole through its .sc-keep span.
+        expect($html)->toMatch('~data-testid="VEH-01.title">Skyline <span class="sc-keep">GT-R</span></h1>~u')
+            ->and($html)->not->toMatch('~data-testid="VEH-01.title">[^<]*<span class="sc-bind">~')
             ->and(metaContent($html, 'og:title'))->toContain('Skyline GT-R')->not->toContain('sc-keep')
             ->and(metaContent($html, 'description'))->not->toContain('sc-keep')
             ->and(json_encode(jsonLdBlocks($html)))->toContain('Skyline GT-R')->not->toContain('sc-keep')
@@ -205,14 +210,14 @@ describe('WEB-01 without JavaScript', function () {
 
         $html = $this->withHeader('Accept-Language', 'de')->get($this->url)->assertOk()->getContent();
 
-        expect($html)->toContain('HKS Hi-Power')->toContain('Volk TE37');
+        expect(strip_tags((string) $html))->toContain('HKS Hi-Power')->toContain('Volk TE37');
 
         if ($shown) {
             expect(substr_count((string) $html, 'data-testid="WEB-01.legalStatus"'))->toBeGreaterThanOrEqual(2)
-                ->and($html)->toContain('Teilegutachten')->toContain('Nicht erforderlich')
+                ->and($html)->toContain('Teilegutachten')->toContain('Eintragungsfrei')
                 ->toContain('data-testid="WEB-01.legalDisclaimer">Angaben des Besitzers, keine rechtliche Prüfung</p>');
         } else {
-            expect($html)->not->toContain('WEB-01.legalStatus')->not->toContain('Teilegutachten')->not->toContain('Nicht erforderlich');
+            expect($html)->not->toContain('WEB-01.legalStatus')->not->toContain('Teilegutachten')->not->toContain('Eintragungsfrei');
         }
     })->with([['local', true], ['staging', true], ['production', false]]);
 
@@ -258,7 +263,8 @@ describe('WEB-01 without JavaScript', function () {
         expect($row)->toContain('<div class="flex shrink-0 self-center">')
             // The legal pill is in the text column, after the values; the end column holds the install status alone.
             ->and($text)->toContain('data-testid="WEB-01.legalStatus"')
-            ->and(strpos($text, 'Teilegutachten'))->toBeGreaterThan((int) strpos($text, 'HKS Hi-Power'))
+            ->and(strpos($text, 'Teilegutachten'))->toBeGreaterThan((int) strpos($text, 'Hi-Power</span>'))
+            ->and(strpos($text, 'Hi-Power</span>'))->not->toBeFalse()
             ->and(substr($row, (int) strpos($row, 'self-center')))->not->toContain('WEB-01.legalStatus');
     });
 
@@ -305,7 +311,7 @@ describe('WEB-01 hero save control [SIG sig.saved_builds] (M2.1 review P1)', fun
             ->toContain('href="'.$signIn.'" class="sc-focus sc-hero-save" aria-label="'.__('public.vehicle.save').'"')
             ->toContain('<use href="#ph-bookmark-simple">')
             ->toContain('<symbol id="ph-bookmark-simple"');
-        // Save comes before share in the title row, as in VEH-01's header.
+        // Save comes before share in the action row (DQ-1047: the title row moved onto the hero).
         expect(strpos($html, 'VEH-01.saveRow'))->toBeLessThan((int) strpos($html, 'VEH-01.share'));
         // The hero chip lives inside the pager it sits on (M2.8 matrix: no interactive region lies across it), and the pager stays
         // unpositioned, so the hero remains the chip's containing block: it neither scrolls with the slides nor gets clipped.
@@ -338,7 +344,8 @@ describe('SEO', function () {
             ->and(metaContent($html, 'twitter:title'))->toBe(metaContent($html, 'og:title'))
             ->and(metaContent($html, 'twitter:image'))->toBe(metaContent($html, 'og:image'))
             ->and($blocks)->toHaveCount(2)
-            ->and($blocks[0]['@type'])->toBe('Vehicle')
+            // Car, the Vehicle of schema.org for passenger cars.
+            ->and($blocks[0]['@type'])->toBe('Car')
             ->and($blocks[0]['@context'])->toBe('https://schema.org')
             ->and($blocks[0]['url'])->toBe(url($this->url))
             ->and($blocks[0]['vehicleModelDate'])->toBe('2002')
@@ -721,13 +728,13 @@ describe('WEB-08', function () {
             ->and($imprint)->toContain('data-testid="WEB-08.title">Impressum</h1>');
     });
 
-    it('sets its title as title.l and its body in the body colour, like SET-18 (DQ-218)', function () {
+    it('sets its title as title.1 and its body in the body colour, like SET-18 (DQ-218)', function () {
         LegalDocument::factory()->published()->create(['key' => LegalDocumentKey::Imprint, 'locale' => 'de', 'body_md' => "# Impressum\n\n## Anbieter\n\nText."]);
 
         $html = (string) $this->withHeader('Accept-Language', 'de')->get('/impressum')->assertOk()->getContent();
 
-        expect($html)->toMatch('~<h1 class="text-title-l text-ink"\s+data-testid="WEB-08.title">Impressum</h1>~')
-            ->not->toContain('text-display-l')
+        expect($html)->toMatch('~<h1 class="t-title-1 text-ink"\s+data-testid="WEB-08.title">Impressum</h1>~')
+            ->not->toContain('t-display-title')
             ->toContain('class="sc-prose text-body text-ink"');
     });
 
@@ -763,8 +770,8 @@ describe('WEB-08', function () {
     })->with([
         'imprint de' => [LegalDocumentKey::Imprint, 'de', "[[Firmenname]] [[Rechtsform]]<br />\n[[Anschrift]]<br />\n[[PLZ und Ort]]<br />\nDeutschland</p>"],
         'imprint en' => [LegalDocumentKey::Imprint, 'en', "[[Firmenname]] [[Rechtsform]]<br />\n[[Anschrift]]<br />\n[[PLZ und Ort]]<br />\nGermany</p>"],
-        'privacy de' => [LegalDocumentKey::Privacy, 'de', "Deutschland<br />\nE-\u{2060}Mail: [[Datenschutz-E-\u{2060}Mail]]</p>"],
-        'privacy en' => [LegalDocumentKey::Privacy, 'en', "Germany<br />\nEmail: [[Datenschutz-E-\u{2060}Mail]]</p>"],
+        'privacy de' => [LegalDocumentKey::Privacy, 'de', "Deutschland<br />\nE-\u{2060}Mail: [[Datenschutz-\u{2060}E-\u{2060}Mail]]</p>"],
+        'privacy en' => [LegalDocumentKey::Privacy, 'en', "Germany<br />\nEmail: [[Datenschutz-\u{2060}E-\u{2060}Mail]]</p>"],
         'terms de' => [LegalDocumentKey::Terms, 'de', "[[Anschrift]]<br />\n[[PLZ und Ort]]<br />\nDeutschland</p>"],
         'terms en' => [LegalDocumentKey::Terms, 'en', "[[Anschrift]]<br />\n[[PLZ und Ort]]<br />\nGermany</p>"],
     ]);

@@ -15,6 +15,7 @@ import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import preloadFonts from './preload-fonts.js';
 import stripQa from './strip-qa.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -46,9 +47,18 @@ if (!existsSync(join(dist, 'index.html'))) {
   process.exit(1);
 }
 
+const indexHtml = join(dist, 'index.html');
+// 09 §4.2: preload the two faces above the fold of the first screen (preload-fonts.js says which and why). It fails the
+// export when a face is missing from it, rather than ship an index.html that points at nothing.
+try {
+  writeFileSync(indexHtml, preloadFonts.preloadAboveTheFold(readFileSync(indexHtml, 'utf8'), dist));
+} catch (error) {
+  console.error(`✖ ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+}
+
 // The bundle compiles the QA overrides out by itself; the inline head script needs this step.
 if (env.EXPO_PUBLIC_APP_ENV === 'production') {
-  const indexHtml = join(dist, 'index.html');
   writeFileSync(indexHtml, stripQa.stripQaBlock(readFileSync(indexHtml, 'utf8')));
 }
 

@@ -238,6 +238,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/events/{slug}/attendees/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Take a member off the list
+         * @description The organiser (EVT-06). Silent for the member; they cannot answer again. A going member's spot goes to the waitlist. Answers 204.
+         */
+        delete: operations["v1.events.attendees.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List attendees
+         * @description Members only. Going members by username; the organiser sees every answer newest first and filters by `status`.
+         */
+        get: operations["v1.events.attendees.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/blocks": {
         parameters: {
             query?: never;
@@ -349,6 +389,79 @@ export interface paths {
          *     again answers 403 `account_restricted`, since it makes something public.
          */
         patch: operations["v1.updates.update"];
+        trace?: never;
+    };
+    "/build-updates/{update}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a build update (VEH-05)
+         * @description Guests too. Hidden entries, followers-only posts for non-followers and anything of a vehicle the viewer may not see: 404.
+         */
+        get: operations["v1.build-updates.show"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a build update
+         * @description The owner's posts and notes, any time and also under a restriction. Photos, reactions, mentions, comments, highlights and
+         *     collection entries go with it. Answers 204.
+         */
+        delete: operations["v1.build-updates.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit a build update
+         * @description The owner's posts and notes, within 24 hours of posting (403 edit_window_closed afterwards; hiding stays on PATCH updates/{id}).
+         *     Any subset of text, mileage_km, happened_on, audience, modification_ids, photo_order and photo_pairs; a change stamps edited_at.
+         */
+        patch: operations["v1.build-updates.update"];
+        trace?: never;
+    };
+    "/build-updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post a build update
+         * @description Accepts an Idempotency-Key header. The photos follow with POST build-updates/{id}/media (up to 10). Followers of the owner and of the
+         *     build hear about it once it has text, a photo or a linked mod; mentioned members at once (mentions flag). A draft vehicle: 403.
+         *     Unknown or foreign vehicle: 404 vehicle_unavailable.
+         */
+        post: operations["v1.build-updates.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/build-updates/{update}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a photo to a build update
+         * @description Multipart, as a gallery upload (up to 15 MB, JPEG, PNG or WebP by content; re-encoded, EXIF stripped). Up to 10 per update, within
+         *     the 24-hour edit window. Accepts an Idempotency-Key header.
+         */
+        post: operations["v1.build-updates.media.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/catalog/makes": {
@@ -562,6 +675,223 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/client-errors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["v1.client-errors.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my collections
+         * @description In my order, "Gespeichert" created on first use. With contains_type and contains_id (the save sheet) each says whether it holds
+         *     that item.
+         */
+        get: operations["v1.me.collections.index"];
+        put?: never;
+        /**
+         * Create a collection
+         * @description Accepts an Idempotency-Key header. Up to 50 collections (409 limit_reached).
+         */
+        post: operations["v1.me.collections.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/collections/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reorder my collections
+         * @description `ids` top first, every collection exactly once (422 otherwise). Answers 204.
+         */
+        put: operations["v1.me.collections.order"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/collections/{collection}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a collection
+         * @description With its entries; builds in no other collection stop being saved. "Gespeichert": 409. Answers 204.
+         */
+        delete: operations["v1.me.collections.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Rename a collection
+         * @description "Gespeichert" too. Another member's collection: 403.
+         */
+        patch: operations["v1.me.collections.update"];
+        trace?: never;
+    };
+    "/me/collections/{collection}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a collection's items
+         * @description Newest (highest position) first. Items the member can no longer see stay stored and are left out while that lasts.
+         */
+        get: operations["v1.me.collections.items.index"];
+        put?: never;
+        /**
+         * Add an item to a collection
+         * @description Accepts an Idempotency-Key header. `type` vehicle, modification, build_update or event, `id` its id. Only what you can see now (404
+         *     otherwise); your own build: 403. Adding twice keeps the first. A build in any collection counts as saved. Up to 1,000 items (409
+         *     limit_reached).
+         */
+        post: operations["v1.me.collections.items.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/collections/{collection}/items/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reorder a collection's items
+         * @description `ids` as "type:id", top first, every stored item exactly once (422 otherwise). Answers 204.
+         */
+        put: operations["v1.me.collections.items.order"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/collections/{collection}/items/{type}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an item from a collection
+         * @description By type and id, whatever the item's state now. Answers 204.
+         */
+        delete: operations["v1.me.collections.items.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/build-updates/{update}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the comments of a build update
+         * @description Guests too. Top-level comments oldest first, each with its replies. Comments of members the viewer may not see (blocked either
+         *     way, suspended, gone, samples while hidden) and removed ones are left out.
+         */
+        get: operations["v1.comments.index"];
+        put?: never;
+        /**
+         * Comment on a build update
+         * @description Accepts an Idempotency-Key header. `parent_id` replies (a reply to a reply joins its thread). Comments turned off for the vehicle:
+         *     403 comments_disabled. Unverified: 403 email_not_verified. A blocked term: 422 content_blocked.
+         */
+        post: operations["v1.comments.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/comments/{comment}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a comment
+         * @description Its author, or the owner of the update; also under a restriction. Replies go with a top-level comment. Answers 204.
+         */
+        delete: operations["v1.comments.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Turn comments on a vehicle on or off
+         * @description Owner only. Off stops new comments; what was written stays. Answers the vehicle's social block.
+         */
+        patch: operations["v1.vehicles.comments"];
         trace?: never;
     };
     "/compare": {
@@ -913,7 +1243,8 @@ export interface paths {
         post?: never;
         /**
          * Sign out every other device and browser (SET-06)
-         * @description This device stays signed in. Push tokens of the other installs go too.
+         * @description This device stays signed in. Push tokens of the other installs go too. Needs a recent sign-in or POST me/reauth (09 §8.4); a
+         *     member with a password may send the `password` instead (422 on it when wrong, 403 `reauthentication_required` without either).
          */
         delete: operations["v1.me.sessions.destroy-others"];
         options?: never;
@@ -962,6 +1293,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/email/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask for a sign-in code (AUTH-12, passwordless)
+         * @description Always 202 `{attempt_id, resend_after}`, with the same body and duration whether or not the address has an account. `attempt_id` is
+         *     made by the app (a UUID) and kept on the device; send it again with the code to POST auth/email/verify. The mail holds the 6-digit
+         *     code (10 minutes, single use) and an "Anmelden" button that works only on this device. Nothing is sent during the cooldown
+         *     (`resend_after`: 30 s, 60 s, then 120 s), above 5 codes an hour for the address, or while it is locked after 10 wrong codes.
+         */
+        post: operations["v1.auth.email.start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/email/verify": {
         parameters: {
             query?: never;
@@ -973,7 +1327,13 @@ export interface paths {
         put?: never;
         /**
          * Confirm the e-mail address and sign in
-         * @description Needs the code and `password`, the password chosen at registration. A request already signed in as this account
+         * @description **With `attempt_id` (AUTH-13, passwordless):** the `code` or the `magic_token` of the mail's link signs in; an address without an
+         *     account gets one (`is_new: true`, `next: terms` until POST me/onboarding/accept). Wrong code: 422 `invalid_code` with
+         *     `attempts_left`; expired: 422 `code_expired`; 10 wrong codes in an hour: 429 `email_code_locked` with `retry_after` (15 minutes,
+         *     and a security mail to the account). With two-factor on the answer is the challenge, as at sign-in.
+         *
+         *     **Without `attempt_id` (registration with a password):**
+         *     Needs the code and `password`, the password chosen at registration. A request already signed in as this account
          *     (an unverified member may sign in) leaves `password` out. With `device_name` the answer holds a token for that
          *     device, and `device_id` (the app's per-install id) tells two devices of the same model apart, as at sign-in.
          *     Without `device_name` the SPA session is signed in, which needs GET /sanctum/csrf-cookie first (419 otherwise). A wrong,
@@ -1004,6 +1364,198 @@ export interface paths {
          *     or for an address without an open verification.
          */
         post: operations["v1.auth.email.resend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List upcoming events
+         * @description Guests too. EVT-01 Liste, Entdecken "Treffen am Wochenende" (`when=weekend`) and Home (`when=upcoming&per_page=3`): published,
+         *     not ended, public (and followers-only events of members the reader follows), by start. `lat`/`lng` (+ `radius_km`) filter by
+         *     distance to the area point and fill `distance_km`; `near=home` uses the member's SET-11 region instead; `bbox` limits to the map's
+         *     view; `q` searches title and city. Never the exact place of an after_rsvp event.
+         */
+        get: operations["v1.events.index"];
+        put?: never;
+        /**
+         * Create an event
+         * @description Accepts an Idempotency-Key header. A draft with `accept_rules` true (the rules for meets); `submit` true sends it on at once (see
+         *     submit). Needs a verified e-mail (403 email_not_verified) and an account at least 14 days old (403 organiser_not_eligible with
+         *     `eligible_at`). At most 20 drafts, pending and upcoming events (409 limit_reached). A blocked term: 422 content_blocked.
+         */
+        post: operations["v1.events.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/pins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Map pins
+         * @description Guests too. EVT-01 Karte: the same events and filters as the list, at most 300, as area points (never the exact place); the app
+         *     clusters them.
+         */
+        get: operations["v1.events.pins"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show an event
+         * @description Guests too (the data of WEB-09 /e/{slug}). The exact place only for the organiser and going members of an after_rsvp event;
+         *     everybody else reads `location.exact` false with the city and the area point. A draft, pending or rejected event is the
+         *     organiser's alone; for everybody else, as for a missing one: 404 event_unavailable.
+         */
+        get: operations["v1.events.show"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete an event
+         * @description A draft, pending, rejected, cancelled or past event, with its cover, answers and updates. An upcoming published event with
+         *     answers is cancelled first (409 conflict). Answers 204.
+         */
+        delete: operations["v1.events.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Change an event
+         * @description The organiser, while the event is not over or cancelled (409 event_closed). Changing the time or the place of a published event
+         *     tells everybody with an answer. `location_visibility` is fixed once sent (422).
+         */
+        patch: operations["v1.events.update"];
+        trace?: never;
+    };
+    "/events/{slug}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send an event
+         * @description "Zur Prüfung senden" / "Veröffentlichen": a draft or rejected event becomes pending_review (the organiser's first two events and
+         *     every after_rsvp event, ADM-53) or published. Missing time, place or the legal_only rule: 422 naming the fields.
+         */
+        post: operations["v1.events.submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel an event
+         * @description EVT-06, with a reason everybody with an answer reads; they are told. A published event that has not ended, or one in review.
+         */
+        post: operations["v1.events.cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload the cover
+         * @description Accepts an Idempotency-Key header. Re-encoded without metadata, WebP variants; replaces an earlier cover.
+         */
+        post: operations["v1.events.cover"];
+        /**
+         * Remove the cover
+         * @description The organiser, while the event is open and not in review (409 event_in_review, event_closed). The photo is deleted. Answers the
+         *     event, also when it had no cover.
+         */
+        delete: operations["v1.events.cover.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the calendar file
+         * @description Guests too. text/calendar; the exact place only for the organiser and going members of an after_rsvp event.
+         */
+        get: operations["v1.events.ics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List organiser updates
+         * @description The organiser and members with an answer (403 for anybody else); newest first, at most 50.
+         */
+        get: operations["v1.events.updates.index"];
+        put?: never;
+        /**
+         * Post an update
+         * @description Accepts an Idempotency-Key header. The organiser, while the event is open (409 event_closed); everybody with an answer is told.
+         */
+        post: operations["v1.events.updates.store"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1081,6 +1633,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/geocode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search a place
+         * @description EVT-03 "Ort": up to 5 places for an address or venue, through the server (OpenStreetMap Nominatim, 09 §8.7): search on submit
+         *     only, 60 an hour per member, cached 30 days. 503 geocode_unavailable when the service does not answer; the pin can still be set
+         *     by hand. Show "© OpenStreetMap-Mitwirkende" with the results.
+         */
+        get: operations["v1.geocode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/help": {
         parameters: {
             query?: never;
@@ -1115,6 +1689,32 @@ export interface paths {
          */
         get: operations["v1.help.show"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/highlights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a vehicle's highlights
+         * @description Guests too, for a vehicle they may see. Items the viewer may not see (a hidden or followers-only update, a removed photo) are
+         *     left out.
+         */
+        get: operations["v1.vehicles.highlights.index"];
+        /**
+         * Set a vehicle's highlights
+         * @description The whole rail in order, `items: [{type: build_update|photo, id}]`, up to 8, each an update or a finished photo of this vehicle (or
+         *     of its updates). An empty list clears it. Owner only.
+         */
+        put: operations["v1.vehicles.highlights.update"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1227,6 +1827,168 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vehicles/{vehicle}/maintenance-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List maintenance items
+         * @description Every item of the vehicle (at most 30), the nearest due first, those without a date last. `meta.odometer`: the vehicle's last known
+         *     mileage in km (`km` null when unknown).
+         */
+        get: operations["v1.vehicles.maintenance-items.index"];
+        put?: never;
+        /**
+         * Add a maintenance item
+         * @description Accepts an Idempotency-Key header and a client `id` (offline outbox): sending the same id again answers the item with 200. One item
+         *     per type except custom: 409 conflict with the existing item in `current`. 409 limit_reached at 30 items.
+         */
+        post: operations["v1.vehicles.maintenance-items.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/maintenance-items/{item}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a maintenance item
+         * @description Its log entries stay. The HU/AU item also clears the vehicle's HU/AU month. Answers 204, also when it is gone already.
+         */
+        delete: operations["v1.vehicles.maintenance-items.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Change a maintenance item
+         * @description Any subset of the fields. With `version`: 409 edit_conflict and the server's item in `current` when it changed since.
+         */
+        patch: operations["v1.vehicles.maintenance-items.update"];
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/maintenance-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List service log entries
+         * @description Newest first; `item_id` and `year` filter.
+         */
+        get: operations["v1.vehicles.maintenance-logs.index"];
+        put?: never;
+        /**
+         * Add a service log entry
+         * @description Accepts an Idempotency-Key header and a client `id` (offline outbox): the same id again answers the entry with 200. An entry of an
+         *     item moves that item's last time and next due date; its mileage raises the vehicle's odometer.
+         */
+        post: operations["v1.vehicles.maintenance-logs.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/maintenance-logs/{log}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Show a service log entry */
+        get: operations["v1.vehicles.maintenance-logs.show"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a service log entry
+         * @description With its photos. Answers 204, also when it is gone already.
+         */
+        delete: operations["v1.vehicles.maintenance-logs.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Change a service log entry
+         * @description Any subset of the fields. With `version`: 409 edit_conflict and the server's entry in `current` when it changed since.
+         */
+        patch: operations["v1.vehicles.maintenance-logs.update"];
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/maintenance-logs/{log}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a photo to a service log entry
+         * @description Multipart `file` (JPEG, PNG or WebP, re-encoded, EXIF/GPS stripped). At most 6 per entry (409 limit_reached). Accepts an
+         *     Idempotency-Key header, so an outbox upload that resumes adds nothing twice.
+         */
+        post: operations["v1.vehicles.maintenance-logs.photos.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/maintenance-logs/{log}/photos/{media}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a photo of a service log entry
+         * @description Answers 204.
+         */
+        delete: operations["v1.vehicles.maintenance-logs.photos.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/maintenance-media/{media}/{width}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a service log photo
+         * @description Only by the signed URL of a `MaintenanceLogResource.photos` entry; 403 for an expired or altered signature, 404 when the viewer no
+         *     longer owns the vehicle.
+         */
+        get: operations["v1.maintenance-media.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/vehicles/{vehicle}/media": {
         parameters: {
             query?: never;
@@ -1292,6 +2054,50 @@ export interface paths {
          *     back `ready` under new URLs. 422 for a photo that is not finished.
          */
         patch: operations["v1.media.update"];
+        trace?: never;
+    };
+    "/public/users/{username}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a member's events
+         * @description PROF-01/02 "Treffen": the events the member organises that the reader may see in a list: published, public (followers-only ones
+         *     for followers), not removed; `when=past` lists those that are over, newest first. Never drafts or events in review, never the exact
+         *     place of an after_rsvp event. A member the reader may not see: 404 member_unavailable. Guests too.
+         */
+        get: operations["v1.public.users.events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/mentions/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suggest members to mention (UPD-01 autocomplete)
+         * @description Members you follow or who follow you, and members you mentioned before, whose username or name starts with `q` (a leading @ is
+         *     ignored) and whose "Wer darf mich erwähnen" lets you mention them. At most 8, by username. Never across a block; no sample members
+         *     while samples are hidden.
+         */
+        get: operations["v1.mentions.suggest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/conversations/{conversation}/messages": {
@@ -1443,7 +2249,7 @@ export interface paths {
         };
         /**
          * Read a modification
-         * @description The cost is null for anybody but the owner unless cost_public is set; `fields` is the owner's.
+         * @description The cost is null for anybody but the owner (never public); `fields` is the owner's.
          */
         get: operations["v1.mods.show"];
         put?: never;
@@ -1479,6 +2285,69 @@ export interface paths {
          *     delete through DELETE media/{id}.
          */
         post: operations["v1.mods.media.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My events
+         * @description EVT-05 Meine Treffen: `tab` going (with the waitlist, by start), interested, organised (every status of my own, upcoming and
+         *     unsent) or past (newest first).
+         */
+        get: operations["v1.me.events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/maintenance/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Upcoming maintenance
+         * @description Overdue items first, then those due within `days` (default 60) or within 1,000 km, each with its vehicle. At most `limit` (20).
+         */
+        get: operations["v1.me.maintenance.upcoming"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/maintenance/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reminder plan
+         * @description The dedupe contract of 09 §8.8: every reminder stage of the member's reminding items. `key` is deterministic; the app gives its
+         *     local backup notification that id, schedules it only for `planned` date stages (at or after `fire_at`), and drops it once a push
+         *     carries the same `reminder_key` or this list says `sent`/`skipped`. km stages have no date: only the server sends them.
+         */
+        get: operations["v1.me.maintenance.reminders"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1558,6 +2427,142 @@ export interface paths {
         head?: never;
         /** Mark one notification read or unread */
         patch: operations["v1.notifications.update"];
+        trace?: never;
+    };
+    "/me/onboarding/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept AGB, Datenschutz and the age line (AUTH-09b)
+         * @description For a new passwordless account (`next_step: accept_terms`); until then every write but security setup answers 403 `terms_required`.
+         *     The versions must be the ones published now (app-config `legal`), else 422 on the field. Already accepted: 409 `conflict`.
+         */
+        post: operations["v1.me.onboarding.accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/passkeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My passkeys
+         * @description Newest first, at most 20. Each row names its provider from the AAGUID.
+         */
+        get: operations["v1.me.passkeys.index"];
+        put?: never;
+        /**
+         * Add a passkey
+         * @description Behind `auth.passkeys`; a verified address (403 `email_not_verified`) and recent authentication. A response that fails (origin, RP ID, challenge, spent or expired ceremony, a
+         *     credential already stored): 422 `passkey_invalid`. More than 20: 409 `conflict`. Mails the owner.
+         */
+        post: operations["v1.me.passkeys.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/passkeys/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Passkey registration options
+         * @description Behind `auth.passkeys`; needs a verified address (403 `email_not_verified`) and a recent sign-in or POST me/reauth (403
+         *     `reauthentication_required`). Discoverable credential, user verification required, attestation none, the member's passkeys
+         *     excluded. Send the result with `ceremony_id` to POST me/passkeys.
+         */
+        post: operations["v1.me.passkeys.options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/passkeys/{memberPasskey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a passkey
+         * @description Recent authentication. The last way into the account cannot go: 409 `last_sign_in_method`. Mails the owner. The passkey stays in
+         *     the password manager until the member deletes it there.
+         */
+        delete: operations["v1.me.passkeys.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Rename a passkey
+         * @description Recent authentication. Another member's passkey: 404.
+         */
+        patch: operations["v1.me.passkeys.update"];
+        trace?: never;
+    };
+    "/auth/passkeys/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Passkey sign-in options
+         * @description Behind the flag `auth.passkeys`. Usernameless: no `allowCredentials`, user verification required. Pass `options` to the
+         *     platform's passkey prompt and send the result with `ceremony_id` to POST auth/passkeys/verify within 5 minutes.
+         */
+        post: operations["v1.auth.passkeys.options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/passkeys/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with a passkey
+         * @description Checks the assertion against the stored passkey (origin, RP ID, challenge, signature, user verification, counter) and signs in its
+         *     owner with a token for `device_name`, or the web session. No two-factor step. Anything that fails, a spent or expired ceremony and
+         *     a counter that went back (reported to the owner): 422 `passkey_invalid`.
+         */
+        post: operations["v1.auth.passkeys.verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/auth/password/forgot": {
@@ -1709,6 +2714,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My linked sign-in providers */
+        get: operations["v1.me.providers.index"];
+        put?: never;
+        /**
+         * Link Apple or Google
+         * @description Needs the provider's flag (404 `feature_disabled`), a verified address (403 `email_not_verified`) and a recent sign-in or POST
+         *     me/reauth (403 `reauthentication_required`). A fresh ID token as at sign-in, with its nonce from POST auth/nonce in `raw_nonce`; one that fails: 401 `invalid_identity_token`. Already linked to another account: 409
+         *     `provider_already_linked`; another ID of the same provider on this account: 409 `conflict`. Mails the owner.
+         */
+        post: operations["v1.me.providers.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/providers/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unlink Apple or Google
+         * @description Recent authentication. Allowed only while another way in remains (password, passkey, another provider, or an address that is not
+         *     an Apple private relay): 409 `last_sign_in_method`. Apple's authorisation is revoked when the server has the key. Mails the owner.
+         */
+        delete: operations["v1.me.providers.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/users/{username}": {
         parameters: {
             query?: never;
@@ -1750,6 +2799,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/users/{username}/updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a member's build updates
+         * @description PROF-01/02 "Updates": newest first across the member's public builds, each with its build card and `type`. Hidden updates, unlisted
+         *     and private builds are left out; followers-only updates only for the owner and followers. Guests too.
+         */
+        get: operations["v1.public.users.updates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/vehicles/{slug}": {
         parameters: {
             query?: never;
@@ -1780,7 +2850,7 @@ export interface paths {
         };
         /**
          * Read a modification of a vehicle page
-         * @description For VEH-02. The cost is null unless cost_public is set or the owner asks.
+         * @description For VEH-02. The cost is null for anybody but the owner (costs are never public).
          */
         get: operations["v1.public.vehicles.mods.show"];
         put?: never;
@@ -2038,6 +3108,130 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vehicles/{id}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Who reacted (owner only)
+         * @description Newest first, with `meta.summary` (counts by kind and in total). Members the owner may no longer see are left out of the list;
+         *     the summary counts every reaction. Anybody but the owner: 403; an item the viewer may not see: 404.
+         */
+        get: operations["v1.reactions.vehicles.index"];
+        /**
+         * Set or change my reaction
+         * @description One per member and item: a second PUT replaces the first. Answers with my reaction only. Own item: 403. Unverified: 403
+         *     email_not_verified. Anything the viewer may not see, also across a block: 404.
+         */
+        put: operations["v1.reactions.vehicles.update"];
+        post?: never;
+        /**
+         * Take my reaction back
+         * @description Any id answers 200 with my_reaction null, also for an item that went private or was deleted.
+         */
+        delete: operations["v1.reactions.vehicles.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/build-updates/{id}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Who reacted (owner only)
+         * @description Newest first, with `meta.summary` (counts by kind and in total). Members the owner may no longer see are left out of the list;
+         *     the summary counts every reaction. Anybody but the owner: 403; an item the viewer may not see: 404.
+         */
+        get: operations["v1.reactions.build-updates.index"];
+        /**
+         * Set or change my reaction
+         * @description One per member and item: a second PUT replaces the first. Answers with my reaction only. Own item: 403. Unverified: 403
+         *     email_not_verified. Anything the viewer may not see, also across a block: 404.
+         */
+        put: operations["v1.reactions.build-updates.update"];
+        post?: never;
+        /**
+         * Take my reaction back
+         * @description Any id answers 200 with my_reaction null, also for an item that went private or was deleted.
+         */
+        delete: operations["v1.reactions.build-updates.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/reauth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm it is me ("sudo mode")
+         * @description `method`: `passkey` (`ceremony_id` + `credential` from POST me/reauth/passkey-options), `email_code` (`attempt_id` + `code` from
+         *     POST me/reauth/email) or `password`. With two-factor on, `email_code` and `password` also need `two_factor_code`. Marks this token
+         *     or browser session for 10 minutes: changing the e-mail or password, passkeys, linked providers, switching two-factor off, signing
+         *     out everywhere, the data export and the deletion then go through. Wrong answers: 422 on the field (`passkey_invalid` for a passkey).
+         */
+        post: operations["v1.me.reauth"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/reauth/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a confirmation code
+         * @description A code to the account's address for POST me/reauth with `method: email_code`. Always 202 `{attempt_id, resend_after}`; nothing is
+         *     sent during the cooldown, above 5 codes an hour or during a lock.
+         */
+        post: operations["v1.me.reauth.email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/reauth/passkey-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Passkey options for the confirmation
+         * @description Lists the member's own passkeys as `allowCredentials`. Send the result to POST me/reauth with `method: passkey`.
+         */
+        post: operations["v1.me.reauth.passkey-options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -2055,6 +3249,27 @@ export interface paths {
          *     the admin's sign-up counts; nothing else about the scan or the page is stored.
          */
         post: operations["v1.auth.register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/release-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What is new
+         * @description SET-25 "Was ist neu": the releases members got, newest first, in the language of Accept-Language (German when a release has no
+         *     text in it). Guests too; cache with the ETag.
+         */
+        get: operations["v1.release-notes.index"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2100,6 +3315,33 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/rsvp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Answer an event
+         * @description Idempotent: the same answer again changes nothing, and a member on the waitlist keeps their place. Needs a verified e-mail (403
+         *     email_not_verified); the organiser cannot answer (403); cancelled or over: 409 event_closed. A member the organiser took off the
+         *     list: 403 forbidden.
+         */
+        put: operations["v1.events.rsvp.update"];
+        post?: never;
+        /**
+         * Withdraw an answer
+         * @description Any time, also after the event became invisible to the member; a going member's spot goes to the waitlist. Answers the state
+         *     (status null).
+         */
+        delete: operations["v1.events.rsvp.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2256,6 +3498,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/secure-account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * "Das war ich nicht" from a login alert (09 §8.4)
+         * @description `token` is the fragment of /auth/secure#t=… in the alert mail; no sign-in needed (the owner may be locked out). Secures the account
+         *     as SET-21 does: every device signed out, a new password by e-mail code at the next sign-in when the account has one, a support
+         *     request opened, and ways in added since the reported sign-in removed (`removed`). The link works once and for 7 days; only securing the
+         *     account (by any link or SET-21) and deleting it end it early. Invalid, used or expired: 422 on `token`.
+         */
+        post: operations["v1.auth.secure-account"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/sign-in-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sign-in methods (SET-19)
+         * @description Every way into the account: the e-mail code (always), the password, two-factor, Apple and Google, the number of passkeys.
+         */
+        get: operations["v1.me.sign-in-methods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/security-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Security activity (SET-21)
+         * @description The member's own security events, newest first, cursor-paged: sign-ins (with method and device), sign-ins on a new device,
+         *     failed attempts as one row per day with counts, locks, password, e-mail and two-factor changes, passkeys and providers added or
+         *     removed, devices signed out, "Das war ich nicht". Kept 12 months. No IP address; a place only as an approximate city (OA-33).
+         */
+        get: operations["v1.me.security-events.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/security/secure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * "Das war ich nicht" (SET-21)
+         * @description Secures the account at once: every device and browser is signed out, this one too (sign in again), an account with a password
+         *     must set a new one by e-mail code at the next sign-in, and a support request is opened (`ticket_reference`). `security_event_id`
+         *     names the row that was not the member; another member's id: 404. No recent authentication: the owner must be able to act fast.
+         */
+        post: operations["v1.me.security.secure"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -2364,7 +3693,7 @@ export interface paths {
         head?: never;
         /**
          * Update app, privacy and notification settings
-         * @description Any subset of: theme, locale, power_display, show_owner_on_qr, who_can_message, discoverable, indexable, read_receipts,
+         * @description Any subset of: theme, locale, power_display, distance_unit, torque_unit, weight_unit, maintenance (SET-23), show_owner_on_qr, who_can_message, mention_privacy, discoverable, indexable, read_receipts,
          *     ai_suggestions, notification_prefs. indexable false takes the profile and the builds out of the sitemap at once and marks the pages noindex.
          */
         patch: operations["v1.me.settings.update"];
@@ -2409,6 +3738,97 @@ export interface paths {
         get: operations["v1.vehicles.similar"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/nonce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A nonce for Apple or Google
+         * @description Ask for one right before each Apple or Google sign-in or link (POST me/providers) and give it to the provider's SDK (Apple: its
+         *     SHA-256 hex). The ID token must carry it; it is spent by the first token and expires after 10 minutes. Behind the provider's flag
+         *     (404 `feature_disabled`).
+         */
+        post: operations["v1.auth.nonce"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/apple": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with Apple
+         * @description Behind the flag `auth.apple` (404 `feature_disabled` while off or without configured client IDs). `identity_token` is verified
+         *     against Apple's keys: issuer, audience (bundle ID or Services ID), expiry, RS256, and `nonce` = SHA-256 of `raw_nonce`. A linked
+         *     Apple ID signs in (no two-factor step, except once on an account with two-factor on for an ID never tied to it: then the AUTH-11
+         *     challenge, SEC-M46-02). An unknown one with the address of an existing account answers 202 `link_required`
+         *     (AUTH-16, a code went to that address); otherwise a new account is created (`is_new: true`, `next: terms`). `full_name` is stored
+         *     for a new account (Apple sends it only once). Any failed check: 401 `invalid_identity_token`.
+         */
+        post: operations["v1.auth.apple"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with Google
+         * @description Behind the flag `auth.google` (404 `feature_disabled` while off or without configured client IDs). `id_token` from the Google SDK
+         *     or Google Identity Services is verified against Google's keys: issuer, audience (a configured client ID), expiry, RS256,
+         *     `email_verified`, and `nonce` (from POST auth/nonce, required, single use). Then as for Apple: sign in, 202 `link_required` (AUTH-16) or a new account.
+         */
+        post: operations["v1.auth.google"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/link/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm a provider link (AUTH-16)
+         * @description `attempt_id` from the `link_required` answer and the 6-digit code mailed to the existing account. Links the provider, mails the
+         *     owner, and signs in (with two-factor on: the challenge, as at sign-in). Wrong code: 422 `invalid_code` with `attempts_left`;
+         *     expired: 422 `code_expired`; locked: 429 `email_code_locked`. A provider ID already linked elsewhere: 409 `provider_already_linked`.
+         */
+        post: operations["v1.auth.link.confirm"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2777,6 +4197,72 @@ export interface paths {
         patch: operations["v1.vehicles.visibility"];
         trace?: never;
     };
+    "/vehicles/{vehicle}/follow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Follow a build
+         * @description Idempotent. Own build: 403. Unverified: 403 email_not_verified. Anything the viewer may not see, also across a block: 404
+         *     vehicle_unavailable.
+         */
+        put: operations["v1.vehicles.follow"];
+        post?: never;
+        /**
+         * Stop following a build
+         * @description Any id answers 200 with is_following false, also for a build that went private or was deleted.
+         */
+        delete: operations["v1.vehicles.unfollow"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/odometer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set the mileage
+         * @description The mileage now in km; km-based reminders count from it. Log entries with a higher mileage raise it by themselves.
+         */
+        put: operations["v1.vehicles.odometer"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Private cost totals
+         * @description The owner's spending on the vehicle in euro cents: service log entries and mods (installed or removed, not planned), in total and
+         *     per year, newest year first. Never shown to anybody else.
+         */
+        get: operations["v1.vehicles.costs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/view-as": {
         parameters: {
             query?: never;
@@ -2808,6 +4294,19 @@ export interface components {
             terms_version?: string | null;
             privacy_version?: string | null;
         };
+        /**
+         * AcceptOnboardingRequest
+         * @description AUTH-09b: both versions as app-config lists them, and the age line ticked.
+         */
+        AcceptOnboardingRequest: {
+            terms_version: string;
+            privacy_version: string;
+            /**
+             * @description "Ich bin mindestens 16 Jahre alt." Must be true.
+             * @enum {unknown}
+             */
+            age_confirmed: "yes" | "on" | "1" | 1 | "true" | true;
+        };
         /** AccountRestrictedError */
         AccountRestrictedError: {
             /** @description Translated, safe to show. */
@@ -2830,6 +4329,10 @@ export interface components {
             display_name: string | null;
             city: string | null;
             avatar: components["schemas"]["MediaResource"] | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            is_editorial: boolean;
             /** @description "BMW M4 G82": the main build when it is listed, else the build changed last. */
             car_line: string | null;
             /** @description DQ-293 "Skyline R34", "M4 G82", "Golf GTI VII": model and generation of the same build, no make, no engine. */
@@ -2860,6 +4363,10 @@ export interface components {
             code: string;
             /** @description Only with code account_restricted: end of the restriction, null when it has none. */
             until?: string | null;
+        };
+        /** App.Http.Requests.Api.V1.Social2.ReactRequest */
+        "App.Http.Requests.Api.V1.Social2.ReactRequest": {
+            reaction: components["schemas"]["ReactionType"];
         };
         /** AppConfigResource */
         AppConfigResource: {
@@ -3035,10 +4542,39 @@ export interface components {
          */
         AppealStatus: "open" | "upheld" | "reversed";
         /**
+         * AppleSignInRequest
+         * @description POST auth/apple (09 §8.1). raw_nonce comes from POST auth/nonce; the app hashed it (SHA-256) for Apple. full_name arrives from Apple on the first
+         *     authorisation only and is stored at once; the address is always taken from the verified token, never from the body.
+         */
+        AppleSignInRequest: {
+            identity_token: string;
+            authorization_code?: string | null;
+            raw_nonce: string;
+            full_name?: string | null;
+            /** @description Ignored: Apple's address is read from the verified token. Accepted so the client may send what the SDK returned. */
+            email?: string | null;
+            /** @enum {string|null} */
+            locale?: "de" | "en" | null;
+            device_name?: string | null;
+            platform?: components["schemas"]["DevicePlatform"] | null;
+            app_version?: string | null;
+            /** @description The app's per-install id (a UUID kept in secure storage). Tells two devices of the same model apart; ignored without device_name. */
+            device_id?: string | null;
+            /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
+            os_version?: string | null;
+        };
+        /**
          * Aspiration
          * @enum {string}
          */
         Aspiration: "naturally_aspirated" | "turbo" | "biturbo" | "supercharged" | "twincharged" | "none";
+        /**
+         * AttemptRequest
+         * @description POST me/reauth/email: the attempt id the app made for this code (as at sign-in).
+         */
+        AttemptRequest: {
+            attempt_id: string;
+        };
         /**
          * AuthNextStep
          * @description What the client shows after a neutral auth answer. Never depends on whether the account exists.
@@ -3063,6 +4599,13 @@ export interface components {
             /** @description When the member blocked them, ISO 8601. */
             blocked_at: string;
         };
+        /** BrandFocusResource */
+        BrandFocusResource: {
+            slug: string;
+            name: string;
+            vehicle_count: string;
+            cover: components["schemas"]["MediaResource"] | null;
+        };
         /** BrandResource */
         BrandResource: {
             id: number;
@@ -3071,12 +4614,27 @@ export interface components {
             category_hint: string | null;
             aliases: string[];
         };
+        /** BuildOfWeekResource */
+        BuildOfWeekResource: {
+            vehicle: components["schemas"]["FeedVehicleResource"];
+            /** @description The owner's own words from the description, never invented; null without a description. */
+            quote: string;
+            /** @description ISO week, "2026-W46". */
+            week: string;
+        };
+        /**
+         * BuildUpdateAudience
+         * @description Who sees a build update (09 §8.5): everybody who may see the vehicle, or only its followers (members following the owner or the vehicle) and the owner.
+         * @enum {string}
+         */
+        BuildUpdateAudience: "vehicle" | "followers";
         /** BuildUpdateResource */
         BuildUpdateResource: {
             id: string;
             type: components["schemas"]["BuildUpdateType"];
             /** @description "Fahrwerk geändert", "Räder hinzugefügt", "Technik aktualisiert", "Fotos hinzugefügt", "Notiz" (DQ-290) */
             type_label: string;
+            /** @description The owner's text: a note (up to 500 characters) or, since M4.11, a post (type `post`, up to 2,000, with @mentions). */
             note: string | null;
             /** @description One line for lists: "Fahrwerk: Serie → KW V3 · −35 mm" */
             summary: string;
@@ -3105,22 +4663,73 @@ export interface components {
             created_at: string | null;
             /** @description The timeline's group: "März 2023" */
             month_label: string | null;
+            vehicle_id: string;
+            /** @description Kilometre reading the owner gave (UPD-01), else null. */
+            mileage_km: number | null;
+            /** @description The day it happened (Y-m-d), default the day of posting. */
+            happened_on: string | null;
+            /** @description vehicle: whoever may see the vehicle; followers: only followers of the owner or the build (and the owner). */
+            audience: components["schemas"]["BuildUpdateAudience"];
+            /** @description Set when the owner changed the post after posting: the app shows "bearbeitet". */
+            edited_at: string | null;
+            /**
+             * @description Owner only: until when text, photos and the rest can still be changed (24 hours after posting); null afterwards and for
+             *     automatic entries.
+             */
+            editable_until?: string | null;
+            /** @description Up to 10 photos in the owner's order. The owner sees unfinished and failed uploads too. */
+            photos: components["schemas"]["MediaResource"][];
+            /** @description Before/after pairs of the photos above, by media id. */
+            photo_pairs: {
+                before: string;
+                after: string;
+            }[];
+            /** @description Linked mods, in the owner's order (the mod row of VEH-02). */
+            modifications: {
+                id: string;
+                title: string;
+                category: string | null;
+            }[];
+            /** @description Members the text mentions whom the viewer may see; the app links "@name" in the text to them. */
+            mentions: components["schemas"]["MemberSummaryResource"][];
+            /**
+             * @description The viewer's own reaction [build_reactions]; null for guests, the owner, none yet, or the flag off. Never anybody else's.
+             * @enum {string|null}
+             */
+            my_reaction: "strong" | "clean" | "low" | "loud" | null;
+            /** @description Owner only: reactions by kind and in total [build_reactions]. Missing for everybody else (09 §8.5). */
+            reaction_summary?: {
+                strong: number;
+                clean: number;
+                low: number;
+                loud: number;
+                total: number;
+            };
         };
         /** BuildUpdateRowResource */
         BuildUpdateRowResource: {
             id: string;
             vehicle: components["schemas"]["FeedVehicleResource"];
+            /** @description What changed (BuildUpdateType): the app picks the row's glyph and the note/post layout by it (DQ-1093). */
+            type: components["schemas"]["BuildUpdateType"];
             /** @description "Fahrwerk geändert", "Räder hinzugefügt", "Technik aktualisiert", "Fotos hinzugefügt", "Notiz" (DQ-290) */
             type_label: string;
             /** @description One line: at most two changes, then "3 weitere". */
             summary: string;
             created_at: string | null;
+            /** @description M4.8: the update's own photos (ready, not rejected), in their order, with ThumbHash/blurhash placeholders. */
+            media: components["schemas"]["MediaResource"][];
+            /** @description M4.8: the reader's own state on this update (saved in a collection, their private reaction); null for guests. */
+            viewer: {
+                saved: boolean;
+                reaction: string | null;
+            } | null;
         };
         /**
          * BuildUpdateType
          * @enum {string}
          */
-        BuildUpdateType: "mod_added" | "mod_changed" | "mod_removed" | "specs_changed" | "photos_added" | "note";
+        BuildUpdateType: "mod_added" | "mod_changed" | "mod_removed" | "specs_changed" | "photos_added" | "note" | "post";
         /** CannotMessageError */
         CannotMessageError: {
             /** @description Translated, safe to show. */
@@ -3172,13 +4781,13 @@ export interface components {
              */
             email: string;
             /** @description The current password. */
-            password: string;
+            password?: string | null;
             /** @description With two-factor on: a current code from the authenticator app or a recovery code (SEC-P2-07). */
             code?: string | null;
         };
         /** ChangePasswordRequest */
         ChangePasswordRequest: {
-            current_password: string;
+            current_password?: string | null;
             /** @description 02_PRODUCT_SPEC §3.1: at least 10 characters, not common, not the address; not the username and not the current one. */
             password: string;
             password_confirmation: string;
@@ -3227,8 +4836,35 @@ export interface components {
             /** @description "Nissan Skyline GT-R R34" */
             full_title: string;
             cover: components["schemas"]["MediaResource"] | null;
+            /**
+             * @description DQ-1086: the spec line of the MSG-02 card ("510 PS · 650 Nm"), in whole PS as normalised from what the owner entered; the
+             *     app converts to the reader's unit. Null when unknown.
+             */
+            power_ps: number | null;
+            torque_nm: number | null;
+            /** @description Sample content (09 §8.19): the "Beispiel" badge. */
+            is_sample: boolean;
             /** @description "Fahrzeug von @lukas.sc". Null when the owner asked not to be named on the vehicle page (ADR-148 a), unless it is the reader. */
             owner_username: string | null;
+        };
+        /**
+         * ClientErrorRequest
+         * @description One crash report of the app's error screen. Bounded strings only: the message and stacks come from the app's own code, never from
+         *     a form, and are cut to their limits before they are logged.
+         */
+        ClientErrorRequest: {
+            route: string;
+            name?: string | null;
+            message: string;
+            stack?: string | null;
+            component_stack?: string | null;
+            /** @enum {string} */
+            platform: "web" | "ios" | "android";
+            app_version?: string | null;
+            locale?: string | null;
+            font_scale?: number | null;
+            viewport?: string | null;
+            user_agent?: string | null;
         };
         /**
          * CodeRequest
@@ -3236,6 +4872,103 @@ export interface components {
          */
         CodeRequest: {
             code: string;
+        };
+        /** CollectionBuildUpdateResource */
+        CollectionBuildUpdateResource: {
+            id: string;
+            type: components["schemas"]["BuildUpdateType"];
+            /** @description "Fahrwerk geändert", "Räder hinzugefügt", "Technik aktualisiert", "Fotos hinzugefügt", "Notiz" (DQ-290) */
+            type_label: string;
+            /** @description The owner's text: a note (up to 500 characters) or, since M4.11, a post (type `post`, up to 2,000, with @mentions). */
+            note: string | null;
+            /** @description One line for lists: "Fahrwerk: Serie → KW V3 · −35 mm" */
+            summary: string;
+            /**
+             * @description What happened, one entry per change. On lists at most 20, with details empty; the detail route has all of them, and
+             *     details holds field by field for a changed modification.
+             */
+            changes: {
+                kind: string;
+                category: string | null;
+                modification_id: string | null;
+                label: string;
+                before: string | null;
+                after: string | null;
+                text: string;
+                details: {
+                    label: string;
+                    before: string | null;
+                    after: string | null;
+                }[];
+            }[];
+            /** @description How many changes the entry holds, also when a list shows fewer. */
+            changes_count: number;
+            /** @description Always false for anybody but the owner, who alone sees hidden entries. */
+            hidden: boolean;
+            created_at: string | null;
+            /** @description The timeline's group: "März 2023" */
+            month_label: string | null;
+            vehicle_id: string;
+            /** @description Kilometre reading the owner gave (UPD-01), else null. */
+            mileage_km: number | null;
+            /** @description The day it happened (Y-m-d), default the day of posting. */
+            happened_on: string | null;
+            /** @description vehicle: whoever may see the vehicle; followers: only followers of the owner or the build (and the owner). */
+            audience: components["schemas"]["BuildUpdateAudience"];
+            /** @description Set when the owner changed the post after posting: the app shows "bearbeitet". */
+            edited_at: string | null;
+            /**
+             * @description Owner only: until when text, photos and the rest can still be changed (24 hours after posting); null afterwards and for
+             *     automatic entries.
+             */
+            editable_until?: string | null;
+            /** @description Up to 10 photos in the owner's order. The owner sees unfinished and failed uploads too. */
+            photos: components["schemas"]["MediaResource"][];
+            /** @description Before/after pairs of the photos above, by media id. */
+            photo_pairs: {
+                before: string;
+                after: string;
+            }[];
+            /** @description Linked mods, in the owner's order (the mod row of VEH-02). */
+            modifications: {
+                id: string;
+                title: string;
+                category: string | null;
+            }[];
+            /** @description Members the text mentions whom the viewer may see; the app links "@name" in the text to them. */
+            mentions: components["schemas"]["MemberSummaryResource"][];
+            /**
+             * @description The viewer's own reaction [build_reactions]; null for guests, the owner, none yet, or the flag off. Never anybody else's.
+             * @enum {string|null}
+             */
+            my_reaction: "strong" | "clean" | "low" | "loud" | null;
+            /** @description Owner only: reactions by kind and in total [build_reactions]. Missing for everybody else (09 §8.5). */
+            reaction_summary?: {
+                strong: number;
+                clean: number;
+                low: number;
+                loud: number;
+                total: number;
+            };
+            vehicle: components["schemas"]["VehicleRefResource"];
+        };
+        /** CollectionItemRequest */
+        CollectionItemRequest: {
+            type: components["schemas"]["CollectionItemType"];
+            id: string;
+        };
+        /**
+         * CollectionItemType
+         * @description What a private collection holds (09 §8.6): builds, mods, build updates and events (M4.12); businesses join with M4.14. The value is the morph name stored in member_collection_items.item_type.
+         * @enum {string}
+         */
+        CollectionItemType: "vehicle" | "modification" | "build_update" | "event";
+        /**
+         * CollectionRequest
+         * @description POST and PATCH me/collections: the name. Blank names are refused; the default collection may be renamed.
+         */
+        CollectionRequest: {
+            name: string;
         };
         /** CollectionResource */
         CollectionResource: {
@@ -3274,6 +5007,21 @@ export interface components {
             count: number;
             count_capped: boolean;
         };
+        /** CommentResource */
+        CommentResource: {
+            id: string;
+            build_update_id: string;
+            parent_id: string | null;
+            body: string;
+            author: components["schemas"]["MemberSummaryResource"] | null;
+            /** @description Members the comment mentions whom the viewer may see. */
+            mentions: components["schemas"]["MemberSummaryResource"][];
+            /** @description The viewer may delete it: its author, or the owner of the update. */
+            can_delete: boolean;
+            created_at: string | null;
+            /** @description Replies, oldest first (top-level comments only; a reply's list is empty). */
+            replies: components["schemas"]["CommentResource"][];
+        };
         /** CompareResource */
         CompareResource: {
             /** @description The first build as a card: slug, full_title, subline_parts, cover, spec_strip. */
@@ -3306,6 +5054,21 @@ export interface components {
                 b: components["schemas"]["ModificationRowResource"][];
             }[];
         };
+        /**
+         * ConfirmLinkRequest
+         * @description AUTH-16: the attempt_id of the link_required answer and the 6-digit code mailed to the existing account.
+         */
+        ConfirmLinkRequest: {
+            attempt_id: string;
+            code: string;
+            device_name?: string | null;
+            platform?: components["schemas"]["DevicePlatform"] | null;
+            app_version?: string | null;
+            /** @description The app's per-install id (a UUID kept in secure storage). Tells two devices of the same model apart; ignored without device_name. */
+            device_id?: string | null;
+            /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
+            os_version?: string | null;
+        };
         /** ConflictError */
         ConflictError: {
             /** @description Translated, safe to show. */
@@ -3323,6 +5086,10 @@ export interface components {
             display_name: string | null;
             city: string | null;
             avatar: components["schemas"]["MediaResource"] | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            is_editorial: boolean;
             is_self: boolean;
             /** @description The viewer follows this member. False for guests. */
             is_following: boolean;
@@ -3362,7 +5129,7 @@ export interface components {
             id: string;
             /** @description chats, requests, or archived (a chat with archived_at). */
             folder: components["schemas"]["InboxFolder"];
-            other: components["schemas"]["MemberSummaryResource"] | null;
+            other: components["schemas"]["ConversationMemberResource"] | null;
             /** @description The other account is gone: "Gelöschtes Mitglied". */
             other_deleted: boolean;
             vehicle: components["schemas"]["ChatVehicleResource"] | null;
@@ -3392,12 +5159,31 @@ export interface components {
              */
             other_read_message_id: string | null;
         };
+        /** ConversationMemberResource */
+        ConversationMemberResource: {
+            username: string;
+            display_name: string | null;
+            city: string | null;
+            avatar: components["schemas"]["MediaResource"] | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            is_editorial: boolean;
+            main_vehicle_cover: components["schemas"]["MediaResource"] | null;
+            /** @description The main build: `title` is make and model ("BMW M3") for "fährt BMW M3"; `full_title` adds the generation. */
+            main_vehicle: {
+                slug: string;
+                title: string;
+                full_title: string;
+                is_sample: boolean;
+            } | null;
+        };
         /** ConversationResource */
         ConversationResource: {
             id: string;
             /** @description chats, requests, or archived (a chat with archived_at). */
             folder: components["schemas"]["InboxFolder"];
-            other: components["schemas"]["MemberSummaryResource"] | null;
+            other: components["schemas"]["ConversationMemberResource"] | null;
             /** @description The other account is gone: "Gelöschtes Mitglied". */
             other_deleted: boolean;
             vehicle: components["schemas"]["ChatVehicleResource"] | null;
@@ -3554,7 +5340,7 @@ export interface components {
          * @description SET-13. `code` (authenticator or recovery code) is needed when two-factor is on; without it the answer is 422 on `code`.
          */
         DeleteAccountRequest: {
-            password: string;
+            password?: string | null;
             code?: string | null;
         };
         /** DescriptionSuggestionResource */
@@ -3583,7 +5369,19 @@ export interface components {
             last_used_at: string;
             /** @description The device of this request. */
             current: boolean;
+            /** @description The system version the app last reported ("16" on Android, "26.1" on iOS); null for a browser. */
+            os_version: string | null;
+            /** @description "München": approximate, only with a GeoLite2 database (owner action OA-33); null until then. */
+            approx_city: string | null;
+            /** @description ISO 8601. When this install first signed in; null for a browser. */
+            signed_in_at: string | null;
         };
+        /**
+         * DigestFrequency
+         * @description SET-09 "Zusammenfassung" (09 §7.12): how often the e-mail digest of unread messages may go out. Daily at 18:00 (Europe/Berlin), or weekly on Mondays at that time, covering everything that piled up since.
+         * @enum {string}
+         */
+        DigestFrequency: "daily" | "weekly";
         /** DiscoverResource */
         DiscoverResource: {
             /** @description Makes with at least one public build, most builds first, then by name. */
@@ -3597,7 +5395,22 @@ export interface components {
              *     no match, or the flag off: hide the section.
              */
             similar_members: components["schemas"]["MemberSearchResource"][] | null;
+            /** @description M4.8 "Beliebte Modelle": at most 8 models with the most builds the reader may see. Empty hides the section. */
+            popular_models: components["schemas"]["PopularModelResource"][];
+            /**
+             * @description M4.8 "Treffen am Wochenende": at most 6 events of the coming Saturday and Sunday (Europe/Berlin), soonest first; empty while
+             *     `events` is off.
+             */
+            weekend_events: components["schemas"]["EventCardResource"][];
+            /** @description M4.8 "Neu": the 8 newest builds the reader may see (as `home/new-builds`). */
+            newest: components["schemas"]["FeedVehicleResource"][];
         };
+        /**
+         * DistanceUnit
+         * @description SET-11 "Entfernung" (09 §8.11): how the app shows distances and mileage. The server stores kilometres only.
+         * @enum {string}
+         */
+        DistanceUnit: "km" | "mi";
         /**
          * Drivetrain
          * @enum {string}
@@ -3608,6 +5421,12 @@ export interface components {
             email: string;
             /** @description Seconds until a new code may be asked for. */
             resend_after_seconds: number;
+        };
+        /** EmailCodeStartedResource */
+        EmailCodeStartedResource: {
+            attempt_id: string;
+            /** @description Seconds until the next code may be asked for (30, 60, then 120; longer during a lock or above 5 codes an hour). */
+            resend_after: number;
         };
         /** EmailNotVerifiedError */
         EmailNotVerifiedError: {
@@ -3628,6 +5447,257 @@ export interface components {
             /** Format: email */
             email: string;
         };
+        /** EventAttendeeResource */
+        EventAttendeeResource: {
+            member: components["schemas"]["MemberSummaryResource"];
+            status: components["schemas"]["RsvpStatus"];
+            /** @description Since when; the organiser's list only, null for everybody else. */
+            status_at: string | null;
+        };
+        /** EventCardResource */
+        EventCardResource: {
+            id: string;
+            slug: string;
+            title: string;
+            type: components["schemas"]["EventType"];
+            /** @description Published or cancelled for everybody else; the organiser also sees draft, pending_review and rejected. */
+            status: components["schemas"]["EventStatus"];
+            visibility: components["schemas"]["EventVisibility"];
+            /** @description ISO 8601 (UTC); show in `timezone`. */
+            starts_at: string | null;
+            ends_at: string | null;
+            /** @description Always Europe/Berlin for now (09 §8.7). */
+            timezone: string;
+            /**
+             * @description The place as far as this reader may see it (EventLocation): `exact` false means venue, street, postcode, lat and lng are
+             *     null and the app shows "Ort wird nach deiner Zusage angezeigt" with the city and the area point.
+             */
+            location: {
+                /** @enum {string} */
+                visibility: "public" | "after_rsvp";
+                exact: boolean;
+                venue_name: string | null;
+                street: string | null;
+                postcode: string | null;
+                city: string | null;
+                country: string;
+                lat: number | null;
+                lng: number | null;
+                area: {
+                    lat: number | null;
+                    lng: number | null;
+                };
+            };
+            cover: components["schemas"]["MediaResource"] | null;
+            organiser: components["schemas"]["EventOrganiserResource"];
+            /** @description Real answers, members taken off the list left out; null on a sample event (09 §8.19: no invented counts). */
+            counts: {
+                going: number;
+                interested: number;
+            } | null;
+            /** @description Null without a limit. */
+            capacity: number | null;
+            /** @description Spots left while a capacity is set (0 = new answers join the waitlist); null without a limit and on samples. */
+            spots_left: number | null;
+            /** @description From the `near` point to the area point, whole km; only when the list was asked with `near`. */
+            distance_km: number | null;
+            /**
+             * @description Up to three going members for the avatar row (09 §5 EventCard), by EVT-04's privacy rules: members only (empty for guests),
+             *     findable members, no block, never on a sample event. Next to `counts.going` for "38 Zusagen".
+             */
+            attendee_preview: components["schemas"]["MemberSummaryResource"][];
+            my_rsvp: components["schemas"]["RsvpStatus"] | null;
+            is_sample: boolean;
+        };
+        /**
+         * EventLocationVisibility
+         * @description 09 §8.7: the exact place is public, or only for the organiser and members with a confirmed RSVP ("going"); everybody else sees the area (city and a coarse point), never the venue, address or exact coordinates.
+         * @enum {string}
+         */
+        EventLocationVisibility: "public" | "after_rsvp";
+        /** EventOrganiserResource */
+        EventOrganiserResource: {
+            username: string;
+            display_name: string | null;
+            city: string | null;
+            avatar: components["schemas"]["MediaResource"] | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            is_editorial: boolean;
+            main_vehicle_cover: components["schemas"]["MediaResource"] | null;
+            /**
+             * @description "Verifiziert" on the chip: a verified business or brand organiser (09 §8.10, M4.14). Always false until business profiles
+             *     and their verification exist; a member account is never verified.
+             */
+            verified: boolean;
+        };
+        /** EventPinResource */
+        EventPinResource: {
+            id: string;
+            slug: string;
+            title: string;
+            type: components["schemas"]["EventType"];
+            starts_at: string | null;
+            lat: number;
+            lng: number;
+            is_sample: boolean;
+        };
+        /** EventRefResource */
+        EventRefResource: {
+            id: string;
+            slug: string;
+            title: string;
+            type: components["schemas"]["EventType"];
+            status: components["schemas"]["EventStatus"];
+            /** @description ISO 8601 (UTC); show in Europe/Berlin. */
+            starts_at: string | null;
+            ends_at: string | null;
+            city: string | null;
+            /** @description 09 §8.19: a sample event ("Beispiel" badge). */
+            is_sample: boolean;
+        };
+        /** EventResource */
+        EventResource: {
+            id: string;
+            slug: string;
+            title: string;
+            type: components["schemas"]["EventType"];
+            /** @description Published or cancelled for everybody else; the organiser also sees draft, pending_review and rejected. */
+            status: components["schemas"]["EventStatus"];
+            visibility: components["schemas"]["EventVisibility"];
+            /** @description ISO 8601 (UTC); show in `timezone`. */
+            starts_at: string | null;
+            ends_at: string | null;
+            /** @description Always Europe/Berlin for now (09 §8.7). */
+            timezone: string;
+            /**
+             * @description The place as far as this reader may see it (EventLocation): `exact` false means venue, street, postcode, lat and lng are
+             *     null and the app shows "Ort wird nach deiner Zusage angezeigt" with the city and the area point.
+             */
+            location: {
+                /** @enum {string} */
+                visibility: "public" | "after_rsvp";
+                exact: boolean;
+                venue_name: string | null;
+                street: string | null;
+                postcode: string | null;
+                city: string | null;
+                country: string;
+                lat: number | null;
+                lng: number | null;
+                area: {
+                    lat: number | null;
+                    lng: number | null;
+                };
+            };
+            cover: components["schemas"]["MediaResource"] | null;
+            organiser: components["schemas"]["EventOrganiserResource"];
+            /** @description Real answers, members taken off the list left out; null on a sample event (09 §8.19: no invented counts). */
+            counts: {
+                going: number;
+                interested: number;
+            } | null;
+            /** @description Null without a limit. */
+            capacity: number | null;
+            /** @description Spots left while a capacity is set (0 = new answers join the waitlist); null without a limit and on samples. */
+            spots_left: number | null;
+            /** @description From the `near` point to the area point, whole km; only when the list was asked with `near`. */
+            distance_km: number | null;
+            /**
+             * @description Up to three going members for the avatar row (09 §5 EventCard), by EVT-04's privacy rules: members only (empty for guests),
+             *     findable members, no block, never on a sample event. Next to `counts.going` for "38 Zusagen".
+             */
+            attendee_preview: components["schemas"]["MemberSummaryResource"][];
+            my_rsvp: components["schemas"]["RsvpStatus"] | null;
+            is_sample: boolean;
+            description: string | null;
+            /** @description The organiser's own rules, shown under the community rules. */
+            organiser_rules: string | null;
+            /** @description The rules checklist the organiser accepted (legal_only always). */
+            rules: components["schemas"]["EventRule"][];
+            /** @description Why the event was cancelled; null unless cancelled. */
+            cancellation_reason: string | null;
+            cancelled_at: string | null;
+            /** @description Cancelled by staff rather than the organiser. */
+            cancelled_by_staff: boolean;
+            /** @description Place on the waitlist (1 = next), only while the reader is waiting. */
+            waitlist_position: number | null;
+            /** @description What the reader may do now; the app shows only those actions. */
+            can: {
+                rsvp: boolean;
+                edit: boolean;
+                cancel: boolean;
+                post_update: boolean;
+                view_updates: boolean;
+                view_attendees: boolean;
+                report: boolean;
+            };
+            /**
+             * @description The organiser's review state: submitted_at, reviewed_at and the reason of a rejection. `will_be_reviewed` (a draft or a
+             *     rejected event): sending it goes to the team's review first (the first events, every after_rsvp event), so EVT-03 says
+             *     "Zur Prüfung senden" rather than "Veröffentlichen". `was_premoderated` (a published event): the team approved it before it
+             *     went live. Null for everybody else.
+             */
+            review: {
+                submitted_at: string | null;
+                reviewed_at: string | null;
+                reason: string | null;
+                will_be_reviewed: boolean;
+                was_premoderated: boolean;
+            } | null;
+            /**
+             * @description "In Kalender": an .ics URL. For the organiser and going members of an after_rsvp event a signed link with the exact place
+             *     (valid until two days after the end); otherwise the public file with the area only.
+             */
+            calendar_url: string | null;
+            /** @description The public page WEB-09 (/e/{slug}) for "Teilen". */
+            share_url: string;
+            created_at: string | null;
+        };
+        /** EventRsvpStateResource */
+        EventRsvpStateResource: {
+            event_id: string;
+            status: components["schemas"]["RsvpStatus"] | null;
+            /** @description Place on the waitlist (1 = next) while waiting; null otherwise. */
+            waitlist_position: number | null;
+            counts: {
+                going: number;
+                interested: number;
+            } | null;
+            /** @description Spots left while a capacity is set; null without a limit and on samples. */
+            spots_left: number | null;
+        };
+        /**
+         * EventRule
+         * @description The rules checklist of EVT-03 (09 §8.7 "Rules & law", the events section of the community guidelines). legal_only is required on every event; the organiser ticks the others that apply. Shown as "Regeln" on EVT-02 next to the organiser's own rules.
+         * @enum {string}
+         */
+        EventRule: "legal_only" | "no_racing" | "respect_residents" | "no_litter" | "permits_arranged";
+        /**
+         * EventStatus
+         * @description 09 §8.7: draft → pending_review (pre-moderation, ADM-53) or published → cancelled; rejected by staff (or removed by a moderation decision). Only published and cancelled events are seen by anybody but their organiser and staff.
+         * @enum {string}
+         */
+        EventStatus: "draft" | "pending_review" | "published" | "cancelled" | "rejected";
+        /**
+         * EventType
+         * @description The kind of a meet (09 §8.7, EVT-01 filter "Art"): Treffen · Ausfahrt · Trackday · Messe.
+         * @enum {string}
+         */
+        EventType: "meet" | "cruise" | "track_day" | "show";
+        /** EventUpdateResource */
+        EventUpdateResource: {
+            id: string;
+            body: string;
+            created_at: string | null;
+        };
+        /**
+         * EventVisibility
+         * @description Who sees an event (09 §8.7): public (listed for everybody), followers (the organiser's followers, not listed for others) or unlisted (by link only, never listed).
+         * @enum {string}
+         */
+        EventVisibility: "public" | "followers" | "unlisted";
         /** FacetResource */
         FacetResource: {
             /** @description The parameter value: a slug ("bmw"), an enum value ("rear"), a diameter ("19.5") or a category key. */
@@ -3689,6 +5759,8 @@ export interface components {
             /** @description `editorial` from the curated list, `completeness` when the list left the slot empty. */
             source: components["schemas"]["FeaturedSource"];
             vehicle: components["schemas"]["FeedVehicleResource"];
+            /** @description M4.9: the owner's own first sentence of the description (HOME-01 lead), or null; never invented. */
+            quote: string | null;
         };
         /**
          * FeaturedSource
@@ -3774,6 +5846,10 @@ export interface components {
             cover: components["schemas"]["MediaResource"] | null;
             photo_count: number;
             mod_count: number;
+            /** @description M4.9: the owner's own count of Verlauf entries (hidden ones included); null for anybody else, so no number reaches others. */
+            updates_count: number | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -3806,12 +5882,20 @@ export interface components {
                 summary: string;
                 created_at: string | null;
             } | null;
+            /**
+             * @description M4.8: the reader's own state on this build: saved in one of their collections, their private reaction
+             *     ("strong" | "clean" | "low" | "loud", null while build_reactions is off). Null for guests. Never anybody else's, never a count.
+             */
+            viewer: {
+                saved: boolean;
+                reaction: string | null;
+            } | null;
         };
         /** FollowStateResource */
         FollowStateResource: {
             username: string;
             is_following: boolean;
-            /** @description Null after unfollowing somebody you cannot see. */
+            /** @description Null after unfollowing somebody you cannot see, and for a sample member (09 §8.19). */
             followers: number | null;
         };
         /** FollowerRemovedResource */
@@ -3860,6 +5944,35 @@ export interface components {
             year_from: number | null;
             year_to: number | null;
         };
+        /** GeocodeResultResource */
+        GeocodeResultResource: {
+            label: string;
+            venue_name: string | null;
+            street: string | null;
+            postcode: string | null;
+            city: string | null;
+            country: string | null;
+            lat: number;
+            lng: number;
+        };
+        /**
+         * GoogleSignInRequest
+         * @description POST auth/google (09 §8.1): the ID token of the Google SDK or Google Identity Services; nonce when the client passed one to Google.
+         */
+        GoogleSignInRequest: {
+            id_token: string;
+            /** @description SEC-M46-05: the raw nonce from POST auth/nonce that was given to the Google SDK; single use. */
+            nonce: string;
+            /** @enum {string|null} */
+            locale?: "de" | "en" | null;
+            device_name?: string | null;
+            platform?: components["schemas"]["DevicePlatform"] | null;
+            app_version?: string | null;
+            /** @description The app's per-install id (a UUID kept in secure storage). Tells two devices of the same model apart; ignored without device_name. */
+            device_id?: string | null;
+            /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
+            os_version?: string | null;
+        };
         /**
          * GroundDocument
          * @description Where the ground of a decision is written (Art. 17(3)(d), (e) DSA): the community guidelines, the terms (both legal documents of SET-18) or the law alone.
@@ -3881,14 +5994,56 @@ export interface components {
             /** @description The language of the text: de when the requested language has no own version. */
             locale: string;
         };
+        /**
+         * HighlightItemType
+         * @description What an owner can pin to a vehicle's Highlights rail (09 §8.5): a build update or a photo of the build. The value is what the API and the table use.
+         * @enum {string}
+         */
+        HighlightItemType: "build_update" | "photo";
+        /** HighlightResource */
+        HighlightResource: {
+            type: components["schemas"]["HighlightItemType"];
+            id: string;
+            position: number;
+            build_update: components["schemas"]["BuildUpdateResource"] | null;
+            photo: components["schemas"]["MediaResource"] | null;
+        };
         /** HomeModulesResource */
         HomeModulesResource: {
-            /** @description At most 3, newest first; at most one per build and two per owner. */
+            build_of_week: components["schemas"]["BuildOfWeekResource"] | null;
+            /**
+             * @description M4.8 "Treffen in deiner Nähe": at most 2 upcoming events within 50 km of `lat`/`lng` (asked on demand, never stored); empty
+             *     without a point or while `events` is off: hide the module.
+             */
+            nearby_events: components["schemas"]["EventCardResource"][];
+            /**
+             * @description M4.8 "Marken im Fokus": at most 3 part brands most run on builds the reader may see. Empty hides the module.
+             *     (`workshops_nearby` joins with business profiles, M4.14.)
+             */
+            brands_in_focus: components["schemas"]["BrandFocusResource"][];
+            /**
+             * @description Deprecated since M4.8 (the 2.0 Home has no Build-Updates module; these updates are in the stream too).
+             *     At most 3, newest first; at most one per build and two per owner.
+             */
             build_updates: components["schemas"]["BuildUpdateRowResource"][];
             /** @description At most 12, most recently active first. */
             active_members: components["schemas"]["ActiveMemberResource"][];
             /** @description At most 12, most built first. */
             popular_mods: components["schemas"]["PopularModResource"][];
+        };
+        /**
+         * IdTokenNonceRequest
+         * @description POST auth/nonce (SEC-M46-05): which provider the nonce is for.
+         */
+        IdTokenNonceRequest: {
+            provider: components["schemas"]["SocialProvider"];
+        };
+        /** IdTokenNonceResource */
+        IdTokenNonceResource: {
+            /** @description Give it to the provider SDK (Apple: its SHA-256 hex), then send it unchanged with the ID token. Single use. */
+            nonce: string;
+            /** @description Seconds it stays valid. */
+            expires_in: string;
         };
         /** IdempotencyKeyReusedError */
         IdempotencyKeyReusedError: {
@@ -3984,6 +6139,25 @@ export interface components {
          * @enum {string}
          */
         LegalStatus: "abe" | "parts_certificate" | "registered" | "individual_approval" | "not_required" | "unknown";
+        /**
+         * LinkProviderRequest
+         * @description POST me/providers: a fresh ID token of the provider and the raw nonce from POST auth/nonce it was made with (SEC-M46-05).
+         */
+        LinkProviderRequest: {
+            provider: components["schemas"]["SocialProvider"];
+            id_token: string;
+            raw_nonce: string;
+            authorization_code?: string | null;
+        };
+        /** LinkRequiredResource */
+        LinkRequiredResource: {
+            link_required: boolean;
+            provider: components["schemas"]["SocialProvider"];
+            attempt_id: string;
+            /** @description "s•••@gmail.com" */
+            email_hint: string;
+            resend_after: number;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Format: email */
@@ -3994,6 +6168,227 @@ export interface components {
             app_version?: string | null;
             /** @description The app's per-install id (a UUID kept in secure storage). Tells two devices of the same model apart; ignored without device_name. */
             device_id?: string | null;
+            /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
+            os_version?: string | null;
+        };
+        /** MaintenanceCostsResource */
+        MaintenanceCostsResource: {
+            /** @description Always "EUR": the server keeps euro cents. */
+            currency: string;
+            total_cents: number;
+            maintenance_cents: number;
+            mods_cents: number;
+            /** @description Newest year first; only years with a cost. */
+            years: {
+                year: number;
+                total_cents: number;
+                maintenance_cents: number;
+                mods_cents: number;
+            }[];
+        };
+        /**
+         * MaintenanceDueState
+         * @description Where an item stands (MNT-01 ring and countdown): nothing due known, fine, inside its first lead time (or 1,000 km), or past due.
+         * @enum {string}
+         */
+        MaintenanceDueState: "unknown" | "ok" | "soon" | "overdue";
+        /** MaintenanceItemResource */
+        MaintenanceItemResource: {
+            id: string;
+            vehicle_id: string;
+            type: components["schemas"]["MaintenanceType"];
+            /** @description Custom items only; the app names the other types itself. */
+            title: string | null;
+            interval: {
+                months: number | null;
+                km: number | null;
+            };
+            last_done: {
+                date: string | null;
+                km: number | null;
+            };
+            next_due: {
+                /** @description YYYY-MM-DD; the first day of the month for the HU/AU. */
+                date: string | null;
+                /** @description HU/AU only: the month on the plakette, "2027-03". */
+                month: string | null;
+                km: number | null;
+                /** @description The member set the date or mileage (service booklet); a new log entry computes it again. */
+                pinned: boolean;
+                /** @description The last day before it counts as overdue (the end of the HU/AU month). */
+                deadline: string | null;
+            };
+            /** @description Tyre change: which tyres go on next. */
+            season: string;
+            lead_days: number[];
+            enabled: boolean;
+            notes: string | null;
+            state: components["schemas"]["MaintenanceDueState"];
+            /** @description Days to the due date, negative once past it. */
+            days_left: number | null;
+            /** @description Kilometres to the due mileage, negative once past it; null without a due mileage or a known odometer. */
+            km_left: number | null;
+            /** @description 0–1, how much of the interval has passed (the ring), or null. */
+            progress: number | null;
+            /** @description The reminder stages of the current due date (09 §8.8 "server + local dedupe"): `key` is the id of the local backup notification. */
+            reminders: {
+                key: string;
+                /** @enum {string} */
+                kind: "date" | "km";
+                due_on: string | null;
+                due_km: number | null;
+                lead_days: number | null;
+                fire_on: string | null;
+                /** @enum {string} */
+                status: "planned" | "sent" | "skipped";
+            }[];
+            /** @description Send it back with a PATCH: a newer one on the server answers 409 edit_conflict. */
+            version: number;
+            updated_at: string | null;
+        };
+        /** MaintenanceLogResource */
+        MaintenanceLogResource: {
+            id: string;
+            vehicle_id: string;
+            item_id: string | null;
+            type: components["schemas"]["MaintenanceType"];
+            title: string | null;
+            done_at: string;
+            mileage_km: number | null;
+            /** @description Free text ("Werkstatt am Ring"). */
+            workshop: string | null;
+            /** @description M4.14: the linked business profile; null until business profiles exist. */
+            business_id: string | null;
+            /** @description Private: only ever in the owner's answers. label: "189,00 €" in the request's language. */
+            cost: {
+                cents: number;
+                currency: string;
+                label: string;
+            } | null;
+            notes: string | null;
+            /** @description Receipts and booklet photos from the private disk: signed URLs for the reader, valid about 10 minutes. */
+            photos: {
+                id: string;
+                status: string;
+                width: number | null;
+                height: number | null;
+                blurhash: string | null;
+                variants: {
+                    width: number;
+                    height: number;
+                    url: string;
+                }[];
+            }[];
+            version: number;
+            created_at: string | null;
+            updated_at: string | null;
+        };
+        /**
+         * MaintenancePhotoRequest
+         * @description A photo of a service log entry (receipt, booklet stamp): JPEG, PNG or WebP through the media pipeline, kept on the private disk.
+         */
+        MaintenancePhotoRequest: {
+            /** Format: binary */
+            file: string;
+        };
+        /** MaintenancePhotoResource */
+        MaintenancePhotoResource: {
+            id: string;
+            /** @enum {string} */
+            status: "processing" | "ready" | "failed";
+            width: unknown;
+            height: unknown;
+            blurhash: unknown;
+            variants: {
+                width: number;
+                height: number;
+                url: string;
+            }[];
+        };
+        /** MaintenanceReminderPlanResource */
+        MaintenanceReminderPlanResource: {
+            /** @description The zone of fire_on / fire_at and of the daily server run. */
+            timezone: string;
+            /**
+             * @description key "mnt:{item}:d{due}:{lead}" or "mnt:{item}:k{km}"; fire_at: the server push (09:00 Europe/Berlin on fire_on); status:
+             *     planned (schedule the local backup), sent or skipped (drop it).
+             */
+            stages: {
+                key: string;
+                /** @enum {string} */
+                kind: "date" | "km";
+                item_id: string;
+                vehicle_id: string;
+                type: string;
+                due_on: string | null;
+                due_km: number | null;
+                lead_days: number | null;
+                fire_on: string | null;
+                fire_at: string | null;
+                /** @enum {string} */
+                status: "planned" | "sent" | "skipped";
+            }[];
+        };
+        /**
+         * MaintenanceType
+         * @description The maintenance items of a vehicle (09 §8.8, MNT-01): HU/AU (the month on the plakette, vehicles.hu_au_due), Service, Ölwechsel, Bremsflüssigkeit (24 months), Reifenwechsel Sommer/Winter ("O bis O": due mid-October and two weeks after Easter, reminded early October and around Easter), Kfz-Versicherung (Stichtag 30 November, reminded 1 November) and any number of custom items. Every type but custom exists at most once per vehicle.
+         * @enum {string}
+         */
+        MaintenanceType: "hu_au" | "service" | "oil_change" | "brake_fluid" | "tyre_change" | "insurance" | "custom";
+        /** MaintenanceUpcomingResource */
+        MaintenanceUpcomingResource: {
+            id: string;
+            vehicle_id: string;
+            type: components["schemas"]["MaintenanceType"];
+            /** @description Custom items only; the app names the other types itself. */
+            title: string | null;
+            interval: {
+                months: number | null;
+                km: number | null;
+            };
+            last_done: {
+                date: string | null;
+                km: number | null;
+            };
+            next_due: {
+                /** @description YYYY-MM-DD; the first day of the month for the HU/AU. */
+                date: string | null;
+                /** @description HU/AU only: the month on the plakette, "2027-03". */
+                month: string | null;
+                km: number | null;
+                /** @description The member set the date or mileage (service booklet); a new log entry computes it again. */
+                pinned: boolean;
+                /** @description The last day before it counts as overdue (the end of the HU/AU month). */
+                deadline: string | null;
+            };
+            /** @description Tyre change: which tyres go on next. */
+            season: string;
+            lead_days: number[];
+            enabled: boolean;
+            notes: string | null;
+            state: components["schemas"]["MaintenanceDueState"];
+            /** @description Days to the due date, negative once past it. */
+            days_left: number | null;
+            /** @description Kilometres to the due mileage, negative once past it; null without a due mileage or a known odometer. */
+            km_left: number | null;
+            /** @description 0–1, how much of the interval has passed (the ring), or null. */
+            progress: number | null;
+            /** @description The reminder stages of the current due date (09 §8.8 "server + local dedupe"): `key` is the id of the local backup notification. */
+            reminders: {
+                key: string;
+                /** @enum {string} */
+                kind: "date" | "km";
+                due_on: string | null;
+                due_km: number | null;
+                lead_days: number | null;
+                fire_on: string | null;
+                /** @enum {string} */
+                status: "planned" | "sent" | "skipped";
+            }[];
+            /** @description Send it back with a PATCH: a newer one on the server answers 409 edit_conflict. */
+            version: number;
+            updated_at: string | null;
+            vehicle: components["schemas"]["VehicleRefResource"];
         };
         /** MakePageResource */
         MakePageResource: {
@@ -4043,13 +6438,20 @@ export interface components {
             theme: components["schemas"]["ThemePreference"];
             power_display: components["schemas"]["PowerDisplay"];
             member_since: string;
+            /** @description Each count is null for a sample account (09 §8.19: counts on samples are hidden). */
             stats: {
-                vehicles: number;
-                followers: number;
-                following: number;
+                vehicles: number | null;
+                followers: number | null;
+                following: number | null;
             };
+            /** @description A sample account of the showcase (09 §8.19). */
+            is_sample: boolean;
+            /** @description The SPEED CLUB Editorial account. */
+            is_editorial: boolean;
             /** @description M2.5 SET-05: two-factor is on, so sign-in, SET-13 and switching it off ask for a code. */
             two_factor_enabled: boolean;
+            /** @description M4.6: false for a passwordless account (e-mail code, Apple, Google); SET-04 then sets one instead of changing it. */
+            password_set: boolean;
             restrictions: {
                 suspended: boolean;
                 messaging: {
@@ -4077,6 +6479,11 @@ export interface components {
             width: number | null;
             height: number | null;
             blurhash: string | null;
+            /**
+             * @description ThumbHash of an editorial/sample photo (09 §4.6, from design/scripts/process-photos.mjs); null for member uploads, which
+             *     keep the blurhash. expo-image: `placeholder={{ thumbhash }}` when set.
+             */
+            thumbhash: string | null;
             focal_x: number | null;
             focal_y: number | null;
             alt: string | null;
@@ -4093,6 +6500,40 @@ export interface components {
          * @enum {string}
          */
         MediaStatus: "processing" | "ready" | "failed";
+        /** MemberCollectionItemResource */
+        MemberCollectionItemResource: {
+            type: components["schemas"]["CollectionItemType"];
+            id: string;
+            position: number;
+            added_at: string | null;
+            vehicle: components["schemas"]["FeedVehicleResource"] | null;
+            /** @description The mod with the build it belongs to. */
+            modification: {
+                id: string;
+                title: string;
+                category: string | null;
+                vehicle: components["schemas"]["VehicleRefResource"];
+            } | null;
+            build_update: components["schemas"]["CollectionBuildUpdateResource"] | null;
+            event: components["schemas"]["EventCardResource"] | null;
+        };
+        /** MemberCollectionResource */
+        MemberCollectionResource: {
+            id: string;
+            /** @description The member's name, or "Gespeichert" / "Saved" for the default collection never renamed. */
+            name: string;
+            /** @description "Gespeichert": cannot be deleted; the save button of a build adds to it. */
+            is_default: boolean;
+            position: number;
+            /** @description Everything stored, also what the member cannot see at the moment (it comes back when it is visible again). */
+            items_count: number;
+            /** @description Up to four photos for the mosaic, newest item first. */
+            covers: components["schemas"]["MediaResource"][];
+            /** @description Only when asked with contains_type and contains_id: whether that item is in this collection. */
+            contains: boolean | null;
+            created_at: string | null;
+            updated_at: string | null;
+        };
         /** MemberProfileResource */
         MemberProfileResource: {
             username: string | null;
@@ -4102,11 +6543,16 @@ export interface components {
             avatar: components["schemas"]["MediaResource"] | null;
             cover: components["schemas"]["MediaResource"] | null;
             member_since: string;
+            /** @description Each count is null for a sample member (09 §8.19: counts on samples are hidden). */
             stats: {
-                vehicles: number;
-                followers: number;
-                following: number;
+                vehicles: number | null;
+                followers: number | null;
+                following: number | null;
             };
+            /** @description Sample content (09 §8.19): the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description The SPEED CLUB Editorial account: the "Editorial" badge. */
+            is_editorial: boolean;
             is_self: boolean;
             is_following: boolean;
             /** @description The member follows the viewer. False for guests and on your own profile. */
@@ -4123,9 +6569,16 @@ export interface components {
             display_name: string | null;
             city: string | null;
             avatar: components["schemas"]["MediaResource"] | null;
-            /** @description Public builds as the profile lists them, and their makes, main vehicle first, at most three. */
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            is_editorial: boolean;
+            /**
+             * @description Public builds as the profile lists them, and their makes, main vehicle first, at most three. For a sample member the count is
+             *     null and the line names the makes only (09 §8.19: counts on samples are hidden).
+             */
             garage: {
-                vehicles: number;
+                vehicles: number | null;
                 makes: string[];
                 line: string;
             };
@@ -4140,8 +6593,37 @@ export interface components {
         /** MemberSettingsResource */
         MemberSettingsResource: {
             theme: components["schemas"]["ThemePreference"];
-            locale: string;
+            /**
+             * @description SET-11: de, en, or "system" when the app follows the device language.
+             * @enum {string}
+             */
+            locale: "de" | "en" | "system";
+            /** @description The language of mails and pushes (de or en). With "system" it is the device language of the last change. */
+            effective_locale: string;
+            /**
+             * @description SET-11 region for "in deiner Nähe" (09 §8.7): the city the member picked and its point, snapped to 0.05°. Home's
+             *     nearby events and EVT-01 `near=home` use it when the device gives no location. Private: only you read it.
+             */
+            home_region: {
+                label: string;
+                lat: number;
+                lng: number;
+            } | null;
             power_display: components["schemas"]["PowerDisplay"];
+            /** @description SET-11 (09 §8.11): units the app shows; the server keeps km, Nm, kg and euro cents. */
+            distance_unit: components["schemas"]["DistanceUnit"];
+            torque_unit: components["schemas"]["TorqueUnit"];
+            weight_unit: components["schemas"]["WeightUnit"];
+            /**
+             * @description SET-23 = MNT-03 (M4.13): reminder defaults. hu_au_lead_days: what a new HU/AU item starts with (days, longest first); the
+             *     switches silence tyre (O bis O), insurance (Stichtag 30.11.) and service-type reminders. Push/e-mail: SET-09 hu_au_reminder.
+             */
+            maintenance: {
+                hu_au_lead_days: number[];
+                tyre_reminders: boolean;
+                insurance_reminder: boolean;
+                service_reminders: boolean;
+            };
             /**
              * @description Whether the pages a sticker leads to name the member (GAR-12). Off: nobody but the member sees the owner on the
              *     public vehicle page, on feed cards or on the sticker PDF (ADR-148 a). Account-wide, not per vehicle.
@@ -4149,6 +6631,11 @@ export interface components {
             show_owner_on_qr: boolean;
             /** @description SET-07 (M2.5): who may start a conversation or send a request (MessagingEligibility). An accepted conversation stays open. */
             who_can_message: components["schemas"]["WhoCanMessage"];
+            /**
+             * @description M4.11 (09 §8.5) "Wer darf mich erwähnen": everyone, followers (members who follow me) or nobody. A mention that is not
+             *     allowed stays plain text, without a link or a notification.
+             */
+            mention_privacy: components["schemas"]["MentionPrivacy"];
             /** @description SET-07: shown in member search, Aktive Mitglieder and suggestions. */
             discoverable: boolean;
             /** @description SET-07: search engines may list the profile and the builds (robots meta on /u and /v, the sitemap). */
@@ -4162,33 +6649,66 @@ export interface components {
              */
             ai_suggestions: boolean;
             /**
-             * @description SET-09 (02_PRODUCT_SPEC §7): push switch per type (plus the e-mail digest of messages and the HU/AU e-mail), quiet hours in
-             *     Europe/Berlin, and push previews of messages (ADR-035). Always complete: unset values are the defaults of the matrix.
+             * @description SET-09 (02_PRODUCT_SPEC §7, 09 §7.12): push and web_push (member web) switches per type, plus the e-mail digest of messages
+             *     and the HU/AU and event e-mails; quiet hours in Europe/Berlin; push previews of messages (ADR-035); how often the message
+             *     digest may go out (daily · weekly). Always complete: unset values are the defaults of the matrix.
              */
             notification_prefs: {
                 types: {
                     new_follower: {
                         push: boolean;
+                        web_push: boolean;
                     };
                     followed_published: {
                         push: boolean;
+                        web_push: boolean;
                     };
                     build_saved: {
                         push: boolean;
+                        web_push: boolean;
                     };
                     new_message: {
                         push: boolean;
                         email_digest: boolean;
+                        web_push: boolean;
                     };
                     message_request: {
                         push: boolean;
+                        web_push: boolean;
                     };
                     hu_au_reminder: {
                         push: boolean;
                         email: boolean;
+                        web_push: boolean;
                     };
                     qr_milestone: {
                         push: boolean;
+                        web_push: boolean;
+                    };
+                    reaction: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    mention: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    comment: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    vehicle_follower: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    event_reminder: {
+                        push: boolean;
+                        email: boolean;
+                        web_push: boolean;
+                    };
+                    event_update: {
+                        push: boolean;
+                        web_push: boolean;
                     };
                 };
                 quiet_hours: {
@@ -4197,6 +6717,8 @@ export interface components {
                     to: string;
                 };
                 message_previews: boolean;
+                /** @enum {string} */
+                digest_frequency: "daily" | "weekly";
             };
         };
         /** MemberSummaryResource */
@@ -4205,6 +6727,10 @@ export interface components {
             display_name: string | null;
             city: string | null;
             avatar: components["schemas"]["MediaResource"] | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            is_editorial: boolean;
         };
         /** MemberUnavailableError */
         MemberUnavailableError: {
@@ -4217,6 +6743,12 @@ export interface components {
             /** @enum {string} */
             code: "member_unavailable";
         };
+        /**
+         * MentionPrivacy
+         * @description SET privacy "Wer darf mich erwähnen" (09 §8.5): everybody, only members who follow me, or nobody. A mention that is not allowed stays plain text: no link, no notification, and the author is not told why.
+         * @enum {string}
+         */
+        MentionPrivacy: "everyone" | "followers" | "nobody";
         /** MessagePreviewResource */
         MessagePreviewResource: {
             id: string;
@@ -4228,10 +6760,10 @@ export interface components {
         };
         /**
          * MessageReaction
-         * @description [SIG sig.msg_reactions] The six fixed reactions, rendered 👍 ❤️ 🔥 😂 😮 🏁 by the app. One per member and message.
+         * @description [SIG sig.msg_reactions] The fixed reactions on a message, one per member and message. The six of M2.4 (rendered 👍 ❤️ 🔥 😂 😮 🏁 by the app) and, since Phase 4, the four car words of build reactions (09 §8.5, ADR-413): Stark, Sauber, Tief, Laut. Private to the two members of the conversation, like every message reaction.
          * @enum {string}
          */
-        MessageReaction: "thumbs_up" | "heart" | "fire" | "laugh" | "wow" | "flag";
+        MessageReaction: "thumbs_up" | "heart" | "fire" | "laugh" | "wow" | "flag" | "stark" | "sauber" | "tief" | "laut";
         /** MessageResource */
         MessageResource: {
             /** @description ULID; sorts by time, strictly increasing within a conversation. */
@@ -4245,7 +6777,22 @@ export interface components {
             sender: components["schemas"]["MemberSummaryResource"] | null;
             sender_deleted: boolean;
             is_mine: boolean;
-            /** @description [SIG sig.msg_reactions] In the fixed order thumbs_up, heart, fire, laugh, wow, flag; only keys somebody used. */
+            /**
+             * @description SM11 (ADR-445): the message this one answers, for the quote above the bubble. `available` false when you no longer see the
+             *     quoted message (removed, deleted for you, cleared): then `body` is null and the app shows "Nachricht nicht mehr verfügbar".
+             *     `body` is the text of a text message only. Null when this message is no reply.
+             */
+            reply_to: {
+                id: string;
+                type: components["schemas"]["MessageType"];
+                body: string | null;
+                is_mine: boolean;
+                available: boolean;
+            } | null;
+            /**
+             * @description [SIG sig.msg_reactions] In the fixed order thumbs_up, heart, fire, laugh, wow, flag, stark, sauber, tief, laut; only keys
+             *     somebody used.
+             */
             reactions: {
                 key: components["schemas"]["MessageReaction"];
                 count: number;
@@ -4324,6 +6871,7 @@ export interface components {
             /** @description The DISC-04 route key, "bmw--m4". */
             key: string;
             vehicle_count: number;
+            cover: components["schemas"]["MediaResource"] | null;
             /** @description Generations with at least one build, oldest first. */
             generations: components["schemas"]["GenerationCountResource"][];
         };
@@ -4363,8 +6911,9 @@ export interface components {
             status?: components["schemas"]["ModStatus"];
             /** @description Month of installation as YYYY-MM. Dropped for a planned part. */
             installed_on?: string | null;
-            /** @description Private unless cost_public is true. */
+            /** @description Private, always: only the owner reads it (09 §11). */
             cost_cents?: number | null;
+            /** @description Ignored since M4.9 (costs are never public); accepted so older apps keep working. */
             cost_public?: boolean;
             legal_status?: components["schemas"]["LegalStatus"] | null;
             notes?: string | null;
@@ -4391,8 +6940,9 @@ export interface components {
             installed_on: string | null;
             /** @description "März 2023" */
             installed_label: string | null;
+            /** @description Always false since M4.9 (09 §11, ADR ruling): costs are never public. Kept for older apps. */
             cost_public: boolean;
-            /** @description Owner, or anybody when cost_public is set. */
+            /** @description The owner's alone (never another member, a guest, a public page or staff in view-as). */
             cost: {
                 cents: number;
                 label: string;
@@ -4460,8 +7010,9 @@ export interface components {
             installed_on: string | null;
             /** @description "März 2023" */
             installed_label: string | null;
+            /** @description Always false since M4.9 (09 §11, ADR ruling): costs are never public. Kept for older apps. */
             cost_public: boolean;
-            /** @description Owner, or anybody when cost_public is set. */
+            /** @description The owner's alone (never another member, a guest, a public page or staff in view-as). */
             cost: {
                 cents: number;
                 label: string;
@@ -4477,6 +7028,18 @@ export interface components {
             email: string;
             resend_after_seconds: number | null;
         };
+        /** NotificationActorResource */
+        NotificationActorResource: {
+            username: string;
+            display_name: string | null;
+            city: string | null;
+            avatar: components["schemas"]["MediaResource"] | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            is_editorial: boolean;
+            main_vehicle_cover: components["schemas"]["MediaResource"] | null;
+        };
         /** NotificationResource */
         NotificationResource: {
             id: string;
@@ -4484,18 +7047,19 @@ export interface components {
             /** @description Rows of one group share it: "new_follower:2026-11-08". Null for rows that never group (security). */
             group_key: string | null;
             /** @description Newest first, at most three, only members the reader may see now. */
-            actors: components["schemas"]["MemberSummaryResource"][];
+            actors: components["schemas"]["NotificationActorResource"][];
             /**
-             * @description new_follower, followed_published: how many members the row is about (the shown ones included), so "und 3 weitere" is
+             * @description new_follower, followed_published, reaction, mention, comment, vehicle_follower: how many members the row is about (the shown ones included), so "und 3 weitere" is
              *     actor_count − 1. build_saved: how many members saved the build that week (never who). security: 0.
              */
             actor_count: number;
             vehicle: components["schemas"]["VehicleRefResource"] | null;
+            event: components["schemas"]["EventRefResource"] | null;
             /**
              * @description By type, language-free. Named details, not data: Laravel (and the export) leave a single resource unwrapped when its
              *     body already has a key "data". followed_published: {kind: "vehicle"|"update", update_id, vehicles, updates} (kind of the latest
              *     event; how many builds were published and updates posted that day). build_saved: {count, week} ("2026-W45"). security:
-             *     {event: "new_device"|"password_changed"|"email_changed"|"two_factor_changed"|"deletion_requested"|"sessions_revoked"|"verification_failed"|"recovery_code_used", device_name}.
+             *     {event: "new_device"|"password_changed"|"email_changed"|"two_factor_changed"|"deletion_requested"|"sessions_revoked"|"verification_failed"|"recovery_code_used", device_name, security_event_id (M4.7: the SET-21 row of a login alert, else null)}.
              *     new_follower: {}. moderation_decision (a decision about the reader's content or account): {decision_id, action:
              *     "remove_content"|"restrict"|"suspend"}. report_decided (the outcome of a case the reader reported): {decision_id, outcome:
              *     "no_action"|"remove_content"|"measures"}, never the measure. SAFE-01 opens the decision.
@@ -4503,11 +7067,19 @@ export interface components {
              *     {due: "2027-03"}, the month the HU/AU is due; GAR-06 opens. catalog_request (M3.3): {outcome: "accepted"|"rejected", requested:
              *     the make and model the member typed, reason: why it was declined (rejected only), else null}; the vehicle is the member's own.
              *     support_reply (Phase 3): {ticket_id, reference: "SC-7H2KQXMB"}, the team answered that support request; SET-15b opens the
-             *     thread. Never the text of the answer.
+             *     thread. Never the text of the answer. M4.11: reaction {target: "vehicle"|"build_update", update_id} (the owner's own item;
+             *     actors are who reacted, never how), mention {update_id, comment_id} (comment_id null for a mention in the update itself),
+             *     comment [build_comments] {update_id, comment_id (the newest), reply: a reply to the reader's comment}, vehicle_follower {}
+             *     (vehicle is the reader's build). update_id is null once the reader may no longer see the update; the row then opens the build.
+             *     M4.12 (the event is in `event`): event_review {outcome: "approved"|"rejected", reason (rejected only)}, event_promoted {} (the
+             *     reader moved from the waitlist to going), event_reminder {kind: "24h"|"2h"}, event_update {kind: "update"|"changed" (time or
+             *     place changed), update_id}, event_cancelled {by_staff}. Never the text of an update. M4.13 maintenance_due (vehicle: the
+             *     reader's own): {kind: "date"|"km", item_id, item_type, due_on (YYYY-MM-DD) or due_km, lead_days, reminder_key (the id of the
+             *     app's local backup notification, also in the push data)}; MNT-01 opens.
              */
             details: {
                 /** @enum {string} */
-                kind?: "vehicle" | "update";
+                kind?: "vehicle" | "update" | "changed" | "24h" | "2h" | "date" | "km";
                 update_id?: string | null;
                 vehicles?: number;
                 updates?: number;
@@ -4524,6 +7096,18 @@ export interface components {
                 reason?: string | null;
                 ticket_id?: string | null;
                 reference?: string | null;
+                /** @enum {string} */
+                target?: "vehicle" | "build_update";
+                comment_id?: string | null;
+                reply?: boolean;
+                security_event_id?: string | null;
+                by_staff?: boolean;
+                item_id?: string | null;
+                item_type?: string | null;
+                due_on?: string | null;
+                due_km?: number | null;
+                lead_days?: number | null;
+                reminder_key?: string | null;
             };
             read_at: string | null;
             /** @description The row's latest event, ISO 8601. */
@@ -4534,13 +7118,24 @@ export interface components {
          * @description The rows of the notification list (02_PRODUCT_SPEC §7). Written by App\Services\Notifications\Notifier only; later modules add their types here (M2.4 messages and requests, M2.6 decisions, M2.7 QR milestones and HU/AU).
          * @enum {string}
          */
-        NotificationType: "new_follower" | "followed_published" | "build_saved" | "security" | "moderation_decision" | "report_decided" | "qr_milestone" | "hu_au_reminder" | "catalog_request" | "support_reply";
+        NotificationType: "new_follower" | "followed_published" | "build_saved" | "security" | "moderation_decision" | "report_decided" | "qr_milestone" | "hu_au_reminder" | "catalog_request" | "support_reply" | "reaction" | "mention" | "comment" | "vehicle_follower" | "event_review" | "event_promoted" | "event_reminder" | "event_update" | "event_cancelled" | "maintenance_due";
+        /** OdometerRequest */
+        OdometerRequest: {
+            /** @description The mileage now, in km (the app converts mi). */
+            km: number;
+        };
+        /** OdometerResource */
+        OdometerResource: {
+            vehicle_id: string;
+            km: number | null;
+            recorded_at: string | null;
+        };
         /**
          * OnboardingStep
          * @description The first open step of F1, where the app resumes after a restart.
          * @enum {string}
          */
-        OnboardingStep: "verify_email" | "choose_username" | "profile_setup";
+        OnboardingStep: "verify_email" | "accept_terms" | "choose_username" | "profile_setup";
         /**
          * OrganiseConversationRequest
          * @description [SIG sig.msg_organize] `PATCH conversations/{id}`: mute (until a moment, or with no end), pin, archive. At least one key.
@@ -4570,6 +7165,48 @@ export interface components {
             /** @enum {string} */
             code: "own_content";
         };
+        /** PasskeyOptionsResource */
+        PasskeyOptionsResource: {
+            ceremony_id: string;
+            expires_in: string;
+            /** @description PublicKeyCredentialCreationOptionsJSON or PublicKeyCredentialRequestOptionsJSON (WebAuthn L3). */
+            options: string;
+        };
+        /** PasskeyResource */
+        PasskeyResource: {
+            id: string;
+            name: string;
+            /** @description The password manager or platform, from the AAGUID ("iCloud-Schlüsselbund", "Google Passwortmanager"). */
+            provider: string | null;
+            /** @description Icon key for the app: apple, google, chrome, 1password, bitwarden, samsung, windows, microsoft, dashlane, proton or key. */
+            provider_icon: string | "key";
+            /** @description Synced across the member's devices (backup state of the credential). */
+            synced: boolean;
+            last_used_at: string | null;
+            created_at: string;
+        };
+        /**
+         * PasskeySignInRequest
+         * @description POST auth/passkeys/verify: the ceremony_id of POST auth/passkeys/options and the PublicKeyCredential as JSON (id, rawId, type,
+         *     response.clientDataJSON, response.authenticatorData, response.signature, response.userHandle; base64url).
+         */
+        PasskeySignInRequest: {
+            ceremony_id: string;
+            credential: {
+                id: string;
+                rawId: string;
+                /** @enum {string} */
+                type: "public-key";
+                response: string[];
+            };
+            device_name?: string | null;
+            platform?: components["schemas"]["DevicePlatform"] | null;
+            app_version?: string | null;
+            /** @description The app's per-install id (a UUID kept in secure storage). Tells two devices of the same model apart; ignored without device_name. */
+            device_id?: string | null;
+            /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
+            os_version?: string | null;
+        };
         /** PasswordChangeRequiredError */
         PasswordChangeRequiredError: {
             /** @description Translated, safe to show. */
@@ -4596,7 +7233,15 @@ export interface components {
          * @description The current password again (SET-05 start, SET-12).
          */
         PasswordRequest: {
-            password: string;
+            password?: string | null;
+        };
+        /** PasswordlessSessionResource */
+        PasswordlessSessionResource: {
+            token: string | null;
+            token_expires_at: string | null;
+            member: components["schemas"]["MeResource"];
+            is_new: boolean;
+            next: components["schemas"]["SignInNext"];
         };
         /** PhotoCategoryResource */
         PhotoCategoryResource: {
@@ -4615,6 +7260,14 @@ export interface components {
             category_key: string | null;
             /** @description What DISC-02 searches for when the chip is tapped (`q`). */
             query: string;
+        };
+        /** PopularModelResource */
+        PopularModelResource: {
+            key: string;
+            make: string;
+            name: string;
+            vehicle_count: string;
+            cover: components["schemas"]["MediaResource"] | null;
         };
         /**
          * PowerDisplay
@@ -4665,6 +7318,9 @@ export interface components {
             cover: components["schemas"]["MediaResource"] | null;
             photo_count: number;
             mod_count: number;
+            updates_count: number;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -4689,7 +7345,7 @@ export interface components {
                 code: string;
                 url: string;
             } | null;
-            /** @description The web page of this vehicle, for sharing. */
+            /** @description The web page of this vehicle, for sharing: the canonical address (no redirect for a link preview), HTTPS where the site is. */
             canonical_url: string;
             description: string | null;
             /** @description "510 PS (375 kW)" in the viewer's setting, what was entered, and the provenance label. */
@@ -4721,6 +7377,11 @@ export interface components {
             }[];
             photos: components["schemas"]["MediaResource"][];
             highlights: components["schemas"]["ModificationRowResource"][];
+            /**
+             * @description M4.9 VEH-01 "Highlights": the owner's pinned rail (build updates and photos, in their order) the reader may see. `highlights`
+             *     above stays the top mods per category for older apps.
+             */
+            highlights_rail: components["schemas"]["HighlightResource"][];
             /** @description Groups by category, in the order of the catalogue. count is what "Alle Mods (14)" shows. */
             mods: {
                 count: number;
@@ -4734,7 +7395,6 @@ export interface components {
                     items: components["schemas"]["ModificationRowResource"][];
                 }[];
             };
-            updates_count: number;
             /** @description The latest entries of Verlauf; the rest through public/vehicles/{slug}/updates. */
             updates: components["schemas"]["BuildUpdateResource"][];
             owner: components["schemas"]["MemberProfileResource"] | null;
@@ -4750,6 +7410,11 @@ export interface components {
             is_owner: boolean;
             /** @description The viewer saved this build [SIG sig.saved_builds]. Null for guests, for the owner and while the flag is off. */
             is_saved: boolean | null;
+            /**
+             * @description M4.11 (09 §8.5, §8.6): the viewer's own reaction and build follow. Counts (reactions by kind, followers) only for the owner;
+             *     nobody else ever receives them. Each part is null while its flag is off.
+             */
+            social: components["schemas"]["VehicleSocialResource"];
         };
         /** PublishVehicleRequest */
         PublishVehicleRequest: {
@@ -4817,7 +7482,7 @@ export interface components {
         QrScanState: "active" | "revoked" | "private" | "not_found";
         /** QrStatsResource */
         QrStatsResource: {
-            /** @description Exactly 14 entries, oldest first. `date` is YYYY-MM-DD in German time. */
+            /** @description Exactly 30 entries since M4.9 (14 before), oldest first. `date` is YYYY-MM-DD in German time. */
             days: {
                 date: string;
                 count: number;
@@ -4825,6 +7490,8 @@ export interface components {
             /** @description Since the vehicle's first code, over all its codes. */
             total: number;
             total_14_days: number;
+            /** @description M4.9: the sum of `days`. */
+            total_30_days: string;
             /** @description The milestones of the in-app `qr_milestone` notification the total has reached, ascending: of 10, 50, 100, 500, 1000. */
             milestones_reached: number[];
         };
@@ -4847,6 +7514,55 @@ export interface components {
         /** ReactRequest */
         ReactRequest: {
             key: components["schemas"]["MessageReaction"];
+        };
+        /** ReactionRowResource */
+        ReactionRowResource: {
+            member: components["schemas"]["MemberSummaryResource"] | null;
+            reaction: components["schemas"]["ReactionType"];
+            reacted_at: string | null;
+        };
+        /** ReactionStateResource */
+        ReactionStateResource: {
+            /** @description vehicles or build-updates, as in the path. */
+            target_type: string;
+            target_id: string;
+            /** @enum {string|null} */
+            my_reaction: "strong" | "clean" | "low" | "loud" | null;
+        };
+        /**
+         * ReactionType
+         * @description Private reactions on builds and build updates (09 §8.5, ADR-413): Stark · Sauber · Tief · Laut, one per member and item. The app draws them with its own glyphs (strong, clean, low, loud). Counts reach the owner only, never anybody else.
+         * @enum {string}
+         */
+        ReactionType: "strong" | "clean" | "low" | "loud";
+        /** ReasonRequest */
+        ReasonRequest: {
+            /** @description Shown to everybody with an answer on EVT-02. */
+            reason: string;
+        };
+        /**
+         * ReauthMethod
+         * @description How POST me/reauth proves the member again (09 §8.1 "sudo mode").
+         * @enum {string}
+         */
+        ReauthMethod: "passkey" | "email_code" | "password";
+        /**
+         * ReauthRequest
+         * @description POST me/reauth. passkey: ceremony_id + credential; email_code: attempt_id + code; password: password. two_factor_code with two-factor
+         *     on for email_code and password.
+         */
+        ReauthRequest: {
+            method: components["schemas"]["ReauthMethod"];
+            password?: string | null;
+            attempt_id?: string | null;
+            code?: string | null;
+            ceremony_id?: string | null;
+            credential?: string[] | null;
+            two_factor_code?: string | null;
+        };
+        /** ReauthResource */
+        ReauthResource: {
+            reauthenticated_until: string;
         };
         /** RecoveryCodesResource */
         RecoveryCodesResource: {
@@ -4875,12 +7591,34 @@ export interface components {
             locale?: "de" | "en" | null;
             ref?: components["schemas"]["SignupRef"] | null;
         };
+        /** ReleaseNoteResource */
+        ReleaseNoteResource: {
+            /** @description "1.0.0" */
+            version: string;
+            /** @description YYYY-MM-DD, the day the release reached members. */
+            date: string;
+            title: string;
+            /** @description What is new, one sentence each. */
+            items: string[];
+        };
+        /** RenamePasskeyRequest */
+        RenamePasskeyRequest: {
+            name: string;
+        };
         /** ReorderMediaRequest */
         ReorderMediaRequest: {
             ids: string[];
         };
         /** ReorderModificationsRequest */
         ReorderModificationsRequest: {
+            ids: string[];
+        };
+        /**
+         * ReorderRequest
+         * @description PUT me/collections/order (ids of collections) and PUT me/collections/{id}/items/order (items as "type:id"), first = top. Must name
+         *     every entry exactly once; the controller checks that against what is stored.
+         */
+        ReorderRequest: {
             ids: string[];
         };
         /** ReorderVehiclesRequest */
@@ -4920,7 +7658,7 @@ export interface components {
          * @description What can be reported (m2.6-contract §1). The id is the member's username for `member` (resolved to the account on receipt) and the ULID of the row otherwise.
          * @enum {string}
          */
-        ReportTargetType: "member" | "vehicle" | "photo" | "message" | "build_update" | "modification";
+        ReportTargetType: "member" | "vehicle" | "photo" | "message" | "build_update" | "modification" | "comment" | "event";
         /** RequestPendingError */
         RequestPendingError: {
             /** @description Translated, safe to show. */
@@ -4943,7 +7681,24 @@ export interface components {
         RotateTokenRequest: {
             /** @description The app's per-install id, as sent at sign-in. Taken only by a token that has none yet (an older app build's). */
             device_id?: string | null;
+            /** @description M4.7 (09 §8.4): the app and system version now, so SET-06 shows them after an update. */
+            app_version?: string | null;
+            os_version?: string | null;
         };
+        /** RsvpRequest */
+        RsvpRequest: {
+            /**
+             * @description going ("Zusagen"; the waitlist when full) or interested.
+             * @enum {string}
+             */
+            status: "going" | "interested";
+        };
+        /**
+         * RsvpStatus
+         * @description A member's answer to an event (09 §8.7): going ("Zusagen"), interested, or the waitlist when a capacity is full. A spot that frees up goes to the longest-waiting member (Rsvps::fill).
+         * @enum {string}
+         */
+        RsvpStatus: "going" | "interested" | "waitlist";
         /** SafetyTargetResource */
         SafetyTargetResource: {
             type: components["schemas"]["ReportTargetType"];
@@ -4974,8 +7729,9 @@ export interface components {
             installed_on: string | null;
             /** @description "März 2023" */
             installed_label: string | null;
+            /** @description Always false since M4.9 (09 §11, ADR ruling): costs are never public. Kept for older apps. */
             cost_public: boolean;
-            /** @description Owner, or anybody when cost_public is set. */
+            /** @description The owner's alone (never another member, a guest, a public page or staff in view-as). */
             cost: {
                 cents: number;
                 label: string;
@@ -5059,6 +7815,10 @@ export interface components {
             cover: components["schemas"]["MediaResource"] | null;
             photo_count: number;
             mod_count: number;
+            /** @description M4.9: the owner's own count of Verlauf entries (hidden ones included); null for anybody else, so no number reaches others. */
+            updates_count: number | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -5090,6 +7850,14 @@ export interface components {
                 type_label: string;
                 summary: string;
                 created_at: string | null;
+            } | null;
+            /**
+             * @description M4.8: the reader's own state on this build: saved in one of their collections, their private reaction
+             *     ("strong" | "clean" | "low" | "loud", null while build_reactions is off). Null for guests. Never anybody else's, never a count.
+             */
+            viewer: {
+                saved: boolean;
+                reaction: string | null;
             } | null;
             /** @description When the member saved the build, ISO 8601. */
             saved_at: string;
@@ -5147,8 +7915,87 @@ export interface components {
          * @description Password and a second factor (SET-05 off, new recovery codes): a six-digit authenticator code or a recovery code ("ABCDE-FGHJK").
          */
         SecondFactorRequest: {
-            password: string;
+            password?: string | null;
             code: string;
+        };
+        /**
+         * SecureAccountLinkRequest
+         * @description POST auth/secure-account: the token of a login alert's "Das war ich nicht" link (the fragment of /auth/secure#t=…).
+         */
+        SecureAccountLinkRequest: {
+            token: string;
+        };
+        /**
+         * SecureAccountRequest
+         * @description POST me/security/secure (SET-21 "Das war ich nicht"): optionally the row that was not the member.
+         */
+        SecureAccountRequest: {
+            /** @description The SET-21 row the member did not do; it goes into the support request. */
+            security_event_id?: string | null;
+        };
+        /** SecuredAccountResource */
+        SecuredAccountResource: {
+            /** @description Always true: sign in again. */
+            signed_out: boolean;
+            /** @description The support request that was opened ("SC-7H2KQXMB"). */
+            ticket_reference: string;
+            devices_signed_out: number;
+            sessions_signed_out: number;
+            /** @description The next sign-in with the password asks for a new one by e-mail code. */
+            password_reset_required: boolean;
+            /**
+             * @description What was removed because it was added since the reported sign-in (SEC-M47-01): passkeys and provider links (counts), a pending
+             *     e-mail change, and a second factor turned on since then. The app lists them on the confirmation.
+             */
+            removed: {
+                passkeys: number;
+                providers: number;
+                email_change: boolean;
+                two_factor: boolean;
+            };
+        };
+        /**
+         * SecurityActivity
+         * @description The rows of SET-21 Sicherheitsaktivität (09 §7.9, §8.4): what a member sees of their member_security_events. Several audit actions can share a row type (both locks are `sign_in_locked`); bookkeeping events (registration, token rotation, renames) are not shown.
+         * @enum {string}
+         */
+        SecurityActivity: "signed_in" | "new_device" | "sign_in_failed" | "sign_in_locked" | "password_changed" | "password_reset" | "email_changed" | "two_factor_enabled" | "two_factor_disabled" | "recovery_codes_regenerated" | "recovery_code_used" | "passkey_added" | "passkey_removed" | "passkey_rejected" | "provider_linked" | "provider_unlinked" | "sessions_revoked" | "signed_out_everywhere" | "token_replay_blocked" | "account_secured" | "data_export_requested" | "deletion_requested";
+        /** SecurityEventResource */
+        SecurityEventResource: {
+            id: string;
+            type: components["schemas"]["SecurityActivity"];
+            /** @description ISO 8601. For `sign_in_failed`, the first failure of that day; `details.last_at` is the latest. */
+            occurred_at: string;
+            /** @description The device it happened on, when known; null for a staff action. */
+            device: {
+                name: string | null;
+                platform: components["schemas"]["DevicePlatform"] | null;
+            } | null;
+            /** @description The app install of this request. */
+            this_device: boolean;
+            /** @description "München": approximate, only with a GeoLite2 database (OA-33). */
+            approx_city: string | null;
+            method: components["schemas"]["SignInMethod"] | null;
+            /** @description Done by the SPEED CLUB team (e.g. sessions ended by support). */
+            by_staff: boolean;
+            /**
+             * @description What else the row names: `provider` (apple, google), `passkey_provider` (iCloud-Schlüsselbund, …), `count` and `steps`
+             *     {password, email_code, second_factor} of failed attempts with `last_at`, `devices` and `sessions` signed out, `recovery_codes_left`.
+             */
+            details: {
+                provider?: string;
+                passkey_provider?: string;
+                count?: number;
+                steps?: {
+                    [key: string]: number;
+                };
+                last_at?: string;
+                devices?: number;
+                sessions?: number;
+                recovery_codes_left?: number;
+            };
+            /** @description Offers "Das war ich nicht" (POST me/security/secure with this id). */
+            can_secure: boolean;
         };
         /**
          * SendMessageRequest
@@ -5161,6 +8008,11 @@ export interface components {
             body?: string | null;
             media_id?: string | null;
             vehicle_id?: string | null;
+            /**
+             * @description SM11 reply (ADR-445): the id of a message of this conversation you can see. A message you deleted for yourself, one before
+             *     your clearing point or one that is gone is 422.
+             */
+            reply_to_id?: string | null;
             /** @description Your id of the message, stable across retries (a UUID). */
             client_id: string;
         };
@@ -5182,11 +8034,83 @@ export interface components {
          */
         SessionKind: "app" | "web";
         /**
+         * SetHighlightsRequest
+         * @description The whole rail in order: up to 8 build updates (own posts and notes, not hidden) or finished photos of this vehicle and its updates.
+         */
+        SetHighlightsRequest: {
+            items: {
+                type: components["schemas"]["HighlightItemType"];
+                id: string;
+            }[];
+        };
+        /** SetVehicleCommentsRequest */
+        SetVehicleCommentsRequest: {
+            enabled: boolean;
+        };
+        /**
+         * SignInMethod
+         * @description How a member proved who they are at sign-in (SET-21 "Anmeldung mit Passkey"). A sign-in with a second factor keeps its first proof.
+         * @enum {string}
+         */
+        SignInMethod: "password" | "email_code" | "passkey" | "apple" | "google";
+        /** SignInMethodsResource */
+        SignInMethodsResource: {
+            /** @description Always on (ADR-407). `reachable` is false for an Apple private relay address until OA-34: then it is no way in. */
+            email_code: {
+                available: boolean;
+                email: string;
+                reachable: boolean;
+            };
+            password: {
+                set: boolean;
+                /** @description Password sign-in offered (`auth.password_login`). */
+                available: boolean;
+            };
+            two_factor: {
+                enabled: boolean;
+            };
+            /** @description Apple, then Google. */
+            providers: {
+                provider: components["schemas"]["SocialProvider"];
+                available: boolean;
+                linked: boolean;
+                email: string | null;
+                linked_at: string | null;
+                last_used_at: string | null;
+            }[];
+            passkeys: {
+                available: boolean;
+                count: number;
+            };
+            /** @description Ways in besides the e-mail code: password, passkeys, providers. */
+            other_methods: number;
+        };
+        /**
+         * SignInNext
+         * @description `next` of a finished passwordless sign-in (09 §8.1): the screen the app opens next. terms = AUTH-09b, username = AUTH-08, profile = AUTH-09, done = Home.
+         * @enum {string}
+         */
+        SignInNext: "terms" | "username" | "profile" | "done";
+        /**
          * SignupRef
          * @description Where a sign-up began (ADR-216), sent by the client as `ref` on auth/register: a QR sticker scan, a public vehicle page or a public profile. Anything else is no source. Counts only; nothing about the scan or the page is stored.
          * @enum {string}
          */
         SignupRef: "qr" | "public_vehicle" | "public_profile";
+        /** SocialAccountResource */
+        SocialAccountResource: {
+            provider: components["schemas"]["SocialProvider"];
+            email: string | null;
+            is_private_relay: boolean;
+            linked_at: string;
+            last_used_at: string | null;
+        };
+        /**
+         * SocialProvider
+         * @description Identity providers whose ID tokens the server verifies itself (ADR-408).
+         * @enum {string}
+         */
+        SocialProvider: "apple" | "google";
         /**
          * StartConversationRequest
          * @description `POST conversations` (m2.4-contract §2): the recipient by username, an optional vehicle context (VEH-01 "Nachricht"), and the first
@@ -5208,11 +8132,48 @@ export interface components {
             client_id: string;
         };
         /**
+         * StartEmailCodeRequest
+         * @description AUTH-12 (09 §8.1). attempt_id is made by the client (a UUID or 22 to 64 random URL-safe characters) and kept on the device: it binds
+         *     the code and the magic link to this device, so it is never sent anywhere else and never part of a link.
+         */
+        StartEmailCodeRequest: {
+            /** Format: email */
+            email: string;
+            attempt_id: string;
+            /** @enum {string|null} */
+            locale?: "de" | "en" | null;
+            platform?: components["schemas"]["DevicePlatform"] | null;
+        };
+        /**
          * StoreAppealRequest
          * @description POST decisions/{id}/appeal: why the decision is wrong, in the member's words (at most 2000 characters).
          */
         StoreAppealRequest: {
             text: string;
+        };
+        /**
+         * StoreBuildUpdatePhotoRequest
+         * @description Size and real file type are checked on the bytes by App\Services\Media\MediaService (413 and 415), as for every upload.
+         */
+        StoreBuildUpdatePhotoRequest: {
+            /** Format: binary */
+            file: string;
+            alt?: string | null;
+            focal_x?: number | null;
+            focal_y?: number | null;
+        };
+        /**
+         * StoreBuildUpdatePostRequest
+         * @description UPD-01 (09 §8.5). Photos follow with POST build-updates/{id}/media.
+         */
+        StoreBuildUpdatePostRequest: {
+            vehicle_id: string;
+            text?: string | null;
+            mileage_km?: number | null;
+            /** Format: date */
+            happened_on?: string | null;
+            audience?: components["schemas"]["BuildUpdateAudience"] | null;
+            modification_ids?: string[] | null;
         };
         /** StoreBuildUpdateRequest */
         StoreBuildUpdateRequest: {
@@ -5224,6 +8185,112 @@ export interface components {
             model_text?: string | null;
             generation_text?: string | null;
             vehicle_id?: string | null;
+        };
+        /** StoreCommentRequest */
+        StoreCommentRequest: {
+            body: string;
+            parent_id?: string | null;
+        };
+        /**
+         * StoreEventCoverRequest
+         * @description Size and real file type are checked on the bytes by App\Services\Media\MediaService (413 and 415), as for every upload.
+         */
+        StoreEventCoverRequest: {
+            /** Format: binary */
+            file: string;
+            alt?: string | null;
+            focal_x?: number | null;
+            focal_y?: number | null;
+        };
+        /** StoreEventRequest */
+        StoreEventRequest: {
+            title: string;
+            type: components["schemas"]["EventType"];
+            visibility?: components["schemas"]["EventVisibility"];
+            location_visibility?: components["schemas"]["EventLocationVisibility"];
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            venue_name?: string | null;
+            street?: string | null;
+            postcode?: string | null;
+            city?: string | null;
+            country?: string;
+            lat?: number | null;
+            lng?: number | null;
+            description?: string | null;
+            organiser_rules?: string | null;
+            rules?: components["schemas"]["EventRule"][];
+            capacity?: number | null;
+            /**
+             * @description The organiser accepts the rules for meets (09 §8.7 creation rights); must be true.
+             * @enum {unknown}
+             */
+            accept_rules: "yes" | "on" | "1" | 1 | "true" | true;
+            /** @description Send it on at once (pre-moderation or published); false keeps a draft. Default false. */
+            submit?: boolean;
+        };
+        /** StoreEventUpdateRequest */
+        StoreEventUpdateRequest: {
+            body: string;
+        };
+        /** StoreMaintenanceItemRequest */
+        StoreMaintenanceItemRequest: {
+            /** @description Client-generated ULID for the offline outbox (09 §8.12): sending it again answers the item already made. */
+            id?: string;
+            type: components["schemas"]["MaintenanceType"];
+            /** @description Required for custom items, ignored otherwise ("Zahnriemen", "Klimaservice"). */
+            title?: string | null;
+            interval_months?: number | null;
+            interval_km?: number | null;
+            /** Format: date */
+            last_done_at?: string | null;
+            last_done_km?: number | null;
+            /**
+             * Format: date
+             * @description The member's own due date (service booklet, HU/AU plakette: any day of the month, stored as its first). Null: computed.
+             */
+            next_due_at?: string | null;
+            next_due_km?: number | null;
+            /** @description Days before the due date to remind, at most three, 0–90 (default per type; the HU/AU's from SET-23). */
+            lead_days?: number[] | null;
+            enabled?: boolean;
+            notes?: string | null;
+        };
+        /** StoreMaintenanceLogRequest */
+        StoreMaintenanceLogRequest: {
+            /** @description Client-generated ULID for the offline outbox (09 §8.12). */
+            id?: string;
+            /** @description The item this entry completes (its type wins); null for an entry of its own. */
+            item_id?: string | null;
+            type?: components["schemas"]["MaintenanceType"] | null;
+            title?: string | null;
+            /** Format: date */
+            done_at: string;
+            mileage_km?: number | null;
+            /** @description Free text until business profiles exist (M4.14 links a business). */
+            workshop?: string | null;
+            /** @description Private, always: only the owner ever reads it. Euro cents. */
+            cost_cents?: number | null;
+            notes?: string | null;
+        };
+        /**
+         * StorePasskeyRequest
+         * @description POST me/passkeys: the ceremony_id of POST me/passkeys/options and the PublicKeyCredential of navigator.credentials.create() as JSON
+         *     (id, rawId, type, response.clientDataJSON, response.attestationObject, response.transports; base64url). name is optional; without it
+         *     the provider's name ("iCloud-Schlüsselbund") or "Passkey".
+         */
+        StorePasskeyRequest: {
+            ceremony_id: string;
+            credential: {
+                id: string;
+                rawId: string;
+                /** @enum {string} */
+                type: "public-key";
+                response: string[];
+            };
+            name?: string | null;
         };
         /**
          * StorePushTokenRequest
@@ -5356,6 +8423,12 @@ export interface components {
              */
             retry_at: string;
         };
+        /**
+         * TorqueUnit
+         * @description SET-11 "Drehmoment" (09 §8.11): how the app shows torque. The server stores newton metres only.
+         * @enum {string}
+         */
+        TorqueUnit: "nm" | "lbft";
         /** TranslateRequest */
         TranslateRequest: {
             source: components["schemas"]["TranslationSource"];
@@ -5393,6 +8466,8 @@ export interface components {
             app_version?: string | null;
             /** @description The app's per-install id (a UUID kept in secure storage). Tells two devices of the same model apart; ignored without device_name. */
             device_id?: string | null;
+            /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
+            os_version?: string | null;
         };
         /** TwoFactorChallengeResource */
         TwoFactorChallengeResource: {
@@ -5426,9 +8501,83 @@ export interface components {
             /** @description Open message requests (M2.4). */
             requests: number;
         };
+        /**
+         * UpdateBuildUpdatePostRequest
+         * @description Any subset of the post's fields, plus the order of its photos and before/after pairs (both by media id of this update's photos).
+         */
+        UpdateBuildUpdatePostRequest: {
+            text?: string | null;
+            mileage_km?: number | null;
+            /** Format: date */
+            happened_on?: string | null;
+            audience?: components["schemas"]["BuildUpdateAudience"] | null;
+            modification_ids?: string[] | null;
+            photo_order?: string[];
+            photo_pairs?: string[][];
+        };
         /** UpdateBuildUpdateRequest */
         UpdateBuildUpdateRequest: {
             hidden: boolean;
+        };
+        /** UpdateEventRequest */
+        UpdateEventRequest: {
+            title?: string;
+            type?: components["schemas"]["EventType"];
+            visibility?: components["schemas"]["EventVisibility"];
+            location_visibility?: components["schemas"]["EventLocationVisibility"];
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            venue_name?: string | null;
+            street?: string | null;
+            postcode?: string | null;
+            city?: string | null;
+            country?: string;
+            lat?: number | null;
+            lng?: number | null;
+            description?: string | null;
+            organiser_rules?: string | null;
+            rules?: components["schemas"]["EventRule"][];
+            capacity?: number | null;
+        };
+        /** UpdateMaintenanceItemRequest */
+        UpdateMaintenanceItemRequest: {
+            /** @description The `version` the edit started from: a newer one on the server answers 409 edit_conflict with `current`. */
+            version?: number;
+            /** @description Required for custom items, ignored otherwise ("Zahnriemen", "Klimaservice"). */
+            title?: string | null;
+            interval_months?: number | null;
+            interval_km?: number | null;
+            /** Format: date */
+            last_done_at?: string | null;
+            last_done_km?: number | null;
+            /**
+             * Format: date
+             * @description The member's own due date (service booklet, HU/AU plakette: any day of the month, stored as its first). Null: computed.
+             */
+            next_due_at?: string | null;
+            next_due_km?: number | null;
+            /** @description Days before the due date to remind, at most three, 0–90 (default per type; the HU/AU's from SET-23). */
+            lead_days?: number[] | null;
+            enabled?: boolean;
+            notes?: string | null;
+        };
+        /** UpdateMaintenanceLogRequest */
+        UpdateMaintenanceLogRequest: {
+            version?: number;
+            /** @description The item this entry completes (its type wins); null for an entry of its own. */
+            item_id?: string | null;
+            type?: components["schemas"]["MaintenanceType"] | null;
+            title?: string | null;
+            /** Format: date */
+            done_at?: string;
+            mileage_km?: number | null;
+            /** @description Free text until business profiles exist (M4.14 links a business). */
+            workshop?: string | null;
+            /** @description Private, always: only the owner ever reads it. Euro cents. */
+            cost_cents?: number | null;
+            notes?: string | null;
         };
         /** UpdateMediaRequest */
         UpdateMediaRequest: {
@@ -5465,13 +8614,38 @@ export interface components {
         /** UpdateSettingsRequest */
         UpdateSettingsRequest: {
             theme?: components["schemas"]["ThemePreference"];
-            /** @enum {string} */
-            locale?: "de" | "en";
+            /**
+             * @description SET-11: "system" follows the device; the device language (Accept-Language) becomes the language of mails and pushes.
+             * @enum {string}
+             */
+            locale?: "de" | "en" | "system";
+            /**
+             * @description SET-11 "Region für in deiner Nähe" (09 §8.7): a city the member picked (place search), or null to clear it. The point is
+             *     stored snapped to the 0.05° grid of event areas; it is never shown to anybody else.
+             */
+            home_region?: {
+                label?: string;
+                lat?: number;
+                lng?: number;
+            };
             power_display?: components["schemas"]["PowerDisplay"];
+            /** @description M4.13 SET-11 (09 §8.11): display units only; nothing stored changes its unit. */
+            distance_unit?: components["schemas"]["DistanceUnit"];
+            torque_unit?: components["schemas"]["TorqueUnit"];
+            weight_unit?: components["schemas"]["WeightUnit"];
+            /** @description M4.13 SET-23: any part; the rest stays. */
+            maintenance?: {
+                hu_au_lead_days?: number[];
+                tyre_reminders?: boolean;
+                insurance_reminder?: boolean;
+                service_reminders?: boolean;
+            };
             /** @description Account-wide: off names the owner to nobody but the owner on WEB-01, VEH-01, feed cards and the sticker PDF (ADR-148 a). */
             show_owner_on_qr?: boolean;
             /** @description SET-07 privacy (M2.5), each with an effect: messaging starts and requests, member search, search engines, read receipts. */
             who_can_message?: components["schemas"]["WhoCanMessage"];
+            /** @description M4.11 (09 §8.5): "Wer darf mich erwähnen". */
+            mention_privacy?: components["schemas"]["MentionPrivacy"];
             discoverable?: boolean;
             indexable?: boolean;
             read_receipts?: boolean;
@@ -5481,26 +8655,58 @@ export interface components {
                 types?: {
                     new_follower?: {
                         push?: boolean;
+                        web_push?: boolean;
                     };
                     followed_published?: {
                         push?: boolean;
+                        web_push?: boolean;
                     };
                     build_saved?: {
                         push?: boolean;
+                        web_push?: boolean;
                     };
                     new_message?: {
                         push?: boolean;
                         email_digest?: boolean;
+                        web_push?: boolean;
                     };
                     message_request?: {
                         push?: boolean;
+                        web_push?: boolean;
                     };
                     hu_au_reminder?: {
                         push?: boolean;
                         email?: boolean;
+                        web_push?: boolean;
                     };
                     qr_milestone?: {
                         push?: boolean;
+                        web_push?: boolean;
+                    };
+                    reaction?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    mention?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    comment?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    vehicle_follower?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    event_reminder?: {
+                        push?: boolean;
+                        email?: boolean;
+                        web_push?: boolean;
+                    };
+                    event_update?: {
+                        push?: boolean;
+                        web_push?: boolean;
                     };
                 };
                 quiet_hours?: {
@@ -5509,6 +8715,7 @@ export interface components {
                     to?: string;
                 };
                 message_previews?: boolean;
+                digest_frequency?: components["schemas"]["DigestFrequency"];
             };
         };
         /**
@@ -5645,6 +8852,10 @@ export interface components {
             cover: components["schemas"]["MediaResource"] | null;
             photo_count: number;
             mod_count: number;
+            /** @description M4.9: the owner's own count of Verlauf entries (hidden ones included); null for anybody else, so no number reaches others. */
+            updates_count: number | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -5669,6 +8880,11 @@ export interface components {
                 code: string;
                 url: string;
             } | null;
+        };
+        /** VehicleFollowStateResource */
+        VehicleFollowStateResource: {
+            vehicle_id: string;
+            is_following: boolean;
         };
         /** VehicleIncompleteError */
         VehicleIncompleteError: {
@@ -5697,6 +8913,8 @@ export interface components {
             /** @description "Nissan Skyline GT-R R34" */
             full_title: string;
             cover: components["schemas"]["MediaResource"] | null;
+            /** @description Sample content (09 §8.19): the "Beispiel" badge. */
+            is_sample: boolean;
         };
         /** VehicleResource */
         VehicleResource: {
@@ -5732,6 +8950,10 @@ export interface components {
             cover: components["schemas"]["MediaResource"] | null;
             photo_count: number;
             mod_count: number;
+            /** @description M4.9: the owner's own count of Verlauf entries (hidden ones included); null for anybody else, so no number reaches others. */
+            updates_count: number | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -5798,6 +9020,28 @@ export interface components {
                 gearbox: string | null;
             };
         };
+        /** VehicleSocialResource */
+        VehicleSocialResource: {
+            /**
+             * @description The viewer's reaction [build_reactions]: strong, clean, low or loud. Null for guests, the owner, none yet, or the flag off.
+             * @enum {string|null}
+             */
+            my_reaction: "strong" | "clean" | "low" | "loud" | null;
+            /** @description The viewer follows this build [vehicle_follow]. Null for guests, the owner and while the flag is off. */
+            is_following: boolean | null;
+            /** @description [build_comments] whether the owner allows comments on this vehicle's updates. */
+            comments_enabled: boolean;
+            /** @description Owner only: reactions on the build by kind and in total [build_reactions]. */
+            reaction_summary?: {
+                strong: number;
+                clean: number;
+                low: number;
+                loud: number;
+                total: number;
+            };
+            /** @description Owner only: how many members follow this build [vehicle_follow]. Never public (09 §8.6). */
+            followers_count?: number;
+        };
         /** VehicleSpecsSavedResource */
         VehicleSpecsSavedResource: {
             id: string;
@@ -5832,6 +9076,10 @@ export interface components {
             cover: components["schemas"]["MediaResource"] | null;
             photo_count: number;
             mod_count: number;
+            /** @description M4.9: the owner's own count of Verlauf entries (hidden ones included); null for anybody else, so no number reaches others. */
+            updates_count: number | null;
+            /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
+            is_sample: boolean;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -5920,6 +9168,7 @@ export interface components {
         VerifyEmailRequest: {
             /** Format: email */
             email: string;
+            /** @description The 6-digit code from the mail, or the token of its "Anmelden" link (same device only). */
             code: string;
             /** @description The password of the registration. Not needed when the request is already signed in as this account. */
             password?: string | null;
@@ -5928,6 +9177,8 @@ export interface components {
             app_version?: string | null;
             /** @description The app's per-install id (a UUID kept in secure storage). Tells two devices of the same model apart; ignored without device_name. */
             device_id?: string | null;
+            /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
+            os_version?: string | null;
         };
         /** ViewAsNoMessagesError */
         ViewAsNoMessagesError: {
@@ -5956,6 +9207,12 @@ export interface components {
          * @enum {string}
          */
         Visibility: "public" | "unlisted" | "private";
+        /**
+         * WeightUnit
+         * @description SET-11 "Gewicht" (09 §8.11): how the app shows weights. The server stores kilograms only.
+         * @enum {string}
+         */
+        WeightUnit: "kg" | "lb";
         /** WheelSetupResource */
         WheelSetupResource: {
             /** @description Tap opens VEH-01 (`public/vehicles/{slug}`). `owner` is null when the owner hides the name (ADR-148 a). */
@@ -5964,6 +9221,7 @@ export interface components {
                 slug: string;
                 full_title: string;
                 cover: components["schemas"]["MediaResource"] | null;
+                is_sample: boolean;
                 owner: components["schemas"]["MemberSummaryResource"] | null;
             };
             wheel: {
@@ -6051,7 +9309,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["DeleteAccountRequest"];
             };
@@ -6891,6 +10149,167 @@ export interface operations {
             };
         };
     };
+    "v1.events.attendees.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.attendees.index": {
+        parameters: {
+            query?: {
+                /** @description The organiser filters by answer; everybody else always gets going members. */
+                status?: components["schemas"]["RsvpStatus"];
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `EventAttendeeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventAttendeeResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.me.blocks.index": {
         parameters: {
             query?: {
@@ -7395,6 +10814,376 @@ export interface operations {
                 };
             };
             404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.build-updates.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                /** @description The update ID */
+                update: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `BuildUpdateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BuildUpdateResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.build-updates.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The update ID */
+                update: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.build-updates.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The update ID */
+                update: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateBuildUpdatePostRequest"];
+            };
+        };
+        responses: {
+            /** @description `BuildUpdateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BuildUpdateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.build-updates.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreBuildUpdatePostRequest"];
+            };
+        };
+        responses: {
+            /** @description `BuildUpdateResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BuildUpdateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.build-updates.media.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The update ID */
+                update: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["StoreBuildUpdatePhotoRequest"];
+            };
+        };
+        responses: {
+            /** @description `MediaResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
             /** @description payload_too_large: a JSON body over 512 KB. */
             413: {
                 headers: {
@@ -8103,6 +11892,1127 @@ export interface operations {
                 };
                 content: {
                     "image/webp": string;
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.client-errors.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientErrorRequest"];
+            };
+        };
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.collections.index": {
+        parameters: {
+            query?: {
+                contains_type?: components["schemas"]["CollectionItemType"] | null;
+                contains_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `MemberCollectionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MemberCollectionResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.collections.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionRequest"];
+            };
+        };
+        responses: {
+            /** @description `MemberCollectionResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MemberCollectionResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.collections.order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.collections.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The collection ID */
+                collection: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.collections.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The collection ID */
+                collection: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionRequest"];
+            };
+        };
+        responses: {
+            /** @description `MemberCollectionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MemberCollectionResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.collections.items.index": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description The collection ID */
+                collection: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `MemberCollectionItemResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MemberCollectionItemResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.collections.items.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The collection ID */
+                collection: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionItemRequest"];
+            };
+        };
+        responses: {
+            /** @description `MemberCollectionItemResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MemberCollectionItemResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.collections.items.order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The collection ID */
+                collection: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.collections.items.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The collection ID */
+                collection: string;
+                type: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.comments.index": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description The update ID */
+                update: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `CommentResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CommentResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.comments.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The update ID */
+                update: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description `CommentResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CommentResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.comments.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comment ID */
+                comment: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetVehicleCommentsRequest"];
+            };
+        };
+        responses: {
+            /** @description `VehicleSocialResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VehicleSocialResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
                 };
             };
             422: components["responses"]["ValidationException"];
@@ -9140,7 +14050,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["PasswordRequest"];
             };
@@ -9444,7 +14354,9 @@ export interface operations {
     };
     "v1.me.sessions.destroy-others": {
         parameters: {
-            query?: never;
+            query?: {
+                password?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -9494,6 +14406,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionExpiredError"];
                 };
             };
+            422: components["responses"]["ValidationException"];
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -9617,6 +14530,62 @@ export interface operations {
             };
         };
     };
+    "v1.auth.email.start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartEmailCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description `EmailCodeStartedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmailCodeStartedResource"];
+                    };
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.auth.email.verify": {
         parameters: {
             query?: never;
@@ -9634,6 +14603,8 @@ export interface operations {
              * @description `AuthSessionResource`
              *
              *     `TwoFactorChallengeResource`
+             *
+             *     `PasswordlessSessionResource`
              */
             200: {
                 headers: {
@@ -9644,6 +14615,8 @@ export interface operations {
                         data: components["schemas"]["AuthSessionResource"];
                     } | {
                         data: components["schemas"]["TwoFactorChallengeResource"];
+                    } | {
+                        data: components["schemas"]["PasswordlessSessionResource"];
                     };
                 };
             };
@@ -9710,6 +14683,1015 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["NextStepResource"];
                     };
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.index": {
+        parameters: {
+            query?: {
+                /** @description today · weekend (Sat–Sun of this week) · month (until its end) · upcoming (default). Europe/Berlin. */
+                when?: "today" | "weekend" | "month" | "upcoming";
+                type?: components["schemas"]["EventType"];
+                /** @description `home`: around the member's SET-11 region (ignored without one, and when lat/lng are given). */
+                near?: "home";
+                /** @description Words of the title or the city ("cars coffee hamburg"); every word must match. At most 80 characters. */
+                q?: string | null;
+                lat?: number;
+                lng?: number;
+                /** @description Kilometres around lat/lng, default 50, at most 300. */
+                radius_km?: number;
+                /** @description The map's view: minLng,minLat,maxLng,maxLat. */
+                bbox?: string;
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `EventCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventCardResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreEventRequest"];
+            };
+        };
+        responses: {
+            /** @description `EventResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.pins": {
+        parameters: {
+            query?: {
+                /** @description today · weekend (Sat–Sun of this week) · month (until its end) · upcoming (default). Europe/Berlin. */
+                when?: "today" | "weekend" | "month" | "upcoming";
+                type?: components["schemas"]["EventType"];
+                /** @description `home`: around the member's SET-11 region (ignored without one, and when lat/lng are given). */
+                near?: "home";
+                /** @description Words of the title or the city ("cars coffee hamburg"); every word must match. At most 80 characters. */
+                q?: string | null;
+                lat?: number;
+                lng?: number;
+                /** @description Kilometres around lat/lng, default 50, at most 300. */
+                radius_km?: number;
+                /** @description The map's view: minLng,minLat,maxLng,maxLat. */
+                bbox?: string;
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `EventPinResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventPinResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EventResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateEventRequest"];
+            };
+        };
+        responses: {
+            /** @description `EventResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EventResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description `EventResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.cover": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["StoreEventCoverRequest"];
+            };
+        };
+        responses: {
+            /** @description `MediaResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.cover.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EventResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: "private, no-store";
+                    "X-Robots-Tag"?: "noindex";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar; charset=utf-8": string;
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.updates.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `EventUpdateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventUpdateResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.updates.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreEventUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description `EventUpdateResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventUpdateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
             /** @description payload_too_large: a JSON body over 512 KB. */
@@ -10039,6 +16021,70 @@ export interface operations {
             };
         };
     };
+    "v1.geocode": {
+        parameters: {
+            query: {
+                /** @description An address, venue or place, searched on submit (never per keystroke, 09 §8.7). */
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `GeocodeResultResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GeocodeResultResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.help.index": {
         parameters: {
             query?: never;
@@ -10116,6 +16162,131 @@ export interface operations {
                 content?: never;
             };
             403: components["responses"]["AuthorizationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.highlights.index": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `HighlightResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["HighlightResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.highlights.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetHighlightsRequest"];
+            };
+        };
+        responses: {
+            /** @description Array of `HighlightResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["HighlightResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -10237,7 +16408,10 @@ export interface operations {
     };
     "v1.home.modules": {
         parameters: {
-            query?: never;
+            query?: {
+                lat?: number;
+                lng?: number;
+            };
             header?: {
                 /** @description ETag of the copy the client holds. */
                 "If-None-Match"?: string;
@@ -10265,6 +16439,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            422: components["responses"]["ValidationException"];
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -10358,6 +16533,975 @@ export interface operations {
             };
             403: components["responses"]["AuthorizationException"];
             404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-items.index": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `MaintenanceItemResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceItemResource"][];
+                        meta: {
+                            odometer: {
+                                km: unknown;
+                                recorded_at: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-items.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreMaintenanceItemRequest"];
+            };
+        };
+        responses: {
+            /** @description `MaintenanceItemResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceItemResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-items.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+                item: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-items.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+                item: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateMaintenanceItemRequest"];
+            };
+        };
+        responses: {
+            /** @description `MaintenanceItemResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceItemResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-logs.index": {
+        parameters: {
+            query?: {
+                item_id?: string;
+                year?: number;
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `MaintenanceLogResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceLogResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-logs.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreMaintenanceLogRequest"];
+            };
+        };
+        responses: {
+            /** @description `MaintenanceLogResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceLogResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-logs.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+                log: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MaintenanceLogResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceLogResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-logs.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+                log: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-logs.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+                log: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateMaintenanceLogRequest"];
+            };
+        };
+        responses: {
+            /** @description `MaintenanceLogResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceLogResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-logs.photos.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+                log: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["MaintenancePhotoRequest"];
+            };
+        };
+        responses: {
+            /** @description `MaintenancePhotoResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenancePhotoResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.maintenance-logs.photos.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+                log: string;
+                media: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.maintenance-media.show": {
+        parameters: {
+            query: {
+                viewer: string;
+            };
+            header?: never;
+            path: {
+                media: string;
+                width: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Transfer-Encoding": "chunked";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": string;
+                };
+            };
             422: components["responses"]["ValidationException"];
             /** @description Rate limited, or a login delay is running. */
             429: {
@@ -10680,6 +17824,145 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.public.users.events": {
+        parameters: {
+            query?: {
+                /** @description upcoming (default, by start) or past (newest first). */
+                when?: "upcoming" | "past";
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `EventCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventCardResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.mentions.suggest": {
+        parameters: {
+            query: {
+                q: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `MemberSummaryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MemberSummaryResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
                 };
             };
             422: components["responses"]["ValidationException"];
@@ -11714,11 +18997,240 @@ export interface operations {
             };
         };
     };
+    "v1.me.events": {
+        parameters: {
+            query?: {
+                /** @description EVT-05 tabs: going (with the waitlist), interested, organised (every status), past. Default going. */
+                tab?: "going" | "interested" | "organised" | "past";
+                per_page?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `EventCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventCardResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.maintenance.upcoming": {
+        parameters: {
+            query?: {
+                /** @description Items due within this many days (overdue ones and those within 1,000 km always). Default 60. */
+                days?: number;
+                limit?: number;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `MaintenanceUpcomingResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceUpcomingResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.maintenance.reminders": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MaintenanceReminderPlanResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceReminderPlanResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.notifications.index": {
         parameters: {
             query?: {
                 per_page?: number | null;
                 cursor?: string | null;
+                /** @description M4.8 HOME-02 chips: only rows of this category; absent for all. */
+                category?: "builds" | "social" | "events" | "system";
             };
             header?: never;
             path?: never;
@@ -11953,6 +19465,565 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.onboarding.accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptOnboardingRequest"];
+            };
+        };
+        responses: {
+            /** @description `MeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MeResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.passkeys.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `PasskeyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasskeyResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+        };
+    };
+    "v1.me.passkeys.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StorePasskeyRequest"];
+            };
+        };
+        responses: {
+            /** @description `PasskeyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasskeyResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["EmailNotVerifiedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.passkeys.options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `PasskeyOptionsResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasskeyOptionsResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["EmailNotVerifiedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.passkeys.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The member passkey ID */
+                memberPasskey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.passkeys.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The member passkey ID */
+                memberPasskey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenamePasskeyRequest"];
+            };
+        };
+        responses: {
+            /** @description `PasskeyResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasskeyResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.auth.passkeys.options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `PasskeyOptionsResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasskeyOptionsResource"];
+                    };
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.auth.passkeys.verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasskeySignInRequest"];
+            };
+        };
+        responses: {
+            /** @description `PasswordlessSessionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasswordlessSessionResource"];
+                    };
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
                 };
             };
             /** @description payload_too_large: a JSON body over 512 KB. */
@@ -12552,6 +20623,199 @@ export interface operations {
             };
         };
     };
+    "v1.me.providers.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `SocialAccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SocialAccountResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+        };
+    };
+    "v1.me.providers.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkProviderRequest"];
+            };
+        };
+        responses: {
+            /** @description `SocialAccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SocialAccountResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["EmailNotVerifiedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.providers.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.public.users.show": {
         parameters: {
             query?: never;
@@ -12665,6 +20929,71 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MemberUnavailableError"];
                 };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.public.users.updates": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `BuildUpdateRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BuildUpdateRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             422: components["responses"]["ValidationException"];
             /** @description Rate limited, or a login delay is running. */
@@ -13508,6 +21837,731 @@ export interface operations {
             };
         };
     };
+    "v1.reactions.vehicles.index": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ReactionRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReactionRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                            summary: {
+                                strong: number;
+                                clean: number;
+                                low: number;
+                                loud: number;
+                                total: number;
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.reactions.vehicles.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["App.Http.Requests.Api.V1.Social2.ReactRequest"];
+            };
+        };
+        responses: {
+            /** @description `ReactionStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReactionStateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.reactions.vehicles.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ReactionStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReactionStateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.reactions.build-updates.index": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ReactionRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReactionRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                            summary: {
+                                strong: number;
+                                clean: number;
+                                low: number;
+                                loud: number;
+                                total: number;
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.reactions.build-updates.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["App.Http.Requests.Api.V1.Social2.ReactRequest"];
+            };
+        };
+        responses: {
+            /** @description `ReactionStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReactionStateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.reactions.build-updates.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ReactionStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReactionStateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.reauth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReauthRequest"];
+            };
+        };
+        responses: {
+            /** @description `ReauthResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReauthResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.reauth.email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttemptRequest"];
+            };
+        };
+        responses: {
+            /** @description `EmailCodeStartedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmailCodeStartedResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.reauth.passkey-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `PasskeyOptionsResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasskeyOptionsResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.auth.register": {
         parameters: {
             query?: never;
@@ -13551,6 +22605,49 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.release-notes.index": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `ReleaseNoteResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReleaseNoteResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -13725,6 +22822,171 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+        };
+    };
+    "v1.events.rsvp.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RsvpRequest"];
+            };
+        };
+        responses: {
+            /** @description `EventRsvpStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventRsvpStateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.rsvp.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EventRsvpStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventRsvpStateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
         };
     };
     "v1.me.saved.index": {
@@ -14323,6 +23585,250 @@ export interface operations {
             };
         };
     };
+    "v1.auth.secure-account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecureAccountLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description `SecuredAccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SecuredAccountResource"];
+                    };
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.sign-in-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `SignInMethodsResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SignInMethodsResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+        };
+    };
+    "v1.me.security-events.index": {
+        parameters: {
+            query?: {
+                /** @description Rows per page, 1 to 50 (default 20). */
+                per_page?: number | null;
+                /** @description The `next_cursor` of the previous page. */
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `SecurityEventResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SecurityEventResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "v1.me.security.secure": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SecureAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description `SecuredAccountResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SecuredAccountResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.auth.login": {
         parameters: {
             query?: never;
@@ -14778,6 +24284,288 @@ export interface operations {
             };
         };
     };
+    "v1.auth.nonce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdTokenNonceRequest"];
+            };
+        };
+        responses: {
+            /** @description `IdTokenNonceResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IdTokenNonceResource"];
+                    };
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.auth.apple": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppleSignInRequest"];
+            };
+        };
+        responses: {
+            /**
+             * @description `PasswordlessSessionResource`
+             *
+             *     `TwoFactorChallengeResource`
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasswordlessSessionResource"];
+                    } | {
+                        data: components["schemas"]["TwoFactorChallengeResource"];
+                    };
+                };
+            };
+            /** @description `LinkRequiredResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LinkRequiredResource"];
+                    };
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.auth.google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleSignInRequest"];
+            };
+        };
+        responses: {
+            /**
+             * @description `PasswordlessSessionResource`
+             *
+             *     `TwoFactorChallengeResource`
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasswordlessSessionResource"];
+                    } | {
+                        data: components["schemas"]["TwoFactorChallengeResource"];
+                    };
+                };
+            };
+            /** @description `LinkRequiredResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LinkRequiredResource"];
+                    };
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.auth.link.confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmLinkRequest"];
+            };
+        };
+        responses: {
+            /**
+             * @description `PasswordlessSessionResource`
+             *
+             *     `TwoFactorChallengeResource`
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PasswordlessSessionResource"];
+                    } | {
+                        data: components["schemas"]["TwoFactorChallengeResource"];
+                    };
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.support.tickets.index": {
         parameters: {
             query?: never;
@@ -15041,7 +24829,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["PasswordRequest"];
             };
@@ -15118,7 +24906,7 @@ export interface operations {
         requestBody?: {
             content: {
                 "application/json": {
-                    password: string;
+                    password?: string | null;
                     code: string;
                 };
             };
@@ -16146,6 +25934,315 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.follow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `VehicleFollowStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VehicleFollowStateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.unfollow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `VehicleFollowStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VehicleFollowStateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.odometer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OdometerRequest"];
+            };
+        };
+        responses: {
+            /** @description `OdometerResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OdometerResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MaintenanceCostsResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MaintenanceCostsResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {

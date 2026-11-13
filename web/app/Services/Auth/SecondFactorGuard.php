@@ -9,6 +9,7 @@ use App\Exceptions\ApiException;
 use App\Models\User;
 use App\Services\Audit\Audit;
 use App\Services\Notifications\Notifier;
+use App\Services\Security\FailedSignIns;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
@@ -32,6 +33,9 @@ final class SecondFactorGuard
 
     public function failed(User $user, ?string $deviceName = null): void
     {
+        // SET-21 (09 §8.4): counted in the day's failed sign-ins.
+        app(FailedSignIns::class)->later($user, 'second_factor');
+
         $hour = 'second-factor-fail-hour:'.$user->getKey();
         $day = 'second-factor-fail-day:'.$user->getKey();
 

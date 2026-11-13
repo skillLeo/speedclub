@@ -49,7 +49,7 @@ export function BrandSection() {
       <Group title="Katakana" note="Zwischen Hairlines, nie im Produkt-Layer.">
         <View style={styles.katakana} aria-hidden>
           <Hairline style={styles.rule} />
-          <Text variant="eyebrow" color="text.secondary">
+          <Text variant="labelBadge" color="text.secondary" selectable={false}>
             {KATAKANA}
           </Text>
           <Hairline style={styles.rule} />
@@ -65,7 +65,7 @@ export function BrandSection() {
           testID="DEV-01.brand.moment"
         />
       </Group>
-      <Group title="Markenmoment" note="Der rote Button gehört auf den Willkommen-Screen, hier FS-1 mit Scrim über 55 %.">
+      <Group title="Markenmoment" note={'Der rote Button gehört auf den Willkommen-Screen, hier FS-1 mit Scrim über 55\u00a0%.'}>
         <Photo aspect="4:3" corner="md" {...PHOTOS.r34}>
           <PhotoScrim coverage={WELCOME_SCRIM} />
           <View style={styles.welcome}>

@@ -9,11 +9,14 @@ import {
   parseNumber,
   keepNameTogether,
   keepFiguresTogether,
+  joinShortCompounds,
   keepShortNamesTogether,
   keepValuesTogether,
   roundInt,
   valueSegments,
+  WHOLE_VALUE_MAX,
 } from '@/lib/format';
+import { WHOLE_PART_MAX } from '@/ui/textBreaks';
 
 describe('isNumericValue', () => {
   it.each(['500', '2.568', '−35', '−35 mm', '2,9', '380 mm', '255/35 R19', '255/\u206035 R19', '19″ × 9,5J ET35', '19″ × 9,5J ET35 · 255/35 R19', '1.500 U/min'])(
@@ -67,6 +70,23 @@ describe('keepNameTogether', () => {
   });
 });
 
+describe('joinShortCompounds (r5 name-hyphen-break)', () => {
+  const WJ = '\u2060';
+  it('joins a hyphen with a part of fewer than 3 letters or figures on either side', () => {
+    expect(joinShortCompounds('Bei einem RB-Spezialisten in Mönchengladbach.')).toBe(`Bei einem RB-${WJ}Spezialisten in Mönchengladbach.`);
+    expect(joinShortCompounds('mit GT-SS-Ladern')).toBe(`mit GT-${WJ}SS-${WJ}Ladern`);
+    expect(joinShortCompounds('die Datenschutz-E-Mail')).toBe(`die Datenschutz-${WJ}E-${WJ}Mail`);
+    expect(joinShortCompounds('6-stelligen Code, Plug-in, sign-in')).toBe(`6-${WJ}stelligen Code, Plug-${WJ}in, sign-${WJ}in`);
+  });
+
+  it('keeps a hyphen between two longer parts, an existing joiner and an address as they are', () => {
+    expect(joinShortCompounds('Nismo Aero-Seitenschweller')).toBe('Nismo Aero-Seitenschweller');
+    expect(joinShortCompounds(`E-${WJ}Mail-Adresse`)).toBe(`E-${WJ}Mail-Adresse`);
+    expect(joinShortCompounds('info@sc-x.de und https://sc-x.de/e-mail')).toBe('info@sc-x.de und https://sc-x.de/e-mail');
+    expect(joinShortCompounds('Ölwechsel – erledigt')).toBe('Ölwechsel – erledigt');
+  });
+});
+
 describe('keepShortNamesTogether', () => {
   it('leaves an address whole, so a copy carries no invisible character', () => {
     expect(keepShortNamesTogether('Schreib an info@sc-x.de oder geh auf https://sc-x.de')).toBe('Schreib an info@sc-x.de oder geh auf https://sc-x.de');
@@ -110,6 +130,27 @@ describe('valueSegments', () => {
     expect(valueSegments('265/35 R18', false)).toEqual([{ text: `265/${WJ}35 R18`, numeric: true }]);
     expect(valueSegments('1.500 U/min')).toEqual([{ text: `1.500${NBSP}U/${WJ}min`, numeric: true }]);
     expect(valueSegments('Serie/Sport')).toEqual([{ text: 'Serie/Sport', numeric: false }]);
+  });
+
+  it('lets a long value wrap between two data, never inside one (APK Build 9, R35 "ET30" / "/15")', () => {
+    const WJ = '\u2060';
+    const [wheel, cut, tyre] = valueSegments('20″ × 10/11J ET30/15 · 285/35 R20');
+    // 20 characters: wider than a mod row's values at 360 beside the pill. It may wrap before "ET30/15", which stays whole.
+    expect(wheel).toEqual({ text: `20″${NBSP}×${NBSP}10/${WJ}11J ET30/${WJ}15`, numeric: true });
+    expect(cut).toEqual({ text: `${NBSP}· `, numeric: false });
+    // A tyre size keeps its rim.
+    expect(tyre).toEqual({ text: `285/${WJ}35${NBSP}R20`, numeric: true });
+    // Stored data stays as it was: only the display text carries the joiners.
+    expect(wheel?.text.replaceAll(WJ, '').replaceAll(NBSP, ' ')).toBe('20″ × 10/11J ET30/15');
+  });
+
+  it('keeps a value up to WHOLE_VALUE_MAX whole, and words and units together in a long one', () => {
+    expect(WHOLE_VALUE_MAX).toBe(18);
+    // NH-7: one budget for a whole value and a whole meta part.
+    expect(WHOLE_PART_MAX).toBe(WHOLE_VALUE_MAX);
+    expect(valueSegments('19″ × 9,5J ET35')).toEqual([{ text: `19″${NBSP}×${NBSP}9,5J${NBSP}ET35`, numeric: true }]);
+    expect(valueSegments('Michelin Pilot Sport 255/35 ZR19')[0]?.text).toBe(`Michelin${NBSP}Pilot${NBSP}Sport${NBSP}255/\u206035${NBSP}ZR19`);
+    expect(valueSegments('BBS LM 19″ × 9,5J ET35 2.568 cm³')[0]?.text).toBe(`BBS${NBSP}LM${NBSP}19″${NBSP}×${NBSP}9,5J ET35 2.568${NBSP}cm³`);
   });
 });
 

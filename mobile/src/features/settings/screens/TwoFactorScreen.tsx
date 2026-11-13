@@ -13,6 +13,8 @@ import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
 import { isNative } from '@/lib/platform';
 import { createStyles, size } from '@/theme';
 import { Button, Dialog, QRDisplay, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { SlotText } from '@/ui/SlotText';
+import { PRODUCT_NAMES } from '@/ui/textBreaks';
 
 import { twoFactorEnabledOf } from '../account';
 import { useMemberGate } from '../components/MemberGate';
@@ -135,12 +137,10 @@ function TwoFactorContent({ me }: { me: Me }) {
     body = (
       <View style={styles.body} testID={`${ROUTE}.setup`}>
         <View style={styles.steps}>
-          <Text variant="titleS" role="heading" {...({ 'aria-level': 2 } as object)}>
+          <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)}>
             {t('twoFactor.scanTitle')}
           </Text>
-          <Text variant="body" color="text.secondary">
-            {t('twoFactor.scanBody')}
-          </Text>
+          <SlotText variant="body" color="text.secondary" text={t('twoFactor.scanBody')} keep={PRODUCT_NAMES} />
         </View>
         <QRDisplay svg={setup.qrSvg} label={t('twoFactor.qrLabel')} code={groupSecret(setup.secret)} testID={`${ROUTE}.qr`} />
         <View style={styles.actions}>
@@ -157,7 +157,7 @@ function TwoFactorContent({ me }: { me: Me }) {
           ) : null}
         </View>
         <View style={styles.block}>
-          <Text variant="titleS" role="heading" {...({ 'aria-level': 2 } as object)}>
+          <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)}>
             {t('twoFactor.confirmTitle')}
           </Text>
           {notice ? <FormNotice message={notice} testID={`${ROUTE}.notice`} /> : null}
@@ -180,14 +180,13 @@ function TwoFactorContent({ me }: { me: Me }) {
     body = (
       <View style={styles.body}>
         <RestrictionNotice routeId={ROUTE} />
-        <Text variant="body" color="text.secondary" testID={`${ROUTE}.intro`}>
-          {t('twoFactor.intro')}
-        </Text>
+        {/* DQ-927: "Google Authenticator" and the other product names never hyphenate. */}
+        <SlotText variant="body" color="text.secondary" text={t('twoFactor.intro')} keep={PRODUCT_NAMES} testID={`${ROUTE}.intro`} />
         {notice ? <FormNotice message={notice} testID={`${ROUTE}.notice`} /> : null}
         <RowGroup>
           <View style={styles.status} testID={`${ROUTE}.status`}>
             <Text variant="bodyStrong">{t(enabled ? 'twoFactor.statusOn' : 'twoFactor.statusOff')}</Text>
-            <Text variant="supporting" color="text.secondary">
+            <Text variant="callout" color="text.secondary">
               {t(enabled ? 'twoFactor.statusOnBody' : 'twoFactor.statusOffBody')}
             </Text>
           </View>

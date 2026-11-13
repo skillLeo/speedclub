@@ -16,6 +16,12 @@ final class SafeMarkdown
 
     private const WORD_JOINER = "\u{2060}";
 
+    /** A hyphen between two runs of letters or figures, without a word joiner after it yet; both runs are captured (COMPOUND_HYPHEN of mobile/src/lib/format.ts). */
+    private const COMPOUND_HYPHEN = '/([\p{L}\p{N}]+)-(?!\x{2060})(?=([\p{L}\p{N}]+))/u';
+
+    /** A part of a compound shorter than this never stands alone at a line end or start ("E- / Mail", "Kontakt- / E", "RB- / …"); SHORT_COMPOUND_PART of mobile/src/lib/format.ts. */
+    public const SHORT_COMPOUND_PART = 3;
+
     /** "§" or "§§" and the white space before its number ("§ 27a", "§§ 19 und 21"). */
     private const PARAGRAPH_SIGN = '/(§§?)[ \t\r\n]+(?=\p{Nd})/u';
 
@@ -31,10 +37,11 @@ final class SafeMarkdown
     }
 
     /**
-     * 03 §4 and DQ-145/DQ-220: a line never breaks after a short prefix ("QR- / Code", "E- / Mail"). A word joiner after the hyphen keeps
-     * the halves together; the glyph stays the same and screen readers skip it. Only text between tags changes, never a tag, an attribute
-     * or a link target, and code keeps its text. A word with "://" or "@" is an address someone may copy, so it stays whole. The app reads
-     * the same documents with the same rule (mobile/src/features/settings/markdown/parse.ts).
+     * 03 §4 and DQ-145/DQ-220: a line never breaks after a short prefix ("QR- / Code", "E- / Mail"), nor beside a short part of a compound
+     * (r5 audit "name-hyphen-break": "Datenschutz- / E-Mail", "GT- / SS-Ladern"). A word joiner after the hyphen keeps the halves together;
+     * the glyph stays the same and screen readers skip it. Only text between tags changes, never a tag, an attribute or a link target, and
+     * code keeps its text. A word with "://" or "@" is an address someone may copy, so it stays whole. The app reads the same documents with
+     * the same rule (joinShortPrefixes of mobile/src/features/settings/markdown/parse.ts: the short prefix, then joinShortCompounds).
      */
     public static function joinShortPrefixes(string $html): string
     {
@@ -44,10 +51,45 @@ final class SafeMarkdown
             }
 
             // A PCRE failure (invalid UTF-8, a backtrack limit) returns null: the text then stays as it was, never blank.
-            return preg_replace_callback('/\S+/u', fn (array $word): string => preg_match('~://|@~', $word[0]) === 1
+            return preg_replace_callback('/\S+/u', fn (array $word): string => self::isAddress($word[0])
                 ? $word[0]
-                : preg_replace(self::SHORT_PREFIX, '$1$2-'.self::WORD_JOINER, $word[0]) ?? $word[0], $text) ?? $text;
+                : self::joinCompoundWord(preg_replace(self::SHORT_PREFIX, '$1$2-'.self::WORD_JOINER, $word[0]) ?? $word[0]), $text) ?? $text;
         });
+    }
+
+    /**
+     * joinShortCompounds of mobile/src/lib/format.ts for plain text: a hyphen with a part of fewer than SHORT_COMPOUND_PART letters or figures
+     * on either side ("E-Mail", "IP-Adressen", "Datenschutz-E-Mail", "RB-Spezialisten", "sign-in") gets a word joiner after it, so the line
+     * never breaks there; a hyphen between two longer parts stays a place to wrap ("Aero-Seitenschweller"), and a hyphen that a joiner already
+     * follows stays as it is. A word with "://" or "@" is an address someone may copy and stays whole. Display only, through {{ }} (a member's
+     * own words, such as a vehicle description): never into a field, a meta tag or a request.
+     */
+    public static function joinShortCompounds(string $text): string
+    {
+        if (! str_contains($text, '-')) {
+            return $text;
+        }
+
+        // On a PCRE failure the text stays as it was, never blank.
+        return preg_replace_callback('/\S+/u', fn (array $word): string => self::isAddress($word[0]) ? $word[0] : self::joinCompoundWord($word[0]), $text) ?? $text;
+    }
+
+    /** The compound step for one word without white space. */
+    private static function joinCompoundWord(string $word): string
+    {
+        return preg_replace_callback(
+            self::COMPOUND_HYPHEN,
+            fn (array $match): string => mb_strlen($match[1]) < self::SHORT_COMPOUND_PART || mb_strlen($match[2]) < self::SHORT_COMPOUND_PART
+                ? $match[1].'-'.self::WORD_JOINER
+                : $match[0],
+            $word,
+        ) ?? $word;
+    }
+
+    /** An address someone may copy ("https://…", "info@…") keeps its characters. */
+    private static function isAddress(string $word): bool
+    {
+        return preg_match('~://|@~', $word) === 1;
     }
 
     /**

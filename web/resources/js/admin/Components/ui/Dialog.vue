@@ -50,7 +50,7 @@ function initialFocus(event: Event): void {
                     ref="content"
                     :role="role"
                     :data-testid="testId"
-                    :class="[widths[size], 'sc-pop pointer-events-auto flex max-h-full w-full flex-col rounded-md border border-line bg-surface text-ink shadow-sheet focus-visible:outline-none']"
+                    :class="[widths[size], 'sc-pop pointer-events-auto flex max-h-full w-full flex-col rounded-sm border border-line bg-surface text-ink shadow-sheet focus-visible:outline-none']"
                     @open-auto-focus="initialFocus"
                     @escape-key-down="(e: KeyboardEvent) => { if (!dismissible) e.preventDefault(); }"
                     @pointer-down-outside="(e: Event) => { if (!dismissible) e.preventDefault(); }"
@@ -58,8 +58,8 @@ function initialFocus(event: Event): void {
                 >
                     <header class="flex items-start gap-16 px-24 pt-24">
                         <div class="flex min-w-0 flex-1 flex-col gap-4">
-                            <DialogTitle class="text-title-s text-ink">{{ title }}</DialogTitle>
-                            <DialogDescription v-if="description" class="text-supporting text-ink-2">{{ description }}</DialogDescription>
+                            <DialogTitle class="text-headline text-ink">{{ title }}</DialogTitle>
+                            <DialogDescription v-if="description" class="text-admin-base text-ink-2">{{ description }}</DialogDescription>
                         </div>
                         <DialogClose
                             v-if="dismissible"

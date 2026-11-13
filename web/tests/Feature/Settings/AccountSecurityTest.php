@@ -10,6 +10,7 @@ use App\Models\AuditEvent;
 use App\Models\Notification;
 use App\Models\PushToken;
 use App\Models\User;
+use App\Services\Auth\DeviceInstalls;
 use App\Services\Auth\VerificationCodes;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -145,8 +146,8 @@ describe('SET-04 password change', function () {
         $member = setMember();
         $here = setSignIn($member, 'install-here-0001');
         $there = setSignIn($member, 'install-there-001', 'Pixel 9');
-        PushToken::factory()->create(['user_id' => $member->id, 'device_id' => 'install-there-001', 'token' => 'ExponentPushToken[bbbbbbbbbbbbbbbbbbbbbb]']);
-        PushToken::factory()->create(['user_id' => $member->id, 'device_id' => 'install-here-0001', 'token' => 'ExponentPushToken[cccccccccccccccccccccc]']);
+        PushToken::factory()->create(['user_id' => $member->id, 'device_id' => DeviceInstalls::key($member->id, 'install-there-001'), 'token' => 'ExponentPushToken[bbbbbbbbbbbbbbbbbbbbbb]']);
+        PushToken::factory()->create(['user_id' => $member->id, 'device_id' => DeviceInstalls::key($member->id, 'install-here-0001'), 'token' => 'ExponentPushToken[cccccccccccccccccccccc]']);
 
         $this->withToken($here)->postJson('/api/v1/me/password', [
             'current_password' => 'password',
@@ -159,7 +160,7 @@ describe('SET-04 password change', function () {
         $this->withToken($there)->getJson('/api/v1/auth/me')->assertUnauthorized();
         app('auth')->forgetGuards();
         $this->withToken($here)->getJson('/api/v1/auth/me')->assertOk();
-        expect($member->pushTokens()->pluck('device_id')->all())->toBe(['install-here-0001']);
+        expect($member->pushTokens()->pluck('device_id')->all())->toBe([DeviceInstalls::key($member->id, 'install-here-0001')]);
         Mail::assertSent(SecurityNoticeMail::class, fn (SecurityNoticeMail $mail): bool => $mail->variant === 'others_signed_out');
     });
 

@@ -12,11 +12,13 @@ import { useVehicleShare } from '@/features/vehicle/share';
 import { textSkeleton } from '@/features/vehicle/skeletonGeometry';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Hairline, Icon, ListRow, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { Hairline, ListRow, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
 
 import { FormGroup } from '../components/fields';
 import { EditorForm, EditorScreen, FORM_MAX_WIDTH, RestrictedNotice } from '../components/frames';
 import { OwnerOnQrSetting, OwnerOnQrSkeletonRow } from '../components/OwnerOnQrSetting';
+import { PlateReminder } from '../components/PlateReminder';
 import { VisibilityChoice } from '../components/VisibilityChoice';
 import { saveErrorMessage } from '../errors';
 import { isVisibility, VISIBILITIES } from '../model';
@@ -31,8 +33,8 @@ const useStyles = createStyles((t) => ({
   reminderText: { flex: 1, gap: t.space[4] },
   // The skeleton in EditorForm's column and FormGroup's rhythm, on the same cards as the page (frames.tsx, fields.tsx).
   skeletonColumn: { alignSelf: 'flex-start', gap: t.space[24], maxWidth: FORM_MAX_WIDTH, width: '100%' },
-  skeletonGroup: { gap: t.space[16] },
-  skeletonEyebrow: { marginBottom: -t.space[4] },
+  skeletonGroup: { gap: t.space[16], marginTop: t.space[8] },
+  skeletonEyebrow: { marginBottom: t.space[8] - t.space[16] },
   skeletonCard: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
   radioRow: { gap: t.space[2], paddingBottom: t.space[12], paddingHorizontal: t.space[12], paddingTop: t.space[4] },
   radioLine: { alignItems: 'center', flexDirection: 'row', gap: t.space[12], minHeight: t.size.touchMin },
@@ -62,7 +64,6 @@ export function VisibilityScreen() {
 
 function VisibilityForm({ vehicle, restriction }: { vehicle: GarageVehicle; restriction: string | null }) {
   const { t } = useTranslation('garage');
-  const styles = useStyles();
   const router = useRouter();
   const online = useOnline();
   const change = useChangeVisibility(vehicle.id);
@@ -105,7 +106,7 @@ function VisibilityForm({ vehicle, restriction }: { vehicle: GarageVehicle; rest
       {/* DQ-176: not "Sichtbarkeit" again under the title; this group is the one vehicle, the next one all of them. */}
       <FormGroup title={t('visibility.thisVehicleGroup')}>
         {vehicle.status === 'draft' ? (
-          <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.draftNote`}>
+          <Text variant="callout" color="text.secondary" testID={`${ROUTE}.draftNote`}>
             {t('visibility.draftNote')}
           </Text>
         ) : null}
@@ -131,15 +132,7 @@ function VisibilityForm({ vehicle, restriction }: { vehicle: GarageVehicle; rest
           </RowCard>
         </FormGroup>
       ) : null}
-      <View style={styles.reminder} testID={`${ROUTE}.plateReminder`}>
-        <Icon name="info" size={20} color="text.secondary" />
-        <View style={styles.reminderText}>
-          <Text variant="bodyStrong">{t('visibility.plateTitle')}</Text>
-          <Text variant="supporting" color="text.secondary">
-            {t('visibility.plateBody')}
-          </Text>
-        </View>
-      </View>
+      <PlateReminder testID={`${ROUTE}.plateReminder`} />
       <RowCard>
         <ListRow icon="image" title={t('visibility.checkPhotos')} onPress={() => router.push(`/garage/${vehicle.id}/photos`)} inset={space[16]} testID={`${ROUTE}.photos`} />
       </RowCard>
@@ -173,13 +166,14 @@ function VisibilitySkeleton({ known }: { known: KnownVehicle }) {
   const vehicle = known.vehicle ?? known.card;
   const shareable = !vehicle || (vehicle.status === 'published' && vehicle.visibility !== 'private');
   const withQr = !vehicle || Boolean(vehicle.qr);
-  const eyebrow = (key: string) => textSkeleton(t(key), 'eyebrow', fontScale, width).width;
+  // The header's own role and width (ADR-426 e), so the skeleton line is as long as the header it stands for.
+  const eyebrow = (key: string) => textSkeleton(t(key), SECTION_HEADER_ROLE, fontScale, width).width;
   return (
     <Skeleton testID={`${ROUTE}.skeleton`}>
       <View style={styles.skeletonColumn} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
         <View style={styles.skeletonGroup}>
-          <SkeletonText variant="eyebrow" width={eyebrow('visibility.thisVehicleGroup')} style={styles.skeletonEyebrow} />
-          {vehicle?.status === 'draft' ? <KnownTextSkeleton text={t('visibility.draftNote')} variant="supporting" /> : null}
+          <SkeletonText variant={SECTION_HEADER_ROLE} width={eyebrow('visibility.thisVehicleGroup')} style={styles.skeletonEyebrow} testID={`${ROUTE}.skeleton.header.thisVehicle`} />
+          {vehicle?.status === 'draft' ? <KnownTextSkeleton text={t('visibility.draftNote')} variant="callout" /> : null}
           <View style={styles.skeletonCard} testID={`${ROUTE}.skeleton.choice`}>
             {VISIBILITIES.map((option, index) => (
               <View key={option}>
@@ -190,7 +184,7 @@ function VisibilitySkeleton({ known }: { known: KnownVehicle }) {
                   </View>
                   <View style={styles.radioBodyRow}>
                     <View style={styles.radioInset} />
-                    <KnownTextSkeleton text={t(`visibility.options.${option}.body`)} variant="supporting" style={styles.radioBody} />
+                    <KnownTextSkeleton text={t(`visibility.options.${option}.body`)} variant="callout" style={styles.radioBody} />
                   </View>
                 </View>
                 {index < VISIBILITIES.length - 1 ? <Hairline /> : null}
@@ -199,14 +193,14 @@ function VisibilitySkeleton({ known }: { known: KnownVehicle }) {
           </View>
         </View>
         <View style={styles.skeletonGroup}>
-          <SkeletonText variant="eyebrow" width={eyebrow('visibility.ownerOnQr.group')} style={styles.skeletonEyebrow} />
+          <SkeletonText variant={SECTION_HEADER_ROLE} width={eyebrow('visibility.ownerOnQr.group')} style={styles.skeletonEyebrow} testID={`${ROUTE}.skeleton.header.ownerOnQr`} />
           <View style={styles.skeletonCard} testID={`${ROUTE}.skeleton.ownerOnQr`}>
             <OwnerOnQrSkeletonRow />
           </View>
         </View>
         {shareable ? (
           <View style={styles.skeletonGroup}>
-            <SkeletonText variant="eyebrow" width={eyebrow('visibility.shareGroup')} style={styles.skeletonEyebrow} />
+            <SkeletonText variant={SECTION_HEADER_ROLE} width={eyebrow('visibility.shareGroup')} style={styles.skeletonEyebrow} testID={`${ROUTE}.skeleton.header.share`} />
             <View style={styles.skeletonCard}>
               <SkeletonListRow label={t('owner.copyLink')} />
               <SkeletonListRow label={t('owner.share')} />
@@ -218,7 +212,7 @@ function VisibilitySkeleton({ known }: { known: KnownVehicle }) {
           <SkeletonBlock width={size.icon.m} height={size.icon.m} />
           <View style={styles.reminderText}>
             <KnownTextSkeleton text={t('visibility.plateTitle')} variant="bodyStrong" />
-            <KnownTextSkeleton text={t('visibility.plateBody')} variant="supporting" />
+            <KnownTextSkeleton text={t('visibility.plateBody')} variant="callout" />
           </View>
         </View>
         <View style={styles.skeletonCard}>

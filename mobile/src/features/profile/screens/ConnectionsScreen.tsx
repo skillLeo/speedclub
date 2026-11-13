@@ -43,7 +43,7 @@ import {
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { FollowButton } from '../components/FollowButton';
-import { GuestInvitation } from '../components/GuestInvitation';
+import { GuestPrompt } from '../components/GuestPrompt';
 
 const ROUTE = 'PROF-04';
 const SKELETON_ROWS = 6;
@@ -78,7 +78,7 @@ function RowsSkeleton() {
           <SkeletonBlock width={size.avatar.md} height={size.avatar.md} corner="full" />
           <View style={styles.skeletonText}>
             <SkeletonText variant="bodyStrong" width="55%" />
-            <SkeletonText variant="supporting" width="35%" />
+            <SkeletonText variant="callout" width="35%" />
           </View>
           <SkeletonBlock width={size.touchMin * 2} height={size.button.m} corner="sm" />
         </View>
@@ -136,6 +136,7 @@ const ConnectionRow = memo(function ConnectionRow({ row, removable, signedIn, di
         meta={row.display_name?.trim() ? ownerMeta(row) : row.city?.trim() || undefined}
         avatarUri={variantUrl(row.avatar, size.avatar.md)}
         avatarBlurhash={row.avatar?.blurhash}
+        sample={row}
         onPress={() => onOpen(row)}
         trailing={trailing}
         divider={divider}
@@ -229,8 +230,8 @@ export function ConnectionsScreen({ own = false }: ConnectionsScreenProps) {
         tabs: t('connections.tabsLabelOther'),
       };
   const tabs = [
-    { value: 'followers' as const, label: stats ? t('connections.followersCount', { count: stats.followers, value: format.number(stats.followers) }) : t('connections.followers') },
-    { value: 'following' as const, label: stats ? t(following.count, { value: format.number(stats.following) }) : following.plain },
+    { value: 'followers' as const, label: stats && stats.followers !== null ? t('connections.followersCount', { count: stats.followers, value: format.number(stats.followers) }) : t('connections.followers') },
+    { value: 'following' as const, label: stats && stats.following !== null ? t(following.count, { value: format.number(stats.following) }) : following.plain },
   ];
 
   let state: ReactNode = null;
@@ -238,7 +239,7 @@ export function ConnectionsScreen({ own = false }: ConnectionsScreenProps) {
   let loading = false;
   const unavailable = !own && (qaState === 'restricted' || isMemberUnavailable(profile.error) || isMemberUnavailable(query.error));
   if (own && status === 'guest') {
-    state = <GuestInvitation routeId={ROUTE} returnTo="/profile/connections" />;
+    state = <GuestPrompt routeId={ROUTE} returnTo="/profile/connections" />;
   } else if (unavailable) {
     state = (
       <EmptyState

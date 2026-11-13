@@ -12,13 +12,13 @@
             try { document.documentElement.dataset.theme = localStorage.getItem('sc-admin-theme') === 'light' ? 'light' : 'carbon'; }
             catch (e) { document.documentElement.dataset.theme = 'carbon'; }
         </script>
-        <x-font-preload />
+        <x-font-preload surface="admin" />
         {{-- SEC-P3-04: guests see only the routes of the sign-in pages. --}}
         @routes(\App\Http\Controllers\Admin\Support\ZiggyScope::group(request()), nonce: Vite::cspNonce())
         @vite(['resources/css/admin.css', 'resources/js/admin/app.ts'])
         @inertiaHead
     </head>
-    <body class="min-h-screen bg-canvas font-ui text-body text-ink antialiased">
+    <body class="min-h-screen bg-canvas font-ui text-admin-base text-ink antialiased">
         @inertia
     </body>
 </html>

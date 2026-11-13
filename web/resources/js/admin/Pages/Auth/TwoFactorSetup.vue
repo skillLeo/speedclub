@@ -27,7 +27,12 @@ interface QaSample {
     codes: string[];
 }
 
-const props = withDefaults(defineProps<{ passwordConfirmed?: boolean; qaSample?: QaSample | null }>(), { passwordConfirmed: false, qaSample: null });
+/** `skippable`: STAFF_2FA_REQUIRED=false, the page offers "Später einrichten" for this session (route admin.two-factor.skip). */
+const props = withDefaults(defineProps<{ passwordConfirmed?: boolean; qaSample?: QaSample | null; skippable?: boolean }>(), {
+    passwordConfirmed: false,
+    qaSample: null,
+    skippable: false,
+});
 
 type Step = 'password' | 'preparing' | 'scan' | 'recovery' | 'failed';
 
@@ -41,6 +46,8 @@ const qrSvg = ref<string | null>(props.qaSample?.svg ?? null);
 const secret = ref<string | null>(props.qaSample?.key ?? null);
 const recoveryCodes = ref<string[]>(props.qaSample?.codes ?? []);
 const saved = ref(false);
+const skipping = ref(false);
+const skipError = ref<string | null>(null);
 
 const qrSrc = computed(() => (qrSvg.value === null ? null : `data:image/svg+xml;base64,${window.btoa(qrSvg.value)}`));
 // Two even lines of four groups ("ABCD EFGH IJKL MNOP" / …), never 5 + 3 (DQ-551).
@@ -134,6 +141,24 @@ async function copySecret(): Promise<void> {
 
 const recoveryFile = computed(() => `data:text/plain;charset=utf-8,${encodeURIComponent(`${trans('auth.setup.recovery_file_title')}\n\n${recoveryCodes.value.join('\n')}\n`)}`);
 
+/** "Später einrichten": the server marks this session only and sends it on to the dashboard. */
+function skip(): void {
+    skipping.value = true;
+    skipError.value = null;
+    router.post(
+        routeOr('admin.two-factor.skip', '/admin/two-factor/skip'),
+        {},
+        {
+            onError: () => {
+                skipError.value = trans('auth.setup.skip_failed');
+            },
+            onFinish: () => {
+                skipping.value = false;
+            },
+        },
+    );
+}
+
 function finish(): void {
     router.visit(routeOr('admin.dashboard', '/admin'));
 }
@@ -148,9 +173,9 @@ onMounted(() => {
     <Head :title="trans('auth.setup.title')" />
     <div class="flex flex-col gap-24" data-testid="ADM-03" :data-qa-state="state" :data-step="step">
         <div class="flex flex-col gap-8">
-            <p class="text-caption text-ink-3">{{ trans('auth.setup.eyebrow') }}</p>
-            <h1 class="text-title-m text-ink">{{ trans('auth.setup.title') }}</h1>
-            <p class="text-supporting text-ink-2">{{ trans('auth.setup.intro') }}</p>
+            <p class="text-caption text-ink-3">{{ trans(props.skippable ? 'auth.setup.eyebrow_optional' : 'auth.setup.eyebrow') }}</p>
+            <h1 class="text-title-2 text-ink">{{ trans('auth.setup.title') }}</h1>
+            <p class="text-admin-base text-ink-2">{{ trans(props.skippable ? 'auth.setup.intro_optional' : 'auth.setup.intro') }}</p>
         </div>
 
         <ol class="flex gap-8 text-caption" :aria-label="trans('auth.setup.steps')">
@@ -164,8 +189,8 @@ onMounted(() => {
         <div v-if="state === 'loading'" class="flex flex-col gap-24" aria-busy="true" data-testid="ADM-03.loading">
             <!-- The scan step's own parts with skeletons for what is still coming: instruction, QR card, the two key lines, code field (DQ-533). -->
             <div class="flex flex-col gap-12">
-                <p class="text-supporting text-ink">{{ trans('auth.setup.scan') }}</p>
-                <div class="self-start rounded-lg bg-qr-bg p-16"><Skeleton class="size-160" /></div>
+                <p class="text-admin-base text-ink">{{ trans('auth.setup.scan') }}</p>
+                <div class="self-start rounded-sm bg-qr-bg p-16"><Skeleton class="size-160" /></div>
                 <div class="flex flex-col gap-4">
                     <p class="text-caption text-ink-2">{{ trans('auth.setup.key_label') }}</p>
                     <div class="flex items-center gap-8">
@@ -202,14 +227,14 @@ onMounted(() => {
         <!-- 2 · scan + code -->
         <div v-else-if="step === 'scan'" class="flex flex-col gap-24">
             <div class="flex flex-col gap-12">
-                <p class="text-supporting text-ink">{{ trans('auth.setup.scan') }}</p>
-                <div class="self-start rounded-lg bg-qr-bg p-16">
+                <p class="text-admin-base text-ink">{{ trans('auth.setup.scan') }}</p>
+                <div class="self-start rounded-sm bg-qr-bg p-16">
                     <img v-if="qrSrc" :src="qrSrc" :alt="trans('auth.setup.qr_alt')" class="size-160" data-testid="ADM-03.qr" />
                 </div>
                 <div class="flex flex-col gap-4">
                     <p class="text-caption text-ink-2">{{ trans('auth.setup.key_label') }}</p>
                     <div class="flex items-center gap-8">
-                        <code class="sc-key flex flex-col font-ui text-code text-ink tabular-nums" data-testid="ADM-03.key">
+                        <code class="sc-key flex flex-col font-ui text-admin-base text-ink tabular-nums" data-testid="ADM-03.key">
                             <span v-for="line in secretLines" :key="line" class="whitespace-nowrap">{{ line }}</span>
                         </code>
                         <Button size="sm" variant="ghost" :icon="PhCopy" @click="copySecret">{{ trans('auth.setup.copy_key') }}</Button>
@@ -227,17 +252,23 @@ onMounted(() => {
         <!-- 3 · recovery codes, shown once -->
         <div v-else-if="step === 'recovery'" class="flex flex-col gap-16">
             <AuthNotice tone="success" :text="trans('auth.setup.enabled')" />
-            <p class="text-supporting text-ink">{{ trans('auth.setup.recovery_intro') }}</p>
+            <p class="text-admin-base text-ink">{{ trans('auth.setup.recovery_intro') }}</p>
             <!-- One code per line, numbered, never broken at its hyphen (DQ-543). -->
             <ol class="flex flex-col gap-4 rounded-sm border border-line bg-surface px-16 py-12" data-testid="ADM-03.recovery-codes">
                 <li v-for="(item, index) in recoveryCodes" :key="item" class="flex items-baseline gap-12">
                     <span class="w-16 text-right text-caption text-ink-3 tabular-nums" aria-hidden="true">{{ index + 1 }}</span>
-                    <span class="sc-key whitespace-nowrap text-code text-ink tabular-nums">{{ item }}</span>
+                    <span class="sc-key whitespace-nowrap text-admin-base text-ink tabular-nums">{{ item }}</span>
                 </li>
             </ol>
             <Button variant="secondary" :icon="PhDownloadSimple" :href="recoveryFile" external download="speedclub-admin-recovery-codes.txt">{{ trans('auth.setup.download') }}</Button>
             <Checkbox v-model="saved" :label="trans('auth.setup.saved')" data-testid="ADM-03.saved" />
             <Button variant="primary" block :disabled="saved !== true" data-testid="ADM-03.finish" @click="finish">{{ trans('auth.setup.finish') }}</Button>
+        </div>
+
+        <!-- STAFF_2FA_REQUIRED=false: the secondary way out, for this session only. Not once TOTP is confirmed (recovery step). -->
+        <div v-if="props.skippable && state !== 'loading' && step !== 'recovery'" class="flex flex-col gap-8 border-t border-line pt-16" data-testid="ADM-03.skip-area">
+            <AuthNotice v-if="skipError" tone="error" :text="skipError" test-id="ADM-03.skip-error" />
+            <Button variant="ghost" block :loading="skipping" :disabled="processing" data-testid="ADM-03.skip" @click="skip">{{ trans('auth.setup.skip') }}</Button>
         </div>
     </div>
 </template>

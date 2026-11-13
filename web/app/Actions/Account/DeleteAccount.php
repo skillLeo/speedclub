@@ -5,14 +5,23 @@ namespace App\Actions\Account;
 use App\Enums\MemberSecurityEvent;
 use App\Enums\QrRevocationReason;
 use App\Enums\SecurityNotice;
+use App\Enums\SocialProvider;
 use App\Enums\UserStatus;
+use App\Models\DeviceInstall;
 use App\Models\Follow;
+use App\Models\LoginAttempt;
+use App\Models\MemberPasskey;
+use App\Models\PasskeyChallenge;
+use App\Models\SocialAccount;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VerificationCode;
 use App\Services\Account\WithdrawMemberMedia;
 use App\Services\Audit\Audit;
+use App\Services\Auth\AuthMailer;
+use App\Services\Auth\IdTokens\AppleTokens;
 use App\Services\Auth\MemberSessions;
+use App\Services\Events\EventHousekeeping;
 use App\Services\Notifications\Notifier;
 use App\Services\PublicPages\OgImages;
 use App\Services\PublicPages\SitemapWriter;
@@ -42,6 +51,8 @@ class DeleteAccount
         private readonly Notifier $notifier,
         private readonly OgImages $og,
         private readonly SitemapWriter $sitemap,
+        private readonly AppleTokens $apple,
+        private readonly AuthMailer $mailer,
     ) {}
 
     public function handle(User $user): void
@@ -70,14 +81,25 @@ class DeleteAccount
             // The export asked for before keeps its link (ADR-203 c): the member proved password and second factor for this.
             $revoked = $this->sessions->revokeAll($user, keepExportLinks: true);
             VerificationCode::query()->where('user_id', $user->id)->delete();
+            // M4.6 (09 §8.1): every way in goes with the request, not only at the hard delete. Apple's refresh tokens are revoked after
+            // the commit (they are read here, before their rows go).
+            $apple = SocialAccount::query()->where('user_id', $user->id)->where('provider', SocialProvider::Apple)->get();
+            $passkeys = MemberPasskey::query()->where('user_id', $user->id)->delete();
+            $providers = SocialAccount::query()->where('user_id', $user->id)->delete();
+            LoginAttempt::query()->where('user_id', $user->id)->delete();
+            PasskeyChallenge::query()->where('user_id', $user->id)->delete();
+            // M4.7: the app installs go with the sign-ins; SET-21 rows stay with the account until the hard delete (cascade).
+            DeviceInstall::query()->where('user_id', $user->id)->delete();
 
             Audit::record(MemberSecurityEvent::DeletionRequested->value, $user, after: [
                 'vehicles' => $vehicles->count(),
                 'follows' => $follows,
+                'passkeys' => $passkeys,
+                'providers' => $providers,
                 ...$revoked,
             ], actor: $user);
 
-            return ['vehicles' => $vehicles];
+            return ['vehicles' => $vehicles, 'apple' => $apple];
         });
 
         if ($closed === null) {
@@ -95,8 +117,17 @@ class DeleteAccount
 
         $this->safely(fn () => $this->og->purge($user));
         $this->sitemap->forget();
+        // M4.12 (09 §8.7): answers to events go (spots to the waitlist); the member's upcoming events are cancelled and attendees told.
+        $this->safely(fn () => app(EventHousekeeping::class)->accountClosed($user));
 
         $this->notifier->security($user, SecurityNotice::DeletionRequested);
+
+        // 09 §8.1: revoke Sign in with Apple after the response (a 200 is no proof; the outcome is audited and logged).
+        foreach ($closed['apple'] as $account) {
+            $this->mailer->afterResponse(function () use ($user, $account): void {
+                Audit::record(MemberSecurityEvent::AppleRevoked->value, $user, after: ['outcome' => $this->apple->revoke($account)], actor: $user);
+            });
+        }
     }
 
     /**

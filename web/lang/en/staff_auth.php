@@ -8,4 +8,6 @@ return [
     'password_proof_required' => 'First set a password of your own through “Forgot password?”. The link is sent to this address.',
     'session_ended' => 'You were signed out because the password, the two-factor settings or the status of your account changed.',
     'password_check_locked' => 'Too many wrong passwords. Try again in :time.',
+    // ADM-03 skipped (STAFF_2FA_REQUIRED=false): a step that rests on a current code.
+    'two_factor_first' => 'This step needs a code from your authenticator app. Set up two-factor protection first.',
 ];

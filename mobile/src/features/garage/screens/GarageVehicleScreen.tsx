@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
+import { useFlag } from '@/api/queries/appConfig';
 import { useCachedCard, useSetMainVehicle, useVehicle } from '@/api/queries/garage';
+import { MAINTENANCE_FLAG } from '@/api/queries/maintenance';
+import { NextHuChip } from '@/features/maintenance/components/NextHuChip';
 import { myVehiclesKey } from '@/api/queries/profile';
 import { usePublicVehicle } from '@/api/queries/vehicles';
 import { MoreSheet, type MoreAction } from '@/features/vehicle/components/MoreSheet';
@@ -21,7 +24,7 @@ import { createStyles } from '@/theme';
 import { toast } from '@/ui';
 
 import { GoneState, RestrictedNotice, SignInState, useGarageAccess } from '../components/frames';
-import { CompletenessHints, OwnerToolbar, ownerToolLabels, VisibilityNote } from '../components/OwnerToolbar';
+import { CompletenessHints, OwnerEditSheet, ownerCapsuleOf, VisibilityNote } from '../components/OwnerToolbar';
 import { isGone, saveErrorMessage } from '../errors';
 
 const ROUTE = 'GAR-02';
@@ -52,8 +55,10 @@ export function GarageVehicleScreen() {
   // puts the restriction first in Übersicht, as on GAR-01; the public mapping to unavailable is for VEH-01 only.
   const state = routeStateOf(query, online, qaState === 'restricted' ? 'default' : qaState);
   const setMain = useSetMainVehicle();
-  const { share, copy, sharing } = useVehicleShare(ROUTE);
+  const { share, copy } = useVehicleShare(ROUTE);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const maintenance = useFlag(MAINTENANCE_FLAG);
   const tabParam = paramOf(params.tab);
   const tab = isProfileTab(tabParam) ? tabParam : 'overview';
   const client = useQueryClient();
@@ -90,13 +95,7 @@ export function GarageVehicleScreen() {
     // garage already knows.
     const known = own.data ?? card;
     return (
-      <VehicleProfileSkeleton
-        routeId={ROUTE}
-        onBack={back}
-        toolbarLabels={ownerToolLabels(t, known ? Boolean(known.qr) : true)}
-        photoCount={known?.photo_count}
-        known={known}
-      />
+      <VehicleProfileSkeleton routeId={ROUTE} onBack={back} owner photoCount={known?.photo_count} known={known} />
     );
   }
   if (state !== 'ready' || !query.data) {
@@ -116,8 +115,18 @@ export function GarageVehicleScreen() {
   }
 
   const vehicle = qaState === 'empty' ? withoutContent(query.data) : query.data;
+  const capsule = ownerCapsuleOf(vehicle, ROUTE, {
+    t,
+    go: (path) => router.push(path as never),
+    onEdit: () => setEditing(true),
+    onShare: () => void share(vehicle),
+  });
   const changeTab = (next: ProfileTab) => router.setParams({ tab: next === 'overview' ? undefined : next });
   const moreActions: MoreAction[] = [
+    // M4.13 MNT-01: the owner's maintenance of this car (09 §8.8), behind the `maintenance` flag.
+    ...(maintenance
+      ? [{ key: 'maintenance', icon: 'service-wrench' as const, label: t('maintenance.open'), onPress: () => router.push(`/garage/${vehicle.id}/maintenance`) }]
+      : []),
     ...(vehicle.status === 'published' && !vehicle.is_main
       ? [
           {
@@ -133,6 +142,10 @@ export function GarageVehicleScreen() {
         ]
       : []),
     ...(vehicle.qr ? [{ key: 'preview', icon: 'eye' as const, label: t('owner.viewPublic'), onPress: () => router.push(`/qr/${vehicle.id}/preview`) }] : []),
+    ...(vehicle.status === 'published' && vehicle.visibility !== 'private'
+      ? [{ key: 'share', icon: 'share-network' as const, label: t('owner.share'), onPress: () => void share(vehicle) }]
+      : []),
+    { key: 'visibility', icon: vehicle.visibility === 'private' ? ('lock-simple' as const) : ('eye' as const), label: t('owner.visibility'), onPress: () => router.push(`/garage/${vehicle.id}/visibility`) },
     { key: 'copyLink', icon: 'link', label: t('owner.copyLink'), onPress: () => void copy(vehicle) },
   ];
 
@@ -144,17 +157,14 @@ export function GarageVehicleScreen() {
         onBack={back}
         tab={tab}
         onTabChange={changeTab}
-        headerActions={[
-          ...(vehicle.status === 'published' && vehicle.visibility !== 'private'
-            ? [{ icon: 'share-network' as const, label: t('owner.share'), onPress: () => void share(vehicle), disabled: sharing, testID: `${ROUTE}.share` }]
-            : []),
-          { icon: 'dots-three', label: t('owner.more'), onPress: () => setMoreOpen(true), testID: `${ROUTE}.moreActions` },
-        ]}
-        ownerToolbar={<OwnerToolbar vehicle={vehicle} routeId={ROUTE} />}
+        // DQ-1062 (DQ-942): at most two floating controls on the hero, back and "Mehr"; the owner's actions are the capsule.
+        headerActions={[{ icon: 'dots-three', label: t('owner.more'), onPress: () => setMoreOpen(true), testID: `${ROUTE}.moreActions` }]}
+        capsule={capsule}
         ownerContent={
           // Only when there is something to say: an empty block would still take the section gap above the description.
-          access.restriction || vehicle.status !== 'published' || vehicle.visibility !== 'public' || (vehicle.completeness && !vehicle.completeness.is_complete) ? (
+          maintenance || access.restriction || vehicle.status !== 'published' || vehicle.visibility !== 'public' || (vehicle.completeness && !vehicle.completeness.is_complete) ? (
             <View style={styles.owner}>
+              {maintenance ? <NextHuChip vehicleId={vehicle.id} routeId={ROUTE} /> : null}
               {access.restriction ? <RestrictedNotice message={access.restriction} testID={`${ROUTE}.restricted`} /> : null}
               <VisibilityNote vehicle={vehicle} routeId={ROUTE} />
               <CompletenessHints vehicle={vehicle} routeId={ROUTE} />
@@ -162,6 +172,7 @@ export function GarageVehicleScreen() {
           ) : undefined
         }
       />
+      <OwnerEditSheet vehicle={vehicle} routeId={ROUTE} visible={editing} onClose={() => setEditing(false)} />
       <MoreSheet visible={moreOpen} onClose={() => setMoreOpen(false)} title={vehicle.full_title} actions={moreActions} testID={`${ROUTE}.moreSheet`} />
     </>
   );

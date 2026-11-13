@@ -3,18 +3,23 @@
  * - a handle ("@paul.roadster") breaks only after its "." or "_", never inside a letter run and never with a hyphen: a zero-width
  *   space goes after them in the shown text. Screen readers skip it, so the accessible name stays the same;
  * - a vehicle name wraps at its spaces, never inside a word, and a hyphenated name stays whole ("GT-R"); a model letter stays with
- *   the number after it ("C 63", "A 45", DQ-310), as the two are one designation;
+ *   the number after it ("C 63", "A 45", DQ-310), as the two are one designation; in a display title a trailing code of at most
+ *   4 characters stays with the word before it ("GT-R R34", "VIII (CD)", ADR-426 c) where a breakable space remains before the
+ *   pair and the pair fits the line;
  * - a meta line "a · b · c" wraps at its "·" first, and the "·" stays at the end of the part before it. A short part ("vor 2 Std.",
  *   "Frankfurt am Main") stays whole; a longer one wraps at its own spaces.
  */
-import { isNumericValue, keepFiguresTogether, keepNameTogether, type ValueSegment } from '@/lib/format';
+import { isNumericValue, keepFiguresTogether, keepNameTogether, WHOLE_VALUE_MAX, type ValueSegment } from '@/lib/format';
 
 const ZERO_WIDTH_SPACE = '\u200B';
 const NO_BREAK_SPACE = '\u00A0';
 const META_SEPARATOR = ' · ';
 
-/** A part this short fits whole on its own line of a phone's row, beside a trailing button at 360 (about 130 of text). */
-export const WHOLE_PART_MAX = 18;
+/**
+ * A part this short fits whole on its own line of a phone's row, beside a trailing button at 360 (about 130 of text). One budget
+ * with a whole value (format WHOLE_VALUE_MAX, ADR-424), so the two cannot drift apart (NH-7).
+ */
+export const WHOLE_PART_MAX = WHOLE_VALUE_MAX;
 
 /** "@paul.roadster" → "@paul.<U+200B>roadster": a break after "." or "_" when the handle is wider than its line. */
 export function handleText(handle: string): string {
@@ -33,6 +38,71 @@ export function keepModelLettersTogether(text: string): string {
 export function vehicleNameText(name: string): string {
   return keepModelLettersTogether(keepNameTogether(name));
 }
+
+/** ADR-426 c: a trailing code this short ("R34", "(CD)", "G82") never stands alone on the last line of a display title. */
+export const TRAILING_CODE_MAX = 4;
+/** Characters that draw nothing and do not count towards the code's length (the word joiner of "GT-R", a zero-width space). */
+const INVISIBLE = /[\u2060\u200B]/g;
+
+/**
+ * "Nissan Skyline GT-R R34" → "Nissan Skyline GT-R<U+00A0>R34" (ADR-426 c as amended after code review round 3): the last
+ * space-separated token, when it has at most TRAILING_CODE_MAX visible characters, is bound to the word before it, but only
+ * when a breakable space remains before that pair ("Porsche 911", "Toyota GR86" and "Lamborghini Urus" stay breakable: bound,
+ * they would be one word that a narrow line breaks inside) and `fits` says the pair ("GT-R<U+00A0>R34") fits the line at the
+ * size it is drawn. A display-time step only: the stored name keeps its plain space, the Blade page binds the same way, and
+ * the parity test folds every white space (U+00A0 included).
+ */
+export function bindTrailingCode(text: string, fits: (pair: string) => boolean): string {
+  const at = text.lastIndexOf(' ');
+  if (at <= 0) return text;
+  const code = text.slice(at + 1);
+  const before = text.slice(0, at);
+  const visible = [...code.replace(INVISIBLE, '')].length;
+  if (visible === 0 || visible > TRAILING_CODE_MAX || before.trim() === '') return text;
+  // The breakable space that would remain before the pair.
+  const remaining = before.lastIndexOf(' ');
+  if (remaining <= 0 || before.slice(0, remaining).trim() === '') return text;
+  const pair = `${before.slice(remaining + 1)}${NO_BREAK_SPACE}${code}`;
+  return fits(pair) ? `${before}${NO_BREAK_SPACE}${code}` : text;
+}
+
+/**
+ * A car name as display.title sets it: vehicleNameText, and, given `fits` (DisplayTitle knows the width and the drawn size),
+ * its trailing short code bound to the word before it (ADR-426 c). Without `fits` nothing is bound: no width, no binding.
+ * displayTitleLayout's displayTitleText supplies `fits` from the estimate.
+ */
+export function vehicleTitleText(name: string, fits?: (pair: string) => boolean): string {
+  const text = vehicleNameText(name.trim());
+  return fits ? bindTrailingCode(text, fits) : text;
+}
+
+/**
+ * DQ-926: a car, part or brand name inside a sentence ("{{vehicle}} hat jetzt einen eigenen QR-Code"). The characters it sets
+ * keep the name's own breaks: a word joiner after a hyphen of the name ("GT-R", "Slip-On"), a no-break space after a model
+ * letter ("C 63"), and one binding its trailing code ("R34", "(CD)") to the word before it where a breakable space remains
+ * before the pair (ADR-426 c; in running text the pair always fits a line when it is no longer than WHOLE_PART_MAX). They
+ * cannot stop hyphenation: whether the name hyphenates is up to the Text it sits in. Where the surface takes a node, set it
+ * in a SlotText slot (a span that never hyphenates); a plain string (a toast, a dialog title) takes the hyphenation of its Text.
+ */
+export function nameInText(name: string): string {
+  return bindTrailingCode(vehicleNameText(name.trim()), (pair) => [...pair.replace(INVISIBLE, '')].length <= WHOLE_PART_MAX);
+}
+
+/**
+ * DQ-927: an e-mail address, a URL or a username inside a sentence shows exactly the characters on file: it never breaks at a
+ * hyphen of its own ("speed-club") and may break only after "@", "." and "/", where a zero-width space is set (screen readers
+ * skip it; a copy on the web drops it, webDocument listenForCopy). Hyphenation is up to the Text it sits in: a SlotText slot,
+ * or a Text with `hyphenate={false}`. Display only: never into a field or a request.
+ */
+export function identifierText(value: string): string {
+  return keepNameTogether(value).replace(/([@./])(?=[^\s./\u2060\u200B])/g, `$1${ZERO_WIDTH_SPACE}`);
+}
+
+/**
+ * DQ-927: product names that appear inside our own copy. They never hyphenate ("Google Authentica- / tor"); SlotText's `keep`
+ * sets them in a span that does not. Longest first, so "Google Authenticator" wins over "Authenticator".
+ */
+export const PRODUCT_NAMES: readonly string[] = ['Google Authenticator', 'Google Play', 'App Store', 'Authenticator', '1Password', 'Bitwarden'];
 
 const isHandle = (part: string) => /^@\S+$/.test(part);
 

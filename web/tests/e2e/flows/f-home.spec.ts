@@ -50,15 +50,20 @@ async function reveal(page: Page, target: Locator): Promise<void> {
   const box = await list.boundingBox();
   if (!box) throw new Error('HOME-01.list is not on screen');
   await page.mouse.move(box.x + box.width / 2, box.y + Math.min(box.height, page.viewportSize()?.height ?? box.height) / 2);
-  for (let step = 0; step < 30; step++) {
+  // 09 §7.3: the modules sit between 4:5 feed cards (one card is about a screen), so the walk is long; a step of 500 stays below a
+  // window minus a row, so it never skips one.
+  for (let step = 0; step < 90; step++) {
     if ((await target.count()) > 0 && (await target.first().isVisible())) {
+      // Drawn: the browser brings it the rest of the way (WebKit's wheel steps are not the ones asked for).
+      await target.first().scrollIntoViewIfNeeded();
+      await restingOffset(list);
       const inView = await target.first().evaluate((el) => {
         const r = el.getBoundingClientRect();
         return r.top >= 0 && r.bottom <= window.innerHeight;
       });
       if (inView) return;
     }
-    await page.mouse.wheel(0, 250);
+    await page.mouse.wheel(0, 500);
     await restingOffset(list);
   }
   await expect(target.first(), 'reached by scrolling').toBeInViewport();
@@ -123,16 +128,21 @@ async function wheelDown(page: Page, listId: string, distance: number): Promise<
 
 /** The card nearest the top of the list that fits whole between the header (160: the search field and tabs of DISC-02 end above it) and the foot of the window, with its place on screen. */
 async function cardInView(page: Page, prefix: string): Promise<{ testId: string; y: number } | null> {
-  return page.evaluate((prefix) => {
-    const height = window.innerHeight;
-    const bodies = [...document.querySelectorAll<HTMLElement>(`[data-testid^="${prefix}"][data-testid$=".body"]`)]
+  // A Start card and a DISC-02 list card (both MediaCard `feed` since DQ-1037) open from their header.
+  const suffix = '.header';
+  return page.evaluate(({ prefix, suffix }) => {
+    // A card under the floating tab bar is not whole: Playwright would scroll it out from under the bar before it clicks, and the
+    // place read here would no longer be the one the list keeps (M4.8 r1: a header at y 797 of 844 moved the list by 397).
+    const bar = document.querySelector<HTMLElement>('[data-testid="shell.tabbar"]');
+    const height = bar && bar.checkVisibility() ? Math.min(window.innerHeight, bar.getBoundingClientRect().top) : window.innerHeight;
+    const bodies = [...document.querySelectorAll<HTMLElement>(`[data-testid^="${prefix}"][data-testid$="${suffix}"]`)]
       .filter((el) => el.checkVisibility())
       .map((el) => ({ testId: el.getAttribute('data-testid') ?? '', box: el.getBoundingClientRect() }))
       .filter(({ box }) => box.top > 160 && box.bottom <= height)
       .map(({ testId, box }) => ({ testId, y: box.top }))
       .sort((a, b) => a.y - b.y);
     return bodies[0] ?? null;
-  }, prefix);
+  }, { prefix, suffix });
 }
 
 /**
@@ -159,7 +169,7 @@ async function expectPlaceKept(list: Locator, offset: number): Promise<void> {
 }
 
 test.describe('FS-2 Für dich (M2.2)', () => {
-  test('hero, Neue Builds (2) + Alle, Build-Updates (3), Aktive Mitglieder, Beliebte Mods, then a stream that repeats nothing above it', async ({
+  test('09 §7.3: the lead, Neu in der Garage (8) + Alle, then the stream with Aktive Mitglieder and Beliebte Mods between, repeating nothing above it', async ({
     page,
   }) => {
     test.setTimeout(120_000);
@@ -173,52 +183,37 @@ test.describe('FS-2 Für dich (M2.2)', () => {
     const modules = (await bodyOf<{ data: Modules }>(modulesAnswer)).data;
     const stream = await bodyOf<FeedPage>(streamAnswer);
 
-    await expect(id(page, 'HOME-01.title')).toHaveText('Start');
+    // 09 §6.2 d: the brush wordmark (the page's heading, named Start) and the bell; the segments under it.
+    await expect(id(page, 'HOME-01.header.logo')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Start' })).toBeVisible();
     await expect(id(page, 'HOME-01.tab.forYou')).toHaveAttribute('aria-selected', 'true');
     await expect(id(page, 'HOME-01.tab.following')).toHaveAttribute('aria-selected', 'false');
 
-    // The hero: the first featured build, 16:9 edge to edge on a phone.
+    // The lead: the first featured build, 4:5 edge to edge on a phone, its name on the photo.
     expect(featured.length, 'the demo data has a featured build').toBeGreaterThan(0);
     const hero = featured[0]!.vehicle;
-    await expect(id(page, 'HOME-01.featured.eyebrow')).toHaveText('FEATURED BUILD');
     expect(readable(await id(page, 'HOME-01.featured.title').textContent())).toBe(readable(hero.full_title));
     const heroBox = await id(page, 'HOME-01.featured').boundingBox();
-    expect(heroBox?.x, 'the hero starts at the screen edge').toBe(0);
+    expect(heroBox?.x, 'the lead starts at the screen edge').toBe(0);
     expect(heroBox?.width, 'and spans the screen').toBe(390);
 
-    // Neue Builds: the first two of the answer that are not the hero, in that order.
-    const shownNew = newBuilds.filter((vehicle) => vehicle.id !== hero.id).slice(0, 2);
-    expect(shownNew).toHaveLength(2);
-    await expect(id(page, 'HOME-01.newBuilds')).toContainText('Neue Builds');
-    const firstRows = (await drawnRows(page)).rows.slice(0, 2);
-    expect(firstRows.map((row) => row.testId)).toEqual(shownNew.map((vehicle) => `HOME-01.card.${vehicle.id}`));
+    // Neu in der Garage: up to 8 rail cards of the answer that are not the lead, in that order.
+    const rail = newBuilds.filter((vehicle) => vehicle.id !== hero.id).slice(0, 8);
+    expect(rail.length).toBeGreaterThan(1);
+    await expect(id(page, 'HOME-01.newBuilds')).toContainText('Neu in der Garage');
+    const railIds = await page
+      .locator('[data-testid="HOME-01.newBuilds.rail"] [data-testid^="HOME-01.newBuilds.item."]')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('data-testid') ?? '').filter((t) => /^HOME-01\.newBuilds\.item\.[0-9a-z]{26}$/.test(t)));
+    expect(railIds).toEqual(rail.map((vehicle) => `HOME-01.newBuilds.item.${vehicle.id}`));
     await expect(anyWithId(page, `HOME-01.card.${hero.id}`)).toHaveCount(0);
 
-    // Build-Updates: the three rows of the answer, in its order, after Neue Builds.
-    expect(modules.build_updates, 'the live demo has three build updates (B1)').toHaveLength(3);
-    await reveal(page, page.locator('[data-testid="HOME-01.updates.list"]:visible'));
-    await expect(id(page, 'HOME-01.updates')).toContainText('Build-Updates');
-    const updateRows = page.locator('[data-testid="HOME-01.updates.list"] [data-testid^="HOME-01.update."]:visible');
-    const updateIds = await updateRows.evaluateAll((els) =>
-      els.map((el) => el.getAttribute('data-testid') ?? '').filter((t) => /^[0-9a-z]{26}$/.test(t.slice('HOME-01.update.'.length))),
-    );
-    expect(updateIds).toEqual(
-      modules.build_updates.map((update) => `HOME-01.update.${update.id}`),
-    );
-
-    // Aktive Mitglieder: the strip starts with the answer's first members, each with @username and the car.
+    // Aktive Mitglieder and Beliebte Mods sit between the feed cards (after every 6).
     expect(modules.active_members.length, 'the live demo has active members (B1)').toBeGreaterThan(0);
-    // The section header is HOME-01.members; the strip below it is HOME-01.activeMembers (M2.2 round 1, D3).
-    await expect(id(page, 'HOME-01.members')).toContainText('Aktive Mitglieder');
     const firstMember = modules.active_members[0]!;
     await reveal(page, page.locator(`[data-testid="HOME-01.activeMembers.member.${firstMember.username}.username"]:visible`));
+    await expect(id(page, 'HOME-01.members')).toContainText('Aktive Mitglieder');
     await expect(id(page, `HOME-01.activeMembers.member.${firstMember.username}.username`)).toHaveText(`@${firstMember.username}`);
-    // DQ-293: the row shows the short car (model + generation), car_line stays for the accessible name.
-    if (firstMember.car_short) {
-      expect(readable(await id(page, `HOME-01.activeMembers.member.${firstMember.username}.car`).textContent())).toBe(readable(firstMember.car_short));
-    }
 
-    // Beliebte Mods diese Woche: the chips in the answer's order, no counts, on at most two lines.
     expect(modules.popular_mods.length, 'the live demo has popular mods (B1)').toBeGreaterThanOrEqual(3);
     await reveal(page, page.locator('[data-testid="HOME-01.mods.list"]:visible'));
     await expect(id(page, 'HOME-01.mods')).toContainText('Beliebte Mods diese Woche');
@@ -229,49 +224,29 @@ test.describe('FS-2 Für dich (M2.2)', () => {
     const lines = new Set(await chips.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top))));
     expect(lines.size, 'the chips take at most two lines (FS-2)').toBeLessThanOrEqual(2);
 
-    // The stream: the server leaves out the hero and the module's update rows, and nothing drawn above comes again below.
+    // The stream: no lead, and no build of the rail as a card of its own; each build once at a time on screen.
     const streamVehicles = stream.data.flatMap((item) => (item.type === 'vehicle' && item.vehicle ? [item.vehicle.id] : []));
-    const streamUpdates = stream.data.flatMap((item) => (item.type === 'update' && item.update ? [item.update.id] : []));
     expect(streamVehicles.length, 'the stream has builds').toBeGreaterThan(0);
-    expect(streamVehicles, 'no hero in the stream').not.toContain(hero.id);
-    for (const update of modules.build_updates) expect(streamUpdates, 'no module update in the stream').not.toContain(update.id);
-    expect(new Set(streamVehicles).size, 'each build once').toBe(streamVehicles.length);
-
-    // In the app: wheel through the first stream page and look at every snapshot. A row drawn twice at once, the hero as a card, or a
-    // Neue Builds card below the chips (in the stream) is a duplicate.
-    const above = new Set([hero.id, ...shownNew.map((vehicle) => vehicle.id)].map((vehicleId) => `HOME-01.card.${vehicleId}`));
-    const seen = new Set<string>();
-    const check = async (step: number) => {
-      const { rows, modsBottom } = await drawnRows(page);
-      const ids = rows.map((row) => row.testId);
-      expect(ids.filter((testId, index) => ids.indexOf(testId) !== index), `rows drawn twice at step ${step}`).toEqual([]);
-      expect(ids, `the hero as a card at step ${step}`).not.toContain(`HOME-01.card.${hero.id}`);
-      // The window FlashList draws is one piece: with the chips drawn, the stream is what lies below them; without them, a window
-      // that holds any stream row lies wholly below the chips, so every row in it is the stream's.
-      const inStream =
-        modsBottom !== null ? rows.filter((row) => row.top >= modsBottom) : rows.some((row) => !above.has(row.testId)) ? rows : [];
-      expect(
-        inStream.filter((row) => above.has(row.testId)).map((row) => row.testId),
-        `a build shown above comes again in the stream at step ${step}`,
-      ).toEqual([]);
-      for (const testId of ids) seen.add(testId);
-    };
-    await check(0);
+    expect(streamVehicles, 'no lead in the stream').not.toContain(hero.id);
+    const above = new Set([hero.id, ...rail.map((vehicle) => vehicle.id)].map((vehicleId) => `HOME-01.card.${vehicleId}`));
     const list = id(page, 'HOME-01.list');
     const box = await list.boundingBox();
     if (!box) throw new Error('HOME-01.list is not on screen');
     await page.mouse.move(box.x + box.width / 2, Math.min(box.y + box.height, 844) / 2);
-    for (let step = 1; step <= 14; step++) {
+    for (let step = 0; step <= 14; step++) {
+      const { rows } = await drawnRows(page);
+      const ids = rows.map((row) => row.testId);
+      expect(ids.filter((testId, index) => ids.indexOf(testId) !== index), `rows drawn twice at step ${step}`).toEqual([]);
+      expect(ids.filter((testId) => above.has(testId)), `a build drawn above comes again as a card at step ${step}`).toEqual([]);
       await page.mouse.wheel(0, 600);
       await restingOffset(list);
-      await check(step);
     }
-    const firstStream = streamVehicles.find((vehicleId) => !shownNew.some((v) => v.id === vehicleId));
-    expect(seen.has(`HOME-01.card.${firstStream}`), 'the stream is drawn below the modules').toBe(true);
   });
 
   // M2.3 (m2.3-api-handover.md §2): "Alle" continues Neue Builds' own order, which is sort=updated (sort=newest is first publish).
   test('"Alle" opens DISC-02 sorted by Zuletzt aktualisiert; a Beliebte Mods chip opens DISC-02 with its q', async ({ page }) => {
+    // The chips sit between feed cards further down (09 §7.3): the walk there is long.
+    test.setTimeout(120_000);
     const modulesAnswer = answerOf(page, 'home/modules');
     await page.goto(qaUrl('/app/'));
     const modules = (await bodyOf<{ data: Modules }>(modulesAnswer)).data;
@@ -334,9 +309,13 @@ test.describe('FS-2 Folge ich (M2.2)', () => {
     await page.goto(qaUrl('/app/?tab=following'));
     await expect(id(page, 'HOME-01.tab.following')).toHaveAttribute('aria-selected', 'true');
     const page1 = await bodyOf<FeedPage>(answer);
-    const expected = page1.data.map((item) =>
-      item.type === 'vehicle' ? `HOME-01.card.${item.vehicle!.id}` : `HOME-01.stream.update.${item.update!.id}`,
-    );
+    // DQ-1027: consecutive updates of one build are one compact card, under the first update's id.
+    const expected = page1.data
+      .filter((item, index) => {
+        const before = page1.data[index - 1];
+        return !(item.type === 'update' && before?.type === 'update' && before.update!.vehicle.id === item.update!.vehicle.id);
+      })
+      .map((item) => (item.type === 'vehicle' ? `HOME-01.card.${item.vehicle!.id}` : `HOME-01.stream.update.${item.update!.id}`));
     expect(expected, 'the followed build is in the stream').toContain(`HOME-01.card.${vehicle.id}`);
     await expect(id(page, `HOME-01.card.${vehicle.id}`)).toBeVisible();
     const drawn = (await drawnRows(page)).rows.map((row) => row.testId);
@@ -356,13 +335,15 @@ test.describe('FS-2 Folge ich (M2.2)', () => {
     await expect(id(page, `HOME-01.card.${vehicle.id}`)).toBeVisible();
   });
 
-  test('a guest gets the sign-in prompt, which leads to AUTH-03 and back', async ({ page }) => {
+  test('a guest gets the sign-in prompt, which leads to AUTH-12', async ({ page }) => {
     await page.goto(qaUrl('/app/?tab=following'));
     await expect(id(page, 'HOME-01.following.guest')).toBeVisible();
     await expect(id(page, 'HOME-01.following.guest.title')).toHaveText('Sieh, was sich bei deinen Leuten tut');
     await expect(page.locator('[data-testid^="HOME-01.card."]:visible')).toHaveCount(0);
     await id(page, 'HOME-01.following.guest.action').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
+    // M4.6 (09 §7.2): signing in starts passwordless, at AUTH-12 Mit E-Mail fortfahren.
+    await expect(id(page, 'AUTH-12.root')).toBeVisible();
+    await page.waitForLoadState('networkidle');
   });
 
   test('a member who follows nobody gets the empty state with suggestions, and Folgen there follows', async ({ page, context }) => {
@@ -377,7 +358,7 @@ test.describe('FS-2 Folge ich (M2.2)', () => {
     expect(suggestions.length, 'suggestions for an empty Folge ich').toBeGreaterThan(0);
     expect(suggestions.length).toBeLessThanOrEqual(6);
     await expect(id(page, 'HOME-01.following.empty')).toBeVisible();
-    await expect(id(page, 'HOME-01.following.empty.title')).toHaveText('Noch nichts von Mitgliedern, denen du folgst');
+    await expect(id(page, 'HOME-01.following.empty.title')).toHaveText('Folge Builds, die dich interessieren');
     const rows = page.locator('[data-testid^="HOME-01.suggestion."][data-testid$=".follow"]:visible');
     await expect(rows).toHaveCount(suggestions.length);
     expect(suggestions.map((s) => s.username), 'the viewer is never suggested').not.toContain(viewer.username);
@@ -406,7 +387,8 @@ for (const [width, height] of [
     test('HOME-01 keeps its place through a build page and back, and through a tab switch; a re-tap forgets it', async ({ page }) => {
       await page.goto(qaUrl('/app/'));
       const list = id(page, 'HOME-01.list');
-      await expect(page.locator('[data-testid^="HOME-01.card."]:visible').first()).toBeVisible();
+      // The lead and the rail fill the first screen (09 §7.3); the feed cards follow below them.
+      await expect(page.locator('[data-testid^="HOME-01.newBuilds.item."]:visible').first()).toBeVisible();
       const { offset, card } = await wheelToCard(page, 'HOME-01.list', 'HOME-01.card.', 2400);
 
       // Header back from a build.

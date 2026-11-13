@@ -2,7 +2,8 @@
     "nav": {
         "health": "System health",
         "jobs": "Jobs",
-        "integrations": "Integrations"
+        "integrations": "Integrations",
+        "mail_preview": "Mail preview"
     },
     "status": {
         "ok": "OK",
@@ -216,5 +217,18 @@
         "test_ok_ai": "The AI call answered.",
         "test_ok_push": "Test push sent.",
         "test_failed": "The test failed."
+    },
+    "mail_preview": {
+        "title": "Mail preview",
+        "intro": "The last 50 e‑mails of this server (transport: :mailer). Only outside production, so sign-in codes can be shown without SMTP.",
+        "error": "The mail preview could not be loaded",
+        "empty": "No e‑mails yet",
+        "empty_body": "As soon as the server sends an e‑mail, for example a sign-in code, it appears here.",
+        "code": "Code :code",
+        "detail": "Selected e‑mail",
+        "choose": "Choose an e‑mail on the left.",
+        "format": "View",
+        "text": "Text",
+        "html": "HTML"
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * SET-06 row. No IP address and no place (02_PRODUCT_SPEC §3.1).
+ * SET-06 row (09 §7.9, §8.4). No IP address; a place only as an approximate city when a GeoLite2 database is set up (OA-33).
  *
  * @property DeviceSession $resource
  */
@@ -34,6 +34,12 @@ class DeviceSessionResource extends JsonResource
             'last_used_at' => $this->resource->lastUsedAt->toIso8601String(),
             /** The device of this request. */
             'current' => $this->resource->current,
+            /** @var string|null The system version the app last reported ("16" on Android, "26.1" on iOS); null for a browser. */
+            'os_version' => $this->resource->osVersion,
+            /** @var string|null "München": approximate, only with a GeoLite2 database (owner action OA-33); null until then. */
+            'approx_city' => $this->resource->approxCity,
+            /** @var string|null ISO 8601. When this install first signed in; null for a browser. */
+            'signed_in_at' => $this->resource->signedInAt?->toIso8601String(),
         ];
     }
 }

@@ -42,7 +42,7 @@ const useStyles = createStyles((t) => ({
   },
 }));
 
-/** §8 unread badge: dot 8 or pill 18 high, accent.fill + white `badge`, "99+" above 99. */
+/** §8 unread badge: dot 8 or pill 18 high, accent.fill + white `label.badge`, "99+" above 99. */
 export function UnreadBadge({ count, label, decorative = false, style, testID }: UnreadBadgeProps) {
   const { t } = useTranslation('common');
   const styles = useStyles();
@@ -70,7 +70,7 @@ export function UnreadBadge({ count, label, decorative = false, style, testID }:
       testID={testID}
       style={[styles.pill, style]}
     >
-      <Text variant="badge" color="text.onAccent" selectable={false}>
+      <Text variant="labelBadge" numeric color="text.onAccent" selectable={false}>
         {unreadCountText(count)}
       </Text>
     </View>

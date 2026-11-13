@@ -34,9 +34,12 @@ class BuildUpdateController extends Controller
     {
         abort_unless(Gate::allows('view', $vehicle), 404);
 
+        $updates = $vehicle->buildUpdates();
+        // M4.11: hidden entries for the owner only, followers-only posts for followers (BuildUpdate::restrictTo).
+        BuildUpdate::restrictTo($updates->getQuery(), Viewer::from($request), $vehicle);
+
         return BuildUpdateResource::collection(
-            $vehicle->buildUpdates()
-                ->when(! $vehicle->isOwnedBy(Viewer::from($request)), fn ($query) => $query->where('hidden', false))
+            $updates
                 ->orderByDesc('created_at')
                 ->orderByDesc('id')
                 ->cursorPaginate($request->pageSize())

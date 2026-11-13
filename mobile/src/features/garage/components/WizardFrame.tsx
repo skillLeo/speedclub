@@ -22,6 +22,7 @@ import {
   type StickyCTASecondary,
   type VehicleCardProps,
 } from '@/ui';
+import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
 
 import { stepNumber, WIZARD_STEPS, type WizardStep } from '../model';
 import { useCloseModal, wizardPath } from '../navigation';
@@ -68,12 +69,15 @@ export type WizardFrameProps = {
   reached: number;
   /** The live card of the desktop's right pane. */
   preview: WizardPreview;
+  /** Step 4 (DQ-1052): the real VEH-01 render in the right pane instead of the card. */
+  previewNode?: ReactNode;
   /** False while the step shows a loading or error state instead of its form. */
   ready?: boolean;
   /** The skeleton: it holds no control and may run past the screen, so it does not scroll (nothing to reach by keyboard). */
   still?: boolean;
   children: ReactNode;
-  cta?: { label: string; onPress: () => void; loading?: boolean; disabled?: boolean };
+  /** `brand` only for "Veröffentlichen" (ADR-431 a). */
+  cta?: { label: string; onPress: () => void; loading?: boolean; disabled?: boolean; variant?: 'primary' | 'brand' };
   secondary?: StickyCTASecondary;
   dirty: boolean;
   onDiscard?: () => void;
@@ -94,6 +98,7 @@ export function WizardFrame({
   draftId,
   reached,
   preview,
+  previewNode,
   ready = true,
   still = false,
   children,
@@ -178,12 +183,13 @@ export function WizardFrame({
                     {index < number ? (
                       <Icon name="check" size={16} color="text.inverse" />
                     ) : (
-                      <Text variant="badge" color={current ? 'text.primary' : 'text.secondary'}>
+                      <Text variant="labelBadge" numeric color={current ? 'text.primary' : 'text.secondary'}>
                         {String(index)}
                       </Text>
                     )}
                   </View>
-                  <Text variant="labelS" color={current ? 'text.primary' : open ? 'text.secondary' : 'text.tertiary'} style={styles.railLabel}>
+                  {/* ADR-426 f: a step is a link, so its name is the action role, as in the app's sidebar (bodyStrong). */}
+                  <Text variant="bodyStrong" color={current ? 'text.primary' : open ? 'text.secondary' : 'text.tertiary'} style={styles.railLabel}>
                     {t(`wizard.steps.${entry}`)}
                   </Text>
                 </PressableScale>
@@ -192,10 +198,10 @@ export function WizardFrame({
           </View>
           <View style={styles.body}>{form}</View>
           <ScrollView style={styles.previewScroll} contentContainerStyle={styles.preview} testID="GAR-03.preview">
-            <Text variant="eyebrow" color="text.secondary" hyphenate={false}>
+            <Text variant={SECTION_HEADER_ROLE} color="text.secondary" role="heading" {...({ 'aria-level': 2 } as object)} hyphenate={false} testID="GAR-03.preview.title">
               {t('wizard.preview')}
             </Text>
-            <VehicleCard {...preview} testID="GAR-03.previewCard" />
+            {previewNode ?? <VehicleCard {...preview} testID="GAR-03.previewCard" />}
           </ScrollView>
         </View>
       ) : (
@@ -204,6 +210,7 @@ export function WizardFrame({
       {ready && cta ? (
         <StickyCTABar
           label={cta.label}
+          variant={cta.variant}
           onPress={cta.onPress}
           loading={cta.loading}
           disabled={cta.disabled}

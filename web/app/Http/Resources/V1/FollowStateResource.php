@@ -5,6 +5,7 @@ namespace App\Http\Resources\V1;
 use App\Models\Follow;
 use App\Models\User;
 use App\Services\Auth\MemberStats;
+use App\Services\Showcase\SampleContent;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -44,11 +45,11 @@ class FollowStateResource extends JsonResource
             'username' => $member === null ? $this->requestedName : $member->username,
             'is_following' => $member !== null && $viewer !== null && Follow::query()->where('follower_id', $viewer->id)->where('followee_id', $member->id)->exists(),
             /**
-             * Null after unfollowing somebody you cannot see.
+             * Null after unfollowing somebody you cannot see, and for a sample member (09 §8.19).
              *
              * @var int|null
              */
-            'followers' => $member === null ? null : app(MemberStats::class)->followers($member),
+            'followers' => $member === null ? null : SampleContent::count($member, app(MemberStats::class)->followers($member)),
         ];
     }
 }

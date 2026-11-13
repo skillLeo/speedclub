@@ -178,7 +178,6 @@ export function modSchema(fields: readonly ModCategoryField[], locale: FormatLoc
       partNumber: z.string().max(PART_NUMBER_MAX_LENGTH, issue('validation.tooLong', { max: PART_NUMBER_MAX_LENGTH })),
       installedOn: z.string(),
       cost: z.string(),
-      costPublic: z.boolean(),
       legalStatus: z.enum(LEGAL_STATUSES).or(z.literal('')),
       notes: z.string().max(NOTES_MAX_LENGTH, issue('validation.tooLong', { max: NOTES_MAX_LENGTH })),
       fields: z.record(z.string(), z.union([z.string(), z.boolean()])),

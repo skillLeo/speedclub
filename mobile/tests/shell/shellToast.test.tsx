@@ -24,6 +24,9 @@ import { flat } from '../ui/helpers';
 
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
 jest.mock('expo-haptics', () => ({}));
+// The JS shell (web, and native's fallback while nav.native_tabs is off): the real (tabs) route file resolves to
+// _layout.native.tsx under Jest's iOS preset, so the chrome is held at 'js' here. Native tabs: tests/shell/nativeTabs.test.tsx.
+jest.mock('@/features/shell/navMode', () => ({ ...jest.requireActual('@/features/shell/navMode'), useTabChrome: () => 'js' }));
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
   __esModule: true,
   default: () => ({ width: 390, height: 844, scale: 1, fontScale: 1 }),

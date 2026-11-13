@@ -76,7 +76,7 @@ describe('BuildUpdateRow', () => {
     expect(thumb.aspectRatio).toBe(1);
     expect(thumb.borderRadius).toBe(radius.sm);
     expect(flat(screen.getByText(props.title).props.style).fontSize).toBe(typography.bodyStrong.fontSize);
-    expect(textStyle(props.diff).fontSize).toBe(typography.supporting.fontSize);
+    expect(textStyle(props.diff).fontSize).toBe(typography.callout.fontSize);
     expect(flat(screen.getByText(updateMetaText(props.meta, 1)).props.style).color).toBe(themes.carbon.color.text.tertiary);
   });
 
@@ -85,7 +85,7 @@ describe('BuildUpdateRow', () => {
     expect(textStyle(props.diff).fontVariant).toBeUndefined();
     const segment = textStyle('−35 mm');
     expect(segment.fontVariant).toEqual(['tabular-nums']);
-    expect(segment.fontSize).toBe(typography.supporting.fontSize);
+    expect(segment.fontSize).toBe(typography.callout.fontSize);
     expect(segment.color).toBe(themes.carbon.color.text.secondary);
   });
 
@@ -218,12 +218,12 @@ describe('ModRow legal status pill (M2.7 signature, M2.8)', () => {
 
   it('shares the line under the text with the status pill at a large font, and never shortens the name', async () => {
     dimensions.mockReturnValue({ width: 360, height: 780, scale: 1, fontScale: 2 });
-    await renderUi(<ModRow {...props} legalStatus="Nicht erforderlich" />);
+    await renderUi(<ModRow {...props} legalStatus="Eintragungsfrei" />);
     const pills = screen.getByTestId('m.pills');
     expect(within(pills).getByTestId('m.status')).toBeTruthy();
     expect(within(pills).getByTestId('m.legalStatus')).toBeTruthy();
     expect(screen.getByText('BBS LM').props.numberOfLines).toBeUndefined();
-    expect(screen.getByRole('link', { name: 'BBS LM, 19″ × 9,5J ET35, Verbaut, Nicht erforderlich' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'BBS LM, 19″ × 9,5J ET35, Verbaut, Eintragungsfrei' })).toBeTruthy();
   });
 
   it('draws no pill line without a legal status at normal text', async () => {
@@ -234,12 +234,12 @@ describe('ModRow legal status pill (M2.7 signature, M2.8)', () => {
 });
 
 describe('SpecRow', () => {
-  it('is at least 48 high, label secondary, value spec.value', async () => {
+  it('is at least 48 high, label secondary, value body.strong', async () => {
     await renderUi(<SpecRow label="Leistung" value="500" unit="PS" testID="s" />);
     expect(flat(screen.getByText('Leistung').props.style).color).toBe(themes.carbon.color.text.secondary);
     const row = screen.getByTestId('s').children[0];
     expect(typeof row === 'string' ? undefined : flat(row?.props.style).minHeight).toBe(space[48]);
-    expect(flat(screen.getByTestId('s.value').props.style).fontSize).toBe(typography.specValue.fontSize);
+    expect(flat(screen.getByTestId('s.value').props.style).fontSize).toBe(typography.bodyStrong.fontSize);
   });
 
   it('sets numeric values in tabular figures and text values in proportional ones', async () => {
@@ -252,7 +252,7 @@ describe('SpecRow', () => {
   it('shows provenance only when given', async () => {
     await renderUi(<SpecRow label="Leistung" value="500" testID="a" />);
     expect(screen.queryByTestId('a.provenance')).toBeNull();
-    await renderUi(<SpecRow label="Leistung" value="500" provenance="Gemessen" testID="b" />);
+    await renderUi(<SpecRow label="Leistung" value="500" provenance="Prüfstand" testID="b" />);
     expect(flat(screen.getByTestId('b.provenance').props.style).color).toBe(themes.carbon.color.text.tertiary);
   });
 
@@ -356,22 +356,24 @@ describe('BuildUpdateRowSkeleton', () => {
     return textHeight + 2 * space[12];
   }
 
-  // The text column of DEV-01.rows.update, measured live: 228 at 360, 250 at 390, 290 at 430, 540 from 768 up.
+  // The text column of DEV-01.rows.update, measured live: 228 at 360, 250 at 390, 290 at 430, 540 from 768 up. The heights
+  // are the 2.0 line boxes (body.strong 22, callout 20, caption 16, plus 2 × 12): v1 counted 24 for the title. At 200 % the
+  // title "Fahrwerk geändert" is 276 wide in Inter 600 at 30 (TTF advances, M4.1), so the 290 column now holds it on one line.
   it.each([
-    [1, 228, 84],
-    [1.3, 228, 102],
-    [1.5, 228, 144],
-    [2, 228, 264],
-    [1, 250, 84],
-    [1.3, 250, 102],
-    [1.5, 250, 144],
-    [2, 250, 264],
-    [1, 290, 84],
-    [1.3, 290, 102],
-    [1.5, 290, 114],
-    [2, 290, 232],
-    [1.5, 540, 114],
-    [2, 540, 144],
+    [1, 228, 82],
+    [1.3, 228, 99.4],
+    [1.5, 228, 141],
+    [2, 228, 256],
+    [1, 250, 82],
+    [1.3, 250, 99.4],
+    [1.5, 250, 141],
+    [2, 250, 256],
+    [1, 290, 82],
+    [1.3, 290, 99.4],
+    [1.5, 290, 111],
+    [2, 290, 180],
+    [1.5, 540, 111],
+    [2, 540, 140],
   ])('at font scale %s and a text column of %i it is %i high, the height of the real row', async (fontScale, width, height) => {
     dimensions.mockReturnValue({ width: 390, height: 844, scale: 1, fontScale });
     await renderUi(
@@ -394,9 +396,9 @@ describe('BuildUpdateRowSkeleton', () => {
     const real = flat(screen.getByTestId('real.body').props.style);
     const skeleton = flat(screen.getByTestId('skel.row').props.style);
     expect(skeleton).toEqual(real);
-    const lines = typography.bodyStrong.lineHeight + typography.supporting.lineHeight + typography.caption.lineHeight;
-    expect(lines).toBe(60);
-    expect(lines + (skeleton.paddingVertical as number) * 2).toBe(84);
+    const lines = typography.bodyStrong.lineHeight + typography.callout.lineHeight + typography.caption.lineHeight;
+    expect(lines).toBe(58);
+    expect(lines + (skeleton.paddingVertical as number) * 2).toBe(82);
   });
 });
 
@@ -473,8 +475,9 @@ describe('OwnerRow', () => {
   it('makes the identity box taller than its text stack, so fill and focus ring clear the content', async () => {
     await renderUi(<OwnerRow name="Lukas" meta="@lukas.sc" onPress={jest.fn()} testID="o" />);
     const box = visualOf('o.identity');
-    const stack = typography.bodyStrong.lineHeight + typography.supporting.lineHeight;
-    expect(stack + (box.padding as number) * 2).toBe(60);
+    const stack = typography.bodyStrong.lineHeight + typography.callout.lineHeight;
+    // body.strong 22 + callout 20 (v1: label 20 + supporting 20 = 40, so 60 then), 8 around.
+    expect(stack + (box.padding as number) * 2).toBe(58);
     expect(box.padding as number).toBeGreaterThan(size.border.focusRing + size.border.focusOffset);
     // The margin gives the padding back: the avatar stays on the gutter, the row keeps its FS-3 rhythm.
     expect(flat(screen.getByTestId('o.identity').props.style).margin).toBe(-(box.padding as number));

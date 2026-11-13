@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { newIdempotencyKey } from '@/api/client';
@@ -25,6 +24,7 @@ import {
   Hairline,
   Header,
   IconButton,
+  KeyboardInsetView,
   MemberRow,
   OfflineBanner,
   Photo,
@@ -81,7 +81,7 @@ function CandidatesSkeleton() {
           <SkeletonBlock width={size.avatar.md} height={size.avatar.md} corner="full" />
           <View style={styles.skeletonText}>
             <SkeletonText variant="bodyStrong" width="50%" />
-            <SkeletonText variant="supporting" width="35%" />
+            <SkeletonText variant="callout" width="35%" />
           </View>
         </View>
       ))}
@@ -272,10 +272,10 @@ function NewMessageBody() {
   );
 
   const compose = recipient ? (
-    <KeyboardAvoidingView behavior="padding" automaticOffset keyboardVerticalOffset={-inset} style={styles.root}>
+    <KeyboardInsetView bottomInset={inset} style={styles.root}>
       <View style={{ paddingHorizontal: gutter }}>
         <View style={styles.to}>
-          <Text variant="supporting" color="text.secondary">
+          <Text variant="callout" color="text.secondary">
             {t('compose.to')}
           </Text>
           <View style={styles.toText}>
@@ -300,7 +300,7 @@ function NewMessageBody() {
             <Photo aspect="1:1" corner="sm" {...photoFields((vehicle ?? about)?.cover, size.thumb.row)} />
           </View>
           <View style={styles.vehicleText}>
-            <Text variant="supporting" color="text.secondary">
+            <Text variant="callout" color="text.secondary">
               {vehicle ? t('compose.vehicle') : t('compose.about')}
             </Text>
             <Text variant="bodyStrong" hyphenate={false}>
@@ -327,7 +327,7 @@ function NewMessageBody() {
       <View style={styles.spacer} />
       {online ? null : (
         <View style={[styles.note, { paddingHorizontal: gutter }]}>
-          <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.offlineNote`}>
+          <Text variant="callout" color="text.secondary" testID={`${ROUTE}.offlineNote`}>
             {t('compose.offline')}
           </Text>
         </View>
@@ -345,7 +345,7 @@ function NewMessageBody() {
           testID={`${ROUTE}.composer`}
         />
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardInsetView>
   ) : null;
 
   return (

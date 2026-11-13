@@ -1,15 +1,15 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Button, Dialog, ImageViewer, ListRow, Sheet, Switch, Text, TextInput, ToastHost, dismissToast, toast } from '@/ui';
+import { Button, ContextMenu, ContextMenuArea, ContextMenuButton, Dialog, ImageViewer, ListRow, OwnerCapsule, Photo, Sheet, Switch, Text, TextInput, ToastHost, dismissToast, toast, type ContextMenuItem } from '@/ui';
 import { useCurrentToast } from '@/ui/toast';
 
-import { noop, viewerImages } from '../data';
-import { Group, Panel, SectionScreen, Wrap } from '../parts';
+import { PHOTOS, noop, viewerImages } from '../data';
+import { FullBleed, Group, Panel, SectionScreen, Specimen, Wrap } from '../parts';
 
-type Variant = 'sheet' | 'sheet-full' | 'sheet-form' | 'sheet-toast' | 'sheet-locked' | 'dialog' | 'dialog-destructive' | 'dialog-long' | 'toast' | 'viewer';
+type Variant = 'sheet' | 'sheet-full' | 'sheet-form' | 'sheet-toast' | 'sheet-locked' | 'dialog' | 'dialog-destructive' | 'dialog-long' | 'toast' | 'viewer' | 'menu';
 
 const VARIANTS: readonly { id: Variant; label: string }[] = [
   { id: 'sheet', label: 'Sheet' },
@@ -22,13 +22,26 @@ const VARIANTS: readonly { id: Variant; label: string }[] = [
   { id: 'dialog-long', label: 'Dialog mit langem Text' },
   { id: 'toast', label: 'Toast' },
   { id: 'viewer', label: 'Bildansicht' },
+  { id: 'menu', label: 'Kontextmenü' },
 ];
 
 const MAKES = ['Audi', 'BMW', 'Honda', 'Mazda', 'Mercedes-Benz', 'Mitsubishi', 'Nissan', 'Porsche', 'Subaru', 'Toyota', 'Volkswagen', 'Volvo'];
 
 const useStyles = createStyles((t) => ({
   body: { gap: t.space[16] },
+  area: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, padding: t.space[16] },
+  capsuleStage: { justifyContent: 'flex-end' },
+  capsule: { bottom: t.space[24], left: 0, position: 'absolute', right: 0 },
 }));
+
+/** A vehicle's more menu: share, compare, report; destructive last (09 §5 ContextMenu). */
+const MENU_ITEMS: readonly ContextMenuItem[] = [
+  { key: 'share', label: 'Teilen', icon: 'share-network', onSelect: noop },
+  { key: 'copy', label: 'Link kopieren', icon: 'link', onSelect: noop },
+  { key: 'report', label: 'Melden', icon: 'flag', destructive: true, onSelect: noop },
+  { key: 'compare', label: 'Vergleichen', icon: 'arrows-left-right', onSelect: noop },
+  { key: 'hide', label: 'Ausblenden', icon: 'eye-slash', disabled: true, onSelect: noop },
+];
 
 function SheetRows() {
   return (
@@ -40,7 +53,8 @@ function SheetRows() {
   );
 }
 
-const TOAST_MESSAGE = 'Fahrzeug aus deiner Garage entfernt.';
+/** The gallery's standard undo toast; tests/ui/ToastFit.test.tsx measures it at 360, 393 and 412. */
+export const TOAST_MESSAGE = 'Aus deiner Garage entfernt.';
 
 function showToast() {
   toast(TOAST_MESSAGE, { undo: noop, testID: 'DEV-01.overlays.toast' });
@@ -54,6 +68,7 @@ export function OverlaysSection() {
   const [notify, setNotify] = useState(true);
   const [images] = useState(viewerImages);
   const close = () => setOpen(null);
+  const window = useWindowDimensions();
 
   const current = useCurrentToast();
   const keepToast = initial === 'toast' && open === 'toast';
@@ -83,13 +98,45 @@ export function OverlaysSection() {
           ))}
         </Wrap>
       </Group>
+      <Group title="Kontextmenü" note="Native: lange drücken (mittleres Haptik-Feedback). Web: Knopf oder Rechtsklick. Im Menü Pfeiltasten, Pos1/Ende, Enter, Escape.">
+        <Wrap>
+          <ContextMenuButton items={MENU_ITEMS} label="Weitere Aktionen" variant="tonal" testID="DEV-01.overlays.menu" />
+        </Wrap>
+        <ContextMenuArea items={MENU_ITEMS} label="Aktionen für Nissan Skyline GT-R R34" style={styles.area} testID="DEV-01.overlays.menuArea">
+          <Text variant="headline">Nissan Skyline GT-R R34</Text>
+          <Text variant="callout" color="text.secondary">
+            Lange drücken oder Rechtsklick für das Menü
+          </Text>
+        </ContextMenuArea>
+      </Group>
+      <Group title="Besitzer-Kapsel" note="Schwebt unten über dem Foto: Update posten als kleiner Primärknopf, dann Bearbeiten, Fotos, Mods, QR und Mehr. Unter 430 wandert Fotos in Mehr, QR bleibt sichtbar.">
+        <Specimen label="Über einem Foto" fill>
+          <FullBleed>
+            <Photo {...PHOTOS.r34} aspect="4:5" style={styles.capsuleStage}>
+              <OwnerCapsule
+                label="Aktionen für deinen Build"
+                primary={{ label: 'Update posten', onPress: noop }}
+                actions={[
+                  { key: 'edit', icon: 'pencil-simple', label: 'Bearbeiten', onPress: noop, priority: 1 },
+                  { key: 'photos', icon: 'camera', label: 'Fotos', onPress: noop, priority: 3 },
+                  { key: 'mods', icon: 'wrench', label: 'Mods', onPress: noop, priority: 2 },
+                  { key: 'qr', icon: 'qr-code', label: 'QR-Code', onPress: noop, priority: 0 },
+                ]}
+                more={{ label: 'Mehr', items: MENU_ITEMS }}
+                style={styles.capsule}
+                testID="DEV-01.overlays.capsule"
+              />
+            </Photo>
+          </FullBleed>
+        </Specimen>
+      </Group>
       <Group title="Darunter" note="Inhalt hinter Scrim und Blatt, damit der Layer sichtbar wird.">
         <Panel>
           <ListRow title="Benachrichtigungen" icon="bell" value="An" inset={16} divider />
           <ListRow title="Sprache" icon="info" value="Deutsch" inset={16} />
         </Panel>
         <Text variant="body" color="text.secondary">
-          Seit 2019 in meiner Garage. Motor überholt, Fahrwerk auf KW V3 umgebaut, die BBS LM frisch aufbereitet.
+          {'Seit 2019 in meiner Garage. Motor überholt, Fahrwerk auf KW\u00A0V3 umgebaut, die BBS\u00A0LM frisch aufbereitet.'}
         </Text>
       </Group>
 
@@ -172,6 +219,16 @@ export function OverlaysSection() {
       >
         <TextInput label="Benutzername" testID="DEV-01.overlays.dialogLong.input" />
       </Dialog>
+
+      {/* A fixed anchor near the top right, as a "more" button in a header would open it (for the screenshot matrix). */}
+      <ContextMenu
+        visible={open === 'menu'}
+        anchor={{ x: window.width - 64, y: 64, width: 44, height: 44 }}
+        items={MENU_ITEMS}
+        label="Weitere Aktionen"
+        onClose={close}
+        testID="DEV-01.overlays.menuPanel"
+      />
 
       <ImageViewer visible={open === 'viewer'} images={images} initialIndex={0} onClose={close} testID="DEV-01.overlays.viewer" />
     </SectionScreen>

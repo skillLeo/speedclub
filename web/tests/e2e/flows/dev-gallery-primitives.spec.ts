@@ -346,7 +346,7 @@ test.describe('text field focus (DQ-092)', () => {
     await disabled.scrollIntoViewIfNeeded();
     await disabled.hover();
     // Nothing to wait for when it stays as it is: give a wrong hover the time to show.
-    await page.waitForTimeout(tokens.motion.duration.micro);
+    await page.waitForTimeout(tokens.motion.effect.fast.css.duration);
     expect(await borderOf(frameOf(disabled))).toEqual(color('border.default'));
   });
 
@@ -583,7 +583,7 @@ test.describe('search bar is one focus scope (DQ-094)', () => {
     await page.mouse.down();
     await page.mouse.move(2, 2);
     await page.mouse.up();
-    await page.waitForTimeout(tokens.motion.duration.micro * 2);
+    await page.waitForTimeout(tokens.motion.effect.fast.css.duration * 2);
     await expect(input).toHaveValue('BMW');
     await expect(cancel).toHaveCount(1);
     await page.mouse.click(2, 2);
@@ -596,7 +596,7 @@ test.describe('search bar is one focus scope (DQ-094)', () => {
     await byTestId(EMPTY).focus();
     await page.keyboard.press(tabKey(browserName));
     await cancel.evaluate((node) => node.dispatchEvent(new FocusEvent('focusout', { bubbles: true })));
-    await page.waitForTimeout(tokens.motion.duration.micro * 2);
+    await page.waitForTimeout(tokens.motion.effect.fast.css.duration * 2);
     await expect(cancel).toHaveCount(1);
   });
 });

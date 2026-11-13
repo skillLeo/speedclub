@@ -3,7 +3,10 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../support/fixtures';
 import { assertNoHighViolations, isAdminUrl, runDomAudit } from '../support/dom-audit.mjs';
-import { auditConfig, tokens } from '../support/tokens.mjs';
+import { DESKTOP_MIN_WIDTH, auditConfig, tokens } from '../support/tokens.mjs';
+
+/** Where the web applies the desktop type sizes (layout.breakpoints.desktop). */
+const DESKTOP: number = DESKTOP_MIN_WIDTH;
 
 const color = (name: string, theme = 'carbon'): string => tokens.themes[theme].color[name];
 /** A colour token of `theme` that `other` does not have. */
@@ -32,6 +35,31 @@ async function audit(page: Page, html: string, opts: { theme?: string; fontScale
 }
 
 const of = (report: Awaited<ReturnType<typeof audit>>, check: string) => report.violations.filter((v) => v.check === check);
+
+/** Where the layout broke the cell's text: its characters grouped by line, "Fahr / zeuge,". */
+const textLines = (page: Page, id: string): Promise<string> =>
+  page.locator(`[data-testid="${id}"]`).evaluate((el) => {
+    const node = el.firstChild as Text;
+    const range = document.createRange();
+    let out = '';
+    let last = Number.NEGATIVE_INFINITY;
+    for (let i = 0; i < node.data.length; i++) {
+      const char = node.data.charAt(i);
+      // A space at a line end hangs (no box of its own): it belongs to no line.
+      if (/\s/.test(char)) continue;
+      range.setStart(node, i);
+      range.setEnd(node, i + 1);
+      const boxes = [...range.getClientRects()].filter((b) => b.width > 0);
+      if (boxes.length === 0) continue;
+      // The lowest box is the glyph; Chromium reports the generated hyphen of a break above with the character after it.
+      const glyph = boxes.reduce((low, b) => (b.top > low.top ? b : low));
+      if (out !== '' && glyph.top - last > glyph.height / 2) out += ' / ';
+      else if (out !== '' && /\s/.test(node.data.charAt(i - 1))) out += ' ';
+      last = Math.max(last, glyph.top);
+      out += char;
+    }
+    return out;
+  });
 
 test.describe('DOM audit self-test: every rule catches its violation', () => {
   test('horizontal overflow, even though the Expo reset hides body overflow', async ({ page }) => {
@@ -160,6 +188,20 @@ test.describe('DOM audit self-test: every rule catches its violation', () => {
     expect(found.map((v) => v.element)).toEqual([expect.stringContaining('[carbonInLight]'), expect.stringContaining('[lightOutside]')]);
     expect(found[0]?.message).toMatch(/theme "light" \(its frame\)/);
     expect(found[1]?.message).toMatch(/theme "carbon"$/);
+  });
+
+  test('a ThemeScope brand stage (data-theme-scope) is checked against its scope theme, not the page theme (DQ-1045)', async ({ page }) => {
+    const report = await audit(
+      page,
+      page_(`<section data-theme-scope="carbon" data-testid="stage" style="background:${color('bg.canvas', 'carbon')};color:${color('text.primary', 'carbon')}">
+          <p data-testid="ok" style="margin:0;color:${only('carbon', 'light')}">Carbon auf der Bühne</p>
+          <p data-testid="offPalette" style="margin:0;color:rgb(1, 2, 3)">Keine Farbe der Palette</p>
+        </section>`),
+      { theme: 'light' },
+    );
+    const found = of(report, 'non-token-colour');
+    expect(found.map((v) => v.element)).toEqual([expect.stringContaining('[offPalette]')]);
+    expect(found[0]?.message).toMatch(/theme "carbon" \(its frame\)/);
   });
 
   // ADR-222: the sr-only pattern as Tailwind v4 writes it, and a skip link that leaves it on focus.
@@ -291,7 +333,7 @@ test.describe('DOM audit self-test: every rule catches its violation', () => {
     test(`qr tokens are only valid inside the QR region (${theme})`, async ({ page }) => {
       // Only a qr.* colour that no general token of the theme shares can prove the rule: qr.fg is pure black, which
       // media.ground (DQ-104) is too, and qr.bg is white, as text.onAccent is. qr.caption belongs to the QR card alone.
-      const { colors, qrColors } = auditConfig({ theme });
+      const { colors, qrColors } = auditConfig({ theme, viewportWidth: 390 });
       const general = new Set(colors.map(({ r, g, b, a }) => `${r},${g},${b},${a}`));
       const qrOnly = qrColors.filter(({ r, g, b, a }) => !general.has(`${r},${g},${b},${a}`));
       expect(qrOnly.map((t) => t.name), 'a qr colour of its own to test with').toContain('qr.caption');
@@ -383,7 +425,7 @@ test.describe('DOM audit self-test: exemptions for one kind of element', () => {
       <div data-qa-exempt="fixed-glyph" style="font:${font};color:${color('text.secondary')}">${text}</div></div>`);
 
   test('fixed-glyph keeps an avatar\'s initials at their scale-1 pair at 200 %, and is counted', async ({ page }) => {
-    const title = tokens.typography['title.m'];
+    const title = tokens.typography['title.2'];
     const report = await audit(page, avatar(tokens.size.avatar.xl, `600 ${title.size}px/${title.lineHeight}px Inter`), { fontScale: 2 });
     expect(report.violations).toEqual([]);
     expect(report.exemptions['fixed-glyph']).toBe(1);
@@ -396,13 +438,13 @@ test.describe('DOM audit self-test: exemptions for one kind of element', () => {
     const report = await audit(page, avatar(tokens.size.avatar.xl, '600 21px/27px Inter'), { fontScale: 2 });
     expect(of(report, 'non-scale-font').map((v) => v.message)).toEqual([expect.stringContaining('fixed-glyph')]);
     // A scaled pair is not a fixed glyph either.
-    const title = tokens.typography['title.m'];
+    const title = tokens.typography['title.2'];
     const scaled = await audit(page, avatar(tokens.size.avatar.xl, `600 ${title.size * 2}px/${title.lineHeight * 2}px Inter`), { fontScale: 2 });
     expect(of(scaled, 'non-scale-font')).toHaveLength(1);
   });
 
   test('fixed-glyph on anything but an avatar\'s initials is an unknown exemption and frees nothing', async ({ page }) => {
-    const label = tokens.typography.label;
+    const label = tokens.typography['body.strong'];
     const font = `600 ${label.size}px/${label.lineHeight}px Inter`;
     for (const html of [
       avatar(tokens.size.avatar.xl, font, 'Lukas'), // a word, not initials
@@ -442,14 +484,14 @@ test.describe('DOM audit self-test: exemptions for one kind of element', () => {
     expect(of(asButton, 'overlap').length).toBeGreaterThan(0);
   });
 
-  // ADR-145 + design-QA ruling (M2.8): a tab label in a 72 cell stops at 1.15, below the `tab` token's own cap of 1.3.
+  // ADR-145 + design-QA ruling (M2.8): a tab label in a 72 cell stops at 1.15, below the `web.tab` token's own cap of 1.3.
   const tabBar = (cell: number, font: string, { container = 'shell.tabbar', exempt = true } = {}) =>
     page_(`<div data-testid="${container}"><div role="tablist" class="row">
       <div role="tab" aria-selected="true" aria-label="Nachrichten" tabindex="0" style="width:${cell}px;height:56px;display:flex;align-items:center;justify-content:center">
         <div ${exempt ? 'data-qa-exempt="tab-label"' : ''} style="font:${font};color:${color('text.secondary')}">Nachrichten</div>
       </div></div></div>`);
   const tabAt = (scale: number) => {
-    const tab = tokens.typography.tab;
+    const tab = tokens.typography['web.tab'];
     return `600 ${tab.size * scale}px/${tab.lineHeight * scale}px Inter`;
   };
 
@@ -465,7 +507,7 @@ test.describe('DOM audit self-test: exemptions for one kind of element', () => {
   test('tab-label accepts only the capped tab pair, not the scaled one or another token', async ({ page }) => {
     const scaled = await audit(page, tabBar(72, tabAt(1.3)), { fontScale: 2 });
     expect(of(scaled, 'non-scale-font').map((v) => v.message)).toEqual([expect.stringContaining('tab-label')]);
-    const label = tokens.typography.label;
+    const label = tokens.typography['body.strong'];
     const other = await audit(page, tabBar(72, `600 ${label.size * 2}px/${label.lineHeight * 2}px Inter`), { fontScale: 2 });
     expect(of(other, 'non-scale-font')).toHaveLength(1);
     // At scale 1 the cap does nothing: the pair is the token's.
@@ -487,6 +529,748 @@ test.describe('DOM audit self-test: exemptions for one kind of element', () => {
   });
 });
 
+test.describe('DOM audit self-test: mid-word wrap (09 §4.2, DQ-801)', () => {
+  // How React Native Web sets a Text: it breaks a word that does not fit instead of letting it overflow.
+  const rnText = 'white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word';
+  const numeral = "font:600 40px/40px 'Archivo Condensed'";
+  const cell = (token: string, width: number, extra = '', attrs = '') =>
+    `<div style="width:${width}px"><div data-testid="value" ${attrs} style="${rnText};${numeral};${extra}">${token}</div></div>`;
+
+  for (const token of ['2002', 'AWD', '1.725', '3,9']) {
+    test(`a short token broken over two lines is High: "${token}"`, async ({ page }) => {
+      const report = await audit(page, page_(cell(token, 24)));
+      const found = of(report, 'mid-word-wrap');
+      expect(found.map((v) => v.element)).toEqual([expect.stringContaining('[value]')]);
+      expect(found[0]?.severity).toBe('High');
+      expect(found[0]?.message).toContain(`"${token}" breaks inside the word`);
+    });
+  }
+
+  test('the same token where it fits is fine', async ({ page }) => {
+    const report = await audit(page, page_(cell('2002', 200)));
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+  });
+
+  test('words that wrap at their spaces are not this check; a long word broken without a hyphen is (DQ-925)', async ({ page }) => {
+    const report = await audit(
+      page,
+      page_(`<div style="width:120px;${rnText};font:600 30px/34px 'Archivo SemiExpanded'" data-testid="name">Golf GTI</div>
+        <div style="width:120px;${rnText};font:400 15px/22px Inter" data-testid="long">Fahrwerksabstimmungsprotokoll</div>`),
+    );
+    // Before DQ-925 the check looked at short tokens only, and this break by overflow-wrap went unseen.
+    expect(of(report, 'mid-word-wrap').map((v) => v.element)).toEqual([expect.stringContaining('[long]')]);
+    expect(of(report, 'mid-word-wrap')[0]?.message).toContain('"Fahrwerksabstimmungsprotokoll" across two lines without a hyphen');
+  });
+
+  test('a measurement mirror and visually hidden text are not measured', async ({ page }) => {
+    const report = await audit(
+      page,
+      page_(`<div aria-hidden="true" style="position:absolute;top:0;left:0;pointer-events:none">${cell('2002', 24)}</div>
+        <div aria-hidden="true" style="pointer-events:none">${cell('1.725', 24)}</div>
+        <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">${cell('AWD', 24)}</span>`),
+    );
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+  });
+
+  test('an aria-hidden token that is on screen and in the flow is still checked', async ({ page }) => {
+    const report = await audit(page, page_(`<div aria-hidden="true">${cell('2002', 24)}</div>`));
+    expect(of(report, 'mid-word-wrap')).toHaveLength(1);
+  });
+
+  test('a token with an explicit break opportunity or break-anywhere styling is intent, counted as such', async ({ page }) => {
+    const report = await audit(
+      page,
+      page_(`${cell('Prüf&shy;stand', 24)}${cell('AB&#8203;CD', 24)}${cell('1.725', 24, 'word-break:break-all')}${cell('3,9', 24, 'line-break:anywhere')}`),
+    );
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+    expect(report.exemptions['mid-word-intent']).toBe(4);
+  });
+
+  test('a token whose only child elements are <wbr> is intent; any other child element is not a leaf (N-4)', async ({ page }) => {
+    const report = await audit(page, page_(`${cell('AB<wbr>CD', 24)}${cell('20<wbr>02', 24)}${cell('<span>2002</span><wbr>', 24)}`));
+    // The third cell is no leaf; its inner span is one, without a break opportunity, so it is reported.
+    expect(of(report, 'mid-word-wrap').map((v) => v.message)).toEqual([expect.stringContaining('"2002" breaks inside the word')]);
+    expect(report.exemptions['mid-word-intent']).toBe(2);
+  });
+
+  test('a short token that wraps at its own hyphen is a finding (07 §3)', async ({ page }) => {
+    const report = await audit(page, page_(`${cell('GT-R', 24)}${cell('E-Auto', 24)}`));
+    expect(of(report, 'mid-word-wrap')).toHaveLength(2);
+    expect(report.exemptions['mid-word-intent']).toBeUndefined();
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+});
+
+test.describe('DOM audit self-test: house hyphenation is intent (DQ-181), nothing else is', () => {
+  // The house rule as web/resources/css/public.css and mobile/src/ui/Text.tsx (WEB_HYPHENATION) set it, on an RN Web Text.
+  const rnText = 'white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word';
+  const house = 'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:10 4 4;-webkit-hyphenate-limit-before:4;-webkit-hyphenate-limit-after:4';
+  const body = 'font:400 16px/24px Inter';
+  const cell = (id: string, word: string, width: number, style: string, lang = 'de') =>
+    `<div style="width:${width}px"><div data-testid="${id}" lang="${lang}" style="${rnText};${body};${style}">${word}</div></div>`;
+  /** The advance of `text` in the cell's font on this engine, so a cell is exactly as narrow as a case needs. */
+  const advance = async (page: Page, text: string): Promise<number> => {
+    await page.setContent(page_(''));
+    return page.evaluate(
+      ({ text, font }) => {
+        const ctx = document.createElement('canvas').getContext('2d');
+        if (!ctx) throw new Error('no 2d canvas');
+        ctx.font = font;
+        return ctx.measureText(text).width;
+      },
+      { text, font: '400 16px Inter' },
+    );
+  };
+
+  test('"Nachrichten" and "Mitteilungen" hyphenated in a narrow cell are the exemption hyphenation, not a finding', async ({ page }) => {
+    // "Nach-" fits 60 but not "Nachrich-"; "Mittei-" fits 70 but not "Mitteilun-" (Inter 16): one dictionary break each.
+    const report = await audit(page, page_(`${cell('n', 'Nachrichten', 60, house)}${cell('m', 'Mitteilungen', 70, house)}`));
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+    // Counted only for a token that did wrap: both cells broke and both breaks were hyphenations.
+    expect(report.exemptions['hyphenation']).toBe(2);
+    expect(report.exemptions['mid-word-intent']).toBeUndefined();
+  });
+
+  test('the same words under hyphens manual or none, broken by overflow-wrap, are findings', async ({ page }) => {
+    const report = await audit(
+      page,
+      page_(
+        `${cell('n', 'Nachrichten', 60, 'hyphens:manual;-webkit-hyphens:manual;overflow-wrap:anywhere')}` +
+          `${cell('m', 'Mitteilungen', 70, 'hyphens:manual;-webkit-hyphens:manual;overflow-wrap:anywhere')}` +
+          `${cell('x', 'Nachrichten', 60, 'hyphens:none;-webkit-hyphens:none')}`,
+      ),
+    );
+    expect(of(report, 'mid-word-wrap').map((v) => v.element)).toEqual([
+      expect.stringContaining('[n]'),
+      expect.stringContaining('[m]'),
+      expect.stringContaining('[x]'),
+    ]);
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+
+  test('"2002" and "AWD" under hyphens auto are still findings (DQ-801): only letters hyphenate', async ({ page }) => {
+    const numeral = "font:600 40px/40px 'Archivo Condensed'";
+    const report = await audit(
+      page,
+      page_(
+        `<div style="width:24px"><div data-testid="year" lang="de" style="${rnText};${numeral};${house}">2002</div></div>` +
+          `<div style="width:24px"><div data-testid="drive" lang="de" style="${rnText};${numeral};${house}">AWD</div></div>`,
+      ),
+    );
+    expect(of(report, 'mid-word-wrap').map((v) => v.message)).toEqual([
+      expect.stringContaining('"2002" breaks inside the word'),
+      expect.stringContaining('"AWD" breaks inside the word'),
+    ]);
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+
+  test('a word under 10 letters is a finding, even where the element allows shorter words', async ({ page }) => {
+    // "Nachricht" (9) in the house cell, and in a cell whose own limits would let the engine hyphenate it ("Nach-richt").
+    const report = await audit(
+      page,
+      page_(`${cell('house', 'Nachricht', 50, house)}${cell('lax', 'Nachricht', 50, 'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:5 2 2')}`),
+    );
+    expect(of(report, 'mid-word-wrap').map((v) => v.element)).toEqual([expect.stringContaining('[house]'), expect.stringContaining('[lax]')]);
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+
+  test('a hyphenation that leaves fewer than 4 letters on a side is a finding', async ({ page }) => {
+    // An element with looser limits lets the engine break "Mitteilun-gen" (3 after the break); the house rule needs 4.
+    const width = Math.ceil(await advance(page, 'Mitteilun-')) + 2;
+    const lax = 'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:5 2 2;-webkit-hyphenate-limit-before:2;-webkit-hyphenate-limit-after:2';
+    const report = await audit(page, page_(cell('short', 'Mitteilungen', width, lax)));
+    expect(of(report, 'mid-word-wrap').map((v) => v.element)).toEqual([expect.stringContaining('[short]')]);
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+
+  test('a long word under hyphens auto that overflow-wrap breaks without a hyphen is a finding', async ({ page }) => {
+    // No dictionary for the language (zxx): the engine cannot hyphenate, and overflow-wrap breaks "Nachri|chten", 6 and 5
+    // letters, both sides long enough. Without a visible hyphen it is a break inside the word.
+    const width = Math.ceil(await advance(page, 'Nachri')) + 1;
+    expect(await advance(page, 'Nachric')).toBeGreaterThan(width);
+    const report = await audit(page, page_(cell('plain', 'Nachrichten', width, house, 'zxx')));
+    expect(of(report, 'mid-word-wrap').map((v) => v.element)).toEqual([expect.stringContaining('[plain]')]);
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+
+  test('the same words where they fit are no wrap and no exemption', async ({ page }) => {
+    const report = await audit(page, page_(`${cell('n', 'Nachrichten', 200, house)}${cell('m', 'Mitteilungen', 200, house)}`));
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+});
+
+test.describe('DOM audit self-test: mid-word wrap in running text (DQ-923, DQ-925)', () => {
+  // An RN Web Text inside an RN Web View (a flex item), the way Text.tsx renders running text, at the cell's width.
+  const rnText = 'white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word';
+  const house = 'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:10 4 4;-webkit-hyphenate-limit-before:4;-webkit-hyphenate-limit-after:4';
+  const body = 'font:400 16px/24px Inter';
+  const cell = (id: string, text: string, width: number, style = '', lang = 'de') =>
+    `<div style="display:flex;flex-direction:column;width:${width}px"><div data-testid="${id}" lang="${lang}" style="${rnText};${body};${style}">${text}</div></div>`;
+  const advance = async (page: Page, text: string): Promise<number> => {
+    await page.setContent(page_(''));
+    return page.evaluate(
+      ({ text, font }) => {
+        const ctx = document.createElement('canvas').getContext('2d');
+        if (!ctx) throw new Error('no 2d canvas');
+        ctx.font = font;
+        return ctx.measureText(text).width;
+      },
+      { text, font: '400 16px Inter' },
+    );
+  };
+  /** How many lines an element's text takes, so a case proves it wrapped at all. */
+  const linesOf = (page: Page, id: string): Promise<number> =>
+    page.locator(`[data-testid="${id}"]`).evaluate((el) => Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)));
+
+  test('"Google Play" in a flex item narrower than "Google": the word breaks without a hyphen, High (DQ-923)', async ({ page }) => {
+    const width = Math.floor(await advance(page, 'Googl')) + 1;
+    const report = await audit(page, page_(cell('store', 'Bei Google Play laden', width)));
+    const found = of(report, 'mid-word-wrap');
+    expect(found.map((v) => v.element)).toEqual([expect.stringContaining('[store]')]);
+    expect(found[0]?.severity).toBe('High');
+    expect(found[0]?.message).toContain('the word "Google" across two lines without a hyphen');
+  });
+
+  test('"Unbedenklichkeitsbescheinigung" in a sentence, broken by overflow-wrap under hyphens manual: a finding (DQ-925)', async ({ page }) => {
+    const report = await audit(page, page_(cell('doc', 'Die Unbedenklichkeitsbescheinigung liegt vor.', 140, 'hyphens:manual;-webkit-hyphens:manual')));
+    expect(of(report, 'mid-word-wrap').map((v) => v.message)).toEqual([expect.stringContaining('"Unbedenklichkeitsbescheinigung"')]);
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+
+  test('a long word under hyphens auto without a dictionary (overflow-wrap, no hyphen) is a finding in running text too', async ({ page }) => {
+    const width = Math.ceil(await advance(page, 'Nachri')) + 1;
+    const report = await audit(page, page_(cell('plain', 'Neue Nachrichten', width, house, 'zxx')));
+    expect(of(report, 'mid-word-wrap').map((v) => v.message)).toEqual([expect.stringContaining('the word "Nachrichten" across two lines without a hyphen')]);
+  });
+
+  test('dictionary hyphenation under the house rule in a sentence is the exemption hyphenation, not a finding', async ({ page }) => {
+    // As the leaf cases: "Nach-" fits 60, "Mittei-" fits 70, and the word before goes on its own line.
+    const report = await audit(page, page_(`${cell('n', 'Deine Nachrichten', 60, house)}${cell('m', 'Alle Mitteilungen', 70, house)}`));
+    expect(await linesOf(page, 'n')).toBeGreaterThanOrEqual(3);
+    expect(await linesOf(page, 'm')).toBeGreaterThanOrEqual(3);
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+    expect(report.exemptions['hyphenation']).toBe(2);
+  });
+
+  test('a visible hyphen outside the house rule is still a finding: a 9-letter word, a split that leaves 3', async ({ page }) => {
+    const lax = 'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:5 2 2;-webkit-hyphenate-limit-before:2;-webkit-hyphenate-limit-after:2';
+    const width = Math.ceil(await advance(page, 'Mitteilun-')) + 2;
+    const report = await audit(page, page_(`${cell('short', 'Alle Mitteilungen', width, lax)}${cell('nine', 'Eine Nachricht', 50, lax)}`));
+    const found = of(report, 'mid-word-wrap');
+    expect(found.map((v) => v.element)).toEqual([expect.stringContaining('[short]'), expect.stringContaining('[nine]')]);
+    for (const v of found) expect(v.message).toContain('outside the house rule as the engine counts it (hyphenate-limit-chars)');
+  });
+
+  test('an e-mail and a URL broken only at their own break points (ZWSP after "@" and "/", before ".") are no word breaks', async ({ page }) => {
+    const mail = 'lukas.sc@​speedclub​.test';
+    const url = 'speedclub.test/​v/​nissan​-skyline';
+    const width = Math.ceil(Math.max(await advance(page, 'lukas.sc@'), await advance(page, 'speedclub.test/'), await advance(page, 'nissan'))) + 4;
+    const report = await audit(page, page_(`${cell('mail', mail, width)}${cell('url', url, width)}`));
+    expect(await linesOf(page, 'mail')).toBeGreaterThanOrEqual(2);
+    expect(await linesOf(page, 'url')).toBeGreaterThanOrEqual(2);
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+  });
+
+  test('the same e-mail without break points, broken between two letters, is a finding', async ({ page }) => {
+    const width = Math.ceil(await advance(page, 'lukas.sc@spee')) + 1;
+    const report = await audit(page, page_(cell('mail', 'lukas.sc@speedclub.test', width)));
+    expect(of(report, 'mid-word-wrap').map((v) => v.message)).toEqual([expect.stringContaining('the word "speedclub" across two lines')]);
+  });
+
+  test('break-anywhere styling is intent; mirrors, visually hidden and rotated text are not read', async ({ page }) => {
+    const width = Math.floor(await advance(page, 'Googl')) + 1;
+    const report = await audit(
+      page,
+      page_(
+        `${cell('any', 'Bei Google Play laden', width, 'word-break:break-all')}` +
+          `<div aria-hidden="true" style="position:absolute;top:0;left:0;pointer-events:none">${cell('mirror', 'Bei Google Play laden', width)}</div>` +
+          `<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">${cell('sr', 'Bei Google Play laden', width)}</span>` +
+          `<div style="transform:rotate(90deg);width:200px">${cell('turned', 'Bei Google Play laden', 200)}</div>`,
+      ),
+    );
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+    expect(report.exemptions['mid-word-intent']).toBe(1);
+  });
+
+  test('words that fit their lines, and breaks at spaces, are no finding and no exemption', async ({ page }) => {
+    const report = await audit(page, page_(cell('fit', 'Bei Google Play laden, die Unbedenklichkeitsbescheinigung liegt vor', 400)));
+    expect(await linesOf(page, 'fit')).toBeGreaterThanOrEqual(2);
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+});
+
+test.describe('DOM audit self-test: hyphenation as the engine counts it (MF-R4-3)', () => {
+  // The house rule on an RN Web Text, as in the running-text block above.
+  const rnText = 'white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word';
+  const house = 'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:10 4 4;-webkit-hyphenate-limit-before:4;-webkit-hyphenate-limit-after:4';
+  const lax = 'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:5 2 2;-webkit-hyphenate-limit-before:2;-webkit-hyphenate-limit-after:2';
+  const cell = (id: string, text: string, width: number, style: string) =>
+    `<div style="display:flex;flex-direction:column;width:${width}px"><div data-testid="${id}" lang="de" style="${rnText};font:400 16px/24px Inter;${style}">${text}</div></div>`;
+  const advance = async (page: Page, text: string): Promise<number> => {
+    await page.setContent(page_(''));
+    return page.evaluate((t) => {
+      const ctx = document.createElement('canvas').getContext('2d');
+      if (!ctx) throw new Error('no 2d canvas');
+      ctx.font = '400 16px Inter';
+      return ctx.measureText(t).width;
+    }, text);
+  };
+  const linesOf = textLines;
+  /** A cell that fits `head` plus the generated hyphen and the rest on the next line, and no later hyphenation point. */
+  const widthFor = async (page: Page, head: string, rest: string) => Math.ceil(Math.max(await advance(page, `${head}-`), await advance(page, rest))) + 2;
+
+  // The engine-legal breaks of the r5 capture: both installed engines read hyphenate-limit-chars and count the attached punctuation
+  // (probe of 2026-11-11, Chromium 156 and WebKit 27.2). Each word alone (a short-token leaf, or running text when longer than 12) and
+  // after "die" (running text): the engine's own break, a visible hyphen, the exemption.
+  for (const [id, head, rest, word] of [
+    ['fahr', 'Fahr', 'zeuge,', 'Fahrzeuge,'],
+    ['commu', 'Commu', 'nity', 'Community-Richtlinien'],
+    ['aufneh', 'aufneh', 'men,', 'aufnehmen,'],
+    ['mitglie', 'Mitglie', 'der,', 'Mitglieder,'],
+    ['einspr', 'Einsprü', 'che;', 'Einsprüche;'],
+    ['zurueck', 'zurückneh', 'men.', 'zurücknehmen.'],
+    ['pruefPunct', 'Prüf', 'stand.', 'Prüfstand.'],
+  ] as const) {
+    test(`"${head}- / ${rest}" under the house rule is the engine's own hyphenation: the exemption, not a finding`, async ({ page }) => {
+      const width = await widthFor(page, head, rest);
+      const report = await audit(page, page_(`${cell(`${id}-alone`, word, width, house)}${cell(`${id}-text`, `die ${word}`, width, house)}`));
+      // The case is real only when the engine broke exactly there (alone) and inside the word at all (after "die").
+      expect((await linesOf(page, `${id}-alone`)).startsWith(`${head} / ${rest}`)).toBe(true);
+      expect((await linesOf(page, `${id}-text`)).replace(/^die( \/)? /, '')).toContain(' / ');
+      expect(of(report, 'mid-word-wrap')).toEqual([]);
+      expect(report.exemptions['hyphenation']).toBeGreaterThanOrEqual(2);
+    });
+  }
+
+  test('a part joined by a word joiner belongs to the segment: "SS-\u2060La- / dern" (10 with the joiner) is the engines\' own break', async ({ page }) => {
+    // GAR-02's "GT-SS-\u2060Ladern": both engines count "SS-\u2060Ladern" from the break after "GT-", the joiner included, and hyphenate
+    // "La-dern"; "X-\u2060Ladern" (9) they never hyphenate (probe of 2026-11-11).
+    // Running text: a short-token leaf stays letters with attached punctuation only (a hyphen inside it is a finding, 07 §3).
+    const width = await widthFor(page, 'SS-\u2060La', 'dern');
+    const report = await audit(page, page_(cell('joinedText', 'die SS-\u2060Ladern', width, house)));
+    // WebKit gives the joiner a box of its own, Chromium none: compared without it.
+    expect((await linesOf(page, 'joinedText')).replace(/\u2060/g, '')).toBe('die / SS-La / dern');
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+    expect(of(report, 'name-hyphen-break')).toEqual([]);
+    expect(report.exemptions['hyphenation']).toBe(1);
+  });
+
+  test('"Am Prüfstand" (9, no punctuation): neither engine hyphenates it; overflow-wrap breaks it without a hyphen (High)', async ({ page }) => {
+    // Both engines read hyphenate-limit-chars: the word minimum of 10 counts "Prüfstand." (above) but not this.
+    expect(await page.evaluate(() => CSS.supports('hyphenate-limit-chars', '10 4 4'))).toBe(true);
+    const width = await widthFor(page, 'Prüf', 'stand');
+    const report = await audit(page, page_(cell('pruef', 'Am Prüfstand', width, house)));
+    expect(await linesOf(page, 'pruef')).toBe('Am / Prüfs / tand');
+    expect(of(report, 'mid-word-wrap').map((v) => v.message)).toEqual([expect.stringContaining('"Prüfs / tand" breaks the word "Prüfstand" across two lines without a hyphen')]);
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+
+  test('an engine without hyphenate-limit-chars has no word minimum: "Nach- / richt" is then its own hyphenation (model, MF-R4-3)', async ({ page }) => {
+    // The lax cell lets both installed engines break "Nach-richt" (4 and 5). Audited as such an engine would count (the audit reads
+    // CSS.supports, stubbed here for hyphenate-limit-chars only), it is the exemption; as the installed engines count, a finding.
+    const html = page_(cell('nine', 'Eine Nachricht', 50, lax));
+    const real = await audit(page, html);
+    expect(await linesOf(page, 'nine')).toBe('Eine / Nach / richt');
+    expect(of(real, 'mid-word-wrap').map((v) => v.message)).toEqual([expect.stringContaining('(counted here: 9 in the word, 4 before, 5 after)')]);
+    await page.setContent(html);
+    await page.evaluate(() => {
+      const supports = CSS.supports.bind(CSS);
+      CSS.supports = ((property: string, value?: string) =>
+        property === 'hyphenate-limit-chars' ? false : value === undefined ? supports(property) : supports(property, value)) as typeof CSS.supports;
+    });
+    const older = await runDomAudit(page);
+    expect(of(older, 'mid-word-wrap')).toEqual([]);
+    expect(older.exemptions['hyphenation']).toBe(1);
+  });
+
+  test('attached punctuation is counted: "Mitteilun- / gen." keeps 4 after the break (exemption), "Mitteilun- / gen" 3 (High)', async ({ page }) => {
+    // Lax limits let the engine break after "Mitteilun" in both cells; the audit applies the house limits (4 after) as counted.
+    const width = Math.ceil(await advance(page, 'Mitteilun-')) + 2;
+    const report = await audit(page, page_(`${cell('dot', 'Mitteilungen.', width, lax)}${cell('bare', 'Mitteilungen', width, lax)}`));
+    expect(await linesOf(page, 'dot')).toBe('Mitteilun / gen.');
+    expect(await linesOf(page, 'bare')).toBe('Mitteilun / gen');
+    expect(of(report, 'mid-word-wrap').map((v) => v.element)).toEqual([expect.stringContaining('[bare]')]);
+    expect(report.exemptions['hyphenation']).toBe(1);
+  });
+
+  test('opening punctuation counts before the break: "(Ver- / träge)" keeps 4 (exemption), "Ver- / träge" leaves 3 (High)', async ({ page }) => {
+    // Each cell fits its first syllable with the hyphen and the rest, not "Verträ-"; alone (leaf) and after "die" (running text).
+    const paren = await widthFor(page, '(Ver', 'träge)');
+    const bare = await widthFor(page, 'Ver', 'träge');
+    const report = await audit(
+      page,
+      page_(
+        `${cell('paren', '(Verträge)', paren, lax)}${cell('bare', 'Verträge', bare, lax)}` +
+          `${cell('parenText', 'die (Verträge)', paren, lax)}${cell('bareText', 'die Verträge', bare, lax)}`,
+      ),
+    );
+    expect(await linesOf(page, 'paren')).toBe('(Ver / träge)');
+    expect(await linesOf(page, 'bare')).toBe('Ver / träge');
+    expect(await linesOf(page, 'parenText')).toBe('die / (Ver / träge)');
+    expect(await linesOf(page, 'bareText')).toBe('die / Ver / träge');
+    const found = of(report, 'mid-word-wrap');
+    expect(found.map((v) => v.element)).toEqual([expect.stringContaining('[bare]'), expect.stringContaining('[bareText]')]);
+    expect(found[1]?.message).toContain('"Ver- / träge" hyphenates "Verträge" outside the house rule as the engine counts it (hyphenate-limit-chars)');
+    expect(found[1]?.message).toContain('(counted here: 8 in the word, 3 before, 5 after)');
+    expect(report.exemptions['hyphenation']).toBe(2);
+  });
+
+  test('a break without a hyphen between two letters stays High under hyphens auto (no dictionary, zxx)', async ({ page }) => {
+    const width = Math.ceil(await advance(page, 'Nachri')) + 1;
+    const html = `<div style="display:flex;flex-direction:column;width:${width}px"><div data-testid="plain" lang="zxx" style="${rnText};font:400 16px/24px Inter;${house}">Neue Nachrichten,</div></div>`;
+    const report = await audit(page, page_(html));
+    const found = of(report, 'mid-word-wrap');
+    expect(found.map((v) => v.message)).toEqual([expect.stringContaining('breaks the word "Nachrichten" across two lines without a hyphen')]);
+    expect(found[0]?.severity).toBe('High');
+    expect(report.exemptions['hyphenation']).toBeUndefined();
+  });
+});
+
+test.describe('DOM audit self-test: a word wider than its line keeps its finding, with the reason (SF-R4-1)', () => {
+  const rnText = 'white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word';
+  const lax = 'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:5 2 2;-webkit-hyphenate-limit-before:2;-webkit-hyphenate-limit-after:2';
+  const cell = (id: string, text: string, width: number, style = '', padding = 0) =>
+    `<div style="display:flex;flex-direction:column;width:${width}px;padding:0 ${padding}px"><div data-testid="${id}" lang="de" style="${rnText};font:400 16px/24px Inter;${style}">${text}</div></div>`;
+  const advance = async (page: Page, text: string): Promise<number> => {
+    await page.setContent(page_(''));
+    return page.evaluate((t) => {
+      const ctx = document.createElement('canvas').getContext('2d');
+      if (!ctx) throw new Error('no 2d canvas');
+      ctx.font = '400 16px Inter';
+      return ctx.measureText(t).width;
+    }, text);
+  };
+
+  test('"Mönchengladbach" wider than its bubble: High, and the message says the word is wider than its line', async ({ page }) => {
+    // The line box is the content box: the cell's padding (8 + 8) narrows it below the word.
+    const word = await advance(page, 'Mönchengladbach');
+    const width = Math.floor(word) - 8 + 16;
+    const report = await audit(page, page_(cell('bubble', 'Bei einem Spezialisten in Mönchengladbach.', width, 'hyphens:manual;-webkit-hyphens:manual', 8)));
+    const found = of(report, 'mid-word-wrap');
+    expect(found.map((v) => v.message)).toEqual([expect.stringContaining('the word "Mönchengladbach" across two lines without a hyphen (word wider than its line: ')]);
+    expect(found[0]?.severity).toBe('High');
+    expect(found[0]?.message).toMatch(/\(word wider than its line: [\d.]+ px word, [\d.]+ px line\)$/);
+  });
+
+  test('a short token wider than its cell ("QXMB"): High, with the same reason', async ({ page }) => {
+    const width = Math.floor(await advance(page, 'QXM')) + 2;
+    const report = await audit(page, page_(cell('code', 'QXMB', width)));
+    expect(of(report, 'mid-word-wrap').map((v) => v.message)).toEqual([expect.stringContaining('"QXMB" breaks inside the word over 2 lines (word wider than its line: ')]);
+  });
+
+  test('a hyphenation outside the house rule in a word that fits its line: High, without that reason', async ({ page, browserName }) => {
+    // "Alle Mitteilun-" fits, "Mitteilungen" alone fits too: the word could have gone to the next line whole. WebKit hyphenates it
+    // there ("Alle Mitteilun- / gen"); Chromium moves it whole (layout probe of 2026-11-11), so it has nothing to report. The width
+    // comparison is engine-independent; the reason-bearing side is proven in both engines above.
+    const width = Math.ceil(Math.max((await advance(page, 'Alle Mitteilun-')) + 6, await advance(page, 'Mitteilungen'))) + 2;
+    expect(await advance(page, 'Alle Mitteilungen')).toBeGreaterThan(width);
+    const report = await audit(page, page_(cell('fits', 'Alle Mitteilungen', width, lax)));
+    const found = of(report, 'mid-word-wrap');
+    if (browserName === 'chromium') {
+      expect(await textLines(page, 'fits')).toBe('Alle / Mitteilungen');
+      expect(found).toEqual([]);
+      return;
+    }
+    expect(await textLines(page, 'fits')).toBe('Alle Mitteilun / gen');
+    expect(found.map((v) => v.message)).toEqual([expect.stringContaining('"Mitteilun- / gen" hyphenates "Mitteilungen" outside the house rule')]);
+    expect(found[0]?.message).not.toContain('wider than its line');
+  });
+});
+
+test.describe('DOM audit self-test: name-hyphen-break (DQ-926)', () => {
+  const rnText = 'white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word';
+  const body = 'font:400 16px/24px Inter';
+  const cell = (id: string, text: string, width: number) =>
+    `<div style="display:flex;flex-direction:column;width:${width}px"><div data-testid="${id}" lang="de" style="${rnText};${body}">${text}</div></div>`;
+  /** A cell exactly wide enough for `line` (which ends at the hyphen), so the layout breaks right after it. */
+  const widthFor = async (page: Page, line: string): Promise<number> => {
+    await page.setContent(page_(''));
+    const w = await page.evaluate((text) => {
+      const ctx = document.createElement('canvas').getContext('2d');
+      if (!ctx) throw new Error('no 2d canvas');
+      ctx.font = '400 16px Inter';
+      return ctx.measureText(text).width;
+    }, line);
+    return Math.ceil(w) + 2;
+  };
+
+  /** The layout did break right after `line` (which ends at the hyphen): the next character sits on a lower line. */
+  const breaksAfter = (page: Page, id: string, line: string): Promise<boolean> =>
+    page.locator(`[data-testid="${id}"]`).evaluate((el, at) => {
+      const node = el.firstChild as Text;
+      const box = (offset: number) => {
+        const r = document.createRange();
+        r.setStart(node, offset);
+        r.setEnd(node, offset + 1);
+        const rects = [...r.getClientRects()].filter((b) => b.width > 0);
+        return rects.reduce((low, b) => (b.top > low.top ? b : low));
+      };
+      const hyphen = box(at - 1);
+      return box(at).top - hyphen.top > hyphen.height / 2;
+    }, line.length);
+
+  for (const [id, text, line, split] of [
+    ['gtr', 'Nissan Skyline GT-R R34', 'Nissan Skyline GT-', '"GT- / R"'],
+    ['slip', 'Akrapovič Slip-On Abgasanlage', 'Akrapovič Slip-', '"Slip- / On"'],
+    ['eauto', 'Mein E-Auto lädt', 'Mein E-', '"E- / Auto"'],
+    // MF-R4-2: the real names of the r5 capture that keep their finding (1 or 2 letters on one side of the break, in the token).
+    ['email', 'Schreib uns eine E-Mail-Adresse', 'Schreib uns eine E-', '"E- / Mail-Adresse"'],
+    ['ip', 'Gespeicherte IP-Adressen', 'Gespeicherte IP-', '"IP- / Adressen"'],
+    ['qr', 'Dein neuer QR-Sticker', 'Dein neuer QR-', '"QR- / Sticker"'],
+    ['rb', 'Bei einem echten RB-Spezialisten', 'Bei einem echten RB-', '"RB- / Spezialisten"'],
+  ] as const) {
+    test(`${split} at a line end is Medium`, async ({ page }) => {
+      const report = await audit(page, page_(cell(id, text, await widthFor(page, line))));
+      expect(await breaksAfter(page, id, line)).toBe(true);
+      const found = of(report, 'name-hyphen-break');
+      expect(found.map((v) => v.element)).toEqual([expect.stringContaining(`[${id}]`)]);
+      expect(found[0]?.severity).toBe('Medium');
+      expect(found[0]?.message).toContain(split);
+      // The break is at a real hyphen between two words of letters: no mid-word finding on top.
+      expect(of(report, 'mid-word-wrap')).toEqual([]);
+    });
+  }
+
+  test('"Rhein- / Main" (5 and 4) is fine, and so is a name joined with a word joiner or U+2011', async ({ page }) => {
+    const report = await audit(
+      page,
+      page_(
+        `${cell('rm', 'Treffen Rhein-Main-Gebiet', await widthFor(page, 'Treffen Rhein-'))}` +
+          `${cell('wj', 'Nissan Skyline GT-⁠R R34', await widthFor(page, 'Nissan Skyline GT-'))}` +
+          `${cell('nb', 'Nissan Skyline GT‑R R34', await widthFor(page, 'Nissan Skyline GT-'))}`,
+      ),
+    );
+    expect(of(report, 'name-hyphen-break')).toEqual([]);
+    expect(of(report, 'mid-word-wrap')).toEqual([]);
+  });
+
+  // MF-R4-2: what the break leaves is counted within the token (letters and digits from its start to the hyphen, and from the hyphen
+  // to its end), not only the run next to the hyphen. These false findings of the r5 capture are fine: each side keeps 3 or more.
+  for (const [id, text, line, split] of [
+    ['privacy', 'Schreib an die Datenschutz-E-⁠Mail.', 'Schreib an die Datenschutz-', 'Datenschutz- / E-⁠Mail'],
+    ['gtss', 'Mit GT-SS-Ladern', 'Mit GT-SS-', 'GT-SS- / Ladern'],
+    ['contact', 'Die DSA-Kontakt-E-⁠Mail.', 'Die DSA-Kontakt-', 'DSA-Kontakt- / E-⁠Mail'],
+    ['export', 'Per Export-E-⁠Mail', 'Per Export-', 'Export- / E-⁠Mail'],
+    ['report', 'Über die Melde-E-⁠Mail.', 'Über die Melde-', 'Melde- / E-⁠Mail'],
+    ['slug', 'nissan-skyline-gt-r-r34-5tf974vj', 'nissan-skyline-gt-r-', 'nissan-skyline-gt-r- / r34-5tf974vj'],
+  ] as const) {
+    test(`"${split}" leaves 3 or more of the token on each side: no finding`, async ({ page }) => {
+      const report = await audit(page, page_(cell(id, text, await widthFor(page, line))));
+      // The case is real only when the layout broke exactly there.
+      expect(await breaksAfter(page, id, line)).toBe(true);
+      expect(of(report, 'name-hyphen-break')).toEqual([]);
+      expect(of(report, 'mid-word-wrap')).toEqual([]);
+    });
+  }
+
+  test('the token is counted, not the run beside the hyphen: "GT- / SS-Ladern" leaves 2 before the break, a finding', async ({ page }) => {
+    const report = await audit(page, page_(cell('gtss', 'Laden mit GT-SS-Ladern', await widthFor(page, 'Laden mit GT-'))));
+    expect(await breaksAfter(page, 'gtss', 'Laden mit GT-')).toBe(true);
+    expect(of(report, 'name-hyphen-break').map((v) => v.message)).toEqual([expect.stringContaining('"GT- / SS-Ladern" breaks "GT-SS-Ladern"')]);
+  });
+});
+
+test.describe('DOM audit self-test: lost truncation (DQ-922)', () => {
+  // React Native Web 0.21 Text: the base text style, then textOneLine (numberOfLines={1}) or textMultiLine + line clamp (N > 1).
+  const rnBase = "display:inline;white-space:pre-wrap;word-wrap:break-word;margin:0;padding:0;font:400 15px/22px Inter";
+  const oneLine = 'max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-wrap:normal';
+  const multiLine = (n: number) => `display:-webkit-box;max-width:100%;overflow:clip;text-overflow:ellipsis;-webkit-box-orient:vertical;-webkit-line-clamp:${n}`;
+  const preview = 'Bist du am Samstag beim Treffen in Mönchengladbach dabei? Ich bringe den R34 mit.';
+  /** An inbox row: an RN Web View (flex) with the preview Text as its flex item. */
+  const row = (id: string, style: string) =>
+    `<div style="display:flex;flex-direction:column;width:240px"><div data-testid="${id}" dir="auto" aria-label="${preview}" style="${rnBase};${style}">${preview}</div></div>`;
+
+  test('numberOfLines={1} with the text-wrap: pretty shorthand after it renders several lines: High', async ({ page }) => {
+    const report = await audit(page, page_(row('lost', `${oneLine};text-wrap:pretty`)));
+    const found = of(report, 'lost-truncation');
+    expect(found.map((v) => v.element)).toEqual([expect.stringContaining('[lost]')]);
+    expect(found[0]?.severity).toBe('High');
+    expect(found[0]?.message).toContain('asks for 1 line (text-overflow: ellipsis)');
+  });
+
+  test('numberOfLines={1} with the longhand text-wrap-style: pretty keeps one line: no finding', async ({ page }) => {
+    const report = await audit(page, page_(row('kept', `${oneLine};text-wrap-style:pretty`)));
+    expect(of(report, 'lost-truncation')).toEqual([]);
+    expect(await page.locator('[data-testid="kept"]').evaluate((el) => el.getBoundingClientRect().height)).toBe(22);
+  });
+
+  test('numberOfLines={2}: the clamp shows 2 lines (no finding); without display -webkit-box it is lost (finding)', async ({ page }) => {
+    const report = await audit(page, page_(`${row('clamp', multiLine(2))}${row('noBox', `${multiLine(2)};display:block`)}`));
+    expect(of(report, 'lost-truncation').map((v) => v.element)).toEqual([expect.stringContaining('[noBox]')]);
+    expect(of(report, 'lost-truncation')[0]?.message).toContain('asks for 2 line(s) (-webkit-line-clamp 2, display block)');
+  });
+
+  test('wrapping text that asks for no truncation, and a mirror that loses it, are not this check', async ({ page }) => {
+    const report = await audit(
+      page,
+      page_(`${row('plain', '')}<div aria-hidden="true" style="position:absolute;top:0;left:0;pointer-events:none">${row('mirror', `${oneLine};text-wrap:pretty`)}</div>`),
+    );
+    expect(of(report, 'lost-truncation')).toEqual([]);
+  });
+});
+
+// React Native Web's View: every one is `position: relative; z-index: 0` (react-native-web View styles.view), so each is a stacking
+// context, and an absolutely positioned child paints after the in-flow children of its parent whatever their order.
+const RNW_VIEW = `.v { display: flex; flex-direction: column; position: relative; z-index: 0; box-sizing: border-box; flex-shrink: 0;
+  min-width: 0; min-height: 0; }`;
+const GLYPH = '<svg data-testid="glyph" width="24" height="24" viewBox="0 0 256 256" fill="currentColor"><path d="M168 48 88 128l80 80"/></svg>';
+
+test.describe('DOM audit self-test: covered glyph (DQ-901)', () => {
+  /** FloatingControl as M4.1 shipped it on the web: Pressable > visual > [absoluteFill ChromeSurface, Icon]. */
+  const control = (inner: string, theme = 'carbon') =>
+    page_(
+      `<div class="v" role="button" tabindex="0" aria-label="Zurück" data-testid="fc" style="width:44px;height:44px;align-items:center;justify-content:center">
+        <div class="v" data-testid="fc.visual" style="width:44px;height:44px;border-radius:9999px;align-items:center;justify-content:center">${inner}</div>
+      </div>`,
+      RNW_VIEW,
+      theme,
+    );
+  const surface = (extra = '', theme = 'carbon') =>
+    `<div class="v" data-testid="fc.surface" style="position:absolute;inset:0;border-radius:9999px;background:${color('chrome.translucent', theme)};${extra}"></div>`;
+
+  test('an absoluteFill surface drawn before the in-flow icon paints over it: High, in every theme', async ({ page }) => {
+    for (const theme of ['carbon', 'light']) {
+      const report = await audit(page, control(`${surface('', theme)}${GLYPH}`, theme), { theme });
+      const found = of(report, 'covered-glyph');
+      expect(found.map((v) => v.element), theme).toEqual([expect.stringContaining('[glyph]')]);
+      expect(found[0]?.severity).toBe('High');
+      expect(found[0]?.message).toContain('[fc.surface]');
+    }
+  });
+
+  test('the cover is found by paint order, not by hit testing: pointer-events none, a backdrop blur, and a surface after the icon', async ({ page }) => {
+    const cases = {
+      'pointer-events none (elementFromPoint skips it)': `${surface('pointer-events:none')}${GLYPH}`,
+      'a backdrop blur over a light fill': `<div class="v" data-testid="fc.surface" style="position:absolute;inset:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)"></div>${GLYPH}`,
+      'the surface after the icon in the DOM': `${GLYPH}${surface()}`,
+      'the icon in a plain block before a positioned surface': `<div>${GLYPH}</div>${surface()}`,
+    };
+    for (const [name, inner] of Object.entries(cases)) {
+      const report = await audit(page, control(inner));
+      expect(of(report, 'covered-glyph').map((v) => v.element), name).toEqual([expect.stringContaining('[glyph]')]);
+    }
+  });
+
+  test('the fixed shapes paint the icon last: no finding', async ({ page }) => {
+    const cases = {
+      'icon wrapped in a positioned zIndex 1 View': `${surface()}<div class="v" style="z-index:1">${GLYPH}</div>`,
+      'icon wrapped in a plain RN Web View after the surface (DOM order among z 0 layers)': `${surface()}<div class="v">${GLYPH}</div>`,
+      'icon nested inside the surface (ChromeSurface as the wrapper, like chromePill)': `<div class="v" data-testid="fc.surface" style="width:44px;height:44px;border-radius:9999px;align-items:center;justify-content:center;background:${color('chrome.translucent')};backdrop-filter:blur(20px)">${GLYPH}</div>`,
+      'a surface with a negative z-index stays under the in-flow icon': `${surface('z-index:-1')}${GLYPH}`,
+    };
+    for (const [name, inner] of Object.entries(cases)) {
+      const report = await audit(page, control(inner));
+      expect(of(report, 'covered-glyph'), name).toEqual([]);
+    }
+  });
+
+  test('a pressed-tone layer (alpha 0.06-0.08) over the icon, or an opaque layer at opacity 0, is no cover', async ({ page }) => {
+    for (const tone of ['state.pressed', 'state.pressedInverse']) {
+      const pressed = await audit(page, control(`<div class="v">${GLYPH}</div><div class="v" style="position:absolute;inset:0;background:${color(tone)}"></div>`));
+      expect(of(pressed, 'covered-glyph'), tone).toEqual([]);
+    }
+    const resting = await audit(page, control(`${GLYPH}<div class="v" style="position:absolute;inset:0;opacity:0;background:${color('chrome.opaque')}"></div>`));
+    expect(of(resting, 'covered-glyph')).toEqual([]);
+  });
+
+  test('a layer covering less than half of the icon, or an icon outside any control, is not this check', async ({ page }) => {
+    const corner = await audit(page, control(`<div class="v" style="position:absolute;left:0;top:0;width:16px;height:16px;background:${color('chrome.opaque')}"></div>${GLYPH}`));
+    expect(of(corner, 'covered-glyph')).toEqual([]);
+    const loose = await audit(page, page_(`<div class="v" style="width:44px;height:44px">${surface()}${GLYPH}</div>`, RNW_VIEW));
+    expect(of(loose, 'covered-glyph')).toEqual([]);
+  });
+});
+
+test.describe('DOM audit self-test: clipped field (DQ-902)', () => {
+  const BIO =
+    'Seit 2014 schraube ich an meinem R34. Am liebsten fahre ich auf der Nordschleife und zu Treffen im Ruhrgebiet, alles selbst gemacht, vom Fahrwerk bis zur Abstimmung.';
+  /** TextInput multiline on the web: a hidden mirror sizes the box, the textarea (rows 1) covers it, both capped at maxRows x line. */
+  const field = (mirror: { size: number; line: number }, maxRows = 6, text = BIO) =>
+    page_(
+      `<div class="v" style="width:300px;padding:12px 16px;background:${color('bg.raised')}">
+        <div class="v">
+          <div class="v" aria-hidden="true" style="opacity:0;overflow:hidden;pointer-events:none;max-height:${24 * maxRows}px">
+            <div style="font:400 ${mirror.size}px/${mirror.line}px Inter;white-space:pre-wrap;overflow-wrap:break-word">${text}&#8203;</div>
+          </div>
+          <textarea rows="1" data-testid="bio" aria-label="Über dich" style="position:absolute;inset:0;margin:0;padding:0;border:0;resize:none;
+            font:400 16px/24px Inter;white-space:pre-wrap;overflow-wrap:break-word;max-height:${24 * maxRows}px;background:transparent;color:inherit">${text}</textarea>
+        </div>
+      </div>`,
+      RNW_VIEW,
+    );
+
+  test('a 16/24 field sized from a 15/22 mirror cuts the text: High', async ({ page }) => {
+    const report = await audit(page, field({ size: 15, line: 22 }));
+    const found = of(report, 'clipped-field');
+    expect(found.map((v) => v.element)).toEqual([expect.stringContaining('[bio]')]);
+    expect(found[0]?.severity).toBe('High');
+    expect(found[0]?.message).toContain('max-height 144px');
+  });
+
+  test('a contenteditable textbox that scrolls below its max-height is the same finding', async ({ page }) => {
+    const report = await audit(
+      page,
+      page_(`<div contenteditable="true" role="textbox" aria-multiline="true" aria-label="Notiz" data-testid="note"
+        style="width:200px;height:48px;max-height:144px;overflow:auto;font:400 16px/24px Inter">${BIO}</div>`),
+    );
+    expect(of(report, 'clipped-field').map((v) => v.element)).toEqual([expect.stringContaining('[note]')]);
+  });
+
+  test('a mirror in the field\'s own pair, and a field at its max rows that scrolls by design, are fine', async ({ page }) => {
+    const matching = await audit(page, field({ size: 16, line: 24 }));
+    expect(of(matching, 'clipped-field')).toEqual([]);
+    const full = await audit(page, field({ size: 16, line: 24 }, 3, `${BIO} ${BIO} ${BIO}`));
+    expect(await page.getByTestId('bio').evaluate((el) => el.scrollHeight > el.clientHeight + 1), 'the fixture scrolls').toBe(true);
+    expect(of(full, 'clipped-field')).toEqual([]);
+    const rows = await audit(page, page_(`<textarea rows="2" aria-label="Kurz" style="width:200px;margin:0;padding:0;border:0;font:400 16px/24px Inter;resize:none">${BIO}</textarea>`));
+    expect(of(rows, 'clipped-field'), 'a textarea at its rows without max-height').toEqual([]);
+  });
+});
+
+test.describe('DOM audit self-test: display.title lines (DQ-904, ADR-426 a)', () => {
+  const t = tokens.typography['display.title'] as { size: number; lineHeight: number; minSize: number; minLineHeight: number; maxLines: number; web: { size: number; lineHeight: number } };
+  const title = (size: number, line: number, width: number, text = 'Nissan Skyline GT-R R34', attrs = '') =>
+    `<div data-testid="title" ${attrs} style="font:600 ${size}px/${line}px 'Archivo SemiExpanded';width:${width}px">${text}</div>`;
+
+  test('a full-size title over its 2 lines is Medium: 30/34 on a phone, 44/48 on the desktop, scaled at 200 %', async ({ page }) => {
+    expect(t.maxLines).toBe(2);
+    const cases: { name: string; viewport: number; scale: number; size: number; line: number }[] = [
+      { name: 'phone 30/34', viewport: 390, scale: 1, size: t.size, line: t.lineHeight },
+      { name: 'phone fs2 60/68', viewport: 390, scale: 2, size: t.size * 2, line: t.lineHeight * 2 },
+      { name: 'desktop 44/48', viewport: 1440, scale: 1, size: t.web.size, line: t.web.lineHeight },
+      { name: 'desktop card 30/34', viewport: 1440, scale: 1, size: t.size, line: t.lineHeight },
+    ];
+    for (const c of cases) {
+      await page.setViewportSize({ width: c.viewport, height: 900 });
+      const report = await audit(page, page_(title(c.size, c.line, c.size * 4)), { fontScale: c.scale });
+      const found = of(report, 'display-title-lines');
+      expect(found.map((v) => v.element), c.name).toEqual([expect.stringContaining('[title]')]);
+      expect(found[0]?.severity).toBe('Medium');
+      expect(found[0]?.message).toMatch(/renders on [3-9] lines/);
+    }
+  });
+
+  test('two lines at full size, any lines at the shrink pair, a nested span, a mirror: no finding', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    const two = await audit(page, page_(title(t.size, t.lineHeight, 360, 'Skyline GT-R')));
+    expect(of(two, 'display-title-lines')).toEqual([]);
+    const shrunk = await audit(page, page_(title(t.minSize, t.minLineHeight, t.minSize * 4)));
+    expect(await page.getByTestId('title').evaluate((el, line) => el.getBoundingClientRect().height / line, t.minLineHeight), 'the shrunk fixture wraps').toBeGreaterThan(2);
+    expect(of(shrunk, 'display-title-lines')).toEqual([]);
+    // One title, reported once: the spans of a nested Text are part of its lines.
+    const nested = await audit(page, page_(title(t.size, t.lineHeight, t.size * 4, 'Nissan <span>Skyline</span> <span>GT-R R34</span>')));
+    expect(of(nested, 'display-title-lines')).toHaveLength(1);
+    // A measurement mirror (aria-hidden, absolutely positioned) is not the title on screen.
+    const mirror = await audit(page, page_(title(t.size, t.lineHeight, t.size * 4, 'Nissan Skyline GT-R R34', 'aria-hidden="true"').replace('style="font', 'style="position:absolute;font')));
+    expect(of(mirror, 'display-title-lines')).toEqual([]);
+    // Another face at the same pair is not the role.
+    const other = await audit(page, page_(title(t.size, t.lineHeight, t.size * 4).replace("'Archivo SemiExpanded'", 'Inter')));
+    expect(of(other, 'display-title-lines')).toEqual([]);
+  });
+});
+
 test.describe('DOM audit self-test: font scale', () => {
   test('at scale 2 the expected sizes are doubled', async ({ page }) => {
     const report = await audit(page, page_('<div style="font:32px/48px Inter">Text</div>'), { fontScale: 2 });
@@ -498,16 +1282,70 @@ test.describe('DOM audit self-test: font scale', () => {
     expect(of(report, 'non-scale-font')).toHaveLength(1);
   });
 
-  test('tab and badge stay capped at maxFontScale', async ({ page }) => {
-    const capped = tokens.typography.tab;
-    const size = capped.size * capped.maxFontScale;
-    const line = capped.lineHeight * capped.maxFontScale;
-    const ok = await audit(page, page_(`<div style="font:${size}px/${line}px Inter">Tab</div>`), { fontScale: 2 });
-    expect(of(ok, 'non-scale-font')).toHaveLength(0);
-    const uncapped = await audit(page, page_(`<div style="font:${capped.size * 2}px/${capped.lineHeight * 2}px Inter">Tab</div>`), {
-      fontScale: 2,
-    });
-    expect(of(uncapped, 'non-scale-font')).toHaveLength(1);
+  test('web.tab and the hero numerals stay capped at maxFontScale, on desktop too', async ({ page }) => {
+    const roles: [string, string][] = [['web.tab', 'Inter'], ['hero.numeral', "'Archivo Condensed'"], ['hero.numeral.s', "'Archivo Condensed'"]];
+    for (const [name, family] of roles) {
+      const t = tokens.typography[name] as { size: number; lineHeight: number; maxFontScale: number; web?: { size: number; lineHeight: number } };
+      // The mobile pair on a phone, the desktop pair where the page applies it (layout.breakpoints.desktop and wider).
+      for (const [pair, width] of [[t, 390], ...(t.web ? [[t.web, DESKTOP]] : [])] as [{ size: number; lineHeight: number }, number][]) {
+        await page.setViewportSize({ width, height: 844 });
+        const ok = await audit(page, page_(`<div style="font:600 ${pair.size * t.maxFontScale}px/${pair.lineHeight * t.maxFontScale}px ${family}">510</div>`), {
+          fontScale: 2,
+        });
+        expect(of(ok, 'non-scale-font'), `${name} ${pair.size} at ${width}`).toHaveLength(0);
+        const uncapped = await audit(page, page_(`<div style="font:600 ${pair.size * 2}px/${pair.lineHeight * 2}px ${family}">510</div>`), {
+          fontScale: 2,
+        });
+        expect(of(uncapped, 'non-scale-font'), `${name} ${pair.size} uncapped at ${width}`).toHaveLength(1);
+      }
+    }
+  });
+
+  test('a desktop pair of a 2.0 role is on the scale (09 §4.2) at the desktop width, in its token face', async ({ page }) => {
+    const hero = tokens.typography['hero.numeral'].web;
+    const title = tokens.typography['display.title'].web;
+    const desktopPairs = `<div style="font:600 ${hero.size}px/${hero.lineHeight}px 'Archivo Condensed'">510</div>
+        <div style="font:600 ${title.size}px/${title.lineHeight}px 'Archivo SemiExpanded'">GT-R</div>`;
+    await page.setViewportSize({ width: DESKTOP, height: 900 });
+    const report = await audit(page, page_(desktopPairs));
+    expect(of(report, 'non-scale-font')).toEqual([]);
+    // Only the first face of a token stack counts: the numeral stack's fallback, set first, is no token font.
+    const fallback = await audit(page, page_(`<div style="font:600 ${hero.size}px/${hero.lineHeight}px 'Arial Narrow'">510</div>`));
+    expect(of(fallback, 'non-scale-font').map((v) => v.message)).toEqual([expect.stringContaining('Arial Narrow')]);
+  });
+
+  test('display.title\'s shrink pair (09 §4.2, 24/28) is on the scale at every width, scaled at font scale 2', async ({ page }) => {
+    const t = tokens.typography['display.title'] as { size: number; lineHeight: number; minSize: number };
+    const shrunk = { size: t.minSize, lineHeight: t.minSize + t.lineHeight - t.size };
+    expect(shrunk).toEqual({ size: 24, lineHeight: 28 });
+    const title = (scale: number, line = shrunk.lineHeight) =>
+      `<div data-testid="title" style="font:600 ${shrunk.size * scale}px/${line * scale}px 'Archivo SemiExpanded'">Skyline GT-R R34</div>`;
+    for (const width of [390, DESKTOP, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const scale of [1, 2]) {
+        const ok = await audit(page, page_(title(scale)), { fontScale: scale });
+        expect(of(ok, 'non-scale-font'), `${width} fs${scale}`).toEqual([]);
+        // The shrunk size with any other leading, or the shrunk pair at the other scale, is still off the scale.
+        const leading = await audit(page, page_(title(scale, t.lineHeight)), { fontScale: scale });
+        expect(of(leading, 'non-scale-font').map((v) => v.element), `${width} fs${scale} 24/34`).toEqual([expect.stringContaining('[title]')]);
+        const other = await audit(page, page_(title(3 - scale)), { fontScale: scale });
+        expect(of(other, 'non-scale-font').map((v) => v.element), `${width} fs${scale} unscaled`).toEqual([expect.stringContaining('[title]')]);
+      }
+    }
+  });
+
+  test('below the desktop width a desktop pair is off the scale: hero.numeral 88/88 fails at 360 and at 1279', async ({ page }) => {
+    const hero = tokens.typography['hero.numeral'].web;
+    const title = tokens.typography['display.title'].web;
+    for (const width of [360, DESKTOP - 1]) {
+      await page.setViewportSize({ width, height: 800 });
+      const report = await audit(
+        page,
+        page_(`<div data-testid="hero" style="font:600 ${hero.size}px/${hero.lineHeight}px 'Archivo Condensed'">510</div>
+          <div data-testid="title" style="font:600 ${title.size}px/${title.lineHeight}px 'Archivo SemiExpanded'">GT-R</div>`),
+      );
+      expect(of(report, 'non-scale-font').map((v) => v.element), `at ${width}`).toEqual([expect.stringContaining('[hero]'), expect.stringContaining('[title]')]);
+    }
   });
 });
 
@@ -527,9 +1365,9 @@ test.describe('DOM audit self-test: no false positives', () => {
       <div class="fill scroll" data-testid="scroller">
         <div style="padding:20px">
           <!-- type scale and tokens -->
-          <div style="font:700 28px/34px Inter;letter-spacing:-0.4px">Garage</div>
+          <div style="font:600 28px/32px 'Inter Display';letter-spacing:-0.28px">Garage</div>
           <div style="font:400 14px/20px Inter;color:${color('text.secondary')}">Sekundär</div>
-          <div style="font:700 40px/44px 'Barlow Semi Condensed';overflow:hidden;height:44px">Skyline</div>
+          <div style="font:600 40px/40px 'Archivo Condensed';overflow:hidden;height:40px">Skyline</div>
 
           <!-- intentional numberOfLines truncation with accessible full text -->
           <div aria-label="Ein sehr langer Fahrzeugname, der abgeschnitten wird"
@@ -588,7 +1426,7 @@ test.describe('DOM audit self-test: no false positives', () => {
           </div>
 
           <!-- QR card keeps its black on white -->
-          <div data-qa-exempt="qr" style="background:${color('qr.bg')};color:${color('qr.fg')};padding:16px;font:400 13px/18px Inter">
+          <div data-qa-exempt="qr" style="background:${color('qr.bg')};color:${color('qr.fg')};padding:16px;font:500 12px/16px Inter">
             <svg width="64" height="64" viewBox="0 0 2 2"><rect width="1" height="1" fill="#000"/></svg>
             <div style="color:${color('qr.caption')}">speedclub.de/c/7H2K</div>
           </div>

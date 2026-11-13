@@ -90,9 +90,9 @@ describe('GAR-10 values', () => {
   it('fills the form from the stored mod, numbers in the member’s format', () => {
     const values = modValuesFrom(wheelMod(), WHEEL_FIELDS, 'de');
     expect(values.fields).toMatchObject({ wheel_brand: 'BBS', diameter: '19', width_front: '9,5', et_front: '35', staggered: false, width_rear: '' });
-    expect(values).toMatchObject({ status: 'installed', installedOn: '03/2023', cost: '2.400', costPublic: false, notes: 'Neu lackiert', title: '' });
+    expect(values).toMatchObject({ status: 'installed', installedOn: '03/2023', cost: '2.400', notes: 'Neu lackiert', title: '' });
     expect(modValuesFrom(wheelMod({ title: 'Meine Sommerräder' }), WHEEL_FIELDS, 'de').title).toBe('Meine Sommerräder');
-    expect(modValuesFrom(undefined, WHEEL_FIELDS, 'de')).toMatchObject({ status: 'installed', costPublic: false, fields: { staggered: false, diameter: '' } });
+    expect(modValuesFrom(undefined, WHEEL_FIELDS, 'de')).toMatchObject({ status: 'installed', fields: { staggered: false, diameter: '' } });
   });
 
   it('sends fields as strict JSON: numbers in the schema unit, true for a switch, empty left out', () => {

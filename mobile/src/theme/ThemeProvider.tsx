@@ -11,7 +11,8 @@ import { qa } from '@/lib/qa';
 import { useThemeHydrated, useThemePreference } from './preference';
 import { getTheme, resolveThemeName, useAccentSet, type AppTheme } from './theme';
 import { themes, zIndex, type ThemeName } from './tokens.generated';
-import { useMotion } from './useMotion';
+import { coveringRadius, motionDuration, useMotionPreference } from '@/ui/motion';
+import { takeThemeReveal, type RevealOrigin } from './reveal';
 import { applyThemeToDocument } from './webDocument';
 
 const ThemeContext = createContext<AppTheme | null>(null);
@@ -22,25 +23,51 @@ export function useTheme(): AppTheme {
   return theme;
 }
 
+type Disc = { key: number; origin: RevealOrigin; colour: string };
+
 /**
  * Applies a resolved theme without a flash: an overlay in the previous canvas colour covers the tree,
  * the new theme renders underneath on the next frame, then the overlay fades out. The tree never remounts.
  * Whenever target and applied agree again, also when a change is undone before its frame, the overlay fades.
+ *
+ * SM14 (M4.10, theme/reveal.ts): a change SET-10 asked to reveal from a swatch grows a disc in the new canvas colour from there
+ * (effect.slow) instead, switches beneath it and fades it (effect.fast); a change the web's View Transition already animates
+ * applies at once. Reduced motion keeps the crossfade.
  */
 function useThemeCrossfade(target: ThemeName) {
-  const { enabled, timingTo } = useMotion();
+  const { enabled, reduced, effectTo } = useMotionPreference();
   const [applied, setApplied] = useState(target);
+  const [disc, setDisc] = useState<Disc | null>(null);
   const cover = useSharedValue(0);
   const fill = useSharedValue<string>(themes[target].color.bg.canvas);
   const covering = useRef(false);
+  const discs = useRef(0);
 
   useEffect(() => {
     if (target === applied) {
       if (covering.current) {
         covering.current = false;
-        cover.set(timingTo(0, 'small'));
+        cover.set(effectTo(0, 'slow'));
       }
       return;
+    }
+    const reveal = takeThemeReveal();
+    if (reveal?.mode === 'instant') {
+      // The web's View Transition animates this change: apply it on the next frame, with no overlay.
+      const frame = requestAnimationFrame(() => setApplied(target));
+      return () => cancelAnimationFrame(frame);
+    }
+    if (reveal?.mode === 'disc' && enabled && !reduced) {
+      const origin = reveal.origin;
+      const frame = requestAnimationFrame(() => {
+        discs.current += 1;
+        setDisc({ key: discs.current, origin, colour: themes[target].color.bg.canvas });
+      });
+      const covered = setTimeout(() => setApplied(target), motionDuration('effect.slow'));
+      return () => {
+        cancelAnimationFrame(frame);
+        clearTimeout(covered);
+      };
     }
     if (enabled && !covering.current) {
       covering.current = true;
@@ -49,18 +76,56 @@ function useThemeCrossfade(target: ThemeName) {
     }
     const frame = requestAnimationFrame(() => setApplied(target));
     return () => cancelAnimationFrame(frame);
-  }, [target, applied, enabled, timingTo, cover, fill]);
+  }, [target, applied, enabled, reduced, effectTo, cover, fill]);
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: cover.get(), backgroundColor: fill.get() }));
-  return { applied, overlayStyle };
+  return { applied, overlayStyle, disc, endDisc: () => setDisc(null) };
+}
+
+/** The SM14 disc: grows from the swatch until it covers the window, then fades once the theme beneath has switched. */
+function RevealDisc({ disc, width, height, onDone }: { disc: Disc; width: number; height: number; onDone: () => void }) {
+  const { effectTo } = useMotionPreference();
+  const grow = useSharedValue(0);
+  const fade = useSharedValue(1);
+  const radius = coveringRadius(disc.origin, width, height);
+  useEffect(() => {
+    grow.set(effectTo(1, 'slow'));
+    const covered = setTimeout(() => fade.set(effectTo(0, 'fast')), motionDuration('effect.slow'));
+    const done = setTimeout(onDone, motionDuration('effect.slow') + motionDuration('effect.fast'));
+    return () => {
+      clearTimeout(covered);
+      clearTimeout(done);
+    };
+    // One run per disc: the callbacks of the first render are the ones that count.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const style = useAnimatedStyle(() => ({ opacity: fade.get(), transform: [{ scale: grow.get() }] }));
+  return (
+    <Animated.View
+      aria-hidden
+      style={[
+        styles.disc,
+        {
+          backgroundColor: disc.colour,
+          borderRadius: radius,
+          height: radius * 2,
+          left: disc.origin.x - radius,
+          top: disc.origin.y - radius,
+          width: radius * 2,
+        },
+        style,
+      ]}
+      testID="theme.reveal"
+    />
+  );
 }
 
 /** Mounts only after hydration, so the crossfade starts from the stored theme and never fades into it. */
 function HydratedThemeProvider({ children }: { children: ReactNode }) {
   const preference = useThemePreference();
   const systemScheme = useColorScheme();
-  const { fontScale: osFontScale } = useWindowDimensions();
-  const { applied, overlayStyle } = useThemeCrossfade(resolveThemeName(preference, systemScheme));
+  const { fontScale: osFontScale, width, height } = useWindowDimensions();
+  const { applied, overlayStyle, disc, endDisc } = useThemeCrossfade(resolveThemeName(preference, systemScheme));
 
   const accent = useAccentSet();
   const theme = getTheme(applied, isWeb ? (qa.fontScale ?? 1) : osFontScale, accent);
@@ -85,6 +150,7 @@ function HydratedThemeProvider({ children }: { children: ReactNode }) {
       <View style={[styles.root, { backgroundColor: canvas }]}>
         {children}
         <Animated.View aria-hidden style={[styles.overlay, overlayStyle]} testID="theme.overlay" />
+        {disc ? <RevealDisc key={disc.key} disc={disc} width={width} height={height} onDone={endDisc} /> : null}
       </View>
     </ThemeContext>
   );
@@ -108,4 +174,5 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   overlay: { ...StyleSheet.absoluteFill, pointerEvents: 'none', zIndex: zIndex.toast },
+  disc: { pointerEvents: 'none', position: 'absolute', zIndex: zIndex.toast },
 });

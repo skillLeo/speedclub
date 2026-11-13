@@ -86,13 +86,16 @@ class SaveController extends Controller
             ->whereHas('owner', fn ($owner) => $owner
                 ->whereNull('users.deleted_at')
                 ->where('users.status', UserStatus::Active)
-                ->whereNotNull('users.email_verified_at'))
+                ->whereNotNull('users.email_verified_at')
+                // 09 §8.19: a saved sample build stays saved but is left out while editorial_samples is off.
+                ->when(! $builds->samplesVisible(), fn ($hidden) => $hidden->where('users.is_sample', false)))
             ->with(FeedVehicleResource::RELATIONS)
             ->withCount('modifications')
             ->orderByDesc('saves.created_at')
             ->orderByDesc('saves.id');
 
         $builds->withoutBlocks($saved->getBaseQuery(), $user, 'vehicles.owner_id');
+        $builds->withoutSamples($saved->getBaseQuery(), 'vehicles.is_sample');
 
         return SavedVehicleResource::collection($saved->cursorPaginate($request->pageSize(), ['vehicles.*'])->withQueryString());
     }

@@ -8,6 +8,7 @@ use App\Models\QrCode;
 use App\Models\Vehicle;
 use App\Services\Qr\QrCodes;
 use App\Services\Qr\QrRenderer;
+use App\Services\Showcase\SampleContent;
 use App\Support\PublicUrl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -78,7 +79,11 @@ class LandingPage
             ->where('status', VehicleStatus::Published)
             ->where('visibility', Visibility::Public)
             ->has('media')
-            ->whereHas('owner', fn ($owner) => $owner->where('indexable', true))
+            // Samples never feature on the indexed landing page while editorial_samples is off: filtered before the top-N cut, so they
+            // cannot crowd real builds out of the candidates.
+            ->when(! app(SampleContent::class)->visible(), fn ($hidden) => $hidden->where('is_sample', false))
+            ->whereHas('owner', fn ($owner) => $owner->where('indexable', true)
+                ->when(! app(SampleContent::class)->visible(), fn ($hidden) => $hidden->where('is_sample', false)))
             ->withCount('modifications')
             ->orderByDesc('modifications_count')
             ->orderBy('id')

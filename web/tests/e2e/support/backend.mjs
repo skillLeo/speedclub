@@ -146,6 +146,20 @@ export const setWhoCanMessage = (email, value) => backend('set-who-can-message',
  */
 export const runTestJobs = (email, only = '') => backend('run-test-jobs', email, ...(only ? [only] : []));
 
+/**
+ * M4.12 F15: moves a test account's creation back, so it may organise events (09 §8.7: at least 14 days old).
+ * @param {string} email
+ * @param {number} [days]
+ */
+export const ageTestMember = (email, days = 15) => backend('age-test-member', email, String(days));
+
+/**
+ * M4.12 F15: the ADM-53 decision on a test organiser's pending event (approve publishes it), until the admin queue drives it.
+ * @param {string} slug
+ * @param {'approve'|'reject'} [outcome]
+ */
+export const reviewTestEvent = (slug, outcome = 'approve') => backend('review-test-event', slug, outcome);
+
 /** For an exit handler, where nothing asynchronous runs any more. */
 export function deleteTestAccountsSync(prefix = '') {
   assertLocalServer();

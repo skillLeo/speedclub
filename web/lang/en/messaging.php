@@ -6,6 +6,7 @@ return [
     'photo_unknown' => 'This photo no longer exists. Upload it again.',
     'photo_not_ready' => 'The photo is still being processed. Try again in a moment.',
     'vehicle_unavailable' => 'You cannot share this vehicle right now.',
+    'reply_unavailable' => 'You can no longer reply to this message.',
     'recipient_self' => 'You cannot write to yourself.',
     'pin_limit' => 'You can pin at most :max conversations.',
     'push' => [

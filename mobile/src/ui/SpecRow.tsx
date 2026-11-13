@@ -13,7 +13,7 @@ export type SpecRowProps = {
   value: string;
   /** "PS" */
   unit?: string;
-  /** Shown under the value when it is not the factory figure: "Besitzerangabe", "Gemessen". */
+  /** Shown under the value when it is not the factory figure: "Geschätzt", "Prüfstand". */
   provenance?: string;
   /** The hairline to the next row. */
   divider?: boolean;
@@ -55,19 +55,19 @@ export function SpecRow({ label, value, unit, provenance, divider = true, inset,
   return (
     <View testID={testID} style={style}>
       <View accessible style={[styles.row, stacked ? styles.rowStacked : null, { paddingLeft: side, paddingRight: side }]}>
-        <Text variant="supporting" color="text.secondary" hyphenate={false} style={styles.label}>
+        <Text variant="callout" color="text.secondary" hyphenate={false} style={styles.label}>
           {label}
         </Text>
         <View style={[styles.end, stacked ? styles.endStacked : null]}>
           <Text
-            variant="specValue"
+            variant="bodyStrong" numeric
             hyphenate={false}
             style={[endText, isNumericValue(value) ? null : styles.proportional]}
             testID={testID ? `${testID}.value` : undefined}
           >
             {value}
             {unit ? (
-              <Text variant="specUnit" color="text.secondary" hyphenate={false}>
+              <Text variant="labelUnit" color="text.secondary" hyphenate={false}>
                 {NO_BREAK_SPACE}
                 {unit}
               </Text>

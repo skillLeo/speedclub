@@ -1,18 +1,15 @@
 import { View } from 'react-native';
 
-import { createStyles, layout, size, useBreakpoint } from '@/theme';
+import { createStyles, size, useBreakpoint } from '@/theme';
 import { Skeleton, SkeletonBlock, SkeletonText, VehicleCardSkeleton } from '@/ui';
 
-import { stripCardWidth } from './GarageStrip';
-
-/** PROF-01's own rows: Meine QR-Codes, Einstellungen, Fahrzeug hinzufügen, and Gespeichert with its flag (DQ-273). */
-const ROWS = 3;
+import { PROFILE_COLUMN_MAX, profileCoverHeight } from './ProfileHeader';
 
 const useStyles = createStyles((t) => ({
-  identity: { maxWidth: layout.feedColumn + 2 * layout.gutter.desktop, width: '100%' },
+  identity: { maxWidth: PROFILE_COLUMN_MAX, width: '100%' },
   avatar: { marginTop: t.space[8] },
-  // FS-8 with a cover: the avatar overlaps it by 32, as in ProfileHeader.
-  avatarOverlap: { alignSelf: 'flex-start', marginTop: -t.space[32] },
+  // As ProfileIdentity: the avatar overlaps the cover by half its height, inside the canvas ring.
+  avatarOverlap: { alignSelf: 'flex-start', marginTop: -size.avatar.xl / 2 },
   ring: {
     backgroundColor: t.color.bg.canvas,
     borderRadius: t.radius.full,
@@ -23,18 +20,17 @@ const useStyles = createStyles((t) => ({
     top: -t.space[2],
   },
   names: { gap: t.space[2], marginTop: t.space[12] },
-  stats: { marginTop: t.space[12] },
   bio: { marginTop: t.space[12] },
+  stats: { marginTop: t.space[12] },
   actions: { flexDirection: 'row', gap: t.space[8], marginTop: t.space[16] },
-  section: { marginTop: t.space[32] },
-  card: { marginTop: t.space[12] },
-  rows: { marginTop: t.space[32] },
+  tabs: { flexDirection: 'row', gap: t.space[24], marginTop: t.space[24], minHeight: t.size.contentTab, alignItems: 'center' },
+  card: { marginTop: t.space[16] },
 }));
 
 /**
- * The profile in the shape it will have (§8): with the cover when the member has one (DQ-122), avatar, name lines, stats,
- * two lines of bio, the actions, one garage card and the rows. Without a known cover it takes the shorter shape, so it is
- * never longer than what replaces it. `width` is the full width for the cover, `columnWidth` the column's for the card.
+ * The profile in the shape it will have (SM15): the cover when the member has one (DQ-122), the avatar, the name lines, two lines of
+ * bio, the counts, the actions, the tab row and one garage card. Without a known cover it takes the shorter shape, so it is never
+ * longer than what replaces it. `width` is the full width for the cover, `columnWidth` the column's for the card.
  */
 export function ProfileSkeleton({
   width,
@@ -42,27 +38,24 @@ export function ProfileSkeleton({
   withCover = false,
   variant = 'own',
   withMessage = false,
-  rows = ROWS,
   routeId = 'PROF-01',
 }: {
   width: number;
   columnWidth: number;
   withCover?: boolean;
-  /** `member` (PROF-02): Folgen, Nachricht and more, and no rows of your own. */
+  /** `member` (PROF-02): Folgen, Nachricht and more. */
   variant?: 'own' | 'member';
-  /** PROF-02 for a guest: Nachricht beside Folgen (members get it with M2.4, DQ-265). */
+  /** PROF-02: Nachricht beside Folgen. */
   withMessage?: boolean;
-  /** How many own rows PROF-01 shows. */
-  rows?: number;
   routeId?: string;
 }) {
   const styles = useStyles();
   const { gutter, kind } = useBreakpoint();
-  const cardWidth = stripCardWidth(columnWidth, gutter, kind);
   const column = { paddingHorizontal: gutter };
+  const cardWidth = Math.max(0, columnWidth - 2 * gutter);
   return (
     <Skeleton testID={`${routeId}.skeleton`}>
-      {withCover && width > 0 ? <SkeletonBlock width={width} aspectRatio={3} testID={`${routeId}.skeleton.cover`} /> : null}
+      {withCover && width > 0 ? <SkeletonBlock width={width} height={profileCoverHeight(width, kind)} testID={`${routeId}.skeleton.cover`} /> : null}
       <View style={[styles.identity, column]}>
         {withCover ? (
           <View style={styles.avatarOverlap}>
@@ -73,39 +66,36 @@ export function ProfileSkeleton({
           <SkeletonBlock width={size.avatar.xl} height={size.avatar.xl} corner="full" style={styles.avatar} />
         )}
         <View style={styles.names}>
-          <SkeletonText variant="titleM" width="50%" />
-          <SkeletonText variant="supporting" width="30%" />
+          <SkeletonText variant="title1" width="55%" />
+          <SkeletonText variant="callout" width="30%" />
           <SkeletonText variant="caption" width="55%" />
         </View>
-        <SkeletonText variant="bodyStrong" width="70%" style={styles.stats} />
         <SkeletonText variant="body" lines={2} style={styles.bio} />
+        <SkeletonText variant="callout" width="70%" style={styles.stats} />
         {variant === 'own' ? (
           <View style={styles.actions}>
             <SkeletonBlock width="40%" height={size.button.m} corner="sm" />
-            <SkeletonBlock width={size.iconButton} height={size.iconButton} corner="sm" />
-            <SkeletonBlock width={size.iconButton} height={size.iconButton} corner="sm" />
+            <SkeletonBlock width={size.iconButton} height={size.iconButton} corner="full" />
+            <SkeletonBlock width={size.iconButton} height={size.iconButton} corner="full" />
           </View>
         ) : (
           <View style={styles.actions}>
             <SkeletonBlock width="25%" height={size.button.m} corner="sm" />
             {withMessage ? <SkeletonBlock width="30%" height={size.button.m} corner="sm" /> : null}
-            <SkeletonBlock width={size.iconButton} height={size.iconButton} corner="sm" />
+            <SkeletonBlock width={size.iconButton} height={size.iconButton} corner="full" />
           </View>
         )}
-      </View>
-      <View style={[styles.section, styles.identity, column]}>
-        <SkeletonText variant="titleS" width="25%" />
+        <View style={styles.tabs}>
+          <SkeletonText variant="bodyStrong" width="15%" />
+          <SkeletonText variant="bodyStrong" width="15%" />
+          {variant === 'own' ? <SkeletonText variant="bodyStrong" width="15%" /> : null}
+        </View>
         {cardWidth > 0 ? (
           <View style={[styles.card, { width: cardWidth }]}>
             <VehicleCardSkeleton />
           </View>
         ) : null}
       </View>
-      {variant === 'own' ? (
-        <View style={[styles.rows, styles.identity, column]}>
-          <SkeletonBlock height={size.row.single * rows} corner="md" />
-        </View>
-      ) : null}
     </Skeleton>
   );
 }

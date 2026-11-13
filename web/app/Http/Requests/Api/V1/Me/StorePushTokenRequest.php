@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\V1\Me;
 use App\Enums\DevicePlatform;
 use App\Models\PersonalAccessToken;
 use App\Models\User;
+use App\Services\Auth\DeviceInstalls;
 use App\Support\Auth\DeviceInfo;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -46,7 +47,9 @@ class StorePushTokenRequest extends FormRequest
             // A stored token only: the cookie session of the web app has none, and neither has a test's stand-in.
             $own = $token instanceof PersonalAccessToken && $token->exists ? $token->deviceId() : null;
 
-            if ($own !== null && ! $validator->errors()->has('device_id') && $this->input('device_id') !== $own) {
+            $given = $this->input('device_id');
+
+            if ($own !== null && ! $validator->errors()->has('device_id') && (! is_string($given) || DeviceInstalls::key((string) $user->getKey(), $given) !== $own)) {
                 $validator->errors()->add('device_id', (string) __('validation.push_device_mismatch'));
             }
         }];

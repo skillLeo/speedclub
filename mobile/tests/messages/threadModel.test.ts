@@ -2,6 +2,7 @@
 import { dayLabel, inboxTime } from '@/features/messages/dates';
 import { threadItems, type MessageItem } from '@/features/messages/grouping';
 import { mergeThread, newestServerId, uniqueServerMessages } from '@/features/messages/merge';
+import { newestReceivedText } from '@/features/messages/model';
 import type { OutboxEntry } from '@/features/messages/outbox';
 import { readReceiptKey, readToSend } from '@/features/messages/receipts';
 
@@ -136,5 +137,19 @@ describe('merging server pages with the outbox', () => {
     const merged = mergeThread(server, [entry('c-1', 1, 'failed', '2026-11-08T10:00:00Z'), entry('c-2', 2, 'sending'), entry('c-3', 3, 'queued')]);
     expect(merged.map((message) => message.key)).toEqual(['c-3', 'c-2', '03', 'c-1', '01']);
     expect(merged.find((message) => message.key === 'c-1')?.delivery).toBe('failed');
+  });
+});
+
+describe('qaOpen=actions target (MSG-02-translate)', () => {
+  it('is the newest text of the other member the server has, never an own, photo or unsent one', () => {
+    const own = serverMessage({ id: '01J9', mine: true, senderUsername: null, body: 'Passt.' });
+    const photo = serverMessage({ id: '01J8', kind: 'photo', body: null });
+    const unsent = { ...serverMessage({ id: '01J7', body: 'Noch unterwegs' }), id: null };
+    const older = serverMessage({ id: '01J1', body: 'Hast du die BBS noch?' });
+    const newest = serverMessage({ id: '01J5', body: 'Samstag um 10 am Treffpunkt?' });
+    expect(newestReceivedText([own, photo, unsent, older, newest])?.id).toBe('01J5');
+    expect(newestReceivedText([newest, older])?.id).toBe('01J5');
+    expect(newestReceivedText([own, photo])).toBeNull();
+    expect(newestReceivedText([])).toBeNull();
   });
 });

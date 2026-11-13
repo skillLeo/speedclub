@@ -81,17 +81,17 @@ function isClear(value: QueueValue): boolean {
 
         <!-- 1 · queues -->
         <section aria-labelledby="dash-queues" class="flex flex-col gap-12" data-testid="ADM-06.queues">
-            <h2 id="dash-queues" class="text-title-s text-ink">{{ trans('dashboard.queues.title') }}</h2>
+            <h2 id="dash-queues" class="text-headline text-ink">{{ trans('dashboard.queues.title') }}</h2>
             <StateBlock v-if="forcedError" kind="error" :title="trans('dashboard.queues.error')" :retryable="false" />
             <EmptyQueue v-else-if="tiles.length === 0" variant="quiet" :title="trans('dashboard.queues.none_title')" :body="trans('dashboard.queues.none_body')" />
             <ul v-else class="grid grid-cols-1 gap-12 tablet:grid-cols-2 desktop:grid-cols-3">
-                <li v-for="tile in tiles" :key="tile.key" class="flex min-h-120 flex-col gap-12 rounded-md border border-line-subtle bg-surface px-16 py-16" :data-testid="`ADM-06.queue.${tile.testId}`">
+                <li v-for="tile in tiles" :key="tile.key" class="flex min-h-120 flex-col gap-12 rounded-sm border border-line-subtle bg-surface px-16 py-16" :data-testid="`ADM-06.queue.${tile.testId}`">
                     <div class="flex items-start justify-between gap-12">
-                        <h3 class="text-label-s text-ink-2">{{ trans(tile.label) }}</h3>
+                        <h3 class="text-admin-base-strong text-ink-2">{{ trans(tile.label) }}</h3>
                         <Link
                             v-if="queueHref(tile) && !forcedLoading"
                             :href="queueHref(tile) ?? ''"
-                            :class="[focusRing, '-my-8 -mr-8 inline-flex h-32 min-w-32 items-center gap-4 rounded-xs px-8 text-label-s text-ink-2 hover:bg-hover hover:text-ink']"
+                            :class="[focusRing, '-my-8 -mr-8 inline-flex h-32 min-w-32 items-center gap-4 rounded-xs px-8 text-admin-base-strong text-ink-2 hover:bg-hover hover:text-ink']"
                             :aria-label="trans('dashboard.queues.open', { queue: trans(tile.label) })"
                         >
                             {{ trans('dashboard.queues.open_short') }}<PhArrowRight :size="16" aria-hidden="true" />
@@ -102,7 +102,7 @@ function isClear(value: QueueValue): boolean {
                     </template>
                     <!-- queue zero on the same baseline as a count, no box (DQ-504) -->
                     <div v-else-if="isClear(queue(tile))" class="flex flex-col gap-4" data-queue="clear">
-                        <p class="font-display text-display-m text-ink-3 tabular-nums">{{ formatNumber(0) }}</p>
+                        <p class="font-numeral text-hero-numeral-s text-ink-3 tabular-nums">{{ formatNumber(0) }}</p>
                         <p class="flex items-center gap-4 text-caption text-ink-2">
                             <PhCheck :size="16" class="shrink-0 text-success" aria-hidden="true" />
                             <span>{{ queue(tile).since ? trans('dashboard.queues.clear_since', { time: formatRelative(queue(tile).since) }) : trans('dashboard.queues.clear') }}</span>
@@ -110,11 +110,11 @@ function isClear(value: QueueValue): boolean {
                         </p>
                     </div>
                     <div v-else-if="queue(tile).count === null" class="flex flex-col gap-4">
-                        <p class="text-label-s" :class="queue(tile).status === 'danger' ? 'text-danger' : 'text-warning'">{{ trans('dashboard.queues.stale') }}</p>
+                        <p class="text-admin-base-strong" :class="queue(tile).status === 'danger' ? 'text-danger' : 'text-warning'">{{ trans('dashboard.queues.stale') }}</p>
                         <p v-if="queue(tile).since" class="text-caption text-ink-3">{{ trans('dashboard.queues.last', { time: formatRelative(queue(tile).since) }) }}</p>
                     </div>
                     <div v-else class="flex flex-col gap-4">
-                        <p class="font-display text-display-m tabular-nums" :class="queue(tile).status === 'danger' ? 'text-danger' : queue(tile).status === 'warning' ? 'text-warning' : 'text-ink'">
+                        <p class="font-numeral text-hero-numeral-s tabular-nums" :class="queue(tile).status === 'danger' ? 'text-danger' : queue(tile).status === 'warning' ? 'text-warning' : 'text-ink'">
                             {{ formatNumber(queue(tile).count) }}
                         </p>
                         <p class="text-caption text-ink-2">
@@ -136,16 +136,16 @@ function isClear(value: QueueValue): boolean {
             <!-- 2 · KPIs -->
             <section aria-labelledby="dash-kpis" class="flex flex-col gap-12" data-testid="ADM-06.kpis">
                 <div class="flex flex-wrap items-baseline justify-between gap-8">
-                    <h2 id="dash-kpis" class="text-title-s text-ink">{{ trans('dashboard.kpis.title') }}</h2>
+                    <h2 id="dash-kpis" class="text-headline text-ink">{{ trans('dashboard.kpis.title') }}</h2>
                     <p class="text-caption text-ink-3">{{ trans('dashboard.kpis.series') }}</p>
                 </div>
-                <div v-if="forcedLoading" data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line-subtle bg-line-subtle tablet:grid-cols-3">
+                <div v-if="forcedLoading" data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-line-subtle bg-line-subtle tablet:grid-cols-3">
                     <KpiTile v-for="key in KPI_ORDER" :key="key" :label="trans(`dashboard.kpis.${key}`)" :value="null" :period="PER_DAY.includes(key) ? trans('dashboard.kpis.per_day') : undefined" loading />
                 </div>
                 <StateBlock v-else-if="forcedError" kind="error" :title="trans('dashboard.kpis.error')" :retryable="false" />
                 <Deferred v-else data="kpis">
                     <template #fallback>
-                        <div data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line-subtle bg-line-subtle tablet:grid-cols-3">
+                        <div data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-line-subtle bg-line-subtle tablet:grid-cols-3">
                             <KpiTile v-for="key in KPI_ORDER" :key="key" :label="trans(`dashboard.kpis.${key}`)" :value="null" :period="PER_DAY.includes(key) ? trans('dashboard.kpis.per_day') : undefined" loading />
                         </div>
                     </template>
@@ -153,7 +153,7 @@ function isClear(value: QueueValue): boolean {
                         <StateBlock kind="error" :title="trans('dashboard.kpis.error')" :body="reloading ? trans('ui.state.reloading') : undefined" test-id="ADM-06.kpis.error" @retry="reload('kpis')" />
                     </template>
                     <EmptyQueue v-if="kpiList.length === 0" variant="first" :title="trans('dashboard.kpis.empty_title')" :body="trans('dashboard.kpis.empty_body')" />
-                    <div v-else data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line-subtle bg-line-subtle tablet:grid-cols-3">
+                    <div v-else data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-line-subtle bg-line-subtle tablet:grid-cols-3">
                         <KpiTile
                             v-for="kpi in kpiList"
                             :key="kpi.key"
@@ -170,7 +170,7 @@ function isClear(value: QueueValue): boolean {
 
             <!-- 3 · charts + 4 · DSA -->
             <section aria-labelledby="dash-charts" class="flex flex-col gap-12" data-testid="ADM-06.charts">
-                <h2 id="dash-charts" class="text-title-s text-ink">{{ trans('dashboard.charts.title') }}</h2>
+                <h2 id="dash-charts" class="text-headline text-ink">{{ trans('dashboard.charts.title') }}</h2>
                 <div class="grid grid-cols-1 gap-16 desktop:grid-cols-2">
                     <template v-if="forcedLoading || forcedError">
                         <ChartCard
@@ -223,20 +223,20 @@ function isClear(value: QueueValue): boolean {
                         />
                     </Deferred>
                     <!-- 4 · DSA -->
-                    <section aria-labelledby="dash-dsa" class="flex min-w-0 flex-col gap-12 self-start rounded-md border border-line-subtle bg-surface px-16 py-16" data-testid="ADM-06.dsa">
+                    <section aria-labelledby="dash-dsa" class="flex min-w-0 flex-col gap-12 self-start rounded-sm border border-line-subtle bg-surface px-16 py-16" data-testid="ADM-06.dsa">
                         <h3 id="dash-dsa" class="text-headline text-ink">{{ trans('dashboard.dsa.title') }}</h3>
-                        <p class="text-supporting text-ink-2">{{ trans('dashboard.dsa.body') }}</p>
+                        <p class="text-admin-base text-ink-2">{{ trans('dashboard.dsa.body') }}</p>
                         <Skeleton v-if="forcedLoading" class="h-28 w-120" />
-                        <p v-else-if="forcedError" class="text-supporting text-ink-2" role="alert">{{ trans('dashboard.dsa.error') }}</p>
+                        <p v-else-if="forcedError" class="text-admin-base text-ink-2" role="alert">{{ trans('dashboard.dsa.error') }}</p>
                         <Deferred v-else data="dsa">
                             <template #fallback><Skeleton class="h-28 w-120" /></template>
                             <template #rescue>
                                 <StateBlock kind="error" :title="trans('dashboard.dsa.error')" test-id="ADM-06.dsa.error" @retry="reload('dsa')" />
                             </template>
-                            <p v-if="!dsa || dsa.average === null" class="text-supporting text-ink-3">{{ trans('dashboard.dsa.empty') }}</p>
+                            <p v-if="!dsa || dsa.average === null" class="text-admin-base text-ink-3">{{ trans('dashboard.dsa.empty') }}</p>
                             <div v-else class="flex flex-col gap-12">
-                                <p class="font-display text-display-m text-ink tabular-nums" data-testid="ADM-06.dsa.value">{{ formatNumber(dsa.average) }}</p>
-                                <table class="w-full max-w-400 border-collapse text-supporting">
+                                <p class="font-numeral text-hero-numeral-s text-ink tabular-nums" data-testid="ADM-06.dsa.value">{{ formatNumber(dsa.average) }}</p>
+                                <table class="w-full max-w-400 border-collapse text-admin-base">
                                     <caption class="sr-only">{{ trans('dashboard.dsa.months') }}</caption>
                                     <tbody>
                                         <tr v-for="month in dsa.months" :key="month.month" class="h-32 border-b border-line-subtle last:border-b-0">

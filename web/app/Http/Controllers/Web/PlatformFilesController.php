@@ -18,22 +18,44 @@ class PlatformFilesController extends Controller
      * in the fragment, which is no part of the path, so only the verified app or the member web gets it. The app claims the same exact
      * paths in its intent filters (mobile/app.config.ts).
      */
-    public const APP_PATHS = ['/v/*', '/u/*', '/c/*', '/C/*', '/app/reset-password', '/app/verify-email'];
+    public const APP_PATHS = ['/v/*', '/u/*', '/c/*', '/C/*', '/app/reset-password', '/app/verify-email', '/auth/magic', '/auth/secure', '/app/auth/magic', '/app/auth/secure'];
+
+    /**
+     * Link-preview fetchers named in robots.txt. They get their own group in both modes: with indexing off they still reach the pages
+     * people share and their images, so a link posted from staging still previews while the pages say noindex. Search engines follow
+     * the * group. (WhatsApp, iMessage and Telegram's fetchers read no robots.txt; they are named for the ones that copy them.)
+     */
+    public const PREVIEW_AGENTS = ['Twitterbot', 'facebookexternalhit', 'Facebot', 'LinkedInBot', 'Slackbot', 'Slackbot-LinkExpanding', 'TelegramBot', 'WhatsApp', 'Discordbot', 'Pinterestbot', 'redditbot', 'SkypeUriPreview'];
+
+    /**
+     * What a shared link and its preview need: the landing page, the vehicle and member pages with their cards, the QR resolver that
+     * redirects to a vehicle page (bots are not counted as scans, KnownBots), the brand files. Later routes (/e/, /b/, /brands/) join here.
+     */
+    public const SHARED_PATHS = ['/$', '/v/', '/u/', '/c/', '/C/', '/og/', '/brand/', '/storage/og/', '/app/v/', '/app/u/', '/site.webmanifest', '/favicon', '/apple-touch-icon.png', '/icon-'];
+
+    /** Never for a crawler. */
+    public const PRIVATE_PATHS = ['/app/', '/admin', '/api/'];
 
     public function robots(): Response
     {
-        $lines = config()->boolean('speedclub.public_pages.allow_indexing')
+        $indexing = config()->boolean('speedclub.public_pages.allow_indexing');
+        $previews = [
+            ...array_map(fn (string $agent): string => 'User-agent: '.$agent, self::PREVIEW_AGENTS),
+            ...array_map(fn (string $path): string => 'Allow: '.$path, self::SHARED_PATHS),
+            ...($indexing ? array_map(fn (string $path): string => 'Disallow: '.$path, self::PRIVATE_PATHS) : ['Disallow: /']),
+        ];
+
+        $lines = $indexing
             ? [
                 'User-agent: *',
-                'Disallow: /app/',
-                'Disallow: /admin/',
-                'Disallow: /api/',
-                'Disallow: /c/',
-                'Disallow: /C/',
+                ...array_map(fn (string $path): string => 'Allow: '.$path, ['/v/', '/u/', '/og/']),
+                ...array_map(fn (string $path): string => 'Disallow: '.$path, [...self::PRIVATE_PATHS, '/c/', '/C/']),
+                '',
+                ...$previews,
                 '',
                 'Sitemap: '.rtrim(config()->string('app.url'), '/').'/sitemap.xml',
             ]
-            : ['User-agent: *', 'Disallow: /'];
+            : [...$previews, '', 'User-agent: *', 'Disallow: /'];
 
         return new Response(implode("\n", $lines)."\n", 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',
@@ -51,14 +73,15 @@ class PlatformFilesController extends Controller
 
     /**
      * An empty list until a fingerprint is set, which is valid and links nothing. Several keys go comma separated, for the upload key
-     * and Play's signing key side by side.
+     * and Play's signing key side by side. M4.6 (09 §8.2): get_login_creds lets Android's Credential Manager use the passkeys of this
+     * site in the app.
      */
     public function assetLinks(): JsonResponse
     {
         $fingerprints = $this->fingerprints((string) config('speedclub.mobile.android_cert_sha256'));
 
         return $this->association($fingerprints === [] ? [] : [[
-            'relation' => ['delegate_permission/common.handle_all_urls'],
+            'relation' => ['delegate_permission/common.handle_all_urls', 'delegate_permission/common.get_login_creds'],
             'target' => [
                 'namespace' => 'android_app',
                 'package_name' => config('speedclub.mobile.android_package'),
@@ -72,12 +95,14 @@ class PlatformFilesController extends Controller
         $team = config('speedclub.mobile.ios_team_id');
         $bundle = config('speedclub.mobile.ios_bundle_id');
 
-        $details = is_string($team) && $team !== '' && is_string($bundle) && $bundle !== '' ? [[
-            'appIDs' => [$team.'.'.$bundle],
+        $app = is_string($team) && $team !== '' && is_string($bundle) && $bundle !== '' ? $team.'.'.$bundle : null;
+        $details = $app !== null ? [[
+            'appIDs' => [$app],
             'components' => array_map(fn (string $path): array => ['/' => $path], self::APP_PATHS),
         ]] : [];
 
-        return $this->association(['applinks' => ['details' => $details]]);
+        // M4.6 (09 §8.2): webcredentials for the app's passkeys and saved credentials; empty until the Team ID exists (OA-15).
+        return $this->association(['applinks' => ['details' => $details], 'webcredentials' => ['apps' => $app !== null ? [$app] : []]]);
     }
 
     /**

@@ -136,7 +136,8 @@ describe('/app', function () {
         $csp = cspOf($this->get('/app')->assertOk()->headers->get('Content-Security-Policy'));
         $hash = base64_encode(hash('sha256', $script, true));
 
-        expect($csp['script-src'])->toBe("'self' 'sha256-$hash'")
+        // ADR-449: the map library host is the one other source (SpaMapCspTest).
+        expect($csp['script-src'])->toBe("'self' 'sha256-$hash' https://unpkg.com")
             ->and($csp['script-src'])->not->toContain('unsafe')
             ->and($csp['script-src'])->not->toContain('nonce')
             ->and($csp['object-src'])->toBe("'none'")
@@ -191,7 +192,7 @@ describe('/app', function () {
     it('adds the realtime hosts only when Pusher is configured', function () {
         file_put_contents($this->index, '<p>x</p>');
 
-        expect(cspOf($this->get('/app')->headers->get('Content-Security-Policy'))['connect-src'])->toBe("'self'");
+        expect(cspOf($this->get('/app')->headers->get('Content-Security-Policy'))['connect-src'])->toBe("'self' https://tiles.openfreemap.org");
 
         // M2.4: realtime needs all four Pusher values and the pusher broadcaster (App\Services\Messaging\Realtime).
         config(['broadcasting.default' => 'pusher', 'broadcasting.connections.pusher.key' => 'public-key', 'broadcasting.connections.pusher.secret' => 'secret', 'broadcasting.connections.pusher.app_id' => '1', 'broadcasting.connections.pusher.options.cluster' => 'eu']);

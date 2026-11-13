@@ -36,7 +36,7 @@ beforeEach(function () {
     $this->canvas = app(OgImageCanvas::class);
     $this->photo = TestImages::jpeg(1200, 630);
     $this->member = fn (string $name, ?string $city = null): string => $this->canvas->member(null, null, null, null, $name, '@nina', $city);
-    $this->vehicle = fn (?string $eyebrow, string $title, string $specs = ''): string => $this->canvas->vehicle($this->photo, null, null, $eyebrow, $title, $specs);
+    $this->vehicle = fn (?string $eyebrow, string $title, string $specs = ''): string => $this->canvas->vehicle($this->photo, null, null, $eyebrow, $title, $specs === '' ? [] : [['value' => $specs, 'unit' => null, 'label' => 'Leistung']]);
 });
 
 describe('sanitise', function () {
@@ -83,23 +83,27 @@ describe('sanitise', function () {
 
     it('says true of its lists: every range is really in the font', function () {
         $font = fn (string $file): array => tap(Font::load(resource_path('fonts/'.$file)), fn ($parsed) => $parsed->parse())->getUnicodeCharMap();
-        $inter = $font('Inter-Medium.ttf');
-        $barlowBold = $font('BarlowSemiCondensed-Bold.ttf');
-        $barlowSemiBold = $font('BarlowSemiCondensed-SemiBold.ttf');
+        // Every Inter cut a card draws with, Inter Display for a member's name among them: none of them may lack a letter of the list.
+        $inters = ['Inter-Medium.ttf' => $font('Inter-Medium.ttf'), 'InterDisplay-SemiBold.ttf' => $font('InterDisplay-SemiBold.ttf')];
+        $archivos = ['ArchivoSemiExpanded-SemiBold.ttf' => $font('ArchivoSemiExpanded-SemiBold.ttf'), 'ArchivoCondensed-SemiBold.ttf' => $font('ArchivoCondensed-SemiBold.ttf')];
         $missing = [];
 
         foreach (OgImageCanvas::INTER_RANGES as [$from, $to]) {
             foreach (range($from, $to) as $codePoint) {
-                if (($inter[$codePoint] ?? 0) === 0) {
-                    $missing[] = 'Inter U+'.dechex($codePoint);
+                foreach ($inters as $file => $map) {
+                    if (($map[$codePoint] ?? 0) === 0) {
+                        $missing[] = $file.' U+'.dechex($codePoint);
+                    }
                 }
             }
         }
 
-        foreach (OgImageCanvas::BARLOW_RANGES as [$from, $to]) {
+        foreach (OgImageCanvas::ARCHIVO_RANGES as [$from, $to]) {
             foreach (range($from, $to) as $codePoint) {
-                if (($barlowBold[$codePoint] ?? 0) === 0 || ($barlowSemiBold[$codePoint] ?? 0) === 0) {
-                    $missing[] = 'Barlow U+'.dechex($codePoint);
+                foreach ($archivos as $file => $map) {
+                    if (($map[$codePoint] ?? 0) === 0) {
+                        $missing[] = $file.' U+'.dechex($codePoint);
+                    }
                 }
             }
         }
@@ -107,14 +111,34 @@ describe('sanitise', function () {
         expect($missing)->toBe([]);
     });
 
-    it('counts on Inter for every letter Barlow has', function () {
-        foreach (OgImageCanvas::BARLOW_RANGES as [$from, $to]) {
+    it('lists Archivo only within what Inter has, Cyrillic outside', function () {
+        foreach (OgImageCanvas::ARCHIVO_RANGES as [$from, $to]) {
             foreach (range($from, $to) as $codePoint) {
                 // Spaces go at the edges, and they are in Inter's list as well: x x keeps it.
                 expect($this->canvas->sanitise('x'.mb_chr($codePoint).'x'))->not->toBe('xx', 'U+'.dechex($codePoint));
             }
         }
+
+        $archivo = fn (int $codePoint): bool => collect(OgImageCanvas::ARCHIVO_RANGES)->contains(fn (array $range): bool => $codePoint >= $range[0] && $codePoint <= $range[1]);
+
+        expect($archivo(mb_ord('И')))->toBeFalse()
+            ->and($archivo(mb_ord('Ξ')))->toBeFalse()
+            ->and($archivo(mb_ord('ẞ')))->toBeTrue()
+            ->and($archivo(mb_ord('Ş')))->toBeTrue();
     });
+
+    it('chooses Archivo for a car, Inter when Archivo lacks a letter, Inter Display for a person', function (string $font, string $text, string $expected) {
+        $fontFor = new ReflectionMethod(OgImageCanvas::class, 'fontFor');
+
+        expect($fontFor->invoke($this->canvas, $font, $text))->toBe($expected);
+    })->with([
+        'a model' => ['ArchivoSemiExpanded-SemiBold.ttf', 'Skyline GT-R', 'ArchivoSemiExpanded-SemiBold.ttf'],
+        'the capital sharp s, which Archivo has' => ['ArchivoSemiExpanded-SemiBold.ttf', 'GROẞ', 'ArchivoSemiExpanded-SemiBold.ttf'],
+        'a make in Cyrillic' => ['ArchivoSemiExpanded-SemiBold.ttf', 'Лада', 'Inter-Medium.ttf'],
+        'one letter Archivo lacks moves the whole line' => ['ArchivoSemiExpanded-SemiBold.ttf', 'Skyline ƀ', 'Inter-Medium.ttf'],
+        'spec numerals' => ['ArchivoCondensed-SemiBold.ttf', '280 PS · 3,9 s', 'ArchivoCondensed-SemiBold.ttf'],
+        'a member in Greek' => ['InterDisplay-SemiBold.ttf', 'Νίκος', 'InterDisplay-SemiBold.ttf'],
+    ]);
 });
 
 describe('the drawn card', function () {
@@ -133,9 +157,27 @@ describe('the drawn card', function () {
         expect(($this->member)('Ξ'))->not->toBe(($this->member)('Φ'));
     });
 
-    it('draws a capital sharp s in Inter, as Barlow has none', function () {
-        // Barlow lacks both: on a line in Barlow they would be the same box.
-        expect(($this->vehicle)(null, 'ẞ'))->not->toBe(($this->vehicle)(null, 'ƀ'))
+    it('draws a capital sharp s as a real Archivo letter, not the box Archivo draws for a code point it lacks', function () {
+        $archivo = resource_path('fonts/ArchivoSemiExpanded-SemiBold.ttf');
+        $map = tap(Font::load($archivo), fn ($parsed) => $parsed->parse())->getUnicodeCharMap();
+        // GD forced into Archivo, as the card's title line is: a code point the font lacks comes out as its .notdef glyph.
+        $draw = function (string $text) use ($archivo): string {
+            $image = imagecreatetruecolor(160, 120);
+            imagefill($image, 0, 0, (int) imagecolorallocate($image, 0, 0, 0));
+            imagettftext($image, 64, 0, 24, 96, (int) imagecolorallocate($image, 255, 255, 255), $archivo, $text);
+            ob_start();
+            imagepng($image);
+
+            return (string) ob_get_clean();
+        };
+
+        // Archivo has U+1E9E, and lacks U+0180 (ƀ) and U+0416 (Ж): those two draw the same box.
+        expect($map[0x1E9E] ?? 0)->not->toBe(0)
+            ->and($map[0x0180] ?? 0)->toBe(0)
+            ->and($map[0x0416] ?? 0)->toBe(0)
+            ->and($draw('ƀ'))->toBe($draw('Ж'))
+            ->and($draw('ẞ'))->not->toBe($draw('ƀ'))
+            // And the card does not leave it out of a title.
             ->and(($this->vehicle)(null, 'GROẞ'))->not->toBe(($this->vehicle)(null, 'GRO'));
     });
 
@@ -147,11 +189,13 @@ describe('the drawn card', function () {
         expect(($this->vehicle)('日産', "スカイライン 🏎\u{FE0F}"))->toBe(($this->vehicle)(null, ''));
     });
 
-    it('leaves no gap where the title was: the eyebrow moves down to the line above the specs', function () {
+    it('draws a title with nothing drawable left as no title, and keeps the eyebrow and the specs where they stand', function () {
         $without = ($this->vehicle)('NISSAN', '日産', '280 PS');
 
-        expect($without)->not->toBe(($this->vehicle)(null, '', '280 PS'))
-            ->and(ogTextTop($without))->toBe(ogTextTop(($this->vehicle)('NISSAN', 'Skyline', '280 PS')) + 88);
+        expect($without)->toBe(($this->vehicle)('NISSAN', '', '280 PS'))
+            ->and($without)->not->toBe(($this->vehicle)(null, '', '280 PS'))
+            // The panel is laid out from the top: the first white text below the wordmark is the title, else the spec numeral.
+            ->and(ogTextTop($without))->toBeGreaterThan(ogTextTop(($this->vehicle)('NISSAN', 'Skyline', '280 PS')));
     });
 
     it('still draws the title when the eyebrow is gone', function () {

@@ -6,6 +6,7 @@ use App\Models\BuildUpdate;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Garage\BuildUpdatePresenter;
+use App\Services\Social\ViewerStates;
 use App\Support\Viewer;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
@@ -23,6 +24,18 @@ class FeedVehicleResource extends VehicleCardResource
 
     /** A card has one line for the change: two rendered, the rest as "3 weitere". */
     private const CARD_CHANGES = 2;
+
+    /**
+     * M4.8: every card registers its build, so the reader's states of a whole list load in one go (ViewerStates).
+     */
+    public function __construct($resource)
+    {
+        parent::__construct($resource);
+
+        if ($resource instanceof Vehicle) {
+            ViewerStates::register('vehicle', (string) $resource->id);
+        }
+    }
 
     /**
      * @return array<string, mixed>
@@ -49,6 +62,13 @@ class FeedVehicleResource extends VehicleCardResource
              * @var array{id: string, type_label: string, summary: string, created_at: string|null}|null
              */
             'latest_update' => $update instanceof BuildUpdate ? $this->latestUpdate($update, $viewer) : null,
+            /**
+             * M4.8: the reader's own state on this build: saved in one of their collections, their private reaction
+             * ("strong" | "clean" | "low" | "loud", null while build_reactions is off). Null for guests. Never anybody else's, never a count.
+             *
+             * @var array{saved: bool, reaction: string|null}|null
+             */
+            'viewer' => $viewer === null ? null : app(ViewerStates::class)->of($viewer, 'vehicle', (string) $vehicle->id),
         ];
     }
 

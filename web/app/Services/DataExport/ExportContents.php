@@ -52,6 +52,136 @@ class ExportContents
             'reactions.json' => $forStaff ? ['count' => $this->reactionCount($user)] : $this->reactions($user),
             'push_devices.json' => $this->pushDevices($user),
             'browser_sessions.json' => $this->browserSessions($user),
+            // M4.7 (09 §8.4, §13): app installs with model, system and app version (never the install id or its hash).
+            'device_installs.json' => $this->deviceInstalls($user),
+            // M4.11 (09 §8.5, §8.6): the member's own build reactions, build follows, collections, comments and mentions written.
+            'social.json' => $this->social($user),
+            // M4.12 (09 §8.7, §13): events the member organised (with the exact place and the updates they wrote) and their answers.
+            'events.json' => $this->events($user),
+            // M4.13 (09 §8.8, §13): the member's maintenance items and service log with costs, odometers and the reminders sent.
+            'maintenance.json' => $this->maintenance($user),
+        ];
+    }
+
+    /**
+     * Per vehicle (deleted ones still inside their grace period included): items, log entries (costs included: the member's own) and
+     * photo references, the odometer; the reminder stages that went out.
+     *
+     * @return array{vehicles: list<array<string, mixed>>, reminders_sent: array<int, array<mixed>>}
+     */
+    private function maintenance(User $user): array
+    {
+        $vehicles = [];
+
+        foreach (Vehicle::withTrashed()->where('owner_id', $user->getKey())->orderBy('sort')->orderBy('id')->get(['id', 'public_id', 'odometer_km', 'odometer_at']) as $vehicle) {
+            $items = DB::table('maintenance_items')->where('vehicle_id', $vehicle->id)->orderBy('created_at')->get([
+                'id', 'type', 'title', 'interval_months', 'interval_km', 'last_done_at', 'last_done_km', 'next_due_at', 'next_due_km', 'due_pinned',
+                'lead_days', 'enabled', 'notes', 'created_at', 'updated_at',
+            ])->map(function (object $item): array {
+                $row = (array) $item;
+                $row['lead_days'] = is_string($row['lead_days']) ? json_decode($row['lead_days'], true) : $row['lead_days'];
+
+                return $row;
+            })->all();
+            $logs = DB::table('maintenance_logs')->where('vehicle_id', $vehicle->id)->orderBy('done_at')->get([
+                'id', 'item_id', 'type', 'title', 'done_at', 'mileage_km', 'workshop', 'cost_cents', 'currency', 'notes', 'created_at', 'updated_at',
+            ])->map(function (object $log): array {
+                $row = (array) $log;
+                $row['photos'] = Media::withTrashed()->where('mediable_type', 'maintenance_log')->where('mediable_id', $row['id'])->pluck('id')
+                    ->map(fn (mixed $id): ?string => $this->photoRef($id))->filter()->values()->all();
+
+                return $row;
+            })->all();
+
+            if ($items === [] && $logs === [] && $vehicle->getAttribute('odometer_km') === null) {
+                continue;
+            }
+
+            $vehicles[] = [
+                'vehicle' => $vehicle->public_id,
+                'odometer_km' => $vehicle->getAttribute('odometer_km'),
+                'odometer_at' => $this->date($vehicle->getAttribute('odometer_at')),
+                'items' => $items,
+                'logs' => $logs,
+            ];
+        }
+
+        $sent = DB::table('maintenance_reminders')->where('user_id', $user->getKey())->whereNotNull('sent_at')->orderBy('sent_at')
+            ->get(['reminder_key', 'due_on', 'due_km', 'lead_days', 'sent_at'])->map(fn (object $row): array => (array) $row)->all();
+
+        return ['vehicles' => $vehicles, 'reminders_sent' => $sent];
+    }
+
+    /**
+     * @return array{organised: list<array<string, mixed>>, answers: list<array<string, mixed>>}
+     */
+    private function events(User $user): array
+    {
+        $id = $user->getKey();
+        $organised = [];
+
+        foreach (DB::table('events')->where('organiser_id', $id)->orderBy('created_at')->get([
+            'id', 'slug', 'title', 'type', 'status', 'visibility', 'location_visibility', 'starts_at', 'ends_at', 'timezone', 'venue_name', 'street',
+            'postcode', 'city', 'country', 'lat', 'lng', 'description', 'organiser_rules', 'rules', 'capacity', 'cancellation_reason', 'cancelled_at',
+            'review_reason', 'submitted_at', 'published_at', 'created_at', 'updated_at',
+        ]) as $event) {
+            $row = (array) $event;
+            $updates = [];
+
+            foreach (DB::table('event_updates')->where('event_id', $row['id'])->orderBy('created_at')->get(['body', 'created_at']) as $update) {
+                $updates[] = (array) $update;
+            }
+
+            unset($row['id']);
+            $row['rules'] = is_string($row['rules']) ? json_decode($row['rules'], true) : $row['rules'];
+            $row['url'] = '/e/'.(is_string($row['slug']) ? $row['slug'] : '');
+            $row['updates'] = $updates;
+            $organised[] = $row;
+        }
+
+        // Never another member's data: the event's title and link with the member's own answer.
+        $answers = [];
+
+        foreach (DB::table('event_rsvps')->join('events', 'events.id', '=', 'event_rsvps.event_id')->where('event_rsvps.user_id', $id)
+            ->orderBy('event_rsvps.created_at')
+            ->get(['events.title', 'events.slug', 'events.starts_at', 'event_rsvps.status', 'event_rsvps.status_at', 'event_rsvps.removed_at', 'event_rsvps.created_at']) as $answer) {
+            $row = (array) $answer;
+            $answers[] = [
+                'event' => $row['title'],
+                'url' => '/e/'.(is_string($row['slug']) ? $row['slug'] : ''),
+                'starts_at' => $row['starts_at'],
+                'status' => $row['status'],
+                'since' => $row['status_at'],
+                'removed_by_organiser_at' => $row['removed_at'],
+                'answered_at' => $row['created_at'],
+            ];
+        }
+
+        return ['organised' => $organised, 'answers' => $answers];
+    }
+
+    /**
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    private function social(User $user): array
+    {
+        $id = $user->getKey();
+        $rows = fn ($query): array => $query->get()->map(fn (object $row): array => (array) $row)->all();
+
+        return [
+            'reactions' => $rows(DB::table('reactions')->where('user_id', $id)->orderBy('created_at')->select(['reactable_type as item_type', 'reactable_id as item_id', 'type as reaction', 'updated_at as reacted_at'])),
+            'followed_builds' => $rows(DB::table('vehicle_follows')->join('vehicles', 'vehicles.id', '=', 'vehicle_follows.vehicle_id')->where('vehicle_follows.user_id', $id)
+                ->orderBy('vehicle_follows.created_at')->selectRaw("CONCAT('/v/', vehicles.slug, '-', vehicles.public_id) as vehicle, vehicle_follows.created_at as followed_at")),
+            'collections' => DB::table('member_collections')->where('user_id', $id)->orderBy('position')->get(['id', 'name', 'is_default', 'created_at'])
+                ->map(fn (object $collection): array => [
+                    'name' => $collection->name ?? __('social.collections.default_name'),
+                    'is_default' => (bool) $collection->is_default,
+                    'created_at' => $collection->created_at,
+                    'items' => $rows(DB::table('member_collection_items')->where('collection_id', $collection->id)->orderByDesc('position')->select(['item_type', 'item_id', 'created_at as added_at'])),
+                ])->all(),
+            'comments' => $rows(DB::table('comments')->where('user_id', $id)->orderBy('created_at')->select(['build_update_id', 'parent_id', 'body', 'status', 'created_at', 'deleted_at'])),
+            'mentions_written' => $rows(DB::table('mentions')->join('users', 'users.id', '=', 'mentions.mentioned_user_id')->where('mentions.author_id', $id)
+                ->orderBy('mentions.created_at')->select(['mentions.mentionable_type as item_type', 'mentions.mentionable_id as item_id', 'users.username as member', 'mentions.created_at'])),
         ];
     }
 
@@ -523,6 +653,19 @@ class ExportContents
                 'last_used_at' => $row->last_used_at,
                 'expires_at' => $row->expires_at,
             ])
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function deviceInstalls(User $user): array
+    {
+        return DB::table('device_installs')
+            ->where('user_id', $user->getKey())
+            ->orderBy('first_seen_at')
+            ->get(['platform', 'model', 'os_version', 'app_version', 'approx_city', 'first_seen_at', 'last_seen_at'])
+            ->map(fn (object $row): array => (array) $row)
             ->all();
     }
 

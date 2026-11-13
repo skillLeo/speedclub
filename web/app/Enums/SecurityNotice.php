@@ -18,4 +18,13 @@ enum SecurityNotice: string
     case VerificationFailed = 'verification_failed';
     // M2.5 fix round: a sign-in with a recovery code, naming how many are left.
     case RecoveryCodeUsed = 'recovery_code_used';
+    // M4.6 Auth 2.0 (09 §8.1/§8.2): e-mail code lock, provider link/unlink, passkey added/removed/refused (counter regression).
+    case EmailCodeLocked = 'email_code_locked';
+    case ProviderLinked = 'provider_linked';
+    case ProviderUnlinked = 'provider_unlinked';
+    case PasskeyAdded = 'passkey_added';
+    case PasskeyRemoved = 'passkey_removed';
+    case PasskeyRejected = 'passkey_rejected';
+    // M4.7 (09 §8.4): "Das war ich nicht" signed every device out and opened a support request.
+    case AccountSecured = 'account_secured';
 }

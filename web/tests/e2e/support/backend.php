@@ -139,6 +139,8 @@ const AUTH_LIMITERS = [
     'member-register', 'member-login', 'member-verify', 'member-email', 'username-check',
     // Phase 2 per-address limits a run reaches from one machine: AUTH-11, WEB-05, WEB-09 and WEB-10 (m2.5/m2.6 handovers).
     'two-factor-challenge', 'web-account-deletion', 'reports', 'contact-form',
+    // M4.6 Auth 2.0 per IP: F9 and F10 ask for several codes and passkey ceremonies a run (20 codes an hour per IP).
+    'auth-email-start', 'auth-email-verify', 'auth-passkeys', 'auth-social',
 ];
 /** Accounts the visual matrix photographs in the middle of onboarding (AUTH-08, AUTH-09). */
 const ONBOARDING = [
@@ -1089,6 +1091,30 @@ switch ($command) {
         $closed = BuildUpdate::query()->where('vehicle_id', $vehicle->getKey())->whereNotNull('open_until')->update(['open_until' => null]);
         finish(['closed' => $closed]);
 
+    case 'age-test-member':
+        // M4.12 F15: an organiser needs an account at least 14 days old (09 §8.7 creation rights). Moves a test account's
+        // creation back by that many days; nothing else of the account changes.
+        [$email, $days] = $args + [null, '15'];
+        if (! is_string($email) || ! isTestAccount($email) || ! ctype_digit((string) $days) || (int) $days > 400) {
+            refuse('usage: backend.php age-test-member <test email> <days ≤ 400>');
+        }
+        $user = User::query()->where('email', $email)->first() ?? refuse('no such account');
+        $user->forceFill(['created_at' => now()->subDays((int) $days)])->saveQuietly();
+        finish(['id' => $user->getKey(), 'created_at' => $user->created_at?->toIso8601String()]);
+
+    case 'review-test-event':
+        // M4.12 F15: the ADM-53 decision on a test organiser's pending event, without the admin queue (its UI is lane B's): approve
+        // publishes it, reject keeps it out with a reason. Only events of accounts under E2E_DOMAIN.
+        [$slug, $outcome] = $args + [null, 'approve'];
+        $event = \App\Models\Event::query()->where('slug', (string) $slug)->with('organiser')->first() ?? refuse('no such event');
+        if (! isTestAccount((string) $event->organiser?->email) || ! in_array($outcome, ['approve', 'reject'], true)) {
+            refuse('usage: backend.php review-test-event <slug of a test organiser> approve|reject');
+        }
+        $event->forceFill($outcome === 'approve'
+            ? ['status' => \App\Enums\EventStatus::Published, 'published_at' => now(), 'reviewed_at' => now(), 'review_reason' => null]
+            : ['status' => \App\Enums\EventStatus::Rejected, 'reviewed_at' => now(), 'review_reason' => 'Bitte nenn die Genehmigung des Platzes.'])->save();
+        finish(['slug' => $event->slug, 'status' => $event->status->value]);
+
     case 'qr-scans':
         // The counted scans of a code (F4), and what a stored row holds: one number per code and day, nothing about who.
         $code = QrCode::query()->where('code', strtoupper((string) ($args[0] ?? '')))->first() ?? refuse('no such code');
@@ -1351,6 +1377,16 @@ switch ($command) {
 
     case 'remove-health-fixture':
         finish(healthFixture(false));
+
+    case 'remove-maintenance-fixture':
+        // The exit path of the visual stage fixture `maintenance` (support/maintenance.mjs): its fixed-id items and log entries of one
+        // vehicle, and the HU/AU month the HU/AU item mirrored onto that vehicle (ADR-441). The normal teardown deletes through the API.
+        $vehicle = (string) ($args[0] ?? '') ?: refuse('usage: remove-maintenance-fixture <vehicle> <id>...');
+        $ids = array_values(array_filter(array_slice($args, 1), fn ($id) => str_starts_with((string) $id, '01mntfx')));
+        $logs = DB::table('maintenance_logs')->where('vehicle_id', $vehicle)->whereIn('id', $ids)->delete();
+        $items = DB::table('maintenance_items')->where('vehicle_id', $vehicle)->whereIn('id', $ids)->delete();
+        DB::table('vehicles')->where('id', $vehicle)->update(['hu_au_due' => null, 'hu_au_reminded_for' => null]);
+        finish(['logs' => $logs, 'items' => $items]);
 
     case 'reset-staff-limits':
         // The staff sign-in limiter (FortifyServiceProvider 'login': per address + client, and per client) of the loopback clients, for
@@ -1728,5 +1764,5 @@ switch ($command) {
         finish(['email' => $user->email, 'tickets' => $ids]);
 
     default:
-        refuse('usage: backend.php reset-limits|age-codes|ensure-onboarding|create-member|delete-accounts|close-updates|qr-scans|set-discoverable|set-who-can-message|run-test-jobs|decide-test-case|ensure-sessions-fixture|ensure-staff|delete-staff|reset-staff-limits|seeded-audit-event|start-view-as|ensure-decisions-fixture|ensure-two-factor-fixture|ensure-approvals-fixture|publish-announcement-fixture|remove-announcement-fixture|announcement-fixture-plan|announcements-state|ensure-reconsent-fixture|remove-reconsent-fixture|reconsent-fixture-plan|legal-documents-state|ensure-support-fixture|remove-branding-fixture|branding-state|enable-premium-fixture|disable-premium-fixture|run-health-fixture|remove-health-fixture');
+        refuse('usage: backend.php reset-limits|age-codes|ensure-onboarding|create-member|delete-accounts|close-updates|qr-scans|set-discoverable|set-who-can-message|run-test-jobs|decide-test-case|ensure-sessions-fixture|ensure-staff|delete-staff|reset-staff-limits|seeded-audit-event|start-view-as|ensure-decisions-fixture|ensure-two-factor-fixture|ensure-approvals-fixture|publish-announcement-fixture|remove-announcement-fixture|announcement-fixture-plan|announcements-state|ensure-reconsent-fixture|remove-reconsent-fixture|reconsent-fixture-plan|legal-documents-state|ensure-support-fixture|remove-branding-fixture|branding-state|enable-premium-fixture|disable-premium-fixture|run-health-fixture|remove-health-fixture|remove-maintenance-fixture');
 }

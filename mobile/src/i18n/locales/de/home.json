@@ -1,10 +1,11 @@
 {
   "offline": "Offline – du siehst den zuletzt geladenen Stand.",
+  "offlineSince": "Offline – zuletzt aktualisiert {{time}}.",
   "featured": {
     "eyebrow": "FEATURED BUILD"
   },
   "newBuilds": {
-    "title": "Neue Builds",
+    "title": "Neu in der Garage",
     "allLabel": "Alle neuen Builds in Entdecken"
   },
   "card": {
@@ -46,7 +47,8 @@
     "vehicleCount_other": "{{formatted}} Fahrzeuge",
     "aboutTitle": "Über SPEED CLUB",
     "aboutBody": "Deine Garage mit Technik und Mods als echte Daten, und ein QR-⁠Code, der dein Auto auf dem Parkplatz mit seiner Build-Seite verbindet.",
-    "join": "Konto erstellen"
+    "join": "Konto erstellen",
+    "makesFocus": "Marken im Fokus"
   },
   "tabs": {
     "label": "Ansicht von Start",
@@ -70,10 +72,9 @@
   },
   "following": {
     "empty": {
-      "title": "Noch nichts von Mitgliedern, denen du folgst",
-      "body": "Folge Mitgliedern, deren Builds dich interessieren. Ihre neuen Builds und Änderungen erscheinen dann hier.",
-      "bodySuggestions": "Folge Mitgliedern, deren Builds dich interessieren.",
-      "discover": "Mitglieder entdecken"
+      "title": "Folge Builds, die dich interessieren",
+      "body": "Neue Fotos und Änderungen dieser Builds landen dann hier.",
+      "discover": "Builds entdecken"
     },
     "suggestions": "Vorschläge für dich",
     "suggestionsActive": "Gerade aktiv",
@@ -81,6 +82,13 @@
       "title": "Sieh, was sich bei deinen Leuten tut",
       "body": "Melde dich an und folge Mitgliedern. Ihre neuen Builds und Änderungen erscheinen dann hier.",
       "signIn": "Anmelden"
+    },
+    "updates_one": "{{count}} Update",
+    "updates_other": "{{count}} Updates",
+    "build": {
+      "follow": "Folgen",
+      "following": "Folge ich",
+      "failed": "Folgen hat nicht geklappt. Versuch es noch einmal."
     }
   },
   "notifications": {
@@ -92,7 +100,7 @@
     "aBuild": "einen Build",
     "readAll": "Alle als gelesen markieren",
     "readAllFailed": "Die Mitteilungen konnten nicht als gelesen markiert werden. Versuch es gleich noch einmal.",
-    "emptyTitle": "Noch keine Mitteilungen",
+    "emptyTitle": "Noch nichts Neues.",
     "emptyBody": "Hier siehst du, wer dir folgt und was es Neues von Mitgliedern gibt, denen du folgst.",
     "errorTitle": "Mitteilungen konnten nicht geladen werden",
     "offlineBody": "Sobald du wieder online bist, laden wir deine Mitteilungen.",
@@ -115,16 +123,27 @@
       "buildSavedAny_one": "{{count}} Mitglied hat einen deiner Builds gespeichert",
       "buildSavedAny_other": "{{count}} Mitglieder haben einen deiner Builds gespeichert",
       "security": {
-        "new_device": "Neue Anmeldung auf einem unbekannten Gerät. Warst du das nicht? Dann ändere sofort dein Passwort.",
+        "new_device": "Neue Anmeldung auf einem unbekannten Gerät. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.",
         "password_changed": "Dein Passwort wurde geändert. Warst du das nicht? Dann setz es über „Passwort vergessen“ zurück.",
-        "email_changed": "Deine E-⁠Mail-Adresse wurde geändert. Warst du das nicht? Dann ändere sofort dein Passwort.",
-        "two_factor_changed": "Deine Zwei-Faktor-Anmeldung wurde geändert. Warst du das nicht? Dann ändere sofort dein Passwort.",
-        "deletion_requested": "Die Löschung deines Kontos wurde beantragt. Warst du das nicht? Dann ändere sofort dein Passwort.",
-        "other": "Eine Sicherheitseinstellung deines Kontos wurde geändert. Warst du das nicht? Dann ändere sofort dein Passwort.",
-        "new_device_named": "Neue Anmeldung auf {{device}}. Warst du das nicht? Dann ändere sofort dein Passwort.",
-        "sessions_revoked": "Geräte wurden von deinem Konto abgemeldet. Warst du das nicht? Dann ändere sofort dein Passwort.",
-        "verification_failed": "Bei deinem Konto wurde ein falsches Passwort oder ein falscher Code eingegeben. Warst du das nicht? Dann ändere sofort dein Passwort.",
-        "recovery_code_used": "Für eine Anmeldung wurde ein Wiederherstellungscode verwendet. Warst du das nicht? Dann ändere sofort dein Passwort."
+        "email_changed": "Deine E-⁠Mail-Adresse wurde geändert. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.",
+        "two_factor_changed": "Dein Zwei-Faktor-Schutz wurde geändert. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.",
+        "deletion_requested": "Die Löschung deines Kontos wurde beantragt. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.",
+        "other": "Eine Sicherheitseinstellung deines Kontos wurde geändert. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.",
+        "new_device_named": "Neue Anmeldung auf {{device}}. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.",
+        "sessions_revoked": "Geräte wurden von deinem Konto abgemeldet. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.",
+        "verification_failed": "Bei deinem Konto wurde ein falsches Passwort oder ein falscher Code eingegeben. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.",
+        "recovery_code_used": "Für eine Anmeldung wurde ein Wiederherstellungscode verwendet. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.",
+        "email_code_locked": "Bei deinem Konto wurden zu oft falsche Anmeldecodes eingegeben. Die Anmeldung per Code ist 15 Minuten gesperrt. Warst du das nicht? Dann prüf deine Anmeldemethoden.",
+        "provider_linked": "Eine neue Anmeldemethode wurde mit deinem Konto verbunden. Warst du das nicht? Dann trenn sie in den Einstellungen.",
+        "provider_linked_named": "{{name}} wurde mit deinem Konto verbunden. Warst du das nicht? Dann trenn es in den Einstellungen.",
+        "provider_unlinked": "Eine Anmeldemethode wurde von deinem Konto getrennt. Warst du das nicht? Dann prüf deine Anmeldemethoden.",
+        "provider_unlinked_named": "{{name}} wurde von deinem Konto getrennt. Warst du das nicht? Dann prüf deine Anmeldemethoden.",
+        "passkey_added": "Ein neuer Passkey wurde zu deinem Konto hinzugefügt. Warst du das nicht? Dann entfern ihn in den Einstellungen.",
+        "passkey_added_named": "Der Passkey „{{name}}“ wurde zu deinem Konto hinzugefügt. Warst du das nicht? Dann entfern ihn in den Einstellungen.",
+        "passkey_removed": "Ein Passkey wurde von deinem Konto entfernt. Warst du das nicht? Dann prüf deine Anmeldemethoden.",
+        "passkey_removed_named": "Der Passkey „{{name}}“ wurde von deinem Konto entfernt. Warst du das nicht? Dann prüf deine Anmeldemethoden.",
+        "passkey_rejected": "Eine Anmeldung mit einem deiner Passkeys wurde abgelehnt, weil er kopiert sein könnte. Prüf deine Passkeys in den Einstellungen.",
+        "passkey_rejected_named": "Eine Anmeldung mit dem Passkey „{{name}}“ wurde abgelehnt, weil er kopiert sein könnte. Prüf deine Passkeys in den Einstellungen."
       },
       "other": "Neue Mitteilung",
       "followedBuilds_one": "{{actor}} hat {{count}} Build veröffentlicht",
@@ -159,12 +178,49 @@
       "supportReplyAny": "Das Team hat auf deine Support-Anfrage geantwortet"
     },
     "restricted": "Dein Konto ist eingeschränkt. Deine Mitteilungen siehst du weiterhin.",
-    "restrictedUntil": "Dein Konto ist bis {{date}} eingeschränkt. Deine Mitteilungen siehst du weiterhin."
+    "restrictedUntil": "Dein Konto ist bis {{date}} eingeschränkt. Deine Mitteilungen siehst du weiterhin.",
+    "thisWeek": "Diese Woche",
+    "earlier": "Früher",
+    "filters": {
+      "label": "Mitteilungen filtern",
+      "all": "Alle",
+      "builds": "Builds",
+      "social": "Social",
+      "events": "Treffen",
+      "system": "System"
+    },
+    "filterEmpty": "In dieser Auswahl ist noch nichts.",
+    "filterEmptyMore": "In den geladenen Mitteilungen ist hier noch nichts. Scroll weiter, um ältere zu laden.",
+    "emptyAction": "Builds entdecken",
+    "menu": "Weitere Aktionen",
+    "settings": "Einstellungen",
+    "markRead": "Gelesen",
+    "sampleUpdate": "{{name}} hat ein Update zu seinem {{car}} gepostet.",
+    "sampleFollow": "{{name}} folgt jetzt deinem {{car}}.",
+    "sampleTimeUpdate": "vor 2 Std.",
+    "sampleTimeFollow": "gestern"
   },
   "announcements": {
     "dismiss": "Hinweis ausblenden",
     "more": "Mehr erfahren",
     "externalLabel": "{{label}} (öffnet im Browser)",
     "warningLabel": "Wichtig: {{title}}"
+  },
+  "weekly": {
+    "title": "Build der Woche",
+    "quote": "„{{quote}}“",
+    "reason": "Von der Redaktion ausgewählt."
+  },
+  "actions": {
+    "react": "Reagieren",
+    "reactions": {
+      "strong": "Stark",
+      "clean": "Sauber",
+      "low": "Tief",
+      "loud": "Laut"
+    },
+    "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
+    "copied": "Link kopiert.",
+    "shareFailed": "Teilen geht hier nicht. Der Link: {{url}}"
   }
 }

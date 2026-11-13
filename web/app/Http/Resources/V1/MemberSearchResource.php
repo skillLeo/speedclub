@@ -3,6 +3,7 @@
 namespace App\Http\Resources\V1;
 
 use App\Services\Discover\MemberHit;
+use App\Services\Showcase\SampleContent;
 use App\Services\Social\MessagingEligibility;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
@@ -31,15 +32,20 @@ class MemberSearchResource extends JsonResource
         return [
             ...(new MemberSummaryResource($hit->member))->toArray($request),
             /**
-             * Public builds as the profile lists them, and their makes, main vehicle first, at most three.
+             * Public builds as the profile lists them, and their makes, main vehicle first, at most three. For a sample member the count is
+             * null and the line names the makes only (09 §8.19: counts on samples are hidden).
              *
-             * @var array{vehicles: int, makes: list<string>, line: string}
+             * @var array{vehicles: int|null, makes: list<string>, line: string}
              */
             'garage' => [
-                'vehicles' => $hit->vehicleCount,
+                'vehicles' => SampleContent::count($hit->member, $hit->vehicleCount),
                 'makes' => $hit->makes,
                 /** "3 Fahrzeuge · BMW, Nissan" */
-                'line' => $hit->makes === [] ? $count : $count.' · '.implode(', ', $hit->makes),
+                'line' => match (true) {
+                    SampleContent::isSample($hit->member) => implode(', ', $hit->makes),
+                    $hit->makes === [] => $count,
+                    default => $count.' · '.implode(', ', $hit->makes),
+                },
             ],
             'is_self' => $viewer?->is($hit->member) ?? false,
             /** The signed-in viewer follows this member (DQ-326, "Folgen" on the row); false for guests and for the viewer's own row. */

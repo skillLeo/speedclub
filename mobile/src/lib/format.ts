@@ -124,6 +124,30 @@ export function keepShortNamesTogether(text: string): string {
   return text.replace(/\S+/g, (word) => (word.length <= SHORT_NAME_LENGTH && !/:\/\/|@/.test(word) ? keepNameTogether(word) : word));
 }
 
+/** A hyphen between two runs of letters or figures, without a word joiner after it yet; the runs are captured. */
+const COMPOUND_HYPHEN = /([\p{L}\p{N}]+)-(?!\u2060)(?=([\p{L}\p{N}]+))/gu;
+/** A part of a compound shorter than this never stands alone at a line end or start ("E- / Mail", "Kontakt- / E", "RB- / …"). */
+export const SHORT_COMPOUND_PART = 3;
+
+/**
+ * 03 §4, DQ-145/DQ-220, r5 audit "name-hyphen-break": a hyphen with a part of fewer than SHORT_COMPOUND_PART letters or figures
+ * on either side ("E-Mail", "IP-Adressen", "Datenschutz-E-Mail", "RB-Spezialisten", "sign-in") gets a word joiner after it, so
+ * the line never breaks there; a hyphen between two longer parts stays a place to wrap ("Aero-Seitenschweller"). A word with
+ * "://" or "@" is an address someone may copy and stays as it is. Display only: for a member's own words (a message, a vehicle
+ * description) and for copy from the server, never into a field or a request. The glyph stays the same and screen readers skip
+ * the joiner; a copy on the web drops it (webDocument listenForCopy).
+ */
+export function joinShortCompounds(text: string): string {
+  if (!text.includes('-')) return text;
+  return text.replace(/\S+/g, (word) =>
+    /:\/\/|@/.test(word)
+      ? word
+      : word.replace(COMPOUND_HYPHEN, (match: string, before: string, after: string) =>
+          [...before].length < SHORT_COMPOUND_PART || [...after].length < SHORT_COMPOUND_PART ? `${before}-${WORD_JOINER}` : match,
+        ),
+  );
+}
+
 /** A figure with at most two letters around it, the way dimensions are written: "2.568", "−35", "19″", "9,5J", "ET35", "255/35", "R19". */
 const FIGURE = /^[−+-]?[A-Za-z]{0,2}\d[\d.,/]*[A-Za-z]{0,2}[″′°%]?$/;
 const VALUE_SEPARATOR = /^[×·→/]$/;
@@ -141,6 +165,30 @@ export function isNumericValue(value: string): boolean {
 export type ValueSegment = { text: string; numeric: boolean };
 
 /**
+ * A value up to this long fits one line of a mod row's values at 360 beside its status pill, the " ·" after it included
+ * (about 150 of `callout`). textBreaks takes it as WHOLE_PART_MAX, the budget of a whole meta part: one constant for both.
+ */
+export const WHOLE_VALUE_MAX = 18;
+
+/** A rim designation after a tyre size ("255/35 R19", "285/35 ZR20"): one datum with the size before it. */
+const RIM = /^Z?R\d/;
+
+/**
+ * APK Build 9, R35 "20″ × 10/11J ET30/15 · 285/35 R20": a value joined by no-break spaces that is wider than its column has no
+ * place to wrap, and Android's balanced line breaker then cut it inside a token ("ET30" / "/15"). A long value keeps each
+ * datum whole (a figure with its unit, "×" with both sides, a tyre size with its rim) and may wrap between two data
+ * ("20″ × 10/11J" / "ET30/15"), as Blade's `.sc-run` does with the same line. Words stay together as before.
+ */
+function keepLongValueTogether(value: string): string {
+  return value.replace(/(\S+)\s+(?=(\S+))/g, (_match, left: string, right: string) => {
+    const before = withoutJoiners(left);
+    const after = withoutJoiners(right);
+    const twoData = FIGURE.test(before) && FIGURE.test(after) && !RIM.test(after);
+    return twoData ? `${left} ` : `${left}${NO_BREAK_SPACE}`;
+  });
+}
+
+/**
  * A string of values cut at its arrows and middle dots, with the wrapping of `keepValuesTogether`. `numeric` marks the
  * segments that may use tabular figures: in "Serie → 6-Kolben · 380 mm" that is "380 mm" alone (§4, `isNumericValue`).
  */
@@ -148,7 +196,8 @@ export function valueSegments(values: string, wholeValues: boolean = true): Valu
   return values.split(/\s+([·→])\s+/).map((part, index) => {
     if (index % 2 === 1) return { text: `${NO_BREAK_SPACE}${part} `, numeric: false };
     const value = keepValueSlashes(part.trim());
-    return { text: wholeValues ? value.replace(/\s+/g, NO_BREAK_SPACE) : value, numeric: isNumericValue(value) };
+    const whole = withoutJoiners(value).length > WHOLE_VALUE_MAX ? keepLongValueTogether(value) : value.replace(/\s+/g, NO_BREAK_SPACE);
+    return { text: wholeValues ? whole : value, numeric: isNumericValue(value) };
   });
 }
 
@@ -195,6 +244,12 @@ export function formatMonthYear(date: Date, locale: FormatLocale = 'de'): string
 /** "14.06.2026" */
 export function formatDate(date: Date, locale: FormatLocale = 'de'): string {
   return dateFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
+/** "14. Juni 2026" / "14 June 2026": the date in a sentence (SKILL §9). */
+export function formatLongDate(date: Date, locale: FormatLocale = 'de'): string {
+  // DQ-1005: the day stays with its month ("12. November" / "2026", never "12." / "November 2026").
+  return dateFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date).replace(/^(\d{1,2}\.?) /, '$1\u00A0');
 }
 
 /** "14:30" */

@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Api\V1\Me;
 
+use App\Http\Requests\Api\V1\Me\Concerns\ProvesPassword;
 use App\Models\User;
 use App\Rules\MemberPassword;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ChangePasswordRequest extends FormRequest
 {
+    use ProvesPassword;
+
     /**
      * @return array<string, mixed>
      */
@@ -16,7 +19,7 @@ class ChangePasswordRequest extends FormRequest
         $user = $this->user();
 
         return [
-            'current_password' => ['required', 'string', 'max:'.config()->integer('speedclub.passwords.max_length')],
+            'current_password' => $this->passwordRule(),
             // 02_PRODUCT_SPEC §3.1: at least 10 characters, not common, not the address; not the username and not the current one.
             'password' => ['required', 'string', 'confirmed', new MemberPassword($user instanceof User ? $user->email : null)],
             'password_confirmation' => ['required', 'string'],

@@ -21,8 +21,8 @@ const tones: Record<ToastTone, string> = { success: 'text-success', error: 'text
         >
             <component :is="icons[item.tone]" :size="20" :class="tones[item.tone]" aria-hidden="true" />
             <div class="flex min-w-0 flex-1 flex-col gap-2">
-                <p class="text-label-s text-ink">{{ item.title }}</p>
-                <p v-if="item.description" class="text-supporting text-ink-2">{{ item.description }}</p>
+                <p class="text-admin-base-strong text-ink">{{ item.title }}</p>
+                <p v-if="item.description" class="text-admin-base text-ink-2">{{ item.description }}</p>
             </div>
             <button type="button" :class="[focusRing, 'inline-flex size-24 items-center justify-center rounded-xs text-ink-3 hover:text-ink']" :aria-label="trans('ui.toast.dismiss')" @click="dismissToast(item.id)">
                 <PhX :size="16" aria-hidden="true" />

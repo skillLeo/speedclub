@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, type LayoutChangeEvent } from 'react-native';
+import { View, type DimensionValue, type LayoutChangeEvent } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import type { Edge } from 'react-native-safe-area-context';
 
@@ -22,11 +22,15 @@ import {
   useCollapsingHeader,
   type StickyCTASecondary,
 } from '@/ui';
+import { SlotText } from '@/ui/SlotText';
+import { PRODUCT_NAMES } from '@/ui/textBreaks';
 
 import { FormNotice } from './FormNotice';
 
 /** The column of a form on wide screens: wide enough for a German label beside a checkbox, narrow enough to read as a form. */
-const FORM_MAX_WIDTH = layout.inboxPane + space[64];
+export const FORM_MAX_WIDTH = layout.inboxPane + space[64];
+/** DQ-1002: from here on a short form stands in the middle of the window, not at the top of an empty canvas. */
+const CENTRED_FROM = 1024;
 const EDGES: readonly Edge[] = ['left', 'right'];
 /** A focused field keeps this much air above the keyboard and the sticky bar. */
 const KEYBOARD_OFFSET = space[64] + space[32];
@@ -34,6 +38,9 @@ const KEYBOARD_OFFSET = space[64] + space[32];
 const useStyles = createStyles((t) => ({
   scroll: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: t.space[32], paddingTop: t.space[8] },
+  centred: { justifyContent: 'center' },
+  // DQ-994: a picture that leads the screen (AUTH-14) stands above the title.
+  lead: { marginBottom: t.space[24] },
   column: { alignSelf: 'center', maxWidth: FORM_MAX_WIDTH, width: '100%' },
   heading: { gap: t.space[8], marginBottom: t.space[24] },
   body: { gap: t.space[16] },
@@ -42,6 +49,8 @@ const useStyles = createStyles((t) => ({
   footer: { marginTop: t.space[24] },
   skeletonFields: { gap: t.space[16] },
   skeletonField: { gap: t.space[8] },
+  // A tertiary M button: 44 high, its label centred in it.
+  skeletonLink: { justifyContent: 'center', minHeight: t.size.button.m },
   // Measures the labels of the sticky bar on one line each. Invisible, and out of the layout and the accessibility tree.
   measure: { alignItems: 'flex-start', left: 0, opacity: 0, pointerEvents: 'none', position: 'absolute', top: 0 },
 }));
@@ -49,12 +58,19 @@ const useStyles = createStyles((t) => ({
 export type AuthScreenProps = {
   routeId: string;
   title: string;
+  /** 09 §7.2: the passwordless steps (AUTH-12/13/14/16, AUTH-09b) set their title in title.2; the v1 forms keep title.1. */
+  titleVariant?: 'title1' | 'title2';
   subtitle?: string;
   /**
    * False for a subtitle whose long word already carries a hard hyphen: "Authenticator-App" broke as "Authenti- / cator-App"
    * (DQ-440). It then wraps at its spaces and that hyphen only.
    */
   subtitleHyphenate?: boolean;
+  /**
+   * DQ-927: values set apart in the subtitle (`slot(name)` in the translated line): an e-mail address shows exactly as on
+   * file and never hyphenates. See SlotText.
+   */
+  subtitleSlots?: Readonly<Record<string, string>>;
   /**
    * A step of signing in (AUTH-03, AUTH-11): a restricted account may still sign in, so its forced restricted state says that in
    * the info tone, not that the function is unavailable (DQ-437).
@@ -63,7 +79,10 @@ export type AuthScreenProps = {
   children?: ReactNode;
   /** Under the fields: links to the neighbouring screens. */
   footer?: ReactNode;
+  /** The inverse primary (ADR-431 a); red stays for real brand moments, and no auth step is one (DQ-991). */
   cta?: { label: string; onPress: () => void; loading?: boolean; disabled?: boolean };
+  /** Above the title: the illustration that leads AUTH-14 (09 §7.2 order: fragment, title, body). */
+  lead?: ReactNode;
   secondary?: StickyCTASecondary;
   /** `null`: no way back, for the steps a member has to finish. By default back, or Home after a direct link. */
   onBack?: (() => void) | null;
@@ -73,16 +92,33 @@ export type AuthScreenProps = {
    * success (a replace, or the session routing) must not run into the guard.
    */
   dirty?: boolean;
-  /** How many fields the skeleton draws. */
-  skeletonFields?: number;
+  /**
+   * How many label + input pairs the skeleton draws: required, so no screen inherits fields it does not have (DQ-1003: AUTH-12 has
+   * one, WEB-12 none).
+   */
+  skeletonFields: number;
   /** Replaces the fields of the skeleton where they are not plain inputs, as the code cells. */
   skeleton?: ReactNode;
+  /** The subtitle's lines in the skeleton (2 unless the screen knows its body runs longer). */
+  skeletonSubtitleLines?: number;
+  /** Drawn after the skeleton's fields: a caption's lines, a tertiary link's bar (`AuthSkeletonLink`). */
+  skeletonAfter?: ReactNode;
 };
 
 /**
  * DQ-112: whether the primary of the sticky bar needs a line of its own. Beside the secondary it gets the rest of the row;
  * a label that does not fit there on one line would wrap and grow the button past 52, so the bar stacks instead.
  */
+/** A tertiary M link's place in a skeleton: its label line, flush with the column (the 44 target is invisible). */
+export function AuthSkeletonLink({ width = '45%' }: { width?: DimensionValue }) {
+  const styles = useStyles();
+  return (
+    <View style={styles.skeletonLink}>
+      <SkeletonText variant="body" width={width} />
+    </View>
+  );
+}
+
 export function barNeedsStack(rowWidth: number, primaryLabel: number, secondaryLabel: number): boolean {
   if (rowWidth <= 0 || primaryLabel <= 0) return false;
   // The padding token holds the border (§8, Button).
@@ -103,18 +139,23 @@ export function authHeaderInset(width: number, gutter: number): number {
 export function AuthScreen({
   routeId,
   title,
+  titleVariant = 'title1',
   subtitle,
   subtitleHyphenate = true,
+  subtitleSlots,
   signInStep = false,
   children,
   footer,
+  lead,
   cta,
   secondary,
   onBack,
   headerTrailing,
   dirty = false,
-  skeletonFields = 2,
+  skeletonFields,
   skeleton,
+  skeletonAfter,
+  skeletonSubtitleLines = 2,
 }: AuthScreenProps) {
   const { t } = useTranslation('auth');
   const styles = useStyles();
@@ -155,7 +196,7 @@ export function AuthScreen({
       <KeyboardAwareScrollView
         {...header.scrollProps}
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingHorizontal: gutter }]}
+        contentContainerStyle={[styles.content, width >= CENTRED_FROM ? styles.centred : null, { paddingHorizontal: gutter }]}
         keyboardShouldPersistTaps="handled"
         bottomOffset={KEYBOARD_OFFSET}
         testID={`${routeId}.scroll`}
@@ -164,29 +205,37 @@ export function AuthScreen({
           {loading ? (
             <Skeleton testID={`${routeId}.skeleton`}>
               <View style={styles.heading}>
-                <SkeletonText variant="titleL" width="70%" />
-                {subtitle ? <SkeletonText variant="body" lines={2} /> : null}
+                <SkeletonText variant={titleVariant} width="70%" />
+                {subtitle ? <SkeletonText variant="body" lines={skeletonSubtitleLines} /> : null}
               </View>
               <View style={styles.skeletonFields}>
                 {skeleton}
                 {Array.from({ length: skeletonFields }, (_, index) => (
-                  <View key={index} style={styles.skeletonField}>
-                    <SkeletonText variant="labelS" width="30%" />
+                  <View key={index} style={styles.skeletonField} testID={`${routeId}.skeleton.field`}>
+                    <SkeletonText variant="callout" width="30%" />
                     <SkeletonBlock height={size.input} corner="sm" />
                   </View>
                 ))}
+                {skeletonAfter}
               </View>
             </Skeleton>
           ) : (
             <>
+              {lead ? <View style={styles.lead}>{lead}</View> : null}
               <View style={styles.heading}>
-                <Text variant="titleL" role="heading" testID={`${routeId}.title`}>
+                <Text variant={titleVariant} role="heading" testID={`${routeId}.title`}>
                   {title}
                 </Text>
                 {subtitle ? (
-                  <Text variant="body" color="text.secondary" hyphenate={subtitleHyphenate} testID={`${routeId}.subtitle`}>
-                    {subtitle}
-                  </Text>
+                  <SlotText
+                    variant="body"
+                    color="text.secondary"
+                    hyphenate={subtitleHyphenate}
+                    text={subtitle}
+                    slots={subtitleSlots}
+                    keep={PRODUCT_NAMES}
+                    testID={`${routeId}.subtitle`}
+                  />
                 ) : null}
               </View>
               <View style={styles.body}>
@@ -206,6 +255,7 @@ export function AuthScreen({
             <View style={styles.inlineActions} testID={`${routeId}.cta`}>
               <Button
                 label={cta.label}
+                variant="primary"
                 size="l"
                 fullWidth
                 onPress={cta.onPress}
@@ -233,6 +283,7 @@ export function AuthScreen({
       {cta && !wide ? (
         <StickyCTABar
           label={cta.label}
+          variant="primary"
           onPress={cta.onPress}
           loading={cta.loading}
           disabled={ctaDisabled}
@@ -244,10 +295,10 @@ export function AuthScreen({
       ) : null}
       {cta && secondary && !wide ? (
         <View aria-hidden style={styles.measure}>
-          <Text variant="label" hyphenate={false} selectable={false} onLayout={measured('primary')}>
+          <Text variant="bodyStrong" hyphenate={false} selectable={false} onLayout={measured('primary')}>
             {cta.label}
           </Text>
-          <Text variant="labelS" hyphenate={false} selectable={false} onLayout={measured('secondary')}>
+          <Text variant="bodyStrong" hyphenate={false} selectable={false} onLayout={measured('secondary')}>
             {secondary.label}
           </Text>
         </View>
@@ -263,7 +314,7 @@ export function FooterLink({ text, children }: { text?: string; children: ReactN
   return (
     <View style={styles.row}>
       {text ? (
-        <Text variant="supporting" color="text.secondary" style={styles.text}>
+        <Text variant="callout" color="text.secondary" style={styles.text}>
           {text}
         </Text>
       ) : null}

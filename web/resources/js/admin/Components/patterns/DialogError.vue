@@ -9,7 +9,7 @@ defineProps<{ message: string | null; testId?: string }>();
 </script>
 
 <template>
-    <p v-if="message" class="flex basis-full items-start gap-8 rounded-sm border border-line px-12 py-8 text-supporting text-ink" role="alert" :data-testid="testId">
+    <p v-if="message" class="flex basis-full items-start gap-8 rounded-sm border border-line px-12 py-8 text-admin-base text-ink" role="alert" :data-testid="testId">
         <PhWarningCircle :size="20" class="shrink-0 text-danger" aria-hidden="true" />{{ message }}
     </p>
 </template>

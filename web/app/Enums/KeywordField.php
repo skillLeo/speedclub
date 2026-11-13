@@ -17,6 +17,10 @@ enum KeywordField: string
     case VehicleNickname = 'vehicle_nickname';
     case ModTitle = 'mod_title';
     case PhotoCaption = 'photo_caption';
+    // M4.11 [build_comments]: public like a build note, so blocked like it.
+    case Comment = 'comment';
+    // M4.12: an event's title, description and organiser rules; public, so blocked like a build note.
+    case EventText = 'event_text';
 
     public function mayBlock(): bool
     {

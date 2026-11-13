@@ -1,20 +1,15 @@
 import { Link, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import type { Edge } from 'react-native-safe-area-context';
 
-import { createStyles, useBreakpoint } from '@/theme';
-import { Button, Header, Screen, Text } from '@/ui';
+import { createStyles } from '@/theme';
+import { Button, Header } from '@/ui';
 
-/** No tab bar on this route. The Header pads the top; the screen pads the other edges. */
-const EDGES: readonly Edge[] = ['bottom', 'left', 'right'];
+import { BrandStage } from '../components/BrandStage';
+import { NOT_FOUND_PHOTO } from '../photos';
 
-const useStyles = createStyles((t) => ({
-  content: { flex: 1, justifyContent: 'center' },
-  block: { gap: t.space[8] },
-  // From 768 the block is a 480 column in the middle of the window, its text still on the left: three quarters of the feed.
-  blockCentred: { alignSelf: 'center', maxWidth: (t.layout.feedColumn * 3) / 4, width: '100%' },
-  home: { marginTop: t.space[8] },
+const useStyles = createStyles(() => ({
+  screen: { flex: 1 },
 }));
 
 export type NotFoundScreenProps = {
@@ -23,28 +18,32 @@ export type NotFoundScreenProps = {
   body?: string;
 };
 
-/** SYS-03: link not found, and later the QR-revoked state of /c/[code]. */
+/**
+ * SYS-03 (09 §7.14, DQ-1088): link not found, revoked or private, as a photo-backed brand state like SYS-01/02. A full-bleed 4:5
+ * night photo from the top edge under a transparent header with back, fading into the Carbon stage; the wordmark, `title.1`, one
+ * line and the one filled way on, "Zur Startseite", left-aligned in the lower part. From 768 the AUTH-02 split: photo 7 columns
+ * edge to edge, the copy vertically centred in the other 5. Back leaves the way the member came, or goes home when the link was
+ * opened directly (no history), so there is always a control in the corner.
+ */
 export function NotFoundScreen({ title, body }: NotFoundScreenProps) {
   const { t } = useTranslation('common');
-  const { gutter, kind } = useBreakpoint();
   const styles = useStyles();
   const router = useRouter();
+  const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
   return (
-    <Screen edges={EDGES} testID="SYS-03.screen">
-      <Header onBack={router.canGoBack() ? () => router.back() : undefined} testID="SYS-03.header" />
-      <View style={[styles.content, { paddingHorizontal: gutter }]} testID="SYS-03.root">
-        <View style={[styles.block, kind === 'phone' ? null : styles.blockCentred]} testID="SYS-03.block">
-          <Text variant="titleL" role="heading" aria-level={1} testID="SYS-03.title">
-            {title ?? t('notFound.title')}
-          </Text>
-          <Text color="text.secondary" testID="SYS-03.body">
-            {body ?? t('notFound.body')}
-          </Text>
+    <View style={styles.screen} testID="SYS-03.screen">
+      <BrandStage
+        routeId="SYS-03"
+        photo={NOT_FOUND_PHOTO}
+        title={title ?? t('notFound.title')}
+        body={body ?? t('notFound.body')}
+        header={<Header variant="photo" onBack={back} hairline={false} testID="SYS-03.header" />}
+        actions={
           <Link href="/" replace asChild>
-            <Button label={t('notFound.home')} role="link" variant="primary" size="m" style={styles.home} testID="SYS-03.home" />
+            <Button label={t('notFound.home')} role="link" variant="primary" size="l" fullWidth testID="SYS-03.home" />
           </Link>
-        </View>
-      </View>
-    </Screen>
+        }
+      />
+    </View>
   );
 }

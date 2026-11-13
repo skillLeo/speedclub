@@ -75,7 +75,7 @@ class SessionController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return new AuthSessionResource($action->handle($user, $request->deviceId()));
+        return new AuthSessionResource($action->handle($user, $request->deviceId(), $request->appVersion(), $request->osVersion()));
     }
 
     /**

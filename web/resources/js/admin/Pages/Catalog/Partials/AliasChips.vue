@@ -47,7 +47,7 @@ function remove(alias: string): void {
             </span>
         </Field>
         <ul v-if="model.length > 0" class="flex flex-wrap gap-8" :aria-label="trans('catalog.aliases.list')">
-            <li v-for="alias in model" :key="alias" class="inline-flex h-32 items-center gap-2 rounded-xs border border-line pl-8 text-supporting text-ink">
+            <li v-for="alias in model" :key="alias" class="inline-flex h-32 items-center gap-2 rounded-xs border border-line pl-8 text-admin-base text-ink">
                 <span class="sc-key">{{ alias }}</span>
                 <button type="button" :class="[focusRing, 'inline-flex size-32 items-center justify-center rounded-xs text-ink-3 hover:text-ink']" :aria-label="trans('catalog.aliases.remove', { alias })" @click="remove(alias)">
                     <PhX :size="16" aria-hidden="true" />

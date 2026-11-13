@@ -28,6 +28,7 @@ export const ResultTile = memo(function ResultTile({ vehicle, width, onOpen, sty
       title={keepNameTogether(vehicle.full_title)}
       spec={tileSpec(vehicle)}
       photo={photoFields(vehicle.cover, width)}
+      sample={{ is_sample: vehicle.is_sample }}
       onPress={() => onOpen(vehicle)}
       style={style}
       testID={testID}

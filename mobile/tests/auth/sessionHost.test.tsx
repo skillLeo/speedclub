@@ -48,10 +48,13 @@ const ME: Me = {
   id: '01lukas',
   email: 'lukas@speedclub.test',
   email_verified: true,
+  is_sample: false,
+  is_editorial: false,
   has_username: true,
   profile_complete: true,
   next_step: null,
   force_password_change: false,
+  password_set: true,
   two_factor_enabled: false,
   username: 'lukas.sc',
   username_change_available_at: null,
@@ -177,7 +180,7 @@ describe('the expired dialog with a form held behind it (BH-30)', () => {
     expiredOnEditor();
     await mount();
     await fireEvent.press(screen.getByTestId('AUTH.sessionNotice.signIn'));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/sign-in', params: { returnTo: EDITOR } });
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/auth/email', params: { returnTo: EDITOR } });
     expect(useSessionStore.getState()).toMatchObject({ notice: null, expiredFrom: ME.id });
     await tick();
     // Still on the editor for this tick: the dialog must not come back by itself.

@@ -89,7 +89,7 @@ describe('label in name on web (M2.8 axe)', () => {
     );
     const press = screen.getByTestId('m.press');
     startsWithVisibleText(press);
-    expect(labelOf(press)).toMatch(/^Nissan Silvia S15, Fahrzeug von @lukas\.sc, \d{2}:\d{2}, Du$/);
+    expect(labelOf(press)).toMatch(/^Nissan Silvia S15, Fahrzeug von @lukas\.sc, Ansehen, \d{2}:\d{2}, Du$/);
   });
 
   it('MSG-01 row: no label on web, its visible text names it; pin, mute and the count name themselves', async () => {

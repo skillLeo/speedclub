@@ -75,7 +75,7 @@ const meta = computed(() =>
                 <Badge v-if="make.is_popular" tone="neutral">{{ trans('catalog.makes.popular') }}</Badge>
             </template>
             <template #meta>
-                <p class="text-supporting text-ink-2 tabular-nums" data-testid="ADM-14-make.meta">{{ meta }}</p>
+                <p class="text-admin-base text-ink-2 tabular-nums" data-testid="ADM-14-make.meta">{{ meta }}</p>
             </template>
             <template v-if="manage" #actions>
                 <RecordActions level="make" :entry="make" :dialogs="makeDialogs" test-id="ADM-14-make.action" />
@@ -86,17 +86,17 @@ const meta = computed(() =>
         <MergedNotice v-if="make.merged_into" :name="make.merged_into.name" :href="makeHref(make.merged_into.id)" test-id="ADM-14-make.merged" />
 
         <section class="flex flex-col gap-12" :aria-label="trans('catalog.make.models_title')">
-            <h2 class="text-title-s text-ink">{{ trans('catalog.make.models_title') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('catalog.make.models_title') }}</h2>
             <StateBlock v-if="state === 'error'" kind="error" :title="trans('catalog.make.error')" :body="trans('catalog.error_body')" test-id="ADM-14-make.error" />
             <!-- DQ-601: the header holds the one "Modell hinzufügen". -->
             <EmptyQueue v-else-if="state !== 'loading' && list.length === 0" variant="first" :title="trans('catalog.make.empty_title')" :body="trans('catalog.make.empty_body')" data-testid="ADM-14-make.empty" />
             <ScrollRegion v-else :label="trans('catalog.make.models_caption', { make: make.name })" test-id="ADM-14-make.models">
-                <table class="w-full text-supporting" :aria-busy="state === 'loading' || undefined">
+                <table class="w-full text-admin-base" :aria-busy="state === 'loading' || undefined">
                     <caption class="sr-only">{{ trans('catalog.make.models_caption', { make: make.name }) }}</caption>
                     <!-- DQ-593: the same column widths while loading and with rows. -->
                     <colgroup><col /><col class="w-120" /><col class="w-120" /><col class="w-240" /><col v-if="manage" class="w-48" /></colgroup>
                     <thead>
-                        <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                        <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                             <th scope="col" class="px-12">{{ trans('catalog.columns.model') }}</th>
                             <th scope="col" class="whitespace-nowrap px-12 text-right">{{ trans('catalog.columns.generations') }}</th>
                             <th scope="col" class="whitespace-nowrap px-12 text-right">{{ trans('catalog.columns.vehicles') }}</th>

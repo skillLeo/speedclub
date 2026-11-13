@@ -124,7 +124,7 @@ export function ProfileImagesEditor({ me, width, disabled = false }: ProfileImag
         </View>
         <View style={styles.avatarBox}>
           <View style={styles.ring} />
-          <Avatar name={name} uri={avatarUrlOf(me.avatar)} blurhash={me.avatar?.blurhash} size={96} decorative testID="PROF-03.avatar" />
+          <Avatar name={name} uri={avatarUrlOf(me.avatar)} blurhash={me.avatar?.blurhash} size={88} decorative testID="PROF-03.avatar" />
           {avatar.progress !== null ? (
             <UploadBadge
               value={avatar.progress}
@@ -144,7 +144,7 @@ export function ProfileImagesEditor({ me, width, disabled = false }: ProfileImag
           />
         </View>
       </View>
-      <Text variant="helper" color="text.secondary" testID="PROF-03.images.hint">
+      <Text variant="caption" color="text.secondary" testID="PROF-03.images.hint">
         {t('edit.photos.hint')}
       </Text>
       {failure ? (

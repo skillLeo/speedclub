@@ -1,0 +1,61 @@
+{
+  "$comment": "Pinned inputs and recipe for design/scripts/build-fonts.py (docs/09_PREMIUM_2_0.md §4.2, ADR-402). Every download is refused unless its SHA-256 matches. Change anything here, rebuild, and commit the lock with the outputs: node design/scripts/check-fonts.mjs fails until manifest.json agrees.",
+  "schema": 1,
+  "inter": {
+    "version": "4.1",
+    "url": "https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip",
+    "sha256": "9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e",
+    "licenceName": "SIL Open Font License 1.1 (no Reserved Font Name)",
+    "licence": { "member": "LICENSE.txt", "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a", "as": "OFL-Inter.txt" },
+    "faces": [
+      { "postScriptName": "Inter-Regular", "member": "extras/ttf/Inter-Regular.ttf", "sha256": "40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82", "cssFamily": "Inter", "weight": 400, "widthClass": 5 },
+      { "postScriptName": "Inter-Medium", "member": "extras/ttf/Inter-Medium.ttf", "sha256": "97ad806f526e41546d46365bb3a393145f75b7b1568913db74549ad8b8dba872", "cssFamily": "Inter", "weight": 500, "widthClass": 5 },
+      { "postScriptName": "Inter-SemiBold", "member": "extras/ttf/Inter-SemiBold.ttf", "sha256": "78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3", "cssFamily": "Inter", "weight": 600, "widthClass": 5 },
+      { "postScriptName": "Inter-Bold", "member": "extras/ttf/Inter-Bold.ttf", "sha256": "288316099b1e0a47a4716d159098005eef7c0066921f34e3200393dbdb01947f", "cssFamily": "Inter", "weight": 700, "widthClass": 5 },
+      { "postScriptName": "InterDisplay-SemiBold", "member": "extras/ttf/InterDisplay-SemiBold.ttf", "sha256": "0310d7a325896129730c6c8cf9a6e0f81ee258bedf77b1ff059b2a7b75f74e02", "cssFamily": "Inter Display", "weight": 600, "widthClass": 5 },
+      { "postScriptName": "InterDisplay-Bold", "member": "extras/ttf/InterDisplay-Bold.ttf", "sha256": "b74c8e0dd744b3347faca4c96bc7b2e32f7d6f62300a79b1d1a99331e44a5bc4", "cssFamily": "Inter Display", "weight": 700, "widthClass": 5 }
+    ]
+  },
+  "archivo": {
+    "version": "2.001",
+    "commit": "6c70c829f09ea345d3590406693220ea35c6553f",
+    "file": "Archivo[wdth,wght].ttf",
+    "url": "https://raw.githubusercontent.com/google/fonts/6c70c829f09ea345d3590406693220ea35c6553f/ofl/archivo/Archivo%5Bwdth%2Cwght%5D.ttf",
+    "sha256": "0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053",
+    "licenceName": "SIL Open Font License 1.1 (no Reserved Font Name)",
+    "licence": {
+      "url": "https://raw.githubusercontent.com/google/fonts/6c70c829f09ea345d3590406693220ea35c6553f/ofl/archivo/OFL.txt",
+      "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b",
+      "as": "OFL-Archivo.txt"
+    },
+    "instances": [
+      { "postScriptName": "ArchivoCondensed-SemiBold", "family": "Archivo Condensed", "style": "SemiBold", "cssFamily": "Archivo Condensed", "weight": 600, "widthClass": 3, "axes": { "wdth": 75, "wght": 600 } },
+      { "postScriptName": "ArchivoCondensed-Bold", "family": "Archivo Condensed", "style": "Bold", "cssFamily": "Archivo Condensed", "weight": 700, "widthClass": 3, "axes": { "wdth": 75, "wght": 700 } },
+      { "postScriptName": "ArchivoSemiExpanded-SemiBold", "family": "Archivo SemiExpanded", "style": "SemiBold", "cssFamily": "Archivo SemiExpanded", "weight": 600, "widthClass": 6, "axes": { "wdth": 112.5, "wght": 600 } },
+      { "postScriptName": "ArchivoSemiExpanded-Bold", "family": "Archivo SemiExpanded", "style": "Bold", "cssFamily": "Archivo SemiExpanded", "weight": 700, "widthClass": 6, "axes": { "wdth": 112.5, "wght": 700 } }
+    ]
+  },
+  "build": {
+    "charsets": {
+      "spec": "U+0020-007E, U+00A0-00FF, U+2013-2014, U+201C-201E, U+20AC",
+      "copy": "U+2010-2011, U+2018-201A, U+2022, U+2026, U+2032-2033, U+2039-203A, U+2190, U+2192, U+2212, U+2248, U+2264-2265, U+2318",
+      "latinExt": "U+0100-024F, U+1E9E"
+    },
+    "primaryCharsets": ["spec", "copy"],
+    "latinExtFiles": true,
+    "keepFeatures": ["tnum", "pnum", "lnum", "case", "zero", "cv11"],
+    "webNameIds": [0, 1, 2, 3, 4, 5, 6, 13, 14, 16, 17],
+    "webHinting": false,
+    "archivoOverlaps": "remove",
+    "cssUrlPrefix": "../fonts/2.0/"
+  },
+  "tools": {
+    "requirements": ["fonttools==4.68.0", "brotli==1.2.1", "skia-pathops==0.9.2"],
+    "verifiedOn": "macOS arm64, Python 3.15.2",
+    "wheels": {
+      "fonttools-4.68.0-cp315-cp315-macosx_10_15_universal2.whl": "ab6505dfbe3199453d8542b25f55c1ea3260d38029d9db58c0c7304d438abdc0",
+      "brotli-1.2.1-cp315-cp315-macosx_10_15_universal2.whl": "eea17e3cdc6f9aecffe15fe9a9eeba8e8c049a5d347de1561eed2240cdf35a79",
+      "skia_pathops-0.9.2-cp310-abi3-macosx_10_9_universal2.whl": "c7a925b919c050df1e0545d26a69b64d9c8e1959e4dca73b06df088bf01d30f0"
+    }
+  }
+}

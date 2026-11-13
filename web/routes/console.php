@@ -4,6 +4,7 @@ use App\Console\Commands\AuditExportCommand;
 use App\Console\Commands\AuditRetentionCommand;
 use App\Console\Commands\AuditVerifyCommand;
 use App\Console\Commands\CheckPushReceiptsCommand;
+use App\Console\Commands\EventHousekeepingCommand;
 use App\Console\Commands\ExpireApprovalsCommand;
 use App\Console\Commands\GenerateSitemapCommand;
 use App\Console\Commands\KpiSnapshotCommand;
@@ -20,11 +21,14 @@ use App\Console\Commands\PrunePrivacyRequestsCommand;
 use App\Console\Commands\PruneSupportTicketsCommand;
 use App\Console\Commands\PruneVehiclesCommand;
 use App\Console\Commands\RankHomeFeedCommand;
+use App\Console\Commands\SendEventRemindersCommand;
 use App\Console\Commands\SendHuAuRemindersCommand;
+use App\Console\Commands\SendMaintenanceRemindersCommand;
 use App\Console\Commands\SendMessageDigestCommand;
 use App\Console\Commands\SendQrMilestonesCommand;
 use App\Console\Commands\SendSavedBuildsDigestCommand;
 use App\Jobs\Catalog\PruneCatalogImports;
+use App\Services\Maintenance\MaintenanceReminders;
 use App\Support\HostFunctions;
 use Illuminate\Support\Facades\Schedule;
 use Laravel\Sanctum\Console\Commands\PruneExpired;
@@ -81,9 +85,17 @@ Schedule::command(PruneSupportTicketsCommand::class)->dailyAt('04:10');
 // reminder 30 days before the due month. Both tell once (vehicles.qr_milestone, vehicles.hu_au_reminded_for) and stop after 40 s.
 Schedule::command(SendQrMilestonesCommand::class)->dailyAt('09:00')->timezone('Europe/Berlin');
 Schedule::command(SendHuAuRemindersCommand::class)->dailyAt('09:00')->timezone('Europe/Berlin');
+// M4.13 (09 §8.8): maintenance reminders at the members' lead times, daily 09:00 Europe/Berlin, once per stage (maintenance_reminders),
+// stops after 40 s. While `maintenance` is on it tells the HU/AU too and the M2.7 command above stays silent; while off, the reverse.
+Schedule::command(SendMaintenanceRemindersCommand::class)->dailyAt(MaintenanceReminders::HOUR)->timezone('Europe/Berlin');
 
 // M2.6: timed suspensions and restrictions end when their date passes, so lists filtering on status = active show the member again.
 Schedule::command(LiftExpiredSuspensionsCommand::class)->everyFifteenMinutes();
+
+// M4.12 events (09 §8.7): reminders 24 h and 2 h before the start for going members, every five minutes (each run stops after 40 s and
+// tells nobody twice); daily upkeep: retention (cancelled/rejected 12 months, past 24), waitlists after deleted accounts, sample dates.
+Schedule::command(SendEventRemindersCommand::class)->everyFiveMinutes()->withoutOverlapping(10);
+Schedule::command(EventHousekeepingCommand::class)->dailyAt('03:50');
 
 // M3.1 admin: four-eyes requests end after 24 hours (ADR-214); the WAU tile's rolling seven-day count of the German day before (ADR-216).
 Schedule::command(ExpireApprovalsCommand::class)->hourly();

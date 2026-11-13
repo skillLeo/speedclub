@@ -1,0 +1,330 @@
+[
+ {
+  "username": "sebastian.demo",
+  "display_name": "Sebastian Krüger",
+  "city": "München",
+  "joined_days": 430,
+  "avatar": true,
+  "bio": "BMW im Alltag, Porsche am Wochenende, JDM im Herzen. Schreib mir, wenn du in der Ecke München schraubst."
+ },
+ {
+  "username": "jonas.e46",
+  "display_name": "Jonas Becker",
+  "city": "Köln",
+  "joined_days": 612,
+  "avatar": true,
+  "bio": "S54 und Handschalter, mehr braucht es nicht. Sonntags meistens in der Eifel."
+ },
+ {
+  "username": "lea.gti",
+  "display_name": "Lea Hoffmann",
+  "city": "Hannover",
+  "joined_days": 540,
+  "avatar": true,
+  "bio": "Golf seit dem Führerschein. Frag mich alles zu EA888 und Fahrwerk."
+ },
+ {
+  "username": "timo.rs",
+  "display_name": "Timo Schulz",
+  "city": "Ingolstadt",
+  "joined_days": 498,
+  "avatar": true,
+  "bio": "Fünfzylinder-Sound ist mein Wecker. Treffen in Ingolstadt? Melde dich."
+ },
+ {
+  "username": "mia.s2k",
+  "display_name": "Mia Wagner",
+  "city": "Düsseldorf",
+  "joined_days": 455,
+  "avatar": true,
+  "bio": "Offen fahren bei jedem Wetter. VTEC bis 9.000, du kennst das."
+ },
+ {
+  "username": "felix.gt3",
+  "display_name": "Felix Schäfer",
+  "city": "Stuttgart",
+  "joined_days": 702,
+  "avatar": true,
+  "bio": "Saugmotor-Fan aus Zuffenhausen-Nähe. Trackdays statt Eisdiele."
+ },
+ {
+  "username": "hannah.mx5",
+  "display_name": "Hannah Koch",
+  "city": "Bremen",
+  "joined_days": 388,
+  "avatar": false,
+  "bio": "Leicht, offen, ehrlich. Wenn du einen NA-Ersatzteilkontakt suchst, frag mich."
+ },
+ {
+  "username": "lars.skyline",
+  "display_name": "Lars Richter",
+  "city": "Hamburg",
+  "joined_days": 670,
+  "avatar": true,
+  "bio": "RB26 und ich: eine lange Geschichte. Import-Erfahrung teile ich gern."
+ },
+ {
+  "username": "elias.amg",
+  "display_name": "Elias Wolf",
+  "city": "Ludwigsburg",
+  "joined_days": 344,
+  "avatar": true,
+  "bio": "V8-Sauger forever. Wenn du einen M156-Spezialisten suchst, schreib mir."
+ },
+ {
+  "username": "emma.typer",
+  "display_name": "Emma Neumann",
+  "city": "Leipzig",
+  "joined_days": 302,
+  "avatar": true,
+  "bio": "Fronttriebler können mehr, als du denkst. Rennstrecke statt Ampel."
+ },
+ {
+  "username": "david.supra",
+  "display_name": "David Zimmermann",
+  "city": "Nürnberg",
+  "joined_days": 590,
+  "avatar": true,
+  "bio": "2JZ, B58 und ein Wankel. Ich fahre, was mich grinsen lässt."
+ },
+ {
+  "username": "sophie.quattro",
+  "display_name": "Sophie Schwarz",
+  "city": "Heilbronn",
+  "joined_days": 515,
+  "avatar": true,
+  "bio": "Quattro seit 1990 in der Familie. Fünfzylinder-Klang ist Heimat."
+ },
+ {
+  "username": "niklas.z33",
+  "display_name": "Niklas Braun",
+  "city": "Augsburg",
+  "joined_days": 270,
+  "avatar": false,
+  "bio": "VQ-Motoren und lange Autobahnetappen. Treffen im Süden? Bin dabei."
+ },
+ {
+  "username": "julia.boxer",
+  "display_name": "Julia Krause",
+  "city": "Kassel",
+  "joined_days": 410,
+  "avatar": true,
+  "bio": "Boxer-Blubbern und Schotterpässe. Du bist im Rallye-Fieber? Ich auch."
+ },
+ {
+  "username": "ben.m2",
+  "display_name": "Ben Hartmann",
+  "city": "Berlin",
+  "joined_days": 360,
+  "avatar": true,
+  "bio": "Kompakte M-Modelle sind die besten. Brandenburger Landstraßen am Morgen."
+ },
+ {
+  "username": "anna.964",
+  "display_name": "Anna Lange",
+  "city": "Frankfurt am Main",
+  "joined_days": 655,
+  "avatar": true,
+  "bio": "Luftgekühlt und original, so gut es geht. Schreib mir zu 964-Teilen."
+ },
+ {
+  "username": "moritz.rx7",
+  "display_name": "Moritz Schmitt",
+  "city": "Dresden",
+  "joined_days": 480,
+  "avatar": true,
+  "bio": "Wankel-Fahrer aus Überzeugung. Ja, ich habe immer Öl dabei."
+ },
+ {
+  "username": "laura.golf2",
+  "display_name": "Laura Krämer",
+  "city": "Wolfsburg",
+  "joined_days": 620,
+  "avatar": false,
+  "bio": "Golf 2 seit 2015, VR6 seit 2021. Youngtimer brauchen Liebe, keine Eile."
+ },
+ {
+  "username": "kai.c63",
+  "display_name": "Kai Werner",
+  "city": "Essen",
+  "joined_days": 233,
+  "avatar": true,
+  "bio": "AMG-Klang im Ruhrpott. Am Wochenende am Bilster Berg."
+ },
+ {
+  "username": "marie.gr86",
+  "display_name": "Marie Lehmann",
+  "city": "Münster",
+  "joined_days": 290,
+  "avatar": true,
+  "bio": "Hinterradantrieb, Saugmotor, Handschaltung. So muss das."
+ },
+ {
+  "username": "tim.sti",
+  "display_name": "Tim Peters",
+  "city": "Bielefeld",
+  "joined_days": 445,
+  "avatar": true,
+  "bio": "STI-Fahrer seit zehn Jahren. Wenn du einen EJ-Spezialisten suchst, frag mich."
+ },
+ {
+  "username": "lina.rs6",
+  "display_name": "Lina König",
+  "city": "Wiesbaden",
+  "joined_days": 395,
+  "avatar": true,
+  "bio": "Kombis mit V8. Familienauto und Trackday-Waffe in einem."
+ },
+ {
+  "username": "fabian.e92",
+  "display_name": "Fabian Walter",
+  "city": "Regensburg",
+  "joined_days": 560,
+  "avatar": true,
+  "bio": "S65-Fan. 8.400 Umdrehungen sind mein Lieblingsgeräusch."
+ },
+ {
+  "username": "jana.718",
+  "display_name": "Jana Mayer",
+  "city": "Karlsruhe",
+  "joined_days": 330,
+  "avatar": true,
+  "bio": "Mittelmotor und Schwarzwald-Kurven. Du kommst mit auf die B500?"
+ },
+ {
+  "username": "luca.r35",
+  "display_name": "Luca Fuchs",
+  "city": "Mannheim",
+  "joined_days": 505,
+  "avatar": true,
+  "bio": "Godzilla im Alltag. Ja, auch im Winter."
+ },
+ {
+  "username": "clara.ae86",
+  "display_name": "Clara Vogel",
+  "city": "Freiburg im Breisgau",
+  "joined_days": 375,
+  "avatar": true,
+  "bio": "Hachiroku und Drift-Training. Du lernst nie aus."
+ },
+ {
+  "username": "philipp.rs4",
+  "display_name": "Philipp Jung",
+  "city": "Mainz",
+  "joined_days": 690,
+  "avatar": true,
+  "bio": "Audi RS seit dem RS2. Kombi mit Charakter."
+ },
+ {
+  "username": "sarah.fk8",
+  "display_name": "Sarah Keller",
+  "city": "Saarbrücken",
+  "joined_days": 260,
+  "avatar": true,
+  "bio": "Type R in Championship White. Wer will, fährt mit auf den Ring."
+ },
+ {
+  "username": "jan.s15",
+  "display_name": "Jan Hahn",
+  "city": "Kiel",
+  "joined_days": 610,
+  "avatar": true,
+  "bio": "Silvia-Liebhaber aus dem Norden. SR20 sind die besten Motoren der Welt."
+ },
+ {
+  "username": "nele.scirocco",
+  "display_name": "Nele Roth",
+  "city": "Braunschweig",
+  "joined_days": 210,
+  "avatar": false,
+  "bio": "Scirocco R und Golf Clubsport. Volkswagen kann auch laut."
+ },
+ {
+  "username": "maxi.g82",
+  "display_name": "Maximilian Frank",
+  "city": "Bonn",
+  "joined_days": 470,
+  "avatar": true,
+  "bio": "Drei M-Modelle, ein Ziel: Spaß auf der Landstraße."
+ },
+ {
+  "username": "johanna.civic",
+  "display_name": "Johanna Berger",
+  "city": "Rostock",
+  "joined_days": 340,
+  "avatar": true,
+  "bio": "Honda-Saugmotoren und Ostseeküste. Drehzahl ist mein Hobby."
+ },
+ {
+  "username": "dominik.r32",
+  "display_name": "Dominik Schuster",
+  "city": "Duisburg",
+  "joined_days": 580,
+  "avatar": true,
+  "bio": "R32 seit 2016 aus Japan importiert. Teile? Frag mich."
+ },
+ {
+  "username": "alina.a45",
+  "display_name": "Alina Arnold",
+  "city": "Chemnitz",
+  "joined_days": 225,
+  "avatar": true,
+  "bio": "Hot Hatches mit Stern. Kompakt, schnell, laut."
+ },
+ {
+  "username": "robin.e30",
+  "display_name": "Robin Pohl",
+  "city": "Erfurt",
+  "joined_days": 660,
+  "avatar": false,
+  "bio": "Drei Generationen M3 in der Garage. Hilfe bei E30-Teilen gibt es bei mir."
+ },
+ {
+  "username": "selin.yaris",
+  "display_name": "Selin Aydın",
+  "city": "Dortmund",
+  "joined_days": 190,
+  "avatar": true,
+  "bio": "GR Yaris und 350Z. Zwei Welten, beide machen süchtig."
+ },
+ {
+  "username": "florian.997",
+  "display_name": "Florian Busch",
+  "city": "Würzburg",
+  "joined_days": 600,
+  "avatar": true,
+  "bio": "Porsche-Sammler mit Hang zum Turbo. Ich teile gern Werkstatt-Tipps."
+ },
+ {
+  "username": "kathi.rx8",
+  "display_name": "Katharina Ludwig",
+  "city": "Potsdam",
+  "joined_days": 250,
+  "avatar": false,
+  "bio": "RX-8 und MX-5: leicht, drehfreudig, ehrlich."
+ },
+ {
+  "username": "erik.corrado",
+  "display_name": "Erik Brandt",
+  "city": "Osnabrück",
+  "joined_days": 520,
+  "avatar": true,
+  "bio": "Youngtimer aus den 80ern und 90ern. VR6-Sound ist Musik."
+ },
+ {
+  "username": "nora.m3",
+  "display_name": "Nora Demir",
+  "city": "Bonn",
+  "joined_days": 285,
+  "avatar": true,
+  "bio": "M3 in zwei Generationen. Von Sauger bis Biturbo alles dabei."
+ },
+ {
+  "username": "yusuf.r33",
+  "display_name": "Yusuf Kaya",
+  "city": "Gelsenkirchen",
+  "joined_days": 435,
+  "avatar": true,
+  "bio": "R33 und Supra. Japan-Klassiker aus dem Pott."
+ }
+]

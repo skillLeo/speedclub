@@ -101,10 +101,10 @@ function remove(view: SavedView): void {
         </form>
         <ul v-if="views.length > 0" class="mt-16 flex flex-col border-t border-line-subtle">
             <li v-for="view in views" :key="view.id" class="flex h-40 items-center gap-8 border-b border-line-subtle">
-                <span class="flex-1 truncate text-supporting text-ink">{{ view.name }}</span>
+                <span class="flex-1 truncate text-admin-base text-ink">{{ view.name }}</span>
                 <IconButton :icon="PhTrash" :label="trans('ui.table.views.delete', { name: view.name })" variant="danger" :loading="deleting === view.id" @click="remove(view)" />
             </li>
         </ul>
-        <p v-else class="mt-16 text-supporting text-ink-3">{{ trans('ui.table.views.none') }}</p>
+        <p v-else class="mt-16 text-admin-base text-ink-3">{{ trans('ui.table.views.none') }}</p>
     </Dialog>
 </template>

@@ -93,12 +93,12 @@ export function VehiclePhotos({ vehicle, disabled = false, locked = false, onEdi
         fallbackAlt={vehicle.full_title}
         testID={`${routeId}.photos`}
       />
-      <Text variant="helper" color="text.secondary" testID={`${routeId}.photos.count`}>
+      <Text variant="caption" color="text.secondary" testID={`${routeId}.photos.count`}>
         {t('photos.count', { count: vehicle.photos.length + uploads.uploads.length, max: VEHICLE_PHOTO_LIMIT })}
       </Text>
       <View style={styles.reminder} testID={`${routeId}.plateReminder`}>
         <Icon name="info" size={16} color="text.secondary" />
-        <Text variant="helper" color="text.secondary" style={styles.reminderText}>
+        <Text variant="caption" color="text.secondary" style={styles.reminderText}>
           {t('photos.plateReminder')}
         </Text>
       </View>

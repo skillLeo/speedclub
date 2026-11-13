@@ -1,0 +1,76 @@
+// Visual registry entries of the M4.12/M4.17 admin pages ADM-53 Treffen-Queue and ADM-54 Treffen-Detail (09 §10.2/§10.3, ADR-437/439).
+// Same fields as routes.mjs, which merges this list. Data: lukas.sc's event in review {pendingEventId} (support/events.mjs, made through
+// the member API on first use, found by title afterwards, seen only by him and staff) and the seeded published sample events
+// (ShowcaseEvents). Its waiting time follows the server clock, so the cells are volatile (ADR-223).
+
+export const routesM417EvtAdmin = [
+  {
+    id: 'ADM-53',
+    volatile: true,
+    path: '/admin/events',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default', 'loading', 'empty', 'error'],
+    ready: '[data-testid="ADM-53"] [data-testid="ADM-53.table"]',
+    notes: 'Treffen-Queue "In Prüfung" as moderator: oldest first with the SLA timer (Wartet), title with kind and city, start, organiser with history (Erstes Treffen / n freigegeben), place (Nach Zusage with a lock), reports; filters Suche · Art · Genauer Ort.',
+  },
+  {
+    id: 'ADM-53-pane',
+    volatile: true,
+    path: '/admin/events?event={pendingEventId}',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default', 'loading', 'error'],
+    ready: '[data-testid="ADM-53"] [data-testid="ADM-53.pane"]',
+    notes: 'SplitQueue from 1280: the narrow list (Wartet, Treffen) and the pane with "Cars & Coffee am Ring": status In Prüfung, waiting since, Freigeben (the one filled button) and Ablehnen, the keyboard line, cover, time, organiser @lukas.sc, the exact place with who else sees it, description, rules.',
+  },
+  {
+    id: 'ADM-53-reject',
+    volatile: true,
+    path: '/admin/events?event={pendingEventId}&dialog=reject',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default'],
+    ready: '[data-testid="ADM-53.reject-dialog"]',
+    notes: 'Ablehnen: the title in quotes, what the organiser reads, the reason field (10–1000 characters) before the red confirm.',
+  },
+  {
+    id: 'ADM-53-published',
+    path: '/admin/events?tab=published',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default'],
+    ready: '[data-testid="ADM-53"] [data-testid="ADM-53.table"]',
+    notes: 'Veröffentlicht: the seeded sample events with Zusagen visible, no waiting time.',
+  },
+  {
+    id: 'ADM-53-analyst',
+    volatile: true,
+    path: '/admin/events?event={pendingEventId}',
+    phase: 3,
+    auth: 'staff-analyst',
+    states: ['default'],
+    ready: '[data-testid="ADM-53"] [data-testid="ADM-53.pane"]',
+    notes: 'View-only (moderation.view without moderation.decide): the lock line under the tabs, the pane without Freigeben/Ablehnen.',
+  },
+  {
+    id: 'ADM-54',
+    volatile: true,
+    path: '/admin/events/{pendingEventId}',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default', 'loading', 'error'],
+    ready: '[data-qa-state="ready"] [data-testid="ADM-54.detail"], [data-qa-state]:not([data-qa-state="ready"])[data-testid="ADM-54-page"]',
+    notes: 'Treffen-Detail: header with status, kind · date · city · @organiser, Freigeben and Ablehnen; tabs Überblick · Antworten & Updates · Meldungen; the activity column from the audit log.',
+  },
+  {
+    id: 'ADM-54-reject',
+    volatile: true,
+    path: '/admin/events/{pendingEventId}?dialog=reject',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default'],
+    ready: '[data-testid="ADM-54.reject-dialog"]',
+    notes: 'Ablehnen from the record: the same dialog as the queue.',
+  },
+];

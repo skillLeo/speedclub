@@ -3,7 +3,8 @@
 namespace App\Enums;
 
 /**
- * Audit actions of member security events (05_ARCHITECTURE §13). Never with an IP address (ADR-113).
+ * Audit actions of member security events (05_ARCHITECTURE §13). Never with an IP address (ADR-113). Each one also becomes a row of
+ * member_security_events (SecurityEventLog), which SET-21 reads through SecurityActivity.
  */
 enum MemberSecurityEvent: string
 {
@@ -31,4 +32,23 @@ enum MemberSecurityEvent: string
     case HardDeleted = 'member.hard_deleted';
     case SecondFactorLocked = 'member.second_factor_locked';
     case PasswordCheckFailed = 'member.password_check_failed';
+    // M4.6 Auth 2.0 (09 §8.1/§8.2).
+    case EmailCodeLocked = 'member.email_code_locked';
+    case TermsAccepted = 'member.terms_accepted';
+    case ProviderLinked = 'member.provider_linked';
+    case ProviderUnlinked = 'member.provider_unlinked';
+    case ProviderLinkRequested = 'member.provider_link_requested';
+    case AppleRevoked = 'member.apple_revoked';
+    case PasskeyAdded = 'member.passkey_added';
+    case PasskeyRenamed = 'member.passkey_renamed';
+    case PasskeyRemoved = 'member.passkey_removed';
+    case PasskeySignCountRegressed = 'member.passkey_sign_count_regressed';
+    case Reauthenticated = 'member.reauthenticated';
+    // SEC-M46-01: the owner proved an address someone else had registered; that someone's passkeys and providers went with the rest.
+    case UnprovenDataCleared = 'member.unproven_data_cleared';
+    // M4.7 account security (09 §8.4): every sign-in (a new device is LoginNewDevice instead), wrong sign-in proofs as one row per day
+    // and account, and "Das war ich nicht" (SET-21, the mail link).
+    case SignedIn = 'member.signed_in';
+    case SignInFailed = 'member.sign_in_failed';
+    case AccountSecured = 'member.account_secured';
 }

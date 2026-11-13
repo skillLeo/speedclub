@@ -3,7 +3,9 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 
-import { createStyles, resolveColor, size, useMotion, useTheme } from '@/theme';
+import { createStyles, resolveColor, size, useTheme } from '@/theme';
+
+import { useMotionPreference } from './motion';
 
 type Common = {
   /** Accessible name, for example "Foto wird hochgeladen" or "Schritt 2 von 4". */
@@ -29,7 +31,7 @@ const useStyles = createStyles((t) => ({
   },
   fill: { backgroundColor: t.color.text.primary, transformOrigin: 'left' },
   segments: { alignSelf: 'stretch', flexDirection: 'row', gap: t.size.progress.segmentGap },
-  segment: { backgroundColor: t.color.border.default, flex: 1, height: t.size.progress.height },
+  segment: { backgroundColor: t.color.border.default, flex: 1, height: t.size.progress.height, overflow: 'hidden' },
   segmentDone: { backgroundColor: t.color.text.primary },
 }));
 
@@ -46,12 +48,12 @@ export function Progress(props: ProgressProps) {
 
 function Bar({ value, label, style, testID }: Common & { value: number }) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const clamped = clamp01(value);
   const progress = useSharedValue(clamped);
 
   useEffect(() => {
-    progress.set(motion.timingTo(clamped));
+    progress.set(motion.springTo(clamped, 'calm'));
   }, [clamped, motion, progress]);
 
   const fill = useAnimatedStyle(() => ({ transform: [{ scaleX: progress.get() }] }));
@@ -86,8 +88,27 @@ function Wizard({ step, total = DEFAULT_STEPS, label, style, testID }: Common & 
       style={[styles.segments, style]}
     >
       {Array.from({ length: total }, (_, index) => (
-        <View key={index} style={[styles.segment, index < step ? styles.segmentDone : null]} />
+        <WizardSegment key={index} done={index < step} testID={testID ? `${testID}.segment.${index}` : undefined} />
       ))}
+    </View>
+  );
+}
+
+/**
+ * 09 §7.6 GAR-03: the active segment fills from the left on spring.default (a scaleX transform); reduced motion sets it
+ * through the effect crossfade path of `springTo` (ADR-405). A segment that is done at mount starts full.
+ */
+function WizardSegment({ done, testID }: { done: boolean; testID?: string }) {
+  const styles = useStyles();
+  const motion = useMotionPreference();
+  const fill = useSharedValue(done ? 1 : 0);
+  useEffect(() => {
+    fill.set(motion.springTo(done ? 1 : 0, 'default'));
+  }, [done, fill, motion]);
+  const fillStyle = useAnimatedStyle(() => ({ transform: [{ scaleX: fill.get() }] }));
+  return (
+    <View style={styles.segment} testID={testID}>
+      <Animated.View style={[StyleSheet.absoluteFill, styles.fill, styles.segmentDone, fillStyle]} />
     </View>
   );
 }

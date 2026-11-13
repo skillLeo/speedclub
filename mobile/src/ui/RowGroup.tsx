@@ -5,7 +5,16 @@ import { createStyles } from '@/theme';
 import { RowBody } from './rowParts';
 import { Text } from './Text';
 
+/**
+ * ADR-426 e (amended after design QA round 3, DQ-928): one role for every grouped-list and form section header ("Sicherheit",
+ * "Dieses Fahrzeug"): `callout.strong` 14/20 **600** in `text.secondary`, sentence case, one weight step above the `callout`
+ * 500 field labels, so a header never reads as one more label. RowGroup, the garage FormGroup, the wizard's preview header and
+ * every skeleton line that stands for such a header use it, so the lists never show one pattern in two sizes again (DQ-906).
+ */
+export const SECTION_HEADER_ROLE = 'calloutStrong' as const;
+
 const useStyles = createStyles((t) => ({
+  // ADR-426 e: space.8 below the header; the lists that stack groups set space.32 between them.
   group: { gap: t.space[8] },
   // In line with the text of the rows below, which sit 16 inside the card.
   title: { paddingHorizontal: t.space[16] },
@@ -31,7 +40,7 @@ export function RowGroup({ title, children, style, testID }: RowGroupProps) {
   return (
     <View style={[styles.group, style]} testID={testID}>
       {title ? (
-        <Text variant="labelS" color="text.secondary" role="heading" {...({ 'aria-level': 2 } as object)} style={styles.title}>
+        <Text variant={SECTION_HEADER_ROLE} color="text.secondary" role="heading" {...({ 'aria-level': 2 } as object)} style={styles.title} testID={testID ? `${testID}.title` : undefined}>
           {title}
         </Text>
       ) : null}

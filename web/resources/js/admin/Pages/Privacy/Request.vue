@@ -150,7 +150,7 @@ const exportState = computed(() => (r.value.export ? trans(`privacy.request.expo
                 </div>
             </template>
             <template #meta>
-                <p class="flex flex-wrap items-center gap-x-8 gap-y-4 text-supporting text-ink-2 tabular-nums" data-testid="ADM-46.meta">
+                <p class="flex flex-wrap items-center gap-x-8 gap-y-4 text-admin-base text-ink-2 tabular-nums" data-testid="ADM-46.meta">
                     <span>{{ trans('privacy.request.received', { date: formatDate(r.received_at) }) }}</span>
                     <span aria-hidden="true">·</span>
                     <span :class="due.tone === 'danger' ? 'text-danger' : due.tone === 'warning' ? 'text-warning' : ''">{{ `${trans('privacy.request.due', { date: formatDate(r.due_at) })} (${due.text})` }}</span>
@@ -166,34 +166,34 @@ const exportState = computed(() => (r.value.export ? trans(`privacy.request.expo
 
             <template #request>
                 <div class="flex flex-col gap-24 pt-24">
-                    <p v-if="!can.process && !final" class="text-supporting text-ink-2" data-testid="ADM-46.view-only">{{ trans('privacy.request.view_only') }}</p>
+                    <p v-if="!can.process && !final" class="text-admin-base text-ink-2" data-testid="ADM-46.view-only">{{ trans('privacy.request.view_only') }}</p>
                     <section class="flex flex-col gap-4 rounded-sm border border-line-subtle px-16 py-12" data-testid="ADM-46.requester">
                         <p class="text-caption text-ink-3">{{ trans('privacy.request.requester_title') }}</p>
-                        <p class="sc-key text-body-strong text-ink">{{ requesterText(r.requester) }}<template v-if="r.requester.kind === 'member' && r.requester.name">{{ ` · ${r.requester.name}` }}</template></p>
-                        <p v-if="r.requester.email" class="sc-key text-supporting text-ink-2">{{ trans('privacy.request.address', { email: r.requester.email }) }}</p>
-                        <p v-else-if="r.requester.kind === 'external'" class="text-supporting text-warning">{{ trans('privacy.request.no_address') }}</p>
-                        <Link v-if="r.requester.id && !r.requester.deleted" :href="memberHref(r.requester.id)" :class="[focusRing, 'inline-flex h-32 items-center gap-4 self-start rounded-xs text-label-s text-ink hover:underline']" data-testid="ADM-46.member">
+                        <p class="sc-key text-admin-base-strong text-ink">{{ requesterText(r.requester) }}<template v-if="r.requester.kind === 'member' && r.requester.name">{{ ` · ${r.requester.name}` }}</template></p>
+                        <p v-if="r.requester.email" class="sc-key text-admin-base text-ink-2">{{ trans('privacy.request.address', { email: r.requester.email }) }}</p>
+                        <p v-else-if="r.requester.kind === 'external'" class="text-admin-base text-warning">{{ trans('privacy.request.no_address') }}</p>
+                        <Link v-if="r.requester.id && !r.requester.deleted" :href="memberHref(r.requester.id)" :class="[focusRing, 'inline-flex h-32 items-center gap-4 self-start rounded-xs text-admin-base-strong text-ink hover:underline']" data-testid="ADM-46.member">
                             <PhUserCircle :size="16" aria-hidden="true" />{{ trans('privacy.request.member_link') }}
                         </Link>
                     </section>
                     <section class="flex flex-col gap-8" data-testid="ADM-46.details">
-                        <h2 class="text-title-s text-ink">{{ trans('privacy.request.details_title') }}</h2>
-                        <p v-if="r.details" class="max-w-720 whitespace-pre-line text-supporting text-ink">{{ r.details }}</p>
-                        <p v-else class="text-supporting text-ink-3">{{ trans('privacy.request.no_details') }}</p>
+                        <h2 class="text-headline text-ink">{{ trans('privacy.request.details_title') }}</h2>
+                        <p v-if="r.details" class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ r.details }}</p>
+                        <p v-else class="text-admin-base text-ink-3">{{ trans('privacy.request.no_details') }}</p>
                     </section>
                     <section class="flex flex-col gap-8" data-testid="ADM-46.deadline">
-                        <h2 class="text-title-s text-ink">{{ trans('privacy.request.deadline_title') }}</h2>
-                        <p class="text-supporting text-ink tabular-nums">{{ trans('privacy.request.deadline_line', { received: formatDate(r.received_at), due: formatDate(r.due_at) }) }}</p>
-                        <p v-if="r.extended_at" class="max-w-720 text-supporting text-ink-2">{{ trans('privacy.request.extended_line', { date: formatDate(r.extended_at), reason: r.extension_reason ?? '–' }) }}</p>
-                        <p v-else-if="can.extend" class="text-helper text-ink-3">{{ trans('privacy.request.extend_hint') }}</p>
+                        <h2 class="text-headline text-ink">{{ trans('privacy.request.deadline_title') }}</h2>
+                        <p class="text-admin-base text-ink tabular-nums">{{ trans('privacy.request.deadline_line', { received: formatDate(r.received_at), due: formatDate(r.due_at) }) }}</p>
+                        <p v-if="r.extended_at" class="max-w-720 text-admin-base text-ink-2">{{ trans('privacy.request.extended_line', { date: formatDate(r.extended_at), reason: r.extension_reason ?? '–' }) }}</p>
+                        <p v-else-if="can.extend" class="text-admin-base text-ink-3">{{ trans('privacy.request.extend_hint') }}</p>
                     </section>
                     <section v-if="r.export || r.approval" class="flex flex-col gap-4" data-testid="ADM-46.linked">
-                        <h2 class="text-title-s text-ink">{{ trans('privacy.request.linked_title') }}</h2>
-                        <p v-if="exportState" class="text-supporting text-ink-2">{{ trans('privacy.request.export_status', { status: exportState }) }}</p>
-                        <p v-if="r.approval" class="text-supporting text-ink-2">{{ trans('privacy.request.approval_status', { status: trans(`approvals.status.${r.approval.status}`) }) }}</p>
+                        <h2 class="text-headline text-ink">{{ trans('privacy.request.linked_title') }}</h2>
+                        <p v-if="exportState" class="text-admin-base text-ink-2">{{ trans('privacy.request.export_status', { status: exportState }) }}</p>
+                        <p v-if="r.approval" class="text-admin-base text-ink-2">{{ trans('privacy.request.approval_status', { status: trans(`approvals.status.${r.approval.status}`) }) }}</p>
                     </section>
                     <section v-if="can.process" class="flex flex-col gap-12" data-testid="ADM-46.handling">
-                        <h2 class="text-title-s text-ink">{{ trans('privacy.request.handling_title') }}</h2>
+                        <h2 class="text-headline text-ink">{{ trans('privacy.request.handling_title') }}</h2>
                         <div class="flex flex-wrap items-end gap-12">
                             <div class="w-240"><Field :label="trans('privacy.request.assignee')"><Select v-model="handling.assigned" :options="assigneeOptions" size="sm" data-testid="ADM-46.assignee" /></Field></div>
                             <div class="w-200"><Field :label="trans('privacy.request.status')"><Select v-model="handling.status" :options="statusOptions" size="sm" data-testid="ADM-46.status-select" /></Field></div>
@@ -206,18 +206,18 @@ const exportState = computed(() => (r.value.export ? trans(`privacy.request.expo
             <template #reply>
                 <div class="flex flex-col gap-16 pt-24" data-testid="ADM-46.reply">
                     <div class="flex flex-col gap-4">
-                        <h2 class="text-title-s text-ink">{{ trans('privacy.request.reply_title') }}</h2>
-                        <p class="max-w-720 text-supporting text-ink-2">{{ trans('privacy.request.reply_body') }}</p>
-                        <p v-if="r.last_reply_at" class="text-helper text-ink-3 tabular-nums">{{ trans('privacy.request.last_reply', { date: formatDateTime(r.last_reply_at) }) }}</p>
+                        <h2 class="text-headline text-ink">{{ trans('privacy.request.reply_title') }}</h2>
+                        <p class="max-w-720 text-admin-base text-ink-2">{{ trans('privacy.request.reply_body') }}</p>
+                        <p v-if="r.last_reply_at" class="text-admin-base text-ink-3 tabular-nums">{{ trans('privacy.request.last_reply', { date: formatDateTime(r.last_reply_at) }) }}</p>
                     </div>
-                    <p v-if="!can.reply" class="max-w-720 text-supporting" :class="can.reply_blocked === 'permission' ? 'text-ink-2' : 'text-warning'" data-testid="ADM-46.reply.blocked">{{ replyBlocked }}</p>
+                    <p v-if="!can.reply" class="max-w-720 text-admin-base" :class="can.reply_blocked === 'permission' ? 'text-ink-2' : 'text-warning'" data-testid="ADM-46.reply.blocked">{{ replyBlocked }}</p>
                     <template v-else>
-                        <p v-if="r.reply_to" class="sc-key text-supporting text-ink" data-testid="ADM-46.reply.to">{{ trans('privacy.request.reply_to', { email: r.reply_to }) }}</p>
+                        <p v-if="r.reply_to" class="sc-key text-admin-base text-ink" data-testid="ADM-46.reply.to">{{ trans('privacy.request.reply_to', { email: r.reply_to }) }}</p>
                         <div class="flex flex-wrap items-end gap-12">
                             <div class="min-w-240 grow basis-0"><Field :label="trans('privacy.request.template')"><Select v-model="reply.template" :options="templateOptions" data-testid="ADM-46.reply.template" /></Field></div>
                             <div class="w-160"><Field :label="trans('privacy.request.reply_locale')"><Select v-model="reply.locale" :options="localeOptions" data-testid="ADM-46.reply.locale" /></Field></div>
                         </div>
-                        <p class="max-w-720 text-helper text-ink-2" data-testid="ADM-46.reply.about">{{ trans(`privacy.request.template_about.${reply.template}`) }}</p>
+                        <p class="max-w-720 text-admin-base text-ink-2" data-testid="ADM-46.reply.about">{{ trans(`privacy.request.template_about.${reply.template}`) }}</p>
                         <Field :label="trans('privacy.request.detail')" :hint="trans('privacy.request.detail_hint')" optional>
                             <Textarea v-model="reply.detail" :rows="3" :maxlength="2000" show-count data-testid="ADM-46.reply.detail" />
                         </Field>
@@ -232,39 +232,39 @@ const exportState = computed(() => (r.value.export ? trans(`privacy.request.expo
             <template #complete>
                 <div class="flex flex-col gap-16 pt-24" data-testid="ADM-46.complete">
                     <template v-if="final">
-                        <p class="max-w-720 text-supporting text-ink-2">{{ trans('privacy.request.final') }}</p>
+                        <p class="max-w-720 text-admin-base text-ink-2">{{ trans('privacy.request.final') }}</p>
                         <section class="flex flex-col gap-8 rounded-sm border border-line-subtle px-16 py-12" data-testid="ADM-46.evidence">
-                            <h2 class="text-title-s text-ink">{{ trans('privacy.request.evidence_title') }}</h2>
-                            <p v-if="!r.evidence?.note && !r.evidence?.file" class="text-supporting text-ink-3">{{ trans('privacy.request.no_evidence') }}</p>
-                            <div v-if="r.evidence?.note" class="flex flex-col gap-2"><p class="text-caption text-ink-3">{{ trans('privacy.request.evidence_note') }}</p><p class="max-w-720 whitespace-pre-line text-supporting text-ink">{{ r.evidence.note }}</p></div>
+                            <h2 class="text-headline text-ink">{{ trans('privacy.request.evidence_title') }}</h2>
+                            <p v-if="!r.evidence?.note && !r.evidence?.file" class="text-admin-base text-ink-3">{{ trans('privacy.request.no_evidence') }}</p>
+                            <div v-if="r.evidence?.note" class="flex flex-col gap-2"><p class="text-caption text-ink-3">{{ trans('privacy.request.evidence_note') }}</p><p class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ r.evidence.note }}</p></div>
                             <div v-if="r.evidence?.file" class="flex flex-wrap items-center gap-12">
                                 <span class="text-caption text-ink-3">{{ trans('privacy.request.evidence_file') }}</span>
-                                <span class="sc-key text-supporting text-ink">{{ r.evidence.file }}</span>
+                                <span class="sc-key text-admin-base text-ink">{{ r.evidence.file }}</span>
                                 <Button v-if="r.evidence.download" size="sm" variant="secondary" :icon="PhDownloadSimple" :href="r.evidence.download" external data-testid="ADM-46.evidence.download">{{ trans('privacy.request.download') }}</Button>
                             </div>
                         </section>
                     </template>
-                    <p v-else-if="!can.process" class="text-supporting text-ink-2">{{ trans('privacy.request.view_only') }}</p>
+                    <p v-else-if="!can.process" class="text-admin-base text-ink-2">{{ trans('privacy.request.view_only') }}</p>
                     <form v-else class="flex flex-col gap-16" novalidate @submit.prevent="submitComplete()">
                         <div class="flex flex-col gap-4">
-                            <h2 class="text-title-s text-ink">{{ trans('privacy.request.complete_title') }}</h2>
-                            <p class="max-w-720 text-supporting text-ink-2">{{ trans('privacy.request.complete_body') }}</p>
+                            <h2 class="text-headline text-ink">{{ trans('privacy.request.complete_title') }}</h2>
+                            <p class="max-w-720 text-admin-base text-ink-2">{{ trans('privacy.request.complete_body') }}</p>
                         </div>
                         <RadioGroup v-model="complete.outcome" :options="outcomeOptions" :legend="trans('privacy.request.outcome')" orientation="horizontal" data-testid="ADM-46.complete.outcome" />
                         <Field :label="trans('privacy.request.note')" :hint="trans('privacy.request.note_hint')" :required="complete.outcome === 'rejected'" :optional="complete.outcome !== 'rejected'">
                             <Textarea v-model="complete.note" :rows="4" :maxlength="5000" show-count data-testid="ADM-46.complete.note" />
                         </Field>
                         <div class="flex flex-col gap-4">
-                            <span class="text-label-s text-ink">{{ trans('privacy.request.file') }}</span>
+                            <span class="text-admin-base-strong text-ink">{{ trans('privacy.request.file') }}</span>
                             <div class="flex flex-wrap items-center gap-12">
-                                <label :class="[focusRing, 'inline-flex h-32 cursor-pointer items-center gap-8 rounded-sm border border-line bg-raised px-12 text-label-s text-ink hover:bg-hover has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus']">
+                                <label :class="[focusRing, 'inline-flex h-32 cursor-pointer items-center gap-8 rounded-sm border border-line bg-raised px-12 text-admin-base-strong text-ink hover:bg-hover has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus']">
                                     <PhPaperclip :size="16" aria-hidden="true" />{{ trans('privacy.request.file_choose') }}
                                     <input ref="fileInput" type="file" class="sr-only" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.zip" data-testid="ADM-46.complete.file" @change="pickFile" />
                                 </label>
-                                <span class="sc-key text-supporting" :class="complete.file ? 'text-ink' : 'text-ink-3'">{{ complete.file?.name ?? trans('privacy.request.file_none') }}</span>
+                                <span class="sc-key text-admin-base" :class="complete.file ? 'text-ink' : 'text-ink-3'">{{ complete.file?.name ?? trans('privacy.request.file_none') }}</span>
                                 <IconButton v-if="complete.file" :icon="PhX" :label="trans('privacy.request.file_remove')" size="sm" @click="clearFile()" />
                             </div>
-                            <p class="max-w-720 text-helper text-ink-3">{{ trans('privacy.request.file_hint') }}</p>
+                            <p class="max-w-720 text-admin-base text-ink-3">{{ trans('privacy.request.file_hint') }}</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-12">
                             <Button type="submit" variant="primary" size="sm" :loading="action.processing.value" data-testid="ADM-46.complete.submit">{{ complete.outcome === 'rejected' ? trans('privacy.request.reject_submit') : trans('privacy.request.complete_submit') }}</Button>

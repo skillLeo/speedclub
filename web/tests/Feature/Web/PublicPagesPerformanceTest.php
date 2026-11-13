@@ -29,8 +29,10 @@ it('inlines the built stylesheet in a nonced style block and links no stylesheet
     expect($nonce)->not->toBeEmpty()
         ->and($html)->toContain('<style nonce="'.$nonce[1].'">'.$css.'</style>')
         ->not->toMatch('~<link[^>]+rel="stylesheet"~')
-        // The fonts it names are its own build's files.
-        ->and($css)->toContain('/build/assets/inter-latin-400-normal-');
+        // The fonts it names are its own build's files: the 2.0 faces (09 §4.2), not the package fonts of v1 (WebFontsTest pins the full set).
+        ->and($css)->toMatch('~/build/assets/Inter-Regular-[A-Za-z0-9_-]+\.woff2~')
+        ->toMatch('~/build/assets/ArchivoSemiExpanded-SemiBold-[A-Za-z0-9_-]+\.woff2~')
+        ->not->toContain('inter-latin-');
 })->with(['home', 'vehicle', 'member']);
 
 it('keeps the wordmark in the landing hero behind the photo in the queue', function () {

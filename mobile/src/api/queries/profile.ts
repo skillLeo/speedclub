@@ -6,11 +6,12 @@
  * cookie and the XSRF header on web, never for a guest, and never for a member another tab has replaced (SEC-S-02). An upload
  * belongs to the session it started in, and ends with it (SEC-S-01).
  */
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { api, apiData, apiOrigin, guardMemberWrite, networkError, readCookie, sendsSessionCookie, toApiError } from '@/api/client';
 import { meKey, refreshMe, type Me } from '@/api/queries/auth';
+import { publicIdOf, retryUnlessAnswered, usePublicViewer, type BuildUpdate } from '@/api/queries/vehicles';
 import { queryClient } from '@/api/queryClient';
 import type { components } from '@/api/schema';
 import i18n from '@/i18n';
@@ -22,6 +23,7 @@ export type VehicleCardData = components['schemas']['VehicleCardResource'];
 export type MediaData = components['schemas']['MediaResource'];
 export type ProfilePatch = components['schemas']['UpdateProfileRequest'];
 export type ProfileImageSlot = 'avatar' | 'cover';
+export type ProfileEvent = components['schemas']['EventCardResource'];
 
 export const myVehiclesKey = ['me', 'vehicles'] as const;
 
@@ -35,6 +37,71 @@ export function useMyVehicles() {
     queryKey: myVehiclesKey,
     queryFn: async ({ signal }) => (await apiData(api.GET('/me/vehicles', { signal }))).data,
     enabled: signedIn,
+  });
+}
+
+/** PROF-01 Treffen: the events the member said yes to (EVT-05 "Zugesagt", waitlist included), soonest first. */
+export function useMyEvents(enabled: boolean = true) {
+  const signedIn = useSessionStore((state) => state.status === 'member');
+  return useQuery({
+    queryKey: ['me', 'events', 'going'] as const,
+    queryFn: async ({ signal }) =>
+      (await apiData(api.GET('/me/events', { params: { query: { tab: 'going', per_page: PROFILE_EVENTS } }, signal }))).data,
+    enabled: enabled && signedIn,
+    retry: retryUnlessAnswered,
+  });
+}
+
+/** How many events and updates the profile tabs show; the rest lives on the event list and the vehicle pages. */
+export const PROFILE_EVENTS = 10;
+export const PROFILE_UPDATES = 20;
+/** Updates are read from this many published builds at most (main vehicle first). */
+export const PROFILE_UPDATE_SOURCES = 6;
+
+/** An update with the build it belongs to, for the profile's Updates tab. */
+export type ProfileUpdate = { update: BuildUpdate; vehicle: Pick<VehicleCardData, 'id' | 'slug' | 'full_title' | 'cover'> };
+
+/** Newest first across builds, at most `limit`. Exported for the tests. */
+export function mergeProfileUpdates(lists: readonly (readonly ProfileUpdate[])[], limit: number = PROFILE_UPDATES): ProfileUpdate[] {
+  const time = (entry: ProfileUpdate) => Date.parse(entry.update.created_at ?? '') || 0;
+  return lists
+    .flat()
+    .filter((entry) => !entry.update.hidden)
+    .sort((a, b) => time(b) - time(a))
+    .slice(0, limit);
+}
+
+/**
+ * PROF-01/02 Updates: the latest build updates of the member's published builds, newest first. There is no per-member route
+ * (API gap, reported to lane B): the first page of each build's Verlauf is read, for at most PROFILE_UPDATE_SOURCES builds.
+ */
+export function useProfileUpdates(vehicles: readonly VehicleCardData[], enabled: boolean = true) {
+  const viewer = usePublicViewer();
+  const sources = vehicles.slice(0, PROFILE_UPDATE_SOURCES);
+  return useQueries({
+    queries: sources.map((vehicle) => ({
+      queryKey: ['public-vehicle', publicIdOf(vehicle.slug), viewer, 'profile-updates'] as const,
+      queryFn: async ({ signal }: { signal: AbortSignal }) =>
+        (
+          await apiData(
+            api.GET('/public/vehicles/{slug}/updates', {
+              params: { path: { slug: vehicle.slug }, query: { per_page: PROFILE_UPDATES } },
+              signal,
+            }),
+          )
+        ).data.map((update) => ({ update, vehicle }) satisfies ProfileUpdate),
+      enabled,
+      retry: retryUnlessAnswered,
+      meta: { persist: false },
+    })),
+    combine: (results) => ({
+      data: results.every((result) => result.data !== undefined) ? mergeProfileUpdates(results.map((result) => result.data ?? [])) : undefined,
+      isPending: results.some((result) => result.isPending && result.fetchStatus !== 'idle'),
+      isError: results.some((result) => result.isError),
+      isPaused: results.some((result) => result.fetchStatus === 'paused'),
+      isFetching: results.some((result) => result.isFetching),
+      refetch: () => Promise.all(results.map((result) => result.refetch())),
+    }),
   });
 }
 

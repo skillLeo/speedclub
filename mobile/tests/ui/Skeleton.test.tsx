@@ -61,7 +61,7 @@ describe('Skeleton', () => {
   it('text lines take the line height of the variant, the last line is shorter', async () => {
     await renderUi(
       <Skeleton>
-        <SkeletonText variant="titleS" lines={3} testID="t" />
+        <SkeletonText variant="headline" lines={3} testID="t" />
       </Skeleton>,
     );
     const root = screen.getByTestId('t');
@@ -69,7 +69,7 @@ describe('Skeleton', () => {
     expect(lines).toHaveLength(3);
     const line = lines[0];
     expect(flat(line && typeof line !== 'string' ? line.props.style : undefined).height).toBe(
-      typography.titleS.lineHeight * PixelRatio.getFontScale(),
+      typography.headline.lineHeight * PixelRatio.getFontScale(),
     );
   });
 });

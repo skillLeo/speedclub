@@ -24,12 +24,12 @@ const useStyles = createStyles((t) => ({
   },
 }));
 
-/** §8 status pill: 20 high, radius 4, 1 border.default, `badge` text.secondary. */
+/** §8 status pill: 20 high, radius 4, 1 border.default, `label.badge` text.secondary. */
 export function StatusPill({ label, style, testID }: StatusPillProps) {
   const styles = useStyles();
   return (
     <View testID={testID} style={[styles.pill, style]}>
-      <Text hyphenate={false} variant="badge" color="text.secondary">
+      <Text hyphenate={false} variant="labelBadge" color="text.secondary">
         {label}
       </Text>
     </View>

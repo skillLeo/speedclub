@@ -6,6 +6,8 @@ use App\Enums\AiFeature;
 use App\Enums\CaseOrigin;
 use App\Enums\ReportTargetType;
 use App\Models\BuildUpdate;
+use App\Models\Comment;
+use App\Models\Event;
 use App\Models\Media;
 use App\Models\ModerationCase;
 use App\Models\Modification;
@@ -165,6 +167,8 @@ final class Triage
             ReportTargetType::BuildUpdate => BuildUpdate::query()->whereKey($case->target_id)->value('note'),
             ReportTargetType::Modification => Modification::query()->whereKey($case->target_id)->value('notes'),
             ReportTargetType::Member => User::query()->whereKey($case->target_id)->value('bio'),
+            ReportTargetType::Comment => Comment::withTrashed()->whereKey($case->target_id)->value('body'),
+            ReportTargetType::Event => Event::query()->whereKey($case->target_id)->value('description'),
             default => null,
         };
 

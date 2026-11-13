@@ -8,6 +8,7 @@ use App\Http\Middleware\PublicPageContext;
 use App\Http\Middleware\RedirectMembersToApp;
 use App\Services\Qr\QrResolver;
 use App\Services\Qr\QrScans;
+use App\Support\PublicUrl;
 use App\Support\SignedInBrowser;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -36,7 +37,8 @@ class QrScanController extends Controller
         }
 
         $response = $resolution->state === QrScanState::Active
-            ? redirect('/v/'.$resolution->slug(), 302)
+            // One hop to the canonical page, on HTTPS where the site is (PublicUrl::absolute): /v answers 200 without another redirect.
+            ? redirect()->to(PublicUrl::absolute('/v/'.$resolution->slug()), 302)
             : response()->view('public.state', ['state' => $resolution->state->value, 'copy' => $resolution->copy()], self::STATUS[$resolution->state->value]);
 
         $response->headers->set('Cache-Control', 'no-store');

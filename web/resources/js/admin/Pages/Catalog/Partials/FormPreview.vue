@@ -45,12 +45,12 @@ const cells = (row: LayoutRow): SchemaField[] => (row.kind === 'pair' ? [...row.
 <template>
     <div class="flex flex-col gap-16" :data-testid="testId">
         <div class="flex flex-wrap items-center justify-between gap-12">
-            <p class="max-w-560 text-supporting text-ink-2">{{ trans('catalog.preview.intro') }}</p>
+            <p class="max-w-560 text-admin-base text-ink-2">{{ trans('catalog.preview.intro') }}</p>
             <SegmentedControl v-model="localeModel" class="self-start" :options="[{ value: 'de', label: trans('catalog.preview.de') }, { value: 'en', label: trans('catalog.preview.en') }]" :label="trans('catalog.preview.language')" />
         </div>
         <EmptyQueue v-if="live.length === 0" variant="first" :title="trans('catalog.preview.empty_title')" :body="trans('catalog.preview.empty_body')" />
-        <div v-else class="flex max-w-560 flex-col gap-24 rounded-md border border-line px-24 py-24" :lang="locale">
-            <p class="text-title-s text-ink">{{ (locale === 'en' ? categoryName.en : categoryName.de) ?? '' }}</p>
+        <div v-else class="flex max-w-560 flex-col gap-24 rounded-sm border border-line px-24 py-24" :lang="locale">
+            <p class="text-headline text-ink">{{ (locale === 'en' ? categoryName.en : categoryName.de) ?? '' }}</p>
             <section v-for="group in groups" :key="group.key" class="flex flex-col gap-16" :aria-label="trans(`catalog.preview.groups.${group.key}_${locale}`)" :data-testid="`${testId}.group.${group.key}`">
                 <h3 class="text-caption text-ink-3 uppercase">{{ trans(`catalog.preview.groups.${group.key}_${locale}`) }}</h3>
                 <template v-for="row in group.rows" :key="cells(row)[0]?.key">
@@ -59,7 +59,7 @@ const cells = (row: LayoutRow): SchemaField[] => (row.kind === 'pair' ? [...row.
                         <Field v-for="f in cells(row)" :key="f.key" :label="label(f)" :required="f.required">
                             <Select v-if="f.type === 'select'" :model-value="values[f.key] || undefined" :options="options(f)" :placeholder="trans(locale === 'en' ? 'catalog.preview.choose_en' : 'catalog.preview.choose')" :data-testid="`${testId}.${f.key}`" @update:model-value="(v: string | undefined) => (values[f.key] = v ?? '')" />
                             <Input v-else v-model="values[f.key]" :inputmode="f.type === 'number' ? 'decimal' : undefined" :tnum="f.type === 'number'" :placeholder="placeholder(f)" :data-testid="`${testId}.${f.key}`">
-                                <template v-if="unitOf(f)" #trailing><span class="pr-8 text-supporting text-ink-3">{{ unitOf(f) }}</span></template>
+                                <template v-if="unitOf(f)" #trailing><span class="pr-8 text-admin-base text-ink-3">{{ unitOf(f) }}</span></template>
                             </Input>
                         </Field>
                     </div>

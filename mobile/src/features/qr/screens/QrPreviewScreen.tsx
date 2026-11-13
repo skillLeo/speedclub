@@ -39,11 +39,11 @@ function PreviewSkeleton() {
       <View style={styles.card}>
         <SkeletonBlock width="100%" aspectRatio={4 / 3} corner="md" />
         <View style={styles.cardText}>
-          <SkeletonText variant="titleS" width="70%" />
-          <SkeletonText variant="supporting" width="55%" />
+          <SkeletonText variant="headline" width="70%" />
+          <SkeletonText variant="callout" width="55%" />
         </View>
       </View>
-      <SkeletonText variant="bodyDense" lines={2} style={styles.explain} />
+      <SkeletonText variant="body" lines={2} style={styles.explain} />
       <SkeletonBlock width="100%" height={size.button.l} corner="sm" style={styles.open} />
     </Skeleton>
   );
@@ -88,8 +88,8 @@ function PreviewBody({ qr }: { qr: QrCodeData }) {
       <View style={styles.card} testID={`${ROUTE}.card`}>
         <Photo {...photo} aspect="4:3" corner="none" label={qr.vehicle.cover?.alt ?? undefined} testID={`${ROUTE}.photo`} />
         <View style={styles.cardText}>
-          <Text variant="titleS">{keepNameTogether(qr.vehicle.full_title)}</Text>
-          <Text variant="supporting" color="text.secondary" hyphenate={false} selectable testID={`${ROUTE}.url`}>
+          <Text variant="headline">{keepNameTogether(qr.vehicle.full_title)}</Text>
+          <Text variant="callout" color="text.secondary" hyphenate={false} selectable testID={`${ROUTE}.url`}>
             {displayQrUrl(url)}
           </Text>
         </View>
@@ -97,7 +97,7 @@ function PreviewBody({ qr }: { qr: QrCodeData }) {
       {isBlockedByStaff(qr) ? (
         <QrNotice message={t('preview.blocked')} style={styles.notice} testID={`${ROUTE}.blocked`} />
       ) : null}
-      <Text variant="bodyDense" color="text.secondary" style={styles.explain} testID={`${ROUTE}.explain`}>
+      <Text variant="body" color="text.secondary" style={styles.explain} testID={`${ROUTE}.explain`}>
         {t(explanationKey(qr))}
       </Text>
       <Button

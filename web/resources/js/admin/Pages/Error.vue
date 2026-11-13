@@ -31,9 +31,9 @@ function reload(): void {
     <Head :title="trans(`errors.${key}.title`)" />
     <section class="flex max-w-560 flex-col gap-16 py-24" data-testid="ADM-05" :data-status="status" :data-qa-state="'error'">
         <p class="text-caption text-ink-3 tabular-nums">{{ trans('errors.code', { code: String(status) }) }}</p>
-        <h1 class="text-title-m text-ink">{{ trans(`errors.${key}.title`) }}</h1>
-        <p class="text-body text-ink-2">{{ trans(`errors.${key}.body`) }}</p>
-        <p v-if="status === 403 && signedIn" class="text-supporting text-ink-3" data-testid="ADM-05.view-only">{{ trans('errors.403.hint') }}</p>
+        <h1 class="text-title-2 text-ink">{{ trans(`errors.${key}.title`) }}</h1>
+        <p class="text-admin-base text-ink-2">{{ trans(`errors.${key}.body`) }}</p>
+        <p v-if="status === 403 && signedIn" class="text-admin-base text-ink-3" data-testid="ADM-05.view-only">{{ trans('errors.403.hint') }}</p>
         <div class="mt-8 flex flex-wrap gap-8">
             <Button v-if="canRetry" variant="primary" :icon="PhArrowClockwise" data-testid="ADM-05.retry" @click="reload">{{ trans('errors.retry') }}</Button>
             <Button v-if="signedIn" :variant="canRetry ? 'secondary' : 'primary'" :icon="PhGauge" :href="routeOr('admin.dashboard', '/admin')" data-testid="ADM-05.dashboard">

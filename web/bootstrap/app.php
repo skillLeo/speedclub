@@ -12,6 +12,7 @@ use App\Http\Middleware\Idempotency;
 use App\Http\Middleware\LimitJsonBody;
 use App\Http\Middleware\RefuseLongQuery;
 use App\Http\Middleware\RejectInvalidText;
+use App\Http\Middleware\RequireRecentAuthentication;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocaleFromHeader;
 use App\Http\Middleware\StaffSession;
@@ -55,6 +56,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'idempotent' => Idempotency::class,
             'not-restricted' => EnsureNotRestricted::class,
             'verified-member' => EnsureVerified::class,
+            // M4.6 sudo mode (09 §8.1): `recent.auth:10` or `recent.auth:10,or-password`.
+            'recent.auth' => RequireRecentAuthentication::class,
         ]);
 
         $middleware->web(prepend: [RefuseLongQuery::class]);

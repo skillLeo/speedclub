@@ -2,90 +2,79 @@ import { memberItemWidth } from '@/features/home/components/ActiveMembersStrip';
 import { chipsThatFit } from '@/features/home/components/PopularModsChips';
 import { memberMetaText } from '@/ui/MemberRow';
 import { handleText } from '@/ui/textBreaks';
-import { forYouRows, streamRows } from '@/features/home/screens/HomeScreen';
+import { forYouRows, MODULE_EVERY, streamRows, weeklyBuild, type HomeRow } from '@/features/home/screens/HomeScreen';
+import type { FeedVehicle } from '@/api/queries/home';
 
-import { activeMember, buildUpdate, GTI, M4, MODS, R34, updateItem, vehicleItem } from './fixtures';
+import { activeMember, buildUpdate, feedVehicle, GTI, M4, MODS, R34, updateItem, vehicleItem } from './fixtures';
 
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
 jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.resolve(null)) }));
 
-describe('FS-2 rows of Für dich', () => {
-  const base = { hero: undefined, newBuilds: [], updates: [], members: [], mods: [], stream: [] };
+describe('09 §7.3 rows of Für dich', () => {
+  const base = { hero: undefined, newBuilds: [], members: [], mods: [], stream: [] };
+  const many = (count: number) => Array.from({ length: count }, (_, index) => vehicleItem(feedVehicle({ id: `01stream${index}`, slug: `s-${index}` })));
+  const shape = (rows: HomeRow[]) => rows.map((row) => (row.kind === 'section' ? `§${row.section}` : row.kind));
 
-  it('keeps the blueprint order and leaves out every module without content', () => {
-    const rows = forYouRows({ ...base, hero: GTI, newBuilds: [R34, M4], updates: [buildUpdate()], members: [activeMember()], mods: MODS, stream: [updateItem(buildUpdate({ id: 's' }))] });
-    expect(rows.map((row) => (row.kind === 'section' ? `§${row.section}` : row.kind))).toEqual([
+  it('keeps the blueprint order: lead, Neu in der Garage, the stream with a module after every 6 items', () => {
+    const weekly = feedVehicle({ id: '01weekly', slug: 'weekly' });
+    const rows = forYouRows({ ...base, hero: GTI, newBuilds: [R34, M4], weekly, members: [activeMember()], mods: MODS, stream: many(14) });
+    expect(shape(rows)).toEqual([
       'hero',
       '§newBuilds',
-      'card',
-      'card',
-      '§updates',
-      'updates',
+      'rail',
+      ...Array(MODULE_EVERY).fill('card'),
+      '§weekly',
+      'weekly',
+      ...Array(MODULE_EVERY).fill('card'),
       '§members',
       'members',
+      'card',
+      'card',
       '§mods',
       'mods',
-      'streamUpdates',
     ]);
     expect(forYouRows({ ...base, stream: [vehicleItem(R34)] }).map((row) => row.kind)).toEqual(['card']);
   });
 
-  it('shows two Neue Builds without the featured one, and none of the builds above again in the stream', () => {
-    const rows = forYouRows({ ...base, hero: R34, newBuilds: [R34, M4, GTI], stream: [vehicleItem(M4), vehicleItem(R34), updateItem(buildUpdate())] });
-    const cards = rows.filter((row) => row.kind === 'card');
-    expect(cards.map((row) => row.kind === 'card' && row.vehicle.id)).toEqual([M4.id, GTI.id]);
-    expect(cards.at(-1)).toMatchObject({ last: true });
-    expect(rows.at(-1)?.kind).toBe('streamUpdates');
+  it('leaves out every module without content, and appends the modules a short stream has no room for', () => {
+    const rows = forYouRows({ ...base, mods: MODS, stream: many(2) });
+    expect(shape(rows)).toEqual(['card', 'card', '§mods', 'mods']);
+    expect(forYouRows(base)).toEqual([]);
   });
 
-  // M2.2 review 2: the server leaves only the hero out of the stream. The other featured builds are not drawn above, so they belong in it.
-  it('keeps a featured build that is not the hero in the stream', () => {
+  it('fills the rail with up to 8 builds without the lead, and never repeats a build drawn above in the stream', () => {
+    const rail = Array.from({ length: 10 }, (_, index) => feedVehicle({ id: `01rail${index}` }));
+    const rows = forYouRows({ ...base, hero: rail[0], newBuilds: rail, stream: [vehicleItem(rail[1] as FeedVehicle), vehicleItem(R34), updateItem(buildUpdate())] });
+    const railRow = rows.find((row) => row.kind === 'rail');
+    expect(railRow?.kind === 'rail' && railRow.vehicles.map((vehicle) => vehicle.id)).toEqual(rail.slice(1, 9).map((vehicle) => vehicle.id));
+    expect(rows.filter((row) => row.kind === 'card').map((row) => row.kind === 'card' && row.vehicle.id)).toEqual([R34.id]);
+    expect(rows.at(-1)?.kind).toBe('update');
+  });
+
+  it('calls only an editorial pick other than the lead "Build der Woche"', () => {
+    expect(weeklyBuild([{ source: 'editorial', vehicle: GTI, quote: null }, { source: 'editorial', vehicle: R34, quote: null }])?.id).toBe(R34.id);
+    expect(weeklyBuild([{ source: 'editorial', vehicle: GTI, quote: null }, { source: 'completeness', vehicle: R34, quote: null }])).toBeUndefined();
+    expect(weeklyBuild(undefined)).toBeUndefined();
+  });
+
+  // M2.2 review 2: the server leaves only the lead out of the stream. The other featured builds are not drawn above, so they belong in it.
+  it('keeps a featured build that is not the lead in the stream', () => {
     const featuredSecond = { ...GTI, id: '01featured2' };
     const rows = forYouRows({ ...base, hero: R34, newBuilds: [M4], stream: [vehicleItem(featuredSecond), vehicleItem(R34)] });
-    const streamCards = rows.filter((row) => row.kind === 'card' && row.key.startsWith('stream.'));
-    expect(streamCards.map((row) => row.kind === 'card' && row.vehicle.id)).toEqual([featuredSecond.id]);
+    expect(rows.filter((row) => row.kind === 'card').map((row) => row.kind === 'card' && row.vehicle.id)).toEqual([featuredSecond.id]);
   });
 
-  it('marks the first section when there is no featured build, for the space under the segments', () => {
-    expect(forYouRows({ ...base, updates: [buildUpdate()] })[0]).toEqual({ kind: 'section', section: 'updates', first: true });
-    expect(forYouRows({ ...base, hero: GTI, updates: [buildUpdate()] })[1]).toEqual({ kind: 'section', section: 'updates', first: false });
-  });
-
-  it('turns a Folge ich page into cards and update rows, in the server’s order, and skips an item without its body', () => {
+  it('turns a Folge ich page into build and update cards, in the server’s order, and skips an item without its body', () => {
     const rows = streamRows([updateItem(buildUpdate()), vehicleItem(R34), { type: 'vehicle', key: 'broken', vehicle: null, update: null }]);
-    expect(rows.map((row) => row.kind)).toEqual(['streamUpdates', 'card']);
+    expect(rows.map((row) => row.kind)).toEqual(['update', 'card']);
   });
 
-  it('puts consecutive update rows into one block, so they share the hairlines of §8 (DQ-288)', () => {
-    const rows = streamRows([updateItem(buildUpdate({ id: 'u1' })), updateItem(buildUpdate({ id: 'u2' })), vehicleItem(M4), updateItem(buildUpdate({ id: 'u3' }))]);
-    expect(rows.map((row) => (row.kind === 'streamUpdates' ? row.updates.map((update) => update.id).join('+') : row.kind))).toEqual(['u1+u2', 'card', 'u3']);
-  });
-
-  it('does not repeat a card’s latest change that is an update row of the stream (DQ-289)', () => {
+  it('does not repeat a card’s latest change that has a card of its own in the stream (DQ-289)', () => {
     const latest = { id: 'u-brakes', type_label: 'Modifikation hinzugefügt', summary: 'Bremsen: Serie → Endless MX72', created_at: '2026-11-07T18:00:00+00:00' };
     const ae86 = { ...R34, id: '01ae86', latest_update: latest };
     const rows = streamRows([updateItem(buildUpdate({ id: 'u-brakes', vehicle: ae86 })), vehicleItem(ae86), vehicleItem(R34)]);
     expect(rows[1]).toMatchObject({ kind: 'card', showLatest: false });
     expect(rows[2]).not.toHaveProperty('showLatest');
-  });
-
-  it('does not repeat a change that Build-Updates lists, on a Neue Builds card or a stream card (DQ-308)', () => {
-    const latest = { id: 'u-golf', type_label: 'Modifikation hinzugefügt', summary: 'Fahrwerk: Serie → KW V3', created_at: '2026-11-07T18:00:00+00:00' };
-    const golf = { ...GTI, latest_update: latest };
-    const ae86 = { ...R34, id: '01ae86', latest_update: { ...latest, id: 'u-ae86' } };
-    const rows = forYouRows({
-      ...base,
-      newBuilds: [golf, M4],
-      updates: [buildUpdate({ id: 'u-golf' }), buildUpdate({ id: 'u-ae86' })],
-      stream: [vehicleItem(ae86), vehicleItem(R34)],
-    });
-    const cards = rows.filter((row) => row.kind === 'card');
-    expect(cards.map((row) => (row.kind === 'card' ? [row.vehicle.id, row.showLatest ?? true] : null))).toEqual([
-      [golf.id, false],
-      [M4.id, true],
-      [ae86.id, false],
-      [R34.id, true],
-    ]);
   });
 });
 

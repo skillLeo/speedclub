@@ -29,7 +29,7 @@ const useStyles = createStyles((t) => ({
     alignSelf: 'center',
     backgroundColor: t.color.qr.bg,
     boxShadow: t.colorScheme === 'light' ? t.shadow.e1 : undefined,
-    borderRadius: t.radius.lg,
+    borderRadius: t.radius.md,
     gap: t.space[4],
     maxWidth: t.size.qrMaxOnScreen + t.space[24] * 2,
     padding: t.space[24],
@@ -76,7 +76,7 @@ export function QRDisplay({ svg, imageUri, label, code, url, style, testID }: QR
           <Image source={{ uri: imageUri }} contentFit="contain" alt="" accessibilityLabel="" accessible={false} style={styles.image} />
         )}
       </View>
-      <Text variant="code" color="qr.fg" selectable style={styles.text} testID={part('shortCode')}>
+      <Text variant="headline" numeric color="qr.fg" selectable style={styles.text} testID={part('shortCode')}>
         {code}
       </Text>
       {url ? (

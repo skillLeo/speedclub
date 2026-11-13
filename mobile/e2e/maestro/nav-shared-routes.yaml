@@ -16,8 +16,15 @@ env:
     visible:
       id: AUTH-02.root
     timeout: 60000
+# M4.6: the password sign-in is behind "Mit E-Mail fortfahren" → "Mit Passwort anmelden" (needs `auth.password_login`, on by default).
 - tapOn:
-    id: AUTH-02.signIn
+    id: AUTH-02.provider.email
+- extendedWaitUntil:
+    visible:
+      id: AUTH-12.root
+    timeout: 15000
+- tapOn:
+    id: AUTH-12.withPassword
 - extendedWaitUntil:
     visible:
       id: AUTH-03.root

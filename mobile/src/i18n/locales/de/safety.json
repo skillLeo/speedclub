@@ -96,7 +96,9 @@
         "photo": "Foto",
         "message": "Nachricht",
         "build_update": "Build-Update",
-        "modification": "Modifikation"
+        "modification": "Modifikation",
+        "comment": "Kommentar",
+        "event": "Treffen"
     },
     "status": {
         "received": "Eingegangen",
@@ -221,7 +223,7 @@
         "required": "Schreib kurz, warum du widersprichst.",
         "send": "Einspruch senden",
         "sentTitle": "Dein Einspruch ist eingegangen",
-        "sentBody": "Sobald wir entschieden haben, sagen wir dir per Mitteilung und E-Mail Bescheid.",
+        "sentBody": "Sobald wir entschieden haben, sagen wir dir per Mitteilung und E-\u2060Mail Bescheid.",
         "done": "Fertig",
         "failure": {
             "offline": "Du bist offline. Dein Einspruch ist noch nicht gesendet. Versuch es noch einmal, sobald du wieder online bist.",
@@ -245,6 +247,8 @@
         "message": "Nachricht von {{label}}",
         "build_update": "Update zu {{label}}",
         "modification": "Mod an {{label}}",
+        "comment": "Kommentar von {{label}}",
+        "event": "Treffen „{{label}}“",
         "gone": "Nicht mehr verfügbar"
     }
 }

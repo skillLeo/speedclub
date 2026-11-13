@@ -35,13 +35,16 @@ const useStyles = createStyles((t) => ({
   // DQ-298: a Button S (36) beside the title line (24) would make the header 36 high, 18 from title to content instead of §5's 12.
   // The button overhangs the line by the difference, 4 above and 8 below, which also sets its label on the title's baseline. Both
   // margins are on the spacing scale; the content below keeps its 12, and the 44 target reaches into that gap as it does elsewhere.
+  // 2.0: the title is `headline` (22 line); the overhang is re-measured with the SectionHeader rebuild (M4.4, Button S 32).
+  // BUG-2: the action may sit in this wrapping row and its column wrapper only because the Button's visual never grows inside
+  // its hugging target (PressableScale `visualFills`); a growing one took the whole panel height on Android.
   overhang: { marginBottom: -t.space[8], marginTop: -t.space[4] },
   // On a line of its own the padding reaches into the gutter on the start side instead (DQ-110), so the text starts on the
   // title's edge. The box keeps its width, so the wrap it was measured in cannot change.
   actionStacked: { flexShrink: 0, marginLeft: -t.size.buttonPaddingX.s },
 }));
 
-/** §8 section header: `title.s` and one trailing action. */
+/** Section header: `headline` (v1 `title.s`, 09 §4.2) and one trailing action. */
 export function SectionHeader({ title, actionLabel, onAction, actionAccessibilityLabel, trailing, wraps = false, level = 2, style, testID }: SectionHeaderProps) {
   const styles = useStyles();
   const [titleBottom, setTitleBottom] = useState(0);
@@ -67,7 +70,7 @@ export function SectionHeader({ title, actionLabel, onAction, actionAccessibilit
 
   return (
     <View testID={testID} style={[styles.row, wraps ? styles.rowWraps : null, style]}>
-      <Text variant="titleS" role="heading" {...({ 'aria-level': level } as object)} style={styles.title} onLayout={onTitleLayout}>
+      <Text variant="headline" role="heading" {...({ 'aria-level': level } as object)} style={styles.title} onLayout={onTitleLayout}>
         {title}
       </Text>
       {trailing ??

@@ -736,16 +736,28 @@ describe('POST auth/login', function () {
             Mail::assertNotSent(SecurityNoticeMail::class);
         });
 
-        it('recognises a browser after an update, by its user agent without version numbers', function () {
+        // SEC-M47-02: a browser is its random id in a first-party cookie, not its user agent.
+        it('recognises a browser after an update by its browser cookie, and treats the same user agent without it as new', function () {
             $this->member->knownDevices()->create(['fingerprint' => str_repeat('a', 64), 'last_seen_at' => now()]);
+            $name = config()->string('speedclub.known_devices.browser_cookie');
 
             $session = freshSpaSession();
             $response = spa($session)->withHeader('User-Agent', 'Mozilla/5.0 Firefox/140.0')->postJson('/api/v1/auth/login', ['email' => 'lukas@example.de', 'password' => AUTH_PASSWORD])->assertOk();
             Mail::assertSent(SecurityNoticeMail::class, 1);
+            $browserId = $response->getCookie($name)?->getValue();
+            expect($browserId)->toBeString();
+            forgetAuth();
+
+            $session = freshSpaSession();
+            spa($session)->withCookie($name, (string) $browserId)->withHeader('User-Agent', 'Mozilla/5.0 Firefox/141.0')->postJson('/api/v1/auth/login', ['email' => 'lukas@example.de', 'password' => AUTH_PASSWORD])->assertOk();
+            Mail::assertSent(SecurityNoticeMail::class, 1);
+            forgetAuth();
+            // Another browser with the same user agent: no browser cookie.
+            $this->defaultCookies = [];
 
             $session = freshSpaSession();
             spa($session)->withHeader('User-Agent', 'Mozilla/5.0 Firefox/141.0')->postJson('/api/v1/auth/login', ['email' => 'lukas@example.de', 'password' => AUTH_PASSWORD])->assertOk();
-            Mail::assertSent(SecurityNoticeMail::class, 1);
+            Mail::assertSent(SecurityNoticeMail::class, 2);
         });
 
         it('stores only a checksum', function () {
@@ -896,7 +908,10 @@ describe('GET auth/me', function () {
                 'username', 'username_change_available_at', 'display_name', 'city', 'bio', 'avatar', 'cover', 'locale', 'theme',
                 'power_display', 'member_since',
                 'stats' => ['vehicles', 'followers', 'following'],
+                'is_sample', 'is_editorial',
                 'two_factor_enabled',
+                // M4.6: false for a passwordless account.
+                'password_set',
                 'restrictions' => [
                     'suspended',
                     'messaging' => ['restricted', 'until', 'decision_id'],

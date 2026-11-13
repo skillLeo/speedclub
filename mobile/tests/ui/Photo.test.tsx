@@ -30,7 +30,7 @@ describe('Photo', () => {
     expect(image.props.contentPosition).toEqual({ left: '25%', top: '60%' });
     expect(image.props.placeholderContentFit).toBe('cover');
     expect(JSON.stringify(image.props.placeholder)).toContain('blurhash:/LKO2');
-    expect(image.props.transition).toEqual(expect.objectContaining({ duration: motion.duration.small }));
+    expect(image.props.transition).toEqual(expect.objectContaining({ duration: motion.css['effect.default'].duration }));
   });
 
   it('clamps a focal point outside the photo', () => {

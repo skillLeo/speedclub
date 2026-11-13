@@ -14,9 +14,19 @@ use Spatie\Csp\Preset;
  *
  * react-native-web injects its generated stylesheet at runtime, which no hash can cover, so style-src-elem has to
  * allow inline styles. Scripts stay without any unsafe keyword.
+ *
+ * Event maps (ADR-449): the MapLibre GL controller loads its library and stylesheet from unpkg (pinned version with SRI), runs its
+ * workers from blob: URLs and draws OpenFreeMap tiles. The map only loads after a tap, so these hosts see no request on page load. Only
+ * /app carries them; Blade and the API keep their own presets.
  */
 class SpaPreset implements Preset
 {
+    /** The library and stylesheet of the event map (mobile/public/map/event-map.js). */
+    public const MAP_LIBRARY_HOST = 'https://unpkg.com';
+
+    /** Vector tiles, glyphs and sprites of the event map. */
+    public const MAP_TILES_HOST = 'https://tiles.openfreemap.org';
+
     public function configure(Policy $policy): void
     {
         $inline = $this->inlineHashes();
@@ -27,12 +37,14 @@ class SpaPreset implements Preset
             ->add(Directive::FORM_ACTION, Keyword::SELF)
             ->add(Directive::FRAME_ANCESTORS, Keyword::NONE)
             ->add(Directive::OBJECT, Keyword::NONE)
-            ->add(Directive::SCRIPT, [Keyword::SELF, ...$inline['script']])
-            ->add(Directive::STYLE, [Keyword::SELF, Keyword::UNSAFE_INLINE])
+            ->add(Directive::SCRIPT, [Keyword::SELF, ...$inline['script'], self::MAP_LIBRARY_HOST])
+            ->add(Directive::STYLE, [Keyword::SELF, Keyword::UNSAFE_INLINE, self::MAP_LIBRARY_HOST])
+            ->add(Directive::WORKER, [Keyword::SELF, 'blob:'])
+            ->add(Directive::CHILD, [Keyword::SELF, 'blob:'])
             ->add(Directive::FONT, [Keyword::SELF, 'data:'])
-            ->add(Directive::IMG, [Keyword::SELF, 'data:', 'blob:', ...MediaSources::hosts()])
+            ->add(Directive::IMG, [Keyword::SELF, 'data:', 'blob:', ...MediaSources::hosts(), self::MAP_TILES_HOST])
             ->add(Directive::MEDIA, [Keyword::SELF, 'blob:', ...MediaSources::hosts()])
-            ->add(Directive::CONNECT, [Keyword::SELF, ...Realtime::connectHosts()]);
+            ->add(Directive::CONNECT, [Keyword::SELF, ...Realtime::connectHosts(), self::MAP_TILES_HOST]);
     }
 
     /**

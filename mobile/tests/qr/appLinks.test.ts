@@ -35,6 +35,10 @@ describe('App Links and universal links (M1.7, M2.1)', () => {
           { scheme: 'https', host: 'speedclub.de', pathPrefix: '/u/' },
           { scheme: 'https', host: 'speedclub.de', path: '/app/reset-password' },
           { scheme: 'https', host: 'speedclub.de', path: '/app/verify-email' },
+          { scheme: 'https', host: 'speedclub.de', path: '/auth/magic' },
+          { scheme: 'https', host: 'speedclub.de', path: '/app/auth/magic' },
+          { scheme: 'https', host: 'speedclub.de', path: '/auth/secure' },
+          { scheme: 'https', host: 'speedclub.de', path: '/app/auth/secure' },
         ],
         category: ['BROWSABLE', 'DEFAULT'],
       },
@@ -54,6 +58,10 @@ describe('App Links and universal links (M1.7, M2.1)', () => {
       { scheme: 'https', host: 'staging.speedclub.de', port: '8443', pathPrefix: '/u/' },
       { scheme: 'https', host: 'staging.speedclub.de', port: '8443', path: '/app/reset-password' },
       { scheme: 'https', host: 'staging.speedclub.de', port: '8443', path: '/app/verify-email' },
+      { scheme: 'https', host: 'staging.speedclub.de', port: '8443', path: '/auth/magic' },
+      { scheme: 'https', host: 'staging.speedclub.de', port: '8443', path: '/app/auth/magic' },
+      { scheme: 'https', host: 'staging.speedclub.de', port: '8443', path: '/auth/secure' },
+      { scheme: 'https', host: 'staging.speedclub.de', port: '8443', path: '/app/auth/secure' },
     ]);
     expect(config.ios?.associatedDomains).toEqual(['applinks:staging.speedclub.de:8443']);
   });

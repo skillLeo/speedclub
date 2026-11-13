@@ -19,12 +19,12 @@
  *
  * Pure apart from the transport it is given, so it is tested without React or the network.
  */
-import type { ChatVehicle, DeliveryFailure, FailureReason, ThreadMessage } from './model';
+import type { ChatVehicle, DeliveryFailure, FailureReason, ReplyQuote, ThreadMessage } from './model';
 
 export type LocalPhoto = { uri: string; width: number; height: number; mimeType?: string | null; fileName?: string | null };
 
 export type OutboxDraft =
-  | { kind: 'text'; body: string }
+  | { kind: 'text'; body: string; replyTo?: ReplyQuote | null }
   | { kind: 'vehicle'; vehicle: ChatVehicle }
   | { kind: 'photo'; photo: LocalPhoto; /** Set once the upload succeeded, so a retry does not upload again. */ mediaId: string | null };
 
@@ -420,5 +420,6 @@ export function entryToMessage(entry: OutboxEntry): ThreadMessage {
     reactions: [],
     delivery: entry.state,
     failure: entry.failure,
+    replyTo: draft.kind === 'text' ? (draft.replyTo ?? null) : null,
   };
 }

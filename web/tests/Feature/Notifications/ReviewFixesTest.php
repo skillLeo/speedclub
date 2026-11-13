@@ -8,6 +8,7 @@ use App\Models\Follow;
 use App\Models\Notification;
 use App\Models\PushToken;
 use App\Models\User;
+use App\Services\Auth\DeviceInstalls;
 use App\Services\Notifications\Notifier;
 use App\Services\Notifications\NotifyFollowersOfPublication;
 use App\Services\Notifications\QuietHours;
@@ -155,8 +156,9 @@ describe('followed_published rows (review #11)', function () {
 describe('push tokens (review #5, #6, #7)', function () {
     it('takes a device away from the member who used it before when another signs in with its id', function () {
         $before = ntfMember('vorher', ['email' => 'vorher@example.de']);
-        PushToken::factory()->create(['user_id' => $before->id, 'device_id' => '6f1c2b0e-8d4a-4f7e-9a51-0c3e1d2b4a01']);
-        PushToken::factory()->create(['user_id' => $before->id, 'device_id' => '0b9e7d55-21c4-4a8f-b6e2-7f3a9c1d5e02']);
+        // SEC-M47-03: as stored, keyed to the member, with the install key that joins nothing across accounts.
+        PushToken::factory()->create(['user_id' => $before->id, 'device_id' => DeviceInstalls::key($before->id, '6f1c2b0e-8d4a-4f7e-9a51-0c3e1d2b4a01'), 'install_key' => DeviceInstalls::installKey('6f1c2b0e-8d4a-4f7e-9a51-0c3e1d2b4a01')]);
+        PushToken::factory()->create(['user_id' => $before->id, 'device_id' => DeviceInstalls::key($before->id, '0b9e7d55-21c4-4a8f-b6e2-7f3a9c1d5e02'), 'install_key' => DeviceInstalls::installKey('0b9e7d55-21c4-4a8f-b6e2-7f3a9c1d5e02')]);
         ntfMember('danach', ['email' => 'danach@example.de', 'password' => 'Lackierung-92-rot']);
 
         $this->postJson('/api/v1/auth/login', [
@@ -164,12 +166,12 @@ describe('push tokens (review #5, #6, #7)', function () {
             'device_id' => '6f1c2b0e-8d4a-4f7e-9a51-0c3e1d2b4a01',
         ])->assertOk();
 
-        expect(PushToken::query()->pluck('device_id')->all())->toBe(['0b9e7d55-21c4-4a8f-b6e2-7f3a9c1d5e02']);
+        expect(PushToken::query()->pluck('device_id')->all())->toBe([DeviceInstalls::key($before->id, '0b9e7d55-21c4-4a8f-b6e2-7f3a9c1d5e02')]);
     });
 
     it('refuses another install id than the one the token signed in with', function () {
         $phone = $this->lena->createToken('Pixel 9');
-        $phone->accessToken->forceFill(['device_id' => 'install-aaaa-1'])->save();
+        $phone->accessToken->forceFill(['device_id' => DeviceInstalls::key($this->lena->id, 'install-aaaa-1')])->save();
 
         $this->withToken($phone->plainTextToken)->postJson('/api/v1/me/push-tokens', ['token' => 'ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]', 'platform' => 'ios', 'device_id' => 'install-bbbb-2'])
             ->assertUnprocessable()->assertJsonValidationErrors('device_id');
@@ -206,7 +208,10 @@ describe('the e-mail-changed mail (copy b)', function () {
         $html = $mail->render();
 
         expect($html)->toContain('mailto:hilfe@speedclub.de')
-            ->toContain('schreib uns sofort an hilfe@speedclub.de')
+            // Copy review M4.7: support, or "Das war ich nicht" in the app, and still no reset of the password.
+            ->toContain('schreib uns an hilfe@speedclub.de')
+            ->toContain('Das war ich nicht')
+            ->toContain('Setz dein Passwort in diesem Fall nicht selbst zurück')
             ->not->toContain('/app/forgot-password');
 
         expect((new SecurityNoticeMail(SecurityNotice::NewDevice, 'Pixel'))->render())->toContain('/app/forgot-password');

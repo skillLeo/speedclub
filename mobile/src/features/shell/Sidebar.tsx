@@ -82,17 +82,17 @@ export function AccountSlot() {
         onPress={() => {
           // Nothing the guest tapped earlier belongs to this sign-in.
           clearAuthIntent();
-          router.push('/sign-in');
+          router.push('/auth/email');
         }}
         contentStyle={({ hovered }: PressableVisualState) => [styles.accountContent, hovered ? styles.hovered : null]}
         testID="shell.sidebar.signIn"
       >
         <Icon name="sign-in" size={24} color="text.primary" />
         <Text
-          variant="label"
+          variant="bodyStrong"
           selectable={false}
           maxFontSizeMultiplier={SIDEBAR_LABEL_CAP}
-          style={[styles.signInLabel, typeStyle('label', isWeb ? Math.min(fontScale, SIDEBAR_LABEL_CAP) : 1)]}
+          style={[styles.signInLabel, isWeb ? typeStyle('bodyStrong', Math.min(fontScale, SIDEBAR_LABEL_CAP)) : null]}
         >
           {t('auth.signIn')}
         </Text>
@@ -111,7 +111,7 @@ export function AccountSlot() {
       testID="shell.sidebar.account"
     >
       <Avatar name={name} uri={member.avatarUrl} size={32} decorative />
-      <Text variant="label" numberOfLines={fontScale >= LARGE_FONT_SCALE ? 2 : 1} style={styles.accountName} testID="shell.sidebar.account.name">
+      <Text variant="bodyStrong" numberOfLines={fontScale >= LARGE_FONT_SCALE ? 2 : 1} style={styles.accountName} testID="shell.sidebar.account.name">
         {name}
       </Text>
     </PressableScale>

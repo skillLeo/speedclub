@@ -36,10 +36,10 @@ withDefaults(defineProps<{ title: string; crumbs?: Crumb[]; description?: string
             </nav>
             <div class="flex flex-wrap items-center gap-12">
                 <span v-if="loading" class="flex h-28 items-center" aria-hidden="true"><Skeleton class="h-24 w-240" /></span>
-                <h1 v-else class="text-title-m text-ink" data-page-title>{{ title }}</h1>
+                <h1 v-else class="text-title-2 text-ink" data-page-title>{{ title }}</h1>
                 <slot name="badge" />
             </div>
-            <p v-if="description" class="max-w-720 text-supporting text-ink-2">{{ description }}</p>
+            <p v-if="description" class="max-w-720 text-admin-base text-ink-2">{{ description }}</p>
             <div v-if="$slots.meta" class="mt-4"><slot name="meta" /></div>
             <!-- DQ-555: a record with many actions puts them on their own row, in the skeleton as in the ready header, so nothing jumps. -->
             <div v-if="actionsBelow && $slots.actions" class="mt-8 flex flex-wrap items-center gap-8"><slot name="actions" /></div>

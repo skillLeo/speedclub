@@ -49,6 +49,12 @@ const loadedOr = (loaded, root) =>
 
 import { routesM35 } from './routes-m35.mjs';
 import { routesM36 } from './routes-m36.mjs';
+import { routesM410Mnt } from './routes-m410-mnt.mjs';
+import { routesM412Evt } from './routes-m412-evt.mjs';
+import { routesM417EvtAdmin } from './routes-m417-evt-admin.mjs';
+import { routesM410Prof } from './routes-m410-prof.mjs';
+import { routesM410Set } from './routes-m410-set.mjs';
+import { routesM48R3 } from './routes-m48-r3.mjs';
 
 export const routes = [
   {
@@ -72,6 +78,36 @@ export const routes = [
     notes: 'Gallery: Type scale.',
   },
   {
+    id: 'DEV-01-motion',
+    path: '/app/dev/gallery/motion',
+    phase: 3,
+    auth: 'guest',
+    states: ['default'],
+    ready: '[data-testid="DEV-01.motion.root"]',
+    capture: 'expanded',
+    notes: 'M4.3 motion kit: SM1–SM20 demos with the reduced-motion toggle.',
+  },
+  {
+    id: 'DEV-01-timeline',
+    path: '/app/dev/gallery/timeline',
+    phase: 3,
+    auth: 'guest',
+    states: ['default'],
+    ready: '[data-testid="DEV-01.timeline.root"]',
+    capture: 'expanded',
+    notes: 'M4.4 Timeline (VEH-01 Verlauf).',
+  },
+  {
+    id: 'DEV-01-buildsheet',
+    path: '/app/dev/gallery/buildsheet',
+    phase: 3,
+    auth: 'guest',
+    states: ['default'],
+    ready: '[data-testid="DEV-01.buildsheet.root"]',
+    capture: 'expanded',
+    notes: 'M4.4 BuildSheet (VEH-01 Mods).',
+  },
+  {
     id: 'DEV-01-colour',
     path: '/app/dev/gallery/colour',
     phase: 1,
@@ -80,6 +116,16 @@ export const routes = [
     ready: '[data-testid="DEV-01.colour.root"]',
     capture: 'expanded',
     notes: 'Gallery: All colour tokens of the theme.',
+  },
+  {
+    id: 'DEV-01-foundation',
+    path: '/app/dev/gallery/foundation',
+    phase: 1,
+    auth: 'guest',
+    states: ['default'],
+    ready: '[data-testid="DEV-01.foundation.root"]',
+    capture: 'expanded',
+    notes: 'Gallery: Form und Bewegung (radii, concentric corners, motion tokens, chrome material).',
   },
   {
     id: 'DEV-01-icons',
@@ -320,7 +366,7 @@ export const routes = [
     phase: 2,
     auth: 'guest',
     states: [...ALL_STATES, 'restricted'],
-    ready: loadedOr('[data-testid^="HOME-01.card."]', 'HOME-01.root'),
+    ready: loadedOr('[data-testid^="HOME-01.newBuilds.item."]', 'HOME-01.root'),
     capture: 'expanded',
     maxHeight: 6000,
     notes: 'FS-2 Für dich as a guest (M2.2): large title Start with the bell (asks to sign in), segmented Für dich · Folge ich, the featured build (16:9 hero edge to edge on phones, in the 640 column with radius 12 from 768), Neue Builds (2 cards, "Alle" → DISC-02 sorted by Neueste), Build-Updates (3 rows), Aktive Mitglieder (avatar 56, @username, car line), Beliebte Mods diese Woche (chips, at most 2 lines), then the ranked stream without the hero or the Neue Builds. From 1280 the rail: the top five makes with real counts, Über SPEED CLUB. empty = "Noch keine öffentlichen Builds". Expanded and bounded (DQ-283): the picture runs to 6000 px at most (`maxHeight`), which holds the hero, Neue Builds, Build-Updates, Aktive Mitglieder, Beliebte Mods and the first builds and update rows of the stream; the stream is endless, so its footer is not on the picture. The content is measured once before the viewport grows, so pages loaded afterwards change nothing on it.',
@@ -331,7 +377,7 @@ export const routes = [
     phase: 2,
     auth: 'member',
     states: ['default'],
-    ready: loadedOr('[data-testid^="HOME-01.card."]', 'HOME-01.root'),
+    ready: loadedOr('[data-testid^="HOME-01.newBuilds.item."]', 'HOME-01.root'),
     capture: 'expanded',
     maxHeight: 6000,
     notes: 'FS-2 Für dich as lukas.sc (M2.2): as the guest view, plus the bell\'s unread dot and the dot on the Start tab (the demo history leaves unread rows, m2.2-api-handover.md §7), and from 1280 Deine Garage in the rail instead of Über SPEED CLUB. The forced states are the guest entry\'s. Expanded and bounded (DQ-283): the picture runs to 6000 px at most (`maxHeight`), which holds the hero, Neue Builds, Build-Updates, Aktive Mitglieder, Beliebte Mods and the first builds and update rows of the stream; the stream is endless, so its footer is not on the picture. The content is measured once before the viewport grows, so pages loaded afterwards change nothing on it.',
@@ -343,7 +389,8 @@ export const routes = [
     auth: 'member',
     states: ALL_STATES,
     ready:
-      '[data-qa-state="default"] [data-testid="HOME-01.root"]:has([data-testid="HOME-01.tab.following"][aria-selected="true"]) [data-testid^="HOME-01.card."], ' +
+      // A feed card of a build or of an update (09 §7.3): both open from their photo, `.open.0`.
+      '[data-qa-state="default"] [data-testid="HOME-01.root"]:has([data-testid="HOME-01.tab.following"][aria-selected="true"]) [data-testid^="HOME-01."][data-testid$=".open.0"], ' +
       '[data-qa-state]:not([data-qa-state="default"]) [data-testid="HOME-01.root"]:has([data-testid="HOME-01.tab.following"][aria-selected="true"])',
     capture: 'expanded',
     maxHeight: 6000,
@@ -390,7 +437,8 @@ export const routes = [
     phase: 2,
     auth: 'guest',
     states: [...ALL_STATES, 'restricted'],
-    ready: loadedOr('[data-testid="DISC-01.collections.list"]', 'DISC-01.root'),
+    // M4.8: the BrandTile grid is always there; Kollektionen hide while none is curated.
+    ready: loadedOr('[data-testid="DISC-01.makes"]', 'DISC-01.root'),
     capture: 'expanded',
     notes: 'FS-11 (M2.3): large title Entdecken, sticky 44 search bar, Zuletzt gesucht (device only, empty in a fresh context), text make tiles in 3 columns (2 below 104 px tile width or at 200 %) with real build counts, Kollektionen (7 seeded, 16:9 covers, real counts), Beliebte Mods (chips). A guest gets no "Mitglieder mit ähnlichen Autos". A tile opens DISC-03. empty = "Noch keine Marken" and no further sections.',
   },
@@ -557,7 +605,7 @@ export const routes = [
     states: OWNER_LIST_STATES,
     ready: loadedOr('[data-testid^="GAR-01.card."]', 'GAR-01.root'),
     capture: 'expanded',
-    notes: 'FS-4 as lukas.sc: R34 card with the Hauptfahrzeug badge, completeness line and bar, QR button; S15; Entwürfe with the E30 "Entwurf · Schritt 2 von 4" + Fortsetzen; Sortieren. The header "+" is hidden from 1280, where the sidebar holds it (DQ-084).',
+    notes: 'FS-4 / 09 §7.6 as lukas.sc: SM16 carousel (desktop: 2-column grid) with the R34 card, neutral Hauptfahrzeug badge, completeness line and bar, page pills, quick actions Update posten · Mods · Fotos · QR-Code, the private stats line; S15; Entwürfe with the E30 "Entwurf · Schritt 2 von 4" + Fortsetzen; Sortieren. The header "+" is hidden from 1280, where the sidebar holds it (DQ-084).',
   },
   {
     id: 'GAR-01-empty',
@@ -566,7 +614,7 @@ export const routes = [
     auth: 'member-empty',
     states: ['default'],
     ready: '[data-testid="GAR-01.empty"]',
-    notes: 'The brand empty state of FS-4 for nina.neu: wheel glyph, "Füge dein erstes Auto hinzu", "Fahrzeug hinzufügen".',
+    notes: 'GAR-01 empty (09 §7.6) for nina.neu: full-bleed photo with "Deine Garage wartet.", one line, "Auto hinzufügen", and a sample R34 VehicleCard badged "Beispiel".',
   },
   {
     id: 'GAR-01-guest',
@@ -636,7 +684,7 @@ export const routes = [
     states: ['default', 'loading', 'error', 'offline'],
     ready: loadedOr('[data-testid="GAR-04.qr"]', 'GAR-04.root'),
     capture: 'expanded',
-    notes: 'Brand moment after publishing: wordmark, accent rule, "Dein Build ist online", the QR card with 8TR0 Q3MC, "Mods hinzufügen". qaMotion=off shows the end of the 600 ms print.',
+    notes: 'GAR-04 brand moment (09 §7.6, SM13): blurred cover stage, brush logo, accent rule and katakana, the QR card with 8TR0 Q3MC printed in, "Dein Build ist live.", "QR-Code ansehen" · "Teilen" · "Zur Garage". qaMotion=off shows the end of the print.',
   },
   {
     id: 'GAR-05',
@@ -740,7 +788,7 @@ export const routes = [
     states: [...ALL_STATES, 'restricted'],
     ready: loadedOr('[data-testid="VEH-01.title"]', 'VEH-01.root'),
     capture: 'expanded',
-    notes: 'FS-3: 4:3 hero pager "1/3" with back/share/more on photo, eyebrow NISSAN, "Skyline GT-R R34", sub-line, spec strip, owner row with Folgen/Nachricht (auth sheet), sticky tabs Übersicht · Technik · Mods · Verlauf, closing owner card. empty = the photo-less hero and empty sections.',
+    notes: 'FS-3 / 09 §7.6 (M4.9): 4:5 stretchy hero pager "1/3" with back and Mehr on the photo (DQ-942), eyebrow NISSAN, "Skyline GT-R R34", sub-line, spec strip, owner row (identity only), action row: Folgen (the one filled control) over Teilen · Nachricht (Speichern with the saved-builds flag), sticky tabs Übersicht · Daten · Mods · Verlauf, Highlights rail when pinned, latest update, similar builds as 3:4 rail cards, closing owner card with a tonal button. empty = the photo-less hero and empty sections.',
   },
   {
     id: 'VEH-01-member',
@@ -820,6 +868,67 @@ export const routes = [
     capture: 'expanded',
     notes: 'Build update detail: before → after of each change, the fields of a changed mod, the link to the mod.',
   },
+  // M4.9 + M4.11 (09 §7.6, §8.5–§8.6): the VEH-01 tabs, the owner's own build, the owner's update detail and UPD-01.
+  {
+    id: 'VEH-01-specs',
+    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?tab=specs',
+    phase: 3,
+    auth: 'guest',
+    states: ['default'],
+    ready: '[data-testid="VEH-01.panel.specs"]',
+    capture: 'expanded',
+    notes: 'M4.9: Daten as grouped spec tables with provenance, tnum values right-aligned.',
+  },
+  {
+    id: 'VEH-01-mods',
+    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?tab=mods',
+    phase: 3,
+    auth: 'guest',
+    states: ['default'],
+    ready: '[data-testid="VEH-01.panel.mods"]',
+    capture: 'expanded',
+    notes: 'M4.9: Mods as the BuildSheet by system.',
+  },
+  {
+    id: 'VEH-01-history',
+    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?tab=history',
+    phase: 3,
+    auth: 'guest',
+    states: ['default'],
+    ready: '[data-testid="VEH-01.panel.history"]',
+    capture: 'expanded',
+    notes: 'M4.9 (DQ-975): Verlauf Timeline; an update with its own photos shows them (3-up), a before/after pair the SM17 slider, mileage in tnum.',
+  },
+  {
+    id: 'VEH-01-owner',
+    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj',
+    phase: 3,
+    auth: 'member',
+    states: ['default'],
+    ready: '[data-testid="VEH-01.ownerCapsule"]',
+    capture: 'expanded',
+    notes: 'M4.9: lukas.sc on his own R34: the OwnerCapsule (Update posten + QR, Bearbeiten, Mods, Fotos) instead of the visitor action row; the Highlights rail with "Bearbeiten" (or the pin invitation when empty).',
+  },
+  {
+    id: 'VEH-05-owner',
+    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj/updates/{r34Update}',
+    phase: 3,
+    auth: 'member',
+    states: ['default'],
+    ready: loadedOr('[data-testid="VEH-05.title"]', 'VEH-05.root'),
+    capture: 'expanded',
+    notes: 'M4.11: the owner\'s update detail: vehicle chip, meta (Kilometerstand, bearbeitet), the private reactions block "Nur du siehst, wer wie reagiert hat." with the four glyphs and counts, never a react button; Löschen in the more sheet.',
+  },
+  {
+    id: 'UPD-01',
+    path: '/app/post-update?vehicleId={r34}',
+    phase: 3,
+    auth: 'member',
+    states: ['default', 'offline', 'restricted'],
+    ready: loadedOr('[data-testid="UPD-01.text"]', 'UPD-01.root'),
+    capture: 'expanded',
+    notes: 'M4.11 Update posten (modal): text with @-hint, Fotos (Hinzufügen, Vorher/Nachher pairing), Kilometerstand + Datum (today), audience (Wie das Fahrzeug · Nur Follower), Mods verknüpfen, sticky "Posten".',
+  },
   // M1.7 app screens as lukas.sc. restricted = the suspended-account notice.
   {
     id: 'QR-01',
@@ -840,7 +949,7 @@ export const routes = [
     states: OWNER_LIST_STATES,
     ready: loadedOr('[data-testid="QR-02.card"]', 'QR-02.root'),
     capture: 'expanded',
-    notes: 'FS-9: "QR-Code" + vehicle, the white server-rendered card aligned with title and buttons (DQ-035), Herunterladen · Teilen, Öffentliche Seite ansehen, Sticker-Platzierung, QR-Code ersetzen on its own. M2.7 [SIG sig.qr_stats]: the scans row (14 bars, "n in 14 Tagen · m gesamt", the next milestone); the download sheet with Placard A5/A4 [SIG sig.placard_pdf] is in f-signature.spec.ts.',
+    notes: 'FS-9 / 09 §7.6 QR-02: "QR-Code" + vehicle, the white server-rendered card on the blurred cover stage (SM13), aligned with title and buttons (DQ-035), In Fotos sichern · Sticker-PDF, rows Weitere Formate · Teilen · Öffentliche Seite ansehen · Sticker-Platzierung (· Sticker bestellen behind sticker_shop), QR-Code ersetzen on its own. M2.7 [SIG sig.qr_stats]: the scans row (14 bars, "n in 14 Tagen · m gesamt", the next milestone); the download sheet with Placard A5/A4 [SIG sig.placard_pdf] is in f-signature.spec.ts.',
   },
   {
     id: 'QR-03',
@@ -883,8 +992,34 @@ export const routes = [
     states: ['default'],
     ready: '[data-testid="AUTH-02.root"]',
     capture: 'expanded',
-    notes: 'FS-1 brand moment: night photo, logo at 28 %, scrim solid from the top of the block (ADR-129), Konto erstellen · Anmelden · Erst umsehen. No data, so no other state.',
+    notes: 'FS-1 brand moment: night photo, logo at 28 %, scrim solid from the top of the block (ADR-129). M4.6 (09 §7.2): the ProviderButtons stack (Apple/Google behind their flags, Mit E-Mail fortfahren, Mit Passkey anmelden where passkeys work), Erst umsehen, Datenschutz · AGB. No red, no password field. No data, so no other state.',
   },
+  // M4.8 (09 §7.1). AUTH-01: the SplashOverlay held at the end of its SM1 reveal (`?splash=hold`, non-production only); the visual
+  // matrix and the e2e flows never see it otherwise (qa overrides and automated browsers skip it). ONB-01…03: the onboarding pager on
+  // its page; a first visit of /app shows it only to a person (never to an automated browser), so the matrix opens it by path.
+  {
+    id: 'AUTH-01',
+    path: '/app/?splash=hold',
+    phase: 1,
+    auth: 'guest',
+    states: ['default'],
+    ready: '[data-testid="AUTH-01.root"]',
+    notes: 'Cold-start brand moment: Carbon canvas (#0B0B0C in every theme), the white brush logo at the native splash size, the katakana under it, held after the SM1 wipe. Never a spinner. No data, so no other state.',
+  },
+  ...[1, 2, 3].map((page) => ({
+    id: `ONB-0${page}`,
+    path: `/app/onboarding?page=${page}`,
+    phase: 1,
+    auth: /** @type {const} */ ('guest'),
+    states: ['default'],
+    ready: `[data-testid="ONB-0${page}.root"]`,
+    capture: /** @type {const} */ ('expanded'),
+    notes: [
+      'ONB-01: night photo (wheel and caliper), a live VehicleCard (BMW M3 E46, Beispiel) on it, "Deine Garage. Jedes Detail.", page pill, Weiter, Überspringen top-right.',
+      'ONB-02: cockpit photo, a live SpecStrip + BuildSheet excerpt (R34, Beispiel), "Dein Build als Datenblatt.".',
+      'ONB-03: R34 photo, a live QR card (Beispiel), "Ein QR-Code für dein Auto.", primary "Los geht’s".',
+    ][page - 1],
+  })),
   {
     id: 'AUTH-03',
     path: '/app/sign-in',
@@ -1191,10 +1326,11 @@ export const routes = [
     path: '/app/profile/saved',
     phase: 2,
     auth: 'member',
-    states: ALL_STATES,
-    ready: loadedOr('[data-testid^="PROF-05.card."]', 'PROF-05.root'),
+    states: ['default', 'loading', 'error', 'offline'],
+    // DQ-1087: PROF-05 opens the "Gespeichert" collection (COL-02); its own states are the wall skeleton and the error.
+    ready: '[data-testid^="COL-02.item."], [data-testid="COL-02.empty"], [data-testid="PROF-05.skeleton"], [data-testid="PROF-05.error"]',
     capture: 'expanded',
-    notes: '[SIG sig.saved_builds] lukas.sc\'s 4 saved builds, newest save first (964, G82, FK8, A80): feed cards, "Gespeichert am …" and the filled save glyph that removes with Rückgängig in the toast. empty = "Noch nichts gespeichert".',
+    notes: 'DQ-1087: /profile/saved keeps its address and replaces itself with lukas.sc\'s "Gespeichert" collection, the COL-02 wall (no v1 cards). loading = the wall skeleton under "Gespeichert"; error/offline = the retry.',
   },
   {
     id: 'SET-08',
@@ -1480,6 +1616,11 @@ export const routes = [
     auth: 'member',
     states: ['default'],
     ready: '[data-testid="PROF-02.report.reason.spam"]',
+    // DQ-937: under load both attempts of this cell timed out on the ready row while every other cell passed. Not a slow sheet: the
+    // sheet never opened. PROF-02's report target is the username of the URL, there on the first render, so useReport's qaOpen effect
+    // fires while the session is still 'loading'; useRequireAuth answers false then, and the one-shot autoOpened ref is already spent.
+    // VEH-01's target is the loaded build, which comes after the session. The fix is in the app (the effect waits for a settled
+    // session), not a longer ready timeout.
     notes: 'SAFE report sheet, first step, over PROF-02 of jann.ptrs: "Du meldest: @jann.ptrs", the six reasons with their hints as rows, the sheet\'s scrim over the profile.',
   },
   {
@@ -2440,7 +2581,7 @@ routes.push(
 );
 
 // Phase 3 modules built in parallel keep their entries in their own files (lead, M3.5/M3.6).
-routes.push(...routesM35, ...routesM36);
+routes.push(...routesM35, ...routesM36, ...routesM410Mnt, ...routesM410Prof, ...routesM410Set, ...routesM48R3, ...routesM412Evt, ...routesM417EvtAdmin);
 
 // M3.5 + M3.7 app surfaces of 8b9d874 (QA). The announcement on Start, the re-consent sheet and the member's support requests
 // show data every viewer (or a staff queue) would see, so each names a stage fixture (support/stage-fixtures.mjs): the runner takes these
@@ -2448,10 +2589,8 @@ routes.push(...routesM35, ...routesM36);
 // and times (support/backend.php), so the pictures stay put. The [AI] surfaces: every ai.* flag is off and the server refuses to turn one
 // on without a provider (OA-18), so their cells force their flags with the non-production override `qaFlags` (fa703ed, mobile/src/lib/qa.ts:
 // those flags count as on and the surface skips the opt-in). The runner cannot tap, so each cell shows its surface before the tap; a tap
-// would meet the server's 404 `feature_disabled` and hide it again. MSG-02-translate waits for a hook that opens the actions sheet.
+// would meet the server's 404 `feature_disabled` and hide it again.
 const AI_QA = 'Forced through qaFlags (no provider key, OA-18); before the tap, as the runner cannot tap and a tap meets 404 feature_disabled.';
-const MSG_ACTIONS_PLANNED =
-  'Planned: "Übersetzen" is an item of the long-press actions sheet (MessageActionsSheet), and neither the runner (no interaction step) nor the app (qaOpen knows only "report") can open it. Needs a QA hook in the app: qaOpen=actions on MSG-02 opens the actions sheet of the newest received text message once the thread has loaded (like qaOpen=report, useReport.tsx); then this cell is ready on the item of the sheet [data-testid="MSG-02.actions.translate"] and its path adds qaOpen=actions.';
 // The registry's inferred literal type knows no `fixture` (no earlier entry has one); these entries are checked as RouteDef instead.
 /** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(
   {
@@ -2557,13 +2696,12 @@ const MSG_ACTIONS_PLANNED =
   },
   {
     id: 'MSG-02-translate',
-    path: '/app/messages/01m5wpk0c0e8jjewpe4ycappww?qaFlags=ai.translate',
+    path: '/app/messages/01m5qvzg200gc60g288tcg08r4?qaFlags=ai.translate&qaOpen=actions',
     phase: 3,
     auth: 'member-kenji',
-    status: 'planned',
     states: ['default'],
     ready: '[data-testid="MSG-02.actions.translate"]',
-    notes: `${MSG_ACTIONS_PLANNED} The picture: the actions sheet of a message kenji.r34 received, with "Übersetzen" (ai.translate through qaFlags).`,
+    notes: `${AI_QA} The actions sheet of the newest message kenji.r34 received, opened by qaOpen=actions (MSG-02, the matrix cannot long-press), with "Übersetzen" (ai.translate through qaFlags).`,
   },
   {
     id: 'SET-07-ai',

@@ -107,9 +107,9 @@ beforeEach(() => {
 
 describe('VEH-06 compare header on phones (DQ-414)', () => {
   it.each([
-    [360, layout.gutter.compact],
-    [390, layout.gutter.regular],
-    [430, layout.gutter.regular],
+    [360, layout.gutter.phone],
+    [390, layout.gutter.phone],
+    [430, layout.gutter.phoneLarge],
   ])('at %i keeps the pinned pair in the gutter of %i, as the table under it', async (width, gutter) => {
     at(width);
     stubFetch({ '/compare': { body: { data: ANSWER } } });
@@ -137,7 +137,7 @@ describe('VEH-06 compare header on phones (DQ-414)', () => {
     // DQ-438: the whole title, with "GT-R" and "V-Spec" kept whole (a word joiner after the hyphen), so 200 % never breaks "GT- / R".
     expect(screen.getByTestId('VEH-06.car.a.title')).toHaveTextContent(vehicleNameText('Nissan Skyline GT-R R34 V-Spec II Nür'));
     expect(screen.getByTestId('VEH-06.car.a.title')).toHaveTextContent('GT-\u2060R', { exact: false });
-    expect(flat(screen.getByTestId('VEH-06.car.a.title').props.style).fontSize).toBe(typography.labelS.fontSize);
+    expect(flat(screen.getByTestId('VEH-06.car.a.title').props.style).fontSize).toBe(typography.callout.fontSize);
   });
 });
 
@@ -150,7 +150,7 @@ describe('VEH-06 skeleton (DQ-422)', () => {
     // Not in the centred state frame: that one pads 32 above and centres its child.
     expect(flat(skeleton.props.style).justifyContent).toBeUndefined();
     const sticky = flat(screen.getByTestId('VEH-06.skeleton.sticky').props.style);
-    expect(sticky.paddingHorizontal).toBe(layout.gutter.regular);
+    expect(sticky.paddingHorizontal).toBe(layout.gutter.phone);
     expect(sticky.paddingTop).toBe(space[8]);
     expect(sticky.paddingBottom).toBe(space[12]);
     for (const side of ['a', 'b'] as const) {

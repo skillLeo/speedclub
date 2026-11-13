@@ -19,14 +19,24 @@ const emit = defineEmits<{ menu: []; search: [] }>();
         <IconButton class="shell:hidden" :icon="PhList" :label="trans('shell.menu')" data-testid="shell.menu" @click="emit('menu')" />
         <button
             type="button"
-            :class="[focusRing, 'flex h-32 w-full max-w-400 min-w-0 items-center gap-8 rounded-search border border-line-control bg-raised px-12 text-left text-supporting text-ink-3 hover:border-line-strong']"
+            :class="[
+                focusRing,
+                // Phone: a square search button, so the right-hand group (environment, theme, staff menu) never squeezes it into its
+                // neighbours; from tablet the full field.
+                'flex size-32 shrink-0 items-center justify-center rounded-sm border border-line-control bg-raised text-admin-base text-ink-3 hover:border-line-strong tablet:h-32 tablet:w-full tablet:max-w-400 tablet:min-w-0 tablet:shrink tablet:justify-start tablet:gap-8 tablet:px-12 tablet:text-left',
+            ]"
+            :aria-keyshortcuts="shortcut.startsWith('⌘') ? 'Meta+K' : 'Control+K'"
             aria-haspopup="dialog"
             data-testid="shell.search"
             @click="emit('search')"
         >
+            <!-- The name is the visible text (WCAG 2.5.3, axe label-content-name-mismatch): the placeholder and the shortcut as shown, no
+                 aria-label that leaves the shortcut out. On phones only the screen-reader copy names the square button. -->
             <PhMagnifyingGlass :size="16" class="shrink-0" aria-hidden="true" />
-            <span class="min-w-0 flex-1 truncate" :title="trans('shell.search.placeholder')">{{ trans('shell.search.placeholder') }}</span>
-            <Kbd class="hidden tablet:inline-flex">{{ shortcut }}</Kbd>
+            <span class="sr-only tablet:hidden">{{ trans('shell.search.placeholder') }}</span>
+            <span class="hidden min-w-0 flex-1 truncate tablet:block" :title="trans('shell.search.placeholder')">{{ trans('shell.search.placeholder') }}</span>
+            <!-- Kbd sets its own display, which beat a `hidden` on it: the wrapper hides the shortcut on phones (no keyboard there). -->
+            <span class="hidden tablet:inline-flex"><Kbd>{{ shortcut }}</Kbd></span>
         </button>
         <div class="ml-auto flex shrink-0 items-center gap-8">
             <EnvBadge />

@@ -32,7 +32,7 @@ const variants = {
 } as const;
 
 const classes = computed(() => [
-    'inline-flex shrink-0 items-center justify-center rounded-sm transition-colors duration-150 ease-standard',
+    'inline-flex shrink-0 items-center justify-center rounded-sm transition-colors duration-effect-fast ease-effect-fast',
     focusRing,
     sizes[props.size],
     props.disabled ? 'cursor-not-allowed text-ink-disabled' : variants[props.variant],

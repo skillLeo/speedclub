@@ -8,10 +8,12 @@
         "typecheck": "vue-tsc --noEmit",
         "lint": "eslint resources/js --max-warnings 0",
         "i18n:admin": "node scripts/check-admin-i18n.mjs",
-        "verify": "npm run typecheck && npm run lint && npm run i18n:admin && npm run build",
+        "design-lint": "node ../scripts/design-lint.mjs --root ..",
+        "verify": "npm run typecheck && npm run lint && npm run i18n:admin && npm run build && npm run design-lint",
         "e2e": "playwright test --config=tests/e2e/playwright.config.ts",
         "visual": "node tests/e2e/visual/run.mjs",
-        "lhci": "lhci autorun --config=tests/e2e/lighthouse/lighthouserc.cjs"
+        "lhci": "lhci autorun --config=tests/e2e/lighthouse/lighthouserc.cjs",
+        "lhci:app": "lhci autorun --config=tests/e2e/lighthouse/lighthouserc.app-gate.cjs"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.14.0",
@@ -38,8 +40,6 @@
         "vue-tsc": "^3.3.14"
     },
     "dependencies": {
-        "@fontsource/barlow-semi-condensed": "^5.3.0",
-        "@fontsource/inter": "^5.3.0",
         "@inertiajs/vue3": "^3.10.0",
         "@phosphor-icons/core": "^2.1.1",
         "@phosphor-icons/vue": "^2.2.1",

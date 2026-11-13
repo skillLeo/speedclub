@@ -145,6 +145,7 @@
             "reviewed": "Photo approved"
         },
         "member": {
+            "apple_revoked": "Apple authorisation revoked",
             "bulk_executed": "Bulk action run",
             "consent_accepted": "New legal version accepted",
             "data_export_downloaded": "Data export downloaded",
@@ -154,6 +155,7 @@
             "email_change_requested": "E-mail change requested",
             "email_changed": "E-mail address changed",
             "email_changed_by_staff": "E-mail address changed by staff",
+            "email_code_locked": "Code sign-in locked",
             "email_verified": "E-mail address verified",
             "export_downloaded": "Staff export downloaded",
             "export_started": "Staff export started",
@@ -162,13 +164,21 @@
             "login_new_device": "Sign-in on a new device",
             "logout_all": "Signed out everywhere",
             "message_metadata_viewed": "Message metadata viewed",
+            "passkey_added": "Passkey added",
+            "passkey_removed": "Passkey removed",
+            "passkey_renamed": "Passkey renamed",
+            "passkey_sign_count_regressed": "Passkey refused: counter went back",
             "password_change_forced": "Password change forced",
             "password_changed": "Password changed",
             "password_check_failed": "Wrong password",
             "password_reset": "Password reset",
             "pii_viewed": "Personal data revealed",
             "profile_edited": "Profile edited by staff",
+            "provider_link_requested": "Connection requested",
+            "provider_linked": "Sign-in method connected",
+            "provider_unlinked": "Sign-in method removed",
             "qr_reissued": "QR code reissued",
+            "reauthenticated": "Identity confirmed",
             "recovery_code_used": "Recovery code used",
             "recovery_codes_regenerated": "New recovery codes",
             "registered": "Signed up",
@@ -176,6 +186,7 @@
             "second_factor_locked": "Second factor locked",
             "session_revoked": "Session ended",
             "sessions_revoked_by_staff": "All sessions ended by staff",
+            "terms_accepted": "Terms and privacy accepted",
             "token_replayed": "Old token replayed",
             "token_rotation_retried": "Token rotation retried",
             "two_factor_disabled": "Two-factor turned off",
@@ -183,7 +194,11 @@
             "two_factor_reset": "Two-factor reset",
             "username_changed": "Username changed",
             "view_as_ended": "View-as ended",
-            "view_as_started": "View-as started"
+            "view_as_started": "View-as started",
+            "unproven_data_cleared": "Unproven sign-in methods removed",
+            "signed_in": "Signed in",
+            "sign_in_failed": "Failed sign-in attempts",
+            "account_secured": "Account secured (\"This wasn't me\")"
         },
         "membership": {
             "entitlement_granted": "Membership granted",
@@ -269,7 +284,8 @@
             "two_factor_reset": "Two-factor reset",
             "two_factor_rotated": "New authenticator confirmed",
             "two_factor_rotation_cancelled": "Authenticator change cancelled",
-            "two_factor_rotation_started": "Authenticator change started"
+            "two_factor_rotation_started": "Authenticator change started",
+            "two_factor_skipped": "Two-factor setup skipped"
         },
         "support": {
             "bulk_status": "Ticket status changed in bulk",
@@ -287,7 +303,8 @@
             "jobs_retried": "Failed jobs retried",
             "test_ai_run": "AI connection tested",
             "test_mail_sent": "Test email sent",
-            "test_pusher_sent": "Realtime connection tested"
+            "test_pusher_sent": "Realtime connection tested",
+            "mail_preview_opened": "Mail preview opened"
         },
         "template": {
             "reset": "Template reset",
@@ -298,6 +315,13 @@
             "bulk_hidden": "Vehicles hidden in bulk",
             "deleted_by_staff": "Vehicle deleted by staff",
             "edited_by_staff": "Vehicle edited by staff"
+        },
+        "event": {
+            "approved": "Meet approved",
+            "rejected": "Meet rejected",
+            "cancelled_by_staff": "Meet cancelled by staff",
+            "reopened": "Meet back in review",
+            "private_place_viewed": "Viewed the exact place of a meet"
         }
     }
 }

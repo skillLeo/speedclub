@@ -145,7 +145,7 @@ describe('where the toast sits', () => {
   const settledShift = async () => {
     await show('Code erneut gesendet');
     await act(async () => {
-      jest.advanceTimersByTime(motion.duration.small + motion.duration.micro);
+      jest.advanceTimersByTime(motion.css['effect.default'].duration + motion.css['effect.fast'].duration);
     });
     return screen.getByTestId('toast').parent;
   };
@@ -224,7 +224,8 @@ describe('a toast while an overlay is open', () => {
 
     await act(async () => setOpen(false));
     await act(async () => {
-      jest.advanceTimersByTime(motion.duration.medium);
+      // The sheet stays mounted for its exit, the spring.default slide (09 §4.7, SM10).
+      jest.advanceTimersByTime(motion.css['spring.default'].duration);
     });
     expect(screen.queryByTestId('app.host')).not.toBeNull();
     expect(screen.getAllByTestId('saved')).toHaveLength(1);

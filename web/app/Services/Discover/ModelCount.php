@@ -2,6 +2,7 @@
 
 namespace App\Services\Discover;
 
+use App\Models\Media;
 use App\Models\VehicleModel;
 
 /**
@@ -16,5 +17,6 @@ final readonly class ModelCount
         public VehicleModel $model,
         public int $count,
         public array $generations,
+        public ?Media $cover = null,
     ) {}
 }

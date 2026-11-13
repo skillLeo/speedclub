@@ -353,7 +353,7 @@ describe('states reached through the API', function () {
         $this->getJson('/api/v1/public/users/lukas.sc/vehicles')->assertOk()->assertJsonPath('data', []);
     });
 
-    it('takes a cost off every route the moment it stops being public', function () {
+    it('never lets a cost reach anybody but the owner, even when an older app asks for it public (M4.9 ruling)', function () {
         $targets = gaTargets($this->owner);
         $slug = $targets['vehicle']->canonicalSlug();
         $mod = $targets['mod'];
@@ -366,7 +366,7 @@ describe('states reached through the API', function () {
         Sanctum::actingAs($stranger);
 
         foreach ($urls as $url) {
-            expect((string) $this->getJson('/api/v1'.$url)->assertOk()->getContent())->toContain('7654321');
+            expect((string) $this->getJson('/api/v1'.$url)->assertOk()->getContent())->not->toContain('7654321');
         }
 
         Sanctum::actingAs($this->owner);

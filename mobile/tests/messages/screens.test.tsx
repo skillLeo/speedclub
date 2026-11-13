@@ -60,7 +60,9 @@ jest.mock('@/api/client', () => {
 jest.mock('@/api/queries/appConfig', () => ({ ...jest.requireActual<object>('@/api/queries/appConfig'), useFlag: () => true }));
 jest.mock('@/ui/toast', () => ({ ...jest.requireActual<object>('@/ui/toast'), toast: jest.fn() }));
 const mockQa: { state: 'default' | 'loading' | 'empty' | 'error' | 'offline' | 'restricted' } = { state: 'default' };
-jest.mock('@/lib/qa', () => ({ ...jest.requireActual<object>('@/lib/qa'), useQaState: () => mockQa.state }));
+jest.mock('@/lib/qa', () => ({ ...jest.requireActual<object>('@/lib/qa'), useQaState: () => mockQa.state, qa: {} }));
+/** The mocked overrides object: a test sets `open` on it (qaOpen). */
+const qaOverrides = jest.requireMock<{ qa: { open?: 'report' | 'actions' } }>('@/lib/qa').qa;
 const mockClock = { now: new Date('2026-11-08T11:00:00+01:00') };
 jest.mock('@/lib/clock', () => ({ now: () => mockClock.now }));
 
@@ -70,6 +72,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   mockQa.state = 'default';
+  delete qaOverrides.open;
   endMessagingSession();
   useSessionStore.setState({ status: 'loading', member: null });
   jest.clearAllMocks();
@@ -182,6 +185,34 @@ describe('MSG-02 (FS-7)', () => {
     expect(screen.getByText('Gestern')).toBeTruthy();
     expect(screen.getByTestId('MSG-02.message.01J3.read')).toHaveTextContent('Gelesen');
     expect(screen.getByTestId('MSG-02.header.name')).toHaveTextContent('Jann Peters');
+    expect(screen.getByTestId('MSG-02.header.username')).toHaveTextContent('@jann.ptrs');
+  });
+
+  it('says what the member drives under the name (DQ-1086)', async () => {
+    const other = { username: 'jann.ptrs', displayName: 'Jann Peters', avatar: null, mainVehicle: { slug: 'bmw-m4', title: 'BMW M4' } };
+    const { adapter } = adapterWith({ detail: conversation({ other }), messages });
+    await renderWith(adapter, <ThreadPane conversationId="c1" routeId="MSG-02" onLeave={jest.fn()} />);
+    expect(await screen.findByText('fährt BMW M4')).toBeTruthy();
+  });
+
+  it('qaOpen=actions opens the actions sheet of the newest received text once the thread has loaded, once (MSG-02-translate)', async () => {
+    qaOverrides.open = 'actions';
+    const { adapter, actions } = adapterWith({ messages });
+    await renderWith(adapter, <ThreadPane conversationId="c1" routeId="MSG-02" onLeave={jest.fn()} />);
+    // 01J3 is the newest, but it is your own: the sheet is that of 01J2.
+    await fireEvent.press(await screen.findByTestId('MSG-02.actions.hide'));
+    expect(jest.mocked(actions.hideMessage)).toHaveBeenCalledWith('01JCONV000000000000000000A', '01J2');
+    await flush();
+    // Closed, it stays closed: a later answer for the thread does not open it again.
+    await screen.findByTestId('MSG-02.message.01J2');
+    expect(screen.queryByTestId('MSG-02.actions.hide')).toBeNull();
+  });
+
+  it('opens no actions sheet without qaOpen=actions', async () => {
+    const { adapter } = adapterWith({ messages });
+    await renderWith(adapter, <ThreadPane conversationId="c1" routeId="MSG-02" onLeave={jest.fn()} />);
+    await flush();
+    expect(screen.queryByTestId('MSG-02.actions.hide')).toBeNull();
   });
 
   it('marks the newest message read while the thread is on screen', async () => {
@@ -248,7 +279,7 @@ describe('MSG-02 (FS-7)', () => {
     await renderWith(adapter, <ThreadPane conversationId="c1" routeId="MSG-02" onLeave={jest.fn()} />);
     const id = messages[0]?.id ?? '';
     const press = await screen.findByTestId(`MSG-02.message.${id}.press`, { includeHiddenElements: true });
-    const slop = (size.touchMin - (typography.bodyDense.lineHeight + 2 * space[8])) / 2;
+    const slop = (size.touchMin - (typography.body.lineHeight + 2 * space[8])) / 2;
     expect(slop).toBeGreaterThan(0);
     expect(press.props.hitSlop).toEqual(expect.objectContaining({ top: slop, bottom: slop }));
     expect(StyleSheet.flatten(screen.getByTestId(`MSG-02.message.${id}.chat.bubble`, { includeHiddenElements: true }).props.style).minHeight).toBeUndefined();
@@ -373,10 +404,17 @@ describe('MSG-04 request mode', () => {
 });
 
 describe('MSG-01 organise [SIG]', () => {
-  it('archives from the more button, with Rückgängig', async () => {
+  it('has no permanent more button on phones (DQ-1106 a): long-press organises', async () => {
+    const { adapter } = adapterWith({ inbox: [summary({ id: 'c1' })] });
+    await renderWith(adapter, <MessagesScreen />);
+    await screen.findByTestId('MSG-01.row.c1.open');
+    expect(screen.queryByTestId('MSG-01.row.c1.more')).toBeNull();
+  });
+
+  it('archives from a long-press, with Rückgängig', async () => {
     const { adapter, actions } = adapterWith({ inbox: [summary({ id: 'c1' })] });
     await renderWith(adapter, <MessagesScreen />);
-    await fireEvent.press(await screen.findByTestId('MSG-01.row.c1.more'));
+    await fireEvent(await screen.findByTestId('MSG-01.row.c1.open'), 'longPress');
     await fireEvent.press(await screen.findByTestId('MSG-01.organise.archive'));
     await flush();
     expect(jest.mocked(actions.organise)).toHaveBeenCalledWith('c1', { archived: true });
@@ -387,7 +425,7 @@ describe('MSG-01 organise [SIG]', () => {
   it('asks before deleting a conversation for you', async () => {
     const { adapter, actions } = adapterWith({ inbox: [summary({ id: 'c1' })] });
     await renderWith(adapter, <MessagesScreen />);
-    await fireEvent.press(await screen.findByTestId('MSG-01.row.c1.more'));
+    await fireEvent(await screen.findByTestId('MSG-01.row.c1.open'), 'longPress');
     await fireEvent.press(await screen.findByTestId('MSG-01.organise.delete'));
     expect(jest.mocked(actions.deleteConversation)).not.toHaveBeenCalled();
     await fireEvent.press(await screen.findByTestId('MSG-01.deleteDialog.confirm'));

@@ -12,7 +12,8 @@ import { TabBarOverlayContext, useHideTabBar, useTabBarPadding } from '@/feature
 import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
 import { isWeb } from '@/lib/platform';
 import { useOnline } from '@/state/online';
-import { createStyles, layout, size, useBreakpoint, useMotion } from '@/theme';
+import { createStyles, layout, size, useBreakpoint } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import {
   Button,
   DiscardGuardDialog,
@@ -130,7 +131,7 @@ export function SettingsPage({
   const styles = useStyles();
   const router = useRouter();
   const online = useOnline();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const { gutter, kind } = useBreakpoint();
   const wide = kind !== 'phone';
   const split = useSettingsSplit() && section !== undefined;

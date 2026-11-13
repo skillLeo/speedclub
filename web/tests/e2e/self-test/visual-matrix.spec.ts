@@ -1,6 +1,6 @@
 // The matrix planner, QA URLs, the override contract, image diffing, baselines, contact sheets and
 // the runner CLI. Chromium only: nothing here depends on the browser engine.
-import { execFile } from 'node:child_process';
+import { execFile, execFileSync, type ChildProcess, type ExecFileOptions } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -14,18 +14,84 @@ import { MAX_DIFF_PIXEL_RATIO, comparePng } from '../support/image-diff.mjs';
 import { announcementFixturePlan, reconsentFixturePlan } from '../support/backend.mjs';
 import { STAFF_SESSION_COOKIE, sessionCookieExpiry } from '../support/staff.mjs';
 import { QA_NOW, checkQaContract, qaUrl } from '../support/qa.mjs';
-import { spacingScale, tokens, typePairs } from '../support/tokens.mjs';
+import { DESKTOP_MIN_WIDTH, fontFamilies, spacingScale, tokens, typePairs } from '../support/tokens.mjs';
 import { handleBaseline } from '../visual/baseline.mjs';
 import { buildContactSheet } from '../visual/contact-sheet.mjs';
-import { cellName, interleaveByRoute, isExpectedStatus, isVolatileCell, pathTokens, planRoute, resolvePath, stagesOf, validateRoutes, type RouteDef } from '../visual/matrix.mjs';
+import { cellName, compareCellNames, interleaveByRoute, isExpectedStatus, isVolatileCell, pathTokens, planRoute, resolvePath, stagesOf, validateRoutes, type RouteDef } from '../visual/matrix.mjs';
 import { PLAIN_LIMITER, RateBudget, buildLimits, uriToRegex } from '../visual/rate-budget.mjs';
 import { routes } from '../visual/routes.mjs';
 import { defaultCellOf, findUnrenderedStates } from '../visual/state-check.mjs';
-import { baselineOrigin, parseCell, planPromotion, promote } from '../visual/promote-baselines.mjs';
+import { DEFAULT_P4_BASELINES, baselineDirOf, baselineOrigin, parseCell, planPromotion, promote } from '../visual/promote-baselines.mjs';
+import { filterP4Cells, p4ContextOptions, p4PrimaryDeviceOf, planLines, planP4Route, validateP4Filters } from '../visual/p4.mjs';
+import { EN12, FLAGSHIP, SPECIMEN, TABLET, describeSets, isFlagship, isForm } from '../visual/p4-sets.mjs';
 
 const RUNNER = fileURLToPath(new URL('../visual/run.mjs', import.meta.url));
 const PROMOTER = fileURLToPath(new URL('../visual/promote-baselines.mjs', import.meta.url));
-const exec = promisify(execFile);
+const execFileAsync = promisify(execFile);
+
+/**
+ * The child processes this worker started (the runner, the promoter, node -e) that have not exited yet. A test that fails or times out
+ * while one runs must not leave it behind: a runner left over keeps its browsers and the qa-run lock (H1: PID 92230 held it for over
+ * 30 minutes). afterEach ends each one with its process tree.
+ */
+const running = new Set<ChildProcess>();
+const exec = (file: string, args: readonly string[], options: ExecFileOptions = {}): Promise<{ stdout: string; stderr: string }> => {
+  const run = execFileAsync(file, args, { ...options, encoding: 'utf8' });
+  const { child } = run;
+  running.add(child);
+  child.once('exit', () => running.delete(child));
+  return run;
+};
+
+/** Every descendant pid of `pid` (POSIX `ps`; Playwright's browsers are children of the runner in their own process group). */
+const descendantsOf = (pid: number): number[] => {
+  if (process.platform === 'win32') return [];
+  const table = execFileSync('ps', ['-A', '-o', 'pid=', '-o', 'ppid='], { encoding: 'utf8' })
+    .trim()
+    .split('\n')
+    .map((line) => line.trim().split(/\s+/).map(Number) as [number, number]);
+  const out: number[] = [];
+  const walk = (parent: number) => {
+    for (const [child, ppid] of table) {
+      if (ppid === parent && !out.includes(child)) {
+        out.push(child);
+        walk(child);
+      }
+    }
+  };
+  walk(pid);
+  return out;
+};
+
+/** SIGTERM first (the runner's Playwright closes its browsers on it), then SIGKILL for the whole tree after a grace period. */
+const endProcessTree = async (child: ChildProcess, graceMs = 10_000): Promise<void> => {
+  if (child.exitCode !== null || child.signalCode !== null || child.pid === undefined) return;
+  const tree = descendantsOf(child.pid);
+  const exited = new Promise<boolean>((resolve) => child.once('exit', () => resolve(true)));
+  child.kill('SIGTERM');
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const ended = await Promise.race([exited, new Promise<boolean>((resolve) => (timer = setTimeout(() => resolve(false), graceMs)))]);
+  clearTimeout(timer);
+  for (const pid of ended ? tree : [child.pid, ...tree]) {
+    try {
+      process.kill(pid, 'SIGKILL');
+    } catch {
+      // gone already
+    }
+  }
+};
+
+test.afterEach(async () => {
+  const left = [...running];
+  running.clear();
+  await Promise.all(left.map((child) => endProcessTree(child)));
+});
+
+/**
+ * The bound of one runner process against the stub server: below the describe's test timeout (180 s), so a hanging runner fails its
+ * test with a message instead of outliving it. The child is ended with SIGTERM (then afterEach takes its tree).
+ */
+const STUB_RUN_TIMEOUT_MS = 150_000;
 
 const member: RouteDef = {
   id: 'GAR-01',
@@ -302,22 +368,120 @@ test.describe('matrix planning, 07_QA section 3', () => {
       expect(problems.some((p) => expected.test(p))).toBe(true);
     }
   });
+
+  test('a planned route says why it is not captured (DQ-937): plannedReason is required beside it, and only there', () => {
+    const planned: RouteDef = { ...member, status: 'planned', plannedReason: 'waits for a QA hook in the app' };
+    expect(validateRoutes([planned])).toEqual([]);
+    expect(validateRoutes([{ ...member, status: 'planned' }])).toEqual(['GAR-01: a planned route needs a plannedReason']);
+    expect(validateRoutes([{ ...member, status: 'planned', plannedReason: '  ' }])).toEqual(['GAR-01: a planned route needs a plannedReason']);
+    expect(validateRoutes([{ ...member, plannedReason: 'nothing planned' }])).toEqual(["GAR-01: plannedReason only beside status 'planned'"]);
+    // The contract holds on a synthetic route of its own, so it stays proven when the registry has no planned route left.
+    const synthetic: RouteDef = { ...member, id: 'GAR-99-planned', status: 'planned', plannedReason: 'needs a QA hook' };
+    expect(validateRoutes([synthetic, member])).toEqual([]);
+    expect(validateRoutes([{ ...member, id: 'GAR-99-planned', status: 'planned' }])).toEqual(['GAR-99-planned: a planned route needs a plannedReason']);
+  });
+
+  test('MSG-02-translate is a captured route now: qaOpen=actions opens the actions sheet with "Übersetzen" (DQ-937 closed)', () => {
+    const translate = routes.find((r) => r.id === 'MSG-02-translate') as RouteDef | undefined;
+    expect(translate).toBeDefined();
+    expect(translate?.status).toBeUndefined();
+    expect(translate?.plannedReason).toBeUndefined();
+    expect(translate?.path).toContain('qaOpen=actions');
+    expect(translate?.ready).toBe('[data-testid="MSG-02.actions.translate"]');
+    expect(validateRoutes([translate as RouteDef])).toEqual([]);
+  });
 });
 
 test.describe('tokens are the source of the audit', () => {
   test('spacing scale and type pairs come from tokens.json', () => {
     expect(spacingScale()).toEqual(Object.values(tokens.space).map(Number).sort((a, b) => a - b));
     const body = tokens.typography.body;
-    expect(typePairs(2).find((t) => t.name === 'body')).toMatchObject({ size: body.size * 2, lineHeight: body.lineHeight * 2 });
+    expect(typePairs(2, 390).find((t) => t.name === 'body' && t.variant === 'base')).toMatchObject({ size: body.size * 2, lineHeight: body.lineHeight * 2 });
   });
 
-  test('tab and badge are capped at their maxFontScale', () => {
-    for (const name of ['tab', 'badge']) {
-      const t = tokens.typography[name];
-      expect(typePairs(2).find((p) => p.name === name)?.size).toBeCloseTo(t.size * t.maxFontScale);
-      expect(typePairs(1.2).find((p) => p.name === name)?.size).toBeCloseTo(t.size * 1.2);
+  test('a role with a desktop size yields that pair too, from the desktop width on; a role that inherits its size yields none', () => {
+    expect(DESKTOP_MIN_WIDTH).toBe(tokens.layout.breakpoints.desktop);
+    const pairs = typePairs(1, DESKTOP_MIN_WIDTH);
+    for (const [name, raw] of Object.entries(tokens.typography)) {
+      const t = raw as { size: number | 'inherit'; lineHeight: number | 'inherit'; web?: { size: number; lineHeight: number } };
+      const own = pairs.filter((p) => p.name === name);
+      if (t.size === 'inherit') {
+        expect(own, name).toEqual([]);
+        continue;
+      }
+      expect(own.find((p) => p.variant === 'base'), name).toMatchObject({ size: t.size, lineHeight: t.lineHeight });
+      if (t.web) expect(own.find((p) => p.variant === 'web'), name).toMatchObject({ size: t.web.size, lineHeight: t.web.lineHeight });
+      else expect(own.filter((p) => p.variant === 'web'), name).toEqual([]);
+    }
+    // The 2.0 roles the spec names (09 §4.2): body 16/24 and hero.numeral 88/88 on desktop; numeric.inline nests in its parent's pair.
+    expect(pairs).toContainEqual({ name: 'body', variant: 'web', size: 16, lineHeight: 24 });
+    expect(pairs).toContainEqual({ name: 'hero.numeral', variant: 'web', size: 88, lineHeight: 88 });
+    expect(pairs.some((p) => p.name === 'numeric.inline')).toBe(false);
+    expect(pairs.every((p) => Number.isFinite(p.size) && Number.isFinite(p.lineHeight))).toBe(true);
+    expect(typePairs(1, 1440)).toEqual(pairs);
+  });
+
+  test('below the desktop width the audit knows the mobile pairs only (hero.numeral 88/88 is off the scale at 360)', () => {
+    for (const width of [360, 390, 768, DESKTOP_MIN_WIDTH - 1]) {
+      const pairs = typePairs(1, width);
+      expect(pairs.filter((p) => p.variant === 'web'), `at ${width}`).toEqual([]);
+      expect(pairs, `at ${width}`).not.toContainEqual(expect.objectContaining({ size: 88, lineHeight: 88 }));
+      expect(pairs, `at ${width}`).toEqual(typePairs(1, DESKTOP_MIN_WIDTH).filter((p) => p.variant !== 'web'));
+    }
+    expect(() => typePairs(1, Number.NaN)).toThrow(/two numbers/);
+  });
+
+  test('display.title\'s shrink pair (09 §4.2 "max 2 lines, shrink to 24") is a pair at every width: 24/28, 48/56 at font scale 2', () => {
+    // Only display.title shrinks; a new minSize must come with its own check here.
+    const shrinking = Object.entries(tokens.typography).filter(([, t]) => (t as { minSize?: number }).minSize !== undefined).map(([name]) => name);
+    expect(shrinking).toEqual(['display.title']);
+    for (const width of [390, 1440]) {
+      expect(typePairs(1, width), `fs1 at ${width}`).toContainEqual({ name: 'display.title', variant: 'shrink', size: 24, lineHeight: 28 });
+      expect(typePairs(2, width), `fs2 at ${width}`).toContainEqual({ name: 'display.title', variant: 'shrink', size: 48, lineHeight: 56 });
+      // It adds exactly that pair: every other pair is the role's base or desktop one, and no other size/leading appears.
+      for (const scale of [1, 2]) {
+        const pairs = typePairs(scale, width);
+        expect(pairs.filter((p) => p.variant === 'shrink'), `shrink pairs fs${scale} at ${width}`).toEqual([
+          { name: 'display.title', variant: 'shrink', size: 24 * scale, lineHeight: 28 * scale },
+        ]);
+        const key = (p: { size: number; lineHeight: number }) => `${p.size}/${p.lineHeight}`;
+        const without = new Set(pairs.filter((p) => p.variant !== 'shrink').map(key));
+        expect([...new Set(pairs.map(key))].filter((k) => !without.has(k)), `new pairs fs${scale} at ${width}`).toEqual([`${24 * scale}/${28 * scale}`]);
+        // The neighbours of the shrink pair stay off the scale.
+        for (const off of [[24, 34], [24, 32], [30, 28], [44, 28], [24, 24]] as const) {
+          expect(pairs.map(key), `${off.join('/')} fs${scale} at ${width}`).not.toContain(`${off[0] * scale}/${off[1] * scale}`);
+        }
+      }
+      // A scale's shrink pair is no pair at the other scale.
+      expect(typePairs(1, width).map((p) => `${p.size}/${p.lineHeight}`)).not.toContain('48/56');
+      expect(typePairs(2, width).map((p) => `${p.size}/${p.lineHeight}`)).not.toContain('24/28');
     }
   });
+
+  test('the token faces are the four 2.0 families (09 §4.2) and their per-weight native names, nothing else', () => {
+    const css = ['Inter', 'Inter Display', 'Archivo Condensed', 'Archivo SemiExpanded'];
+    const native = Object.values(tokens.font).flatMap((group) => Object.values((group as { native: Record<string, string> }).native));
+    expect([...fontFamilies()].sort()).toEqual([...css, ...native].sort());
+    // Native names are the PostScript names of the files in design/fonts (ADR-402): family without spaces, a dash, the weight.
+    for (const name of native) expect(name).toMatch(/^(?:Inter|InterDisplay|ArchivoCondensed|ArchivoSemiExpanded)-(?:Regular|Medium|SemiBold|Bold)$/);
+  });
+
+  test('web.tab, hero.numeral, hero.numeral.s and label.badge are capped at their maxFontScale, on desktop too', () => {
+    const capped = ['web.tab', 'hero.numeral', 'hero.numeral.s', 'label.badge'];
+    // Every capped role of tokens.json is in the list (ADR-421 a added label.badge), so a new cap cannot go unchecked.
+    expect(Object.entries(tokens.typography).filter(([, t]) => (t as { maxFontScale?: number }).maxFontScale !== undefined).map(([name]) => name).sort()).toEqual([...capped].sort());
+    for (const name of capped) {
+      const t = tokens.typography[name] as { size: number; maxFontScale: number; web?: { size: number } };
+      expect(t.maxFontScale, name).toBeDefined();
+      expect(typePairs(2, 390).find((p) => p.name === name && p.variant === 'base')?.size).toBeCloseTo(t.size * t.maxFontScale);
+      expect(typePairs(1.2, 390).find((p) => p.name === name && p.variant === 'base')?.size).toBeCloseTo(t.size * 1.2);
+      if (t.web) {
+        expect(typePairs(2, DESKTOP_MIN_WIDTH).find((p) => p.name === name && p.variant === 'web')?.size).toBeCloseTo(t.web.size * t.maxFontScale);
+        expect(typePairs(1.2, DESKTOP_MIN_WIDTH).find((p) => p.name === name && p.variant === 'web')?.size).toBeCloseTo(t.web.size * 1.2);
+      }
+    }
+  });
+
 });
 
 test.describe('QA URLs and the override contract', () => {
@@ -853,13 +1017,32 @@ test.describe('runner CLI', () => {
       file,
       JSON.stringify([
         { id: 'TEST-3', path: '/app/garage', phase: 1, auth: 'guest', states: ['default'], ready: '[data-testid="GAR-01.root"]' },
-        { id: 'TEST-4', path: '/app/later', phase: 1, auth: 'guest', states: ['default'], ready: '[data-testid="x"]', status: 'planned' },
+        { id: 'TEST-4', path: '/app/later', phase: 1, auth: 'guest', states: ['default'], ready: '[data-testid="x"]', status: 'planned', plannedReason: 'needs a QA hook' },
       ]),
     );
     const { stdout } = await exec(process.execPath, [RUNNER, '--tier=module', `--routes-file=${file}`, '--dry-run']);
     expect(stdout).toContain('TEST-3__390x844__carbon__de');
     expect(stdout).toContain('Planned, not run: TEST-4');
+    expect(stdout).toContain('  TEST-4: not capturable yet: needs a QA hook');
     expect(stdout).not.toContain('TEST-4__');
+  });
+
+  test('a planned route named in --routes is still not captured: listed with its reason, in the plan of a p4 run too (DQ-937)', async ({}, testInfo) => {
+    const file = testInfo.outputPath('routes.json');
+    writeFileSync(
+      file,
+      JSON.stringify([
+        { id: 'GAR-01', path: '/app/garage', phase: 1, auth: 'guest', states: ['default'], ready: 'body' },
+        { id: 'MSG-02-translate', path: '/app/messages/x', phase: 3, auth: 'guest', states: ['default'], ready: 'body', status: 'planned', plannedReason: 'the runner cannot tap' },
+      ]),
+    );
+    const { stdout } = await exec(process.execPath, [RUNNER, '--tier=p4', `--routes-file=${file}`, '--routes=GAR-01,MSG-02-translate', '--plan']);
+    expect(stdout).toContain('Planned, not run: MSG-02-translate');
+    expect(stdout).toContain('  MSG-02-translate: not capturable yet: the runner cannot tap');
+    expect(stdout).toMatch(/Tier p4: 1 route\(s\)/);
+    // Only planned routes named: nothing to capture, the reason is still printed before the refusal.
+    const only = exec(process.execPath, [RUNNER, '--tier=p4', `--routes-file=${file}`, '--routes=MSG-02-translate', '--plan']);
+    await expect(only).rejects.toMatchObject({ stdout: expect.stringContaining('MSG-02-translate: not capturable yet: the runner cannot tap') });
   });
 
   test('a phase run takes the routes of that phase and of every earlier one, and none of a later one', async ({}, testInfo) => {
@@ -970,6 +1153,55 @@ test.describe('runner CLI', () => {
   });
 });
 
+test.describe('runner exit (H1: a runner kept the qa-run lock after its summary)', () => {
+  // A handle nothing closes (as a browser CaptureSession.reset() could not close in time): `--import` opens an interval before
+  // run.mjs loads. With process.exitCode the process would wait on it for ever; the runner must end once its summary is out.
+  const LINGER = 'data:text/javascript,setInterval(()=>{},1000)';
+
+  test('the runner exits with its code and its whole output while a handle stays open: 0 for a run, 2 for a wrong option', async ({}, testInfo) => {
+    const file = testInfo.outputPath('routes.json');
+    writeFileSync(file, JSON.stringify([{ id: 'TEST-9', path: '/app/garage', phase: 1, auth: 'guest', states: ['default'], viewports: [390], ready: 'body' }]));
+    const bound = { timeout: 60_000, killSignal: 'SIGTERM' as const };
+    const ok = await exec(process.execPath, ['--import', LINGER, RUNNER, '--tier=module', `--routes-file=${file}`, '--dry-run'], bound).then(
+      ({ stdout }) => ({ code: 0, killed: false, stdout }),
+      (e: { code: number | null; killed?: boolean; stdout: string }) => ({ code: e.code, killed: e.killed === true, stdout: e.stdout }),
+    );
+    expect(ok.killed, 'the runner did not exit by itself').toBe(false);
+    expect(ok.code).toBe(0);
+    expect(ok.stdout).toContain('TEST-9__390x844__carbon__de');
+    const wrong = await exec(process.execPath, ['--import', LINGER, RUNNER, '--tier=nope'], bound).then(
+      () => ({ code: 0, killed: false, stderr: '' }),
+      (e: { code: number | null; killed?: boolean; stderr: string }) => ({ code: e.code, killed: e.killed === true, stderr: e.stderr }),
+    );
+    expect(wrong.killed, 'the runner did not exit by itself after an error').toBe(false);
+    expect(wrong.code).toBe(2);
+    expect(wrong.stderr.length).toBeGreaterThan(0);
+  });
+
+  test('the harness ends a child that outlives its test with its process tree', async () => {
+    const child = execFile(process.execPath, ['-e', `require('node:child_process').spawn(process.execPath, ['-e', 'setInterval(()=>{},1000)'], { stdio: 'ignore' }); setInterval(()=>{},1000)`]);
+    running.add(child);
+    // The grandchild has started when the tree has two levels.
+    const pid = child.pid as number;
+    const deadline = Date.now() + 30_000;
+    while (descendantsOf(pid).length === 0 && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 100));
+    const tree = descendantsOf(pid);
+    expect(tree.length, 'the fixture started a grandchild').toBeGreaterThan(0);
+    await endProcessTree(child, 2_000);
+    const alive = (p: number) => {
+      try {
+        process.kill(p, 0);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    const until = Date.now() + 10_000;
+    while ([pid, ...tree].some(alive) && Date.now() < until) await new Promise((resolve) => setTimeout(resolve, 100));
+    expect([pid, ...tree].filter(alive)).toEqual([]);
+  });
+});
+
 // The runner end to end against a node:http stub: no app, no database, no artisan, not port 8080. The stub's screen reports the
 // qa overrides it was given and is audit clean, so each test here fails or passes for the one thing it provokes.
 test.describe('runner failure paths against a stub server', () => {
@@ -1034,13 +1266,14 @@ test.describe('runner failure paths against a stub server', () => {
     const run = await exec(
       process.execPath,
       [RUNNER, '--tier=module', '--workers=1', `--routes-file=${routesFile}`, `--limits-file=${limitsFile}`, `--out=${out}`, `--baselines=${baselines}`, ...args],
-      { env: { ...process.env, SPEEDCLUB_BASE_URL: base } },
+      { env: { ...process.env, SPEEDCLUB_BASE_URL: base }, timeout: STUB_RUN_TIMEOUT_MS, killSignal: 'SIGTERM' },
     ).then(
-      ({ stdout }) => ({ code: 0, output: stdout }),
-      (e: { code: number; stdout: string; stderr: string }) => ({ code: e.code, output: `${e.stdout}\n${e.stderr}` }),
+      ({ stdout }) => ({ code: 0, output: stdout, killed: false }),
+      (e: { code: number; killed?: boolean; stdout: string; stderr: string }) => ({ code: e.code, output: `${e.stdout}\n${e.stderr}`, killed: e.killed === true }),
     );
     server.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
+    expect(run.killed, `the runner did not exit within ${STUB_RUN_TIMEOUT_MS / 1000} s:\n${run.output.slice(-2000)}`).toBe(false);
     const dir = join(out, 'phase-1');
     const summary = JSON.parse(readFileSync(join(dir, 'summary.json'), 'utf8'));
     expect(summary.baseUrl, 'the run went to the stub').toBe(base);
@@ -1473,5 +1706,294 @@ test.describe('promoting reviewed screenshots to baselines', () => {
     const written = await exec(process.execPath, [PROMOTER, `--approval=${good}`, `--routes-file=${routesFile}`, `--baselines=${baselines}`, '--write'], { env });
     expect(written.stdout).toContain('Wrote 1 baseline(s)');
     expect(readFileSync(join(baselines, 'TEST-P1__390x844__carbon__de.png')).equals(readFileSync(join(from, 'TEST-P1__390x844__carbon__de.png')))).toBe(true);
+  });
+});
+
+// The Phase 4 tier (09 §14.1, visual/p4.mjs): planning, names, filters, sets and the CLI. The module and phase tiers above are unchanged.
+test.describe('p4 tier', () => {
+  const route = (over: Partial<RouteDef>): RouteDef => ({ ...member, id: 'GAR-09', path: '/app/garage/x/mods', states: ['default'], ...over });
+  const names = (r: RouteDef) => planP4Route(r).map((c) => c.name);
+
+  test('a member route: iPhone 15 Pro, Pixel 8 and both desktops, Carbon and Hell, DE, its states once at iPhone 15 Pro Carbon DE', () => {
+    expect(names(route({ states: ['default', 'error'] }))).toEqual([
+      'GAR-09__393x852__carbon__de__iphone15pro',
+      'GAR-09__393x852__light__de__iphone15pro',
+      'GAR-09__412x915__carbon__de__pixel8',
+      'GAR-09__412x915__light__de__pixel8',
+      'GAR-09__1280x800__carbon__de__desktop1280',
+      'GAR-09__1280x800__light__de__desktop1280',
+      'GAR-09__1440x900__carbon__de__desktop1440',
+      'GAR-09__1440x900__light__de__desktop1440',
+      'GAR-09__393x852__carbon__de__iphone15pro__error',
+    ]);
+  });
+
+  test('a flagship screen and its variants: + iPhone SE, + Schwarz, + 200 % at 393 and 1440; EN and tablet only for their lists', () => {
+    for (const id of ['GAR-01', 'GAR-01-empty']) {
+      const cells = planP4Route(route({ id, path: '/app/garage' }));
+      expect(new Set(cells.map((c) => c.device))).toEqual(new Set(['iphone15pro', 'iphonese', 'pixel8', 'desktop1280', 'desktop1440', ...(id === 'GAR-01' ? ['tablet'] : [])]));
+      expect(cells.filter((c) => c.theme === 'black')).toHaveLength(id === 'GAR-01' ? 6 : 5);
+      expect(cells.filter((c) => c.fontScale === 2).map((c) => c.name)).toEqual([`${id}__393x852__carbon__de__iphone15pro__fs2`, `${id}__1440x900__carbon__de__desktop1440__fs2`]);
+      expect(cells.filter((c) => c.locale === 'en').map((c) => c.name)).toEqual(
+        id === 'GAR-01' ? ['GAR-01__393x852__carbon__en__iphone15pro', 'GAR-01__1440x900__carbon__en__desktop1440'] : [],
+      );
+    }
+    expect(isFlagship({ id: 'GAR-010' })).toBe(false);
+  });
+
+  test('forms by rule (editor states on an auth, wizard, editor or settings path) and by list; lists and menus are no forms', () => {
+    const editor = ['default', 'loading', 'error', 'offline', 'restricted'];
+    expect(isForm(route({ id: 'SET-04', path: '/app/settings/security/password', states: editor }))).toBe(true);
+    expect(isForm(route({ id: 'AUTH-03', path: '/app/sign-in', states: ['default', 'loading', 'error', 'offline'] }))).toBe(true);
+    expect(isForm(route({ id: 'SET-06', path: '/app/settings/security/sessions', states: ['default', 'loading', 'empty'] }))).toBe(false);
+    expect(isForm(route({ id: 'SET-01', path: '/app/settings', states: editor }))).toBe(false);
+    expect(isForm(route({ id: 'VEH-02', path: '/app/v/x/mods/y', states: editor }))).toBe(false);
+    expect(isForm(route({ id: 'WEB-09', path: '/melden', states: ['default', 'error'] }))).toBe(true);
+    const form = planP4Route(route({ id: 'SET-04', path: '/app/settings/security/password', states: editor }));
+    expect(form.some((c) => c.device === 'iphonese')).toBe(true);
+    expect(form.some((c) => c.theme === 'black')).toBe(false);
+    expect(form.filter((c) => c.fontScale === 2)).toHaveLength(2);
+  });
+
+  test('admin (ADR-212): desktops only, Carbon and Hell, the zoom cell, its states at desktop1280 Carbon DE; no EN, no fs2', () => {
+    expect(names({ ...admin, states: ['default', 'loading'] })).toEqual([
+      'ADM-09__1280x800__carbon__de__desktop1280',
+      'ADM-09__1280x800__light__de__desktop1280',
+      'ADM-09__1440x900__carbon__de__desktop1440',
+      'ADM-09__1440x900__light__de__desktop1440',
+      'ADM-09__1280x800__carbon__de__desktop1280__zoom2',
+      'ADM-09__1280x800__carbon__de__desktop1280__loading',
+    ]);
+    const zoom = planP4Route(admin).find((c) => c.zoom === 2);
+    expect(zoom?.viewport).toEqual({ width: 640, height: 400 });
+    expect(parseCell(zoom?.name ?? '')).toEqual({ routeId: 'ADM-09', width: 1280, height: 800, zoom: 2, state: 'default', device: 'desktop1280' });
+  });
+
+  test('a public page: phones and desktops; a route\'s viewports keep the matching device kinds and may not leave nothing', () => {
+    const web = route({ id: 'WEB-02', path: '/u/x', states: ['default', 'error'] });
+    expect(new Set(planP4Route(web).map((c) => c.device))).toEqual(new Set(['iphone15pro', 'pixel8', 'desktop1280', 'desktop1440']));
+    expect(planP4Route(web).find((c) => c.state === 'error')?.name).toBe('WEB-02__393x852__carbon__de__iphone15pro__error');
+    // The flagship public pages (09 §9): + iPhone SE, + Schwarz, + 200 % like every flagship screen.
+    for (const id of ['WEB-01', 'WEB-03']) {
+      const cells = planP4Route(route({ id, path: '/', states: ['default', 'error'] }));
+      expect(new Set(cells.map((c) => c.device))).toEqual(new Set(['iphone15pro', 'iphonese', 'pixel8', 'desktop1280', 'desktop1440']));
+      expect(cells.filter((c) => c.theme === 'black')).toHaveLength(5);
+      expect(cells.filter((c) => c.fontScale === 2).map((c) => c.name)).toEqual([`${id}__393x852__carbon__de__iphone15pro__fs2`, `${id}__1440x900__carbon__de__desktop1440__fs2`]);
+    }
+    expect(new Set(planP4Route(route({ viewports: [1280, 1440] })).map((c) => c.device))).toEqual(new Set(['desktop1280', 'desktop1440']));
+    expect(new Set(planP4Route(route({ viewports: [390] })).map((c) => c.device))).toEqual(new Set(['iphone15pro', 'pixel8']));
+    expect(() => planP4Route(route({ viewports: [999] }))).toThrow(/nothing to capture in tier p4/);
+  });
+
+  test('SPECIMEN gallery routes (DQ-909) add iphone15pro Carbon DE at 200 % and iphone15pro Schwarz DE, nothing else', () => {
+    expect(SPECIMEN).toEqual(['DEV-01-typography', 'DEV-01-badges', 'DEV-01-selection', 'DEV-01-foundation']);
+    for (const id of SPECIMEN) {
+      const registered = (routes as RouteDef[]).find((r) => r.id === id);
+      expect(registered, `${id} is in the registry`).toBeDefined();
+      const plain = names({ ...(registered as RouteDef), id: 'DEV-01-colour' }).map((n) => n.replace('DEV-01-colour', id));
+      const cells = names(registered as RouteDef);
+      expect(cells.filter((n) => !plain.includes(n)), id).toEqual([`${id}__393x852__carbon__de__iphone15pro__fs2`, `${id}__393x852__black__de__iphone15pro`]);
+      expect(plain.every((n) => cells.includes(n)), `${id} keeps its other cells`).toBe(true);
+    }
+    expect(describeSets(routes as RouteDef[]).specimen).toEqual(SPECIMEN);
+    // Another gallery section keeps the plain plan.
+    expect(names(route({ id: 'DEV-01-colour', path: '/app/dev/gallery/colour' })).some((n) => n.includes('__black__') || n.includes('__fs2'))).toBe(false);
+  });
+
+  test('an admin route that excludes 1280 keeps its 200 % zoom cell on the first desktop window it allows (review M4.0)', () => {
+    const zoomOf = (r: RouteDef) => planP4Route(r).filter((c) => (c as { zoom?: number }).zoom === 2).map((c) => c.device);
+    expect(zoomOf(admin)).toEqual(['desktop1280']);
+    expect(zoomOf({ ...admin, viewports: [1440] })).toEqual(['desktop1440']);
+  });
+
+  test('a state named like a p4 device is refused, so a cell name never reads as another device (review M4.0)', () => {
+    expect(validateRoutes([{ ...admin, states: ['default', 'tablet'] }])).toEqual(['ADM-09: state "tablet" is named like a p4 device']);
+    expect(validateRoutes([{ ...admin, states: ['default', 'pixel8', 'loading'] }])).toHaveLength(1);
+  });
+
+  test('forced states move to the first device a route allows when its viewports exclude the primary one, never dropped', () => {
+    const states = ['default', 'loading', 'error'];
+    const desktopOnly = route({ viewports: [1280, 1440], states });
+    expect(p4PrimaryDeviceOf(desktopOnly)).toBe('desktop1280');
+    expect(planP4Route(desktopOnly).filter((c) => c.state !== 'default').map((c) => c.name)).toEqual([
+      'GAR-09__1280x800__carbon__de__desktop1280__loading',
+      'GAR-09__1280x800__carbon__de__desktop1280__error',
+    ]);
+    expect(planP4Route(route({ viewports: [1440], states })).filter((c) => c.state !== 'default').map((c) => c.device)).toEqual(['desktop1440', 'desktop1440']);
+    expect(planP4Route({ ...admin, viewports: [1440], states }).filter((c) => c.state !== 'default').map((c) => c.device)).toEqual(['desktop1440', 'desktop1440']);
+    // Where the primary device is allowed, it stays the primary device.
+    expect(p4PrimaryDeviceOf(route({ viewports: [390, 1280], states }))).toBe('iphone15pro');
+    expect(p4PrimaryDeviceOf({ ...admin, states })).toBe('desktop1280');
+    // Every forced state of every registry route has its cell.
+    for (const r of (routes as RouteDef[]).filter((x) => x.status !== 'planned')) {
+      const planned = new Set(planP4Route(r).map((c) => c.state));
+      for (const state of r.states) expect(planned.has(state), `${r.id} ${state}`).toBe(true);
+    }
+  });
+
+  test('p4 names carry the device and never meet a module or phase name; parsers and sheets read the device apart from the state', () => {
+    const p4Names = new Set((routes as RouteDef[]).filter((r) => r.status !== 'planned').flatMap(names));
+    for (const r of (routes as RouteDef[]).filter((x) => x.status !== 'planned')) {
+      for (const tier of ['module', 'phase'] as const) for (const c of planRoute(r, tier)) expect(p4Names.has(c.name)).toBe(false);
+    }
+    expect(parseCell('HOME-01__393x852__carbon__de__iphone15pro__fs2__error')).toEqual({
+      routeId: 'HOME-01', width: 393, height: 852, zoom: 1, state: 'error', device: 'iphone15pro',
+    });
+    expect(defaultCellOf({ name: 'HOME-01__393x852__carbon__de__iphone15pro__error', state: 'error' })).toBe('HOME-01__393x852__carbon__de__iphone15pro');
+    // Contact sheet: de default cells first, by device; a module/phase list sorts as it always did.
+    expect(['X__1440x900__carbon__de__desktop1440', 'X__393x852__carbon__de__iphone15pro__error', 'X__393x852__carbon__de__iphone15pro'].sort(compareCellNames)).toEqual([
+      'X__393x852__carbon__de__iphone15pro', 'X__1440x900__carbon__de__desktop1440', 'X__393x852__carbon__de__iphone15pro__error',
+    ]);
+    expect(['X__390x844__carbon__de__error', 'X__1280x800__carbon__de', 'X__390x844__carbon__de'].sort(compareCellNames)).toEqual([
+      'X__390x844__carbon__de', 'X__1280x800__carbon__de', 'X__390x844__carbon__de__error',
+    ]);
+  });
+
+  test('p4 baselines live apart: promotion puts p4 cells into __screenshots__/p4, every other cell where it always went', () => {
+    expect(baselineDirOf('HOME-01__393x852__carbon__de__iphone15pro')).toBe(DEFAULT_P4_BASELINES);
+    expect(DEFAULT_P4_BASELINES.endsWith(join('__screenshots__', 'p4'))).toBe(true);
+    expect(baselineDirOf('HOME-01__390x844__carbon__de')).toBe(fileURLToPath(new URL('../__screenshots__/', import.meta.url)));
+    expect(baselineDirOf('HOME-01__393x852__carbon__de__iphone15pro', { baselines: '/x' })).toBe('/x');
+  });
+
+  test('filters keep what they name, --states=default keeps 200 %, EN and zoom cells, and unknown values are errors', () => {
+    const cells = planP4Route(route({ id: 'GAR-01', path: '/app/garage', states: ['default', 'error'] }));
+    const kept = filterP4Cells(cells, { devices: null, themes: null, locales: null, states: ['default'] });
+    expect(kept.some((c) => c.state !== 'default')).toBe(false);
+    expect(kept.some((c) => c.fontScale === 2) && kept.some((c) => c.locale === 'en')).toBe(true);
+    const narrow = filterP4Cells(cells, { devices: ['iphone15pro', 'desktop1440'], themes: ['carbon'], locales: ['de'], states: ['default'] });
+    expect(narrow.map((c) => c.name)).toEqual([
+      'GAR-01__393x852__carbon__de__iphone15pro', 'GAR-01__1440x900__carbon__de__desktop1440',
+      'GAR-01__393x852__carbon__de__iphone15pro__fs2', 'GAR-01__1440x900__carbon__de__desktop1440__fs2',
+    ]);
+    expect(filterP4Cells(cells, { devices: ['iphone15pro'], themes: null, locales: null, states: null, fontScales: ['1'] }).some((c) => c.fontScale === 2)).toBe(false);
+    expect(validateP4Filters({ devices: ['iphone15'], themes: ['hell'], locales: ['fr'], states: ['broken'], fontScales: ['3'] }, routes as RouteDef[])).toHaveLength(5);
+    expect(validateP4Filters({ devices: ['tablet'], themes: ['black'], locales: ['en'], states: ['default', 'restricted'] }, routes as RouteDef[])).toEqual([]);
+  });
+
+  test('the sets: flagship ids without a route are listed as not built yet, never dropped', () => {
+    const sets = describeSets([route({ id: 'HOME-01', path: '/app/' }), route({ id: 'VEH-01-member', path: '/app/v/x' }), route({ id: 'EVT-02', path: '/app/e/x', status: 'planned' })]);
+    expect(sets.flagship).toEqual(['HOME-01', 'VEH-01-member']);
+    expect(sets.notBuiltYet).toContain('EVT-02');
+    expect(sets.notBuiltYet).not.toContain('VEH-01');
+    expect(FLAGSHIP).toHaveLength(17);
+    // 09 §9 marks the landing and the public vehicle page ★: the pages a scanned sticker opens.
+    expect(FLAGSHIP).toEqual(expect.arrayContaining(['WEB-03', 'WEB-01']));
+    expect(EN12).toHaveLength(12);
+    const registry = describeSets(routes as RouteDef[]);
+    expect(registry.flagship).toEqual(expect.arrayContaining(['WEB-03', 'WEB-01']));
+    expect(registry.en12, 'every EN12 route exists').toEqual(EN12);
+    expect(registry.tablet, 'every TABLET route exists').toEqual(TABLET);
+  });
+
+  test('device contexts: the descriptor\'s user agent and touch with the p4 viewport; desktops add nothing; a missing descriptor throws', () => {
+    expect(p4ContextOptions('iphone15pro')).toMatchObject({ isMobile: true, hasTouch: true, viewport: { width: 393, height: 852 }, userAgent: expect.stringContaining('iPhone') });
+    expect(p4ContextOptions('pixel8')).toMatchObject({ isMobile: true, viewport: { width: 412, height: 915 }, userAgent: expect.stringContaining('Android') });
+    expect(p4ContextOptions('iphonese').viewport).toEqual({ width: 375, height: 667 });
+    expect(p4ContextOptions('tablet')).toMatchObject({ viewport: { width: 820, height: 1180 }, userAgent: expect.stringContaining('iPad') });
+    expect(p4ContextOptions('desktop1440')).toEqual({});
+    expect(() => p4ContextOptions('pixel8', {})).toThrow(/no device descriptor/);
+  });
+
+  test('--plan counts per dimension without a browser; p4 options are refused on the gate tiers; --scale is --device-scale', async ({}, testInfo) => {
+    const file = testInfo.outputPath('routes.json');
+    writeFileSync(file, JSON.stringify([{ id: 'GAR-01', path: '/app/garage', phase: 1, auth: 'guest', states: ['default', 'error'], ready: 'body' }]));
+    const { stdout } = await exec(process.execPath, [RUNNER, '--tier=p4', `--routes-file=${file}`, '--plan', '--states=default']);
+    expect(stdout).toContain('Not built yet: AUTH-01, ONB-01, ONB-02, ONB-03, AUTH-02, HOME-01');
+    expect(stdout).toContain('per device    iphone15pro 5 · iphonese 3 · pixel8 3 · tablet 3 · desktop1280 3 · desktop1440 5');
+    expect(stdout).toContain('total 22');
+    expect(planLines(planP4Route(route({}))).at(-1)).toBe('  total 8');
+    for (const args of [['--tier=module', '--capture-only'], ['--tier=phase', '--phase=1', '--states=default'], ['--tier=module', '--devices=pixel8'], ['--tier=p4', '--devices=nokia'], ['--tier=p4', '--scale=2', '--device-scale=3', `--out=${testInfo.outputPath('never')}`]]) {
+      await expect(exec(process.execPath, [RUNNER, '--plan', ...args]), args.join(' ')).rejects.toMatchObject({ code: 2 });
+    }
+    await expect(exec(process.execPath, [RUNNER, '--tier=p4', '--scale=2', '--dry-run'])).rejects.toMatchObject({ code: 2, stderr: expect.stringContaining('--device-scale') });
+  });
+
+  test('a p4 capture against a stub: WebKit and Chromium devices, a third party blocked and recorded, --capture-only reports and exits 0, but never passes an untrustworthy picture', async ({}, testInfo) => {
+    test.setTimeout(180_000);
+    // The third party: a server that would answer, under another host name (localhost, while the run's host is 127.0.0.1).
+    let thirdPartyHits = 0;
+    const thirdParty = createServer((_req, res) => {
+      thirdPartyHits++;
+      res.writeHead(404).end();
+    });
+    await new Promise<void>((resolve) => thirdParty.listen(0, '127.0.0.1', resolve));
+    const thirdPartyUrl = `http://localhost:${(thirdParty.address() as AddressInfo).port}/pixel.png`;
+    const server = createServer((req, res) => {
+      const url = new URL(req.url ?? '/', 'http://stub');
+      if (url.pathname === '/app/') return void res.writeHead(200).end('_expo/static/js/web/stub.js');
+      if (url.pathname === '/boom.png') return void res.writeHead(500).end();
+      const q = url.searchParams;
+      // A picture that cannot be trusted: the page renders Hell when Carbon is asked for (qa-override) and its image answers 500
+      // (server-error, broken-image).
+      if (url.pathname === '/mislabelled') {
+        res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+        return void res.end(`<!doctype html><html lang="de" data-qa-theme="light" data-qa-locale="${q.get('qaLocale')}" data-qa-font-scale="${q.get('qaFontScale') ?? '1'}" data-qa-state="${q.get('qaState') ?? 'default'}" data-qa-motion="${q.get('qaMotion')}"><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Stub</title></head><body style="margin:0;min-height:100vh"><img src="/boom.png" alt="" width="1" height="1"></body></html>`);
+      }
+      if (url.pathname !== '/screen') return void res.writeHead(404).end();
+      const attributes = `data-qa-theme="${q.get('qaTheme')}" data-qa-locale="${q.get('qaLocale')}" data-qa-font-scale="${q.get('qaFontScale') ?? '1'}" data-qa-state="${q.get('qaState') ?? 'default'}" data-qa-motion="${q.get('qaMotion')}"`;
+      // The image of a third party must never load: WebKit sends it to the refusing proxy, Chromium cannot resolve it. It is a CSS
+      // background, so the blocked request is the only finding: a blocked <img> would also be a broken image, which fails the run
+      // with --capture-only too (STUB-2 below). Without the viewport meta a mobile browser lays the page out at 980 px, as a real
+      // phone would.
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      res.end(`<!doctype html><html lang="de" ${attributes}><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Stub</title></head><body style="margin:0;min-height:100vh"><div style="width:1px;height:1px;background-image:url(${thirdPartyUrl})"></div></body></html>`);
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const routesFile = testInfo.outputPath('routes.json');
+    const limitsFile = testInfo.outputPath('limits.json');
+    writeFileSync(
+      routesFile,
+      JSON.stringify([
+        { id: 'STUB-1', path: '/screen', phase: 1, auth: 'guest', states: ['default'], ready: 'body' },
+        { id: 'STUB-2', path: '/mislabelled', phase: 1, auth: 'guest', states: ['default'], ready: 'body' },
+      ]),
+    );
+    writeFileSync(limitsFile, JSON.stringify({ routes: [], config: {} }));
+    const run = (out: string, extra: string[]) =>
+      exec(process.execPath, [RUNNER, '--tier=p4', '--workers=1', '--devices=iphone15pro,pixel8', '--themes=carbon', `--routes-file=${routesFile}`, `--limits-file=${limitsFile}`, `--out=${out}`, ...extra], {
+        env: { ...process.env, SPEEDCLUB_BASE_URL: base },
+      }).then(
+        ({ stdout }) => ({ code: 0, output: stdout }),
+        (e: { code: number; stdout: string; stderr: string }) => ({ code: e.code, output: `${e.stdout}\n${e.stderr}` }),
+      );
+    const out = testInfo.outputPath('p4');
+    const captured = await run(out, ['--capture-only', '--routes=STUB-1']);
+    const gated = await run(testInfo.outputPath('p4-gated'), ['--routes=STUB-1']);
+    const untrusted = testInfo.outputPath('p4-untrusted');
+    const mislabelled = await run(untrusted, ['--capture-only', '--routes=STUB-2']);
+    for (const s of [server, thirdParty]) {
+      s.closeAllConnections();
+      await new Promise((resolve) => s.close(resolve));
+    }
+
+    expect(thirdPartyHits, 'no engine reached the third party').toBe(0);
+    expect(captured.code, captured.output).toBe(0);
+    expect(gated.code, 'without --capture-only the same findings fail the run').toBe(1);
+    const summary = JSON.parse(readFileSync(join(out, 'summary.json'), 'utf8'));
+    expect(summary.tier).toBe('p4');
+    expect(summary.captureOnly).toBe(true);
+    expect(summary.auditWouldFail).toBe(true);
+    expect(summary.totals.captured).toBe(2);
+    expect(summary.totals.baselineNew, 'no p4 baseline yet is no failure').toBe(2);
+    expect(summary.integrityFailures, 'a blocked third party alone leaves the picture trustworthy').toEqual([]);
+    for (const name of ['STUB-1__393x852__carbon__de__iphone15pro', 'STUB-1__412x915__carbon__de__pixel8']) {
+      expect(summary.findings).toContainEqual(expect.objectContaining({ cell: name, check: 'third-party-request', severity: 'High' }));
+      const { width, height } = await sharp(join(out, `${name}.png`)).metadata();
+      expect(`${width}x${height}`).toBe(name.split('__')[1]);
+    }
+    expect(existsSync(join(out, 'contact', 'STUB-1.png'))).toBe(true);
+
+    // --capture-only relaxes the audits, never the integrity of the picture: a cell that shows another theme or a server error fails.
+    expect(mislabelled.code, mislabelled.output).toBe(1);
+    expect(mislabelled.output).toContain('PICTURE INTEGRITY: 2 cell(s)');
+    const untrustedSummary = JSON.parse(readFileSync(join(untrusted, 'summary.json'), 'utf8'));
+    expect(untrustedSummary.passed).toBe(false);
+    expect(untrustedSummary.totals.failed, 'captured, not a capture failure').toBe(0);
+    for (const name of ['STUB-2__393x852__carbon__de__iphone15pro', 'STUB-2__412x915__carbon__de__pixel8']) {
+      const failure = untrustedSummary.integrityFailures.find((f: { cell: string }) => f.cell === name);
+      expect(new Set(failure?.findings.map((f: { check: string }) => f.check))).toEqual(new Set(['qa-override', 'server-error', 'broken-image']));
+    }
   });
 });

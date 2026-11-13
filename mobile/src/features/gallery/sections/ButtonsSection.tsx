@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
-import { createStyles } from '@/theme';
+import { createStyles, size } from '@/theme';
 import { Button, IconButton, Photo, PhotoScrim, StickyCTABar, type ButtonVariant } from '@/ui';
 
 import { PHOTOS, noop } from '../data';
@@ -70,13 +70,13 @@ function VariantGroup({ variant, title, note, label }: (typeof VARIANTS)[number]
   return (
     <Group title={title} note={note}>
       <Wrap>
-        <Specimen label="L · 52">
+        <Specimen label={`L · ${size.button.l}`}>
           <Button label={label} variant={variant} size="l" onPress={noop} testID={`${id}.l`} />
         </Specimen>
-        <Specimen label="M · 44">
+        <Specimen label={`M · ${size.button.m}`}>
           <Button label={label} variant={variant} size="m" onPress={noop} testID={`${id}.m`} />
         </Specimen>
-        <Specimen label="S · 36">
+        <Specimen label={`S · ${size.button.s}`}>
           <Button label={label} variant={variant} size="s" onPress={noop} testID={`${id}.s`} />
         </Specimen>
       </Wrap>
@@ -127,7 +127,7 @@ export function ButtonsSection() {
           </Specimen>
         </Wrap>
       </Group>
-      <Group title="Auf Foto" note="Weiße Schrift auf einem Band in der Endfarbe des Scrims, 12 vom Rand, mindestens 9,29:1 auch auf reinem Weiß. Bei größerer Schrift bricht die Reihe um und bleibt auf dem Band.">
+      <Group title="Auf Foto" note={'Weiße Schrift auf einem Band in der Endfarbe des Scrims, 12 vom Rand, mindestens 9,29\u00a0:\u00a01 (Kontrast) auch auf reinem Weiß. Bei größerer Schrift bricht die Reihe um und bleibt auf dem Band.'}>
         <Specimen label="Outline und Text" fill>
           <OnPhotoButtons />
         </Specimen>
@@ -139,7 +139,7 @@ export function ButtonsSection() {
           </Photo>
         </Specimen>
       </Group>
-      <Group title="Icon Button" note="44er Ziel, 24er Glyphe.">
+      <Group title="Icon Button" note="44er Ziel, 24er Glyphe. Schlicht 36, tonal 40 auf surface-2, schwebend 44 nur über Fotos.">
         <Wrap>
           <Specimen label="Standard">
             <IconButton icon="share-network" label="Teilen" onPress={noop} testID="DEV-01.buttons.icon" />
@@ -159,7 +159,20 @@ export function ButtonsSection() {
             <IconButton icon="bookmark-simple" label="Speichern" loading onPress={noop} />
           </Specimen>
         </Wrap>
-        <Specimen label="Auf Foto · 36er Kreis" fill>
+        <Wrap>
+          <Specimen label="Tonal · 40er Kreis">
+            <IconButton icon="qr-code" label="QR-Code" variant="tonal" onPress={noop} testID="DEV-01.buttons.iconTonal" />
+          </Specimen>
+          {FORCED.map(({ label, state }) => (
+            <Specimen key={label} label={`Tonal · ${label}`} forced={state}>
+              <IconButton icon="qr-code" label="QR-Code" variant="tonal" onPress={noop} />
+            </Specimen>
+          ))}
+          <Specimen label="Tonal · deaktiviert">
+            <IconButton icon="qr-code" label="QR-Code" variant="tonal" disabled />
+          </Specimen>
+        </Wrap>
+        <Specimen label="Auf Foto · 44er Kreis" fill>
           <Photo aspect="16:9" corner="md" {...PHOTOS.wheels}>
             <View style={styles.overlay}>
               <IconButton icon="caret-left" label="Zurück" variant="onPhoto" onPress={noop} />

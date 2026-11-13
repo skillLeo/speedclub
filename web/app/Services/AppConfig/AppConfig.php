@@ -97,12 +97,20 @@ class AppConfig
      */
     public function ogDefaultUrl(): string
     {
+        return $this->publishedOgDefaultUrl() ?? url(config()->string('speedclub.public_pages.og_default'));
+    }
+
+    /**
+     * Only what staff published (or preview): OgImages draws its own brand card when this is null.
+     */
+    public function publishedOgDefaultUrl(): ?string
+    {
         /** @var list<string> $locales */
         $locales = config('speedclub.locales');
         $locale = in_array(app()->getLocale(), $locales, true) ? app()->getLocale() : $locales[0];
         $og = $this->forLocale($locale)['branding']['og_default'];
 
-        return is_string($og) && $og !== '' ? $og : url(config()->string('speedclub.public_pages.og_default'));
+        return is_string($og) && $og !== '' ? $og : null;
     }
 
     /**

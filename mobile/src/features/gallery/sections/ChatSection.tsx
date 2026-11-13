@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { createStyles } from '@/theme';
+import { bubble, createStyles, size } from '@/theme';
 import { ChatBubble, Composer } from '@/ui';
 
 import { noop } from '../data';
@@ -19,10 +19,13 @@ export function ChatSection() {
   const [draft, setDraft] = useState('');
   return (
     <SectionScreen section="chat">
-      <Group title="Blasen" note="Höchstens 75 % breit, Radius 16, 4 an der Ecke zum Absender.">
+      <Group
+        title="Blasen"
+        note={`Höchstens ${Math.round(bubble.maxWidthRatio * 100)}\u00A0% breit, Radius ${bubble.radius}, ${bubble.tailRadius} an der Ecke zum Absender.`}
+      >
         <View style={styles.thread}>
           <ChatBubble text="Hi, ist das dein R34 aus Stuttgart?" senderLabel="Jann" tail={false} testID="DEV-01.chat.other" />
-          <ChatBubble text="Hast du die BBS LM selbst aufbereitet?" senderLabel="Jann" time="14:32" />
+          <ChatBubble text={'Hast du die BBS\u00A0LM selbst aufbereitet?'} senderLabel="Jann" time="14:32" />
           <View style={styles.groupGap}>
             <ChatBubble own text="Ja, das ist meiner." senderLabel="Du" tail={false} testID="DEV-01.chat.own" />
           </View>
@@ -34,7 +37,10 @@ export function ChatSection() {
           />
         </View>
       </Group>
-      <Group title="Composer" note="Randlos wie auf einem echten Screen: Plus auf dem Gutter, Senden endet an der eigenen Blase. Mindestens 44, wächst bis fünf Zeilen, Senden erst mit Text.">
+      <Group
+        title="Eingabezeile"
+        note={`Randlos wie auf einem echten Bildschirm: Plus am Seitenrand, Senden endet an der eigenen Blase. Mindestens ${size.composerMin} hoch, wächst bis ${size.composerMaxLines} Zeilen, Senden erst mit Text.`}
+      >
         <Specimen label="Live" fill>
           <FullBleed>
             <Composer {...LABELS} value={draft} onChangeText={setDraft} onSend={() => setDraft('')} onAttach={noop} testID="DEV-01.chat.composer" />

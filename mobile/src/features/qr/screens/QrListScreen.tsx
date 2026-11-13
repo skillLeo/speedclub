@@ -55,7 +55,7 @@ function ListSkeleton() {
               <SkeletonBlock width={size.thumb.row} aspectRatio={1} corner="sm" />
               <View style={styles.skeletonText}>
                 <SkeletonText variant="body" width="60%" />
-                <SkeletonText variant="supporting" width="35%" />
+                <SkeletonText variant="callout" width="35%" />
               </View>
             </View>
             {index < SKELETON_ROWS - 1 ? <Hairline inset={space[16]} /> : null}

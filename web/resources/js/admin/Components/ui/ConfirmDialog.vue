@@ -83,7 +83,7 @@ function submit(): void {
             <Field v-if="typed" :label="trans('ui.confirm.typed_label', { word })">
                 <Input v-model="typedValue" autocomplete="off" spellcheck="false" :data-testid="testId ? `${testId}.typed` : undefined" />
             </Field>
-            <p v-if="error" class="text-helper text-danger" role="alert">{{ error }}</p>
+            <p v-if="error" class="text-admin-base text-danger" role="alert">{{ error }}</p>
         </form>
         <template #footer>
             <Button variant="ghost" :disabled="processing" data-dialog-cancel @click="open = false">{{ trans('ui.actions.cancel') }}</Button>

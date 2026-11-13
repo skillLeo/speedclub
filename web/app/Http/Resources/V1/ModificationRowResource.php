@@ -9,6 +9,7 @@ use App\Services\AppConfig\FeatureFlags;
 use App\Services\Garage\ModPresenter;
 use App\Services\Garage\VehiclePresenter;
 use App\Support\Units;
+use App\Support\ViewAs;
 use App\Support\Viewer;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 
 /**
- * One row of FS-3 Highlights and the Mods tab, and of GAR-09. The cost is the owner's unless cost_public is set: for anybody else
+ * One row of FS-3 Highlights and the Mods tab, and of GAR-09. The cost is the owner's alone (09 §11, M4.9 ruling: costs are never public): for anybody else
  * the field is null, and the amount never leaves the server.
  *
  * @property Modification $resource
@@ -69,10 +70,14 @@ class ModificationRowResource extends JsonResource
              * @var string|null
              */
             'installed_label' => $installed instanceof CarbonInterface ? $installed->copy()->locale($locale)->translatedFormat('F Y') : null,
-            /** @var bool */
-            'cost_public' => $mod->getAttribute('cost_public'),
             /**
-             * Owner, or anybody when cost_public is set.
+             * Always false since M4.9 (09 §11, ADR ruling): costs are never public. Kept for older apps.
+             *
+             * @var bool
+             */
+            'cost_public' => false,
+            /**
+             * The owner's alone (never another member, a guest, a public page or staff in view-as).
              *
              * @var array{cents: int, label: string}|null
              */
@@ -120,7 +125,8 @@ class ModificationRowResource extends JsonResource
         $mod = $this->resource;
         $cents = $mod->getAttribute('cost_cents');
 
-        if (! is_int($cents) || ($mod->getAttribute('cost_public') !== true && ! $mod->vehicle->isOwnedBy(Viewer::from($request)))) {
+        // ADR-441: a private cost is the owner's alone, never staff's in view-as.
+        if (! is_int($cents) || ! $mod->vehicle->isOwnedBy(Viewer::from($request)) || ViewAs::active()) {
             return null;
         }
 

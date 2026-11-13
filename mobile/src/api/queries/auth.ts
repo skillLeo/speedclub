@@ -49,7 +49,8 @@ export type UsernameAvailability = components['schemas']['UsernameAvailabilityRe
 export type UsernameReason = components['schemas']['UsernameUnavailableReason'];
 export type MemberSettings = components['schemas']['MemberSettingsResource'];
 type SettingsPatch = components['schemas']['UpdateSettingsRequest'];
-type Locale = NonNullable<SettingsPatch['locale']>;
+/** A concrete language: the account may also say "system" (follow the device), which is never synced as a language. */
+type Locale = Exclude<NonNullable<SettingsPatch['locale']>, 'system'>;
 type ThemePreference = MemberSettings['theme'];
 
 export const meKey = ['auth', 'me'] as const;
@@ -140,14 +141,20 @@ export function deviceId(): Promise<string | null> {
   return deviceIdRead;
 }
 
+/** The app and system versions now (M4.7, 09 §8.4): what SET-06 shows of this device. Native only. */
+export function deviceVersions(): { app_version: string; os_version?: string } {
+  const os = Device.osVersion;
+  return { app_version: Application.nativeApplicationVersion ?? appVersion.versionName, ...(os ? { os_version: os } : {}) };
+}
+
 /** The fingerprint of a device, native only: web has a cookie and no token. */
-async function deviceFields() {
+export async function deviceFields() {
   if (!isNative) return {};
   const id = await deviceId();
   return {
     device_name: Device.modelName ?? 'SPEED CLUB App',
     platform: (Device.osName === 'iOS' || Device.osName === 'iPadOS' ? 'ios' : 'android') as 'ios' | 'android',
-    app_version: Application.nativeApplicationVersion ?? appVersion.versionName,
+    ...deviceVersions(),
     ...(id ? { device_id: id } : {}),
   };
 }
@@ -240,7 +247,7 @@ export function refreshMe(me: Me): void {
 }
 
 /** After a sign-in. Everything loaded as a guest may read differently now (follow state, restrictions). */
-async function adoptSession(session: AuthSession): Promise<void> {
+export async function adoptSession(session: AuthSession): Promise<void> {
   await storeToken(session);
   void settlePendingLogoutAtSignIn(session.member.id);
   adoptMe(session.member);
@@ -362,7 +369,7 @@ export async function retryPendingLogout(): Promise<void> {
  * the only safe moment: after it, a revoke with a token of the same device_id would end the new token too. Heard, the slot goes;
  * lost, it stays for the check after the sign-in (settlePendingLogoutAtSignIn).
  */
-async function revokePendingLogoutBeforeSignIn(): Promise<void> {
+export async function revokePendingLogoutBeforeSignIn(): Promise<void> {
   if (!isNative) return;
   const pending = await pendingLogout();
   if (pending === null) return;
@@ -495,8 +502,10 @@ async function rotateWhenDue(now: number): Promise<boolean> {
     const timer = setTimeout(() => controller.abort(), ROTATE_TIMEOUT_MS);
     const id = await deviceId();
     try {
-      // The install's id, as at sign-in: a token from before the app sent one takes it here.
-      const { data } = await apiData(api.POST('/auth/token/rotate', { signal: controller.signal, ...(id ? { body: { device_id: id } } : {}) }));
+      // The install's id, as at sign-in: a token from before the app sent one takes it here. M4.7: the app and system version now, so
+      // SET-06 shows them after an update.
+      const body = { ...deviceVersions(), ...(id ? { device_id: id } : {}) };
+      const { data } = await apiData(api.POST('/auth/token/rotate', { signal: controller.signal, body }));
       // A session that ended meanwhile, by the server's word, gets no new way in.
       if (useSessionStore.getState().status !== 'guest') await storeToken(data);
       return true;
@@ -594,6 +603,12 @@ function enqueueSettings(task: () => Promise<void>): Promise<void> {
  * A value on the device that differs from the one last agreed was chosen here since then, so it is newer and goes to the
  * account. Otherwise the account's value applies. The QA overrides win over both and are never sent anywhere.
  */
+const THEME_PREFERENCES: ReadonlySet<string> = new Set(['carbon', 'black', 'light', 'system']);
+
+function isThemePreference(value: unknown): value is Me['theme'] {
+  return typeof value === 'string' && THEME_PREFERENCES.has(value);
+}
+
 export function reconcileSettings(me: Pick<Me, 'theme' | 'locale'>): Promise<void> {
   // View-as: the member's theme and language are neither applied to this browser nor sent anywhere.
   if (isViewAsTab()) return Promise.resolve();
@@ -602,13 +617,16 @@ export function reconcileSettings(me: Pick<Me, 'theme' | 'locale'>): Promise<voi
     const next: SyncedSettings = { ...synced };
     const patch: SettingsPatch = {};
 
-    if (!fixedThemePreference()) {
+    // M4.6: an account the server has just created can answer without its theme (null): the device keeps its own then. Applying
+    // an unknown value would leave the theme provider without a theme (a blank page on the member web).
+    const accountTheme = isThemePreference(me.theme) ? me.theme : null;
+    if (!fixedThemePreference() && accountTheme) {
       const device = await getStored('sc.theme');
-      if (device && device !== synced.theme && device !== me.theme) {
+      if (device && device !== synced.theme && device !== accountTheme) {
         patch.theme = device;
       } else {
-        next.theme = me.theme;
-        if (getThemePreference() !== me.theme) setThemePreference(me.theme);
+        next.theme = accountTheme;
+        if (getThemePreference() !== accountTheme) setThemePreference(accountTheme);
       }
     }
     if (!qa.locale) {
@@ -738,7 +756,7 @@ export type TwoFactorChallenge = components['schemas']['TwoFactorChallengeResour
  */
 export type SignInAnswer = { kind: 'session'; session: AuthSession } | { kind: 'two_factor'; challenge: string; expiresIn: number };
 
-function readSignIn(data: AuthSession | TwoFactorChallenge): SignInAnswer {
+export function readSignIn(data: AuthSession | TwoFactorChallenge): SignInAnswer {
   if ('two_factor_required' in data) return { kind: 'two_factor', challenge: data.challenge, expiresIn: data.expires_in };
   return { kind: 'session', session: data };
 }

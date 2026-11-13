@@ -10,7 +10,6 @@ import { ApiError, newIdempotencyKey } from '@/api/client';
 import { subjectOf, useReplyToSupportTicket, useSupportThread, type SupportThread } from '@/api/queries/settings';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors, formatWait } from '@/features/auth/forms';
-import { GuestInvitation } from '@/features/profile/components/GuestInvitation';
 import { paramOf } from '@/features/vehicle/navigation';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
@@ -24,6 +23,7 @@ import { useFailureMessage, useFieldMessage } from '../forms';
 import { MESSAGE_MAX_LENGTH, supportReplySchema, type SupportReplyValues } from '../schemas';
 
 import { requestMetaText, statusKey } from './SupportRequestsScreen';
+import { SettingsGuest } from '../components/SettingsGuest';
 
 export const THREAD_ROUTE = 'SET-15b';
 const REPLY_ROWS = 6;
@@ -47,13 +47,13 @@ function ThreadSkeleton() {
     <Skeleton testID={`${THREAD_ROUTE}.skeleton`}>
       <View style={styles.body}>
         <View style={styles.head}>
-          <SkeletonText variant="titleM" width="70%" />
-          <SkeletonText variant="supporting" width="50%" />
+          <SkeletonText variant="title2" width="70%" />
+          <SkeletonText variant="callout" width="50%" />
         </View>
         <View style={styles.messages}>
           {[3, 2].map((lines, index) => (
             <View key={index} style={[styles.message, styles.member]}>
-              <SkeletonText variant="labelS" width="35%" />
+              <SkeletonText variant="callout" width="35%" />
               {Array.from({ length: lines }, (_, line) => (
                 <SkeletonText key={line} variant="body" width={line === lines - 1 ? '60%' : '100%'} />
               ))}
@@ -73,12 +73,12 @@ function Messages({ thread }: { thread: SupportThread }) {
   return (
     <>
       <View style={styles.head}>
-        <Text variant="titleM" role="heading" {...({ 'aria-level': 1 } as object)} testID={`${THREAD_ROUTE}.subject`}>
+        <Text variant="title2" role="heading" {...({ 'aria-level': 1 } as object)} testID={`${THREAD_ROUTE}.subject`}>
           {subjectOf(thread) ?? t('requests.noSubject')}
         </Text>
         <View style={styles.meta}>
           <StatusPill label={t(statusKey(thread.status))} testID={`${THREAD_ROUTE}.status`} />
-          <Text variant="supporting" color="text.secondary" selectable testID={`${THREAD_ROUTE}.meta`}>
+          <Text variant="callout" color="text.secondary" selectable testID={`${THREAD_ROUTE}.meta`}>
             {requestMetaText([thread.reference, t(`contact.categories.${thread.category}`), created])}
           </Text>
         </View>
@@ -90,7 +90,7 @@ function Messages({ thread }: { thread: SupportThread }) {
             <View key={message.id} role="listitem" style={[styles.message, team ? styles.team : styles.member]} testID={`${THREAD_ROUTE}.message.${message.id}`}>
               <View style={styles.author}>
                 <Icon name={team ? 'lifebuoy' : 'user'} size={16} color="text.secondary" />
-                <Text variant="labelS" color="text.secondary">
+                <Text variant="callout" color="text.secondary">
                   {team ? t('requests.team') : t('requests.you')}
                 </Text>
                 <Text variant="caption" color="text.tertiary">
@@ -175,10 +175,10 @@ function ThreadPage({ thread, id }: { thread: SupportThread; id: string }) {
       <View style={styles.body}>
         <Messages thread={thread} />
         <View style={styles.reply} testID={`${THREAD_ROUTE}.reply`}>
-          <Text variant="titleS" role="heading" {...({ 'aria-level': 2 } as object)}>
+          <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)}>
             {t('requests.reply.title')}
           </Text>
-          <Text variant="supporting" color="text.secondary" testID={`${THREAD_ROUTE}.replyHint`}>
+          <Text variant="callout" color="text.secondary" testID={`${THREAD_ROUTE}.replyHint`}>
             {closed ? t('requests.reply.closedHint') : t('requests.reply.hint')}
           </Text>
           {notice ? <FormNotice message={notice} testID={`${THREAD_ROUTE}.notice`} /> : null}
@@ -223,7 +223,7 @@ export function SupportThreadScreen() {
 
   let body: ReactNode;
   if (status === 'guest') {
-    body = <GuestInvitation routeId={THREAD_ROUTE} returnTo={returnTo} />;
+    body = <SettingsGuest routeId={THREAD_ROUTE} returnTo={returnTo} />;
   } else if (qaState === 'empty' || (query.error instanceof ApiError && query.error.kind === 'not_found')) {
     body = <EmptyState icon="lifebuoy" title={t('requests.goneTitle')} body={t('requests.goneBody')} testID={`${THREAD_ROUTE}.gone`} />;
   } else if (qaState === 'loading' || status === 'loading' || (query.isPending && query.fetchStatus !== 'paused' && qaState !== 'error')) {

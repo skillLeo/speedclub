@@ -30,6 +30,12 @@ final class Reauthentication
 
     public function password(User $user, string $password, string $field = 'password'): void
     {
+        // M4.6 sudo mode (09 §8.1): within 10 minutes of a sign-in or POST me/reauth the password may be left out; one that is sent is
+        // still checked. A passwordless account has no other way through these endpoints.
+        if ($password === '' && app(RecentAuthentication::class)->isRecent($user, request())) {
+            return;
+        }
+
         $key = 'reauth-password:'.$user->getKey();
 
         if (RateLimiter::tooManyAttempts($key, config()->integer('speedclub.reauth.password_failures_per_hour'))) {

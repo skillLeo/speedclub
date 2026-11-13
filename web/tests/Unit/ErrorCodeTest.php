@@ -18,13 +18,13 @@ it('maps HTTP statuses to codes', function (int $status, ErrorCode $code) {
 
 it('gives every code a status that maps back, except the named variants of a generic code', function (ErrorCode $code) {
     $generic = match ($code) {
-        ErrorCode::AccountRestricted, ErrorCode::EmailNotVerified, ErrorCode::PasswordChangeRequired, ErrorCode::QrRevokedByStaff, ErrorCode::CannotMessage, ErrorCode::SecondFactorLocked, ErrorCode::PasswordConfirmationRequired, ErrorCode::ViewAsReadOnly, ErrorCode::ViewAsNoMessages, ErrorCode::AiOptInRequired, ErrorCode::ConsentRequired => ErrorCode::Forbidden,
-        ErrorCode::InvalidCredentials => ErrorCode::Unauthenticated,
-        ErrorCode::InvalidCode, ErrorCode::VehicleIncomplete, ErrorCode::OwnContent, ErrorCode::AppealPeriodOver, ErrorCode::ChallengeExpired, ErrorCode::TwoFactorCodeRequired, ErrorCode::DecisionNotAppealable, ErrorCode::ContentBlocked, ErrorCode::AiRefused, ErrorCode::AiUnverifiable => ErrorCode::ValidationFailed,
-        ErrorCode::AiUnavailable, ErrorCode::AiBudgetExhausted => ErrorCode::ServiceUnavailable,
-        ErrorCode::AiDailyLimit => ErrorCode::RateLimited,
-        ErrorCode::VehicleUnavailable, ErrorCode::MemberUnavailable, ErrorCode::FeatureDisabled => ErrorCode::NotFound,
-        ErrorCode::UsernameChangeCooldown, ErrorCode::TokenRotationNotDue, ErrorCode::TwoFactorRequired, ErrorCode::IdempotencyKeyReused, ErrorCode::FeedStale, ErrorCode::RequestPending, ErrorCode::AlreadyReported, ErrorCode::AppealExists => ErrorCode::Conflict,
+        ErrorCode::AccountRestricted, ErrorCode::EmailNotVerified, ErrorCode::PasswordChangeRequired, ErrorCode::QrRevokedByStaff, ErrorCode::CannotMessage, ErrorCode::SecondFactorLocked, ErrorCode::PasswordConfirmationRequired, ErrorCode::ViewAsReadOnly, ErrorCode::ViewAsNoMessages, ErrorCode::ViewAsPrivate, ErrorCode::AiOptInRequired, ErrorCode::ConsentRequired, ErrorCode::TermsRequired, ErrorCode::ReauthenticationRequired, ErrorCode::EditWindowClosed, ErrorCode::CommentsDisabled, ErrorCode::OrganiserNotEligible => ErrorCode::Forbidden,
+        ErrorCode::InvalidCredentials, ErrorCode::InvalidIdentityToken => ErrorCode::Unauthenticated,
+        ErrorCode::InvalidCode, ErrorCode::VehicleIncomplete, ErrorCode::OwnContent, ErrorCode::AppealPeriodOver, ErrorCode::ChallengeExpired, ErrorCode::TwoFactorCodeRequired, ErrorCode::DecisionNotAppealable, ErrorCode::ContentBlocked, ErrorCode::AiRefused, ErrorCode::AiUnverifiable, ErrorCode::CodeExpired, ErrorCode::PasskeyInvalid => ErrorCode::ValidationFailed,
+        ErrorCode::AiUnavailable, ErrorCode::AiBudgetExhausted, ErrorCode::GeocodeUnavailable => ErrorCode::ServiceUnavailable,
+        ErrorCode::AiDailyLimit, ErrorCode::EmailCodeLocked => ErrorCode::RateLimited,
+        ErrorCode::VehicleUnavailable, ErrorCode::MemberUnavailable, ErrorCode::FeatureDisabled, ErrorCode::EventUnavailable => ErrorCode::NotFound,
+        ErrorCode::UsernameChangeCooldown, ErrorCode::TokenRotationNotDue, ErrorCode::TwoFactorRequired, ErrorCode::IdempotencyKeyReused, ErrorCode::FeedStale, ErrorCode::RequestPending, ErrorCode::AlreadyReported, ErrorCode::AppealExists, ErrorCode::ProviderAlreadyLinked, ErrorCode::LastSignInMethod, ErrorCode::LimitReached, ErrorCode::EventClosed, ErrorCode::EventInReview, ErrorCode::EditConflict => ErrorCode::Conflict,
         default => $code,
     };
 

@@ -46,7 +46,7 @@ function choose(value: unknown): void {
                 :class="[
                     focusRing,
                     fieldHeights[size],
-                    'group inline-flex items-center justify-center whitespace-nowrap rounded-xs text-label-s text-ink-2 transition-colors duration-150 ease-standard hover:text-ink data-[state=on]:text-ink data-[disabled]:text-ink-disabled',
+                    'group inline-flex items-center justify-center whitespace-nowrap rounded-xs text-admin-base-strong text-ink-2 transition-colors duration-effect-fast ease-effect-fast hover:text-ink data-[state=on]:text-ink data-[disabled]:text-ink-disabled',
                 ]"
                 :data-testid="`segment.${option.value}`"
             >
@@ -61,7 +61,7 @@ function choose(value: unknown): void {
                 :class="[
                     focusRing,
                     segments[size],
-                    'inline-flex items-center justify-center whitespace-nowrap rounded-xs text-label-s text-ink-2 transition-colors duration-150 ease-standard hover:text-ink data-[state=on]:bg-overlay data-[state=on]:text-ink data-[state=on]:shadow-e1 data-[disabled]:text-ink-disabled',
+                    'inline-flex items-center justify-center whitespace-nowrap rounded-xs text-admin-base-strong text-ink-2 transition-colors duration-effect-fast ease-effect-fast hover:text-ink data-[state=on]:bg-overlay data-[state=on]:text-ink data-[state=on]:shadow-e1 data-[disabled]:text-ink-disabled',
                 ]"
                 :data-testid="`segment.${option.value}`"
             >

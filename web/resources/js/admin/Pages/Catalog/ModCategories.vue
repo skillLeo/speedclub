@@ -55,14 +55,14 @@ else if (dialog === 'edit' && props.categories[0]) open(props.categories[0]);
         <StateBlock v-if="state === 'error'" kind="error" :title="trans('catalog.categories.error')" :body="trans('catalog.error_body')" test-id="ADM-15.error" />
         <EmptyQueue v-else-if="state !== 'loading' && list.length === 0" variant="first" :title="trans('catalog.categories.empty_title')" :body="trans('catalog.categories.empty_body')" data-testid="ADM-15.empty" />
         <ScrollRegion v-else :label="trans('catalog.categories.caption')" test-id="ADM-15.table">
-            <table class="w-full text-supporting" :aria-busy="state === 'loading' || undefined">
+            <table class="w-full text-admin-base" :aria-busy="state === 'loading' || undefined">
                 <caption class="sr-only">{{ trans('catalog.categories.caption') }}</caption>
                 <!-- DQ-593: the same column widths while loading and with rows. -->
                 <colgroup>
                     <col class="w-80" /><col /><col class="w-200" /><col class="w-80" /><col class="w-160" /><col class="w-96" /><col class="w-120" /><col v-if="manage" class="w-48" />
                 </colgroup>
                 <thead>
-                    <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                    <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                         <th scope="col" class="whitespace-nowrap px-12 text-right">{{ trans('catalog.columns.sort') }}</th>
                         <th scope="col" class="px-12">{{ trans('catalog.columns.category') }}</th>
                         <th scope="col" class="whitespace-nowrap px-12">{{ trans('catalog.columns.key') }}</th>

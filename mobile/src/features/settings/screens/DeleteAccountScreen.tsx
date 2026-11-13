@@ -62,7 +62,7 @@ function DeleteSkeleton() {
         <RowGroup>
           <View style={styles.skeletonList}>
             {DELETION_CONSEQUENCES.map((item) => (
-              <SkeletonText key={item.key} variant="bodyDense" lines={2} />
+              <SkeletonText key={item.key} variant="body" lines={2} />
             ))}
           </View>
         </RowGroup>
@@ -82,7 +82,7 @@ export function DeletionConsequences() {
         {DELETION_CONSEQUENCES.map((item) => (
           <View key={item.key} style={styles.item} role="listitem" testID={`${ROUTE}.consequence.${item.key}`}>
             <Icon name={item.icon} size={20} color="text.secondary" />
-            <Text variant="bodyDense" style={styles.itemText}>
+            <Text variant="body" style={styles.itemText}>
               {t(`delete.consequences.${item.key}`)}
             </Text>
           </View>
@@ -189,11 +189,11 @@ function DeleteAccountForm({ me }: { me: Me }) {
         </Text>
         <DeletionConsequences />
         <View style={styles.links}>
-          <Text variant="supporting" color="text.secondary">
+          <Text variant="callout" color="text.secondary">
             {t('delete.exportFirst')}
           </Text>
           {/* ADR-203 (c): an export asked for before the deletion stays buildable and downloadable until it expires. */}
-          <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.exportKept`}>
+          <Text variant="callout" color="text.secondary" testID={`${ROUTE}.exportKept`}>
             {t('delete.exportKept')}
           </Text>
           <Button
@@ -205,7 +205,7 @@ function DeleteAccountForm({ me }: { me: Me }) {
             onPress={() => router.push(SETTINGS_PATHS.export)}
             testID={`${ROUTE}.toExport`}
           />
-          <Text variant="supporting" color="text.secondary">
+          <Text variant="callout" color="text.secondary">
             {t('delete.retention')}
           </Text>
           <Button
@@ -219,7 +219,7 @@ function DeleteAccountForm({ me }: { me: Me }) {
           />
           {webDeletion ? (
             <>
-              <Text variant="supporting" color="text.secondary">
+              <Text variant="callout" color="text.secondary">
                 {t('delete.webHint')}
               </Text>
               <Button
@@ -238,7 +238,7 @@ function DeleteAccountForm({ me }: { me: Me }) {
           <FormNotice message={notice} tone={notice === t('reauth.locked') ? 'info' : 'error'} testID={`${ROUTE}.notice`} />
         ) : null}
         <View style={styles.fields}>
-          <Text variant="titleS" role="heading" {...({ 'aria-level': 2 } as object)}>
+          <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)}>
             {t('delete.confirmTitle')}
           </Text>
           <Controller
@@ -303,7 +303,7 @@ function DeleteAccountForm({ me }: { me: Me }) {
                   testID={`${ROUTE}.understood`}
                 />
                 {fieldState.error ? (
-                  <Text variant="helper" color="accent.fg" role="alert" testID={`${ROUTE}.understood.error`}>
+                  <Text variant="caption" color="accent.fg" role="alert" testID={`${ROUTE}.understood.error`}>
                     {fieldMessage(fieldState.error)}
                   </Text>
                 ) : null}

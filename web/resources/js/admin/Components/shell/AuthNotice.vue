@@ -10,6 +10,6 @@ const colors = { success: 'text-success', warning: 'text-warning', error: 'text-
 <template>
     <div class="flex items-start gap-12 rounded-sm border border-line bg-surface px-12 py-12" :role="tone === 'error' ? 'alert' : 'status'" :data-testid="testId">
         <component :is="icons[tone]" :size="20" class="shrink-0" :class="colors[tone]" aria-hidden="true" />
-        <p class="text-supporting text-ink">{{ text }}</p>
+        <p class="text-admin-base text-ink">{{ text }}</p>
     </div>
 </template>

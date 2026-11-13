@@ -6,6 +6,8 @@
 .DESCRIPTION
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1 -Phase 1
   Options: -Quick (static + unit only), -SkipVisual, -SkipLighthouse
+  Phase 4 (09_PREMIUM_2_0 §14, §17) adds: fonts manifest check, design-lint --strict, the p4 visual tier (09 §14.1) instead of
+  the phase tier, and the member web Lighthouse gate (09 §12, lighthouserc.app-gate.cjs). It is expected to fail until M4.18.
   Report : docs/reports/phase-<N>/verify-<timestamp>.md   Logs: docs/reports/logs/verify-*.log
   Exit   : 0 only if every executed gate passed.
   The npm/composer scripts called here are created in Phase 1 (M1.0) with exactly these names.
@@ -15,7 +17,7 @@
 #>
 [CmdletBinding()]
 param(
-  [ValidateRange(1, 3)][int]$Phase = 1,
+  [ValidateRange(1, 4)][int]$Phase = 1,
   [int]$Port = 8080,
   [switch]$Quick,
   [switch]$SkipVisual,
@@ -96,6 +98,12 @@ function Test-Up {
 # ------------------------------------------------------------------ static + unit gates
 Invoke-Gate 'Design tokens (contrast + generated files)' 'node' @('design/scripts/build-tokens.mjs', '--check')
 Invoke-Gate 'Custom icons (source rules + generated files)' 'node' @('design/scripts/build-icons.mjs', '--check')
+if ($Phase -ge 4) {
+  # Fonts 2.0 (ADR-402): every file in design/fonts matches manifest.json; no Python needed for the check.
+  Invoke-Gate 'Fonts (design/fonts against manifest.json)' 'node' @('design/scripts/check-fonts.mjs')
+  # The anti-template gate at its phase-gate strength: every violation fails, the ratchet baseline is ignored (09 §14.4).
+  Invoke-Gate 'Design lint (strict, 09 §14.4)' 'node' @('scripts/design-lint.mjs', '--strict')
+}
 Invoke-Gate 'Mobile verify (tsc, eslint, jest, i18n)' $Npm @('--prefix', 'mobile', 'run', 'verify')
 Invoke-Gate 'Laravel verify (pint, phpstan, pest, audit)' $Composer @('--working-dir=web', 'verify')
 # Timings (Pest group perf, excluded from composer verify in web/phpunit.xml): alone, after the parallel suite, on the gate's engine.
@@ -131,12 +139,21 @@ if (-not $Quick) {
   }
   if (Test-Up) {
     Invoke-Gate 'E2E (flows, a11y, DOM audit, parity)' $Npm @('--prefix', 'web', 'run', 'e2e')
-    if (-not $SkipVisual) { Invoke-Gate "Visual matrix (phase $Phase tier)" $Npm @('--prefix', 'web', 'run', 'visual', '--', '--tier=phase', "--phase=$Phase") }
+    if (-not $SkipVisual) {
+      if ($Phase -ge 4) {
+        # 09 §14.1: the Phase 4 device matrix with every state; it replaces the v1 phase tier, whose baselines 2.0 retires.
+        Invoke-Gate 'Visual matrix (p4 tier, 09 §14.1)' $Npm @('--prefix', 'web', 'run', 'visual', '--', '--tier=p4')
+      } else {
+        Invoke-Gate "Visual matrix (phase $Phase tier)" $Npm @('--prefix', 'web', 'run', 'visual', '--', '--tier=phase', "--phase=$Phase")
+      }
+    }
     if (-not $SkipLighthouse) {
       # lhci measures the checkout as production runs it (web/tests/e2e/lighthouse/lighthouserc.cjs): tls-front.mjs starts a PHP
       # instance with APP_ENV=production, APP_DEBUG=false and `artisan optimize` caches of its own in web/.lighthouseci/app, never
       # in bootstrap/cache, and lhci ends it with its process tree. Teardown: a front or instance left behind, then the caches.
       Invoke-Gate 'Lighthouse CI (public pages)' $Npm @('--prefix', 'web', 'run', 'lhci')
+      # 09 §12: the member web /app (mobile) — Performance ≥ 80, LCP ≤ 2.5 s, CLS ≤ 0.05, TBT ≤ 300 ms.
+      if ($Phase -ge 4) { Invoke-Gate 'Lighthouse CI (member web /app, 09 §12)' $Npm @('--prefix', 'web', 'run', 'lhci:app') }
       $lhciAppPort = if ($env:SPEEDCLUB_LHCI_APP_PORT) { $env:SPEEDCLUB_LHCI_APP_PORT } else { '8091' }
       $lhciLeftover = "-S 127\.0\.0\.1:$lhciAppPort |lighthouse[\\/]tls-front\.mjs"
       if (-not $OnUnix) {
@@ -169,6 +186,9 @@ if ($serverProc) { Stop-ServeTree $serverProc.Id }
 $failed = @($Results | Where-Object { $_.Status -ne 'PASS' })
 # safe.directory: the checkout may belong to another user (root-owned on the Mac), and git then refuses with "dubious ownership".
 $commit = (git -c "safe.directory=$Root" -C $Root rev-parse --short HEAD 2>$null) -join ''
+# A report must not imply that it tested a commit when the working tree had other changes.
+$dirty = @(git -c "safe.directory=$Root" -C $Root status --porcelain 2>$null).Count
+if ($dirty -gt 0) { $commit = "$commit + $dirty uncommitted change(s)" }
 $lines = @("# Verify report - Phase $Phase - $(Get-Date -Format 'yyyy-MM-dd HH:mm')", '', "Commit: $commit  |  Mode: $(if ($Quick) { 'quick' } else { 'full' })", '', '| Gate | Result | Time (s) | Exit | Log |', '|---|---|---|---|---|')
 foreach ($r in $Results) { $lines += "| $($r.Gate) | $($r.Status) | $($r.Seconds) | $($r.Exit) | $($r.Log) |" }
 $lines += ''

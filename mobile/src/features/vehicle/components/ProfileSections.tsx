@@ -1,21 +1,22 @@
 import { useState, type ReactNode } from 'react';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { usePublicVehicleUpdates, type BuildUpdate, type PublicModRow, type PublicVehicle, type VehicleMedia } from '@/api/queries/vehicles';
-import { isWeb } from '@/lib/platform';
-import { createStyles, space } from '@/theme';
-import { Button, Icon, ModRow, Photo, PressableScale, SectionHeader, SpecRow, Text } from '@/ui';
-import { joinLabel, RowBody, useStacksAtFontScale } from '@/ui/rowParts';
-import { ValueText } from '@/ui/ValueText';
+import { createStyles, layout as layoutTokens, size, space } from '@/theme';
+import { BuildSheet, BuildSheetRow, Button, Photo, PressableScale, SectionHeader, SpecRow, Text, Timeline, type BuildSheetSection, type TimelineEntry } from '@/ui';
 import { TranslatableText } from '@/features/ai/TranslatableText';
+import { unpairedPhotos, updatePairs } from '@/features/updates/model';
+import { useFormat } from '@/lib/useFormat';
 
 import { useLegalPill } from '../legal';
-import { photoFields } from '../media';
+import { photoFields, visiblePhotos } from '../media';
 import {
   categoryIcon,
   changeLines,
-  groupByMonth,
+  historyMetaLine,
+  historyTitle,
   mergeUpdates,
   modValues,
   ownerName,
@@ -28,8 +29,8 @@ import { GroupHeader, RowCard } from './RowCard';
 
 /** Changes an entry of Verlauf shows before "und 2 weitere Änderungen"; VEH-05 has all of them. */
 export const HISTORY_CHANGES_SHOWN = 3;
-/** The photo preview of FS-3 is 2 × 2. */
-const PREVIEW_COLUMNS = 2;
+/** DQ-1078 (09 §7.6 Übersicht): the photo preview is a 3-up grid, 1:1 tiles 2 apart, edge to edge of the column. */
+const PREVIEW_COLUMNS = 3;
 const PREVIEW_TILE_WIDTH = 320;
 
 const useStyles = createStyles((t) => ({
@@ -37,25 +38,13 @@ const useStyles = createStyles((t) => ({
   first: { marginTop: 0 },
   headerToContent: { marginBottom: t.space[12] },
   groupGap: { marginTop: t.space[24] },
-  previewRows: { gap: t.space[8] },
-  previewRow: { flexDirection: 'row', gap: t.space[8] },
+  previewRows: { gap: t.space[2] },
+  previewRow: { flexDirection: 'row', gap: t.space[2] },
   previewTile: { flex: 1 },
-  previewVisual: { borderRadius: t.radius.sm },
-  closing: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, marginTop: t.space[32], padding: t.space[16] },
-  closingBody: { marginTop: t.space[4] },
-  closingAction: { marginTop: t.space[12] },
+  previewVisual: { borderRadius: t.radius.none },
+  closing: { alignItems: 'flex-start', gap: t.space[4], marginTop: t.space[32] },
+  closingAction: { marginLeft: -t.space[12] },
   disclaimer: { marginTop: t.space[16] },
-  month: { marginTop: t.space[24] },
-  monthFirst: { marginTop: 0 },
-  timeline: {
-    borderLeftColor: t.color.border.default,
-    borderLeftWidth: isWeb ? t.size.border.control : StyleSheet.hairlineWidth,
-    marginTop: t.space[8],
-  },
-  entry: { alignItems: 'flex-start', flexDirection: 'row', gap: t.space[8], paddingLeft: t.space[16], paddingRight: t.space[8], paddingVertical: t.space[8] },
-  entryText: { flex: 1, gap: t.space[2], minWidth: 0 },
-  change: { gap: t.space[2] },
-  caret: { paddingTop: t.space[2] },
   loadOlder: { alignSelf: 'flex-start', marginTop: t.space[16] },
   loadError: { marginTop: t.space[16] },
 }));
@@ -69,12 +58,22 @@ export type OverviewSectionProps = Navigation & {
   routeId: string;
   /** GAR-02: the owner's completeness hints and anything else only the owner sees, first in the tab. */
   ownerContent?: ReactNode;
-  /** The closing owner card of FS-3, with its action; null leaves the card out. */
+  /**
+   * DQ-1057: a guest's one line under the content, "Melde dich an, um Lukas zu schreiben." with its link; null leaves it out (a
+   * member writes from the action row's "Nachricht").
+   */
   closingAction?: { label: string; onPress: () => void } | null;
-  /** False on a desktop, where the thumbnails under the hero show the same photos (WEB-01 does the same). */
+  /** The photo preview (3-up, DQ-1078); on at every width since the desktop hero has no thumbnails (DQ-1048). */
   showPhotoPreview?: boolean;
   /** [SIG] FS-3 "Ähnliche Builds", after the photos and before the closing owner card (M2.3, features/discover). */
   similar?: ReactNode;
+  /**
+   * 09 §7.6 Übersicht: the owner-pinned Highlights rail, right after the description (M4.11). A render function told whether it is
+   * the first block, so the rail adds its own gap (above it, or below it when first) and an empty rail leaves none (DQ-1056).
+   */
+  pins?: (first: boolean) => ReactNode;
+  /** 09 §7.6 Übersicht: the latest update as a feed card, after the top mods. */
+  latest?: ReactNode;
   onShowMods: () => void;
   onOpenGallery: () => void;
   /** The index in the vehicle's photos. */
@@ -89,6 +88,8 @@ export function OverviewSection({
   closingAction,
   showPhotoPreview = true,
   similar,
+  pins,
+  latest,
   onShowMods,
   onOpenGallery,
   onOpenPhoto,
@@ -120,6 +121,9 @@ export function OverviewSection({
       ),
     );
   }
+  // DQ-1056: no wrapper gap; the rail brings its own when it shows.
+  const pinsNode = pins ? pins(blocks.length === 0) : null;
+  const pinsIndex = blocks.length;
   if (vehicle.highlights.length > 0) {
     blocks.push(
       <View key="highlights" testID={`${routeId}.highlights`}>
@@ -131,31 +135,36 @@ export function OverviewSection({
           style={styles.headerToContent}
           testID={`${routeId}.highlights.header`}
         />
+        {/* DQ-954: the same row as the Mods tab (BuildSheet's ModRow 2.0: glyph tile, brand, pills), without section headers. */}
         <RowCard>
           {vehicle.highlights.map((mod, index) => (
-            <ModRow
+            <BuildSheetRow
               key={mod.id}
-              icon={categoryIcon(mod.category.icon)}
-              name={mod.title}
-              values={modValues(mod)}
-              status={mod.status_label}
-              {...legalPill(mod)}
-              onPress={() => onOpenMod(mod)}
+              mod={{
+                key: mod.id,
+                icon: categoryIcon(mod.category.icon),
+                name: mod.title,
+                brand: mod.brand ?? null,
+                ...(modValues(mod) ? { values: modValues(mod) } : {}),
+                status: mod.status_label,
+                ...legalPill(mod),
+                onPress: () => onOpenMod(mod),
+                testID: `${routeId}.highlight.${index}`,
+              }}
               divider={index < vehicle.highlights.length - 1}
-              inset={space[16]}
-              testID={`${routeId}.highlight.${index}`}
             />
           ))}
         </RowCard>
         {/* 08_LEGAL §7: a stated legal status always shows with the disclaimer, here as under the Mods tab. */}
         {vehicle.highlights.some((mod) => legalPill(mod).legalStatus) ? (
-          <Text variant="helper" color="text.tertiary" style={styles.disclaimer} testID={`${routeId}.highlights.legalDisclaimer`}>
+          <Text variant="caption" color="text.tertiary" style={styles.disclaimer} testID={`${routeId}.highlights.legalDisclaimer`}>
             {t('mods.disclaimer')}
           </Text>
         ) : null}
       </View>,
     );
   }
+  if (latest) blocks.push(<View key="latest">{latest}</View>);
   if (preview.length > 0) {
     blocks.push(
       <View key="photos" testID={`${routeId}.photoPreview`}>
@@ -171,7 +180,11 @@ export function OverviewSection({
           photos={preview}
           total={vehicle.photo_count}
           fallbackAlt={vehicle.full_title}
-          onOpen={(position) => onOpenPhoto(position + 1)}
+          onOpen={(position) => {
+            const photo = preview[position];
+            const index = photo ? visiblePhotos(vehicle.photos).findIndex((item) => item.id === photo.id) : -1;
+            onOpenPhoto(Math.max(0, index));
+          }}
           testID={`${routeId}.photoPreview.tile`}
         />
       </View>,
@@ -189,24 +202,19 @@ export function OverviewSection({
   return (
     <View>
       {blocks.map((block, index) => (
-        <View key={index} style={index === 0 ? styles.first : styles.section}>
-          {block}
+        <View key={index}>
+          {index === pinsIndex ? pinsNode : null}
+          <View style={index === 0 ? styles.first : styles.section}>{block}</View>
         </View>
       ))}
+      {pinsIndex === blocks.length ? pinsNode : null}
       {vehicle.owner && closingAction ? (
+        // DQ-1057: one line and a text link for a guest, no card that repeats the action row's "Nachricht".
         <View style={styles.closing} testID={`${routeId}.closingOwner`}>
-          <Text variant="titleS">{t('overview.closingTitle', { name: ownerName(vehicle.owner) })}</Text>
-          <Text variant="supporting" color="text.secondary" style={styles.closingBody}>
-            {t('overview.closingBody')}
+          <Text variant="callout" color="text.secondary">
+            {t('overview.closingGuest', { name: ownerName(vehicle.owner) })}
           </Text>
-          <Button
-            label={closingAction.label}
-            variant="primary"
-            size="m"
-            onPress={closingAction.onPress}
-            style={styles.closingAction}
-            testID={`${routeId}.closingMessage`}
-          />
+          <Button label={closingAction.label} variant="tertiary" size="s" onPress={closingAction.onPress} style={styles.closingAction} testID={`${routeId}.closingMessage`} />
         </View>
       ) : null}
     </View>
@@ -224,6 +232,8 @@ type PhotoPreviewProps = {
 };
 
 function PhotoPreview({ photos, total, fallbackAlt, onOpen, testID }: PhotoPreviewProps) {
+  // The row starts after the hero's photo, or from the first one for a build with fewer than four (previewPhotos).
+  const offset = total >= 4 ? 1 : 0;
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
   const rows: VehicleMedia[][] = [];
@@ -238,13 +248,13 @@ function PhotoPreview({ photos, total, fallbackAlt, onOpen, testID }: PhotoPrevi
               <PressableScale
                 key={photo.id}
                 role="button"
-                aria-label={t('hero.open', { alt: photo.alt || fallbackAlt, current: position + 2, total })}
+                aria-label={t('hero.open', { alt: photo.alt || fallbackAlt, current: position + 1 + offset, total })}
                 onPress={() => onOpen(position)}
                 style={styles.previewTile}
                 contentStyle={styles.previewVisual}
                 testID={`${testID}.${position}`}
               >
-                <Photo {...photoFields(photo, PREVIEW_TILE_WIDTH)} aspect="4:3" corner="sm" />
+                <Photo {...photoFields(photo, PREVIEW_TILE_WIDTH)} aspect="1:1" corner="none" />
               </PressableScale>
             );
           })}
@@ -291,7 +301,7 @@ export function SpecsSection({ vehicle, routeId }: { vehicle: PublicVehicle; rou
   );
 }
 
-/** FS-3 Mods: groups by category (glyph, `title.s`, count) with mod rows, then the disclaimer of 08_LEGAL §7. */
+/** FS-3 Mods: groups by category (glyph, `headline`, count) with mod rows, then the disclaimer of 08_LEGAL §7. */
 export function ModsSection({ vehicle, routeId, onOpenMod }: Navigation & { vehicle: PublicVehicle; routeId: string }) {
   const { t } = useTranslation('vehicle');
   const legalPill = useLegalPill();
@@ -304,41 +314,42 @@ export function ModsSection({ vehicle, routeId, onOpenMod }: Navigation & { vehi
       </Text>
     );
   }
+  const sections: BuildSheetSection[] = groups.map((group) => ({
+    key: group.category.key,
+    title: group.category.name,
+    icon: categoryIcon(group.category.icon),
+    count: group.count,
+    countLabel: t('mods.count', { count: group.count }),
+    testID: `${routeId}.mods.${group.category.key}`,
+    mods: group.items.map((mod) => ({
+      key: mod.id,
+      icon: categoryIcon(mod.category.icon),
+      name: mod.title,
+      // DQ-952: the brand caption on every row that has a brand, as the DEV-01 anatomy ("BBS LM" by BBS).
+      brand: mod.brand ?? null,
+      ...(modValues(mod) ? { values: modValues(mod) } : {}),
+      status: mod.status_label,
+      ...legalPill(mod),
+      // Behaviour kept: a row opens VEH-02 (with the chevron). The inline expand waits for the details the API does not list
+      // yet (photos, product link, "Eingebaut von"), which VEH-02 shows; costs stay private (09 §7.6 GAR-10).
+      onPress: () => onOpenMod(mod),
+      testID: `${routeId}.mod.${mod.id}`,
+    })),
+  }));
   return (
     <View>
-      {groups.map((group, index) => (
-        <View key={group.category.key} style={index === 0 ? null : styles.groupGap} testID={`${routeId}.mods.${group.category.key}`}>
-          <GroupHeader
-            title={group.category.name}
-            icon={categoryIcon(group.category.icon)}
-            count={group.count}
-            countLabel={t('mods.count', { count: group.count })}
-            style={styles.headerToContent}
-          />
-          <RowCard>
-            {group.items.map((mod, rowIndex) => (
-              <ModRow
-                key={mod.id}
-                icon={categoryIcon(mod.category.icon)}
-                name={mod.title}
-                values={modValues(mod)}
-                status={mod.status_label}
-                {...legalPill(mod)}
-                onPress={() => onOpenMod(mod)}
-                divider={rowIndex < group.items.length - 1}
-                inset={space[16]}
-                testID={`${routeId}.mod.${mod.id}`}
-              />
-            ))}
-          </RowCard>
-        </View>
-      ))}
-      <Text variant="helper" color="text.tertiary" style={styles.disclaimer} testID={`${routeId}.legalDisclaimer`}>
+      <BuildSheet sections={sections} testID={`${routeId}.buildSheet`} />
+      <Text variant="caption" color="text.tertiary" style={styles.disclaimer} testID={`${routeId}.legalDisclaimer`}>
         {t('mods.disclaimer')}
       </Text>
     </View>
   );
 }
+
+/** Verlauf shows up to three photos per entry (Timeline's 3-up grid); a third of the column, a pair the whole column. */
+const HISTORY_PHOTOS_SHOWN = 3;
+const HISTORY_PHOTO_WIDTH = size.railCard;
+const HISTORY_PAIR_WIDTH = layoutTokens.feedColumn;
 
 export type HistorySectionProps = {
   vehicle: PublicVehicle;
@@ -350,11 +361,11 @@ export type HistorySectionProps = {
 export function HistorySection({ vehicle, routeId, onOpenUpdate }: HistorySectionProps) {
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
+  const format = useFormat();
   const [wantsOlder, setWantsOlder] = useState(false);
   const older = usePublicVehicleUpdates(vehicle.slug, wantsOlder);
   const pages = older.data?.pages.flatMap((page) => page.data) ?? [];
   const updates = mergeUpdates(vehicle.updates, pages);
-  const months = groupByMonth(updates);
   const remaining = Math.max(0, vehicle.updates_count - updates.length);
   // Once the list route has answered, its cursor decides; the count can lag behind a hidden entry.
   const canLoadOlder = remaining > 0 && (!older.data || older.hasNextPage);
@@ -374,22 +385,15 @@ export function HistorySection({ vehicle, routeId, onOpenUpdate }: HistorySectio
 
   return (
     <View>
-      {months.map((month, index) => (
-        <View key={`${month.label}-${index}`} style={index === 0 ? styles.monthFirst : styles.month} testID={`${routeId}.month.${index}`}>
-          {month.label ? (
-            <Text variant="labelS" color="text.secondary" role="heading" {...({ 'aria-level': 2 } as object)}>
-              {month.label}
-            </Text>
-          ) : null}
-          <View style={styles.timeline}>
-            {month.updates.map((update) => (
-              <HistoryEntry key={update.id} update={update} onPress={() => onOpenUpdate(update)} testID={`${routeId}.update.${update.id}`} />
-            ))}
-          </View>
-        </View>
-      ))}
+      <Timeline
+        entries={updates.map((update) =>
+          historyEntry(update, t, () => onOpenUpdate(update), `${routeId}.update.${update.id}`, (value) => format.number(value)),
+        )}
+        groupTestID={(index) => `${routeId}.month.${index}`}
+        testID={`${routeId}.timeline`}
+      />
       {older.isError && !older.isFetching ? (
-        <Text variant="supporting" color="text.secondary" role="alert" style={styles.loadError} testID={`${routeId}.history.loadError`}>
+        <Text variant="callout" color="text.secondary" role="alert" style={styles.loadError} testID={`${routeId}.history.loadError`}>
           {t('history.loadError')}
         </Text>
       ) : null}
@@ -408,45 +412,43 @@ export function HistorySection({ vehicle, routeId, onOpenUpdate }: HistorySectio
   );
 }
 
-function HistoryEntry({ update, onPress, testID }: { update: BuildUpdate; onPress: () => void; testID: string }) {
-  const { t } = useTranslation('vehicle');
-  const styles = useStyles();
-  const largeFont = useStacksAtFontScale();
-  const { lines, more } = changeLines(update, HISTORY_CHANGES_SHOWN);
+/** One entry of Verlauf as the Timeline shows it (09 §5): the type as title, its first changes, the note, the rest as a count. */
+function historyEntry(
+  update: BuildUpdate,
+  t: TFunction<'vehicle'>,
+  onPress: () => void,
+  testID: string,
+  number: (value: number) => string,
+): TimelineEntry {
+  // DQ-975: an update's own photos (M4.11) show in Verlauf, a before/after pair as the SM17 slider.
+  const pair = updatePairs(update)[0];
+  const photos = unpairedPhotos(update)
+    .slice(0, HISTORY_PHOTOS_SHOWN)
+    .map((photo) => ({ ...photoFields(photo, HISTORY_PHOTO_WIDTH), alt: photo.alt ?? undefined }));
+  // DQ-977: a title that names the change is followed by the system and the key value only, never the change again.
+  const meta = historyMetaLine(update);
+  const { lines, more } = meta ? { lines: [meta], more: 0 } : changeLines(update, HISTORY_CHANGES_SHOWN);
   const note = update.note?.trim();
-  const moreText = more > 0 ? t('history.moreChanges', { count: more }) : undefined;
-
-  return (
-    <RowBody
-      onPress={onPress}
-      label={joinLabel([...lines.flatMap((line) => [line.label, line.diff]), lines.length === 0 ? update.type_label : null, note, moreText])}
-      style={styles.entry}
-      testID={testID}
-    >
-      <View style={styles.entryText}>
-        {lines.length === 0 ? <Text variant="bodyStrong">{update.type_label}</Text> : null}
-        {lines.map((line) => (
-          <View key={line.key} style={styles.change}>
-            <Text variant="bodyStrong">{line.label}</Text>
-            {line.diff ? (
-              <ValueText variant="supporting" color="text.secondary" hyphenate={largeFont} values={line.diff} wholeValues={!largeFont} />
-            ) : null}
-          </View>
-        ))}
-        {note ? (
-          <Text variant="supporting" color="text.secondary">
-            {note}
-          </Text>
-        ) : null}
-        {moreText ? (
-          <Text variant="caption" color="text.tertiary">
-            {moreText}
-          </Text>
-        ) : null}
-      </View>
-      <View style={styles.caret}>
-        <Icon name="caret-right" size={16} color="text.tertiary" />
-      </View>
-    </RowBody>
-  );
+  return {
+    key: update.id,
+    date: update.month_label ?? '',
+    title: historyTitle(update, (key, values) => t(`history.title.${key}`, values)),
+    lines: lines.map((line) => ({ key: line.key, label: line.label, ...(line.diff ? { detail: line.diff } : {}), ...(meta ? { inline: true } : {}) })),
+    ...(note ? { note } : {}),
+    ...(more > 0 ? { more: t('history.moreChanges', { count: more }) } : {}),
+    ...(pair
+      ? {
+          beforeAfter: {
+            before: { ...photoFields(pair.before, HISTORY_PAIR_WIDTH), label: t('update.before') },
+            after: { ...photoFields(pair.after, HISTORY_PAIR_WIDTH), label: t('update.after') },
+            label: t('update.beforeAfter'),
+          },
+        }
+      : photos.length > 0
+        ? { photos }
+        : {}),
+    ...(update.mileage_km !== null ? { mileage: t('update.mileage', { value: number(update.mileage_km) }) } : {}),
+    onPress,
+    testID,
+  };
 }

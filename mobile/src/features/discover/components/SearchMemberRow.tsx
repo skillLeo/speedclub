@@ -8,13 +8,14 @@ import { FollowButton } from '@/features/profile/components/FollowButton';
 import { variantUrl } from '@/features/profile/media';
 import { ownerMeta, ownerName } from '@/features/vehicle/model';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Avatar, Text } from '@/ui';
+import { Avatar, SampleBadges, Text, useSampleBadgeLabels } from '@/ui';
 import { joinLabel, LARGE_FONT_SCALE, RowBody, RowDivider, useStacksAtFontScale } from '@/ui/rowParts';
 
 /** The row's inset (`ui/MemberRow`'s `side`): none, the list's column already keeps to the gutter. */
 const ROW_SIDE = space[0];
 
 const useStyles = createStyles((t) => ({
+  badges: { marginTop: t.space[4] },
   body: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -61,12 +62,13 @@ export const SearchMemberRow = memo(function SearchMemberRow({ member, onOpen, d
   const followState = useFollowState();
   const showFollow = !member.is_self;
   const buttonStacked = useStacksAtFontScale() && showFollow;
+  const sampleLabels = useSampleBadgeLabels(member);
   return (
     <View testID={testID}>
       <View style={buttonStacked ? styles.rootStacked : styles.root}>
         <RowBody
           onPress={() => onOpen(member)}
-          label={joinLabel([name, self, meta, garage])}
+          label={joinLabel([name, self, ...sampleLabels, meta, garage])}
           boxStyle={buttonStacked ? styles.boxStacked : styles.boxInline}
           style={styles.body}
           testID={`${testID}.body`}
@@ -83,19 +85,19 @@ export const SearchMemberRow = memo(function SearchMemberRow({ member, onOpen, d
             {stacked ? (
               <>
                 <Text
-                  variant="supporting"
+                  variant="callout"
                   color="text.secondary"
                   hyphenate={false}
                   testID={`${testID}.handle`}
                 >
                   {ownerMeta({ username: member.username, city: null })}
                 </Text>
-                <Text variant="supporting" color="text.secondary" hyphenate={false} testID={`${testID}.city`}>
+                <Text variant="callout" color="text.secondary" hyphenate={false} testID={`${testID}.city`}>
                   {city}
                 </Text>
               </>
             ) : (
-              <Text variant="supporting" color="text.secondary" hyphenate={false} testID={`${testID}.meta`}>
+              <Text variant="callout" color="text.secondary" hyphenate={false} testID={`${testID}.meta`}>
                 {meta.replace(/ (?=·)/, NO_BREAK_SPACE)}
               </Text>
             )}
@@ -104,6 +106,8 @@ export const SearchMemberRow = memo(function SearchMemberRow({ member, onOpen, d
                 {garage}
               </Text>
             ) : null}
+            {/* 09 §8.19: the Editorial account and sample members are badged; their counts are hidden by the API. */}
+            <SampleBadges flags={member} style={styles.badges} testID={`${testID}.sample`} />
           </View>
         </RowBody>
         {showFollow ? (

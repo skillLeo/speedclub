@@ -3,8 +3,9 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { haptics } from '@/lib/haptics';
-import { createStyles, size, space, useMotion } from '@/theme';
+import { createStyles, size, space } from '@/theme';
 
+import { useMotionPreference } from './motion';
 import { PressableScale } from './PressableScale';
 
 export type SwitchProps = {
@@ -54,11 +55,11 @@ const useStyles = createStyles((t) => ({
  */
 export function Switch({ value, onValueChange, label, disabled = false, style, testID }: SwitchProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const progress = useSharedValue(value ? 1 : 0);
 
   useEffect(() => {
-    progress.set(motion.springTo(value ? 1 : 0));
+    progress.set(motion.springTo(value ? 1 : 0, 'fast'));
   }, [motion, progress, value]);
 
   const onLayer = useAnimatedStyle(() => ({

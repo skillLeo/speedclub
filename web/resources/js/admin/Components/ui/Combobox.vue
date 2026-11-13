@@ -41,7 +41,7 @@ function onInput(value: string): void {
         <ComboboxAnchor
             :class="[
                 controlSize[size],
-                'flex w-full items-center gap-8 rounded-sm border border-line-control bg-raised text-ink transition-colors duration-150 ease-standard hover:border-line-strong',
+                'flex w-full items-center gap-8 rounded-sm border border-line-control bg-raised text-ink transition-colors duration-effect-fast ease-effect-fast hover:border-line-strong',
                 'focus-within:border-ink has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus has-[[aria-invalid=true]]:border-danger has-[:disabled]:cursor-not-allowed has-[:disabled]:text-ink-disabled',
             ]"
         >
@@ -52,7 +52,7 @@ function onInput(value: string): void {
                 :aria-label="ariaLabel"
                 :aria-invalid="field.invalid.value ? 'true' : undefined"
                 :aria-describedby="field.describedBy.value"
-                class="h-full min-w-0 flex-1 bg-transparent text-supporting text-ink placeholder:text-ink-3 focus:outline-none disabled:cursor-not-allowed"
+                class="h-full min-w-0 flex-1 bg-transparent text-admin-base text-ink placeholder:text-ink-3 focus:outline-none disabled:cursor-not-allowed"
                 @update:model-value="onInput"
             />
             <PhCaretDown :size="16" class="pointer-events-none shrink-0 text-ink-3" aria-hidden="true" />
@@ -60,7 +60,7 @@ function onInput(value: string): void {
         <ComboboxPortal>
             <ComboboxContent position="popper" :side-offset="4" :class="[floating, 'max-h-320 sc-match-trigger']">
                 <ComboboxViewport>
-                    <ComboboxEmpty class="px-8 py-8 text-supporting text-ink-3">{{ trans('ui.combobox.empty') }}</ComboboxEmpty>
+                    <ComboboxEmpty class="px-8 py-8 text-admin-base text-ink-3">{{ trans('ui.combobox.empty') }}</ComboboxEmpty>
                     <ComboboxItem v-for="option in visible" :key="option.value" :value="option.value" :disabled="option.disabled" :class="menuItem">
                         <span class="flex-1 truncate">{{ option.label }}</span>
                         <ComboboxItemIndicator><PhCheck :size="16" aria-hidden="true" /></ComboboxItemIndicator>

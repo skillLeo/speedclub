@@ -6,6 +6,7 @@ use App\Mail\SecurityNoticeMail;
 use App\Models\AuditEvent;
 use App\Models\PushToken;
 use App\Models\User;
+use App\Services\Auth\DeviceInstalls;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -43,7 +44,7 @@ it('lists app installs and browsers, this device first, without IP or place', fu
         ->and(json_encode($rows))->not->toContain('203.0.113.9');
 
     foreach ($rows as $row) {
-        expect(array_keys($row))->toBe(['id', 'kind', 'device_name', 'platform', 'app_version', 'last_used_at', 'current']);
+        expect(array_keys($row))->toBe(['id', 'kind', 'device_name', 'platform', 'app_version', 'last_used_at', 'current', 'os_version', 'approx_city', 'signed_in_at']);
     }
 });
 
@@ -51,7 +52,7 @@ it('ends one other device with its push token, never this one', function () {
     $member = setMember();
     $here = setSignIn($member, 'install-here-0001');
     $there = setSignIn($member, 'install-there-001', 'Pixel 9');
-    PushToken::factory()->create(['user_id' => $member->id, 'device_id' => 'install-there-001', 'token' => 'ExponentPushToken[dddddddddddddddddddddd]']);
+    PushToken::factory()->create(['user_id' => $member->id, 'device_id' => DeviceInstalls::key($member->id, 'install-there-001'), 'token' => 'ExponentPushToken[dddddddddddddddddddddd]']);
 
     $rows = collect($this->withToken($here)->getJson('/api/v1/me/sessions')->json('data'));
     $other = $rows->firstWhere('current', false)['id'];

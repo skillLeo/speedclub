@@ -66,7 +66,7 @@ const meta = computed(() => [props.model.slug, transChoice('catalog.make.vehicle
         <PageHeader :title="title" :crumbs="crumbs">
             <template #badge><StatusPill v-bind="entryPill(model)" /></template>
             <template #meta>
-                <p class="text-supporting text-ink-2 tabular-nums" data-testid="ADM-14-model.meta">{{ meta }}</p>
+                <p class="text-admin-base text-ink-2 tabular-nums" data-testid="ADM-14-model.meta">{{ meta }}</p>
             </template>
             <template v-if="manage" #actions>
                 <RecordActions level="model" :entry="model" :dialogs="modelDialogs" test-id="ADM-14-model.action" />
@@ -77,17 +77,17 @@ const meta = computed(() => [props.model.slug, transChoice('catalog.make.vehicle
         <MergedNotice v-if="model.merged_into" :name="model.merged_into.name" :href="modelHref(model.merged_into.id)" test-id="ADM-14-model.merged" />
 
         <section class="flex flex-col gap-12" :aria-label="trans('catalog.model.generations_title')">
-            <h2 class="text-title-s text-ink">{{ trans('catalog.model.generations_title') }}</h2>
+            <h2 class="text-headline text-ink">{{ trans('catalog.model.generations_title') }}</h2>
             <StateBlock v-if="state === 'error'" kind="error" :title="trans('catalog.model.error')" :body="trans('catalog.error_body')" test-id="ADM-14-model.error" />
             <!-- DQ-601: the header holds the one "Generation hinzufügen". -->
             <EmptyQueue v-else-if="state !== 'loading' && list.length === 0" variant="first" :title="trans('catalog.model.empty_title')" :body="trans('catalog.model.empty_body')" data-testid="ADM-14-model.empty" />
             <ScrollRegion v-else :label="trans('catalog.model.generations_caption', { model: title })" test-id="ADM-14-model.generations">
-                <table class="w-full text-supporting" :aria-busy="state === 'loading' || undefined">
+                <table class="w-full text-admin-base" :aria-busy="state === 'loading' || undefined">
                     <caption class="sr-only">{{ trans('catalog.model.generations_caption', { model: title }) }}</caption>
                     <!-- DQ-593: the same column widths while loading and with rows. -->
                     <colgroup><col /><col class="w-160" /><col class="w-120" /><col class="w-240" /><col v-if="manage" class="w-48" /></colgroup>
                     <thead>
-                        <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                        <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                             <th scope="col" class="px-12">{{ trans('catalog.columns.generation') }}</th>
                             <th scope="col" class="whitespace-nowrap px-12 text-right">{{ trans('catalog.columns.years') }}</th>
                             <th scope="col" class="whitespace-nowrap px-12 text-right">{{ trans('catalog.columns.vehicles') }}</th>

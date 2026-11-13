@@ -22,7 +22,7 @@ import { withStartLock } from '../support/start-lock.mjs';
 import { readable } from '../support/text.mjs';
 
 type Member = Awaited<ReturnType<typeof createGarageMember>>;
-type FeedVehicle = { id: string; slug: string; full_title: string; owner: { username: string } | null };
+type FeedVehicle = { id: string; slug: string; full_title: string; is_sample?: boolean; owner: { username: string } | null };
 type Overview = { vehicles: { count: number; items: FeedVehicle[] }; members: { count: number; items: { username: string; city: string | null }[] } };
 type Facet = { value: string; label: string; count: number };
 type Facets = { total: number; total_capped: boolean; generations: Facet[] | null; wheel_diameter: Facet[] };
@@ -107,7 +107,8 @@ function chipIds(page: Page): Promise<string[]> {
   return page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('[data-testid^="DISC-02.chips."]')]
       .map((el) => el.getAttribute('data-testid') ?? '')
-      .filter((testId) => !/\.(filter|body|remove)$/.test(testId) && testId !== 'DISC-02.chips')
+      // M4.8 (DQ-1037): the rail also holds a chip per field that opens its picker (`.field.<key>`); those are not active filters.
+      .filter((testId) => !/\.(filter|body|remove)$/.test(testId) && !/^DISC-02\.chips\.field\./.test(testId) && testId !== 'DISC-02.chips')
       .filter((testId, index, all) => all.indexOf(testId) === index)
       .filter((testId) => document.querySelector<HTMLElement>(`[data-testid="${testId}"]`)?.checkVisibility()),
   );
@@ -254,7 +255,7 @@ test.describe('F5 discover: M4 → chips → filter sheet → build → owner �
     expect(await shownIds(page, 'DISC-02.vehicle.')).toEqual([m4.id]);
 
     // The build, its owner, Folgen.
-    await id(page, `DISC-02.vehicle.${m4.id}.body`).click();
+    await id(page, `DISC-02.vehicle.${m4.id}.header`).click();
     await expect(id(page, 'VEH-01.title')).toBeVisible();
     expect(pathOf(page)).toBe(`/app/v/${m4.slug}`);
     await expect(id(page, 'VEH-01.ownerRow')).toContainText(`@${owner.username}`);
@@ -533,9 +534,17 @@ test.describe('F5 discover: from a build page', () => {
     await strip.scrollIntoViewIfNeeded();
     await expect(strip).toHaveAttribute('role', 'region');
     await expect(id(page, 'VEH-01.similar.header')).toContainText(de('discover', 'similar.title'));
-    expect(await shownIds(page, 'VEH-01.similar.')).toEqual(similar.slice(0, (await shownIds(page, 'VEH-01.similar.')).length).map((v) => v.id));
-    await id(page, `VEH-01.similar.${similar[0]!.id}`).click();
-    await expect.poll(() => pathOf(page)).toBe(`/app/v/${similar[0]!.slug}`);
+    // DQ-1063 (M4.9 design QA): the rail shows the answer's real builds first, in its order, then at most two sample builds that look
+    // different from every card already shown (SimilarBuilds.distinctSimilar).
+    const shown = await shownIds(page, 'VEH-01.similar.');
+    const real = similar.filter((vehicle) => !vehicle.is_sample).map((vehicle) => vehicle.id);
+    expect(shown.slice(0, Math.min(real.length, shown.length))).toEqual(real.slice(0, Math.min(real.length, shown.length)));
+    const samplesShown = shown.filter((shownId) => !real.includes(shownId));
+    expect(samplesShown.length).toBeLessThanOrEqual(2);
+    for (const sampleId of samplesShown) expect(similar.find((vehicle) => vehicle.id === sampleId)?.is_sample).toBe(true);
+    const first = similar.find((vehicle) => vehicle.id === shown[0])!;
+    await id(page, `VEH-01.similar.${first.id}`).click();
+    await expect.poll(() => pathOf(page)).toBe(`/app/v/${first.slug}`);
     await expect(id(page, 'VEH-01.title')).toBeVisible();
   });
 });

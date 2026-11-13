@@ -4,7 +4,7 @@ import { StyleSheet, View, type GestureResponderEvent, type LayoutChangeEvent, t
 import { isWeb } from '@/lib/platform';
 import { createStyles, size as sizeTokens, useBreakpoint, useTheme, type ColorToken } from '@/theme';
 
-import { Icon, type IconName } from './icons/Icon';
+import { Icon, type IconName, type IconWeight } from './icons/Icon';
 import { PressableScale, type PressableVisualState } from './PressableScale';
 import { Spinner } from './Spinner';
 import { Text, typeStyle } from './Text';
@@ -44,6 +44,8 @@ export type ButtonProps = {
   locked?: string | null;
   /** Leading icon, 20 (16 on size S). */
   icon?: IconName;
+  /** `fill` for a brand mark that is solid by its owner's rules (the Apple logo, 09 §5 ProviderButtons). */
+  iconWeight?: IconWeight;
   /** Stretches to the parent's width. Otherwise it hugs its label, and wraps the label rather than leave the parent. */
   fullWidth?: boolean;
   /**
@@ -54,6 +56,10 @@ export type ButtonProps = {
   flush?: 'start' | 'end';
   /** Replaces the label for screen readers when it needs more context. */
   accessibilityLabel?: string;
+  /** A toggle such as VEH-01's "Speichern": announced as `aria-pressed`. Undefined for a plain action. */
+  pressed?: boolean;
+  /** A second way in on the same control (VEH-01: long-press "Speichern" opens the collections). */
+  onLongPress?: () => void;
   style?: StyleProp<ViewStyle>;
   testID?: string;
   ref?: Ref<ComponentRef<typeof View>>;
@@ -115,7 +121,6 @@ const useStyles = createStyles((t) => ({
   spinner: { alignItems: 'center', justifyContent: 'center' },
   layer: { borderRadius: t.radius.sm },
   layerHover: { backgroundColor: t.color.state.hover },
-  layerPressed: { backgroundColor: t.color.state.pressed },
   layerPhoto: { backgroundColor: t.color.onPhoto.chipBg },
   // Text-only variants have no visible border, so the state layer fills it too and the shape stays the full 44.
   layerOverBorder: {
@@ -156,9 +161,12 @@ export function Button({
   disabled: disabledProp = false,
   locked,
   icon,
+  iconWeight = 'regular',
   fullWidth = false,
   flush,
   accessibilityLabel,
+  pressed,
+  onLongPress,
   style,
   testID,
   ref,
@@ -171,7 +179,11 @@ export function Button({
   const color = foreground(variant, filled, disabled);
   const smallType = size === 's';
   const outlined = variant === 'secondary' || variant === 'onPhoto';
-  const labelVariant = smallType ? 'labelS' : 'label';
+  // SM7 tone (ADR-421 c): the press base fades the state.pressed layer in on effect.fast, state.pressedInverse on the inverse
+  // fill of primary. The accent fill has its own pressed fill (accent.fillPressed) and a photo button its chip ground.
+  const ownPressedFill = (isFilled && variant !== 'primary') || isOnPhoto;
+  // Every size sets its label in body.strong, Inter 600 (09 §5; v1 label and label.s, token mapping).
+  const labelVariant = 'bodyStrong';
 
   // DQ-066: a label that wraps takes the whole width and centres inside it, which strands an icon beside it at the edge, so
   // the icon goes on its own line above. Stacking gives the label more room, so it stays until label, font or window change.
@@ -199,10 +211,14 @@ export function Button({
 
   return (
     <PressableScale
+      toneShift={!ownPressedFill}
+      tone={variant === 'primary' ? 'inverse' : 'default'}
       ref={ref}
       role={role}
       {...(href === undefined ? {} : { href })}
       aria-label={accessibilityLabel ?? label}
+      {...(pressed === undefined ? {} : { 'aria-pressed': pressed })}
+      {...(onLongPress && !locked && !disabledProp ? { onLongPress } : {})}
       aria-busy={loading}
       aria-disabled={disabled || undefined}
       // Undefined, not false, while only locked: a `disabled` of false would override aria-disabled in the accessibility state,
@@ -230,18 +246,19 @@ export function Button({
     >
       {(state) => (
         <>
-          {!isFilled && !disabled && (state.pressed || state.hovered) ? (
+          {/* Hover only: the pressed tone is the press base's layer above it. A photo button keeps its chip ground for both. */}
+          {!isFilled && !disabled && (state.hovered || (isOnPhoto && state.pressed)) ? (
             <View
               style={[
                 StyleSheet.absoluteFill,
                 styles.layer,
-                isOnPhoto ? styles.layerPhoto : state.pressed ? styles.layerPressed : styles.layerHover,
+                isOnPhoto ? styles.layerPhoto : styles.layerHover,
                 outlined ? null : styles.layerOverBorder,
               ]}
             />
           ) : null}
           <View style={[styles.row, iconStacked ? styles.rowStacked : null, flush === undefined ? null : flush === 'end' ? styles.rowEnd : styles.rowStart, loading ? styles.hidden : null]}>
-            {icon ? <Icon name={icon} size={smallType ? 16 : 20} color={color} /> : null}
+            {icon ? <Icon name={icon} size={smallType ? 16 : 20} weight={iconWeight} color={color} /> : null}
             <Text variant={labelVariant} color={color} selectable={false} hyphenate={false} onLayout={icon && flush === undefined ? measureLabel : undefined} style={[styles.label, flush === undefined ? null : flush === 'end' ? styles.labelEnd : styles.labelStart]}>
               {label}
             </Text>

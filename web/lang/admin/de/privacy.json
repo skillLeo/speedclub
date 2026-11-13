@@ -315,6 +315,10 @@
                 "label": "Audit-Ereignisse",
                 "note": "Mit den täglichen Exporten der Prüfkette."
             },
+            "security_events": {
+                "label": "Sicherheitsaktivität",
+                "note": "Anmeldungen, Fehlversuche und Änderungen an der Anmeldung, die Mitglieder unter Sicherheitsaktivität sehen. Ohne IP-Adresse."
+            },
             "audit_archive": {
                 "label": "Archiv des Audit-Logs",
                 "note": "Danach archivierter Export, bis zu diesem Alter."

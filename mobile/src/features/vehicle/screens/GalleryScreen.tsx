@@ -10,7 +10,8 @@ import { useTabScrollToTop } from '@/features/shell/retap';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarInset } from '@/features/shell/tabBarLayout';
 import { useQaState } from '@/lib/qa';
-import { createStyles, layout, space, useBreakpoint, useMotion, type BreakpointKind } from '@/theme';
+import { createStyles, layout, space, useBreakpoint, type BreakpointKind } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import { Chip, CollapsingFlashList, EmptyState, Header, Photo, PressableScale, Screen, Skeleton, SkeletonBlock, Text } from '@/ui';
 import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
@@ -22,17 +23,18 @@ import { RouteStateBody, useRouteState } from '../states';
 
 const ROUTE_ID = 'VEH-03';
 const EDGES: readonly Edge[] = ['left', 'right'];
-const SKELETON_TILES = 6;
-const TILE_RATIO = 4 / 3;
+const SKELETON_TILES = 9;
+const TILE_RATIO = 1;
 
 /**
  * Columns and gap per width. The gap is split into the cells' side padding, which only stays on the spacing scale for
  * these pairs: 2 × 8, 3 × 12, 4 × 16.
  */
 const GRID: Record<BreakpointKind, { columns: number; gap: number }> = {
-  phone: { columns: 2, gap: space[8] },
-  tablet: { columns: 3, gap: space[12] },
-  desktop: { columns: 4, gap: space[16] },
+  // DQ-1070 (09 §7.6 VEH-03, §5 wall): a 1:1 wall, 2 apart, no radius; 3 columns on a phone, more where there is room.
+  phone: { columns: 3, gap: space[2] },
+  tablet: { columns: 4, gap: space[2] },
+  desktop: { columns: 5, gap: space[2] },
 };
 
 type Filter = MediaCategory | 'all';
@@ -49,7 +51,7 @@ const useStyles = createStyles((t) => ({
   filters: { flexGrow: 0 },
   filterRow: { flexDirection: 'row', gap: t.space[8], paddingVertical: t.space[12] },
   intro: { paddingBottom: t.space[12], paddingTop: t.space[4] },
-  tileVisual: { borderRadius: t.radius.sm },
+  tileVisual: { borderRadius: t.radius.none },
   skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingTop: t.space[16] },
   footer: { height: t.space[32] },
 }));
@@ -65,7 +67,7 @@ type TileProps = {
   onOpen: (index: number) => void;
 };
 
-/** One 4:3 photo, radius 8. */
+/** One 1:1 photo of the wall, no radius (DQ-1070). */
 const Tile = memo(function Tile({ photo, index, total, fallbackAlt, columns, gap, tileWidth, onOpen }: TileProps) {
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
@@ -79,7 +81,7 @@ const Tile = memo(function Tile({ photo, index, total, fallbackAlt, columns, gap
         contentStyle={styles.tileVisual}
         testID={`${ROUTE_ID}.photo.${index}`}
       >
-        <Photo {...photoFields(photo, tileWidth)} aspect="4:3" corner="sm" />
+        <Photo {...photoFields(photo, tileWidth)} aspect="1:1" corner="none" />
       </PressableScale>
     </View>
   );
@@ -94,7 +96,7 @@ export function GalleryScreen() {
   const initial = paramOf(params.category);
   const back = useBack(`/v/${slug}`);
   const qaState = useQaState();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const { gutter, kind } = useBreakpoint();
   const tabBarInset = useTabBarInset();
   const header = useCollapsingHeader();
@@ -111,14 +113,17 @@ export function GalleryScreen() {
   const shown = useMemo(() => (filter === 'all' ? all : all.filter((photo) => photo.category === filter)), [all, filter]);
   const counts = useMemo(() => categoryCounts(all), [all]);
   const { columns, gap } = GRID[kind];
-  const inner = Math.min(width, layout.contentMax + 2 * layout.gutter.desktop) - 2 * gutter;
+  // The wall runs edge to edge on a phone; from 768 it keeps the column's gutters.
+  const wallInset = kind === 'phone' ? 0 : gutter;
+  const inner = Math.min(width, layout.contentMax + 2 * layout.gutter.desktop) - 2 * wallInset;
   const tileWidth = Math.max(0, (inner - gap * (columns - 1)) / columns);
   const fallbackAlt = vehicle?.full_title ?? '';
   const open = useCallback((index: number) => setViewerIndex(index), []);
   const separatorStyle = useMemo(() => ({ height: gap }), [gap]);
   const Separator = useCallback(() => <View style={separatorStyle} />, [separatorStyle]);
   // The tab bar's padding and the 32 below the grid stay apart: each is on the spacing scale, their sum is not.
-  const listContent = useMemo(() => ({ paddingBottom: tabBarInset, paddingHorizontal: gutter }), [gutter, tabBarInset]);
+  const listContent = useMemo(() => ({ paddingBottom: tabBarInset, paddingHorizontal: wallInset }), [wallInset, tabBarInset]);
+  const headInset = useMemo(() => ({ paddingHorizontal: gutter - wallInset }), [gutter, wallInset]);
   const skeletonGrid = useMemo(() => ({ rowGap: gap }), [gap]);
   // FlashList sizes its cells by the column count; the skeleton's wrapping row needs the width itself.
   const skeletonCell = useMemo(() => ({ width: `${100 / columns}%` as const }), [columns]);
@@ -167,11 +172,11 @@ export function GalleryScreen() {
   let content: ReactNode;
   if (state === 'loading') {
     content = (
-      <Skeleton testID={`${ROUTE_ID}.skeleton`} style={{ paddingHorizontal: gutter }}>
+      <Skeleton testID={`${ROUTE_ID}.skeleton`} style={{ paddingHorizontal: wallInset }}>
         <View style={[styles.skeletonGrid, skeletonGrid]}>
           {Array.from({ length: SKELETON_TILES }, (_, index) => (
             <View key={index} style={[gridCell(index, columns, gap), skeletonCell]}>
-              <SkeletonBlock width="100%" aspectRatio={TILE_RATIO} corner="sm" />
+              <SkeletonBlock width="100%" aspectRatio={TILE_RATIO} corner="none" />
             </View>
           ))}
         </View>
@@ -205,9 +210,9 @@ export function GalleryScreen() {
         ItemSeparatorComponent={Separator}
         ListFooterComponent={<View style={styles.footer} />}
         ListHeaderComponent={
-          <View>
+          <View style={headInset}>
             {filters}
-            <Text variant="supporting" color="text.secondary" style={styles.intro} testID={`${ROUTE_ID}.count`}>
+            <Text variant="callout" color="text.secondary" style={styles.intro} testID={`${ROUTE_ID}.count`}>
               {t('gallery.count', { count: shown.length })}
             </Text>
           </View>

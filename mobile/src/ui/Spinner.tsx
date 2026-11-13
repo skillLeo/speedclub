@@ -1,18 +1,12 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  Easing,
-  ReduceMotion,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 
-import { motion as motionTokens, resolveColor, size as sizeTokens, useMotion, useTheme, type ColorToken } from '@/theme';
+import { resolveColor, size as sizeTokens, useTheme, type ColorToken } from '@/theme';
+
+import { spinLoop, useMotionPreference } from './motion';
 
 export type SpinnerProps = {
   size?: 16 | 20 | 24;
@@ -38,23 +32,13 @@ const styles = StyleSheet.create({ still: { alignSelf: 'center' } });
 export function Spinner({ size = 20, color = 'text.primary', label, decorative = false, testID }: SpinnerProps) {
   const { t } = useTranslation('common');
   const theme = useTheme();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const turning = motion.enabled && !motion.reduced;
   const rotation = useSharedValue(0);
 
   useEffect(() => {
     if (!turning) return undefined;
-    rotation.set(
-      withRepeat(
-        withTiming(FULL_TURN, {
-          duration: motionTokens.duration.skeletonCycle,
-          easing: Easing.linear,
-          reduceMotion: ReduceMotion.Never,
-        }),
-        -1,
-        false,
-      ),
-    );
+    rotation.set(spinLoop(FULL_TURN));
     return () => cancelAnimation(rotation);
   }, [rotation, turning]);
 

@@ -30,7 +30,6 @@ export type ModFormValues = {
   installedOn: string;
   /** "1.234,50" as typed. */
   cost: string;
-  costPublic: boolean;
   /** [SIG `sig.mod_legal_status`]: empty until the owner chooses one. */
   legalStatus: LegalStatus | '';
   notes: string;
@@ -189,7 +188,6 @@ export function modValuesFrom(mod: OwnerMod | undefined, fields: readonly ModCat
     partNumber: mod?.part_number ?? '',
     installedOn: monthText(mod?.installed_on),
     cost: costText(mod?.cost?.cents, locale),
-    costPublic: mod?.cost_public ?? false,
     legalStatus: legalStatusOf(mod?.legal_status) ?? '',
     notes: mod?.notes ?? '',
     fields: values,
@@ -246,7 +244,8 @@ export function modPayload(
     part_number: values.partNumber.trim() || null,
     installed_on: values.status === 'planned' ? null : parseMonth(values.installedOn),
     cost_cents: cost === null || Number.isNaN(cost) ? null : cost,
-    cost_public: values.costPublic,
+    // DQ-1055: costs are never public (09 §7.6, §11). While the API still has the key, every save closes an old public cost.
+    cost_public: false,
     notes: values.notes.trim() || null,
     fields: stored,
   };

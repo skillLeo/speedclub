@@ -13,7 +13,7 @@ const CASES: Case[] = [
   {
     name: 'a DISC-02 result card opens VEH-01',
     open: () => '/app/discover/search?make=bmw&model=m4',
-    control: '[data-testid^="DISC-02.vehicle."][data-testid$=".body"]',
+    control: '[data-testid^="DISC-02.vehicle."][data-testid$=".header"]',
     target: /^\/app\/v\/bmw-m4-/,
   },
   {

@@ -3,7 +3,12 @@
 namespace App\Http\Resources\V1;
 
 use App\Models\BuildUpdate;
+use App\Models\Media;
+use App\Models\Modification;
+use App\Models\User;
 use App\Services\Garage\BuildUpdatePresenter;
+use App\Services\Social\Mentions;
+use App\Services\Social\Reactions;
 use App\Support\Viewer;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
@@ -47,7 +52,11 @@ class BuildUpdateResource extends JsonResource
             'type' => $update->type,
             /** "Fahrwerk geändert", "Räder hinzugefügt", "Technik aktualisiert", "Fotos hinzugefügt", "Notiz" (DQ-290) */
             'type_label' => $presenter->typeLabel($update, $locale),
-            /** @var string|null */
+            /**
+             * The owner's text: a note (up to 500 characters) or, since M4.11, a post (type `post`, up to 2,000, with @mentions).
+             *
+             * @var string|null
+             */
             'note' => $update->getAttribute('note'),
             /**
              * One line for lists: "Fahrwerk: Serie → KW V3 · −35 mm"
@@ -78,6 +87,99 @@ class BuildUpdateResource extends JsonResource
             'month_label' => $created instanceof CarbonInterface
                 ? $created->copy()->setTimezone(config()->string('speedclub.display_timezone'))->locale($locale)->translatedFormat('F Y')
                 : null,
+            ...$this->social($update, $viewer),
         ];
+    }
+
+    /**
+     * M4.11 (09 §8.5): what a post carries besides its text, and the private reactions. Automatic entries have no photos, mods or
+     * mentions of their own; their lists stay empty without a query.
+     *
+     * @return array<string, mixed>
+     */
+    private function social(BuildUpdate $update, ?User $viewer): array
+    {
+        $authored = $update->type->isAuthored();
+        $isOwner = $update->vehicle->isOwnedBy($viewer);
+        $reactions = app(Reactions::class);
+        $edited = $update->edited_at;
+        $happened = $update->happened_on;
+
+        return [
+            'vehicle_id' => $update->vehicle_id,
+            /** Kilometre reading the owner gave (UPD-01), else null. */
+            'mileage_km' => $update->mileage_km,
+            /**
+             * The day it happened (Y-m-d), default the day of posting.
+             */
+            'happened_on' => $happened?->toDateString(),
+            /** vehicle: whoever may see the vehicle; followers: only followers of the owner or the build (and the owner). */
+            'audience' => $update->audience,
+            /**
+             * Set when the owner changed the post after posting: the app shows "bearbeitet".
+             */
+            'edited_at' => $edited?->toIso8601String(),
+            /**
+             * Owner only: until when text, photos and the rest can still be changed (24 hours after posting); null afterwards and for
+             * automatic entries.
+             *
+             * @var string|null
+             */
+            'editable_until' => $this->when($isOwner, fn (): ?string => $update->isEditable() ? $update->created_at?->copy()->addHours(config()->integer('speedclub.social_2.update_edit_hours'))->toIso8601String() : null),
+            /**
+             * Up to 10 photos in the owner's order. The owner sees unfinished and failed uploads too.
+             *
+             * @var list<MediaResource>
+             */
+            'photos' => $authored ? $this->photos($update, $isOwner) : [],
+            /**
+             * Before/after pairs of the photos above, by media id.
+             *
+             * @var list<array{before: string, after: string}>
+             */
+            'photo_pairs' => array_map(fn (array $pair): array => ['before' => (string) $pair[0], 'after' => (string) $pair[1]], $update->photo_pairs ?? []),
+            /**
+             * Linked mods, in the owner's order (the mod row of VEH-02).
+             *
+             * @var list<array{id: string, title: string, category: string|null}>
+             */
+            'modifications' => $authored ? $update->modifications()->with('category')->get()->map(fn (Modification $mod): array => [
+                'id' => (string) $mod->getKey(),
+                'title' => (string) $mod->getAttribute('title'),
+                'category' => $mod->category->getAttribute('key'),
+            ])->values()->all() : [],
+            /**
+             * Members the text mentions whom the viewer may see; the app links "@name" in the text to them.
+             *
+             * @var list<MemberSummaryResource>
+             */
+            'mentions' => $authored
+                ? array_map(fn (User $member): MemberSummaryResource => new MemberSummaryResource($member), app(Mentions::class)->forItems($update->getMorphClass(), [(string) $update->getKey()], $viewer)[(string) $update->getKey()] ?? [])
+                : [],
+            /**
+             * The viewer's own reaction [build_reactions]; null for guests, the owner, none yet, or the flag off. Never anybody else's.
+             *
+             * @var 'strong'|'clean'|'low'|'loud'|null
+             */
+            'my_reaction' => $isOwner ? null : $reactions->mine($viewer, $update)?->value,
+            /**
+             * Owner only: reactions by kind and in total [build_reactions]. Missing for everybody else (09 §8.5).
+             *
+             * @var array{strong: int, clean: int, low: int, loud: int, total: int}
+             */
+            'reaction_summary' => $this->when($isOwner && $reactions->enabled(), fn (): array => $reactions->summary($update)),
+        ];
+    }
+
+    /**
+     * @return list<MediaResource>
+     */
+    private function photos(BuildUpdate $update, bool $isOwner): array
+    {
+        return array_values($update->photos()
+            ->when(! $isOwner, fn ($query) => $query->usablePhoto())
+            ->get()
+            ->map(fn (Media $photo): MediaResource => new MediaResource($photo))
+            ->all());
     }
 }

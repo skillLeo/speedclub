@@ -1,10 +1,11 @@
 {
   "offline": "Offline – you're seeing what was loaded last.",
+  "offlineSince": "Offline – last updated {{time}}.",
   "featured": {
     "eyebrow": "FEATURED BUILD"
   },
   "newBuilds": {
-    "title": "New builds",
+    "title": "New in the garage",
     "allLabel": "All new builds in Discover"
   },
   "card": {
@@ -46,7 +47,8 @@
     "vehicleCount_other": "{{formatted}} vehicles",
     "aboutTitle": "About SPEED CLUB",
     "aboutBody": "Your garage with specs and mods as real data, and a QR code that links your car in the car park to its build page.",
-    "join": "Create account"
+    "join": "Create account",
+    "makesFocus": "Makes in focus"
   },
   "tabs": {
     "label": "Home view",
@@ -70,10 +72,9 @@
   },
   "following": {
     "empty": {
-      "title": "Nothing yet from members you follow",
-      "body": "Follow members whose builds interest you. Their new builds and changes will show up here.",
-      "bodySuggestions": "Follow members whose builds interest you.",
-      "discover": "Discover members"
+      "title": "Follow builds you’re into",
+      "body": "New photos and changes from those builds will land here.",
+      "discover": "Discover builds"
     },
     "suggestions": "Suggestions for you",
     "suggestionsActive": "Active right now",
@@ -81,6 +82,13 @@
       "title": "See what your people are up to",
       "body": "Sign in and follow members. Their new builds and changes will show up here.",
       "signIn": "Sign in"
+    },
+    "updates_one": "{{count}} update",
+    "updates_other": "{{count}} updates",
+    "build": {
+      "follow": "Follow",
+      "following": "Following",
+      "failed": "Couldn’t follow. Please try again."
     }
   },
   "notifications": {
@@ -92,7 +100,7 @@
     "aBuild": "a build",
     "readAll": "Mark all as read",
     "readAllFailed": "Couldn't mark your notifications as read. Try again in a moment.",
-    "emptyTitle": "No notifications yet",
+    "emptyTitle": "Nothing new yet.",
     "emptyBody": "This is where you'll see who follows you and what's new from members you follow.",
     "errorTitle": "Notifications couldn't be loaded",
     "offlineBody": "We'll load your notifications as soon as you're back online.",
@@ -115,16 +123,27 @@
       "buildSavedAny_one": "{{count}} member saved one of your builds",
       "buildSavedAny_other": "{{count}} members saved one of your builds",
       "security": {
-        "new_device": "New sign-in on an unknown device. If this wasn't you, change your password now.",
+        "new_device": "New sign-⁠in on an unknown device. If this wasn’t you, secure your account with “This wasn’t me”.",
         "password_changed": "Your password was changed. If this wasn't you, reset it with “Forgot password”.",
-        "email_changed": "Your email address was changed. If this wasn't you, change your password now.",
-        "two_factor_changed": "Your two-factor sign-in was changed. If this wasn't you, change your password now.",
-        "deletion_requested": "Deletion of your account was requested. If this wasn't you, change your password now.",
-        "other": "A security setting on your account was changed. If this wasn't you, change your password now.",
-        "new_device_named": "New sign-in on {{device}}. If this wasn't you, change your password now.",
-        "sessions_revoked": "Devices were signed out of your account. Wasn’t you? Change your password right away.",
-        "verification_failed": "A wrong password or code was entered for your account. Wasn’t you? Change your password right away.",
-        "recovery_code_used": "A recovery code was used to sign in. Wasn’t you? Change your password right away."
+        "email_changed": "Your email address was changed. If this wasn’t you, secure your account with “This wasn’t me”.",
+        "two_factor_changed": "Your two-factor protection was changed. If this wasn’t you, secure your account with “This wasn’t me”.",
+        "deletion_requested": "Deletion of your account was requested. If this wasn’t you, secure your account with “This wasn’t me”.",
+        "other": "A security setting on your account was changed. If this wasn’t you, secure your account with “This wasn’t me”.",
+        "new_device_named": "New sign-⁠in on {{device}}. If this wasn’t you, secure your account with “This wasn’t me”.",
+        "sessions_revoked": "Devices were signed out of your account. If this wasn’t you, secure your account with “This wasn’t me”.",
+        "verification_failed": "A wrong password or code was entered for your account. If this wasn’t you, secure your account with “This wasn’t me”.",
+        "recovery_code_used": "A recovery code was used to sign in. If this wasn’t you, secure your account with “This wasn’t me”.",
+        "email_code_locked": "Too many wrong sign-in codes were entered for your account. Signing in with a code is blocked for 15 minutes. Wasn't you? Check your sign-in methods.",
+        "provider_linked": "A new sign-in method was connected to your account. Wasn't you? Disconnect it in Settings.",
+        "provider_linked_named": "{{name}} was connected to your account. Wasn't you? Disconnect it in Settings.",
+        "provider_unlinked": "A sign-in method was disconnected from your account. Wasn't you? Check your sign-in methods.",
+        "provider_unlinked_named": "{{name}} was disconnected from your account. Wasn't you? Check your sign-in methods.",
+        "passkey_added": "A new passkey was added to your account. Wasn't you? Remove it in Settings.",
+        "passkey_added_named": "The passkey “{{name}}” was added to your account. Wasn't you? Remove it in Settings.",
+        "passkey_removed": "A passkey was removed from your account. Wasn't you? Check your sign-in methods.",
+        "passkey_removed_named": "The passkey “{{name}}” was removed from your account. Wasn't you? Check your sign-in methods.",
+        "passkey_rejected": "A sign-in with one of your passkeys was refused because it may have been copied. Check your passkeys in Settings.",
+        "passkey_rejected_named": "A sign-in with the passkey “{{name}}” was refused because it may have been copied. Check your passkeys in Settings."
       },
       "other": "New notification",
       "followedBuilds_one": "{{actor}} published {{count}} build",
@@ -159,12 +178,49 @@
       "supportReplyAny": "The team replied to your support request"
     },
     "restricted": "Your account is restricted. You can still see your notifications.",
-    "restrictedUntil": "Your account is restricted until {{date}}. You can still see your notifications."
+    "restrictedUntil": "Your account is restricted until {{date}}. You can still see your notifications.",
+    "thisWeek": "This week",
+    "earlier": "Earlier",
+    "filters": {
+      "label": "Filter notifications",
+      "all": "All",
+      "builds": "Builds",
+      "social": "Social",
+      "events": "Meets",
+      "system": "System"
+    },
+    "filterEmpty": "Nothing here yet.",
+    "filterEmptyMore": "Nothing here among the loaded notifications. Scroll on to load older ones.",
+    "emptyAction": "Discover builds",
+    "menu": "More actions",
+    "settings": "Settings",
+    "markRead": "Read",
+    "sampleUpdate": "{{name}} posted an update to his {{car}}.",
+    "sampleFollow": "{{name}} now follows your {{car}}.",
+    "sampleTimeUpdate": "2 h ago",
+    "sampleTimeFollow": "yesterday"
   },
   "announcements": {
     "dismiss": "Hide notice",
     "more": "Learn more",
     "externalLabel": "{{label}} (opens in the browser)",
     "warningLabel": "Important: {{title}}"
+  },
+  "weekly": {
+    "title": "Build of the week",
+    "quote": "“{{quote}}”",
+    "reason": "Picked by the editors."
+  },
+  "actions": {
+    "react": "React",
+    "reactions": {
+      "strong": "Strong",
+      "clean": "Clean",
+      "low": "Low",
+      "loud": "Loud"
+    },
+    "failed": "That didn’t work. Please try again.",
+    "copied": "Link copied.",
+    "shareFailed": "Sharing isn’t available here. The link: {{url}}"
   }
 }

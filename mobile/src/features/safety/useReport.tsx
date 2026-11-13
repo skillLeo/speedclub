@@ -80,13 +80,15 @@ export function useReport(target: ReportTarget | null, { onBlocked, routeId }: U
     [available, pathname, requireAuth, status],
   );
 
-  // QA only (qaOpen=report, compiled out of production with the other overrides): the sheet opens once the target is there.
+  // QA only (qaOpen=report, compiled out of production with the other overrides): the sheet opens once the target is there and
+  // the session is known. While it is still `loading`, openFor would route a member through the guest path (the auth sheet, or on
+  // the web the guest step), and the one try would be spent (PROF-02 capture, H3).
   const autoOpened = useRef(false);
   useEffect(() => {
-    if (qa.open !== 'report' || autoOpened.current || !available || !target?.id) return;
+    if (qa.open !== 'report' || autoOpened.current || !available || !target?.id || status === 'loading') return;
     autoOpened.current = true;
     openFor(target);
-  }, [available, openFor, target]);
+  }, [available, openFor, status, target]);
 
   const openBlockAndReportFor = useCallback(
     (next: ReportTarget) => {

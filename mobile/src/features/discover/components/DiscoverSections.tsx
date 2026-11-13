@@ -11,23 +11,23 @@ import { PopularModsChips } from '@/features/home/components/PopularModsChips';
 import { photoFields } from '@/features/profile/media';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, space, useBreakpoint, useTheme } from '@/theme';
-import { SectionHeader, Skeleton, SkeletonBlock, SkeletonText } from '@/ui';
+import { MediaCard, MediaCardSkeleton, SectionHeader, Skeleton, SkeletonText } from '@/ui';
 
 import { collectionPath, searchPath } from '../navigation';
-import { CollectionCard } from './CollectionCard';
 import { SearchMemberRow } from './SearchMemberRow';
 
-/** A collection card at font scale 1: wide enough for "Golf GTI Generationen" in `title.s`, with the next card peeking in. */
-export const COLLECTION_CARD_WIDTH = space[64] * 4 + space[24];
+/** A rail card at font scale 1: two cards and the start of a third on a 390 phone, so the row shows that it scrolls (09 §5 rail). */
+export const RAIL_CARD_WIDTH = space[64] * 2 + space[24];
 const MAX_CARD_SCALE = 1.5;
+/** From 1280 the column has open canvas beside it: the cards form a grid of this many columns instead of a strip (DQ-329). */
+const GRID_COLUMNS = 3;
 
 const useStyles = createStyles((t) => ({
   header: { paddingBottom: t.space[12] },
   gap: { width: t.space[12] },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space[12] },
   members: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, paddingHorizontal: t.space[16] },
-  skeletonRow: { flexDirection: 'row', gap: t.space[12] },
-  skeletonCard: { gap: t.space[8] },
+  skeletonRow: { flexDirection: 'row', gap: t.space[12], overflow: 'hidden' },
 }));
 
 function Gap() {
@@ -35,10 +35,20 @@ function Gap() {
   return <View style={styles.gap} />;
 }
 
-function useCardWidth(column: number): number {
+/** The rail card's width: it grows with the font up to 1.5×, never wider than the column less a peek of the next card. */
+export function railCardWidth(column: number, fontScale: number): number {
+  return Math.max(0, Math.min(Math.round(RAIL_CARD_WIDTH * Math.min(MAX_CARD_SCALE, Math.max(1, fontScale))), column - space[48]));
+}
+
+/** The grid's card width from 1280: three columns inside the column. */
+export function railGridWidth(column: number): number {
+  return Math.floor((column - space[12] * (GRID_COLUMNS - 1)) / GRID_COLUMNS);
+}
+
+function useCardWidth(column: number): { width: number; grid: boolean } {
   const { fontScale } = useTheme();
-  // Never wider than the column less a peek of the next card, so a phone shows that the row scrolls.
-  return Math.min(Math.round(COLLECTION_CARD_WIDTH * Math.min(MAX_CARD_SCALE, Math.max(1, fontScale))), column - space[48]);
+  const grid = useBreakpoint().kind === 'desktop';
+  return { width: grid ? railGridWidth(column) : railCardWidth(column, fontScale), grid };
 }
 
 export type CollectionsProps = {
@@ -49,39 +59,37 @@ export type CollectionsProps = {
   testID: string;
 };
 
-/** FS-11 "Kollektionen": admin-curated sets as 16:9 cards in a row that scrolls sideways; each opens DISC-02 with its chips. */
+/**
+ * FS-11 "Kollektionen" as the 09 §7.5 photo rail: admin-curated sets as `rail` MediaCards (3:4, radius 12) in a row that scrolls
+ * sideways, run to the screen edge on a phone; each opens DISC-02 with its chips. "Beliebte Modelle" takes this place once the API
+ * names popular models with a cover (lane B).
+ */
 export function Collections({ collections, column, gutter, testID }: CollectionsProps) {
   const { t } = useTranslation('discover');
   const styles = useStyles();
   const router = useRouter();
   const format = useFormat();
-  const grid = useBreakpoint().kind === 'desktop';
-  const gridWidth = Math.floor((column - space[12]) / 2);
-  const stripWidth = useCardWidth(column);
-  const width = grid ? gridWidth : stripWidth;
+  const { width, grid } = useCardWidth(column);
   const cardStyle = useMemo(() => ({ width }), [width]);
   const renderItem = useCallback(
     ({ item }: { item: DiscoverCollection }) => {
       const count = countLabel(item.count, item.count_capped, format.number);
       return (
-        <View style={cardStyle}>
-          <CollectionCard
-            title={item.title}
-            subtitle={item.subtitle}
-            countLabel={t('collections.count', { count: item.count, formatted: count })}
-            photo={photoFields(item.cover, width)}
-            onPress={() => router.push(collectionPath(item.filters, item.sort))}
-            testID={`${testID}.${item.key}`}
-          />
-        </View>
+        <MediaCard
+          variant="rail"
+          title={item.title}
+          spec={t('collections.count', { count: item.count, formatted: count })}
+          photo={photoFields(item.cover, width)}
+          onPress={() => router.push(collectionPath(item.filters, item.sort))}
+          style={cardStyle}
+          testID={`${testID}.${item.key}`}
+        />
       );
     },
     [cardStyle, format.number, router, t, testID, width],
   );
   if (collections.length === 0) return null;
   if (grid) {
-    // DQ-329: from 1280 the column has open canvas beside it, so a strip would end in a hard cut there. Two columns of cards
-    // inside the column instead, every collection in view.
     return (
       <View testID={testID}>
         <SectionHeader title={t('collections.title')} style={styles.header} testID={`${testID}.header`} />
@@ -114,22 +122,17 @@ export function Collections({ collections, column, gutter, testID }: Collections
   );
 }
 
-/** The cards while DISC-01 loads: two 16:9 blocks with their text lines, where the row will be. */
+/** The rail while DISC-01 loads: the cards the page draws first, in their geometry (MediaCardSkeleton `rail`). */
 export function CollectionsSkeleton({ column, testID }: { column: number; testID: string }) {
   const styles = useStyles();
-  const strip = useCardWidth(column);
-  // The same two cards the page draws: the strip's first two on a phone, the grid's first row from 1280.
-  const width = useBreakpoint().kind === 'desktop' ? Math.floor((column - space[12]) / 2) : strip;
+  const { width, grid } = useCardWidth(column);
+  const shown = grid ? GRID_COLUMNS : Math.max(1, Math.ceil(column / (width + space[12])));
   return (
     <Skeleton testID={testID}>
-      <SkeletonText variant="titleS" width="35%" style={styles.header} />
+      <SkeletonText variant="headline" width="35%" style={styles.header} />
       <View style={styles.skeletonRow}>
-        {[0, 1].map((index) => (
-          <View key={index} style={[styles.skeletonCard, { width }]}>
-            <SkeletonBlock width={width} height={Math.round((width * 9) / 16)} corner="md" />
-            <SkeletonText variant="titleS" width="70%" />
-            <SkeletonText variant="caption" width="30%" />
-          </View>
+        {Array.from({ length: shown }, (_, index) => (
+          <MediaCardSkeleton key={index} variant="rail" style={{ width }} />
         ))}
       </View>
     </Skeleton>

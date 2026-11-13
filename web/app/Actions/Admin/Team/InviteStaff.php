@@ -56,11 +56,13 @@ class InviteStaff
         ])->validate();
 
         $roles = RoleSets::validate($roles);
-        RoleSets::ensureHolds($by, RoleSets::atomsOf($roles));
 
+        // Before the atom check: the Owner role holds atoms no Admin has (StaffSeeder::OWNER_ONLY), and this is the clearer answer.
         if (in_array('owner', $roles, true) && ! $by->isOwner()) {
             throw new TeamRefused('owner_only');
         }
+
+        RoleSets::ensureHolds($by, RoleSets::atomsOf($roles));
 
         $plain = array_values(array_filter($roles, fn (string $role): bool => ! RoleSets::elevates([], [$role])));
         $elevating = $plain !== $roles;

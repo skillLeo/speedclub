@@ -1,5 +1,7 @@
 # 03 — Design System & Flagship Screen Blueprints
 
+> **Superseded by `docs/09_PREMIUM_2_0.md` §4–§7 where they conflict** (Phase 4, SPEED CLUB 2.0, ADR-401): fonts (Archivo + Inter 4, ADR-402), radii (0/4/8/12/20/full, ADR-403), motion (spring/effect tokens, ADR-405), navigation (native tabs, ADR-404), components and screen blueprints. Where 09 is silent, this document still applies.
+
 **Source of truth for values:** `design/tokens/tokens.json` → generated files (`node design/scripts/build-tokens.mjs`).
 **This document** explains how to use them and defines the exact layout of the flagship screens.
 **No value may appear in code that is not a token** (lint + runtime DOM audit enforce this).

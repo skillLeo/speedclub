@@ -23,12 +23,22 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class RateLimits
 {
-    private const PER_IP = ['member_register', 'member_login', 'member_verify', 'member_email', 'qr', 'public_read', 'two_factor_challenge', 'contact_form', 'web_account_deletion'];
+    private const PER_IP = ['member_register', 'member_login', 'member_verify', 'member_email', 'qr', 'public_read', 'two_factor_challenge', 'contact_form', 'web_account_deletion', 'client_errors',
+        // M4.6 Auth 2.0 (09 §8.1): passwordless sign-ins per IP; the per-address limits live in App\Services\Auth\EmailCodes.
+        'auth_email_start', 'auth_email_verify', 'auth_social', 'auth_passkeys',
+        // M4.7 (09 §8.4): "Das war ich nicht" links per IP.
+        'auth_secure_account'];
 
     private const PER_MEMBER_OR_IP = [
         'conversations', 'conversation_requests', 'messages', 'conversation_edits', 'typing', 'realtime_auth', 'follows', 'uploads', 'reports', 'catalog_requests', 'username_check', 'garage_writes', 'garage_reorders', 'garage_edits', 'unfollows', 'blocks', 'saves', 'account_edits', 'notification_reads', 'push_tokens', 'qr_downloads', 'qr_reissues', 'token_rotate', 'account_security', 'support_tickets', 'appeals',
         // M3.7 [AI]: throttle:ai (every AI endpoint but the translation) and throttle:ai-translate, per member and hour.
         'ai', 'ai_translate',
+        // M4.6: POST me/reauth (and its code and options), passkey and provider changes.
+        'reauth', 'auth_methods',
+        // M4.11 Social 2.0.
+        'reactions', 'comments', 'mention_suggest', 'collections', 'build_updates',
+        // M4.12 events.
+        'events', 'rsvps', 'event_updates', 'geocode',
     ];
 
     /**

@@ -66,7 +66,7 @@ function submit(): void {
 
         <!-- The results' own geometry: the count line says what runs, then groups as bordered lists of 40 rows. -->
         <div v-if="loading || state === 'loading'" class="flex flex-col gap-32" aria-busy="true" data-testid="ADM-07.loading">
-            <p class="text-supporting text-ink-2" aria-live="polite">{{ trans('search.searching', { q: term.trim() }) }}</p>
+            <p class="text-admin-base text-ink-2" aria-live="polite">{{ trans('search.searching', { q: term.trim() }) }}</p>
             <div v-for="n in 2" :key="n" class="flex flex-col gap-8">
                 <div class="flex h-28 items-center"><Skeleton shape="text" class="w-120" /></div>
                 <ul class="flex flex-col rounded-sm border border-line-subtle bg-surface">
@@ -83,9 +83,9 @@ function submit(): void {
         <EmptyQueue v-else-if="total === 0" variant="quiet" :icon="PhMagnifyingGlass" :title="trans('search.no_results_title', { q })" :body="trans('search.no_results_body')" data-testid="ADM-07.no-results" />
 
         <div v-else class="flex flex-col gap-32" data-testid="ADM-07.results">
-            <p class="text-supporting text-ink-2 tabular-nums" aria-live="polite">{{ trans('search.count', { count: formatNumber(total), q }) }}</p>
+            <p class="text-admin-base text-ink-2 tabular-nums" aria-live="polite">{{ trans('search.count', { count: formatNumber(total), q }) }}</p>
             <section v-for="group in groups.filter((g) => g.items.length > 0)" :key="group.group" :aria-labelledby="`search-${group.group}`" class="flex flex-col gap-8" :data-testid="`ADM-07.group.${group.group}`">
-                <h2 :id="`search-${group.group}`" class="flex items-baseline gap-8 text-title-s text-ink">
+                <h2 :id="`search-${group.group}`" class="flex items-baseline gap-8 text-headline text-ink">
                     {{ trans(`search.groups.${group.group}`) }}
                     <span class="text-caption text-ink-3 tabular-nums">{{ formatNumber(group.items.length) }}</span>
                 </h2>
@@ -96,7 +96,7 @@ function submit(): void {
                             :href="item.url ?? undefined"
                             :class="[item.url ? `${focusRing} hover:bg-hover` : '', 'flex h-40 items-center gap-12 px-12']"
                         >
-                            <span class="min-w-0 flex-1 truncate text-supporting text-ink">{{ item.title }}</span>
+                            <span class="min-w-0 flex-1 truncate text-admin-base text-ink">{{ item.title }}</span>
                             <span v-if="item.subtitle" class="max-w-320 truncate text-caption text-ink-3">{{ item.subtitle }}</span>
                         </component>
                     </li>

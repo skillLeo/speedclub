@@ -7,6 +7,7 @@ use App\Enums\RestrictionType;
 use App\Enums\WhoCanMessage;
 use App\Models\Follow;
 use App\Models\User;
+use App\Services\Showcase\SampleContent;
 
 /**
  * Whether a viewer may write to a member now (02_PRODUCT_SPEC §3.5, §3.6). The one place for the rule: PROF-02's `can_message` reads it,
@@ -49,7 +50,8 @@ class MessagingEligibility
             return CannotMessageReason::Restricted;
         }
 
-        if ($member->trashed() || ! $member->isPubliclyVisible() || ($blocked ?? $viewer->hasBlockWith($member))) {
+        // 09 §8.19: a sample member is closed to messages while editorial_samples is off.
+        if ($member->trashed() || ! $member->isPubliclyVisible() || ($blocked ?? $viewer->hasBlockWith($member)) || app(SampleContent::class)->hides($member, $viewer)) {
             return CannotMessageReason::RecipientClosed;
         }
 

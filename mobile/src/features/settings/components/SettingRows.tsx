@@ -22,6 +22,8 @@ export type SwitchRowProps = {
   onValueChange: (next: boolean) => void;
   disabled?: boolean;
   divider?: boolean;
+  /** False keeps the helper's words whole: a date ("30. November") must not hyphenate (DQ-1101). */
+  hyphenate?: boolean;
   testID: string;
 };
 
@@ -30,13 +32,14 @@ export type SwitchRowProps = {
  * Disabled (offline, restricted) dims the switch only: the row itself is no control, and its text keeps its colours, which pass
  * AA, while text.disabled would not (M2.8 axe on SET-07).
  */
-export function SwitchRow({ title, helper, value, onValueChange, disabled, divider, testID }: SwitchRowProps) {
+export function SwitchRow({ title, helper, value, onValueChange, disabled, divider, hyphenate, testID }: SwitchRowProps) {
   // View-as (m3.2-contract §3): every setting is read-only.
   const readOnly = useViewAsReadOnly();
   return (
     <ListRow
       title={title}
       subtitle={helper}
+      hyphenate={hyphenate}
       inset={ROW_INSET}
       divider={divider}
       control={<Switch value={value} onValueChange={onValueChange} label={title} disabled={disabled || readOnly} testID={`${testID}.switch`} />}
@@ -82,7 +85,7 @@ export function RadioRows<T extends string>({ label, options, value, onChange, d
             {option.helper ? (
               <View style={styles.radioHelper}>
                 <View style={styles.radioSlot} />
-                <Text variant="supporting" color="text.secondary" style={styles.radioHelperText} testID={`${testID}.${option.value}.helper`}>
+                <Text variant="callout" color="text.secondary" style={styles.radioHelperText} testID={`${testID}.${option.value}.helper`}>
                   {option.helper}
                 </Text>
               </View>

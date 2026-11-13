@@ -11,8 +11,9 @@ import {
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { isIOS, isWeb } from '@/lib/platform';
-import { createStyles, resolveColor, useBreakpoint, useMotion, useTheme } from '@/theme';
+import { createStyles, resolveColor, useBreakpoint, useTheme } from '@/theme';
 
+import { motionDuration, useMotionPreference } from './motion';
 import { FieldSurface } from './FieldSurface';
 import { Icon } from './icons/Icon';
 import { PressableScale } from './PressableScale';
@@ -60,13 +61,13 @@ export type SearchBarProps = Omit<RNTextInputProps, 'style' | 'value' | 'onChang
 };
 
 const useStyles = createStyles((t) => ({
-  root: { alignItems: 'center', borderRadius: t.radius.search, flexDirection: 'row', gap: t.space[4], ...NO_BROWSER_OUTLINE },
+  root: { alignItems: 'center', borderRadius: t.radius.md, flexDirection: 'row', gap: t.space[4], ...NO_BROWSER_OUTLINE },
   // DQ-060: at a large font on a phone the action leaves the field too little room, so it takes its own line while open.
   rootStacked: { alignItems: 'stretch', flexDirection: 'column' },
   field: {
     alignItems: 'center',
     backgroundColor: t.color.bg.raised,
-    borderRadius: t.radius.search,
+    borderRadius: t.radius.md,
     flexDirection: 'row',
     gap: t.space[8],
     minHeight: t.size.search,
@@ -76,7 +77,7 @@ const useStyles = createStyles((t) => ({
   fieldInline: { flex: 1 },
   // DQ-038: without the clear button a long placeholder ends inside the field, not on its frame.
   fieldNoClear: { paddingRight: t.space[12] },
-  frame: { borderRadius: t.radius.search, pointerEvents: 'none' },
+  frame: { borderRadius: t.radius.md, pointerEvents: 'none' },
   tabExit: { height: 0, position: 'absolute', width: 0, ...NO_BROWSER_OUTLINE },
   frameFocus: { borderColor: t.color.text.primary, borderWidth: t.size.border.inputFocus },
   input: { alignSelf: 'stretch', flex: 1, minWidth: 0, ...NO_BROWSER_OUTLINE, ...FIELD_ELLIPSIS, padding: 0 },
@@ -123,8 +124,7 @@ export function SearchBar({
   // On web a press blurs the field first; the cancel action must survive until its press ends.
   const pressingAction = useRef(false);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const motion = useMotion();
-  const body = typeStyle('body', isWeb ? theme.fontScale : 1, undefined, false);
+  const body = typeStyle('input', isWeb ? theme.fontScale : 1, undefined, false);
   const largeFont = useStacksAtFontScale();
   const { kind } = useBreakpoint();
   const stacked = active && largeFont && kind === 'phone';
@@ -145,7 +145,7 @@ export function SearchBar({
       pressingAction.current = false;
       const focusStays = isWeb ? contains(rootRef.current, document.activeElement) : inputRef.current?.isFocused();
       if (!focusStays) setActive(false);
-    }, motion.duration.micro);
+    }, motionDuration('effect.fast'));
   };
   useEffect(
     () => () => {
@@ -324,12 +324,12 @@ function CancelAction({
   testID: string | undefined;
 }) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const opacity = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.get() }));
 
   useEffect(() => {
-    opacity.set(motion.timingTo(1, 'micro'));
+    opacity.set(motion.effectTo(1, 'fast'));
   }, [motion, opacity]);
 
   // ADR-118 inset ring: the action sits only space 4 from the field, and while it holds focus the field keeps its frame. An
@@ -348,7 +348,7 @@ function CancelAction({
         testID={testID}
         contentStyle={styles.cancel}
       >
-        <Text variant="labelS" selectable={false} hyphenate={false}>
+        <Text variant="bodyStrong" selectable={false} hyphenate={false}>
           {label}
         </Text>
       </PressableScale>

@@ -3,7 +3,8 @@ import { StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { isAppReady } from '@/lib/ready';
-import { space, useMotion } from '@/theme';
+import { space } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 
 const styles = StyleSheet.create({ fill: { flex: 1 } });
 
@@ -17,12 +18,12 @@ type Navigation = {
 type Props = { routeKey: string; navigation: Navigation; children: ReactNode };
 
 /**
- * §10: on web a stack only flips display, so push and pop get their 260 ms here: fade + translate 12, or a 120 ms
- * crossfade under reduced motion. It plays on a screen that was pushed and on one revealed by a pop. It stays still
+ * On web a stack only flips display, so push and pop get their motion here: a fade (effect.slow) and a translate of 12 on
+ * spring.calm, which navigation uses because it must not bounce (09 §4.7); under reduced motion the effect.default crossfade. It plays on a screen that was pushed and on one revealed by a pop. It stays still
  * for a tab root on first visit and for a tab coming back, because §10 wants tab switches instant.
  */
 function WebStackTransition({ routeKey, navigation, children }: Props) {
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const pushed = isAppReady() && (navigation.getState().routes.at(0)?.key ?? routeKey) !== routeKey;
   const shift = motion.reduced ? 0 : space[12];
   const opacity = useSharedValue(pushed && motion.enabled ? 0 : 1);
@@ -34,8 +35,8 @@ function WebStackTransition({ routeKey, navigation, children }: Props) {
     const play = (from: number) => {
       opacity.set(0);
       translate.set(from);
-      opacity.set(motion.timingTo(1, 'medium', 'decelerate'));
-      translate.set(motion.timingTo(0, 'medium', 'decelerate'));
+      opacity.set(motion.reduced ? motion.effectTo(1, 'default') : motion.effectTo(1, 'slow'));
+      translate.set(motion.springTo(0, 'calm'));
     };
     if (pushed) play(shift);
     const unsubscribeBlur = navigation.addListener('blur', () => {

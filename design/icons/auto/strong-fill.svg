@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor">
+  <path d="M39,172A96,96,0,1,1,217,172Z M114,136a14,14,0,1,0,28,0a14,14,0,1,0,-28,0Z M151.3,127L189.4,97.7L180.8,86.6L142.7,115.9Z" fill-rule="evenodd"/>
+  <rect x="64" y="192" width="128" height="16" rx="8"/>
+</svg>

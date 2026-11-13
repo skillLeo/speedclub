@@ -78,12 +78,12 @@ export function VerifyEmailNotice({ tabBarOverlay = false }: { tabBarOverlay?: b
         style={[styles.row, { paddingLeft: gutter, paddingRight: gutter }]}
         testID="shell.verifyNotice.action"
       >
-        <Text variant="supporting" numberOfLines={2} hyphenate={false} style={styles.text} testID="shell.verifyNotice.text">
+        <Text variant="callout" numberOfLines={2} hyphenate={false} style={styles.text} testID="shell.verifyNotice.text">
           {visible}
         </Text>
         <View style={styles.action}>
           {stacks ? null : (
-            <Text variant="labelS" numberOfLines={1} hyphenate={false} selectable={false}>
+            <Text variant="bodyStrong" numberOfLines={1} hyphenate={false} selectable={false}>
               {t('verifyNotice.action')}
             </Text>
           )}

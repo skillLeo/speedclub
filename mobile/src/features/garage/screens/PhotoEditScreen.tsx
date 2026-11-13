@@ -9,7 +9,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { useFlag } from '@/api/queries/appConfig';
 import { useUpdateMedia, type GarageMedia, type GarageVehicle, type MediaPatch } from '@/api/queries/garage';
-import { KnownTextSkeleton, linesInHeight } from '@/features/vehicle/components/KnownTextSkeleton';
+import { KnownTextSkeleton } from '@/features/vehicle/components/KnownTextSkeleton';
 import type { MediaCategory } from '@/api/queries/vehicles';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
@@ -18,8 +18,10 @@ import { paramOf } from '@/features/vehicle/navigation';
 import { isWeb } from '@/lib/platform';
 import { useOnline } from '@/state/online';
 import { buttonChrome, buttonHeight, estimatedLabelWidth } from '@/features/vehicle/skeletonGeometry';
-import { createStyles, layout, size, space, typography, useBreakpoint, useTheme } from '@/theme';
+import { createStyles, layout, size, space, useBreakpoint, useTheme } from '@/theme';
 import { Button, Photo, PressableScale, Skeleton, SkeletonBlock, SkeletonText, Text, TextInput, toast } from '@/ui';
+import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
+import { InputLineMeasure, multilineMaxHeight, TEXT_INPUT_ROLE, useDrawnLine } from '@/ui/TextInput';
 import { keyOf } from '@/ui/useRovingKeys';
 import { PhotoCategoryAssist } from '@/features/ai/PhotoCategoryAssist';
 
@@ -75,8 +77,8 @@ const useStyles = createStyles((t) => ({
   field: { gap: t.space[8] },
   // The skeleton in EditorForm's column and FormGroup's rhythm (frames.tsx, fields.tsx).
   skeletonColumn: { alignSelf: 'flex-start', gap: t.space[24], maxWidth: FORM_MAX_WIDTH, width: '100%' },
-  skeletonGroup: { gap: t.space[16] },
-  skeletonEyebrow: { marginBottom: -t.space[4] },
+  skeletonGroup: { gap: t.space[16], marginTop: t.space[8] },
+  skeletonEyebrow: { marginBottom: t.space[8] - t.space[16] },
   skeletonStage: { alignSelf: 'center' },
   skeletonButton: { alignSelf: 'flex-start' },
   skeletonChips: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
@@ -202,7 +204,7 @@ function PhotoForm({ vehicle, photo, restriction }: { vehicle: GarageVehicle; ph
       {locked && restriction ? <RestrictedNotice message={restriction} testID={`${ROUTE}.restricted`} /> : null}
       {notice ? <FormNotice message={notice} testID={`${ROUTE}.notice`} /> : null}
       <FormGroup title={t('photoEdit.focusGroup')}>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {t('photoEdit.focusHint')}
         </Text>
         <GestureDetector gesture={pan} touchAction="none" userSelect="none">
@@ -282,7 +284,7 @@ function PhotoForm({ vehicle, photo, restriction }: { vehicle: GarageVehicle; ph
           name="category"
           render={({ field }) => (
             <View style={styles.field}>
-              <Text variant="labelS" color="text.secondary" aria-hidden>
+              <Text variant="callout" color="text.secondary" aria-hidden>
                 {t('photoEdit.category')}
               </Text>
               <ChoiceChips
@@ -311,21 +313,33 @@ function PhotoForm({ vehicle, photo, restriction }: { vehicle: GarageVehicle; ph
 }
 
 /**
- * DQ-214: the alt field as TextInput draws it: as tall as its text or its placeholder, up to `ALT_ROWS` rows and 12 above and
- * below them, and never below the 52 of a single line.
+ * DQ-214, SF-R4-2: the alt field as TextInput draws it: as tall as its text or its placeholder in the field's own role
+ * (TEXT_INPUT_ROLE, input 16/24, mobile size on every width), up to `ALT_ROWS` rows of the drawn input line (Android 14+ draws
+ * it non-linearly at a large font, so native measures one line, as TextInput does) and 12 above and below them, and never
+ * below the 52 of a single line.
  */
-function AltFieldSkeleton({ text }: { text: string }) {
+export function AltFieldSkeleton({ text, testID }: { text: string; testID?: string }) {
   const styles = useStyles();
   const { fontScale } = useTheme();
+  const { drawnLine, onMeasure } = useDrawnLine(fontScale);
   const [textHeight, setTextHeight] = useState(0);
-  const rows = Math.min(ALT_ROWS, linesInHeight(textHeight, 'body', fontScale));
+  const lines = textHeight > 0 ? Math.max(1, Math.round(textHeight / drawnLine)) : 1;
+  const rows = Math.min(ALT_ROWS, lines);
   return (
     <View>
-      <SkeletonBlock height={Math.max(size.input, rows * typography.body.lineHeight * fontScale + 2 * space[12])} corner="sm" />
+      <SkeletonBlock height={Math.max(size.input, multilineMaxHeight(drawnLine, rows) + 2 * space[12])} corner="sm" testID={testID} />
       <View aria-hidden style={styles.skeletonAltMeasure}>
-        <Text variant="body" hyphenate={false} selectable={false} onLayout={(event) => setTextHeight(event.nativeEvent.layout.height)}>
+        <Text
+          variant={TEXT_INPUT_ROLE}
+          hyphenate={false}
+          desktopSize={false}
+          selectable={false}
+          onLayout={(event) => setTextHeight(event.nativeEvent.layout.height)}
+          testID={testID ? `${testID}.measure` : undefined}
+        >
           {text}
         </Text>
+        {isWeb ? null : <InputLineMeasure onMeasure={onMeasure} />}
       </View>
     </View>
   );
@@ -348,8 +362,8 @@ function PhotoEditSkeleton({ photo, vehicleTitle }: { photo: GarageMedia | undef
     <Skeleton testID={`${ROUTE}.skeleton`}>
       <View style={styles.skeletonColumn}>
         <View style={styles.skeletonGroup}>
-          <SkeletonText variant="eyebrow" width="25%" style={styles.skeletonEyebrow} />
-          <KnownTextSkeleton text={t('photoEdit.focusHint')} variant="supporting" />
+          <SkeletonText variant={SECTION_HEADER_ROLE} width="25%" style={styles.skeletonEyebrow} testID={`${ROUTE}.skeleton.header.focus`} />
+          <KnownTextSkeleton text={t('photoEdit.focusHint')} variant="callout" />
           <SkeletonBlock width="100%" aspectRatio={ratio} corner="md" style={[styles.skeletonStage, { maxWidth: STAGE_MAX_HEIGHT * ratio }]} />
           <SkeletonBlock
             width={estimatedLabelWidth(centre, 's', fontScale) + buttonChrome('s', true)}
@@ -371,14 +385,14 @@ function PhotoEditSkeleton({ photo, vehicleTitle }: { photo: GarageMedia | undef
           </FieldPair>
         </View>
         <View style={styles.skeletonGroup}>
-          <SkeletonText variant="eyebrow" width="25%" style={styles.skeletonEyebrow} />
+          <SkeletonText variant={SECTION_HEADER_ROLE} width="25%" style={styles.skeletonEyebrow} testID={`${ROUTE}.skeleton.header.details`} />
           <View style={styles.field}>
-            <SkeletonText variant="labelS" width="35%" />
-            <AltFieldSkeleton text={alt || t('photoEdit.altPlaceholder', { vehicle: vehicleTitle })} />
-            <KnownTextSkeleton text={`${t('photoEdit.altHelper')} ${charCount(alt.length, ALT_MAX_LENGTH)}`} variant="helper" />
+            <SkeletonText variant="callout" width="35%" />
+            <AltFieldSkeleton text={alt || t('photoEdit.altPlaceholder', { vehicle: vehicleTitle })} testID={`${ROUTE}.skeleton.alt`} />
+            <KnownTextSkeleton text={`${t('photoEdit.altHelper')} ${charCount(alt.length, ALT_MAX_LENGTH)}`} variant="caption" />
           </View>
           <View style={styles.field}>
-            <SkeletonText variant="labelS" width="25%" />
+            <SkeletonText variant="callout" width="25%" />
             <View style={styles.skeletonChips}>
               {MEDIA_CATEGORIES.map((category) => (
                 <SkeletonBlock

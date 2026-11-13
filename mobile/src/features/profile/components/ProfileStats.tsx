@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
@@ -19,7 +20,8 @@ const useStyles = createStyles((t) => ({
 }));
 
 export type ProfileStatsProps = {
-  stats: { vehicles: number; followers: number; following: number };
+  /** A null count is hidden (a sample member, 09 §8.19: counts on samples are hidden), never shown as 0. */
+  stats: { vehicles: number | null; followers: number | null; following: number | null };
   /** PROF-04 on the Follower tab; without it the stat is plain text. */
   onFollowers?: () => void;
   /** PROF-04 on the Folge ich tab. */
@@ -33,7 +35,8 @@ export type ProfileStatsProps = {
 
 /**
  * FS-8 stats, inline and not boxes: "**3** Fahrzeuge · **128** Follower · **87** Folge ich". Follower and Folge ich lead to
- * PROF-04 as links with a 44 target around the line (the visual stays a line of `supporting`). Real numbers only (ADR-114).
+ * PROF-04 as links with a 44 target around the line (the visual stays a line of `supporting`). Real numbers only (ADR-114):
+ * a null count (sample member) is left out, and without any count the line is not drawn.
  */
 export function ProfileStats({ stats, onFollowers, onFollowing, member, style, testID }: ProfileStatsProps) {
   const { t } = useTranslation('profile');
@@ -46,7 +49,7 @@ export function ProfileStats({ stats, onFollowers, onFollowing, member, style, t
   /** "5 Folge ich" exactly as drawn, no-break spaces included: a link's accessible name starts with it (WCAG 2.5.3). */
   const visible = (value: number, label: string) => `${format.number(value)}${NO_BREAK}${keepTogether(label)}`;
   const stat = (value: number, label: string) => (
-    <Text variant="supporting" color="text.secondary">
+    <Text variant="callout" color="text.secondary">
       <Text variant="bodyStrong" style={TABULAR}>
         {format.number(value)}
       </Text>
@@ -62,38 +65,50 @@ export function ProfileStats({ stats, onFollowers, onFollowing, member, style, t
       stat(value, label)
     );
   const dot = (
-    <Text variant="supporting" color="text.secondary" aria-hidden>
+    <Text variant="callout" color="text.secondary" aria-hidden>
       {SEPARATOR}
     </Text>
   );
 
+  const items = [
+    stats.vehicles === null ? null : { id: 'vehicles', node: stat(stats.vehicles, t('stats.vehicles', { count: stats.vehicles })) },
+    stats.followers === null
+      ? null
+      : {
+          id: 'followers',
+          node: link(
+            stats.followers,
+            t('stats.followers', { count: stats.followers }),
+            t('stats.followersLink', { label: visible(stats.followers, t('stats.followers', { count: stats.followers })) }),
+            onFollowers,
+            'followers',
+          ),
+        },
+    stats.following === null
+      ? null
+      : {
+          id: 'following',
+          node: link(
+            stats.following,
+            followingLabel,
+            member
+              ? t('stats.followingLinkOther', { label: visible(stats.following, followingLabel), name: member.handle })
+              : t('stats.followingLink', { label: visible(stats.following, followingLabel) }),
+            onFollowing,
+            'following',
+          ),
+        },
+  ].filter((item): item is { id: string; node: ReactElement } => item !== null);
+  if (items.length === 0) return null;
+
   return (
     <View style={[styles.row, style]} testID={testID}>
-      <View style={styles.item}>
-        {stat(stats.vehicles, t('stats.vehicles', { count: stats.vehicles }))}
-        {dot}
-      </View>
-      <View style={styles.item}>
-        {link(
-          stats.followers,
-          t('stats.followers', { count: stats.followers }),
-          t('stats.followersLink', { label: visible(stats.followers, t('stats.followers', { count: stats.followers })) }),
-          onFollowers,
-          'followers',
-        )}
-        {dot}
-      </View>
-      <View style={styles.item}>
-        {link(
-          stats.following,
-          followingLabel,
-          member
-            ? t('stats.followingLinkOther', { label: visible(stats.following, followingLabel), name: member.handle })
-            : t('stats.followingLink', { label: visible(stats.following, followingLabel) }),
-          onFollowing,
-          'following',
-        )}
-      </View>
+      {items.map((item, index) => (
+        <View key={item.id} style={styles.item}>
+          {item.node}
+          {index < items.length - 1 ? dot : null}
+        </View>
+      ))}
     </View>
   );
 }

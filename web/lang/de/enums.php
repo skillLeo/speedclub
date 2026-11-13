@@ -8,9 +8,9 @@ return [
         'hp' => 'hp',
     ],
     'power_source' => [
-        'factory' => 'Werksangabe',
-        'claimed' => 'Besitzerangabe',
-        'measured' => 'Gemessen',
+        'factory' => 'Herstellerangabe',
+        'claimed' => 'Geschätzt',
+        'measured' => 'Prüfstand',
     ],
     'vehicle_status' => [
         'draft' => 'Entwurf',
@@ -25,14 +25,14 @@ return [
     'mod_status' => [
         'installed' => 'Verbaut',
         'planned' => 'Geplant',
-        'removed' => 'Entfernt',
+        'removed' => 'Ausgebaut',
     ],
     'legal_status' => [
         'abe' => 'ABE',
         'parts_certificate' => 'Teilegutachten',
         'registered' => 'Eingetragen',
         'individual_approval' => 'Einzelabnahme',
-        'not_required' => 'Nicht erforderlich',
+        'not_required' => 'Eintragungsfrei',
         'unknown' => 'Unbekannt',
     ],
     'media_category' => [
@@ -79,7 +79,7 @@ return [
         'naturally_aspirated' => 'Saugmotor',
         'turbo' => 'Turbo',
         'biturbo' => 'Biturbo',
-        'supercharged' => 'Kompressor',
+        'supercharged' => 'Kompressor', // design-lint-disable-line DL09 -- engine aspiration term (Aufladung), not marketing copy
         'twincharged' => 'Turbo + Kompressor',
         'none' => 'Keine (Elektro)',
     ],
@@ -133,6 +133,11 @@ return [
         'specs_changed' => 'Technik geändert',
         'photos_added' => 'Neue Fotos',
         'note' => 'Notiz',
+        'post' => 'Update',
+    ],
+    'social_provider' => [
+        'apple' => 'Apple',
+        'google' => 'Google',
     ],
     'device_platform' => [
         'ios' => 'iOS',
@@ -206,5 +211,86 @@ return [
     'session_kind' => [
         'app' => 'App',
         'web' => 'Browser',
+    ],
+    'reaction_type' => [
+        'strong' => 'Stark',
+        'clean' => 'Sauber',
+        'low' => 'Tief',
+        'loud' => 'Laut',
+    ],
+    'build_update_audience' => [
+        'vehicle' => 'Wie das Fahrzeug',
+        'followers' => 'Nur Follower',
+    ],
+    'comment_status' => [
+        'visible' => 'Sichtbar',
+        'removed' => 'Entfernt',
+    ],
+    'mention_privacy' => [
+        'everyone' => 'Alle',
+        'followers' => 'Follower',
+        'nobody' => 'Niemand',
+    ],
+    'event_type' => [
+        'meet' => 'Treffen',
+        'cruise' => 'Ausfahrt',
+        'track_day' => 'Trackday',
+        'show' => 'Messe',
+    ],
+    'event_status' => [
+        'draft' => 'Entwurf',
+        'pending_review' => 'In Prüfung',
+        'published' => 'Veröffentlicht',
+        'cancelled' => 'Abgesagt',
+        'rejected' => 'Abgelehnt',
+    ],
+    'event_visibility' => [
+        'public' => 'Öffentlich',
+        'followers' => 'Nur Follower',
+        'unlisted' => 'Nur mit Link',
+    ],
+    'event_location_visibility' => [
+        'public' => 'Öffentlich',
+        'after_rsvp' => 'Nach Zusage',
+    ],
+    'rsvp_status' => [
+        'going' => 'Zugesagt',
+        'interested' => 'Interessiert',
+        'waitlist' => 'Warteliste',
+    ],
+    'event_rule' => [
+        'legal_only' => 'Nur legal: keine Rennen, kein gefährliches Fahren auf öffentlichen Straßen',
+        'no_racing' => 'Kein Burnout, kein Drift, kein Wettfahren',
+        'respect_residents' => 'Rücksicht auf Anwohner: Motor aus, keine laute Musik',
+        'no_litter' => 'Hinterlasse keinen Müll',
+        'permits_arranged' => 'Genehmigungen und Einverständnis des Platzbesitzers liegen vor',
+    ],
+    // M4.13 Garage pro (09 §8.8, §8.11).
+    'maintenance_type' => [
+        'hu_au' => 'HU/AU',
+        'service' => 'Service',
+        'oil_change' => 'Ölwechsel',
+        'brake_fluid' => 'Bremsflüssigkeit',
+        'tyre_change' => 'Reifenwechsel',
+        'insurance' => 'Kfz-Versicherung',
+        'custom' => 'Eigene',
+    ],
+    'maintenance_due_state' => [
+        'unknown' => 'Kein Termin',
+        'ok' => 'In Ordnung',
+        'soon' => 'Bald fällig',
+        'overdue' => 'Überfällig',
+    ],
+    'distance_unit' => [
+        'km' => 'km',
+        'mi' => 'mi',
+    ],
+    'torque_unit' => [
+        'nm' => 'Nm',
+        'lbft' => 'lb-ft',
+    ],
+    'weight_unit' => [
+        'kg' => 'kg',
+        'lb' => 'lb',
     ],
 ];

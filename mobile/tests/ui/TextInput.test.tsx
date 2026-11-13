@@ -1,16 +1,17 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 import { createRef, type ComponentRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import type { TextInput as RNTextInput } from 'react-native';
+import { Dimensions, type TextInput as RNTextInput } from 'react-native';
 
 import { hydrateThemePreference, size, themes } from '@/theme';
-import { errorFocusWidth, TextInput } from '@/ui/TextInput';
+import { errorFocusWidth, linearInputLine, TextInput } from '@/ui/TextInput';
 
-import { flat, renderUi } from './helpers';
+import { flat, measureOf, renderUi } from './helpers';
 
 beforeAll(hydrateThemePreference);
 
 const carbon = themes.carbon.color;
+const fontScaleOf = () => Dimensions.get('window').fontScale;
 
 /** The overlay that draws the border is the last child of the field. */
 function frameOf(testID: string) {
@@ -92,8 +93,11 @@ describe('TextInput', () => {
     const input = screen.getByTestId('f');
     expect(input.props.multiline).toBe(true);
     const text = flat(input.props.style);
-    expect(text.maxHeight).toBe(24 * 3);
+    // Native: 3 lines as drawn. Until the measuring line reports, the linear line at the OS font scale stands in.
+    expect(text.maxHeight).toBe(linearInputLine(fontScaleOf()) * 3);
     expect(text.paddingTop ?? text.paddingVertical ?? text.padding).toBe(0);
+    await fireEvent(measureOf('f', 'line'), 'layout', { nativeEvent: { layout: { height: 24 } } });
+    expect(flat(screen.getByTestId('f').props.style).maxHeight).toBe(24 * 3);
     // The field's box around the text carries the padding, so the cap is still 3 × 24 + 2 × 12.
     const box = screen.getByTestId('f.field').children[0];
     expect(flat(box && typeof box !== 'string' ? box.props.style : undefined).paddingVertical).toBe(12);

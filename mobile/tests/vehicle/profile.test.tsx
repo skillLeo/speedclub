@@ -7,10 +7,14 @@ import { VehicleProfile } from '@/features/vehicle/components/VehicleProfile';
 import { VehicleScreen } from '@/features/vehicle/screens/VehicleScreen';
 import { useSessionStore } from '@/state/session';
 import { hydrateThemePreference, themes } from '@/theme';
+import { vehicleTitleText } from '@/ui/textBreaks';
 
 import { R34 } from './fixtures';
 import { visualOf } from '../ui/helpers';
 import { newQueryClient, renderWithProviders, stubFetch } from './harness';
+
+/** DQ-802: the title is set as a car name, so "GT-R" carries its word joiner on native (web keeps it whole with a span). */
+const R34_TITLE = vehicleTitleText('Skyline GT-R R34');
 
 const SLUG = R34.slug;
 const mockParams: { slug: string; tab?: string } = { slug: SLUG };
@@ -62,30 +66,42 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(text('VEH-01.root')).toBeTruthy();
     expect(text('VEH-01.photoCount')).toHaveTextContent('1/3');
     expect(text('VEH-01.eyebrow')).toHaveTextContent('NISSAN');
-    expect(text('VEH-01.title')).toHaveTextContent('Skyline GT-R R34');
+    expect(text('VEH-01.title')).toHaveTextContent(R34_TITLE);
     expect(text('VEH-01.subline')).toHaveTextContent('2002 · 2,6 l R6 Biturbo (RB26DETT) · Bayside Blue');
-    expect(text('VEH-01.specStrip')).toHaveTextContent('500PS540Nm2002BaujahrAWDAntrieb');
-    expect(text('VEH-01.ownerRow')).toHaveTextContent('LSLukas Scholz@lukas.sc · StuttgartFolgenNachricht');
-    // Parity regions sit in the order of WEB-01.
+    expect(text('VEH-01.specStrip')).toHaveTextContent('Leistung500PSPrüfstandDrehmoment540NmPrüfstandBaujahr2002AntriebAWD');
+    // DQ-1047: the owner is a chip on the hero (avatar 32 + @handle); Folgen, Speichern, Teilen, Nachricht are the action row.
+    expect(text('VEH-01.ownerRow')).toHaveTextContent('LS@lukas.sc', { exact: true });
+    expect(text('VEH-01.actions')).toHaveTextContent('FolgenTeilenNachricht');
+    // Parity (parity/compare.mjs folds white space only): no invisible break in the name, the handle or the city, so the
+    // handle's "." carries no zero-width space (handleText / identifierText are not for this row), no word joiner, no soft hyphen.
+    const ownerTexts = within(text('VEH-01.ownerRow'))
+      .getAllByText(/./, { includeHiddenElements: true })
+      .flatMap((node) => [node.props.children].flat())
+      .filter((child): child is string => typeof child === 'string');
+    expect(ownerTexts).toEqual(expect.arrayContaining(['@lukas.sc']));
+    expect(ownerTexts.join('')).not.toMatch(/[​⁠­]/);
+    // Parity regions sit in the order of WEB-01: the identity on the hero (DQ-1047), then the strip on the canvas.
     const ids = screen.getAllByTestId(/^VEH-01\.(hero|title|specStrip|ownerRow)$/).map((node) => node.props.testID as string);
-    expect(ids).toEqual(['VEH-01.hero', 'VEH-01.title', 'VEH-01.specStrip', 'VEH-01.ownerRow']);
+    expect(ids).toEqual(['VEH-01.hero', 'VEH-01.title', 'VEH-01.ownerRow', 'VEH-01.specStrip']);
+    // The identity sits on the hero's stage (DQ-1047), the strip under it.
+    expect(within(text('VEH-01.stage')).getByTestId('VEH-01.title')).toBeTruthy();
     // The tab row's name is WEB-01's nav label (public.vehicle.nav_label), word for word.
     expect(text('VEH-01.tabs.list').props['aria-label']).toBe('Abschnitte');
   });
 
-  it('opens Übersicht with the description, three highlights, the photo preview and the closing owner card', async () => {
+  it('opens Übersicht with the description, three highlights, the photo preview and the guest line (DQ-1057)', async () => {
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />);
-    expect(text('VEH-01.description')).toHaveTextContent(/^Skyline GT-R V-Spec II aus Japan/);
+    expect(text('VEH-01.description')).toHaveTextContent(/^Skyline GT-\u2060R V-\u2060Spec II aus Japan/);
     expect(within(text('VEH-01.highlights')).getByText('Rays Volk Racing TE37 Saga')).toBeTruthy();
     expect(text('VEH-01.highlights.header.action')).toHaveTextContent('Alle Mods (14)');
     expect(text('VEH-01.photoPreview.header.action')).toHaveTextContent('Alle Fotos (3)');
     expect(screen.getByTestId('VEH-01.photoPreview.tile.0')).toBeTruthy();
-    expect(text('VEH-01.closingOwner')).toHaveTextContent(/^Fragen an Lukas Scholz\?/);
+    expect(text('VEH-01.closingOwner')).toHaveTextContent(/^Melde dich an, um Lukas Scholz zu schreiben\./);
   });
 
-  it('sends a guest to the auth-required sheet and back here, from the owner row and the owner card', async () => {
+  it('sends a guest to the auth-required sheet and back here, from the action row and the owner card', async () => {
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />);
-    await fireEvent.press(text('VEH-01.ownerRow.follow'));
+    await fireEvent.press(text('VEH-01.actions.follow'));
     expect(useSessionStore.getState()).toMatchObject({ promptOpen: true, intent: { returnTo: `/v/${SLUG}` } });
     await act(() => useSessionStore.setState({ promptOpen: false, intent: null }));
     await fireEvent.press(text('VEH-01.closingMessage'));
@@ -96,8 +112,9 @@ describe('VEH-01 composition (FS-3)', () => {
     signIn();
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />);
     expect(text('VEH-01.ownerRow')).toBeTruthy();
-    expect(text('VEH-01.ownerRow.follow')).toHaveTextContent('Folgen');
-    await fireEvent.press(text('VEH-01.ownerRow.message'));
+    // Without the build-follow flag "Folgen" follows the owner, as in M2.1; it is the one filled control.
+    expect(text('VEH-01.actions.follow')).toHaveTextContent('Folgen');
+    await fireEvent.press(text('VEH-01.actions.message'));
     expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/new-message', params: { to: 'lukas.sc', about: R34.slug } });
   });
 
@@ -105,8 +122,8 @@ describe('VEH-01 composition (FS-3)', () => {
     signIn();
     const closed = { ...R34, owner: R34.owner ? { ...R34.owner, can_message: false } : null };
     await renderWithProviders(<VehicleProfile vehicle={closed} onBack={jest.fn()} />);
-    expect(text('VEH-01.ownerRow.follow')).toBeTruthy();
-    expect(screen.queryByTestId('VEH-01.ownerRow.message')).toBeNull();
+    expect(text('VEH-01.actions.follow')).toBeTruthy();
+    expect(screen.queryByTestId('VEH-01.actions.message')).toBeNull();
   });
 
   it('leaves the owner out entirely when the owner is hidden (ADR-148)', async () => {
@@ -132,7 +149,7 @@ describe('VEH-01 composition (FS-3)', () => {
     await fireEvent.press(text('VEH-01.tabs.specs'));
     expect(text('VEH-01.panel.specs')).toBeTruthy();
     expect(text('VEH-01.spec.power.value')).toHaveTextContent('500 PS (368 kW)');
-    expect(text('VEH-01.spec.power.provenance')).toHaveTextContent('Gemessen');
+    expect(text('VEH-01.spec.power.provenance')).toHaveTextContent('Prüfstand');
     expect(screen.queryByTestId('VEH-01.spec.make.provenance')).toBeNull();
     expect(text('VEH-01.tabs.specs').props.accessibilityState.selected).toBe(true);
   });
@@ -143,7 +160,7 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(text('VEH-01.mods.exhaust')).toHaveTextContent(/^Abgasanlage\s3/);
     expect(text('VEH-01.legalDisclaimer')).toHaveTextContent('Angaben des Besitzers, keine rechtliche Prüfung');
     // ADR-153: no legal status in Phase 1, even where an answer still carries a label.
-    for (const label of ['Teilegutachten', 'Nicht erforderlich', 'Einzelabnahme', 'Unbekannt']) expect(screen.queryByText(label)).toBeNull();
+    for (const label of ['Teilegutachten', 'Eintragungsfrei', 'Einzelabnahme', 'Unbekannt']) expect(screen.queryByText(label)).toBeNull();
     const wheels = R34.mods.groups[0]!.items[0]!;
     await fireEvent.press(text(`VEH-01.mod.${wheels.id}.body`));
     expect(mockRouter.push).toHaveBeenCalledWith(`/v/${SLUG}/mods/${wheels.id}`);
@@ -197,7 +214,8 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(text('VEH-01.history.loadOlder')).toHaveTextContent('1 älteren Eintrag laden');
     await fireEvent.press(text('VEH-01.history.loadOlder'));
     await waitFor(() => expect(text('VEH-01.update.older')).toBeTruthy());
-    expect(new URL(calls[0]!.url).search).toBe('?per_page=30');
+    const list = calls.find((call) => new URL(call.url).pathname.endsWith('/updates'));
+    expect(new URL(list!.url).search).toBe('?per_page=30');
     expect(screen.queryByTestId('VEH-01.history.loadOlder')).toBeNull();
   });
 
@@ -207,8 +225,9 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(await screen.findByTestId('VEH-04.viewer.counter')).toHaveTextContent('1/3');
     await fireEvent.press(text('VEH-04.viewer.close'));
     await waitFor(() => expect(screen.queryByTestId('VEH-04.viewer')).toBeNull());
+    // DQ-1078: a build with three photos shows all three in the 3-up row, so tile 1 is the second photo.
     await fireEvent.press(text('VEH-01.photoPreview.tile.1'));
-    expect(await screen.findByTestId('VEH-04.viewer.counter')).toHaveTextContent('3/3');
+    expect(await screen.findByTestId('VEH-04.viewer.counter')).toHaveTextContent('2/3');
   });
 
   it('shares the canonical page and copies it from the more sheet', async () => {
@@ -232,21 +251,24 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(mockRouter.push).toHaveBeenCalledWith(`/qr/${R34.id}`);
   });
 
-  it('renders the slots GAR-02 fills', async () => {
+  it('renders the slots GAR-02 fills (DQ-1062: its capsule instead of a toolbar)', async () => {
     const { Text } = jest.requireActual<typeof import('@/ui')>('@/ui');
     signIn();
+    const edit = jest.fn();
     await renderWithProviders(
       <VehicleProfile
         vehicle={{ ...R34, is_owner: true }}
         routeId="GAR-02"
         onBack={jest.fn()}
-        ownerToolbar={<Text testID="toolbar">Bearbeiten</Text>}
+        capsule={{ actions: [{ key: 'edit', icon: 'pencil-simple', label: 'Bearbeiten', onPress: edit, testID: 'GAR-02.tool.edit' }], more: [] }}
         ownerContent={<Text testID="hints">Noch 3 Angaben</Text>}
       />,
     );
-    expect(text('GAR-02.ownerToolbar')).toHaveTextContent('Bearbeiten');
+    await fireEvent.press(text('GAR-02.tool.edit'));
+    expect(edit).toHaveBeenCalled();
+    expect(text('GAR-02.ownerCapsule.primary')).toHaveTextContent('Update posten');
     expect(text('GAR-02.panel.overview')).toHaveTextContent(/^Noch 3 Angaben/);
-    expect(text('GAR-02.title')).toHaveTextContent('Skyline GT-R R34');
+    expect(text('GAR-02.title')).toHaveTextContent(R34_TITLE);
   });
 });
 
@@ -254,7 +276,7 @@ describe('VEH-01 route states', () => {
   it('loads the page for the slug and shows it', async () => {
     const { calls } = stubFetch({ [`/public/vehicles/${SLUG}`]: { body: { data: R34 } } });
     await renderWithProviders(<VehicleScreen />);
-    expect(await screen.findByTestId('VEH-01.title')).toHaveTextContent('Skyline GT-R R34');
+    expect(await screen.findByTestId('VEH-01.title')).toHaveTextContent(R34_TITLE);
     expect(new URL(calls[0]!.url).pathname).toBe(`/api/v1/public/vehicles/${SLUG}`);
   });
 

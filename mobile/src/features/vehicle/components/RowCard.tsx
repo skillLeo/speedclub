@@ -40,7 +40,7 @@ export type GroupHeaderProps = {
 };
 
 /**
- * A heading of a group inside a tab: optional glyph, `title.s`, optional count in tertiary tabular figures. The count stands in the
+ * A heading of a group inside a tab: optional glyph, `headline`, optional count in tertiary tabular figures. The count stands in the
  * heading's own line behind a no-break space, so at a large font it stays with the last word and never sits alone (DQ-180).
  */
 export function GroupHeader({ title, icon, count, countLabel, style, testID }: GroupHeaderProps) {
@@ -49,7 +49,7 @@ export function GroupHeader({ title, icon, count, countLabel, style, testID }: G
     <View style={[styles.header, style]} testID={testID}>
       {icon ? <Icon name={icon} size={20} color="text.secondary" /> : null}
       <Text
-        variant="titleS"
+        variant="headline"
         role="heading"
         {...({ 'aria-level': 2 } as object)}
         aria-label={count === undefined || !countLabel ? undefined : joinLabel([title, countLabel])}
@@ -59,7 +59,7 @@ export function GroupHeader({ title, icon, count, countLabel, style, testID }: G
         {count === undefined ? null : (
           <>
             {NO_BREAK_SPACE}
-            <Text variant="supporting" color="text.tertiary" style={styles.count} testID={testID ? `${testID}.count` : undefined}>
+            <Text variant="callout" color="text.tertiary" style={styles.count} testID={testID ? `${testID}.count` : undefined}>
               {String(count)}
             </Text>
           </>

@@ -11,6 +11,7 @@ use App\Models\Message;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppConfig\FeatureFlags;
+use App\Services\Discover\VisibleBuilds;
 use App\Services\Social\MessagingEligibility;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -20,12 +21,13 @@ use Illuminate\Support\Facades\Gate;
  */
 class ConversationViews
 {
-    public const VEHICLE_RELATIONS = ['make', 'vehicleModel', 'generation', 'cover', 'media', 'owner'];
+    public const VEHICLE_RELATIONS = ['make', 'vehicleModel', 'generation', 'cover', 'media', 'owner', 'specs'];
 
     public function __construct(
         private readonly MessagingEligibility $eligibility,
         private readonly FeatureFlags $flags,
         private readonly TypingSignals $typing,
+        private readonly VisibleBuilds $builds,
     ) {}
 
     /**
@@ -44,6 +46,7 @@ class ConversationViews
         $conversations = Conversation::query()->whereKey($ids)->with(['vehicle' => fn ($query) => $query->with(self::VEHICLE_RELATIONS)])->get()->keyBy('id');
         $others = ConversationParticipant::query()->whereIn('conversation_id', $ids)->where('user_id', '!=', $viewer->id)->get()->keyBy('conversation_id');
         $users = User::withTrashed()->with('avatar')->whereKey($others->pluck('user_id')->unique()->values()->all())->get()->keyBy('id');
+        $this->mainVehicles($viewer, $users);
         $previews = $this->previews($rows);
         $followers = Follow::query()->where('followee_id', $viewer->id)->whereIn('follower_id', $users->keys()->all())->pluck('follower_id')->flip();
         $pending = $this->pendingRequests($viewer, $others);
@@ -84,6 +87,28 @@ class ConversationViews
     public function one(User $viewer, ConversationParticipant $me, bool $detail = true): ConversationView
     {
         return $this->build($viewer, [$me], $detail)[0];
+    }
+
+    /**
+     * DQ-1086/1096: each partner's main build ("fährt BMW M3" under the name, the car badge on the avatar), only a build the viewer may
+     * see in a list (VisibleBuilds: public, published, no block, samples only while shown); null otherwise. Two queries per page, set as
+     * the `mainVehicle` relation that ConversationMemberResource reads.
+     *
+     * @param  Collection<string, User>  $users
+     */
+    private function mainVehicles(User $viewer, Collection $users): void
+    {
+        if ($users->isEmpty()) {
+            return;
+        }
+
+        $mains = $this->builds->query($viewer)->whereIn('vs.owner_id', $users->keys()->all())->where('v.is_main', true)
+            ->pluck('vs.vehicle_id', 'vs.owner_id')->map(strval(...))->all();
+        $vehicles = $this->builds->vehicles(array_values($mains));
+
+        foreach ($users as $id => $user) {
+            $user->setRelation('mainVehicle', isset($mains[$id]) ? ($vehicles[$mains[$id]] ?? null) : null);
+        }
     }
 
     /**

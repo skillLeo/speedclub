@@ -161,6 +161,13 @@ describe('Prüfen with a draft without a name (BH-00)', () => {
     expect(mockRouter.dismissTo).toHaveBeenCalledWith(`/add-vehicle/${DRAFT_ID}/vehicle`);
   });
 
+  it('keeps Veröffentlichen closed while something is missing and says why above it (DQ-1069)', async () => {
+    await showReview({ model: null, model_id: null, model_text: null, generation: null, generation_id: null });
+    const publish = screen.getByTestId('GAR-03.review.cta.primary');
+    expect(publish.props['aria-disabled'] ?? publish.props.accessibilityState?.disabled).toBe(true);
+    expect(screen.getByTestId('GAR-03.review.publishNote')).toHaveTextContent(/Zum Veröffentlichen fehlt noch: Modell/);
+  });
+
   it('lists a missing make too', async () => {
     await showReview({ make: null, make_id: null, make_text: null, model: null, model_id: null, model_text: null, eyebrow: null });
     expect(screen.getByTestId('GAR-03.review.missing.make')).toBeTruthy();

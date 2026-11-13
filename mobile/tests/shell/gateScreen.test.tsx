@@ -1,7 +1,8 @@
-// SYS-02 with a message the team wrote (DQ-093): short and centred is the brand moment, long needs a left edge to read.
+// SYS-02 with a message the team wrote (DQ-093, 09 §7.14 M4.10): a photo-backed brand state, always left-aligned (no centred hero).
 import { screen } from '@testing-library/react-native';
 import type { TextStyle } from 'react-native';
 
+import { MAINTENANCE_PHOTO } from '@/features/system/photos';
 import { gateBodyWidth, GateScreen } from '@/features/system/screens/GateScreen';
 import { hydrateThemePreference, size, space } from '@/theme';
 
@@ -29,13 +30,16 @@ const alignOf = (testID: string) => (flat(screen.getByTestId(testID).props.style
 
 const gate = (body: string, fontScale: number = 1, width: number = 390) => {
   mockWindow.current = { width, height: 844, scale: 2, fontScale };
-  return renderUi(<GateScreen routeId="SYS-02" title="Kurze Wartung" body={body} />);
+  return renderUi(<GateScreen routeId="SYS-02" title="Kurze Wartung" body={body} photo={MAINTENANCE_PHOTO} />);
 };
 
 describe('the gate screen', () => {
-  it('centres a short message', async () => {
+  it('sets a short message on the left too, under the photo, with the one action', async () => {
     await gate(SHORT);
-    expect(alignOf('SYS-02.state.body')).toBe('center');
+    expect(alignOf('SYS-02.state.body')).toBeUndefined();
+    expect(screen.getByTestId('SYS-02.photo')).toBeTruthy();
+    expect(screen.getByTestId('SYS-02.state.action')).toHaveTextContent('Erneut prüfen');
+    expect(screen.queryByTestId('SYS-02.store')).toBeNull();
   });
 
   it('sets a long message left-aligned, with the same title, body and action', async () => {
@@ -49,13 +53,10 @@ describe('the gate screen', () => {
     expect(screen.getByTestId('SYS-02.logo')).toBeTruthy();
   });
 
-  it('counts lines, not letters: a line that fits three lines at 100 % does not at 200 %', async () => {
-    const middling = SHORT.repeat(3);
-    const small = await gate(middling);
-    expect(alignOf('SYS-02.state.body')).toBe('center');
-    small.unmount();
-    await gate(middling, 2);
-    expect(alignOf('SYS-02.state.body')).toBeUndefined();
+  it('puts the photo beside the copy from 768', async () => {
+    await gate(SHORT, 1, 1280);
+    expect(screen.getByTestId('SYS-02.photo')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Kurze Wartung' })).toBeTruthy();
   });
 
   it('measures the column EmptyState lays out', () => {

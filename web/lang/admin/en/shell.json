@@ -96,5 +96,12 @@
         "esc": "Esc",
         "copied": "Link copied",
         "copy_failed": "The link could not be copied."
+    },
+    "two_factor": {
+        "required_for_action": "This step needs a code from your authenticator app. Set up two-factor sign-in first.",
+        "reminder": "Protect your account with a code from your authenticator app.",
+        "reminder_link": "Set up now",
+        "reminder_dismiss": "Hide notice",
+        "reminder_label": "Two-factor sign-in missing"
     }
 }

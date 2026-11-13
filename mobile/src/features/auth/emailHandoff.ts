@@ -16,7 +16,7 @@ import { useSessionStore } from '@/state/session';
 
 import { firstParam } from './forms';
 
-export type HandoffRoute = '/sign-in' | '/sign-up' | '/verify-email' | '/forgot-password' | '/reset-password';
+export type HandoffRoute = '/sign-in' | '/sign-up' | '/verify-email' | '/forgot-password' | '/reset-password' | '/auth/email';
 
 let slot: { route: HandoffRoute; email: string } | null = null;
 

@@ -234,9 +234,10 @@ describe('SAFE-01 views', () => {
 describe('target labels', () => {
   const t = i18n.getFixedT('de', 'safety');
   it('words the language-free label by its type', () => {
-    expect(targetLabel(t, { type: 'photo', label: 'Audi RS6 Avant C8' })).toBe('Foto von Audi RS6 Avant C8');
-    expect(targetLabel(t, { type: 'message', label: '@paul.roadster' })).toBe('Nachricht von @paul.roadster');
-    expect(targetLabel(t, { type: 'member', label: '@paul.roadster' })).toBe('@paul.roadster');
+    // DQ-926: a vehicle name keeps its trailing code (ADR-426 c), a handle breaks only after its "." (DQ-282).
+    expect(targetLabel(t, { type: 'photo', label: 'Audi RS6 Avant C8' })).toBe('Foto von Audi RS6 Avant\u00A0C8');
+    expect(targetLabel(t, { type: 'message', label: '@paul.roadster' })).toBe('Nachricht von @paul.\u200Broadster');
+    expect(targetLabel(t, { type: 'member', label: '@paul.roadster' })).toBe('@paul.\u200Broadster');
     expect(targetLabel(t, { type: 'vehicle', label: '' })).toBe('Nicht mehr verfügbar');
   });
 });

@@ -26,6 +26,16 @@
         "changes_count": "int",
         "hidden": "bool",
         "created_at": "string",
-        "month_label": "string"
+        "month_label": "string",
+        "vehicle_id": "string",
+        "mileage_km": "null",
+        "happened_on": "null",
+        "audience": "string",
+        "edited_at": "null",
+        "photos": [],
+        "photo_pairs": [],
+        "modifications": [],
+        "mentions": [],
+        "my_reaction": "null"
     }
 }

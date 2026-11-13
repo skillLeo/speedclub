@@ -103,7 +103,7 @@ function SwitcherBody({ items, onOpen }: Pick<QuickSwitcherProps, 'items' | 'onO
           if (entries.length === 0) return null;
           return (
             <View key={group} role="group" aria-label={groupLabel(group)}>
-              <Text variant="eyebrow" color="text.tertiary" style={styles.groupTitle}>
+              <Text variant="caption" color="text.tertiary" style={styles.groupTitle}>
                 {groupLabel(group)}
               </Text>
               {entries.map(({ item, index }) => (

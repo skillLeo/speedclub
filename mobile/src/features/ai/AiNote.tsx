@@ -13,7 +13,7 @@ const useStyles = createStyles((t) => ({
 
 export type AiNoteProps = {
   note: AiNoteState;
-  variant?: Extract<TextProps['variant'], 'supporting' | 'helper'>;
+  variant?: Extract<TextProps['variant'], 'callout' | 'caption'>;
   testID: string;
 };
 
@@ -21,7 +21,7 @@ export type AiNoteProps = {
  * The line under an AI surface after a request (M3.7): what happened, in words. For 403 `email_not_verified` (ADR-252) it carries the
  * way to confirm the address (AUTH-04), since that is the only thing the member can do about it.
  */
-export function AiNote({ note, variant = 'supporting', testID }: AiNoteProps) {
+export function AiNote({ note, variant = 'callout', testID }: AiNoteProps) {
   const { t } = useTranslation('common');
   const styles = useStyles();
   const router = useRouter();

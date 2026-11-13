@@ -161,16 +161,16 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                 <div class="flex flex-wrap items-end justify-between gap-12">
                     <div class="flex max-w-720 flex-col gap-4">
                         <h2 class="text-headline text-ink">{{ trans('moderation.rules.keywords.title') }}</h2>
-                        <p class="text-supporting text-ink-2">{{ trans('moderation.rules.keywords.intro') }}</p>
+                        <p class="text-admin-base text-ink-2">{{ trans('moderation.rules.keywords.intro') }}</p>
                     </div>
                     <Button v-if="can('moderation.rules')" size="sm" variant="primary" :icon="PhPlus" data-testid="ADM-23.add" @click="addOpen = true">{{ trans('moderation.rules.keywords.add') }}</Button>
                 </div>
                 <EmptyQueue v-if="pageState !== 'loading' && rules.length === 0" variant="first" :title="trans('moderation.rules.keywords.empty_title')" :body="trans('moderation.rules.keywords.empty_body')" data-testid="ADM-23.keywords.empty" />
                 <ScrollRegion v-else :label="trans('moderation.rules.keywords.caption')">
-                    <table class="w-full text-supporting">
+                    <table class="w-full text-admin-base">
                         <caption class="sr-only">{{ trans('moderation.rules.keywords.caption') }}</caption>
                         <thead>
-                            <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                            <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                                 <th scope="col" class="px-12">{{ trans('moderation.rules.keywords.term') }}</th>
                                 <th scope="col" class="px-12">{{ trans('moderation.rules.keywords.list') }}</th>
                                 <th scope="col" class="px-12">{{ trans('moderation.rules.keywords.created') }}</th>
@@ -204,7 +204,7 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                 <div class="flex flex-wrap items-end justify-between gap-12">
                     <div class="flex max-w-720 flex-col gap-4">
                         <h2 class="text-headline text-ink">{{ trans('moderation.rules.limits.title') }}</h2>
-                        <p class="text-supporting text-ink-2">{{ trans('moderation.rules.limits.intro') }}</p>
+                        <p class="text-admin-base text-ink-2">{{ trans('moderation.rules.limits.intro') }}</p>
                         <p class="text-caption text-ink-3 tabular-nums" data-testid="ADM-23.limits.published">
                             {{ published ? trans('moderation.rules.limits.published', { version: formatNumber(published.version), name: published.published_by ?? '–', date: formatDateTime(published.published_at) }) : trans('moderation.rules.limits.never') }}
                         </p>
@@ -212,10 +212,10 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                     <Button v-if="can('moderation.rules')" size="sm" variant="secondary" :icon="PhPencilSimple" data-testid="ADM-23.limits.edit" @click="limitsOpen = true">{{ trans('moderation.rules.limits.edit') }}</Button>
                 </div>
                 <ScrollRegion :label="trans('moderation.rules.limits.caption')">
-                    <table class="w-full text-supporting">
+                    <table class="w-full text-admin-base">
                         <caption class="sr-only">{{ trans('moderation.rules.limits.caption') }}</caption>
                         <thead>
-                            <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                            <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                                 <th scope="col" class="px-12">{{ trans('moderation.rules.limits.name') }}</th>
                                 <th scope="col" class="px-12 text-right">{{ trans('moderation.rules.limits.default') }}</th>
                                 <th scope="col" class="px-12 text-right">{{ trans('moderation.rules.limits.range') }}</th>
@@ -283,7 +283,7 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
             <form id="adm23-limits" class="flex flex-col gap-16" novalidate @submit.prevent="publishLimits">
                 <div v-for="l in limitRows" :key="l.name" class="flex flex-wrap items-end justify-between gap-12 border-b border-line-subtle pb-12">
                     <div class="flex min-w-0 flex-col gap-2">
-                        <p class="text-label-s text-ink">{{ limitLabel(l.name) }}</p>
+                        <p class="text-admin-base-strong text-ink">{{ limitLabel(l.name) }}</p>
                         <p class="text-caption text-ink-3 tabular-nums">{{ trans('moderation.rules.limits.per', { max: formatNumber(l.default), window: windowText(l.minutes) }) }} · {{ trans('moderation.rules.limits.range_value', { min: formatNumber(l.lower), max: formatNumber(l.upper) }) }}</p>
                     </div>
                     <div class="w-120">

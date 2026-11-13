@@ -93,8 +93,8 @@ const ground = computed(() => (props.kind === 'wordmark_white' ? 'bg-black' : pr
                             <img v-if="asset.thumb" :src="asset.thumb" alt="" :width="asset.width" :height="asset.height" class="block size-full" :class="logo ? 'object-contain p-8' : 'object-cover'" loading="lazy" />
                             <span v-if="asset.id === selected" class="absolute right-4 top-4 flex size-24 items-center justify-center rounded-full bg-inverse text-ink-inverse"><PhCheck :size="16" aria-hidden="true" /></span>
                         </span>
-                        <span class="px-4 text-helper tabular-nums text-ink-2">{{ trans('brand.size', { width: formatNumber(asset.width), height: formatNumber(asset.height) }) }}</span>
-                        <span class="px-4 pb-4 text-helper text-ink-3">{{ formatDate(asset.uploaded_at) }}<template v-if="asset.uploaded_by"> · {{ asset.uploaded_by }}</template></span>
+                        <span class="px-4 text-admin-base tabular-nums text-ink-2">{{ trans('brand.size', { width: formatNumber(asset.width), height: formatNumber(asset.height) }) }}</span>
+                        <span class="px-4 pb-4 text-admin-base text-ink-3">{{ formatDate(asset.uploaded_at) }}<template v-if="asset.uploaded_by"> · {{ asset.uploaded_by }}</template></span>
                         <span class="sr-only">{{ asset.id === selected ? trans('brand.picker.chosen') : trans('brand.picker.choose') }}</span>
                     </button>
                 </li>
@@ -106,7 +106,7 @@ const ground = computed(() => (props.kind === 'wordmark_white' ? 'bg-black' : pr
                 </Field>
                 <div class="flex flex-wrap items-center gap-12">
                     <Button size="sm" variant="secondary" :icon="PhImage" @click="input?.click()">{{ trans('brand.picker.select_file') }}</Button>
-                    <span class="min-w-0 truncate text-supporting text-ink-2">{{ file ? file.name : trans('brand.picker.no_file') }}</span>
+                    <span class="min-w-0 truncate text-admin-base text-ink-2">{{ file ? file.name : trans('brand.picker.no_file') }}</span>
                 </div>
             </form>
         </div>

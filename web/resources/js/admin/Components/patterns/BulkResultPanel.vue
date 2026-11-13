@@ -20,9 +20,9 @@ const done = computed(() => props.results.length - failed.value.length);
 <template>
     <Dialog v-model:open="open" :title="title" size="md" :test-id="testId">
         <div class="flex flex-col gap-16">
-            <p class="text-supporting text-ink tabular-nums">{{ trans('ui.bulk.summary', { done: formatNumber(done), failed: formatNumber(failed.length) }) }}</p>
+            <p class="text-admin-base text-ink tabular-nums">{{ trans('ui.bulk.summary', { done: formatNumber(done), failed: formatNumber(failed.length) }) }}</p>
             <StateBlock v-if="failed.length > 0" kind="partial" :title="trans('ui.bulk.partial')" :retryable="false" />
-            <table v-if="failed.length > 0" class="w-full border-collapse text-supporting">
+            <table v-if="failed.length > 0" class="w-full border-collapse text-admin-base">
                 <thead>
                     <tr class="h-32 border-b border-line text-caption text-ink-2">
                         <th scope="col" class="pr-12 text-left">{{ trans('ui.bulk.record') }}</th>

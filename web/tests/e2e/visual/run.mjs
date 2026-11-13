@@ -2,11 +2,17 @@
 // Visual matrix runner, docs/07_QA_AND_RELEASE.md section 3.
 //   npm --prefix web run visual -- --tier=module --routes=HOME-01,DISC-01
 //   npm --prefix web run visual -- --tier=phase --phase=1   (--phase=N: every route of phases 1..N, into phase-N/)
+//   npm --prefix web run visual -- --tier=p4 --capture-only --states=default   (Phase 4 matrix, 09 §14.1; p4.mjs, p4-sets.mjs)
 // A route's `{name}` path tokens are seeded ids read once per run (support/path-tokens.mjs), and `expectStatus` lets a
 // page answer the 4xx it has by design (WEB-06).
-// Options: --tier=module|phase  --routes=ID,ID  --phase=N  --update-baselines  --resume
+// Options: --tier=module|phase|p4  --routes=ID,ID  --phase=N  --update-baselines  --resume
 //          --workers=N  --fail-on=high|medium  --dry-run  --out=DIR  --baselines=DIR
-//          --device-scale=2 (device pixels for pictures outside the gate, e.g. the client preview; needs --out)
+//          --device-scale=2 or --scale=2 (device pixels for pictures outside the gate, e.g. the client preview; needs --out)
+//          --plan (no browser: the planned cell count per device/theme/locale/fontScale/state of the tier and routes)
+//          p4 only: --devices=iphone15pro,iphonese,pixel8,tablet,desktop1280,desktop1440  --themes=carbon,black,light
+//          --locales=de,en  --states=default[,loading,…]  --font-scales=1[,2]  --capture-only (audit findings are reported in the summary, not failed on;
+//          capture failures, picture-integrity findings (INTEGRITY_CHECKS), baseline mismatches and a changed export still fail). p4 writes into docs/reports/visual/p4/ (or --out)
+//          and compares with tests/e2e/__screenshots__/p4/.
 //          --routes-file=FILE.json (other registry, for the harness self-test)  --ready-timeout=MS
 //          --limits-file=FILE.json ({routes, config} as artisan gives them, instead of asking artisan; for the harness self-test)
 //          --cell-timeout=MS (watchdog of one attempt after its rate-limit room, default 120000)
@@ -34,7 +40,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { chromium } from '@playwright/test';
+import { chromium, webkit } from '@playwright/test';
 import { runDomAudit } from '../support/dom-audit.mjs';
 import { applyAuth, authLease } from '../support/auth.mjs';
 import {
@@ -44,6 +50,7 @@ import {
   appFingerprint,
   checkQaContract,
   contextOptions,
+  decodeImagesForCapture,
   qaUrl,
   trackNetwork,
   waitForStablePage,
@@ -66,11 +73,14 @@ import {
   validateRoutes,
 } from './matrix.mjs';
 import { RateBudget, buildLimits, loadServerLimits } from './rate-budget.mjs';
-import { tokenValues } from '../support/path-tokens.mjs';
+import { missingTokens, tokenValues } from '../support/path-tokens.mjs';
 import { ensureApprovalsFixture } from '../support/backend.mjs';
 import { staffRun } from '../support/staff.mjs';
 import { STAGE_FIXTURES } from '../support/stage-fixtures.mjs';
 import { routes as registry } from './routes.mjs';
+import { filterP4Cells, p4ContextOptions, P4_DEVICE_IDS, planLines, planP4Route, validateP4Filters } from './p4.mjs';
+import { p4Device } from './p4-devices.mjs';
+import { describeSets } from './p4-sets.mjs';
 
 /**
  * The server whose host the baselines show. Routes with `hostDependent` (a QR code of APP_URL in the picture) are compared with
@@ -81,6 +91,16 @@ const BASELINE_ORIGIN = new URL(process.env.SPEEDCLUB_BASELINE_URL ?? 'http://lo
 const REPO_ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 const DEFAULT_OUT = join(REPO_ROOT, 'docs', 'reports', 'visual');
 const DEFAULT_BASELINES = fileURLToPath(new URL('../__screenshots__/', import.meta.url));
+/** The p4 tier (09 §14.1): its own report folder and its own baselines, apart from the module and phase tiers. */
+const DEFAULT_P4_OUT = join(DEFAULT_OUT, 'p4');
+const DEFAULT_P4_BASELINES = join(DEFAULT_BASELINES, 'p4');
+/** A p4 worker keeps at most this many browser contexts (device × locale × auth), the least recently used one is closed first. */
+const P4_MAX_SLOTS = 6;
+/**
+ * WebKit has no host resolver rules: third parties go to a proxy on the discard port, which refuses them, so nothing but our own
+ * host is reached, again without request interception (which would disable the HTTP cache). They still count as third-party requests.
+ */
+const BLOCKING_PROXY = 'http://127.0.0.1:9';
 const ACTION_TIMEOUT_MS = 30_000;
 /** How long closing a browser may take before the session goes on without it. */
 const CLOSE_TIMEOUT_MS = 10_000;
@@ -105,22 +125,47 @@ function parseCli() {
       'routes-file': { type: 'string' },
       'limits-file': { type: 'string' },
       'ready-timeout': { type: 'string', default: '30000' },
-      'device-scale': { type: 'string', default: '1' },
+      'device-scale': { type: 'string' },
+      scale: { type: 'string' },
       'cell-timeout': { type: 'string', default: '120000' },
       'idle-timeout': { type: 'string', default: '600000' },
+      plan: { type: 'boolean', default: false },
+      'capture-only': { type: 'boolean', default: false },
+      devices: { type: 'string' },
+      themes: { type: 'string' },
+      locales: { type: 'string' },
+      states: { type: 'string' },
+      'font-scales': { type: 'string' },
     },
   });
-  if (values.tier !== 'module' && values.tier !== 'phase') throw new Error('--tier must be module or phase');
+  if (values.tier !== 'module' && values.tier !== 'phase' && values.tier !== 'p4') throw new Error('--tier must be module, phase or p4');
   if (values['fail-on'] !== 'high' && values['fail-on'] !== 'medium') throw new Error('--fail-on must be high or medium');
   if (values.tier === 'phase' && !values.phase) throw new Error('--tier=phase needs --phase=N');
-  // Device pixels for pictures outside the gate (the client preview's Retina shots). The gate and its baselines stay at 1.
-  const deviceScale = Number(values['device-scale']);
-  if (![1, 2, 3].includes(deviceScale)) throw new Error('--device-scale must be 1, 2 or 3');
-  if (deviceScale !== 1 && (values['update-baselines'] || !values.out)) {
-    throw new Error('--device-scale above 1 needs --out and never updates baselines: its pictures are not the gate');
+  const p4 = values.tier === 'p4';
+  // The gate tiers have none of these: a filtered or audit-blind module or phase run could pass for a gate run.
+  if (!p4) {
+    const used = [values['capture-only'] ? 'capture-only' : null, ...['devices', 'themes', 'locales', 'states', 'font-scales'].filter((o) => values[/** @type {'devices'} */ (o)] !== undefined)];
+    for (const option of used) if (option) throw new Error(`--${option} is an option of --tier=p4 only`);
   }
+  // Device pixels for pictures outside the gate (the client preview's Retina shots). The gate and its baselines stay at 1.
+  if (values.scale !== undefined && values['device-scale'] !== undefined && values.scale !== values['device-scale']) {
+    throw new Error('--scale and --device-scale name the same thing: give one');
+  }
+  const deviceScale = Number(values.scale ?? values['device-scale'] ?? '1');
+  if (![1, 2, 3].includes(deviceScale)) throw new Error('--device-scale (--scale) must be 1, 2 or 3');
+  if (deviceScale !== 1 && (values['update-baselines'] || !values.out)) {
+    throw new Error('--device-scale (--scale) above 1 needs --out and never updates baselines: its pictures are not the gate');
+  }
+  const list = (/** @type {string|undefined} */ v) =>
+    v === undefined
+      ? null
+      : v
+          .split(',')
+          .map((x) => x.trim())
+          .filter(Boolean);
+  const defaultOut = p4 ? DEFAULT_P4_OUT : DEFAULT_OUT;
   return {
-    tier: /** @type {'module'|'phase'} */ (values.tier),
+    tier: /** @type {'module'|'phase'|'p4'} */ (values.tier),
     routeIds: values.routes
       ? values.routes
           .split(',')
@@ -133,15 +178,27 @@ function parseCli() {
     workers: values.workers ? Number(values.workers) : Math.min(6, Math.max(2, Math.floor(availableParallelism() / 2))),
     failOn: values['fail-on'],
     dryRun: values['dry-run'],
-    outRoot: values.out ?? DEFAULT_OUT,
+    plan: values.plan,
+    outRoot: values.out ?? defaultOut,
     // Pictures at another scale are compared with baselines of their own (none exist, so every cell is new).
-    baselines: values.baselines ?? (deviceScale === 1 ? DEFAULT_BASELINES : join(values.out ?? DEFAULT_OUT, `baselines-x${deviceScale}`)),
+    baselines:
+      values.baselines ??
+      (deviceScale === 1 ? (p4 ? DEFAULT_P4_BASELINES : DEFAULT_BASELINES) : join(values.out ?? defaultOut, `baselines-x${deviceScale}`)),
     routesFile: values['routes-file'] ?? null,
     limitsFile: values['limits-file'] ?? null,
     readyTimeout: Number(values['ready-timeout']),
     cellTimeout: Number(values['cell-timeout']),
     idleTimeout: Number(values['idle-timeout']),
     deviceScale,
+    captureOnly: values['capture-only'],
+    /** @type {import('./p4.mjs').P4Filters} */
+    filters: {
+      devices: list(values.devices),
+      themes: list(values.themes),
+      locales: list(values.locales),
+      states: list(values.states),
+      fontScales: list(values['font-scales']),
+    },
   };
 }
 
@@ -150,14 +207,17 @@ function selectRoutes(cli, /** @type {RouteDef[]} */ all) {
   if (cli.routeIds) {
     const unknown = cli.routeIds.filter((id) => !all.some((r) => r.id === id));
     if (unknown.length) throw new Error(`Unknown route id(s): ${unknown.join(', ')}. Add them to tests/e2e/visual/routes.mjs`);
-    return { selected: all.filter((r) => cli.routeIds?.includes(r.id)), notRun: [] };
+    // A planned route named on purpose is still not captured (it would only time out on its ready element): it is listed with its
+    // reason like every other planned route (DQ-937).
+    const named = all.filter((r) => cli.routeIds?.includes(r.id));
+    return { selected: named.filter((r) => r.status !== 'planned'), notRun: named.filter((r) => r.status === 'planned') };
   }
   // A phase gate photographs everything shipped so far: `--phase=2` takes the routes of phases 1 and 2 (into phase-2/), since a
   // Phase 2 module can change a Phase 1 screen (SET-01, MSG-01, the shell) and the gate must see it.
   const inPhase = (/** @type {RouteDef} */ r) => cli.phase === null || r.phase <= cli.phase;
   return {
     selected: all.filter((r) => r.status !== 'planned' && inPhase(r)),
-    notRun: all.filter((r) => r.status === 'planned' && inPhase(r)).map((r) => r.id),
+    notRun: all.filter((r) => r.status === 'planned' && inPhase(r)),
   };
 }
 
@@ -180,30 +240,56 @@ class CaptureSession {
   #cell = null;
   /** @type {import('../support/auth.mjs').AuthLease|null} the credentials the cell being captured holds (released after it) */
   #lease = null;
+  /** Contexts a worker keeps at most (p4: P4_MAX_SLOTS; the module and phase tiers keep every one, as before). */
+  #maxSlots;
+  #slotClock = 0;
   constructor(
     /** @type {number} */ readyTimeout,
     /** @type {RateBudget} */ budget,
     /** @type {number} */ deviceScale = 1,
     /** @type {number} */ cellTimeout = 120_000,
+    /** @type {number} */ maxSlots = Infinity,
   ) {
     this.#readyTimeout = readyTimeout;
     this.#budget = budget;
     this.#deviceScale = deviceScale;
     this.#cellTimeout = cellTimeout;
+    this.#maxSlots = maxSlots;
   }
 
-  /** @type {import('@playwright/test').Browser|null} */
-  #browser = null;
-  /** @type {Map<string, {context:import('@playwright/test').BrowserContext,page:import('@playwright/test').Page,network:ReturnType<typeof trackNetwork>,log:{pageErrors:string[],consoleErrors:string[],thirdParty:string[],rateLimited:string[],serverErrors:string[]},uses:number,epoch:string|null}>} */
+  /** One browser per engine: Chromium for the module and phase tiers and the p4 Chromium devices, WebKit for the p4 Apple devices. */
+  /** @type {Map<'chromium'|'webkit', import('@playwright/test').Browser>} */
+  #browsers = new Map();
+  /** @type {Map<string, {context:import('@playwright/test').BrowserContext,page:import('@playwright/test').Page,network:ReturnType<typeof trackNetwork>,log:{pageErrors:string[],consoleErrors:string[],thirdParty:string[],rateLimited:string[],serverErrors:string[]},uses:number,epoch:string|null,lastUsed:number}>} */
   #slots = new Map();
 
-  async #open(/** @type {'de'|'en'} */ locale, /** @type {string} */ auth, /** @type {import('../support/auth.mjs').AuthLease} */ lease) {
-    if (!this.#browser) {
+  /** @param {'chromium'|'webkit'} engine */
+  async #browserFor(engine) {
+    let browser = this.#browsers.get(engine);
+    if (!browser) {
       const host = new URL(BASE_URL).hostname;
-      // Nothing but our own host resolves. Interception would disable the HTTP cache.
-      this.#browser = await chromium.launch({ args: [`--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE ${host}`] });
+      browser =
+        engine === 'chromium'
+          ? // Nothing but our own host resolves. Interception would disable the HTTP cache.
+            await chromium.launch({ args: [`--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE ${host}`] })
+          : await webkit.launch({ proxy: { server: BLOCKING_PROXY, bypass: host } });
+      this.#browsers.set(engine, browser);
     }
-    const context = await this.#browser.newContext({ ...contextOptions({ locale }), deviceScaleFactor: this.#deviceScale });
+    return browser;
+  }
+
+  async #open(
+    /** @type {'de'|'en'} */ locale,
+    /** @type {string} */ auth,
+    /** @type {import('../support/auth.mjs').AuthLease} */ lease,
+    /** @type {string|undefined} */ deviceId,
+  ) {
+    const browser = await this.#browserFor(deviceId === undefined ? 'chromium' : p4Device(deviceId).engine);
+    const context = await browser.newContext(
+      deviceId === undefined
+        ? { ...contextOptions({ locale }), deviceScaleFactor: this.#deviceScale }
+        : { ...contextOptions({ locale }), ...p4ContextOptions(deviceId), deviceScaleFactor: this.#deviceScale },
+    );
     context.setDefaultTimeout(ACTION_TIMEOUT_MS);
     await context.clock.setFixedTime(new Date(QA_NOW));
     await applyAuth(context, auth, lease);
@@ -236,11 +322,13 @@ class CaptureSession {
     page.on('websocket', (ws) => {
       if (new URL(ws.url()).hostname !== new URL(origin).hostname) log.thirdParty.push(ws.url());
     });
-    return { context, page, network: trackNetwork(page), log, uses: 0, epoch: lease.epoch };
+    return { context, page, network: trackNetwork(page), log, uses: 0, epoch: lease.epoch, lastUsed: 0 };
   }
 
-  async #slot(/** @type {'de'|'en'} */ locale, /** @type {string} */ auth) {
-    const key = `${locale}|${auth}`;
+  async #slot(/** @type {'de'|'en'} */ locale, /** @type {string} */ auth, /** @type {string|undefined} */ deviceId) {
+    // p4: one context per device (the desktop widths share one, the module/phase context), locale and auth.
+    const key =
+      deviceId === undefined ? `${locale}|${auth}` : `${p4Device(deviceId).descriptor === null ? 'desktop' : deviceId}|${locale}|${auth}`;
     // The cell's credentials (a view-as, a staff session) renewed when they are about to run out, and held until the cell is done
     // (capture() releases the lease): a kept context opened with older ones is opened anew (support/auth.mjs authLease).
     this.#at('renewing the session');
@@ -253,23 +341,31 @@ class CaptureSession {
       slot = undefined;
     }
     if (!slot) {
+      // Bounded (p4): the least recently used context goes first.
+      while (this.#slots.size >= this.#maxSlots) {
+        const [oldKey, old] = [...this.#slots.entries()].sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0] ?? [];
+        if (oldKey === undefined || !old) break;
+        this.#slots.delete(oldKey);
+        await old.context.close().catch(() => {});
+      }
       this.#at('opening the page');
-      slot = await this.#open(locale, auth, lease);
+      slot = await this.#open(locale, auth, lease, deviceId);
       this.#slots.set(key, slot);
     }
     slot.uses++;
+    slot.lastUsed = ++this.#slotClock;
     return slot;
   }
 
   /** Closes everything, so that a retry starts from a clean browser; one that does not close in time is left behind, not awaited. */
   async reset() {
-    const browser = this.#browser;
+    const browsers = [...this.#browsers.values()];
     const slots = [...this.#slots.values()];
     this.#slots.clear();
-    this.#browser = null;
+    this.#browsers.clear();
     const close = (async () => {
       for (const slot of slots) await slot.context.close().catch(() => {});
-      await browser?.close().catch(() => {});
+      for (const browser of browsers) await browser.close().catch(() => {});
     })();
     /** @type {ReturnType<typeof setTimeout>|undefined} */
     let timer;
@@ -339,7 +435,7 @@ class CaptureSession {
    * @param {string} pngPath
    */
   async #capture(route, cell, pngPath) {
-    const { page, network, log } = await this.#slot(cell.locale, route.auth);
+    const { page, network, log } = await this.#slot(cell.locale, route.auth, cell.device);
     this.#at('clearing stored state');
     log.pageErrors.length = 0;
     log.consoleErrors.length = 0;
@@ -405,6 +501,10 @@ class CaptureSession {
       // inverted list (MSG-02) then sits at the bottom under an empty band of a size that changes from run to run.
       if (grown && (await trimEmptyBand(page, cell.viewport))) await waitForStablePage(page, { network });
     }
+    // DQ-910: lazy photos below the fold (a full-page capture) or revealed by the expansion are loaded and decoded, bounded by the
+    // ready timeout; nothing waits when every image is decoded already.
+    this.#at('decoding images');
+    const images = await decodeImagesForCapture(page, this.#readyTimeout);
     refuseRateLimited();
     this.#at('screenshot');
     await page.screenshot({
@@ -422,6 +522,7 @@ class CaptureSession {
       url,
       audit,
       stable,
+      images,
       contractIssues,
       pageErrors: [...log.pageErrors],
       consoleErrors: [...log.consoleErrors],
@@ -518,6 +619,24 @@ async function trimEmptyBand(page, viewport) {
 }
 
 /**
+ * Findings that make a picture untrustworthy rather than report a design defect: the page did not apply the requested theme,
+ * locale, font scale or state (`qa-override`, `state-not-rendered`), it shows a server error or an image that failed, or it threw.
+ * `--capture-only` relaxes the DOM audit and the other runtime checks, never these: such a cell is no valid "before" picture.
+ */
+const INTEGRITY_CHECKS = ['qa-override', STATE_NOT_RENDERED, 'server-error', 'runtime-error', 'broken-image', 'image-not-decoded'];
+
+/**
+ * The cells of a run with picture-integrity findings, each with those findings.
+ * @param {any[]} results
+ * @returns {{name: string, findings: {check: string, message: string}[]}[]}
+ */
+function integrityFindingsOf(results) {
+  return results
+    .map((r) => ({ name: r.name, findings: (r.violations ?? []).filter((/** @type {any} */ v) => INTEGRITY_CHECKS.includes(v.check)) }))
+    .filter((r) => r.findings.length > 0);
+}
+
+/**
  * Failures of the page itself count like audit rows: a page that throws or calls third parties is High.
  * @param {RouteDef} route
  * @param {Awaited<ReturnType<CaptureSession['capture']>>} c
@@ -531,12 +650,47 @@ function mergeRuntimeFindings(route, c) {
   for (const e of c.pageErrors) add('runtime-error', 'High', e);
   for (const u of c.thirdParty) add('third-party-request', 'High', u);
   for (const u of c.serverErrors) add('server-error', 'High', u);
-  for (const u of c.stable.imagesFailed) add('broken-image', 'High', u);
+  for (const u of [...c.stable.imagesFailed, ...c.images.failed]) add('broken-image', 'High', u);
+  // DQ-910: the picture shows a placeholder or a black box where this photo belongs.
+  for (const u of c.images.undecoded) add('image-not-decoded', 'High', `not decoded before the screenshot: ${u}`);
   if (route.qaContract !== false) for (const issue of c.contractIssues) add('qa-override', 'High', issue);
   return audit;
 }
 
 const pad = (/** @type {number} */ n, w = 6) => String(n).padStart(w);
+
+/**
+ * What a p4 summary adds: the sets, the filters, the scale, and with --capture-only every audit finding of the run, cell by cell,
+ * so the "before" state is documented, not only counted, and apart from it the cells whose picture cannot be trusted.
+ * @param {any[]} results
+ * @param {{cli: ReturnType<typeof parseCli>, sets: ReturnType<typeof describeSets>|null, filteredOut: string[], auditFailing: boolean, integrity: ReturnType<typeof integrityFindingsOf>}} o
+ */
+function p4Summary(results, { cli, sets, filteredOut, auditFailing, integrity }) {
+  /** @type {Record<string, {High: number, Medium: number}>} */
+  const byCheck = {};
+  /** @type {{cell: string, check: string, severity: string, element: string, message: string}[]} */
+  const findings = [];
+  for (const r of results) {
+    for (const v of r.violations ?? []) {
+      const entry = (byCheck[v.check] ??= { High: 0, Medium: 0 });
+      if (v.severity === 'High' || v.severity === 'Medium') entry[/** @type {'High'|'Medium'} */ (v.severity)]++;
+      findings.push({ cell: r.name, check: v.check, severity: v.severity, element: v.element, message: v.message });
+    }
+  }
+  return {
+    scale: cli.deviceScale,
+    captureOnly: cli.captureOnly,
+    // What the audits found would have failed this run without --capture-only.
+    auditWouldFail: auditFailing,
+    // Cells whose picture cannot be trusted (INTEGRITY_CHECKS): they fail the run with or without --capture-only.
+    integrityFailures: integrity.map((r) => ({ cell: r.name, findings: r.findings.map((v) => ({ check: v.check, message: v.message })) })),
+    filters: cli.filters,
+    noCellUnderFilters: filteredOut,
+    sets,
+    findingsByCheck: byCheck,
+    findings,
+  };
+}
 
 /**
  * @param {string} title
@@ -586,29 +740,80 @@ async function main() {
   const problems = validateRoutes(allRoutes);
   if (problems.length) throw new Error(`Invalid route registry:\n  ${problems.join('\n  ')}`);
 
+  const p4 = cli.tier === 'p4';
+  if (p4) {
+    const filterProblems = validateP4Filters(cli.filters, allRoutes);
+    if (filterProblems.length) throw new Error(`Wrong p4 filter:\n  ${filterProblems.join('\n  ')}`);
+  }
   const chosen = selectRoutes(cli, allRoutes);
   const { notRun } = chosen;
-  if (chosen.selected.length === 0) throw new Error('No routes selected.');
+  // DQ-937: what is planned but not captured, and why, before anything else (also before --plan and --dry-run).
+  const printNotRun = () => {
+    if (!notRun.length) return;
+    console.log(`Planned, not run: ${notRun.map((r) => r.id).join(', ')}`);
+    for (const r of notRun) console.log(`  ${r.id}: not capturable yet: ${r.plannedReason ?? 'no reason given'}`);
+  };
+  if (chosen.selected.length === 0) {
+    printNotRun();
+    throw new Error('No routes selected.');
+  }
   // Seeded ids that change with every seed (`{r34}` and the like), read once per run as the demo member.
   const names = [...new Set(chosen.selected.flatMap((r) => pathTokens(r.path)))];
-  const tokens = names.length > 0 && !cli.dryRun ? await tokenValues(names) : null;
-  const selected = chosen.selected.map((r) => (tokens && pathTokens(r.path).length > 0 ? { ...r, path: resolvePath(r.path, tokens) } : r));
-
-  /** @type {{route:RouteDef,cell:Cell,dir:string,phase:number}[]} */
-  const jobs = [];
-  for (const route of selected) {
-    const phase = cli.phase ?? route.phase;
-    const dir = join(cli.outRoot, `phase-${phase}`);
-    for (const cell of planRoute(route, cli.tier)) jobs.push({ route, cell, dir, phase });
+  const tokens = names.length > 0 && !cli.dryRun && !cli.plan ? await tokenValues(names) : null;
+  // A route whose seeded token has no value (a seed another lane has not run yet) is skipped with its reason; the others still run.
+  const skippedForSeed = chosen.selected.filter((r) => pathTokens(r.path).some((name) => name in missingTokens));
+  for (const route of skippedForSeed) {
+    const reasons = pathTokens(route.path).filter((name) => name in missingTokens).map((name) => `{${name}}: ${missingTokens[name]}`);
+    console.log(`SKIPPED ${route.id}: ${reasons.join('; ')}`);
   }
-  // All routes in turn: the cells of one route use the same limiters, and back to back they would wait on them.
-  jobs.splice(0, jobs.length, ...interleaveByRoute(jobs, (j) => j.route.id));
+  const selected = chosen.selected
+    .filter((r) => !skippedForSeed.includes(r))
+    .map((r) => (tokens && pathTokens(r.path).length > 0 ? { ...r, path: resolvePath(r.path, tokens) } : r));
+
+  // The output folder of a group of results: `phase-N/` of the module and phase tiers, the p4 folder itself for the p4 tier.
+  const dirOf = (/** @type {number|'p4'} */ group) => (group === 'p4' ? cli.outRoot : join(cli.outRoot, `phase-${group}`));
+  /** @type {{route:RouteDef,cell:Cell,dir:string,phase:number|'p4'}[]} */
+  const jobs = [];
+  /** @type {string[]} p4: routes the filters leave without a cell */
+  const filteredOut = [];
+  for (const route of selected) {
+    const phase = p4 ? 'p4' : (cli.phase ?? route.phase);
+    const dir = dirOf(phase);
+    const cells = cli.tier === 'p4' ? filterP4Cells(planP4Route(route), cli.filters) : planRoute(route, cli.tier);
+    if (cells.length === 0) filteredOut.push(route.id);
+    for (const cell of cells) jobs.push({ route, cell, dir, phase });
+  }
+  if (p4) {
+    // One device after the other (a worker then needs the contexts of one device at a time), all routes in turn within each.
+    const ordered = P4_DEVICE_IDS.flatMap((id) => interleaveByRoute(jobs.filter((j) => j.cell.device === id), (j) => j.route.id));
+    jobs.splice(0, jobs.length, ...ordered);
+  } else {
+    // All routes in turn: the cells of one route use the same limiters, and back to back they would wait on them.
+    jobs.splice(0, jobs.length, ...interleaveByRoute(jobs, (j) => j.route.id));
+  }
   // The cells of a stage fixture last, one fixture at a time (stagesOf keeps the interleaved order inside each stage).
   const stages = stagesOf(jobs, (j) => j.route.fixture);
   jobs.splice(0, jobs.length, ...stages.flatMap((s) => s.jobs));
+  if (p4 && jobs.length === 0) throw new Error('No cells selected: the p4 filters leave nothing of the selected routes.');
   console.log(`Tier ${cli.tier}: ${selected.length} route(s), ${jobs.length} screenshot(s), ${cli.workers} workers, ${BASE_URL}`);
-  if (notRun.length) console.log(`Planned, not run: ${notRun.join(', ')}`);
+  printNotRun();
+  /** @type {ReturnType<typeof describeSets>|null} */
+  const sets = p4 ? describeSets(allRoutes) : null;
+  if (sets) {
+    console.log(
+      `p4 sets: FLAGSHIP ${sets.flagship.length} route(s), FORMS ${sets.forms.length}, EN12 ${sets.en12.length}, TABLET ${sets.tablet.length}, SPECIMEN ${sets.specimen.length}` +
+        ` · scale ${cli.deviceScale} · ${cli.captureOnly ? 'capture only (audit findings reported, not failed on)' : 'audits fail the run'}`,
+    );
+    console.log(`Not built yet: ${sets.notBuiltYet.length ? sets.notBuiltYet.join(', ') : 'none'}`);
+    const active = Object.entries(cli.filters).filter(([, v]) => v !== null);
+    if (active.length) console.log(`Filters: ${active.map(([k, v]) => `--${k === 'fontScales' ? 'font-scales' : k}=${/** @type {string[]} */ (v).join(',')}`).join(' ')}`);
+    if (filteredOut.length) console.log(`No cell under the filters: ${filteredOut.join(', ')}`);
+  }
   for (const s of stages) if (s.fixture) console.log(`Stage fixture ${s.fixture}: ${s.jobs.length} screenshot(s) after the others`);
+  if (cli.plan) {
+    for (const line of planLines(jobs.map((j) => j.cell))) console.log(line);
+    return 0;
+  }
   if (cli.dryRun) {
     for (const s of stages) {
       if (s.fixture) console.log(`  [stage fixture ${s.fixture}]`);
@@ -674,7 +879,7 @@ async function main() {
   guard.unref();
 
   const worker = async () => {
-    const session = new CaptureSession(cli.readyTimeout, budget, cli.deviceScale, cli.cellTimeout);
+    const session = new CaptureSession(cli.readyTimeout, budget, cli.deviceScale, cli.cellTimeout, p4 ? P4_MAX_SLOTS : Infinity);
     sessions.push(session);
     for (;;) {
       const job = queue[next++];
@@ -729,6 +934,7 @@ async function main() {
                 consoleErrors: c.consoleErrors,
                 domQuiet: c.stable.domQuiet,
                 fontsLoaded: c.stable.fontsLoaded,
+                imagesMadeEager: c.images.eager,
                 qaContract: { enforced: route.qaContract !== false, issues: c.contractIssues },
               },
               baseline,
@@ -776,7 +982,7 @@ async function main() {
   };
   /**
    * A job that never got its picture because its stage fixture could not be set up: failed, with the reason, like a failed capture.
-   * @param {{route:RouteDef,cell:Cell,dir:string,phase:number}} job
+   * @param {{route:RouteDef,cell:Cell,dir:string,phase:number|'p4'}} job
    * @param {string} message
    */
   const failWithoutCapture = async ({ route, cell, dir, phase }, message) => {
@@ -834,7 +1040,7 @@ async function main() {
 
   // DQ-501: a state cell that is the default's picture did not render its state (state-check.mjs). High, so it fails the run.
   for (const dir of dirs) {
-    const inDir = results.filter((r) => join(cli.outRoot, `phase-${r.phase}`) === dir);
+    const inDir = results.filter((r) => dirOf(r.phase) === dir);
     for (const finding of await findUnrenderedStates(inDir, dir)) {
       const r = inDir.find((x) => x.name === finding.name);
       if (!r || (r.violations ?? []).some((/** @type {any} */ v) => v.check === STATE_NOT_RENDERED)) continue;
@@ -865,7 +1071,7 @@ async function main() {
   let exitCode = 0;
   for (const phase of [...new Set(results.map((r) => r.phase))]) {
     const phaseResults = results.filter((r) => r.phase === phase).sort((a, b) => a.name.localeCompare(b.name));
-    const dir = join(cli.outRoot, `phase-${phase}`);
+    const dir = dirOf(phase);
     /** @type {Record<string,{high:number,medium:number,baseline?:string,failed?:boolean}>} */
     const info = {};
     for (const r of phaseResults) info[r.name] = { high: r.high, medium: r.medium, baseline: r.baseline?.status, failed: r.failed };
@@ -890,20 +1096,25 @@ async function main() {
       qaContractNotEnforced: count((r) => r.runtime && !r.runtime.qaContract.enforced && r.runtime.qaContract.issues.length > 0),
       retried: count((r) => (r.attempts ?? 1) > 1),
     };
+    // --capture-only (p4): the audits run and are reported in full, but their findings do not fail the run; everything else does,
+    // the picture-integrity findings among them (INTEGRITY_CHECKS are High, so without --capture-only they fail through auditFailing).
+    const auditFailing = totals.high > 0 || (cli.failOn === 'medium' && totals.medium > 0);
+    const integrity = integrityFindingsOf(phaseResults);
     const failing =
       exportChanged ||
       totals.failed > 0 ||
-      totals.high > 0 ||
+      (auditFailing && !cli.captureOnly) ||
+      (cli.captureOnly && integrity.length > 0) ||
       totals.baselineMismatch > 0 ||
-      totals.baselineRefused > 0 ||
-      (cli.failOn === 'medium' && totals.medium > 0);
+      totals.baselineRefused > 0;
     if (failing) exitCode = 1;
 
     const summary = {
       tier: cli.tier,
-      phase,
+      phase: phase === 'p4' ? cli.phase : phase,
       routes: selected.map((r) => r.id),
-      plannedNotRun: notRun,
+      plannedNotRun: notRun.map((r) => r.id),
+      plannedNotRunReasons: Object.fromEntries(notRun.map((r) => [r.id, r.plannedReason ?? ''])),
       baseUrl: BASE_URL,
       workers: cli.workers,
       durationMs,
@@ -925,10 +1136,11 @@ async function main() {
         diffRatio: r.baseline?.ratio ?? null,
         ms: r.ms,
       })),
+      ...(phase === 'p4' ? p4Summary(phaseResults, { cli, sets, filteredOut, auditFailing, integrity }) : {}),
     };
     await writeFile(join(dir, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
 
-    printTable(`Phase ${phase}, tier ${cli.tier}`, phaseResults);
+    printTable(phase === 'p4' ? 'Tier p4' : `Phase ${phase}, tier ${cli.tier}`, phaseResults);
     const top = topFindings(phaseResults);
     if (top.length) {
       console.log('\nMost frequent findings (screenshots affected):');
@@ -936,6 +1148,23 @@ async function main() {
     }
     for (const f of summary.failures.slice(0, 10)) console.log(`\nCAPTURE FAILED ${f.name}: ${f.error}`);
     for (const f of summary.retries.slice(0, 10)) console.log(`\nRETRIED ${f.name}, first attempt: ${f.firstError}`);
+    if (phase === 'p4') {
+      if (totals.baselineNew) console.log(`\nNo p4 baseline yet for ${totals.baselineNew} cell(s) (baseline "new"): reported, not a failure.`);
+      const secondsPerCell = totals.captured ? durationMs / 1000 / Math.max(1, capturedHere) : 0;
+      console.log(`Seconds per cell (wall clock, ${cli.workers} workers): ${secondsPerCell.toFixed(2)}`);
+      if (cli.captureOnly && auditFailing) {
+        console.log(
+          `\nCAPTURE ONLY: ${totals.high} High and ${totals.medium} Medium audit finding(s) are in summary.json (findings), not failed on.`,
+        );
+      }
+      if (integrity.length) {
+        console.log(`\nPICTURE INTEGRITY: ${integrity.length} cell(s) cannot be trusted as a picture of their cell (failed on, also with --capture-only):`);
+        for (const r of integrity.slice(0, 20)) {
+          console.log(`  ${r.name}: ${r.findings.map((v) => `${v.check}: ${String(v.message).slice(0, 160)}`).join(' | ')}`);
+        }
+        if (integrity.length > 20) console.log(`  … ${integrity.length - 20} more in summary.json (integrityFailures)`);
+      }
+    }
     if (totals.qaContractNotEnforced) {
       console.log(
         `\nWARNING: ${totals.qaContractNotEnforced} screenshot(s) come from routes that do not honour qa* overrides yet (qaContract: false).`,
@@ -953,12 +1182,24 @@ async function main() {
   return exitCode;
 }
 
+/**
+ * Ends the process with `code` once stdout and stderr are flushed (a pipe is asynchronous on macOS: process.exit alone can cut the
+ * summary). Bounded, so a stuck stream cannot hold the exit either.
+ * @param {number} code
+ */
+async function exitWith(code) {
+  const flushed = (/** @type {NodeJS.WriteStream} */ stream) => new Promise((resolve) => stream.write('', () => resolve(null)));
+  await Promise.race([Promise.all([flushed(process.stdout), flushed(process.stderr)]), new Promise((resolve) => setTimeout(resolve, CLOSE_TIMEOUT_MS).unref())]);
+  process.exit(code);
+}
+
+// An explicit exit, not process.exitCode: a browser that CaptureSession.reset() had to leave behind (it did not close within
+// CLOSE_TIMEOUT_MS) keeps a handle open, and Node then never ended (H1: a runner held the qa-run lock for over 30 minutes after its
+// summary). Playwright's exit handler kills the browsers it launched when the process exits.
 main().then(
-  (code) => {
-    process.exitCode = code;
-  },
+  (code) => exitWith(code),
   (error) => {
     console.error(error instanceof Error ? error.message : error);
-    process.exitCode = 2;
+    return exitWith(2);
   },
 );

@@ -6,26 +6,30 @@ import { View } from 'react-native';
 import { ApiError, networkError, newIdempotencyKey } from '@/api/client';
 import { useChangeVisibility, usePublishVehicle, type GarageVehicle, type Visibility } from '@/api/queries/garage';
 import { FormNotice } from '@/features/auth/components/FormNotice';
-import { photoFields, specChips } from '@/features/profile/media';
+import { specChips } from '@/features/profile/media';
 import { RowCard } from '@/features/vehicle/components/RowCard';
 import { keepNameTogether, keepValuesTogether } from '@/lib/format';
+import { hapticFor } from '@/lib/haptics';
 import { useOnline } from '@/state/online';
-import { createStyles, space } from '@/theme';
-import { ListRow, toast, VehicleCard } from '@/ui';
+import { createStyles, space, useBreakpoint } from '@/theme';
+import { ListRow, Text, toast } from '@/ui';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 
 import { FormGroup } from '../../components/fields';
-import { RestrictedNotice } from '../../components/frames';
+import { PlateReminder } from '../../components/PlateReminder';
+import { FORM_MAX_WIDTH, RestrictedNotice } from '../../components/frames';
 import { usePhotoCounts } from '../../components/VehiclePhotos';
 import { VisibilityChoice } from '../../components/VisibilityChoice';
 import { WizardFrame } from '../../components/WizardFrame';
+import { WizardVehiclePreview } from '../../components/WizardVehiclePreview';
 import { mayStillLand, saveErrorMessage } from '../../errors';
 import { isVisibility, missingForPublish, stepFor, type WizardStep } from '../../model';
 import { useCloseModal, useReplaceWizardWithPublished, wizardPath } from '../../navigation';
 import { useMountedRef, usePreview, useWizardDraft } from '../../wizard';
 import { WizardStateBody } from './WizardStateBody';
 
-const CARD_PHOTO_WIDTH = 560;
+/** The desktop's right pane (WizardFrame PREVIEW_WIDTH 320) inside its 24 padding. */
+const PANE_PREVIEW_WIDTH = 320 - 2 * space[24];
 
 const useStyles = createStyles((t) => ({
   missing: { gap: t.space[8] },
@@ -97,6 +101,9 @@ function ReviewStep({ draft, reached, restriction }: { draft: GarageVehicle; rea
   const [leaving, setLeaving] = useState(false);
   const missing = missingForPublish(draft);
   const locked = restriction !== null;
+  const { kind, gutter, width } = useBreakpoint();
+  const desktop = kind === 'desktop';
+  const columnWidth = Math.min(FORM_MAX_WIDTH, width - 2 * gutter);
 
   useEffect(() => {
     if (leaving) close();
@@ -154,7 +161,9 @@ function ReviewStep({ draft, reached, restriction }: { draft: GarageVehicle; rea
     publish.mutate(
       { visibility, idempotencyKey: publishAttempt.current.key },
       {
-        // Success needs nothing here: the answer is the published vehicle in the cache, and the screen above goes to GAR-04.
+        // The answer is the published vehicle in the cache, and the screen above goes to GAR-04; here only the success haptic
+        // of the publish (09 §4.8), before GAR-04's QR reveal gives its own.
+        onSuccess: () => hapticFor('vehiclePublished'),
         onError: (error) => {
           // Only an answer that refuses this publish makes the next attempt a new intent. No answer, a 429, a 5xx or a 401 says
           // nothing about whether the first one landed, so the retry keeps its key (as createOnce).
@@ -183,8 +192,17 @@ function ReviewStep({ draft, reached, restriction }: { draft: GarageVehicle; rea
       draftId={draft.id}
       reached={reached}
       preview={preview}
+      previewNode={<WizardVehiclePreview draft={draft} width={PANE_PREVIEW_WIDTH} onAddPhoto={() => edit('photos')} testID="GAR-03.review.card" />}
       dirty={false}
-      cta={{ label: t('review.publish'), onPress: submit, loading: publish.isPending || saving, disabled: locked || !online }}
+      // 09 §7.6 / ADR-431 a: publishing is the garage's brand moment, the one place the red fill stands. DQ-1069: what "Fehlt noch"
+      // lists is required by the server (vehicle_incomplete), so the button waits for it and says why just above it.
+      cta={{
+        label: t('review.publish'),
+        variant: 'brand',
+        onPress: submit,
+        loading: publish.isPending || saving,
+        disabled: locked || !online || missing.length > 0,
+      }}
       secondary={{
         label: t('wizard.saveDraft'),
         onPress: () => {
@@ -197,13 +215,8 @@ function ReviewStep({ draft, reached, restriction }: { draft: GarageVehicle; rea
     >
       {locked && restriction ? <RestrictedNotice message={restriction} testID="GAR-03.restricted" /> : null}
       {notice ? <FormNotice message={notice} testID="GAR-03.notice" /> : null}
-      <VehicleCard
-        title={draft.full_title.trim() || t('wizard.untitled')}
-        subtitle={draft.subline_parts.slice(0, 2).join(' · ') || undefined}
-        photo={photoFields(draft.cover, CARD_PHOTO_WIDTH)}
-        specs={specChips(draft)}
-        testID="GAR-03.review.card"
-      />
+      {/* DQ-1052: the real VEH-01 render on phones and tablets; on desktop it stands in the right pane only, never twice. */}
+      {desktop ? null : <WizardVehiclePreview draft={draft} width={columnWidth} onAddPhoto={() => edit('photos')} testID="GAR-03.review.card" />}
       {missing.length > 0 || serverMissing.length > 0 ? (
         <FormGroup title={t('review.missingTitle')} testID="GAR-03.review.missing">
           <View style={styles.missing}>
@@ -267,6 +280,12 @@ function ReviewStep({ draft, reached, restriction }: { draft: GarageVehicle; rea
       <FormGroup title={t('visibility.label')}>
         <VisibilityChoice value={visibility} onChange={pick} disabled={publish.isPending} onlyPrivate={locked} testID="GAR-03.review.visibility" />
       </FormGroup>
+      <PlateReminder testID="GAR-03.review.plateReminder" />
+      {missing.length > 0 ? (
+        <Text variant="caption" color="text.secondary" role="note" testID="GAR-03.review.publishNote">
+          {t('review.publishNeeds', { items: missing.map((item) => t(`review.missing.${item}`)).join(', ') })}
+        </Text>
+      ) : null}
     </WizardFrame>
   );
 }

@@ -10,12 +10,17 @@ import { isWeb } from '@/lib/platform';
 
 export type UploadedMedia = components['schemas']['MediaResource'];
 
-export type UploadTarget = { kind: 'vehicle'; vehicleId: string } | { kind: 'mod'; vehicleId: string; modId: string };
+export type UploadTarget =
+  | { kind: 'vehicle'; vehicleId: string }
+  | { kind: 'mod'; vehicleId: string; modId: string }
+  /** M4.11: a build update's own photos (ADR-436 d), sent after the post exists. */
+  | { kind: 'update'; vehicleId: string; updateId: string };
 
 type Answer = { status: number; body: unknown; retryAfter: string | null };
 
 export function uploadUrl(target: UploadTarget): string {
   const base = `${apiOrigin()}/api/v1`;
+  if (target.kind === 'update') return `${base}/build-updates/${target.updateId}/media`;
   return target.kind === 'vehicle' ? `${base}/vehicles/${target.vehicleId}/media` : `${base}/mods/${target.modId}/media`;
 }
 

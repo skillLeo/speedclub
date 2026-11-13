@@ -95,12 +95,12 @@ onMounted(async () => {
     <Head :title="trans('memberships.entitlements.title')" />
     <div class="flex flex-col gap-24" data-testid="ADM-F2" :data-qa-state="pageState">
         <PageHeader :title="trans('memberships.entitlements.title')" :crumbs="[{ label: trans('shell.groups.settings') }]" :description="trans('memberships.entitlements.intro')">
-            <template #meta><p class="text-supporting text-ink-3">{{ trans('memberships.scaffold') }}</p></template>
+            <template #meta><p class="text-admin-base text-ink-3">{{ trans('memberships.scaffold') }}</p></template>
             <template #actions>
                 <Button size="sm" variant="primary" :icon="PhUserPlus" :disabled="planOptions.length === 0" data-testid="ADM-F2.grant" @click="openGrant()">{{ trans('memberships.entitlements.grant') }}</Button>
             </template>
         </PageHeader>
-        <p v-if="planOptions.length === 0" class="text-supporting text-ink-2">{{ trans('memberships.entitlements.no_plans') }}</p>
+        <p v-if="planOptions.length === 0" class="text-admin-base text-ink-2">{{ trans('memberships.entitlements.no_plans') }}</p>
 
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('memberships.entitlements.error')" :body="trans('ui.state.error_body')" test-id="ADM-F2.error" @retry="router.reload()" />
         <div v-else-if="pageState === 'loading'" class="flex flex-col rounded-sm border border-line-subtle" aria-busy="true" data-testid="ADM-F2.loading">
@@ -108,9 +108,9 @@ onMounted(async () => {
         </div>
         <EmptyQueue v-else-if="rows.length === 0" variant="first" :title="trans('memberships.entitlements.empty_title')" :body="trans('memberships.entitlements.empty_body')" data-testid="ADM-F2.empty" />
         <ScrollRegion v-else :label="trans('memberships.entitlements.caption')" test-id="ADM-F2.table">
-            <table class="w-full border-collapse text-supporting">
+            <table class="w-full border-collapse text-admin-base">
                 <caption class="sr-only">{{ trans('memberships.entitlements.caption') }}</caption>
-                <thead class="bg-surface text-left text-label-s text-ink-2">
+                <thead class="bg-surface text-left text-admin-base-strong text-ink-2">
                     <tr class="h-40 border-b border-line">
                         <th scope="col" class="px-12">{{ trans('memberships.entitlements.columns.member') }}</th>
                         <th scope="col" class="px-12">{{ trans('memberships.entitlements.columns.plan') }}</th>

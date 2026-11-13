@@ -39,7 +39,7 @@ export function AuthRequiredSheet() {
           size="l"
           onPress={() => {
             closeAuthPromptKeepingIntent();
-            router.push({ pathname: '/sign-in', params });
+            router.push({ pathname: '/auth/email', params });
           }}
           testID="shell.authRequired.signIn"
         />

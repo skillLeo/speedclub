@@ -3,6 +3,7 @@
 namespace App\Http\Resources\V1;
 
 use App\Services\Discover\FeaturedBuild;
+use App\Services\Home\BuildOfWeek;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,6 +23,8 @@ class FeaturedBuildResource extends JsonResource
             /** `editorial` from the curated list, `completeness` when the list left the slot empty. */
             'source' => $this->resource->source,
             'vehicle' => new FeedVehicleResource($this->resource->vehicle),
+            /** M4.9: the owner's own first sentence of the description (HOME-01 lead), or null; never invented. */
+            'quote' => BuildOfWeek::quote($this->resource->vehicle),
         ];
     }
 }

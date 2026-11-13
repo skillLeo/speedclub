@@ -4,8 +4,10 @@ namespace App\Services\Auth;
 
 use App\Models\User;
 use App\Support\Auth\DeviceInfo;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 
 /**
@@ -21,7 +23,11 @@ final class TwoFactorChallenges
 {
     public const TTL_SECONDS = 300;
 
-    public function issue(User $user, ?DeviceInfo $device, Request $request): string
+    /**
+     * @param  array<string, mixed>  $pending  applied after the second factor (SEC-M46-02); encrypted in the cache, as it may hold a
+     *                                         provider identity and an Apple authorization code
+     */
+    public function issue(User $user, ?DeviceInfo $device, Request $request, array $pending = []): string
     {
         $token = Str::random(40);
 
@@ -30,6 +36,7 @@ final class TwoFactorChallenges
             'remember' => $this->rememberHash($user),
             'bound_to' => $this->boundTo($device, $request),
             'expires_at' => now()->addSeconds(self::TTL_SECONDS)->getTimestamp(),
+            'pending' => $pending === [] ? null : Crypt::encrypt($pending),
         ], self::TTL_SECONDS);
 
         return $token;
@@ -63,6 +70,29 @@ final class TwoFactorChallenges
         }
 
         return ['user' => $user, 'entry' => $entry];
+    }
+
+    /**
+     * What issue() was given to apply after the second factor; empty when nothing (or it cannot be read).
+     *
+     * @param  array<string, mixed>  $entry
+     * @return array<string, mixed>
+     */
+    public static function pending(array $entry): array
+    {
+        $sealed = $entry['pending'] ?? null;
+
+        if (! is_string($sealed)) {
+            return [];
+        }
+
+        try {
+            $pending = Crypt::decrypt($sealed);
+        } catch (DecryptException) {
+            return [];
+        }
+
+        return is_array($pending) ? $pending : [];
     }
 
     /**

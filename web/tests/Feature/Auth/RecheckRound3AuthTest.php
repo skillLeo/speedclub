@@ -9,6 +9,7 @@ use App\Models\AuditEvent;
 use App\Models\PersonalAccessToken;
 use App\Models\Staff;
 use App\Models\User;
+use App\Services\Auth\DeviceInstalls;
 use App\Support\EmailAddress;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -204,7 +205,8 @@ describe('two phones of the same model', function () {
 
         r3Call($a)->assertOk();
         r3Call($b)->assertOk();
-        expect($this->member->tokens()->pluck('device_id')->sort()->values()->all())->toBe([R3_PHONE_B, R3_PHONE_A]);
+        // SEC-M47-03: stored only in the member-keyed form.
+        expect($this->member->tokens()->pluck('device_id')->sort()->values()->all())->toBe(collect([R3_PHONE_A, R3_PHONE_B])->map(fn (string $id): string => DeviceInstalls::key($this->member->id, $id))->sort()->values()->all());
     });
 
     it('still keep one token per install: a second sign-in on the same phone replaces its token', function () {
@@ -266,7 +268,8 @@ describe('two phones of the same model', function () {
             'email' => 'neu@example.de', 'code' => $code, 'password' => R3_PASSWORD, 'device_name' => 'Pixel 8', 'platform' => 'android', 'device_id' => R3_PHONE_A,
         ])->assertOk()->json('data.token');
 
-        expect(PersonalAccessToken::findToken($token)?->device_id)->toBe(R3_PHONE_A);
+        // SEC-M47-03: stored only in the member-keyed form.
+        expect(PersonalAccessToken::findToken($token)?->device_id)->toBe(DeviceInstalls::key((string) User::query()->where('email', 'neu@example.de')->value('id'), R3_PHONE_A));
         r3Call($other)->assertOk();
     });
 
@@ -302,7 +305,7 @@ describe('token rotation with a device_id', function () {
 
         $new = r3Call($old, 'POST', '/api/v1/auth/token/rotate', ['device_id' => R3_PHONE_A])->assertOk()->json('data.token');
 
-        expect(PersonalAccessToken::findToken($new)?->device_id)->toBe(R3_PHONE_A);
+        expect(PersonalAccessToken::findToken($new)?->device_id)->toBe(DeviceInstalls::key($this->member->id, R3_PHONE_A));
 
         r3Call($who === 'new' ? $new : $old, 'POST', '/api/v1/auth/logout')->assertNoContent();
 
@@ -319,8 +322,8 @@ describe('token rotation with a device_id', function () {
 
         $new = r3Call($old, 'POST', '/api/v1/auth/token/rotate', ['device_id' => R3_PHONE_A])->assertOk()->json('data.token');
 
-        expect(PersonalAccessToken::findToken($old)?->device_id)->toBe(R3_PHONE_A)
-            ->and(PersonalAccessToken::findToken($new)?->device_id)->toBe(R3_PHONE_A)
+        expect(PersonalAccessToken::findToken($old)?->device_id)->toBe(DeviceInstalls::key($this->member->id, R3_PHONE_A))
+            ->and(PersonalAccessToken::findToken($new)?->device_id)->toBe(DeviceInstalls::key($this->member->id, R3_PHONE_A))
             ->and(PersonalAccessToken::findToken($other)?->device_id)->toBeNull();
 
         r3Call($who === 'new' ? $new : $old, 'POST', '/api/v1/auth/logout')->assertNoContent();
@@ -336,8 +339,8 @@ describe('token rotation with a device_id', function () {
 
         $new = r3Call($old, 'POST', '/api/v1/auth/token/rotate', ['device_id' => R3_PHONE_B])->assertOk()->json('data.token');
 
-        expect(PersonalAccessToken::findToken($new)?->device_id)->toBe(R3_PHONE_A)
-            ->and(PersonalAccessToken::findToken($old)?->device_id)->toBe(R3_PHONE_A);
+        expect(PersonalAccessToken::findToken($new)?->device_id)->toBe(DeviceInstalls::key($this->member->id, R3_PHONE_A))
+            ->and(PersonalAccessToken::findToken($old)?->device_id)->toBe(DeviceInstalls::key($this->member->id, R3_PHONE_A));
     });
 
     it('still takes a lost answer back by device_id, and leaves the other phone of that model alone', function () {
@@ -365,7 +368,7 @@ describe('token rotation with a device_id', function () {
 
         $new = r3Call($old, 'POST', '/api/v1/auth/token/rotate')->assertOk()->json('data.token');
 
-        expect(PersonalAccessToken::findToken($new)?->device_id)->toBe(R3_PHONE_A);
+        expect(PersonalAccessToken::findToken($new)?->device_id)->toBe(DeviceInstalls::key($this->member->id, R3_PHONE_A));
     });
 
     it('refuses a device_id that is not a plain id, and leaves the token as it was', function (mixed $value) {

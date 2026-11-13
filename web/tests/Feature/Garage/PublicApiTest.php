@@ -51,7 +51,7 @@ describe('GET public/vehicles/{slug}', function () {
             ->assertJsonPath('data.spec_strip.2.label', 'Baujahr')
             ->assertJsonPath('data.spec_strip.3', ['key' => 'drivetrain', 'value' => 'AWD', 'unit' => null, 'label' => 'Antrieb'])
             ->assertJsonPath('data.power.label', '500 PS (368 kW)')
-            ->assertJsonPath('data.power.source_label', 'Gemessen')
+            ->assertJsonPath('data.power.source_label', 'Prüfstand')
             ->assertJsonPath('data.torque.label', '540 Nm')
             ->assertJsonPath('data.subline_parts.1', '2,6 l R6 Biturbo (RB26DETT)')
             ->assertJsonPath('data.subline_parts.2', 'Bayside Blue')
@@ -210,7 +210,8 @@ describe('GET public/vehicles/{slug}', function () {
 
         $page = $this->getJson(publicUrl($vehicle))->json('data');
 
-        expect(collect($page['mods']['groups'])->flatMap(fn (array $group) => $group['items'])->firstWhere('title', 'Offen')['cost']['cents'])->toBe(77700)
+        // M4.9 ruling: costs are never public, cost_public or not.
+        expect(collect($page['mods']['groups'])->flatMap(fn (array $group) => $group['items'])->firstWhere('title', 'Offen')['cost'])->toBeNull()
             ->and(collect($page['mods']['groups'])->flatMap(fn (array $group) => $group['items'])->firstWhere('title', 'Geheim')['cost'])->toBeNull();
 
         $this->getJson(publicUrl($vehicle, "/mods/{$private->id}"))->assertJsonPath('data.cost', null)->assertJsonPath('data.fields', null);

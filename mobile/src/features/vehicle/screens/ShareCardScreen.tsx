@@ -125,7 +125,7 @@ export function ShareCardScreen() {
           testID={`${ROUTE}.format`}
         />
         <View style={[styles.frame, { maxWidth: PREVIEW_MAX_HEIGHT * ratio }]}>{preview}</View>
-        <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.hint`}>
+        <Text variant="callout" color="text.secondary" testID={`${ROUTE}.hint`}>
           {t('shareCard.hint')}
         </Text>
         <View style={styles.actions}>

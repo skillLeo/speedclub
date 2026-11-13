@@ -190,12 +190,12 @@ const formId = `${props.testId}-form`;
         <StateBlock v-else-if="loadState === 'error'" kind="error" :title="trans('catalog.accept.load_error')" :body="trans('catalog.error_body')" @retry="load" />
         <form v-else :id="formId" class="flex flex-col gap-24" novalidate @submit.prevent="submit">
             <FormError :message="formError" :test-id="`${testId}.error`" />
-            <p class="rounded-sm border border-line-subtle px-12 py-8 text-supporting text-ink-2" :data-testid="`${testId}.asked`">
+            <p class="rounded-sm border border-line-subtle px-12 py-8 text-admin-base text-ink-2" :data-testid="`${testId}.asked`">
                 {{ trans('catalog.accept.asked', { text: asked, member: request?.member?.username ? `@${request.member.username}` : trans('catalog.requests.no_member') }) }}
             </p>
 
             <fieldset class="flex flex-col gap-12">
-                <legend class="mb-8 text-label-s text-ink">{{ trans('catalog.accept.levels.make') }}</legend>
+                <legend class="mb-8 text-admin-base-strong text-ink">{{ trans('catalog.accept.levels.make') }}</legend>
                 <SegmentedControl v-model="form.makeMode" class="self-start" :options="modeOptions(false)" :label="trans('catalog.accept.levels.make')" />
                 <Field v-if="form.makeMode === 'pick'" :label="trans('catalog.accept.pick.make')" :error="err('make_id')" required>
                     <Combobox v-model="form.makeId" :options="makeOptions" :placeholder="trans('catalog.accept.search')" :data-testid="`${testId}.make`" />
@@ -211,7 +211,7 @@ const formId = `${props.testId}-form`;
             </fieldset>
 
             <fieldset class="flex flex-col gap-12">
-                <legend class="mb-8 text-label-s text-ink">{{ trans('catalog.accept.levels.model') }}</legend>
+                <legend class="mb-8 text-admin-base-strong text-ink">{{ trans('catalog.accept.levels.model') }}</legend>
                 <SegmentedControl v-model="form.modelMode" class="self-start" :options="modelModes" :label="trans('catalog.accept.levels.model')" />
                 <Field v-if="form.modelMode === 'pick'" :label="trans('catalog.accept.pick.model')" :error="err('model_id')" required>
                     <Combobox v-model="form.modelId" :options="modelOptions" :disabled="!form.makeId" :placeholder="trans('catalog.accept.search')" :data-testid="`${testId}.model`" />
@@ -219,11 +219,11 @@ const formId = `${props.testId}-form`;
                 <Field v-else-if="form.modelMode === 'new'" :label="trans('catalog.accept.new.model')" :error="err('model_name')" required>
                     <Input v-model="form.modelName" maxlength="100" :data-testid="`${testId}.model-name`" />
                 </Field>
-                <p v-else class="text-supporting text-ink-3">{{ trans('catalog.accept.none.model') }}</p>
+                <p v-else class="text-admin-base text-ink-3">{{ trans('catalog.accept.none.model') }}</p>
             </fieldset>
 
             <fieldset v-if="form.modelMode !== 'none'" class="flex flex-col gap-12">
-                <legend class="mb-8 text-label-s text-ink">{{ trans('catalog.accept.levels.generation') }}</legend>
+                <legend class="mb-8 text-admin-base-strong text-ink">{{ trans('catalog.accept.levels.generation') }}</legend>
                 <SegmentedControl v-model="form.generationMode" class="self-start" :options="generationModes" :label="trans('catalog.accept.levels.generation')" />
                 <Field v-if="form.generationMode === 'pick'" :label="trans('catalog.accept.pick.generation')" :error="err('generation_id')" required>
                     <Combobox v-model="form.generationId" :options="generationOptions" :disabled="!form.modelId" :placeholder="trans('catalog.accept.search')" />
@@ -239,10 +239,10 @@ const formId = `${props.testId}-form`;
                         <Field :label="trans('catalog.fields.year_to')" :error="err('year_to')" optional><Input v-model="form.yearTo" inputmode="numeric" maxlength="4" tnum /></Field>
                     </div>
                 </div>
-                <p v-else class="text-supporting text-ink-3">{{ trans('catalog.accept.none.generation') }}</p>
+                <p v-else class="text-admin-base text-ink-3">{{ trans('catalog.accept.none.generation') }}</p>
             </fieldset>
 
-            <p class="text-supporting text-ink-2">{{ trans('catalog.accept.member_note') }}</p>
+            <p class="text-admin-base text-ink-2">{{ trans('catalog.accept.member_note') }}</p>
             <Field :label="trans('catalog.fields.reason')" :hint="trans('catalog.fields.reason_optional_hint')" :error="err('reason')" optional>
                 <Textarea v-model="form.reason" :rows="2" :maxlength="1000" />
             </Field>

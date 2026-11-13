@@ -113,11 +113,12 @@ test.describe('shared routes across tabs (ADR-101)', () => {
       await expectActiveTab(page, 'garage');
     });
 
-    // DQ-202, ADR-160: the large title stays put between the tabs on desktop.
+    // DQ-202, ADR-160: the large title stays put between the tabs on desktop. PROF-01 has no large title since M4.10 (header pattern
+    // b over the cover, 09 §7.7): its page title is the member's name, on the same column edge.
     for (const width of [1280, 1440]) {
       test(`the large title of every tab root starts at the same place at ${width}`, async ({ page, byTestId }) => {
         await page.setViewportSize({ width, height: 800 });
-        const titles = { home: 'HOME-01.title', discover: 'DISC-01.title', garage: 'GAR-01.title', messages: 'MSG-01.title', profile: 'PROF-01.title' };
+        const titles = { home: 'HOME-01.header.title', discover: 'DISC-01.title', garage: 'GAR-01.title', messages: 'MSG-01.title', profile: 'PROF-01.name' };
         await page.goto('/app/');
         for (const name of TABS) {
           await tab(page, name).click();

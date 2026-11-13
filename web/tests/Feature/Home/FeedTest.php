@@ -43,7 +43,7 @@ describe('tab=for_you', function () {
             ->and($response->json('data.0.vehicle.owner.username'))->toBe('lukas.sc');
     });
 
-    it('leaves out the featured builds, the first two Neue Builds and the Build-Updates module', function () {
+    it('leaves out the featured builds and the first two Neue Builds, but no longer the Build-Updates module (M4.8)', function () {
         config(['speedclub.home.featured_limit' => 1, 'speedclub.home.featured_slugs' => []]);
         $builds = collect(range(1, 6))->map(fn (int $i) => homeBuild(hoursAgo: $i));
         homeOrder($builds->all());
@@ -60,9 +60,11 @@ describe('tab=for_you', function () {
         expect($featured)->not->toBeNull()
             ->and($newBuilds)->toHaveCount(2)
             ->and(array_intersect($keys, array_map(fn (string $id) => "vehicle:$id", $shown)))->toBe([])
-            ->and($keys)->not->toContain("update:{$moduleUpdate->id}")
+            // M4.8: no module takes it any more, so its build's card in the stream shows it as the latest change.
+            ->and($keys)->toContain("vehicle:{$builds[5]->id}")
             ->and(count(array_filter($keys, fn (string $key) => str_starts_with($key, 'vehicle:'))))->toBe(6 - count($shown));
-        expect($this->getJson('/api/v1/home/modules')->json('data.build_updates.0.id'))->toBe($moduleUpdate->id);
+        $card = collect($this->getJson('/api/v1/feed?tab=for_you&per_page=20')->json('data'))->firstWhere('key', "vehicle:{$builds[5]->id}");
+        expect($card['vehicle']['latest_update']['id'] ?? null)->toBe($moduleUpdate->id);
     });
 
     it('never shows three items of one owner in a row, on a page or across pages', function (int $perPage) {
@@ -110,7 +112,7 @@ describe('tab=for_you', function () {
         expect($response->json('data.*.type'))->toBe(['vehicle', 'vehicle', 'vehicle', 'update', 'vehicle'])
             ->and($response->json('data.3.key'))->toBe("update:{$latest->id}")
             ->and($response->json('data.3.update.vehicle.id'))->toBe($elsewhere->id)
-            ->and(array_keys($response->json('data.3.update')))->toBe(['id', 'vehicle', 'type_label', 'summary', 'created_at'])
+            ->and(array_keys($response->json('data.3.update')))->toBe(['id', 'vehicle', 'type', 'type_label', 'summary', 'created_at', 'media', 'viewer'])
             ->and($response->json('data.3.vehicle'))->toBeNull()
             // Its card shows it as latest_update; it never comes as a row of its own.
             ->and($response->json('data.1.vehicle.latest_update.id'))->toBe($ofACard->id)

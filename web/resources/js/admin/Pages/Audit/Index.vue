@@ -239,7 +239,7 @@ function requestExport(reason: string | null): void {
                         </Field>
                     </div>
                     <fieldset class="min-w-240 grow-2 basis-0">
-                        <legend class="mb-4 text-label-s text-ink">{{ trans('audit.filters.target') }}</legend>
+                        <legend class="mb-4 text-admin-base-strong text-ink">{{ trans('audit.filters.target') }}</legend>
                         <div class="flex gap-4">
                             <div class="w-1/2 min-w-0">
                                 <Select v-model="targetModel" :options="targetOptions" size="sm" :placeholder="trans('audit.filters.any_target')" :aria-label="trans('audit.filters.target_type')" data-testid="ADM-44.filter.target-type" />
@@ -297,30 +297,30 @@ function requestExport(reason: string | null): void {
                 <dl class="grid grid-cols-1 gap-x-24 gap-y-12 tablet:grid-cols-2">
                     <div class="flex flex-col gap-2">
                         <dt class="text-caption text-ink-3">{{ trans('audit.columns.actor') }}</dt>
-                        <dd class="text-supporting text-ink">{{ actorLabel(detail) }}</dd>
+                        <dd class="text-admin-base text-ink">{{ actorLabel(detail) }}</dd>
                     </div>
                     <div class="flex flex-col gap-2">
                         <dt class="text-caption text-ink-3">{{ trans('audit.columns.target') }}</dt>
-                        <dd class="text-supporting text-ink">{{ detail.target ? `${targetName(detail.target.type)} ${detail.target.id ?? ''}` : '–' }}</dd>
+                        <dd class="text-admin-base text-ink">{{ detail.target ? `${targetName(detail.target.type)} ${detail.target.id ?? ''}` : '–' }}</dd>
                     </div>
                     <div class="flex flex-col gap-2 tablet:col-span-2">
                         <dt class="text-caption text-ink-3">{{ trans('audit.columns.reason') }}</dt>
-                        <dd class="text-supporting text-ink">{{ detail.reason ?? '–' }}</dd>
+                        <dd class="text-admin-base text-ink">{{ detail.reason ?? '–' }}</dd>
                     </div>
                     <div class="flex flex-col gap-2">
                         <dt class="text-caption text-ink-3">{{ trans('audit.event.request') }}</dt>
-                        <dd class="break-all text-supporting text-ink-2 tabular-nums">{{ detail.request_id ?? '–' }}</dd>
+                        <dd class="break-all text-admin-base text-ink-2 tabular-nums">{{ detail.request_id ?? '–' }}</dd>
                     </div>
                     <div class="flex flex-col gap-2">
                         <dt class="text-caption text-ink-3">{{ trans('audit.event.hash') }}</dt>
-                        <dd class="break-all text-supporting text-ink-2 tabular-nums">{{ detail.hash }}</dd>
+                        <dd class="break-all text-admin-base text-ink-2 tabular-nums">{{ detail.hash }}</dd>
                     </div>
                 </dl>
                 <section class="flex flex-col gap-8" :aria-label="trans('audit.event.diff')">
-                    <h3 class="text-label-s text-ink">{{ trans('audit.event.diff') }}</h3>
+                    <h3 class="text-admin-base-strong text-ink">{{ trans('audit.event.diff') }}</h3>
                     <DiffViewer :before="detail.before" :after="detail.after" test-id="ADM-44.diff" />
                 </section>
-                <p class="text-helper text-ink-3">{{ trans('audit.event.viewed_note') }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('audit.event.viewed_note') }}</p>
             </div>
         </Drawer>
 

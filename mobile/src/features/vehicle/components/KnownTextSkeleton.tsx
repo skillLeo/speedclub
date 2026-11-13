@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { createStyles, maxFontScale, typography, useTheme, type TypeVariant } from '@/theme';
+import { createStyles, maxFontScale, typography, typographyDesktop, useTheme, type SizedTypeVariant, type TypeVariant } from '@/theme';
 import { SkeletonText, Text } from '@/ui';
+import { useDesktopType } from '@/ui/Text';
 
 import { estimatedTextWidth } from '../skeletonGeometry';
 
@@ -11,16 +12,21 @@ const useStyles = createStyles(() => ({
   measure: { alignItems: 'flex-start', left: 0, opacity: 0, pointerEvents: 'none', position: 'absolute', right: 0, top: 0 },
 }));
 
-/** The lines a box of this height holds in a type variant, with the font scale and its cap as SkeletonText draws them. */
-export function linesInHeight(height: number, variant: TypeVariant, fontScale: number): number {
+/**
+ * The lines a box of this height holds in a type variant, with the font scale and its cap as SkeletonText draws them; `desktop`:
+ * in the role's web desktop line box, as Text and SkeletonText take it at layout.breakpoints.desktop (body 24, not 22).
+ */
+export function linesInHeight(height: number, variant: SizedTypeVariant, fontScale: number, desktop: boolean = false): number {
   const cap = (maxFontScale as Partial<Record<TypeVariant, number>>)[variant];
-  return Math.max(1, Math.round(height / (typography[variant].lineHeight * Math.min(fontScale, cap ?? fontScale))));
+  const desktopType = desktop ? (typographyDesktop as Partial<Record<SizedTypeVariant, { lineHeight: number }>>)[variant] : undefined;
+  const lineHeight = (desktopType ?? typography[variant]).lineHeight;
+  return Math.max(1, Math.round(height / (lineHeight * Math.min(fontScale, cap ?? fontScale))));
 }
 
 export type KnownTextSkeletonProps = {
   /** The copy the page will set here. */
   text: string;
-  variant: TypeVariant;
+  variant: SizedTypeVariant;
   /** As the page's Text, so both break at the same places. */
   hyphenate?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -35,8 +41,9 @@ export type KnownTextSkeletonProps = {
 export function KnownTextSkeleton({ text, variant, hyphenate, style, testID }: KnownTextSkeletonProps) {
   const styles = useStyles();
   const { fontScale } = useTheme();
+  const desktop = useDesktopType();
   const [box, setBox] = useState({ width: 0, height: 0 });
-  const lines = box.height > 0 ? linesInHeight(box.height, variant, fontScale) : 1;
+  const lines = box.height > 0 ? linesInHeight(box.height, variant, fontScale, desktop) : 1;
   const oneLine = box.width > 0 ? box.width : estimatedTextWidth(text, variant, fontScale);
   return (
     <View style={style}>

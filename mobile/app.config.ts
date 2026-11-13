@@ -18,8 +18,11 @@ const APP_LINK_ENVS: ReadonlySet<string> = new Set(['staging', 'production']);
 // SEC-P2-03: the reset and verify mails' https links open the installed app as verified App Links, so their code never has to
 // travel over the custom scheme, which any app can claim.
 const APP_LINK_PATH_PREFIXES = ['/c/', '/C/', '/v/', '/u/'] as const;
-/** Exact paths, so no later /app/reset-password… route is taken along. */
-const APP_LINK_PATHS = ['/app/reset-password', '/app/verify-email'] as const;
+/**
+ * Exact paths, so no later /app/reset-password… route is taken along. M4.6 / M4.7: the magic link and "Das war ich nicht" of the
+ * mails (/auth/…, redirected to /app/auth/… on the web) carry a token too.
+ */
+const APP_LINK_PATHS = ['/app/reset-password', '/app/verify-email', '/auth/magic', '/app/auth/magic', '/auth/secure', '/app/auth/secure'] as const;
 
 function appLinkOrigin(): { host: string; port: string | null } | null {
   if (!APP_LINK_ENVS.has(appEnv)) return null;
@@ -196,6 +199,8 @@ const config: ExpoConfig = {
   ...(easProjectId ? { extra: { eas: { projectId: easProjectId } } } : {}),
   plugins: [
     'expo-router',
+    // M4.7 SET-20 app lock (09 §8.3): Face ID usage text; Android needs no extra permission text.
+    ['expo-local-authentication', { faceIDPermission: 'Damit du SPEED CLUB mit Face ID entsperren kannst.' }],
     // SEC-P1-06: the dev-client scheme (exp+speedclub) only in builds that can open a dev server.
     ['expo-dev-client', { addGeneratedScheme: !releaseBuild }],
     [
@@ -216,7 +221,27 @@ const config: ExpoConfig = {
     ],
     'expo-image',
     'expo-secure-store',
-    'expo-font',
+    // ADR-402: the 2.0 faces are embedded, so native text never waits for a download or swaps fonts. Each file is named
+    // after its PostScript name: iOS opens it by that name (UIAppFonts), Android looks it up as assets/fonts/<name>.ttf, one
+    // family per weight. An explicit list keeps the web woff2 files in assets/fonts/web out of the iOS bundle.
+    // tests/fonts.test.tsx keeps this list equal to the faces tokens.json names.
+    [
+      'expo-font',
+      {
+        fonts: [
+          './assets/fonts/Inter-Regular.ttf',
+          './assets/fonts/Inter-Medium.ttf',
+          './assets/fonts/Inter-SemiBold.ttf',
+          './assets/fonts/Inter-Bold.ttf',
+          './assets/fonts/InterDisplay-SemiBold.ttf',
+          './assets/fonts/InterDisplay-Bold.ttf',
+          './assets/fonts/ArchivoCondensed-SemiBold.ttf',
+          './assets/fonts/ArchivoCondensed-Bold.ttf',
+          './assets/fonts/ArchivoSemiExpanded-SemiBold.ttf',
+          './assets/fonts/ArchivoSemiExpanded-Bold.ttf',
+        ],
+      },
+    ],
     'expo-status-bar',
     // Without enforceContrast: false, Android ignores NavigationBar.setStyle (ThemeProvider).
     ['expo-navigation-bar', { enforceContrast: false }],

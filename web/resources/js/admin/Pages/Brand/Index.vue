@@ -139,15 +139,15 @@ const ogAsset = computed(() => (empty.value ? null : asset(form.value.og_default
 
             <section class="flex flex-col gap-12" aria-labelledby="adm28-logos" data-testid="ADM-28.logos">
                 <div class="flex flex-col gap-4">
-                    <h2 id="adm28-logos" class="text-title-s text-ink">{{ trans('brand.logos.title') }}</h2>
-                    <p class="max-w-720 text-supporting text-ink-2">{{ trans('brand.logos.intro') }}</p>
+                    <h2 id="adm28-logos" class="text-headline text-ink">{{ trans('brand.logos.title') }}</h2>
+                    <p class="max-w-720 text-admin-base text-ink-2">{{ trans('brand.logos.intro') }}</p>
                 </div>
                 <ul class="grid grid-cols-1 gap-16 desktop:grid-cols-2">
                     <li v-for="slot in LOGO_SLOTS" :key="slot" class="flex flex-col gap-12 rounded-sm border border-line bg-surface p-16" :data-testid="`ADM-28.logo.${slot}`">
                         <div class="flex flex-wrap items-start justify-between gap-8">
                             <div class="flex min-w-0 flex-col gap-2">
-                                <h3 class="text-title-s text-ink">{{ trans(`brand.logos.${slot}`) }}</h3>
-                                <p class="text-supporting text-ink-2">{{ trans(`brand.logos.${slot}_hint`) }}</p>
+                                <h3 class="text-headline text-ink">{{ trans(`brand.logos.${slot}`) }}</h3>
+                                <p class="text-admin-base text-ink-2">{{ trans(`brand.logos.${slot}_hint`) }}</p>
                             </div>
                             <div v-if="!draft.readOnly.value" class="flex gap-8">
                                 <Button v-if="form.logos[slot]" size="sm" variant="ghost" @click="form.logos[slot] = null">{{ trans('brand.remove') }}</Button>
@@ -157,22 +157,22 @@ const ogAsset = computed(() => (empty.value ? null : asset(form.value.og_default
                         <div class="flex h-120 items-center justify-center overflow-hidden rounded-xs px-24" :class="grounds[slot]">
                             <img v-if="logoOf(slot)?.url" :src="logoOf(slot)?.url ?? ''" :alt="trans(`brand.logos.${slot}`)" :width="logoOf(slot)?.width" :height="logoOf(slot)?.height" class="block h-auto max-h-80 w-auto max-w-full object-contain" />
                             <img v-else-if="BUNDLED[slot]" :src="BUNDLED[slot]" :alt="trans('brand.logos.bundled')" width="640" height="192" class="block h-auto max-h-80 w-auto max-w-full object-contain" />
-                            <span v-else class="text-supporting text-ink-2">{{ trans('brand.logos.none') }}</span>
+                            <span v-else class="text-admin-base text-ink-2">{{ trans('brand.logos.none') }}</span>
                         </div>
-                        <p class="text-helper tabular-nums text-ink-3">
+                        <p class="text-admin-base tabular-nums text-ink-3">
                             <template v-if="logoOf(slot)">{{ trans('brand.size', { width: formatNumber(logoOf(slot)?.width), height: formatNumber(logoOf(slot)?.height) }) }}</template>
                             <template v-else-if="BUNDLED[slot]">{{ trans('brand.logos.bundled') }} · {{ trans('brand.minimum', { width: formatNumber(minimums[kindOf(slot)].width), height: formatNumber(minimums[kindOf(slot)].height) }) }}</template>
                             <template v-else>{{ trans('brand.minimum', { width: formatNumber(minimums[kindOf(slot)].width), height: formatNumber(minimums[kindOf(slot)].height) }) }}</template>
                         </p>
-                        <p v-if="draft.errorAt(`logos.${slot}`)" class="text-helper text-danger" role="alert">{{ draft.errorAt(`logos.${slot}`) }}</p>
+                        <p v-if="draft.errorAt(`logos.${slot}`)" class="text-admin-base text-danger" role="alert">{{ draft.errorAt(`logos.${slot}`) }}</p>
                     </li>
                 </ul>
             </section>
 
             <section class="flex flex-col gap-12" aria-labelledby="adm28-heroes" data-testid="ADM-28.heroes">
                 <div class="flex flex-col gap-4">
-                    <h2 id="adm28-heroes" class="text-title-s text-ink">{{ trans('brand.heroes.title') }}</h2>
-                    <p class="max-w-720 text-supporting text-ink-2">{{ trans('brand.heroes.intro') }}</p>
+                    <h2 id="adm28-heroes" class="text-headline text-ink">{{ trans('brand.heroes.title') }}</h2>
+                    <p class="max-w-720 text-admin-base text-ink-2">{{ trans('brand.heroes.intro') }}</p>
                 </div>
                 <HeroSlot
                     v-for="slot in HERO_SLOTS"
@@ -192,8 +192,8 @@ const ogAsset = computed(() => (empty.value ? null : asset(form.value.og_default
             <section class="flex flex-col gap-12 rounded-sm border border-line bg-surface p-16" aria-labelledby="adm28-og" data-testid="ADM-28.og">
                 <div class="flex flex-wrap items-start justify-between gap-8">
                     <div class="flex min-w-0 flex-col gap-4">
-                        <h2 id="adm28-og" class="text-title-s text-ink">{{ trans('brand.og.title') }}</h2>
-                        <p class="max-w-720 text-supporting text-ink-2">{{ trans('brand.og.intro') }}</p>
+                        <h2 id="adm28-og" class="text-headline text-ink">{{ trans('brand.og.title') }}</h2>
+                        <p class="max-w-720 text-admin-base text-ink-2">{{ trans('brand.og.intro') }}</p>
                     </div>
                     <div v-if="!draft.readOnly.value" class="flex gap-8">
                         <Button v-if="form.og_default" size="sm" variant="ghost" @click="form.og_default = null">{{ trans('brand.remove') }}</Button>
@@ -202,15 +202,15 @@ const ogAsset = computed(() => (empty.value ? null : asset(form.value.og_default
                 </div>
                 <div class="aspect-1200/630 w-full max-w-480 overflow-hidden rounded-xs bg-raised">
                     <img v-if="ogAsset?.url" :src="ogAsset.url" :alt="trans('brand.og.title')" :width="ogAsset.width" :height="ogAsset.height" class="block size-full object-cover" />
-                    <span v-else class="flex size-full items-center justify-center px-16 text-center text-supporting text-ink-2">{{ trans('brand.og.bundled') }}</span>
+                    <span v-else class="flex size-full items-center justify-center px-16 text-center text-admin-base text-ink-2">{{ trans('brand.og.bundled') }}</span>
                 </div>
-                <p v-if="draft.errorAt('og_default')" class="text-helper text-danger" role="alert">{{ draft.errorAt('og_default') }}</p>
+                <p v-if="draft.errorAt('og_default')" class="text-admin-base text-danger" role="alert">{{ draft.errorAt('og_default') }}</p>
             </section>
 
             <section class="flex flex-col gap-12" aria-labelledby="adm28-accent" data-testid="ADM-28.accent">
                 <div class="flex flex-col gap-4">
-                    <h2 id="adm28-accent" class="text-title-s text-ink">{{ trans('brand.accent.title') }}</h2>
-                    <p class="max-w-720 text-supporting text-ink-2">{{ trans('brand.accent.intro') }}</p>
+                    <h2 id="adm28-accent" class="text-headline text-ink">{{ trans('brand.accent.title') }}</h2>
+                    <p class="max-w-720 text-admin-base text-ink-2">{{ trans('brand.accent.intro') }}</p>
                 </div>
                 <div role="radiogroup" aria-labelledby="adm28-accent" class="grid grid-cols-2 gap-12 desktop:grid-cols-4">
                     <label
@@ -227,17 +227,17 @@ const ogAsset = computed(() => (empty.value ? null : asset(form.value.og_default
                             <rect x="64" y="0" width="32" height="32" :fill="set.light.fg" />
                         </svg>
                         <span class="flex items-center justify-between gap-8">
-                            <span class="text-label-s text-ink">{{ trans(`brand.accent.sets.${key}`) }}</span>
-                            <span v-if="key === defaultAccent" class="text-helper text-ink-3">{{ trans('brand.accent.default') }}</span>
+                            <span class="text-admin-base-strong text-ink">{{ trans(`brand.accent.sets.${key}`) }}</span>
+                            <span v-if="key === defaultAccent" class="text-admin-base text-ink-3">{{ trans('brand.accent.default') }}</span>
                         </span>
                     </label>
                 </div>
-                <p class="text-helper text-ink-3">{{ trans('brand.accent.rule') }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('brand.accent.rule') }}</p>
             </section>
 
             <section class="flex flex-col gap-12 rounded-sm border border-line bg-surface p-16" data-testid="ADM-28.theme">
                 <RadioGroup v-model="themeModel" :options="themeOptions" :legend="trans('brand.themes.title')" :disabled="draft.readOnly.value" />
-                <p class="text-helper text-ink-3">{{ trans('brand.themes.intro') }}</p>
+                <p class="text-admin-base text-ink-3">{{ trans('brand.themes.intro') }}</p>
             </section>
         </template>
 

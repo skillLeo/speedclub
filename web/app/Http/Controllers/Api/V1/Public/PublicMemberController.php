@@ -8,10 +8,12 @@ use App\Enums\Visibility;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Garage\GarageListRequest;
+use App\Http\Resources\V1\BuildUpdateRowResource;
 use App\Http\Resources\V1\MemberProfileResource;
 use App\Http\Resources\V1\VehicleCardResource;
 use App\Models\User;
 use App\Services\Garage\PublicMembers;
+use App\Services\Social\MemberUpdates;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -57,6 +59,21 @@ class PublicMemberController extends Controller
                 ->cursorPaginate($request->pageSize())
                 ->withQueryString()
         );
+    }
+
+    /**
+     * List a member's build updates.
+     *
+     * PROF-01/02 "Updates": newest first across the member's public builds, each with its build card and `type`. Hidden updates, unlisted
+     * and private builds are left out; followers-only updates only for the owner and followers. Guests too.
+     *
+     * @unauthenticated
+     */
+    public function updates(GarageListRequest $request, string $username, MemberUpdates $updates): AnonymousResourceCollection
+    {
+        $member = $this->visible($request, $username);
+
+        return BuildUpdateRowResource::collection($updates->page(Viewer::from($request), $member, $request->pageSize()));
     }
 
     private function visible(Request $request, string $username): User

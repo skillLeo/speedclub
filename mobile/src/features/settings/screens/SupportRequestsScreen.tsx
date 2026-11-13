@@ -8,16 +8,16 @@ import { subjectOf, useSupportTickets, type SupportTicket, type SupportTicketSta
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
-import { GuestInvitation } from '@/features/profile/components/GuestInvitation';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { Button, EmptyState, ErrorState, Hairline, Icon, RowGroup, Skeleton, SkeletonText, StatusPill, Text } from '@/ui';
+import { Button, EmptyState, ErrorState, Hairline, Icon, RowGroup, SampleBadge, Skeleton, SkeletonText, StatusPill, Text } from '@/ui';
 import { endsWord, joinLabel, RowBody, RowDivider } from '@/ui/rowParts';
 import { metaLineText } from '@/ui/textBreaks';
 
 import { RestrictionNotice } from '../components/RestrictionNotice';
 import { ROW_INSET } from '../components/ValueRow';
 import { SettingsPage } from '../components/SettingsPage';
+import { SettingsGuest } from '../components/SettingsGuest';
 
 export const REQUESTS_ROUTE = 'SET-15a';
 const SKELETON_ROWS = 4;
@@ -65,7 +65,7 @@ function RequestRow({ title, status, meta, divider, onPress, testID }: RequestRo
           <Text variant="body">{endsWord(title, true)}</Text>
           <View style={styles.requestMeta}>
             <StatusPill label={endsWord(status, true)} testID={`${testID}.status`} />
-            <Text variant="supporting" color="text.secondary" hyphenate={false} testID={`${testID}.meta`}>
+            <Text variant="callout" color="text.secondary" hyphenate={false} testID={`${testID}.meta`}>
               {meta}
             </Text>
           </View>
@@ -86,7 +86,7 @@ function RequestsSkeleton() {
           <View key={index}>
             <View style={styles.skeletonRow}>
               <SkeletonText variant="body" width={index % 2 ? '55%' : '70%'} />
-              <SkeletonText variant="supporting" width="40%" />
+              <SkeletonText variant="callout" width="40%" />
             </View>
             {index < SKELETON_ROWS - 1 ? <Hairline inset={ROW_INSET} /> : null}
           </View>
@@ -123,7 +123,7 @@ export function SupportRequestsScreen() {
 
   let body: ReactNode;
   if (status === 'guest') {
-    body = <GuestInvitation routeId={REQUESTS_ROUTE} returnTo="/settings/help/requests" />;
+    body = <SettingsGuest routeId={REQUESTS_ROUTE} returnTo="/settings/help/requests" />;
   } else if (qaState === 'loading' || status === 'loading' || (query.isPending && query.fetchStatus !== 'paused' && qaState === 'default')) {
     body = <RequestsSkeleton />;
   } else if (qaState === 'error' || (!tickets && (query.isError || query.fetchStatus === 'paused'))) {
@@ -140,7 +140,25 @@ export function SupportRequestsScreen() {
   } else if (!tickets || tickets.length === 0) {
     body = (
       <EmptyState
-        icon="lifebuoy"
+        // DQ-1033 (09 §5 EmptyState): a request as it will stand here, badged Beispiel.
+        preview={
+          <RowGroup testID={`${REQUESTS_ROUTE}.sample`}>
+            <View style={styles.requestRow}>
+              <View style={styles.requestText}>
+                <View style={styles.requestMeta}>
+                  <Text variant="body">{t('requests.sampleSubject')}</Text>
+                  <SampleBadge />
+                </View>
+                <View style={styles.requestMeta}>
+                  <StatusPill label={t(statusKey('pending'))} />
+                  <Text variant="callout" color="text.secondary" hyphenate={false}>
+                    {requestMetaText([t('requests.sampleReference'), t('requests.sampleTopic'), t('requests.sampleDate')])}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </RowGroup>
+        }
         title={t('requests.emptyTitle')}
         body={t('requests.emptyBody')}
         action={{ label: t('requests.new'), onPress: () => router.push('/settings/help/contact'), variant: 'secondary', size: 'm' }}

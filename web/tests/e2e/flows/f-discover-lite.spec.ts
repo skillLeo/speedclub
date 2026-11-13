@@ -13,8 +13,7 @@ import type { Locator, Page, Response } from '@playwright/test';
 import { applyAuth } from '../support/auth.mjs';
 import { setDiscoverable } from '../support/backend.mjs';
 import { expect, test } from '../support/fixtures';
-import { BBS_WHEELS, buildVehicle, createGarageMember, demoIds, R34 } from '../support/garage.mjs';
-import { acquireStartLock, releaseStartLock } from '../support/start-lock.mjs';
+import { buildVehicle, createGarageMember, demoIds, R34 } from '../support/garage.mjs';
 import { qaUrl } from '../support/qa.mjs';
 
 type Owner = { username: string; city: string | null } | null;
@@ -221,7 +220,7 @@ test.describe('HOME-01 Start', () => {
   // M2.2 (FS-2): Neue Builds are two cards (home/new-builds?per_page=3, the hero left out), and the ranked stream below the modules
   // comes from GET feed?tab=for_you. Builds that other specs publish meanwhile are the newest, so the latest change is taken from
   // the stream, which ranks the demo builds, and not from Neue Builds.
-  test('lists the featured build and Neue Builds from the API, opens a vehicle and its latest change', async ({ page }) => {
+  test('lists the lead and Neu in der Garage from the API, and opens a build of the stream from its feed card', async ({ page }) => {
     const featuredAnswer = answerOf(page, 'home/featured');
     const buildsAnswer = answerOf(page, 'home/new-builds');
     const streamAnswer = answerOf(page, 'feed');
@@ -236,59 +235,38 @@ test.describe('HOME-01 Start', () => {
     expect(featured.length).toBeGreaterThan(0);
     expect(featured.length).toBeLessThanOrEqual(3);
 
-    await expect(id(page, 'HOME-01.title')).toHaveText('Start');
-    // Phone: one 16:9 hero, the first featured build, with its owner as "@user · city".
+    await expect(page.getByRole('heading', { name: 'Start' })).toBeVisible();
+    // Phone: the lead (MediaCard lead, 4:5 edge to edge), the first featured build, with its owner on the photo.
     const hero = featured[0]!.vehicle;
     await expect(id(page, 'HOME-01.featured')).toBeVisible();
     expect(plain(await id(page, 'HOME-01.featured.title').textContent())).toBe(hero.full_title);
-    if (hero.owner) {
-      expect(plain(await id(page, 'HOME-01.featured.byline').textContent())).toBe(
-        [`@${hero.owner.username}`, hero.owner.city].filter(Boolean).join(' · '),
-      );
-    }
-    await expect(id(page, 'HOME-01.newBuilds')).toContainText('Neue Builds');
-    // DQ-188: the featured build is not repeated among Neue Builds.
-    const feed = builds.filter((v) => v.id !== hero.id);
-    await expect(id(page, `HOME-01.card.${feed[0]!.id}`)).toBeVisible();
+    if (hero.owner) await expect(id(page, 'HOME-01.featured')).toContainText(`@${hero.owner.username}`);
+    await expect(id(page, 'HOME-01.newBuilds')).toContainText('Neu in der Garage');
+    // DQ-188: the lead is not repeated in the rail, nor as a card.
+    const fresh = builds.filter((v) => v.id !== hero.id);
+    await expect(id(page, `HOME-01.newBuilds.item.${fresh[0]!.id}`)).toBeVisible();
+    await expect(page.locator(`[data-testid="HOME-01.newBuilds.item.${hero.id}"]`)).toHaveCount(0);
     await expect(page.locator(`[data-testid="HOME-01.card.${hero.id}"]`)).toHaveCount(0);
-    const shown = (await shownIds(page, 'HOME-01.card.')).slice(0, 2);
+    const shown = (await shownIds(page, 'HOME-01.newBuilds.item.')).slice(0, 3);
     expect(shown.length).toBeGreaterThan(0);
-    expect(shown, 'the Neue Builds cards in the order of the answer').toEqual(feed.slice(0, shown.length).map((v) => v.id));
-    const first = feed[0]!;
-    if (first.owner) await expect(id(page, `HOME-01.card.${first.id}.owner`)).toContainText(`@${first.owner.username}`);
+    expect(shown, 'the rail in the order of the answer').toEqual(fresh.slice(0, shown.length).map((v) => v.id));
     await expectNoEngagementWords(page, 'HOME-01.root');
 
-    await id(page, `HOME-01.card.${first.id}.body`).click();
-    await expect(id(page, 'VEH-01.title')).toBeVisible();
-    expect(pathOf(page)).toBe(`/app/v/${first.slug}`);
-
-    // The latest change is a link of its own, to its VEH-05 entry. Shown deterministically on a build of this test: published under
-    // the Start lock (support/start-lock.mjs), it is the newest public build, so a card of Neue Builds; a mod added after the publish
-    // is its latest change, and Build-Updates leaves out the builds shown in Neue Builds (DQ-308), so the card shows it. The demo
-    // stream's builds could all have their change listed as a row under load (round 3), which left nothing to click.
-    // Without specs (5 of the 13 items of VehicleCompleteness) it is never the hero: with no editorial slugs the hero is the most
-    // complete of the builds changed last, ties to the newest, and a build of the default specs, a photo and a mod (10 of 13) made
-    // as the newest took the hero, which leaves it out of Neue Builds (DQ-188; verify of 2026-11-08, WebKit).
-    const member = await createGarageMember('homelatest');
-    await acquireStartLock();
-    try {
-      const car = await buildVehicle(member.api, { photos: 1, specs: null, mods: [BBS_WHEELS] });
-      const fresh = answerOf(page, 'home/new-builds');
-      const heroNow = answerOf(page, 'home/featured');
-      await open(page, '/app/');
-      const listed = await json<FeedVehicle[]>(await fresh);
-      expect((await json<{ vehicle: FeedVehicle }[]>(await heroNow))[0]?.vehicle.id, 'the build of this test is not the hero').not.toBe(car.id);
-      const mine = listed.find((v) => v.id === car.id);
-      expect(mine?.latest_update, 'the new build carries its mod as the latest change').toBeTruthy();
-      const latest = id(page, `HOME-01.card.${car.id}.latest`);
-      await expect(latest).toBeVisible();
-      await expect(latest).toContainText(plain(mine!.latest_update!.summary).slice(0, 20));
-      await latest.click();
-      await expect(id(page, 'VEH-05.title')).toBeVisible();
-      expect(pathOf(page)).toBe(`/app/v/${mine!.slug}/updates/${mine!.latest_update!.id}`);
-    } finally {
-      releaseStartLock();
+    // A feed card of the stream: its header opens the build, its caption tells the latest change (09 §7.3).
+    const streamCar = stream.find((item) => item.type === 'vehicle' && item.vehicle && !fresh.slice(0, 8).some((v) => v.id === item.vehicle!.id) && item.vehicle.id !== hero.id)?.vehicle;
+    expect(streamCar, 'the stream has a build below the rail').toBeTruthy();
+    const header = page.locator(`[data-testid="HOME-01.card.${streamCar!.id}.header"]:visible`);
+    for (let step = 0; step < 30 && (await header.count()) === 0; step++) {
+      await page.mouse.move(195, 500);
+      await page.mouse.wheel(0, 500);
+      await page.waitForTimeout(150);
     }
+    if (streamCar!.latest_update) {
+      await expect(id(page, `HOME-01.card.${streamCar!.id}.caption`)).toContainText(plain(streamCar!.latest_update.summary).slice(0, 12));
+    }
+    await header.click();
+    await expect(id(page, 'VEH-01.title')).toBeVisible();
+    expect(pathOf(page)).toBe(`/app/v/${streamCar!.slug}`);
   });
 
   test('opens at the top when the featured build answers after Neue Builds', async ({ page }) => {
@@ -312,7 +290,7 @@ test.describe('HOME-01 Start', () => {
       return null;
     });
     expect(scrolled, 'Start is still at the top').toBe(0);
-    await expect(id(page, 'HOME-01.title')).toBeInViewport();
+    await expect(id(page, 'HOME-01.header.logo')).toBeInViewport();
     await expect(id(page, 'HOME-01.featured.title')).toBeInViewport();
   });
 
@@ -325,20 +303,19 @@ test.describe('HOME-01 Start', () => {
     const { makes } = await json<{ makes: MakeTile[] }>(await makesAnswer);
 
     await expect(id(page, 'HOME-01.rail')).toBeVisible();
-    // FS-2 on every width (DQ-188): the featured build with its eyebrow heads the column, then Neue Builds. The rail shows
-    // no build, so none appears twice above the fold.
-    await expect(id(page, 'HOME-01.featured.eyebrow')).toHaveText('FEATURED BUILD');
+    // 09 §7.3 on every width (DQ-188): the lead heads the column, then Neu in der Garage. The side rail shows no build, so none
+    // appears twice above the fold.
     expect(plain(await id(page, 'HOME-01.featured.title').textContent())).toBe(featured[0]!.vehicle.full_title);
     await expect(id(page, 'HOME-01.rail').locator('[data-testid="HOME-01.featured"]')).toHaveCount(0);
     const heroBox = await id(page, 'HOME-01.featured').boundingBox();
     const sectionBox = await id(page, 'HOME-01.newBuilds').boundingBox();
     expect(heroBox!.y, 'the featured build is above Neue Builds').toBeLessThan(sectionBox!.y);
-    for (const make of makes.slice(0, 5)) {
+    for (const make of makes.slice(0, 3)) {
       const row = id(page, `HOME-01.rail.make.${make.slug}`);
       expect(plain(await row.textContent())).toContain(make.name);
       await expect(row).toContainText(`${make.vehicle_count} Build${make.vehicle_count === 1 ? '' : 's'}`);
     }
-    expect(await countSlugs(page, 'HOME-01.rail.make.')).toBe(Math.min(5, makes.length));
+    expect(await countSlugs(page, 'HOME-01.rail.make.')).toBe(Math.min(3, makes.length));
     await expect(id(page, 'HOME-01.rail.about')).toContainText('Über SPEED CLUB');
     await expectNoEngagementWords(page, 'HOME-01.root');
 
@@ -410,7 +387,13 @@ test.describe('DISC-01 Entdecken', () => {
     await expect(id(page, 'DISC-01.title')).toHaveText('Entdecken');
     await expect(id(page, 'DISC-01.makesHeader')).toContainText('Marken');
     await expect(id(page, `DISC-01.makes.${makes[0]!.slug}`)).toBeVisible();
-    expect(await countSlugs(page, 'DISC-01.makes.')).toBe(makes.length);
+    // DQ-1036 / DQ-1038: the grid shows whole rows (6 on a phone) and "Alle N" in its header shows the rest; every make is reachable.
+    const shown = await countSlugs(page, 'DISC-01.makes.');
+    if (shown < makes.length) {
+      await expect(id(page, 'DISC-01.makesHeader.action')).toContainText(String(makes.length));
+      await id(page, 'DISC-01.makesHeader.action').click();
+    }
+    await expect.poll(() => countSlugs(page, 'DISC-01.makes.')).toBe(makes.length);
     for (const make of makes) {
       const tile = id(page, `DISC-01.makes.${make.slug}`);
       // DQ-186: the name carries a word joiner after a hyphen ("Mercedes-Benz" stays whole).
@@ -513,7 +496,7 @@ test.describe('DISC-02 Suche', () => {
     // Back to Fahrzeuge, then the hit opens its build page.
     await id(page, 'DISC-02.tab.vehicles').click();
     await scrollUntilVisible(page, 'DISC-02.list', card, 120);
-    await id(page, `DISC-02.vehicle.${flagship}.body`).click();
+    await id(page, `DISC-02.vehicle.${flagship}.header`).click();
     await expect(id(page, 'VEH-01.title')).toBeVisible();
     expect(pathOf(page)).toBe(`/app/v/${R34.slug}`);
 
@@ -749,7 +732,12 @@ test.describe('DISC-02 Suche', () => {
     await expect(id(page, 'DISC-02.suggestions')).toBeVisible();
     await id(page, 'DISC-02.header.back').click();
     await expect(page.locator('[data-testid^="DISC-01.makes."]:visible').first()).toBeVisible();
-    // DISC-01 has photos since M2.3 (Kollektionen): they finish loading first, so going offline fails no picture half way.
+    // DISC-01 has photos since M2.3 (Kollektionen) and the "Neu entdeckt" wall since M4.8, which the browser loads lazily: the page is
+    // wheeled through once and all of them finish loading first, so going offline fails no picture half way.
+    await page.mouse.move(195, 500);
+    for (let step = 0; step < 12; step++) await page.mouse.wheel(0, 600);
+    await page.waitForLoadState('networkidle');
+    for (let step = 0; step < 12; step++) await page.mouse.wheel(0, -900);
     await page.waitForLoadState('networkidle');
     await context.setOffline(true);
     await expect(id(page, 'shell.offline')).toBeVisible();
@@ -826,7 +814,9 @@ test.describe('MSG-01 Nachrichten', () => {
     await expect(id(page, 'MSG-01.tabs')).toHaveCount(0);
     await expect(id(page, 'MSG-01.soon')).toHaveCount(0);
     await id(page, 'MSG-01.guest.action').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
+    // M4.6 (09 §7.2): signing in starts passwordless, at AUTH-12 Mit E-Mail fortfahren. Its requests settle before the test ends.
+    await expect(id(page, 'AUTH-12.root')).toBeVisible();
+    await page.waitForLoadState('networkidle');
     expect(new URL(page.url()).searchParams.get('returnTo')).toBe('/messages');
   });
 

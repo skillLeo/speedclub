@@ -340,7 +340,8 @@ describe('SET-16 on the API', () => {
     expect(screen.getByTestId('SET-16.report.r1.status')).toHaveTextContent('Eingegangen');
     expect(screen.getByTestId('SET-16.empty.about')).toBeTruthy();
     await act(async () => fireEvent.press(screen.getByTestId('SET-16.more.mine')));
-    expect(await screen.findByText('@drift.koenig')).toBeTruthy();
+    // A handle breaks only after its "." (DQ-282, DQ-926).
+    expect(await screen.findByText('@drift.\u200Bkoenig')).toBeTruthy();
     expect(sent(calls, 'GET', '/me/reports')[0]?.url).toContain('per_page=30');
   });
 });

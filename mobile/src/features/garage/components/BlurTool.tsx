@@ -266,18 +266,18 @@ export function BlurTool({ vehicle, photo, disabled, onDirtyChange, routeId }: B
 
   return (
     <FormGroup title={t('blur.group')} testID={testID}>
-      <Text variant="supporting" color="text.secondary">
+      <Text variant="callout" color="text.secondary">
         {t('blur.intro')}
       </Text>
       {processing ? (
         <View style={styles.processing} role="status" aria-live="polite" testID={`${testID}.processing`}>
           <Spinner size={20} label={t('blur.processing')} />
-          <Text variant="supporting" style={styles.processingText}>
+          <Text variant="callout" style={styles.processingText}>
             {t('blur.processing')}
           </Text>
         </View>
       ) : !ready ? (
-        <Text variant="supporting" color="text.secondary" role="status" testID={`${testID}.notReady`}>
+        <Text variant="callout" color="text.secondary" role="status" testID={`${testID}.notReady`}>
           {t('blur.notReady')}
         </Text>
       ) : !open ? (
@@ -348,7 +348,7 @@ export function BlurTool({ vehicle, photo, disabled, onDirtyChange, routeId }: B
               {draft ? <View style={[styles.draft, boxStyle(draft)]} testID={`${testID}.draft`} /> : null}
             </View>
           </GestureDetector>
-          <Text variant="helper" color="text.secondary" testID={`${testID}.count`}>
+          <Text variant="caption" color="text.secondary" testID={`${testID}.count`}>
             {regions.length === 0 ? t('blur.empty') : t('blur.count', { count: regions.length, max: MAX_BLUR_REGIONS })}
             {isWeb ? ` ${t('blur.regionKeys')}` : ''}
           </Text>
@@ -391,7 +391,7 @@ export function BlurTool({ vehicle, photo, disabled, onDirtyChange, routeId }: B
               <Text variant="body" aria-hidden>
                 {t('blur.preview')}
               </Text>
-              <Text variant="helper" color="text.secondary">
+              <Text variant="caption" color="text.secondary">
                 {t('blur.previewHint')}
               </Text>
             </View>

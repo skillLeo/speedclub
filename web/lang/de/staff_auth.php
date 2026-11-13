@@ -8,4 +8,6 @@ return [
     'password_proof_required' => 'Lege zuerst über „Passwort vergessen?“ ein eigenes Passwort fest. Der Link kommt per E-Mail an diese Adresse.',
     'session_ended' => 'Du wurdest abgemeldet, weil sich das Passwort, die Zwei-Faktor-Einstellungen oder der Status deines Kontos geändert haben.',
     'password_check_locked' => 'Zu viele falsche Passwörter. Versuch es in :time noch einmal.',
+    // ADM-03 skipped (STAFF_2FA_REQUIRED=false): a step that rests on a current code.
+    'two_factor_first' => 'Für diesen Schritt brauchst du einen Code aus der Authenticator-App. Richte den Zwei-Faktor-Schutz zuerst ein.',
 ];

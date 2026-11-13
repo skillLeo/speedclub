@@ -193,7 +193,7 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
             />
           </View>
           <View style={stacked ? styles.stacked : styles.unitColumn}>
-            <Text variant="labelS" color="text.secondary" aria-hidden>
+            <Text variant="callout" color="text.secondary" aria-hidden>
               {t('specs.powerUnit')}
             </Text>
             <View style={stacked ? null : styles.unitBox}>

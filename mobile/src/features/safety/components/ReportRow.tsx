@@ -74,7 +74,7 @@ export const ReportRow = memo(function ReportRow({ icon, title, subtitle, status
           <Text variant="body" hyphenate={false}>
             {endsWord(reportTitleText(title), true)}
           </Text>
-          <Text variant="supporting" color="text.secondary" hyphenate={false}>
+          <Text variant="callout" color="text.secondary" hyphenate={false}>
             {/* DQ-445a: "Inhalt entfernt · 23.10.2026" wraps before its "·", never right after it. */}
             {endsWord(metaLineText(subtitle, undefined, 'starts'), true)}
           </Text>
@@ -98,7 +98,7 @@ export function EmptyGroupRow({ title, body, testID }: { title: string; body: st
   return (
     <View style={styles.empty} testID={testID}>
       <Text variant="body">{endsWord(title, true)}</Text>
-      <Text variant="supporting" color="text.secondary">
+      <Text variant="callout" color="text.secondary">
         {body}
       </Text>
     </View>

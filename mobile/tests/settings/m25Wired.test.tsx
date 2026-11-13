@@ -45,25 +45,39 @@ jest.mock('@/api/queries/auth', () => {
 const SETTINGS: MemberSettings = {
   theme: 'carbon',
   locale: 'de',
+  effective_locale: 'de',
+  home_region: null,
   power_display: 'ps_kw',
+  distance_unit: 'km',
+  torque_unit: 'nm',
+  weight_unit: 'kg',
+  maintenance: { hu_au_lead_days: [30, 14, 1], tyre_reminders: true, insurance_reminder: true, service_reminders: true },
   show_owner_on_qr: true,
   who_can_message: 'everyone',
+  mention_privacy: 'everyone',
   discoverable: true,
   indexable: true,
   read_receipts: true,
   ai_suggestions: false,
   notification_prefs: {
     types: {
-      new_follower: { push: true },
-      followed_published: { push: false },
-      build_saved: { push: false },
-      new_message: { push: true, email_digest: false },
-      message_request: { push: true },
-      hu_au_reminder: { push: true, email: false },
-      qr_milestone: { push: false },
+      new_follower: { push: true, web_push: false },
+      followed_published: { push: false, web_push: false },
+      build_saved: { push: false, web_push: false },
+      new_message: { push: true, email_digest: false, web_push: false },
+      message_request: { push: true, web_push: false },
+      hu_au_reminder: { push: true, email: false, web_push: false },
+      qr_milestone: { push: false, web_push: false },
+      reaction: { push: true, web_push: false },
+      mention: { push: true, web_push: false },
+      comment: { push: true, web_push: false },
+      vehicle_follower: { push: true, web_push: false },
+      event_reminder: { push: true, email: false, web_push: false },
+      event_update: { push: true, web_push: false },
     },
     quiet_hours: { enabled: true, from: '22:00', to: '07:00' },
     message_previews: false,
+    digest_frequency: 'weekly',
   },
 };
 
@@ -193,6 +207,6 @@ describe('wired settings', () => {
     expect(screen.getByTestId('SET-09.previews.switch')).not.toBeChecked();
     await fireEvent.press(screen.getByTestId('SET-09.push.new_follower.switch'));
     await waitFor(async () => expect(await bodies(calls, '/me/settings')).toEqual([{ notification_prefs: { types: { new_follower: { push: false } } } }]));
-    expect(screen.getByTestId('SET-09.mandatory')).toHaveTextContent(/immer per E-Mail/);
+    expect(screen.getByTestId('SET-09.mandatory')).toHaveTextContent(/immer per E-\u2060Mail/);
   });
 });

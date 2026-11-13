@@ -32,7 +32,7 @@ export function ShortcutSheet({ visible, onClose, modifier }: { visible: boolean
   return (
     <Sheet visible={visible} onClose={onClose} title={t('system.shortcuts.title')} narrow expandable={false} testID={ID}>
       <View style={styles.body}>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {t('system.shortcuts.note')}
         </Text>
         {SHORTCUT_ROWS.map((row, index) => {
@@ -58,7 +58,7 @@ export function ShortcutSheet({ visible, onClose, modifier }: { visible: boolean
                         </Text>
                       ) : null}
                       <View style={styles.cap}>
-                        <Text variant="labelS">{key}</Text>
+                        <Text variant="callout">{key}</Text>
                       </View>
                     </View>
                   ))}

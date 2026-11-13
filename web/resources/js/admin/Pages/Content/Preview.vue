@@ -99,11 +99,11 @@ onBeforeUnmount(() => timers.forEach((timer) => clearInterval(timer)));
                 <div class="flex min-w-0 flex-1 flex-col gap-4">
                     <template v-if="state === 'loading'"><Skeleton shape="text" class="w-320" /><Skeleton shape="text" class="w-240" /></template>
                     <template v-else>
-                        <p class="text-label-s text-ink">{{ mine.length > 0 ? trans('content.preview.with_drafts') : trans('content.preview.no_drafts') }}</p>
-                        <p class="text-supporting text-ink-2">
+                        <p class="text-admin-base-strong text-ink">{{ mine.length > 0 ? trans('content.preview.with_drafts') : trans('content.preview.no_drafts') }}</p>
+                        <p class="text-admin-base text-ink-2">
                             <template v-if="mine.length > 0">{{ mine.map((draft) => `${keyLabel(draft.key)} v${draft.version}`).join(' · ') }} · </template>{{ trans('content.preview.valid_until', { time: formatTime(preview.expires_at) }) }}
                         </p>
-                        <p v-if="others.length > 0" class="text-helper text-ink-3">{{ trans('content.preview.others', { list: others.map((draft) => keyLabel(draft.key)).join(', ') }) }}</p>
+                        <p v-if="others.length > 0" class="text-admin-base text-ink-3">{{ trans('content.preview.others', { list: others.map((draft) => keyLabel(draft.key)).join(', ') }) }}</p>
                     </template>
                 </div>
                 <div class="flex flex-wrap gap-4">
@@ -116,15 +116,15 @@ onBeforeUnmount(() => timers.forEach((timer) => clearInterval(timer)));
                 <SegmentedControl v-model="theme" :options="themes" :label="trans('content.preview.theme')" data-testid="ADM-34.theme" />
                 <Button size="sm" variant="ghost" :icon="PhArrowSquareOut" :href="src" external data-testid="ADM-34.open">{{ trans('content.preview.open') }}</Button>
             </div>
-            <p v-if="!vehicle" class="text-helper text-ink-3">{{ trans('content.preview.no_vehicle') }}</p>
+            <p v-if="!vehicle" class="text-admin-base text-ink-3">{{ trans('content.preview.no_vehicle') }}</p>
 
             <div class="flex flex-wrap items-start gap-24" data-testid="ADM-34.frames">
                 <figure class="flex min-w-0 max-w-full flex-col gap-8" data-testid="ADM-34.frame.mobile" :data-frame-ready="ready.mobile || undefined">
-                    <figcaption class="flex items-center gap-8 text-label-s text-ink-2"><PhDeviceMobile :size="16" aria-hidden="true" />{{ trans('content.preview.mobile') }}</figcaption>
+                    <figcaption class="flex items-center gap-8 text-admin-base-strong text-ink-2"><PhDeviceMobile :size="16" aria-hidden="true" />{{ trans('content.preview.mobile') }}</figcaption>
                     <!-- DQ-640: the phone at 1:1, so copy and contrast can be judged. ADR-212: narrower than the column, the frame scrolls
                          sideways in its own box (focusable for the arrow keys), never the page. -->
                     <div
-                        class="h-844 w-390 max-w-full overflow-x-auto overflow-y-hidden rounded-md border border-line bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                        class="h-844 w-390 max-w-full overflow-x-auto overflow-y-hidden rounded-sm border border-line bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                         tabindex="0"
                         role="region"
                         :aria-label="trans('content.preview.mobile')"
@@ -142,10 +142,10 @@ onBeforeUnmount(() => timers.forEach((timer) => clearInterval(timer)));
                     </div>
                 </figure>
                 <figure class="flex min-w-0 max-w-full flex-col gap-8" data-testid="ADM-34.frame.desktop" :data-frame-ready="ready.desktop || undefined">
-                    <figcaption class="flex items-center gap-8 text-label-s text-ink-2"><PhMonitor :size="16" aria-hidden="true" />{{ trans('content.preview.desktop') }}</figcaption>
+                    <figcaption class="flex items-center gap-8 text-admin-base-strong text-ink-2"><PhMonitor :size="16" aria-hidden="true" />{{ trans('content.preview.desktop') }}</figcaption>
                     <!-- DQ-640: 1280 × 800 at three quarters; narrower than the column, it scrolls in its own box (ADR-212). -->
                     <div
-                        class="h-600 w-960 max-w-full overflow-x-auto overflow-y-hidden rounded-md border border-line bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                        class="h-600 w-960 max-w-full overflow-x-auto overflow-y-hidden rounded-sm border border-line bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                         tabindex="0"
                         role="region"
                         :aria-label="trans('content.preview.desktop')"
@@ -163,7 +163,7 @@ onBeforeUnmount(() => timers.forEach((timer) => clearInterval(timer)));
                     </div>
                 </figure>
             </div>
-            <p class="text-helper text-ink-3">{{ trans('content.preview.read_only') }}</p>
+            <p class="text-admin-base text-ink-3">{{ trans('content.preview.read_only') }}</p>
         </template>
     </div>
 </template>

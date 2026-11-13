@@ -63,6 +63,12 @@ function refreshTarget(target: UploadTarget) {
     void queryClient.invalidateQueries({ queryKey: modKeys.mod(target.modId) });
     void queryClient.invalidateQueries({ queryKey: modKeys.list(target.vehicleId) });
   }
+  // M4.11: a post's own photo (UPD-01) shows on VEH-05 and in the feed.
+  if (target.kind === 'update') {
+    const updateId = target.updateId;
+    void queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === 'build-update' && query.queryKey[2] === updateId });
+    void queryClient.invalidateQueries({ queryKey: ['home'] });
+  }
 }
 
 export function createGarageUploadDriver(): UploadDriver {

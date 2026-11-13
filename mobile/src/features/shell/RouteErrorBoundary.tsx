@@ -1,8 +1,9 @@
-import { useNavigation, useRouter, useSegments, type ErrorBoundaryProps } from 'expo-router';
-import { Component, type ReactNode } from 'react';
+import { useNavigation, usePathname, useRouter, useSegments, type ErrorBoundaryProps } from 'expo-router';
+import { Component, useEffect, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Edge } from 'react-native-safe-area-context';
 
+import { reportClientError } from '@/api/clientErrors';
 import { isWeb } from '@/lib/platform';
 import { createStyles } from '@/theme';
 import { ErrorState, Header, Screen } from '@/ui';
@@ -37,6 +38,11 @@ function RouteErrorScreen({ error, onRetry, leave }: { error: unknown; onRetry: 
   const styles = useStyles();
   const padding = useTabBarPadding();
   const connection = isConnectionError(error);
+  const pathname = usePathname();
+  // A render error is reported once (the class boundary below adds its component stack); a lost connection is not a bug.
+  useEffect(() => {
+    if (!connection) reportClientError(error, pathname);
+  }, [connection, error, pathname]);
   // §8 error state: the plain cause and what to do next. A render error is not the member's connection, and on web the retry is a reload.
   const title = connection ? t('states.errorTitle') : t('shell.routeError.title');
   const message = connection
@@ -121,6 +127,10 @@ export class RouteErrorBoundary extends Component<{ children: ReactNode }, State
 
   static getDerivedStateFromError(error: unknown): State {
     return { error, failed: true };
+  }
+
+  override componentDidCatch(error: unknown, info: ErrorInfo): void {
+    if (!isConnectionError(error)) reportClientError(error, isWeb && typeof window !== 'undefined' ? window.location.pathname : 'root', info.componentStack);
   }
 
   private retry = () => {

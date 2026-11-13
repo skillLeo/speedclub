@@ -41,12 +41,27 @@ export function dayLabel(date: Date, reference: Date, locale: FormatLocale, labe
   if (days === 0) return labels.today;
   if (days === 1) return labels.yesterday;
   const sameYear = key.slice(0, 4) === today.slice(0, 4);
-  return format(INTL_LOCALE[locale], {
+  return separatorDate(date, locale, sameYear);
+}
+
+/**
+ * DQ-1105: the separator from its parts in one fixed pattern, "Do., 29. Okt." (de) and "Thu 29 Oct" (en), whatever an engine's own
+ * pattern is (WebKit printed "Do. 29. Okt.", Chromium "Do., 29. Okt."). The year follows when it is not this year's.
+ */
+function separatorDate(date: Date, locale: FormatLocale, sameYear: boolean): string {
+  const parts = format(INTL_LOCALE[locale], {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
     ...(sameYear ? {} : { year: 'numeric' }),
-  }).format(date);
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
+  const year = sameYear ? '' : ` ${part('year')}`;
+  if (locale === 'de') {
+    const weekday = part('weekday').replace(/\.?$/, '.');
+    return `${weekday}, ${part('day')}. ${part('month')}${year}`;
+  }
+  return `${part('weekday').replace(/,$/, '')} ${part('day')} ${part('month')}${year}`;
 }
 
 /**

@@ -30,7 +30,6 @@ import { AiLabel } from '@/features/ai/AiLabel';
 import { AiSearchAction } from '@/features/ai/AiSearchAction';
 import { aiChipParams } from '@/features/ai/search';
 import { BrowseErrorState, RestrictionNotice, useBrowseRestriction } from '@/features/home/components/BrowseStates';
-import { FeedVehicleCard, FeedVehicleCardSkeleton } from '@/features/home/components/FeedVehicleCard';
 import { useTabScrollToTop } from '@/features/shell/retap';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarInset } from '@/features/shell/tabBarLayout';
@@ -40,7 +39,8 @@ import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
-import { createStyles, layout, space, typography, useBreakpoint, useMotion, useTheme } from '@/theme';
+import { createStyles, layout, typography, useBreakpoint, useTheme } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import {
   Button,
   ContentTabs,
@@ -52,7 +52,6 @@ import {
   SearchBar,
   Sheet,
   Skeleton,
-  SkeletonBlock,
   SkeletonText,
   Spinner,
   Text,
@@ -61,13 +60,15 @@ import {
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { chipLabel, knownLabel, rememberLabel, slugWords, type LabelField, type LabelLookup } from '../chipLabels';
-import { FilterChipRow, type ActiveChip } from '../components/FilterChipRow';
+import { SampleWall } from '../components/SampleWall';
+import { ResultFeedCard, ResultFeedCardSkeleton } from '../components/ResultFeedCard';
+import { FilterChipRow, type ActiveChip, type FieldChip } from '../components/FilterChipRow';
 import { FilterPanel, type FilterPanelStatus } from '../components/FilterPanel';
 import { FilterSheet, type FilterSheetPage } from '../components/FilterSheet';
 import { PickerList } from '../components/PickerList';
 import { QueryChips } from '../components/QueryChips';
 import { ResultsBar } from '../components/ResultsBar';
-import { ResultTile } from '../components/ResultTile';
+import { BuildWallSkeleton, WALL_GAP, WallCell } from '../components/BuildWall';
 import { SearchMemberRow } from '../components/SearchMemberRow';
 import { SortSheet } from '../components/SortSheet';
 import {
@@ -88,7 +89,7 @@ import {
   type SearchFilters,
   type SearchState,
 } from '../filters';
-import { UNDERSTAND_PARAM } from '../navigation';
+import { SCOPE_PARAM, searchScopeOf, UNDERSTAND_PARAM } from '../navigation';
 import { clearRecentSearches, rememberSearch, useRecentSearches } from '../recentSearches';
 import { useDebouncedValue } from '../useDebouncedValue';
 import { useSearchPlaceholder } from '../useSearchPlaceholder';
@@ -110,9 +111,9 @@ const SENT_KEPT = 4;
 const TAB_LABEL_CHARS = 14;
 /** Inter's average advance in em across such a label, as `estimateLines` counts it. */
 const TAB_CHAR_EM = 0.55;
-/** §8 grid tiles: 2 columns on phones and tablets; 3 beside the filter panel from 1280 (04_SCREEN_REGISTER DISC). */
-const GRID_COLUMNS = { phone: 2, tablet: 2, desktop: 3 } as const;
-const GRID_GAP = space[12];
+/** 09 §7.5 result wall (DQ-1038): 2 columns on phones, 3 from 768, and 3 beside the filter panel from 1280 (04_SCREEN_REGISTER DISC). */
+const GRID_COLUMNS = { phone: 2, tablet: 3, desktop: 3 } as const;
+const GRID_GAP = WALL_GAP;
 /**
  * Facets and the desktop panel's URL write wait until taps settle: `search/facets` shares the `search` limit (60 a minute), and
  * an aborted request still counts. Draft and chips change at once; only the network waits.
@@ -120,6 +121,8 @@ const GRID_GAP = space[12];
 export const FACETS_DEBOUNCE_MS = 300;
 /** From 1280 the filters stay open beside the results: the settings pane's width, a known column of this shell. */
 const PANEL_WIDTH = layout.settingsPane;
+/** DQ-1037: the filters the "Mods" chip of the rail stands for (the sheet's Räder, Fahrwerk, Abgasanlage and Mods groups). */
+const MOD_FIELDS = ['wheel_diameter', 'wheel_brand', 'suspension_type', 'suspension_brand', 'exhaust_brand', 'mod_category'] as const;
 
 type Row =
   | { kind: 'vehicle'; vehicle: FeedVehicle }
@@ -138,14 +141,17 @@ const useStyles = createStyles((t) => ({
   chipsBelow: { paddingTop: t.space[8] },
   chipsAlone: { paddingBottom: t.space[8] },
   cardGap: { paddingBottom: t.space[24] },
-  tiles: { flexDirection: 'row', gap: GRID_GAP, paddingBottom: t.space[24] },
+  cardColumn: { alignSelf: 'center' },
+  // 09 §5 result wall: 2 px between the photos in both directions, 0 radius.
+  tiles: { flexDirection: 'row', gap: GRID_GAP, paddingBottom: GRID_GAP },
   tile: { flexShrink: 0 },
+  // A phone runs the wall to the screen edges (09 §4.6 photography is the interface); wider, it stays in the column.
+  wallBleed: { alignSelf: 'center', width: '100%' },
   states: { gap: t.space[32], paddingBottom: t.space[32], paddingTop: t.space[16] },
   // RESULT 11: on the cards' column and its start edge, as the rest of the column (§15 left-aligned hierarchy).
   footer: { alignItems: 'flex-start', minHeight: t.size.touchMin, paddingBottom: t.space[32], paddingTop: t.space[8] },
   footerError: { alignItems: 'flex-start', gap: t.space[8], paddingBottom: t.space[32] },
   skeleton: { gap: t.space[24] },
-  skeletonTile: { gap: t.space[8] },
   // The tab bar's geometry (ContentTabs with `bleed`): 44 high tabs with 12 of label padding reaching past the column.
   skeletonTabs: { flexDirection: 'row', marginHorizontal: -t.space[12] },
   skeletonTab: { justifyContent: 'center', minHeight: t.size.contentTab, paddingHorizontal: t.space[12] },
@@ -169,7 +175,7 @@ function SearchTabsSkeleton({ width }: { width: number }) {
   const styles = useStyles();
   const theme = useTheme();
   const padding = theme.space[12];
-  const label = Math.ceil(TAB_LABEL_CHARS * TAB_CHAR_EM * typography.bodyDense.fontSize * theme.fontScale);
+  const label = Math.ceil(TAB_LABEL_CHARS * TAB_CHAR_EM * typography.body.fontSize * theme.fontScale);
   const row = width + 2 * padding;
   const equal = 2 * (label + 2 * padding) > row;
   const lines = equal ? Math.max(1, Math.ceil(label / Math.max(1, row / 2 - 2 * padding))) : 1;
@@ -178,7 +184,7 @@ function SearchTabsSkeleton({ width }: { width: number }) {
       <View style={styles.skeletonTabs}>
         {[0, 1].map((index) => (
           <View key={index} style={[styles.skeletonTab, equal ? styles.skeletonTabEqual : null]}>
-            <SkeletonText variant="labelS" lines={lines} width={equal ? '80%' : label} lastLineWidth="50%" />
+            <SkeletonText variant="callout" lines={lines} width={equal ? '80%' : label} lastLineWidth="50%" />
           </View>
         ))}
       </View>
@@ -187,15 +193,17 @@ function SearchTabsSkeleton({ width }: { width: number }) {
   );
 }
 
-/** The result cards while the first answer is on the way; the list's own 16 above them, as in the loaded list. */
-function SearchSkeleton({ width }: { width: number }) {
+/**
+ * The result cards while the first answer is on the way, in the feed card's geometry (DQ-1037): edge to edge like the loaded cards,
+ * so `bleed` takes back the column's gutter on phones and tablets; from 1280 the cards keep `width`.
+ */
+function SearchSkeleton({ width, bleed }: { width: number; bleed: number }) {
   const styles = useStyles();
   return (
     <Skeleton testID={`${ROUTE}.skeleton`}>
-      <View style={styles.skeleton}>
-        {/* DQ-205: a result usually carries a change, so the first card draws one; the next never runs longer than the page. */}
-        <FeedVehicleCardSkeleton width={width} testID={`${ROUTE}.skeleton.card`} />
-        <FeedVehicleCardSkeleton width={width} latest={false} />
+      <View style={[styles.skeleton, bleed > 0 ? { marginHorizontal: -bleed } : { width }]}>
+        <ResultFeedCardSkeleton testID={`${ROUTE}.skeleton.card`} />
+        <ResultFeedCardSkeleton />
       </View>
     </Skeleton>
   );
@@ -241,23 +249,13 @@ function useQueryField(urlQuery: string) {
   return { text, setText, commit };
 }
 
-/** The grid while the first answer is on the way: two rows of 4:3 tiles with their two text lines. */
-function GridSkeleton({ width, columns }: { width: number; columns: number }) {
-  const styles = useStyles();
-  const tile = Math.floor((width - (columns - 1) * GRID_GAP) / columns);
+/** The wall while the first answer is on the way: two rows of its 1:1 cells, run to the edges on a phone as the wall is. */
+function GridSkeleton({ width, columns, bleed }: { width: number; columns: number; bleed: number }) {
   return (
     <Skeleton testID={`${ROUTE}.skeleton`}>
-      {[0, 1].map((row) => (
-        <View key={row} style={styles.tiles}>
-          {Array.from({ length: columns }, (_, index) => (
-            <View key={index} style={[styles.skeletonTile, { width: tile }]}>
-              <SkeletonBlock width={tile} height={Math.round((tile * 3) / 4)} corner="sm" />
-              <SkeletonText variant="labelS" width="80%" />
-              <SkeletonText variant="caption" width="50%" />
-            </View>
-          ))}
-        </View>
-      ))}
+      <View style={{ marginHorizontal: -bleed }}>
+        <BuildWallSkeleton width={width} columns={columns} count={2 * columns} />
+      </View>
     </Skeleton>
   );
 }
@@ -314,7 +312,7 @@ export function SearchScreen() {
   const common = useTranslation('common').t;
   const styles = useStyles();
   const router = useRouter();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const format = useFormat();
   const online = useOnline();
   const focused = useScreenFocused();
@@ -328,8 +326,10 @@ export function SearchScreen() {
   const { fontScale } = useTheme();
   const desktop = kind === 'desktop';
   const { state: url, update } = useSearchUrlState();
-  const params = useLocalSearchParams<{ [UNDERSTAND_PARAM]?: string | string[] }>();
+  const params = useLocalSearchParams<{ [UNDERSTAND_PARAM]?: string | string[]; [SCOPE_PARAM]?: string | string[] }>();
   const understandParam = paramOf(params[UNDERSTAND_PARAM]) === '1';
+  // DISC-01's scope chips: "Mitglieder" or "Builds" puts that tab in front of a search with both (the member can still switch).
+  const scope = searchScopeOf(paramOf(params[SCOPE_PARAM]));
   const query = url.q;
   const field = useQueryField(query);
   const recent = useRecentSearches();
@@ -353,7 +353,10 @@ export function SearchScreen() {
   const cardWidth = Math.min(COLUMN, resultsWidth);
   const view: ResultView = url.view ?? (desktop ? 'grid' : 'list');
   const columns = GRID_COLUMNS[kind];
-  const tileWidth = Math.floor((resultsWidth - (columns - 1) * GRID_GAP) / columns);
+  // The wall's width: the screen on a phone (edge to edge), the results' column elsewhere.
+  const phone = kind === 'phone';
+  const wallWidth = phone ? Math.min(COLUMN + 2 * gutter, width) : resultsWidth;
+  const tileWidth = Math.floor((wallWidth - (columns - 1) * GRID_GAP) / columns);
   const tileStyle = useMemo(() => [styles.tile, { width: tileWidth }], [styles.tile, tileWidth]);
   const [wanted, setWanted] = useState<ReadonlySet<string>>(() => new Set());
 
@@ -484,7 +487,8 @@ export function SearchScreen() {
   // Members are found by text only, so without one there is no Mitglieder tab; a filter keeps the Fahrzeuge tab in front.
   const membersTab = query !== '';
   const autoTab: SearchKind = data && membersTab && !criteriaOn && data.vehicles.count === 0 && data.members.count > 0 ? 'members' : 'vehicles';
-  const tab: SearchKind = membersTab && chosen?.key === requestKey ? chosen.tab : autoTab;
+  const scopedTab: SearchKind | null = scope === 'members' && !criteriaOn ? 'members' : scope === 'vehicles' ? 'vehicles' : null;
+  const tab: SearchKind = membersTab && chosen?.key === requestKey ? chosen.tab : membersTab && scopedTab ? scopedTab : autoTab;
   const vehiclesMore = useMoreVehicles(query, current ? data.vehicles.next_cursor : null, wanted.has(`${requestKey}|vehicles`), criteria);
   const membersMore = useMoreMembers(query, current ? data.members.next_cursor : null, wanted.has(`${requestKey}|members`));
   const more = tab === 'vehicles' ? vehiclesMore : membersMore;
@@ -536,10 +540,10 @@ export function SearchScreen() {
     },
     [query, router],
   );
-  const openUpdate = useCallback(
-    (vehicle: FeedVehicle) => {
+  const openOwner = useCallback(
+    (username: string) => {
       if (query) rememberSearch(query);
-      if (vehicle.latest_update) router.push(`/v/${vehicle.slug}/updates/${vehicle.latest_update.id}`);
+      router.push({ pathname: '/u/[username]', params: { username } });
     },
     [query, router],
   );
@@ -593,6 +597,47 @@ export function SearchScreen() {
     onRemove: () => setFilters(removeChip(url.filters, chip)),
   }));
   const filterCount = activeFilterCount(url.filters);
+  // DQ-1037 (09 §7.5): on phones and tablets the rail has a chip per filter of the blueprint, each opening its sheet; a field's one
+  // value moves into its chip (inverted, with its ×). Region has no API filter yet (lane B gap), so it has no chip.
+  const openSheetAt = (page: FilterSheetPage) => {
+    changeDraft(url.filters);
+    setSheet({ open: true, page });
+  };
+  const chipOf = (field: string) => chips.find((chip) => chip.id.startsWith(`${field}:`));
+  const modCount = MOD_FIELDS.reduce((sum, field) => sum + url.filters[field].length, 0);
+  const powerChip = chipOf('power');
+  const fieldChips: FieldChip[] = desktop
+    ? []
+    : [
+        { key: 'make', label: t('filters.fields.make'), value: chipOf('make'), onPress: () => openSheetAt('make') },
+        { key: 'model', label: t('filters.fields.model'), value: chipOf('model'), onPress: () => openSheetAt(url.filters.make ? 'model' : 'make') },
+        { key: 'year', label: t('filters.fields.year'), value: chipOf('year'), onPress: () => openSheetAt('filters') },
+        {
+          key: 'power',
+          label: t('chips.power'),
+          value: powerChip ? { ...powerChip, label: t('chips.powerValue', { value: powerChip.label }) } : undefined,
+          onPress: () => openSheetAt('filters'),
+        },
+        {
+          key: 'mods',
+          label: t('chips.mods'),
+          selected: modCount > 0,
+          count: modCount > 0 ? modCount : undefined,
+          accessibilityLabel: modCount > 0 ? t('chips.modsLabel', { count: modCount }) : undefined,
+          onPress: () => openSheetAt('filters'),
+        },
+        {
+          key: 'sort',
+          label: url.sort ? t(`sort.${url.sort}`) : t('sort.title'),
+          selected: url.sort !== null,
+          accessibilityLabel: url.sort ? `${t(`sort.${url.sort}`)}, ${t('sort.title')}` : undefined,
+          onPress: () => setSortOpen(true),
+        },
+      ];
+  const inFields = new Set(
+    (desktop ? [] : [chipOf('make'), chipOf('model'), chipOf('year'), powerChip]).flatMap((chip) => (chip ? [chip.id] : [])),
+  );
+  const restChips = chips.filter((chip) => !inFields.has(chip.id));
   const resetAll = () => write(resetFilters(url));
   const labelFor = (fieldName: 'make' | 'model', value: string | null, find: LabelLookup) =>
     value ? (find(fieldName, value) ?? knownLabel(fieldName, value) ?? slugWords(value)) : null;
@@ -619,7 +664,12 @@ export function SearchScreen() {
   let loading = false;
   const noResults = (shown: string) => (
     <View style={styles.states}>
-      <EmptyState icon="magnifying-glass" title={t('noResults.title', { query: shown })} body={t('noResults.body')} testID={`${ROUTE}.noResults`} />
+      <EmptyState
+        preview={<SampleWall testID={`${ROUTE}.noResults.sample`} />}
+        title={t('noResults.title', { query: shown })}
+        body={t('noResults.body')}
+        testID={`${ROUTE}.noResults`}
+      />
       <QueryChips title={t('suggestions.makes')} terms={makeNames} onPick={pick} testID={`${ROUTE}.suggestions`} />
     </View>
   );
@@ -627,7 +677,7 @@ export function SearchScreen() {
   // to take one filter off.
   const noFiltered = (
     <EmptyState
-      icon="funnel"
+      preview={<SampleWall testID={`${ROUTE}.noResultsFiltered.sample`} />}
       title={t('noResultsFiltered.title')}
       body={t('noResultsFiltered.body')}
       action={hasFilters(url.filters) ? { label: t('noResultsFiltered.action'), onPress: resetAll } : undefined}
@@ -644,7 +694,7 @@ export function SearchScreen() {
           <QueryChips title={t('suggestions.makes')} terms={makeNames} onPick={pick} testID={`${ROUTE}.suggestions`} />
         </View>
       ) : (
-        <EmptyState icon="magnifying-glass" title={t('start.title')} body={t('start.body')} testID={`${ROUTE}.start`} />
+        <EmptyState preview={<SampleWall testID={`${ROUTE}.start.sample`} />} title={t('start.title')} body={t('start.body')} testID={`${ROUTE}.start`} />
       );
   } else if (
     qaState === 'loading' ||
@@ -652,7 +702,7 @@ export function SearchScreen() {
     (qaState !== 'error' && !data && (overview.isPending || placeholder) && overview.fetchStatus !== 'paused')
   ) {
     loading = true;
-    state = view === 'grid' && tab === 'vehicles' ? <GridSkeleton width={resultsWidth} columns={columns} /> : <SearchSkeleton width={cardWidth} />;
+    state = view === 'grid' && tab === 'vehicles' ? <GridSkeleton width={wallWidth} columns={columns} bleed={phone ? gutter : 0} /> : <SearchSkeleton width={cardWidth} bleed={desktop ? 0 : gutter} />;
   } else if (validation) {
     const fieldMessage = Object.values(validation.fieldErrors)[0]?.[0];
     state = (
@@ -682,7 +732,7 @@ export function SearchScreen() {
   } else if (rows.length === 0) {
     state = (
       <EmptyState
-        icon={tab === 'vehicles' ? 'garage' : 'user'}
+        {...(tab === 'vehicles' ? { preview: <SampleWall testID={`${ROUTE}.tabEmpty.sample`} /> } : { icon: 'user' as const })}
         title={tab === 'vehicles' ? t('noVehicles', { query: data.query }) : t('noMembers', { query: data.query })}
         testID={`${ROUTE}.tabEmpty`}
       />
@@ -698,6 +748,13 @@ export function SearchScreen() {
         ? { paddingRight: gutter, width: '100%' as const }
         : { alignSelf: 'center' as const, maxWidth: COLUMN + 2 * gutter, paddingHorizontal: gutter, width: '100%' as const },
     [desktop, gutter],
+  );
+  const wallStyle = useMemo(() => [styles.wallBleed, { maxWidth: COLUMN + 2 * gutter }], [gutter, styles.wallBleed]);
+  // DQ-1037: a feed card runs edge to edge on a phone (its header and caption keep the gutter themselves), in the column wider.
+  const feedCardWidth = phone ? Math.min(width, COLUMN + 2 * gutter) : cardWidth;
+  const cardRowStyle = useMemo(
+    () => [styles.cardGap, phone ? wallStyle : desktop ? { width: cardWidth } : [styles.cardColumn, { width: cardWidth }]],
+    [cardWidth, desktop, phone, styles.cardColumn, styles.cardGap, wallStyle],
   );
   const showTabs = membersTab && data !== undefined && !validation && (!state || (criteriaOn && tab === 'vehicles' && !loading));
   const tabsList = data
@@ -732,7 +789,7 @@ export function SearchScreen() {
       <View style={[columnStyle, styles.firstBar]}>
         <Skeleton>
           <View style={styles.skeletonBar}>
-            <SkeletonText variant="supporting" width="40%" />
+            <SkeletonText variant="callout" width="40%" />
           </View>
         </Skeleton>
       </View>
@@ -752,7 +809,7 @@ export function SearchScreen() {
   } else if (!state && more.isError) {
     footer = (
       <View style={[columnStyle, styles.footerError]} testID={`${ROUTE}.moreError`}>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {t('list.moreError')}
         </Text>
         <Button label={common('actions.retry')} variant="secondary" size="m" onPress={() => void (more.data ? more.fetchNextPage() : more.refetch())} testID={`${ROUTE}.moreRetry`} />
@@ -780,7 +837,7 @@ export function SearchScreen() {
   // Without that tab (filters alone, an interpreted text) it stays under the search field.
   const showChipRow = criteriaOn || hasFilters(url.filters) || (query !== '' && !desktop);
   const chipRow = showChipRow ? (
-    <FilterChipRow chips={chips} count={filterCount} onOpenFilters={desktop ? null : openFilters} gutter={desktop ? 0 : gutter} testID={`${ROUTE}.chips`} />
+    <FilterChipRow chips={restChips} fields={fieldChips} count={filterCount} onOpenFilters={desktop ? null : openFilters} gutter={desktop ? 0 : gutter} testID={`${ROUTE}.chips`} />
   ) : null;
   const chipsUnderTabs = membersTab;
   const chipsBelowTabs = chipsUnderTabs && tab === 'vehicles' && chipRow ? <View style={[columnStyle, styles.chipsBelow]}>{chipRow}</View> : null;
@@ -877,14 +934,21 @@ export function SearchScreen() {
       onEndReachedThreshold={0.5}
       renderItem={({ item }: { item: Row }) =>
         item.kind === 'vehicle' ? (
-          <View style={[styles.cardGap, columnStyle]}>
-            <FeedVehicleCard vehicle={item.vehicle} width={cardWidth} onOpen={openVehicle} onOpenUpdate={openUpdate} testID={`${ROUTE}.vehicle.${item.vehicle.id}`} />
+          // DQ-1037: the MediaCard `feed` anatomy, edge to edge on a phone, the 640 column wider.
+          <View style={cardRowStyle}>
+            <ResultFeedCard
+              vehicle={item.vehicle}
+              width={feedCardWidth}
+              onOpen={openVehicle}
+              onOpenOwner={openOwner}
+              testID={`${ROUTE}.vehicle.${item.vehicle.id}`}
+            />
           </View>
         ) : item.kind === 'tiles' ? (
-          <View style={[styles.tiles, columnStyle]}>
+          <View style={[styles.tiles, phone ? wallStyle : columnStyle]}>
             {item.vehicles.map((vehicle) => (
               <View key={vehicle.id} style={tileStyle}>
-                <ResultTile vehicle={vehicle} width={tileWidth} onOpen={openVehicle} testID={`${ROUTE}.tile.${vehicle.id}`} />
+                <WallCell vehicle={vehicle} width={tileWidth} onOpen={openVehicle} testID={`${ROUTE}.tile.${vehicle.id}`} />
               </View>
             ))}
           </View>
@@ -915,7 +979,7 @@ export function SearchScreen() {
             <ScrollView style={styles.panel} contentContainerStyle={styles.panelContent} keyboardShouldPersistTaps="handled" testID={`${ROUTE}.panel`}>
               <View role="region" aria-label={t('filters.panelLabel')}>
                 <View style={styles.panelHead}>
-                  <Text variant="titleM" role="heading" {...({ 'aria-level': 2 } as object)}>
+                  <Text variant="title2" role="heading" {...({ 'aria-level': 2 } as object)}>
                     {t('filters.title')}
                   </Text>
                   {filterCount > 0 ? (

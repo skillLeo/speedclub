@@ -9,6 +9,7 @@ import { THEMES } from '../support/tokens.mjs';
 const GALLERY_SECTIONS = [
   'typography',
   'colour',
+  'foundation',
   'icons',
   'buttons',
   'inputs',

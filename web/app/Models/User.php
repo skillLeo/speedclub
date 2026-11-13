@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use App\Enums\DistanceUnit;
+use App\Enums\MentionPrivacy;
+use App\Enums\OnboardingState;
 use App\Enums\OnboardingStep;
 use App\Enums\PowerDisplay;
 use App\Enums\RestrictionType;
 use App\Enums\ThemePreference;
+use App\Enums\TorqueUnit;
 use App\Enums\UserStatus;
+use App\Enums\WeightUnit;
 use App\Enums\WhoCanMessage;
 use App\Support\EmailAddress;
 use Carbon\CarbonImmutable;
@@ -43,7 +48,8 @@ use Laravel\Sanctum\HasApiTokens;
  */
 #[Fillable([
     'email', 'password', 'username', 'display_name', 'city', 'bio', 'locale', 'theme', 'power_display',
-    'who_can_message', 'discoverable', 'indexable', 'show_owner_on_qr', 'read_receipts', 'ai_suggestions', 'notification_prefs',
+    'who_can_message', 'discoverable', 'indexable', 'show_owner_on_qr', 'read_receipts', 'ai_suggestions', 'notification_prefs', 'mention_privacy',
+    'distance_unit', 'torque_unit', 'weight_unit', 'maintenance_prefs',
     'terms_version', 'privacy_version', 'consented_at', 'marketing_consent_at',
 ])]
 #[Hidden(['password', 'remember_token', 'credentials_epoch', 'two_factor_secret', 'two_factor_recovery_codes'])]
@@ -62,15 +68,25 @@ class User extends Authenticatable
             'password' => 'hashed',
             'username_changed_at' => 'datetime',
             'profile_setup_at' => 'datetime',
+            'is_sample' => 'boolean',
+            'is_editorial' => 'boolean',
             'theme' => ThemePreference::class,
             'power_display' => PowerDisplay::class,
             'who_can_message' => WhoCanMessage::class,
+            'mention_privacy' => MentionPrivacy::class,
             'discoverable' => 'boolean',
             'indexable' => 'boolean',
             'show_owner_on_qr' => 'boolean',
             'read_receipts' => 'boolean',
             'ai_suggestions' => 'boolean',
             'notification_prefs' => 'array',
+            'distance_unit' => DistanceUnit::class,
+            'torque_unit' => TorqueUnit::class,
+            'weight_unit' => WeightUnit::class,
+            'maintenance_prefs' => 'array',
+            'locale_follows_system' => 'boolean',
+            'home_region_lat' => 'float',
+            'home_region_lng' => 'float',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
@@ -83,7 +99,23 @@ class User extends Authenticatable
             'consented_at' => 'datetime',
             'marketing_consent_at' => 'datetime',
             'deletion_requested_at' => 'datetime',
+            'onboarding_state' => OnboardingState::class,
+            'age_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * SET-11 "Region für in deiner Nähe": the member's chosen point (snapped to 0.05°) for Home "Treffen in deiner Nähe" and EVT-01
+     * `near=home`; null without one.
+     *
+     * @return array{0: float, 1: float}|null
+     */
+    public function homeRegionPoint(): ?array
+    {
+        $lat = $this->getAttribute('home_region_lat');
+        $lng = $this->getAttribute('home_region_lng');
+
+        return is_numeric($lat) && is_numeric($lng) ? [(float) $lat, (float) $lng] : null;
     }
 
     /**
@@ -100,6 +132,41 @@ class User extends Authenticatable
     protected function username(): Attribute
     {
         return Attribute::make(set: fn (?string $value): ?string => $value === null ? null : mb_strtolower(trim($value)));
+    }
+
+    /**
+     * M4.6: a passwordless account (e-mail code, Apple, Google) that has not accepted AGB, Datenschutz and the age line yet (AUTH-09b).
+     * Every write but the safety paths answers 403 terms_required until then (EnsureCurrentConsent).
+     */
+    public function isPendingTerms(): bool
+    {
+        return $this->getAttribute('onboarding_state') === OnboardingState::PendingTerms;
+    }
+
+    /**
+     * Passwordless accounts have none until they set one in SET-04.
+     */
+    public function hasPassword(): bool
+    {
+        $password = $this->getAttributes()['password'] ?? null;
+
+        return is_string($password) && $password !== '';
+    }
+
+    /**
+     * @return HasMany<SocialAccount, $this>
+     */
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
+
+    /**
+     * @return HasMany<MemberPasskey, $this>
+     */
+    public function memberPasskeys(): HasMany
+    {
+        return $this->hasMany(MemberPasskey::class);
     }
 
     public function isDeactivated(): bool
@@ -201,6 +268,7 @@ class User extends Authenticatable
     {
         return match (true) {
             ! $this->hasVerifiedEmail() => OnboardingStep::VerifyEmail,
+            $this->isPendingTerms() => OnboardingStep::AcceptTerms,
             ! $this->hasUsername() => OnboardingStep::ChooseUsername,
             ! $this->hasCompletedProfileSetup() => OnboardingStep::ProfileSetup,
             default => null,
@@ -303,6 +371,26 @@ class User extends Authenticatable
     public function knownDevices(): HasMany
     {
         return $this->hasMany(KnownDevice::class);
+    }
+
+    /**
+     * M4.7 (09 §8.4): the member's app installs.
+     *
+     * @return HasMany<DeviceInstall, $this>
+     */
+    public function deviceInstalls(): HasMany
+    {
+        return $this->hasMany(DeviceInstall::class);
+    }
+
+    /**
+     * M4.7 (09 §8.4): what SET-21 reads.
+     *
+     * @return HasMany<SecurityEvent, $this>
+     */
+    public function securityEvents(): HasMany
+    {
+        return $this->hasMany(SecurityEvent::class);
     }
 
     /**

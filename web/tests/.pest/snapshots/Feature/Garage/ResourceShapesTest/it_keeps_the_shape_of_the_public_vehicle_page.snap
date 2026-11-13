@@ -33,6 +33,7 @@
             "width": "int",
             "height": "int",
             "blurhash": "string",
+            "thumbhash": "null",
             "focal_x": "null",
             "focal_y": "null",
             "alt": "null",
@@ -48,6 +49,8 @@
         },
         "photo_count": "int",
         "mod_count": "int",
+        "updates_count": "int",
+        "is_sample": "bool",
         "published_at": "string",
         "updated_at": "string",
         "wizard": "null",
@@ -92,6 +95,7 @@
                 "width": "int",
                 "height": "int",
                 "blurhash": "string",
+                "thumbhash": "null",
                 "focal_x": "null",
                 "focal_y": "null",
                 "alt": "null",
@@ -122,10 +126,7 @@
                 "installed_on": "string",
                 "installed_label": "string",
                 "cost_public": "bool",
-                "cost": {
-                    "cents": "int",
-                    "label": "string"
-                },
+                "cost": "null",
                 "legal_status": "null",
                 "legal_status_label": "null",
                 "thumb": {
@@ -135,6 +136,7 @@
                     "width": "int",
                     "height": "int",
                     "blurhash": "string",
+                    "thumbhash": "null",
                     "focal_x": "null",
                     "focal_y": "null",
                     "alt": "null",
@@ -150,6 +152,7 @@
                 }
             }
         ],
+        "highlights_rail": [],
         "mods": {
             "count": "int",
             "groups": [
@@ -176,10 +179,7 @@
                             "installed_on": "string",
                             "installed_label": "string",
                             "cost_public": "bool",
-                            "cost": {
-                                "cents": "int",
-                                "label": "string"
-                            },
+                            "cost": "null",
                             "legal_status": "null",
                             "legal_status_label": "null",
                             "thumb": {
@@ -189,6 +189,7 @@
                                 "width": "int",
                                 "height": "int",
                                 "blurhash": "string",
+                                "thumbhash": "null",
                                 "focal_x": "null",
                                 "focal_y": "null",
                                 "alt": "null",
@@ -207,7 +208,6 @@
                 }
             ]
         },
-        "updates_count": "int",
         "updates": [
             {
                 "id": "string",
@@ -230,7 +230,17 @@
                 "changes_count": "int",
                 "hidden": "bool",
                 "created_at": "string",
-                "month_label": "string"
+                "month_label": "string",
+                "vehicle_id": "string",
+                "mileage_km": "null",
+                "happened_on": "null",
+                "audience": "string",
+                "edited_at": "null",
+                "photos": [],
+                "photo_pairs": [],
+                "modifications": [],
+                "mentions": [],
+                "my_reaction": "null"
             }
         ],
         "owner": {
@@ -246,6 +256,8 @@
                 "followers": "int",
                 "following": "int"
             },
+            "is_sample": "bool",
+            "is_editorial": "bool",
             "is_self": "bool",
             "is_following": "bool",
             "follows_you": "bool",
@@ -253,6 +265,11 @@
         },
         "share_card_url": "null",
         "is_owner": "bool",
-        "is_saved": "null"
+        "is_saved": "null",
+        "social": {
+            "my_reaction": "null",
+            "is_following": "null",
+            "comments_enabled": "bool"
+        }
     }
 }

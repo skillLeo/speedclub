@@ -25,7 +25,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * Create and edit of GAR-10 (02_PRODUCT_SPEC §3.3). The category's schema decides the fields. Brand and part fall back to what
  * the category form holds in its fields, so a client need not send them twice, and the title is brand + model until the member
- * writes their own. Costs stay private unless cost_public is set; legal_status exists only while its flag is on. An edit of
+ * writes their own. Costs stay private, always (M4.9 ruling, cost_public is ignored); legal_status exists only while its flag is on. An edit of
  * nothing but what only the owner reads (notes, a private cost) leaves the vehicle's updated_at alone.
  */
 class SaveModification
@@ -116,7 +116,7 @@ class SaveModification
 
     /**
      * What anybody but the owner can read of a modification (ModificationResource, the search keys, the public page): everything
-     * but the notes, and the cost only while it is public. As JSON with sorted fields, so a form that sends the same values in
+     * but the notes and the cost. As JSON with sorted fields, so a form that sends the same values in
      * another order changes nothing.
      */
     private function publicFace(Modification $mod): string
@@ -125,7 +125,6 @@ class SaveModification
         $fields = $mod->getAttribute('fields') ?? [];
         ksort($fields);
         $installed = $mod->getAttribute('installed_on');
-        $costPublic = $mod->getAttribute('cost_public') === true;
 
         return (string) json_encode([
             'title' => $mod->getAttribute('title'),
@@ -137,8 +136,6 @@ class SaveModification
             'part_number' => $mod->getAttribute('part_number'),
             'installed_on' => $installed instanceof CarbonInterface ? $installed->format('Y-m') : null,
             'legal_status' => $mod->getAttribute('legal_status') instanceof LegalStatus ? $mod->getAttribute('legal_status')->value : $mod->getAttribute('legal_status'),
-            'cost_public' => $costPublic,
-            'cost_cents' => $costPublic ? $mod->getAttribute('cost_cents') : null,
             'sort' => $mod->getAttribute('sort'),
         ]);
     }
@@ -176,11 +173,14 @@ class SaveModification
             $this->fillPart($mod, $fields, $current, $attributes);
         }
 
-        foreach (['part_number', 'notes', 'cost_cents', 'cost_public'] as $key) {
+        foreach (['part_number', 'notes', 'cost_cents'] as $key) {
             if (array_key_exists($key, $attributes)) {
-                $mod->setAttribute($key, $attributes[$key] ?? ($key === 'cost_public' ? false : null));
+                $mod->setAttribute($key, $attributes[$key]);
             }
         }
+
+        // M4.9 ruling (09 §11): costs are never public; a cost_public an older app still sends changes nothing.
+        $mod->setAttribute('cost_public', false);
 
         if (array_key_exists('status', $attributes)) {
             $mod->setAttribute('status', $attributes['status']);

@@ -10,6 +10,7 @@ use App\Models\Vehicle;
 use App\Services\Garage\ModPresenter;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Media\MediaService;
+use App\Services\Pdf\PdfFonts;
 use App\Services\Qr\QrCodes;
 use App\Services\Qr\QrRenderer;
 use App\Support\Viewer;
@@ -31,7 +32,12 @@ final class Placard
     private const FONTS = [
         ['family' => 'Inter', 'weight' => '400', 'variant' => 'normal', 'file' => 'Inter-Regular.ttf'],
         ['family' => 'Inter', 'weight' => '700', 'variant' => 'bold', 'file' => 'Inter-SemiBold.ttf'],
-        ['family' => 'Barlow Semi Condensed', 'weight' => '700', 'variant' => 'bold', 'file' => 'BarlowSemiCondensed-Bold.ttf'],
+        // display.title (09 §4.2): the make and the name of the car in Archivo SemiExpanded.
+        ['family' => 'Archivo SemiExpanded', 'weight' => '600', 'variant' => '600', 'file' => 'ArchivoSemiExpanded-SemiBold.ttf'],
+        // Its glyph fallback at the same weight: make and model can be the member's free text ("Лада 2107"), and Archivo has no Cyrillic
+        // and almost no Greek. dompdf maps per character along the font-family list, but only to a registered variant of the same
+        // subtype ('600'); the next family after it is a core font with WinAnsi glyphs only, which would print those letters blank.
+        ['family' => 'Inter', 'weight' => '600', 'variant' => '600', 'file' => 'Inter-SemiBold.ttf'],
     ];
 
     /** The photo band of the sheet, width to height: 130 × 44 mm on A5, the same shape on A4. */
@@ -83,7 +89,7 @@ final class Placard
 
         /** @var PDF $pdf */
         $pdf = $this->configure(app('dompdf.wrapper'));
-        $this->registerFonts($pdf);
+        PdfFonts::register($pdf, self::FONTS);
 
         $pdf->loadView('pdf.placard', $this->viewData($vehicle, $qr, $size));
         $pdf->setPaper($size, 'portrait');
@@ -191,25 +197,5 @@ final class Placard
         imagejpeg($image, null, 85);
 
         return 'data:image/jpeg;base64,'.base64_encode((string) ob_get_clean());
-    }
-
-    /**
-     * Registered once, as for the sticker sheet (QrSticker): parsing a TTF takes seconds.
-     */
-    private function registerFonts(PDF $pdf): void
-    {
-        $metrics = $pdf->getDomPDF()->getFontMetrics();
-        $families = $metrics->getFontFamilies();
-
-        foreach (self::FONTS as $font) {
-            $installed = $families[mb_strtolower($font['family'])][$font['variant']] ?? null;
-
-            if (! is_string($installed) || ! is_file($installed.'.ufm')) {
-                $metrics->registerFont(
-                    ['family' => $font['family'], 'weight' => $font['weight'], 'style' => 'normal'],
-                    resource_path('fonts/'.$font['file']),
-                );
-            }
-        }
     }
 }

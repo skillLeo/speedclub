@@ -3,6 +3,8 @@
 namespace App\Services\Notifications;
 
 use App\Enums\DevicePlatform;
+use App\Enums\NotificationType;
+use App\Enums\SecurityNotice;
 use App\Models\Notification;
 use App\Models\PushToken;
 use App\Models\User;
@@ -25,7 +27,10 @@ class SendPushNotification implements ShouldQueue
 
     public int $timeout = 40;
 
-    public function __construct(public readonly string $notificationId) {}
+    /**
+     * @param  string  $exceptInstallId  an install id whose push tokens are left out ('' for none): the new device of a login alert (09 §8.4)
+     */
+    public function __construct(public readonly string $notificationId, public readonly string $exceptInstallId = '') {}
 
     public function handle(ExpoPush $push, NotificationFeed $feed, NotificationTexts $texts): void
     {
@@ -38,8 +43,10 @@ class SendPushNotification implements ShouldQueue
 
         $preference = $row->type->pushPreference();
         $wanted = $preference === null ? $row->type->alwaysPushes() : NotificationPrefs::wantsPush($recipient, $preference);
+        // M4.7 (09 §8.4): the login alert pushes, whatever the switches and quiet hours, like every security notice mails.
+        $loginAlert = $row->type === NotificationType::Security && ($row->data['event'] ?? null) === SecurityNotice::NewDevice->value;
 
-        if (! $wanted || (! $row->type->isUrgent() && QuietHours::active($recipient))) {
+        if (! $loginAlert && (! $wanted || (! $row->type->isUrgent() && QuietHours::active($recipient)))) {
             return;
         }
 
@@ -53,6 +60,7 @@ class SendPushNotification implements ShouldQueue
         $tokens = PushToken::query()
             ->where('user_id', $recipient->id)
             ->whereIn('platform', [DevicePlatform::Ios->value, DevicePlatform::Android->value])
+            ->when($this->exceptInstallId !== '', fn ($query) => $query->where(fn ($other) => $other->whereNull('device_id')->orWhere('device_id', '!=', $this->exceptInstallId)))
             ->get();
 
         if ($tokens->isNotEmpty()) {
@@ -60,6 +68,8 @@ class SendPushNotification implements ShouldQueue
                 'type' => $shown->type->value,
                 'notification_id' => $shown->id,
                 'path' => $texts->path($shown),
+                // M4.13 (09 §8.8): the stage's deterministic key; the app drops its local backup notification of the same id.
+                ...($shown->type === NotificationType::MaintenanceDue && is_string($shown->data['reminder_key'] ?? null) ? ['reminder_key' => $shown->data['reminder_key']] : []),
             ]);
         }
     }

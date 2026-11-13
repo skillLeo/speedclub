@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Csp\SpaPreset;
 use App\Mail\MessageDigestMail;
 use App\Models\User;
 use App\Services\Messaging\Conversations;
@@ -115,7 +116,8 @@ describe('app-config and the /app CSP', function () {
         config(['broadcasting.default' => 'null']);
 
         $this->getJson('/api/v1/app-config')->assertOk()->assertJsonPath('data.realtime', ['enabled' => false, 'key' => null, 'cluster' => null]);
-        expect(msgConnectSrc($this->get('/app')->headers->get('Content-Security-Policy')))->toBe("'self'");
+        // ADR-449: the event map's tile host is the one other source of /app (SpaMapCspTest).
+        expect(msgConnectSrc($this->get('/app')->headers->get('Content-Security-Policy')))->toBe("'self' ".SpaPreset::MAP_TILES_HOST);
     });
 
     it('stays off when a key is missing even with BROADCAST_CONNECTION=pusher', function () {
@@ -123,7 +125,8 @@ describe('app-config and the /app CSP', function () {
         config(['broadcasting.connections.pusher.secret' => null]);
 
         $this->getJson('/api/v1/app-config')->assertJsonPath('data.realtime.enabled', false);
-        expect(msgConnectSrc($this->get('/app')->headers->get('Content-Security-Policy')))->toBe("'self'");
+        // ADR-449: the event map's tile host is the one other source of /app (SpaMapCspTest).
+        expect(msgConnectSrc($this->get('/app')->headers->get('Content-Security-Policy')))->toBe("'self' ".SpaPreset::MAP_TILES_HOST);
     });
 
     it('gives the public key and cluster, never the secret, and opens connect-src to the EU hosts only', function () {
@@ -134,7 +137,7 @@ describe('app-config and the /app CSP', function () {
             ->and($config->getContent())->not->toContain('very-secret')->not->toContain('12345');
 
         $connect = msgConnectSrc($this->get('/app')->headers->get('Content-Security-Policy'));
-        expect($connect)->toBe("'self' wss://ws-eu.pusher.com https://sockjs-eu.pusher.com https://stats.pusher.com")
+        expect($connect)->toBe("'self' wss://ws-eu.pusher.com https://sockjs-eu.pusher.com https://stats.pusher.com ".SpaPreset::MAP_TILES_HOST)
             ->and($connect)->not->toContain('*');
     });
 });

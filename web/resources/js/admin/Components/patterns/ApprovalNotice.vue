@@ -22,12 +22,12 @@ const queue = hasRoute('admin.team.approvals') ? routeOr('admin.team.approvals',
         <PhSealCheck :size="20" class="mt-2 shrink-0 text-info" aria-hidden="true" />
         <div class="flex min-w-0 flex-1 flex-col gap-4">
             <template v-if="approval">
-                <p class="text-label-s text-ink">{{ trans(approval.existing ? 'ui.approval.already' : 'ui.approval.requested', { title: flashText(approval.title, trans) }) }}</p>
-                <p class="text-supporting text-ink-2">{{ trans('ui.approval.next', { until: formatDateTime(approval.expires_at) }) }}</p>
+                <p class="text-admin-base-strong text-ink">{{ trans(approval.existing ? 'ui.approval.already' : 'ui.approval.requested', { title: flashText(approval.title, trans) }) }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans('ui.approval.next', { until: formatDateTime(approval.expires_at) }) }}</p>
             </template>
             <template v-else>
-                <p class="text-label-s text-ink">{{ trans('ui.approval.preview_title') }}</p>
-                <p class="text-supporting text-ink-2">{{ trans('ui.approval.preview_body') }}</p>
+                <p class="text-admin-base-strong text-ink">{{ trans('ui.approval.preview_title') }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans('ui.approval.preview_body') }}</p>
             </template>
         </div>
         <Button v-if="approval && queue" size="sm" variant="secondary" :href="queue">{{ trans('ui.approval.open_queue') }}</Button>

@@ -1,3 +1,4 @@
+import { layout, size } from '@/theme';
 import { Button, Header, HeaderLargeTitle, Photo, PhotoScrim } from '@/ui';
 
 import { PHOTOS, noop } from '../data';
@@ -6,13 +7,16 @@ import { FullBleed, Group, SectionScreen, Specimen } from '../parts';
 export function HeaderSection() {
   return (
     <SectionScreen section="header">
-      <Group title="Compact" note="44 hoch, headline mittig, Aktionen 44 × 44. Randlos auf bg.canvas wie auf einem echten Screen.">
+      <Group
+        title="Kompakt"
+        note={`${size.header} hoch, headline mittig, Aktionen ${size.iconButton} × ${size.iconButton}. Randlos auf bg.canvas wie auf einem echten Bildschirm.`}
+      >
         <Specimen label="Mit Zurück" fill>
           <FullBleed>
             <Header safeTop={false} title="Technik" onBack={noop} testID="DEV-01.header.back" />
           </FullBleed>
         </Specimen>
-        <Specimen label="Zurück mit vorherigem Titel (ab 390 Breite, nicht auf Android)" fill>
+        <Specimen label={`Zurück mit vorherigem Titel (ab ${layout.phoneLargeMinWidth}\u00a0pt Breite, nicht auf Android)`} fill>
           <FullBleed>
             <Header safeTop={false} title="Technik" onBack={noop} backTitle="Garage" />
           </FullBleed>
@@ -28,7 +32,7 @@ export function HeaderSection() {
             />
           </FullBleed>
         </Specimen>
-        <Specimen label="Aktionen mit Unread" fill>
+        <Specimen label="Aktionen mit Ungelesen-Punkt" fill>
           <FullBleed>
             <Header
               safeTop={false}
@@ -47,7 +51,10 @@ export function HeaderSection() {
           </FullBleed>
         </Specimen>
       </Group>
-      <Group title="Large" note="Direkt auf bg.canvas wie auf einem Tab-Root: title.l auf dem Gutter, klappt nach 52 zur kompakten Leiste zusammen.">
+      <Group
+        title="Groß"
+        note={`Direkt auf bg.canvas wie auf der ersten Seite eines Tabs: title.1 am Seitenrand, klappt nach ${size.headerLargeTitleBlock} zur kompakten Leiste zusammen.`}
+      >
         <FullBleed>
           <Header
             safeTop={false}

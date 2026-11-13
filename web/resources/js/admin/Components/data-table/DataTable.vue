@@ -292,7 +292,7 @@ function onRowClick(row: Row, event: MouseEvent): void {
 
         <!-- toolbar -->
         <div class="flex flex-wrap items-center justify-between gap-8">
-            <p class="text-supporting text-ink-2 tabular-nums" aria-live="polite" :data-testid="`${testId}.count`">
+            <p class="text-admin-base text-ink-2 tabular-nums" aria-live="polite" :data-testid="`${testId}.count`">
                 <template v-if="view === 'rows'">{{ transChoice('ui.table.count', rows.meta.total, { count: formatNumber(rows.meta.total) }) }}</template>
             </p>
             <div class="flex flex-wrap items-center gap-8">
@@ -338,8 +338,8 @@ function onRowClick(row: Row, event: MouseEvent): void {
             :aria-label="trans('ui.table.bulk.region')"
             :data-testid="`${testId}.bulk`"
         >
-            <p class="text-label-s text-ink tabular-nums">{{ trans('ui.table.bulk.selected', { count: formatNumber(selectedIds.length) }) }}</p>
-            <p v-if="selectedIds.length > 100" class="text-helper text-warning">{{ trans('ui.table.bulk.four_eyes') }}</p>
+            <p class="text-admin-base-strong text-ink tabular-nums">{{ trans('ui.table.bulk.selected', { count: formatNumber(selectedIds.length) }) }}</p>
+            <p v-if="selectedIds.length > 100" class="text-admin-base text-warning">{{ trans('ui.table.bulk.four_eyes') }}</p>
             <div class="flex flex-1 flex-wrap items-center justify-end gap-8">
                 <Button
                     v-for="action in availableBulk"
@@ -368,8 +368,8 @@ function onRowClick(row: Row, event: MouseEvent): void {
         <!-- table -->
         <div v-else class="relative min-w-0">
         <div ref="scroller" class="relative min-w-0 overflow-auto rounded-sm border border-line-subtle bg-surface" :class="loading ? 'opacity-60' : ''" :data-scrollable="wider || undefined" @scroll.passive="measureScroll">
-            <div v-if="loading" class="sc-progress absolute inset-x-0 top-0 z-20 h-2 bg-accent" aria-hidden="true" />
-            <table class="w-full border-collapse text-supporting" :class="[fluid ? 'table-auto' : 'table-fixed', narrow ? '' : 'min-w-960']">
+            <div v-if="loading" class="sc-progress absolute inset-x-0 top-0 z-20 h-2 bg-ink" aria-hidden="true" />
+            <table class="w-full border-collapse text-admin-base" :class="[fluid ? 'table-auto' : 'table-fixed', narrow ? '' : 'min-w-960']">
                 <caption class="sr-only">{{ caption }}</caption>
                 <thead class="sticky top-0 z-10 bg-surface">
                     <tr class="h-40 border-b border-line">

@@ -11,14 +11,14 @@ import { GarageScreen } from '@/features/garage/screens/GarageScreen';
 import { HistoryScreen } from '@/features/garage/screens/HistoryScreen';
 import { ModEditorScreen } from '@/features/garage/screens/ModEditorScreen';
 import { ModsScreen } from '@/features/garage/screens/ModsScreen';
-import { PhotoEditScreen } from '@/features/garage/screens/PhotoEditScreen';
+import { AltFieldSkeleton, PhotoEditScreen } from '@/features/garage/screens/PhotoEditScreen';
 import { PhotosScreen } from '@/features/garage/screens/PhotosScreen';
 import { WizardReviewScreen } from '@/features/garage/screens/wizard/WizardReviewScreen';
 import { WizardPhotosScreen } from '@/features/garage/screens/wizard/WizardPhotosScreen';
 import { WizardVehicleScreen } from '@/features/garage/screens/wizard/WizardVehicleScreen';
 import type { OwnerUpdate } from '@/api/queries/garage';
 import { useSessionStore } from '@/state/session';
-import { hydrateThemePreference, themes } from '@/theme';
+import { hydrateThemePreference, themes, typography } from '@/theme';
 
 import { flat, visualOf } from '../ui/helpers';
 import { card, draftCard, media, vehicle, VEHICLE_ID, WHEEL_FIELDS, wheelMod } from './fixtures';
@@ -129,8 +129,15 @@ describe('GAR-01 Garage', () => {
     // DQ-152: it wraps after the dot only, "Schritt 2 von 4" stays together.
     expect(screen.getByText('Entwurf · Schritt 2 von 4')).toBeTruthy();
     expect(screen.getByTestId('GAR-01.add')).toBeTruthy();
+    // 09 §7.6: the private stats line, only from what the list carries (14 mods and 3 photos on the fixture's card).
+    expect(screen.getByTestId('GAR-01.stats.line')).toHaveTextContent('1\u00a0Fahrzeug · 14\u00a0Mods · 3\u00a0Fotos');
+    // The quick actions of the car: QR keeps the card's `.qr` id the flows press.
     await fireEvent.press(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.qr`));
     expect(mockRouter.push).toHaveBeenCalledWith(`/qr/${VEHICLE_ID}`);
+    await fireEvent.press(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.mods`));
+    expect(mockRouter.push).toHaveBeenCalledWith(`/garage/${VEHICLE_ID}/mods`);
+    await fireEvent.press(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.update`));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/post-update', params: { vehicleId: VEHICLE_ID } });
     await fireEvent.press(screen.getByTestId('GAR-01.draft.01draft.body'));
     expect(mockRouter.push).toHaveBeenCalledWith('/add-vehicle/01draft/specs', { withAnchor: true });
   });
@@ -162,15 +169,76 @@ describe('GAR-01 Garage', () => {
     expect(flat(screen.getByTestId('GAR-01.title').props.style).alignSelf).toBe(alignSelf);
   });
 
-  it('greets an empty garage with the brand empty state and its one action', async () => {
+  it('greets an empty garage with a photo, its one action and a sample card badged Beispiel (09 §7.6)', async () => {
     width(390);
     stubFetch({ '/api/v1/auth/me': ME, '/api/v1/me/vehicles': list([]) });
     await renderScreen(<GarageScreen />);
     await waitFor(() => expect(screen.getByTestId('GAR-01.empty')).toBeTruthy());
-    expect(screen.getByText('Füge dein erstes Auto hinzu')).toBeTruthy();
-    expect(screen.getByTestId('GAR-01.empty.frame', { includeHiddenElements: true })).toBeTruthy();
-    await fireEvent.press(screen.getByText('Fahrzeug hinzufügen'));
+    expect(screen.getByTestId('GAR-01.empty.title')).toHaveTextContent('Deine Garage wartet.');
+    expect(screen.getByTestId('GAR-01.empty.photo')).toBeTruthy();
+    expect(screen.getByTestId('GAR-01.empty.sample.sample')).toHaveTextContent('Beispiel');
+    await fireEvent.press(screen.getByTestId('GAR-01.empty.action'));
     expect(mockRouter.push).toHaveBeenCalledWith('/add-vehicle/new/vehicle');
+  });
+
+  it('lays the cards out two to a row from 1280, not as one stretched phone column (DQ-921)', async () => {
+    width(1440);
+    const second = card({ id: '01second', is_main: false, full_title: 'BMW M3 E46' });
+    stubFetch({ '/api/v1/auth/me': ME, '/api/v1/me/vehicles': list([card(), second]) });
+    await renderScreen(<GarageScreen />);
+    await waitFor(() => expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}`)).toBeTruthy());
+    expect(screen.getByTestId('GAR-01.grid')).toBeTruthy();
+    expect(screen.getByTestId('GAR-01.card.01second')).toBeTruthy();
+    expect(screen.queryByTestId('GAR-01.carousel')).toBeNull();
+  });
+
+  it('shows the cars in the SM16 carousel on a phone', async () => {
+    width(390);
+    const second = card({ id: '01second', is_main: false, full_title: 'BMW M3 E46' });
+    stubFetch({ '/api/v1/auth/me': ME, '/api/v1/me/vehicles': list([card(), second]) });
+    await renderScreen(<GarageScreen />);
+    await waitFor(() => expect(screen.getByTestId('GAR-01.carousel')).toBeTruthy());
+    expect(screen.getByTestId(`GAR-01.carousel.card.${VEHICLE_ID}`)).toBeTruthy();
+    expect(screen.getByTestId('GAR-01.carousel.card.01second')).toBeTruthy();
+    // One page indicator and one action row, QR included, for the centred (first) car only: a QR control floating on the photo
+    // overlapped the card's link (DOM audit overlap, m4.10-shots).
+    expect(screen.getByTestId('GAR-01.pages').props['aria-label']).toBe('Fahrzeug 1 von 2');
+    expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.qr`)).toBeTruthy();
+    expect(screen.queryByTestId('GAR-01.card.01second.qr')).toBeNull();
+    expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.update`)).toBeTruthy();
+    expect(screen.queryByTestId('GAR-01.card.01second.update')).toBeNull();
+    expect(screen.getByTestId('GAR-01.stats.line')).toHaveTextContent('2\u00a0Fahrzeuge · 28\u00a0Mods · 6\u00a0Fotos');
+  });
+
+  it('draws the 2.0 card: display title, caption, mini spec and status on the photo (DQ-1050)', async () => {
+    width(390);
+    stubFetch({ '/api/v1/auth/me': ME, '/api/v1/me/vehicles': list([card()]) });
+    await renderScreen(<GarageScreen />);
+    await waitFor(() => expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.title`)).toBeTruthy());
+    expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.status`)).toHaveTextContent('Öffentlich');
+    expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.spec`)).toHaveTextContent(/LeistungDrehmoment|Leistung/);
+    // One action row: the filled "Update posten" and two secondary buttons, no tile grid (DQ-1051).
+    expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.update`)).toHaveTextContent('Update posten');
+    expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.mods`)).toHaveTextContent('Mods');
+  });
+
+  it('closes the editing actions under a restriction, the QR code stays (DQ-1067 a)', async () => {
+    width(390);
+    stubFetch({ '/api/v1/auth/me': RESTRICTED_ME, '/api/v1/me/vehicles': list([card()]) });
+    await renderScreen(<GarageScreen />);
+    await waitFor(() => expect(screen.getByTestId('GAR-01.restricted')).toBeTruthy());
+    for (const action of ['update', 'mods', 'photos']) {
+      expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.${action}`).props.accessibilityState?.disabled ?? screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.${action}`).props['aria-disabled']).toBe(true);
+    }
+    expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.qr`)).toBeTruthy();
+  });
+
+  it('names the page and the cause when the list fails (DQ-1078)', async () => {
+    width(390);
+    stubFetch({ '/api/v1/auth/me': ME, '/api/v1/me/vehicles': { status: 500, body: { message: 'x' } } });
+    await renderScreen(<GarageScreen />);
+    await waitFor(() => expect(screen.getByTestId('GAR-01.error')).toBeTruthy(), { timeout: 5000 });
+    expect(screen.getByTestId('GAR-01.error')).toHaveTextContent(/Deine Garage konnte nicht geladen werden\./);
   });
 
   it('invites a guest to sign in instead of loading anything', async () => {
@@ -449,6 +517,16 @@ describe('GAR-11 entries', () => {
     hidden: false,
     created_at: null,
     month_label: 'März 2023',
+    vehicle_id: VEHICLE_ID,
+    mileage_km: null,
+    happened_on: null,
+    audience: 'vehicle',
+    edited_at: null,
+    photos: [],
+    photo_pairs: [],
+    modifications: [],
+    mentions: [],
+    my_reaction: null,
     ...overrides,
   });
   const show = async (entries: OwnerUpdate[]) => {
@@ -461,11 +539,12 @@ describe('GAR-11 entries', () => {
     await renderScreen(<HistoryScreen />);
   };
 
-  it('titles a change as VEH-01 does, with the kind of entry as meta (DQ-175)', async () => {
+  it('titles one named change as VEH-01 does, the system and key value under it, the kind never twice (DQ-175, DQ-1059)', async () => {
     await show([update({})]);
     await waitFor(() => expect(screen.getByTestId('GAR-11.entry.01upd')).toBeTruthy());
-    expect(screen.getByTestId('GAR-11.entry.01upd')).toHaveTextContent('FahrwerkSerie → KW V3 · −35 mmModifikation geändert');
-    expect(screen.getByLabelText('Fahrwerk ausblenden')).toBeTruthy();
+    expect(screen.getByTestId('GAR-11.entry.01upd')).toHaveTextContent('KW V3 statt SerieFahrwerk · −35 mm');
+    expect(screen.getByTestId('GAR-11.entry.01upd')).not.toHaveTextContent('Modifikation geändert');
+    expect(screen.getByLabelText('KW V3 statt Serie ausblenden')).toBeTruthy();
   });
 
   it('keeps the kind as the title of an entry without changes, and says it once', async () => {
@@ -536,7 +615,7 @@ describe('GAR-05 and the catalogue', () => {
 });
 
 describe('provenance chips (DQ-169)', () => {
-  // Label widths of Werksangabe, Besitzerangabe and Gemessen at 14/600.
+  // Label widths of Herstellerangabe, Geschätzt and Prüfstand at 14/600.
   const LABELS = [88, 109, 65];
 
   it('stay on one row where they fit, share two even columns where they do not, and wrap where even a column is too narrow', () => {
@@ -606,6 +685,73 @@ describe('GAR-08 focal point', () => {
     expect(screen.getByTestId('GAR-08.stage')).toHaveAccessibleName('Fokuspunkt: 55 % von links, 45 % von oben');
     expect(announce).toHaveBeenLastCalledWith('55 % von links, 45 % von oben');
     announce.mockRestore();
+  });
+});
+
+describe('GAR-08 loading', () => {
+  afterEach(() => {
+    mockWindow.current = null;
+  });
+
+  it('draws its section headers’ skeleton lines at the header role’s height (ADR-426 e)', async () => {
+    mockParams = { id: VEHICLE_ID, mediaId: '01side' };
+    mockWindow.current = { width: 390, height: 844, scale: 1, fontScale: 1 };
+    stubFetch({ '/api/v1/auth/me': ME });
+    const answered = globalThis.fetch;
+    globalThis.fetch = (async (input: Request | string, init?: RequestInit) => {
+      const request = typeof input === 'string' ? new Request(input, init) : input;
+      if (new URL(request.url).pathname.endsWith(`/vehicles/${VEHICLE_ID}`)) return new Promise<Response>(() => undefined);
+      return answered(request);
+    }) as typeof fetch;
+    await renderScreen(<PhotoEditScreen />);
+    await waitFor(() => expect(screen.getByTestId('GAR-08.skeleton.header.focus', { includeHiddenElements: true })).toBeTruthy());
+    for (const header of ['focus', 'details']) {
+      const line = screen.getByTestId(`GAR-08.skeleton.header.${header}`, { includeHiddenElements: true });
+      const box = line.children.find((child) => typeof child !== 'string');
+      expect(box && typeof box !== 'string' ? flat(box.props.style).height : null).toBe(typography.callout.lineHeight);
+    }
+  });
+});
+
+describe('GAR-08 alt field skeleton (SF-R4-2)', () => {
+  afterEach(() => {
+    mockWindow.current = null;
+  });
+
+  type Node = ReturnType<typeof screen.getByTestId>;
+  const layout = (node: Node, height: number) => fireEvent(node, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 300, height } } });
+  const blockHeight = () => flat(screen.getByTestId('GAR-08.skeleton.alt', { includeHiddenElements: true }).props.style).height;
+  const inputLine = typography.input.lineHeight;
+  const padding = 12;
+
+  it('measures in the field\'s input role and is as tall as the field with a 2-line alt text', async () => {
+    mockWindow.current = { width: 390, height: 844, scale: 1, fontScale: 1 };
+    await renderScreen(<AltFieldSkeleton text="Heckansicht des Skyline auf nasser Fahrbahn bei Nacht in Yokohama" testID="GAR-08.skeleton.alt" />);
+    const measure = screen.getByTestId('GAR-08.skeleton.alt.measure', { includeHiddenElements: true });
+    // The input role (16/24), never body (15/22): the field's own line box.
+    expect(flat(measure.props.style).fontSize).toBe(typography.input.fontSize);
+    expect(flat(measure.props.style).lineHeight).toBe(inputLine);
+    await layout(measure, 2 * inputLine);
+    // TextInput: two drawn lines of the input role and 12 above and below them.
+    expect(blockHeight()).toBe(2 * inputLine + 2 * padding);
+    await layout(measure, 5 * inputLine);
+    // At most ALT_ROWS (3) rows, as the field caps them.
+    expect(blockHeight()).toBe(3 * inputLine + 2 * padding);
+  });
+
+  it('counts rows in the drawn line, as Android 14+ draws it at a large font', async () => {
+    mockWindow.current = { width: 390, height: 844, scale: 1, fontScale: 2 };
+    await renderScreen(<AltFieldSkeleton text="Heckansicht des Skyline auf nasser Fahrbahn bei Nacht in Yokohama" testID="GAR-08.skeleton.alt" />);
+    const drawnLine = 36;
+    const measure = screen.getByTestId('GAR-08.skeleton.alt.measure', { includeHiddenElements: true });
+    // InputLineMeasure, beside the measured text: one line of the input role as the OS draws it.
+    const line = measure.parent?.children.find(
+      (child): child is Node => typeof child !== 'string' && (child.props.dataSet as { qaMeasure?: string } | undefined)?.qaMeasure === 'line',
+    );
+    expect(line).toBeTruthy();
+    if (line) await layout(line, drawnLine);
+    await layout(measure, 2 * drawnLine);
+    expect(blockHeight()).toBe(2 * drawnLine + 2 * padding);
   });
 });
 

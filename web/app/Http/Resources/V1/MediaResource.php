@@ -41,6 +41,11 @@ class MediaResource extends JsonResource
             'width' => $width,
             'height' => $height,
             'blurhash' => $this->blurhash,
+            /**
+             * ThumbHash of an editorial/sample photo (09 §4.6, from design/scripts/process-photos.mjs); null for member uploads, which
+             * keep the blurhash. expo-image: `placeholder={{ thumbhash }}` when set.
+             */
+            'thumbhash' => $this->thumbhash,
             'focal_x' => $this->focal_x,
             'focal_y' => $this->focal_y,
             'alt' => $this->alt,

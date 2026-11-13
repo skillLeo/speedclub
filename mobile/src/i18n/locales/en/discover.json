@@ -3,7 +3,11 @@
   "search": {
     "placeholder": "Make, model, mods or members",
     "submit": "Search for “{{query}}”",
-    "placeholderShort": "Make, model, member"
+    "placeholderShort": "Make, model, member",
+    "submitScoped": {
+      "vehicles": "Search builds for “{{query}}”",
+      "members": "Search members for “{{query}}”"
+    }
   },
   "recent": {
     "title": "Recent searches",
@@ -20,7 +24,9 @@
     "emptyTitle": "No makes yet",
     "emptyBody": "As soon as builds are public, you'll find their makes here.",
     "emptyAction": "Add vehicle",
-    "errorTitle": "Makes couldn't be loaded"
+    "errorTitle": "Makes couldn't be loaded",
+    "all": "All {{count}}",
+    "allLabel": "Show all {{count}} makes"
   },
   "start": {
     "title": "What are you looking for?",
@@ -66,7 +72,12 @@
     "yearTo": "{{value}} or older",
     "yearBetween": "Year {{min}}–{{max}}",
     "yearExact": "Year {{value}}",
-    "wheelDiameter": "{{value}}″"
+    "wheelDiameter": "{{value}}″",
+    "power": "Power",
+    "powerValue": "Power {{value}}",
+    "mods": "Mods",
+    "modsLabel_one": "Mods, {{count}} active",
+    "modsLabel_other": "Mods, {{count}} active"
   },
   "results": {
     "count_one": "{{formatted}} build",
@@ -172,7 +183,10 @@
     "notFoundBody": "There are no public builds of this make. Choose another make in Discover.",
     "errorTitle": "The make couldn't be loaded",
     "back": "To Discover",
-    "since": "since {{year}}"
+    "since": "since {{year}}",
+    "newTitle": "New from {{make}}",
+    "newAllLabel": "All new {{make}} builds",
+    "moreModels": "More models:"
   },
   "model": {
     "count_one": "{{formatted}} public build",
@@ -215,5 +229,15 @@
     "action": "Search with AI",
     "nothing": "We didn’t find matching filters for that. The search for your text carries on.",
     "applied": "Filters from your search"
+  },
+  "scopes": {
+    "label": "Search in",
+    "all": "All",
+    "vehicles": "Builds",
+    "members": "Members"
+  },
+  "newest": {
+    "title": "Just discovered",
+    "allLabel": "All new builds"
   }
 }

@@ -55,16 +55,6 @@ export function formatClock(seconds: number): string {
   return `${Math.floor(whole / MINUTE)}:${String(whole % MINUTE).padStart(2, '0')}`;
 }
 
-const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b);
-
-/**
- * An address in running text may break after "@" and after a dot, never in the middle of a part (DQ-130). Only for
- * display: the zero-width spaces must never reach a field or a request.
- */
-export function breakableEmail(email: string): string {
-  return email.replace(/([@.])(?=.)/g, `$1${ZERO_WIDTH_SPACE}`);
-}
-
 /** Seconds left of a timer, ticking once a second. `restart` sets it again. */
 export function useCountdown(initialSeconds: number = 0): { remaining: number; restart: (seconds: number) => void } {
   const [remaining, setRemaining] = useState(initialSeconds);

@@ -35,8 +35,8 @@ async function freshMember(label: string): Promise<{ email: string; username: st
 }
 
 // The copy of mobile/src/i18n/locales/de/auth.json, as it renders. A word joiner (U+2060) after the hyphen keeps "E-Mail"
-// and "6-stellig" on one line (DQ-147); "E-Mail-Adresse" has none in the form errors, since it may break at its second
-// hyphen. So may AUTH-05's title, which at 200 % is wider than a phone (DQ-252), and the verify notice's sentence.
+// and "6-stellig" on one line (DQ-147); "E-Mail-Adresse" carries it too (joinShortCompounds, M4.1 fix round 7) and may still
+// break at its second hyphen. So may AUTH-05's title, which at 200 % is wider than a phone (DQ-252), and the verify notice's sentence.
 const WJ = String.fromCharCode(0x2060);
 /** verify.titleNoMail: AUTH-05 when no mail was just sent. */
 const VERIFY_TITLE_NO_MAIL = `Bestätige deine E-${WJ}Mail-Adresse`;
@@ -50,7 +50,7 @@ const VERIFY_NOTICE_SHORT = `E-${WJ}Mail bestätigen`;
 const VERIFY_NOTICE_ACTION = 'Code eingeben';
 const INVALID_CODE = 'Das hat nicht gepasst. Prüfe den Code oder fordere einen neuen an.';
 const INVALID_WITH_PASSWORD = 'Code oder Passwort stimmen nicht. Prüfe beides oder fordere einen neuen Code an.';
-const INVALID_CREDENTIALS = 'E-Mail-Adresse oder Passwort stimmen nicht.';
+const INVALID_CREDENTIALS = `E-${WJ}Mail-Adresse oder Passwort stimmen nicht.`;
 const RESEND = 'Neuen Code anfordern';
 /** verify.resendWait with formatClock: "1:00" to "0:01". */
 const RESEND_WAIT = /^Einen neuen Code kannst du in [01]:\d\d anfordern\.$/;
@@ -152,6 +152,22 @@ async function register(page: Page, email: string, password = PASSWORD): Promise
   return response;
 }
 
+/**
+ * M4.6: Welcome no longer carries a password button (09 §7.2 AUTH-02). The password ways stay one step further: "Mit E-Mail
+ * fortfahren" → AUTH-12 "Mit Passwort anmelden" → AUTH-03, and its "Registrieren" → AUTH-04.
+ */
+async function welcomeToPasswordSignIn(page: Page): Promise<void> {
+  await id(page, 'AUTH-02.provider.email').click();
+  await expect(id(page, 'AUTH-12.root')).toBeVisible();
+  await id(page, 'AUTH-12.withPassword').click();
+  await expect(id(page, 'AUTH-03.root')).toBeVisible();
+}
+
+async function welcomeToSignUp(page: Page): Promise<void> {
+  await welcomeToPasswordSignIn(page);
+  await id(page, 'AUTH-03.toSignUp').click();
+}
+
 /** AUTH-03 with the given credentials. Returns the answer of auth/login. */
 async function signIn(page: Page, email: string, password: string): Promise<Response> {
   await id(page, 'AUTH-03.email').fill(email);
@@ -174,7 +190,7 @@ test.describe('F1 onboarding', () => {
     const email = address('happy');
     await open(page, '/app/welcome');
     await expect(id(page, 'AUTH-02.root')).toBeVisible();
-    await id(page, 'AUTH-02.signUp').click();
+    await welcomeToSignUp(page);
     await expect(id(page, 'AUTH-04.root')).toBeVisible();
     expect(pathOf(page)).toBe('/app/sign-up');
 
@@ -441,7 +457,7 @@ test.describe('F1 onboarding', () => {
       if (r.url().includes('/api/v1/auth/register')) sent.push(r.url());
     });
     await id(page, 'AUTH-04.cta.primary').click();
-    await expect(id(page, 'AUTH-04.email.error')).toHaveText('Gib deine E-Mail-Adresse ein.');
+    await expect(id(page, 'AUTH-04.email.error')).toHaveText(`Gib deine E-${WJ}Mail-Adresse ein.`);
     await expect(id(page, 'AUTH-04.password.error')).toHaveText('Gib dein Passwort ein.');
     await expect(id(page, 'AUTH-04.ageConfirmed.error')).toHaveText('Bestätige, dass du mindestens 16 Jahre alt bist.');
     await expect(id(page, 'AUTH-04.termsAccepted.error')).toHaveText('Akzeptiere die AGB, um weiterzumachen.');
@@ -455,9 +471,9 @@ test.describe('F1 onboarding', () => {
     await expect(rule('length')).toHaveAttribute('aria-label', 'Mindestens 10 Zeichen: noch nicht erfüllt');
     await id(page, 'AUTH-04.password').fill(email);
     await expect(rule('length')).toHaveAttribute('aria-label', 'Mindestens 10 Zeichen: erfüllt');
-    await expect(rule('notEmail')).toHaveAttribute('aria-label', 'Nicht deine E-Mail-Adresse: noch nicht erfüllt');
+    await expect(rule('notEmail')).toHaveAttribute('aria-label', `Nicht deine E-${WJ}Mail-Adresse: noch nicht erfüllt`);
     await id(page, 'AUTH-04.password').fill('liverpool1');
-    await expect(rule('notEmail')).toHaveAttribute('aria-label', 'Nicht deine E-Mail-Adresse: erfüllt');
+    await expect(rule('notEmail')).toHaveAttribute('aria-label', `Nicht deine E-${WJ}Mail-Adresse: erfüllt`);
 
     // Show and hide.
     await expect(id(page, 'AUTH-04.password')).toHaveAttribute('type', 'password');
@@ -481,7 +497,7 @@ test.describe('F1 onboarding', () => {
 
   test('a started form asks before it is left', async ({ page }) => {
     await open(page, '/app/welcome');
-    await id(page, 'AUTH-02.signUp').click();
+    await welcomeToSignUp(page);
     await id(page, 'AUTH-04.email').fill('jonas.becker@example.de');
     await id(page, 'AUTH-04.header.back').click();
     await expect(id(page, 'AUTH-04.discard')).toBeVisible();
@@ -489,8 +505,9 @@ test.describe('F1 onboarding', () => {
     await expect(id(page, 'AUTH-04.email')).toHaveValue('jonas.becker@example.de');
     await id(page, 'AUTH-04.header.back').click();
     await id(page, 'AUTH-04.discard.discard').click();
-    await expect(id(page, 'AUTH-02.root')).toBeVisible();
-    expect(pathOf(page)).toBe('/app/welcome');
+    // AUTH-03 replaced itself with AUTH-04, so back leads to AUTH-12, the step before it.
+    await expect(id(page, 'AUTH-12.root')).toBeVisible();
+    expect(pathOf(page)).toBe('/app/auth/email');
   });
 
   // BH-34: a sibling link takes the address along, so that alone asks nothing. What it would lose still asks.
@@ -714,7 +731,7 @@ test.describe('F1 onboarding', () => {
     await id(page, 'SET-01.signOut').click();
     await id(page, 'SET-01.signOutDialog.confirm').click();
     await expect(id(page, 'AUTH-02.root')).toBeVisible();
-    await id(page, 'AUTH-02.signIn').click();
+    await welcomeToPasswordSignIn(page);
     expect((await signIn(page, second, PASSWORD)).status()).toBe(200);
     await expect(id(page, 'HOME-01.root')).toBeVisible();
 

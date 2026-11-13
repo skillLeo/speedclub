@@ -12,7 +12,7 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { keepShortNamesTogether } from '@/lib/format';
-import { isAndroid } from '@/lib/platform';
+import { isAndroid, isWeb } from '@/lib/platform';
 import { createStyles, layout, size, space, useBreakpoint, useTheme } from '@/theme';
 
 import { Hairline } from './Hairline';
@@ -92,8 +92,8 @@ export type HeaderLargeTitleProps = {
 
 /** The title takes over during the last stretch of the collapse. */
 const FADE_DISTANCE = space[8];
-/** Back title narrower than this leaves the centred title no room. */
-const BACK_TITLE_MIN_WIDTH = layout.compactMaxWidth + 1;
+/** Below the large-phone width (430) a back title leaves the centred title no room. */
+const BACK_TITLE_MIN_WIDTH = layout.phoneLargeMinWidth;
 /** From this font scale a centred one-liner between the controls would be clipped, so the compact title gets its own line. */
 const STACKED_TITLE_FONT_SCALE = 1.3;
 
@@ -320,6 +320,14 @@ export function Header({
 }
 
 /**
+ * Web: the block is never the browser's scroll anchor (CSS scroll anchoring, Chromium and WebKit). From
+ * layout.breakpoints.desktop title.1 is 36/40 instead of 28/32 and grows upwards inside the 52 block, so with the title as the
+ * anchor a window crossing that width moved a scrolled screen by the title's growth (DISC-01: 40 became 31, shell.spec "crossing
+ * a breakpoint"). The content under the block anchors instead, and it stays where it is while the block keeps its height.
+ */
+const NOT_A_SCROLL_ANCHOR = isWeb ? ({ overflowAnchor: 'none' } as unknown as ViewStyle) : null;
+
+/**
  * The `title.l` block of a tab root. Put it first in the scrolling content, so it scrolls under the bar with the list.
  * At least 52 high, with the title on its lower edge and 8 below it.
  */
@@ -328,11 +336,11 @@ export function HeaderLargeTitle({ title, scroll, style, testID }: HeaderLargeTi
   const { gutter } = useBreakpoint();
   return (
     <View
-      style={[styles.large, { paddingHorizontal: gutter }, style]}
+      style={[styles.large, NOT_A_SCROLL_ANCHOR, { paddingHorizontal: gutter }, style]}
       onLayout={(event) => scroll?.collapseAt.set(event.nativeEvent.layout.height)}
       testID={testID}
     >
-      <Text variant="titleL" role="heading">
+      <Text variant="title1" role="heading">
         {title}
       </Text>
     </View>

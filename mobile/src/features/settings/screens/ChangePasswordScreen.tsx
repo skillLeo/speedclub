@@ -39,7 +39,7 @@ function PasswordSkeleton() {
       <View style={styles.body}>
         {[0, 1, 2].map((index) => (
           <View key={index} style={styles.field}>
-            <SkeletonText variant="labelS" width="35%" />
+            <SkeletonText variant="callout" width="35%" />
             <SkeletonBlock height={size.input} corner="sm" />
           </View>
         ))}

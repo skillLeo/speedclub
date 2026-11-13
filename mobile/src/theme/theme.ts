@@ -2,8 +2,10 @@ import { useSyncExternalStore } from 'react';
 
 import {
   accentPalette,
+  bubble,
   defaultTheme,
   layout,
+  material,
   motion,
   opacity,
   radius,
@@ -29,6 +31,8 @@ export type AppTheme = {
   readonly radius: typeof radius;
   readonly size: typeof size;
   readonly layout: typeof layout;
+  readonly bubble: typeof bubble;
+  readonly material: typeof material;
   readonly motion: typeof motion;
   readonly zIndex: typeof zIndex;
   readonly opacity: typeof opacity;
@@ -48,7 +52,7 @@ const cache = new Map<string, AppTheme>();
 
 /**
  * M3.5 ADM-28: the accent set from app-config's `branding.accent_set`, one of the pre-validated sets of tokens.json (contrast-checked
- * on all three themes by build-tokens.mjs). Anything else keeps the default set. Only `accent.fg/fill/fillPressed` change.
+ * on all three themes by build-tokens.mjs). Anything else keeps the default set. Only `accent.fg/fill/fillPressed` and `bubble.ownBg` change.
  */
 let accent: AccentSet = accentPalette.default as AccentSet;
 const accentListeners = new Set<() => void>();
@@ -83,11 +87,16 @@ export function getTheme(name: ThemeName, fontScale: number = 1, accentSet: Acce
   let theme = cache.get(key);
   if (!theme) {
     const { color: base, colorScheme, shadow } = themes[name];
-    const set = accentPalette.sets[accentSet];
+    const { bubbleOwnBg, ...accentColors } = accentPalette.sets[accentSet][colorScheme];
+    // The own message bubble is tinted from the accent (09 §4.1), so the set carries its own bubble.ownBg next to the accent.
     const color =
       accentSet === accentPalette.default
         ? base
-        : ({ ...base, accent: { ...base.accent, ...set[colorScheme] } } as ThemeColors);
+        : ({
+            ...base,
+            accent: { ...base.accent, ...accentColors },
+            bubble: { ...base.bubble, ownBg: bubbleOwnBg },
+          } as ThemeColors);
     theme = {
       name,
       colorScheme,
@@ -98,6 +107,8 @@ export function getTheme(name: ThemeName, fontScale: number = 1, accentSet: Acce
       radius,
       size,
       layout,
+      bubble,
+      material,
       motion,
       zIndex,
       opacity,

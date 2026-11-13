@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { size } from '@/theme';
 import { Checkbox, Chip, ContentTabs, Radio, SegmentedControl, Switch } from '@/ui';
 
 import { noop } from '../data';
@@ -25,7 +26,7 @@ export function SelectionSection() {
 
   return (
     <SectionScreen section="selection">
-      <Group title="Chip" note="36 hoch, Auswahl invertiert die Fläche.">
+      <Group title="Chip" note={`${size.chip} hoch, Auswahl invertiert die Fläche; gedrückt liegt state.pressedInverse über der invertierten Fläche.`}>
         <Wrap>
           <Specimen label="Standard">
             <Chip label="Allrad" onPress={noop} selected={false} testID="DEV-01.selection.chip" />
@@ -41,6 +42,10 @@ export function SelectionSection() {
           <Specimen label="Gewählt">
             <Chip label="Biturbo" onPress={noop} selected />
           </Specimen>
+          {/* ADR-421 c: the pressed tone on the inverted fill of a selected chip. */}
+          <Specimen label="Gewählt · gedrückt" forced={{ pressed: true }}>
+            <Chip label="Biturbo" onPress={noop} selected testID="DEV-01.selection.chipSelectedPressed" />
+          </Specimen>
           <Specimen label="Mit Zähler">
             <Chip label="Filter" onPress={noop} icon="funnel" count={3} />
           </Specimen>
@@ -52,7 +57,7 @@ export function SelectionSection() {
           </Specimen>
         </Wrap>
       </Group>
-      <Group title="Switch" note="51 × 31, ohne Grün.">
+      <Group title="Switch" note={`${size.switch.width} × ${size.switch.height}, ohne Grün.`}>
         <Wrap>
           <Specimen label="Live">
             <Switch value={toggle} onValueChange={setToggle} label="Öffentlich sichtbar" testID="DEV-01.selection.switch" />
@@ -71,7 +76,7 @@ export function SelectionSection() {
           </Specimen>
         </Wrap>
       </Group>
-      <Group title="Checkbox" note="22 sichtbar, 44er Ziel.">
+      <Group title="Checkbox" note={`${size.checkbox} sichtbar, ${size.touchMin}er Ziel.`}>
         <Wrap>
           <Specimen label="Live">
             <Checkbox checked={box} onChange={setBox} label="AGB akzeptieren" testID="DEV-01.selection.checkbox" />
@@ -111,7 +116,7 @@ export function SelectionSection() {
           </Specimen>
         </Wrap>
       </Group>
-      <Group title="Segmented Control" note="36 hoch, höchstens drei Segmente.">
+      <Group title="Segmented Control" note={`${size.segmented} hoch, höchstens drei Segmente.`}>
         <Specimen label="Drei Segmente" fill>
           <SegmentedControl
             label="Ansicht"
@@ -161,7 +166,7 @@ export function SelectionSection() {
           />
         </Specimen>
       </Group>
-      <Group title="Content Tabs" note="44 hoch, Unterstrich in accent.fg, scrollt bei Überlänge.">
+      <Group title="Content Tabs" note={`${size.contentTab} hoch, Unterstrich in accent.fg, scrollt bei Überlänge.`}>
         <Specimen label="Live" fill>
           <ContentTabs label="Fahrzeugbereiche" tabs={TABS} value={tab} onChange={setTab} testID="DEV-01.selection.tabs" />
         </Specimen>

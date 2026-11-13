@@ -72,7 +72,7 @@ class ModificationController extends Controller
     /**
      * Read a modification.
      *
-     * The cost is null for anybody but the owner unless cost_public is set; `fields` is the owner's.
+     * The cost is null for anybody but the owner (never public); `fields` is the owner's.
      */
     public function show(Modification $modification): ModificationResource
     {

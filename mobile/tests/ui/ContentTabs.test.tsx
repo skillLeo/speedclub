@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { hydrateThemePreference, size, themes, typography } from '@/theme';
-import { ContentTabs } from '@/ui/ContentTabs';
+import { ContentTabs, tabRowOffset } from '@/ui/ContentTabs';
 
 import { flat, renderUi, visualOf } from './helpers';
 
@@ -24,12 +24,12 @@ describe('ContentTabs', () => {
     expect(visualOf('t.tech').minHeight).toBe(size.contentTab);
   });
 
-  it('label is 15/20 semi-bold, active text.primary, others text.secondary', async () => {
+  it('label is body.strong (15/22 semi-bold), active text.primary, others text.secondary', async () => {
     await renderUi(<ContentTabs tabs={tabs} value="tech" onChange={jest.fn()} label="Fahrzeug" testID="t" />);
     const active = flat(screen.getByText('Technik').props.style) as ReturnType<typeof flat> & { fontFamily?: string };
-    expect(active.fontSize).toBe(15);
-    expect(active.lineHeight).toBe(20);
-    expect(active.fontFamily).toBe(typography.labelS.fontFamily);
+    expect(active.fontSize).toBe(typography.bodyStrong.fontSize);
+    expect(active.lineHeight).toBe(typography.bodyStrong.lineHeight);
+    expect(active.fontFamily).toBe(typography.bodyStrong.fontFamily);
     expect(active.color).toBe(themes.carbon.color.text.primary);
     expect(flat(screen.getByText('Mods').props.style).color).toBe(themes.carbon.color.text.secondary);
   });
@@ -55,5 +55,31 @@ describe('ContentTabs', () => {
     await renderUi(<ContentTabs tabs={tabs} value="tech" onChange={jest.fn()} label="Fahrzeug" testID="t" />);
     expect(screen.getByTestId('t.tech').props.tabIndex).toBe(0);
     expect(screen.getByTestId('t.mods').props.tabIndex).toBe(-1);
+  });
+});
+
+describe('tabRowOffset (DQ-1089, DQ-1115)', () => {
+  // Four tabs of 100 each from x 0, as the row lays them out.
+  const boxes = [0, 100, 200, 300].map((x) => ({ x, width: 100 }));
+
+  it('stays at the start while the selected tab fits', () => {
+    expect(tabRowOffset(boxes, 0, 250, 0)).toBe(0);
+    expect(tabRowOffset(boxes, 1, 250, 0)).toBe(0);
+  });
+
+  it('starts at a whole tab, never inside one, so the first tab in view is never cut', () => {
+    // The third tab ends at 300: from 100 it fits in 250, from 0 it does not.
+    expect(tabRowOffset(boxes, 2, 250, 0)).toBe(100);
+    expect(tabRowOffset(boxes, 3, 250, 0)).toBe(200);
+  });
+
+  it('keeps the trailing inset', () => {
+    expect(tabRowOffset(boxes, 1, 210, 10)).toBe(100);
+    expect(tabRowOffset(boxes, 1, 220, 10)).toBe(0);
+  });
+
+  it('falls back to the selected tab when it is wider than the row', () => {
+    expect(tabRowOffset([{ x: 0, width: 100 }, { x: 100, width: 400 }], 1, 250, 0)).toBe(100);
+    expect(tabRowOffset(boxes, 2, 0, 0)).toBe(0);
   });
 });

@@ -65,7 +65,7 @@ export function DesktopThumbs({ photos, fallbackAlt, onSelect, testID }: Desktop
             <Photo {...photoFields(photo, THUMB_WIDTH)} aspect="4:3" corner="sm">
               {last && hidden > 0 ? (
                 <View style={[StyleSheet.absoluteFill, styles.more]}>
-                  <Text variant="label" color="onPhoto.primary" selectable={false}>
+                  <Text variant="bodyStrong" color="onPhoto.primary" selectable={false}>
                     {t('hero.morePhotos', { count: hidden })}
                   </Text>
                 </View>

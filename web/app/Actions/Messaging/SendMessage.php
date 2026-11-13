@@ -3,24 +3,34 @@
 namespace App\Actions\Messaging;
 
 use App\Enums\CannotMessageReason;
+use App\Enums\ErrorCode;
 use App\Enums\MessageType;
+use App\Exceptions\ApiException;
 use App\Models\Conversation;
 use App\Models\ConversationParticipant;
 use App\Models\Message;
 use App\Models\User;
+use App\Services\Messaging\Conversations;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 /**
  * POST conversations/{id}/messages. The caller found $mine as an active participant (else 404). Locks the conversation, then the sender's
  * side, then the other side, as every messaging write does.
+ *
+ * A reply (SM11, ADR-445) quotes a message of the same conversation that the sender sees now: not removed, not deleted for the sender,
+ * not before the sender's clearing point. Anything else is 422 on `reply_to_id`, the same answer for a message of another conversation
+ * as for one that never existed.
  */
 class SendMessage
 {
-    public function __construct(private readonly DeliverMessage $deliver) {}
+    public function __construct(
+        private readonly DeliverMessage $deliver,
+        private readonly Conversations $conversations,
+    ) {}
 
     /**
-     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string}  $draft
+     * @param  array{type: MessageType, body: string|null, media_id: string|null, vehicle_id: string|null, client_id: string, reply_to_id?: string|null}  $draft
      */
     public function handle(User $sender, ConversationParticipant $mine, array $draft, ?string $key): Delivery
     {
@@ -31,6 +41,7 @@ class SendMessage
         }
 
         $this->deliver->assertAttachable($sender, $mine->conversation_id, $draft);
+        $this->assertQuotable($mine, $draft['reply_to_id'] ?? null);
 
         try {
             return DB::transaction(function () use ($sender, $mine, $draft, $key): Delivery {
@@ -63,6 +74,13 @@ class SendMessage
             }
 
             return new Delivery($mine->refresh(), $replay, true);
+        }
+    }
+
+    private function assertQuotable(ConversationParticipant $mine, ?string $replyTo): void
+    {
+        if ($replyTo !== null && ! $this->conversations->visibleMessages($mine)->whereKey($replyTo)->exists()) {
+            throw new ApiException(ErrorCode::ValidationFailed, errors: ['reply_to_id' => [(string) __('messaging.reply_unavailable')]]);
         }
     }
 }

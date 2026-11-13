@@ -5,7 +5,6 @@ import { View } from 'react-native';
 
 import { useMemberSettings, useSetShowOwnerOnQr } from '@/api/queries/settings';
 import { useFlag } from '@/api/queries/appConfig';
-import { GuestInvitation } from '@/features/profile/components/GuestInvitation';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
@@ -19,11 +18,15 @@ import { SettingsPage } from '../components/SettingsPage';
 import { ROW_INSET } from '../components/ValueRow';
 import { useFailureMessage } from '../forms';
 import { SETTINGS_PATHS } from '../navigation';
-import { privacyOf, useUpdatePrivacy, type PrivacyPatch, type PrivacyValues, type WhoCanMessage } from '@/api/queries/settings';
+import { privacyOf, useUpdatePrivacy, type MentionPrivacy, type PrivacyPatch, type PrivacyValues, type WhoCanMessage } from '@/api/queries/settings';
 import { useAnySuggestionFlag } from '@/features/ai/availability';
+import { SettingsGuest } from '../components/SettingsGuest';
 
 const ROUTE = 'SET-07';
 export const READ_RECEIPTS_FLAG = 'sig.msg_read_receipts';
+/** M4.11 (09 §8.5): mentions and their privacy choice. */
+export const MENTIONS_FLAG = 'mentions';
+const MENTION_OPTIONS: readonly MentionPrivacy[] = ['everyone', 'followers', 'nobody'];
 
 const useStyles = createStyles((t) => ({
   groups: { gap: t.space[32] },
@@ -39,7 +42,7 @@ function PrivacySkeleton({ groups }: { groups: readonly number[] }) {
       <View style={styles.groups}>
         {groups.map((rows, index) => (
           <View key={index} style={styles.skeletonGroup}>
-            <SkeletonText variant="labelS" width="30%" style={styles.skeletonLabel} />
+            <SkeletonText variant="callout" width="30%" style={styles.skeletonLabel} />
             <SkeletonBlock height={size.row.withThumb * rows} corner="md" />
           </View>
         ))}
@@ -64,6 +67,7 @@ export function PrivacyScreen() {
   const ownerOnQr = useSetShowOwnerOnQr();
   const updatePrivacy = useUpdatePrivacy();
   const readReceipts = useFlag(READ_RECEIPTS_FLAG);
+  const mentions = useFlag(MENTIONS_FLAG);
   const aiFlags = useAnySuggestionFlag();
   // Optimistic in the settings cache: a value moves at once and goes back when the server refuses it.
   const values: PrivacyValues = privacyOf(settings.data);
@@ -76,9 +80,9 @@ export function PrivacyScreen() {
 
   let body: ReactNode;
   if (status === 'guest') {
-    body = <GuestInvitation routeId={ROUTE} returnTo="/settings/privacy" />;
+    body = <SettingsGuest routeId={ROUTE} returnTo="/settings/privacy" />;
   } else if (qaState === 'loading' || status === 'loading' || (settings.isPending && settings.fetchStatus !== 'paused' && qaState !== 'error')) {
-    body = <PrivacySkeleton groups={aiFlags ? [3, readReceipts ? 4 : 3, 1, 1] : [3, readReceipts ? 4 : 3, 1]} />;
+    body = <PrivacySkeleton groups={[3, ...(mentions ? [3] : []), readReceipts ? 4 : 3, ...(aiFlags ? [1] : []), 1]} />;
   } else if (qaState === 'error' || !settings.data) {
     const offline = !online || settings.fetchStatus === 'paused';
     body = (
@@ -109,6 +113,23 @@ export function PrivacyScreen() {
             testID={`${ROUTE}.whoCanMessage`}
           />
         </RowGroup>
+        {mentions ? (
+          // ADR-436 b: a mention that is not allowed stays plain text, with no notification and no explanation.
+          <RowGroup title={t('privacy.mentionsGroup')} testID={`${ROUTE}.mentions`}>
+            <RadioRows<MentionPrivacy>
+              label={t('privacy.mentionPrivacy')}
+              value={data.mention_privacy}
+              onChange={(next) => change({ mention_privacy: next })}
+              disabled={disabled}
+              options={MENTION_OPTIONS.map((option) => ({
+                value: option,
+                label: t(`privacy.mention.${option}`),
+                helper: t(`privacy.mention.${option}Helper`),
+              }))}
+              testID={`${ROUTE}.mentionPrivacy`}
+            />
+          </RowGroup>
+        ) : null}
         <RowGroup title={t('privacy.visibilityGroup')} testID={`${ROUTE}.visibility`}>
           <SwitchRow
             title={t('privacy.discoverable')}
@@ -171,7 +192,7 @@ export function PrivacyScreen() {
           />
         </RowGroup>
         {disabled ? (
-          <Text variant="supporting" color="text.secondary" style={styles.note} testID={`${ROUTE}.offlineNote`}>
+          <Text variant="callout" color="text.secondary" style={styles.note} testID={`${ROUTE}.offlineNote`}>
             {t('privacy.offlineNote')}
           </Text>
         ) : null}

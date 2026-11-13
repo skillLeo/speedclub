@@ -4,6 +4,7 @@ namespace App\Actions\Auth;
 
 use App\Enums\ErrorCode;
 use App\Enums\MemberSecurityEvent;
+use App\Enums\SignInMethod;
 use App\Enums\VerificationPurpose;
 use App\Exceptions\ApiException;
 use App\Models\User;
@@ -68,7 +69,7 @@ class VerifyMemberEmail
         }
 
         /** @var User $user */
-        return $this->signIn->begin($user, $device, $request);
+        return $this->signIn->begin($user, $device, $request, method: SignInMethod::EmailCode);
     }
 
     private function invalid(): ApiException

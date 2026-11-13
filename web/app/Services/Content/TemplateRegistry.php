@@ -26,6 +26,8 @@ final class TemplateRegistry
         'month' => 'März 2027',
         'date' => '14.06.2026',
         'time' => '18:42',
+        // M4.7 login alerts: the approximate place (GeoLite2 only).
+        'place' => 'München',
         'days' => '7',
         'reason' => 'Beleidigung',
         'email' => 'm•••@example.de',
@@ -50,6 +52,8 @@ final class TemplateRegistry
         'id' => 'SC-2026-4711',
         'max' => '10',
         'action' => 'Ansehen',
+        // SEC-M47-01: what securing the account removed.
+        'items' => '1 Passkey, die offene E-Mail-Änderung',
     ];
 
     /**

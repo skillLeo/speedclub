@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\ScheduleInlineCommand;
 use App\Support\Doctor\EnvironmentDoctor;
 use App\Support\HostFunctions;
 use Illuminate\Console\Scheduling\Schedule;
@@ -53,6 +54,51 @@ it('runs nothing that is not due, and goes on after a failing task', function ()
 
     $this->artisan('speedclub:schedule-inline')->expectsOutputToContain('1 failed')->assertExitCode(1);
     expect(Cache::get('inline-probe')[0])->toBe('after');
+});
+
+it('gives the inline queue worker its own 128 MB on top of what the run already uses', function () {
+    // The worker stops with exit code 12 once its process reaches --memory (128 MB by default). Inline, the process is shared, so a
+    // run that already holds more than that (a long test process, or a heavy task earlier in the minute) must not stop it.
+    $ballast = str_repeat('x', 150 * 1024 * 1024);
+    expect(memory_get_usage(true) / 1024 / 1024)->toBeGreaterThan(128);
+
+    $this->artisan('speedclub:schedule-inline')->expectsOutputToContain('scheduled task(s), 0 failed')->assertExitCode(0);
+    expect(strlen($ballast))->toBe(150 * 1024 * 1024);
+});
+
+it('keeps the inline worker limit below PHP\'s own memory_limit', function () {
+    // 128 MB on top of the run, capped 32 MB below memory_limit (null = -1, unlimited); below the current use it stops at once.
+    expect(ScheduleInlineCommand::workerMemoryLimit(50, 512))->toBe(178)
+        ->and(ScheduleInlineCommand::workerMemoryLimit(200, 256))->toBe(224)
+        ->and(ScheduleInlineCommand::workerMemoryLimit(200, null))->toBe(328)
+        ->and(ScheduleInlineCommand::workerMemoryLimit(300, 256))->toBe(224)
+        ->and(ScheduleInlineCommand::workerMemoryLimit(10, 16))->toBe(1);
+});
+
+it('hands the capped limit to the inline worker on a host whose memory_limit leaves less than 128 MB of room', function () {
+    // A stand-in for queue:work records the --memory it receives (registered after the framework's command, so it wins).
+    Artisan::command('queue:work {connection?} {--stop-when-empty} {--max-time=} {--tries=} {--memory=}', function () {
+        Cache::put('worker-memory', (int) $this->option('memory'));
+    });
+    $used = (int) ceil(memory_get_usage(true) / 1024 / 1024);
+    $previous = ini_get('memory_limit');
+    ini_set('memory_limit', ($used + 96).'M');
+
+    try {
+        $this->artisan('speedclub:schedule-inline')->expectsOutputToContain('scheduled task(s), 0 failed')->assertExitCode(0);
+    } finally {
+        ini_set('memory_limit', (string) $previous);
+    }
+
+    // Without the cap the worker would get its use + 128 MB, above PHP's own limit; with it, memory_limit − 32 MB.
+    expect(Cache::get('worker-memory'))->toBe($used + 96 - 32);
+});
+
+it('leaves a worker with its own --memory as scheduled', function () {
+    app(Schedule::class)->command('queue:work --stop-when-empty --memory=1')->everyMinute();
+
+    // Every PHP process uses more than 1 MB, so this worker stops at once with exit code 12: its limit was not replaced.
+    $this->artisan('speedclub:schedule-inline')->expectsOutputToContain('1 failed')->assertExitCode(1);
 });
 
 it('keeps the app backups off where proc_open is disabled, and on where it is available', function () {

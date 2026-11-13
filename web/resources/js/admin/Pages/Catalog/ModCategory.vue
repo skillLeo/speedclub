@@ -184,7 +184,7 @@ else if (dialog === 'order') {
             test-id="ADM-15-category"
         >
             <template #meta>
-                <p class="text-supporting text-ink-2 tabular-nums" data-testid="ADM-15-category.meta">{{ meta }}</p>
+                <p class="text-admin-base text-ink-2 tabular-nums" data-testid="ADM-15-category.meta">{{ meta }}</p>
             </template>
             <template v-if="manage" #actions>
                 <Button size="sm" variant="secondary" :icon="PhPencilSimple" data-testid="ADM-15-category.edit" @click="categoryOpen = true">{{ trans('catalog.category.edit') }}</Button>
@@ -206,7 +206,7 @@ else if (dialog === 'order') {
                 </EmptyQueue>
                 <div v-else class="flex flex-col gap-12">
                     <div v-if="manage" class="flex min-h-32 flex-wrap items-center justify-between gap-8" data-testid="ADM-15-category.toolbar">
-                        <p class="text-supporting text-ink-2">{{ trans(ordering ? 'catalog.order.active' : 'catalog.order.hint') }}</p>
+                        <p class="text-admin-base text-ink-2">{{ trans(ordering ? 'catalog.order.active' : 'catalog.order.hint') }}</p>
                         <span v-if="ordering" class="flex items-center gap-8">
                             <Button size="sm" variant="ghost" @click="ordering = false">{{ trans('ui.actions.cancel') }}</Button>
                             <Button size="sm" variant="primary" :disabled="!orderChanged" data-testid="ADM-15-category.order-save" @click="orderReasonOpen = true">{{ trans('catalog.order.save') }}</Button>
@@ -214,10 +214,10 @@ else if (dialog === 'order') {
                         <Button v-else size="sm" variant="secondary" :icon="PhListNumbers" data-testid="ADM-15-category.order" @click="startOrder">{{ trans('catalog.order.start') }}</Button>
                     </div>
                     <ScrollRegion :label="trans('catalog.category.fields_caption', { name })" test-id="ADM-15-category.fields">
-                        <table class="w-full text-supporting">
+                        <table class="w-full text-admin-base">
                             <caption class="sr-only">{{ trans('catalog.category.fields_caption', { name }) }}</caption>
                             <thead>
-                                <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                                <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                                     <th scope="col" class="w-px whitespace-nowrap px-12 text-right">{{ trans('catalog.columns.position') }}</th>
                                     <th scope="col" class="px-12">{{ trans('catalog.columns.field') }}</th>
                                     <th scope="col" class="w-px whitespace-nowrap px-12">{{ trans('catalog.columns.type') }}</th>
@@ -305,7 +305,7 @@ else if (dialog === 'order') {
         />
         <Dialog v-model:open="orderReasonOpen" :title="trans('catalog.order.title')" :description="trans('catalog.order.body')" size="sm" :dismissible="!write.processing.value" test-id="ADM-15-category.order-dialog">
             <form id="adm15-order" class="flex flex-col gap-16" novalidate @submit.prevent="saveOrder">
-                <ol class="flex flex-col text-supporting text-ink-2">
+                <ol class="flex flex-col text-admin-base text-ink-2">
                     <li v-for="(f, index) in order" :key="f.id" class="flex min-h-32 items-center gap-8 tabular-nums">
                         <span class="w-24 shrink-0 text-right text-ink-3">{{ index + 1 }}</span>
                         <span class="truncate text-ink">{{ fieldLabel(f) }}</span>

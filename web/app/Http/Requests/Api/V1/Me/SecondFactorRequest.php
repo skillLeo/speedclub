@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Me;
 
+use App\Http\Requests\Api\V1\Me\Concerns\ProvesPassword;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -9,13 +10,15 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class SecondFactorRequest extends FormRequest
 {
+    use ProvesPassword;
+
     /**
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'password' => ['required', 'string', 'max:'.config()->integer('speedclub.passwords.max_length')],
+            'password' => $this->passwordRule(),
             'code' => ['required', 'string', 'max:32'],
         ];
     }

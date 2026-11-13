@@ -3,6 +3,7 @@ import { useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react
 
 import { createStyles, size, space, useTheme } from '@/theme';
 
+import { Icon, type IconName } from './icons/Icon';
 import { Photo, type PhotoFields } from './Photo';
 import { joinLabel, RowBody, RowDivider, useRowInset, useStacksAtFontScale, type RowInset } from './rowParts';
 import { estimateLines, SkeletonBlock, SkeletonText } from './Skeleton';
@@ -21,6 +22,11 @@ export type BuildUpdateRowProps = {
    */
   meta?: string;
   photo: PhotoFields;
+  /**
+   * DQ-1093: the system's glyph on a quiet tile, instead of the photo's empty frame, when the update has no photo of its own and
+   * the list does not repeat the car's cover.
+   */
+  glyph?: IconName;
   onPress?: () => void;
   /** The hairline to the next row, inset to the text start. */
   divider?: boolean;
@@ -38,6 +44,16 @@ const useStyles = createStyles((t) => ({
     paddingVertical: t.space[12],
   },
   thumb: { alignSelf: 'center', flexShrink: 0, width: t.size.thumb.row },
+  glyphTile: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: t.color.bg.surface,
+    borderRadius: t.radius.sm,
+    flexShrink: 0,
+    height: t.size.thumb.row,
+    justifyContent: 'center',
+    width: t.size.thumb.row,
+  },
   text: { flex: 1, minWidth: 0 },
 }));
 
@@ -80,7 +96,7 @@ export function BuildUpdateRowSkeleton({
   // Until the first layout: a row across the window. The skeleton is still invisible then.
   const [measured, setMeasured] = useState<number | null>(null);
   const width = measured ?? windowWidth - 2 * side - size.thumb.row - space[12];
-  const lines = (chars: number, variant: 'bodyStrong' | 'supporting' | 'caption') =>
+  const lines = (chars: number, variant: 'bodyStrong' | 'callout' | 'caption') =>
     estimateLines(chars, variant, fontScale, width);
   return (
     <View testID={testID}>
@@ -92,7 +108,7 @@ export function BuildUpdateRowSkeleton({
           testID={testID ? `${testID}.text` : undefined}
         >
           <SkeletonText variant="bodyStrong" width="60%" lines={lines(TYPICAL_CHARS.title, 'bodyStrong')} />
-          <SkeletonText variant="supporting" width="80%" lines={lines(TYPICAL_CHARS.diff, 'supporting')} />
+          <SkeletonText variant="callout" width="80%" lines={lines(TYPICAL_CHARS.diff, 'callout')} />
           <SkeletonText variant="caption" width="40%" lines={lines(TYPICAL_CHARS.meta, 'caption')} />
         </View>
       </View>
@@ -102,7 +118,7 @@ export function BuildUpdateRowSkeleton({
 }
 
 /** §8 build-update row: 56 thumb radius 8, `body.strong` title, diff with tabular figures in its numeric segments, tertiary meta. */
-export function BuildUpdateRow({ title, diff, meta, photo, onPress, divider = true, inset, style, testID }: BuildUpdateRowProps) {
+export function BuildUpdateRow({ title, diff, meta, photo, glyph, onPress, divider = true, inset, style, testID }: BuildUpdateRowProps) {
   const styles = useStyles();
   const side = useRowInset(inset);
   const largeFont = useStacksAtFontScale();
@@ -117,12 +133,18 @@ export function BuildUpdateRow({ title, diff, meta, photo, onPress, divider = tr
       >
         {({ pressed }) => (
           <>
-            <Photo {...photo} aspect="1:1" corner="sm" style={styles.thumb} testID={testID ? `${testID}.thumb` : undefined} />
+            {glyph && !photo.source ? (
+              <View aria-hidden style={styles.glyphTile} testID={testID ? `${testID}.glyph` : undefined}>
+                <Icon name={glyph} size={24} color="text.secondary" />
+              </View>
+            ) : (
+              <Photo {...photo} aspect="1:1" corner="sm" style={styles.thumb} testID={testID ? `${testID}.thumb` : undefined} />
+            )}
             <View style={styles.text}>
               <Text variant="bodyStrong">{title}</Text>
               {diff ? (
                 // DQ-313: the "·"-first rule of the meta line, with before and after held together around "→".
-                <ValueText variant="supporting" color="text.secondary" hyphenate={largeFont} values={diff} segments={diffSegments(diff, !largeFont)} />
+                <ValueText variant="callout" color="text.secondary" hyphenate={largeFont} values={diff} segments={diffSegments(diff, !largeFont)} />
               ) : null}
               {meta ? (
                 // The pressed background leaves tertiary just under 4.5:1 on a raised surface in carbon.

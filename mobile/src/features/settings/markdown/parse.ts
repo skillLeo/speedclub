@@ -9,6 +9,7 @@
  * Every scan moves forward and gives up after a bounded distance, and the delimiter searches remember where they already
  * failed, so hostile input of any shape stays roughly linear.
  */
+import { joinShortCompounds } from '@/lib/format';
 
 export type MdInline =
   | { type: 'text'; text: string }
@@ -368,13 +369,16 @@ const WORD_JOINER = '\u2060';
 const SHORT_PREFIX = /(^|[^\p{L}\p{N}])(\p{L}|\p{Lu}{2,4}|\p{Lu}[\p{Lu}\p{Ll}]{1,2})-(?=\p{L})/gu;
 
 /**
- * 03 §4 and DQ-145/DQ-220: a line never breaks after a short prefix ("QR- / Code", "E- / Mail"). A word joiner after the hyphen keeps
+ * 03 §4 and DQ-145/DQ-220: a line never breaks after a short prefix ("QR- / Code", "E- / Mail") or before a short part ("Kontakt- / E-Mail"). A word joiner after the hyphen keeps
  * the halves together; the glyph stays the same and screen readers skip it. A word with "://" or "@" is an address someone may copy,
  * so it stays whole. Link targets and code keep their text. The public pages apply the same rule (App\Support\SafeMarkdown).
  */
 export function joinShortPrefixes(text: string): string {
   if (!text.includes('-')) return text;
-  return text.replace(/\S+/g, (word) => (/:\/\/|@/.test(word) ? word : word.replace(SHORT_PREFIX, `$1$2-${WORD_JOINER}`)));
+  const prefixed = text.replace(/\S+/g, (word) => (/:\/\/|@/.test(word) ? word : word.replace(SHORT_PREFIX, `$1$2-${WORD_JOINER}`)));
+  // r5 audit: a short part after the hyphen too ("Datenschutz- / E-Mail", "Sicherheits- / E-Mail"), and a short part inside a
+  // longer word ("GT-SS-Ladern"). SafeMarkdown on the public pages needs the same step (lead: WEB-08 findings).
+  return joinShortCompounds(prefixed);
 }
 
 const NO_BREAK_SPACE = '\u00A0';

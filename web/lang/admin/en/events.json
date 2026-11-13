@@ -1,0 +1,192 @@
+{
+    "title": "Meets",
+    "queue_title": "Meet queue",
+    "nav": {
+        "title": "Meets"
+    },
+    "intro": "Meets that are reviewed before they go live: an organiser's first two and every meet whose place is shown after an RSVP. The oldest is on top.",
+    "tabs": {
+        "label": "Meets by status",
+        "pending": "In review",
+        "published": "Published",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled",
+        "all": "All"
+    },
+    "caption": "Meets with waiting time, start, organiser, place and reports",
+    "columns": {
+        "waiting": "Waiting",
+        "event": "Meet",
+        "starts": "Starts",
+        "organiser": "Organiser",
+        "location": "Place",
+        "going": "Going",
+        "reports": "Reports",
+        "status": "Status"
+    },
+    "filters": {
+        "label": "Filter meets",
+        "q": "Search",
+        "q_placeholder": "Title, city or @organiser",
+        "type": "Kind",
+        "location": "Exact place",
+        "any": "All",
+        "apply": "Apply"
+    },
+    "types": {
+        "meet": "Meet",
+        "cruise": "Cruise",
+        "track_day": "Track day",
+        "show": "Show"
+    },
+    "location": {
+        "public": "For everyone",
+        "after_rsvp": "After RSVP"
+    },
+    "status": {
+        "draft": "Draft",
+        "pending_review": "In review",
+        "published": "Published",
+        "cancelled": "Cancelled",
+        "rejected": "Rejected",
+        "removed": "Removed"
+    },
+    "waiting": {
+        "minutes": ":count min",
+        "hours": ":count h",
+        "days": ":count d",
+        "label": "Waiting since :date"
+    },
+    "organiser": {
+        "first": "First meet",
+        "approved": ":count approved",
+        "since": "Member since :date"
+    },
+    "empty": {
+        "pending_title": "No meets in review",
+        "pending_body": "New meets show up here as soon as an organiser sends them for review.",
+        "published_title": "No published meets yet",
+        "published_body": "Approved meets and meets of established organisers are listed here.",
+        "rejected_title": "No rejected meets",
+        "rejected_body": "Rejected meets stay here for twelve months with their reason.",
+        "cancelled_title": "No cancelled meets",
+        "cancelled_body": "Cancelled meets stay here for twelve months with their reason.",
+        "all_title": "No meets yet",
+        "all_body": "As soon as members create meets and send them for review, they are listed here."
+    },
+    "pane": {
+        "label": "Selected meet",
+        "select_body": "Pick a meet: it opens on the right with place, organiser and description. j and k switch, a approves, r rejects.",
+        "gone": "This meet no longer exists or is a draft again.",
+        "open": "Open meet"
+    },
+    "detail": {
+        "organiser": "Organiser",
+        "place": "Place",
+        "place_private": "Only the organiser and members who are going see the exact place. Your first look each day is in the audit log.",
+        "place_public": "The place is visible to everyone.",
+        "no_place": "No exact place given",
+        "time": "Time",
+        "description": "Description",
+        "no_description": "No description",
+        "organiser_rules": "Organiser's rules",
+        "rules": "Confirmed rules",
+        "capacity": "Spots",
+        "unlimited": "No limit",
+        "answers": "Answers",
+        "going": "Going",
+        "interested": "Interested",
+        "waitlist": "Waitlist",
+        "visibility": "Visible to",
+        "changed": "Changed since approval",
+        "sample": "Sample",
+        "cover": "Cover photo of “:title”",
+        "no_cover": "No cover photo",
+        "review": "Decision",
+        "reviewed": ":name, :date",
+        "cancellation": "Cancellation",
+        "cancelled_by_staff": "Cancelled by the team, :date",
+        "cancelled_by_organiser": "Cancelled by the organiser, :date",
+        "removed": "Removed by a moderation decision, :date",
+        "reports": "Open reports"
+    },
+    "visibility": {
+        "public": "Everyone",
+        "followers": "Followers",
+        "unlisted": "Link only"
+    },
+    "fields": {
+        "title": "Title",
+        "description": "Description",
+        "venue_name": "Venue name",
+        "street": "Street",
+        "postcode": "Postcode",
+        "city": "City",
+        "lat": "Map point",
+        "lng": "Map point",
+        "cover": "Cover photo"
+    },
+    "rules": {
+        "legal_only": "Legal meets only",
+        "no_racing": "No racing on public roads",
+        "respect_residents": "Respect residents and noise",
+        "no_litter": "Leave no rubbish",
+        "permits_arranged": "Permits are arranged"
+    },
+    "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "cancel": "Cancel meet",
+        "reopen": "Back to review",
+        "undo": "Undo",
+        "reload": "Reload",
+        "member": "Open member"
+    },
+    "reject_dialog": {
+        "title": "Reject “:title”?",
+        "body": "The organiser reads the reason and can send the meet again with changes.",
+        "reason": "Reason for the organiser"
+    },
+    "cancel_dialog": {
+        "title": "Cancel “:title”?",
+        "body": "Everybody who answered is notified and reads the reason. The meet stays visible with the cancellation.",
+        "reason": "Reason for the attendees"
+    },
+    "reopen_dialog": {
+        "title": "Send “:title” back to review?",
+        "body": "The meet is no longer public until it is approved again. This works only while nobody has answered."
+    },
+    "conflict": {
+        "title": "Changed meanwhile",
+        "changed": "The meet was changed in the meantime. Reload it and review the current version."
+    },
+    "undo": {
+        "approved": "“:title” approved.",
+        "rejected": "“:title” rejected.",
+        "cancelled": "“:title” cancelled.",
+        "reopened": "“:title” is back in review."
+    },
+    "view_only": "View only: deciding needs a role with “Decide moderation”.",
+    "keys": "Keyboard: j and k switch, a approves, r rejects, u undoes.",
+    "record": {
+        "crumb": "Meets",
+        "tabs": {
+            "label": "Parts of the meet",
+            "overview": "Overview",
+            "answers": "Answers & updates",
+            "reports": "Reports"
+        },
+        "updates": "Organiser updates",
+        "no_updates": "The organiser has not posted any updates yet.",
+        "no_cases": "There are no reports about this meet.",
+        "case": "Case of :date",
+        "error": "The meet could not be loaded."
+    },
+    "flash": {
+        "approved": "Meet approved.",
+        "rejected": "Meet rejected. The organiser gets the reason.",
+        "cancelled": "Meet cancelled. Everybody who answered is notified.",
+        "reopened": "Meet is back in review.",
+        "not_possible": "That is no longer possible: the meet was changed or decided in the meantime."
+    }
+}

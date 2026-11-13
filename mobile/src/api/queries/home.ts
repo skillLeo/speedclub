@@ -75,8 +75,8 @@ export function flattenBuilds(pages: readonly { data: readonly FeedVehicle[] }[]
   return flattenPages(pages, vehicleId);
 }
 
-/** FS-2 "Neue Builds": two cards and "Alle". One more is read, for when the featured build is one of them. Stored for an offline start. */
-export const NEW_BUILDS_PREVIEW = 2;
+/** 09 §7.3 "Neu in der Garage": a rail of 8 and "Alle". One more is read, for when the lead build is one of them. Stored for an offline start. */
+export const NEW_BUILDS_PREVIEW = 8;
 
 export function useNewBuildsPreview() {
   const viewer = usePublicViewer();

@@ -103,7 +103,7 @@ export function UploadSheet({ item, onClose, onRetry, onCancel, testID }: { item
     <Sheet visible={item !== null} onClose={onClose} title={failed ? t('upload.failedTitle') : t('upload.runningTitle')} expandable={false} narrow testID={testID}>
       {item?.error ? (
         <View style={styles.message}>
-          <Text variant="bodyDense" color="text.secondary" testID={`${testID}.message`}>
+          <Text variant="body" color="text.secondary" testID={`${testID}.message`}>
             {item.error}
           </Text>
         </View>

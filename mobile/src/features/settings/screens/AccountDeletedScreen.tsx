@@ -51,7 +51,7 @@ export function AccountDeletedScreen() {
           <View style={styles.mark} aria-hidden>
             <Icon name="check" size={24} color="text.secondary" />
           </View>
-          <Text variant="titleM" role="heading" {...({ 'aria-level': 1 } as object)} testID="SET-13.done.title">
+          <Text variant="title2" role="heading" {...({ 'aria-level': 1 } as object)} testID="SET-13.done.title">
             {t('deleted.title')}
           </Text>
           <Text variant="body" color="text.secondary">

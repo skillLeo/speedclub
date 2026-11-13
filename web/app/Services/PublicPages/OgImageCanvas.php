@@ -2,13 +2,19 @@
 
 namespace App\Services\PublicPages;
 
+use App\Support\DesignTokens;
 use GdImage;
 use Normalizer;
 use RuntimeException;
 
 /**
- * Draws the 1200 × 630 JPEG of a public page with GD, which is all shared hosting promises (ADR-005). Brand layer (03_DESIGN_SYSTEM §2):
- * photo, scrim for legibility, the client's wordmark as delivered, never redrawn. Fonts come from resources/fonts, not from the host.
+ * Draws the link previews of the public pages with GD, which is all shared hosting promises (ADR-005): 1200 × 630 for og:image and
+ * a 1080 × 1080 square beside it. Night editorial (09 §4): the photo edge to edge on one side, a solid canvas panel on the other (no
+ * gradient, no glow), the car's name in Archivo SemiExpanded, the numerals in Archivo Condensed, people and labels in Inter, the
+ * client's white brush wordmark as delivered as the only brand mark, red only as one short brake-light rule. Colours come from the
+ * generated tokens (DesignTokens), fonts from resources/fonts, never from the host.
+ *
+ * A JPEG without metadata (GD writes none), sRGB as the sources are (MediaService re-encodes every upload), below MAX_BYTES.
  */
 class OgImageCanvas
 {
@@ -16,33 +22,63 @@ class OgImageCanvas
 
     public const HEIGHT = 630;
 
-    private const MARGIN = 64;
+    public const LANDSCAPE = 'landscape';
 
-    private const QUALITY = 85;
+    public const SQUARE = 'square';
 
-    private const AVATAR_SIZE = 200;
+    /** @var array<string, array{int<1, max>, int<1, max>}> width and height per format */
+    public const FORMATS = [self::LANDSCAPE => [1200, 630], self::SQUARE => [1080, 1080]];
 
-    private const FONT_DISPLAY = 'BarlowSemiCondensed-Bold.ttf';
+    /** What a preview may weigh: WhatsApp drops images above 300 KB, so a margin stays. */
+    public const MAX_BYTES = 290_000;
 
-    private const FONT_EYEBROW = 'BarlowSemiCondensed-SemiBold.ttf';
+    /** Tried in turn until the file is small enough. */
+    private const QUALITIES = [86, 80, 74, 68, 60, 52];
+
+    /** Landscape: the photo's share of the width; the panel takes the rest. */
+    private const PHOTO_WIDTH = 700;
+
+    /** Square: the photo's share of the height. */
+    private const PHOTO_HEIGHT = 540;
+
+    /** display.title (09 §4.2): cars speak Archivo SemiExpanded, the make above the name as its wordmark. */
+    private const FONT_DISPLAY = 'ArchivoSemiExpanded-SemiBold.ttf';
+
+    /** title.1: people speak Inter, a member's name in its display cut. */
+    private const FONT_NAME = 'InterDisplay-SemiBold.ttf';
+
+    /** The spec numerals: Archivo Condensed, as the SpecStrip. */
+    private const FONT_NUMERALS = 'ArchivoCondensed-SemiBold.ttf';
 
     private const FONT_TEXT = 'Inter-Medium.ttf';
 
+    /** label.caps and label.unit. */
+    private const FONT_LABEL = 'Inter-SemiBold.ttf';
+
+    /** The wordmark as delivered, and the box its ink fills (measured once from the file, at 1280 × 383). */
+    private const LOGO = 'brand/logo-wide-white-1280.png';
+
+    private const LOGO_INK = [38, 38, 1203, 307];
+
     /**
-     * What the Barlow files hold of what people type: Latin with its extensions and typographic punctuation. GD has no call to ask a
-     * font, and comparing boxes cannot tell a letter from Inter's own "NO GLYPH" box. OgImageTextTest checks this against the files.
+     * What both Archivo files hold of INTER_RANGES: Latin with Latin Extended-A, much of B, Vietnamese, U+1E9E and typographic
+     * punctuation; of Greek only Δ Ω µ π, no Cyrillic. GD has no call to ask a font, and comparing boxes cannot tell a letter from a
+     * font's own "NO GLYPH" box. OgImageTextTest checks this against the files.
      *
      * @var list<array{int, int}>
      */
-    public const BARLOW_RANGES = [
-        [0x20, 0x7E], [0xA0, 0xAC], [0xAE, 0x113], [0x116, 0x12B], [0x12D, 0x131], [0x133, 0x137], [0x139, 0x13E], [0x140, 0x148],
-        [0x14A, 0x14D], [0x14F, 0x17E], [0x18F, 0x18F], [0x192, 0x192], [0x1A0, 0x1A1], [0x1AF, 0x1B0], [0x1CD, 0x1CE], [0x218, 0x21B],
-        [0x1E80, 0x1E85], [0x1EA0, 0x1EF9], [0x2010, 0x2010], [0x2013, 0x2014], [0x2018, 0x201A], [0x201C, 0x201E], [0x2020, 0x2022],
-        [0x2026, 0x2026], [0x2030, 0x2030], [0x2039, 0x203A], [0x20AC, 0x20AC], [0x2122, 0x2122],
+    public const ARCHIVO_RANGES = [
+        [0x20, 0x7E], [0xA0, 0xAC], [0xAE, 0x148], [0x14A, 0x17F], [0x18F, 0x18F], [0x192, 0x192], [0x19D, 0x19D], [0x1A0, 0x1A1],
+        [0x1AF, 0x1B0], [0x1C5, 0x1DC], [0x1E6, 0x1E7], [0x1EA, 0x1EB], [0x1FA, 0x21B], [0x22A, 0x22D], [0x230, 0x233], [0x237, 0x237],
+        [0x394, 0x394], [0x3A9, 0x3A9], [0x3BC, 0x3BC], [0x3C0, 0x3C0], [0x1E24, 0x1E25], [0x1E62, 0x1E63], [0x1E6C, 0x1E6D],
+        [0x1E80, 0x1E85], [0x1E9E, 0x1E9E], [0x1EA0, 0x1EF9], [0x2010, 0x2011], [0x2013, 0x2015], [0x2017, 0x201A], [0x201C, 0x201E],
+        [0x2020, 0x2022], [0x2026, 0x2026], [0x2030, 0x2030], [0x2032, 0x2033], [0x2039, 0x203A], [0x203E, 0x203E], [0x2044, 0x2044],
+        [0x2052, 0x2052], [0x20AC, 0x20AC], [0x2122, 0x2122],
     ];
 
     /**
-     * What Inter-Medium holds of the same, plus Greek and Cyrillic. Barlow's list lies within this one, so this is all a card can draw.
+     * What every Inter file here (Inter and Inter Display) holds of what people type: Latin with its extensions, Greek, Cyrillic and
+     * typographic punctuation. Archivo's list lies within this one, so this is all a card can draw.
      * Nothing above U+FFFF, no variation selector and no joiner: GD reads a four-byte character byte by byte. Arabic, Hebrew and CJK
      * stay out, as the fonts have none and GD cannot shape them.
      *
@@ -55,78 +91,121 @@ class OgImageCanvas
     ];
 
     /**
+     * A vehicle: its cover photo by the focal point, the make as the eyebrow, the name, up to three specs, the owner's handle and the
+     * code of its sticker.
+     *
      * @param  string  $photo  image bytes
      * @param  float|null  $focalX  0 to 1, null for the centre
      * @param  float|null  $focalY  0 to 1, null for the centre
+     * @param  list<array{value: string, unit: string|null, label: string}>  $specs  at most three are drawn
+     * @param  string|null  $handle  "@lukas.sc", null when the owner is not named on the page
+     * @param  string|null  $qr  PNG of the code, square, white with its quiet zone
      */
-    public function vehicle(string $photo, ?float $focalX, ?float $focalY, ?string $eyebrow, string $title, string $specs): string
+    public function vehicle(string $photo, ?float $focalX, ?float $focalY, ?string $eyebrow, string $title, array $specs = [], ?string $handle = null, ?string $qr = null, string $format = self::LANDSCAPE): string
     {
         $eyebrow = $this->sanitise((string) $eyebrow);
         $title = $this->sanitise($title);
-        $specs = $this->sanitise($specs);
+        $handle = $this->sanitise((string) $handle);
+        $specs = $this->drawableSpecs($specs);
 
-        $image = $this->canvas();
-        $this->drawCover($image, $photo, $focalX, $focalY);
-        $this->drawScrims($image);
-        $this->drawWordmark($image);
-
-        $white = (int) imagecolorallocate($image, 255, 255, 255);
-        $baseline = self::HEIGHT - self::MARGIN;
-
-        if ($specs !== '') {
-            $this->text($image, self::FONT_TEXT, $specs, 28, 22, self::MARGIN, $baseline, $white);
-            $baseline -= 56;
-        }
-
-        // A line with nothing left to draw leaves no gap: what is above it moves down.
-        if ($title !== '') {
-            $this->text($image, self::FONT_DISPLAY, $title, 72, 44, self::MARGIN, $baseline, $white);
-            $baseline -= 88;
-        }
+        [$image, $panel] = $this->split($format, $photo, $focalX, $focalY);
+        $square = $format === self::SQUARE;
+        $cursor = $this->brandRow($image, $panel, $square ? $handle : '', $square ? 180 : 168);
+        $qrSize = $qr === null ? 0 : ($square ? 152 : 112);
 
         if ($eyebrow !== '') {
-            $this->text($image, self::FONT_EYEBROW, $eyebrow, 30, 24, self::MARGIN, $baseline, $white);
+            $cursor = $this->line($image, self::FONT_DISPLAY, $eyebrow, $square ? 24 : 20, $square ? 18 : 16, $panel['x'], $cursor, $panel['width'], 'text-secondary') + ($square ? 16 : 14);
+        }
+
+        if ($title !== '') {
+            $this->title($image, self::FONT_DISPLAY, $title, $square ? 60 : 44, $square ? 40 : 30, $panel['x'], $cursor, $panel['width']);
+        }
+
+        $specsWidth = $panel['width'] - ($qrSize === 0 ? 0 : $qrSize + 32);
+
+        if ($specs !== []) {
+            $this->specs($image, $specs, $panel['x'], $square ? 884 : 336, $square ? $specsWidth : $panel['width'], $square ? 56 : 48);
+        }
+
+        if ($qr !== null) {
+            $this->qr($image, $qr, $panel['right'] - $qrSize, $panel['bottom'] - $qrSize, $qrSize);
+        }
+
+        if (! $square && $handle !== '') {
+            $this->text($image, self::FONT_TEXT, $handle, 22, 18, $panel['x'], $panel['bottom'], $panel['width'] - ($qrSize === 0 ? 0 : $qrSize + 24), 'text-secondary');
         }
 
         return $this->encode($image);
     }
 
     /**
-     * @param  string|null  $cover  image bytes of the member's cover, a plain dark canvas without one
+     * A member: the cover (else the avatar) as the photo, the avatar round beside the name, handle and city, the number of public builds.
+     * Without any photo the whole card is the canvas.
+     *
+     * @param  string|null  $cover  image bytes
      * @param  string|null  $avatar  image bytes
+     * @param  int|null  $builds  public builds, null or 0 draws no figure
      */
-    public function member(?string $cover, ?float $focalX, ?float $focalY, ?string $avatar, string $name, string $handle, ?string $city): string
+    public function member(?string $cover, ?float $focalX, ?float $focalY, ?string $avatar, string $name, string $handle, ?string $city, ?int $builds = null, string $format = self::LANDSCAPE): string
     {
         $name = $this->sanitise($name);
         $city = $this->sanitise((string) $city);
+        $square = $format === self::SQUARE;
+        $photo = $cover ?? $avatar;
 
-        $image = $this->canvas();
+        [$image, $panel] = $this->split($format, $photo, $cover === null ? null : $focalX, $cover === null ? null : $focalY);
+        $cursor = $this->brandRow($image, $panel, '', $square ? 180 : 168);
 
-        if ($cover !== null) {
-            $this->drawCover($image, $cover, $focalX, $focalY);
-            $this->drawScrims($image);
-        } else {
-            imagefilledrectangle($image, 0, 0, self::WIDTH, self::HEIGHT, (int) imagecolorallocate($image, 18, 18, 20));
+        $x = $panel['x'];
+        $width = $panel['width'];
+        $avatarBottom = $cursor;
+
+        // The round avatar only beside a cover: alone, it is the photo already. Above the name in the narrow panel, left of it in the square.
+        if ($cover !== null && $avatar !== null) {
+            $size = $square ? 120 : 96;
+            $this->avatar($image, $avatar, $x, $cursor, $size);
+            $avatarBottom = $cursor + $size;
+
+            if ($square) {
+                $x += $size + 28;
+                $width -= $size + 28;
+            } else {
+                $cursor += $size + 24;
+            }
         }
-
-        $this->drawWordmark($image);
-
-        $white = (int) imagecolorallocate($image, 255, 255, 255);
-        $x = self::MARGIN;
-
-        if ($avatar !== null) {
-            $this->drawAvatar($image, $avatar, $x, self::HEIGHT - self::MARGIN - self::AVATAR_SIZE);
-            $x += 232;
-        }
-
-        $baseline = self::HEIGHT - self::MARGIN;
-        $line = $handle.($city === '' ? '' : ' · '.$city);
-
-        $this->text($image, self::FONT_TEXT, $line, 28, 22, $x, $baseline, $white);
 
         if ($name !== '') {
-            $this->text($image, self::FONT_DISPLAY, $name, 64, 40, $x, $baseline - 56, $white);
+            $cursor = $this->title($image, self::FONT_NAME, $name, $square ? 56 : 44, $square ? 36 : 30, $x, $cursor, $width) + 8;
         }
+
+        $line = $handle.($city === '' ? '' : ' · '.$city);
+        $cursor = max($avatarBottom, $this->line($image, self::FONT_TEXT, $line, $square ? 26 : 22, 18, $x, $cursor, $width, 'text-secondary'));
+
+        if ($builds !== null && $builds > 0) {
+            $this->specs($image, [['value' => (string) $builds, 'unit' => $builds === 1 ? 'Build' : 'Builds', 'label' => 'Garage']], $panel['x'], max($square ? 884 : 420, $cursor + 32), $panel['width'], $square ? 56 : 48);
+        }
+
+        return $this->encode($image);
+    }
+
+    /**
+     * The brand card for the landing page and every page without a picture of its own: a night photo of the brand layer, the wordmark
+     * large, one line.
+     *
+     * @param  string  $photo  image bytes
+     */
+    public function site(string $photo, ?float $focalX, ?float $focalY, string $line, string $format = self::LANDSCAPE): string
+    {
+        $square = $format === self::SQUARE;
+        [$image, $panel] = $this->split($format, $photo, $focalX, $focalY);
+
+        $width = min($panel['width'], $square ? 520 : 400);
+        // The wordmark and the line as one block, about the optical centre of the panel.
+        $top = $panel['y'] + ($square ? 84 : 132);
+        $height = $this->logo($image, $panel['x'], $top, $width);
+        $cursor = $top + $height + ($square ? 40 : 36);
+        $this->accent($image, $panel['x'], $cursor);
+        $this->title($image, self::FONT_DISPLAY, $this->sanitise($line), $square ? 44 : 34, 26, $panel['x'], $cursor + 28, $panel['width']);
 
         return $this->encode($image);
     }
@@ -201,16 +280,17 @@ class OgImageCanvas
     }
 
     /**
-     * A line stays in one font: the design's, or Inter when Barlow lacks a letter of it, which keeps a Cyrillic or Greek name readable.
+     * A line stays in one font: the design's, or Inter when Archivo lacks a letter of it, which keeps a Cyrillic or Greek name readable.
+     * Inter Display holds all of INTER_RANGES, so a member's name never changes font.
      */
     private function fontFor(string $font, string $text): string
     {
-        if ($font === self::FONT_TEXT) {
+        if ($font !== self::FONT_DISPLAY && $font !== self::FONT_NUMERALS) {
             return $font;
         }
 
         foreach (mb_str_split($text) as $character) {
-            if (! $this->covers(self::BARLOW_RANGES, $character)) {
+            if (! $this->covers(self::ARCHIVO_RANGES, $character)) {
                 return self::FONT_TEXT;
             }
         }
@@ -218,132 +298,377 @@ class OgImageCanvas
         return $font;
     }
 
-    private function canvas(): GdImage
+    /**
+     * @param  list<array{value: string, unit: string|null, label: string}>  $specs
+     * @return list<array{value: string, unit: string, label: string}>
+     */
+    private function drawableSpecs(array $specs): array
     {
-        $image = imagecreatetruecolor(self::WIDTH, self::HEIGHT);
+        $drawable = [];
 
-        if ($image === false) {
+        foreach ($specs as $spec) {
+            $value = $this->sanitise($spec['value']);
+
+            if ($value !== '' && count($drawable) < 3) {
+                $drawable[] = ['value' => $value, 'unit' => $this->sanitise((string) $spec['unit']), 'label' => $this->sanitise($spec['label'])];
+            }
+        }
+
+        return $drawable;
+    }
+
+    /**
+     * The canvas with the photo in its place and the panel's text box. Landscape: photo left, panel right. Square: photo on top, panel
+     * below. Without a photo the panel is the whole card.
+     *
+     * @return array{GdImage, array{x: int, y: int, width: int, right: int, bottom: int}}
+     */
+    private function split(string $format, ?string $photo, ?float $focalX, ?float $focalY): array
+    {
+        [$width, $height] = self::FORMATS[$format] ?? throw new RuntimeException("Unknown OG format [$format].");
+        $image = imagecreatetruecolor($width, $height);
+
+        if (! $image instanceof GdImage) {
             throw new RuntimeException('GD could not create the OG canvas.');
         }
 
         imagealphablending($image, true);
+        imagefilledrectangle($image, 0, 0, $width - 1, $height - 1, $this->color($image, 'bg-canvas'));
+        $square = $format === self::SQUARE;
+        $margin = $square ? 56 : 48;
 
-        return $image;
-    }
+        if ($photo === null) {
+            $margin = $square ? 72 : 64;
 
-    private function load(string $bytes): GdImage
-    {
-        $source = imagecreatefromstring($bytes);
+            return [$image, ['x' => $margin, 'y' => $margin, 'width' => $width - 2 * $margin, 'right' => $width - $margin, 'bottom' => $height - $margin]];
+        }
 
-        return $source === false ? throw new RuntimeException('GD could not read the OG source image.') : $source;
+        if ($square) {
+            $this->cover($image, $photo, $focalX, $focalY, 0, 0, $width, self::PHOTO_HEIGHT);
+
+            return [$image, ['x' => $margin, 'y' => self::PHOTO_HEIGHT + 48, 'width' => $width - 2 * $margin, 'right' => $width - $margin, 'bottom' => $height - $margin]];
+        }
+
+        $this->cover($image, $photo, $focalX, $focalY, 0, 0, self::PHOTO_WIDTH, $height);
+        $x = self::PHOTO_WIDTH + $margin;
+
+        return [$image, ['x' => $x, 'y' => $margin, 'width' => $width - $margin - $x, 'right' => $width - $margin, 'bottom' => $height - $margin]];
     }
 
     /**
-     * Fills the canvas and keeps the focal point inside the crop, as the page does with object-position (03_DESIGN_SYSTEM §7).
+     * The wordmark at the top of the panel, a text right-aligned beside it, then the brake-light rule. Returns where the text below starts.
+     *
+     * @param  array{x: int, y: int, width: int, right: int, bottom: int}  $panel
      */
-    private function drawCover(GdImage $image, string $bytes, ?float $focalX, ?float $focalY): void
+    private function brandRow(GdImage $image, array $panel, string $beside, int $logoWidth): int
+    {
+        $height = $this->logo($image, $panel['x'], $panel['y'], $logoWidth);
+
+        if ($beside !== '') {
+            $path = $this->font(self::FONT_TEXT, $beside);
+            $size = 26;
+            $room = $panel['width'] - $logoWidth - 32;
+
+            while ($size > 18 && $this->width($path, $size, $beside) > $room) {
+                $size -= 2;
+            }
+
+            $text = $this->fit($path, $size, $beside, $room);
+            $x = $panel['right'] - $this->width($path, $size, $text);
+            imagettftext($image, $size, 0, $x, $panel['y'] + (int) round(($height + $size * 0.72) / 2), $this->color($image, 'text-secondary'), $path, $this->literal($text));
+        }
+
+        $rule = $panel['y'] + $height + 32;
+        $this->accent($image, $panel['x'], $rule);
+
+        return $rule + 4 + 24;
+    }
+
+    /**
+     * One short rule in the accent fill: the card's only red, far below 5 % of it.
+     */
+    private function accent(GdImage $image, int $x, int $y): void
+    {
+        imagefilledrectangle($image, $x, $y, $x + 31, $y + 3, $this->color($image, 'accent-fill'));
+    }
+
+    /**
+     * A single line whose top lies at $top. Returns the baseline.
+     */
+    private function line(GdImage $image, string $font, string $text, int $size, int $minSize, int $x, int $top, int $maxWidth, string $color = 'text-primary'): int
+    {
+        if ($text === '') {
+            return $top;
+        }
+
+        $baseline = $top + (int) round($size * 0.76);
+        $this->text($image, $font, $text, $size, $minSize, $x, $baseline, $maxWidth, $color);
+
+        return $baseline + (int) round($size * 0.24);
+    }
+
+    /**
+     * A name in up to two balanced lines: as large as it fits on one line, else the size at which two lines fit with the break that
+     * keeps them closest in width (a model code stays with the word before it), else two lines at the smallest size, the second ending
+     * in an ellipsis. Returns the bottom of the last line.
+     */
+    private function title(GdImage $image, string $font, string $text, int $size, int $minSize, int $x, int $top, int $maxWidth): int
+    {
+        if ($text === '') {
+            return $top;
+        }
+
+        $path = $this->font($font, $text);
+        $lines = [$text];
+        $chosen = $minSize;
+
+        for ($candidate = $size; $candidate >= $minSize; $candidate -= 2) {
+            if ($this->width($path, $candidate, $text) <= $maxWidth) {
+                $lines = [$text];
+                $chosen = $candidate;
+
+                break;
+            }
+
+            $split = $this->balanced($path, $candidate, $text, $maxWidth);
+
+            if ($split !== null) {
+                $lines = $split;
+                $chosen = $candidate;
+
+                break;
+            }
+
+            $chosen = $candidate;
+            $lines = $this->greedy($path, $candidate, $text, $maxWidth);
+        }
+
+        $lineHeight = (int) round($chosen * 1.12);
+        $baseline = $top + (int) round($chosen * 0.76);
+        $color = $this->color($image, 'text-primary');
+
+        foreach (array_slice($lines, 0, 2) as $line) {
+            imagettftext($image, $chosen, 0, $x, $baseline, $color, $path, $this->literal($this->fit($path, $chosen, $line, $maxWidth)));
+            $baseline += $lineHeight;
+        }
+
+        return $baseline - $lineHeight + (int) round($chosen * 0.24);
+    }
+
+    /**
+     * @return list<string>|null two lines that both fit, null when no break does
+     */
+    private function balanced(string $path, int $size, string $text, int $maxWidth): ?array
+    {
+        $words = explode(' ', $text);
+        $best = null;
+        $bestWidth = PHP_INT_MAX;
+
+        for ($break = 1; $break < count($words); $break++) {
+            $first = implode(' ', array_slice($words, 0, $break));
+            $second = implode(' ', array_slice($words, $break));
+            $widest = max($this->width($path, $size, $first), $this->width($path, $size, $second));
+
+            if ($widest <= $maxWidth && $widest < $bestWidth) {
+                $best = [$first, $second];
+                $bestWidth = $widest;
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * As many words as fit on the first line, the rest on the second (fit() ends it in an ellipsis).
+     *
+     * @return list<string>
+     */
+    private function greedy(string $path, int $size, string $text, int $maxWidth): array
+    {
+        $words = explode(' ', $text);
+        $first = array_shift($words);
+
+        while ($words !== [] && $this->width($path, $size, $first.' '.$words[0]) <= $maxWidth) {
+            $first .= ' '.array_shift($words);
+        }
+
+        return $words === [] ? [$first] : [$first, implode(' ', $words)];
+    }
+
+    /**
+     * Up to three columns: the data label in caps, the numeral in Archivo Condensed, the unit beside it. A hairline above.
+     *
+     * @param  list<array{value: string, unit: string, label: string}>  $specs
+     */
+    private function specs(GdImage $image, array $specs, int $x, int $top, int $width, int $size): void
+    {
+        imageline($image, $x, $top, $x + $width, $top, $this->color($image, 'border-hairline'));
+
+        $column = (int) floor($width / 3);
+        $labelBaseline = $top + 40;
+        $valueBaseline = $labelBaseline + 16 + $size;
+        $label = resource_path('fonts/'.self::FONT_LABEL);
+
+        foreach ($specs as $index => $spec) {
+            $left = $x + $index * $column;
+            $room = $column - 16;
+            $caps = mb_strtoupper($spec['label']);
+            $labelSize = $size >= 56 ? 13 : 12;
+
+            while ($labelSize > 10 && $this->width($label, $labelSize, $caps) > $column - 12) {
+                $labelSize--;
+            }
+
+            imagettftext($image, $labelSize, 0, $left, $labelBaseline, $this->color($image, 'text-tertiary'), $label, $this->literal($this->fit($label, $labelSize, $caps, $column - 12)));
+
+            $numeral = $this->font(self::FONT_NUMERALS, $spec['value']);
+            $unitWidth = $spec['unit'] === '' ? 0 : $this->width($label, 16, $spec['unit']) + 6;
+            $valueSize = $size;
+
+            while ($valueSize > 28 && $this->width($numeral, $valueSize, $spec['value']) + $unitWidth > $room) {
+                $valueSize -= 2;
+            }
+
+            $value = $this->fit($numeral, $valueSize, $spec['value'], $room - $unitWidth);
+            imagettftext($image, $valueSize, 0, $left, $valueBaseline, $this->color($image, 'text-primary'), $numeral, $this->literal($value));
+
+            if ($spec['unit'] !== '') {
+                imagettftext($image, 16, 0, $left + $this->width($numeral, $valueSize, $value) + 6, $valueBaseline, $this->color($image, 'text-secondary'), $label, $this->literal($spec['unit']));
+            }
+        }
+    }
+
+    /**
+     * Fills the box and keeps the focal point inside the crop, as the page does with object-position (03_DESIGN_SYSTEM §7).
+     */
+    private function cover(GdImage $image, string $bytes, ?float $focalX, ?float $focalY, int $x, int $y, int $width, int $height): void
     {
         $source = $this->load($bytes);
         $sourceWidth = imagesx($source);
         $sourceHeight = imagesy($source);
-        $scale = max(self::WIDTH / $sourceWidth, self::HEIGHT / $sourceHeight);
-        $cropWidth = (int) round(self::WIDTH / $scale);
-        $cropHeight = (int) round(self::HEIGHT / $scale);
+        $scale = max($width / $sourceWidth, $height / $sourceHeight);
+        $cropWidth = min($sourceWidth, (int) round($width / $scale));
+        $cropHeight = min($sourceHeight, (int) round($height / $scale));
 
-        $x = (int) round(($sourceWidth * ($focalX ?? 0.5)) - ($cropWidth / 2));
-        $y = (int) round(($sourceHeight * ($focalY ?? 0.5)) - ($cropHeight / 2));
+        $left = (int) round(($sourceWidth * ($focalX ?? 0.5)) - ($cropWidth / 2));
+        $top = (int) round(($sourceHeight * ($focalY ?? 0.5)) - ($cropHeight / 2));
 
         imagecopyresampled(
             $image,
             $source,
-            0,
-            0,
-            max(0, min($x, $sourceWidth - $cropWidth)),
-            max(0, min($y, $sourceHeight - $cropHeight)),
-            self::WIDTH,
-            self::HEIGHT,
+            $x,
+            $y,
+            max(0, min($left, $sourceWidth - $cropWidth)),
+            max(0, min($top, $sourceHeight - $cropHeight)),
+            $width,
+            $height,
             $cropWidth,
             $cropHeight,
         );
     }
 
-    private function drawScrims(GdImage $image): void
+    /**
+     * The delivered wordmark, its ink box scaled to $width. Returns the drawn height.
+     */
+    private function logo(GdImage $image, int $x, int $y, int $width): int
     {
-        $this->gradient($image, (int) (self::HEIGHT * 0.3), self::HEIGHT, 0.0, 0.82);
-        $this->gradient($image, 0, 150, 0.45, 0.0);
-    }
+        $logo = @imagecreatefrompng(public_path(self::LOGO));
 
-    private function gradient(GdImage $image, int $from, int $to, float $startOpacity, float $endOpacity): void
-    {
-        for ($y = $from; $y < $to; $y++) {
-            $opacity = $startOpacity + (($endOpacity - $startOpacity) * (($y - $from) / max(1, $to - $from)));
-            // GD counts alpha from 0, opaque, to 127, transparent.
-            $color = (int) imagecolorallocatealpha($image, 0, 0, 0, max(0, min(127, 127 - (int) round($opacity * 127))));
-            imageline($image, 0, $y, self::WIDTH, $y, $color);
-        }
-    }
-
-    private function drawWordmark(GdImage $image): void
-    {
-        $logo = imagecreatefrompng(public_path('brand/logo-wide-white-320.png'));
-
-        if ($logo === false) {
+        if (! $logo instanceof GdImage) {
             throw new RuntimeException('GD could not read the wordmark.');
         }
 
-        imagecopy($image, $logo, self::MARGIN - 8, 40, 0, 0, imagesx($logo), imagesy($logo));
+        [$left, $top, $inkWidth, $inkHeight] = self::LOGO_INK;
+        $height = (int) round($inkHeight * $width / $inkWidth);
+        imagecopyresampled($image, $logo, $x, $y, $left, $top, $width, $height, $inkWidth, $inkHeight);
+
+        return $height;
     }
 
     /**
-     * Round by a mask: every pixel outside the circle stays what the background is.
+     * The code at its own size (its quiet zone is white already), never scaled: a resampled module turns grey.
      */
-    private function drawAvatar(GdImage $image, string $bytes, int $x, int $y): void
+    private function qr(GdImage $image, string $png, int $x, int $y, int $size): void
     {
-        $size = self::AVATAR_SIZE;
+        $code = @imagecreatefromstring($png);
+
+        if (! $code instanceof GdImage) {
+            throw new RuntimeException('GD could not read the QR code.');
+        }
+
+        imagefilledrectangle($image, $x, $y, $x + $size - 1, $y + $size - 1, $this->color($image, 'qr-bg'));
+        $side = min($size, imagesx($code), imagesy($code));
+        imagecopy($image, $code, $x + intdiv($size - $side, 2), $y + intdiv($size - $side, 2), 0, 0, $side, $side);
+    }
+
+    /**
+     * Round, drawn at twice the size and scaled down, so the edge is smooth.
+     */
+    private function avatar(GdImage $image, string $bytes, int $x, int $y, int $size): void
+    {
         $source = $this->load($bytes);
         $side = min(imagesx($source), imagesy($source));
-        $offsetX = (int) ((imagesx($source) - $side) / 2);
-        $offsetY = (int) ((imagesy($source) - $side) / 2);
-        $radius = $size / 2;
+        $double = max(2, $size * 2);
+        $round = imagecreatetruecolor($double, $double);
 
-        $scaled = imagecreatetruecolor($size, $size);
-
-        if ($scaled === false) {
+        if (! $round instanceof GdImage) {
             throw new RuntimeException('GD could not create the avatar.');
         }
 
-        imagecopyresampled($scaled, $source, 0, 0, $offsetX, $offsetY, $size, $size, $side, $side);
+        imagealphablending($round, false);
+        imagesavealpha($round, true);
+        imagecopyresampled($round, $source, 0, 0, intdiv(imagesx($source) - $side, 2), intdiv(imagesy($source) - $side, 2), $double, $double, $side, $side);
+        $clear = (int) imagecolorallocatealpha($round, 0, 0, 0, 127);
+        $radius = $double / 2;
 
-        for ($row = 0; $row < $size; $row++) {
-            for ($column = 0; $column < $size; $column++) {
-                if ((($column - $radius + 0.5) ** 2) + (($row - $radius + 0.5) ** 2) <= $radius ** 2) {
-                    imagesetpixel($image, $x + $column, $y + $row, (int) imagecolorat($scaled, $column, $row));
+        for ($row = 0; $row < $double; $row++) {
+            for ($column = 0; $column < $double; $column++) {
+                if ((($column - $radius + 0.5) ** 2) + (($row - $radius + 0.5) ** 2) > $radius ** 2) {
+                    imagesetpixel($round, $column, $row, $clear);
                 }
             }
         }
+
+        imagecopyresampled($image, $round, $x, $y, 0, 0, $size, $size, $double, $double);
+    }
+
+    private function load(string $bytes): GdImage
+    {
+        $source = @imagecreatefromstring($bytes);
+
+        return $source instanceof GdImage ? $source : throw new RuntimeException('GD could not read the OG source image.');
     }
 
     /**
-     * Shrinks to $minSize first; a name that is still too long ends in an ellipsis.
+     * Shrinks to $minSize first; a text that is still too long ends in an ellipsis.
      */
-    private function text(GdImage $image, string $font, string $text, int $size, int $minSize, int $x, int $baseline, int $color): void
+    private function text(GdImage $image, string $font, string $text, int $size, int $minSize, int $x, int $baseline, int $maxWidth, string $color = 'text-primary'): void
     {
-        $path = resource_path('fonts/'.$this->fontFor($font, $text));
-        $maxWidth = self::WIDTH - $x - self::MARGIN;
+        $path = $this->font($font, $text);
 
         while ($size > $minSize && $this->width($path, $size, $text) > $maxWidth) {
             $size -= 2;
         }
 
-        if ($this->width($path, $size, $text) > $maxWidth) {
-            while (mb_strlen($text) > 1 && $this->width($path, $size, $text.'…') > $maxWidth) {
-                $text = mb_substr($text, 0, -1);
-            }
+        imagettftext($image, $size, 0, $x, $baseline, $this->color($image, $color), $path, $this->literal($this->fit($path, $size, $text, $maxWidth)));
+    }
 
-            $text = rtrim($text).'…';
+    private function fit(string $path, int $size, string $text, int $maxWidth): string
+    {
+        if ($this->width($path, $size, $text) <= $maxWidth) {
+            return $text;
         }
 
-        imagettftext($image, $size, 0, $x, $baseline, $color, $path, $this->literal($text));
+        while (mb_strlen($text) > 1 && $this->width($path, $size, $text.'…') > $maxWidth) {
+            $text = mb_substr($text, 0, -1);
+        }
+
+        return rtrim($text).'…';
+    }
+
+    private function font(string $font, string $text): string
+    {
+        return resource_path('fonts/'.$this->fontFor($font, $text));
     }
 
     private function width(string $font, int $size, string $text): int
@@ -362,12 +687,31 @@ class OgImageCanvas
         return str_replace('&', '&#38;', $text);
     }
 
+    private function color(GdImage $image, string $token): int
+    {
+        [$red, $green, $blue, $alpha] = DesignTokens::rgba($token);
+
+        return (int) imagecolorallocatealpha($image, $red, $green, $blue, max(0, min(127, 127 - (int) round($alpha * 127))));
+    }
+
+    /**
+     * The best quality that stays below MAX_BYTES, progressive.
+     */
     private function encode(GdImage $image): string
     {
-        ob_start();
         imageinterlace($image, true);
-        imagejpeg($image, null, self::QUALITY);
+        $bytes = '';
 
-        return (string) ob_get_clean();
+        foreach (self::QUALITIES as $quality) {
+            ob_start();
+            imagejpeg($image, null, $quality);
+            $bytes = (string) ob_get_clean();
+
+            if (strlen($bytes) <= self::MAX_BYTES) {
+                break;
+            }
+        }
+
+        return $bytes;
     }
 }

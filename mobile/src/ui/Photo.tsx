@@ -2,8 +2,9 @@ import { Image } from 'expo-image';
 import { useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { aspect as aspectTokens, createStyles, radius, useMotion } from '@/theme';
+import { aspect as aspectTokens, createStyles, radius } from '@/theme';
 
+import { motionDuration, useMotionPreference } from './motion';
 import { Icon } from './icons/Icon';
 import { useImagePlaceholder } from './imagePlaceholder';
 import { useEagerImages } from './qaVisualState';
@@ -17,6 +18,8 @@ export type PhotoCorner = keyof typeof radius | 'none';
 export type PhotoFields = {
   source?: string | number | null;
   blurhash?: string | null;
+  /** Preferred over the blurhash when the media has one (09 §4.6). */
+  thumbhash?: string | null;
   focal?: PhotoFocal | null;
 };
 
@@ -59,9 +62,9 @@ export function focalToPosition(focal: PhotoFocal) {
  * §7 photo: an explicit ratio, always `cover`, cropped around the focal point, blurhash until it loads, fade-in
  * 200 ms (off under reduced motion). A missing or broken image leaves the surface with one quiet glyph.
  */
-export function Photo({ source, blurhash, focal, aspect, label, corner = 'none', cachePolicy, children, style, testID }: PhotoProps) {
+export function Photo({ source, blurhash, thumbhash, focal, aspect, label, corner = 'none', cachePolicy, children, style, testID }: PhotoProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const eager = useEagerImages();
   // Holds the failed source and not a flag: FlashList recycles this component for the next photo.
   const [failed, setFailed] = useState<PhotoFields['source']>(null);
@@ -69,7 +72,7 @@ export function Photo({ source, blurhash, focal, aspect, label, corner = 'none',
   const position = useMemo(() => (focal ? focalToPosition(focal) : 'center'), [focal]);
   const shape = { aspectRatio: ratioOf(aspect), borderRadius: corner === 'none' ? 0 : radius[corner] };
   const showImage = Boolean(source) && failed !== source;
-  const placeholder = useImagePlaceholder(blurhash, 'cover');
+  const placeholder = useImagePlaceholder(blurhash, 'cover', thumbhash);
 
   return (
     <View dataSet={{ qaExempt: 'photo' }} testID={testID} style={[styles.root, shape, style]}>
@@ -81,7 +84,7 @@ export function Photo({ source, blurhash, focal, aspect, label, corner = 'none',
           placeholderContentFit="cover"
           contentFit="cover"
           contentPosition={position}
-          transition={motion.reduced ? null : motion.duration.small}
+          transition={motion.reduced ? null : motionDuration('effect.default')}
           recyclingKey={typeof source === 'string' ? source : undefined}
           {...(cachePolicy ? { cachePolicy } : {})}
           accessible={Boolean(label)}

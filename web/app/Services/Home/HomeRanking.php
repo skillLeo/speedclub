@@ -10,6 +10,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleSearch;
 use App\Services\Garage\VehicleCompleteness;
 use App\Services\Garage\VehiclePresenter;
+use App\Services\Showcase\SampleContent;
 use App\Support\HomeClock;
 use App\Support\Slug;
 use Carbon\CarbonImmutable;
@@ -194,6 +195,7 @@ class HomeRanking
             ->whereNull('m.deleted_at')
             ->where('m.status', UserStatus::Active->value)
             ->whereNotNull('m.email_verified_at')
+            ->when(! app(SampleContent::class)->visible(), fn (Builder $members) => $members->where('m.is_sample', false))
             ->whereBetween('x.created_at', [$since, $now])
             ->groupBy($groupColumn)
             ->select($groupColumn.' as id')

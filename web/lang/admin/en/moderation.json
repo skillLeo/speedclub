@@ -99,7 +99,9 @@
         "photo": "Photo",
         "message": "Message",
         "build_update": "Update",
-        "modification": "Modification"
+        "modification": "Modification",
+        "comment": "Comment",
+        "event": "Meet"
     },
     "target_of": {
         "member": "Profile :label",
@@ -107,7 +109,9 @@
         "photo": "Photo of :label",
         "message": "Message from :label",
         "build_update": "Update of :label",
-        "modification": "Mod on :label"
+        "modification": "Mod on :label",
+        "comment": "Comment by :label",
+        "event": "Meet “:label”"
     },
     "unnamed": "Unnamed",
     "reasons": {
@@ -192,7 +196,14 @@
             "hidden": "Hidden",
             "removed_photo": "The photo is removed; its public variants are gone.",
             "deleted": "Deleted",
-            "private": "Private"
+            "private": "Private",
+            "comment_reply": "Reply to a comment",
+            "comment_on": "Comment on a build update",
+            "comment_removed": "Removed: only its author still sees the comment.",
+            "comment_deleted": "Deleted by its author",
+            "open_vehicle": "Open vehicle",
+            "open_event": "Open meet",
+            "event_removed": "Removed by a moderation decision"
         },
         "reports": {
             "title": "Reports",
@@ -241,7 +252,11 @@
                 "type": "Kind",
                 "brand_text": "Brand",
                 "part_name": "Part",
-                "notes": "Notes"
+                "notes": "Notes",
+                "body": "Comment",
+                "venue_name": "Place",
+                "city": "City",
+                "organiser_rules": "Organiser's rules"
             }
         },
         "decision": {
@@ -426,9 +441,16 @@
                 "ai": "AI suggestions",
                 "ai_translate": "AI translations",
                 "appeals": "Appeals",
+                "auth_email_start": "Sign-in code requests (per IP)",
+                "auth_email_verify": "Sign-in code checks (per IP)",
+                "auth_methods": "Passkey and sign-in method changes",
+                "auth_secure_account": "\"This wasn't me\" links (per IP)",
+                "auth_passkeys": "Passkey sign-in (per IP)",
+                "auth_social": "Sign-in with Apple or Google (per IP)",
                 "blocks": "Blocking",
                 "browse": "Home and Discover",
                 "catalog_requests": "Catalogue requests",
+                "client_errors": "App error reports (per IP)",
                 "contact_form": "Contact form (per IP)",
                 "conversation_edits": "Chat actions",
                 "conversation_requests": "Message requests",
@@ -450,6 +472,7 @@
                 "qr_downloads": "QR downloads",
                 "qr_reissues": "QR reissues",
                 "realtime_auth": "Realtime connections",
+                "reauth": "Identity confirmation",
                 "reports": "Reports",
                 "saves": "Saved builds",
                 "search": "Search",
@@ -460,7 +483,16 @@
                 "unfollows": "Unfollows",
                 "uploads": "Photo uploads",
                 "username_check": "Username checks",
-                "web_account_deletion": "Web account deletion (per IP)"
+                "web_account_deletion": "Web account deletion (per IP)",
+                "reactions": "Reactions",
+                "comments": "Comments",
+                "mention_suggest": "Mention suggestions",
+                "collections": "Editing collections",
+                "build_updates": "Posting updates",
+                "events": "Creating meets",
+                "rsvps": "Changing answers to meets",
+                "event_updates": "Sending meet updates",
+                "geocode": "Place search"
             },
             "groups": {
                 "account": "Account",

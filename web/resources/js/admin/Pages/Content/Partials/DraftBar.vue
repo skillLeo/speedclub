@@ -64,7 +64,7 @@ const guard = computed({
                     <StatusPill v-else tone="success" :label="editor.live ? trans('config.draft.live', { version: String(editor.live.version) }) : trans('config.draft.defaults')" />
                     <Badge v-if="draft.dirty.value" tone="info" :data-testid="`${testId}.dirty`">{{ trans('config.draft.unsaved') }}</Badge>
                 </div>
-                <p class="text-supporting text-ink-2">
+                <p class="text-admin-base text-ink-2">
                     <template v-if="editor.draft && !editor.draft.mine">{{ trans('config.draft.foreign', { name: editor.draft.author ?? trans('config.draft.someone'), date: formatDateTime(editor.draft.updated_at) }) }}</template>
                     <template v-else-if="editor.draft">{{ trans('config.draft.saved_at', { date: formatDateTime(editor.draft.updated_at) }) }}<template v-if="editor.live"> · {{ trans('config.draft.live_since', { version: String(editor.live.version), date: formatDateTime(editor.live.published_at) }) }}</template></template>
                     <template v-else-if="editor.live">{{ trans('config.draft.live_by', { date: formatDateTime(editor.live.published_at), name: editor.live.published_by ?? trans('config.draft.someone') }) }}</template>
@@ -99,7 +99,7 @@ const guard = computed({
                 </Button>
             </div>
         </div>
-        <p v-if="draft.refused.value && !publishOpen && !discardOpen" class="text-helper text-danger" role="alert" :data-testid="`${testId}.refused`">{{ draft.refused.value }}</p>
+        <p v-if="draft.refused.value && !publishOpen && !discardOpen" class="text-admin-base text-danger" role="alert" :data-testid="`${testId}.refused`">{{ draft.refused.value }}</p>
         <ApprovalNotice v-if="editor.approval" :approval="{ id: editor.approval.id, title: editor.approval.title ?? '', expires_at: editor.approval.expires_at, existing: true }" :test-id="`${testId}.approval`" />
 
         <ConfirmDialog
@@ -115,7 +115,7 @@ const guard = computed({
             :test-id="`${testId}.publish-dialog`"
             @confirm="publish"
         >
-            <ul v-if="changes.length > 0" class="flex flex-col gap-4 text-supporting text-ink" :data-testid="`${testId}.publish-changes`">
+            <ul v-if="changes.length > 0" class="flex flex-col gap-4 text-admin-base text-ink" :data-testid="`${testId}.publish-changes`">
                 <li v-for="line in changes" :key="line">{{ line }}</li>
             </ul>
         </ConfirmDialog>

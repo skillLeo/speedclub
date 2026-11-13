@@ -10,6 +10,8 @@ return [
         'message' => 'a message you sent',
         'build_update' => 'an update to your build :label',
         'modification' => 'a modification on your build :label',
+        'comment' => 'a comment you wrote',
+        'event' => 'your meet “:label”',
     ],
     'target_unnamed' => [
         'member' => 'your profile',
@@ -18,6 +20,8 @@ return [
         'message' => 'a message you sent',
         'build_update' => 'one of your updates',
         'modification' => 'one of your modifications',
+        'comment' => 'a comment you wrote',
+        'event' => 'one of your meets',
     ],
 
     'outcome' => [

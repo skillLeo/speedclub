@@ -80,7 +80,7 @@ describe('SET-18 Legal document', () => {
     expect(screen.getAllByText('Lizenzen')).toHaveLength(1);
     expect(screen.getByTestId('SET-18.meta')).toHaveTextContent('Version 1, gültig seit 3. November 2026');
     expect(screen.getByText('Laravel')).toBeTruthy();
-    expect(screen.getByText('[[Kontakt-E-\u2060Mail]]')).toBeTruthy();
+    expect(screen.getByText('[[Kontakt-\u2060E-\u2060Mail]]')).toBeTruthy();
   });
 
   it('asks nothing for a key the app does not know', async () => {

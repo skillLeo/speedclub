@@ -7,6 +7,8 @@ export interface SharedStaff {
     roles: string[];
     permissions: string[];
     two_factor_confirmed: boolean;
+    /** This session skipped ADM-03 (STAFF_2FA_REQUIRED=false) and TOTP is still not confirmed: the shell shows the reminder. */
+    two_factor_skipped?: boolean;
     /** ISO 8601; null when the password was not confirmed within the last 5 minutes (ADR-215). */
     password_confirmed_until: string | null;
 }

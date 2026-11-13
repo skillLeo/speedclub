@@ -126,7 +126,7 @@ if (first !== null && dialog === 'reject') reject(first);
                 <form class="flex w-full flex-wrap items-end gap-8 desktop:flex-nowrap" :aria-label="trans('catalog.filters.label')" @submit.prevent="apply(filterOf())">
                     <!-- DQ-591: the label as a Field label and the track as tall as the 32 px inputs of the row. -->
                     <div class="flex flex-col gap-4">
-                        <span id="adm14-requests-status" class="text-label-s text-ink">{{ trans('catalog.filters.status') }}</span>
+                        <span id="adm14-requests-status" class="text-admin-base-strong text-ink">{{ trans('catalog.filters.status') }}</span>
                         <SegmentedControl
                             v-model="filters.status"
                             class="self-start"
@@ -169,7 +169,7 @@ if (first !== null && dialog === 'reject') reject(first);
             </template>
             <template #cell-resolved="{ row }">
                 <span class="flex min-w-0 flex-col">
-                    <span class="whitespace-nowrap text-supporting text-ink-2 tabular-nums">{{ [row.resolved_by, formatDate(row.resolved_at)].filter(Boolean).join(' · ') }}</span>
+                    <span class="whitespace-nowrap text-admin-base text-ink-2 tabular-nums">{{ [row.resolved_by, formatDate(row.resolved_at)].filter(Boolean).join(' · ') }}</span>
                     <span v-if="row.rejection_reason" class="line-clamp-2 text-caption text-ink-3" :title="row.rejection_reason" data-testid="ADM-14-requests.reason">{{ row.rejection_reason }}</span>
                 </span>
             </template>

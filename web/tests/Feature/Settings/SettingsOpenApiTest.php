@@ -33,7 +33,8 @@ it('types the new resources exactly', function (string $schema, array $propertie
     ['TwoFactorSetupResource', ['secret', 'otpauth_url', 'qr_svg']],
     ['RecoveryCodesResource', ['recovery_codes']],
     ['TwoFactorChallengeResource', ['two_factor_required', 'challenge', 'expires_in']],
-    ['DeviceSessionResource', ['id', 'kind', 'device_name', 'platform', 'app_version', 'last_used_at', 'current']],
+    // M4.7 (09 §8.4): os_version, approx_city (GeoLite2 only) and signed_in_at.
+    ['DeviceSessionResource', ['id', 'kind', 'device_name', 'platform', 'app_version', 'last_used_at', 'current', 'os_version', 'approx_city', 'signed_in_at']],
     ['DataExportResource', ['id', 'status', 'requested_at', 'ready_at', 'expires_at', 'bytes', 'download_url']],
     ['EmailChangeResource', ['email', 'resend_after_seconds']],
     ['HelpArticleSummaryResource', ['key', 'title', 'locale']],
@@ -57,7 +58,8 @@ it('documents the fields of DELETE me/two-factor as a JSON body, never as query 
 
     expect($operation['parameters'] ?? [])->toBe([])
         ->and(array_keys($operation['requestBody']['content']['application/json']['schema']['properties']))->toBe(['password', 'code'])
-        ->and($operation['requestBody']['content']['application/json']['schema']['required'])->toBe(['password', 'code']);
+        // M4.6 (09 §8.1): the password may be left out within 10 minutes of a sign-in or POST me/reauth; the code never.
+        ->and($operation['requestBody']['content']['application/json']['schema']['required'])->toBe(['code']);
 });
 
 it('types recovery codes as a string list and the cooldown as an integer', function () {

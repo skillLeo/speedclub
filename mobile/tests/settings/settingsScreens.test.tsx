@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 
 import { AppearanceScreen, THEME_OPTIONS } from '@/features/settings/screens/AppearanceScreen';
 import { settingsSkeletonGroups, SettingsScreen, valueStacks } from '@/features/settings/screens/SettingsScreen';
@@ -76,8 +76,8 @@ describe('SET-10 Appearance', () => {
     await renderScreen(<AppearanceScreen />);
     const group = screen.getByTestId('SET-10.options');
     expect(group.props.role).toBe('radiogroup');
-    expect(group.props['aria-label']).toBe('Erscheinungsbild');
-    expect(screen.getAllByRole('radio')).toHaveLength(4);
+    expect(group.props['aria-label']).toBe('Darstellung');
+    expect(within(group).getAllByRole('radio')).toHaveLength(4);
     expect(checkedOptions()).toEqual(['carbon']);
     expect(radio('carbon')).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Schwarz (OLED), Echtes Schwarz für OLED-Displays' })).toBeTruthy();
@@ -133,7 +133,7 @@ describe('SET-01 Settings', () => {
     await renderScreen(<SettingsScreen />);
     expect(screen.queryByTestId('SET-01.appearance.value')).toBeNull();
     expect(screen.queryByTestId('SET-01.version.value')).toBeNull();
-    expect(screen.getByTestId('SET-01.appearance')).toHaveTextContent('ErscheinungsbildCarbon');
+    expect(screen.getByTestId('SET-01.appearance')).toHaveTextContent('DarstellungCarbon');
     expect(screen.getByTestId('SET-01.version')).toHaveTextContent(`Version${VERSION} (Build ${BUILD})`);
   });
 
@@ -185,24 +185,31 @@ describe('SET-01 design QA round 1 (M2.8)', () => {
 
   it('DQ-422: builds the skeleton from the real groups, row by row, never longer than the list', () => {
     const row = 56;
-    const legal = 72;
-    expect(settingsSkeletonGroups(true)).toEqual([
-      { titled: false, height: row },
-      { titled: true, height: 3 * row },
-      { titled: true, height: 3 * row },
-      { titled: true, height: 3 * row },
+    const tall = 72;
+    // M4.10 (09 §7.9): the identity card (72), Konto & Sicherheit, Privatsphäre, the app cluster (titled "App" since DQ-1103), Daten & Speicher with
+    // "Cache leeren" (72), Hilfe & Support, Rechtliches, Über SPEED CLUB with Was ist neu and the version, Abmelden.
+    expect(settingsSkeletonGroups(true, {}, false)).toEqual([
+      { titled: false, height: tall },
+      { titled: true, height: 6 * row },
       { titled: true, height: 2 * row },
+      { titled: true, height: 3 * row },
+      { titled: true, height: 2 * row + tall },
+      { titled: true, height: 3 * row },
+      { titled: true, height: tall },
       { titled: true, height: 2 * row },
-      { titled: true, height: legal },
-      { titled: true, height: row },
       { titled: false, height: row },
     ]);
-    // A guest: App (Erscheinungsbild, Sprache), Hilfe, Rechtliches, Über die App; no Abmelden.
-    expect(settingsSkeletonGroups(false)).toEqual([
+    // The flags add Garage & Erinnerungen to the cluster and the Für Betriebe · Mitgliedschaft pair.
+    expect(settingsSkeletonGroups(true, { maintenance: true, businesses: true, membership: true }, false).slice(3, 5)).toEqual([
+      { titled: true, height: 4 * row },
+      { titled: false, height: 2 * row },
+    ]);
+    // A guest: Darstellung and Sprache, Hilfe, Rechtliches, Über SPEED CLUB; no Abmelden.
+    expect(settingsSkeletonGroups(false, {}, false)).toEqual([
       { titled: true, height: 2 * row },
       { titled: true, height: row },
-      { titled: true, height: legal },
-      { titled: true, height: row },
+      { titled: true, height: tall },
+      { titled: true, height: 2 * row },
     ]);
   });
 
@@ -212,7 +219,7 @@ describe('SET-01 design QA round 1 (M2.8)', () => {
     await renderScreen(<SettingsScreen />);
     expect(screen.getByTestId('SET-01.skeleton')).toBeTruthy();
     expect(screen.getAllByTestId(/^SET-01\.skeleton\.card\./)).toHaveLength(9);
-    expect(screen.getByTestId('SET-01.skeleton.card.1')).toHaveStyle({ height: 168 });
+    expect(screen.getByTestId('SET-01.skeleton.card.1')).toHaveStyle({ height: 336 });
     expect(screen.getByTestId('SET-01.skeleton.card.6')).toHaveStyle({ height: 72 });
     // Konto's group has no label, so its card is the group's only child.
     expect(screen.getByTestId('SET-01.skeleton.group.0').children).toHaveLength(1);
@@ -223,15 +230,18 @@ describe('SET-01 design QA round 1 (M2.8)', () => {
     member();
     mockWindow.current = { width: 390, height: 844, scale: 2, fontScale: 1 };
     await renderScreen(<SettingsScreen />);
+    // M4.10: the identity card stands for Konto (SET-02) without any label above it.
     expect(screen.getByTestId('SET-01.account')).toBeTruthy();
-    expect(screen.getAllByText('Konto')).toHaveLength(1);
-    expect(screen.getByText('Sicherheit')).toBeTruthy();
+    expect(screen.getByTestId('SET-01.accountRow.name')).toHaveTextContent('@lukas.sc');
+    expect(screen.getByText('Konto, Sicherheit & Anmeldung')).toBeTruthy();
+    expect(screen.queryByText('Konto')).toBeNull();
+    expect(screen.getByText('Konto & Sicherheit')).toBeTruthy();
   });
 
   it('DQ-420: on desktop the default detail\'s row is selected in the pane and the detail has no back', async () => {
     mockWindow.current = { width: 1280, height: 800, scale: 1, fontScale: 1 };
     await renderScreen(<SettingsScreen />);
-    // A guest's default detail is Erscheinungsbild.
+    // A guest's default detail is Darstellung.
     expect(screen.getByTestId('SET-01.appearance.body')).toBeSelected();
     expect(screen.getByTestId('SET-01.language.body')).not.toBeSelected();
     expect(screen.getByTestId('SET-01.header')).toBeTruthy();

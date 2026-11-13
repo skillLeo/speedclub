@@ -1,6 +1,6 @@
 @import "tailwindcss" source(none);
 @import "./tokens.generated.css";
-@import "./tailwind-theme.generated.css";
+@import "./tailwind-admin-theme.generated.css";
 @import "./fonts.css";
 
 @source "../js/admin";
@@ -55,7 +55,7 @@
     transform: translateX(var(--reka-tabs-indicator-position));
 }
 
-/* Motion (03 §10): short, functional; all of it off with prefers-reduced-motion and ?qaMotion=off. */
+/* Motion (09 §10.2, ADR-420): effect tokens only (150–200 ms, critically damped, no bounce); off with prefers-reduced-motion and ?qaMotion=off. */
 @keyframes sc-fade-in {
     from { opacity: 0; }
 }
@@ -72,21 +72,18 @@
     from { transform: translateX(-100%); }
 }
 
-@keyframes sc-pulse {
-    50% { background-color: var(--sc-color-skeleton-highlight); }
-}
-
 @keyframes sc-progress {
     from { transform: scaleX(0); }
     to { transform: scaleX(1); }
 }
 
-.sc-fade[data-state="open"] { animation: sc-fade-in 150ms var(--ease-standard); }
-.sc-pop[data-state="open"], .sc-pop:not([data-state]) { animation: sc-pop-in 150ms var(--ease-decelerate); }
-.sc-slide-in[data-state="open"] { animation: sc-slide-in-right 200ms var(--ease-decelerate); }
-.sc-slide-in-left[data-state="open"] { animation: sc-slide-in-left 200ms var(--ease-decelerate); }
-.sc-skeleton { animation: sc-pulse 1.6s ease-in-out infinite; }
-.sc-progress { transform-origin: left; animation: sc-progress 1.2s var(--ease-decelerate) forwards; }
+.sc-fade[data-state="open"] { animation: sc-fade-in var(--sc-effect-fast-duration) var(--sc-effect-fast-easing); }
+.sc-pop[data-state="open"], .sc-pop:not([data-state]) { animation: sc-pop-in var(--sc-effect-fast-duration) var(--sc-effect-default-easing); }
+.sc-slide-in[data-state="open"] { animation: sc-slide-in-right var(--sc-effect-default-duration) var(--sc-effect-default-easing); }
+.sc-slide-in-left[data-state="open"] { animation: sc-slide-in-left var(--sc-effect-default-duration) var(--sc-effect-default-easing); }
+/* Skeletons are a static tone (SKILL §10); content replaces them with the effect.default crossfade. */
+/* design-lint-disable-next-line DL07 -- indeterminate request progress (a 1.2 s fill that stops at full), not a UI transition; no motion token describes it */
+.sc-progress { transform-origin: left; animation: sc-progress 1.2s var(--sc-effect-default-easing) forwards; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }

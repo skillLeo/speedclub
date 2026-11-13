@@ -61,23 +61,37 @@ export const LUKAS = { name: 'Lukas Schneider', username: '@lukas.sc', meta: '@l
 export const SECTIONS = [
   { id: 'typography', title: 'Typografie', hint: 'Schriftstile aus §4' },
   { id: 'colour', title: 'Farben', hint: 'Alle Farb-Tokens des Themes' },
+  { id: 'foundation', title: 'Form und Bewegung', hint: 'Radien, Motion-Tokens, Chrome' },
+  { id: 'motion', title: 'Bewegung', hint: 'Signatur-Bewegungen SM1 bis SM20' },
   { id: 'icons', title: 'Icons', hint: 'Phosphor und Auto-Glyphen' },
   { id: 'buttons', title: 'Buttons', hint: 'Varianten, Größen, Zustände' },
   { id: 'inputs', title: 'Eingaben', hint: 'Textfeld, Suche, Slider, Stepper' },
   { id: 'selection', title: 'Auswahl', hint: 'Chips, Switch, Checkbox, Tabs' },
-  { id: 'badges', title: 'Badges', hint: 'Spec-Chip, Status, Unread, Fortschritt' },
+  { id: 'badges', title: 'Badges', hint: 'Badge, Beispielinhalte, Spec-Chip, Status, Ungelesen' },
   { id: 'avatars', title: 'Avatare', hint: 'Größen und Fallback' },
-  { id: 'cards', title: 'Karten', hint: 'Fahrzeugkarte und Grid-Kachel' },
+  { id: 'cards', title: 'Karten', hint: 'Media-Karten, Fahrzeugkarte, Grid-Kachel' },
   { id: 'rows', title: 'Zeilen', hint: 'Update, Member, Mod, Liste, Besitzer' },
   { id: 'spec', title: 'Technik', hint: 'Spec-Strip und Spec-Zeilen' },
+  { id: 'timeline', title: 'Verlauf', hint: 'Timeline mit Fotos und Vorher/Nachher' },
+  { id: 'buildsheet', title: 'Build-Sheet', hint: 'Mods nach System, Zeilen zum Aufklappen' },
   { id: 'states', title: 'Zustände', hint: 'Skeleton, leer, Fehler, offline' },
   { id: 'qr', title: 'QR-Code', hint: 'Immer Schwarz auf Weiß' },
   { id: 'chat', title: 'Chat', hint: 'Blasen und Composer' },
   { id: 'header', title: 'Header', hint: 'Compact, Large, auf Foto' },
-  { id: 'overlays', title: 'Overlays', hint: 'Sheet, Dialog, Toast, Bildansicht' },
+  { id: 'overlays', title: 'Overlays', hint: 'Sheet, Dialog, Toast, Kontextmenü, Besitzer-Kapsel' },
   { id: 'brand', title: 'Marke', hint: 'Wortmarke und Katakana' },
 ] as const;
 
 export type SectionId = (typeof SECTIONS)[number]['id'];
 
 export const noop = () => undefined;
+
+/**
+ * DQ-909: the colour roles `meta.deprecated.color` in design/tokens/tokens.json still carries, with their replacement. They
+ * stay in the generated themes until their module migrates them, so the colour list marks them "veraltet → Ersatz".
+ * tests/ui/GalleryTokens.test.tsx keeps this map equal to the token file.
+ */
+export const DEPRECATED_COLOURS: Readonly<Record<string, string>> = {
+  'tabBar.background': 'chrome.translucent',
+  'overlay.photoScrimEnd': 'scrim.photoStart → scrim.photoEnd',
+};

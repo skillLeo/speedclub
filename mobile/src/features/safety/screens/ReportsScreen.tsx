@@ -42,13 +42,15 @@ export const TARGET_GLYPHS: Readonly<Record<ReportTargetType, IconName>> = {
   message: 'chat-circle',
   build_update: 'list',
   modification: 'wrench',
+  comment: 'chat-circle',
+  event: 'calendar-blank',
 };
 
 const useStyles = createStyles((t) => ({
   list: { flex: 1 },
   intro: { gap: t.space[16], marginBottom: t.space[8] },
   state: { paddingTop: t.space[32] },
-  // FS-12 group labels (RowGroup): label.s secondary 16 inside the card's edge, 8 above the card, groups 32 apart.
+  // FS-12 group labels (RowGroup): callout secondary 16 inside the card's edge, 8 above the card, groups 32 apart.
   label: { marginBottom: t.space[8], paddingHorizontal: t.space[16] },
   labelMine: { marginTop: t.space[16] },
   labelAbout: { marginTop: t.space[32] },
@@ -74,7 +76,7 @@ const ReportsRow = memo(function ReportsRow({ item, columnStyle, onOpen, onMore,
     case 'header':
       content = (
         <Text
-          variant="labelS"
+          variant="callout"
           color="text.secondary"
           role="heading"
           {...({ 'aria-level': 2 } as object)}
@@ -164,7 +166,7 @@ function ReportsSkeleton() {
     <Skeleton testID={`${ROUTE}.skeleton`}>
       {(['mine', 'about'] as const).map((section) => (
         <View key={section} testID={`${ROUTE}.skeleton.${section}`}>
-          <SkeletonText variant="labelS" width="40%" style={[styles.label, section === 'mine' ? styles.labelMine : styles.labelAbout]} />
+          <SkeletonText variant="callout" width="40%" style={[styles.label, section === 'mine' ? styles.labelMine : styles.labelAbout]} />
           <SkeletonBlock height={size.row.withThumb} corner="md" testID={`${ROUTE}.skeleton.${section}.card`} />
         </View>
       ))}
@@ -259,7 +261,7 @@ export function ReportsScreen() {
             ListHeaderComponent={
               status === 'guest' ? null : (
                 <View style={[frame.columnStyle, styles.intro]}>
-                  <Text variant="bodyDense" color="text.secondary" testID={`${ROUTE}.intro`}>
+                  <Text variant="body" color="text.secondary" testID={`${ROUTE}.intro`}>
                     {t('reports.intro')}
                   </Text>
                   {restricted ? <FormNotice tone="info" message={t('decision.restricted')} testID={`${ROUTE}.restricted`} /> : null}

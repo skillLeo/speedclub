@@ -3,16 +3,17 @@ import { View } from 'react-native';
 import Svg, { Circle, Line, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 
 import { isWeb } from '@/lib/platform';
-import { createStyles, fonts, resolveColor, size, typography, useTheme, type ColorToken } from '@/theme';
+import { createStyles, resolveColor, size, useTheme, type ColorToken } from '@/theme';
 import { Text } from '@/ui';
+import { typeStyle } from '@/ui/Text';
 
 /** How a place on the car reads in QR-03. */
 export type PlacementTone = 'ok' | 'caution' | 'avoid';
 
 export const TONE_COLOR: Readonly<Record<PlacementTone, ColorToken>> = {
-  ok: 'status.success',
-  caution: 'status.warning',
-  avoid: 'status.danger',
+  ok: 'state.success',
+  caution: 'state.warning',
+  avoid: 'accent.fg',
 };
 
 /** The four places of 08_LEGAL_COMPLIANCE §7, in the order of its list. */
@@ -54,7 +55,9 @@ export function PlacementDiagram({ testID }: { testID?: string }) {
   const glass = c('bg.raised');
   const body = c('bg.canvas');
   const tone = (value: PlacementTone) => c(TONE_COLOR[value]);
-  const family = isWeb ? `${typography.labelS.fontFamily}, ${fonts.ui.css}` : typography.labelS.fontFamily;
+  // The face of `callout`: on web its family stack and weight 500 (an embedded face name such as Inter-Medium is no web family
+  // and would fall back to Inter 400); native names the embedded face and sets no weight (rules/mobile.md).
+  const face = typeStyle('callout', 1, isWeb ? 'web' : 'native');
 
   const marker = (x: number, y: number, number: number, value: PlacementTone) => (
     <>
@@ -64,7 +67,8 @@ export function PlacementDiagram({ testID }: { testID?: string }) {
         y={y + MARKER_BASELINE}
         fill={tone(value)}
         fontSize={MARKER_TEXT_SIZE}
-        fontFamily={family}
+        fontFamily={face.fontFamily}
+        fontWeight={isWeb ? face.fontWeight : undefined}
         textAnchor="middle"
       >
         {String(number)}
@@ -112,10 +116,10 @@ export function PlacementDiagram({ testID }: { testID?: string }) {
         </Svg>
       </View>
       <View style={styles.ends} aria-hidden>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {t('placement.front')}
         </Text>
-        <Text variant="supporting" color="text.secondary">
+        <Text variant="callout" color="text.secondary">
           {t('placement.rear')}
         </Text>
       </View>
@@ -134,7 +138,7 @@ export function PlacementMarker({ number, tone, label }: { number: number; tone:
       aria-label={label}
       style={[markerStyles.marker, { borderColor: resolveColor(theme, TONE_COLOR[tone]) }]}
     >
-      <Text variant="labelS" color={TONE_COLOR[tone]} hyphenate={false} selectable={false}>
+      <Text variant="callout" color={TONE_COLOR[tone]} hyphenate={false} selectable={false}>
         {String(number)}
       </Text>
     </View>

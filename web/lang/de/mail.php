@@ -2,6 +2,36 @@
 
 return [
     'code_note' => 'Der Code gilt :minutes Minuten. Du hast das nicht angefordert? Dann kannst du diese E-Mail ignorieren.',
+    // M4.6 passwordless e-mail codes (09 §8.1).
+    'email_code' => [
+        'action' => 'Anmelden',
+        'same_device' => 'Der Button funktioniert nur auf dem Gerät, auf dem du den Code angefordert hast.',
+        'sign_in' => [
+            'subject' => ':code ist dein SPEED CLUB Code',
+            'heading' => 'Dein Code zum Anmelden',
+            'intro' => 'Gib diesen Code in der App ein oder tipp auf „Anmelden“.',
+        ],
+        'sign_up' => [
+            'subject' => ':code ist dein SPEED CLUB Code',
+            'heading' => 'Willkommen im SPEED CLUB',
+            'intro' => 'Mit diesem Code legst du dein Konto an. Gib ihn in der App ein oder tipp auf „Anmelden“.',
+        ],
+        'link' => [
+            'subject' => ':code bestätigt die Verknüpfung',
+            'heading' => ':provider mit deinem Konto verbinden',
+            'intro' => 'Jemand möchte :provider mit deinem SPEED CLUB Konto verbinden. Warst du das, gib diesen Code in der App ein. Sonst ignorier diese E-Mail, dann bleibt alles, wie es ist.',
+        ],
+        'reauth' => [
+            'subject' => ':code ist dein Bestätigungscode',
+            'heading' => 'Bestätige, dass du es bist',
+            'intro' => 'Du änderst gerade etwas an der Sicherheit deines Kontos. Gib diesen Code in der App ein.',
+        ],
+        'change_email' => [
+            'subject' => ':code bestätigt deine neue E-Mail-Adresse',
+            'heading' => 'Neue E-Mail-Adresse bestätigen',
+            'intro' => 'Gib diesen Code in der App ein, um deine neue Adresse zu bestätigen.',
+        ],
+    ],
     'verification' => [
         'subject' => ':code ist dein SPEED CLUB Code',
         'heading' => 'Bestätige deine E-Mail-Adresse',
@@ -20,7 +50,7 @@ return [
         'intro' => 'Jemand wollte mit dieser E-Mail-Adresse ein Konto erstellen. Das Konto gibt es bereits. Wenn du das warst, melde dich an oder setze dein Passwort zurück.',
         'sign_in' => 'Anmelden',
         'reset' => 'Passwort vergessen',
-        'note' => 'Du warst das nicht? Dann musst du nichts tun. An deinem Konto hat sich nichts geändert.',
+        'note' => 'Warst du das nicht? Dann musst du nichts tun. An deinem Konto hat sich nichts geändert.',
     ],
     'closing' => [
         'subject' => 'Dein SPEED CLUB Konto wird gerade gelöscht',
@@ -59,7 +89,51 @@ return [
     'security' => [
         'browser' => 'einem Browser',
         'action' => 'Passwort zurücksetzen',
-        'note' => 'Warst du das nicht? Dann setz dein Passwort sofort zurück. Damit werden alle Geräte abgemeldet.',
+        'note' => 'Warst du das nicht? Tipp in der App unter Einstellungen › Sicherheit auf „Das war ich nicht“. Wir melden dann alle Geräte ab und unser Support meldet sich bei dir.',
+        // M4.7 (09 §8.4): login alerts and new ways in.
+        'when' => 'Zeitpunkt: :time',
+        'when_where' => 'Zeitpunkt: :time · in der Nähe von :place',
+        'secure_action' => 'Das war ich nicht',
+        'secure_note' => 'Warst du das nicht? Tipp auf „Das war ich nicht“. Wir melden dann alle Geräte ab und unser Support meldet sich bei dir. Warst du es selbst, musst du nichts tun.',
+        'removed' => 'Wir haben entfernt, was nach der gemeldeten Anmeldung hinzugekommen ist: :items. War etwas davon von dir, richte es nach der Anmeldung neu ein.',
+        'account_secured' => [
+            'subject' => 'Dein Konto wurde gesichert',
+            'heading' => 'Wir haben dein Konto gesichert',
+            'intro' => 'Du hast eine Anmeldung als „Das war ich nicht“ gemeldet. Alle Geräte und Browser sind jetzt abgemeldet. Deine Anfrage hat die Nummer :reference; unser Support meldet sich bei dir.',
+            'after' => 'Melde dich wieder an und ändere dein Passwort, falls du eins hast. Prüfe unter Einstellungen › Anmeldung & Passkeys, welche Anmeldewege mit deinem Konto verbunden sind.',
+            'note' => 'Fragen? Schreib uns an :support.',
+            'action' => 'Support schreiben',
+        ],
+        'email_code_locked' => [
+            'subject' => 'Zu viele falsche Codes',
+            'heading' => 'Anmeldung mit Code vorübergehend gesperrt',
+            'intro' => 'Für dein Konto wurde zu oft ein falscher Anmeldecode eingegeben. Zu deinem Schutz nehmen wir für 15 Minuten keine Codes an.',
+        ],
+        'provider_linked' => [
+            'subject' => 'Neue Anmeldemethode verbunden',
+            'heading' => 'Eine Anmeldemethode wurde verbunden',
+            'intro' => 'Mit deinem Konto ist jetzt eine neue Anmeldemethode verbunden (:device).',
+        ],
+        'provider_unlinked' => [
+            'subject' => 'Anmeldemethode entfernt',
+            'heading' => 'Eine Anmeldemethode wurde entfernt',
+            'intro' => 'Von deinem Konto wurde eine Anmeldemethode entfernt (:device).',
+        ],
+        'passkey_added' => [
+            'subject' => 'Neuer Passkey für dein Konto',
+            'heading' => 'Ein Passkey wurde hinzugefügt',
+            'intro' => 'Für dein Konto wurde gerade ein Passkey angelegt (:device).',
+        ],
+        'passkey_removed' => [
+            'subject' => 'Passkey entfernt',
+            'heading' => 'Ein Passkey wurde entfernt',
+            'intro' => 'Von deinem Konto wurde gerade ein Passkey entfernt (:device).',
+        ],
+        'passkey_rejected' => [
+            'subject' => 'Passkey-Anmeldung abgelehnt',
+            'heading' => 'Wir haben eine Passkey-Anmeldung abgelehnt',
+            'intro' => 'Bei einer Anmeldung mit deinem Passkey (:device) sah es so aus, als käme sie von einer Kopie. Wir haben sie abgelehnt. Entferne den Passkey unter Einstellungen › Anmeldung & Passkeys und leg ihn neu an.',
+        ],
         'new_device' => [
             'subject' => 'Neue Anmeldung bei SPEED CLUB',
             'heading' => 'Neue Anmeldung auf einem Gerät',
@@ -80,7 +154,7 @@ return [
             // M3.2: support changed it after checking the member's identity; both addresses get this.
             'intro_staff' => 'Unser Support-Team hat die E-Mail-Adresse deines Kontos auf deinen Wunsch geändert, nachdem wir deine Identität geprüft haben. Diese Nachricht geht an die bisherige und an die neue Adresse.',
             // The reset code would go to the new, maybe hijacked address: this mail sends the member to support instead.
-            'note' => 'Warst du das nicht? Dann schreib uns sofort an :support. Wir sichern dein Konto. Setz dein Passwort in diesem Fall nicht selbst zurück: Der Code ginge an die neue Adresse.',
+            'note' => 'Warst du das nicht? Setz dein Passwort in diesem Fall nicht selbst zurück: Der Code ginge an die neue Adresse. Tipp stattdessen in der App unter Einstellungen › Sicherheit auf „Das war ich nicht“ oder schreib uns an :support. Wir sichern dann dein Konto.',
             'action' => 'Support schreiben',
         ],
         'two_factor_changed' => [
@@ -88,10 +162,10 @@ return [
             'heading' => 'Dein Zwei-Faktor-Schutz wurde geändert',
             'intro' => 'Der Zwei-Faktor-Schutz deines Kontos wurde gerade ein- oder ausgeschaltet.',
             'intro_enabled' => 'Der Zwei-Faktor-Schutz deines Kontos ist jetzt eingeschaltet. Bei jeder Anmeldung fragen wir nach einem Code aus deiner Authenticator-App.',
-            'intro_disabled' => 'Der Zwei-Faktor-Schutz deines Kontos wurde gerade ausgeschaltet. Für die Anmeldung reicht jetzt wieder dein Passwort.',
+            'intro_disabled' => 'Der Zwei-Faktor-Schutz deines Kontos wurde gerade ausgeschaltet. Für die Anmeldung reicht jetzt wieder deine Anmeldung ohne Code.',
             'intro_recovery_codes' => 'Für dein Konto wurden gerade neue Wiederherstellungscodes erstellt. Die alten gelten nicht mehr.',
             // M3.2: support reset it (four-eyes) after checking the member's identity.
-            'intro_reset_by_staff' => 'Unser Support-Team hat den Zwei-Faktor-Schutz deines Kontos auf deinen Wunsch zurückgesetzt. Für die Anmeldung reicht jetzt wieder dein Passwort; du kannst den Schutz unter Einstellungen › Sicherheit neu einrichten.',
+            'intro_reset_by_staff' => 'Unser Support-Team hat den Zwei-Faktor-Schutz deines Kontos auf deinen Wunsch zurückgesetzt. Für die Anmeldung reicht jetzt wieder deine Anmeldung ohne Code; du kannst den Schutz unter Einstellungen › Sicherheit neu einrichten.',
         ],
         'verification_failed' => [
             'subject' => 'Fehlgeschlagener Bestätigungsversuch',
@@ -111,7 +185,7 @@ return [
             'heading' => 'Geräte wurden von deinem Konto abgemeldet',
             'intro' => 'Auf :device wurden gerade andere Geräte oder Browser von deinem Konto abgemeldet.',
             // M3.2: support signed every device out.
-            'intro_staff' => 'Unser Team hat dein Konto zu deinem Schutz auf allen Geräten und in allen Browsern abgemeldet. Melde dich mit deinem Passwort wieder an.',
+            'intro_staff' => 'Unser Team hat dein Konto zu deinem Schutz auf allen Geräten und in allen Browsern abgemeldet. Melde dich wieder an.',
         ],
         'deletion_requested' => [
             'subject' => 'Dein Konto wird gelöscht',

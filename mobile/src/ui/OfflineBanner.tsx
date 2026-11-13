@@ -29,7 +29,7 @@ export function OfflineBanner({ label, style, testID }: OfflineBannerProps) {
   const theme = useTheme();
   const { gutter } = useBreakpoint();
   const [textHeight, setTextHeight] = useState(0);
-  const wrapped = textHeight > typography.supporting.lineHeight * theme.fontScale * WRAPPED_LINES;
+  const wrapped = textHeight > typography.callout.lineHeight * theme.fontScale * WRAPPED_LINES;
   return (
     <View
       role="status"
@@ -38,7 +38,7 @@ export function OfflineBanner({ label, style, testID }: OfflineBannerProps) {
       style={[styles.banner, wrapped ? styles.bannerWrapped : null, { paddingLeft: gutter, paddingRight: gutter }, style]}
     >
       <Text
-        variant="supporting"
+        variant="callout"
         hyphenate={false}
         onLayout={(event) => setTextHeight(event.nativeEvent.layout.height)}
         testID={testID ? `${testID}.text` : undefined}

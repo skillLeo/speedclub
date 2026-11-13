@@ -2,7 +2,8 @@ import { Image } from 'expo-image';
 import { useMemo, useState } from 'react';
 import { PixelRatio, StyleSheet, View } from 'react-native';
 
-import { createStyles, useMotion } from '@/theme';
+import { createStyles } from '@/theme';
+import { motionDuration, useMotionPreference } from '@/ui/motion';
 import { Icon, type PhotoAspect } from '@/ui';
 import { useImagePlaceholder } from '@/ui/imagePlaceholder';
 import { ratioOf } from '@/ui/Photo';
@@ -42,7 +43,7 @@ export type ChatPhotoProps = {
  */
 export function ChatPhoto({ uri, blurhash, aspect, label, onFailed, testID }: ChatPhotoProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   // The failed URL and not a flag: a fresh URL after the refresh shows again, and FlashList recycles this view.
   const [failed, setFailed] = useState<string | null>(null);
   const source = useMemo(() => (uri ? { uri } : null), [uri]);
@@ -57,7 +58,7 @@ export function ChatPhoto({ uri, blurhash, aspect, label, onFailed, testID }: Ch
           placeholderContentFit="cover"
           contentFit="cover"
           cachePolicy="memory"
-          transition={motion.reduced ? null : motion.duration.small}
+          transition={motion.reduced ? null : motionDuration('effect.default')}
           recyclingKey={uri ?? undefined}
           accessible
           alt={label}

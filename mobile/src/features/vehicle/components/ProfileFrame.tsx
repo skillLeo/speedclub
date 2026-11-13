@@ -5,9 +5,10 @@ import { useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 import { useTabScrollToTop } from '@/features/shell/retap';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
-import { useTabBarPadding } from '@/features/shell/tabBarLayout';
+import { useTabBarInset, useTabBarPadding } from '@/features/shell/tabBarLayout';
 import { isWeb } from '@/lib/platform';
-import { createStyles, layout as layoutTokens, size, useMotion, zIndex } from '@/theme';
+import { createStyles, layout as layoutTokens, size, space, zIndex } from '@/theme';
+import { useMotionPreference } from '@/ui/motion';
 import { Header, Screen, type HeaderAction } from '@/ui';
 import type { CollapsingHeader } from '@/ui/useCollapsingHeader';
 
@@ -21,6 +22,9 @@ const useStyles = createStyles(() => ({
   content: { flexGrow: 1 },
   overlay: { left: 0, pointerEvents: 'box-none', position: 'absolute', right: 0, top: 0, zIndex: zIndex.header },
   overlayHeader: { position: 'relative' },
+  // DQ-1049: the capsule floats centred above the tab bar (09 §5 OwnerCapsule); the scroll content ends with room for it.
+  floating: { left: 0, pointerEvents: 'box-none', position: 'absolute', right: 0, zIndex: zIndex.sticky },
+  floatingRoom: { height: size.button.s + 2 * space[4] + 2 * space[12] },
 }));
 
 /** The width of the content area before its first layout: the window minus the rail or the sidebar. */
@@ -50,6 +54,10 @@ export type ProfileFrameProps = {
   children: ReactNode;
   /** Overlays of the screen: viewer, sheets. */
   overlays?: ReactNode;
+  /** DQ-1068: a read-only page's offline line ("Offline – zuletzt aktualisiert vor 5 Min."), not the outbox copy. */
+  offlineLabel?: string;
+  /** DQ-1049: the owner's floating capsule, above the tab bar and the safe area; the content gets room for it at its end. */
+  floating?: ReactNode;
 };
 
 /**
@@ -70,10 +78,13 @@ export function ProfileFrame({
   onOverlayHeight,
   children,
   overlays,
+  offlineLabel,
+  floating,
 }: ProfileFrameProps) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const padding = useTabBarPadding();
+  const tabBarInset = useTabBarInset();
 
   useTabScrollToTop(() => {
     if (header.scrollY.get() <= 0) return false;
@@ -96,7 +107,7 @@ export function ProfileFrame({
             actions={actions}
             testID={`${routeId}.header`}
           />
-          <ShellOfflineBanner />
+          <ShellOfflineBanner label={offlineLabel} />
         </>
       )}
       <View style={styles.body} onLayout={(event: LayoutChangeEvent) => onWidth?.(event.nativeEvent.layout.width)}>
@@ -108,6 +119,7 @@ export function ProfileFrame({
           testID={`${routeId}.scroll`}
         >
           {children}
+          {floating ? <View style={styles.floatingRoom} /> : null}
         </Animated.ScrollView>
         {overHero ? (
           <View style={styles.overlay} onLayout={(event: LayoutChangeEvent) => onOverlayHeight?.(event.nativeEvent.layout.height)}>
@@ -121,9 +133,10 @@ export function ProfileFrame({
               style={styles.overlayHeader}
               testID={`${routeId}.header`}
             />
-            <ShellOfflineBanner />
+            <ShellOfflineBanner label={offlineLabel} />
           </View>
         ) : null}
+        {floating ? <View style={[styles.floating, { bottom: tabBarInset + space[12] }]}>{floating}</View> : null}
       </View>
       {overlays}
     </Screen>

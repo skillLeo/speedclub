@@ -101,7 +101,7 @@ function readable(payload: Record<string, unknown> | null | undefined): Record<s
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('content.versions.error')" :body="trans('ui.state.error_body')" test-id="ADM-35.error" @retry="router.reload()" />
         <template v-else>
             <div v-if="draft && pageState === 'ready'" class="flex flex-wrap items-center justify-between gap-12 rounded-sm border border-line bg-surface px-16 py-12" data-testid="ADM-35.draft">
-                <p class="text-supporting text-ink-2">{{ trans('content.versions.draft', { version: String(draft.version), name: draft.author ?? trans('config.draft.someone'), date: formatDateTime(draft.updated_at) }) }}</p>
+                <p class="text-admin-base text-ink-2">{{ trans('content.versions.draft', { version: String(draft.version), name: draft.author ?? trans('config.draft.someone'), date: formatDateTime(draft.updated_at) }) }}</p>
                 <Button size="sm" variant="secondary" :icon="PhPencilSimple" :href="editHref">{{ trans('content.versions.open_editor') }}</Button>
             </div>
 
@@ -109,10 +109,10 @@ function readable(payload: Record<string, unknown> | null | undefined): Record<s
                 <section class="w-full min-w-0 wide:w-560" :aria-label="trans('content.versions.list')">
                     <EmptyQueue v-if="pageState !== 'loading' && versions.length === 0" variant="first" :icon="PhClockCounterClockwise" :title="trans('content.versions.empty_title')" :body="trans('content.versions.empty_body')" data-testid="ADM-35.empty" />
                     <ScrollRegion v-else :label="trans('content.versions.list')">
-                        <table class="w-full text-supporting" data-testid="ADM-35.table">
+                        <table class="w-full text-admin-base" data-testid="ADM-35.table">
                             <caption class="sr-only">{{ trans('content.versions.list') }}</caption>
                             <thead>
-                                <tr class="h-40 border-b border-line text-left text-label-s text-ink-2">
+                                <tr class="h-40 border-b border-line text-left text-admin-base-strong text-ink-2">
                                     <th scope="col" class="w-px whitespace-nowrap px-12 text-right">{{ trans('content.versions.columns.version') }}</th>
                                     <th scope="col" class="px-12">{{ trans('content.versions.columns.status') }}</th>
                                     <th scope="col" class="px-12">{{ trans('content.versions.columns.published') }}</th>
@@ -132,7 +132,7 @@ function readable(payload: Record<string, unknown> | null | undefined): Record<s
                                     <td class="whitespace-nowrap px-12"><StatusPill :tone="row.status === 'published' ? 'success' : 'neutral'" :label="trans(`content.versions.status.${row.status}`)" /></td>
                                     <td class="px-12 py-4">
                                         <span class="block whitespace-nowrap tabular-nums text-ink-2">{{ formatDateTime(row.published_at) }}</span>
-                                        <span class="block text-helper text-ink-2">{{ row.published_by ?? trans('config.draft.person') }}</span>
+                                        <span class="block text-admin-base text-ink-2">{{ row.published_by ?? trans('config.draft.person') }}</span>
                                     </td>
                                     <td class="px-12 py-4 text-ink-2">{{ row.reason ?? '–' }}</td>
                                 </tr>
@@ -148,13 +148,13 @@ function readable(payload: Record<string, unknown> | null | undefined): Record<s
                 <section v-else-if="chosen" class="flex w-full min-w-0 flex-1 flex-col gap-16 rounded-sm border border-line bg-surface p-16" :aria-label="trans('content.versions.detail')" data-testid="ADM-35.detail">
                     <div class="flex flex-wrap items-start justify-between gap-12">
                         <div class="flex min-w-0 flex-col gap-4">
-                            <h2 class="text-title-s text-ink">{{ chosen.previous ? trans('content.versions.compare', { version: String(chosen.version), previous: String(chosen.previous.version) }) : trans('content.versions.first', { version: String(chosen.version) }) }}</h2>
-                            <p class="text-supporting text-ink-2">{{ chosen.reason ?? trans('content.versions.no_reason') }}</p>
+                            <h2 class="text-headline text-ink">{{ chosen.previous ? trans('content.versions.compare', { version: String(chosen.version), previous: String(chosen.previous.version) }) : trans('content.versions.first', { version: String(chosen.version) }) }}</h2>
+                            <p class="text-admin-base text-ink-2">{{ chosen.reason ?? trans('content.versions.no_reason') }}</p>
                         </div>
                         <Button v-if="mayRollback" size="sm" variant="secondary" :icon="PhArrowCounterClockwise" data-testid="ADM-35.rollback" @click="rollbackOpen = true">{{ trans('content.versions.rollback', { version: String(chosen.version) }) }}</Button>
                     </div>
                     <DiffViewer :before="chosen.previous ? readable(chosen.previous.payload) : {}" :after="readable(chosen.payload)" changed-only test-id="ADM-35.diff" />
-                    <p v-if="!canRollback && chosen.status === 'superseded'" class="text-helper text-ink-3" data-testid="ADM-35.elsewhere">
+                    <p v-if="!canRollback && chosen.status === 'superseded'" class="text-admin-base text-ink-3" data-testid="ADM-35.elsewhere">
                         {{ trans('content.versions.change_elsewhere') }}
                         <Link :href="editHref" :class="[focusRing, 'rounded-xs text-ink underline']">{{ trans(`content.versions.keys.${configKey}`) }}</Link>
                     </p>

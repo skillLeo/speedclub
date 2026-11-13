@@ -117,14 +117,14 @@ const formId = `${props.testId}-form`;
                 <dl class="flex flex-wrap gap-x-24 gap-y-8" :data-testid="`${testId}.facts`">
                     <div v-for="fact in facts" :key="fact.key" class="flex flex-col gap-2">
                         <dt class="text-caption text-ink-3">{{ fact.label }}</dt>
-                        <dd class="text-label-s text-ink tabular-nums">{{ formatNumber(fact.value) }}</dd>
+                        <dd class="text-admin-base-strong text-ink tabular-nums">{{ formatNumber(fact.value) }}</dd>
                     </div>
                 </dl>
-                <p v-if="impact.candidates.length === 0" class="text-supporting text-ink-2" :data-testid="`${testId}.no-candidates`">{{ trans(`catalog.merge.no_candidates.${level}`) }}</p>
+                <p v-if="impact.candidates.length === 0" class="text-admin-base text-ink-2" :data-testid="`${testId}.no-candidates`">{{ trans(`catalog.merge.no_candidates.${level}`) }}</p>
                 <Field v-else :label="trans('catalog.merge.survivor')" :hint="trans('catalog.merge.survivor_hint')" required>
                     <Combobox v-model="target" :options="options" :placeholder="trans('catalog.merge.survivor_placeholder')" :data-testid="`${testId}.survivor`" />
                 </Field>
-                <p v-if="chosen" class="rounded-sm border border-line px-12 py-8 text-supporting text-ink-2" :data-testid="`${testId}.outcome`">
+                <p v-if="chosen" class="rounded-sm border border-line px-12 py-8 text-admin-base text-ink-2" :data-testid="`${testId}.outcome`">
                     {{
                         transChoice(level === 'brand' ? 'catalog.merge.outcome_brand' : 'catalog.merge.outcome', moving, {
                             count: formatNumber(moving),

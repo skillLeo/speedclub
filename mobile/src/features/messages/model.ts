@@ -15,8 +15,11 @@ export type ChatMedia = components['schemas']['ChatMediaResource'];
 export type Folder = 'chats' | 'requests' | 'archived';
 export type MessageKind = 'text' | 'photo' | 'vehicle';
 
-/** §2 `messages/{id}/reactions`: six fixed keys, one per member and message. */
-export const REACTION_KEYS = ['thumbs_up', 'heart', 'fire', 'laugh', 'wow', 'flag'] as const;
+/**
+ * §2 `messages/{id}/reactions`: fixed keys, one per member and message. The six v1 keys and, since M4.11, the four build reactions
+ * (Stark · Sauber · Tief · Laut), which a message shows as their words like the v1 keys without a glyph.
+ */
+export const REACTION_KEYS = ['thumbs_up', 'heart', 'fire', 'laugh', 'wow', 'flag', 'stark', 'sauber', 'tief', 'laut'] as const;
 export type ReactionKey = (typeof REACTION_KEYS)[number];
 
 export function isReactionKey(value: unknown): value is ReactionKey {
@@ -30,6 +33,19 @@ export type ChatMember = {
   username: string;
   displayName: string | null;
   avatar: MessageMedia | null;
+  /** The member's main car cover for the avatar's car badge (09 §7.8); lane B gap `main_vehicle_cover`, read when present. */
+  carCover?: MessageMedia | null;
+  /**
+   * DQ-1086: the member's main build for "fährt BMW M3" under the name; null without a public build (the @handle then).
+   * Lane B `main_vehicle {slug, title, full_title, is_sample}`, read when present.
+   */
+  mainVehicle?: ChatMemberVehicle | null;
+};
+
+export type ChatMemberVehicle = {
+  slug: string;
+  /** Make and model: "BMW M3". */
+  title: string;
 };
 
 /** A shared vehicle: the context card, a vehicle message, MSG-05's shared vehicle. */
@@ -41,6 +57,9 @@ export type ChatVehicle = {
   cover: MessageMedia | null;
   /** "lukas.sc": the context card says "Fahrzeug von @lukas.sc". Null when the owner is not shown. */
   ownerUsername: string | null;
+  /** DQ-1086 spec mini-line ("510 PS · 650 Nm"); read when the server sends `power_ps` / `torque_nm`, else absent. */
+  powerPs?: number | null;
+  torqueNm?: number | null;
 };
 
 /**
@@ -57,6 +76,20 @@ export type DeliveryFailure = {
   message: string;
   /** Seconds from `Retry-After`, for the automatic retry. */
   retryAfter?: number | null;
+};
+
+/**
+ * 09 §7.8 swipe-to-reply (flag `msg_replies`): the message a reply quotes, as the quote bar and the bubble show it. Lane B gap:
+ * `reply_to_id` on send and `reply_to {id, type, body, is_mine}` on MessageResource; until then the flag stays off.
+ */
+export type ReplyQuote = {
+  id: string;
+  mine: boolean;
+  kind: MessageKind;
+  /** The start of a text; null for a photo or a vehicle, which the quote names instead. */
+  excerpt: string | null;
+  /** False when the answered message was deleted or is no longer visible (`reply_to.available`); the quote then says so. */
+  available?: boolean;
 };
 
 export type ThreadMessage = {
@@ -81,6 +114,8 @@ export type ThreadMessage = {
   reactions: readonly MessageReaction[];
   delivery: Delivery;
   failure: DeliveryFailure | null;
+  /** The message this one answers (flag `msg_replies`). */
+  replyTo?: ReplyQuote | null;
 };
 
 export type MessagePreview = {
@@ -154,6 +189,19 @@ export function isMuted(conversation: Pick<ConversationSummary, 'mutedUntil' | '
 export function compareIds(a: string, b: string): number {
   if (a === b) return 0;
   return a < b ? -1 : 1;
+}
+
+/**
+ * The newest text message of the other member that the server has (its ULID is the latest), or null: what `qaOpen=actions`
+ * opens the actions sheet for, where "Übersetzen" can be offered (MSG-02-translate capture).
+ */
+export function newestReceivedText(messages: readonly ThreadMessage[]): ThreadMessage | null {
+  let newest: ThreadMessage | null = null;
+  for (const message of messages) {
+    if (message.mine || message.kind !== 'text' || !message.body || !message.id) continue;
+    if (!newest?.id || compareIds(message.id, newest.id) > 0) newest = message;
+  }
+  return newest;
 }
 
 /** Inbox order (contract §2): pinned first, then the latest message. */

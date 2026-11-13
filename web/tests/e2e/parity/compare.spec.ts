@@ -78,6 +78,32 @@ test.describe('parity comparison', () => {
     expect(result.regions[0]?.pixelsOk).toBe(false);
   });
 
+  test('a region is captured clear of a sticky bar, and one that stays covered fails', async ({ browser }) => {
+    // A 300-high viewport with the spec region at 48…148: a fixed bar over the bottom 180 covers it wherever it scrolls.
+    const bar = '<div data-testid="r.bar" style="position:fixed;left:0;right:0;bottom:0;height:180px;background:#c8102e"></div>';
+    const tall = '<div style="height:600px"></div>';
+    const a = await open(browser, html('Titel', SPEC).replace('</body>', `${tall}</body>`));
+    const b = await open(browser, html('Titel', SPEC).replace('</body>', `${tall}<div data-testid="r.bar" style="position:fixed;left:0;right:0;bottom:0;height:60px;background:#c8102e"></div></body>`));
+    const cleared = await compareParity(a, b, { regions: ['r.spec'] });
+    expect(cleared.regions[0]?.occludedBy).toEqual([]);
+    expect(cleared.passed).toBe(true);
+
+    const c = await open(browser, html('Titel', SPEC).replace('</body>', `${bar}</body>`));
+    const covered = await compareParity(a, c, { regions: ['r.spec'] });
+    expect(covered.regions[0]?.occludedBy).toEqual(['app: r.bar']);
+    expect(covered.passed).toBe(false);
+  });
+
+  test('floating chrome named in `chrome` is left out of the capture on both sides, and only that', async ({ browser }) => {
+    const chip = '<span data-testid="r.chip" style="position:absolute;left:8px;top:8px;width:44px;height:44px;border-radius:22px;background:#c8102e"></span>';
+    const a = await open(browser, html('Titel', SPEC));
+    const b = await open(browser, html('Titel', `${SPEC}${chip}`, '[data-testid="r.spec"] { position: relative; }'));
+    const without = await compareParity(a, b, { regions: ['r.spec'] });
+    expect(without.regions[0]?.pixelDiff).toBeGreaterThan(0);
+    const hidden = await compareParity(a, b, { regions: ['r.spec'], chrome: ['[data-testid="r.chip"]'] });
+    expect(hidden.regions[0]?.pixelDiff).toBe(0);
+  });
+
   test('a missing region fails instead of passing silently', async ({ browser }) => {
     const a = await open(browser, html('Titel', SPEC));
     const b = await open(browser, '<!doctype html><title>x</title><p>nichts</p>');

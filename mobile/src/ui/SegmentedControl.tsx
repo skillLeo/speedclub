@@ -3,8 +3,9 @@ import { ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { haptics } from '@/lib/haptics';
-import { createStyles, size, space, useMotion } from '@/theme';
+import { createStyles, size, space } from '@/theme';
 
+import { useMotionPreference } from './motion';
 import { PressableScale } from './PressableScale';
 import { WithoutForcedState } from './qaVisualState';
 import { useStacksAtFontScale } from './rowParts';
@@ -69,7 +70,7 @@ const useStyles = createStyles((t) => ({
 }));
 
 /**
- * §8 segmented control: 36 high, radius 8, a selected pill that slides with spring.snappy, selection haptic. The pill
+ * §8 segmented control: 36 high, radius 8, a selected pill that slides with spring.fast, selection haptic. The pill
  * moves with transform only; between differently wide segments at a large font its width switches at the start.
  */
 export function SegmentedControl<T extends string>({
@@ -84,7 +85,7 @@ export function SegmentedControl<T extends string>({
   testID,
 }: SegmentedControlProps<T>) {
   const styles = useStyles();
-  const motion = useMotion();
+  const motion = useMotionPreference();
   const [width, setWidth] = useState(0);
   const count = options.length;
   const selectedIndex = Math.max(
@@ -105,7 +106,7 @@ export function SegmentedControl<T extends string>({
 
   useEffect(() => {
     // Only a change of selection slides. A layout change, including the first one, places the pill directly.
-    pillX.set(lastIndex.current === selectedIndex ? targetX : motion.springTo(targetX));
+    pillX.set(lastIndex.current === selectedIndex ? targetX : motion.springTo(targetX, 'fast'));
     pillWidth.set(targetWidth);
     lastIndex.current = selectedIndex;
   }, [motion, pillWidth, pillX, selectedIndex, targetWidth, targetX]);
@@ -155,7 +156,7 @@ export function SegmentedControl<T extends string>({
               style={natural ? styles.segmentNatural : styles.segment}
               contentStyle={styles.visual}
             >
-              <Text variant="labelS" color={color} selectable={false} hyphenate={false} style={styles.label}>
+              <Text variant="callout" color={color} selectable={false} hyphenate={false} style={styles.label}>
                 {option.label}
               </Text>
             </PressableScale>

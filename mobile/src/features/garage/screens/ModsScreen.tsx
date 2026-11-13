@@ -19,8 +19,8 @@ import { paramOf, useBack } from '@/features/vehicle/navigation';
 import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
-import { createStyles, size, space, useBreakpoint } from '@/theme';
-import { Button, DiscardGuardDialog, EmptyState, Header, ModRow, Screen, Skeleton, SkeletonText, StatusPill, Text, toast, type HeaderAction } from '@/ui';
+import { createStyles, size, useBreakpoint } from '@/theme';
+import { BuildSheetRow, Button, DiscardGuardDialog, EmptyState, Header, Screen, Skeleton, SkeletonText, StatusPill, Text, toast, type HeaderAction } from '@/ui';
 
 import { CategorySheet } from '../components/CategorySheet';
 import { FORM_MAX_WIDTH, LoadErrorState, RestrictedNotice, SignInState, useGarageAccess, usePushedHeaderWidth, HEADER_TEXT_ACTION } from '../components/frames';
@@ -65,7 +65,8 @@ const useStyles = createStyles((t) => ({
   sortRow: { alignItems: 'center', backgroundColor: t.color.bg.surface, flexDirection: 'row', gap: t.space[12], height: SORT_ROW, paddingLeft: t.space[16], paddingRight: t.space[4] },
   sortRowActive: { backgroundColor: t.color.bg.raised },
   sortText: { flex: 1, minWidth: 0 },
-  skeletonRow: { justifyContent: 'center', minHeight: t.size.row.single, paddingHorizontal: t.space[16] },
+  // ModRow 2.0's height (BuildSheet): the skeleton keeps the loaded rows' geometry.
+  skeletonRow: { justifyContent: 'center', minHeight: t.size.row.mod, paddingHorizontal: t.space[16] },
 }));
 
 const ModItem = memo(function ModItem({ mod, first, last, onOpen }: { mod: OwnerMod; first: boolean; last: boolean; onOpen: (mod: OwnerMod) => void }) {
@@ -73,16 +74,20 @@ const ModItem = memo(function ModItem({ mod, first, last, onOpen }: { mod: Owner
   const legalPill = useLegalPill();
   return (
     <View style={[styles.card, first ? styles.first : null, last ? styles.last : null]}>
-      <ModRow
-        icon={categoryIcon(mod.category.icon)}
-        name={mod.title}
-        values={modValues(mod)}
-        status={mod.status_label}
-        {...legalPill(mod)}
-        onPress={() => onOpen(mod)}
-        inset={space[16]}
+      {/* DQ-1072: the owner's list uses VEH-01's ModRow 2.0 (40 glyph tile, brand caption, pills under the value). */}
+      <BuildSheetRow
+        mod={{
+          key: mod.id,
+          icon: categoryIcon(mod.category.icon),
+          name: mod.title,
+          brand: mod.brand ?? null,
+          ...(modValues(mod) ? { values: modValues(mod) } : {}),
+          status: mod.status_label,
+          ...legalPill(mod),
+          onPress: () => onOpen(mod),
+          testID: `${ROUTE}.mod.${mod.id}`,
+        }}
         divider={!last}
-        testID={`${ROUTE}.mod.${mod.id}`}
       />
     </View>
   );
@@ -93,7 +98,7 @@ function ModsSkeleton() {
   return (
     <Skeleton testID={`${ROUTE}.skeleton`}>
       <View style={styles.header}>
-        <SkeletonText variant="titleS" width="40%" />
+        <SkeletonText variant="headline" width="40%" />
       </View>
       <View style={[styles.card, styles.first, styles.last]}>
         {[0, 1, 2].map((index) => (
@@ -202,7 +207,7 @@ export function ModsScreen() {
     <View style={[styles.column, styles.top]}>
       {access.restriction ? <RestrictedNotice message={access.restriction} testID={`${ROUTE}.restricted`} /> : null}
       {vehicle.data ? (
-        <Text variant="supporting" color="text.secondary" testID={`${ROUTE}.vehicle`}>
+        <Text variant="callout" color="text.secondary" testID={`${ROUTE}.vehicle`}>
           {vehicle.data.full_title}
         </Text>
       ) : null}
@@ -216,7 +221,7 @@ export function ModsScreen() {
       {sorting ? (
         <ScrollView scrollEnabled={!dragging} style={styles.list} contentContainerStyle={{ paddingHorizontal: gutter, paddingBottom: inset }} testID={`${ROUTE}.sortList`}>
           <View style={styles.column}>
-            <Text variant="supporting" color="text.secondary" style={styles.top} testID={`${ROUTE}.sortHint`}>
+            <Text variant="callout" color="text.secondary" style={styles.top} testID={`${ROUTE}.sortHint`}>
               {isWeb ? t('mods.sortHintWeb') : t('mods.sortHint')}
             </Text>
             {groups.map((group) => (
@@ -262,7 +267,7 @@ export function ModsScreen() {
           ListFooterComponent={
             <View style={[styles.column, styles.end]}>
               {statesLegal && !state ? (
-                <Text variant="helper" color="text.tertiary" style={styles.disclaimer} testID={`${ROUTE}.legalDisclaimer`}>
+                <Text variant="caption" color="text.tertiary" style={styles.disclaimer} testID={`${ROUTE}.legalDisclaimer`}>
                   {t('mods.legalStatusHelper')}
                 </Text>
               ) : null}

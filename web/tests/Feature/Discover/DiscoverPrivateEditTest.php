@@ -67,6 +67,9 @@ it('keeps a build where it was after an edit nobody else can read', function (ar
     'notes and a private cost' => [['notes' => 'nur für mich', 'cost_cents' => 4200]],
     'notes alone' => [['notes' => 'nur für mich']],
     'a private cost alone' => [['cost_cents' => 4200]],
+    // M4.9 ruling: costs are never public, so an older app's cost_public changes nothing others read.
+    'the cost made public (ignored)' => [['cost_public' => true]],
+    'a cost with cost_public (ignored)' => [['cost_public' => true, 'cost_cents' => 4200]],
     'the whole form again, fields in another order, new notes' => [[
         'title' => 'BBS LM', 'status' => 'installed', 'fields' => ['width_front' => 9.5, 'diameter' => 19],
         'cost_public' => false, 'cost_cents' => 100_000, 'notes' => 'neu',
@@ -85,14 +88,4 @@ it('moves the build to the top after an edit others can read', function (array $
     'a field' => [['fields' => ['diameter' => 20, 'width_front' => 9.5]]],
     'the status' => [['status' => 'removed']],
     'the part number' => [['part_number' => 'LM-123']],
-    'the cost made public' => [['cost_public' => true]],
-    'a public cost' => [['cost_public' => true, 'cost_cents' => 4200]],
 ]);
-
-it('moves the build when a public cost is made private again, as the cost disappears', function () {
-    $this->mod->forceFill(['cost_public' => true])->save();
-
-    privateEditPatch($this->mod, $this->owner, ['cost_public' => false]);
-
-    expect($this->getJson('/api/v1/home/new-builds')->assertOk()->json('data.0.id'))->toBe($this->old->id);
-});

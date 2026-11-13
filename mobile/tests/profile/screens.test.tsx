@@ -2,8 +2,9 @@ import NetInfo from '@react-native-community/netinfo';
 import type { QueryClient } from '@tanstack/react-query';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
-import { ScrollView, Share } from 'react-native';
+import { Dimensions, Platform, ScrollView, Share, StyleSheet, type TextStyle } from 'react-native';
 
+import { appConfigKey, BUNDLED_APP_CONFIG } from '@/api/queries/appConfig';
 import type { Me } from '@/api/queries/auth';
 import type { VehicleCardData } from '@/api/queries/profile';
 import { queryClient } from '@/api/queryClient';
@@ -13,20 +14,32 @@ import { useSessionStore } from '@/state/session';
 import { hydrateThemePreference } from '@/theme';
 
 import { newQueryClient, renderScreen as renderWith, stubFetch, type Answer } from '../settings/harness';
+import { measureOf } from '../ui/helpers';
 
 const mockRouter = { push: jest.fn(), back: jest.fn(), replace: jest.fn(), navigate: jest.fn(), canGoBack: jest.fn(() => true) };
 const mockPreventRemove = jest.fn();
+/** PROF-03 leaves by popping when PROF-01 is under it in its stack (`index` > 0), else by replacing itself (CARRY-M4.8/9). */
+const mockNavigation = {
+  dispatch: jest.fn(),
+  addListener: jest.fn(() => jest.fn()),
+  getParent: () => undefined,
+  canGoBack: () => true,
+  goBack: jest.fn(),
+  getState: jest.fn(() => ({ index: 1 })),
+};
 
 jest.mock('expo-router', () => ({
   useRouter: () => mockRouter,
   router: mockRouter,
+  useLocalSearchParams: () => ({}),
+  usePathname: () => '/profile',
   useFocusEffect: (effect: () => void | (() => void)) => {
     const { useEffect } = jest.requireActual<typeof import('react')>('react');
     useEffect(effect, [effect]);
   },
   usePreventRemove: (prevent: boolean) => mockPreventRemove(prevent),
   // DiscardGuardDialog continues a blocked action through the screen's navigation.
-  useNavigation: () => ({ dispatch: jest.fn(), addListener: jest.fn(() => jest.fn()), getParent: () => undefined, canGoBack: () => true, goBack: jest.fn() }),
+  useNavigation: () => mockNavigation,
   Link: ({ children }: { children: unknown }) => children,
 }));
 // Items render in place: list virtualisation is FlashList's own business and needs a layout Jest does not have.
@@ -47,10 +60,13 @@ const ME: Me = {
   id: '01m6f7ztzfs0gd39t08rs9zmmp',
   email: 'lukas.sc@speedclub.test',
   email_verified: true,
+  is_sample: false,
+  is_editorial: false,
   has_username: true,
   profile_complete: true,
   next_step: null,
   force_password_change: false,
+  password_set: true,
   two_factor_enabled: false,
   username: 'lukas.sc',
   username_change_available_at: null,
@@ -74,6 +90,7 @@ const CARD = {
   status: 'published',
   visibility: 'public',
   is_main: true,
+  is_sample: false,
   eyebrow: 'NISSAN',
   make: 'Nissan',
   model: 'Skyline GT-R',
@@ -88,6 +105,7 @@ const CARD = {
   cover: null,
   photo_count: 3,
   mod_count: 14,
+  updates_count: null,
   published_at: null,
   updated_at: null,
   wizard: null,
@@ -151,8 +169,10 @@ describe('PROF-01 My profile', () => {
     expect(screen.queryByTestId('PROF-01.vehicle.draft')).toBeNull();
     await fireEvent.press(screen.getByTestId('PROF-01.vehicle.v1.body'));
     expect(mockRouter.push).toHaveBeenCalledWith('/v/nissan-skyline-gt-r-r34-5tf974vj');
-    await fireEvent.press(screen.getByTestId('PROF-01.garage.header.action'));
-    expect(mockRouter.navigate).toHaveBeenCalledWith('/garage');
+    // 09 §7.7: the Garage tab lists the cards one under the other, with "Fahrzeug hinzufügen" after them.
+    expect(screen.getByTestId('PROF-01.tabs.garage')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('PROF-01.addVehicle'));
+    expect(mockRouter.push).toHaveBeenCalledWith('/add-vehicle/new/vehicle');
   });
 
   it('invites to add the first car when the garage is empty', async () => {
@@ -170,8 +190,9 @@ describe('PROF-01 My profile', () => {
     await renderScreen(<ProfileScreen />);
     await waitFor(() => expect(screen.getByTestId('PROF-01.edit')).toBeTruthy());
     await fireEvent.press(screen.getByTestId('PROF-01.edit'));
-    await fireEvent.press(screen.getByTestId('PROF-01.qr'));
-    await fireEvent.press(screen.getByTestId('PROF-01.settings.body'));
+    await fireEvent.press(screen.getByTestId('PROF-01.qrCodes'));
+    // Header pattern (b): the gear floats in the bar over the cover.
+    await fireEvent.press(screen.getByTestId('PROF-01.settings'));
     expect(mockRouter.push.mock.calls).toEqual([['/profile/edit'], ['/profile/qr'], ['/settings']]);
   });
 
@@ -217,14 +238,68 @@ describe('PROF-01 My profile', () => {
     await connection(true);
   });
 
+  it('shows the builds’ updates on the Updates tab and opens one', async () => {
+    signIn();
+    const update = {
+      id: 'u1', type: 'suspension', type_label: 'Fahrwerk geändert', note: null, summary: 'Serie → KW V3', changes: [], changes_count: 1, hidden: false,
+      created_at: '2026-11-10T10:00:00Z', month_label: null, vehicle_id: 'v1', mileage_km: null, happened_on: null, audience: 'vehicle', edited_at: null,
+      photos: [], photo_pairs: [], modifications: [],
+    };
+    api({ '/public/vehicles/nissan-skyline-gt-r-r34-5tf974vj/updates': { body: { data: [update], links: {}, meta: { next_cursor: null } } } });
+    await renderScreen(<ProfileScreen />);
+    await waitFor(() => expect(screen.getByTestId('PROF-01.tabs.updates')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('PROF-01.tabs.updates'));
+    await waitFor(() => expect(screen.getByTestId('PROF-01.update.u1')).toBeTruthy());
+    expect(screen.getByTestId('PROF-01.update.u1')).toHaveTextContent('Fahrwerk geändert', { exact: false });
+    await fireEvent.press(screen.getByTestId('PROF-01.update.u1'));
+    expect(mockRouter.push).toHaveBeenCalledWith('/v/nissan-skyline-gt-r-r34-5tf974vj/updates/u1');
+  });
+
+  it('shows the events said yes to on the Treffen tab, with the flag', async () => {
+    signIn();
+    client.setQueryData(appConfigKey, { config: { ...BUNDLED_APP_CONFIG, flags: { events: true } }, confirmed: true });
+    const event = {
+      id: 'e1', slug: 'cars-coffee', title: 'Cars & Coffee Riem', type: 'meet', status: 'published', visibility: 'public',
+      starts_at: '2026-06-14T17:30:00Z', ends_at: null, timezone: 'Europe/Berlin',
+      location: { visibility: 'public', exact: true, venue_name: 'Messe', street: null, postcode: null, city: 'München', country: 'DE', lat: null, lng: null, area: { lat: null, lng: null } },
+      cover: null, organiser: { username: 'max.e46', display_name: null, city: null, avatar: null, is_sample: false, is_editorial: false },
+      counts: { going: 12, interested: 0 }, capacity: null, spots_left: null, distance_km: null, my_rsvp: 'going', is_sample: false,
+    };
+    api({ '/me/events': { body: { data: [event], links: {}, meta: { next_cursor: null } } } });
+    await renderScreen(<ProfileScreen />);
+    await waitFor(() => expect(screen.getByTestId('PROF-01.tabs.events')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('PROF-01.tabs.events'));
+    await waitFor(() => expect(screen.getByTestId('PROF-01.event.e1')).toHaveTextContent('Cars & Coffee Riem', { exact: false }));
+    // M4.12: the EVT-05 card, with the time in the event's zone and the real answers; it opens EVT-02.
+    expect(screen.getByTestId('PROF-01.event.e1.caption')).toHaveTextContent('München · ab 19:30 Uhr');
+    expect(screen.getByTestId('PROF-01.event.e1.counts')).toHaveTextContent('12 Zusagen');
+  });
+
+  it('has no Treffen tab without the events flag', async () => {
+    signIn();
+    api();
+    await renderScreen(<ProfileScreen />);
+    await waitFor(() => expect(screen.getByTestId('PROF-01.tabs.garage')).toBeTruthy());
+    expect(screen.queryByTestId('PROF-01.tabs.events')).toBeNull();
+  });
+
   it('offers a guest the sign-in, back to the profile, and no fake data', async () => {
     const { fetchMock } = api();
     await renderScreen(<ProfileScreen />);
     expect(screen.getByTestId('PROF-01.guest')).toBeTruthy();
     expect(screen.queryByTestId('PROF-01.name')).toBeNull();
-    expect(fetchMock).not.toHaveBeenCalled();
+    // Nothing of a member is asked for (app-config, which every screen reads for the logo, is not member data).
+    const paths = (fetchMock.mock.calls as [RequestInfo][]).map(([input]) => new URL(typeof input === 'string' ? input : input.url).pathname);
+    expect(paths.filter((path) => path.includes('/me') || path.includes('/auth/'))).toEqual([]);
+    // 09 §7.7 guest: the brand title, three real fragments badged "Beispiel", one filled action.
+    expect(screen.getByTestId('PROF-01.guest.title')).toHaveTextContent('Werde Teil des SPEED CLUB.');
+    expect(screen.getByTestId('PROF-01.guest.card', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByTestId('PROF-01.guest.spec', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByTestId('PROF-01.guest.qr', { includeHiddenElements: true })).toBeTruthy();
     await fireEvent.press(screen.getByTestId('PROF-01.signIn'));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/sign-in', params: { returnTo: '/profile' } });
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/auth/email', params: { returnTo: '/profile' } });
+    await fireEvent.press(screen.getByTestId('PROF-01.signUp'));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/sign-up', params: { returnTo: '/profile' } });
   });
 });
 
@@ -249,11 +324,48 @@ describe('PROF-03 Edit profile', () => {
     expect(mockPreventRemove).toHaveBeenLastCalledWith(false);
   });
 
+  it('replaces itself with PROF-01 when it is the first route of its stack, so the guard sees the leave (CARRY-M4.8/9)', async () => {
+    mockNavigation.getState.mockReturnValueOnce({ index: 0 });
+    signIn();
+    api();
+    await renderScreen(<EditProfileScreen />);
+    await waitFor(() => expect(screen.getByTestId('PROF-03.city')).toBeTruthy());
+    await fireEvent.changeText(screen.getByTestId('PROF-03.city'), 'Berlin');
+    expect(mockPreventRemove).toHaveBeenLastCalledWith(true);
+    await fireEvent.press(screen.getByTestId('PROF-03.header.back'));
+    expect(mockRouter.replace).toHaveBeenCalledWith('/profile');
+    expect(mockRouter.back).not.toHaveBeenCalled();
+  });
+
   it('counts the characters of the bio', async () => {
     signIn();
     api();
     await renderScreen(<EditProfileScreen />);
     await waitFor(() => expect(screen.getByTestId('PROF-03.bio.helper')).toHaveTextContent('32 von 500 Zeichen'));
+  });
+
+  it('N12 (Build 12): at 360×640 dp × 2.0 on Android the bio caps at whole drawn lines, 7 × 36 instead of 5 × 24', async () => {
+    const os = Platform.OS;
+    Platform.OS = 'android';
+    const window = jest.spyOn(Dimensions, 'get').mockReturnValue({ width: 360, height: 640, scale: 2, fontScale: 2 });
+    try {
+      signIn();
+      api();
+      await renderScreen(<EditProfileScreen />);
+      await waitFor(() => expect(screen.getByTestId('PROF-03.bio')).toBeTruthy());
+      // Android 14+ draws the 24 of `input` at 36 at font scale 2.0 (non-linear sp); the field measures it.
+      await fireEvent(measureOf('PROF-03.bio', 'line'), 'layout', {
+        nativeEvent: { layout: { x: 0, y: 0, width: 300, height: 36 } },
+      });
+      const cap = (StyleSheet.flatten(screen.getByTestId('PROF-03.bio').props.style as TextStyle) ?? {}).maxHeight as number;
+      expect(cap).toBe(7 * 36);
+      expect(cap % 36).toBe(0);
+      expect(cap).toBeGreaterThanOrEqual(5 * 24);
+      expect(cap).toBeLessThanOrEqual(640 * 0.4);
+    } finally {
+      window.mockRestore();
+      Platform.OS = os;
+    }
   });
 
   it('changes the username on its own route when it is free', async () => {

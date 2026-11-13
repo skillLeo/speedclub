@@ -3,13 +3,20 @@
 namespace App\Services\Notifications;
 
 use App\Actions\Support\CreateSupportTicket;
+use App\Enums\MemberSecurityEvent;
 use App\Enums\NotificationType;
 use App\Enums\SecurityNotice;
+use App\Mail\EventReminderMail;
 use App\Mail\HuAuReminderMail;
+use App\Mail\MaintenanceDueMail;
 use App\Mail\SecurityNoticeMail;
 use App\Models\BuildUpdate;
 use App\Models\CatalogRequest;
+use App\Models\Comment;
 use App\Models\Decision;
+use App\Models\Event;
+use App\Models\EventUpdate;
+use App\Models\MaintenanceItem;
 use App\Models\Notification;
 use App\Models\PushToken;
 use App\Models\SupportTicket;
@@ -17,6 +24,9 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Auth\AuthMailer;
 use App\Services\Garage\VehiclePresenter;
+use App\Services\Maintenance\MaintenanceTexts;
+use App\Services\Security\SecureAccountLinks;
+use App\Support\Security\SecurityAlert;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Support\Facades\DB;
@@ -82,6 +92,66 @@ class Notifier
     }
 
     /**
+     * M4.11 (09 §8.17): $actor reacted to the owner's build ($update null) or build update. One row per item and Berlin day, with every
+     * member who reacted that day; the reaction itself is not in the row (the owner reads it on the list). Push at most once an hour
+     * across all reaction rows (NotificationType::pushThrottleMinutes).
+     */
+    public function reaction(User $owner, User $actor, Vehicle $vehicle, ?BuildUpdate $update): ?Notification
+    {
+        $target = $update === null ? 'v:'.$vehicle->id : 'u:'.$update->getKey();
+
+        return $this->grouped(NotificationType::Reaction, $owner, $actor, 'reaction:'.$target.':'.$this->day(), $vehicle, fn (array $data): array => [
+            'target' => $update === null ? 'vehicle' : 'build_update',
+            'update_id' => $update === null ? null : (string) $update->getKey(),
+            'update_ids' => $update === null ? [] : [(string) $update->getKey()],
+        ]);
+    }
+
+    /**
+     * M4.11: $author mentioned $recipient in a build update ($comment null) or a comment on one. One row per text: an edit that names
+     * the member again changes nothing (Mentions::sync only returns new mentions).
+     */
+    public function mention(User $recipient, User $author, Vehicle $vehicle, BuildUpdate $update, ?Comment $comment = null): ?Notification
+    {
+        $key = $comment === null ? 'u:'.$update->getKey() : 'c:'.$comment->getKey();
+
+        return $this->grouped(NotificationType::Mention, $recipient, $author, 'mention:'.$key, $vehicle, fn (array $data): array => [
+            'update_id' => (string) $update->getKey(),
+            'update_ids' => [(string) $update->getKey()],
+            'comment_id' => $comment === null ? null : (string) $comment->getKey(),
+        ]);
+    }
+
+    /**
+     * M4.11 [build_comments]: comments on the recipient's build update, or ($reply) replies to the recipient's comment. One row per
+     * update, kind and Berlin day, with every commenter of that day; never the text.
+     */
+    public function comment(User $recipient, User $actor, Vehicle $vehicle, BuildUpdate $update, Comment $comment, bool $reply): ?Notification
+    {
+        return $this->grouped(
+            NotificationType::Comment,
+            $recipient,
+            $actor,
+            'comment:'.$update->getKey().':'.($reply ? 'reply' : 'update').':'.$this->day(),
+            $vehicle,
+            fn (array $data): array => [
+                'update_id' => (string) $update->getKey(),
+                'update_ids' => [(string) $update->getKey()],
+                'comment_id' => (string) $comment->getKey(),
+                'reply' => $reply,
+            ],
+        );
+    }
+
+    /**
+     * M4.11 (09 §8.6): $follower started following the owner's build. One row per build and Berlin day; never a count for anybody else.
+     */
+    public function vehicleFollower(User $owner, User $follower, Vehicle $vehicle): ?Notification
+    {
+        return $this->grouped(NotificationType::VehicleFollower, $owner, $follower, 'vehicle_follower:'.$vehicle->id.':'.$this->day(), $vehicle, fn (array $data): array => $data);
+    }
+
+    /**
      * [SIG] The weekly aggregate: how many members saved the build in an ISO week, never who. Run again with the same count, it changes
      * nothing.
      */
@@ -107,11 +177,14 @@ class Notifier
      * in-app row, whatever the preferences. Never a push. $to is the address of the mail, the member's own by default (an e-mail change
      * writes to the previous one). $variant picks a more precise mail text (SecurityNoticeMail), e.g. two-factor "enabled"; $count fills
      * :count (recovery codes left).
+     *
+     * M4.7 (09 §8.4): $alert adds the SET-21 row (`security_event_id` in the row), the "Das war ich nicht" link, time and approximate place
+     * to the mail. A new-device notice is the one security notice that also pushes: urgent, to every install but the new one.
      */
-    public function security(User $user, SecurityNotice $notice, ?string $deviceName = null, ?string $to = null, ?string $variant = null, ?int $count = null): ?Notification
+    public function security(User $user, SecurityNotice $notice, ?string $deviceName = null, ?string $to = null, ?string $variant = null, ?int $count = null, ?SecurityAlert $alert = null): ?Notification
     {
         $locale = $user->getAttribute('locale');
-        $this->mailer->sendLater($to ?? $user->email, is_string($locale) ? $locale : app()->getLocale(), new SecurityNoticeMail($notice, $deviceName, $variant, $count));
+        $this->mailer->sendLater($to ?? $user->email, is_string($locale) ? $locale : app()->getLocale(), new SecurityNoticeMail($notice, $deviceName, $variant, $count, $alert->secureUrl ?? $this->freshSecureUrl($user, $notice, $variant), $alert?->place, $alert?->at, $alert?->reference, $alert?->removed));
 
         if ($user->trashed()) {
             return null;
@@ -122,11 +195,51 @@ class Notifier
             'type' => NotificationType::Security,
             'notifiable_type' => 'user',
             'notifiable_id' => $user->id,
-            'data' => ['event' => $notice->value, 'device_name' => $deviceName === null ? null : mb_substr($deviceName, 0, 100)],
+            'data' => [
+                'event' => $notice->value,
+                'device_name' => $deviceName === null ? null : mb_substr($deviceName, 0, 100),
+                ...($alert?->eventId === null ? [] : ['security_event_id' => $alert->eventId]),
+            ],
             'created_at' => now(),
         ])->save();
 
+        if ($notice === SecurityNotice::NewDevice && $this->push->enabled() && $this->reaches($user)) {
+            $claimed = Notification::query()->whereKey($row->id)->whereNull('pushed_at')->toBase()->update(['pushed_at' => now()]);
+
+            if ($claimed === 1) {
+                SendPushNotification::dispatch($row->id, (string) $alert?->pushExceptInstall);
+            }
+        }
+
         return $row;
+    }
+
+    /**
+     * SEC-M47-05: the password, two-factor and signed-out mails carry a fresh "Das war ich nicht" link to the change's own SET-21 row, so an
+     * intruder who changed something there cannot leave the owner without one. Not for a change staff made (the variant says so).
+     */
+    private function freshSecureUrl(User $user, SecurityNotice $notice, ?string $variant): ?string
+    {
+        $types = match ($notice) {
+            SecurityNotice::PasswordChanged => [MemberSecurityEvent::PasswordChanged, MemberSecurityEvent::PasswordReset],
+            SecurityNotice::TwoFactorChanged => [MemberSecurityEvent::TwoFactorEnabled, MemberSecurityEvent::TwoFactorDisabled, MemberSecurityEvent::RecoveryCodesRegenerated],
+            SecurityNotice::SessionsRevoked => [MemberSecurityEvent::SessionRevoked, MemberSecurityEvent::LogoutAll],
+            default => [],
+        };
+
+        if ($types === [] || ($variant !== null && str_contains($variant, 'staff')) || $user->trashed()) {
+            return null;
+        }
+
+        $event = $user->securityEvents()
+            ->whereIn('type', $types)
+            ->whereNull('secured_at')
+            ->where('created_at', '>=', now()->subMinutes(10))
+            ->latest('created_at')
+            ->latest('id')
+            ->first();
+
+        return $event === null ? null : app(SecureAccountLinks::class)->url($user, $event);
     }
 
     /**
@@ -233,6 +346,152 @@ class Notifier
             fn (array $data): array => ['ticket_id' => $ticket->id, 'reference' => CreateSupportTicket::reference($ticket), 'replied_at' => now()->toIso8601String()],
             reaches: true,
         );
+    }
+
+    /**
+     * M4.12 (ADM-53): staff approved or rejected $event. One row per submission (submitted_at), so a resubmitted event is told again;
+     * details {event_id, outcome, reason} (the reason only on a rejection).
+     */
+    public function eventReviewed(User $organiser, Event $event, bool $approved, ?string $reason): ?Notification
+    {
+        $submitted = $event->getAttribute('submitted_at');
+
+        return $this->grouped(NotificationType::EventReview, $organiser, null, 'event_review:'.$event->id.':'.($submitted instanceof CarbonImmutable ? $submitted->getTimestamp() : 0), null, fn (array $data): array => [
+            'event_id' => $event->id,
+            'outcome' => $approved ? 'approved' : 'rejected',
+            'reason' => $approved || $reason === null ? null : mb_substr($reason, 0, 1000),
+        ]);
+    }
+
+    /**
+     * M4.12: a spot freed up and $member moved from the waitlist to "going". One row per event; a later promotion (after leaving and
+     * joining the waitlist again) moves it up.
+     */
+    public function eventPromoted(User $member, Event $event): ?Notification
+    {
+        if ($this->blockedFromEvent($member, $event)) {
+            return null;
+        }
+
+        return $this->grouped(NotificationType::EventPromoted, $member, null, 'event_promoted:'.$event->id, null, fn (array $data): array => [
+            'event_id' => $event->id,
+            'promoted_at' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * M4.12 (09 §8.7): $event starts in 24 h or 2 h ($kind "24h" | "2h"). One row per event and kind: run again, it changes nothing. An
+     * e-mail too when the member switched it on in SET-09 (`event_reminder.email`, off by default).
+     */
+    public function eventReminder(User $member, Event $event, string $kind): ?Notification
+    {
+        if ($this->blockedFromEvent($member, $event)) {
+            return null;
+        }
+
+        // With the start in the key: a moved event reminds again.
+        $key = 'event_reminder:'.$event->id.':'.$kind.':'.($event->starts_at?->getTimestamp() ?? 0);
+        $existed = Notification::query()->where('notifiable_id', $member->id)->where('group_key', $key)->exists();
+        $row = $this->grouped(NotificationType::EventReminder, $member, null, $key, null, fn (array $data): array => ['event_id' => $event->id, 'kind' => $kind]);
+
+        if ($row !== null && ! $existed && (NotificationPrefs::for($member)['types']['event_reminder']['email'] ?? false)) {
+            // From the scheduled command, not a request: sent at once, one by one.
+            $this->mailer->send($member->email, app(NotificationTexts::class)->locale($member), new EventReminderMail($event->title, $kind, $event->slug, $event->starts_at));
+        }
+
+        return $row;
+    }
+
+    /**
+     * M4.12 (EVT-06): the organiser posted $update to the attendees. One row per update; never the text.
+     */
+    public function eventUpdate(User $member, Event $event, EventUpdate $update): ?Notification
+    {
+        if ($this->blockedFromEvent($member, $event)) {
+            return null;
+        }
+
+        return $this->grouped(NotificationType::EventUpdate, $member, null, 'event_update:'.$update->id, null, fn (array $data): array => [
+            'event_id' => $event->id,
+            'kind' => 'update',
+            'update_id' => $update->id,
+        ]);
+    }
+
+    /**
+     * M4.12: the organiser changed the time or the place of $event ($token, the moment of the change). Security review SEC-412-02: one row
+     * per event, updated in place (unread again) by every further change, and pushed at most once per group cooldown, so repeated
+     * changes cannot flood attendees.
+     */
+    public function eventChanged(User $member, Event $event, string $token): ?Notification
+    {
+        if ($this->blockedFromEvent($member, $event)) {
+            return null;
+        }
+
+        return $this->grouped(NotificationType::EventUpdate, $member, null, 'event_changed:'.$event->id, null, fn (array $data): array => [
+            'event_id' => $event->id,
+            'kind' => 'changed',
+            'update_id' => null,
+            'changed_at' => $token,
+        ]);
+    }
+
+    /**
+     * M4.12: $event was cancelled, by its organiser or ($byStaff) by staff. One row per event; the reason is read on EVT-02.
+     */
+    public function eventCancelled(User $member, Event $event, bool $byStaff = false): ?Notification
+    {
+        if (! $byStaff && $this->blockedFromEvent($member, $event)) {
+            return null;
+        }
+
+        return $this->grouped(NotificationType::EventCancelled, $member, null, 'event_cancelled:'.$event->id, null, fn (array $data): array => [
+            'event_id' => $event->id,
+            'by_staff' => $byStaff,
+        ]);
+    }
+
+    /**
+     * M4.13 (09 §8.8): a maintenance reminder stage of $item ($stage: key, kind, due_on, due_km, lead_days). One row per stage, its group
+     * key the stage's deterministic reminder key (also in the push data as `reminder_key`, so the app drops its local backup). An e-mail
+     * too when the owner switched e-mails on for "Fälligkeiten" in SET-09 (`hu_au_reminder.email`, off by default).
+     *
+     * @param  array{key: string, kind: 'date'|'km', due_on: string|null, due_km: int|null, lead_days: int|null}  $stage
+     */
+    public function maintenanceDue(User $owner, Vehicle $vehicle, MaintenanceItem $item, array $stage): ?Notification
+    {
+        $key = $stage['key'];
+        $existed = Notification::query()->where('notifiable_id', $owner->id)->where('group_key', $key)->exists();
+        $row = $this->grouped(NotificationType::MaintenanceDue, $owner, null, $key, $vehicle, fn (array $data): array => [
+            'item_id' => $item->id,
+            'item_type' => $item->type->value,
+            'title' => $item->title,
+            'kind' => $stage['kind'],
+            'due_on' => $stage['due_on'],
+            'due_km' => $stage['due_km'],
+            'lead_days' => $stage['lead_days'],
+            'reminder_key' => $key,
+        ]);
+
+        if ($row !== null && ! $existed && (NotificationPrefs::for($owner)['types']['hu_au_reminder']['email'] ?? false)) {
+            $locale = app(NotificationTexts::class)->locale($owner);
+            $title = app(VehiclePresenter::class)->title($vehicle);
+            // From the daily command, not a request: sent at once, one by one.
+            $this->mailer->send($owner->email, $locale, new MaintenanceDueMail($title, app(MaintenanceTexts::class)->sentence($row->data ?? [], $title, $owner, $locale), (string) $vehicle->id));
+        }
+
+        return $row;
+    }
+
+    /**
+     * Nothing about an event reaches a member who blocked its organiser or whom the organiser blocked (02 §3.5).
+     */
+    private function blockedFromEvent(User $member, Event $event): bool
+    {
+        $organiser = $event->organiser;
+
+        return ! $organiser->is($member) && $member->hasBlockWith($organiser);
     }
 
     /**
@@ -345,6 +604,14 @@ class Notifier
         }
 
         if (! $row->type->isUrgent() && QuietHours::active($recipient)) {
+            return;
+        }
+
+        // 09 §8.17: some types push at most once per period across all their rows (reactions: once an hour).
+        $throttle = $row->type->pushThrottleMinutes();
+
+        if ($throttle !== null && Notification::query()->where('notifiable_id', $recipient->id)->where('type', $row->type)
+            ->where('pushed_at', '>', now()->subMinutes($throttle))->exists()) {
             return;
         }
 

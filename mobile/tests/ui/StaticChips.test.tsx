@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react-native';
+import { Dimensions } from 'react-native';
 
-import { hydrateThemePreference, radius, size, themes, typography } from '@/theme';
+import { hydrateThemePreference, maxFontScale, radius, size, themes, typography } from '@/theme';
 import { SpecChip } from '@/ui/SpecChip';
 import { StatusPill } from '@/ui/StatusPill';
 
@@ -20,7 +21,7 @@ describe('SpecChip', () => {
       fontVariant?: string[];
     };
     expect(text.fontSize).toBe(typography.caption.fontSize);
-    expect(text.fontFamily).toBe(typography.labelS.fontFamily);
+    expect(text.fontFamily).toBe(typography.callout.fontFamily);
     expect(text.fontVariant).toEqual(['tabular-nums']);
   });
 
@@ -37,19 +38,27 @@ describe('SpecChip', () => {
       fontVariant?: string[];
     };
     expect(segment.fontVariant).toEqual(['tabular-nums']);
-    expect(segment.fontFamily).toBe(typography.labelS.fontFamily);
+    expect(segment.fontFamily).toBe(typography.callout.fontFamily);
   });
 });
 
 describe('StatusPill', () => {
-  it('is 20 high, radius 4, 1 border.default, badge text.secondary', async () => {
+  it('is 20 high, radius 4, 1 border.default, label.badge text.secondary', async () => {
     await renderUi(<StatusPill label="Verbaut" testID="p" />);
     const pill = flat(screen.getByTestId('p').props.style);
     expect(pill.minHeight).toBe(size.statusPill);
     expect(pill.borderRadius).toBe(radius.xs);
     expect(pill.borderColor).toBe(themes.carbon.color.border.default);
-    const text = flat(screen.getByText('Verbaut').props.style);
-    expect(text.fontSize).toBe(typography.badge.fontSize);
+    const label = screen.getByText('Verbaut');
+    const text = flat(label.props.style) as ReturnType<typeof flat> & { fontFamily?: string };
+    // N4: set at min(font scale, 1.3) by Text itself, line box included (the jest window is at 2).
+    const scale = Math.min(Dimensions.get('window').fontScale, maxFontScale.labelBadge);
+    expect(text.fontSize).toBeCloseTo(typography.labelBadge.fontSize * scale);
+    expect(text.lineHeight).toBeCloseTo(typography.labelBadge.lineHeight * scale);
+    expect(label.props.allowFontScaling).toBe(false);
+    expect(text.fontFamily).toBe(typography.labelBadge.fontFamily);
     expect(text.color).toBe(themes.carbon.color.text.secondary);
+    // DQ-806: the role carries the cap, so the label never doubles inside its 20-high shape at 200 %.
+    expect(label.props.maxFontSizeMultiplier).toBe(maxFontScale.labelBadge);
   });
 });

@@ -66,7 +66,7 @@ export function DownloadSheet({ visible, onClose, vehicleId, code, vehicleTitle,
   };
 
   const failed = download.error;
-  const errorIconBox = { height: typography.helper.lineHeight * theme.fontScale, justifyContent: 'center' as const };
+  const errorIconBox = { height: typography.caption.lineHeight * theme.fontScale, justifyContent: 'center' as const };
 
   return (
     <Sheet visible={visible} onClose={close} title={t('download.title')} narrow testID="QR-02.downloadSheet">
@@ -92,7 +92,7 @@ export function DownloadSheet({ visible, onClose, vehicleId, code, vehicleTitle,
                 <Text variant="body" color={busy && !active ? 'text.disabled' : 'text.primary'}>
                   {title}
                 </Text>
-                <Text variant="supporting" color={busy && !active ? 'text.disabled' : 'text.secondary'}>
+                <Text variant="callout" color={busy && !active ? 'text.disabled' : 'text.secondary'}>
                   {detail}
                 </Text>
                 {error ? (
@@ -100,7 +100,7 @@ export function DownloadSheet({ visible, onClose, vehicleId, code, vehicleTitle,
                     <View style={errorIconBox}>
                       <Icon name="warning" size={16} color="accent.fg" />
                     </View>
-                    <Text variant="helper" style={styles.errorText}>
+                    <Text variant="caption" style={styles.errorText}>
                       {error.status === 404 ? t('download.gone') : keepNameTogether(error.message)}
                     </Text>
                   </View>

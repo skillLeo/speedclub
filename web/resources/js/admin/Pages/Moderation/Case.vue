@@ -45,7 +45,7 @@ import {
  * person than the decider). A message case shows no content here: its evidence is ADM-22's.
  */
 interface Preview {
-    kind: 'member' | 'vehicle' | 'photo' | 'build_update' | 'modification';
+    kind: 'member' | 'vehicle' | 'photo' | 'build_update' | 'modification' | 'comment' | 'event';
     [key: string]: unknown;
 }
 const props = defineProps<{
@@ -180,7 +180,7 @@ const restrictionText = (d: DecisionDetail): string | null => {
                 </div>
             </template>
             <template #meta>
-                <p class="flex flex-wrap items-center gap-x-8 gap-y-4 text-supporting text-ink-2 tabular-nums" data-testid="ADM-21.meta">
+                <p class="flex flex-wrap items-center gap-x-8 gap-y-4 text-admin-base text-ink-2 tabular-nums" data-testid="ADM-21.meta">
                     <span class="sc-key">{{ trans('moderation.case.title', { reference: c.reference }) }}</span>
                     <span aria-hidden="true">·</span>
                     <span>{{ trans('moderation.case.meta.created', { date: formatDateTime(c.created_at) }) }}</span>
@@ -202,58 +202,86 @@ const restrictionText = (d: DecisionDetail): string | null => {
 
             <template #overview>
                 <div class="flex flex-col gap-24" data-testid="ADM-21.overview">
-                    <p v-if="c.assigned && !c.assigned.me && isOpen" class="text-supporting text-ink-2" data-testid="ADM-21.taken">{{ trans('moderation.case.taken_by_other', { name: c.assigned.name }) }}</p>
+                    <p v-if="c.assigned && !c.assigned.me && isOpen" class="text-admin-base text-ink-2" data-testid="ADM-21.taken">{{ trans('moderation.case.taken_by_other', { name: c.assigned.name }) }}</p>
                     <section class="flex flex-col gap-12">
                         <h2 class="text-headline text-ink">{{ trans('moderation.case.preview.title') }}</h2>
                         <div v-if="messageCase" class="flex flex-col items-start gap-8 rounded-sm border border-dashed border-line px-16 py-16" data-testid="ADM-21.preview.message">
-                            <p class="text-supporting text-ink-2">{{ trans('moderation.case.preview.message') }}</p>
-                            <Link v-if="can('moderation.messages')" :href="messagesHref" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 rounded-xs text-label-s text-ink hover:underline']">
+                            <p class="text-admin-base text-ink-2">{{ trans('moderation.case.preview.message') }}</p>
+                            <Link v-if="can('moderation.messages')" :href="messagesHref" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 rounded-xs text-admin-base-strong text-ink hover:underline']">
                                 {{ trans('moderation.case.preview.message_link') }}<PhArrowSquareOut :size="16" aria-hidden="true" />
                             </Link>
                         </div>
-                        <p v-else-if="preview === null" class="text-supporting text-ink-3" data-testid="ADM-21.preview.gone">{{ trans('moderation.case.preview.gone') }}</p>
+                        <p v-else-if="preview === null" class="text-admin-base text-ink-3" data-testid="ADM-21.preview.gone">{{ trans('moderation.case.preview.gone') }}</p>
                         <div v-else-if="preview.kind === 'member'" class="flex items-start gap-16" data-testid="ADM-21.preview">
                             <img v-if="preview.avatar" :src="String(preview.avatar)" alt="" class="size-48 shrink-0 rounded-full object-cover" />
                             <PhUserCircle v-else :size="24" class="mt-4 shrink-0 text-ink-3" aria-hidden="true" />
                             <div class="flex min-w-0 flex-col gap-4">
-                                <p class="text-body-strong text-ink">{{ preview.display_name ?? `@${preview.username}` }}</p>
-                                <p class="sc-key text-supporting text-ink-2">{{ `@${preview.username}` }}</p>
-                                <p class="max-w-720 whitespace-pre-line text-supporting text-ink">{{ preview.bio ?? trans('moderation.case.preview.no_bio') }}</p>
+                                <p class="text-admin-base-strong text-ink">{{ preview.display_name ?? `@${preview.username}` }}</p>
+                                <p class="sc-key text-admin-base text-ink-2">{{ `@${preview.username}` }}</p>
+                                <p class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ preview.bio ?? trans('moderation.case.preview.no_bio') }}</p>
                             </div>
                         </div>
                         <div v-else-if="preview.kind === 'vehicle'" class="flex flex-col gap-12 desktop:flex-row" data-testid="ADM-21.preview">
                             <img v-if="preview.cover" :src="String(preview.cover)" alt="" class="aspect-4/3 w-240 shrink-0 rounded-sm object-cover" />
                             <div class="flex min-w-0 flex-col gap-4">
-                                <p class="text-body-strong text-ink">{{ preview.title }}</p>
-                                <p v-if="preview.nickname" class="text-supporting text-ink-2">{{ `„${preview.nickname}“` }}</p>
+                                <p class="text-admin-base-strong text-ink">{{ preview.title }}</p>
+                                <p v-if="preview.nickname" class="text-admin-base text-ink-2">{{ `„${preview.nickname}“` }}</p>
                                 <div class="flex flex-wrap gap-8">
                                     <StatusPill v-bind="visibilityPill({ status: String(preview.status), visibility: String(preview.visibility), deleted: preview.deleted === true })" />
                                 </div>
-                                <p class="max-w-720 whitespace-pre-line text-supporting text-ink">{{ preview.description ?? trans('moderation.case.preview.no_description') }}</p>
+                                <p class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ preview.description ?? trans('moderation.case.preview.no_description') }}</p>
                             </div>
                         </div>
                         <div v-else-if="preview.kind === 'photo'" class="flex flex-col gap-8" data-testid="ADM-21.preview">
                             <img v-if="preview.url" :src="String(preview.url)" :alt="String(preview.alt ?? '')" class="aspect-4/3 w-320 rounded-sm object-cover" />
                             <div v-else class="flex aspect-4/3 w-320 items-center justify-center rounded-sm border border-dashed border-line"><PhImageBroken :size="24" class="text-ink-3" aria-hidden="true" /></div>
-                            <p v-if="!preview.url" class="text-supporting text-ink-2">{{ trans('moderation.case.preview.removed_photo') }}</p>
-                            <p v-else-if="preview.alt" class="text-supporting text-ink-2">{{ preview.alt }}</p>
+                            <p v-if="!preview.url" class="text-admin-base text-ink-2">{{ trans('moderation.case.preview.removed_photo') }}</p>
+                            <p v-else-if="preview.alt" class="text-admin-base text-ink-2">{{ preview.alt }}</p>
+                        </div>
+                        <!-- M4.11: a comment under a build update, as written; its author is the case's subject. -->
+                        <div v-else-if="preview.kind === 'comment'" class="flex flex-col gap-8" data-testid="ADM-21.preview">
+                            <p class="flex flex-wrap items-center gap-8 text-caption text-ink-3 tabular-nums">
+                                <span>{{ preview.reply ? trans('moderation.case.preview.comment_reply') : trans('moderation.case.preview.comment_on') }}</span>
+                                <time v-if="preview.created_at" :datetime="String(preview.created_at)">{{ formatDateTime(String(preview.created_at)) }}</time>
+                                <Badge v-if="preview.deleted" tone="neutral">{{ trans('moderation.case.preview.comment_deleted') }}</Badge>
+                            </p>
+                            <blockquote class="max-w-720 whitespace-pre-line border-l-2 border-line-strong pl-12 text-admin-base text-ink" data-testid="ADM-21.preview.comment">{{ preview.body ?? '–' }}</blockquote>
+                            <p v-if="preview.status === 'removed'" class="text-admin-base text-ink-3">{{ trans('moderation.case.preview.comment_removed') }}</p>
+                            <Link v-if="preview.vehicle_id && hasRoute('admin.vehicles.show')" :href="routeOr('admin.vehicles.show', `/admin/vehicles/${String(preview.vehicle_id)}`, { vehicle: String(preview.vehicle_id) })" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 self-start rounded-xs text-admin-base-strong text-ink hover:underline']">
+                                {{ trans('moderation.case.preview.open_vehicle') }}<PhArrowSquareOut :size="16" aria-hidden="true" />
+                            </Link>
+                        </div>
+                        <!-- M4.12: an event, linked to its ADM-54 record. -->
+                        <div v-else-if="preview.kind === 'event'" class="flex flex-col gap-12 desktop:flex-row" data-testid="ADM-21.preview">
+                            <img v-if="preview.cover" :src="String(preview.cover)" alt="" class="aspect-video w-240 shrink-0 rounded-sm object-cover" />
+                            <div class="flex min-w-0 flex-col gap-4">
+                                <p class="text-admin-base-strong text-ink">{{ preview.title }}</p>
+                                <p class="text-admin-base text-ink-2 tabular-nums">{{ [trans(`events.types.${String(preview.type)}`), preview.starts_at ? formatDateTime(String(preview.starts_at)) : null, preview.city].filter(Boolean).join(' · ') }}</p>
+                                <div class="flex flex-wrap gap-8">
+                                    <StatusPill :tone="preview.removed ? 'danger' : 'neutral'" :label="preview.removed ? trans('moderation.case.preview.event_removed') : trans(`events.status.${String(preview.status)}`)" />
+                                </div>
+                                <p class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ preview.description ?? trans('moderation.case.preview.no_description') }}</p>
+                                <Link v-if="hasRoute('admin.events.show')" :href="routeOr('admin.events.show', `/admin/events/${String(preview.id)}`, { event: String(preview.id) })" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 self-start rounded-xs text-admin-base-strong text-ink hover:underline']">
+                                    {{ trans('moderation.case.preview.open_event') }}<PhArrowSquareOut :size="16" aria-hidden="true" />
+                                </Link>
+                            </div>
                         </div>
                         <div v-else class="flex flex-col gap-4" data-testid="ADM-21.preview">
-                            <p v-if="preview.title" class="text-body-strong text-ink">{{ preview.title }}</p>
-                            <p v-if="preview.hidden" class="text-supporting text-ink-3">{{ trans('moderation.case.preview.hidden') }}</p>
-                            <p class="max-w-720 whitespace-pre-line text-supporting text-ink">{{ preview.note ?? preview.part_name ?? '–' }}</p>
+                            <p v-if="preview.title" class="text-admin-base-strong text-ink">{{ preview.title }}</p>
+                            <p v-if="preview.hidden" class="text-admin-base text-ink-3">{{ trans('moderation.case.preview.hidden') }}</p>
+                            <p class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ preview.note ?? preview.part_name ?? '–' }}</p>
                         </div>
                     </section>
 
                     <section class="flex flex-col gap-8">
                         <h2 class="text-headline text-ink">{{ trans('moderation.case.reports.title') }}</h2>
                         <ul class="flex flex-col">
-                            <li v-for="r in reports.slice(0, 3)" :key="r.id" class="flex flex-wrap items-center gap-8 border-t border-line-subtle py-8 text-supporting first:border-t-0">
+                            <li v-for="r in reports.slice(0, 3)" :key="r.id" class="flex flex-wrap items-center gap-8 border-t border-line-subtle py-8 text-admin-base first:border-t-0">
                                 <span class="text-ink">{{ reasonText(r.reason, r.sub_reason) }}</span>
                                 <span class="text-ink-3 tabular-nums">{{ formatDateTime(r.created_at) }}</span>
                             </li>
                         </ul>
-                        <p v-if="reports.length === 0" class="text-supporting text-ink-3">{{ trans('moderation.case.reports.none') }}</p>
+                        <p v-if="reports.length === 0" class="text-admin-base text-ink-3">{{ trans('moderation.case.reports.none') }}</p>
                     </section>
                 </div>
             </template>
@@ -262,7 +290,7 @@ const restrictionText = (d: DecisionDetail): string | null => {
                 <ul class="flex flex-col" data-testid="ADM-21.reports">
                     <li v-for="r in reports" :key="r.id" class="flex flex-col gap-4 border-t border-line-subtle py-12 first:border-t-0 first:pt-0" data-testid="ADM-21.report">
                         <p class="flex flex-wrap items-center gap-8">
-                            <span class="text-label-s text-ink">{{ reasonText(r.reason, r.sub_reason) }}</span>
+                            <span class="text-admin-base-strong text-ink">{{ reasonText(r.reason, r.sub_reason) }}</span>
                             <Badge tone="neutral">{{ trans(`moderation.sources.${r.source}`) }}</Badge>
                             <span class="text-caption text-ink-3 tabular-nums">{{ formatDateTime(r.created_at) }}</span>
                         </p>
@@ -273,13 +301,13 @@ const restrictionText = (d: DecisionDetail): string | null => {
                             <template v-if="r.contact"> · <span data-testid="ADM-21.report-contact" aria-live="polite">{{ contactText(r) }}</span></template>
                             <template v-if="r.good_faith"> · {{ trans('moderation.case.reports.good_faith') }}</template>
                             <Button v-if="r.can_reveal_contact && revealed[r.id] === undefined" size="sm" variant="ghost" :icon="PhEye" :loading="revealing === r.id" data-testid="ADM-21.report-reveal" @click="revealContact(r)">{{ trans('moderation.case.reports.reveal') }}</Button>
-                            <span v-if="revealError?.id === r.id" class="text-helper text-danger" role="alert">{{ revealError.message }}</span>
+                            <span v-if="revealError?.id === r.id" class="text-admin-base text-danger" role="alert">{{ revealError.message }}</span>
                         </p>
-                        <p v-if="r.details" class="max-w-720 whitespace-pre-line text-supporting text-ink">{{ r.details }}</p>
-                        <p v-else-if="r.details_withheld" class="text-supporting text-ink-3" data-testid="ADM-21.details-withheld">{{ trans('moderation.case.reports.details_withheld') }}</p>
+                        <p v-if="r.details" class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ r.details }}</p>
+                        <p v-else-if="r.details_withheld" class="text-admin-base text-ink-3" data-testid="ADM-21.details-withheld">{{ trans('moderation.case.reports.details_withheld') }}</p>
                     </li>
                 </ul>
-                <p v-if="reports.length === 0" class="text-supporting text-ink-3">{{ trans('moderation.case.reports.none') }}</p>
+                <p v-if="reports.length === 0" class="text-admin-base text-ink-3">{{ trans('moderation.case.reports.none') }}</p>
             </template>
 
             <template #evidence>
@@ -291,18 +319,18 @@ const restrictionText = (d: DecisionDetail): string | null => {
                     <section v-if="decision" class="flex flex-col gap-12">
                         <div class="flex flex-wrap items-center gap-8">
                             <StatusPill :tone="outcomeTones[decision.action]" :label="trans(`moderation.outcomes.${decision.action}`)" />
-                            <span v-if="restrictionText(decision)" class="text-supporting text-ink-2 tabular-nums">{{ restrictionText(decision) }}</span>
+                            <span v-if="restrictionText(decision)" class="text-admin-base text-ink-2 tabular-nums">{{ restrictionText(decision) }}</span>
                         </div>
-                        <p class="text-supporting text-ink-2 tabular-nums">
+                        <p class="text-admin-base text-ink-2 tabular-nums">
                             {{ decision.decided_by ? trans('moderation.case.decision.by', { name: decision.decided_by.name, date: formatDateTime(decision.decided_at) }) : trans('moderation.case.decision.by_system', { date: formatDateTime(decision.decided_at) }) }}
                             · {{ trans(decision.automated_detection ? 'moderation.case.decision.automated_detection' : 'moderation.case.decision.human') }}
                         </p>
                         <dl class="flex flex-col gap-8">
-                            <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('moderation.case.decision.facts') }}</dt><dd class="max-w-720 whitespace-pre-line text-supporting text-ink">{{ decision.facts || '–' }}</dd></div>
+                            <div class="flex flex-col gap-2"><dt class="text-caption text-ink-3">{{ trans('moderation.case.decision.facts') }}</dt><dd class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ decision.facts || '–' }}</dd></div>
                             <div class="flex flex-col gap-2">
                                 <dt class="text-caption text-ink-3">{{ trans('moderation.case.decision.ground') }}</dt>
                                 <dd class="flex max-w-720 flex-col gap-2">
-                                    <span class="text-supporting text-ink">{{ decision.ground || '–' }}</span>
+                                    <span class="text-admin-base text-ink">{{ decision.ground || '–' }}</span>
                                     <span class="text-caption text-ink-3">{{ `${trans('decisions.document')}: ${trans(`decisions.documents.${decision.ground_document}`)}${decision.ground_section ? ` § ${decision.ground_section}` : ''}` }}</span>
                                 </dd>
                             </div>
@@ -310,22 +338,22 @@ const restrictionText = (d: DecisionDetail): string | null => {
                         <p v-if="decision.appeal_until" class="text-caption text-ink-3 tabular-nums">{{ trans('moderation.case.decision.appeal_until', { date: formatDate(decision.appeal_until) }) }}</p>
                         <p v-if="decision.reversed_by" class="text-caption text-ink-3 tabular-nums">{{ trans('moderation.case.decision.reversed', { date: formatDate(decision.reversed_by.decided_at) }) }}</p>
                     </section>
-                    <p v-else class="text-supporting text-ink-3">{{ trans('moderation.case.decision.none') }}</p>
+                    <p v-else class="text-admin-base text-ink-3">{{ trans('moderation.case.decision.none') }}</p>
 
                     <section v-if="decision" class="flex flex-col gap-8" data-testid="ADM-21.appeals">
                         <h2 class="text-headline text-ink">{{ trans('moderation.case.appeals.title') }}</h2>
-                        <p v-if="decision.appeals.length === 0" class="text-supporting text-ink-3">{{ trans('moderation.case.appeals.none') }}</p>
+                        <p v-if="decision.appeals.length === 0" class="text-admin-base text-ink-3">{{ trans('moderation.case.appeals.none') }}</p>
                         <ul v-else class="flex flex-col">
                             <li v-for="a in decision.appeals" :key="a.id" class="flex flex-col gap-8 border-t border-line-subtle py-12 first:border-t-0" data-testid="ADM-21.appeal">
                                 <div class="flex flex-wrap items-center justify-between gap-8">
                                     <p class="flex flex-wrap items-center gap-8">
                                         <StatusPill :tone="appealTones[a.status]" :label="trans(`moderation.appeal_status.${a.status}`)" />
-                                        <span class="text-supporting text-ink">{{ [trans(`moderation.roles.${a.role}`), a.appellant ? `@${a.appellant}` : null].filter(Boolean).join(' · ') }}</span>
+                                        <span class="text-admin-base text-ink">{{ [trans(`moderation.roles.${a.role}`), a.appellant ? `@${a.appellant}` : null].filter(Boolean).join(' · ') }}</span>
                                         <span class="text-caption text-ink-3 tabular-nums">{{ trans('moderation.case.appeals.filed', { date: formatDateTime(a.created_at) }) }}</span>
                                     </p>
                                     <Button v-if="a.may_decide" size="sm" variant="primary" data-testid="ADM-21.appeal.decide" @click="decideAppeal(a)">{{ trans('moderation.case.appeals.decide') }}</Button>
                                 </div>
-                                <blockquote v-if="a.text" class="max-w-720 border-l-2 border-line pl-12 text-supporting text-ink">{{ a.text }}</blockquote>
+                                <blockquote v-if="a.text" class="max-w-720 border-l-2 border-line pl-12 text-admin-base text-ink">{{ a.text }}</blockquote>
                                 <p v-else class="text-caption text-ink-3">{{ trans('moderation.case.appeals.text_hidden') }}</p>
                                 <p v-if="a.status === 'open' && !a.may_decide && can('moderation.appeals') && decision.decided_by?.me" class="text-caption text-ink-2" data-testid="ADM-21.appeal.same-staff">{{ trans('moderation.case.appeals.same_staff') }}</p>
                                 <p v-if="a.decided_at" class="text-caption text-ink-3 tabular-nums">{{ trans('moderation.case.appeals.decided', { name: a.decided_by ?? '–', date: formatDateTime(a.decided_at) }) }}</p>
@@ -338,14 +366,14 @@ const restrictionText = (d: DecisionDetail): string | null => {
             <template #prior>
                 <section class="flex flex-col gap-8" data-testid="ADM-21.prior">
                     <h2 class="text-headline text-ink">{{ trans('moderation.case.prior.title') }}</h2>
-                    <p v-if="prior.length === 0" class="text-supporting text-ink-3">{{ trans('moderation.case.prior.none') }}</p>
+                    <p v-if="prior.length === 0" class="text-admin-base text-ink-3">{{ trans('moderation.case.prior.none') }}</p>
                     <ul v-else class="flex flex-col">
                         <li v-for="p in prior" :key="p.id" class="flex flex-wrap items-center gap-8 border-t border-line-subtle py-8 first:border-t-0">
                             <StatusPill :tone="outcomeTones[p.action]" :label="trans(`moderation.outcomes.${p.action}`)" />
-                            <span class="text-supporting text-ink-2">{{ trans(`moderation.target_types.${p.target_type}`) }}</span>
+                            <span class="text-admin-base text-ink-2">{{ trans(`moderation.target_types.${p.target_type}`) }}</span>
                             <time class="text-caption text-ink-3 tabular-nums" :datetime="p.decided_at">{{ formatDate(p.decided_at) }}</time>
                             <Badge v-if="p.reversed" tone="success">{{ trans('moderation.case.prior.reversed') }}</Badge>
-                            <Link :href="caseHref(p.case_id)" :class="[focusRing, 'ml-auto inline-flex min-h-32 items-center rounded-xs text-label-s text-ink hover:underline']">{{ trans('moderation.case.prior.open') }}</Link>
+                            <Link :href="caseHref(p.case_id)" :class="[focusRing, 'ml-auto inline-flex min-h-32 items-center rounded-xs text-admin-base-strong text-ink hover:underline']">{{ trans('moderation.case.prior.open') }}</Link>
                         </li>
                     </ul>
                 </section>

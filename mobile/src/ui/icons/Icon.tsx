@@ -60,11 +60,9 @@ import { InfoIcon } from 'phosphor-react-native/src/icons/Info';
 import { KeyIcon } from 'phosphor-react-native/src/icons/Key';
 import { KeyboardIcon } from 'phosphor-react-native/src/icons/Keyboard';
 import { LifebuoyIcon } from 'phosphor-react-native/src/icons/Lifebuoy';
-import { LightbulbIcon } from 'phosphor-react-native/src/icons/Lightbulb';
 import { LinkIcon } from 'phosphor-react-native/src/icons/Link';
 import { ListIcon } from 'phosphor-react-native/src/icons/List';
 import { LockSimpleIcon } from 'phosphor-react-native/src/icons/LockSimple';
-import { MagicWandIcon } from 'phosphor-react-native/src/icons/MagicWand';
 import { MagnifyingGlassIcon } from 'phosphor-react-native/src/icons/MagnifyingGlass';
 import { MegaphoneSimpleIcon } from 'phosphor-react-native/src/icons/MegaphoneSimple';
 import { MinusIcon } from 'phosphor-react-native/src/icons/Minus';
@@ -152,11 +150,9 @@ export const phosphorIcons = {
   key: KeyIcon,
   keyboard: KeyboardIcon,
   lifebuoy: LifebuoyIcon,
-  lightbulb: LightbulbIcon,
   link: LinkIcon,
   list: ListIcon,
   'lock-simple': LockSimpleIcon,
-  'magic-wand': MagicWandIcon,
   'magnifying-glass': MagnifyingGlassIcon,
   'megaphone-simple': MegaphoneSimpleIcon,
   minus: MinusIcon,

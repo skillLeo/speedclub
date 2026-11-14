@@ -10,7 +10,10 @@ const useStyles = createStyles((t) => ({
 export type AiLabelProps = {
   /** The server's label, "KI-Vorschlag" or "Übersetzt" (EU AI Act Art. 50), in the request's language. */
   label: string;
-  /** `suggestion`: a lightbulb; `translation`: the translate glyph. Phosphor, never sparkles (M3.7 §2). */
+  /**
+   * `suggestion`: the text label alone (09 §4.5: AI features carry "KI-Vorschlag", no icon); `translation`: the translate glyph,
+   * which says what happened to the text, not that a machine did it.
+   */
   kind?: 'suggestion' | 'translation';
   style?: StyleProp<ViewStyle>;
   testID?: string;
@@ -21,7 +24,7 @@ export function AiLabel({ label, kind = 'suggestion', style, testID }: AiLabelPr
   const styles = useStyles();
   return (
     <View style={[styles.row, style]} testID={testID}>
-      <Icon name={kind === 'translation' ? 'translate' : 'lightbulb'} size={16} color="text.secondary" />
+      {kind === 'translation' ? <Icon name="translate" size={16} color="text.secondary" /> : null}
       <Text variant="caption" color="text.secondary">
         {label}
       </Text>

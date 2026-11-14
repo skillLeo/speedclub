@@ -226,7 +226,8 @@
             "rate_limits_published": "Anfrage-Limits veröffentlicht",
             "restriction_lifted": "Einschränkung abgelaufen",
             "template_deleted": "Begründungsvorlage gelöscht",
-            "template_saved": "Begründungsvorlage gespeichert"
+            "template_saved": "Begründungsvorlage gespeichert",
+            "case_released": "Übernahme rückgängig gemacht"
         },
         "permissions": {
             "changed": "Rechte der Rollen geändert"
@@ -334,7 +335,13 @@
             "rejected": "Betrieb abgelehnt",
             "suspended": "Betrieb gesperrt",
             "reinstated": "Betrieb wieder freigeschaltet",
-            "reopened": "Betriebsentscheidung zurückgenommen"
+            "reopened": "Betriebsentscheidung zurückgenommen",
+            "member_invited": "Mitglied ins Betriebsteam eingeladen",
+            "invite_accepted": "Team-Einladung angenommen",
+            "invite_declined": "Team-Einladung abgelehnt",
+            "invite_withdrawn": "Team-Einladung zurückgezogen",
+            "member_removed": "Mitglied aus dem Betriebsteam entfernt",
+            "member_left": "Mitglied hat das Betriebsteam verlassen"
         },
         "product": {
             "created": "Teil angelegt",
@@ -342,6 +349,10 @@
             "archived": "Teil archiviert",
             "restored": "Teil wiederhergestellt",
             "merged": "Teile zusammengeführt"
+        },
+        "editorial": {
+            "sample_hidden": "Beispiel ausgeblendet",
+            "sample_shown": "Beispiel wieder gezeigt"
         }
     }
 }

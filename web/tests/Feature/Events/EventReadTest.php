@@ -201,6 +201,8 @@ describe('GET events', function () {
             ->assertJsonPath('data.0.distance_km', fn (mixed $km): bool => is_int($km) && $km < 10);
         $this->getJson('/api/v1/events/pins?bbox=11.0,47.9,12.0,48.5')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $munich->id);
 
+        // From a Wednesday: on a Saturday or Sunday "next Saturday" is a week after this weekend (the gate ran on Saturday, 14.11.2026).
+        $this->travelTo(CarbonImmutable::now('Europe/Berlin')->next(CarbonImmutable::WEDNESDAY)->setTime(10, 0));
         $saturday = now('Europe/Berlin')->next(CarbonImmutable::SATURDAY)->setTime(14, 0)->utc();
         $weekend = evEvent(null, ['starts_at' => $saturday, 'ends_at' => $saturday->copy()->addHours(3)]);
         $ids = collect($this->getJson('/api/v1/events?when=weekend')->assertOk()->json('data'))->pluck('id');

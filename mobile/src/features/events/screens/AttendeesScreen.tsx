@@ -143,16 +143,18 @@ export function AttendeesScreen() {
       />
     );
   } else if (rows.length === 0) {
-    // DQ-1116 (09 §5 EmptyState): left-aligned, two badged sample rows of what a going member looks like, one line, and for the
-    // organiser one action. Never a centred glyph with a sentence.
+    // DQ-1116 (09 §5 EmptyState): left-aligned headline, the line that introduces the sample ("So sieht das aus:"), the two badged
+    // sample rows of what a going member looks like, then one action for every member of a published meet: "Treffen teilen".
+    // Never a centred glyph with a sentence.
     const shareUrl = event.data?.share_url;
     state = (
       <EmptyState
         preview={<SampleAttendees />}
+        previewPlacement="afterBody"
         title={organiser && tab !== 'going' ? t('attendees.emptyTab') : t('attendees.emptyTitle')}
         body={t('attendees.emptyBody')}
         action={
-          organiser && shareUrl && event.data?.status === 'published'
+          shareUrl && event.data?.status === 'published'
             ? {
                 label: t('attendees.emptyShare'),
                 variant: 'secondary',

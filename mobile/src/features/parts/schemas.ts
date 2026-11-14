@@ -90,6 +90,8 @@ export function serverField(name: string): Path<BusinessFormValues> | null {
     accept_terms: 'acceptTerms',
   };
   if (direct[name]) return direct[name];
+  // SEC-414-06: the map point follows the address; a 422 on it belongs to the street.
+  if (name === 'lat' || name === 'lng') return 'street';
   if (name.startsWith('services.')) return 'services';
   const day = /^opening_hours\.(mon|tue|wed|thu|fri|sat|sun)\b/.exec(name)?.[1] as DayKey | undefined;
   if (day) return `hours.${day}.opens`;
@@ -353,36 +355,91 @@ export function applyBody(values: BusinessFormValues): StoreBusinessBody {
   return fullBody(values);
 }
 
-/** The Impressum fields a verified business no longer changes in the app (ADR-455: they go back through review via support). */
-export const LOCKED_KEYS = ['name', 'legal_name', 'legal_form', 'representative', 'street', 'postcode', 'city', 'country', 'register_court', 'register_number'] as const;
+/**
+ * The fields a verified business no longer changes in the app (ADR-455; SEC-414-06 adds the kind, the contact and the map point): they
+ * go back through review via support. The server names them in MyBusinessResource `locked_fields` (Business::lockedFields); this list
+ * stands in for a copy that does not carry it yet.
+ */
+export const LOCKED_KEYS = [
+  'name',
+  'legal_name',
+  'legal_form',
+  'representative',
+  'street',
+  'postcode',
+  'city',
+  'country',
+  'register_court',
+  'register_number',
+  'vat_id',
+  'kind',
+  'email',
+  'phone',
+  'website',
+  'lat',
+  'lng',
+] as const;
+
+/** The server key of each form field that can be locked. */
+const SERVER_KEY: Partial<Record<Path<BusinessFormValues>, string>> = {
+  name: 'name',
+  kind: 'kind',
+  legalName: 'legal_name',
+  legalForm: 'legal_form',
+  representative: 'representative',
+  registerCourt: 'register_court',
+  registerNumber: 'register_number',
+  vatId: 'vat_id',
+  street: 'street',
+  postcode: 'postcode',
+  city: 'city',
+  country: 'country',
+  email: 'email',
+  phone: 'phone',
+  website: 'website',
+};
+
+const NONE: ReadonlySet<string> = new Set();
+const ALL_LOCKED: ReadonlySet<string> = new Set(LOCKED_KEYS);
+
+/** A form's lock: the server keys it may not send (`true` stands for every key of LOCKED_KEYS). */
+export type Locked = boolean | ReadonlySet<string>;
+
+function lockedSet(locked: Locked): ReadonlySet<string> {
+  if (typeof locked === 'boolean') return locked ? ALL_LOCKED : NONE;
+  return locked;
+}
+
+/**
+ * SEC-414-06: the server keys locked on this business. `locked_fields` when the API sends it (read defensively: older copies and the
+ * generated type may not have it), else every key of LOCKED_KEYS while `identity_locked`, else none.
+ */
+export function lockedFieldsOf(business: Pick<MyBusiness, 'identity_locked'> | null | undefined): ReadonlySet<string> {
+  if (!business) return NONE;
+  const sent: unknown = 'locked_fields' in business ? business.locked_fields : undefined;
+  if (Array.isArray(sent)) {
+    const keys = sent.filter((key): key is string => typeof key === 'string');
+    return keys.length > 0 || !business.identity_locked ? new Set(keys) : ALL_LOCKED;
+  }
+  return business.identity_locked ? ALL_LOCKED : NONE;
+}
 
 /** PATCH me/business: only what changed since `saved`, and never a locked field of a verified business. */
-export function updateBody(values: BusinessFormValues, saved: BusinessFormValues, locked: boolean): UpdateBusinessBody {
+export function updateBody(values: BusinessFormValues, saved: BusinessFormValues, locked: Locked): UpdateBusinessBody {
+  const keys = lockedSet(locked);
   const next = fullBody(values) as Record<string, unknown>;
   const before = fullBody(saved) as Record<string, unknown>;
   const body: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(next)) {
     if (key === 'accept_terms') continue;
-    if (locked && (LOCKED_KEYS as readonly string[]).includes(key)) continue;
+    if (keys.has(key)) continue;
     if (JSON.stringify(value) !== JSON.stringify(before[key])) body[key] = value;
   }
   return body as UpdateBusinessBody;
 }
 
 /** Whether a field is locked for a verified business (shown read-only with the support hint). */
-export function isLockedField(field: Path<BusinessFormValues>, locked: boolean): boolean {
-  if (!locked) return false;
-  const map: Partial<Record<Path<BusinessFormValues>, (typeof LOCKED_KEYS)[number]>> = {
-    name: 'name',
-    legalName: 'legal_name',
-    legalForm: 'legal_form',
-    representative: 'representative',
-    street: 'street',
-    postcode: 'postcode',
-    city: 'city',
-    country: 'country',
-    registerCourt: 'register_court',
-    registerNumber: 'register_number',
-  };
-  return map[field] !== undefined;
+export function isLockedField(field: Path<BusinessFormValues>, locked: Locked): boolean {
+  const key = SERVER_KEY[field];
+  return key !== undefined && lockedSet(locked).has(key);
 }

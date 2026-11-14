@@ -12,6 +12,7 @@ use App\Services\Approvals\Approvals;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
+use Laravel\Sanctum\Sanctum;
 
 require_once __DIR__.'/../Support/helpers.php';
 require_once __DIR__.'/../../Businesses/BusinessTestHelpers.php';
@@ -148,4 +149,69 @@ it('refuses a suspension request for a changed business', function () {
     $this->post("/admin/businesses/{$verified->id}/suspend", ['reason' => 'Impressum gehört zu einem anderen Betrieb.', 'version' => '2020-01-01T00:00:00+00:00'])
         ->assertSessionHasErrors('version');
     expect(ApprovalRequest::query()->where('action', 'business.suspend')->exists())->toBeFalse();
+});
+
+// SEC-414-03: reopen is the verifier's own undo inside the window; any later takedown of a verified business is the four-eyes suspension.
+it('refuses a reopen of a business another staff member verified, or verified before the window, and keeps it public', function (string $case) {
+    $verifier = staffWithRole(null);
+    $verified = bizBusiness(null, ['slug' => 'tuning-nord', 'verified_by' => $verifier->id, 'verified_at' => $case === 'old' ? now()->subDays(90) : now()->subMinutes(5)]);
+    $actor = $case === 'old' ? $verifier : null;
+
+    if ($actor !== null) {
+        seedStaffRoles();
+        $actor->assignRole('moderator');
+        actingAsStaff($actor);
+        $this->withSession(['auth.password_confirmed_at' => time()]);
+    } else {
+        bizAdminAs('moderator');
+    }
+
+    $this->post("/admin/businesses/{$verified->id}/reopen", ['version' => bizVersion($verified)])->assertSessionHasErrors('state');
+    expect($verified->fresh()?->status)->toBe(BusinessStatus::Verified)
+        ->and(AuditEvent::query()->where('action', 'business.reopened')->exists())->toBeFalse();
+    $this->getJson('/api/v1/businesses/tuning-nord')->assertOk();
+    $this->getJson("/admin/businesses/{$verified->id}/preview")->assertJsonPath('business.can.reopen', false)->assertJsonPath('business.can.suspend', true);
+})->with(['another moderator' => ['other'], 'verified 90 days ago' => ['old']]);
+
+it('lets the verifier undo their own verification inside the window, and tells the owner', function () {
+    $staff = bizAdminAs('moderator');
+    $this->post("/admin/businesses/{$this->applied->id}/verify", ['version' => bizVersion($this->applied)])->assertSessionHas('success', 'businesses.flash.verified');
+    $this->getJson("/admin/businesses/{$this->applied->id}/preview")->assertJsonPath('business.can.reopen', true);
+
+    $this->post("/admin/businesses/{$this->applied->id}/reopen", ['version' => bizVersion($this->applied)])->assertSessionHas('success', 'businesses.flash.reopened');
+    expect($this->applied->fresh()?->status)->toBe(BusinessStatus::Applied)
+        ->and(AuditEvent::query()->where('action', 'business.reopened')->where('actor_id', (string) $staff->id)->exists())->toBeTrue()
+        ->and(Notification::query()->where('notifiable_id', $this->owner->id)->where('type', NotificationType::BusinessReview->value)->where('data->outcome', 'reopened')->exists())->toBeTrue();
+});
+
+// SEC-414-07: a monotonic version; owner edits never void a pending suspension.
+it('gives two writes in the same second two versions', function () {
+    $this->travelTo(now()->startOfSecond());
+    $before = bizVersion($this->applied);
+    $this->applied->forceFill(['about' => 'Erste Fassung.'])->save();
+    $first = bizVersion($this->applied);
+    $this->applied->forceFill(['about' => 'Zweite Fassung.'])->save();
+
+    expect($first)->not->toBe($before)->and(bizVersion($this->applied))->not->toBe($first)
+        ->and($this->applied->fresh()?->updated_at?->getTimestamp())->toBe(now()->getTimestamp());
+
+    // Staff who read the first version cannot verify the second.
+    bizAdminAs('moderator');
+    $this->post("/admin/businesses/{$this->applied->id}/verify", ['version' => $first])->assertSessionHasErrors('version');
+    expect($this->applied->fresh()?->status)->toBe(BusinessStatus::Applied);
+});
+
+it('approves a suspension after the owner edited the business meanwhile', function () {
+    $owner = User::factory()->create();
+    $verified = bizBusiness($owner, ['slug' => 'tuning-nord']);
+    bizAdminAs('moderator');
+    $this->post("/admin/businesses/{$verified->id}/suspend", ['reason' => 'Impressum gehört zu einem anderen Betrieb.', 'version' => bizVersion($verified)])
+        ->assertSessionHas('approval');
+
+    // The owner keeps editing while the request waits.
+    Sanctum::actingAs($owner);
+    $this->patchJson('/api/v1/me/business', ['about' => 'Alles in Ordnung hier.'])->assertOk();
+
+    app(Approvals::class)->approve(ApprovalRequest::query()->where('action', 'business.suspend')->firstOrFail(), staffWithRole('admin'));
+    expect($verified->fresh()?->status)->toBe(BusinessStatus::Suspended);
 });

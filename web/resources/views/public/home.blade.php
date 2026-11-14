@@ -16,6 +16,9 @@
     $owner = $vehicle['owner'] ?? null;
     $stepSizes = '(min-width: 1280px) 688px, (min-width: 768px) 58vw, 100vw';
     $stores = array_filter(['App Store' => $store_ios, 'Google Play' => $store_android]);
+    // DQ-1177: the claim breaks only between its sentences ("Dein Auto." / "Dein Build." / "Dein Club."), never inside one: the spaces
+    // within a sentence become no-break spaces, which the title's size rule also treats as unbreakable (DisplayTitleLayout::words).
+    $claim = (string) preg_replace('/(?<![.!?]) /u', "\u{00A0}", (string) __('public.home.claim'));
     $json = [[
         '@context' => 'https://schema.org',
         '@type' => 'Organization',
@@ -49,7 +52,7 @@
             <div class="sc-land-hero-inner">
                 {{-- The title box is the 640 measure itself, so the title's size rule counts the lines it really gets (ADR-426 a). --}}
                 <div class="sc-title-box">
-                    <x-public.display-title :text="__('public.home.claim')" :name="false" id="claim" class="text-on-photo" data-testid="WEB-03.claim" />
+                    <x-public.display-title :text="$claim" :name="false" id="claim" class="text-on-photo" data-testid="WEB-03.claim" />
                 </div>
                 <p class="mt-8 text-body text-on-photo" data-testid="WEB-03.lead">{{ __('public.home.lead') }}</p>
                 <div class="mt-24 flex flex-wrap items-center gap-x-16 gap-y-8">

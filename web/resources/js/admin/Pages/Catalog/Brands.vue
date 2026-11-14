@@ -139,7 +139,7 @@ else if (dialog === 'merge') {
                     <div class="min-w-160 grow basis-0">
                         <Field :label="trans('catalog.filters.status')"><Select v-model="statusModel" :options="statusOptions" size="sm" :placeholder="trans('catalog.filters.status_default')" data-testid="ADM-16.filter.status" /></Field>
                     </div>
-                    <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" class="shrink-0">{{ trans('catalog.filters.apply') }}</Button>
+                    <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" class="shrink-0">{{ trans('catalog.filters.apply') }}</Button>
                 </form>
             </template>
 

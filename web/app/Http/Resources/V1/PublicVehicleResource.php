@@ -46,6 +46,8 @@ class PublicVehicleResource extends VehicleCardResource
         $specs = $vehicle->specs;
         $isOwner = $vehicle->isOwnedBy($viewer);
 
+        ModificationRowResource::loadLinks($vehicle->modifications);
+
         /** @var Collection<int, Modification> $mods */
         $mods = $vehicle->modifications->sortBy([['sort', 'asc'], ['id', 'asc']])->values()->toBase();
 

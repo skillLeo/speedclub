@@ -19,6 +19,11 @@ type QaDataSet = {
    * input role). Marked instead of carrying a test ID, which would extend the control's prefix.
    */
   qaMeasure?: 'mirror' | 'line';
+  /**
+   * A ThemeScope region drawn in another theme than the page's (a brand stage in Carbon, the SM14 panel's theme): the DOM audit
+   * checks the colours inside it against that theme's tokens (`data-theme-scope`, DQ-1045).
+   */
+  themeScope?: 'carbon' | 'black' | 'light';
 };
 
 declare module 'react-native' {

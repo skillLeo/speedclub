@@ -27,7 +27,7 @@
     "draftDeleted": "Entwurf gelöscht",
     "emptyTitle": "Deine Garage wartet.",
     "emptyBody": "Leg dein Auto an, dokumentiere Technik und Mods und hol dir deinen QR-⁠Sticker für die Scheibe.",
-    "emptyAction": "Auto hinzufügen",
+    "emptyAction": "Fahrzeug hinzufügen",
     "sampleTitle": "So sieht ein Build aus",
     "sample": {
       "title": "Nissan Skyline GT-R R34",
@@ -35,7 +35,7 @@
       "power": "500 PS",
       "torque": "540 Nm",
       "drive": "Allrad",
-      "caption": "Nissan · Skyline GT-R · R34 · 2002"
+      "caption": "2,6 l R6 Biturbo (RB26DETT)"
     },
     "actionsFor": "Aktionen für {{vehicle}}",
     "quick": {
@@ -455,7 +455,7 @@
     "statuses": {
       "installed": "Verbaut",
       "planned": "Geplant",
-      "removed": "Ausgebaut"
+      "removed": "Entfernt"
     },
     "groups": {
       "rims": "Felgen",
@@ -859,5 +859,14 @@
     },
     "huChip": "Nächste HU: {{month}}",
     "huChipOverdue": "HU überfällig seit {{month}}"
+  },
+  "widget": {
+    "name": "Mein Auto",
+    "emptyBody": "Dein Auto und seine nächste Fälligkeit.",
+    "add": "Auto hinzufügen",
+    "nothingDue": "{{days}} Tage nichts fällig",
+    "dueLine": "{{title}} {{countdown}}",
+    "a11yCar": "Mein Auto: {{name}}. {{due}} Öffnet dein Auto in der Garage.",
+    "a11yEmpty": "Mein Auto: noch kein Auto. Auto hinzufügen."
   }
 }

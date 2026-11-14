@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { PHOTOS } from '@/features/gallery/data';
 import { QR_SAMPLE_SVG } from '@/features/gallery/qrSample';
 import { createStyles, space } from '@/theme';
-import { BuildSheet, DisplayTitle, Photo, QRDisplay, SampleBadge, SampleBadges, Text } from '@/ui';
+import { BuildSheet, DisplayTitle, MiniSpec, Photo, QRDisplay, SampleBadge, SampleBadges } from '@/ui';
 
 /** ONB-01…03 (09 §7.1): one licensed night photo per page (design/seed-photos/CREDITS.md) and the live component composited on it. */
 export type OnboardingPageKey = 'garage' | 'sheet' | 'qr';
@@ -36,43 +36,7 @@ const useStyles = createStyles((t) => ({
   card: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.xl, overflow: 'hidden' },
   cardBadges: { left: t.space[12], position: 'absolute', top: t.space[12] },
   cardBody: { gap: t.space[12], padding: t.space[16] },
-  // The mini spec: three cells in one row, hairline-free, numeral + unit on one line, the data label under it.
-  spec: { flexDirection: 'row', gap: t.space[12] },
-  specCell: { flex: 1, gap: t.space[2], minWidth: 0 },
-  specValue: { alignItems: 'baseline', flexDirection: 'row', gap: t.space[2] },
 }));
-
-type MiniSpecItem = { key: string; value: string; unit?: string; label: string };
-
-/**
- * 09 §5 SpecStrip, the card's mini form: three `hero.numeral.s` (tnum) with their `label.unit` and `label.caps` data label, in one
- * row (DQ-1035, DQ-1042: no empty fourth quadrant).
- */
-function MiniSpec({ items, testID }: { items: readonly MiniSpecItem[]; testID: string }) {
-  const styles = useStyles();
-  return (
-    <View style={styles.spec} testID={testID}>
-      {items.map((item) => (
-        <View key={item.key} style={styles.specCell}>
-          <View style={styles.specValue}>
-            <Text variant="heroNumeralS" numeric hyphenate={false}>
-              {item.value}
-            </Text>
-            {item.unit ? (
-              <Text variant="labelUnit" color="text.secondary" hyphenate={false}>
-                {item.unit}
-              </Text>
-            ) : null}
-          </View>
-          <Text variant="labelCaps" color="text.secondary" numberOfLines={1} hyphenate={false}>
-            {item.label}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 
 /**
  * The real components with badged sample data ("Beispiel"), not screenshots. They illustrate the page's line and are hidden from
@@ -102,6 +66,7 @@ export function LiveComponent({ page, width, compact = false }: { page: Onboardi
                 { key: 'torque', value: '365', unit: 'Nm', label: sample('torque') },
                 { key: 'year', value: '2004', label: sample('year') },
               ]}
+              layoutWidth={width - 2 * space[16]}
               testID="ONB-01.card.spec"
             />
           </View>
@@ -120,6 +85,7 @@ export function LiveComponent({ page, width, compact = false }: { page: Onboardi
             { key: 'torque', value: '540', unit: 'Nm', label: sample('torque') },
             { key: 'year', value: '2002', label: sample('year') },
           ]}
+          layoutWidth={width - 2 * space[16]}
           testID="ONB-02.spec"
         />
         <BuildSheet

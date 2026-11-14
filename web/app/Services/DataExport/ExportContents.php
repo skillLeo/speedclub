@@ -62,7 +62,79 @@ class ExportContents
             'events.json' => $this->events($user),
             // M4.13 (09 §8.8, §13): the member's maintenance items and service log with costs, odometers and the reminders sent.
             'maintenance.json' => $this->maintenance($user),
+            // SEC-414-11 (M4.14, 09 §8.10): the business the member applied with or works for (application, Impressum, staff's reason
+            // to the applicant), team invitations, and the portfolio tags the member asked for or decided.
+            'business.json' => $this->business($user),
+            'business_tags.json' => $this->businessTags($user),
         ];
+    }
+
+    /**
+     * The member's business: as owner the whole application (Impressum, document note, status and the reason staff gave the applicant;
+     * never a staff name), as staff the business's name and role; open team invitations to the member (business and date).
+     *
+     * @return array{membership: array<string, mixed>|null, invitations: array<int, array<string, mixed>>}
+     */
+    private function business(User $user): array
+    {
+        $id = $user->getKey();
+        $membership = DB::table('business_members')->join('businesses', 'businesses.id', '=', 'business_members.business_id')
+            ->where('business_members.user_id', $id)
+            ->first(['businesses.id', 'businesses.slug', 'businesses.name', 'businesses.owner_id', 'business_members.role', 'business_members.created_at as joined_at']);
+        $row = null;
+
+        if ($membership !== null) {
+            $row = ['business' => $membership->name, 'url' => '/b/'.$membership->slug, 'role' => $membership->role, 'joined_at' => $membership->joined_at];
+
+            if ($membership->owner_id === $id) {
+                $application = (array) DB::table('businesses')->where('id', $membership->id)->first([
+                    'name', 'kind', 'legal_name', 'legal_form', 'representative', 'street', 'postcode', 'city', 'country', 'lat', 'lng', 'phone',
+                    'email', 'website', 'register_court', 'register_number', 'vat_id', 'about', 'services', 'opening_hours', 'document_note', 'status',
+                    'review_reason', 'submitted_at', 'verified_at', 'suspended_at', 'removed_at', 'created_at', 'updated_at',
+                ]);
+
+                foreach (['services', 'opening_hours'] as $json) {
+                    $application[$json] = is_string($application[$json] ?? null) ? json_decode($application[$json], true) : null;
+                }
+
+                $row['application'] = $application;
+                $row['team'] = DB::table('business_members')->join('users', 'users.id', '=', 'business_members.user_id')
+                    ->where('business_members.business_id', $membership->id)->orderBy('business_members.created_at')
+                    ->get(['users.username', 'business_members.role', 'business_members.created_at as joined_at'])
+                    ->map(fn (object $member): array => (array) $member)->all();
+            }
+        }
+
+        $invitations = DB::table('business_invites')->join('businesses', 'businesses.id', '=', 'business_invites.business_id')
+            ->where('business_invites.user_id', $id)->orderBy('business_invites.created_at')
+            ->get(['businesses.name as business', 'business_invites.created_at as invited_at'])
+            ->map(fn (object $invite): array => (array) $invite)->all();
+
+        return ['membership' => $row, 'invitations' => $invitations];
+    }
+
+    /**
+     * "Eingebaut von" on the member's own mods (asked or decided by the member, or proposed to them), and the tags the member decided
+     * for their business: the mod's title, the business, who asked first, the state and the dates.
+     *
+     * @return array{on_my_mods: array<int, array<string, mixed>>, decided_for_business: array<int, array<string, mixed>>}
+     */
+    private function businessTags(User $user): array
+    {
+        $id = $user->getKey();
+        $columns = ['modifications.title as mod', 'businesses.name as business', 'mod_business_tags.status', 'mod_business_tags.initiated_by',
+            'mod_business_tags.decided_at', 'mod_business_tags.created_at'];
+        $base = fn () => DB::table('mod_business_tags')
+            ->join('modifications', 'modifications.id', '=', 'mod_business_tags.mod_id')
+            ->join('vehicles', 'vehicles.id', '=', 'modifications.vehicle_id')
+            ->join('businesses', 'businesses.id', '=', 'mod_business_tags.business_id')
+            ->orderBy('mod_business_tags.created_at');
+
+        $mine = $base()->where('vehicles.owner_id', $id)->get($columns)->map(fn (object $tag): array => (array) $tag)->all();
+        $decided = $base()->where('mod_business_tags.decided_by', $id)->where('vehicles.owner_id', '!=', $id)
+            ->get(['businesses.name as business', 'mod_business_tags.status', 'mod_business_tags.decided_at'])->map(fn (object $tag): array => (array) $tag)->all();
+
+        return ['on_my_mods' => $mine, 'decided_for_business' => $decided];
     }
 
     /**

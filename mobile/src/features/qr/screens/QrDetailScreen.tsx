@@ -40,6 +40,7 @@ import { openPublicPage } from '../openPublicPage';
 import { useRevealOnce } from '../reveal';
 import { isBlockedByStaff } from '../status';
 import { STICKER_SHOP_FLAG, stickerShopUrl } from '../stickerShop';
+import { compactCardWidth } from '../stage';
 import { useQrDownload } from '../useQrDownload';
 
 const ROUTE = 'QR-02';
@@ -180,7 +181,8 @@ function useStageInset(): { inset: number; columnWidth: number; bleed: boolean; 
   const bleed = kind === 'phone';
   return {
     inset: bleed ? gutter : space[24],
-    columnWidth: bleed ? width - 2 * gutter : QR_COLUMN,
+    // ADR-458: on a phone the card leaves both side bands to the car (the stage still runs edge to edge).
+    columnWidth: bleed ? compactCardWidth(width - 2 * gutter) : QR_COLUMN,
     bleed,
     split: !bleed,
   };

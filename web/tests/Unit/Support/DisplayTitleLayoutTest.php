@@ -222,6 +222,22 @@ describe('the trailing code (ADR-426 c as amended)', function () {
             ->and(Layout::state($text, 246, 'page', false, 2, true))->toBe(['size' => 48.0, 'shrunk' => true, 'bound' => false]);
     });
 
+    it('keeps a garage-card title (tile) at 30 when the card rule would shrink it to one line (DQ-1174)', function () {
+        $text = KeepTogether::titleText('Nissan Skyline GT-R R34');
+        // A width where 30 needs two lines and 24 fits one: the card rule shrinks, the tile rule keeps 30 like its neighbours.
+        $width = (float) ceil(Layout::width($text, 24)) + 1;
+
+        expect(Layout::lineCount($text, 30, $width))->toBe(2)
+            ->and(Layout::size($text, $width, 'card', false, 1, true))->toEqual(24)
+            ->and(Layout::size($text, $width, 'tile', false, 1, true))->toEqual(30)
+            // Never the desktop page size: the phone pair at every width.
+            ->and(Layout::size($text, 1000, 'tile', true, 1, true))->toEqual(30)
+            // More than two lines at 30: the page rule's shrink applies to the tile too.
+            ->and(Layout::size(KeepTogether::titleText('Lamborghini Urus'), 170, 'tile', false, 1, true))->toEqual(24)
+            ->and(Layout::placements('tile'))->toBe(['phone' => 'tile', 'tablet' => 'tile', 'desktop' => 'tile'])
+            ->and(Layout::css($text, 'sc-title--t', 'tile', true))->not->toContain('--sc-type-display-title-size)');
+    });
+
     it('counts an overflow at the full size that disappears at 24 as a shrink', function () {
         // "Lamborghini" is 191.97 at 30 and 153.58 at 24: wider than a 170 line only at 30.
         $text = KeepTogether::titleText('Lamborghini Urus');

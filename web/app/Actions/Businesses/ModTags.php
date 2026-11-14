@@ -6,6 +6,7 @@ use App\Enums\BusinessStatus;
 use App\Enums\ErrorCode;
 use App\Enums\ModTagInitiator;
 use App\Enums\ModTagStatus;
+use App\Enums\RestrictionType;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
 use App\Exceptions\ApiException;
@@ -24,13 +25,20 @@ use Illuminate\Validation\ValidationException;
  * only an accepted tag sets modifications.installed_by_business_id, which the business page's portfolio and the mod's public face read.
  * Either side removes a tag at any time (the row goes). Both sides hear about it in the app (Notifier::businessTag). A business must be
  * verified to tag or be tagged (409 business_not_verified). A member of the business's team tagging their own mod confirms both sides.
+ *
+ * SEC-414-01: only the build's owner acting themselves ever confirms at once (request() by a team member, or a team member proposing
+ * their own build); a business's proposal on anyone else's build, team members included, waits for that owner. A tag another business
+ * holds confirmed is never replaced: 409 business_tag_taken until one side takes it off. Accepting publishes "Eingebaut von", so a
+ * publishing-restricted member cannot accept (403 account_restricted); declining stays open (SEC-414-11).
  */
 class ModTags
 {
     public function __construct(private readonly Notifier $notifier) {}
 
     /**
-     * The owner names $business on $mod. Replaces another business's tag of the mod; confirms a pending proposal of the same business.
+     * The owner names $business on $mod (only ever the build's owner as the actor). Replaces another business's pending or declined tag
+     * of the mod (a pending proposal of that business counts as declined); another business's confirmed tag: 409 business_tag_taken.
+     * Confirms a pending proposal of the same business.
      */
     public function request(User $owner, Modification $mod, Business $business): ModBusinessTag
     {
@@ -40,8 +48,9 @@ class ModTags
 
         $ownTeam = $business->roleOf($owner) !== null;
         $notify = null;
+        $replaced = null;
 
-        $tag = DB::transaction(function () use ($owner, $mod, $business, $ownTeam, &$notify): ModBusinessTag {
+        $tag = DB::transaction(function () use ($owner, $mod, $business, $ownTeam, &$notify, &$replaced): ModBusinessTag {
             Modification::query()->whereKey($mod->id)->lockForUpdate()->value('id');
             $tag = ModBusinessTag::query()->where('mod_id', $mod->id)->lockForUpdate()->first();
 
@@ -58,6 +67,14 @@ class ModTags
             }
 
             if ($tag instanceof ModBusinessTag) {
+                if ($tag->business_id !== $business->id && $tag->status === ModTagStatus::Accepted) {
+                    throw new ApiException(ErrorCode::BusinessTagTaken);
+                }
+
+                if ($tag->business_id !== $business->id && $tag->status === ModTagStatus::Pending && $tag->initiated_by === ModTagInitiator::Business) {
+                    $replaced = $tag;
+                }
+
                 $tag->delete();
             }
 
@@ -79,6 +96,10 @@ class ModTags
 
             return $tag;
         });
+
+        if ($replaced instanceof ModBusinessTag) {
+            $this->notifier->businessTag($replaced->business->owner, $replaced, 'declined', true);
+        }
 
         if ($notify === 'requested') {
             $this->notifier->businessTag($business->owner, $tag, 'requested', true);
@@ -110,7 +131,8 @@ class ModTags
             throw new ApiException(ErrorCode::NotFound);
         }
 
-        if ($business->roleOf($owner) !== null) {
+        // SEC-414-01: a team member proposing their own build is the owner acting; any other build waits for its owner, team or not.
+        if ($owner->is($by)) {
             return $this->request($owner, $mod, $business);
         }
 
@@ -175,6 +197,10 @@ class ModTags
 
             if ($accept && ($locked->business->status !== BusinessStatus::Verified || $locked->business->removed_at !== null)) {
                 throw new ApiException(ErrorCode::BusinessNotVerified);
+            }
+
+            if ($accept && $by->isRestrictedFrom(RestrictionType::Publishing)) {
+                throw ApiException::accountRestricted($by->restrictedUntil(RestrictionType::Publishing));
             }
 
             return $this->settle($locked, $mod, $accept, $by);

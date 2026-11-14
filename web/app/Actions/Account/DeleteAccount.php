@@ -18,7 +18,6 @@ use App\Models\Vehicle;
 use App\Models\VerificationCode;
 use App\Services\Account\WithdrawMemberMedia;
 use App\Services\Audit\Audit;
-use App\Services\Auth\AuthMailer;
 use App\Services\Auth\IdTokens\AppleTokens;
 use App\Services\Auth\MemberSessions;
 use App\Services\Events\EventHousekeeping;
@@ -52,7 +51,6 @@ class DeleteAccount
         private readonly OgImages $og,
         private readonly SitemapWriter $sitemap,
         private readonly AppleTokens $apple,
-        private readonly AuthMailer $mailer,
     ) {}
 
     public function handle(User $user): void
@@ -123,11 +121,7 @@ class DeleteAccount
         $this->notifier->security($user, SecurityNotice::DeletionRequested);
 
         // 09 §8.1: revoke Sign in with Apple after the response (a 200 is no proof; the outcome is audited and logged).
-        foreach ($closed['apple'] as $account) {
-            $this->mailer->afterResponse(function () use ($user, $account): void {
-                Audit::record(MemberSecurityEvent::AppleRevoked->value, $user, after: ['outcome' => $this->apple->revoke($account)], actor: $user);
-            });
-        }
+        $this->apple->revokeLater($user, $closed['apple']);
     }
 
     /**

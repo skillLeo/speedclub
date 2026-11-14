@@ -36,10 +36,21 @@ export type ProfileFrameProps = {
   header: CollapsingHeader;
   /** Photo variant: the scroll distance after which the bar is solid (the cover's height minus the bar). */
   collapseAt?: number;
+  /**
+   * Photo variant: the cover's width when it is narrower than the pane (desktop, past the wide column, DQ-1159). The floating bar
+   * spans the cover, so the round controls stay on its top corners.
+   */
+  photoWidth?: number;
   onWidth?: (width: number) => void;
   /** What the offline banner says. */
   offlineLabel?: string;
   bodyTestID?: string;
+  /**
+   * False while the page is a skeleton: taller than a phone and holding nothing to focus, the scroller would be a region nobody
+   * reaches by keyboard (axe scrollable-region-focusable, PROF-02 loading since its cover skeleton, DQ-1234), and there is nothing
+   * to scroll to yet. As HOME-01 and DISC-02 do with their lists.
+   */
+  scrollEnabled?: boolean;
   children: ReactNode;
   /** Sheets and dialogs of the page. */
   overlays?: ReactNode;
@@ -54,9 +65,11 @@ export function ProfileFrame({
   actions,
   header,
   collapseAt,
+  photoWidth,
   onWidth,
   offlineLabel,
   bodyTestID,
+  scrollEnabled = true,
   children,
   overlays,
 }: ProfileFrameProps) {
@@ -85,12 +98,13 @@ export function ProfileFrame({
           {...header.scrollProps}
           style={styles.scroll}
           contentContainerStyle={[styles.content, padding]}
+          scrollEnabled={scrollEnabled}
           testID={`${routeId}.scroll`}
         >
           <View testID={bodyTestID}>{children}</View>
         </Animated.ScrollView>
         {overPhoto ? (
-          <View style={styles.overlay}>
+          <View style={[styles.overlay, photoWidth !== undefined ? { right: undefined, width: photoWidth } : null]}>
             <Header
               variant="photo"
               title={title}

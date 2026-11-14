@@ -9,7 +9,7 @@ import {
   businessHero,
   dayLabel,
   distanceLabel,
-  FALLBACK_COVER,
+  BUSINESS_STAGE,
   hasHours,
   hoursText,
   impressumRows,
@@ -76,6 +76,7 @@ function business(extra: Partial<MyBusiness> = {}): MyBusiness {
     distance_km: null,
     share_path: '/b/werkstatt-nord',
     cover: null,
+    cover_source: null,
     about: 'Fahrwerk und Achsvermessung.',
     opening_hours: [
       { day: 'mon', ranges: [{ opens: '08:00', closes: '12:00' }, { opens: '13:00', closes: '17:30' }], today: true },
@@ -94,7 +95,9 @@ function business(extra: Partial<MyBusiness> = {}): MyBusiness {
     verified_at: null,
     document_note: null,
     identity_locked: true,
+    locked_fields: [],
     team: [{ username: 'jana.nord', role: 'owner' }],
+    invites: [],
     pending_requests: 2,
     views_30d: '128',
     ...extra,
@@ -139,8 +142,8 @@ describe('parts model', () => {
   });
 
   it('never shows a business without a photo', () => {
-    expect(businessHero({ cover: null }, [], 400).source).toBe('fallback');
-    expect(businessHero({ cover: null }, [], 400).photo).toBe(FALLBACK_COVER);
+    expect(businessHero({ cover: null, cover_source: null }, [], 400).source).toBe('fallback');
+    expect(businessHero({ cover: null, cover_source: null }, [], 400).photo).toBe(BUSINESS_STAGE);
   });
 
   it('counts are real: nothing for zero, plurals for the rest', () => {

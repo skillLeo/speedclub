@@ -162,7 +162,6 @@ describe('Icon', () => {
     'image',
     'trash',
     'pencil-simple',
-    'magic-wand',
     'funnel',
     'sort-ascending',
     'list',
@@ -201,10 +200,9 @@ describe('Icon', () => {
     'calendar-blank',
     'selection',
     'keyboard',
-    // M3.5 announcements and support requests, M3.7 AI labels (a lightbulb, never sparkles) and external links.
+    // M3.5 announcements and support requests, and external links. AI output carries its text label only (09 §4.5, M4.18).
     'megaphone-simple',
     'lifebuoy',
-    'lightbulb',
     'arrow-square-out',
     // M4.6 Auth 2.0: ProviderButtons (Apple, E-Mail) and passkey rows.
     'apple-logo',

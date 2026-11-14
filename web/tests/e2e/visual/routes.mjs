@@ -7,7 +7,8 @@
 //   phase     1 | 2 | 3: the phase that shipped the route; `--tier=phase --phase=N` takes every route of phases 1..N
 //   auth      'guest' | 'member' (lukas.sc) | 'member-empty' (nina.neu) | 'member-blocker' (paul.roadster, who has blocked
 //             nina.neu) | 'member-kenji' (kenji.r34) | 'member-affected' (tobi.quattro) | 'member-reporter' (nico.sti) |
-//             'member-sessions' (the SET-06 fixture, DQ-453) |
+//             'member-sessions' (the SET-06 fixture, DQ-453) | 'member-finish' (finish.fixture, a new passwordless account at its AGB
+//             step: AUTH-09b, DQ-1213) |
 //             'member-username' | 'member-profile' (onboarding fixtures), see support/auth.mjs; admin: 'staff-guest' (signed out),
 //             'staff-owner' | 'staff-admin' | 'staff-moderator' | 'staff-support' | 'staff-content' | 'staff-analyst' (one fixture per role),
 //             'staff-challenge' (password accepted, code pending: ADM-02), 'staff-enrol' (signed in, TOTP not enrolled: ADM-03), support/staff.mjs.
@@ -29,6 +30,12 @@
 //             http://localhost:8080); a run elsewhere (the isolated :8081 copy) still audits it and reports baseline `host`.
 //   volatile  true = ADR-223: the picture is the platform's live activity (ADM-06, ADM-08, ADM-44): DOM audit, axe and design review as
 //             usual, no baseline comparison or update outside the fixture states loading/error/empty (baseline `volatile`).
+//   prepare   async ({page, cell, stage, baseUrl}) => void, before the route loads: stage API answers with
+//             `stage(pattern, {method, status, body, headers} | {abort} | {patch})` (route-steps.mjs). They end with the cell; a staged
+//             5xx or 429 is the harness's, never a server-error or rate-limit finding. For a state only the server gives (a lock, a 403).
+//   walk      async ({page, cell, stage, baseUrl}) => void, after the route loaded and before its ready element: the taps and typing
+//             that reach a state no URL can set (an attempt held in memory, a sheet opened by a tap; DQ-1213, routes-m418-gaps.mjs).
+//             `ready` then names an element of the state reached. A route with steps still lists only the states its URL can force.
 //   qaContract false = the page does not report its qa* overrides yet (see README). Default true.
 //             Only the Phase 1 skeleton may use false; M1.1 removes it.
 
@@ -509,12 +516,12 @@ export const routes = [
   },
   {
     id: 'DISC-02-filtered-none',
-    path: '/app/discover/search?make=bmw&model=m4&wheel_diameter[]=19',
+    path: '/app/discover/search?make=bmw&model=m4&wheel_diameter[]=18',
     phase: 2,
     auth: 'guest',
     states: ['default'],
     ready: '[data-testid="DISC-02.noResultsFiltered"]',
-    notes: 'A real filtered search with no build (the demo M4 runs 20″): the chips stay to take one off, "Keine Builds für diese Filter" with the one way out "Filter zurücksetzen".',
+    notes: 'A real filtered search with no build (the demo M4s run 19″ and 20″; M4.18: the Phase 4 demo added the 19″ F82, so 19″ no longer is empty): the chips stay to take one off, "Keine Builds für diese Filter" with the one way out "Filter zurücksetzen".',
   },
   {
     id: 'DISC-02-grid',
@@ -1177,6 +1184,8 @@ export const routes = [
   // (expectStatus, HANDOFF BL-5).
   {
     id: 'WEB-01',
+    // DQ-1183: tier p4 opt-ins (p4.mjs).
+    p4: { tablet: true },
     path: '/v/nissan-skyline-gt-r-r34-5tf974vj',
     phase: 1,
     auth: 'guest',
@@ -1186,6 +1195,8 @@ export const routes = [
   },
   {
     id: 'WEB-02',
+    // DQ-1183: tier p4 opt-ins (p4.mjs).
+    p4: { en: true, tablet: true },
     path: '/u/lukas.sc',
     phase: 1,
     auth: 'guest',
@@ -1195,6 +1206,8 @@ export const routes = [
   },
   {
     id: 'WEB-03',
+    // DQ-1183: tier p4 opt-ins (p4.mjs).
+    p4: { en: true, tablet: true },
     path: '/',
     phase: 1,
     hostDependent: true,
@@ -2504,6 +2517,13 @@ export const routes = [
 // member with TOTP; SAFE-01 of a staff-origin decision and of a reversal (ADR-224) as decisions.fixture, its decisions at fixed times.
 // None of them shows live data, so none is volatile. Overlays and the steps after a tap are in flows/a1-restrict-member.spec.ts.
 const VIEW_AS_BANNER = ':has([data-testid="VIEWAS.banner"])';
+/**
+ * M4.18: a drawn row of Start's stream, a build card (`HOME-01.card.<id>`) or a build update (`HOME-01.stream.update.<id>`). A ready
+ * condition that waits for the stream must take either: a stream can open with updates (lukas.sc's and marco.amg's do), and FlashList
+ * draws only a window around what is visible, so a first build card some 3000 px down (at 1440x900 under an announcement) was drawn in
+ * one run and not in the next, and the cell timed out although Start was complete.
+ */
+export const HOME_STREAM_ROW = ':is([data-testid^="HOME-01.card."], [data-testid^="HOME-01.stream.update."])';
 routes.push(
   {
     id: 'VIEWAS-HOME',
@@ -2511,7 +2531,7 @@ routes.push(
     phase: 3,
     auth: 'viewas',
     states: ['default'],
-    ready: `${VIEW_AS_BANNER} [data-testid^="HOME-01.card."]`,
+    ready: `${VIEW_AS_BANNER} ${HOME_STREAM_ROW}`,
     capture: 'expanded',
     maxHeight: 6000,
     notes: 'Start as marco.amg in a view-as tab: the red bar "Ansicht als @marco.amg – nur lesen" with "Beenden" above every screen, then Für dich as he sees it (the bell and the rail are his). Nothing is written: the follow buttons and the add-vehicle entry say "nur lesen".',
@@ -2591,6 +2611,7 @@ routes.push(
 routes.push(...routesM35, ...routesM36, ...routesM410Mnt, ...routesM410Prof, ...routesM410Set, ...routesM48R3, ...routesM412Evt, ...routesM414, ...routesM415, ...routesM417EvtAdmin);
 routes.push(...(await import('./routes-m416.mjs')).routesM416); // M4.16 Public web 2.0 (lane B)
 routes.push(...(await import('./routes-m417.mjs')).routesM417); // M4.17 Admin 2.0 (admin-builder)
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m418-gaps.mjs')).routesM418Gaps); // DQ-1213: auth, security, system gates, ADM-61 (route steps: prepare/walk)
 
 // M3.5 + M3.7 app surfaces of 8b9d874 (QA). The announcement on Start, the re-consent sheet and the member's support requests
 // show data every viewer (or a staff queue) would see, so each names a stage fixture (support/stage-fixtures.mjs): the runner takes these
@@ -2609,7 +2630,7 @@ const AI_QA = 'Forced through qaFlags (no provider key, OA-18); before the tap, 
     auth: 'member',
     fixture: 'announcement-info',
     states: ['default'],
-    ready: '[data-testid="HOME-01.root"]:has([data-testid^="HOME-01.card."]) [data-testid="HOME-01.announcement.01m5c56300qvs6qrsknavmtw8e.title"]',
+    ready: `[data-testid="HOME-01.root"]:has(${HOME_STREAM_ROW}) [data-testid="HOME-01.announcement.01m5c56300qvs6qrsknavmtw8e.title"]`,
     notes: 'Start of lukas.sc with an info announcement (ADM-30, audience all, dismissible, published through ConfigVersions for this cell only): under the segments a neutral raised card with the megaphone, "Neu: deine Support-Anfragen in der App", the body, the tertiary "Anfragen ansehen" (internal path to SET-15a) and "Hinweis ausblenden" (x, 44 target) in the corner. No red. The rest of Start is HOME-01-member\'s.',
   },
   {
@@ -2619,7 +2640,7 @@ const AI_QA = 'Forced through qaFlags (no provider key, OA-18); before the tap, 
     auth: 'member',
     fixture: 'announcement-warning',
     states: ['default'],
-    ready: '[data-testid="HOME-01.root"]:has([data-testid^="HOME-01.card."]) [data-testid="HOME-01.announcement.01m5c57xk06gk22nnr2wrv5vjt.title"]',
+    ready: `[data-testid="HOME-01.root"]:has(${HOME_STREAM_ROW}) [data-testid="HOME-01.announcement.01m5c57xk06gk22nnr2wrv5vjt.title"]`,
     notes: 'Start of lukas.sc with a warning (ADM-30, severity warning, audience all, dismissible, no action): the same card, the warning glyph is the only accent (role alert), "Wartung am Sonntag, 15. November" and the body, "Hinweis ausblenden".',
   },
   {

@@ -195,6 +195,12 @@ export type ChoiceChipsProps<T extends string> = {
   disabled?: boolean;
   /** DQ-169: a few chips that do not fit one row share two even columns, so the last one is not left alone at its own width. */
   evenRows?: boolean;
+  /**
+   * DQ-1146: the label is also shown above the chips as the field's label (callout, text.secondary, space.8 above the chips, as
+   * TextInput and PickerField), for a chip group that is a form field of its own. Off by default: the group then names itself to
+   * screen readers only, under a header that already says what it is.
+   */
+  visibleLabel?: boolean;
   testID?: string;
 };
 
@@ -214,7 +220,20 @@ export function evenChipLayout(track: number, labels: readonly number[]): 'row' 
 }
 
 /** FS-5's provenance chips (Herstellerangabe · Geschätzt · Prüfstand): a radio group of chips that can also be left empty. */
-export function ChoiceChips<T extends string>({ label, options, value, onChange, disabled = false, evenRows = false, testID }: ChoiceChipsProps<T>) {
+export function ChoiceChips<T extends string>(props: ChoiceChipsProps<T>) {
+  const styles = useStyles();
+  if (!props.visibleLabel) return <ChipGroup {...props} />;
+  return (
+    <View style={styles.field}>
+      <Text variant="callout" color="text.secondary" aria-hidden testID={props.testID ? `${props.testID}.label` : undefined}>
+        {props.label}
+      </Text>
+      <ChipGroup {...props} />
+    </View>
+  );
+}
+
+function ChipGroup<T extends string>({ label, options, value, onChange, disabled = false, evenRows = false, testID }: ChoiceChipsProps<T>) {
   const styles = useStyles();
   const [track, setTrack] = useState(0);
   const [labels, setLabels] = useState<Record<string, number>>({});

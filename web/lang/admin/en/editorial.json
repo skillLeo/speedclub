@@ -1,0 +1,129 @@
+{
+    "title": "Editorial & samples",
+    "nav": {
+        "title": "Editorial & samples"
+    },
+    "intro": "Sample content (Editorial and sample accounts): where it shows and which items you hid one by one. In production it stays off until real builds with written consent exist.",
+    "sample": "Sample",
+    "environments": {
+        "local": "Local",
+        "staging": "Staging",
+        "production": "Production"
+    },
+    "flag": {
+        "title": "Visibility per environment",
+        "hint": "Feature flag “Sample content”",
+        "caption": "Sample content per environment",
+        "environment": "Environment",
+        "samples": "Samples",
+        "note": "Note",
+        "here": "This environment",
+        "on": "Visible",
+        "off": "Hidden",
+        "effective": "Takes effect here at once",
+        "documented": "Intended state, applies there",
+        "turn_on": "Show samples",
+        "turn_off": "Hide samples",
+        "pending": "A change is waiting for approval (four-eyes).",
+        "view_only": "Only owners and admins switch the samples.",
+        "updated": "Last changed on :date",
+        "error": "The flag could not be loaded.",
+        "missing_title": "The sample content switch is missing",
+        "missing_body": "It comes with the platform’s base data. Let the development team know."
+    },
+    "flag_dialog": {
+        "on_title": "Show samples in :environment?",
+        "off_title": "Hide samples in :environment?",
+        "on_body": "Sample builds, meets and businesses show again in the app and on public pages, each marked “Sample”. Items hidden one by one stay hidden.",
+        "off_body": "No member and no public page shows sample content any more. The data stays."
+    },
+    "summary": {
+        "title": "Inventory",
+        "account": "Editorial account:",
+        "vehicles": "Sample builds",
+        "updates": "Build updates",
+        "events": "Sample meets",
+        "businesses": "Sample businesses",
+        "members": "Sample accounts",
+        "hidden": "Hidden one by one",
+        "none": "There is no sample content here. The samples come with the demo data set, locally and on staging."
+    },
+    "items": {
+        "title": "Sample content",
+        "view_only": "You can only view the samples. Roles that edit content can hide them.",
+        "caption_vehicle": "Sample builds with account, visibility and creation date",
+        "caption_event": "Sample meets with account, visibility and creation date",
+        "caption_business": "Sample businesses with account, visibility and creation date"
+    },
+    "tabs": {
+        "label": "Kind of samples",
+        "vehicle": "Builds",
+        "event": "Meets",
+        "business": "Businesses"
+    },
+    "columns": {
+        "cover": "Photo",
+        "title": "Name",
+        "owner": "Account",
+        "state": "For members",
+        "created": "Created",
+        "actions": "Actions"
+    },
+    "states": {
+        "shown": "Visible",
+        "hidden": "Hidden",
+        "withdrawn": "Not public"
+    },
+    "state_hint": {
+        "shown": "Members see it while samples are visible here.",
+        "hidden": "Hidden here, invisible to members.",
+        "withdrawn": "Private or removed, not through this page."
+    },
+    "hidden_by": "Hidden by :name on :date",
+    "filters": {
+        "label": "Filter samples",
+        "q": "Search",
+        "q_vehicle": "Name, make or model",
+        "q_event": "Title or place",
+        "q_business": "Name or place",
+        "state": "For members",
+        "any": "All",
+        "state_shown": "Not hidden",
+        "state_hidden": "Hidden",
+        "apply": "Filter"
+    },
+    "empty": {
+        "vehicle_title": "No sample builds",
+        "vehicle_body": "The sample builds come with the demo data set.",
+        "event_title": "No sample meets",
+        "event_body": "The sample meets come with the demo data set.",
+        "business_title": "No sample businesses",
+        "business_body": "The sample businesses come with the demo data set."
+    },
+    "actions": {
+        "hide": "Hide",
+        "show": "Show again",
+        "hide_named": "Hide :name",
+        "show_named": "Show :name again"
+    },
+    "item_dialog": {
+        "hide_title": "Hide “:name”?",
+        "show_title": "Show “:name” again?",
+        "hide_body_vehicle": "The build becomes private: it leaves Home, Discover, search and its public page. Nobody is notified.",
+        "hide_body_event": "The meet leaves the calendar, the map and its public page. Nobody is notified.",
+        "hide_body_business": "The business leaves the lists and its public page. Nobody is notified.",
+        "show_body": "It shows again as before it was hidden, while samples are visible here."
+    },
+    "errors": {
+        "not_sample": "This is not sample content. Hide real content through moderation.",
+        "already_hidden": "Already hidden.",
+        "not_visible": "Not public right now, there is nothing to hide.",
+        "not_hidden": "Not hidden through this page."
+    },
+    "flash": {
+        "hidden": "Hidden. Members no longer see it.",
+        "shown": "Visible again.",
+        "changed": "Changed otherwise in the meantime, so not restored. Check the record.",
+        "flag": "Sample visibility changed."
+    }
+}

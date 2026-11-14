@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string $user_id
  * @property string $endpoint_hash
  * @property string|null $session_key
+ * @property int|null $token_id
  * @property string $endpoint
  * @property string $public_key
  * @property string $auth_token
@@ -28,7 +29,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Hidden(['endpoint', 'endpoint_hash', 'session_key', 'public_key', 'auth_token'])]
+#[Hidden(['endpoint', 'endpoint_hash', 'session_key', 'token_id', 'public_key', 'auth_token'])]
 class PushSubscription extends Model
 {
     /** @use HasFactory<PushSubscriptionFactory> */
@@ -45,6 +46,7 @@ class PushSubscription extends Model
             'auth_token' => 'encrypted',
             'last_used_at' => 'datetime',
             'failures' => 'integer',
+            'token_id' => 'integer',
         ];
     }
 

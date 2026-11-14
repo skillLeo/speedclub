@@ -5,7 +5,6 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { ApiError } from '@/api/client';
 import { useBusinessesOn, useDecideModTag, useUntagModBusiness } from '@/api/queries/businesses';
 import type { FeedVehicle } from '@/api/queries/home';
 import { PRODUCT_RAIL_SIZE, usePartsOn, useProductRail } from '@/api/queries/parts';
@@ -14,6 +13,8 @@ import { SimilarBuildsList } from '@/features/discover/components/SimilarBuildsL
 import { haptics } from '@/lib/haptics';
 import { createStyles } from '@/theme';
 import { Button, ListRow, StatusPill, Text, toast } from '@/ui';
+
+import { tagErrorText } from './business/tagErrors';
 
 const useStyles = createStyles((t) => ({
   card: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
@@ -90,7 +91,7 @@ export function OwnerTagPanel({ mod, routeId, style }: { mod: Pick<PublicMod, 'i
   const tag = mod.business_tag;
   if (!on || !tag || tag.status === 'accepted') return null;
   const proposal = tag.status === 'pending' && tag.initiated_by === 'business';
-  const fail = (error: unknown) => toast(error instanceof ApiError ? error.message : t('tags.failed'), { haptic: 'warning', testID: `${routeId}.tagToast` });
+  const fail = (error: unknown) => toast(tagErrorText(error, (key) => t(key)), { haptic: 'warning', testID: `${routeId}.tagToast` });
   const answer = (decision: 'accepted' | 'declined') => {
     haptics.light();
     decide.mutate(

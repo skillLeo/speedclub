@@ -27,7 +27,7 @@
     "draftDeleted": "Draft deleted",
     "emptyTitle": "Your garage is waiting.",
     "emptyBody": "Add your car, log its specs and mods and get your QR sticker for the window.",
-    "emptyAction": "Add car",
+    "emptyAction": "Add vehicle",
     "sampleTitle": "What a build looks like",
     "sample": {
       "title": "Nissan Skyline GT-R R34",
@@ -35,7 +35,7 @@
       "power": "500 PS",
       "torque": "540 Nm",
       "drive": "AWD",
-      "caption": "Nissan · Skyline GT-R · R34 · 2002"
+      "caption": "2.6 l I6 twin-turbo (RB26DETT)"
     },
     "actionsFor": "Actions for {{vehicle}}",
     "quick": {
@@ -859,5 +859,14 @@
     },
     "huChip": "Next inspection: {{month}}",
     "huChipOverdue": "Inspection overdue since {{month}}"
+  },
+  "widget": {
+    "name": "My car",
+    "emptyBody": "Your car and its next due date.",
+    "add": "Add a car",
+    "nothingDue": "Nothing due for {{days}} days",
+    "dueLine": "{{title}} {{countdown}}",
+    "a11yCar": "My car: {{name}}. {{due}} Opens your car in the garage.",
+    "a11yEmpty": "My car: no car yet. Add a car."
   }
 }

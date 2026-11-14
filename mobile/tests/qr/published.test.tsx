@@ -91,6 +91,18 @@ describe('GAR-04 Veröffentlicht + QR (09 §7.6, SM13)', () => {
     expect(screen.getByTestId('GAR-04.title')).toHaveTextContent('Dein Build ist live.');
   });
 
+  it('puts the top scrim behind the wordmark on a phone once the mark is measured (ADR-463)', async () => {
+    stubPublished();
+    await renderScreen(<PublishedScreen />);
+    await waitFor(() => expect(screen.getByTestId('GAR-04.qr')).toBeTruthy());
+    expect(screen.queryByTestId('GAR-04.stage.topScrim', { includeHiddenElements: true })).toBeNull();
+    const mark = screen.getByTestId('GAR-04.wordmark', { includeHiddenElements: true }).parent;
+    if (!mark) throw new Error('the wordmark has no frame');
+    await fireEvent(mark, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 60 } } });
+    // The stage's top padding (32) plus the mark (60), twice: the mark sits in the scrim's upper half.
+    expect(screen.getByTestId('GAR-04.stage.topScrim', { includeHiddenElements: true })).toHaveStyle({ height: 184 });
+  });
+
   it('leads on to the QR page, the share sheet with the public page, and the garage', async () => {
     stubPublished();
     await renderScreen(<PublishedScreen />);

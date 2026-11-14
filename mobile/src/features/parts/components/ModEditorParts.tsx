@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { ApiError } from '@/api/client';
-import { BUSINESS_CODES, useBusinessesOn, useBusinessPicker, useTagModBusiness, useUntagModBusiness } from '@/api/queries/businesses';
+import { useBusinessesOn, useBusinessPicker, useTagModBusiness, useUntagModBusiness } from '@/api/queries/businesses';
 import type { OwnerMod } from '@/api/queries/mods';
 import { usePartsOn, useProductSuggestions, type ProductRowData } from '@/api/queries/parts';
 import { useDebouncedValue } from '@/features/auth/forms';
@@ -16,6 +15,7 @@ import { haptics } from '@/lib/haptics';
 import { createStyles, size, space } from '@/theme';
 import { BusinessCard, Button, ErrorState, ListRow, ProductRow, SearchBar, Sheet, Skeleton, SkeletonText, Text, toast } from '@/ui';
 
+import { tagErrorText } from './business/tagErrors';
 import { TYPING_MS } from './EmbeddedParts';
 import { OwnerTagPanel } from './ModParts';
 
@@ -155,11 +155,7 @@ export function InstalledByField({ mod, disabled, routeId }: { mod: OwnerMod | u
           haptics.light();
           toast(answer.status === 'accepted' ? t('tags.confirmed', { name }) : t('tags.requested', { name }), { testID: `${routeId}.tagToast` });
         },
-        onError: (error) =>
-          toast(error instanceof ApiError && error.code === BUSINESS_CODES.notVerified ? t('tags.notVerified') : error instanceof ApiError ? error.message : t('tags.failed'), {
-            haptic: 'warning',
-            testID: `${routeId}.tagToast`,
-          }),
+        onError: (error) => toast(tagErrorText(error, (key) => t(key)), { haptic: 'warning', testID: `${routeId}.tagToast` }),
       },
     );
   };

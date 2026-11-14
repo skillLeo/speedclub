@@ -121,35 +121,41 @@ export function CarouselSnap<T>({
         scrollEnabled={!reordering}
         onScroll={onScroll}
         scrollEventThrottle={16}
-        contentContainerStyle={[styles.row, { gap, paddingHorizontal: inset }]}
+        contentContainerStyle={styles.row}
         testID={`${testID}.scroll`}
       >
-        {items.map((item, index) => (
-          <CarouselCard
-            key={keyOf(item)}
-            index={index}
-            count={items.length}
-            interval={interval}
-            width={itemWidth}
-            scrollX={scrollX}
-            mode={mode}
-            drag={drag}
-            dragFrom={dragFrom}
-            dragTo={dragTo}
-            reduced={motion.reduced}
-            reorderable={onReorder !== undefined}
-            editing={editing}
-            onOpen={onOpen ? () => onOpen(item) : undefined}
-            onPickUp={pickUp}
-            onDrop={drop}
-            label={labelOf(item)}
-            moveLabels={moveLabels}
-            onMove={(to) => onReorder?.(index, to)}
-            testID={`${testID}.card.${keyOf(item)}`}
-          >
-            {renderItem(item, { index, reordering: shrunk })}
-          </CarouselCard>
-        ))}
+        {/* The room that centres the first card: half the free width, a size from the layout, never a spacing step. */}
+        <View style={{ width: inset }} />
+        <View style={[styles.row, { gap }]}>
+          {items.map((item, index) => (
+            <CarouselCard
+              key={keyOf(item)}
+              index={index}
+              count={items.length}
+              interval={interval}
+              width={itemWidth}
+              scrollX={scrollX}
+              mode={mode}
+              drag={drag}
+              dragFrom={dragFrom}
+              dragTo={dragTo}
+              reduced={motion.reduced}
+              reorderable={onReorder !== undefined}
+              editing={editing}
+              onOpen={onOpen ? () => onOpen(item) : undefined}
+              onPickUp={pickUp}
+              onDrop={drop}
+              label={labelOf(item)}
+              moveLabels={moveLabels}
+              onMove={(to) => onReorder?.(index, to)}
+              testID={`${testID}.card.${keyOf(item)}`}
+            >
+              {renderItem(item, { index, reordering: shrunk })}
+            </CarouselCard>
+          ))}
+        </View>
+        {/* The same room after the last card, so it centres too. */}
+        <View style={{ width: inset }} />
       </Animated.ScrollView>
     </View>
   );

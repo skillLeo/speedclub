@@ -44,13 +44,23 @@ test.describe('QR codes in the app', () => {
     expect((await id(page, 'QR-02.card.url').innerText()).replace(/\s+/g, '')).toBe(`${new URL(BASE_URL).host}/C/${R34.code}`);
     // Always black on white (§3.4), whatever the theme.
     expect(await id(page, 'QR-02.card').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)');
-    // FS-9 / DQ-035: the card lines up with the title and the buttons on both edges.
-    const [card, title, download] = await Promise.all(['QR-02.card', 'QR-02.title', 'QR-02.download'].map((t) => id(page, t).boundingBox()));
-    if (!card || !title || !download) throw new Error('missing geometry');
-    expect(Math.abs(card.x - title.x)).toBeLessThan(1);
-    expect(Math.abs(card.x + card.width - (download.x + download.width))).toBeLessThan(1);
+    // ADR-458/463 (replaces FS-9 / DQ-035's edge alignment on phones): the stage runs edge to edge and the card sits centred on it,
+    // leaving both side bands to the car; the buttons below line up with the title on both edges of the column.
+    const [card, stage, title, save, more] = await Promise.all(
+      ['QR-02.card', 'QR-02.stage', 'QR-02.title', 'QR-02.savePhoto', 'QR-02.download'].map((t) => id(page, t).boundingBox()),
+    );
+    if (!card || !stage || !title || !save || !more) throw new Error('missing geometry');
+    expect(stage.x).toBeLessThan(1);
+    expect(stage.width).toBeGreaterThanOrEqual(page.viewportSize()!.width - 1);
+    const [left, right] = [card.x - stage.x, stage.x + stage.width - (card.x + card.width)];
+    expect(left, 'a side band of the car on the left').toBeGreaterThan(title.x);
+    expect(Math.abs(left - right), 'the card centred on the stage').toBeLessThan(1);
+    expect(Math.abs(save.x - title.x)).toBeLessThan(1);
+    expect(Math.abs(save.x + save.width - (more.x + more.width))).toBeLessThan(1);
 
-    await id(page, 'QR-02.download').click();
+    // ListRow's pressable (`.body`) is disabled until the code's SVG is in; a click before that does nothing.
+    await expect(id(page, 'QR-02.download.body')).toBeEnabled({ timeout: 30_000 });
+    await id(page, 'QR-02.download.body').click();
     await expect(id(page, 'QR-02.downloadSheet')).toBeVisible();
     for (const format of ['png', 'png2048', 'svg', 'pdf']) await expect(id(page, `QR-02.download.${format}`)).toBeVisible();
     const [file] = await Promise.all([page.waitForEvent('download'), id(page, 'QR-02.download.png').click()]);
@@ -71,7 +81,9 @@ test.describe('QR codes in the app', () => {
     await qaGoto(`/app/qr/${vehicle.id}`);
     await expect(id(page, 'QR-02.card')).toBeVisible();
     await page.route(svg, (route) => route.fulfill({ status: 500, contentType: 'application/json', body: '{"message":"Server Error"}' }));
-    await id(page, 'QR-02.download').click();
+    // ListRow's pressable (`.body`) is disabled until the code's SVG is in; a click before that does nothing.
+    await expect(id(page, 'QR-02.download.body')).toBeEnabled({ timeout: 30_000 });
+    await id(page, 'QR-02.download.body').click();
     await id(page, 'QR-02.download.svg').click();
     await expect(id(page, 'QR-02.download.svg.error')).toBeVisible();
     await expect(id(page, 'QR-02.downloadSheet')).toBeVisible();

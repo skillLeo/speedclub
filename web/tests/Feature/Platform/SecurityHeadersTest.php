@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Csp\SpaPreset;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -136,8 +137,8 @@ describe('/app', function () {
         $csp = cspOf($this->get('/app')->assertOk()->headers->get('Content-Security-Policy'));
         $hash = base64_encode(hash('sha256', $script, true));
 
-        // ADR-449: the map library host is the one other source (SpaMapCspTest).
-        expect($csp['script-src'])->toBe("'self' 'sha256-$hash' https://unpkg.com")
+        // ADR-449: the map library is the one other source (SpaMapCspTest); SEC-414-04: its exact file, never the unpkg host.
+        expect($csp['script-src'])->toBe("'self' 'sha256-$hash' ".SpaPreset::MAP_LIBRARY_LEGACY['script'][0])
             ->and($csp['script-src'])->not->toContain('unsafe')
             ->and($csp['script-src'])->not->toContain('nonce')
             ->and($csp['object-src'])->toBe("'none'")

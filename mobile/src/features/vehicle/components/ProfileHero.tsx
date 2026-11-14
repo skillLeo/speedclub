@@ -1,14 +1,14 @@
 import { useImperativeHandle, useMemo, useRef, useState, type ComponentRef, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 
 import type { VehicleMedia } from '@/api/queries/vehicles';
-import { isWeb } from '@/lib/platform';
-import { createStyles, radius, space, useBreakpoint } from '@/theme';
+import { createStyles, radius, space } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import { Icon, Photo, PhotoStageScrim, PressableScale, Text, type PhotoAspect } from '@/ui';
+import { Photo, PhotoStageScrim, PressableScale, Text, type PhotoAspect } from '@/ui';
 
 import { photoFields } from '../media';
+import { STAGE_EMPTY_PHOTO } from '../stage';
 
 export type ProfileHeroHandle = {
   /** Scrolls the pager to a photo, for the desktop thumbnails. */
@@ -24,8 +24,6 @@ export type ProfileHeroProps = {
   corner: 'none' | 'md';
   /** "Nissan Skyline GT-R R34", the alt text of a photo without its own. */
   vehicleTitle: string;
-  /** Names the owner in the photo-less state; null when the owner is hidden (ADR-148). */
-  ownerUsername?: string | null;
   onOpen: (index: number) => void;
   onIndexChange?: (index: number) => void;
   /** Width / height: 4:5 edge to edge on a phone (09 §7.6), 16:9 across the content from 768 (DQ-1048). */
@@ -62,25 +60,16 @@ const useStyles = createStyles((t) => ({
     right: t.space[12],
   },
   counterText: { fontVariant: ['tabular-nums'] },
-  empty: {
-    borderBottomColor: t.color.border.subtle,
-    borderBottomWidth: isWeb ? t.size.border.control : StyleSheet.hairlineWidth,
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  emptyTitle: { marginTop: t.space[12] },
-  emptyBody: { marginTop: t.space[4] },
 }));
 
 /**
  * FS-3 hero: edge-to-edge pager (4:5 on a phone, 4:3 in the columns) with the counter "1/12" bottom right. Each photo opens the viewer. Without photos the
- * same 4:3 box holds the designed empty state of WEB-01, so nothing below moves when the first photo arrives.
+ * same box holds WEB-01's empty stage photo under the scrim (DQ-1211), so nothing below moves when the first photo arrives.
  */
-export function ProfileHero({ photos, width, corner, vehicleTitle, ownerUsername, onOpen, onIndexChange, ratio = HERO_RATIO, aspect = '4:3', identityOverlap, routeId, ref }: ProfileHeroProps) {
+export function ProfileHero({ photos, width, corner, vehicleTitle, onOpen, onIndexChange, ratio = HERO_RATIO, aspect = '4:3', identityOverlap, routeId, ref }: ProfileHeroProps) {
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
   const motion = useMotionPreference();
-  const { gutter } = useBreakpoint();
   const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const [index, setIndex] = useState(0);
   const count = photos.length;
@@ -113,17 +102,12 @@ export function ProfileHero({ photos, width, corner, vehicleTitle, ownerUsername
   };
 
   if (count === 0) {
+    // DQ-1211 (WEB-01 parity, DQ-1168): the empty stage photo under the same scrim, so the identity sits on it as on a build with
+    // photos; the line "Noch keine Fotos." is the summary's. Decorative: it shows no car, the name says whose page it is.
     return (
-      <View style={[styles.hero, box]} testID={`${routeId}.hero`}>
-        <View style={[styles.empty, { padding: gutter }]} testID={`${routeId}.heroEmpty`}>
-          <Icon name="image" size={48} color="text.tertiary" />
-          <Text variant="headline" style={styles.emptyTitle}>
-            {t('hero.noPhotoTitle')}
-          </Text>
-          <Text variant="callout" color="text.secondary" style={styles.emptyBody}>
-            {ownerUsername ? t('hero.noPhotoOwner', { username: ownerUsername }) : t('hero.noPhotoBody')}
-          </Text>
-        </View>
+      <View dataSet={{ qaExempt: 'photo' }} style={[styles.hero, box]} testID={`${routeId}.hero`}>
+        <Photo {...STAGE_EMPTY_PHOTO} aspect={aspect} style={slideBox} testID={`${routeId}.stagePhoto`} />
+        <PhotoStageScrim />
       </View>
     );
   }
@@ -152,7 +136,8 @@ export function ProfileHero({ photos, width, corner, vehicleTitle, ownerUsername
                 testID={`${routeId}.hero.${position}`}
                 style={slideBox}
               >
-                <Photo {...photoFields(photo, width)} aspect={aspect} style={slideBox} />
+                {/* The cover is the profile's first paint (LCP): it loads first, the other slides as they come into view. */}
+                <Photo {...photoFields(photo, width)} aspect={aspect} priority={position === 0 ? 'high' : undefined} style={slideBox} />
               </PressableScale>
             )}
           </View>

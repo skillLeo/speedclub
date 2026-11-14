@@ -192,7 +192,7 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                     <div class="min-w-140 grow basis-0"><Field :label="trans('support.tickets.filters.category')"><Select v-model="categoryModel" :options="categoryOptions" size="sm" :placeholder="trans('support.tickets.filters.any')" /></Field></div>
                     <div class="min-w-140 grow basis-0"><Field :label="trans('support.tickets.filters.source')"><Select v-model="sourceModel" :options="sourceOptions" size="sm" :placeholder="trans('support.tickets.filters.any')" /></Field></div>
                     <div class="min-w-140 grow basis-0"><Field :label="trans('support.tickets.filters.assigned')"><Select v-model="assignedModel" :options="assignedOptions" size="sm" :placeholder="trans('support.tickets.filters.any')" /></Field></div>
-                    <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-25.filter.apply">{{ trans('support.tickets.filters.apply') }}</Button>
+                    <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-25.filter.apply">{{ trans('support.tickets.filters.apply') }}</Button>
                 </form>
             </template>
 

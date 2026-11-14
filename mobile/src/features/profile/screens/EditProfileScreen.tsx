@@ -186,7 +186,7 @@ function EditProfileForm({ me, header, held }: { me: Me; header: CollapsingHeade
     defaultValues: profileValues(me),
   });
   // Read during render: React Hook Form only tracks the parts of formState that render reads.
-  const { isDirty, dirtyFields } = formState;
+  const { isDirty, dirtyFields, isSubmitting } = formState;
 
   const username = normalizeUsername(useWatch({ control, name: 'username' }));
   const bio = useWatch({ control, name: 'bio' });
@@ -407,7 +407,9 @@ function EditProfileForm({ me, header, held }: { me: Me; header: CollapsingHeade
           testID="PROF-03.cta"
         />
       )}
-      <DiscardGuardDialog dirty={isDirty && !pending && !saved} testID="PROF-03.discard" />
+      {/* Off from the tap on "Speichern": `isSubmitting` is set within the press, while the mutation's pending state reaches the
+          screen a task later. A back within that gap asked "Änderungen verwerfen?" over a save under way (SEC-S-04, final gate). */}
+      <DiscardGuardDialog dirty={isDirty && !isSubmitting && !pending && !saved} testID="PROF-03.discard" />
     </>
   );
 }

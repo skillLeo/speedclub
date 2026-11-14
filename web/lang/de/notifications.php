@@ -98,6 +98,7 @@ return [
         'rejected' => '„:name“ wurde nicht verifiziert. Den Grund findest du in deinem Betriebs-Dashboard.',
         'suspended' => '„:name“ ist gesperrt und nicht mehr öffentlich. Den Grund findest du in deinem Betriebs-Dashboard.',
         'reinstated' => '„:name“ ist wieder freigeschaltet.',
+        'reopened' => '„:name“ wird noch einmal geprüft und ist so lange nicht öffentlich.',
     ],
     'business_tag' => [
         'business' => [
@@ -110,5 +111,13 @@ return [
             'accepted' => '„:name“ hat den Einbau an deinem :vehicle bestätigt.',
             'declined' => '„:name“ hat die Markierung an deinem :vehicle abgelehnt.',
         ],
+    ],
+    // SEC-414-01: Team-Einladungen (nur in der App).
+    'business_invite' => [
+        'invited' => '„:name“ lädt dich ins Team ein. Nimm die Einladung an oder lehne sie ab.',
+        'removed' => '„:name“ hat dich aus dem Team genommen.',
+        'accepted' => ':username ist jetzt im Team von „:name“.',
+        'declined' => ':username hat die Einladung ins Team von „:name“ abgelehnt.',
+        'left' => ':username hat das Team von „:name“ verlassen.',
     ],
 ];

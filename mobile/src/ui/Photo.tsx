@@ -31,6 +31,11 @@ export type PhotoProps = PhotoFields & {
   corner?: PhotoCorner;
   /** expo-image's cache. `memory` keeps a private picture (a chat photo) off the disk; the default is expo-image's own. */
   cachePolicy?: 'none' | 'disk' | 'memory' | 'memory-disk';
+  /**
+   * The screen's hero, the largest paint of the first screen (skill §6 `priority="high"` on heroes): fetched first and never lazily,
+   * so the browser starts the download as soon as the element exists instead of after its lazy-load check.
+   */
+  priority?: 'high';
   /** Drawn over the photo, for example PhotoScrim, badges and on-photo controls. */
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -62,7 +67,7 @@ export function focalToPosition(focal: PhotoFocal) {
  * §7 photo: an explicit ratio, always `cover`, cropped around the focal point, blurhash until it loads, fade-in
  * 200 ms (off under reduced motion). A missing or broken image leaves the surface with one quiet glyph.
  */
-export function Photo({ source, blurhash, thumbhash, focal, aspect, label, corner = 'none', cachePolicy, children, style, testID }: PhotoProps) {
+export function Photo({ source, blurhash, thumbhash, focal, aspect, label, corner = 'none', cachePolicy, priority, children, style, testID }: PhotoProps) {
   const styles = useStyles();
   const motion = useMotionPreference();
   const eager = useEagerImages();
@@ -79,7 +84,8 @@ export function Photo({ source, blurhash, thumbhash, focal, aspect, label, corne
       {showImage ? (
         <Image
           source={image}
-          loading={eager ? 'eager' : undefined}
+          loading={eager || priority === 'high' ? 'eager' : undefined}
+          {...(priority ? { priority } : {})}
           {...placeholder}
           placeholderContentFit="cover"
           contentFit="cover"

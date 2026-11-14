@@ -1,5 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
-import type { QueryClient } from '@tanstack/react-query';
+import { defaultScheduler, notifyManager, type QueryClient } from '@tanstack/react-query';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 import { Dimensions, Platform, ScrollView, Share, StyleSheet, type TextStyle } from 'react-native';
@@ -321,6 +321,46 @@ describe('PROF-03 Edit profile', () => {
     await waitFor(() => expect(mockRouter.back).toHaveBeenCalled());
     expect(await bodyOf(calls, 'PATCH', '/me/profile')).toEqual({ city: 'Berlin' });
     expect(calls.some((call) => call.method === 'PUT')).toBe(false);
+    expect(mockPreventRemove).toHaveBeenLastCalledWith(false);
+  });
+
+  it('lets go of the guard with the press of "Speichern", before the save reports itself under way (SEC-S-04)', async () => {
+    signIn();
+    const { fetchMock } = api({ '/me/profile': { body: { data: { ...ME, city: 'Berlin' } } } });
+    // The save's answer is held, as over a slow uplink.
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const answer = fetchMock.getMockImplementation()!;
+    let guardAtSave: unknown = 'not sent';
+    fetchMock.mockImplementation(async (input: Request | string) => {
+      if (typeof input !== 'string' && input.method === 'PATCH') {
+        guardAtSave = mockPreventRemove.mock.lastCall?.[0];
+        await held;
+      }
+      return answer(input);
+    });
+    await renderScreen(<EditProfileScreen />);
+    await waitFor(() => expect(screen.getByTestId('PROF-03.city')).toBeTruthy());
+    await fireEvent.changeText(screen.getByTestId('PROF-03.city'), 'Berlin');
+    expect(mockPreventRemove).toHaveBeenLastCalledWith(true);
+    // The mutation's "pending" reaches the screen a task after the request has left (final Phase 4 gate, Chromium: a back in that
+    // gap asked "Änderungen verwerfen?" over the running save). Its notifications wait here, so only the press itself counts.
+    const waiting: (() => void)[] = [];
+    notifyManager.setScheduler((callback) => void waiting.push(callback));
+    try {
+      await fireEvent.press(screen.getByTestId('PROF-03.cta.primary'));
+      await waitFor(() => expect(fetchMock.mock.calls.some(([input]) => typeof input !== 'string' && input.method === 'PATCH')).toBe(true));
+      // The guard as the save leaves.
+      expect(guardAtSave).toBe(false);
+      expect(mockPreventRemove).toHaveBeenLastCalledWith(false);
+    } finally {
+      notifyManager.setScheduler(defaultScheduler);
+      await act(async () => waiting.splice(0).forEach((callback) => callback()));
+    }
+    await act(async () => release());
+    await waitFor(() => expect(mockRouter.back).toHaveBeenCalled());
     expect(mockPreventRemove).toHaveBeenLastCalledWith(false);
   });
 

@@ -7,6 +7,7 @@ use App\Enums\ErrorCode;
 use App\Enums\MemberSecurityEvent;
 use App\Exceptions\ApiException;
 use App\Models\PersonalAccessToken;
+use App\Models\PushSubscription;
 use App\Models\User;
 use App\Services\Audit\Audit;
 use App\Services\Auth\DeviceInstalls;
@@ -97,13 +98,27 @@ class RotateMemberToken
             $version = $token->getAttribute('app_version');
             $platform = $token->getAttribute('platform');
 
-            return $this->tokens->create($owner, new DeviceInfo(
+            $issued = $this->tokens->create($owner, new DeviceInfo(
                 $token->deviceName(),
                 $platform instanceof DevicePlatform ? $platform : null,
                 $appVersion ?? (is_string($version) ? $version : null),
                 $token->deviceId(),
                 $osVersion,
             ), secondFactor: $token->getAttribute('second_factor_at') !== null);
+
+            // SEC-P4-01: a Web Push registered with this device's token stays tied to the device: it moves to the new token, so the old
+            // one's end (grace, prune) does not end it, and signing the device out in SET-06 still does.
+            $successor = PersonalAccessToken::findToken((string) $issued->token);
+
+            if ($successor instanceof PersonalAccessToken) {
+                PushSubscription::query()
+                    ->where('user_id', $owner->getKey())
+                    ->whereIn('token_id', [$token->getKey(), ...$replacements->modelKeys()])
+                    ->toBase()
+                    ->update(['token_id' => $successor->getKey()]);
+            }
+
+            return $issued;
         });
 
         return $result ?? throw new ApiException(ErrorCode::Conflict);

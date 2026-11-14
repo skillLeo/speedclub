@@ -1,7 +1,7 @@
 /** M4.4 part 2: the pure geometry of MediaCard, Timeline and ContextMenu (09 §5). */
 import { aspect, scrimSafe, space } from '@/theme';
 import { contextMenuPlacement, nextMenuIndex } from '@/ui/contextMenuLayout';
-import { leadBodyGap, leadOverlapShare, MEDIA_ASPECT, MEDIA_WALL_GAP, mediaHeight, mediaWallTileWidth, pageAt } from '@/ui/mediaCardLayout';
+import { leadBodyGap, leadOverlapShare, MEDIA_ASPECT, MEDIA_WALL_GAP, mediaHeight, mediaWallTileWidth, pageAt, wallTitleBand } from '@/ui/mediaCardLayout';
 import { timelineGroups, TIMELINE_PHOTOS_MAX } from '@/ui/timelineLayout';
 
 describe('MediaCard geometry', () => {
@@ -28,6 +28,29 @@ describe('MediaCard geometry', () => {
     // On a wide lead the gap grows instead of letting the body climb above the line.
     expect(leadBodyGap(900, 'carbon', 34)).toBeGreaterThan(space[8]);
     expect(leadBodyGap(390, 'carbon', 34)).toBe(space[8]);
+  });
+
+  it('gives a wall name two lines only where both stay below the text-safe line (DQ-1156, ADR-421 b)', () => {
+    const line = 16;
+    for (const theme of ['carbon', 'black', 'light'] as const) {
+      for (const width of [150, 179, 186, 195, 205, 214, 300, 640]) {
+        const band = wallTitleBand(width, theme, line);
+        const below = (1 - scrimSafe[theme].text) * width;
+        if (band.lines === 2) {
+          expect(2 * line + band.twoLinePadding).toBeLessThanOrEqual(below + 1e-6);
+          expect([space[8], space[4], space[2]]).toContain(band.twoLinePadding);
+        } else {
+          expect(2 * line + space[2]).toBeGreaterThan(below);
+        }
+      }
+    }
+    // The iPhone 15 Pro wall tile (195 at 393) takes two lines with padding 2; the iPhone SE tile (186 at 375) keeps one.
+    expect(wallTitleBand(195, 'carbon', line)).toEqual({ lines: 2, twoLinePadding: space[2] });
+    expect(wallTitleBand(186, 'carbon', line).lines).toBe(1);
+    expect(wallTitleBand(640, 'carbon', line)).toEqual({ lines: 2, twoLinePadding: space[8] });
+    // A 4:5 tile is taller, so two lines fit earlier; an unmeasured tile keeps one line.
+    expect(wallTitleBand(186, 'carbon', line, '4:5').lines).toBe(2);
+    expect(wallTitleBand(0, 'carbon', line).lines).toBe(1);
   });
 
   it('reads the pager page from its offset, clamped', () => {

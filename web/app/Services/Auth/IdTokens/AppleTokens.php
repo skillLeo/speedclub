@@ -2,7 +2,12 @@
 
 namespace App\Services\Auth\IdTokens;
 
+use App\Enums\MemberSecurityEvent;
+use App\Enums\SocialProvider;
 use App\Models\SocialAccount;
+use App\Models\User;
+use App\Services\Audit\Audit;
+use App\Services\Auth\AuthMailer;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -10,8 +15,9 @@ use Throwable;
 
 /**
  * Sign in with Apple's server calls (09 §8.1), only with the .p8 key (owner action OA-15): exchange the authorization code for a refresh
- * token at the first sign-in, and revoke it when the account is deleted. Without the key both are skipped and logged. Apple answers 200
- * to a revoke even for an unknown token, so a 200 is logged as "accepted", not as proof.
+ * token at the first sign-in, and revoke it whenever an Apple link goes (account deletion, unlinking in SET-19, "Das war ich nicht", clearing
+ * an unproven account). Without the key both are skipped and logged. Apple answers 200 to a revoke even for an unknown token, so a 200
+ * is logged as "accepted", not as proof.
  */
 final class AppleTokens
 {
@@ -64,6 +70,26 @@ final class AppleTokens
     }
 
     /**
+     * The one way an Apple link's removal reaches Apple (09 §8.1): after the response, so the member never waits for Apple, each Apple
+     * account of $accounts revoked and the outcome audited as `member.apple_revoked`. The caller reads the accounts before deleting their
+     * rows and calls this after the commit; other providers are skipped (Google has no refresh token here).
+     *
+     * @param  iterable<SocialAccount>  $accounts
+     */
+    public function revokeLater(User $user, iterable $accounts): void
+    {
+        foreach ($accounts as $account) {
+            if ($account->provider !== SocialProvider::Apple) {
+                continue;
+            }
+
+            app(AuthMailer::class)->afterResponse(function () use ($user, $account): void {
+                Audit::record(MemberSecurityEvent::AppleRevoked->value, $user, after: ['outcome' => $this->revoke($account)], actor: $user);
+            });
+        }
+    }
+
+    /**
      * Returns the outcome for the audit log: skipped, accepted (HTTP 200) or failed.
      */
     public function revoke(SocialAccount $account): string
@@ -76,9 +102,7 @@ final class AppleTokens
             return 'skipped';
         }
 
-        /** @var list<string> $clients */
-        $clients = config()->array('services.apple.client_ids');
-        $clientId = $clients[0] ?? '';
+        $clientId = self::clientFor($account);
 
         try {
             $response = Http::asForm()->timeout(config()->integer('speedclub.id_tokens.http_timeout_seconds'))->post(config()->string('services.apple.revoke_url'), [
@@ -96,6 +120,24 @@ final class AppleTokens
         Log::info('Apple revoke answered.', ['status' => $response->status()]);
 
         return $response->successful() ? 'accepted' : 'failed';
+    }
+
+    /**
+     * SEC-P4-03: the client the account's tokens were issued to (the bundle ID for the app, the Services ID for the web), as stored at
+     * linking; a link stored before that has none and falls back to the first configured client.
+     */
+    public static function clientFor(SocialAccount $account): string
+    {
+        $stored = $account->getAttribute('client_id');
+
+        if (is_string($stored) && $stored !== '') {
+            return $stored;
+        }
+
+        /** @var list<string> $clients */
+        $clients = config()->array('services.apple.client_ids');
+
+        return $clients[0] ?? '';
     }
 
     /**

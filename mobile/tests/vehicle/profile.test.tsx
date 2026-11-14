@@ -132,16 +132,24 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(screen.queryByTestId('VEH-01.closingOwner')).toBeNull();
   });
 
-  it('designs the photo-less hero and names the owner in it', async () => {
-    const bare = { ...R34, photos: [], cover: null, photo_count: 0 };
+  it('designs the photo-less hero as the empty stage and names the owner under it (DQ-1211)', async () => {
+    const bare = { ...R34, photos: [], cover: null, photo_count: 0, is_owner: false };
     const view = await renderWithProviders(<VehicleProfile vehicle={bare} onBack={jest.fn()} />);
-    expect(text('VEH-01.heroEmpty')).toHaveTextContent('Noch keine Fotos@lukas.sc hat für dieses Fahrzeug noch keine Bilder hochgeladen.');
+    // WEB-01's stage photo with the identity on its scrim, never a grey glyph box.
+    expect(screen.getByTestId('VEH-01.stagePhoto')).toBeTruthy();
+    expect(screen.getByTestId('VEH-01.stage')).toBeTruthy();
+    expect(text('VEH-01.heroEmpty')).toHaveTextContent('Noch keine Fotos. @lukas.sc hat für dieses Fahrzeug noch keine Bilder hochgeladen.');
     expect(screen.queryByTestId('VEH-01.photoCount')).toBeNull();
-    // No photo to float over: the header is a bar above the content.
+    expect(screen.queryByTestId('VEH-01.addPhotos')).toBeNull();
     expect(screen.getByTestId('VEH-01.header')).toBeTruthy();
     await view.unmount();
-    await renderWithProviders(<VehicleProfile vehicle={{ ...bare, owner: null }} onBack={jest.fn()} />);
-    expect(text('VEH-01.heroEmpty')).toHaveTextContent('Noch keine FotosFür dieses Fahrzeug gibt es noch keine Bilder.');
+    const anonymous = await renderWithProviders(<VehicleProfile vehicle={{ ...bare, owner: null }} onBack={jest.fn()} />);
+    expect(text('VEH-01.heroEmpty')).toHaveTextContent('Noch keine Fotos. Für dieses Fahrzeug gibt es noch keine Bilder.');
+    await anonymous.unmount();
+    // The owner gets the one way to add them.
+    await renderWithProviders(<VehicleProfile vehicle={{ ...bare, is_owner: true }} onBack={jest.fn()} />);
+    expect(text('VEH-01.heroEmpty')).toHaveTextContent('Noch keine Fotos. Zeig deinen Build mit dem ersten Foto.');
+    expect(screen.getByTestId('VEH-01.addPhotos')).toBeTruthy();
   });
 
   it('shows Technik as spec tables with provenance under measured values', async () => {

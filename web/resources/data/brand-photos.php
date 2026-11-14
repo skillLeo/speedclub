@@ -13,7 +13,7 @@ return [
             'de' => 'Oranger Toyota GT86 nachts frontal in einer langen dunklen Gasse',
             'en' => 'Orange Toyota GT86 head-on at night in a long dark alley',
         ],
-        'placeholder' => 'data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAACQAwCdASoQABgAPxF0tFEsJqUisAgBgCIJYwABHxuwGfPOLLKAAP77iAEhkvUhkqrK2oyoMPL2uzwia7t2lhmNGNTsXbnsxitGqx8m29Ns6KYkL9R3HXk8kNiW7ahjC8A7mPAA',
+        'placeholder' => 'data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAACQAwCdASoQABgAPxF0tFEsJqUisAgBgCIJYwABHxuwGfPOLLKAAP77iAEhkvUhkqrK2oyoMPL2uzwia7t2lhmNGNTsXbnsxkYjwFquIHrKAN1yMoHmVzQDFMNf35vfbhD0vVgA',
         'variants' => [
             [
                 'width' => 320,
@@ -118,11 +118,6 @@ return [
                 'height' => 1088,
                 'path' => '/brand/photos/state-garage-1600.webp',
             ],
-            [
-                'width' => 1600,
-                'height' => 1088,
-                'path' => '/brand/photos/state-garage-1600.webp',
-            ],
         ],
     ],
     'landing-taillight' => [
@@ -156,11 +151,6 @@ return [
                 'width' => 1080,
                 'height' => 720,
                 'path' => '/brand/photos/landing-taillight-1080.webp',
-            ],
-            [
-                'width' => 1600,
-                'height' => 1067,
-                'path' => '/brand/photos/landing-taillight-1600.webp',
             ],
             [
                 'width' => 1600,
@@ -206,10 +196,44 @@ return [
                 'height' => 1068,
                 'path' => '/brand/photos/landing-wheel-1600.webp',
             ],
+        ],
+    ],
+    'stage-empty' => [
+        'id' => 'stage-empty',
+        'width' => 2400,
+        'height' => 1500,
+        'focal_x' => 0.5,
+        'focal_y' => 0.55,
+        'alt' => [
+            'de' => 'Beleuchteter Unterstand in völliger Dunkelheit auf nassem Asphalt',
+            'en' => 'Lit shelter in complete darkness on wet tarmac',
+        ],
+        'placeholder' => 'data:image/webp;base64,UklGRkYAAABXRUJQVlA4IDoAAADQAQCdASoQAAoABABoJaQAAuopc5gQAAD+9orel3mgsm7VNlr5XeK/0LghNeM/AUKwdu9H19L3EAAA',
+        'variants' => [
+            [
+                'width' => 320,
+                'height' => 200,
+                'path' => '/brand/photos/stage-empty-320.webp',
+            ],
+            [
+                'width' => 640,
+                'height' => 400,
+                'path' => '/brand/photos/stage-empty-640.webp',
+            ],
+            [
+                'width' => 828,
+                'height' => 517,
+                'path' => '/brand/photos/stage-empty-828.webp',
+            ],
+            [
+                'width' => 1080,
+                'height' => 675,
+                'path' => '/brand/photos/stage-empty-1080.webp',
+            ],
             [
                 'width' => 1600,
-                'height' => 1068,
-                'path' => '/brand/photos/landing-wheel-1600.webp',
+                'height' => 1000,
+                'path' => '/brand/photos/stage-empty-1600.webp',
             ],
         ],
     ],

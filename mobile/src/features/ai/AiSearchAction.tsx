@@ -62,7 +62,6 @@ export function AiSearchAction({ text, onApply, testID }: AiSearchActionProps) {
       {dayEnd ? null : (
         <Button
           label={t('ai.action')}
-          icon="lightbulb"
           variant="tertiary"
           size="s"
           flush="start"

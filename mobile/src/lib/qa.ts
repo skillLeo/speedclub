@@ -31,7 +31,18 @@ export type QaOverrides = {
    * asks still meets the server's 404 `feature_disabled`.
    */
   readonly flags?: readonly string[];
+  /**
+   * DQ-1162: `qaPush=off|on|denied|needsInstall|unsupported|unavailable` shows SET-09's "In diesem Browser" row in that state on the
+   * member web while `web_push` is on, without a VAPID key or a real permission prompt (an automated browser has neither).
+   */
+  readonly push?: QaPushState;
+  /** DQ-1151: `qaStep=2…5` opens BIZ-02's wizard on that step, so the matrix captures steps it cannot fill its way to. */
+  readonly step?: number;
 };
+
+export const QA_PUSH_STATES = ['off', 'on', 'denied', 'needsInstall', 'unsupported', 'unavailable'] as const;
+export type QaPushState = (typeof QA_PUSH_STATES)[number];
+const QA_STEP_MAX = 9;
 
 /** A flag key as app-config names them ("ai.nl_search"); at most this many in one override. */
 const QA_FLAG = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
@@ -56,6 +67,8 @@ export const parseQa: (search: string) => QaOverrides =
         const fontScale = Number(params.get('qaFontScale'));
         const state = params.get('qaState');
         const now = new Date(params.get('qaNow') ?? Number.NaN);
+        const push = params.get('qaPush');
+        const step = Number(params.get('qaStep'));
         const flags = (params.get('qaFlags') ?? '')
           .split(',')
           .map((flag) => flag.trim())
@@ -79,6 +92,8 @@ export const parseQa: (search: string) => QaOverrides =
           ...(params.get('qaOpen') === 'installHint' ? { open: 'installHint' as const } : {}),
           ...(Number.isNaN(now.getTime()) ? {} : { now }),
           ...(flags.length > 0 ? { flags } : {}),
+          ...((QA_PUSH_STATES as readonly string[]).includes(push ?? '') ? { push: push as QaPushState } : {}),
+          ...(Number.isInteger(step) && step >= 1 && step <= QA_STEP_MAX ? { step } : {}),
         };
       };
 

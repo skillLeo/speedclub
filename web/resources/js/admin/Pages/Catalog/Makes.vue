@@ -114,7 +114,7 @@ else if (first !== null && (dialog === 'edit' || dialog === 'active' || dialog =
                     <div class="min-w-140 grow basis-0">
                         <Field :label="trans('catalog.filters.popular')"><Select v-model="popularModel" :options="popularOptions" size="sm" :placeholder="trans('catalog.filters.any')" data-testid="ADM-14.filter.popular" /></Field>
                     </div>
-                    <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-14.filter.apply">{{ trans('catalog.filters.apply') }}</Button>
+                    <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-14.filter.apply">{{ trans('catalog.filters.apply') }}</Button>
                 </form>
             </template>
 

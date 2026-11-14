@@ -60,7 +60,7 @@ it('styles the controls with appearance none, 22 visual, the control border and 
         ->toContain('border: 1px solid var(--color-line-control);')
         ->not->toContain('accent-color')
         ->and(publicCssRule('.sc-form-radio'))->toContain('border-radius: 9999px;')
-        ->and(publicCssRule('.sc-form-check'))->toContain('border-radius: 4px;')
+        ->and(publicCssRule('.sc-form-check'))->toContain('border-radius: var(--sc-radius-xs);') // 4 (DQ-1184: tokens, not raw px)
         ->and(publicCssRule('.sc-form-radio:checked, .sc-form-check:checked'))->toContain('background: var(--color-inverse);')
         ->and(publicCssRule('.sc-form-radio::before, .sc-form-check::before'))->toContain('background: var(--color-ink-inverse);')
         // The row around a control stays the 44 target.

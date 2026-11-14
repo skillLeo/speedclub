@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Events;
 
+use App\Rules\ValidCursor;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,8 @@ class MyEventsRequest extends FormRequest
             /** EVT-05 tabs: going (with the waitlist), interested, organised (every status), past. Default going. */
             'tab' => ['sometimes', Rule::in(['going', 'interested', 'organised', 'past'])],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
-            'cursor' => ['sometimes', 'string', 'max:512'],
+            /** The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+            'cursor' => ['sometimes', 'string', 'max:512', new ValidCursor(['events.starts_at', 'events.id'])],
         ];
     }
 

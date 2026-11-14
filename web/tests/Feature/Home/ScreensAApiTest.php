@@ -181,6 +181,8 @@ describe('notifications', function () {
 
 describe('discover', function () {
     it('lists popular models, weekend events and the newest builds', function () {
+        // From a Wednesday: on a Saturday or Sunday "next Saturday" is a week after this weekend (the gate ran on Saturday, 14.11.2026).
+        $this->travelTo(CarbonImmutable::now('Europe/Berlin')->next(CarbonImmutable::WEDNESDAY)->setTime(10, 0));
         $first = homeBuild(hoursAgo: 1);
         homeBuild(hoursAgo: 2, attributes: ['make_id' => $first->make_id, 'model_id' => $first->model_id]);
         homeBuild(hoursAgo: 3);

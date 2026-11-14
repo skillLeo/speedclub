@@ -50,34 +50,32 @@ class DashboardData
         $count = (clone $query)->count();
         $oldest = $count > 0 ? (clone $query)->min('submitted_at') : null;
 
-        return [
-            'count' => $count,
-            'status' => $count > 0 ? 'warning' : 'ok',
-            'since' => is_string($oldest) ? CarbonImmutable::parse($oldest, 'UTC')->toIso8601String() : null,
-        ];
+        return Kpi::waitingSince($count, is_string($oldest) ? CarbonImmutable::parse($oldest, 'UTC') : null);
     }
 
     /**
-     * @return list<array{key: string, value: int, previous: int|null, series: list<int>}>
+     * The six KPI tiles of 09 §10.2 (cached in Kpi::tiles()).
+     *
+     * @return list<array{key: string, unit: 'count'|'minutes'|'percent', value: int|float|null, previous: int|float|null, series: list<int|float|null>}>
      */
-    public function kpis(): array
+    public function kpis(?CarbonImmutable $frozen = null): array
     {
-        return $this->kpi->kpis();
+        return $this->kpi->at($frozen)->tiles();
     }
 
     /**
      * @return array{registrations: list<array{date: string, value: int}>, qr_funnel: list<array{date: string, scans: int, registrations: int}>, top_makes: list<array{label: string, value: int}>}
      */
-    public function charts(): array
+    public function charts(?CarbonImmutable $frozen = null): array
     {
-        return $this->kpi->charts();
+        return $this->kpi->at($frozen)->charts();
     }
 
     /**
      * @return array{average: int|null, months: list<array{month: string, value: int}>}
      */
-    public function dsa(): array
+    public function dsa(?CarbonImmutable $frozen = null): array
     {
-        return $this->kpi->dsa();
+        return $this->kpi->at($frozen)->dsa();
     }
 }

@@ -76,6 +76,8 @@ const queue = useSplitQueue<BusinessRow, DecidedBusiness>({
         if (sel.value?.can.reject && mayDecide.value) rejectOpen.value = true;
     },
     onUndo: () => undo(),
+    // DQ-1202: Anträge opens the oldest application from 1280 px (not under a forced QA state, which has no real rows).
+    autoSelect: () => applied.value && state.value === 'ready',
 });
 const { selectedId, paneOpen, split, lastDecided } = queue;
 
@@ -170,6 +172,7 @@ const caption = (row: BusinessRow): string => [trans(`businesses.kinds.${row.kin
                     :empty-title="trans(`businesses.empty.${tab}_title`)"
                     :empty-body="trans(`businesses.empty.${tab}_body`)"
                     :row-href="rowHref"
+                    :current-row-id="split ? selectedId : null"
                     :force-state="forcedTable"
                     test-id="ADM-55.table"
                 >

@@ -7,7 +7,7 @@ import { View, type LayoutChangeEvent } from 'react-native';
 
 import { flattenById, usePartsOn, useProduct, useProductBuilds, type ProductDetail } from '@/api/queries/parts';
 import { SampleWall } from '@/features/discover/components/SampleWall';
-import { useDiscoverColumn, WALL_COLUMNS_BY_KIND } from '@/features/discover/layout';
+import { WALL_COLUMNS_BY_KIND } from '@/features/discover/layout';
 import { RestrictionNotice, useBrowseRestriction } from '@/features/home/components/BrowseStates';
 import { GroupHeader, RowCard } from '@/features/vehicle/components/RowCard';
 import { categoryIcon } from '@/features/vehicle/model';
@@ -22,6 +22,7 @@ import { Button, Icon, PressableScale, Skeleton, SkeletonBlock, SkeletonText, Sp
 import { BuildsEmpty, BuildsWall } from '../components/BuildsWall';
 import { PageStateBody, pageStateOf } from '../components/PageStates';
 import { PartsPage } from '../components/PartsPage';
+import { SPLIT_GAP, usePartsColumns } from '../components/partsLayout';
 import { buildsLabel, websiteUrl } from '../model';
 import { openUrl } from '../openUrl';
 
@@ -38,6 +39,8 @@ const useStyles = createStyles((t) => ({
   links: { alignItems: 'flex-start', gap: t.space[12] },
   affiliate: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
   states: { paddingTop: t.space[16] },
+  split: { alignItems: 'flex-start', flexDirection: 'row', gap: SPLIT_GAP },
+  main: { gap: t.space[32] },
 }));
 
 /**
@@ -57,7 +60,7 @@ export function ProductScreen() {
   const flag = usePartsOn();
   const restriction = useBrowseRestriction();
   const back = useBack('/discover');
-  const column = useDiscoverColumn();
+  const column = usePartsColumns();
   const query = useProduct(id);
   const state = pageStateOf(query, flag, online, qaState);
   const product = state === 'ready' ? query.data : undefined;
@@ -128,7 +131,7 @@ function ProductBody({ product, collapseOn }: { product: ProductDetail; collapse
   const styles = useStyles();
   const router = useRouter();
   const format = useFormat();
-  const column = useDiscoverColumn();
+  const column = usePartsColumns();
   const { width, kind } = useBreakpoint();
   const builds = useProductBuilds(product.id);
   const buildRows = useMemo(() => flattenById(builds.data?.pages).filter((vehicle) => vehicle.cover), [builds.data?.pages]);
@@ -138,7 +141,7 @@ function ProductBody({ product, collapseOn }: { product: ProductDetail; collapse
   const phone = kind === 'phone';
   const caption = [product.line, count].filter(Boolean).join(' · ');
 
-  return (
+  const head = (
     <>
       <View style={styles.head} onLayout={collapseOn}>
         <PressableScale
@@ -190,9 +193,11 @@ function ProductBody({ product, collapseOn }: { product: ProductDetail; collapse
           </RowCard>
         </View>
       ) : null}
-
-      {official || affiliate ? (
-        <View style={styles.links}>
+    </>
+  );
+  const links =
+      official || affiliate ? (
+        <View style={styles.links} testID={`${ROUTE}.links`}>
           {official ? (
             <Button
               label={t('product.official')}
@@ -224,7 +229,21 @@ function ProductBody({ product, collapseOn }: { product: ProductDetail; collapse
             </View>
           ) : null}
         </View>
-      ) : null}
+      ) : null;
+
+  return (
+    <>
+      {column.split ? (
+        <View style={styles.split}>
+          <View style={[styles.main, { width: column.main }]}>{head}</View>
+          <View style={{ width: column.side }}>{links}</View>
+        </View>
+      ) : (
+        <>
+          {head}
+          {links}
+        </>
+      )}
 
       <BuildsWall
         title={t('product.builds', { product: keepNameTogether(product.full_name) })}

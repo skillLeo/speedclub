@@ -2,7 +2,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-handler/jest-utils';
 
-import { GalleryScreen } from '@/features/vehicle/screens/GalleryScreen';
+import { GalleryScreen, wallRows } from '@/features/vehicle/screens/GalleryScreen';
 import { ModDetailScreen } from '@/features/vehicle/screens/ModDetailScreen';
 import { UpdateDetailScreen } from '@/features/vehicle/screens/UpdateDetailScreen';
 import { ViewerScreen } from '@/features/vehicle/screens/ViewerScreen';
@@ -121,6 +121,17 @@ describe('VEH-02 modification detail', () => {
 });
 
 describe('VEH-03 gallery', () => {
+  it('lays the wall out in rows of the column count, each row knowing the index of its first photo (no fractional cell padding)', () => {
+    const photos = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((id) => ({ id }) as Parameters<typeof wallRows>[0][number]);
+    const rows = wallRows(photos, 3);
+    expect(rows.map((row) => [row.key, row.start, row.photos.length])).toEqual([
+      ['a', 0, 3],
+      ['d', 3, 3],
+      ['g', 6, 1],
+    ]);
+    expect(wallRows([], 3)).toEqual([]);
+  });
+
   beforeEach(() => setParams({ slug: SLUG }));
 
   it('shows every photo, filters by the categories that hold photos, and opens the filtered set', async () => {

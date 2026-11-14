@@ -1,11 +1,14 @@
+import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
+import { useBusinessesOn } from '@/api/queries/businesses';
+import { usePartsOn } from '@/api/queries/parts';
 import { usePublicVehicleUpdates, type BuildUpdate, type PublicModRow, type PublicVehicle, type VehicleMedia } from '@/api/queries/vehicles';
 import { createStyles, layout as layoutTokens, size, space } from '@/theme';
-import { BuildSheet, BuildSheetRow, Button, Photo, PressableScale, SectionHeader, SpecRow, Text, Timeline, type BuildSheetSection, type TimelineEntry } from '@/ui';
+import { BuildSheet, BuildSheetRow, Button, Photo, PressableScale, SectionHeader, SpecRow, Text, Timeline, type BuildSheetLink, type BuildSheetSection, type TimelineEntry } from '@/ui';
 import { TranslatableText } from '@/features/ai/TranslatableText';
 import { unpairedPhotos, updatePairs } from '@/features/updates/model';
 import { useFormat } from '@/lib/useFormat';
@@ -306,7 +309,44 @@ export function ModsSection({ vehicle, routeId, onOpenMod }: Navigation & { vehi
   const { t } = useTranslation('vehicle');
   const legalPill = useLegalPill();
   const styles = useStyles();
+  const router = useRouter();
+  const partsOn = usePartsOn();
+  const businessesOn = useBusinessesOn();
   const groups = vehicle.mods.groups.filter((group) => group.items.length > 0);
+  // M4.14: the catalogue product (BRD-02), its brand (BRD-01) and "Eingebaut von" (BIZ-01) under the row, while their flags are on.
+  const modLinks = (mod: PublicModRow): BuildSheetLink[] => {
+    const links: BuildSheetLink[] = [];
+    const product = partsOn ? mod.product : null;
+    if (product) {
+      links.push({
+        key: 'product',
+        label: product.full_name,
+        icon: 'part-box',
+        accessibilityLabel: t('mods.links.productLabel', { product: product.full_name }),
+        onPress: () => router.push({ pathname: '/products/[id]', params: { id: product.id } }),
+        testID: `${routeId}.mod.${mod.id}.product`,
+      });
+      links.push({
+        key: 'brand',
+        label: t('mods.links.brand', { brand: product.brand.name }),
+        accessibilityLabel: t('mods.links.brandLabel', { brand: product.brand.name }),
+        onPress: () => router.push({ pathname: '/brands/[slug]', params: { slug: product.brand.slug || product.brand_slug } }),
+        testID: `${routeId}.mod.${mod.id}.brand`,
+      });
+    }
+    const installed = businessesOn ? mod.installed_by : null;
+    if (installed) {
+      links.push({
+        key: 'installedBy',
+        label: t('mods.links.installedBy', { business: installed.name }),
+        icon: 'workshop',
+        accessibilityLabel: t('mods.links.installedByLabel', { business: installed.name, city: installed.city }),
+        onPress: () => router.push({ pathname: '/b/[slug]', params: { slug: installed.slug } }),
+        testID: `${routeId}.mod.${mod.id}.installedBy`,
+      });
+    }
+    return links;
+  };
   if (groups.length === 0) {
     return (
       <Text variant="body" color="text.secondary" testID={`${routeId}.modsEmpty`}>
@@ -330,6 +370,7 @@ export function ModsSection({ vehicle, routeId, onOpenMod }: Navigation & { vehi
       ...(modValues(mod) ? { values: modValues(mod) } : {}),
       status: mod.status_label,
       ...legalPill(mod),
+      links: modLinks(mod),
       // Behaviour kept: a row opens VEH-02 (with the chevron). The inline expand waits for the details the API does not list
       // yet (photos, product link, "Eingebaut von"), which VEH-02 shows; costs stay private (09 §7.6 GAR-10).
       onPress: () => onOpenMod(mod),

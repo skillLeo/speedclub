@@ -83,7 +83,7 @@
     "detail": {
         "organiser": "Organiser",
         "place": "Place",
-        "place_private": "Only the organiser and members who are going see the exact place. Your first look each day is in the audit log.",
+        "place_private": "Only the organiser and members who are going see the exact place. Your first look each day is recorded in the audit log.",
         "place_public": "The place is visible to everyone.",
         "no_place": "No exact place given",
         "time": "Time",

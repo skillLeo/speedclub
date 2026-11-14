@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\PublicIcons;
 use Illuminate\Support\Facades\Vite;
 
 require_once dirname(__DIR__).'/Garage/GarageTestHelpers.php';
@@ -43,13 +44,84 @@ it('puts the landing hero photo first in the queue, as the only high-priority im
         ->and($html)->not->toContain('data-testid="WEB-03.logo"');
 });
 
-it('loads the first garage card of a member page without lazy loading, and the others lazily', function () {
+it('loads the cover of a member page as its only eager photo, and defers every garage card, the first included', function () {
     publishedVehicle($this->owner, ['make_id' => null, 'model_id' => null, 'generation_id' => null, 'make_text' => 'Nissan', 'model_text' => 'Silvia']);
 
     $html = (string) $this->get('/u/lukas.sc')->assertOk()->getContent();
-    preg_match_all('~<img\b[^>]*\babsolute inset-0\b[^>]*>~', $html, $cards);
+    $live = (string) preg_replace('~<noscript>.*?</noscript>~s', '', $html);
+    preg_match_all('~<img\b[^>]*\bclass="sc-photo[^"]*"[^>]*>~', $live, $photos);
+    preg_match_all('~<img\b[^>]*\babsolute inset-0\b[^>]*>~', $live, $cards);
+    preg_match_all('~<noscript><img\b[^>]*\babsolute inset-0\b[^>]*></noscript>~', $html, $copies);
 
-    expect($cards[0])->toHaveCount(2)
-        ->and($cards[0][0])->not->toContain('loading="lazy"')->not->toContain('fetchpriority')
-        ->and($cards[0][1])->toContain('loading="lazy"')->toContain('fetchpriority="low"');
+    // ADR-469 (DQ-1234): every member page opens on a cover (here the brand stage, as both builds have one photo). It is the page's
+    // LCP and its one eager photo: the only high-priority image, the only preload, the only photo outside <noscript> that names its
+    // file. Since the M4.18 LCP fix the first garage card is no exception (eager, its 1080 file cost /u/jann.ptrs about 890 ms of
+    // LCP): every card is a deferred placeholder (data-sc-src, lazy, the transparent pixel) with its <noscript> copy, sized to the
+    // card's column (inside the phone gutters, not 100vw).
+    expect(preg_match_all('~<img[^>]+fetchpriority="high"~', $html))->toBe(1)
+        ->and($html)->toMatch('~<img[^>]+fetchpriority="high"[^>]+class="sc-photo sc-ph-stage-empty~')
+        ->and(substr_count($html, 'rel="preload" as="image"'))->toBe(1)
+        ->and($cards[0])->toHaveCount(2)
+        ->and($copies[0])->toHaveCount(2);
+
+    foreach ($photos[0] as $photo) {
+        if (str_contains($photo, 'fetchpriority="high"')) {
+            expect($photo)->toContain('sc-ph-stage-empty')->toContain(' srcset=')->not->toContain('loading="lazy"')->not->toContain('data-sc-src');
+        } else {
+            expect($photo)->toContain('data-sc-src="')->toContain('src="data:image/gif;base64,')->not->toContain('fetchpriority');
+        }
+    }
+
+    foreach ($cards[0] as $card) {
+        expect($card)->toContain('loading="lazy"')->toContain('data-sc-src="')->toContain('data-sc-srcset="')
+            ->toContain('src="data:image/gif;base64,')->not->toContain(' srcset=')->not->toContain('fetchpriority')
+            ->toMatch('~ sizes="[^"]*, calc\(100vw - 40px\)"~');
+    }
+
+    foreach ($copies[0] as $copy) {
+        expect($copy)->toContain('loading="lazy"')->toContain(' srcset=')->not->toContain('data-sc-src')->not->toContain('fetchpriority')
+            ->toMatch('~ sizes="[^"]*, calc\(100vw - 40px\)"~');
+    }
+});
+
+it('fetches nothing but the hero before the page has loaded (M4.16 LCP)', function () {
+    $html = (string) $this->get('/')->assertOk()->getContent();
+    // Outside <noscript>, every photo but the hero names its file only in data-sc-src.
+    $live = (string) preg_replace('~<noscript>.*?</noscript>~s', '', $html);
+    preg_match_all('~<img\b[^>]*\bclass="sc-photo[^"]*"[^>]*>~', $live, $photos);
+
+    expect($photos[0])->not->toBeEmpty();
+
+    foreach ($photos[0] as $photo) {
+        if (str_contains($photo, 'fetchpriority="high"')) {
+            expect($photo)->toContain('sc-ph-landing-hero')->not->toContain('loading="lazy"');
+        } else {
+            expect($photo)->toContain('data-sc-src="')->toContain('src="data:image/gif;base64,')->not->toContain('fetchpriority');
+        }
+    }
+
+    expect(substr_count($html, 'rel="preload" as="image"'))->toBe(1);
+});
+
+it('carries in its sprites exactly the symbols the page uses, not every glyph (M4.18 LCP: about 9 KB less HTML on the critical path)', function (string $page) {
+    $path = $page === 'vehicle' ? '/v/'.$this->vehicle->canonicalSlug() : ($page === 'member' ? '/u/lukas.sc' : '/');
+    $html = (string) $this->get($path)->assertOk()->getContent();
+    preg_match_all('~<use href="#([^"]+)"~', $html, $uses);
+    preg_match_all('~<symbol id="([^"]+)"~', $html, $symbols);
+    $used = array_values(array_unique($uses[1]));
+    sort($used);
+    $printed = $symbols[1];
+    sort($printed);
+
+    expect($used)->not->toBeEmpty()
+        ->and($printed)->toBe($used)
+        ->and(substr_count(view('components.icons.phosphor-sprite')->render(), '<symbol id="'))->toBeGreaterThan(count($printed));
+})->with(['home', 'vehicle', 'member']);
+
+it('prints no sprite markup for a page without icons, and only the symbols a page used otherwise', function () {
+    expect((string) PublicIcons::sprite('components.icons.phosphor-sprite'))->toBe('');
+
+    PublicIcons::use('ph-wrench');
+    expect((string) PublicIcons::sprite('components.icons.phosphor-sprite'))->toContain('<symbol id="ph-wrench"')
+        ->not->toContain('<symbol id="ph-arrow-right"');
 });

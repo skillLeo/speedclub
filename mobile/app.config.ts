@@ -1,5 +1,6 @@
 import type { ExpoConfig } from 'expo/config';
 import { withAndroidManifest, withInfoPlist, type ConfigPlugin } from 'expo/config-plugins';
+import type { WithAndroidWidgetsParams } from 'react-native-android-widget';
 
 import version from './version.json';
 
@@ -161,6 +162,27 @@ const appLinkAndroid = appLink
     }
   : {};
 
+/**
+ * M4.18 widget "Mein Auto" (09 §8.14). The faces it draws with are the bundled ones (the widget looks them up in assets/fonts by
+ * file name); the preview is a composite of a real seed photo (design/scripts/build-widget-assets.mjs).
+ */
+const ANDROID_WIDGETS: WithAndroidWidgetsParams = {
+  fonts: ['./assets/fonts/Inter-Medium.ttf', './assets/fonts/Inter-SemiBold.ttf', './assets/fonts/ArchivoSemiExpanded-SemiBold.ttf'],
+  widgets: [
+    {
+      name: 'MeinAuto',
+      label: 'Mein Auto',
+      minWidth: '250dp',
+      minHeight: '110dp',
+      targetCellWidth: 4,
+      targetCellHeight: 2,
+      resizeMode: 'horizontal|vertical',
+      previewImage: './assets/widget/mein-auto-preview.png',
+      updatePeriodMillis: 21600000,
+    },
+  ],
+};
+
 const config: ExpoConfig = {
   name: 'SPEED CLUB',
   slug: 'speedclub',
@@ -279,6 +301,14 @@ const config: ExpoConfig = {
       },
     ],
     './plugins/withReleaseSigning',
+    // M4.19: a deep link (widget tap, QR, mail link) that reaches a restored task — process killed, task in recents — becomes
+    // MainActivity's intent, so expo-router's initial URL is that link and not the task's original launcher intent.
+    './plugins/withNewIntentAsIntent',
+    // M4.18 (09 §8.14, ADR-454): the Android home-screen widget "Mein Auto". Android only by construction: the plugin's mods are
+    // all Android mods (manifest receiver, provider XML, preview drawable, fonts in assets/fonts), so iOS prebuilds and the web
+    // export never run them, and the JS side (src/features/widget/register.android.ts) is not in the iOS or web bundle.
+    // updatePeriodMillis is large on purpose (upstream ANR issue #165): the app pushes every change itself.
+    ['react-native-android-widget', ANDROID_WIDGETS],
   ],
   experiments: {
     typedRoutes: true,

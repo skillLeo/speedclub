@@ -318,7 +318,7 @@ export function ModelScreen() {
             <View key={entry.slug} onLayout={generation === entry.slug ? onActiveChip : undefined}>
             <Chip
               label={years ? `${entry.name} · ${years}` : entry.name}
-              count={entry.vehicle_count}
+              count={entry.vehicle_count > 0 ? entry.vehicle_count : undefined}
               selected={generation === entry.slug}
               selectionRole="radio"
               onPress={() => router.setParams({ generation: entry.slug })}
@@ -348,9 +348,12 @@ export function ModelScreen() {
             <DisplayTitle placement="page" layoutWidth={column.inner} role="heading" {...({ 'aria-level': 1 } as object)} testID={`${ROUTE}.title`}>
               {data.model.name}
             </DisplayTitle>
-            <Text variant="callout" color="text.secondary" numeric testID={`${ROUTE}.count`}>
-              {t('model.count', { count: data.model.vehicle_count, formatted: format.number(data.model.vehicle_count) })}
-            </Text>
+            {/* ADR-466: real builds only; with samples alone there is no "0 Builds". */}
+            {data.model.vehicle_count > 0 ? (
+              <Text variant="callout" color="text.secondary" numeric testID={`${ROUTE}.count`}>
+                {t('model.count', { count: data.model.vehicle_count, formatted: format.number(data.model.vehicle_count) })}
+              </Text>
+            ) : null}
           </View>
           {generationChips}
           <SegmentedControl

@@ -100,7 +100,7 @@ const memberHref = (id: string) => routeOr('admin.members.show', `/admin/members
                             <Select v-model="statusModel" :options="statusOptions" size="sm" :placeholder="trans('qr.filters.any')" data-testid="ADM-18.filter.status" />
                         </Field>
                     </div>
-                    <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" data-testid="ADM-18.filter.apply">{{ trans('qr.filters.apply') }}</Button>
+                    <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" data-testid="ADM-18.filter.apply">{{ trans('qr.filters.apply') }}</Button>
                 </form>
             </template>
 

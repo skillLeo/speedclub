@@ -31,7 +31,9 @@ const useStyles = createStyles((t) => ({
   band: { overflow: 'hidden', width: SPLASH_LOGO_WIDTH },
   wordmarkBand: { height: LOGO_HEIGHT * KANA_CUT },
   kanaBand: { height: LOGO_HEIGHT * (1 - KANA_CUT), marginTop: -t.space[12] },
-  kanaImage: { marginTop: -LOGO_HEIGHT * KANA_CUT },
+  // The band is a window onto the asset's lower part: the whole logo sits in it, shifted up by the wordmark's share. A crop of the
+  // image, not spacing (the DOM audit read a −107.6 margin as an off-scale step).
+  kanaImage: { left: 0, position: 'absolute', top: -LOGO_HEIGHT * KANA_CUT },
 }));
 
 /**

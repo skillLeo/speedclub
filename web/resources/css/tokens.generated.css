@@ -458,6 +458,9 @@
   --sc-type-web-tab-size: calc(11px * min(var(--sc-type-scale, 1), 1.3));
   --sc-type-web-tab-line: calc(13px * min(var(--sc-type-scale, 1), 1.3));
   --sc-type-web-tab-tracking: calc(0px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-web-sidebar-size: calc(15px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-web-sidebar-line: calc(22px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-web-sidebar-tracking: calc(0px * min(var(--sc-type-scale, 1), 1.3));
   --sc-type-admin-base-size: calc(13px * var(--sc-type-scale, 1));
   --sc-type-admin-base-line: calc(20px * var(--sc-type-scale, 1));
   --sc-type-admin-base-tracking: calc(0px * var(--sc-type-scale, 1));
@@ -552,6 +555,7 @@
 .t-numeric-inline { font-family: var(--sc-font-ui); font-weight: 500; font-variant-numeric: tabular-nums;}
 .t-input { font-family: var(--sc-font-ui); font-size: var(--sc-type-input-size); line-height: var(--sc-type-input-line); letter-spacing: var(--sc-type-input-tracking); font-weight: 400; }
 .t-web-tab { font-family: var(--sc-font-ui); font-size: var(--sc-type-web-tab-size); line-height: var(--sc-type-web-tab-line); letter-spacing: var(--sc-type-web-tab-tracking); font-weight: 500; }
+.t-web-sidebar { font-family: var(--sc-font-ui); font-size: var(--sc-type-web-sidebar-size); line-height: var(--sc-type-web-sidebar-line); letter-spacing: var(--sc-type-web-sidebar-tracking); font-weight: 600; }
 .t-admin-base { font-family: var(--sc-font-ui); font-size: var(--sc-type-admin-base-size); line-height: var(--sc-type-admin-base-line); letter-spacing: var(--sc-type-admin-base-tracking); font-weight: 400; }
 .t-admin-base-strong { font-family: var(--sc-font-ui); font-size: var(--sc-type-admin-base-strong-size); line-height: var(--sc-type-admin-base-strong-line); letter-spacing: var(--sc-type-admin-base-strong-tracking); font-weight: 500; }
 .t-admin-table { font-family: var(--sc-font-ui); font-size: var(--sc-type-admin-table-size); line-height: var(--sc-type-admin-table-line); letter-spacing: var(--sc-type-admin-table-tracking); font-weight: 400; }

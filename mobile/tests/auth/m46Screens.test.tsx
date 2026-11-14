@@ -1,4 +1,4 @@
-// M4.6 Auth 2.0 screens: AUTH-02 (providers), AUTH-12, AUTH-13, WEB-12, AUTH-09b, AUTH-16, AUTH-14, SET-19, the reauth sheet and OTPInput.
+// M4.6 Auth 2.0 screens: AUTH-02 (providers), AUTH-12, AUTH-13, WEB-16, AUTH-09b, AUTH-16, AUTH-14, SET-19, the reauth sheet and OTPInput.
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
 
@@ -303,7 +303,7 @@ describe('AUTH-13 code entry', () => {
   });
 });
 
-describe('WEB-12 magic link', () => {
+describe('WEB-16 magic link', () => {
   it('on another device: tells the member to type the code there', async () => {
     mockParams = { t: 'AbcDefGhiJklMnoPqrStuVwxYz0123456789_-abcd' };
     stubFetch({});
@@ -327,8 +327,8 @@ describe('WEB-12 magic link', () => {
     mockParams = { t: 'AbcDefGhiJklMnoPqrStuVwxYz0123456789_-abcd' };
     stubFetch({ '/auth/email/verify': error(422, 'code_expired') });
     await renderScreen(<MagicLinkScreen />);
-    expect(await screen.findByTestId('WEB-12.enterCode')).toBeTruthy();
-    expect(screen.getByTestId('WEB-12.notice')).toHaveTextContent(/abgelaufen/);
+    expect(await screen.findByTestId('WEB-16.enterCode')).toBeTruthy();
+    expect(screen.getByTestId('WEB-16.notice')).toHaveTextContent(/abgelaufen/);
   });
 });
 

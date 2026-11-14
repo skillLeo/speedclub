@@ -1,6 +1,6 @@
 // F9 Auth 2.0, passwordless first (09 §7.2, §8.1) on the member web at /app, against the real API: Welcome → "Mit E-Mail
 // fortfahren" (AUTH-12) → the 6-digit code from the local mailbox (AUTH-13, a wrong one first) → "Fast geschafft" (AUTH-09b)
-// → username (AUTH-08) → profile (AUTH-09) → garage. Then the same-device magic link (WEB-12) and the link on another browser.
+// → username (AUTH-08) → profile (AUTH-09) → garage. Then the same-device magic link (WEB-16) and the link on another browser.
 //
 // Every account is new and ends in E2E_DOMAIN; the global teardown deletes them all (support/backend.mjs).
 import type { Locator, Page } from '@playwright/test';
@@ -63,7 +63,7 @@ test.describe('F9 e-mail code sign-up', () => {
     const refused = page.waitForResponse(isPost('auth/email/verify'));
     await id(page, 'AUTH-13.code').fill(wrongCode(code));
     expect((await refused).status()).toBe(422);
-    await expect(id(page, 'AUTH-13.code.error')).toContainText(/Noch \d Versuche?\./);
+    await expect(id(page, 'AUTH-13.code.error')).toContainText(/Noch \d\u00A0Versuche?\./);
     await expect(id(page, 'AUTH-13.code')).toHaveValue('');
 
     const verified = page.waitForResponse(isPost('auth/email/verify'));
@@ -106,7 +106,7 @@ test.describe('F9 e-mail code sign-up', () => {
     await page.goto(`${BASE_URL}${link.pathname}${link.hash}`);
     expect((await verified).status()).toBe(200);
     await expect(id(page, 'AUTH-09b.root')).toBeVisible();
-    await expect.poll(() => new URL(page.url()).hash, { message: 'WEB-12 clears the token from the address bar' }).toBe('');
+    await expect.poll(() => new URL(page.url()).hash, { message: 'WEB-16 clears the token from the address bar' }).toBe('');
   });
 
   test('on another browser the link says to type the code', async ({ page, browser }) => {
@@ -118,7 +118,7 @@ test.describe('F9 e-mail code sign-up', () => {
       const tab = await other.newPage();
       const link = new URL(magic ?? '');
       await tab.goto(`${BASE_URL}${link.pathname}${link.hash}`);
-      await expect(tab.locator('[data-testid="WEB-12.root"]:visible')).toBeVisible();
+      await expect(tab.locator('[data-testid="WEB-16.root"]:visible')).toBeVisible();
       await expect(tab.getByText('Gib den Code in der App ein')).toBeVisible();
     } finally {
       await other.close();

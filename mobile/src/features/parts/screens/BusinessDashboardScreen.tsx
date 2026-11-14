@@ -10,6 +10,7 @@ import {
   BUSINESS_CODES,
   BUSINESS_LIMITS,
   hasNoBusiness,
+  teamInvites,
   useAddTeamMember,
   useBusinessesOn,
   useMyBusiness,
@@ -42,7 +43,8 @@ import {
   toast,
 } from '@/ui';
 
-import { BuildsWall } from '../components/BuildsWall';
+import { shortDate } from '../components/business/dates';
+import { PortfolioBuilds } from '../components/business/PortfolioBuilds';
 import { PageStateBody } from '../components/PageStates';
 import { PartsPage } from '../components/PartsPage';
 import { ProposeSheet } from '../components/ProposeSheet';
@@ -79,8 +81,8 @@ export function BusinessDashboardScreen() {
   const back = useBack('/settings');
   const column = useDiscoverColumn();
   const mine = useMyBusiness();
-  const none = qaState === 'empty' || hasNoBusiness(mine.error);
-  const business = qaState === 'empty' || qaState === 'loading' || qaState === 'error' ? undefined : mine.data;
+  const none = qaState === 'empty' || mine.data === null || hasNoBusiness(mine.error);
+  const business = qaState === 'empty' || qaState === 'loading' || qaState === 'error' ? undefined : (mine.data ?? undefined);
 
   let content;
   if (status === 'guest') {
@@ -175,6 +177,16 @@ function Dashboard({ business, onBack, restricted }: { business: MyBusiness; onB
   const [removing, setRemoving] = useState<string | null>(null);
   const remove = useRemoveTeamMember();
   const phone = kind === 'phone';
+  // SEC-414-01: an invitation holds a place until it is accepted or withdrawn; staff and open invitations share the limit.
+  const invites = teamInvites(business);
+  const places = business.team.filter((member) => member.role === 'staff').length + invites.length;
+
+  const withdraw = (username: string) => {
+    remove.mutate(username, {
+      onSuccess: () => toast(t('team.withdrawn', { username }), { testID: `${ROUTE}.toast` }),
+      onError: (error) => toast(error instanceof ApiError ? error.message : t('team.failed'), { haptic: 'warning', testID: `${ROUTE}.toast` }),
+    });
+  };
 
   const leave = removing !== null && removing === own;
   const confirmRemove = () => {
@@ -198,7 +210,7 @@ function Dashboard({ business, onBack, restricted }: { business: MyBusiness; onB
       offlineLabel={t('states.offlineBanner')}
       overlays={
         <>
-          {owner ? <AddMemberSheet visible={adding} onClose={() => setAdding(false)} count={business.team.length} /> : null}
+          {owner ? <AddMemberSheet visible={adding} onClose={() => setAdding(false)} count={places} /> : null}
           {verified ? <ProposeSheet visible={proposing} onClose={() => setProposing(false)} routeId={ROUTE} /> : null}
           <Dialog
             visible={removing !== null}
@@ -280,7 +292,8 @@ function Dashboard({ business, onBack, restricted }: { business: MyBusiness; onB
 
           {verified ? (
             <View style={styles.section}>
-              <BuildsWall
+              <PortfolioBuilds
+                feature={kind === 'desktop'}
                 title={t('business.portfolio')}
                 count={business.portfolio_count ? t('counts.builds', { count: business.portfolio_count, value: format.number(business.portfolio_count) }) : null}
                 vehicles={builds}
@@ -330,8 +343,35 @@ function Dashboard({ business, onBack, restricted }: { business: MyBusiness; onB
                         />
                       ) : undefined
                     }
-                    divider={index < business.team.length - 1}
+                    divider={index < business.team.length - 1 || invites.length > 0}
                     testID={`${ROUTE}.team.${member.username ?? index}`}
+                  />
+                );
+              })}
+              {invites.map((invite, index) => {
+                const date = invite.invited_at ? shortDate(new Date(invite.invited_at), format.locale) : null;
+                const id = invite.username ?? `invite.${index}`;
+                return (
+                  <ListRow
+                    key={id}
+                    icon="envelope-simple"
+                    title={invite.username ? `@${invite.username}` : t('team.gone')}
+                    subtitle={date ? t('team.invitedOn', { date }) : t('team.invited')}
+                    hyphenate={false}
+                    control={
+                      owner && invite.username ? (
+                        <Button
+                          label={t('team.withdraw')}
+                          variant="tertiary"
+                          size="s"
+                          accessibilityLabel={t('team.withdrawLabel', { username: invite.username })}
+                          onPress={() => (invite.username ? withdraw(invite.username) : undefined)}
+                          testID={`${ROUTE}.invite.${id}.withdraw`}
+                        />
+                      ) : undefined
+                    }
+                    divider={index < invites.length - 1}
+                    testID={`${ROUTE}.invite.${id}`}
                   />
                 );
               })}
@@ -343,7 +383,7 @@ function Dashboard({ business, onBack, restricted }: { business: MyBusiness; onB
                   icon="plus"
                   variant="secondary"
                   size="m"
-                  disabled={business.team.length > BUSINESS_LIMITS.staffMax || restricted}
+                  disabled={places >= BUSINESS_LIMITS.staffMax || restricted}
                   onPress={() => setAdding(true)}
                   testID={`${ROUTE}.team.add`}
                 />

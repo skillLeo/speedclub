@@ -162,7 +162,7 @@ describe('DISC-04 model pages', function () {
 });
 
 describe('DISC-01 additions', function () {
-    it('lists collections with real counts and a visible cover, leaving out empty and broken ones', function () {
+    it('lists collections with real counts and a visible cover, leaving out empty, broken and unfiltered ones', function () {
         $m4 = m23Build('BMW', 'M4', 'G82', ['power' => 510]);
         $m2 = m23Build('BMW', 'M2', 'G87', ['power' => 460, 'updated_at' => now()->addMinute()->toDateTimeString()]);
         m23Build('BMW', 'M3', 'E46', ['power' => 343]);
@@ -174,11 +174,10 @@ describe('DISC-01 additions', function () {
 
         $collections = $this->getJson('/api/v1/discover')->assertOk()->json('data.collections');
 
-        expect(array_column($collections, 'key'))->toBe(['bmw-m', 'alle'])
+        // DQ-1214: "alle" has no filter, so it would count and list every public build; it is not a collection.
+        expect(array_column($collections, 'key'))->toBe(['bmw-m'])
             ->and($collections[0])->toMatchArray(['title' => 'BMW M Builds', 'subtitle' => 'Ab 400 PS', 'filters' => ['make' => 'bmw', 'power_min' => 400], 'sort' => 'power', 'count' => 2, 'count_capped' => false])
-            ->and($collections[0]['cover']['id'])->toBe($m4->cover_media_id ?? Media::query()->where('mediable_id', $m4->id)->value('id'))
-            ->and($collections[1]['count'])->toBe(3)
-            ->and($collections[1]['filters'])->toBe([]);
+            ->and($collections[0]['cover']['id'])->toBe($m4->cover_media_id ?? Media::query()->where('mediable_id', $m4->id)->value('id'));
 
         // The chosen build goes private: the cover falls back to the collection's build changed last.
         Vehicle::query()->whereKey($m4->id)->update(['visibility' => 'private']);

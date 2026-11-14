@@ -7,6 +7,7 @@ use App\Enums\ModerationStatus;
 use App\Models\Media;
 use App\Models\User;
 use App\Services\Auth\MemberStats;
+use App\Services\Garage\MemberCovers;
 use App\Services\Showcase\SampleContent;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,7 +26,9 @@ class MemberPublicResource extends JsonResource
     {
         $member = $this->resource;
         $avatar = $this->visible($member->avatar);
-        $cover = $this->visible($member->cover);
+        // SEC-414-10: a cover from a vehicle that left the public garage is not shown (MemberCovers, as on /u and its og:image).
+        $reader = $request->user();
+        $cover = MemberCovers::visible($member, $reader instanceof User ? $reader : null);
 
         return [
             'username' => $member->username,

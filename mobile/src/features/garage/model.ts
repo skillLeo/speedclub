@@ -35,11 +35,16 @@ export function splitGarage(cards: readonly VehicleCardData[] | undefined): { ve
   return { vehicles: all.filter((card) => card.status !== 'draft'), drafts: all.filter((card) => card.status === 'draft') };
 }
 
+/** DQ-1217 (skill §9): the figure and its "%" never part ("100 / %" at 200 %): a no-break space between them, whatever the API sent. */
+export function completenessLine(line: string): string {
+  return line.replace(/(\d)[ \u202F]%/gu, '$1\u00A0%');
+}
+
 /** "Build zu 70 % vollständig" and its share for the 2-px bar. */
 export function completenessBar(card: Pick<VehicleCardData, 'completeness'>): { label: string; value: number } | undefined {
   const completeness = card.completeness;
   if (!completeness) return undefined;
-  return { label: completeness.line, value: Math.min(1, Math.max(0, completeness.percent / 100)) };
+  return { label: completenessLine(completeness.line), value: Math.min(1, Math.max(0, completeness.percent / 100)) };
 }
 
 // -- Reorder (GAR-01, GAR-07, GAR-09)

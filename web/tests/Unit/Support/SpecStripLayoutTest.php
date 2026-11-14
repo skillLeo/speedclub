@@ -461,6 +461,7 @@ it('takes its geometry from the tokens, and public.css draws the cell with the s
         ->and(Layout::UNIT_GAP)->toBe($tokens['space']['4'])
         ->and(Layout::DIVIDER)->toBe($tokens['size']['border']['control'])
         ->and(Layout::DESKTOP_WIDTH)->toBe($tokens['layout']['breakpoints']['desktop'])
-        ->and($cell[1] ?? '')->toContain('padding: '.Layout::CELL_PADDING_Y.'px '.Layout::CELL_PADDING_X.'px;')
-        ->and($cell[1] ?? '')->toContain('gap: '.Layout::CELL_GAP.'px;');
+        // Phase 4 (09 §14.4): public.css spells the scale steps as token variables, `--sc-space-<n>` being n px.
+        ->and($cell[1] ?? '')->toContain('padding: var(--sc-space-'.Layout::CELL_PADDING_Y.') var(--sc-space-'.Layout::CELL_PADDING_X.');')
+        ->and($cell[1] ?? '')->toContain('gap: var(--sc-space-'.Layout::CELL_GAP.');');
 });

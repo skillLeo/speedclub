@@ -141,7 +141,7 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                     <div class="min-w-200 grow-2 basis-0"><Field :label="trans('team.index.filters.q')"><Input v-model="filters.q" size="sm" maxlength="120" :placeholder="trans('team.index.filters.q_placeholder')" data-testid="ADM-39.filter.q" /></Field></div>
                     <div class="min-w-140 grow basis-0"><Field :label="trans('team.index.filters.state')"><Select v-model="stateModel" :options="stateOptions" size="sm" :placeholder="trans('team.index.filters.any')" data-testid="ADM-39.filter.state" /></Field></div>
                     <div class="min-w-140 grow basis-0"><Field :label="trans('team.index.filters.role')"><Select v-model="roleModel" :options="roleOptions" size="sm" :placeholder="trans('team.index.filters.any')" data-testid="ADM-39.filter.role" /></Field></div>
-                    <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-39.filter.apply">{{ trans('team.index.filters.apply') }}</Button>
+                    <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-39.filter.apply">{{ trans('team.index.filters.apply') }}</Button>
                 </form>
             </template>
 

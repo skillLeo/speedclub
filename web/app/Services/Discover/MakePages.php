@@ -9,8 +9,9 @@ use App\Models\VehicleModel;
 
 /**
  * DISC-03 and the DISC-04 header (m2.3 contract §6): the models and generations of a make with the real number of builds the viewer can
- * find (VisibleBuilds, blocks included). Only entries with at least one build are listed; a make or model without any has no page.
- * Models by count, then name; generations oldest first. A build whose model was typed freely ("Nicht gefunden?") counts for its make only.
+ * find (VisibleBuilds, blocks included). Only entries with at least one visible build are listed; a make or model without any has no
+ * page. The numbers count real builds only (DQ-1212, ADR-457): samples (while shown) keep an entry listed but never add to its count.
+ * Models by real count, then visible count, then name; generations oldest first. A build whose model was typed freely ("Nicht gefunden?") counts for its make only.
  */
 final class MakePages
 {
@@ -29,7 +30,7 @@ final class MakePages
         $covers = app(CatalogHighlights::class)->modelCovers($viewer, array_map(fn (ModelCount $model): int => (int) $model->model->getKey(), $models));
         $models = array_map(fn (ModelCount $model): ModelCount => new ModelCount($model->model, $model->count, $model->generations, $covers[(int) $model->model->getKey()] ?? null), $models);
 
-        return new MakePage($make, array_sum(array_column($counts, 'hits')), $models);
+        return new MakePage($make, array_sum(array_column($counts, 'real')), $models);
     }
 
     public function model(?User $viewer, VehicleModel $model): ?ModelCount
@@ -47,11 +48,11 @@ final class MakePages
 
     public function makeCount(?User $viewer, Make $make): int
     {
-        return $this->builds->query($viewer)->where('vs.make_id', $make->getKey())->count();
+        return VisibleBuilds::realOnly($this->builds->query($viewer)->where('vs.make_id', $make->getKey()))->count();
     }
 
     /**
-     * @return list<array{model: int|null, generation: int|null, hits: int}>
+     * @return list<array{model: int|null, generation: int|null, hits: int, real: int}>
      */
     private function counts(?User $viewer, Make $make, ?VehicleModel $model): array
     {
@@ -61,17 +62,19 @@ final class MakePages
             ->groupBy('vs.model_id', 'vs.generation_id')
             ->select('vs.model_id', 'vs.generation_id')
             ->selectRaw('COUNT(*) as hits')
+            ->selectRaw(VisibleBuilds::REAL_COUNT.' as real_hits')
             ->get();
 
         return array_values($rows->map(fn (object $row): array => [
             'model' => is_numeric($id = VisibleBuilds::column($row, 'model_id')) ? (int) $id : null,
             'generation' => is_numeric($id = VisibleBuilds::column($row, 'generation_id')) ? (int) $id : null,
             'hits' => (int) VisibleBuilds::column($row, 'hits'),
+            'real' => (int) VisibleBuilds::column($row, 'real_hits'),
         ])->all());
     }
 
     /**
-     * @param  list<array{model: int|null, generation: int|null, hits: int}>  $counts
+     * @param  list<array{model: int|null, generation: int|null, hits: int, real: int}>  $counts
      * @return list<ModelCount>
      */
     private function models(array $counts): array
@@ -89,24 +92,27 @@ final class MakePages
 
             $byModel[$model->id]['model'] = $model;
             $byModel[$model->id]['hits'] = ($byModel[$model->id]['hits'] ?? 0) + $count['hits'];
+            $byModel[$model->id]['real'] = ($byModel[$model->id]['real'] ?? 0) + $count['real'];
             $generation = $count['generation'] === null ? null : $generations->get($count['generation']);
 
             if ($generation instanceof Generation && $generation->getAttribute('model_id') === $model->id) {
-                $byModel[$model->id]['generations'][] = new GenerationCount($generation, $count['hits']);
+                $byModel[$model->id]['generations'][] = new GenerationCount($generation, $count['real']);
             }
         }
 
         $result = [];
+        $visible = [];
 
         foreach ($byModel as $entry) {
             $generationCounts = $entry['generations'] ?? [];
             usort($generationCounts, fn (GenerationCount $a, GenerationCount $b): int => [$a->generation->getAttribute('year_from') ?? PHP_INT_MAX, $a->generation->getAttribute('name')]
                 <=> [$b->generation->getAttribute('year_from') ?? PHP_INT_MAX, $b->generation->getAttribute('name')]);
-            $result[] = new ModelCount($entry['model'], $entry['hits'], $generationCounts);
+            $result[] = new ModelCount($entry['model'], $entry['real'], $generationCounts);
+            $visible[$entry['model']->id] = $entry['hits'];
         }
 
-        usort($result, fn (ModelCount $a, ModelCount $b): int => [$b->count, mb_strtolower((string) $a->model->getAttribute('name'))]
-            <=> [$a->count, mb_strtolower((string) $b->model->getAttribute('name'))]);
+        usort($result, fn (ModelCount $a, ModelCount $b): int => [$b->count, $visible[$b->model->id], mb_strtolower((string) $a->model->getAttribute('name'))]
+            <=> [$a->count, $visible[$a->model->id], mb_strtolower((string) $b->model->getAttribute('name'))]);
 
         return $result;
     }

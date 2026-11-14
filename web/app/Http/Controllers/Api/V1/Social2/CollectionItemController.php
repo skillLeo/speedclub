@@ -54,7 +54,7 @@ class CollectionItemController extends Controller
             CollectionItemType::BuildUpdate->value => BuildUpdate::query()->whereKey($byType(CollectionItemType::BuildUpdate))
                 ->with(['vehicle' => fn ($query) => $query->with(['make', 'vehicleModel', 'generation', 'cover', 'media'])])->get()->keyBy('id'),
             CollectionItemType::Event->value => Event::query()->whereKey($byType(CollectionItemType::Event))->with('organiser')->get()->keyBy('id'),
-            CollectionItemType::Business->value => Business::query()->whereKey($byType(CollectionItemType::Business))->with(['owner', 'logo'])->get()->keyBy('id'),
+            CollectionItemType::Business->value => Business::query()->whereKey($byType(CollectionItemType::Business))->with(['owner', 'logo', 'cover'])->get()->keyBy('id'),
         ];
 
         $page->setCollection($page->getCollection()->filter(function ($item) use ($targets, $collections, $user): bool {

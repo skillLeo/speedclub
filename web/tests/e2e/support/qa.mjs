@@ -117,24 +117,36 @@ export async function makeContextDeterministic(context, opts = {}) {
  * @param {import('@playwright/test').Page} page
  */
 export function trackNetwork(page) {
-  let inflight = 0;
+  /** @type {Set<import('@playwright/test').Request>} */
+  const inflight = new Set();
   let lastChange = Date.now();
-  const touch = (/** @type {number} */ d) => {
-    inflight += d;
+  const start = (/** @type {import('@playwright/test').Request} */ r) => {
+    inflight.add(r);
     lastChange = Date.now();
   };
-  page.on('request', () => touch(1));
-  page.on('requestfinished', () => touch(-1));
-  page.on('requestfailed', () => touch(-1));
+  const end = (/** @type {import('@playwright/test').Request} */ r) => {
+    if (inflight.delete(r)) lastChange = Date.now();
+  };
+  page.on('request', start);
+  page.on('requestfinished', end);
+  page.on('requestfailed', end);
+  // DQ-1213: Playwright's WebKit (1.64) reports neither `requestfinished` nor a response for the request of a document loaded with a
+  // #fragment (`/app/auth/secure#t=…`), so the page never got quiet. A main-frame navigation counts as done once its document has
+  // loaded: the page's own load event says the document arrived.
+  const documentLoaded = () => {
+    for (const r of [...inflight]) if (r.isNavigationRequest() && r.frame() === page.mainFrame()) end(r);
+  };
+  page.on('domcontentloaded', documentLoaded);
+  page.on('load', documentLoaded);
   return {
     /** @param {{quietMs?:number,timeoutMs?:number}} [o] */
     async waitForQuiet({ quietMs = 120, timeoutMs = 15000 } = {}) {
       const deadline = Date.now() + timeoutMs;
       while (Date.now() < deadline) {
-        if (inflight <= 0 && Date.now() - lastChange >= quietMs) return;
+        if (inflight.size === 0 && Date.now() - lastChange >= quietMs) return;
         await new Promise((r) => setTimeout(r, 25));
       }
-      throw new Error(`Network not quiet after ${timeoutMs} ms (${inflight} requests in flight)`);
+      throw new Error(`Network not quiet after ${timeoutMs} ms (${inflight.size} requests in flight: ${[...inflight].slice(0, 3).map((r) => `${r.method()} ${r.url()}`).join(', ')})`);
     },
   };
 }

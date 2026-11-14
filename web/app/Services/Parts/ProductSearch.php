@@ -4,13 +4,15 @@ namespace App\Services\Parts;
 
 use App\Models\Brand;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\Catalog\CatalogSlugs;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Active products (not archived, not merged away) by name, with the filters of ProductSearchRequest. LIKE only (MySQL 8 and MariaDB
- * alike): the term matches the name, the line, an alias or the brand's name or aliases. By name, then id (the cursor).
+ * alike): the term matches the name, the line, an alias or the brand's name or aliases. By name, then id (the cursor); $ranked (the Teile
+ * scope, `counts=true`) by the real build count first (ADR-457).
  */
 final class ProductSearch
 {
@@ -18,9 +20,9 @@ final class ProductSearch
      * @param  array{q: string|null, brand: string|null, category: string|null}  $filters
      * @return CursorPaginator<int, Product>
      */
-    public function page(array $filters, int $perPage): CursorPaginator
+    public function page(array $filters, int $perPage, bool $ranked = false, ?User $viewer = null): CursorPaginator
     {
-        $query = Product::query()->active()->with(['brand', 'category']);
+        $query = Product::query()->active();
 
         if ($filters['brand'] !== null) {
             $brand = CatalogSlugs::brand($filters['brand']);
@@ -39,6 +41,10 @@ final class ProductSearch
                 ->orWhereHas('brand', fn (Builder $brand) => $brand->where('name', 'like', $like)->orWhere('aliases', 'like', $like)));
         }
 
-        return $query->orderBy('products.name')->orderBy('products.id')->cursorPaginate($perPage)->withQueryString();
+        if ($ranked) {
+            return app(PartBuilds::class)->ranked($query, $viewer)->with(['brand', 'category'])->cursorPaginate($perPage)->withQueryString();
+        }
+
+        return $query->with(['brand', 'category'])->orderBy('products.name')->orderBy('products.id')->cursorPaginate($perPage)->withQueryString();
     }
 }

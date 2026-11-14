@@ -138,7 +138,14 @@ test.describe('A3 branding publish and rollback', () => {
               // An aborted request can no longer be continued.
               await route.continue().catch(() => undefined);
             });
+            // HeroSlot measures 250 ms after the point last changed, so a move inside that window merges with the first point and nothing
+            // is in flight to overtake (both engines in the Phase 4 gate run). The move waits until the first measurement has left.
+            const firstPoint = page.waitForRequest((request) => {
+              const url = new URL(request.url());
+              return url.pathname.endsWith('/contrast') && Math.abs(Number(url.searchParams.get('focal_x')) - FOCAL.x) >= 0.02;
+            });
             await uploadWelcomeHero(page, NIGHT);
+            await firstPoint;
             const focal = id(page, 'ADM-28.hero.welcome.focal');
             const box = await focal.boundingBox();
             if (!box) throw new Error('The focal point area has no box');

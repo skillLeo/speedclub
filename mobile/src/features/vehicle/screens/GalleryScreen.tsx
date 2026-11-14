@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import type { FlashListRef } from '@shopify/flash-list';
 import { memo, useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, useWindowDimensions, View, type ViewStyle } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { usePublicVehicle, type MediaCategory, type VehicleMedia } from '@/api/queries/vehicles';
@@ -23,12 +23,13 @@ import { RouteStateBody, useRouteState } from '../states';
 
 const ROUTE_ID = 'VEH-03';
 const EDGES: readonly Edge[] = ['left', 'right'];
-const SKELETON_TILES = 9;
+/** The skeleton's rows of tiles (a phone shows nine). */
+const SKELETON_ROWS = 3;
 const TILE_RATIO = 1;
 
 /**
- * Columns and gap per width. The gap is split into the cells' side padding, which only stays on the spacing scale for
- * these pairs: 2 × 8, 3 × 12, 4 × 16.
+ * Columns and gap per width. A row lays its tiles out with the gap between them and equal shares of what is left, so every tile
+ * is equally wide and no cell carries a fraction of a gap as padding (off the spacing scale; m4.18 DOM audit, DQ-1070).
  */
 const GRID: Record<BreakpointKind, { columns: number; gap: number }> = {
   // DQ-1070 (09 §7.6 VEH-03, §5 wall): a 1:1 wall, 2 apart, no radius; 3 columns on a phone, more where there is room.
@@ -39,10 +40,18 @@ const GRID: Record<BreakpointKind, { columns: number; gap: number }> = {
 
 type Filter = MediaCategory | 'all';
 
-/** The cell of a grid position: its column's share of the gaps on both sides, so all columns are equally wide. */
-export function gridCell(index: number, columns: number, gap: number): ViewStyle {
-  const column = index % columns;
-  return { paddingLeft: (column * gap) / columns, paddingRight: ((columns - column - 1) * gap) / columns };
+/** One row of the wall: its photos (at most `columns`) and the index of the first one in the shown list. */
+export type WallRow = { key: string; start: number; photos: readonly VehicleMedia[] };
+
+/** The shown photos in rows of `columns`, each row keyed by its first photo. */
+export function wallRows(photos: readonly VehicleMedia[], columns: number): WallRow[] {
+  const rows: WallRow[] = [];
+  const step = Math.max(1, Math.floor(columns));
+  for (let start = 0; start < photos.length; start += step) {
+    const slice = photos.slice(start, start + step);
+    rows.push({ key: slice[0]?.id ?? String(start), start, photos: slice });
+  }
+  return rows;
 }
 
 const useStyles = createStyles((t) => ({
@@ -52,7 +61,10 @@ const useStyles = createStyles((t) => ({
   filterRow: { flexDirection: 'row', gap: t.space[8], paddingVertical: t.space[12] },
   intro: { paddingBottom: t.space[12], paddingTop: t.space[4] },
   tileVisual: { borderRadius: t.radius.none },
-  skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingTop: t.space[16] },
+  skeletonGrid: { paddingTop: t.space[16] },
+  wallRow: { flexDirection: 'row' },
+  // Equal shares of the row after its gaps; a short last row keeps empty cells, so its tiles have the same width.
+  wallCell: { flexBasis: 0, flexGrow: 1, minWidth: 0 },
   footer: { height: t.space[32] },
 }));
 
@@ -61,19 +73,16 @@ type TileProps = {
   index: number;
   total: number;
   fallbackAlt: string;
-  columns: number;
-  gap: number;
   tileWidth: number;
   onOpen: (index: number) => void;
 };
 
 /** One 1:1 photo of the wall, no radius (DQ-1070). */
-const Tile = memo(function Tile({ photo, index, total, fallbackAlt, columns, gap, tileWidth, onOpen }: TileProps) {
+const Tile = memo(function Tile({ photo, index, total, fallbackAlt, tileWidth, onOpen }: TileProps) {
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
-  const cell = useMemo(() => gridCell(index, columns, gap), [columns, gap, index]);
   return (
-    <View style={cell}>
+    <View style={styles.wallCell}>
       <PressableScale
         role="button"
         aria-label={t('hero.open', { alt: photo.alt || fallbackAlt, current: index + 1, total })}
@@ -100,7 +109,7 @@ export function GalleryScreen() {
   const { gutter, kind } = useBreakpoint();
   const tabBarInset = useTabBarInset();
   const header = useCollapsingHeader();
-  const listRef = useRef<FlashListRef<VehicleMedia>>(null);
+  const listRef = useRef<FlashListRef<WallRow>>(null);
   const query = usePublicVehicle(slug);
   const state = useRouteState(query);
   const [filter, setFilter] = useState<Filter>(isMediaCategory(initial) ? initial : 'all');
@@ -124,9 +133,9 @@ export function GalleryScreen() {
   // The tab bar's padding and the 32 below the grid stay apart: each is on the spacing scale, their sum is not.
   const listContent = useMemo(() => ({ paddingBottom: tabBarInset, paddingHorizontal: wallInset }), [wallInset, tabBarInset]);
   const headInset = useMemo(() => ({ paddingHorizontal: gutter - wallInset }), [gutter, wallInset]);
-  const skeletonGrid = useMemo(() => ({ rowGap: gap }), [gap]);
-  // FlashList sizes its cells by the column count; the skeleton's wrapping row needs the width itself.
-  const skeletonCell = useMemo(() => ({ width: `${100 / columns}%` as const }), [columns]);
+  const rowGap = useMemo(() => ({ rowGap: gap }), [gap]);
+  const columnGap = useMemo(() => ({ columnGap: gap }), [gap]);
+  const rows = useMemo(() => wallRows(shown, columns), [shown, columns]);
 
   useTabScrollToTop(() => {
     if (header.scrollY.get() <= 0) return false;
@@ -173,10 +182,14 @@ export function GalleryScreen() {
   if (state === 'loading') {
     content = (
       <Skeleton testID={`${ROUTE_ID}.skeleton`} style={{ paddingHorizontal: wallInset }}>
-        <View style={[styles.skeletonGrid, skeletonGrid]}>
-          {Array.from({ length: SKELETON_TILES }, (_, index) => (
-            <View key={index} style={[gridCell(index, columns, gap), skeletonCell]}>
-              <SkeletonBlock width="100%" aspectRatio={TILE_RATIO} corner="none" />
+        <View style={[styles.skeletonGrid, rowGap]}>
+          {Array.from({ length: SKELETON_ROWS }, (_, row) => (
+            <View key={row} style={[styles.wallRow, columnGap]}>
+              {Array.from({ length: columns }, (__, column) => (
+                <View key={column} style={styles.wallCell}>
+                  <SkeletonBlock width="100%" aspectRatio={TILE_RATIO} corner="none" />
+                </View>
+              ))}
             </View>
           ))}
         </View>
@@ -188,24 +201,29 @@ export function GalleryScreen() {
     );
   } else {
     content = (
-      <CollapsingFlashList<VehicleMedia>
+      <CollapsingFlashList<WallRow>
         ref={listRef}
         {...header.scrollProps}
-        data={shown}
-        numColumns={columns}
+        data={rows}
         key={`${columns}-${filter}`}
-        keyExtractor={(photo) => photo.id}
-        renderItem={({ item, index }) => (
-          <Tile
-            photo={item}
-            index={index}
-            total={shown.length}
-            fallbackAlt={fallbackAlt}
-            columns={columns}
-            gap={gap}
-            tileWidth={tileWidth}
-            onOpen={open}
-          />
+        keyExtractor={(row) => row.key}
+        renderItem={({ item }) => (
+          <View style={[styles.wallRow, columnGap]}>
+            {item.photos.map((photo, offset) => (
+              <Tile
+                key={photo.id}
+                photo={photo}
+                index={item.start + offset}
+                total={shown.length}
+                fallbackAlt={fallbackAlt}
+                tileWidth={tileWidth}
+                onOpen={open}
+              />
+            ))}
+            {Array.from({ length: columns - item.photos.length }, (_, empty) => (
+              <View key={`empty.${empty}`} style={styles.wallCell} />
+            ))}
+          </View>
         )}
         ItemSeparatorComponent={Separator}
         ListFooterComponent={<View style={styles.footer} />}

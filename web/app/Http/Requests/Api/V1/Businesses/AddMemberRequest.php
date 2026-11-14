@@ -5,7 +5,7 @@ namespace App\Http\Requests\Api\V1\Businesses;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * BIZ-03 Team: a member (their @username) joins the business as staff.
+ * BIZ-03 Team: the owner invites a member (their @username); they join as staff once they accept (SEC-414-01).
  */
 class AddMemberRequest extends FormRequest
 {

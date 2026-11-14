@@ -25,6 +25,8 @@ export type BusinessLegalForm = components['schemas']['BusinessLegalForm'];
 export type BusinessStatus = components['schemas']['BusinessStatus'];
 export type BusinessRole = components['schemas']['BusinessRole'];
 export type ModTag = components['schemas']['ModTagResource'];
+export type BusinessInvite = components['schemas']['BusinessInviteResource'];
+export type TeamInvite = MyBusiness['invites'][number];
 export type ModTagStatus = components['schemas']['ModTagStatus'];
 export type StoreBusinessBody = components['schemas']['StoreBusinessRequest'];
 export type UpdateBusinessBody = components['schemas']['UpdateBusinessRequest'];
@@ -73,11 +75,14 @@ export const BUSINESS_CODES = {
   emailNotVerified: 'email_not_verified',
   limitReached: 'limit_reached',
   conflict: 'conflict',
+  /** SEC-414: another business's confirmed tag on the mod is never replaced; one side takes it off first. */
+  tagTaken: 'business_tag_taken',
 } as const;
 
 export const LIST_PAGE_SIZE = 20;
 export const PORTFOLIO_PAGE_SIZE = 12;
 export const TAGS_PAGE_SIZE = 30;
+export const INVITES_PAGE_SIZE = 20;
 /** The business picker of "Eingebaut von": the first matches as the member types. */
 export const PICKER_SIZE = 8;
 
@@ -102,6 +107,7 @@ export const businessKeys = {
   tagList: (direction: TagDirection, status: ModTagStatus) => ['businesses', 'tags', direction, status] as const,
   modTags: ['businesses', 'modTags'] as const,
   modTagList: (direction: TagDirection, status: ModTagStatus) => ['businesses', 'modTags', direction, status] as const,
+  invites: ['businesses', 'invites'] as const,
 };
 
 /** The plain calls, shared by the hooks and the tests. */
@@ -134,8 +140,19 @@ export const businessesApi = {
       }),
     );
   },
-  async mine(signal?: AbortSignal): Promise<MyBusiness> {
-    return (await apiData(api.GET('/me/business', { signal }))).data;
+  /**
+   * DQ-1158: GET me/business answers 200 {data: null} while the member has none (older servers: 404 business_unavailable). That is
+   * an answer, not a failure: null, so the query settles without an error and is not retried (BIZ-02 then offers the application,
+   * BIZ-03 the invitation).
+   */
+  async mine(signal?: AbortSignal): Promise<MyBusiness | null> {
+    try {
+      const body = await apiData(api.GET('/me/business', { signal }));
+      return 'data' in body && body.data ? body.data : null;
+    } catch (error) {
+      if (hasNoBusiness(error)) return null;
+      throw error;
+    }
   },
   async apply(body: StoreBusinessBody, idempotencyKey: string): Promise<MyBusiness> {
     const answer = await apiData(api.POST('/me/business', { body, headers: { 'Idempotency-Key': idempotencyKey } }));
@@ -204,6 +221,19 @@ export const businessesApi = {
   async decideModTag(tagId: string, decision: 'accepted' | 'declined'): Promise<ModTag> {
     return (await apiData(api.PATCH('/me/mod-tags/{tag}', { params: { path: { tag: tagId } }, body: { decision } }))).data;
   },
+  /** SEC-414-01: the team invitations waiting for the member (BIZ-05), newest first. */
+  async invites(cursor: string | null, signal?: AbortSignal): Promise<Page<BusinessInvite>> {
+    return apiData(api.GET('/me/business-invites', { params: { query: { per_page: INVITES_PAGE_SIZE, ...(cursor ? { cursor } : {}) } }, signal }));
+  },
+  async acceptInvite(inviteId: string, idempotencyKey: string): Promise<MyBusiness> {
+    const answer = await apiData(
+      api.POST('/me/business-invites/{invite}/accept', { params: { path: { invite: inviteId } }, headers: { 'Idempotency-Key': idempotencyKey } }),
+    );
+    return (answer as Wrapped<MyBusiness>).data;
+  },
+  async declineInvite(inviteId: string): Promise<void> {
+    await apiData(api.DELETE('/me/business-invites/{invite}', { params: { path: { invite: inviteId } } }));
+  },
 };
 
 /** 404 `business_unavailable` (none, or one the reader may not see) and `feature_disabled`. */
@@ -211,7 +241,7 @@ export function isBusinessUnavailable(error: unknown): boolean {
   return error instanceof ApiError && error.kind === 'not_found';
 }
 
-/** GET me/business answers 404 business_unavailable while the member has none: BIZ-02 then offers the application. */
+/** GET me/business answers 404 business_unavailable while the member has none (`businessesApi.mine` turns it into null). */
 export function hasNoBusiness(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404 && error.code === BUSINESS_CODES.unavailable;
 }
@@ -277,7 +307,7 @@ export function usePortfolio(slug: string, enabled: boolean = true) {
   });
 }
 
-/** BIZ-02 status and BIZ-03: the member's own business (404 business_unavailable while there is none). */
+/** BIZ-02 status and BIZ-03: the member's own business; null while there is none (404 business_unavailable, see `mine`). */
 export function useMyBusiness(enabled: boolean = true) {
   const on = useBusinessesOn();
   const mayRead = useSessionStore(selectMayReadOwned);
@@ -363,13 +393,18 @@ export function useUploadBusinessMedia() {
     mutationFn: ({ kind, form, idempotencyKey }: { kind: 'logo' | 'cover'; form: FormData; idempotencyKey: string }) =>
       businessesApi.upload(kind, form, idempotencyKey),
     onSuccess: (media, { kind }) => {
-      client.setQueryData<MyBusiness>(businessKeys.mine, (business) => (business ? { ...business, [kind]: media } : business));
+      client.setQueryData<MyBusiness | null>(businessKeys.mine, (business) => (business ? { ...business, [kind]: media } : business));
       void client.invalidateQueries({ queryKey: businessKeys.mine });
     },
   });
 }
 
-/** BIZ-03 Team: the owner adds @username as staff; the answer is the business with its team. */
+/** The open invitations of the own business (SEC-414-01); none on a copy cached before the field existed. */
+export function teamInvites(business: Pick<MyBusiness, 'invites'>): TeamInvite[] {
+  return Array.isArray(business.invites) ? business.invites : [];
+}
+
+/** BIZ-03 Team "Einladen" (SEC-414-01): the owner invites @username, who joins as staff once they accept; the answer is the business with its team and open invitations. */
 export function useAddTeamMember() {
   const client = useQueryClient();
   return useMutation({
@@ -378,16 +413,25 @@ export function useAddTeamMember() {
   });
 }
 
-/** BIZ-03 Team: the owner removes staff, staff leave. Optimistic: the row goes at once and comes back when the call fails. */
+/**
+ * BIZ-03 Team: the owner removes staff or withdraws an open invitation (the same call), staff leave. Optimistic: the row goes at once and
+ * comes back when the call fails.
+ */
 export function useRemoveTeamMember() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (username: string) => businessesApi.removeMember(username),
     onMutate: async (username) => {
       await client.cancelQueries({ queryKey: businessKeys.mine });
-      const before = client.getQueryData<MyBusiness>(businessKeys.mine);
-      client.setQueryData<MyBusiness>(businessKeys.mine, (business) =>
-        business ? { ...business, team: business.team.filter((member) => member.username?.toLowerCase() !== username.toLowerCase()) } : business,
+      const before = client.getQueryData<MyBusiness | null>(businessKeys.mine);
+      client.setQueryData<MyBusiness | null>(businessKeys.mine, (business) =>
+        business
+          ? {
+              ...business,
+              team: business.team.filter((member) => member.username?.toLowerCase() !== username.toLowerCase()),
+              invites: teamInvites(business).filter((invite) => invite.username?.toLowerCase() !== username.toLowerCase()),
+            }
+          : business,
       );
       return { before };
     },
@@ -479,6 +523,70 @@ export function useDecideModTag() {
       void client.invalidateQueries({ queryKey: ['businesses', 'portfolio'] });
     },
   });
+}
+
+/** BIZ-05: the team invitations waiting for the member (SEC-414-01). */
+export function useBusinessInvites(enabled: boolean = true) {
+  const on = useBusinessesOn();
+  const mayRead = useSessionStore(selectMayReadOwned);
+  return useInfiniteQuery({
+    queryKey: businessKeys.invites,
+    queryFn: ({ pageParam, signal }) => businessesApi.invites(pageParam, signal),
+    initialPageParam: null as string | null,
+    getNextPageParam: nextCursor,
+    enabled: on && mayRead && enabled,
+    retry: retryUnlessAnswered,
+  });
+}
+
+/** Every invitation of the pages once, newest first as the API sends them. */
+export function flattenInvites(pages: readonly Page<BusinessInvite>[] | undefined): BusinessInvite[] {
+  const seen = new Set<string>();
+  return (pages ?? []).flatMap((page) => page.data).filter((invite) => (seen.has(invite.id) ? false : (seen.add(invite.id), true)));
+}
+
+function withoutInvite(data: InfiniteData<Page<BusinessInvite>> | undefined, inviteId: string): InfiniteData<Page<BusinessInvite>> | undefined {
+  if (!data) return data;
+  return { ...data, pages: data.pages.map((page) => ({ ...page, data: page.data.filter((invite) => invite.id !== inviteId) })) };
+}
+
+/**
+ * BIZ-05 "Annehmen" (Idempotency-Key): the member joins as staff; the answer is the business, which becomes "my business". The member's
+ * other invitations end on the server, so the list reads again.
+ */
+export function useAcceptBusinessInvite() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ inviteId, idempotencyKey }: { inviteId: string; idempotencyKey: string }) => businessesApi.acceptInvite(inviteId, idempotencyKey),
+    onSuccess: (business) => storeMyBusiness(client, business),
+    onSettled: () => {
+      void client.invalidateQueries({ queryKey: businessKeys.invites });
+      void client.invalidateQueries({ queryKey: businessKeys.mine });
+    },
+  });
+}
+
+/** BIZ-05 "Ablehnen": optimistic, the row goes at once and comes back when the call fails (a gone invitation stays gone). */
+export function useDeclineBusinessInvite() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: string) => businessesApi.declineInvite(inviteId),
+    onMutate: async (inviteId) => {
+      await client.cancelQueries({ queryKey: businessKeys.invites });
+      const before = client.getQueryData<InfiniteData<Page<BusinessInvite>>>(businessKeys.invites);
+      client.setQueryData<InfiniteData<Page<BusinessInvite>>>(businessKeys.invites, (data) => withoutInvite(data, inviteId));
+      return { before };
+    },
+    onError: (error, _inviteId, context) => {
+      if (context?.before && !isBusinessUnavailable(error)) client.setQueryData(businessKeys.invites, context.before);
+    },
+    onSettled: () => void client.invalidateQueries({ queryKey: businessKeys.invites }),
+  });
+}
+
+/** BIZ-05: an invitation that is gone (404 business_unavailable) leaves the list without a call. */
+export function dropInvite(client: QueryClient, inviteId: string): void {
+  client.setQueryData<InfiniteData<Page<BusinessInvite>>>(businessKeys.invites, (data) => withoutInvite(data, inviteId));
 }
 
 /** Whether the member may see "Für Betriebe" at all: signed in, the flag on. */

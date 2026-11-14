@@ -36,7 +36,7 @@ import { photoFields } from '@/features/profile/media';
 import { useHideTabBar } from '@/features/shell/tabBarLayout';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
 import { haptics } from '@/lib/haptics';
-import { useQaState } from '@/lib/qa';
+import { qa, useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
@@ -68,6 +68,8 @@ import {
   isLockedField,
   maskTime,
   serverFieldMap,
+  lockedFieldsOf,
+  type Locked,
   STEP_FIELDS,
   stepOf,
   STEPS,
@@ -85,8 +87,9 @@ const NOTE_ROWS = 4;
 const useStyles = createStyles((t) => ({
   progress: { gap: t.space[8] },
   services: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
-  serviceAdd: { alignItems: 'stretch', flexDirection: 'row', gap: t.space[8] },
-  addCell: { justifyContent: 'flex-end' },
+  // DQ-1147: field and "Hinzufügen" share the row's bottom edge (the button is shorter than the field); the note runs below the row.
+  serviceAdd: { alignItems: 'flex-end', flexDirection: 'row', gap: t.space[8] },
+  serviceAddButton: { alignSelf: 'flex-end', flexShrink: 0 },
   grow: { flex: 1 },
   day: { gap: t.space[8] },
   media: { gap: t.space[12] },
@@ -97,6 +100,7 @@ const useStyles = createStyles((t) => ({
   status: { gap: t.space[16] },
   statusActions: { alignItems: 'flex-start', gap: t.space[12] },
   locked: { marginTop: t.space[4] },
+  field: { gap: t.space[8] },
 }));
 
 /**
@@ -118,8 +122,9 @@ export function BusinessApplyScreen() {
   // §9: an editor pushed inside a tab hides the bar, so the sticky CTA sits at the bottom edge above the keyboard.
   useHideTabBar();
   const mine = useMyBusiness();
-  const none = hasNoBusiness(mine.error);
-  const business = qaState === 'empty' ? undefined : mine.data;
+  // DQ-1158: no business yet is `null` (the query's quiet answer to 404 business_unavailable), never an error.
+  const none = mine.data === null || hasNoBusiness(mine.error);
+  const business = qaState === 'empty' ? undefined : (mine.data ?? undefined);
   // "Für Betriebe" of a verified business is its dashboard (09 §7.9: BIZ-02 apply / BIZ-03 dashboard).
   const verified = business?.status === 'verified' && !editing && qaState === 'default';
   useEffect(() => {
@@ -283,10 +288,13 @@ function BusinessForm({ business, restricted, onDone }: { business: MyBusiness |
   const styles = useStyles();
   const online = useOnline();
   const creating = business === null;
-  const locked = business?.identity_locked === true;
+  // SEC-414-06: the server names the locked fields (`locked_fields`); each of them is read-only with the support hint.
+  const lockedFields = useMemo(() => lockedFieldsOf(business), [business]);
+  const locked = lockedFields.size > 0;
   const defaults = useMemo(() => (business ? valuesFrom(business) : emptyValues()), [business]);
   const form = useForm<BusinessFormValues>({ resolver: zodResolver(businessSchema(creating)) as never, mode: 'onTouched', defaultValues: defaults });
-  const [step, setStep] = useState<Step>('business');
+  // DQ-1151: `qaStep` opens the wizard on a later step for the visual matrix (never in production, where `qa` has no overrides).
+  const [step, setStep] = useState<Step>(() => (qa.step ? (STEPS[qa.step - 1] ?? 'business') : 'business'));
   const [notice, setNotice] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -352,7 +360,7 @@ function BusinessForm({ business, restricted, onDone }: { business: MyBusiness |
       if (creating) {
         result = await save.mutateAsync({ mode: 'apply', body: applyBody(values), idempotencyKey: createKey.current });
       } else {
-        const body = updateBody(values, defaults, locked);
+        const body = updateBody(values, defaults, lockedFields);
         result = Object.keys(body).length > 0 ? await save.mutateAsync({ mode: 'update', body }) : business;
       }
       await uploadMedia();
@@ -412,9 +420,9 @@ function BusinessForm({ business, restricted, onDone }: { business: MyBusiness |
           {t('apply.lockedNote')}
         </Text>
       ) : null}
-      {step === 'business' ? <BusinessStep control={form.control} locked={locked} /> : null}
-      {step === 'impressum' ? <ImpressumStep control={form.control} locked={locked} /> : null}
-      {step === 'contact' ? <ContactStep control={form.control} locked={locked} /> : null}
+      {step === 'business' ? <BusinessStep control={form.control} locked={lockedFields} /> : null}
+      {step === 'impressum' ? <ImpressumStep control={form.control} locked={lockedFields} /> : null}
+      {step === 'contact' ? <ContactStep control={form.control} locked={lockedFields} /> : null}
       {step === 'hours' ? <HoursStep control={form.control} /> : null}
       {step === 'finish' ? (
         <FinishStep control={form.control} creating={creating} business={business} media={media} onPick={(kind) => void pick(kind)} />
@@ -423,7 +431,7 @@ function BusinessForm({ business, restricted, onDone }: { business: MyBusiness |
   );
 }
 
-type StepProps = { control: Control<BusinessFormValues>; locked?: boolean };
+type StepProps = { control: Control<BusinessFormValues>; locked?: Locked };
 
 /** A text field of the form: label, the server's or our message, the locked hint of a verified business. */
 function Field({
@@ -441,7 +449,7 @@ function Field({
   name: 'name' | 'about' | 'legalName' | 'representative' | 'registerCourt' | 'registerNumber' | 'vatId' | 'street' | 'postcode' | 'city' | 'email' | 'phone' | 'website' | 'documentNote';
   label: string;
   helper?: string;
-  locked?: boolean;
+  locked?: Locked;
   multiline?: boolean;
   maxRows?: number;
   maxLength?: number;
@@ -475,28 +483,35 @@ function Field({
 }
 
 function BusinessStep({ control, locked = false }: StepProps) {
+  const kindLocked = isLockedField('kind', locked);
   const { t } = useTranslation('parts');
   const styles = useStyles();
   const [service, setService] = useState('');
   return (
     <>
-      <FormGroup title={t('apply.groups.profile')} testID={`${ROUTE}.group.profile`}>
+      {/* DQ-1146: no section header over a field whose own label says it all ("Profil" over "Name des Betriebs"). */}
+      <FormGroup testID={`${ROUTE}.group.profile`}>
         <Field control={control} name="name" label={t('apply.fields.name')} helper={t('apply.fields.nameHelper')} locked={locked} maxLength={120} />
         <Controller
           control={control}
           name="kind"
-          render={({ field }) => (
-            <ChoiceChips
-              label={t('apply.fields.kind')}
-              options={BUSINESS_KINDS.map((kind) => ({ value: kind, label: t(`kinds.${kind}`) }))}
-              value={field.value}
-              onChange={(next) => (next ? field.onChange(next) : undefined)}
-              testID={`${ROUTE}.kind`}
-            />
+          render={({ field, fieldState }) => (
+            <View style={styles.field}>
+              <ChoiceChips
+                label={t('apply.fields.kind')}
+                visibleLabel
+                options={BUSINESS_KINDS.map((kind) => ({ value: kind, label: t(`kinds.${kind}`) }))}
+                value={field.value}
+                onChange={(next) => (next ? field.onChange(next) : undefined)}
+                disabled={kindLocked}
+                testID={`${ROUTE}.kind`}
+              />
+              <FieldNote helper={kindLocked ? t('apply.lockedField') : undefined} error={fieldText(t, fieldState.error)} testID={`${ROUTE}.kind.note`} />
+            </View>
           )}
         />
       </FormGroup>
-      <FormGroup title={t('apply.groups.services')} testID={`${ROUTE}.group.services`}>
+      <FormGroup testID={`${ROUTE}.group.services`}>
         <Controller
           control={control}
           name="services"
@@ -522,9 +537,10 @@ function BusinessStep({ control, locked = false }: StepProps) {
                       testID={`${ROUTE}.service`}
                     />
                   </View>
-                  {/* Its own column to the row's bottom edge: the button sits level with the field, under its label. */}
-                  <View style={styles.addCell}>
-                    <Button label={t('apply.fields.addService')} variant="secondary" size="m" disabled={!service.trim()} onPress={add} testID={`${ROUTE}.service.add`} />
+                  {/* DQ-1147: the Button hugs its label with alignSelf flex-start, which beat the row's flex-end; its own box sits on the
+                      input's bottom, and size L is the input's height (52), so both share one line. */}
+                  <View style={styles.serviceAddButton}>
+                    <Button label={t('apply.fields.addService')} variant="secondary" size="l" disabled={!service.trim()} onPress={add} testID={`${ROUTE}.service.add`} />
                   </View>
                 </View>
                 {/* The note under the row, so "Hinzufügen" lines up with the field and not with its helper. */}
@@ -617,6 +633,7 @@ function ImpressumStep({ control, locked = false }: StepProps) {
           control={control}
           name="vatId"
           label={t('apply.fields.vatId')}
+          locked={locked}
           helper={t('apply.fields.vatIdHelper')}
           maxLength={20}
           inputProps={{ autoCapitalize: 'characters', autoCorrect: false }}
@@ -650,7 +667,7 @@ function ContactStep({ control, locked = false }: StepProps) {
         <Controller
           control={control}
           name="country"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <>
               <PickerField
                 label={t('apply.fields.country')}
@@ -659,6 +676,7 @@ function ContactStep({ control, locked = false }: StepProps) {
                 onPress={() => setSheet(true)}
                 disabled={isLockedField('country', locked)}
                 helper={isLockedField('country', locked) ? t('apply.lockedField') : undefined}
+                error={fieldText(t, fieldState.error)}
                 testID={`${ROUTE}.country`}
               />
               <OptionSheet
@@ -682,6 +700,7 @@ function ContactStep({ control, locked = false }: StepProps) {
           control={control}
           name="email"
           label={t('apply.fields.email')}
+          locked={locked}
           helper={t('apply.fields.emailHelper')}
           maxLength={160}
           inputProps={{ keyboardType: 'email-address', autoCapitalize: 'none', autoComplete: 'email', autoCorrect: false }}
@@ -690,6 +709,7 @@ function ContactStep({ control, locked = false }: StepProps) {
           control={control}
           name="phone"
           label={t('apply.fields.phone')}
+          locked={locked}
           helper={t('apply.optional')}
           maxLength={40}
           inputProps={{ keyboardType: 'phone-pad', autoComplete: 'tel' }}
@@ -698,6 +718,7 @@ function ContactStep({ control, locked = false }: StepProps) {
           control={control}
           name="website"
           label={t('apply.fields.website')}
+          locked={locked}
           helper={t('apply.optional')}
           maxLength={300}
           inputProps={{ keyboardType: 'url', autoCapitalize: 'none', autoCorrect: false }}

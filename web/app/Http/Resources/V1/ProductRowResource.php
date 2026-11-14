@@ -40,11 +40,19 @@ class ProductRowResource extends JsonResource
                 'icon' => $category->getAttribute('icon'),
             ],
             /**
-             * Visible builds with this product, a real count; null where the list does not count (the editor's autocomplete).
+             * Visible real builds with this product (samples never count, DQ-1140; 0 = hide the number); null where the list does not
+             * count (the editor's autocomplete).
              *
              * @var int|null
              */
             'builds' => $product->buildCount,
+            /**
+             * ADR-457: the cover of the newest real public build with this product (1:1 thumbnail at radius 8); null when there is none
+             * (the client shows the category glyph) or the list does not count (the editor's autocomplete).
+             *
+             * @var MediaResource|null
+             */
+            'thumbnail' => $product->thumbnail === null ? null : new MediaResource($product->thumbnail),
             /** @var ProductStatus */
             'status' => $product->status,
         ];

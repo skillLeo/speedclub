@@ -2,7 +2,7 @@
   "offline": "Offline – du siehst den zuletzt geladenen Stand.",
   "offlineSince": "Offline – zuletzt aktualisiert {{time}}.",
   "featured": {
-    "eyebrow": "FEATURED BUILD"
+    "eyebrow": "Build im Fokus"
   },
   "newBuilds": {
     "title": "Neu in der Garage",
@@ -88,7 +88,9 @@
     "build": {
       "follow": "Folgen",
       "following": "Folge ich",
-      "failed": "Folgen hat nicht geklappt. Versuch es noch einmal."
+      "failed": "Folgen hat nicht geklappt. Versuch es noch einmal.",
+      "view": "Ansehen",
+      "viewLabel": "{{name}} ansehen"
     }
   },
   "notifications": {
@@ -185,7 +187,7 @@
       "label": "Mitteilungen filtern",
       "all": "Alle",
       "builds": "Builds",
-      "social": "Social",
+      "social": "Community",
       "events": "Treffen",
       "system": "System"
     },
@@ -195,7 +197,7 @@
     "menu": "Weitere Aktionen",
     "settings": "Einstellungen",
     "markRead": "Gelesen",
-    "sampleUpdate": "{{name}} hat ein Update zu seinem {{car}} gepostet.",
+    "sampleUpdate": "{{name}} hat ein Update zu {{car}} veröffentlicht.",
     "sampleFollow": "{{name}} folgt jetzt deinem {{car}}.",
     "sampleTimeUpdate": "vor 2 Std.",
     "sampleTimeFollow": "gestern"
@@ -222,5 +224,15 @@
     "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
     "copied": "Link kopiert.",
     "shareFailed": "Teilen geht hier nicht. Der Link: {{url}}"
+  },
+  "brands": {
+    "title": "Marken im Fokus",
+    "all": "Alle",
+    "allLabel": "Alle Teile-Marken in Entdecken zeigen"
+  },
+  "businesses": {
+    "title": "Werkstätten und Betriebe",
+    "all": "Alle",
+    "allLabel": "Alle Betriebe in Entdecken zeigen"
   }
 }

@@ -45,5 +45,5 @@ it('runs F13 from application to the portfolio on the public page', function () 
     $this->getJson("/api/v1/businesses/$slug/portfolio")->assertJsonPath('data.0.id', $mod->vehicle_id);
     $this->getJson("/api/v1/businesses/$slug")->assertJsonPath('data.portfolio_count', 1)->assertJsonPath('data.impressum.vat_id', 'DE123456789');
     $html = $this->get("/b/$slug", ['Accept-Language' => 'de'])->assertOk()->getContent();
-    expect($html)->toContain('data-testid="WEB-10.build"')->toContain('data-testid="WEB-10.impressum"')->toContain('Fahrwerkstatt Elbe GmbH')->toContain('DE123456789');
+    expect($html)->toContain('data-testid="WEB-14.build"')->toContain('data-testid="WEB-14.impressum"')->toContain('Fahrwerkstatt Elbe GmbH')->toContain('DE123456789');
 });

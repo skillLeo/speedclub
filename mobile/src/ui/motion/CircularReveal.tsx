@@ -65,7 +65,8 @@ export function CircularReveal({ theme, origin, children, style, testID }: Circu
   const centre = origin ?? { x: box.width / 2, y: box.height / 2 };
 
   return (
-    <View style={[styles.root, style]} onLayout={onLayout} testID={testID}>
+    // The content is in `applied`'s theme, whatever the page's: on web the DOM audit reads its colours against that theme.
+    <View style={[styles.root, style]} onLayout={onLayout} dataSet={{ themeScope: applied }} testID={testID}>
       <ThemeScope name={applied}>{children}</ThemeScope>
       {phase ? (
         motion.reduced ? (

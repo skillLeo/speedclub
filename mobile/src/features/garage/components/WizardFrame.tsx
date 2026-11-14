@@ -6,7 +6,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { useOnline } from '@/state/online';
-import { createStyles, layout, size, useBreakpoint } from '@/theme';
+import { createStyles, layout, size, space, useBreakpoint } from '@/theme';
 import {
   DiscardGuardDialog,
   Hairline,
@@ -18,7 +18,6 @@ import {
   Screen,
   StickyCTABar,
   Text,
-  VehicleCard,
   type StickyCTASecondary,
   type VehicleCardProps,
 } from '@/ui';
@@ -27,6 +26,7 @@ import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
 import { stepNumber, WIZARD_STEPS, type WizardStep } from '../model';
 import { useCloseModal, wizardPath } from '../navigation';
 import { FORM_MAX_WIDTH } from './frames';
+import { WizardDraftPreview } from './WizardVehiclePreview';
 
 const EDGES: readonly Edge[] = ['left', 'right'];
 const KEYBOARD_OFFSET = size.button.l + size.touchMin;
@@ -201,7 +201,15 @@ export function WizardFrame({
             <Text variant={SECTION_HEADER_ROLE} color="text.secondary" role="heading" {...({ 'aria-level': 2 } as object)} hyphenate={false} testID="GAR-03.preview.title">
               {t('wizard.preview')}
             </Text>
-            {previewNode ?? <VehicleCard {...preview} testID="GAR-03.previewCard" />}
+            {previewNode ?? (
+              // DQ-1218: the review step's stage, never the grey card with a drive pill.
+              <WizardDraftPreview
+                preview={preview}
+                width={PREVIEW_WIDTH - 2 * space[24]}
+                onAddPhoto={step === 'photos' || draftId === 'new' ? undefined : () => router.replace(wizardPath(draftId, 'photos'))}
+                testID="GAR-03.previewCard"
+              />
+            )}
           </ScrollView>
         </View>
       ) : (

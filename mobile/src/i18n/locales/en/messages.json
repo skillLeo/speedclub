@@ -93,7 +93,7 @@
   },
   "thread": {
     "info": "Conversation info",
-    "drives": "{{car}} driver",
+    "drives": "drives {{car}}",
     "vehicleView": "View",
     "contextOwner": "@{{username}}'s vehicle",
     "contextOpen": "Open vehicle: {{title}}",

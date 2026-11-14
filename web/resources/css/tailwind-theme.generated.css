@@ -126,6 +126,10 @@
   --text-web-tab--line-height: var(--sc-type-web-tab-line);
   --text-web-tab--letter-spacing: var(--sc-type-web-tab-tracking);
   --text-web-tab--font-weight: 500;
+  --text-web-sidebar: var(--sc-type-web-sidebar-size);
+  --text-web-sidebar--line-height: var(--sc-type-web-sidebar-line);
+  --text-web-sidebar--letter-spacing: var(--sc-type-web-sidebar-tracking);
+  --text-web-sidebar--font-weight: 600;
 
   --radius-*: initial;
   --radius-none: 0px;

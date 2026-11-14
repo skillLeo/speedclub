@@ -52,6 +52,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property CarbonImmutable|null $suspended_at
  * @property CarbonImmutable|null $removed_at
  * @property bool $is_sample
+ * @property int $version
  * @property-read User $owner
  * @property-read Media|null $logo
  * @property-read Media|null $cover
@@ -67,9 +68,31 @@ class Business extends Model
     public const IDENTITY = ['name', 'legal_name', 'legal_form', 'representative', 'street', 'postcode', 'city', 'country', 'register_court', 'register_number', 'vat_id'];
 
     /**
+     * SEC-414-06: the contact and place a verified badge vouches for (the Impressum's e-mail and phone, the website, the "Route" point and
+     * the kind): locked like IDENTITY once verified, changed through support.
+     */
+    public const CONTACT = ['kind', 'email', 'phone', 'website', 'lat', 'lng'];
+
+    /**
+     * Every field locked once the business is verified (UpdateBusiness, MyBusinessResource `locked_fields`).
+     *
+     * @return list<string>
+     */
+    public static function lockedFields(): array
+    {
+        return [...self::IDENTITY, ...self::CONTACT];
+    }
+
+    /**
      * The number of builds in the portfolio, set by BusinessPresenter for a page (never stored).
      */
     public ?int $portfolioCount = null;
+
+    /**
+     * ADR-457: the cover of the newest portfolio build (real builds first) for a card without a cover of its own, set by
+     * BusinessListing::prepareCovers() (never stored); null when not prepared or there is none.
+     */
+    public ?Media $portfolioCover = null;
 
     /** @var list<string> */
     protected $fillable = [
@@ -96,7 +119,21 @@ class Business extends Model
             'suspended_at' => 'immutable_datetime',
             'removed_at' => 'immutable_datetime',
             'is_sample' => 'boolean',
+            'version' => 'integer',
         ];
+    }
+
+    /**
+     * SEC-414-07: `version` is the optimistic lock of ADM-55/56, raised by one on every write that changes a column (like updated_at,
+     * a persistence detail, not a business rule), so two writes in the same second never share a version.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Business $business): void {
+            if ($business->exists && $business->isDirty()) {
+                $business->version = (int) $business->getOriginal('version', 1) + 1;
+            }
+        });
     }
 
     public function isPublic(): bool
@@ -104,6 +141,9 @@ class Business extends Model
         return $this->status->isPublic() && $this->removed_at === null;
     }
 
+    /**
+     * The member's role in the team: owner, or staff once they accepted an invitation (SEC-414-01: a pending invite is no role).
+     */
     public function roleOf(?User $user): ?BusinessRole
     {
         if ($user === null) {
@@ -133,6 +173,16 @@ class Business extends Model
     public function members(): HasMany
     {
         return $this->hasMany(BusinessMember::class);
+    }
+
+    /**
+     * SEC-414-01: open team invitations (accepted ones become members).
+     *
+     * @return HasMany<BusinessInvite, $this>
+     */
+    public function invites(): HasMany
+    {
+        return $this->hasMany(BusinessInvite::class);
     }
 
     /**

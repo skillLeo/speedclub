@@ -142,3 +142,80 @@ it('rate limits tag requests', function () {
     $this->putJson("/api/v1/mods/{$this->mod->id}/business-tag", ['business' => 'fahrwerkstatt-elbe'])->assertSuccessful();
     $this->putJson("/api/v1/mods/{$this->mod->id}/business-tag", ['business' => 'fahrwerkstatt-elbe'])->assertTooManyRequests();
 });
+
+// SEC-414-01 gate tests (report §2): drafting is an invitation; the business side never confirms on a build owner's behalf.
+it('keeps an added member pending: no role, no dashboard, may still apply, told with business_invite', function () {
+    Sanctum::actingAs($this->bizOwner);
+    $this->postJson('/api/v1/me/business/members', ['username' => 'paul.e30'])->assertOk();
+
+    expect($this->business->refresh()->roleOf($this->member))->toBeNull()
+        ->and(Notification::query()->where('notifiable_id', $this->member->id)->where('type', NotificationType::BusinessInvite->value)->exists())->toBeTrue();
+    Sanctum::actingAs($this->member);
+    $this->getJson('/api/v1/me/business')->assertOk()->assertExactJson(['data' => null]);
+    $this->postJson('/api/v1/me/business', bizBody(), ['Idempotency-Key' => 'sec414-modtags-apply'])->assertCreated();
+});
+
+it('leaves a business proposal on a team member’s mod pending with initiated_by business', function () {
+    BusinessMember::factory()->create(['business_id' => $this->business->id, 'user_id' => $this->member->id]);
+    Sanctum::actingAs($this->bizOwner);
+
+    $this->postJson('/api/v1/me/business/tag-requests', ['mod_id' => $this->mod->id])->assertCreated()
+        ->assertJsonPath('data.status', 'pending')->assertJsonPath('data.initiated_by', 'business');
+    expect($this->mod->refresh()->installed_by_business_id)->toBeNull()
+        ->and(Notification::query()->where('notifiable_id', $this->member->id)->where('type', NotificationType::BusinessTag->value)->value('data'))->toMatchArray(['state' => 'requested']);
+});
+
+it('keeps a rival’s accepted tag through a proposal (the SEC-414-01 probe inverted)', function () {
+    $rival = bizBusiness(null, ['slug' => 'rival-werkstatt']);
+    ModBusinessTag::factory()->create(['mod_id' => $this->mod->id, 'business_id' => $rival->id, 'status' => ModTagStatus::Accepted, 'requested_by' => $this->member->id]);
+    $this->mod->forceFill(['installed_by_business_id' => $rival->id])->saveQuietly();
+    BusinessMember::factory()->create(['business_id' => $this->business->id, 'user_id' => $this->member->id]);
+
+    Sanctum::actingAs($this->bizOwner);
+    $this->postJson('/api/v1/me/business/tag-requests', ['mod_id' => $this->mod->id])->assertConflict();
+
+    expect(ModBusinessTag::query()->where('mod_id', $this->mod->id)->value('business_id'))->toBe($rival->id)
+        ->and($this->mod->refresh()->installed_by_business_id)->toBe($rival->id);
+    $this->getJson('/api/v1/businesses/rival-werkstatt/portfolio')->assertJsonCount(1, 'data');
+    $this->getJson('/api/v1/businesses/fahrwerkstatt-elbe/portfolio')->assertJsonCount(0, 'data');
+});
+
+// SEC-414-08: BIZ-04 rows name a build only while the reader may see it.
+it('drops title, build and owner from a tag row once the build went private or its owner blocked the business', function (string $how) {
+    Sanctum::actingAs($this->member);
+    $this->putJson("/api/v1/mods/{$this->mod->id}/business-tag", ['business' => 'fahrwerkstatt-elbe'])->assertSuccessful();
+
+    $how === 'private'
+        ? Vehicle::query()->whereKey($this->mod->vehicle_id)->update(['visibility' => Visibility::Private->value])
+        : socBlock($this->member, $this->bizOwner);
+
+    Sanctum::actingAs($this->bizOwner);
+    $this->getJson('/api/v1/me/business/tag-requests')->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.vehicle', null)->assertJsonPath('data.0.mod.title', null)->assertJsonPath('data.0.owner_username', null)
+        ->assertJsonPath('data.0.mod.id', $this->mod->id);
+
+    // The owner still reads their own row in full.
+    Sanctum::actingAs($this->member);
+    $this->getJson('/api/v1/me/mod-tags?direction=outgoing')->assertJsonPath('data.0.mod.title', 'Teil')->assertJsonPath('data.0.owner_username', 'paul.e30');
+})->with(['private' => ['private'], 'blocked' => ['blocked']]);
+
+// SEC-414-11: accepting publishes "Eingebaut von", so a publishing restriction refuses it; declining stays open.
+it('refuses an accept under a publishing restriction on both sides, never a decline', function (string $side) {
+    if ($side === 'member') {
+        Sanctum::actingAs($this->bizOwner);
+        $tag = $this->postJson('/api/v1/me/business/tag-requests', ['mod_id' => $this->mod->id])->json('data.id');
+        $this->member->forceFill(['restrictions' => ['publishing' => ['until' => null]]])->save();
+        Sanctum::actingAs($this->member->refresh());
+        $uri = "/api/v1/me/mod-tags/$tag";
+    } else {
+        Sanctum::actingAs($this->member);
+        $tag = $this->putJson("/api/v1/mods/{$this->mod->id}/business-tag", ['business' => 'fahrwerkstatt-elbe'])->json('data.id');
+        $this->bizOwner->forceFill(['restrictions' => ['publishing' => ['until' => null]]])->save();
+        Sanctum::actingAs($this->bizOwner->refresh());
+        $uri = "/api/v1/me/business/tag-requests/$tag";
+    }
+
+    $this->patchJson($uri, ['decision' => 'accepted'])->assertForbidden()->assertJsonPath('code', 'account_restricted');
+    expect($this->mod->refresh()->installed_by_business_id)->toBeNull();
+    $this->patchJson($uri, ['decision' => 'declined'])->assertOk()->assertJsonPath('data.status', 'declined');
+})->with(['build owner' => ['member'], 'business' => ['business']]);

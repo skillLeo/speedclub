@@ -2,7 +2,7 @@ import type { FlashListRef } from '@shopify/flash-list';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, type StyleProp, type ViewStyle } from 'react-native';
+import { PixelRatio, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import {
   newIdempotencyKey,
@@ -18,11 +18,12 @@ import { useRetainedListScroll } from '@/features/shell/useRetainedListScroll';
 import { useBack } from '@/features/vehicle/navigation';
 import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
 import { hapticFor } from '@/lib/haptics';
+import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
-import { createStyles, size, space, useTheme } from '@/theme';
+import { createStyles, size, space, typography, useTheme } from '@/theme';
 import {
   Button,
   CollapsingFlashList,
@@ -41,7 +42,7 @@ import {
 } from '@/ui';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 import { RowDivider } from '@/ui/rowParts';
-import { metaLineText } from '@/ui/textBreaks';
+import { metaLineText, WHOLE_PART_MAX } from '@/ui/textBreaks';
 
 import { deviceNameText } from '../deviceLines';
 import { SettingsSplit, useSettingsSplit } from '../components/SettingsSplit';
@@ -126,8 +127,9 @@ const useStyles = createStyles((t) => ({
   action: { alignItems: 'flex-start', marginTop: t.space[4] },
   // The text button S: its label line in its 32 frame.
   skeletonAction: { alignItems: 'stretch', justifyContent: 'center', minHeight: t.size.button.s },
-  // The "···" trigger starts on the title's line (its 44 target overhangs the 22 line evenly).
-  menu: { marginTop: -t.space[12] + t.space[2] },
+  // The "···" trigger centres on the title's first line: a slot one body line high, the 44 target overhanging it evenly (flex
+  // centring, no negative margin off the spacing scale).
+  menuSlot: { alignItems: 'center', justifyContent: 'center', overflow: 'visible' },
   skeletonRow: { flexDirection: 'row', gap: t.space[12], paddingHorizontal: t.space[8], paddingVertical: t.space[12] },
   skeletonText: { flex: 1, gap: t.space[4] },
   sample: { gap: t.space[12] },
@@ -172,10 +174,13 @@ export function useActivityLines() {
       if (typeof event.details.recovery_codes_left === 'number') {
         details.push(t('activity.details.codesLeft', { count: event.details.recovery_codes_left }));
       }
+      // A part kept whole must still fit a line: the budget of WHOLE_PART_MAX characters is for 100 %, so it shrinks with the font
+      // scale (SET-21 fs2: "ungefähr Hamburg" kept whole was wider than its 200 % line and broke inside "Hamburg").
+      const wholePart = Math.floor(WHOLE_PART_MAX / Math.max(1, fontScale));
       return {
         title,
-        meta: meta.length > 0 ? metaLineText(meta.join(' · ')) : null,
-        when: metaLineText(when.join(' · ')),
+        meta: meta.length > 0 ? metaLineText(meta.join(' · '), wholePart) : null,
+        when: metaLineText(when.join(' · '), wholePart),
         detail: details.length > 0 ? details.join(' · ') : null,
       };
     },
@@ -199,6 +204,8 @@ const ActivityRow = memo(function ActivityRow({ event, marked, divider, disabled
   const lines = useActivityLines()(event);
   const testID = `${ROUTE}.row.${event.id}`;
   const action = secureActionOf(event, marked);
+  const theme = useTheme();
+  const lineHeight = typography.body.lineHeight * (isWeb ? theme.fontScale : PixelRatio.getFontScale());
   return (
     <View style={columnStyle}>
       <View style={[styles.row, marked ? styles.marked : null]} testID={marked ? `${testID}.marked` : testID}>
@@ -206,7 +213,8 @@ const ActivityRow = memo(function ActivityRow({ event, marked, divider, disabled
           <Icon name={activityGlyph(event)} size={20} color="text.secondary" />
         </View>
         <View style={styles.text}>
-          <Text variant="body" hyphenate={false} testID={`${testID}.title`}>
+          {/* SET-21 fs2: "Fehlgeschlagene Anmeldeversuche" is wider than a 200 % line; it hyphenates instead of breaking without a hyphen. */}
+          <Text variant="body" testID={`${testID}.title`}>
             {lines.title}
           </Text>
           {lines.meta ? (
@@ -214,7 +222,8 @@ const ActivityRow = memo(function ActivityRow({ event, marked, divider, disabled
               {lines.meta}
             </Text>
           ) : null}
-          <Text variant="callout" color="text.secondary" numeric testID={`${testID}.when`}>
+          {/* Time and place are short words ("Hamburg", "ungefähr"): they wrap whole, never hyphenated. */}
+          <Text variant="callout" color="text.secondary" numeric hyphenate={false} testID={`${testID}.when`}>
             {lines.when}
           </Text>
           {lines.detail ? (
@@ -238,12 +247,13 @@ const ActivityRow = memo(function ActivityRow({ event, marked, divider, disabled
           ) : null}
         </View>
         {action === 'menu' ? (
-          <ContextMenuButton
-            label={t('activity.rowActions', { event: lines.title })}
-            items={[{ key: 'notMe', label: t('activity.notMe'), icon: 'shield-warning', destructive: true, disabled, onSelect: () => onSecure(event) }]}
-            style={styles.menu}
-            testID={`${testID}.more`}
-          />
+          <View style={[styles.menuSlot, { height: lineHeight }]}>
+            <ContextMenuButton
+              label={t('activity.rowActions', { event: lines.title })}
+              items={[{ key: 'notMe', label: t('activity.notMe'), icon: 'shield-warning', destructive: true, disabled, onSelect: () => onSecure(event) }]}
+              testID={`${testID}.more`}
+            />
+          </View>
         ) : null}
         {divider ? <RowDivider inset={space[8]} lead={TEXT_LEAD} /> : null}
       </View>

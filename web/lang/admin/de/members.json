@@ -194,7 +194,7 @@
         "locked": "Gesperrt seit :date",
         "force_password_change": "Passwortänderung erzwungen",
         "devices": "Angemeldete Geräte",
-        "no_devices": "Kein Gerät angemeldet.",
+        "no_devices": "Gerade ist kein Gerät und kein Browser angemeldet.",
         "device": "Gerät",
         "platform": "Plattform",
         "platform_ios": "iOS",
@@ -206,7 +206,7 @@
         "no_expiry": "Kein Ablauf",
         "unknown_device": "Unbekanntes Gerät",
         "view_as": "Ansicht als",
-        "sign_ins": "Anmeldungen nach Gerät",
+        "sign_ins": "Bisherige Anmeldungen nach Gerät",
         "sign_ins_note": "Nur Datum und Uhrzeit, keine IP-Adressen und keine Gerätekennungen.",
         "no_sign_ins": "Noch keine Anmeldung gezählt.",
         "device_n": "Gerät :n",
@@ -225,7 +225,11 @@
         "linked_at": "verknüpft :date",
         "events": "Sicherheitsereignisse",
         "events_note": "Die letzten 50 Ereignisse aus dem Sicherheitsprotokoll des Mitglieds, mit Gerät und ungefährer Stadt. Keine IP-Adressen.",
-        "no_events": "Noch keine Sicherheitsereignisse."
+        "no_events": "Noch keine Sicherheitsereignisse.",
+        "active_count": ":count aktiv",
+        "browser_session": "Browser-Sitzung",
+        "times": ":count×",
+        "events_repeat": ":date, :from–:to"
     },
     "reports": {
         "as_target": "Fälle zum Mitglied",

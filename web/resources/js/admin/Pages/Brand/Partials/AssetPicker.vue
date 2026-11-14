@@ -7,7 +7,7 @@ import { Button, Dialog, EmptyQueue, Field } from '../../../Components/ui';
 import { focusRing } from '../../../Components/ui/styles';
 import { formatDate, formatNumber } from '../../../lib/format';
 import { routeOr } from '../../../lib/routes';
-import type { AssetKind, BrandAsset } from './brand';
+import { logoGround, type AssetKind, type BrandAsset } from './brand';
 
 /**
  * Choose an uploaded brand image for a slot, or upload a new one (re-encoded, EXIF stripped, WebP variants; the kind's minimum size and
@@ -73,7 +73,7 @@ function upload(): void {
 
 const serverError = computed(() => (props.failed === true ? trans('ui.state.server_error') : error.value));
 const logo = computed(() => props.kind !== 'hero' && props.kind !== 'og');
-const ground = computed(() => (props.kind === 'wordmark_white' ? 'bg-black' : props.kind === 'wordmark_black' ? 'bg-white' : 'bg-raised'));
+const ground = computed(() => logoGround(props.kind));
 </script>
 
 <template>
@@ -89,7 +89,7 @@ const ground = computed(() => (props.kind === 'wordmark_white' ? 'bg-black' : pr
                         :data-testid="`ADM-28.picker.asset`"
                         @click="emit('choose', asset.id), (open = false)"
                     >
-                        <span class="relative block aspect-video overflow-hidden rounded-xs" :class="ground">
+                        <span class="relative block aspect-video overflow-hidden rounded-xs" :class="ground.class" :data-theme="ground.theme">
                             <img v-if="asset.thumb" :src="asset.thumb" alt="" :width="asset.width" :height="asset.height" class="block size-full" :class="logo ? 'object-contain p-8' : 'object-cover'" loading="lazy" />
                             <span v-if="asset.id === selected" class="absolute right-4 top-4 flex size-24 items-center justify-center rounded-full bg-inverse text-ink-inverse"><PhCheck :size="16" aria-hidden="true" /></span>
                         </span>

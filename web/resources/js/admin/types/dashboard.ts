@@ -5,11 +5,13 @@ export interface QueueValue {
     since?: string | null;
 }
 
+/** One of the six tiles of 09 §10.2 (Kpi::tiles). `minutes`: a duration; `percent`: a share 0–1. Null: no data, never a guess. */
 export interface Kpi {
     key: string;
-    value: number;
+    unit: 'count' | 'minutes' | 'percent';
+    value: number | null;
     previous: number | null;
-    series: number[];
+    series: (number | null)[];
 }
 
 export interface DashboardCharts {

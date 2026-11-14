@@ -8,7 +8,7 @@
 |---|---|---|
 | `node design/scripts/build-tokens.mjs --check` | token contrast gate + generated files up to date | exit 0 |
 | `npm --prefix mobile run verify` | `tsc --noEmit` (strict) → `eslint . --max-warnings 0` → `jest --ci` → `node scripts/check-i18n.mjs` (file `mobile/scripts/check-i18n.mjs`: DE/EN keys identical, no hard-coded UI strings) | exit 0 |
-| `composer --working-dir=web verify` | `pint --test` → `phpstan analyse` (Larastan, level 6 minimum, aim 8) → `pest --parallel` (feature + unit + arch) → `composer audit` | exit 0 |
+| `composer --working-dir=web verify` | `pint --test` → `phpstan analyse` (Larastan, level 6 minimum, aim 8) → `pest --testsuite=Arch` (own process: it parses the codebase, ~800 MB) → `pest --parallel --exclude-testsuite=Arch` (feature + unit) → `composer audit` | exit 0 |
 | `npm --prefix web run verify` | `vue-tsc --noEmit` → `eslint` → `vite build` | exit 0 |
 | `npm --prefix web run e2e` | Playwright: flows F1–F8 (member web on `/app` + public Blade pages), A1–A4 (admin), axe accessibility, DOM audit | exit 0 |
 | `npm --prefix web run visual -- --tier=module|phase` | screenshot matrix + contact sheets + baseline diff | exit 0 + design-QA approval |

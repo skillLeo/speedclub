@@ -1,6 +1,6 @@
 import { collectionItemKey, flattenCollectionItems, withItemOrder, withoutItem, type CollectionItem, type CollectionItemsData , MemberCollection } from '@/api/queries/social2';
 import { mosaicSlots } from '@/features/collections/components/CollectionTile';
-import { collectionColumns, collectionTileWidth, visibleCollections } from '@/features/collections/components/CollectionsGrid';
+import { collectionColumns, collectionTileWidth, createTileSpansRow, visibleCollections } from '@/features/collections/components/CollectionsGrid';
 import { __resetRemovalsForTests, flushRemovals, removeWithUndo } from '@/features/collections/deferred';
 import { itemRemovalKey, itemTile, moveKey } from '@/features/collections/model';
 
@@ -84,6 +84,13 @@ describe('COL-01 mosaic and grid', () => {
     expect(collectionColumns(1152)).toBe(4);
     expect(collectionTileWidth(353)).toBe(168);
     expect(collectionTileWidth(0)).toBe(0);
+  });
+
+  it('gives "Neue Sammlung" a row of its own on two columns at a large font, where "Sammlung" is wider than a tile', () => {
+    expect(createTileSpansRow(353, 2)).toBe(true);
+    expect(createTileSpansRow(353, 1.5)).toBe(true);
+    expect(createTileSpansRow(353, 1.3)).toBe(false);
+    expect(createTileSpansRow(640, 2)).toBe(false);
   });
 
   it('leaves out a collection whose delete waits for its undo toast', () => {

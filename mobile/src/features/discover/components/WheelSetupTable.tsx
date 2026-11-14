@@ -8,6 +8,7 @@ import { isWeb } from '@/lib/platform';
 import { createStyles, size, space, useTheme } from '@/theme';
 import { Hairline, Photo, PressableScale, SkeletonBlock, SkeletonText, Text, type PhotoFields } from '@/ui';
 import { joinLabel, LARGE_FONT_SCALE } from '@/ui/rowParts';
+import { handleText } from '@/ui/textBreaks';
 import { ValueText } from '@/ui/ValueText';
 
 /** The fields of a set-up in the lead's fixed order (DQ-323), the same in the cards and the table. */
@@ -96,8 +97,9 @@ function BuildLink({ row, onOpen, testID }: BuildLinkProps) {
           {keepNameTogether(row.title)}
         </Text>
         {row.owner ? (
+          // A long handle breaks after its "." or "_" ("@speedclub. / editorial"), never inside a word (m4.18 DISC-04-wheels at 1280).
           <Text variant="caption" color="text.tertiary" hyphenate={false}>
-            {row.owner}
+            {handleText(row.owner)}
           </Text>
         ) : null}
       </View>

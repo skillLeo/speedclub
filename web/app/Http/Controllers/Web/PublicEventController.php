@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * WEB-09 /e/{slug} (09 §9, M4.16): the public event page, behind the flag `events`. Read as a guest whoever asks (EventPage), so an
+ * WEB-13 /e/{slug} (09 §9, M4.16): the public event page, behind the flag `events`. Read as a guest whoever asks (EventPage), so an
  * event a guest may not see (draft, in review, rejected, removed, followers only, an organiser who is not public, a sample while
  * samples are hidden), a missing one and the flag off all answer the same 404 page.
  */

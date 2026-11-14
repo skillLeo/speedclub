@@ -13,6 +13,7 @@ import { DisplayTitle } from './DisplayTitle';
 import { Photo, type PhotoFields } from './Photo';
 import { PressableScale } from './PressableScale';
 import { Progress } from './Progress';
+import { MiniSpec, MiniSpecSkeleton } from './MiniSpec';
 import { joinLabel } from './rowParts';
 import { estimateLines, SkeletonBlock, SkeletonText } from './Skeleton';
 import { SpecChip, SpecChipSkeleton } from './SpecChip';
@@ -33,8 +34,8 @@ export type VehicleCardStat = { key: string; value: string; unit?: string | null
 export type VehicleCardProps = {
   /**
    * `feed` (default): the v1 card of lists and feeds (4:3, `headline` name, spec chips). `garage`: 09 §5 VehicleCard 2.0 (DQ-1050) —
-   * photo 4:5 radius 20, the name in `display.title` (Archivo), the caption "BMW · M3 · G80 · 2021", a mini spec in
-   * `hero.numeral.s` + `label.caps`, the status badge on the photo and the QR control floating on it.
+   * photo 4:5 radius 20, the name in `display.title` (Archivo), the caption "2,6 l R6 Biturbo (RB26DETT)" (the sub-line, never the
+   * name again, DQ-1223), a mini spec in `hero.numeral.s` + `label.caps`, the status badge on the photo and the QR control floating on it.
    */
   variant?: 'feed' | 'garage';
   /** "Nissan Skyline GT-R R34" */
@@ -58,7 +59,7 @@ export type VehicleCardProps = {
   trailing?: ReactNode;
   /** Replaces the accessible name composed from the visible strings. */
   accessibilityLabel?: string;
-  /** `garage`: "BMW · M3 · G80 · 2021", under the name. */
+  /** `garage`: the sub-line under the name, "2,6 l R6 Biturbo (RB26DETT)" (features/garage/card.ts cardCaption). */
   caption?: string;
   /** `garage`: the mini spec, three cells (power, torque, year). */
   stats?: readonly VehicleCardStat[];
@@ -95,9 +96,7 @@ const useStyles = createStyles((t) => ({
   footer: { alignItems: 'center', flexDirection: 'row', gap: t.space[12], marginTop: t.space[8] },
   // 2.0 (garage): text on the canvas under the photo, no box around it (skill rule 6: hairlines instead of boxes).
   garageText: { gap: t.space[4], marginTop: t.space[16] },
-  garageSpec: { flexDirection: 'row', gap: t.space[12], marginTop: t.space[16] },
-  garageSpecCell: { flex: 1, gap: t.space[2], minWidth: 0 },
-  garageSpecValue: { alignItems: 'baseline', flexDirection: 'row', flexWrap: 'wrap', columnGap: t.space[4] },
+  garageSpec: { marginTop: t.space[16] },
   garageFooter: { marginTop: t.space[16] },
   qr: { position: 'absolute', right: t.space[12], top: t.space[12] },
   completeness: { flex: 1, gap: t.space[8], minWidth: 0 },
@@ -137,14 +136,7 @@ function GarageCardSkeleton({ testID }: { testID?: string }) {
         <SkeletonText variant="displayTitle" width="80%" lines={estimateLines(TYPICAL_DISPLAY_CHARS, 'displayTitle', fontScale, width)} />
         <SkeletonText variant="caption" width="55%" />
       </View>
-      <View style={styles.garageSpec}>
-        {[0, 1, 2].map((index) => (
-          <View key={index} style={styles.garageSpecCell}>
-            <SkeletonText variant="heroNumeralS" width="70%" />
-            <SkeletonText variant="labelCaps" width="60%" />
-          </View>
-        ))}
-      </View>
+      <MiniSpecSkeleton layoutWidth={width} style={styles.garageSpec} />
     </View>
   );
 }
@@ -261,25 +253,8 @@ function GarageVehicleCard({
         ) : null}
       </View>
       {stats.length > 0 ? (
-        <View style={styles.garageSpec} testID={id('spec')}>
-          {stats.map((stat) => (
-            <View key={stat.key} style={styles.garageSpecCell}>
-              <View style={styles.garageSpecValue}>
-                <Text variant="heroNumeralS" numeric hyphenate={false}>
-                  {stat.value}
-                </Text>
-                {stat.unit ? (
-                  <Text variant="labelUnit" color="text.secondary" hyphenate={false}>
-                    {stat.unit}
-                  </Text>
-                ) : null}
-              </View>
-              <Text variant="labelCaps" color="text.secondary" numberOfLines={1} hyphenate={false}>
-                {stat.label}
-              </Text>
-            </View>
-          ))}
-        </View>
+        // DQ-1216: the mini spec reflows by fit (3 → 2 + 1 → 1) and never ellipsises a data label.
+        <MiniSpec items={stats} layoutWidth={layoutWidth} style={styles.garageSpec} testID={id('spec')} />
       ) : null}
     </>
   );

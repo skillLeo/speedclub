@@ -3,8 +3,9 @@ import { trans } from 'laravel-vue-i18n';
 import { computed, onBeforeUnmount, onMounted, ref, watch, type ComputedRef, type Ref } from 'vue';
 
 /**
- * The SplitQueue of 09 §10.2, shared by the review queues (ADM-55 Betriebe; the pattern of ADM-53): the list on the left, the selected
- * item in a right pane (`?<param>=<id>`, a partial visit of `selected` + `decided`), one-key decisions, a 5-s undo and auto-advance.
+ * The SplitQueue of 09 §10.2, shared by the review queues (ADM-20 Meldungen, ADM-53 Treffen, ADM-55 Betriebe): the list on the left,
+ * the selected item in a right pane (`?<param>=<id>`, a partial visit of `selected` + `decided`), one-key decisions, a 5-s undo and
+ * auto-advance.
  *
  * Keys (never while typing, with a dialog or a menu open, or with a modifier): j/k next/previous, a approve, r reject, u undo. They only
  * work from 1280 px, where the pane sits beside the list (`enabled`).
@@ -12,7 +13,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch, type ComputedRef, typ
 export interface Decided {
     id: string;
     outcome: string;
-    version: string;
+    /** The optimistic-lock version the undo posts (ADR-439); the Meldungen undo of a take needs none. */
+    version?: string;
 }
 
 export interface SplitQueueOptions<Row extends { id: string }, D extends Decided> {
@@ -29,9 +31,16 @@ export interface SplitQueueOptions<Row extends { id: string }, D extends Decided
     advance: () => boolean;
     /** Keyboard and split layout on (from 1280 px). */
     enabled: Ref<boolean>;
+    /** Props of the partial visit that opens an item (default: `selected` and `decided`). */
+    only?: string[];
     onApprove: () => void;
     onReject: () => void;
     onUndo: () => void;
+    /**
+     * DQ-1202: open the first row (the oldest item of a review tab) when the page opens without a selection and the pane fits. Only on
+     * the first render: a pane the moderator closed stays closed.
+     */
+    autoSelect?: () => boolean;
 }
 
 export interface SplitQueue<D extends Decided> {
@@ -70,7 +79,7 @@ export function useSplitQueue<Row extends { id: string }, D extends Decided>(opt
         const params = Object.fromEntries(new URLSearchParams(window.location.search).entries());
         if (id === null) delete params[options.param];
         else params[options.param] = id;
-        router.get(options.url(), params, { only: ['selected', 'decided'], preserveState: true, preserveScroll: true, replace: true });
+        router.get(options.url(), params, { only: options.only ?? ['selected', 'decided'], preserveState: true, preserveScroll: true, replace: true });
     }
 
     function neighbour(step: 1 | -1): string | null {
@@ -119,7 +128,11 @@ export function useSplitQueue<Row extends { id: string }, D extends Decided>(opt
         else return;
         event.preventDefault();
     }
-    onMounted(() => window.addEventListener('keydown', onKey));
+    onMounted(() => {
+        window.addEventListener('keydown', onKey);
+        const first = options.rows()[0]?.id;
+        if (options.autoSelect?.() === true && options.enabled.value && selectedId.value === null && first !== undefined) select(first);
+    });
     onBeforeUnmount(() => {
         window.removeEventListener('keydown', onKey);
         window.clearTimeout(undoTimer);

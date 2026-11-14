@@ -17,7 +17,7 @@ const PHOTO = { source: 1, blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj' };
 describe('Badge', () => {
   it.each([
     ['sample', 'Beispiel'],
-    ['editorial', 'Editorial'],
+    ['editorial', 'Redaktion'],
     ['verified', 'Verifiziert'],
     ['business', 'Betrieb'],
     ['founding', 'Gründungsmitglied'],
@@ -75,7 +75,7 @@ describe('sample flags (09 §8.19)', () => {
       </>,
     );
     expect(screen.getByTestId('t.tile.sample.sample')).toBeTruthy();
-    expect(screen.getByTestId('t.member.sample.editorial')).toHaveTextContent('Editorial');
+    expect(screen.getByTestId('t.member.sample.editorial')).toHaveTextContent('Redaktion');
     expect(screen.getByTestId('t.member.sample.sample')).toHaveTextContent('Beispiel');
     expect(screen.getByTestId('t.owner.sample.editorial')).toBeTruthy();
   });

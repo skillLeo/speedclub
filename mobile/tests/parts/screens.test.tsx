@@ -5,11 +5,13 @@ import type { ReactNode } from 'react';
 import { appConfigKey, BUNDLED_APP_CONFIG } from '@/api/queries/appConfig';
 import { queryClient } from '@/api/queryClient';
 import { __resetRemovalsForTests } from '@/features/collections/deferred';
+import * as clock from '@/lib/clock';
 import { EmbeddedBusinesses } from '@/features/parts/components/EmbeddedBusinesses';
 import { EmbeddedParts } from '@/features/parts/components/EmbeddedParts';
 import { BrandScreen } from '@/features/parts/screens/BrandScreen';
 import { BusinessApplyScreen } from '@/features/parts/screens/BusinessApplyScreen';
 import { BusinessDashboardScreen } from '@/features/parts/screens/BusinessDashboardScreen';
+import { BusinessInvitesScreen } from '@/features/parts/screens/BusinessInvitesScreen';
 import { BusinessRequestsScreen } from '@/features/parts/screens/BusinessRequestsScreen';
 import { BusinessScreen } from '@/features/parts/screens/BusinessScreen';
 import { ProductScreen } from '@/features/parts/screens/ProductScreen';
@@ -111,8 +113,14 @@ const PRODUCT_ROW = {
   brand: { slug: 'kw', name: 'KW' },
   category: { key: 'suspension', name: 'Fahrwerk', icon: 'coilover' },
   builds: 14,
+  thumbnail: media('thumb1'),
   status: 'active',
 };
+const BUILD_PHOTO = (id: string, sample = false) => ({
+  photo: media(`p${id}`),
+  vehicle: { id, public_id: `pub${id}`, slug: `build-${id}`, title: 'M3', full_title: 'BMW M3 (E46)', is_sample: sample, path: `/v/build-${id}` },
+  product: { id: '01JPRODUCT0000000000000001', name: 'Variante 3', full_name: 'KW Variante 3', brand: { slug: 'kw', name: 'KW' } },
+});
 const PRODUCT = {
   ...PRODUCT_ROW,
   attributes: [
@@ -180,6 +188,8 @@ const MY_BUSINESS = {
     { username: 'jana.nord', role: 'owner' },
     { username: 'tom.schrauber', role: 'staff' },
   ],
+  invites: [] as { username: string | null; invited_at: string | null }[],
+  locked_fields: [] as string[],
   pending_requests: 1,
   views_30d: '128',
 };
@@ -246,7 +256,10 @@ describe('BRD-01 Marke', () => {
     await renderScreen(<BrandScreen />);
     await waitFor(() => expect(screen.getByTestId('BRD-01.title')).toHaveTextContent('KW'));
     expect(screen.getByTestId('BRD-01.counts')).toHaveTextContent('1.204 Builds · 5 Produkte');
-    await waitFor(() => expect(screen.getByTestId(`BRD-01.product.${PRODUCT_ROW.id}.caption`)).toHaveTextContent('Fahrwerk · Variante · In 14 Builds'));
+    // DQ-1141: rows grouped by product line, the brand not repeated on its own page.
+    await waitFor(() => expect(screen.getByTestId(`BRD-01.product.${PRODUCT_ROW.id}.caption`)).toHaveTextContent('Fahrwerk · In 14 Builds'));
+    expect(screen.getByTestId('BRD-01.group.0')).toHaveTextContent('Variante', { exact: false });
+    expect(screen.queryByTestId(`BRD-01.product.${PRODUCT_ROW.id}.brand`)).toBeNull();
     expect(screen.getByTestId('BRD-01.line.0')).toHaveTextContent('3 Produkte', { exact: false });
     await waitFor(() => expect(screen.getByTestId('BRD-01.builds.build.b1')).toBeTruthy());
     expect(screen.getByTestId('BRD-01.builds.header')).toHaveTextContent('Builds mit KW');
@@ -302,6 +315,11 @@ describe('BRD-02 Produkt', () => {
 describe('BIZ-01 Betriebsprofil', () => {
   beforeEach(() => {
     mockParams = { slug: 'werkstatt-nord' };
+    // The app's clock (qaNow outside production): Monday, 2 November 2026.
+    jest.spyOn(clock, 'now').mockReturnValue(new Date('2026-11-02T10:00:00Z'));
+  });
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('shows the profile with today highlighted, contact, portfolio and the Impressum', async () => {
@@ -315,11 +333,49 @@ describe('BIZ-01 Betriebsprofil', () => {
     expect(screen.getByTestId('BIZ-01.subline')).toHaveTextContent('Werkstatt · Hamburg');
     expect(screen.getByTestId('BIZ-01.verified')).toBeTruthy();
     expect(screen.getByTestId('BIZ-01.hours.today')).toHaveTextContent('Heute');
+    expect(screen.getByTestId('BIZ-01.hours.mon')).toHaveTextContent('Heute', { exact: false });
     expect(screen.getByTestId('BIZ-01.hours.sun')).toHaveTextContent('Geschlossen', { exact: false });
     expect(screen.getByTestId('BIZ-01.impressum.register')).toHaveTextContent('Amtsgericht Hamburg, HRB 123456', { exact: false });
     expect(screen.getByTestId('BIZ-01.impressum.vatId')).toHaveTextContent('DE123456789', { exact: false });
     await waitFor(() => expect(screen.getByTestId('BIZ-01.portfolio.build.b1')).toBeTruthy());
     expect(screen.getByTestId('BIZ-01.portfolio.count')).toHaveTextContent('2 Builds');
+  });
+
+  it('DQ-1148: "Heute" follows the app clock, not the day the server marked', async () => {
+    flags();
+    const serverTuesday = BUSINESS.opening_hours.map((day) => ({ ...day, today: day.day === 'tue' }));
+    stubFetch({ '/businesses/werkstatt-nord': { body: { data: { ...BUSINESS, opening_hours: serverTuesday } } }, '/portfolio': { body: page([]) } });
+    await renderScreen(<BusinessScreen />);
+    await waitFor(() => expect(screen.getByTestId('BIZ-01.hours.mon')).toHaveTextContent('Heute', { exact: false }));
+    expect(screen.getByTestId('BIZ-01.hours.tue')).not.toHaveTextContent('Heute', { exact: false });
+  });
+
+  it('DQ-1143: Speichern sits beside "Nachricht", the cover keeps back and "…"', async () => {
+    flags();
+    signIn('max.r34');
+    stubFetch({ '/businesses/werkstatt-nord': { body: { data: BUSINESS } }, '/portfolio': { body: page([]) } });
+    await renderScreen(<BusinessScreen />);
+    await waitFor(() => expect(screen.getByTestId('BIZ-01.message')).toBeTruthy());
+    expect(screen.getByTestId('BIZ-01.save')).toHaveTextContent('Speichern');
+    expect(screen.getByTestId('BIZ-01.moreActions')).toBeTruthy();
+  });
+
+  it('DQ-1145: one or two builds are rail cards with the car name and its spec, three are the wall', async () => {
+    flags();
+    const withSpec = { ...build('b1', 'nissan-skyline-gt-r-r34-ab12cd34'), spec_strip: [{ key: 'power', label: 'Leistung', value: '280', unit: 'PS' }] };
+    stubFetch({ '/businesses/werkstatt-nord': { body: { data: BUSINESS } }, '/portfolio': { body: page([withSpec]) } });
+    await renderScreen(<BusinessScreen />);
+    await waitFor(() => expect(screen.getByTestId('BIZ-01.portfolio.build.b1.title')).toHaveTextContent(/Nissan Skyline GT-.?R R34/u));
+    expect(screen.getByTestId('BIZ-01.portfolio.build.b1.spec')).toHaveTextContent('280 PS');
+  });
+
+  it('DQ-1145: three builds stay the 2-column wall', async () => {
+    flags();
+    const builds = [build('b1', 'a-b1'), build('b2', 'a-b2'), build('b3', 'a-b3')];
+    stubFetch({ '/businesses/werkstatt-nord': { body: { data: { ...BUSINESS, portfolio_count: 3 } } }, '/portfolio': { body: page(builds) } });
+    await renderScreen(<BusinessScreen />);
+    await waitFor(() => expect(screen.getByTestId('BIZ-01.portfolio.count')).toHaveTextContent('3 Builds'));
+    expect(screen.queryByTestId('BIZ-01.portfolio.build.b1.spec')).toBeNull();
   });
 
   it('"Nachricht" asks a guest to sign in and opens the conversation for a member', async () => {
@@ -365,6 +421,10 @@ describe('BIZ-02 Bewerbung', () => {
     });
     await renderScreen(<BusinessApplyScreen />);
     await waitFor(() => expect(screen.getByTestId('BIZ-02.name')).toBeTruthy());
+    // DQ-1146: the chip group has a visible label, and no section header repeats a field label.
+    expect(screen.getByTestId('BIZ-02.kind.label', { includeHiddenElements: true })).toHaveTextContent('Art des Betriebs');
+    expect(screen.queryByTestId('BIZ-02.group.profile.title')).toBeNull();
+    expect(screen.queryByTestId('BIZ-02.group.services.title')).toBeNull();
     await act(async () => fireEvent.press(screen.getByTestId('BIZ-02.cta.primary')));
     await waitFor(() => expect(screen.getByText('Bitte ausfüllen.')).toBeTruthy());
     await fireEvent.changeText(screen.getByTestId('BIZ-02.name'), 'Werkstatt Nord');
@@ -455,8 +515,124 @@ describe('BIZ-03 Betriebs-Dashboard', () => {
     stubFetch({ '/me/business': { status: 404, body: { message: 'Kein Betrieb', code: 'business_unavailable' } } });
     await renderScreen(<BusinessDashboardScreen />);
     await waitFor(() => expect(screen.getByTestId('BIZ-03.empty')).toBeTruthy());
-    await act(async () => fireEvent.press(screen.getByText('Betrieb anmelden')));
+    await act(async () => fireEvent.press(screen.getByText('Betrieb eintragen')));
     expect(mockRouter.push).toHaveBeenCalledWith('/settings/business/apply');
+  });
+});
+
+describe('BIZ-02 locked fields (SEC-414-06)', () => {
+  it('disables every field the server names in locked_fields, and keeps the others editable', async () => {
+    flags();
+    signIn('jana.nord');
+    mockParams = { edit: '1' };
+    stubFetch({ '/me/business': { body: { data: { ...MY_BUSINESS, identity_locked: true, locked_fields: ['name', 'kind', 'email', 'website'] } } } });
+    await renderScreen(<BusinessApplyScreen />);
+    await waitFor(() => expect(screen.getByTestId('BIZ-02.lockedNote')).toBeTruthy());
+    expect(screen.getByTestId('BIZ-02.name').props.editable).toBe(false);
+    expect(screen.getByTestId('BIZ-02.about').props.editable).toBe(true);
+    expect(screen.getByTestId('BIZ-02.kind.note.helper')).toHaveTextContent('Support', { exact: false });
+    for (let step = 0; step < 2; step += 1) await act(async () => fireEvent.press(screen.getByTestId('BIZ-02.cta.primary')));
+    await waitFor(() => expect(screen.getByTestId('BIZ-02.email')).toBeTruthy());
+    expect(screen.getByTestId('BIZ-02.email').props.editable).toBe(false);
+    expect(screen.getByTestId('BIZ-02.website').props.editable).toBe(false);
+    expect(screen.getByTestId('BIZ-02.phone').props.editable).toBe(true);
+    expect(screen.getByTestId('BIZ-02.street').props.editable).toBe(true);
+  });
+});
+
+describe('BIZ-03 Team invitations (SEC-414-01)', () => {
+  it('shows open invitations as pending rows and withdraws one', async () => {
+    flags();
+    signIn('jana.nord');
+    const { calls } = stubFetch({
+      '/me/business': { body: { data: { ...MY_BUSINESS, invites: [{ username: 'lena.k', invited_at: '2026-10-30T09:00:00Z' }] } } },
+      '/me/business/members/lena.k': { body: {} },
+      '/portfolio': { body: page([]) },
+    });
+    await renderScreen(<BusinessDashboardScreen />);
+    await waitFor(() => expect(screen.getByTestId('BIZ-03.invite.lena.k')).toHaveTextContent('Eingeladen · 30.', { exact: false }));
+    expect(screen.getByTestId('BIZ-03.team.add')).toHaveTextContent('Mitglied einladen');
+    await act(async () => fireEvent.press(screen.getByTestId('BIZ-03.invite.lena.k.withdraw')));
+    await waitFor(() => expect(callsTo(calls, 'DELETE', '/me/business/members/lena.k')).toHaveLength(1));
+    await waitFor(() => expect(screen.getByTestId('BIZ-03.toast')).toHaveTextContent('Einladung an @lena.k zurückgezogen.'));
+  });
+});
+
+const INVITE = {
+  id: '01JINVITE0000000000000001',
+  business: { ...BUSINESS, cover: null, cover_source: null },
+  invited_by: 'jana.nord',
+  created_at: '2026-11-01T09:00:00Z',
+};
+
+describe('BIZ-05 Einladungen', () => {
+  it('accepts an invitation with an Idempotency-Key and opens the dashboard', async () => {
+    flags();
+    signIn('max.r34');
+    const { calls } = stubFetch({
+      '/me/business-invites': { body: page([INVITE]) },
+      [`/me/business-invites/${INVITE.id}/accept`]: { body: { data: { ...MY_BUSINESS, viewer_role: 'staff' } } },
+    });
+    await renderScreen(<BusinessInvitesScreen />);
+    await waitFor(() => expect(screen.getByTestId(`BIZ-05.invite.${INVITE.id}.meta`)).toHaveTextContent('Eingeladen von @jana.nord', { exact: false }));
+    await act(async () => fireEvent.press(screen.getByTestId(`BIZ-05.invite.${INVITE.id}.accept`)));
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/business'));
+    const request = callsTo(calls, 'POST', `/me/business-invites/${INVITE.id}/accept`)[0];
+    expect(request?.headers.get('Idempotency-Key')).toBeTruthy();
+  });
+
+  it('says so when the member belongs to a business already, and drops a gone invitation', async () => {
+    flags();
+    signIn('max.r34');
+    let answer = { status: 409, body: { message: 'Schon in einem Betrieb', code: 'business_exists' } };
+    stubFetch({
+      // Once the business is gone, the server no longer lists the invitation.
+      '/me/business-invites': () => ({ body: page(answer.status === 404 ? [] : [INVITE]) }),
+      [`/me/business-invites/${INVITE.id}/accept`]: () => answer,
+    });
+    await renderScreen(<BusinessInvitesScreen />);
+    await waitFor(() => expect(screen.getByTestId(`BIZ-05.invite.${INVITE.id}`)).toBeTruthy());
+    await act(async () => fireEvent.press(screen.getByTestId(`BIZ-05.invite.${INVITE.id}.accept`)));
+    await waitFor(() => expect(screen.getByTestId('BIZ-05.toast')).toHaveTextContent('Du gehörst schon zu einem Betrieb', { exact: false }));
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+    answer = { status: 404, body: { message: 'Nicht gefunden', code: 'business_unavailable' } };
+    await act(async () => fireEvent.press(screen.getByTestId(`BIZ-05.invite.${INVITE.id}.accept`)));
+    await waitFor(() => expect(screen.queryByTestId(`BIZ-05.invite.${INVITE.id}`)).toBeNull());
+  });
+
+  it('a full team answers 409 limit_reached', async () => {
+    flags();
+    signIn('max.r34');
+    stubFetch({
+      '/me/business-invites': { body: page([INVITE]) },
+      [`/me/business-invites/${INVITE.id}/accept`]: { status: 409, body: { message: 'Voll', code: 'limit_reached' } },
+    });
+    await renderScreen(<BusinessInvitesScreen />);
+    await waitFor(() => expect(screen.getByTestId(`BIZ-05.invite.${INVITE.id}`)).toBeTruthy());
+    await act(async () => fireEvent.press(screen.getByTestId(`BIZ-05.invite.${INVITE.id}.accept`)));
+    await waitFor(() => expect(screen.getByTestId('BIZ-05.toast')).toHaveTextContent('Das Team von „Werkstatt Nord“ ist voll', { exact: false }));
+  });
+
+  it('declines with DELETE and the row leaves at once', async () => {
+    flags();
+    signIn('max.r34');
+    const { calls } = stubFetch({
+      '/me/business-invites': () => (calls.some((call) => call.method === 'DELETE') ? { body: page([]) } : { body: page([INVITE]) }),
+      [`/me/business-invites/${INVITE.id}`]: { body: {} },
+    });
+    await renderScreen(<BusinessInvitesScreen />);
+    await waitFor(() => expect(screen.getByTestId(`BIZ-05.invite.${INVITE.id}`)).toBeTruthy());
+    await act(async () => fireEvent.press(screen.getByTestId(`BIZ-05.invite.${INVITE.id}.decline`)));
+    await waitFor(() => expect(callsTo(calls, 'DELETE', `/me/business-invites/${INVITE.id}`)).toHaveLength(1));
+    await waitFor(() => expect(screen.queryByTestId(`BIZ-05.invite.${INVITE.id}`)).toBeNull());
+  });
+
+  it('shows the badged sample when there is no invitation', async () => {
+    flags();
+    signIn('max.r34');
+    stubFetch({ '/me/business-invites': { body: page([]) } });
+    await renderScreen(<BusinessInvitesScreen />);
+    await waitFor(() => expect(screen.getByTestId('BIZ-05.empty')).toBeTruthy());
   });
 });
 
@@ -471,6 +647,8 @@ describe('BIZ-04 Anfragen', () => {
     });
     await renderScreen(<BusinessRequestsScreen />);
     await waitFor(() => expect(screen.getByTestId(`BIZ-04.tag.${TAG.id}`)).toBeTruthy());
+    // DQ-1155: the date in words, "10. Nov.", never "10.11.2026".
+    expect(screen.getByTestId(`BIZ-04.tag.${TAG.id}`)).toHaveTextContent(/@max\.r34 · 10\.\s?Nov\./);
     jest.useFakeTimers();
     await act(async () => fireEvent.press(screen.getByTestId(`BIZ-04.tag.${TAG.id}.accept`)));
     expect(screen.queryByTestId(`BIZ-04.tag.${TAG.id}`)).toBeNull();
@@ -499,18 +677,51 @@ describe('BIZ-04 Anfragen', () => {
 describe('Entdecken scopes', () => {
   it('Teile lists the brands and the products with their counts', async () => {
     flags();
-    stubFetch({ '/brands': { body: { data: [{ slug: 'kw', name: 'KW', builds: '30' }] } }, '/products': { body: page([PRODUCT_ROW]) } });
-    await renderScreen(<EmbeddedParts query="" width={350} phone routeId="DISC-01" />);
+    stubFetch({
+      '/brands': { body: { data: [{ slug: 'kw', name: 'KW', builds: '30' }] } },
+      '/products': { body: { ...page([PRODUCT_ROW]), lead_photo: BUILD_PHOTO('v1'), build_photos: [BUILD_PHOTO('v1'), BUILD_PHOTO('v2'), BUILD_PHOTO('v3', true)] } },
+    });
+    await renderScreen(<EmbeddedParts query="" width={350} phone bleed={20} routeId="DISC-01" />);
     await waitFor(() => expect(screen.getByTestId('DISC-01.partsScope.brands.kw')).toBeTruthy());
     expect(screen.getByTestId(`DISC-01.partsScope.product.${PRODUCT_ROW.id}.caption`)).toHaveTextContent('In 14 Builds', { exact: false });
+    // DQ-1138: the lead photo, the rail without the lead's own build, and a build thumbnail on the row.
+    expect(screen.getByTestId('DISC-01.partsScope.lead.title')).toHaveTextContent('KW Variante 3', { exact: false });
+    expect(screen.getByTestId('DISC-01.partsScope.lead.spec')).toHaveTextContent('In 14 Builds', { exact: false });
+    expect(screen.queryByTestId('DISC-01.partsScope.popular.v1')).toBeNull();
+    expect(screen.getByTestId('DISC-01.partsScope.popular.v2')).toBeTruthy();
+    expect(screen.getByTestId(`DISC-01.partsScope.product.${PRODUCT_ROW.id}.thumb`)).toBeTruthy();
+  });
+
+  it('Teile shows the first eight products, then "Alle Teile"', async () => {
+    flags();
+    const rows = Array.from({ length: 10 }, (_, index) => ({ ...PRODUCT_ROW, id: `01JPRODUCT00000000000000${10 + index}`, thumbnail: null }));
+    stubFetch({ '/brands': { body: { data: [] } }, '/products': { body: { ...page(rows), lead_photo: null, build_photos: [] } } });
+    await renderScreen(<EmbeddedParts query="" width={350} phone bleed={20} routeId="DISC-01" />);
+    await waitFor(() => expect(screen.getByTestId('DISC-01.partsScope.products.all')).toBeTruthy());
+    expect(screen.queryByTestId(`DISC-01.partsScope.product.${rows[8]?.id}`)).toBeNull();
+    expect(screen.queryByTestId('DISC-01.partsScope.lead')).toBeNull();
+    await act(async () => fireEvent.press(screen.getByTestId('DISC-01.partsScope.products.all')));
+    expect(screen.getByTestId(`DISC-01.partsScope.product.${rows[9]?.id}`)).toBeTruthy();
   });
 
   it('Betriebe lists the business cards and filters by kind', async () => {
     flags();
     const { calls } = stubFetch({ '/businesses': { body: page([BUSINESS]) } });
-    await renderScreen(<EmbeddedBusinesses query="" bleed={20} routeId="DISC-01" />);
+    await renderScreen(<EmbeddedBusinesses query="" width={353} bleed={20} routeId="DISC-01" />);
     await waitFor(() => expect(screen.getByTestId('DISC-01.businessesScope.business.werkstatt-nord')).toBeTruthy());
+    // DQ-1139: the cover leads the card; no glyph square.
+    expect(screen.getByTestId('DISC-01.businessesScope.business.werkstatt-nord.cover')).toBeTruthy();
+    expect(screen.queryByTestId('DISC-01.businessesScope.business.werkstatt-nord.coverNote')).toBeNull();
     await act(async () => fireEvent.press(screen.getByTestId('DISC-01.businessesScope.kind.tuner')));
     await waitFor(() => expect(calls.some((call) => call.url.includes('kind=tuner'))).toBe(true));
+  });
+
+  it('a business without a cover shows the brand-stage photo as "Symbolbild", a sample never "Verifiziert"', async () => {
+    flags();
+    stubFetch({ '/businesses': { body: page([{ ...BUSINESS, cover: null, cover_source: null, is_sample: true, verified: true }]) } });
+    await renderScreen(<EmbeddedBusinesses query="" width={353} bleed={20} routeId="DISC-01" />);
+    await waitFor(() => expect(screen.getByTestId('DISC-01.businessesScope.business.werkstatt-nord.coverNote')).toHaveTextContent('Symbolbild'));
+    expect(screen.getByTestId('DISC-01.businessesScope.business.werkstatt-nord.sample')).toBeTruthy();
+    expect(screen.queryByTestId('DISC-01.businessesScope.business.werkstatt-nord.verified')).toBeNull();
   });
 });

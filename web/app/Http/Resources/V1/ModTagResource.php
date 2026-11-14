@@ -7,6 +7,7 @@ use App\Models\ModBusinessTag;
 use App\Models\Modification;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * A row of BIZ-04 Anfragen and of the member's confirmations: the mod (title, category) on its build, the business, who asked and the
@@ -23,7 +24,9 @@ class ModTagResource extends JsonResource
     {
         $tag = $this->resource;
         $mod = $tag->modification;
-        $vehicle = $mod?->vehicle;
+        // SEC-414-08: the build is named (mod title, build, owner) only while the reader may see it: a build that went private, or whose
+        // owner blocked the reader, keeps its row (the reader can still decide or remove it) without title, photo or owner.
+        $vehicle = $mod?->vehicle !== null && Gate::forUser($request->user())->allows('view', $mod->vehicle) ? $mod->vehicle : null;
 
         return [
             'id' => $tag->id,
@@ -31,8 +34,9 @@ class ModTagResource extends JsonResource
             'status' => $tag->status,
             /** Who asked first; the other side decides. @var \App\Enums\ModTagInitiator */
             'initiated_by' => $tag->initiated_by,
-            /** @var array{id: string, title: string, category: string}|null */
-            'mod' => $mod instanceof Modification ? ['id' => $mod->id, 'title' => (string) $mod->getAttribute('title'), 'category' => $mod->category->key] : null,
+            /** The title is null while the reader may not see the build. @var array{id: string, title: string|null, category: string}|null */
+            'mod' => $mod instanceof Modification ? ['id' => $mod->id, 'title' => $vehicle !== null ? (string) $mod->getAttribute('title') : null, 'category' => $mod->category->key] : null,
+            /** Null while the reader may not see the build. */
             'vehicle' => $vehicle !== null ? new VehicleRefResource($vehicle) : null,
             /** @var string|null */
             'owner_username' => $vehicle?->owner?->username,

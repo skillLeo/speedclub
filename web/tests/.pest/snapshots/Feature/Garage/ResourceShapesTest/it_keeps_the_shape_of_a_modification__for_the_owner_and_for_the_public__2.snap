@@ -38,6 +38,8 @@
             ],
             "created_at": "string"
         },
+        "product": "null",
+        "installed_by": "null",
         "vehicle_id": "string",
         "brand_id": "null",
         "brand_text": "null",
@@ -86,8 +88,6 @@
             "suspension_brand": "null",
             "exhaust_brand": "null"
         },
-        "product": "null",
-        "installed_by": "null",
         "business_tag": "null"
     }
 }

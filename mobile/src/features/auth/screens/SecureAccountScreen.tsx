@@ -116,7 +116,10 @@ export function SecureAccountScreen() {
 
   useEffect(() => {
     dropFragment();
-  }, []);
+    // Expo Router keeps the fragment as the route's `#` parameter and writes it back with its next history entry (WebKit, final
+    // Phase 4 gate: the token stayed in the address bar), so it leaves the router's state too.
+    if (isWeb) router.setParams({ '#': undefined });
+  }, [router]);
 
   const shown = result ?? held;
   if (shown) return <SecuredView result={shown} />;

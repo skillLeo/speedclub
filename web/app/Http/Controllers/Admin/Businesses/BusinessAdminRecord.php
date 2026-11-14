@@ -117,7 +117,8 @@ final class BusinessAdminRecord
                 // Four-eyes: asking creates an approval request; a second staff member with moderation.decide approves it (ADM-43).
                 'suspend' => $decide && $business->status === BusinessStatus::Verified,
                 'reinstate' => $decide && $business->status === BusinessStatus::Suspended,
-                'reopen' => $decide && ($business->status === BusinessStatus::Rejected || ($business->status === BusinessStatus::Verified && ! $business->tags()->exists())),
+                // SEC-414-03: a rejection, or one's own verification within the undo window (ReviewBusiness::reopenable).
+                'reopen' => $decide && ReviewBusiness::reopenable($business, $staff),
             ],
         ];
     }

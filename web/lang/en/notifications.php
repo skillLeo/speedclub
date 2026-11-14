@@ -98,6 +98,7 @@ return [
         'rejected' => '":name" was not verified. You will find the reason in your business dashboard.',
         'suspended' => '":name" is suspended and no longer public. You will find the reason in your business dashboard.',
         'reinstated' => '":name" is live again.',
+        'reopened' => '":name" is being reviewed again and is not public until then.',
     ],
     'business_tag' => [
         'business' => [
@@ -110,5 +111,13 @@ return [
             'accepted' => '":name" confirmed the install on your :vehicle.',
             'declined' => '":name" declined the tag on your :vehicle.',
         ],
+    ],
+    // SEC-414-01: team invitations (in-app only).
+    'business_invite' => [
+        'invited' => '":name" invited you to their team. Accept or decline the invitation.',
+        'removed' => '":name" removed you from their team.',
+        'accepted' => ':username is now on the team of ":name".',
+        'declined' => ':username declined the invitation to the team of ":name".',
+        'left' => ':username left the team of ":name".',
     ],
 ];

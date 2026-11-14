@@ -6,11 +6,15 @@ use App\Models\Product;
 use App\Models\User;
 
 /**
- * Fills Product::$buildCount for a page of products (one grouped query), so ProductRow shows "In 14 Builds" with real numbers.
+ * Fills Product::$buildCount (real builds only, DQ-1140) and Product::$thumbnail (ADR-457) for a page of products, in one grouped query
+ * each, so ProductRow shows "In 14 Builds" with real numbers and a photo from a real build.
  */
 final class ProductPresenter
 {
-    public function __construct(private readonly PartBuilds $builds) {}
+    public function __construct(
+        private readonly PartBuilds $builds,
+        private readonly PartPhotos $photos,
+    ) {}
 
     /**
      * @param  iterable<Product>  $products
@@ -23,10 +27,13 @@ final class ProductPresenter
             $list[] = $product;
         }
 
-        $counts = $this->builds->productCounts($viewer, array_map(fn (Product $product): string => $product->id, $list));
+        $ids = array_map(fn (Product $product): string => $product->id, $list);
+        $counts = $this->builds->productCounts($viewer, $ids);
+        $thumbnails = $this->photos->thumbnails($viewer, $ids);
 
         foreach ($list as $product) {
             $product->buildCount = $counts[$product->id] ?? 0;
+            $product->thumbnail = $thumbnails[$product->id] ?? null;
         }
     }
 

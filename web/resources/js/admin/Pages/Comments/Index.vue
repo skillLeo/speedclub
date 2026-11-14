@@ -65,7 +65,9 @@ const reportedOptions = computed<SelectOption[]>(() => [
     { value: '1', label: trans('comments.filters.reported_only') },
 ]);
 
-const flagHref = computed(() => (props.flag?.canManage && hasRoute('admin.config.flags') ? `${routeOr('admin.config.flags', '/admin/config/flags')}?flag=build_comments` : null));
+/** The flag's key, a code identifier (not copy). */
+const FLAG_KEY = 'build_comments';
+const flagHref = computed(() => (props.flag?.canManage && hasRoute('admin.config.flags') ? `${routeOr('admin.config.flags', '/admin/config/flags')}?flag=${FLAG_KEY}` : null));
 const vehicleHref = (id: string): string => routeOr('admin.vehicles.show', `/admin/vehicles/${id}`, { vehicle: id });
 </script>
 
@@ -77,6 +79,8 @@ const vehicleHref = (id: string): string => routeOr('admin.vehicles.show', `/adm
         <p v-if="flag" class="flex min-h-32 flex-wrap items-center gap-8 text-admin-base text-ink-2" data-testid="ADM-60.flag">
             <PhToggleLeft :size="16" class="shrink-0" aria-hidden="true" />
             <span>{{ trans(flag.enabled ? 'comments.flag.on' : 'comments.flag.off') }}</span>
+            <!-- DQ-1203: the key only as a code chip, never in the sentence -->
+            <code class="sc-key inline-flex font-ui h-20 items-center rounded-xs border border-line bg-raised px-4 text-caption text-ink-2">{{ FLAG_KEY }}</code>
             <Link v-if="flagHref" :href="flagHref" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 rounded-xs text-admin-base-strong text-ink hover:underline']">
                 {{ trans('comments.flag.open') }}<PhArrowSquareOut :size="16" aria-hidden="true" />
             </Link>
@@ -119,7 +123,7 @@ const vehicleHref = (id: string): string => routeOr('admin.vehicles.show', `/adm
                 </span>
             </template>
             <template #cell-author="{ row }">
-                <Link v-if="hasRoute('admin.members.show')" :href="memberHref(row.author.id)" :class="[focusRing, 'sc-key block truncate rounded-xs text-ink hover:underline']">{{ `@${row.author.username ?? '–'}` }}</Link>
+                <Link v-if="hasRoute('admin.members.show')" :href="memberHref(row.author.id)" :class="[focusRing, 'sc-key flex min-h-32 min-w-0 items-center rounded-xs text-ink hover:underline']"><span class="truncate">{{ `@${row.author.username ?? '–'}` }}</span></Link>
                 <span v-else class="sc-key block truncate text-ink">{{ `@${row.author.username ?? '–'}` }}</span>
             </template>
             <template #cell-build="{ row }">

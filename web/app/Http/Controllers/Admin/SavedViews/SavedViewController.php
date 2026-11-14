@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\SavedViews;
 
 use App\Actions\Admin\Overview\DeleteTableView;
+use App\Actions\Admin\Overview\SavedViews;
 use App\Actions\Admin\Overview\SaveTableView;
 use App\Http\Controllers\Admin\SavedViews\Requests\StoreSavedViewRequest;
 use App\Http\Controllers\Controller;
@@ -19,7 +20,7 @@ class SavedViewController extends Controller
         /** @var array<string, mixed> $query */
         $query = $request->validated('query');
 
-        $saveView($staff, $request->string('table')->value(), trim($request->string('name')->value()), $query);
+        $saveView($staff, $request->string('table')->value(), trim($request->string('name')->value()), $query, $request->boolean('shared') ? SavedViews::roleOf($staff) : null);
 
         return back(303)->with('success', 'ui.table.views.saved');
     }

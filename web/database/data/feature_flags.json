@@ -44,5 +44,6 @@
 "msg_replies":"Auf einzelne Nachrichten antworten (Wischen zum Antworten, Zitat über der Nachricht); aus, bis die App es freigibt",
 "parts_catalogue":"Teilekatalog: Marken- und Produktseiten, Teile im Mod-Editor verknüpfen, \"Builds mit {Produkt}\"; aus, bis das Modul gebaut und geprüft ist",
 "affiliate_links":"Partnerlinks bei Produkten, gekennzeichnet als \"Anzeige\" (rel=\"sponsored\"); aus",
-"web_push":"Browser-Mitteilungen der Mitglieder-Web-App (Web Push); wirkt nur mit VAPID-Schlüsseln auf dem Server"
+"web_push":"Browser-Mitteilungen der Mitglieder-Web-App (Web Push); wirkt nur mit VAPID-Schlüsseln auf dem Server",
+"android_widget":"Android-Widget „Mein Auto“ auf dem Startbildschirm: Foto und Name des Hauptautos, nächste Fälligkeit; Tippen öffnet die Garage"
 }

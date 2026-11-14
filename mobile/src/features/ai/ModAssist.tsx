@@ -82,7 +82,6 @@ export function ModAssist({ categoryKey, fields, locale, disabled = false, onAcc
     return (
       <Button
         label={t('ai.fromText')}
-        icon="lightbulb"
         variant="tertiary"
         size="m"
         flush="start"

@@ -1,5 +1,5 @@
 /**
- * The event map's configuration (09 §8.7, ADR-411): MapLibre GL JS from a pinned CDN build with subresource integrity, OpenFreeMap
+ * The event map's configuration (09 §8.7, ADR-411, ADR-461): MapLibre GL JS self-hosted at a pinned version with subresource integrity, OpenFreeMap
  * tiles (no key) in a dark style for Carbon/Schwarz and a light one for Hell, recoloured to the canvas tokens, and the attribution
  * "© OpenMapTiles © OpenStreetMap-Mitwirkende" always visible. The controller (public/map/event-map.js) is the same file on native
  * (WebView) and the member web.
@@ -10,12 +10,24 @@ import { resolveColor, size, space, typography, type AppTheme } from '@/theme';
 import { motionDuration } from '@/ui/motion';
 
 export const MAPLIBRE_VERSION = '4.7.1';
+/** ADR-461 (SEC-414-04): the library is self-hosted on the public site, byte-identical to the release, with its licence. */
+export const MAPLIBRE_LIBRARY_PATH = `/lib/maplibre-gl/${MAPLIBRE_VERSION}`;
+
+/**
+ * A file of the self-hosted library: same origin on the member web (the site root, not under /app), the public site for the native
+ * WebView page.
+ */
+export function maplibreUrl(file: string, web: boolean = isWeb, site: string | null = siteUrl()): string {
+  const path = `${MAPLIBRE_LIBRARY_PATH}/${file}`;
+  return web ? path : `${(site ?? '').replace(/\/+$/, '')}${path}`;
+}
+
 export const MAPLIBRE_SCRIPT = {
-  url: `https://unpkg.com/maplibre-gl@${MAPLIBRE_VERSION}/dist/maplibre-gl.js`,
+  url: maplibreUrl('maplibre-gl.js'),
   integrity: 'sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj',
 };
 export const MAPLIBRE_STYLE = {
-  url: `https://unpkg.com/maplibre-gl@${MAPLIBRE_VERSION}/dist/maplibre-gl.css`,
+  url: maplibreUrl('maplibre-gl.css'),
   integrity: 'sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V',
 };
 const TILE_STYLES = {

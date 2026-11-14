@@ -163,7 +163,7 @@ export function ResendButton({ seconds, onPress, disabled, testID }: { seconds: 
 }
 
 /**
- * AUTH-13 (09 §7.2): the 6-digit code of AUTH-12, auto-submitted. The magic link lands on WEB-12 (/auth/magic), which signs in with
+ * AUTH-13 (09 §7.2): the 6-digit code of AUTH-12, auto-submitted. The magic link lands on WEB-16 (/auth/magic), which signs in with
  * the same attempt. Wrong code: shake + "Noch n Versuche"; expired: a new code; locked: 15 minutes with the time left.
  */
 export function CodeEntryScreen() {

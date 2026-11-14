@@ -2,6 +2,32 @@
  "_comment": "SET-25 \"Was ist neu\" (09 §7.12): what members read about each release, newest first by date, German and English. Written for members, not engineers: no build numbers, hashes or module ids. The release engineer adds an entry with each release that reaches members (docs/RELEASES.md is the technical register). Only what the release really ships.",
  "releases": [
   {
+   "version": "2.0.0",
+   "date": "2026-11-14",
+   "de": {
+    "title": "SPEED CLUB 2.0",
+    "items": [
+     "Neues Design: größere Fotos, klarere Schrift und ruhigere Seiten, in der App, im Web und auf den öffentlichen Build-Seiten.",
+     "Anmelden mit E-Mail-Code: kein Passwort nötig. Dein bisheriges Passwort funktioniert weiter.",
+     "Sicherheit: Sieh deine angemeldeten Geräte, bekomme eine Meldung bei neuen Anmeldungen und sperre die App mit der Geräte-Entsperrung.",
+     "Wartung: Trage HU/AU, Inspektionen und Kilometerstand ein und lass dich rechtzeitig erinnern. Kosten bleiben privat.",
+     "Builds und Sammlungen: Folge einem Build, ohne der Person zu folgen. Sortiere Builds in private Sammlungen. Reaktionen sieht nur der Besitzer.",
+     "Erwähnungen: Du bestimmst, wer dich erwähnen darf."
+    ]
+   },
+   "en": {
+    "title": "SPEED CLUB 2.0",
+    "items": [
+     "New design: bigger photos, clearer type and calmer pages, in the app, on the web and on the public build pages.",
+     "Sign in with an e-mail code: no password needed. Your existing password keeps working.",
+     "Security: see your signed-in devices, get a notice about new sign-ins and lock the app with your device unlock.",
+     "Maintenance: log inspections, service and mileage, and get reminded in time. Costs stay private.",
+     "Builds and collections: follow a build without following its owner. Sort builds into private collections. Only the owner sees reactions.",
+     "Mentions: you decide who may mention you."
+    ]
+   }
+  },
+  {
    "version": "1.0.0",
    "date": "2026-11-10",
    "de": {

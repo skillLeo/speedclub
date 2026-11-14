@@ -41,6 +41,7 @@ const ADMIN_WRITES_WITHOUT_RECENT_PASSWORD = [
     'admin.members.delete' => 'four-eyes request (members.delete)',
     // M3.4 moderation and support: no member account changes; decisions, appeals, bulk and rules keep the guard.
     'admin.moderation.cases.assign' => 'takes or hands over a case; nothing is decided',
+    'admin.moderation.cases.release' => 'M4.17: undoes the own take of a case within 10 s (session record); nothing is decided',
     'admin.moderation.cases.preview' => 'renders the statement of reasons; nothing is stored',
     'admin.moderation.cases.evidence' => 'an audited view of the evidence, like the PII reveal',
     'admin.moderation.cases.live' => 'an audited view of the message context, like the PII reveal',

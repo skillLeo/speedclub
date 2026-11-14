@@ -7,6 +7,7 @@ use App\Enums\BusinessStatus;
 use App\Enums\ModTagInitiator;
 use App\Enums\ModTagStatus;
 use App\Models\Business;
+use App\Models\BusinessInvite;
 use App\Models\BusinessMember;
 use App\Services\Businesses\BusinessViews;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class MyBusinessResource extends BusinessResource
     public function toArray(Request $request): array
     {
         $business = $this->resource;
+        $locked = in_array($business->status, [BusinessStatus::Verified, BusinessStatus::Suspended], true);
         $reason = in_array($business->status, [BusinessStatus::Rejected, BusinessStatus::Suspended], true) ? $business->getAttribute('review_reason') : null;
 
         return [
@@ -42,12 +44,26 @@ class MyBusinessResource extends BusinessResource
             /** @var string|null */
             'document_note' => $business->getAttribute('document_note'),
             /** Verified: name, legal form, address and register details change through support only. */
-            'identity_locked' => in_array($business->status, [BusinessStatus::Verified, BusinessStatus::Suspended], true),
+            'identity_locked' => $locked,
+            /**
+             * SEC-414-06: the fields that change through support only while `identity_locked` (the Impressum, its contact, the website,
+             * the map point and the kind); empty otherwise. A PATCH that changes one answers 422 naming it.
+             *
+             * @var list<string>
+             */
+            'locked_fields' => $locked ? Business::lockedFields() : [],
             /**
              * @var list<array{username: string|null, role: BusinessRole}>
              */
             'team' => $business->members()->with('user')->orderBy('created_at')->get()
                 ->map(fn (BusinessMember $member): array => ['username' => $member->user->username, 'role' => $member->role])->values()->all(),
+            /**
+             * SEC-414-01: open invitations (the member has not accepted yet; no role until then), oldest first.
+             *
+             * @var list<array{username: string|null, invited_at: string|null}>
+             */
+            'invites' => $business->invites()->with('user')->orderBy('created_at')->get()
+                ->map(fn (BusinessInvite $invite): array => ['username' => $invite->user->username, 'invited_at' => $invite->created_at?->toIso8601String()])->values()->all(),
             /** Member requests waiting for the business (BIZ-04 badge). */
             'pending_requests' => $business->tags()->where('status', ModTagStatus::Pending->value)->where('initiated_by', ModTagInitiator::Member->value)->count(),
             /** Profile views of the last 30 days (Europe/Berlin), private to the team; the team's own views are not counted. */

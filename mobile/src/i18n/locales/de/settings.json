@@ -79,7 +79,7 @@
         "haptics": "Haptisches Feedback",
         "hapticsHelper": "Ein kurzes Tippen beim Folgen, Speichern, Reagieren und bei Schaltern.",
         "reduceMotion": "Bewegung reduzieren",
-        "reduceMotionHelper": "Immer: Übergänge werden zu ruhigen Überblendungen, auch wenn dein Gerät nichts reduziert.",
+        "reduceMotionHelper": "Immer: Übergänge werden zu ruhigen Überblendungen, auch wenn dein Gerät keine Bewegung reduziert.",
         "motion": {
             "system": "Wie im System",
             "always": "Immer"
@@ -339,7 +339,7 @@
             "mentionHelper": "Wenn dich jemand in einem Update erwähnt. Wer das darf, legst du in Privatsphäre fest.",
             "comment": "Kommentare",
             "commentHelper": "Wenn jemand dein Update kommentiert.",
-            "vehicle_follower": "Folgen deinem Build",
+            "vehicle_follower": "Follower deines Builds",
             "vehicle_followerHelper": "Wenn jemand einem deiner Fahrzeuge folgt.",
             "event_reminder": "Erinnerungen an Treffen",
             "event_reminderHelper": "Am Vortag und kurz vor Beginn der Treffen, denen du zugesagt hast.",
@@ -379,7 +379,7 @@
             "helperDenied": "Du hast Mitteilungen für SPEED CLUB in diesem Browser blockiert. Erlaube sie in den Website-Einstellungen (Symbol links neben der Adresse) und komm dann hierher zurück.",
             "helperInstall": "Auf dem iPhone kommen Mitteilungen nur in der App vom Home-Bildschirm: In Safari auf „Teilen“ tippen, „Zum Home-Bildschirm“ wählen und SPEED CLUB von dort öffnen.",
             "helperUnsupported": "Dieser Browser kann keine Mitteilungen anzeigen.",
-            "helperUnavailable": "Browser-Mitteilungen kommen bald. Bis dahin bekommst du alles in der App und per E-Mail.",
+            "helperUnavailable": "Browser-Mitteilungen kommen bald. Bis dahin findest du alles in der App.",
             "noWorker": "Der Browser ist noch nicht bereit. Lade die Seite neu und versuch es noch einmal.",
             "typesNote": "Diese Schalter gelten für Mitteilungen im Browser. Die App auf deinem Handy stellst du in der App ein.",
             "phoneNote": "Die Schalter unten gelten für die App auf deinem Handy, bis du die Browser-Mitteilungen einschaltest."
@@ -838,7 +838,7 @@
     },
     "appIcon": {
         "title": "App-⁠Icon",
-        "intro": "Das Logo bleibt, der Grund wechselt. Gilt für den Home-⁠Bildschirm dieses Geräts.",
+        "intro": "Das Logo bleibt, der Hintergrund wechselt. Gilt für den Home-⁠Bildschirm dieses Geräts.",
         "options": {
             "black": "Schwarz",
             "white": "Weiß",
@@ -902,14 +902,36 @@
         "perks": {
             "garage": "Mehr Platz in der Garage",
             "garageBody": "Mehr Fahrzeuge, als ein kostenloses Konto hat.",
-            "photos": "Mehr Fotos pro Fahrzeug",
-            "photosBody": "Für Builds, die mehr zu zeigen haben.",
             "stickers": "Weitere QR-Sticker-Designs",
             "stickersBody": "Zusätzliche Motive für den Sticker an deinem Auto.",
             "costs": "Baukosten-Auswertung",
-            "costsBody": "Was dein Build bisher gekostet hat. Nur für dich sichtbar.",
+            "costsBody": "Was dein Build bisher gekostet hat, nach Bereichen. Nur für dich sichtbar.",
             "accent": "Akzentfarbe fürs Profil",
             "accentBody": "Eine eigene Farbe für dein Profil."
+        },
+        "samples": {
+            "cars": {
+                "r34": "Nissan Skyline",
+                "rs3": "Audi Sportback",
+                "p911": "Porsche Carrera",
+                "e46": "BMW Coupé"
+            },
+            "stickers": {
+                "round": "Rund",
+                "plate": "Carbon mit Logo"
+            },
+            "costs": {
+                "private": "Privat",
+                "suspension": "Fahrwerk",
+                "wheels": "Felgen und Reifen",
+                "exhaust": "Abgasanlage",
+                "brakes": "Bremsen"
+            },
+            "accent": {
+                "name": "Dein Profil",
+                "garage": "Garage",
+                "updates": "Updates"
+            }
         },
         "priceTitle": "Preis",
         "priceBody": "Monatlich oder jährlich. Die Preise stehen hier, bevor du etwas abschließen kannst.",

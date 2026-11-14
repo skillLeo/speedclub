@@ -74,6 +74,12 @@ const withFlags = (flags: Record<string, boolean>) => {
   });
   return client;
 };
+/** UPD-01's "Posten" takes presses once the composer knows the vehicle (it is disabled while /me/vehicles loads). */
+const composerReady = () =>
+  waitFor(() => {
+    const cta = screen.getByTestId('UPD-01.cta.primary');
+    expect(cta.props['aria-disabled'] ?? cta.props.accessibilityState?.disabled ?? false).toBeFalsy();
+  });
 const SOCIAL = { my_reaction: null, is_following: false, comments_enabled: true };
 const methodOf = (call: Request) => call.method;
 const pathOf = (call: Request) => new URL(call.url).pathname;
@@ -367,6 +373,7 @@ describe('UPD-01 Update posten (09 §7.6, §8.5)', () => {
     await act(async () => fireEvent.press(await screen.findByTestId('UPD-01.mention.max.e46')));
     expect(text('UPD-01.text').props.value).toBe('Danke @max.e46 ');
     await act(async () => fireEvent.press(text('UPD-01.audience.followers')));
+    await composerReady();
     await act(async () => fireEvent.press(text('UPD-01.cta.primary')));
     const post = await waitFor(() => {
       const found = calls.find(
@@ -399,6 +406,9 @@ describe('UPD-01 Update posten (09 §7.6, §8.5)', () => {
     });
     await renderWithProviders(<PostUpdateScreen />);
     await screen.findByTestId('UPD-01.text');
+    // The form renders before /me/vehicles answers, and "Posten" stays disabled until the vehicle is known: pressing earlier
+    // was a no-op, so the test failed whenever that query was slower than the first render (2 of 5 runs under load).
+    await composerReady();
     await act(async () => fireEvent.press(text('UPD-01.cta.primary')));
     expect(await screen.findByText('Schreib etwas oder füge Fotos hinzu.')).toBeTruthy();
     expect(calls.some((call) => methodOf(call) === 'POST')).toBe(false);

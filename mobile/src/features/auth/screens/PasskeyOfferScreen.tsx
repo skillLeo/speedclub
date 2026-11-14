@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { isReauthCancelled } from '@/api/queries/recentAuth';
@@ -27,6 +27,11 @@ const useStyles = createStyles((t) => ({
 
 /** AUTH-02 is dark in every theme, so its picture is too. */
 const BRAND_THEME = 'carbon' as const;
+/**
+ * On web `data-theme-scope` tells the DOM audit that the fragment is a Carbon scope inside a Hell page (as AUTH-02 and BrandStage, DQ-1045).
+ * The cast stands until `QaDataSet` (src/lib/rn-web-dataset.d.ts) lists `themeScope`.
+ */
+const FRAGMENT_SCOPE = { themeScope: BRAND_THEME } as ViewProps['dataSet'];
 
 /**
  * AUTH-14 "Schneller rein mit Passkey" (09 §7.2): once per device, after a sign-in on a device that can hold a passkey. The stack
@@ -67,7 +72,7 @@ export function PasskeyOfferScreen() {
       secondary={{ label: t('passkeyOffer.later'), onPress: answerPasskeyOffer, disabled: add.isPending, testID: 'AUTH-14.later' }}
       lead={
         <ThemeScope name={BRAND_THEME}>
-          <View aria-hidden style={styles.fragment} testID="AUTH-14.fragment">
+          <View aria-hidden style={styles.fragment} dataSet={FRAGMENT_SCOPE} testID="AUTH-14.fragment">
             <ProviderStackPreview
               providers={stack}
               marked="passkey"

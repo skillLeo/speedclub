@@ -53,6 +53,7 @@ return [
     ],
     'state' => [
         'home' => 'Go to the home page',
+        'retry' => 'Reload',
         'discover' => 'Discover builds',
         'vehicle_unavailable' => ['title' => 'Vehicle not available', 'body' => 'It was removed or is not public right now.'],
         'member_unavailable' => ['title' => 'Member not found', 'body' => 'This profile does not exist or is not public right now.'],
@@ -145,6 +146,8 @@ return [
         'og_portfolio' => 'Portfolio',
     ],
     'brand' => [
+        'lead_credit' => 'Cover photo:',
+        'more_parts' => 'More parts',
         'meta_title' => ':name: parts and builds | SPEED CLUB',
         'meta_description' => 'Parts by :name and the builds they are fitted to.',
         'builds' => 'build|builds',
@@ -194,7 +197,7 @@ return [
         'report' => 'Report meet',
         'og_start' => 'Start',
     ],
-    'card' => ['power' => 'Power', 'torque' => 'Torque', 'model_year' => 'Year'],
+    'card' => ['power' => 'Power', 'torque' => 'Torque', 'model_year' => 'Year', 'drivetrain' => 'Drivetrain'],
     'member' => [
         'meta_title' => ':name (@:username) | SPEED CLUB',
         'meta_description' => 'The garage of :name on SPEED CLUB.',
@@ -204,6 +207,10 @@ return [
         'garage' => 'Garage',
         'garage_empty' => 'No public vehicles yet',
         'garage_empty_body' => 'As soon as @:username publishes a car, it will be here.',
+        'garage_empty_action' => 'Start your own garage',
+        'garage_sample_label' => 'Example: this is how a car shows in a garage.',
+        'garage_sample_title' => 'VW Scirocco',
+        'garage_sample_caption' => 'This is how a car shows in a garage.',
         'since' => 'Member since :date',
         'vehicles' => 'vehicle|vehicles',
         'followers' => 'follower|followers',
@@ -257,7 +264,7 @@ return [
     'account_deletion' => [
         'title' => 'Delete account',
         'description' => 'Delete your SPEED CLUB account with your e-mail address and password, even without the app.',
-        'intro' => 'Here you can delete your SPEED CLUB account, even without the app. In the app, go to Settings › Data › Delete account.',
+        'intro' => 'Here you can delete your SPEED CLUB account, even without the app. In the app, go to Settings › Data & storage › Delete account.',
         'consequences_title' => 'What happens when you delete your account',
         'consequences' => [
             'Your account is deactivated immediately. Nobody can see your profile or vehicles any more.',
@@ -265,7 +272,7 @@ return [
             'All devices are signed out. Nobody follows you any more, and you no longer follow anyone.',
             'In conversations, the other person still sees your messages, shown as from “Deleted member”.',
             'We delete the account with all photos and data for good within 30 days at the latest.',
-            'The deletion cannot be undone. If you want to keep your data, request an export in the app under Settings › Data first.',
+            'The deletion cannot be undone. If you want to keep your data, request an export in the app under Settings › Data & storage first.',
             "If you requested a data export before deleting, you can still download it for up to 7 days through the link in the export e-\u{2060}mail.",
         ],
         'form_title' => "Confirm with your sign-\u{2060}in details",
@@ -287,7 +294,7 @@ return [
     'contact' => [
         'title' => 'Contact',
         'description' => 'Write to the SPEED CLUB team: questions about your account, vehicles, QR stickers, messages or safety.',
-        'intro' => "Have a question or a problem? Write to us and we will reply by e-\u{2060}mail, usually within two working days. If you have an account, you can also use the app: Settings › Help & FAQ › Contact support. You then get the reply in the app.",
+        'intro' => "Have a question or a problem? Write to us and we will reply by e-\u{2060}mail, usually within two working days. If you have an account, you can also use the app: Settings › Help & support › Contact support. You then get the reply in the app.",
         'report_hint' => 'Want to report content that breaks our rules or the law? Use the report form.',
         'report_link' => 'Report content',
         'name' => 'Name',

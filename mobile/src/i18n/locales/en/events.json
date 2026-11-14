@@ -29,7 +29,7 @@
         "laterIn": "Later in {{month}}"
     },
     "place": {
-        "unknown": "Place to follow",
+        "unknown": "Place to be announced",
         "afterRsvp": "The place is shown once you're going",
         "afterRsvpOrganiser": "Only members who are going see the exact place.",
         "area": "Approximate area",
@@ -49,7 +49,7 @@
         "none": "Nobody's going yet"
     },
     "rsvp": {
-        "going": "Go",
+        "going": "I'm going",
         "interested": "Interested",
         "goingDone": "Going",
         "interestedDone": "Interested",
@@ -67,7 +67,7 @@
         "withdrawnToast": "Your answer is withdrawn.",
         "failed": "Your answer couldn't be saved.",
         "closed": "This meet no longer takes answers.",
-        "cardLabel": "{{title}}: go",
+        "cardLabel": "{{title}}: say you're going",
         "cardLabelDone": "{{title}}: going",
         "organiser": "You're organising this meet.",
         "manage": "Manage"
@@ -202,7 +202,7 @@
         "saveChanges": "Save changes",
         "titleLabel": "Title",
         "titlePlaceholder": "e.g. Cars & Coffee at the harbour",
-        "typeLabel": "Kind",
+        "typeLabel": "Type",
         "coverLabel": "Cover",
         "coverHelper": "Landscape 16:9. No readable plates, no faces.",
         "coverPick": "Choose cover",
@@ -420,7 +420,7 @@
         "unavailableBody": "The map couldn't be loaded. The list shows the same meets.",
         "regionLabel": "Map of meets",
         "pickerLabel": "Map to set the meet's place",
-        "consentBody": "The map loads data from OpenFreeMap and OpenStreetMap. Only once you tap.",
+        "consentBody": "The map loads data from OpenFreeMap and OpenStreetMap. It only loads once you tap.",
         "consentAction": "Show map",
         "offlineBody": "You're offline. The map loads once you're connected again."
     },

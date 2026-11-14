@@ -11,7 +11,7 @@ import {
   updateBody,
   type EventFormValues,
 } from '@/features/events/schemas';
-import { mapState, parseMapMessage, mapHtml, MAPLIBRE_SCRIPT } from '@/features/events/map/mapConfig';
+import { mapState, parseMapMessage, mapHtml, maplibreUrl, MAPLIBRE_SCRIPT, MAPLIBRE_STYLE } from '@/features/events/map/mapConfig';
 import { getTheme } from '@/theme/theme';
 
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
@@ -152,5 +152,14 @@ describe('the map (ADR-411)', () => {
     const html = mapHtml(state, 'https://speedclub.test/app/map/event-map.js');
     expect(html).toContain(`integrity="${MAPLIBRE_SCRIPT.integrity}"`);
     expect(html).not.toContain('</script><b>');
+    // ADR-461: the self-hosted library, never the CDN.
+    expect(html).not.toContain('unpkg.com');
+    expect(html).toContain(`src="${MAPLIBRE_SCRIPT.url}"`);
+    expect(MAPLIBRE_STYLE.url).toMatch(/\/lib\/maplibre-gl\/4\.7\.1\/maplibre-gl\.css$/);
+  });
+
+  it('serves MapLibre from the site root on the web and from the public site in the native WebView (ADR-461)', () => {
+    expect(maplibreUrl('maplibre-gl.js', true, 'https://speedclub.test')).toBe('/lib/maplibre-gl/4.7.1/maplibre-gl.js');
+    expect(maplibreUrl('maplibre-gl.css', false, 'https://speedclub.test/')).toBe('https://speedclub.test/lib/maplibre-gl/4.7.1/maplibre-gl.css');
   });
 });

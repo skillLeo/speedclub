@@ -76,6 +76,8 @@ export const HomeLead = memo(function HomeLead({
           }
           sample={{ is_sample: vehicle.is_sample, is_editorial: vehicle.owner?.is_editorial ?? false }}
           layoutWidth={width}
+          // The featured lead is Start's first paint (LCP); the weekly 16:9 lead sits below the fold.
+          priority={wide ? undefined : 'high'}
           onPress={() => onOpen(vehicle)}
           testID={testID}
         />

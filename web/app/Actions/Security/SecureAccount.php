@@ -10,14 +10,17 @@ use App\Enums\SupportCategory;
 use App\Enums\VerificationPurpose;
 use App\Models\PasskeyChallenge;
 use App\Models\SecurityEvent;
+use App\Models\SocialAccount;
 use App\Models\User;
 use App\Services\Audit\Audit;
+use App\Services\Auth\IdTokens\AppleTokens;
 use App\Services\Auth\MemberSessions;
 use App\Services\Notifications\Notifier;
 use App\Services\Security\SecureAccountLinks;
 use App\Support\Security\SecuredAccount;
 use App\Support\Security\SecurityAlert;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -38,6 +41,7 @@ class SecureAccount
         private readonly CreateSupportTicket $tickets,
         private readonly Notifier $notifier,
         private readonly SecureAccountLinks $links,
+        private readonly AppleTokens $apple,
     ) {}
 
     /**
@@ -45,13 +49,13 @@ class SecureAccount
      */
     public function handle(User $user, ?SecurityEvent $event, string $via): SecuredAccount
     {
-        [$revoked, $reference, $removed] = DB::transaction(function () use ($user, $event, $via): array {
+        [$revoked, $reference, $removed, $links] = DB::transaction(function () use ($user, $event, $via): array {
             // SEC-M47-07: a link works once, also when it is used twice at the same moment.
             if ($via === 'link' && $event !== null) {
                 $this->links->claim($event);
             }
 
-            $removed = $this->removeWaysIn($user, $this->since($user, $event));
+            [$removed, $links] = $this->removeWaysIn($user, $this->since($user, $event));
             $reference = CreateSupportTicket::reference($this->tickets->forMember($user, SupportCategory::Account, $this->subject($user), $this->message($user, $event, $removed)));
             $revoked = $this->sessions->revokeAll($user);
             $this->links->closeAll($user);
@@ -73,8 +77,11 @@ class SecureAccount
                 'two_factor_reset' => $removed['two_factor'],
             ], actor: $user);
 
-            return [$revoked, $reference, $removed];
+            return [$revoked, $reference, $removed, $links];
         });
+
+        // A removed Apple link is revoked at Apple too, after the response, like at account deletion (09 §8.1).
+        $this->apple->revokeLater($user, $links);
 
         $this->notifier->security($user, SecurityNotice::AccountSecured, alert: new SecurityAlert(reference: $reference, removed: $removed));
 
@@ -101,7 +108,9 @@ class SecureAccount
     }
 
     /**
-     * @return array{passkeys: int, providers: int, email_change: bool, two_factor: bool}
+     * What went, and the provider links removed (their Apple tokens are revoked after the commit).
+     *
+     * @return array{0: array{passkeys: int, providers: int, email_change: bool, two_factor: bool}, 1: Collection<int, SocialAccount>}
      */
     private function removeWaysIn(User $user, ?CarbonImmutable $since): array
     {
@@ -109,12 +118,14 @@ class SecureAccount
         $emailChange = $user->verificationCodes()->where('purpose', VerificationPurpose::EmailChange)->delete() > 0;
 
         if ($since === null) {
-            return ['passkeys' => 0, 'providers' => 0, 'email_change' => $emailChange, 'two_factor' => false];
+            return [['passkeys' => 0, 'providers' => 0, 'email_change' => $emailChange, 'two_factor' => false], new Collection];
         }
 
         $passkeys = $user->memberPasskeys()->where('created_at', '>=', $since)->delete();
         PasskeyChallenge::query()->where('user_id', $user->id)->delete();
-        $providers = $user->socialAccounts()->where('created_at', '>=', $since)->delete();
+        // Read before they go: an Apple link's refresh token is revoked after the commit.
+        $links = $user->socialAccounts()->where('created_at', '>=', $since)->get();
+        $providers = SocialAccount::query()->whereKey($links->modelKeys())->delete();
 
         $confirmed = $user->getAttribute('two_factor_confirmed_at');
         $twoFactor = $user->hasTwoFactor() && ($confirmed === null || CarbonImmutable::parse($confirmed)->greaterThanOrEqualTo($since));
@@ -129,7 +140,7 @@ class SecureAccount
             ])->save();
         }
 
-        return ['passkeys' => $passkeys, 'providers' => $providers, 'email_change' => $emailChange, 'two_factor' => $twoFactor];
+        return [['passkeys' => $passkeys, 'providers' => $providers, 'email_change' => $emailChange, 'two_factor' => $twoFactor], $links->toBase()];
     }
 
     private function subject(User $user): string

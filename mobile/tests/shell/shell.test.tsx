@@ -21,6 +21,7 @@ import { TabRootScreen } from '@/features/shell/TabRootScreen';
 import { completeAuthIntent, openAuthPrompt, setMember, useSessionStore } from '@/state/session';
 import { setTabBarHidden, useShellStore } from '@/state/shell';
 import { hydrateThemePreference, layout, size, space, ThemeProvider, typography } from '@/theme';
+import { maxFontScale } from '@/theme/tokens.generated';
 import { EmptyState } from '@/ui';
 
 import { flat, visualOf } from '../ui/helpers';
@@ -352,12 +353,13 @@ describe('breakpoints', () => {
     expect(screen.getByText('Lukas').props.numberOfLines).toBe(1);
   });
 
-  it('DQ-078: the destinations and the sign-in stop growing at 1.5, so "Nachrichten" stays on one line of its row', async () => {
+  it('DQ-078, CARRY-M4.12-18: the destinations and the sign-in stop growing at the web tab role cap, so "Nachrichten" stays on one line', async () => {
     mockDimensions.mockReturnValue({ width: 1280, height: 900, scale: 1, fontScale: 2 });
     await open();
     await screen.findByTestId('screen.home');
-    expect(screen.getByText('Nachrichten').props.maxFontSizeMultiplier).toBe(1.5);
-    expect(screen.getByText('Anmelden').props.maxFontSizeMultiplier).toBe(1.5);
+    expect(maxFontScale.webTab).toBe(1.3);
+    expect(screen.getByText('Nachrichten').props.maxFontSizeMultiplier).toBe(maxFontScale.webTab);
+    expect(screen.getByText('Anmelden').props.maxFontSizeMultiplier).toBe(maxFontScale.webTab);
   });
 
   it('the logo box is whole pixels, so the rows below it sit on the grid', async () => {

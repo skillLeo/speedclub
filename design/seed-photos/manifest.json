@@ -319,7 +319,7 @@
         "generation": "F87",
         "colour": "red",
         "angle": "front three-quarter",
-        "plate_blurred": false,
+        "plate_blurred": true,
         "photographer": "Velito",
         "source_url": "https://unsplash.com/photos/red-bmw-m2-sedan-kjyO8EMGAxg",
         "licence": "Unsplash License",
@@ -335,7 +335,7 @@
         "night": true,
         "width": 1920,
         "height": 1280,
-        "thumbhash": "TQcKHYJ1mYp/hpiXh3h6lkZwthkM"
+        "thumbhash": "TQcKHYJlmYp/hpiXh3h6lkZwthkM"
     },
     {
         "file": "audi-rs3-8y-01.jpg",
@@ -1905,7 +1905,7 @@
         "generation": "B9",
         "colour": "silver",
         "angle": "front three-quarter",
-        "plate_blurred": false,
+        "plate_blurred": true,
         "photographer": "Remy Lovesy",
         "source_url": "https://unsplash.com/photos/silver-audi-a-4-on-beach-during-daytime-LO8rqX93FgQ",
         "licence": "Unsplash License",

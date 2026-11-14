@@ -90,7 +90,6 @@ function PhotoCategoryAssistBody({ mediaId, current, disabled, onAccept, testID 
     <View style={styles.root} testID={testID}>
       <Button
         label={note && !note.verify ? t('ai.retry') : t('ai.photoSuggest')}
-        icon={note ? undefined : 'lightbulb'}
         variant="tertiary"
         size="s"
         flush="start"

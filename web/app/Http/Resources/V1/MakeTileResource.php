@@ -23,7 +23,7 @@ class MakeTileResource extends JsonResource
             'id' => $this->resource->id,
             'name' => $this->resource->name,
             'slug' => $this->resource->slug,
-            /** Public builds the viewer can find, never rounded or padded. */
+            /** Real public builds the viewer can find (samples never counted; 0 when the make has samples only), never rounded or padded. */
             'vehicle_count' => $this->resource->vehicleCount,
         ];
     }

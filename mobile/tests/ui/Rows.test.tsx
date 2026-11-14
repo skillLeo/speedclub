@@ -6,7 +6,7 @@ import { BuildUpdateRow, BuildUpdateRowSkeleton, updateMetaText } from '@/ui/Bui
 import { diffSegments, metaLineText, vehicleNameText } from '@/ui/textBreaks';
 import { Button } from '@/ui/Button';
 import { adaptiveValueStacks, ListRow, longestWord } from '@/ui/ListRow';
-import { MemberRow } from '@/ui/MemberRow';
+import { handleFitsLine, MemberRow, splitMetaHandle } from '@/ui/MemberRow';
 import { ModRow } from '@/ui/ModRow';
 import { OwnerRow } from '@/ui/OwnerRow';
 import { Skeleton } from '@/ui/Skeleton';
@@ -134,6 +134,39 @@ describe('MemberRow', () => {
     expect(open).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole('link', { name: 'Lukas Schneider, @lukas.sc · Stuttgart' }));
     expect(open).toHaveBeenCalledTimes(1);
+  });
+
+  it('sets a handle name on one line with an ellipsis, never broken inside its letters (m4.18 HOME-01)', async () => {
+    await renderUi(<MemberRow name="@gmwfgv0nd9wtp21" meta="BMW M3" onPress={jest.fn()} testID="m" />);
+    const handle = screen.getByTestId('m.name');
+    expect(handle.props.numberOfLines).toBe(1);
+    expect(handle.props.children).toBe('@gmwfgv0nd9wtp21');
+    expect(handle.props['aria-label']).toBe('@gmwfgv0nd9wtp21');
+    await renderUi(<MemberRow name="Lukas Schneider" onPress={jest.fn()} testID="n" />);
+    expect(screen.getByTestId('n.name').props.numberOfLines).toBeUndefined();
+  });
+
+  it('sets a long handle of the meta on a line of its own with an ellipsis once it cannot fit the column (m4.18 HOME-01)', async () => {
+    await renderUi(<MemberRow name="Wolfgang Schwarzenberger" meta="@wolfgangschwarzenberger · Skyline R34" onPress={jest.fn()} testID="m" />);
+    expect(screen.queryByTestId('m.handle')).toBeNull();
+    await fireEvent(screen.getByTestId('m.text'), 'layout', { nativeEvent: { layout: { width: 180, height: 40, x: 0, y: 0 } } });
+    const handle = screen.getByTestId('m.handle');
+    expect(handle.props.numberOfLines).toBe(1);
+    expect(handle.props.children).toBe('@wolfgangschwarzenberger');
+    expect(screen.getByText('Skyline\u00A0R34')).toBeTruthy();
+    // A handle that fits stays in the one meta line.
+    await fireEvent(screen.getByTestId('m.text'), 'layout', { nativeEvent: { layout: { width: 400, height: 40, x: 0, y: 0 } } });
+    expect(screen.queryByTestId('m.handle')).toBeNull();
+  });
+
+  it('measures a handle against its line at the font scale', () => {
+    expect(splitMetaHandle('@lukas.sc · Stuttgart')).toEqual({ handle: '@lukas.sc', rest: 'Stuttgart' });
+    expect(splitMetaHandle('@lukas.sc')).toEqual({ handle: '@lukas.sc', rest: '' });
+    expect(splitMetaHandle('Blockiert am 24.10.2026')).toBeNull();
+    const handle = '@wolfgangschwarzenberger';
+    const width = [...handle].length * typography.callout.fontSize * 0.6;
+    expect(handleFitsLine(handle, width, 1)).toBe(true);
+    expect(handleFitsLine(handle, width, 2)).toBe(false);
   });
 
   it('leaves 8 between the pressed fill and the button (DQ-053)', async () => {

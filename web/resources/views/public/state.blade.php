@@ -12,6 +12,9 @@
     // DQ-172: one glyph per state, the same in the app (QrResolveScreen). What is gone reads like private, who cannot be found like not found.
     $icon = ['revoked' => 'prohibit', 'private' => 'lock-simple', 'not_found' => 'magnifying-glass', 'vehicle_unavailable' => 'lock-simple', 'member_unavailable' => 'magnifying-glass', 'business_unavailable' => 'lock-simple', 'event_unavailable' => 'lock-simple', 'brand_unavailable' => 'magnifying-glass'][$state] ?? 'compass';
     $photo = \App\Services\PublicPages\PublicPhoto::brand('state-garage');
+    // DQ-1171: a failure (the server, maintenance, too many requests) offers the retry it asks for first: the same address again,
+    // without the screenshot matrix's forced state. Missing and private pages keep "Builds entdecken".
+    $failure = in_array($state, ['server_error', 'maintenance', 'rate_limited'], true);
 @endphp
 <x-public.layout :title="$title.' · SPEED CLUB'" :description="$text" robots="noindex">
     <x-public.top-bar />
@@ -25,8 +28,13 @@
                 <h1 class="mt-12 t-title-1 text-ink" data-testid="{{ $id }}.title">{{ $title }}</h1>
                 <p class="mt-8 text-body text-ink-2" data-testid="{{ $id }}.body">{{ $text }}</p>
                 <div class="mt-24 flex flex-wrap gap-8">
-                    <x-public.button :href="url('/app/discover')" variant="primary" size="l" data-testid="{{ $id }}.discover">{{ __('public.state.discover') }}</x-public.button>
-                    <x-public.button :href="\App\Support\PublicUrl::to('/')" variant="secondary" size="l" data-testid="{{ $id }}.home">{{ __('public.state.home') }}</x-public.button>
+                    @if ($failure)
+                        <x-public.button :href="request()->fullUrlWithoutQuery(['qaState'])" variant="primary" size="l" data-testid="{{ $id }}.retry">{{ __('public.state.retry') }}</x-public.button>
+                        <x-public.button :href="\App\Support\PublicUrl::to('/')" variant="tertiary" size="l" data-testid="{{ $id }}.home">{{ __('public.state.home') }}</x-public.button>
+                    @else
+                        <x-public.button :href="url('/app/discover')" variant="primary" size="l" data-testid="{{ $id }}.discover">{{ __('public.state.discover') }}</x-public.button>
+                        <x-public.button :href="\App\Support\PublicUrl::to('/')" variant="secondary" size="l" data-testid="{{ $id }}.home">{{ __('public.state.home') }}</x-public.button>
+                    @endif
                 </div>
             </div>
         </div>

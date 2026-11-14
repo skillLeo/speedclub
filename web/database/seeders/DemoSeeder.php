@@ -33,6 +33,7 @@ use App\Models\Media;
 use App\Models\ModCategory;
 use App\Models\Modification;
 use App\Models\Notification;
+use App\Models\Product;
 use App\Models\QrCode;
 use App\Models\Role;
 use App\Models\Save;
@@ -201,6 +202,7 @@ class DemoSeeder extends Seeder
             $this->useCoversOnProfiles($data['members']);
             $this->restoreStoryDates();
             $this->seedRecentActivity();
+            $this->linkCatalogueProducts();
             // Also scores every build for Für dich (HomeRanking, at HomeClock::now()).
             app(VehicleSearchProjector::class)->rebuildAll();
             $this->seedNotifications();
@@ -217,6 +219,32 @@ class DemoSeeder extends Seeder
                 $this->call(BrandContentDemoSeeder::class, false, ['now' => $this->now]);
             }
         }));
+    }
+
+    /**
+     * M4.14 (ADR-457, DQ-1138): where a demo member's part is in the parts catalogue (same brand, part name = product name), the mod
+     * links it, as picking it from the mod editor's autocomplete would. So "In 3 Builds", the product thumbnails and the Teile scope's
+     * photos have real (non-sample) builds behind them. The mod's own dates stay as seeded.
+     */
+    public static function linkCatalogueProducts(): int
+    {
+        $products = Product::query()->active()->get(['id', 'brand_id', 'slug'])
+            ->mapWithKeys(fn (Product $product): array => [$product->brand_id.'|'.$product->slug => $product->id]);
+        $linked = 0;
+
+        $mods = DB::table('modifications as m')->join('vehicles as v', 'v.id', '=', 'm.vehicle_id')
+            ->whereNull('m.product_id')->whereNotNull('m.brand_id')->whereNotNull('m.part_name')->where('v.is_sample', false)
+            ->orderBy('m.id')->get(['m.id', 'm.brand_id', 'm.part_name']);
+
+        foreach ($mods as $mod) {
+            $product = $products->get($mod->brand_id.'|'.Slug::make((string) $mod->part_name));
+
+            if (is_string($product)) {
+                $linked += DB::table('modifications')->where('id', $mod->id)->update(['product_id' => $product]);
+            }
+        }
+
+        return $linked;
     }
 
     /**

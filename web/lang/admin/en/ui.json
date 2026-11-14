@@ -54,14 +54,21 @@
         "views": {
             "label": "Views",
             "manage": "Manage views",
-            "manage_body": "Save filters, sort and page size under a name. Only you see your views.",
+            "manage_body": "Save filters, sort and page size under a name. Just for you, or for everyone with your role.",
             "name": "View name",
             "name_short": "The name needs at least 2 characters.",
             "save": "Save current",
             "saved": "View saved",
             "deleted": "View deleted",
             "delete": "Delete view “:name”",
-            "none": "No views of your own yet."
+            "none": "No views of your own yet.",
+            "share": "Share with my role",
+            "share_hint": "Everyone with the role :role sees the view. Only you can change or delete it.",
+            "shared_badge": "Shared with :role",
+            "shared_by": "Shared by :name",
+            "shared_group": "Shared by colleagues",
+            "mine_group": "My views",
+            "none_shared": "No shared views of your role yet."
         },
         "export_csv": "CSV, addresses masked",
         "export_menu": "Export",
@@ -77,7 +84,11 @@
         "next": "Next page"
     },
     "kpi": {
-        "delta": "Change from previous period: "
+        "delta": "Change from previous period: ",
+        "points": ":value pp",
+        "up": "up by",
+        "down": "down by",
+        "flat": "unchanged"
     },
     "chart": {
         "legend": "Legend",
@@ -135,5 +146,11 @@
     "tabs": {
         "more": "More",
         "more_label": "More: :count further sections"
+    },
+    "waiting": {
+        "minutes": ":count min",
+        "hours": ":count h",
+        "days": ":count d",
+        "label": "Waiting since :date"
     }
 }

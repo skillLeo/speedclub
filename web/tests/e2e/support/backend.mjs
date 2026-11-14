@@ -231,6 +231,12 @@ export const testCases = (email) => backend('test-cases', email);
 export const ensureSessionsFixture = () => backend('ensure-sessions-fixture');
 
 /**
+ * DQ-1213: AUTH-09b's fixture member (finish.fixture@E2E_DOMAIN), a new passwordless account at its AGB step, every earlier session ended.
+ * @returns {Promise<{email:string, next_step:string|null}>}
+ */
+export const ensureFinishFixture = () => backend('ensure-finish-fixture');
+
+/**
  * @typedef {{email:string, name:string, role:string, id:number, enrolled:boolean}} StaffFixture
  */
 
@@ -368,11 +374,12 @@ export const announcementsState = () => backend('announcements-state');
 export const ensureReconsentFixture = () => backend('ensure-reconsent-fixture');
 
 /**
- * Pure: what ensure-reconsent-fixture would make of these legal_documents rows (self-test).
+ * Pure: what ensure-reconsent-fixture would make of these legal_documents rows at `now` (UTC, "Y-m-d H:i:s"; self-test).
  * @param {{key:string, locale:string, version:string, published_at:string|null, reason?:string|null}[]} rows
- * @returns {Promise<{versions:Record<string,string>, accepted:Record<string,string>} | {refused:string}>}
+ * @param {string} now
+ * @returns {Promise<{versions:Record<string,string>, accepted:Record<string,string>, at:string} | {refused:string}>}
  */
-export const reconsentFixturePlan = (rows) => backend('reconsent-fixture-plan', JSON.stringify(rows));
+export const reconsentFixturePlan = (rows, now) => backend('reconsent-fixture-plan', JSON.stringify(rows), now);
 
 /** Count and hash of every legal_documents row with all columns. @returns {Promise<{count:number, sha256:string}>} */
 export const legalDocumentsState = () => backend('legal-documents-state');
@@ -388,6 +395,8 @@ export const disablePremiumFixture = () => backend('disable-premium-fixture');
 
 /** M4.14: parts_catalogue and businesses on for the matrix cells and F13 (refused when a person switched one on, ADR-455). */
 export const enableM414Flags = () => backend('enable-m414-flags');
+export const enableM414Affiliate = () => backend('enable-m414-affiliate');
+export const disableM414Affiliate = () => backend('disable-m414-affiliate');
 
 /** parts_catalogue and businesses off again, only when the fixture switched them on. */
 export const disableM414Flags = () => backend('disable-m414-flags');
@@ -395,11 +404,18 @@ export const disableM414Flags = () => backend('disable-m414-flags');
 /** M4.14 visual path tokens {kwProduct}, {productMod}, {productModVehicle}. @returns {Promise<Record<string, string|null>>} */
 export const m414Ids = () => backend('m414-ids');
 
-/** M4.14 F13: staff verify (or reject) a test applicant's business, as ADM-55 would. */
+/**
+ * M4.14 F13: staff verify (or reject) a test applicant's business, as ADM-55 would.
+ * @param {string} slug the business of a test owner (E2E_DOMAIN)
+ * @param {'verify'|'reject'} [outcome]
+ */
 export const reviewTestBusiness = (slug, outcome = 'verify') => backend('review-test-business', slug, outcome);
 
 /** SET-15a / SET-15b: support.fixture with its two requests. @returns {Promise<{email:string, tickets:string[]}>} */
 export const ensureSupportFixture = () => backend('ensure-support-fixture');
+
+/** M4.17 (stage fixture `m417-queues`): one open business application and two comments of m417.fixture; delete-accounts m417.fixture removes them. */
+export const ensureM417Fixture = () => backend('ensure-m417-fixture');
 
 /** ADM-48 (stage fixture `health-run`): one run of the health checks, as the scheduler makes them; removed by removeHealthFixture. */
 export const runHealthFixture = () => backend('run-health-fixture');

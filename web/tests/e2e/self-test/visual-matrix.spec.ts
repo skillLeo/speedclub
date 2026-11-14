@@ -7,19 +7,19 @@ import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import type { TestInfo } from '@playwright/test';
+import { webkit, type TestInfo } from '@playwright/test';
 import sharp from 'sharp';
 import { expect, test } from '../support/fixtures';
 import { MAX_DIFF_PIXEL_RATIO, comparePng } from '../support/image-diff.mjs';
 import { announcementFixturePlan, reconsentFixturePlan } from '../support/backend.mjs';
 import { STAFF_SESSION_COOKIE, sessionCookieExpiry } from '../support/staff.mjs';
-import { QA_NOW, checkQaContract, qaUrl } from '../support/qa.mjs';
+import { QA_NOW, checkQaContract, qaUrl, trackNetwork } from '../support/qa.mjs';
 import { DESKTOP_MIN_WIDTH, fontFamilies, spacingScale, tokens, typePairs } from '../support/tokens.mjs';
 import { handleBaseline } from '../visual/baseline.mjs';
 import { buildContactSheet } from '../visual/contact-sheet.mjs';
 import { cellName, compareCellNames, interleaveByRoute, isExpectedStatus, isVolatileCell, pathTokens, planRoute, resolvePath, stagesOf, validateRoutes, type RouteDef } from '../visual/matrix.mjs';
 import { PLAIN_LIMITER, RateBudget, buildLimits, uriToRegex } from '../visual/rate-budget.mjs';
-import { routes } from '../visual/routes.mjs';
+import { HOME_STREAM_ROW, routes } from '../visual/routes.mjs';
 import { defaultCellOf, findUnrenderedStates } from '../visual/state-check.mjs';
 import { DEFAULT_P4_BASELINES, baselineDirOf, baselineOrigin, parseCell, planPromotion, promote } from '../visual/promote-baselines.mjs';
 import { filterP4Cells, p4ContextOptions, p4PrimaryDeviceOf, planLines, planP4Route, validateP4Filters } from '../visual/p4.mjs';
@@ -204,6 +204,11 @@ test.describe('matrix planning, 07_QA section 3', () => {
       'ADM-46', 'ADM-46-reply', 'ADM-46-complete', 'ADM-46-extend',
       'ADM-48', 'ADM-49',
       'ADM-51', 'ADM-51-rotation', 'ADM-51-recovery',
+      // M4.17 (routes-m417.mjs): the SplitQueues and ADM-60 list the live queues and runs; ADM-09-rail its live "Zuletzt aktiv".
+      'ADM-53', 'ADM-53-pane', 'ADM-53-reject', 'ADM-53-analyst', 'ADM-54', 'ADM-54-reject', 'ADM-55-applied', 'ADM-55-applied-zero', 'ADM-60',
+      'ADM-09-rail', 'ADM-20-pane', 'ADM-20-pane-decide', 'ADM-20-pane-analyst',
+      // DQ-1213: ADM-61 lists whatever mails this host sent last (the e2e runs' included), and its open mail is the newest one.
+      'ADM-61', 'ADM-61-open',
     ]);
   });
 
@@ -220,6 +225,21 @@ test.describe('matrix planning, 07_QA section 3', () => {
     const base = { path: '/app/', phase: 3, auth: 'member', states: ['default'], ready: 'x' };
     expect(validateRoutes([{ ...base, id: 'CONSENT' }])).toEqual([]);
     expect(validateRoutes([{ ...base, id: 'CONSENTS' }, { ...base, id: 'CONSENT-x' }, { ...base, id: 'CONSENT-' }])).toHaveLength(3);
+  });
+
+  test('REAUTH, the re-authentication sheet, is a valid id with lowercase variants; nothing looser is (DQ-1213)', () => {
+    const base = { path: '/app/settings/security/sign-in', phase: 3, auth: 'member', states: ['default'], ready: 'x' };
+    expect(validateRoutes([{ ...base, id: 'REAUTH' }, { ...base, id: 'REAUTH-code' }])).toEqual([]);
+    expect(validateRoutes([{ ...base, id: 'REAUTHS' }, { ...base, id: 'REAUTH-' }, { ...base, id: 'REAUTH-Code' }])).toHaveLength(3);
+  });
+
+  test('route steps (DQ-1213): prepare and walk are functions when given', () => {
+    const base = { id: 'SET-19', path: '/app/settings/security/sign-in', phase: 3, auth: 'member', states: ['default'], ready: 'x' };
+    expect(validateRoutes([{ ...base, prepare: async () => {}, walk: async () => {} }])).toEqual([]);
+    expect(validateRoutes([{ ...base, prepare: 'stage it', walk: {} } as unknown as RouteDef])).toEqual([
+      'SET-19: prepare must be a function (route-steps.mjs)',
+      'SET-19: walk must be a function (route-steps.mjs)',
+    ]);
   });
 
   test('a stage fixture must be a known one, and its cells run after all others, one fixture at a time', () => {
@@ -243,9 +263,12 @@ test.describe('matrix planning, 07_QA section 3', () => {
   });
 
   // The CONSENT stage fixture next to ADM-31's seeded Datenschutz draft "2" (BrandContentDemoSeeder): its versions go above every row of
-  // the document, drafts included, so it never collides with or replaces a real row; it refuses what it cannot place. Pure: no row written.
+  // the document, drafts included, so it never collides with or replaces a real row; it is published after every real text (M4.18: the
+  // Phase 4 legal drafts migration publishes at its run time), and it refuses what it cannot place. Pure: no row written.
   test('the reconsent fixture versions sit above every version of their document, the seeded draft included, and refuse what they cannot place', async () => {
     const at = '2026-10-30 12:00:00';
+    const now = '2026-11-13 09:00:00';
+    const floor = '2026-11-01 08:00:00';
     const seeded = [
       { key: 'terms', locale: 'de', version: '1', published_at: at },
       { key: 'terms', locale: 'en', version: '1', published_at: at },
@@ -253,24 +276,38 @@ test.describe('matrix planning, 07_QA section 3', () => {
       { key: 'privacy', locale: 'en', version: '1', published_at: at },
     ];
     const draft = { key: 'privacy', locale: 'de', version: '2', published_at: null };
-    const fixtureRow = { key: 'terms', locale: 'de', version: '7', published_at: '2026-11-01 08:00:00', reason: 'QA-Fixture CONSENT (visual registry): wird nach der Aufnahme wieder entfernt' };
+    const fixtureRow = { key: 'terms', locale: 'de', version: '7', published_at: '2026-11-12 08:00:00', reason: 'QA-Fixture CONSENT (visual registry): wird nach der Aufnahme wieder entfernt' };
+    // The Phase 4 drafts migration: a newer published version of each text, after the fixed time.
+    const migrated = [
+      { key: 'terms', locale: 'de', version: '2', published_at: '2026-11-10 14:03:27' },
+      { key: 'terms', locale: 'en', version: '2', published_at: '2026-11-10 14:03:27' },
+      { key: 'privacy', locale: 'de', version: '3', published_at: '2026-11-10 14:03:28' },
+      { key: 'privacy', locale: 'en', version: '2', published_at: '2026-11-10 14:03:28' },
+    ];
 
-    expect(await reconsentFixturePlan(seeded), 'no draft').toEqual({ versions: { terms: '2', privacy: '2' }, accepted: { terms: '1', privacy: '1' } });
-    expect(await reconsentFixturePlan([...seeded, draft]), 'above the seeded draft, in both locales').toEqual({
+    expect(await reconsentFixturePlan(seeded, now), 'no draft').toEqual({ versions: { terms: '2', privacy: '2' }, accepted: { terms: '1', privacy: '1' }, at: floor });
+    expect(await reconsentFixturePlan([...seeded, draft], now), 'above the seeded draft, in both locales').toEqual({
       versions: { terms: '2', privacy: '3' },
       accepted: { terms: '1', privacy: '1' },
+      at: floor,
     });
-    expect(await reconsentFixturePlan([...seeded, draft, fixtureRow]), 'a fixture row left behind does not count').toEqual({
+    expect(await reconsentFixturePlan([...seeded, draft, fixtureRow], now), 'a fixture row left behind does not count, its time neither').toEqual({
       versions: { terms: '2', privacy: '3' },
       accepted: { terms: '1', privacy: '1' },
+      at: floor,
+    });
+    expect(await reconsentFixturePlan([...seeded, draft, ...migrated], now), 'after the newest real text, which the member accepted').toEqual({
+      versions: { terms: '3', privacy: '4' },
+      accepted: { terms: '2', privacy: '3' },
+      at: '2026-11-10 14:04:00',
     });
     const refusals: [string, object[], RegExp][] = [
       ['a version that is no whole number', [...seeded, { key: 'terms', locale: 'en', version: '1.1', published_at: null }], /terms \(en\) has the version "1.1"/],
-      ['a text published at the fixture time', [...seeded, { key: 'privacy', locale: 'en', version: '2', published_at: '2026-11-01 08:00:00' }], /privacy \(en\) has a version published at or after/],
+      ['a text scheduled after now', [...seeded, { key: 'privacy', locale: 'en', version: '2', published_at: '2026-11-20 08:00:00' }], /published after now/],
       ['a locale without a published text', seeded.filter((row) => !(row.key === 'terms' && row.locale === 'en')), /no published terms \(en\)/],
     ];
     for (const [what, rows, reason] of refusals) {
-      const plan = await reconsentFixturePlan(rows as Parameters<typeof reconsentFixturePlan>[0]);
+      const plan = await reconsentFixturePlan(rows as Parameters<typeof reconsentFixturePlan>[0], now);
       expect('refused' in plan ? plan.refused : '', what).toMatch(reason);
     }
   });
@@ -381,6 +418,34 @@ test.describe('matrix planning, 07_QA section 3', () => {
     expect(validateRoutes([{ ...member, id: 'GAR-99-planned', status: 'planned' }])).toEqual(['GAR-99-planned: a planned route needs a plannedReason']);
   });
 
+  test('a Start cell that waits for the stream takes a build card or a build update (M4.18), and only a drawn row', async ({ page }) => {
+    // Every ready condition that names a stream row names both kinds through HOME_STREAM_ROW, never a build card alone.
+    const readyOf = (r: RouteDef): string[] => (r.ready === undefined ? [] : [r.ready].flat());
+    const waiting = (routes as RouteDef[]).flatMap((r) =>
+      readyOf(r)
+        .filter((ready) => /HOME-01\.(card|stream\.update)\./.test(ready))
+        .map((ready) => ({ id: r.id, ready })),
+    );
+    expect(waiting.map((r) => r.id)).toEqual(expect.arrayContaining(['VIEWAS-HOME', 'HOME-01-announcement-info', 'HOME-01-announcement-warning']));
+    for (const { id, ready } of waiting) {
+      expect(ready.includes(HOME_STREAM_ROW) && !ready.split(HOME_STREAM_ROW).join('').includes('HOME-01.card.'), id).toBe(true);
+    }
+    // As the runner uses them (`${ready}:visible`): a stream that opens with updates and has drawn no build card yet is ready.
+    const readyOfId = (routeId: string): string => waiting.find((r) => r.id === routeId)?.ready ?? 'missing';
+    const warning = { ready: readyOfId('HOME-01-announcement-warning') };
+    const viewAs = { ready: readyOfId('VIEWAS-HOME') };
+    const start = (rows: string) =>
+      `<!doctype html><html><body><div data-testid="VIEWAS.banner">nur lesen</div><div data-testid="HOME-01.root">` +
+      `<p data-testid="HOME-01.announcement.01m5c57xk06gk22nnr2wrv5vjt.title">Wartung</p><div data-testid="HOME-01.newBuilds.rail">rail</div>${rows}</div></body></html>`;
+    await page.setContent(start('<div data-testid="HOME-01.stream.update.01m76r15c97p9zn5mayjrp8ata">update</div>'));
+    await expect(page.locator(`${warning.ready}:visible`).first()).toBeVisible();
+    await expect(page.locator(`${viewAs.ready}:visible`).first()).toBeVisible();
+    // Nothing drawn after the rail is not ready.
+    await page.setContent(start(''));
+    await expect(page.locator(`${warning.ready}:visible`)).toHaveCount(0);
+    await expect(page.locator(`${viewAs.ready}:visible`)).toHaveCount(0);
+  });
+
   test('MSG-02-translate is a captured route now: qaOpen=actions opens the actions sheet with "Übersetzen" (DQ-937 closed)', () => {
     const translate = routes.find((r) => r.id === 'MSG-02-translate') as RouteDef | undefined;
     expect(translate).toBeDefined();
@@ -467,7 +532,8 @@ test.describe('tokens are the source of the audit', () => {
   });
 
   test('web.tab, hero.numeral, hero.numeral.s and label.badge are capped at their maxFontScale, on desktop too', () => {
-    const capped = ['web.tab', 'hero.numeral', 'hero.numeral.s', 'label.badge'];
+    // ADR-465 added web.sidebar; display.wordmark (the rail tiles' Archivo name) carries the same 1.3 cap.
+    const capped = ['web.tab', 'web.sidebar', 'hero.numeral', 'hero.numeral.s', 'label.badge', 'display.wordmark'];
     // Every capped role of tokens.json is in the list (ADR-421 a added label.badge), so a new cap cannot go unchecked.
     expect(Object.entries(tokens.typography).filter(([, t]) => (t as { maxFontScale?: number }).maxFontScale !== undefined).map(([name]) => name).sort()).toEqual([...capped].sort());
     for (const name of capped) {
@@ -516,6 +582,26 @@ test.describe('QA URLs and the override contract', () => {
     const issues = await checkQaContract(page, expected);
     expect(issues.some((i) => i.includes('theme') && i.includes('"carbon"'))).toBe(true);
     expect(issues.some((i) => i.includes('fontScale'))).toBe(true);
+  });
+
+  test('a document loaded with a #fragment gets quiet on WebKit too (DQ-1213: AUTH-17 /auth/secure#t=…)', async () => {
+    // Playwright's WebKit never reports requestfinished for such a document; the tracker counts a navigation done at its answer.
+    const server = createServer((_req, res) => {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      res.end('<!doctype html><title>Fragment</title><p>ok</p>');
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const browser = await webkit.launch();
+    try {
+      const page = await browser.newPage();
+      const network = trackNetwork(page);
+      await page.goto(`http://127.0.0.1:${(server.address() as AddressInfo).port}/screen?x=1#t=token`, { waitUntil: 'load' });
+      await network.waitForQuiet({ timeoutMs: 5000 });
+    } finally {
+      await browser.close();
+      server.closeAllConnections();
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 
   test('a fixed clock freezes Date for the page', async ({ page }) => {
@@ -625,12 +711,18 @@ test.describe('Lighthouse config', () => {
   const CONFIG = fileURLToPath(new URL('../lighthouse/lighthouserc.cjs', import.meta.url));
   const load = `console.log(JSON.stringify(require(${JSON.stringify(CONFIG)})))`;
 
-  test('budgets of 05_ARCHITECTURE section 21 on the three public URLs', async () => {
+  test('budgets of 05_ARCHITECTURE section 21 on the public URLs (and WEB-13 /e/, 09 §9)', async () => {
     const { stdout } = await exec(process.execPath, ['-e', load], {
-      env: { ...process.env, SPEEDCLUB_DEMO_SLUG: 'nissan-r34', SPEEDCLUB_DEMO_USERNAME: 'kenji.r34', SPEEDCLUB_BASE_URL: 'http://host:1' },
+      env: {
+        ...process.env,
+        SPEEDCLUB_DEMO_SLUG: 'nissan-r34',
+        SPEEDCLUB_DEMO_USERNAME: 'kenji.r34',
+        SPEEDCLUB_DEMO_EVENT: 'abendtreffen-am-hafen',
+        SPEEDCLUB_BASE_URL: 'http://host:1',
+      },
     });
     const { collect, assert } = JSON.parse(stdout).ci;
-    expect(collect.url).toEqual(['http://host:1/', 'http://host:1/v/nissan-r34', 'http://host:1/u/kenji.r34']);
+    expect(collect.url).toEqual(['http://host:1/', 'http://host:1/v/nissan-r34', 'http://host:1/u/kenji.r34', 'http://host:1/e/abendtreffen-am-hafen']);
     // No preset: the Lighthouse default is the mobile profile.
     expect(collect.settings.preset).toBeUndefined();
     expect(existsSync(collect.chromePath)).toBe(true);
@@ -639,9 +731,10 @@ test.describe('Lighthouse config', () => {
       'categories:accessibility': ['error', { minScore: 0.95 }],
       'categories:best-practices': ['error', { minScore: 0.95 }],
       'categories:seo': ['error', { minScore: 0.95 }],
-      'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
-      'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
-      'total-blocking-time': ['error', { maxNumericValue: 200 }],
+      // Since M4.16 the 09 §9 budgets (mobile, 4G): LCP < 2.0 s, CLS < 0.05, TBT < 150 ms.
+      'largest-contentful-paint': ['error', { maxNumericValue: 2000 }],
+      'cumulative-layout-shift': ['error', { maxNumericValue: 0.05 }],
+      'total-blocking-time': ['error', { maxNumericValue: 150 }],
     });
   });
 });
@@ -1241,6 +1334,7 @@ test.describe('runner failure paths against a stub server', () => {
       args = [] as string[],
       app = (_nth: number): Answer => ({ status: 200, body: '_expo/static/js/web/stub.js' }),
       exportChanged = false,
+      routesModule = null as string | null,
     } = {},
   ) => {
     const hits: Hit[] = [];
@@ -1259,9 +1353,10 @@ test.describe('runner failure paths against a stub server', () => {
     const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
     const out = testInfo.outputPath('visual');
     const baselines = testInfo.outputPath('baselines');
-    const routesFile = testInfo.outputPath('routes.json');
+    // A registry module (routes with `prepare`/`walk` steps, which JSON cannot carry) or a JSON file.
+    const routesFile = testInfo.outputPath(routesModule === null ? 'routes.json' : 'routes.mjs');
     const limitsFile = testInfo.outputPath('limits.json');
-    writeFileSync(routesFile, JSON.stringify(routes));
+    writeFileSync(routesFile, routesModule ?? JSON.stringify(routes));
     writeFileSync(limitsFile, JSON.stringify(limits));
     const run = await exec(
       process.execPath,
@@ -1410,6 +1505,50 @@ test.describe('runner failure paths against a stub server', () => {
     expect(run.audit).toMatchObject({ failed: false, attempts: 1, retryReason: null, high: 0, medium: 0 });
     expect(run.summary.passed).toBe(true);
     expect((await sharp(run.png).metadata()).width).toBe(390);
+  });
+
+  test('route steps (DQ-1213): prepare stages answers, walk reaches the state, a staged 503 is no finding, nothing staged outlives its cell', async ({}, testInfo) => {
+    // The screen asks /api/config on load and /api/thing on window.tap() (STUB-2 taps by itself), and writes both answers on <body>.
+    const tapping =
+      `<script>addEventListener('DOMContentLoaded', async () => {` +
+      `const show = (key, value) => document.body.setAttribute('data-' + key, value);` +
+      `window.tap = async () => { const r = await fetch('/api/thing'); show('thing', r.status + ':' + (await r.json()).word); };` +
+      `show('config', (await (await fetch('/api/config')).json()).word);` +
+      `if (new URLSearchParams(location.search).has('auto')) await window.tap();` +
+      `});</script>`;
+    // STUB-1 stages both: /api/config is the server's answer patched, /api/thing a 503 of the harness. STUB-2 runs after it on the kept
+    // page with nothing staged: it must get the server's own answers, or its ready element never comes.
+    const routesModule = `
+      const base = { phase: 1, auth: 'guest', states: ['default'], viewports: [390] };
+      export const routes = [
+        {
+          ...base,
+          id: 'STUB-1',
+          path: '/screen',
+          ready: 'body[data-config="patched"][data-thing="503:staged"]',
+          prepare: async ({ stage }) => {
+            await stage('**/api/config', { patch: (body) => ({ ...body, word: 'patched' }) });
+            await stage('**/api/thing', { method: 'GET', status: 503, body: { word: 'staged' } });
+          },
+          walk: async ({ page }) => page.evaluate(() => window.tap()),
+        },
+        { ...base, id: 'STUB-2', path: '/screen?auto=1', ready: 'body[data-config="real"][data-thing="200:real"]' },
+      ];`;
+    const run = await runAgainstStub(
+      testInfo,
+      {
+        '/screen': (_, url) => screen(url, tapping),
+        '/api/config': () => ({ status: 200, body: JSON.stringify({ word: 'real' }) }),
+        '/api/thing': () => ({ status: 200, body: JSON.stringify({ word: 'real' }) }),
+      },
+      { routesModule },
+    );
+    expect(run.code, run.output).toBe(0);
+    expect(run.audit).toMatchObject({ failed: false, attempts: 1, high: 0, medium: 0 });
+    expect(run.summary.totals).toMatchObject({ captured: 2, failed: 0, high: 0 });
+    // The staged 503 never reached the server; the patched config did (it is the server's answer, changed), and so did STUB-2's calls.
+    expect(run.hitsOf('/api/thing')).toHaveLength(1);
+    expect(run.hitsOf('/api/config')).toHaveLength(2);
   });
 
   test('an API call answering 429 on every load fails the cell: exit 1, the 429 in the error, no picture on disk', async ({}, testInfo) => {

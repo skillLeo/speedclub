@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use App\Support\DisplayTitleLayout;
+use App\Support\KeepTogether;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 
@@ -73,6 +75,26 @@ describe('the status pill and the main badge in label.badge (DQ-923, ADR-421 a, 
         expect($classes)->toContain('text-label-badge')->toContain('hyphens-none')->toContain('whitespace-nowrap')->not->toContain('text-caption')
             // DQ-926: the sub-line keeps a hyphenated name whole.
             ->and($html)->toContain('Bayside Blue · <span class="sc-keep">RB26-DETT</span>');
+    });
+
+    it('sets a garage card as WEB-01 does: sub-line meta, labels above the numerals, one title size in a row (DQ-1174/1175)', function () {
+        $html = Blade::render('<x-public.vehicle-card :card="$card" variant="garage" testid="card" />', ['card' => [
+            'slug' => 'skyline', 'cover' => null, 'is_main' => false, 'full_title' => 'Nissan Skyline GT-R R34', 'make' => 'Nissan', 'model' => 'Skyline GT-R',
+            'generation' => 'R34', 'model_year' => 2002, 'subline_parts' => ['2002', '2,6 l R6 Biturbo (RB26DETT)', 'Bayside Blue'],
+            'spec_strip' => [
+                ['key' => 'power', 'value' => '500', 'unit' => 'PS', 'label' => 'PS'],
+                ['key' => 'torque', 'value' => '540', 'unit' => 'Nm', 'label' => 'Nm'],
+                ['key' => 'model_year', 'value' => '2002', 'unit' => null, 'label' => 'Baujahr'],
+                ['key' => 'drivetrain', 'value' => 'AWD', 'unit' => null, 'label' => 'Antrieb'],
+            ],
+        ]]);
+        preg_match('~data-testid="card.meta">(.*?)</span>\s*<span class="sc-card-stats~s', $html, $meta);
+
+        expect($meta[1])->toStartWith('2002 · ')->toContain('R6 Biturbo')->not->toContain('Nissan')->not->toContain('Bayside Blue')
+            ->and($html)->toMatch('~<span class="block t-label-caps text-ink-2">Leistung</span>\s*<span class="flex items-baseline gap-2 whitespace-nowrap"><span class="t-hero-numeral-s text-ink">500</span><span class="t-label-unit text-ink-2">PS</span>~')
+            ->and($html)->toContain('>Drehmoment<')->toContain('>Antrieb<')->toContain('>AWD<')->not->toContain('>Baujahr<')
+            ->and($html)->not->toContain('truncate t-label-caps')
+            ->and($html)->toContain(DisplayTitleLayout::className(KeepTogether::titleText('Nissan Skyline GT-R R34'), 'tile', true));
     });
 
     it('keeps no other v1 badge role in caption on the public pages', function () {

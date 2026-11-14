@@ -122,6 +122,9 @@ enum ErrorCode: string
     case BusinessExists = 'business_exists';
     // M4.14: portfolio tags need a verified business on both ends (a pending, rejected or suspended business cannot tag or be tagged).
     case BusinessNotVerified = 'business_not_verified';
+    // SEC-414-01: the mod already carries another business's confirmed "Eingebaut von"; the build's owner takes it off first (it is
+    // never replaced silently).
+    case BusinessTagTaken = 'business_tag_taken';
     // M4.14 (09 §8.9): a product that does not exist or is not in the catalogue any more.
     case ProductUnavailable = 'product_unavailable';
 
@@ -133,7 +136,7 @@ enum ErrorCode: string
             self::Forbidden, self::AccountRestricted, self::EmailNotVerified, self::PasswordChangeRequired, self::QrRevokedByStaff, self::CannotMessage, self::SecondFactorLocked, self::PasswordConfirmationRequired, self::ViewAsReadOnly, self::ViewAsNoMessages, self::ViewAsPrivate, self::AiOptInRequired, self::ConsentRequired, self::TermsRequired, self::ReauthenticationRequired, self::EditWindowClosed, self::CommentsDisabled, self::OrganiserNotEligible => 403,
             self::NotFound, self::VehicleUnavailable, self::MemberUnavailable, self::FeatureDisabled, self::EventUnavailable, self::BusinessUnavailable, self::ProductUnavailable => 404,
             self::MethodNotAllowed => 405,
-            self::Conflict, self::UsernameChangeCooldown, self::TokenRotationNotDue, self::TwoFactorRequired, self::IdempotencyKeyReused, self::FeedStale, self::RequestPending, self::AlreadyReported, self::AppealExists, self::ProviderAlreadyLinked, self::LastSignInMethod, self::LimitReached, self::EventClosed, self::EventInReview, self::EditConflict, self::BusinessExists, self::BusinessNotVerified => 409,
+            self::Conflict, self::UsernameChangeCooldown, self::TokenRotationNotDue, self::TwoFactorRequired, self::IdempotencyKeyReused, self::FeedStale, self::RequestPending, self::AlreadyReported, self::AppealExists, self::ProviderAlreadyLinked, self::LastSignInMethod, self::LimitReached, self::EventClosed, self::EventInReview, self::EditConflict, self::BusinessExists, self::BusinessNotVerified, self::BusinessTagTaken => 409,
             self::PayloadTooLarge => 413,
             self::UnsupportedMediaType => 415,
             self::SessionExpired => 419,

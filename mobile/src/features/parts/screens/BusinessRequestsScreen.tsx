@@ -45,6 +45,7 @@ import {
 } from '@/ui';
 import { joinLabel } from '@/ui/rowParts';
 
+import { shortDate } from '../components/business/dates';
 import { tagSubject } from '../model';
 
 const ROUTE = 'BIZ-04';
@@ -143,7 +144,7 @@ export function BusinessRequestsScreen() {
     );
   } else if (!flag && qaState === 'default') {
     state = <EmptyState icon="workshop" title={t('off.businessesTitle')} body={t('off.businessesBody')} testID={`${ROUTE}.unavailable`} />;
-  } else if (hasNoBusiness(mine.error) || (mine.data && !verified && qaState === 'default')) {
+  } else if (mine.data === null || hasNoBusiness(mine.error) || (mine.data && !verified && qaState === 'default')) {
     state = (
       <EmptyState
         icon="workshop"
@@ -220,7 +221,7 @@ export function BusinessRequestsScreen() {
             <TagRow
               tag={item}
               date={item.decided_at ?? item.created_at}
-              format={(iso) => format.date(new Date(iso))}
+              format={(iso) => shortDate(new Date(iso), format.locale)}
               onOpen={() => (item.vehicle && item.mod ? router.push(`/v/${item.vehicle.slug}/mods/${item.mod.id}`) : undefined)}
               actions={
                 tab === 'incoming'

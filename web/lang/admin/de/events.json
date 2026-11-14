@@ -1,6 +1,6 @@
 {
     "title": "Treffen",
-    "queue_title": "Treffen-Queue",
+    "queue_title": "Prüfwarteschlange Treffen",
     "nav": {
         "title": "Treffen"
     },
@@ -83,7 +83,7 @@
     "detail": {
         "organiser": "Organisator",
         "place": "Ort",
-        "place_private": "Den genauen Ort sehen nur der Organisator und Mitglieder mit Zusage. Dein erster Blick am Tag steht im Audit-Log.",
+        "place_private": "Den genauen Ort sehen nur der Organisator und Mitglieder mit Zusage. Dein erster Blick pro Tag wird im Audit-Log festgehalten.",
         "place_public": "Der Ort ist für alle sichtbar.",
         "no_place": "Kein genauer Ort angegeben",
         "time": "Zeit",

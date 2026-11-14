@@ -3,7 +3,8 @@
 use App\Http\Csp\SpaPreset;
 
 /**
- * ADR-449: the /app CSP lets the event map load (MapLibre from unpkg, blob: workers, OpenFreeMap tiles); nothing else gets those hosts.
+ * ADR-449: the /app CSP lets the event map load (MapLibre self-hosted under /lib, SEC-414-04; blob: workers, OpenFreeMap tiles); nothing
+ * else gets those sources.
  */
 /**
  * @return array<string, string>
@@ -33,8 +34,10 @@ afterEach(function () {
 it('allows the event map on /app and its deep links', function (string $uri) {
     $csp = spaMapCsp((string) $this->get($uri)->assertOk()->headers->get('Content-Security-Policy'));
 
-    expect($csp['script-src'])->toContain(SpaPreset::MAP_LIBRARY_HOST)->not->toContain('unsafe')
-        ->and($csp['style-src'])->toContain(SpaPreset::MAP_LIBRARY_HOST)
+    expect($csp['script-src'])->toContain("'self'")->not->toContain('unsafe')
+        // SEC-414-04: never the unpkg host, only the exact legacy files (until the next /app export).
+        ->and($csp['script-src'])->not->toMatch('#https://unpkg\.com(\s|$)#')->toContain(SpaPreset::MAP_LIBRARY_LEGACY['script'][0])
+        ->and($csp['style-src'])->not->toMatch('#https://unpkg\.com(\s|$)#')->toContain(SpaPreset::MAP_LIBRARY_LEGACY['style'][0])
         ->and($csp['worker-src'])->toBe("'self' blob:")
         ->and($csp['child-src'])->toBe("'self' blob:")
         ->and($csp['connect-src'])->toContain(SpaPreset::MAP_TILES_HOST)
@@ -48,7 +51,7 @@ it('keeps the map hosts out of the public pages, the admin and the API', functio
     $header = (string) $this->get($uri)->headers->get('Content-Security-Policy');
 
     expect($header)->not->toBeEmpty()
-        ->and($header)->not->toContain(SpaPreset::MAP_LIBRARY_HOST)
+        ->and($header)->not->toContain('unpkg.com')
         ->and($header)->not->toContain(SpaPreset::MAP_TILES_HOST)
         ->and(spaMapCsp($header))->not->toHaveKey('worker-src');
 })->with(['/', '/admin/login', '/api/v1/app-config']);

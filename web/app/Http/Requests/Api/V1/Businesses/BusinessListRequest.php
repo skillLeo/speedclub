@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\Businesses;
 
 use App\Enums\BusinessKind;
+use App\Rules\ValidCursor;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -26,7 +27,8 @@ class BusinessListRequest extends FormRequest
             'lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:lat'],
             'radius_km' => ['sometimes', 'integer', 'min:1', 'max:'.config()->integer('speedclub.businesses.near_max_km')],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:'.config()->integer('speedclub.businesses.max_page_size')],
-            'cursor' => ['sometimes', 'string', 'max:512'],
+            /** The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+            'cursor' => ['sometimes', 'string', 'max:512', new ValidCursor(['businesses.is_sample', 'businesses.name', 'businesses.id'])],
         ];
     }
 

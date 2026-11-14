@@ -68,7 +68,6 @@ export function DescriptionAssist({ vehicleId, value, disabled = false, onSugges
       {dayEnd ? null : (
         <Button
           label={t('ai.describe')}
-          icon="lightbulb"
           variant="tertiary"
           size="m"
           flush="start"

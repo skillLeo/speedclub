@@ -349,11 +349,20 @@ export function notificationText(notification: AppNotification, t: TFunction): s
       return eventText(notification, data, t);
     case 'business_review':
     case 'business_tag':
+    case 'business_invite':
       return businessText(notification, data, t);
     default:
       return t('notifications.text.other');
   }
 }
+
+/** business_review outcomes with their own sentence; anything else reads as the rejection (the reason is on BIZ-03). */
+const REVIEW_OUTCOMES: ReadonlySet<string> = new Set(['verified', 'rejected', 'suspended', 'reinstated', 'reopened']);
+/** business_invite states (SEC-414-01): invited/removed for the member, accepted/declined/left for the business. */
+const INVITE_STATES: ReadonlySet<string> = new Set(['invited', 'removed', 'accepted', 'declined', 'left']);
+const INVITE_MEMBER_STATES: ReadonlySet<string> = new Set(['invited', 'removed']);
+/** A username as the API allows it, before it goes into a sentence. */
+const USERNAME = /^[a-z0-9._]{2,30}$/i;
 
 /**
  * M4.14 (09 §8.10, ADR-414; in-app only): business_review says how staff decided on the member's business (never the reason, which
@@ -365,7 +374,14 @@ function businessText(notification: AppNotification, data: Record<string, unknow
     (t as unknown as (name: string, options: Record<string, string>) => string)(`parts:notifications.${key}`, values);
   if (notification.type === 'business_review') {
     const outcome = stringIn(data, 'outcome');
-    return tx(`review.${outcome === 'verified' || outcome === 'suspended' || outcome === 'reinstated' ? outcome : 'rejected'}`);
+    return tx(`review.${outcome && REVIEW_OUTCOMES.has(outcome) ? outcome : 'rejected'}`);
+  }
+  if (notification.type === 'business_invite') {
+    // SEC-414-01: the member was invited to (or removed from) a team, or the business hears how the member answered or that they left.
+    const state = stringIn(data, 'state');
+    const username = stringIn(data, 'username');
+    const key = state && INVITE_STATES.has(state) ? state : 'invited';
+    return username && USERNAME.test(username) ? tx(`invite.${key}`, { username }) : tx(`invite.${key}Anonymous`);
   }
   const vehicle = keepLastWordWithNext(notification.vehicle?.full_title?.trim() || tx('aBuild'));
   const side = stringIn(data, 'side') === 'business' ? 'business' : 'member';
@@ -434,6 +450,7 @@ export function notificationIcon(notification: Pick<AppNotification, 'type'>): I
       return 'meet';
     case 'business_review':
     case 'business_tag':
+    case 'business_invite':
       return 'workshop';
     default:
       return 'bell';
@@ -505,6 +522,11 @@ export function notificationTarget(notification: AppNotification, own: string | 
     // opens VEH-02 of the mod, where "Eingebaut von" is confirmed or declined.
     case 'business_review':
       return '/business';
+    // SEC-414-01: an invitation (or a removal) opens the member's invitations; the business's side opens BIZ-03 Team.
+    case 'business_invite': {
+      const state = stringIn(data, 'state');
+      return state && INVITE_MEMBER_STATES.has(state) ? '/business/invites' : '/business';
+    }
     case 'business_tag': {
       if (stringIn(data, 'side') === 'business') return '/business/requests';
       const modId = stringIn(data, 'mod_id');

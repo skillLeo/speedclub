@@ -35,4 +35,14 @@ class ProductSearchRequest extends PartsPageRequest
 
         return ['q' => $string('q'), 'brand' => $string('brand'), 'category' => $string('category')];
     }
+
+    /**
+     * SEC-P4-02: with `counts` the rows are ranked (PartBuilds::ranked), else by name and id (ProductSearch::page).
+     *
+     * @return list<string>
+     */
+    protected function cursorColumns(): array
+    {
+        return $this->boolean('counts') ? self::RANKED_PRODUCTS : ['products.name', 'products.id'];
+    }
 }

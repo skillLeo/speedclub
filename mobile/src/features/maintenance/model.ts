@@ -137,7 +137,8 @@ export type DueModel = {
 
 type ItemLike = Pick<MaintenanceItem, 'type' | 'title' | 'next_due' | 'last_done' | 'state' | 'days_left' | 'km_left' | 'progress' | 'season' | 'enabled'>;
 
-function countdownText(t: TFunction<'garage'>, days: number | null, kmLeft: number | null, unit: DistanceUnit, locale: FormatLocale): string | null {
+/** "in 132 Tagen", "seit 12 Tagen überfällig", "noch 1.200 km" (also the widget "Mein Auto", M4.18). */
+export function countdownText(t: TFunction<'garage'>, days: number | null, kmLeft: number | null, unit: DistanceUnit, locale: FormatLocale): string | null {
   if (days !== null) {
     if (days < 0) return t('maintenance.countdown.overdue', { count: -days });
     if (days === 0) return t('maintenance.countdown.today');

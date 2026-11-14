@@ -26,7 +26,8 @@ class BusinessController extends Controller
      * List businesses.
      *
      * Guests too. The Betriebe scope of Entdecken and Home "Werkstätten in deiner Nähe" (`lat`, `lng`, `radius_km`; each card carries
-     * `distance_km`). Verified businesses by name; cursor pages.
+     * `distance_km`). Verified businesses, real ones before samples, by name; each card with `cover` (ADR-457 fallback chain); cursor
+     * pages.
      *
      * @unauthenticated
      */
@@ -39,7 +40,9 @@ class BusinessController extends Controller
      * Show a business.
      *
      * Guests too. BIZ-01 and the data of /b/{slug}: profile, opening hours, address, contact, the real portfolio count and the Impressum
-     * (§ 5 DDG). Counts a private profile view for BIZ-03 (not the team's own).
+     * (§ 5 DDG). Counts a private profile view for BIZ-03 (not the team's own). `cover` is the hero (DQ-1215, as on /b/{slug}): the
+     * business's own cover, else a portfolio build's photo only when that build has a second photo for its card in the portfolio; else
+     * null (the client shows its brand stage), so hero and portfolio card never show the same picture.
      *
      * @unauthenticated
      */
@@ -48,7 +51,8 @@ class BusinessController extends Controller
         $viewer = Viewer::from($request);
         $business = $this->findBusiness($slug, $viewer);
         $business->portfolioCount = $listing->portfolioCount($viewer, $business);
-        $views->record($business, $viewer);
+        $listing->prepareHero($business, $viewer);
+        $views->record($business, $viewer, $request);
 
         return new BusinessResource($business);
     }
@@ -57,7 +61,7 @@ class BusinessController extends Controller
      * List a business's portfolio.
      *
      * Guests too. "Builds aus unserer Werkstatt": visible builds with a mod whose tag the business and the build's owner both confirmed,
-     * last changed first; cursor pages.
+     * real builds before samples, each last changed first; cursor pages.
      *
      * @unauthenticated
      */

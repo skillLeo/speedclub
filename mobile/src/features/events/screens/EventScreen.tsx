@@ -30,6 +30,7 @@ import {
   DESKTOP_CARD_FLEX,
   DESKTOP_GALLERY_FLEX,
   heroIdentityOverlap,
+  scrimOverlapDataSet,
   useSticky,
 } from '@/features/vehicle/layout';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
@@ -701,6 +702,7 @@ function EventDetailView({ event, onBack }: { event: EventDetail; onBack: () => 
               styles.stageIdentity,
               { marginTop: -overlap, minHeight: overlap, paddingHorizontal: gutter },
             ]}
+            dataSet={scrimOverlapDataSet(overlap)}
           >
             {when}
             {title}

@@ -21,7 +21,10 @@ import {
   type FeedVehicle,
   type PopularMod,
 } from '@/api/queries/home';
+import { DEFAULT_BUSINESS_FILTERS, useBusinessList, type BusinessCardData } from '@/api/queries/businesses';
+import type { MakeTile } from '@/api/queries/discover';
 import { useHomeEvents, type EventCard } from '@/api/queries/events';
+import { usePartsOn } from '@/api/queries/parts';
 import { searchPath } from '@/features/discover/navigation';
 import { EventsModule } from '@/features/events/components/EventsModule';
 import { useTabScrollToTop } from '@/features/shell/retap';
@@ -58,6 +61,7 @@ import { LARGE_FONT_SCALE } from '@/ui/rowParts';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { ActiveMembersStrip } from '../components/ActiveMembersStrip';
+import { BrandsInFocus, BusinessesRail, focusBrands, homeBusinesses } from '../components/CatalogueModules';
 import { BrowseErrorState, RestrictionNotice, useBrowseRestriction } from '../components/BrowseStates';
 import { buildSuggestions, FollowingEmpty, FollowingGuest } from '../components/FollowingStates';
 import { HomeFeedCard, HomeFeedCardSkeleton } from '../components/HomeFeedCard';
@@ -96,7 +100,11 @@ export type HomeRow =
   | { kind: 'members'; members: readonly ActiveMember[] }
   | { kind: 'mods'; mods: readonly PopularMod[] }
   /** M4.12 "Treffen in deiner Nähe": the module brings its own header and "Alle Treffen". */
-  | { kind: 'events'; events: readonly EventCard[] };
+  | { kind: 'events'; events: readonly EventCard[] }
+  /** M4.14 "Marken im Fokus" (09 §7.3): three BrandTiles with their header. */
+  | { kind: 'brands'; brands: readonly MakeTile[] }
+  /** M4.14 "Werkstätten" (09 §7.3): a BusinessCard rail with its header. */
+  | { kind: 'businesses'; businesses: readonly BusinessCardData[] };
 
 /** Remembered while the app runs, so coming back to Start keeps the segment the member chose. */
 let lastTab: FeedTab = 'for_you';
@@ -194,8 +202,13 @@ export function frameOf(pane: number, gutter: number, desktop: boolean): HomeFra
 
 /**
  * Für dich (09 §7.3): the lead, "Neu in der Garage", then the stream with the modules interleaved after every `MODULE_EVERY` items
- * (Build der Woche, Aktive Mitglieder, Beliebte Mods, in that order). A module without content is left out; modules the stream is too
- * short for follow its end. A build drawn above (the lead, the rail, Build der Woche) is never repeated as a card of the stream.
+ * (Treffen, Build der Woche, Marken im Fokus, Werkstätten, Aktive Mitglieder, Beliebte Mods, in that order). A module without content
+ * is left out. A build drawn above (the lead, the rail, Build der Woche) is never repeated as a card of the stream.
+ *
+ * Each module has a fixed slot: after stream row `MODULE_EVERY × n`, but never later than the last row of the first page
+ * (`streamHead`). The first page does not change while the member scrolls, so a later page only adds rows below the modules: they
+ * never move. Before this, the modules the first page had no room for followed the end of the stream and jumped about 8,000 px down
+ * with every page that arrived (m4.18 f-home triage).
  */
 export function forYouRows(input: {
   hero: FeedVehicle | undefined;
@@ -205,7 +218,12 @@ export function forYouRows(input: {
   mods: readonly PopularMod[];
   /** M4.12: the next meets, the first module of the stream (09 §7.3 order: Treffen, Build der Woche, …). */
   events?: readonly EventCard[];
+  /** M4.14: "Marken im Fokus" and "Werkstätten", after Build der Woche (09 §7.3 order); empty hides them. */
+  brands?: readonly MakeTile[];
+  businesses?: readonly BusinessCardData[];
   stream: readonly FeedItem[];
+  /** How many items of `stream` came with its first page (`firstPageLength`); all of them when left out. */
+  streamHead?: number;
 }): HomeRow[] {
   const rows: HomeRow[] = [];
   const shown = new Set<string>();
@@ -224,14 +242,25 @@ export function forYouRows(input: {
     shown.add(input.weekly.id);
     modules.push([{ kind: 'section', section: 'weekly' }, { kind: 'weekly', vehicle: input.weekly }]);
   }
+  if (input.brands && input.brands.length > 0) modules.push([{ kind: 'brands', brands: input.brands }]);
+  if (input.businesses && input.businesses.length > 0) modules.push([{ kind: 'businesses', businesses: input.businesses }]);
   if (input.members.length > 0) modules.push([{ kind: 'section', section: 'members' }, { kind: 'members', members: input.members }]);
   if (input.mods.length > 0) modules.push([{ kind: 'section', section: 'mods' }, { kind: 'mods', mods: input.mods }]);
-  streamRows(input.stream, shown).forEach((row, index) => {
+  const stream = streamRows(input.stream, shown);
+  const headRows = input.streamHead === undefined ? stream.length : streamRows(input.stream.slice(0, input.streamHead), shown).length;
+  const slots = modules.map((_, index) => Math.min((index + 1) * MODULE_EVERY, headRows));
+  const placeAfter = (count: number) => modules.forEach((module, index) => slots[index] === count && rows.push(...module));
+  placeAfter(0);
+  stream.forEach((row, index) => {
     rows.push(row);
-    if ((index + 1) % MODULE_EVERY === 0) rows.push(...(modules.shift() ?? []));
+    placeAfter(index + 1);
   });
-  rows.push(...modules.flat());
   return rows;
+}
+
+/** How many items the stream's first page holds, each once (as `flattenFeed` lists them): the end of the modules' slots. */
+export function firstPageLength(pages: readonly { data: readonly FeedItem[] }[] | undefined): number {
+  return flattenFeed(pages?.slice(0, 1)).length;
 }
 
 /**
@@ -253,7 +282,8 @@ export function streamRows(stream: readonly FeedItem[], shown: ReadonlySet<strin
   return rows;
 }
 
-function rowKey(row: HomeRow): string {
+/** The FlashList key of a row: stable across pages, so a row keeps its cell when a later page arrives. */
+export function rowKey(row: HomeRow): string {
   switch (row.kind) {
     case 'hero':
       return `hero.${row.vehicle.id}`;
@@ -381,6 +411,8 @@ export function HomeScreen() {
   const preview = useNewBuildsPreview();
   const modules = useHomeModules();
   const homeEvents = useHomeEvents();
+  const partsOn = usePartsOn();
+  const homeBusinessList = useBusinessList(DEFAULT_BUSINESS_FILTERS, tab === 'for_you');
   const forYou = useFeed('for_you');
   const following = useFeed('following', tab === 'following');
   const feed = tab === 'for_you' ? forYou : following;
@@ -388,6 +420,10 @@ export function HomeScreen() {
   const retained = useRetainedListScroll(listRef);
   const [refreshing, setRefreshing] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
+  // The list starts under the floating header by a spacer of the header's measured height. On web the first paint came before
+  // that measurement, so the skeleton was drawn at the top and then pushed down by the header's 96: CLS 0.104 on /app/ (09 §12
+  // budget 0.05, m4.18 final gate). Web draws the list's content once the header has a height; it then appears in place.
+  const placed = !isWeb || headerHeight > 0;
   const desktop = kind === 'desktop';
   const [pane, setPane] = useState(desktop ? windowWidth - layout.sidebar : kind === 'tablet' ? windowWidth - layout.rail : windowWidth);
   const frame = frameOf(pane, gutter, desktop);
@@ -415,9 +451,12 @@ export function HomeScreen() {
       members: qaEmpty ? [] : (data?.active_members ?? []),
       mods: qaEmpty ? [] : (data?.popular_mods ?? []),
       events: qaEmpty ? [] : (homeEvents.data ?? []),
+      brands: qaEmpty || !partsOn ? [] : focusBrands(data?.brands_in_focus),
+      businesses: qaEmpty ? [] : homeBusinesses(homeBusinessList.data?.pages[0]?.data),
       stream,
+      streamHead: firstPageLength(feed.data?.pages),
     });
-  }, [hero, homeEvents.data, modules.data, preview.data, qaEmpty, stream, tab, weekly]);
+  }, [feed.data?.pages, hero, homeBusinessList.data?.pages, homeEvents.data, modules.data, partsOn, preview.data, qaEmpty, stream, tab, weekly]);
 
   const guestFollowing = tab === 'following' && session === 'guest';
   const hasData = feed.data !== undefined;
@@ -733,6 +772,18 @@ export function HomeScreen() {
             <EventsModule title={tEvents('home.titleAll')} events={item.events} limit={HOME_EVENT_CARDS} width={frame.column} routeId={ROUTE} />
           </InColumn>
         );
+      case 'brands':
+        return (
+          <InColumn frame={frameStyle} style={moduleColumnStyle}>
+            <BrandsInFocus brands={item.brands} width={frame.column} routeId={ROUTE} />
+          </InColumn>
+        );
+      case 'businesses':
+        return (
+          <InColumn frame={frameStyle} style={moduleColumnStyle}>
+            <BusinessesRail businesses={item.businesses} column={frame.column} bleed={bleed ? gutter : 0} routeId={ROUTE} />
+          </InColumn>
+        );
       case 'mods':
         return (
           <InColumn frame={frameStyle} style={moduleColumnStyle}>
@@ -758,7 +809,7 @@ export function HomeScreen() {
         <CollapsingFlashList
           ref={listRef}
           {...header.scrollProps}
-          data={state ? [] : rows}
+          data={state || !placed ? [] : rows}
           keyExtractor={rowKey}
           getItemType={(row: HomeRow) => row.kind}
           extraData={tab}
@@ -769,16 +820,16 @@ export function HomeScreen() {
           scrollEnabled={!loading}
           // FlashList keeps the visible rows in place when rows arrive above them; Start must open at its top.
           maintainVisibleContentPosition={NO_ANCHOR}
-          ListHeaderComponent={listHeader}
+          ListHeaderComponent={placed ? listHeader : null}
           ListHeaderComponentStyle={railInPage ? styles.headerOverRows : undefined}
           ListEmptyComponent={
-            state ? (
+            state && placed ? (
               <InColumn frame={frameStyle} style={columnStyle}>
                 {state}
               </InColumn>
             ) : null
           }
-          ListFooterComponent={footer}
+          ListFooterComponent={placed ? footer : null}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           refreshing={isWeb ? undefined : refreshing}
@@ -787,7 +838,7 @@ export function HomeScreen() {
           renderItem={renderItem}
           testID={`${ROUTE}.list`}
         />
-        {railShown && frame.rail !== null && !railInPage ? (
+        {railShown && placed && frame.rail !== null && !railInPage ? (
           <View style={[StyleSheet.absoluteFill, styles.railLayer, { top: headerHeight }]}>
             <View style={[styles.railFrame, { width: frame.width }]}>
               <View style={[styles.railColumn, { width: frame.rail }]}>

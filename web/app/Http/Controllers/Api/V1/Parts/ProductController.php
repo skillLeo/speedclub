@@ -7,11 +7,13 @@ use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Parts\PartsPageRequest;
 use App\Http\Requests\Api\V1\Parts\ProductSearchRequest;
+use App\Http\Resources\V1\BuildPhotoResource;
 use App\Http\Resources\V1\FeedVehicleResource;
 use App\Http\Resources\V1\ProductResource;
 use App\Http\Resources\V1\ProductRowResource;
 use App\Models\Product;
 use App\Services\Parts\PartBuilds;
+use App\Services\Parts\PartPhotos;
 use App\Services\Parts\ProductPresenter;
 use App\Services\Parts\ProductSearch;
 use App\Support\Viewer;
@@ -28,21 +30,40 @@ class ProductController extends Controller
     /**
      * Search products.
      *
-     * Guests too. The Teile scope of Entdecken (`counts=true` for "In 14 Builds") and the mod editor's autocomplete (`q`, `category`
-     * of the mod, `per_page=8`). Active products only, by name; cursor pages.
+     * Guests too. The Teile scope of Entdecken (`counts=true`) and the mod editor's autocomplete (`q`, `category` of the mod,
+     * `per_page=8`). Active products only; cursor pages. With `counts=true` (ADR-457): rows sorted by their real build count (samples
+     * never count), each with "In 14 Builds" and a `thumbnail` from a real build, and the response carries `lead_photo` (the most-used
+     * product on a build) and `build_photos` ("Beliebt in Builds", up to 8, real builds first) on its first page; null and [] on later
+     * pages and without `counts`. Without `counts`: by name, no counts, no photos.
      *
      * @unauthenticated
      */
-    public function index(ProductSearchRequest $request, ProductSearch $search, ProductPresenter $presenter): AnonymousResourceCollection
+    public function index(ProductSearchRequest $request, ProductSearch $search, ProductPresenter $presenter, PartPhotos $photos): AnonymousResourceCollection
     {
-        Gate::forUser(Viewer::from($request))->authorize('viewAny', Product::class);
-        $page = $search->page($request->filters(), $request->pageSize());
+        $viewer = Viewer::from($request);
+        Gate::forUser($viewer)->authorize('viewAny', Product::class);
+        $counts = $request->boolean('counts');
+        $page = $search->page($request->filters(), $request->pageSize(), $counts, $viewer);
+        $lead = null;
+        $rail = [];
 
-        if ($request->boolean('counts')) {
-            $presenter->prepare($page->items(), Viewer::from($request));
+        if ($counts) {
+            $presenter->prepare($page->items(), $viewer);
+
+            if ($request->query('cursor') === null) {
+                /** @var list<Product> $ranked */
+                $ranked = array_values($page->items());
+                $lead = $photos->lead($viewer, $ranked);
+                $rail = $photos->rail($viewer, array_slice($ranked, 0, PartPhotos::RAIL * 2));
+            }
         }
 
-        return ProductRowResource::collection($page);
+        return ProductRowResource::collection($page)->additional([
+            /** @var BuildPhotoResource|null */
+            'lead_photo' => $lead === null ? null : new BuildPhotoResource($lead),
+            /** @var array<int, BuildPhotoResource> */
+            'build_photos' => BuildPhotoResource::collection($rail),
+        ]);
     }
 
     /**
@@ -65,8 +86,8 @@ class ProductController extends Controller
     /**
      * List the builds with a product.
      *
-     * Guests too. "Builds mit {Produkt}" (BRD-02, VEH-02 rail): visible builds with a mod linking the product, last changed first;
-     * cursor pages.
+     * Guests too. "Builds mit {Produkt}" (BRD-02, VEH-02 rail): visible builds with a mod linking the product, real builds first and
+     * badged samples after them (ADR-457), each last changed first; cursor pages.
      *
      * @unauthenticated
      */

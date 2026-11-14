@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type LayoutChangeEvent, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
 import type { PublicVehicle } from '@/api/queries/vehicles';
 import { isWeb } from '@/lib/platform';
 import { createStyles, size, useTheme } from '@/theme';
-import { Avatar, DisplayTitle, PressableScale, SampleBadges, SpecStrip, Text } from '@/ui';
+import { Avatar, Button, DisplayTitle, PressableScale, SampleBadges, SpecStrip, Text } from '@/ui';
 
 import { variantUrl } from '../media';
 import { keptSubline, ownerName, specStripItems, SUBLINE_WHOLE_FONT_SCALE, sublineOf } from '../model';
@@ -32,6 +32,8 @@ const useStyles = createStyles((t) => ({
   chipText: { flexShrink: 1 },
   strip: {},
   toolbar: { marginTop: t.space[16] },
+  // DQ-1211: the photo-less line, as WEB-01's "Noch keine Fotos." over its strip; the owner's one action under it.
+  noPhotos: { alignItems: 'flex-start', gap: t.space[8], marginBottom: t.space[16] },
 }));
 
 export type IdentityTone = 'photo' | 'canvas';
@@ -52,6 +54,8 @@ export type VehicleIdentityProps = {
    * owner chip (a link) always starts below the photo (a link too) and never lies over it (m4.10 VEH-01-member overlap High).
    */
   headMinHeight?: number;
+  /** Web only: the DOM audit's marker for the reach into the photo (`scrimOverlapDataSet`). */
+  dataSet?: ViewProps['dataSet'];
   style?: StyleProp<ViewStyle>;
 };
 
@@ -68,6 +72,7 @@ export function VehicleIdentity({
   onOpenOwner,
   onTitleLayout,
   headMinHeight,
+  dataSet,
   style,
 }: VehicleIdentityProps) {
   const { t } = useTranslation('vehicle');
@@ -100,7 +105,7 @@ export function VehicleIdentity({
   ) : null;
 
   return (
-    <View style={[styles.identity, style]} testID={`${routeId}.identity`}>
+    <View style={[styles.identity, style]} dataSet={dataSet} testID={`${routeId}.identity`}>
       <View style={[styles.head, headMinHeight ? { minHeight: headMinHeight } : null]}>
         {/* 09 §8.19: a sample build says so before its name. */}
         <SampleBadges
@@ -190,6 +195,11 @@ export type ProfileSummaryProps = {
   /** VEH-01 (09 §7.6 (4)): the visitor's action row or the owner's capsule. */
   actions?: ReactNode;
   onTitleLayout?: (event: LayoutChangeEvent) => void;
+  /**
+   * DQ-1211: the build has no photos, so the hero is the empty stage. One line above the strip says so (naming the owner for a
+   * visitor, `ownerUsername`), and the owner gets "Fotos hinzufügen" (`onAdd`).
+   */
+  noPhotos?: { ownerUsername: string | null; onAdd?: () => void };
   style?: StyleProp<ViewStyle>;
 };
 
@@ -206,13 +216,31 @@ export function ProfileSummary({
   ownerToolbar,
   actions,
   onTitleLayout,
+  noPhotos,
   style,
 }: ProfileSummaryProps) {
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
+  const noPhotosLine = noPhotos
+    ? noPhotos.onAdd
+      ? t('hero.noPhotoSelf')
+      : noPhotos.ownerUsername
+        ? t('hero.noPhotoOwner', { username: noPhotos.ownerUsername })
+        : t('hero.noPhotoBody')
+    : null;
 
   return (
     <View style={style} testID={`${routeId}.summary`}>
+      {noPhotos ? (
+        <View style={styles.noPhotos}>
+          <Text variant="callout" color="text.secondary" testID={`${routeId}.heroEmpty`}>
+            <Text variant="callout">{`${t('hero.noPhotoTitle')}.`}</Text> {noPhotosLine}
+          </Text>
+          {noPhotos.onAdd ? (
+            <Button label={t('hero.addPhotos')} icon="camera" variant="secondary" size="m" onPress={noPhotos.onAdd} testID={`${routeId}.addPhotos`} />
+          ) : null}
+        </View>
+      ) : null}
       {identity === 'canvas' ? (
         <VehicleIdentity
           vehicle={vehicle}

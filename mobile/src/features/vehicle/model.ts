@@ -191,6 +191,39 @@ export function changeLine(change: BuildUpdate['changes'][number], fallbackLabel
   return { key: `${change.modification_id ?? change.kind}-${index}`, label, ...(diff && diff !== label ? { diff } : {}) };
 }
 
+/** ADR-431 c: the three source words of a power or torque figure (09 §5 SpecStrip): Herstellerangabe · Prüfstand · geschätzt. */
+export type ProvenanceKey = 'factory' | 'claimed' | 'measured';
+
+/** Older and seeded change texts name the source in other words ("gemessen", "Besitzerangabe"); each maps to one of the three. */
+const PROVENANCE_WORDS: Readonly<Record<string, ProvenanceKey>> = {
+  gemessen: 'measured',
+  'prüfstand': 'measured',
+  'auf dem prüfstand gemessen': 'measured',
+  measured: 'measured',
+  dyno: 'measured',
+  besitzerangabe: 'claimed',
+  'geschätzt': 'claimed',
+  estimated: 'claimed',
+  claimed: 'claimed',
+  herstellerangabe: 'factory',
+  werksangabe: 'factory',
+  manufacturer: 'factory',
+};
+
+/**
+ * DQ-1178 (DQ-1077): a change caption speaks the source words of ADR-431 c in the reader's language: "500 PS · gemessen" →
+ * "500 PS · Prüfstand", "Besitzerangabe" → "Geschätzt". Every other part stays as it is.
+ */
+export function provenanceCaption(text: string, source: (key: ProvenanceKey) => string): string {
+  return text
+    .split(' · ')
+    .map((part) => {
+      const key = PROVENANCE_WORDS[part.trim().toLocaleLowerCase('de-DE')];
+      return key ? source(key) : part;
+    })
+    .join(' · ');
+}
+
 export type HistoryTitleKey = 'added' | 'replaced' | 'changed' | 'removed';
 
 /**

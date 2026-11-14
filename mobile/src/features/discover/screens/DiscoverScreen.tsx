@@ -2,7 +2,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import type { TextInput as RNTextInput } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import type { Edge } from 'react-native-safe-area-context';
 
@@ -86,7 +86,8 @@ const useStyles = createStyles((t) => ({
   // DQ-1038: from 768 the wall runs in the pane up to the content width, not in the 640 column.
   wide: { maxWidth: layout.contentMax + 2 * layout.gutter.desktop, paddingBottom: t.space[32], width: '100%' },
   header: { paddingBottom: t.space[12] },
-  scopes: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
+  // DQ-1152: one row that scrolls sideways (to the screen edge on a phone), never two rows of scope chips.
+  scopes: { flexDirection: 'row', gap: t.space[8] },
   centred: { alignSelf: 'center' },
   submit: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
 }));
@@ -135,6 +136,12 @@ export function DiscoverScreen() {
   const searchRef = useRef<ComponentRef<typeof RNTextInput>>(null);
   const gutterStyle = useMemo(() => ({ paddingHorizontal: gutter }), [gutter]);
   const columnWidth = Math.min(layout.feedColumn, width - 2 * gutter);
+  // DQ-1142: Betriebe and Teile use the content width from 768 (09 §7.15), not the 640 column.
+  const wideScope = inPlace && kind !== 'phone';
+  const scopeWidth = wideScope ? wideWallWidth(estimatedPane(kind, width), gutter) : columnWidth;
+  const scopeScroller = useRef<ComponentRef<typeof ScrollView>>(null);
+  const scopeBoxes = useRef<Record<string, { x: number; width: number }>>({});
+  const scopeViewport = useRef(0);
   const column = useMemo(() => [styles.column, kind === 'desktop' ? styles.columnStart : null], [kind, styles.column, styles.columnStart]);
   const typed = normalizeQuery(text);
   // DQ-196: the header and the sticky band are both fixed chrome, so the line belongs under the band, where content scrolls
@@ -194,6 +201,14 @@ export function DiscoverScreen() {
     rememberSearch(q);
     setText('');
     router.push(searchPath(q, { understand: true, scope: searchScope }));
+  };
+  const revealScope = (value: string, animated: boolean) => {
+    const box = scopeBoxes.current[value];
+    const viewport = scopeViewport.current;
+    if (!box || viewport <= 0) return;
+    // The chosen chip whole in view, with the gutter before it (DQ-1152).
+    const x = Math.max(0, box.x + box.width + gutter - viewport);
+    if (box.x + box.width + gutter > viewport) scopeScroller.current?.scrollTo({ x, animated });
   };
   const setScope = (next: DiscoverScope) => {
     rememberScope(next);
@@ -294,20 +309,43 @@ export function DiscoverScreen() {
             <Hairline />
           </Animated.View>
         </View>
-        <View style={[column, gutterStyle, styles.body]}>
+        <View style={[wideScope ? [styles.wide, kind === 'desktop' ? styles.columnStart : styles.centred] : column, gutterStyle, styles.body]}>
           {/* 09 §7.5 scope chips: what the next search looks for. Treffen, Betriebe and Teile join with their modules. */}
-          <View role="radiogroup" aria-label={t('scopes.label')} style={styles.scopes} testID={`${ROUTE}.scopes`}>
-            {scopes.map((option) => (
-              <Chip
-                key={option.value}
-                label={option.label}
-                selected={scope === option.value}
-                selectionRole="radio"
-                onPress={() => setScope(option.value)}
-                testID={`${ROUTE}.scope.${option.value}`}
-              />
-            ))}
-          </View>
+          <ScrollView
+            ref={scopeScroller}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginHorizontal: -gutter }}
+            contentContainerStyle={gutterStyle}
+            onLayout={(event) => {
+              scopeViewport.current = event.nativeEvent.layout.width;
+              revealScope(scope, false);
+            }}
+            testID={`${ROUTE}.scopes.scroll`}
+          >
+            <View role="radiogroup" aria-label={t('scopes.label')} style={styles.scopes} testID={`${ROUTE}.scopes`}>
+              {scopes.map((option) => (
+                <View
+                  key={option.value}
+                  onLayout={(event) => {
+                    scopeBoxes.current[option.value] = { x: event.nativeEvent.layout.x, width: event.nativeEvent.layout.width };
+                    if (option.value === scope) revealScope(option.value, false);
+                  }}
+                >
+                  <Chip
+                    label={option.label}
+                    selected={scope === option.value}
+                    selectionRole="radio"
+                    onPress={() => {
+                      setScope(option.value);
+                      revealScope(option.value, motion.enabled && !motion.reduced);
+                    }}
+                    testID={`${ROUTE}.scope.${option.value}`}
+                  />
+                </View>
+              ))}
+            </View>
+          </ScrollView>
           {restriction ? <RestrictionNotice message={restriction} testID={`${ROUTE}.restricted`} /> : null}
           {inPlace ? null : typed ? (
             <View style={styles.submit}>
@@ -332,9 +370,9 @@ export function DiscoverScreen() {
           {eventsScope ? (
             <EmbeddedEvents width={columnWidth} bleed={phone ? gutter : 0} routeId={ROUTE} />
           ) : businessesScope ? (
-            <EmbeddedBusinesses query={text} bleed={gutter} routeId={ROUTE} />
+            <EmbeddedBusinesses query={text} width={scopeWidth} bleed={gutter} routeId={ROUTE} />
           ) : partsScope ? (
-            <EmbeddedParts query={text} width={columnWidth} phone={phone} routeId={ROUTE} />
+            <EmbeddedParts query={text} width={scopeWidth} phone={phone} bleed={phone ? gutter : 0} routeId={ROUTE} />
           ) : (
             <>
             <View>

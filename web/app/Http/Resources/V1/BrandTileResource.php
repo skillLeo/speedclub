@@ -23,7 +23,7 @@ class BrandTileResource extends JsonResource
         return [
             'slug' => $brand->slug,
             'name' => $brand->name,
-            /** Visible builds with a mod of this brand, a real count. */
+            /** Visible real builds with a mod of this brand; samples never count (DQ-1140), 0 = hide the number. */
             'builds' => $this->resource['builds'],
         ];
     }

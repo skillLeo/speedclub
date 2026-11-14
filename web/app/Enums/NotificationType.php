@@ -53,6 +53,10 @@ enum NotificationType: string
     // M4.14 (09 §8.10): a portfolio tag ("Eingebaut von") waits for the recipient's confirmation (to the business owner, or to the build's
     // owner when the business asked), or the other side decided; one row per tag and state. In-app only.
     case BusinessTag = 'business_tag';
+    // SEC-414-01 (09 §8.10 "invited staff"): team membership is an invitation. To the invited member: a business invited them
+    // (state invited) or removed them from its team (removed); to the business owner: the member accepted, declined or left. One row per
+    // invitation (or membership) and state; a withdrawn invitation takes its row away. In-app only.
+    case BusinessInvite = 'business_invite';
 
     /**
      * M4.8 HOME-02 chips (`?category=`): Builds (own and followed builds, due dates), Sozial (people), Treffen, System (account, safety,
@@ -64,7 +68,7 @@ enum NotificationType: string
             self::FollowedPublished, self::BuildSaved, self::QrMilestone, self::HuAuReminder, self::CatalogRequest, self::MaintenanceDue, self::BusinessTag => 'builds',
             self::NewFollower, self::Reaction, self::Mention, self::Comment, self::VehicleFollower => 'social',
             self::EventReview, self::EventPromoted, self::EventReminder, self::EventUpdate, self::EventCancelled => 'events',
-            self::Security, self::ModerationDecision, self::ReportDecided, self::SupportReply, self::BusinessReview => 'system',
+            self::Security, self::ModerationDecision, self::ReportDecided, self::SupportReply, self::BusinessReview, self::BusinessInvite => 'system',
         };
     }
 
@@ -85,7 +89,7 @@ enum NotificationType: string
             self::NewFollower, self::FollowedPublished, self::Reaction, self::Mention, self::Comment, self::VehicleFollower => true,
             self::BuildSaved, self::Security, self::ModerationDecision, self::ReportDecided, self::QrMilestone, self::HuAuReminder, self::CatalogRequest, self::SupportReply,
             self::EventReview, self::EventPromoted, self::EventReminder, self::EventUpdate, self::EventCancelled, self::MaintenanceDue,
-            self::BusinessReview, self::BusinessTag => false,
+            self::BusinessReview, self::BusinessTag, self::BusinessInvite => false,
         };
     }
 
@@ -126,7 +130,7 @@ enum NotificationType: string
             self::EventReview, self::EventPromoted, self::EventUpdate, self::EventCancelled => 'event_update',
             // M4.13: SET-09 has one row "Fälligkeiten" for every maintenance reminder, the HU/AU's switch since M2.7 (push, e-mail).
             self::MaintenanceDue => 'hu_au_reminder',
-            self::Security, self::ModerationDecision, self::ReportDecided, self::CatalogRequest, self::SupportReply, self::BusinessReview, self::BusinessTag => null,
+            self::Security, self::ModerationDecision, self::ReportDecided, self::CatalogRequest, self::SupportReply, self::BusinessReview, self::BusinessTag, self::BusinessInvite => null,
         };
     }
 }

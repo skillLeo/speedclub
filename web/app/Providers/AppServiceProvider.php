@@ -10,6 +10,7 @@ use App\Models\Block;
 use App\Models\Brand;
 use App\Models\BuildUpdate;
 use App\Models\Business;
+use App\Models\BusinessInvite;
 use App\Models\BusinessMember;
 use App\Models\BusinessViewDay;
 use App\Models\CatalogRequest;
@@ -169,6 +170,7 @@ class AppServiceProvider extends ServiceProvider
             'build_update' => BuildUpdate::class,
             'business' => Business::class,
             'business_member' => BusinessMember::class,
+            'business_invite' => BusinessInvite::class,
             'business_view_day' => BusinessViewDay::class,
             'catalog_request' => CatalogRequest::class,
             'comment' => Comment::class,

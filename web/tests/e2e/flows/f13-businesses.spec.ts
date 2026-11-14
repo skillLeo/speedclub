@@ -34,11 +34,16 @@ test.describe('F13 Businesses', () => {
     const name = `F13 Werkstatt ${owner.username.slice(-4)}`;
 
     // 1. BIZ-02: the five steps; each step refuses "Weiter" until its fields are valid.
-    // GET me/business answers 404 business_unavailable while the member has none: that is how BIZ-02 knows to offer the form.
-    const own = await browserOf(browser, owner, { pageErrors, blockedRequests, expected: [{ status: 404, url: /\/api\/v1\/me\/business$/ }] });
+    // GET me/business answers 200 {data: null} while the member has none (no 404, so no console error): that is how BIZ-02 knows to
+    // offer the form.
+    const own = await browserOf(browser, owner, { pageErrors, blockedRequests, expected: [] });
     let business: MyBusiness;
     try {
+      const none = own.page.waitForResponse(isCall('GET', 'me/business'));
       await open(own.page, `/app/settings/business/apply?${FLAGS}`);
+      const noneAnswer = await none;
+      expect(noneAnswer.status()).toBe(200);
+      expect(await noneAnswer.json()).toEqual({ data: null });
       await expect(id(own.page, 'BIZ-02.name')).toBeVisible();
       await id(own.page, 'BIZ-02.cta.primary').click();
       await expect(own.page.getByText(de('parts', 'validation.required')).first()).toBeVisible();

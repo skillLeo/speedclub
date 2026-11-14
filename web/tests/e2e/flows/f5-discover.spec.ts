@@ -17,13 +17,13 @@ import type { Locator, Page, Response, TestInfo } from '@playwright/test';
 import { DEMO_MEMBER, sessionOf, useSession } from '../support/auth.mjs';
 import { expect, test } from '../support/fixtures';
 import { catalogueIds, createGarageMember, demoIds, expectStatus, R34, SEED_PHOTOS } from '../support/garage.mjs';
-import { qaUrl } from '../support/qa.mjs';
+import { BASE_URL, qaUrl } from '../support/qa.mjs';
 import { withStartLock } from '../support/start-lock.mjs';
 import { readable } from '../support/text.mjs';
 
 type Member = Awaited<ReturnType<typeof createGarageMember>>;
 type FeedVehicle = { id: string; slug: string; full_title: string; is_sample?: boolean; owner: { username: string } | null };
-type Overview = { vehicles: { count: number; items: FeedVehicle[] }; members: { count: number; items: { username: string; city: string | null }[] } };
+type Overview = { vehicles: { count: number; items: FeedVehicle[]; next_cursor?: string | null }; members: { count: number; items: { username: string; city: string | null }[] } };
 type Facet = { value: string; label: string; count: number };
 type Facets = { total: number; total_capped: boolean; generations: Facet[] | null; wheel_diameter: Facet[] };
 type MakePage = { make: { slug: string; name: string; vehicle_count: number }; models: { slug: string; key: string; name: string; vehicle_count: number; generations: { slug: string; vehicle_count: number }[] }[] };
@@ -57,6 +57,9 @@ const pathOf = (page: Page): string => new URL(page.url()).pathname;
 const param = (page: Page, key: string): string | null => new URL(page.url()).searchParams.get(key);
 const open = (page: Page, path: string): Promise<Response | null> => page.goto(qaUrl(path, { theme: 'carbon', locale: 'de' }));
 const ULID = /^[0-9a-z]{26}$/;
+/** Showcase builds with fixed slugs (DemoShowcaseSeeder::publicIdFor): BMW M2 G87 on 20″ (ben.m2), BMW M2 F87 on 19″ (editorial). */
+const SHOWCASE_BMW_20 = 'bmw-m2-g87-fafwqbjz';
+const SHOWCASE_BMW_19 = 'bmw-m2-f87-nkj157jk';
 
 /** The answer of the next GET of exactly this API path whose query passes `accept`. */
 function answerOf(page: Page, path: string, accept: (query: URLSearchParams) => boolean = () => true): Promise<Response> {
@@ -70,6 +73,26 @@ async function dataOf<T>(response: Promise<Response>): Promise<T> {
   const answered = await response;
   expect(answered.status(), `${answered.url()} answered`).toBe(200);
   return ((await answered.json()) as { data: T }).data;
+}
+
+/**
+ * The builds of a DISC-02 answer and of every page after it: search/vehicles with the same query and next_cursor, as the list's
+ * endless scroll asks for them. Seeded data grows (DemoShowcaseSeeder), so a named build may sit below the first page.
+ */
+async function allVehiclesOf(page: Page, answered: Response, overview: Overview): Promise<FeedVehicle[]> {
+  const vehicles = [...overview.vehicles.items];
+  const next = new URL(answered.url());
+  next.pathname = '/api/v1/search/vehicles';
+  let cursor = overview.vehicles.next_cursor ?? null;
+  while (cursor) {
+    next.searchParams.set('cursor', cursor);
+    const response = await page.request.get(next.toString(), { headers: { Accept: 'application/json', Referer: `${BASE_URL}/app/` } });
+    expect(response.status(), `${next.pathname} answered`).toBe(200);
+    const body = (await response.json()) as { data: FeedVehicle[]; meta?: { next_cursor?: string | null } };
+    vehicles.push(...body.data);
+    cursor = body.meta?.next_cursor ?? null;
+  }
+  return vehicles;
 }
 
 /** The ids of the visible `<prefix><ULID>` elements, top to bottom, then left to right. */
@@ -294,7 +317,11 @@ test.describe('F5 discover: the chip row, sort, view and the URL', () => {
     await expect.poll(() => chipIds(page)).toEqual(['DISC-02.chips.make.bmw', 'DISC-02.chips.wheel_diameter.19', 'DISC-02.chips.wheel_diameter.20']);
     expect(await textOf(id(page, 'DISC-02.chips.wheel_diameter.20'))).toBe('20″');
     await expectListOf(page, 'DISC-02.vehicle.', both);
-    expect(both.map((vehicle) => vehicle.slug), 'the demo M4 G82 and M3 E92').toEqual(expect.arrayContaining(['bmw-m4-g82-f3pqxpjb', 'bmw-m3-e90-e92-e93-3aymcw76']));
+    // The newest seeded build of each size (DemoShowcaseSeeder, 6b0b19e4): ben.m2's M2 G87 on 20″ and the editorial M2 F87 on 19″.
+    // Older ones (jann.ptrs' M4 G82, max.e46's M3 E92) sit below the first page since the showcase added newer BMWs on 19/20″.
+    expect(both.map((vehicle) => vehicle.slug), 'the newest demo build on 20″ and on 19″').toEqual(
+      expect.arrayContaining([SHOWCASE_BMW_20, SHOWCASE_BMW_19]),
+    );
 
     // Remove 20″: its chip goes, the URL follows, the list is the new answer.
     await expect(id(page, 'DISC-02.chips.wheel_diameter.20.remove')).toHaveAccessibleName(de('discover', 'chips.remove', { label: '20″' }));
@@ -303,8 +330,8 @@ test.describe('F5 discover: the chip row, sort, view and the URL', () => {
     await expect.poll(() => chipIds(page)).toEqual(['DISC-02.chips.make.bmw', 'DISC-02.chips.wheel_diameter.19']);
     await expect.poll(() => param(page, 'wheel_diameter')).toBe('19');
     const nineteen = (await dataOf<Overview>(removed)).vehicles.items;
-    expect(nineteen.map((vehicle) => vehicle.slug)).toContain('bmw-m3-e90-e92-e93-3aymcw76');
-    expect(nineteen.map((vehicle) => vehicle.slug), 'the 20″ M4 is gone').not.toContain('bmw-m4-g82-f3pqxpjb');
+    expect(nineteen.map((vehicle) => vehicle.slug)).toContain(SHOWCASE_BMW_19);
+    expect(nineteen.map((vehicle) => vehicle.slug), 'the 20″ M2 G87 is gone').not.toContain(SHOWCASE_BMW_20);
     await expectListOf(page, 'DISC-02.vehicle.', nineteen);
 
     // Sort: the sheet offers no Relevanz without a text; Meiste PS applies and closes.
@@ -431,7 +458,11 @@ test.describe('F5 discover: make and model pages', () => {
     const [firstId, secondId] = order as [string, string];
     const expectCards = async (perRow: 1 | 2) => {
       await expect(page.locator(`[data-testid="DISC-04.wheels.${firstId}"]:visible`)).toBeVisible();
-      expect(await visibleIds('[data-testid^="DISC-04.wheels."]:visible')).toEqual(order);
+      // The cards are rows of the page's FlashList, drawn near the window only: other specs' A80s make the answer longer than the
+      // window at 2× font (final Phase 4 gate, run 2: 4 of 5 drawn), so the drawn cards are the answer's order from its top.
+      const drawn = await visibleIds('[data-testid^="DISC-04.wheels."]:visible');
+      expect(drawn.length, 'at least the first two cards are drawn').toBeGreaterThanOrEqual(2);
+      expect(drawn).toEqual(order.slice(0, drawn.length));
       await expect(page.locator('[data-testid^="DISC-04.wheels."][role="row"]:visible')).toHaveCount(0);
       // After a resize the cards are laid out again: both are on screen before their boxes are read.
       await expect(id(page, `DISC-04.wheels.${secondId}`)).toBeVisible();
@@ -443,10 +474,11 @@ test.describe('F5 discover: make and model pages', () => {
       } else {
         expect(b.y, 'one card per row').toBeGreaterThanOrEqual(a.y + a.height - 1);
       }
-      for (const setup of setups) await expect(id(page, `DISC-04.wheels.${setup.vehicle.id}.size`)).toContainText('″');
+      for (const drawnId of drawn) await expect(id(page, `DISC-04.wheels.${drawnId}.size`)).toContainText('″');
+      return drawn;
     };
-    await expectCards(1);
-    for (const setup of setups) {
+    const drawnOnPhone = await expectCards(1);
+    for (const setup of setups.filter((entry) => drawnOnPhone.includes(entry.vehicle.id))) {
       if (setup.wheel.brand) expect(readable(await id(page, `DISC-04.wheels.${setup.vehicle.id}.wheel`).textContent())).toContain(setup.wheel.brand);
     }
     for (const width of [768, 1024]) {
@@ -512,9 +544,13 @@ test.describe('F5 discover: from a build page', () => {
     await expect
       .poll(() => chipIds(page))
       .toEqual([`DISC-02.chips.wheel_diameter.${mod.search.wheel_diameter}`, `DISC-02.chips.wheel_brand.${mod.search.wheel_brand}`]);
-    const found = (await dataOf<Overview>(results)).vehicles.items;
-    expect(found.map((vehicle) => vehicle.slug), 'the build of the mod itself is found').toContain(R34.slug);
+    const answered = await results;
+    const overview = await dataOf<Overview>(Promise.resolve(answered));
+    const found = overview.vehicles.items;
     await expectListOf(page, 'DISC-02.vehicle.', found);
+    // The showcase's JDM builds on Rays 18″ are newer than lukas.sc's R34, which may sit on a later page of the same search.
+    const everyPage = await allVehiclesOf(page, answered, overview);
+    expect(everyPage.map((vehicle) => vehicle.slug), 'the build of the mod itself is found').toContain(R34.slug);
   });
 
   test('VEH-01 [SIG] Ähnliche Builds: the answer\'s builds, an R34 first; a tile opens it', async ({ page }) => {

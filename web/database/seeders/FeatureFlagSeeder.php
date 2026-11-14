@@ -38,6 +38,7 @@ class FeatureFlagSeeder extends Seeder
         'app_icons' => '09 §8.18: alternate app icons (M4.13); production after the store builds carry them',
         'qr_milestone' => 'M4.9: the QR milestone moment (scan marks of a sticker); production with the release that ships it',
         'web_push' => '09 §8.18: browser notifications of the member web (M4.15); staging sends only once VAPID keys exist (OA-32)',
+        'android_widget' => '09 §8.18: the Android home-screen widget "Mein Auto" (09 §8.14, M4.18); production with the store build that carries it',
     ];
 
     /**

@@ -31,7 +31,7 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
-import { concentric, createStyles, layout, size, space, useBreakpoint } from '@/theme';
+import { concentric, createStyles, layout, size, space, typography, typographyDesktop, useBreakpoint, useTheme } from '@/theme';
 import {
   Badge,
   Button,
@@ -47,7 +47,6 @@ import {
   SkeletonBlock,
   SkeletonText,
   ListRow,
-  StatusPill,
   Text,
   toast,
   useCollapsingHeader,
@@ -55,14 +54,26 @@ import {
 } from '@/ui';
 import { identifierText } from '@/ui/textBreaks';
 
-import { BuildsWall } from '../components/BuildsWall';
+import { OpeningHours } from '../components/business/OpeningHours';
+import { PortfolioBuilds } from '../components/business/PortfolioBuilds';
 import { PageStateBody, pageStateOf } from '../components/PageStates';
-import { addressLines, businessHero, dayLabel, hasHours, hoursText, impressumRows, phoneUrl, routeUrl, websiteLabel, websiteUrl } from '../model';
+import { addressLines, businessHero, hasHours, impressumRows, phoneUrl, routeUrl, websiteLabel, websiteUrl } from '../model';
 import { openUrl } from '../openUrl';
 
 const ROUTE = 'BIZ-01';
 const HERO_RATIO = 16 / 9;
 const MAP_HEIGHT = size.avatar.xl * 2;
+/**
+ * DQ-1157: the about text's measure, about 70 characters: Inter's average advance is close to half an em, so 35 em of the body size
+ * (scaled with the font). Until a measure token exists in tokens.json, it is derived from the body role, never a pixel literal.
+ */
+const MEASURE_EM = 35;
+/** DQ-1153: the skeleton's service chips fill two rows, its about text three lines. */
+const SKELETON_CHIP_ROWS = 2;
+const SKELETON_ABOUT_LINES = 3;
+
+/** DOM audit: the identity's negative margin reaches up to the photo's large-text-safe line (ADR-421 b), a layout result. */
+const SCRIM_OVERLAP = { qaExempt: 'scrim-overlap' } as const;
 
 const useStyles = createStyles((t) => ({
   column: { alignSelf: 'flex-start', gap: t.space[32], maxWidth: layout.feedColumn, paddingBottom: t.space[32], paddingTop: t.space[24], width: '100%' },
@@ -71,14 +82,13 @@ const useStyles = createStyles((t) => ({
   nameRow: { alignItems: 'center', flexDirection: 'row', gap: t.space[16] },
   nameText: { flex: 1, gap: t.space[4], minWidth: 0 },
   logo: { borderRadius: t.radius.md, height: t.size.avatar.lg, overflow: 'hidden', width: t.size.avatar.lg },
-  logoGlyph: { alignItems: 'center', backgroundColor: t.color.bg.raised, justifyContent: 'center' },
-  badges: { alignItems: 'center', columnGap: t.space[8], flexDirection: 'row', flexWrap: 'wrap', rowGap: t.space[4] },
+  // DQ-1154: on the stage the initial tile is the photo chip ground (every theme, ADR-421 b), never a light square on the scrim.
+  // DQ-1154: "Werkstatt · Hamburg" and Verifiziert (or Beispiel) on one line; a badge that does not fit wraps whole.
+  subline: { alignItems: 'center', columnGap: t.space[8], flexDirection: 'row', flexWrap: 'wrap', rowGap: t.space[4] },
+  sublineBadge: { alignSelf: 'center' },
   services: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
   section: { gap: t.space[12] },
-  hoursRow: { alignItems: 'center', columnGap: t.space[12], flexDirection: 'row', flexWrap: 'wrap', minHeight: t.size.row.single, paddingHorizontal: t.space[16], paddingVertical: t.space[8] },
-  // The day keeps its whole word; the hours go to the next line when both do not fit (200 %, the narrow desktop card).
-  hoursDay: { flexGrow: 1, flexShrink: 0 },
   impressumRow: { gap: t.space[2], paddingHorizontal: t.space[16], paddingVertical: t.space[12] },
   place: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
   placeBody: { gap: t.space[4], padding: t.space[16] },
@@ -94,6 +104,8 @@ const useStyles = createStyles((t) => ({
   centred: { flexGrow: 1, justifyContent: 'center' },
   skeletonHeader: { left: 0, position: 'absolute', right: 0, top: 0 },
   skeletonRow: { alignItems: 'center', flexDirection: 'row', gap: t.space[16] },
+  skeletonIdentity: { gap: t.space[12] },
+  skeletonChips: { gap: t.space[8] },
 }));
 
 /**
@@ -150,7 +162,10 @@ function StateFrame({ onBack, children }: { onBack: () => void; children: ReactN
   );
 }
 
-/** The page in its geometry while it loads: the 16:9 cover from the top edge, the logo with the name, the hours card. */
+/**
+ * The page in its geometry while it loads (DQ-1153): the 16:9 cover from the top edge, the logo with the name and the subline (with its
+ * badge), the button bar, two rows of service chips, three lines of the about text, then the hours card.
+ */
 function BusinessSkeleton({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation('parts');
   const styles = useStyles();
@@ -165,15 +180,26 @@ function BusinessSkeleton({ onBack }: { onBack: () => void }) {
           <SkeletonBlock aspectRatio={HERO_RATIO} corner="none" />
         </View>
         <View style={[styles.column, { paddingHorizontal: gutter }]}>
-          <View style={styles.skeletonRow}>
-            <SkeletonBlock width={size.avatar.lg} height={size.avatar.lg} corner="md" />
-            <View style={styles.nameText}>
-              <SkeletonText variant="title1" width="70%" />
-              <SkeletonText variant="callout" width="45%" />
+          <View style={styles.skeletonIdentity}>
+            <View style={styles.skeletonRow}>
+              <SkeletonBlock width={size.avatar.lg} height={size.avatar.lg} corner="md" />
+              <View style={styles.nameText}>
+                <SkeletonText variant="title1" width="70%" />
+                <SkeletonText variant="callout" width="65%" />
+              </View>
             </View>
+            <SkeletonBlock width="60%" height={size.button.m} corner="sm" testID={`${ROUTE}.skeleton.actions`} />
+            <View style={styles.skeletonChips} testID={`${ROUTE}.skeleton.services`}>
+              {Array.from({ length: SKELETON_CHIP_ROWS }, (_, row) => (
+                <SkeletonBlock key={row} width={row === 0 ? '90%' : '55%'} height={size.chip} corner="full" />
+              ))}
+            </View>
+            <SkeletonText variant="body" lines={SKELETON_ABOUT_LINES} lastLineWidth="60%" testID={`${ROUTE}.skeleton.about`} />
           </View>
-          <SkeletonBlock width="60%" height={size.chip} corner="full" />
-          <SkeletonBlock width="100%" height={7 * size.row.single} corner="md" />
+          <View style={styles.section}>
+            <SkeletonText variant="headline" width="40%" />
+            <SkeletonBlock width="100%" height={7 * size.row.single} corner="md" />
+          </View>
         </View>
       </Skeleton>
       {phone ? (
@@ -196,6 +222,7 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
   const own = useSessionStore((state) => state.member?.username ?? null);
   const collectionsOn = useFlag(SOCIAL_FLAGS.collections);
   const { gutter, kind, width } = useBreakpoint();
+  const { fontScale } = useTheme();
   const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
@@ -211,6 +238,8 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
   const heroWidth = phone ? contentWidth : Math.min(contentWidth, layout.fullBleedMax);
   const heroHeight = heroWidth / HERO_RATIO;
   const hero = businessHero(business, builds, heroWidth);
+  // DQ-1215: the photo the hero shows (own cover or the API's portfolio pick), which no portfolio card repeats.
+  const heroPhotoId = business.cover?.id ?? null;
   const overlap = desktop ? heroIdentityOverlap(heroWidth, HERO_RATIO) : 0;
   const team = business.viewer_role !== null;
   const messageTo = business.contact.message_username;
@@ -222,6 +251,8 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
   const shareUrl = `${(siteUrl() ?? '').replace(/\/+$/, '')}${business.share_path}`;
   const impressum = impressumRows(business.impressum, t);
   const wallColumns = WALL_COLUMNS_BY_KIND[kind];
+  const aboutMeasure = { maxWidth: MEASURE_EM * (desktop ? typographyDesktop.body.fontSize : typography.body.fontSize) * fontScale };
+  const maySave = collectionsOn && !business.is_sample && status !== 'loading';
   const mainWidth = desktop ? (Math.min(contentWidth, layout.contentMax + 2 * space[24]) - 3 * space[24]) * (DESKTOP_GALLERY_FLEX / (DESKTOP_GALLERY_FLEX + DESKTOP_CARD_FLEX)) : Math.min(layout.feedColumn, contentWidth - 2 * gutter);
 
   const report = useReport(
@@ -259,12 +290,8 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
       ? [{ key: 'report', icon: 'flag', label: t('business.report'), onPress: report.open } satisfies MoreAction]
       : []),
   ];
-  const actions: HeaderAction[] = [
-    ...(collectionsOn && !business.is_sample && status !== 'loading'
-      ? [{ icon: 'bookmark-simple' as const, label: t('business.save'), onPress: save, testID: `${ROUTE}.save` }]
-      : []),
-    { icon: 'dots-three', label: t('business.more'), onPress: () => setMoreOpen(true), testID: `${ROUTE}.moreActions` },
-  ];
+  // DQ-1143: two floating controls over the cover at most (back and "…"); Speichern sits beside "Nachricht".
+  const actions: HeaderAction[] = [{ icon: 'dots-three', label: t('business.more'), onPress: () => setMoreOpen(true), testID: `${ROUTE}.moreActions` }];
 
   const photo = (
     <Photo
@@ -285,35 +312,31 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
       </Text>
     );
 
-  const logo = business.logo ? (
-    <Photo {...photoFields(business.logo, size.avatar.lg)} aspect="1:1" corner="md" style={styles.logo} testID={`${ROUTE}.logo`} />
-  ) : (
-    <View style={[styles.logo, styles.logoGlyph]} testID={`${ROUTE}.logo`}>
-      <Text variant="headline" color="text.secondary" aria-hidden>
-        {business.name.trim().charAt(0).toUpperCase()}
-      </Text>
-    </View>
-  );
-  const nameBlock = (onPhoto: boolean) => (
-    <View style={styles.nameRow}>
-      {logo}
-      <View style={styles.nameText}>
-        <Text variant="title1" role="heading" aria-level={1} color={onPhoto ? 'onPhoto.primary' : 'text.primary'} testID={`${ROUTE}.title`}>
-          {business.name}
-        </Text>
-        <Text variant="callout" color={onPhoto ? 'onPhoto.primary' : 'text.secondary'} testID={`${ROUTE}.subline`}>
-          {business.subline}
-        </Text>
+  // ADR-466 (DQ-1181, WEB-14 parity): a business without a logo shows none; never a letter in a tile.
+  const logo = () =>
+    business.logo ? <Photo {...photoFields(business.logo, size.avatar.lg)} aspect="1:1" corner="md" style={styles.logo} testID={`${ROUTE}.logo`} /> : null;
+  // 09 §7.11 "Werkstatt · München" + Verifiziert: the badge follows the place on its line (DQ-1154). A sample never carries Verifiziert
+  // (the API guarantees it, DQ-1144); the check here keeps it so whatever arrives.
+  const nameBlock = (onPhoto: boolean) => {
+    const tone = onPhoto ? 'onPhoto' : 'default';
+    return (
+      <View style={styles.nameRow}>
+        {logo()}
+        <View style={styles.nameText}>
+          <Text variant="title1" role="heading" aria-level={1} color={onPhoto ? 'onPhoto.primary' : 'text.primary'} testID={`${ROUTE}.title`}>
+            {business.name}
+          </Text>
+          <View style={styles.subline}>
+            <Text variant="callout" color={onPhoto ? 'onPhoto.primary' : 'text.secondary'} testID={`${ROUTE}.subline`}>
+              {business.subline}
+            </Text>
+            {business.verified && !business.is_sample ? <Badge kind="verified" tone={tone} style={styles.sublineBadge} testID={`${ROUTE}.verified`} /> : null}
+            {business.is_sample ? <SampleBadge tone={tone} style={styles.sublineBadge} testID={`${ROUTE}.sample`} /> : null}
+          </View>
+        </View>
       </View>
-    </View>
-  );
-  const badges =
-    business.verified || business.is_sample ? (
-      <View style={styles.badges}>
-        {business.verified ? <Badge kind="verified" testID={`${ROUTE}.verified`} /> : null}
-        {business.is_sample ? <SampleBadge testID={`${ROUTE}.sample`} /> : null}
-      </View>
-    ) : null;
+    );
+  };
   const services =
     business.services.length > 0 ? (
       <View role="list" aria-label={t('business.services')} style={styles.services} testID={`${ROUTE}.services`}>
@@ -324,41 +347,16 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
         ))}
       </View>
     ) : null;
-  const contactActions = mayMessage ? (
-    <View style={styles.actions}>
-      <Button label={t('business.message')} icon="chat-circle" variant="primary" size="m" onPress={message} testID={`${ROUTE}.message`} />
-    </View>
-  ) : null;
+  // "Nachricht" stays the one filled CTA; Speichern is the secondary beside it (DQ-1143), so the cover keeps two floating controls.
+  const contactActions =
+    mayMessage || maySave ? (
+      <View style={styles.actions}>
+        {mayMessage ? <Button label={t('business.message')} icon="chat-circle" variant="primary" size="m" onPress={message} testID={`${ROUTE}.message`} /> : null}
+        {maySave ? <Button label={t('business.save')} icon="bookmark-simple" variant="secondary" size="m" onPress={save} testID={`${ROUTE}.save`} /> : null}
+      </View>
+    ) : null;
 
-  const hours = hasHours(business.opening_hours) ? (
-    <View style={styles.section} testID={`${ROUTE}.hours`}>
-      <GroupHeader title={t('business.hours.title')} />
-      <RowCard>
-        {business.opening_hours.map((day, index) => (
-          <View key={day.day}>
-            {index > 0 ? <Hairline inset={space[16]} /> : null}
-            <View
-              style={styles.hoursRow}
-              aria-label={`${dayLabel(day.day, t)}${day.today ? `, ${t('business.hours.today')}` : ''}: ${hoursText(day, t)}`}
-              accessible
-              testID={`${ROUTE}.hours.${day.day}`}
-            >
-              <Text variant={day.today ? 'bodyStrong' : 'body'} hyphenate={false} style={styles.hoursDay}>
-                {dayLabel(day.day, t)}
-              </Text>
-              {day.today ? <StatusPill label={t('business.hours.today')} testID={`${ROUTE}.hours.today`} /> : null}
-              <Text variant={day.today ? 'bodyStrong' : 'body'} color={day.ranges.length > 0 ? 'text.primary' : 'text.secondary'} numeric>
-                {hoursText(day, t)}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </RowCard>
-      <Text variant="caption" color="text.tertiary">
-        {t('business.hours.zone')}
-      </Text>
-    </View>
-  ) : null;
+  const hours = hasHours(business.opening_hours) ? <OpeningHours days={business.opening_hours} testID={`${ROUTE}.hours`} /> : null;
 
   const placeLines = (
     <>
@@ -425,7 +423,9 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
       </Text>
     </View>
   ) : (
-    <BuildsWall
+    <PortfolioBuilds
+      feature={!phone}
+      heroPhotoId={heroPhotoId}
       title={t('business.portfolio')}
       count={business.portfolio_count ? t('counts.builds', { count: business.portfolio_count, value: format.number(business.portfolio_count) }) : null}
       vehicles={builds}
@@ -471,7 +471,7 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
   );
 
   const about = business.about ? (
-    <Text variant="body" testID={`${ROUTE}.about`}>
+    <Text variant="body" style={aboutMeasure} testID={`${ROUTE}.about`}>
       {business.about}
     </Text>
   ) : null;
@@ -487,12 +487,12 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
       <>
         <View style={styles.stage} onLayout={(event) => setStageHeight(event.nativeEvent.layout.height)} testID={`${ROUTE}.stage`}>
           {photo}
-          <View style={[styles.stageIdentity, { marginTop: -overlap, minHeight: overlap, paddingHorizontal: gutter }]}>{nameBlock(true)}</View>
+          {/* The overlap is derived from the photo's large-text-safe line, not a scale step: a counted audit exemption (M4.18). */}
+          <View dataSet={SCRIM_OVERLAP} style={[styles.stageIdentity, { marginTop: -overlap, minHeight: overlap, paddingHorizontal: gutter }]}>{nameBlock(true)}</View>
         </View>
         <View style={styles.desktopRow}>
           <View style={styles.desktopMain}>
             <View style={styles.identity}>
-              {badges}
               {coverNote}
               {restrictedLine}
               {about}
@@ -520,7 +520,6 @@ function BusinessView({ business, onBack, restricted }: { business: BusinessDeta
         <View style={[styles.column, { paddingHorizontal: gutter }]}>
           <View style={styles.identity}>
             {nameBlock(false)}
-            {badges}
             {coverNote}
             {restrictedLine}
             {contactActions}

@@ -174,6 +174,21 @@ describe('PROF-02 member profile', () => {
     expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/u/[username]/connections', params: { username: 'jann.ptrs', tab: 'following' } });
   });
 
+  it('does not scroll the skeleton, which holds nothing to focus (axe scrollable-region-focusable), and scrolls once loaded', async () => {
+    signIn();
+    mockParams.username = 'jann.ptrs';
+    global.fetch = jest.fn(() => new Promise<Response>(() => undefined)) as unknown as typeof fetch;
+    await render(<MemberProfileScreen />);
+    expect(text('PROF-02.skeleton')).toBeTruthy();
+    expect(text('PROF-02.scroll').props.scrollEnabled).toBe(false);
+
+    client.clear();
+    stub({ 'GET /public/users/jann.ptrs': { body: { data: JANN } }, 'GET /public/users/jann.ptrs/vehicles': { body: PAGE([]) } });
+    await render(<MemberProfileScreen />);
+    await waitFor(() => expect(text('PROF-02.name')).toHaveTextContent('Jann Petersen'));
+    expect(text('PROF-02.scroll').props.scrollEnabled).toBe(true);
+  });
+
   it('follows at once, takes the server count, and turns back with a toast when the server refuses', async () => {
     signIn();
     mockParams.username = 'jann.ptrs';

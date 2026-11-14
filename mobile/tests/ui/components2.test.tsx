@@ -7,6 +7,7 @@ import { BuildSheet } from '@/ui/BuildSheet';
 import { ContextMenu, orderMenuItems, type ContextMenuItem } from '@/ui/ContextMenu';
 import { MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
 import { OwnerCapsule, ownerCapsuleVisibleActions } from '@/ui/OwnerCapsule';
+import { BACKDROP_DIM_COMPACT, QrReveal } from '@/ui/motion/QrReveal';
 import { Timeline } from '@/ui/Timeline';
 
 import { flat, renderUi, textOf } from './helpers';
@@ -35,8 +36,7 @@ beforeAll(hydrateThemePreference);
 beforeEach(() => dimensions.mockReturnValue({ width: 390, height: 844, scale: 1, fontScale: 1 }));
 
 describe('MediaCard', () => {
-  it('lead: 4:5 at 0 radius, the name as a display title on the stage, one name for screen readers, save over the photo', async () => {
-    const onToggle = jest.fn();
+  it('lead: 4:5 at 0 radius, the name as a display title on the stage, one name for screen readers, no second target on the photo', async () => {
     await renderUi(
       <MediaCard
         variant="lead"
@@ -44,7 +44,6 @@ describe('MediaCard', () => {
         photo={PHOTO}
         spec="500 PS · AWD"
         owner={{ username: 'lukas.sc' }}
-        save={{ saved: false, onToggle }}
         sample={{ is_sample: true }}
         onPress={jest.fn()}
         layoutWidth={390}
@@ -61,8 +60,8 @@ describe('MediaCard', () => {
     expect(flat(screen.getByTestId('c.title').props.style).color).toBe(themes.carbon.color.onPhoto.primary);
     expect(screen.getByTestId('c.open').props.accessibilityLabel).toBe('Beispiel, Nissan Skyline GT-R R34, @lukas.sc, 500 PS · AWD');
     expect(screen.getByTestId('c.sample.sample')).toHaveTextContent('Beispiel');
-    await fireEvent.press(screen.getByTestId('c.save'));
-    expect(onToggle).toHaveBeenCalledTimes(1);
+    // M4.18: save and share sit in an action row under the lead (HomeLead), never inside its open target.
+    expect(screen.queryByTestId('c.save')).toBeNull();
   });
 
   it('feed: header, edge-to-edge media with the page pill for several photos, caption, mod chips, actions without counts', async () => {
@@ -117,6 +116,21 @@ describe('MediaCard', () => {
     expect(flat(screen.getByTestId('w.title').props.style).color).toBe(themes.carbon.color.onPhoto.primary);
   });
 
+  it('wall: a long name takes a second line on the scrim where the tile keeps it below the text-safe line (DQ-1156)', async () => {
+    await renderUi(<MediaCard variant="wall" title="Toyota Corolla Levin/Trueno AE86" photo={PHOTO} testID="w" />);
+    expect(screen.getByTestId('w.title').props.numberOfLines).toBe(1);
+    // The 393 wall tile (195): two lines, and once the name wraps the band's padding drops to 2 so both stay below the line.
+    await act(async () => fireEvent(screen.getByTestId('w.titleBand'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 195, height: 32 } } }));
+    expect(screen.getByTestId('w.title').props.numberOfLines).toBe(2);
+    expect(flat(screen.getByTestId('w.titleBand').props.style).paddingBottom).toBe(space[8]);
+    await act(async () => fireEvent(screen.getByTestId('w.title'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 179, height: 32 } } }));
+    expect(flat(screen.getByTestId('w.titleBand').props.style).paddingBottom).toBe(space[2]);
+    // The iPhone SE tile (186) is too short for two safe lines: one line, as before.
+    await act(async () => fireEvent(screen.getByTestId('w.titleBand'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 186, height: 24 } } }));
+    expect(screen.getByTestId('w.title').props.numberOfLines).toBe(1);
+    expect(flat(screen.getByTestId('w.titleBand').props.style).paddingBottom).toBe(space[8]);
+  });
+
   it('wall at 200 %: the name leaves the photo and sits under it, uncut, in page colours (ADR-128)', async () => {
     dimensions.mockReturnValue({ width: 390, height: 844, scale: 1, fontScale: 2 });
     await renderUi(<MediaCard variant="wall" title="Volkswagen Golf GTI Clubsport S" photo={PHOTO} testID="w" />);
@@ -128,6 +142,27 @@ describe('MediaCard', () => {
   it('has a skeleton of the same geometry for every variant', async () => {
     await renderUi(<MediaCardSkeleton variant="rail" testID="s" />);
     expect(screen.getByTestId('s')).toBeTruthy();
+  });
+});
+
+describe('QrReveal phone dim (DQ-1053, ADR-462)', () => {
+  const stage = () => (
+    <QrReveal revealed photo={PHOTO} testID="q">
+      {null}
+    </QrReveal>
+  );
+  it('dims the stage lightly below 768 (the dark stage colour at the compact opacity), 45 % from 768', async () => {
+    expect(BACKDROP_DIM_COMPACT).toBeGreaterThan(0.1);
+    expect(BACKDROP_DIM_COMPACT).toBeLessThanOrEqual(0.25);
+    await renderUi(stage());
+    const phone = flat(screen.getByTestId('q.dim', { includeHiddenElements: true }).props.style);
+    expect(phone.backgroundColor).toBe(themes.carbon.color.scrim.photoEnd);
+    expect(phone.opacity).toBe(BACKDROP_DIM_COMPACT);
+    dimensions.mockReturnValue({ width: 1280, height: 800, scale: 1, fontScale: 1 });
+    await renderUi(stage());
+    const wide = flat(screen.getByTestId('q.dim', { includeHiddenElements: true }).props.style);
+    expect(wide.backgroundColor).toBe(themes.carbon.color.scrim.topStart);
+    expect(wide.opacity).toBeUndefined();
   });
 });
 

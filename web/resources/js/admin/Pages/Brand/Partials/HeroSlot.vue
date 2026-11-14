@@ -125,15 +125,15 @@ const locale = getActiveLanguage();
                     @keydown="key"
                 >
                     <img :src="asset.url" alt="" class="block h-auto w-full select-none" :width="asset.width" :height="asset.height" draggable="false" />
-                    <!-- DQ-637: white with a dark outline, so the point shows on bright photos too; the fill is the scrim token. -->
-                    <span class="pointer-events-none absolute flex size-32 -translate-x-16 -translate-y-16 items-center justify-center rounded-full border-2 border-white bg-scrim text-white outline-1 outline-black" :style="position" aria-hidden="true">
+                    <!-- DQ-637: white with a dark outline, so the point shows on bright photos too; the fill is the scrim token. M4.18: on-photo tokens (DL05). -->
+                    <span class="pointer-events-none absolute flex size-32 -translate-x-16 -translate-y-16 items-center justify-center rounded-full border-2 border-on-photo bg-scrim text-on-photo outline-1 outline-on-photo-chip" :style="position" aria-hidden="true">
                         <PhCrosshair :size="20" />
                     </span>
                 </div>
                 <p class="mt-8 text-admin-base text-ink-3">{{ readOnly ? trans('brand.focal.read_only') : trans('brand.focal.hint') }}</p>
             </div>
             <figure class="flex shrink-0 flex-col gap-4">
-                <span :class="[cropClass, 'block overflow-hidden rounded-xs bg-black']" :data-testid="`ADM-28.hero.${slotKey}.crop`">
+                <span :class="[cropClass, 'block overflow-hidden rounded-xs bg-raised']" :data-testid="`ADM-28.hero.${slotKey}.crop`">
                     <img :src="asset.url" alt="" :width="asset.width" :height="asset.height" class="block size-full object-cover" :style="objectPosition" />
                 </span>
                 <figcaption class="text-admin-base text-ink-3">{{ trans('brand.focal.crop') }}</figcaption>

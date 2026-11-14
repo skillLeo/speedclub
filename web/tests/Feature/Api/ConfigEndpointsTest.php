@@ -33,6 +33,8 @@ describe('GET app-config', function () {
                 'links' => ['imprint', 'privacy', 'terms', 'community', 'help', 'support_email', 'store_ios', 'store_android', 'get_app', 'sticker_shop'],
                 // M2.4: Pusher's public values, or enabled false.
                 'realtime' => ['enabled', 'key', 'cluster'],
+                // M4.15 ADR-452: the VAPID public key, null without keys.
+                'web_push' => ['vapid_public_key'],
             ]])
             ->assertJsonPath('data.maintenance.enabled', false)
             ->assertJsonPath('data.branding.default_theme', 'carbon')

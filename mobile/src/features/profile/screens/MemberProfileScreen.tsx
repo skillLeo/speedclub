@@ -28,7 +28,7 @@ import { useViewAsLock } from '@/features/viewAs/useViewAs';
 import { Button, EmptyState, ErrorState, IconButton, Text, toast, useCollapsingHeader } from '@/ui';
 
 import { FollowButton } from '../components/FollowButton';
-import { PROFILE_COLUMN_MAX, PROFILE_WIDE_MAX, profileCover, profileCoverHeight, ProfileIdentity } from '../components/ProfileHeader';
+import { PROFILE_COLUMN_MAX, PROFILE_WIDE_MAX, profileCover, profileCoverHeight, profileCoverWidth, ProfileIdentity } from '../components/ProfileHeader';
 import { ProfileFrame } from '../components/ProfileFrame';
 import { ProfileSkeleton } from '../components/ProfileSkeleton';
 import { GaragePanel, initialProfileTab, ProfileTabBar, profileTabs, UpdatesPanel, useProfileTabFlags, type ProfileTab } from '../components/ProfileTabs';
@@ -106,7 +106,8 @@ export function MemberProfileScreen() {
   const garageQuery = left
     ? { data: left.vehicles ?? [], isPending: false, isFetching: false, fetchStatus: 'idle' as const, refetch: () => undefined }
     : vehiclesQuery;
-  const cover = profile ? profileCover(profile, vehicles.map((vehicle) => vehicle.cover)) : null;
+  // The member's photo for the cover, or null for the brand stage (DQ-1234): the profile always opens on a cover.
+  const cover = profile ? profileCover(profile, vehicles) : null;
   const tabs = profileTabs(false, flags);
   const current = tabs.includes(tab) ? tab : 'garage';
 
@@ -185,6 +186,7 @@ export function MemberProfileScreen() {
   let body: ReactNode;
   let overPhoto = false;
   if (isSelf && profile) {
+    overPhoto = true;
     body = (
       <ProfileIdentity
         profile={profile}
@@ -196,7 +198,9 @@ export function MemberProfileScreen() {
       />
     );
   } else if (state === 'loading') {
-    body = <ProfileSkeleton width={width} columnWidth={columnWidth} variant="member" withMessage routeId={ROUTE} />;
+    // The skeleton takes the loaded page's geometry: the bar over a cover block (every profile has one, DQ-1234).
+    overPhoto = true;
+    body = <ProfileSkeleton width={width} columnWidth={columnWidth} withCover variant="member" withMessage routeId={ROUTE} />;
   } else if (state === 'unavailable') {
     body = (
       <View style={[styles.stateBody, styles.column, { paddingHorizontal: gutter }]}>
@@ -223,7 +227,7 @@ export function MemberProfileScreen() {
       </View>
     );
   } else {
-    overPhoto = cover !== null;
+    overPhoto = true;
     const memberName = profile.username ?? username;
     body = (
       <>
@@ -231,12 +235,11 @@ export function MemberProfileScreen() {
           profile={profile}
           routeId={ROUTE}
           width={width}
-          cardCovers={vehicles.map((vehicle) => vehicle.cover)}
+          cards={vehicles}
           badge={profile.follows_you ? t('member.followsYou') : undefined}
           other
           onFollowers={connections('followers')}
           onFollowing={connections('following')}
-          onNameBottom={cover ? undefined : (bottom) => header.collapseAt.set(bottom)}
           footer={
             messageHelper ? (
               <Text variant="caption" color="text.secondary" testID={`${ROUTE}.messageHelper`}>
@@ -267,7 +270,14 @@ export function MemberProfileScreen() {
               <UpdatesPanel routeId={ROUTE} own={false} vehicles={vehicles} ready={vehicleData !== undefined} />
             </View>
           ) : (
-            <GaragePanel routeId={ROUTE} own={false} vehicles={vehicles} query={garageQuery} width={kind === 'desktop' ? wideInner : inner} />
+            <GaragePanel
+              routeId={ROUTE}
+              own={false}
+              vehicles={vehicles}
+              query={garageQuery}
+              width={kind === 'desktop' ? wideInner : inner}
+              profileCover={cover}
+            />
           )}
         </View>
       </>
@@ -284,8 +294,10 @@ export function MemberProfileScreen() {
       onBack={back}
       header={header}
       collapseAt={Math.max(0, coverHeight - size.header)}
+      photoWidth={overPhoto ? profileCoverWidth(width, kind) : undefined}
       onWidth={setWidth}
       offlineLabel={t('member.offlineBanner')}
+      scrollEnabled={state !== 'loading'}
       overlays={
         <>
           <MoreSheet visible={moreOpen} onClose={() => setMoreOpen(false)} title={handle} actions={moreActions} testID={`${ROUTE}.moreSheet`} />

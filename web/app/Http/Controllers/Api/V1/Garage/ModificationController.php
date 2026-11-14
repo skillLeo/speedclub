@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\Gate;
  */
 class ModificationController extends Controller
 {
-    private const RELATIONS = ['category.fields', 'brand.mergedInto', 'media', 'vehicle'];
+    private const RELATIONS = ['category.fields', 'brand.mergedInto', 'media', 'vehicle', 'product.brand', 'installedBy.owner'];
 
     /**
      * List a vehicle's modifications.

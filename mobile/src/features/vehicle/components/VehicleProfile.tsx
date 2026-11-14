@@ -17,7 +17,7 @@ import { ContentTabs, OwnerCapsule, type ContextMenuItem, type HeaderAction, typ
 import { StretchyHero } from '@/ui/motion/kit';
 import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
-import { DESKTOP_CARD_FLEX, DESKTOP_GALLERY_FLEX, heroBox, heroIdentityOverlap, heroIdentityWidth, profileSummaryWidth, TABLET_COLUMN, useProfileLayout, useSticky } from '../layout';
+import { DESKTOP_CARD_FLEX, DESKTOP_GALLERY_FLEX, heroBox, heroIdentityOverlap, heroIdentityWidth, profileSummaryWidth, scrimOverlapDataSet, TABLET_COLUMN, useProfileLayout, useSticky } from '../layout';
 import { visiblePhotos } from '../media';
 import { PROFILE_TABS, type ProfileTab } from '../model';
 import { COMPARE_FLAG } from '../compare';
@@ -118,7 +118,6 @@ export function VehicleProfile({
   const header = useCollapsingHeader();
   const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const heroRef = useRef<ProfileHeroHandle>(null);
-  const summaryY = useRef(0);
   const [width, setWidth] = useContentWidth(layout);
   const estimatedOverlay = useEstimatedOverlayHeight();
   const [overlayHeight, setOverlayHeight] = useState<number | null>(null);
@@ -135,19 +134,19 @@ export function VehicleProfile({
   const current = tab ?? ownTab;
   const slug = vehicle.slug;
   const photos = useMemo(() => visiblePhotos(vehicle.photos), [vehicle.photos]);
-  const overHero = layout === 'phone' && photos.length > 0;
+  // DQ-1211: a build without photos has WEB-01's empty stage photo there, so the bar floats over a photo on every build.
+  const overHero = layout === 'phone';
   const barHeight = overlayHeight ?? estimatedOverlay;
 
   // DQ-1047/1048: the hero at every width (4:5 on a phone, 16:9 across the content from 768) with the identity on its scrim.
   const { width: heroWidth, ratio: heroRatio } = heroBox(layout, width);
   const heroHeight = heroWidth / heroRatio;
-  const onPhoto = photos.length > 0;
-  const overlap = onPhoto ? heroIdentityOverlap(heroWidth, heroRatio) : 0;
+  const overlap = heroIdentityOverlap(heroWidth, heroRatio);
 
   // The tabs stick under the floating bar on a phone, at the top of the scroller under a bar above it everywhere else.
   // From 768 the tabs' parent starts under the stage (the hero and the identity under it), whose height comes from its layout.
   const [stageHeight, setStageHeight] = useState(0);
-  const stageOffset = onPhoto ? stageHeight : heroHeight;
+  const stageOffset = stageHeight;
   const sticky = useSticky(header.scrollY, overHero ? barHeight : 0, layout === 'desktop' ? stageOffset + space[24] : layout === 'tablet' ? stageOffset : 0);
   const cardSticky = useSticky(header.scrollY, space[24], stageOffset + space[24]);
 
@@ -220,11 +219,8 @@ export function VehicleProfile({
   // The bar of a tablet shows the title once the page title has passed under it.
   const onTitleLayout = (event: LayoutChangeEvent) => {
     const { y, height } = event.nativeEvent.layout;
-    // On the hero the identity starts `overlap` above the photo's bottom edge; without photos it is the summary's first block.
-    header.collapseAt.set((onPhoto ? heroHeight - overlap : summaryY.current) + y + height);
-  };
-  const trackSummary = (offset: number) => (event: LayoutChangeEvent) => {
-    summaryY.current = offset + event.nativeEvent.layout.y;
+    // On the hero (or the empty stage, DQ-1211) the identity starts `overlap` above the photo's bottom edge.
+    header.collapseAt.set(heroHeight - overlap + y + height);
   };
 
   const heroBody = (
@@ -234,11 +230,10 @@ export function VehicleProfile({
       width={heroWidth}
       corner="none"
       vehicleTitle={vehicle.full_title}
-      ownerUsername={owner?.username}
       onOpen={setViewerIndex}
       ratio={heroRatio}
       aspect={layout === 'phone' ? '4:5' : '16:9'}
-      identityOverlap={onPhoto ? overlap : undefined}
+      identityOverlap={overlap}
       routeId={routeId}
     />
   );
@@ -250,7 +245,7 @@ export function VehicleProfile({
   ) : (
     heroBody
   );
-  const stage = onPhoto ? (
+  const stage = (
     <View style={styles.stage} onLayout={(event) => setStageHeight(event.nativeEvent.layout.height)} testID={`${routeId}.stage`}>
       {hero}
       <VehicleIdentity
@@ -261,11 +256,10 @@ export function VehicleProfile({
         onOpenOwner={openOwner}
         onTitleLayout={onTitleLayout}
         headMinHeight={overlap}
+        dataSet={scrimOverlapDataSet(overlap)}
         style={[styles.heroIdentity, { marginTop: -overlap, paddingHorizontal: gutter }]}
       />
     </View>
-  ) : (
-    hero
   );
 
   // DQ-1049: on phones and tablets the capsule floats above the tab bar (ProfileFrame `floating`); the desktop card keeps it in place.
@@ -306,13 +300,14 @@ export function VehicleProfile({
       vehicle={vehicle}
       routeId={routeId}
       variant={variant}
-      identity={onPhoto ? 'none' : 'canvas'}
+      identity="none"
       // N1b: the strip knows its width before its own layout, so its first frame already has its final columns.
       layoutWidth={profileSummaryWidth(layout, width, gutter)}
       onOpenOwner={openOwner}
       actions={actionRow}
       ownerToolbar={ownerToolbar}
-      onTitleLayout={onPhoto ? undefined : onTitleLayout}
+      // DQ-1211: without photos the stage carries the identity; one line says so, and the owner gets the one way to add them.
+      noPhotos={photos.length === 0 ? { ownerUsername: ownVehicle ? null : (owner?.username ?? null), onAdd: vehicle.is_owner ? () => router.push(`/garage/${vehicle.id}/photos`) : undefined } : undefined}
     />
   );
 
@@ -405,7 +400,7 @@ export function VehicleProfile({
       <View>
         {stage}
         <View style={[styles.tabletColumn, { paddingHorizontal: gutter }]}>
-          <View style={styles.summaryPhone} onLayout={trackSummary(heroHeight)}>
+          <View style={styles.summaryPhone}>
             {summary('page')}
           </View>
           {tabsBlock}
@@ -417,7 +412,7 @@ export function VehicleProfile({
     body = (
       <View>
         {stage}
-        <View style={[styles.summaryPhone, { paddingHorizontal: gutter }]} onLayout={trackSummary(0)}>
+        <View style={[styles.summaryPhone, { paddingHorizontal: gutter }]}>
           {summary('page')}
         </View>
         {tabsBlock}

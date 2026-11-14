@@ -29,9 +29,11 @@ class SecurityHeaders
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         // ADM-34: a page opened with a valid staff preview token may be framed by the admin on the same origin (the draft preview frames);
-        // everything else, and every page without a token, stays unframeable.
+        // so may an answer that says SAMEORIGIN itself (the ADM-61 mail frame, which also sets frame-ancestors 'self'). Everything else,
+        // and every page without a token, stays unframeable.
         $previewFrame = $this->previewFrame($request);
-        $response->headers->set('X-Frame-Options', $previewFrame ? 'SAMEORIGIN' : 'DENY');
+        $selfFramed = $response->headers->get('X-Frame-Options') === 'SAMEORIGIN';
+        $response->headers->set('X-Frame-Options', $previewFrame || $selfFramed ? 'SAMEORIGIN' : 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), geolocation=(), microphone=(), payment=(), usb=()');
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');

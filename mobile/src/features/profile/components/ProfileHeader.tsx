@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, type LayoutChangeEvent } from 'react-native';
+import { View } from 'react-native';
 
 import { avatarUrlOf, type Me } from '@/api/queries/auth';
 import type { MediaData } from '@/api/queries/profile';
@@ -8,29 +8,36 @@ import { useFormat } from '@/lib/useFormat';
 import { createStyles, layout, size, useBreakpoint, type BreakpointKind } from '@/theme';
 import { Avatar, Button, IconButton, Photo, PhotoTopScrim, SampleBadges, sampleBadgeKinds, StatusPill, Text, type PhotoAspect } from '@/ui';
 import { ratioOf } from '@/ui/Photo';
+import { STAGE_EMPTY_PHOTO } from '@/features/vehicle/stage';
 
 import { photoFields } from '../media';
 import { ProfileStats } from './ProfileStats';
 
-/** The profile column (DQ-114): 640 plus its gutters, on the start edge; the cover alone runs full width. */
+/** The profile column (DQ-114): 640 plus its gutters, on the start edge, for the identity and every tab but the desktop Garage. */
 export const PROFILE_COLUMN_MAX = layout.feedColumn + 2 * layout.gutter.desktop;
 /** Desktop Garage tab: the content width of 09 §4.3 (1200) for the cards side by side; identity and the other tabs keep the feed column. */
 export const PROFILE_WIDE_MAX = layout.contentMax + 2 * layout.gutter.desktop;
 /** 09 §5 Avatar 88, overlapping the cover by half its height (09 §7.7). */
 const AVATAR_OVERLAP = size.avatar.xl / 2;
+/** DOM audit: half the avatar's size is a derived margin, not a scale step (counted exemption, M4.18). */
+export const AVATAR_OVERLAP_EXEMPT = { qaExempt: 'avatar-overlap' } as const;
 
 /**
  * 09 §7.7, §4.6, ADR-451 (DQ-1091): the cover is 16:9 on every width, so one upload is never cropped two ways. Phones and tablets
- * show it edge to edge; from 1280 it stands in the profile column (like the VEH-01 hero in its column), so a 16:9 cover of the whole
- * pane cannot push the name below the fold.
+ * show it edge to edge.
  */
 export function profileCoverAspect(_kind?: BreakpointKind): PhotoAspect {
   return '16:9';
 }
 
-/** The cover's width in a pane `width` wide: the pane, or the profile column on the desktop. */
+/**
+ * The cover's width in a pane `width` wide. DQ-1159: from 1280 it spans the main area like the VEH-01 hero (0 radius, full bleed),
+ * up to the wide column's box, so it shares both edges with the column the identity, the tabs and the garage grid stand in (their
+ * text on its gutter, the avatar too): x 240–1280 at 1280 (1040 × 585), x 240–1440 at 1440 (1200 × 675), and never wider than the
+ * 1200 content plus its gutters, where the column stops.
+ */
 export function profileCoverWidth(width: number, kind: BreakpointKind): number {
-  return kind === 'desktop' ? Math.min(width, PROFILE_COLUMN_MAX) : width;
+  return kind === 'desktop' ? Math.min(width, PROFILE_WIDE_MAX) : width;
 }
 
 /** Height of the cover at `width`: where the photo header turns solid, and the skeleton's block. */
@@ -41,8 +48,6 @@ export function profileCoverHeight(width: number, kind: BreakpointKind): number 
 const useStyles = createStyles((t) => ({
   identity: { maxWidth: PROFILE_COLUMN_MAX, width: '100%' },
   avatarOverlap: { alignSelf: 'flex-start', marginTop: -AVATAR_OVERLAP },
-  // Without a cover the avatar starts under the bar, where the photo header's controls would be.
-  avatarTop: { alignSelf: 'flex-start', marginTop: t.space[8] },
   // The canvas ring (09 §7.7) that separates the avatar from the photo it overlaps.
   ring: {
     backgroundColor: t.color.bg.canvas,
@@ -67,16 +72,38 @@ const useStyles = createStyles((t) => ({
 export type ProfileData = Pick<Me, 'display_name' | 'username' | 'city' | 'bio' | 'avatar' | 'cover' | 'member_since' | 'stats'> &
   Partial<Pick<Me, 'is_sample' | 'is_editorial'>>;
 
-/** The member's own cover first; without one the main build's photo (09 §7.7 "favourite car photo"); else none. */
-export function profileCover(profile: Pick<ProfileData, 'cover'>, cardCovers: readonly (MediaData | null | undefined)[]): MediaData | null {
-  const first = cardCovers[0] ?? null;
-  const cover = profile.cover ?? first;
-  // DQ-1090: the cover and the first garage card are in one screenful; when they are the same photo, the cover takes another
-  // build's photo instead (the member's own pick stays wherever it would not repeat).
-  if (cover && first && cover.id === first.id) {
-    return cardCovers.slice(1).find((other): other is MediaData => Boolean(other) && other?.id !== cover.id) ?? cover;
-  }
-  return cover;
+/** What the cover fallback needs of a garage card: the photo it shows and how many photos its build shows the viewer. */
+export type CoverCard = { cover: MediaData | null | undefined; photo_count?: number | null };
+
+/**
+ * The profile cover without one of the member's own (DQ-1234): the brand stage, WEB-01's `stage-empty` (a lit shelter on wet tarmac
+ * at night, no car, no member), the photo /u shows in the same case. It never stands in for somebody's car, so it carries no label.
+ */
+export const PROFILE_STAGE = STAGE_EMPTY_PHOTO;
+
+/**
+ * The member's own cover, always (DQ-1160: PROF-01 shows what PROF-03 previews). Without one a build photo only when no garage card
+ * shows it (DQ-1234, skill rule 6: never one picture twice in a scroll): the cover of the first build, main first (09 §7.7 "favourite
+ * car photo"), that has a second photo, as its card then takes that next one (`useDistinctCover`). Otherwise null: the profile shows
+ * the brand stage (`PROFILE_STAGE`), as /u does (PublicPageData). A chosen cover that is also a card's is kept: the card gives way.
+ */
+export function profileCover(profile: Pick<ProfileData, 'cover'>, cards: readonly CoverCard[]): MediaData | null {
+  if (profile.cover) return profile.cover;
+  return cards.find((card) => card.cover && (card.photo_count ?? 0) > 1)?.cover ?? null;
+}
+
+/** A garage card's photos as far as the card carries them: its cover, and the next gallery photos when the API sends them. */
+export type GarageCardPhotos = { cover: MediaData | null; photos?: readonly MediaData[] | null };
+
+/**
+ * DQ-1160: the photo a garage card shows under a profile whose cover is `profileCoverPhoto`. When the two are the same picture the
+ * card takes its next gallery photo, if the card data carries one; otherwise it keeps its cover (the member's choice is never
+ * replaced on the cover side).
+ */
+export function garageCardCover(vehicle: GarageCardPhotos, profileCoverPhoto: MediaData | null | undefined): MediaData | null {
+  const cover = vehicle.cover;
+  if (!cover || !profileCoverPhoto || cover.id !== profileCoverPhoto.id) return cover;
+  return vehicle.photos?.find((photo) => photo.id !== cover.id) ?? cover;
 }
 
 export type ProfileIdentityProps = {
@@ -85,8 +112,8 @@ export type ProfileIdentityProps = {
   routeId: string;
   /** Width of the screen's content area: the cover runs edge to edge. */
   width: number;
-  /** The garage cards' photos in card order: the cover without one of the member's own, and never the first card's twice. */
-  cardCovers?: readonly (MediaData | null | undefined)[];
+  /** The garage cards in card order: the cover without one of the member's own (`profileCover`). */
+  cards?: readonly CoverCard[];
   /** "Folgt dir" beside the @username (PROF-02). */
   badge?: string;
   /** Another member's profile (PROF-02): the stats name their second list "Gefolgt". */
@@ -99,12 +126,11 @@ export type ProfileIdentityProps = {
   actions: ReactNode;
   /** Under the actions, for a helper such as why Nachricht is off. */
   footer?: ReactNode;
-  /** Where the name ends, from the top of the identity: the bar shows the name once it has scrolled under it. */
-  onNameBottom?: (bottom: number) => void;
 };
 
 /**
- * 09 §7.7 PROF-01/02: a 16:9 cover edge to edge with `scrim.top` under the floating controls, the avatar 88 overlapping it by
+ * 09 §7.7 PROF-01/02: a 16:9 cover edge to edge (on the desktop across the wide column, DQ-1159) with `scrim.top` under the floating
+ * controls (the member's photo, else the brand stage: every profile opens on a photo, skill rule 1), the avatar 88 overlapping it by
  * half in a canvas ring, the name in `title.1` (people speak Inter), @username, "München · Mitglied seit März 2023", the bio
  * (three lines), badges, one quiet meta line of counts and the actions of the variant. No stat boxes.
  */
@@ -112,7 +138,7 @@ export function ProfileIdentity({
   profile,
   routeId,
   width,
-  cardCovers = [],
+  cards = [],
   badge,
   other = false,
   onFollowers,
@@ -120,7 +146,6 @@ export function ProfileIdentity({
   notice,
   actions,
   footer,
-  onNameBottom,
 }: ProfileIdentityProps) {
   const { t } = useTranslation('profile');
   const styles = useStyles();
@@ -130,38 +155,28 @@ export function ProfileIdentity({
   const showUsername = Boolean(profile.display_name && profile.username);
   const since = t('memberSince', { date: format.monthYear(new Date(profile.member_since)) });
   const meta = [profile.city, since].filter(Boolean).join(' · ');
-  const cover = profileCover(profile, cardCovers);
-  const coverHeight = cover && width > 0 ? profileCoverHeight(width, kind) : 0;
+  const cover = profileCover(profile, cards);
+  const coverWidth = profileCoverWidth(width, kind);
 
   return (
     <View testID={`${routeId}.identity`}>
-      {cover && width > 0 ? (
+      {width > 0 ? (
         <Photo
-          {...photoFields(cover, profileCoverWidth(width, kind))}
+          {...(cover ? photoFields(cover, coverWidth) : PROFILE_STAGE)}
           aspect={profileCoverAspect(kind)}
-          label={t('coverLabel', { name })}
-          style={{ width: profileCoverWidth(width, kind) }}
+          label={cover ? t('coverLabel', { name }) : undefined}
+          style={{ width: coverWidth }}
           testID={`${routeId}.cover`}
         >
           <PhotoTopScrim />
         </Photo>
       ) : null}
       <View style={[styles.identity, { paddingHorizontal: gutter }]}>
-        <View style={cover ? styles.avatarOverlap : styles.avatarTop}>
-          {cover ? <View style={styles.ring} /> : null}
+        <View style={styles.avatarOverlap} dataSet={AVATAR_OVERLAP_EXEMPT}>
+          <View style={styles.ring} />
           <Avatar name={name} uri={avatarUrlOf(profile.avatar)} blurhash={profile.avatar?.blurhash} size={88} decorative testID={`${routeId}.avatar`} />
         </View>
-        <View
-          style={styles.names}
-          onLayout={
-            onNameBottom
-              ? (event: LayoutChangeEvent) => {
-                  const { y, height } = event.nativeEvent.layout;
-                  onNameBottom(coverHeight + y + height);
-                }
-              : undefined
-          }
-        >
+        <View style={styles.names}>
           <Text variant="title1" role="heading" aria-level={1} testID={`${routeId}.name`}>
             {name}
           </Text>
@@ -211,13 +226,13 @@ export function ProfileIdentity({
 export type ProfileHeaderProps = {
   me: Me;
   width: number;
-  cardCovers?: readonly (MediaData | null | undefined)[];
+  /** The garage cards in card order, for the cover without one of the member's own (`profileCover`). */
+  cards?: readonly CoverCard[];
   onEdit: () => void;
   onShare: () => void;
   onQrCodes: () => void;
   onFollowers?: () => void;
   onFollowing?: () => void;
-  onNameBottom?: (bottom: number) => void;
   sharing?: boolean;
   /** Under the stats, for a restriction. */
   notice?: ReactNode;
@@ -226,7 +241,7 @@ export type ProfileHeaderProps = {
 };
 
 /** PROF-01: the identity with "Profil bearbeiten" (secondary), share and the QR codes (QR-01). */
-export function ProfileHeader({ me, width, cardCovers, onEdit, onShare, onQrCodes, onFollowers, onFollowing, onNameBottom, sharing = false, notice, readOnly = false }: ProfileHeaderProps) {
+export function ProfileHeader({ me, width, cards, onEdit, onShare, onQrCodes, onFollowers, onFollowing, sharing = false, notice, readOnly = false }: ProfileHeaderProps) {
   const { t } = useTranslation('profile');
   const styles = useStyles();
   return (
@@ -234,10 +249,9 @@ export function ProfileHeader({ me, width, cardCovers, onEdit, onShare, onQrCode
       profile={me}
       routeId="PROF-01"
       width={width}
-      cardCovers={cardCovers}
+      cards={cards}
       onFollowers={onFollowers}
       onFollowing={onFollowing}
-      onNameBottom={onNameBottom}
       notice={notice}
       actions={
         <>

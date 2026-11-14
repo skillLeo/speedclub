@@ -226,7 +226,8 @@
             "rate_limits_published": "Request limits published",
             "restriction_lifted": "Restriction ended",
             "template_deleted": "Statement template deleted",
-            "template_saved": "Statement template saved"
+            "template_saved": "Statement template saved",
+            "case_released": "Take undone"
         },
         "permissions": {
             "changed": "Role permissions changed"
@@ -334,7 +335,13 @@
             "rejected": "Business rejected",
             "suspended": "Business suspended",
             "reinstated": "Business reinstated",
-            "reopened": "Business decision reopened"
+            "reopened": "Business decision reopened",
+            "member_invited": "Member invited to the business team",
+            "invite_accepted": "Team invitation accepted",
+            "invite_declined": "Team invitation declined",
+            "invite_withdrawn": "Team invitation withdrawn",
+            "member_removed": "Member removed from the business team",
+            "member_left": "Member left the business team"
         },
         "product": {
             "created": "Part created",
@@ -342,6 +349,10 @@
             "archived": "Part archived",
             "restored": "Part restored",
             "merged": "Parts merged"
+        },
+        "editorial": {
+            "sample_hidden": "Sample hidden",
+            "sample_shown": "Sample shown again"
         }
     }
 }

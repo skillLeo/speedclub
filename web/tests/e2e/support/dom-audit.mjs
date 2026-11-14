@@ -15,6 +15,14 @@
 //                      or two characters directly inside a circle of an avatar size
 //      tab-label       the `web.tab` token's pair at font scale min(scale, 1.15) (ADR-145): only on a label inside the phone
 //                      tab bar (data-testid shell.tabbar) whose role="tab" cell is exactly 72 wide (design-QA ruling, M2.8)
+//      scrim-overlap   a negative margin-top derived from the photo's large-text-safe line (ADR-421 b; the identity reaches up
+//                      into the photo above it, width / ratio × (1 − scrimSafe.large), so it is a layout result, never a scale
+//                      step; accepted in the r2 re-check and the M4.14 design QA, ADR-457 context): only on a direct child of a stage listed in
+//                      SCRIM_OVERLAP_STAGES whose previous sibling is the stage's photo, and only while the overlap stays
+//                      inside that photo; it frees margin-top alone, every other spacing value stays on the scale
+//      avatar-overlap  a negative margin-top of half an avatar size (09 §7.7: the profile avatar overlaps the cover by half its
+//                      height; −44 for avatar.xl 88, accepted in the M4.10 design QA): only on a box exactly one avatar size
+//                      square whose margin-top is minus half that size; it frees margin-top alone
 //  - A scroll region made focusable for keyboard scrolling (tabindex 0, no role, overflow auto/scroll) is no control
 //    for overlap and touch target; counted as `focusable-scroller`.
 //  - Overlap: an ancestor and its descendant (nested interactive is axe's job: nested-interactive);
@@ -176,6 +184,21 @@ export const isAdminUrl = (url) => {
 const BRAND_POSITION_IDS = ['AUTH-02.logoSlot', 'AUTH-02.logo'];
 /** ADR-145: a tab cell of exactly this width caps its label's font scale at TAB_LABEL_CAP (mobile TabBar.tsx tabLabelCap). */
 const TAB_CELL_WIDTH = 72;
+/**
+ * Stages whose identity block may carry `scrim-overlap`: the identity-on-scrim margins design QA accepted (r2 re-check: VEH-01, EVT-02 and
+ * GAR-03; M4.14: BIZ-01). VEH-01's stage is the shared VehicleProfile, so GAR-02 (the owner's view of the same page) is the same stage;
+ * the two skeleton stages draw that page's geometry while it loads; GAR-03's review step previews VEH-01 with and without a photo.
+ */
+const SCRIM_OVERLAP_STAGES = [
+  'BIZ-01.stage',
+  'VEH-01.stage',
+  'VEH-01.skeleton.stage',
+  'GAR-02.stage',
+  'GAR-02.skeleton.stage',
+  'EVT-02.stage',
+  'GAR-03.vehPreview.stage',
+  'GAR-03.vehPreview.empty',
+];
 const TAB_LABEL_CAP = 1.15;
 
 /**
@@ -187,6 +210,7 @@ const TAB_LABEL_CAP = 1.15;
  * @property {{name:string,size:number,lineHeight:number}[]} unscaledTypePairs the type scale at font scale 1, for fixed-glyph
  * @property {number[]} avatarSizes
  * @property {string[]} brandPositionIds
+ * @property {string[]} scrimOverlapStages data-testids of the stages whose identity may carry `scrim-overlap`
  * @property {number} tabCellWidth width of the tab cell whose label may carry `tab-label`
  * @property {{name:string,variant:string,size:number,lineHeight:number}[]} tabLabelTypePairs the `web.tab` pair at the capped font scale
  * @property {number} tabLabelTolerance
@@ -203,7 +227,7 @@ const TAB_LABEL_CAP = 1.15;
  */
 function auditInBrowser(cfg) {
   const { checks } = cfg;
-  const KNOWN_EXEMPTIONS = ['photo', 'qr', 'safe-area', 'hairline', 'brand-position', 'fixed-glyph', 'tab-label'];
+  const KNOWN_EXEMPTIONS = ['photo', 'qr', 'safe-area', 'hairline', 'brand-position', 'fixed-glyph', 'tab-label', 'scrim-overlap', 'avatar-overlap'];
   const INTERACTIVE_ROLES = [
     'button', 'link', 'tab', 'checkbox', 'radio', 'switch', 'menuitem', 'menuitemcheckbox', 'menuitemradio',
     'option', 'slider', 'combobox', 'textbox', 'searchbox', 'spinbutton', 'treeitem',
@@ -904,8 +928,7 @@ function auditInBrowser(cfg) {
   }
 
   // ---- 3. Overlap
-  const clipToAncestors = (/** @type {Element} */ el) => {
-    const r = el.getBoundingClientRect();
+  const clipToAncestors = (/** @type {Element} */ el, /** @type {DOMRect} */ r = el.getBoundingClientRect()) => {
     const v = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
     for (let cur = el.parentElement; cur; cur = cur.parentElement) {
       const cs = getComputedStyle(cur);
@@ -938,13 +961,38 @@ function auditInBrowser(cfg) {
     }
     return false;
   };
-  const clipped = interactive.map((el) => ({ el, v: clipToAncestors(el) }));
+  /**
+   * The boxes a control paints: its bounding box, or for an inline element that wraps (a document link running onto the next line of
+   * its sentence, AUTH-09b) each of its line boxes. The bounding box of a wrapped inline spans both lines edge to edge and would
+   * "overlap" every other link on those lines, which no pixel does; two line boxes that do intersect still count.
+   */
+  const boxesOf = (/** @type {Element} */ el) => {
+    const lines = getComputedStyle(el).display === 'inline' ? Array.from(el.getClientRects()) : [];
+    return (lines.length > 1 ? lines : [el.getBoundingClientRect()]).map((r) => clipToAncestors(el, r));
+  };
+  /** @typedef {{left:number,top:number,right:number,bottom:number}} Box */
+  /** The largest intersection of two sets of boxes, as [width, height] (0 when none). */
+  const intersection = (/** @type {Box[]} */ as, /** @type {Box[]} */ bs) => {
+    let bestW = 0;
+    let bestH = 0;
+    for (const a of as) {
+      for (const b of bs) {
+        const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (w > 1 && h > 1 && w * h > bestW * bestH) {
+          bestW = w;
+          bestH = h;
+        }
+      }
+    }
+    return [bestW, bestH];
+  };
+  const clipped = interactive.map((el) => ({ el, boxes: boxesOf(el) }));
   for (let i = 0; i < clipped.length; i++) {
-    const a = /** @type {{el:Element,v:{left:number,top:number,right:number,bottom:number}}} */ (clipped[i]);
+    const a = /** @type {{el:Element,boxes:Box[]}} */ (clipped[i]);
     for (let j = i + 1; j < clipped.length; j++) {
-      const b = /** @type {{el:Element,v:{left:number,top:number,right:number,bottom:number}}} */ (clipped[j]);
-      const w = Math.min(a.v.right, b.v.right) - Math.max(a.v.left, b.v.left);
-      const h = Math.min(a.v.bottom, b.v.bottom) - Math.max(a.v.top, b.v.top);
+      const b = /** @type {{el:Element,boxes:Box[]}} */ (clipped[j]);
+      const [w, h] = /** @type {[number, number]} */ (intersection(a.boxes, b.boxes));
       if (w <= 1 || h <= 1) continue;
       if (a.el.contains(b.el) || b.el.contains(a.el)) continue;
       const sa = nearestScroller(a.el);
@@ -1296,6 +1344,24 @@ function auditInBrowser(cfg) {
     if (!cell) return false;
     return Math.abs(cell.getBoundingClientRect().width - cfg.tabCellWidth) < 0.5;
   };
+  // The identity on a listed stage, right after the stage's photo, reaching up into that photo and no further.
+  const isScrimOverlap = (/** @type {Element} */ el) => {
+    const stage = el.parentElement;
+    if (!stage || !cfg.scrimOverlapStages.includes(stage.getAttribute('data-testid') ?? '')) return false;
+    const photo = el.previousElementSibling;
+    if (!photo) return false;
+    const isPhoto = exemptTokens(photo).includes('photo') || photo.querySelector('[data-qa-exempt~="photo"]') !== null;
+    if (!isPhoto) return false;
+    const margin = parseFloat(getComputedStyle(el).marginTop);
+    return Number.isFinite(margin) && margin < 0 && -margin <= photo.getBoundingClientRect().height + 0.5;
+  };
+  // A box exactly one avatar size square, pulled up by half that size (the profile avatar over its cover).
+  const isAvatarOverlap = (/** @type {Element} */ el) => {
+    const r = el.getBoundingClientRect();
+    const side = cfg.avatarSizes.find((s) => Math.abs(r.width - s) < 0.5 && Math.abs(r.height - s) < 0.5);
+    if (side === undefined) return false;
+    return Math.abs(parseFloat(getComputedStyle(el).marginTop) + side / 2) < 0.5;
+  };
   /** @type {Record<string,{allowed:(el:Element)=>boolean,where:string}>} */
   const RESTRICTED_EXEMPTIONS = {
     'brand-position': {
@@ -1304,6 +1370,11 @@ function auditInBrowser(cfg) {
     },
     'fixed-glyph': { allowed: isAvatarInitials, where: "an avatar's initials" },
     'tab-label': { allowed: isCappedTabLabel, where: `a label in a ${cfg.tabCellWidth} px cell of the tab bar (shell.tabbar, or DEV-01's tab bars)` },
+    'scrim-overlap': {
+      allowed: isScrimOverlap,
+      where: `the identity right after the photo of ${cfg.scrimOverlapStages.join(' or ')}, with a negative margin-top inside that photo`,
+    },
+    'avatar-overlap': { allowed: isAvatarOverlap, where: 'a box one avatar size square with a margin-top of minus half that size' },
   };
 
   for (const el of elements) {
@@ -1328,6 +1399,7 @@ function auditInBrowser(cfg) {
       const hidden = insideSrOnly(el);
       for (const [prop, jsProp] of /** @type {[string,string][]} */ (SPACING_PROPS)) {
         if (tokens.includes('brand-position') && prop.startsWith('margin-')) continue;
+        if ((tokens.includes('scrim-overlap') || tokens.includes('avatar-overlap')) && prop === 'margin-top') continue;
         const raw = /** @type {any} */ (cs)[jsProp];
         if (raw === 'normal' || raw === 'auto') continue;
         const resolved = parseFloat(raw);
@@ -1475,6 +1547,7 @@ export async function runDomAudit(page, opts = {}) {
     unscaledTypePairs: auditConfig({ ...opts, viewportWidth, fontScale: 1 }).typePairs,
     avatarSizes: Object.values(tokens.size.avatar).map(Number),
     brandPositionIds: BRAND_POSITION_IDS,
+    scrimOverlapStages: SCRIM_OVERLAP_STAGES,
     tabCellWidth: TAB_CELL_WIDTH,
     tabLabelTypePairs,
     tabLabelTolerance: cappedScale === 1 ? 0.01 : 0.5,

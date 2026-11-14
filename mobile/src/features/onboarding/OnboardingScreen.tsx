@@ -48,6 +48,10 @@ const LIVE_MAX = FORM_MAX_WIDTH - space[64];
  * 12 of air under it before the page content, as every screen header leaves (56, as before).
  */
 const TOP_BAR = sizeTokens.header + space[12];
+/** The air between the skip row and a page's live component (TOP_BAR's 12). */
+const BAR_AIR = space[12];
+/** The air between a page's copy and the floating controls under it. */
+const CONTROLS_AIR = space[24];
 /** DQ-1023: the live component scales down to fit the window, never below this (its text must stay readable). */
 export const LIVE_SCALE_FLOOR = 0.75;
 /** DQ-1023: from this font scale the page may scroll, and the controls follow the copy in the scroll content. */
@@ -83,7 +87,8 @@ const useStyles = createStyles((t) => ({
   photoFrame: { left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 0 },
   photo: { height: '100%', width: '100%' },
   pageScroll: { flex: 1 },
-  pageContent: { alignItems: 'center', flexGrow: 1 },
+  // The page's own air on the scale; what floats over it (the skip row, the controls) is held free by spacers of its size.
+  pageContent: { alignItems: 'center', flexGrow: 1, paddingBottom: CONTROLS_AIR, paddingTop: BAR_AIR },
   spacer: { flexGrow: 1, minHeight: t.space[32] },
   // The live component keeps its layout size; the visual scales from its top edge (DQ-1023).
   liveFrame: { alignItems: 'center', overflow: 'visible' },
@@ -255,8 +260,8 @@ function Onboarding() {
             live={live}
             scrollX={scrollX}
             drift={drift}
-            top={TOP_BAR}
-            bottom={inFlow ? space[24] : controlsHeight + space[24]}
+            barHeight={sizeTokens.header}
+            controlsHeight={inFlow ? 0 : controlsHeight}
             controls={inFlow && index === page ? controls(entry.id) : null}
           />
         ),
@@ -397,17 +402,20 @@ type PageProps = {
   live: number;
   scrollX: SharedValue<number>;
   drift: SharedValue<number>;
-  top: number;
-  bottom: number;
+  /** The skip row's height: it floats over the top of the page (under the status bar). */
+  barHeight: number;
+  /** The floating controls' height under the page, 0 when they follow the copy in the scroll content (from 1.3 font scale). */
+  controlsHeight: number;
   /** From 1.3 font scale: the pill and Weiter after the copy, in the scroll content. */
   controls: ReactNode;
 };
 
-function Page({ page, index, active, width, height, column, live, scrollX, drift, top, bottom, controls }: PageProps) {
+function Page({ page, index, active, width, height, column, live, scrollX, drift, barHeight, controlsHeight, controls }: PageProps) {
   const styles = useStyles();
   const { fontScale } = useTheme();
-  const topPadding = useSafeEdge('top', top);
   const topInset = useSafeInset('top');
+  const top = barHeight + BAR_AIR;
+  const bottom = controlsHeight + CONTROLS_AIR;
   const [copy, setCopy] = useState<{ y: number; height: number } | null>(null);
   const [natural, setNatural] = useState(0);
   const [compact, setCompact] = useState(false);
@@ -430,22 +438,26 @@ function Page({ page, index, active, width, height, column, live, scrollX, drift
       <PagePhoto page={page} index={index} width={width} scrollX={scrollX} drift={drift} height={photoHeight} />
       <ScrollView
         style={styles.pageScroll}
-        contentContainerStyle={[styles.pageContent, topPadding, { minHeight: height, paddingBottom: bottom }]}
+        contentContainerStyle={[styles.pageContent, { minHeight: height }]}
         showsVerticalScrollIndicator={false}
       >
+        {/* The status bar and the skip row over the page: a box of their size keeps the live component below them (DQ-1043). */}
+        <View style={{ height: topInset + barHeight }} />
         <ScaledLive page={page} width={live} scale={scale} compact={compact} onNatural={setNatural} />
         <View style={styles.spacer} />
         <View onLayout={onCopyLayout}>
           <Copy page={page} active={active} width={column} />
         </View>
         {controls ? <View style={[styles.inFlowControls, { width: column }]}>{controls}</View> : null}
+        {/* The floating controls over the page's foot: a box of their measured size keeps the copy above them. */}
+        {controlsHeight > 0 ? <View style={{ height: controlsHeight }} /> : null}
       </ScrollView>
     </View>
   );
 }
 
 /** ≥ 1024 (DQ-1023): the photo fills the pane, the live component sits centred on it, scaled to the pane's height. */
-function SplitPage({ page, index, active, width, height, scrollX, drift }: Omit<PageProps, 'column' | 'live' | 'top' | 'bottom' | 'controls'>) {
+function SplitPage({ page, index, active, width, height, scrollX, drift }: Omit<PageProps, 'column' | 'live' | 'barHeight' | 'controlsHeight' | 'controls'>) {
   const styles = useStyles();
   const [natural, setNatural] = useState(0);
   const room = height - 2 * (TOP_BAR + space[24]);

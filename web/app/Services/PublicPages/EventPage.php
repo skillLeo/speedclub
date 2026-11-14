@@ -14,7 +14,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
 /**
- * The data of WEB-09 /e/{slug} (09 §9, EVT-02 as a public page). Always read as a guest: the page is the same for everybody and may be
+ * The data of WEB-13 /e/{slug} (09 §9, EVT-02 as a public page). Always read as a guest: the page is the same for everybody and may be
  * cached and shared, so the exact place of an after_rsvp event never reaches it (EventLocation, ADR-437 c), and the RSVP actions
  * lead into the app. EventResource gives the same values as the app; this class adds what a web page has: the date in words, the map
  * and route links (to openstreetmap.org, opened only by a tap: no third-party request on the page, ADR-449), SEO with JSON-LD and the

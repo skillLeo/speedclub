@@ -15,7 +15,7 @@ import DraftBar from '../Content/Partials/DraftBar.vue';
 import { useConfigDraft, type EditorProps } from '../Content/Partials/configDraft';
 import AssetPicker from './Partials/AssetPicker.vue';
 import HeroSlot from './Partials/HeroSlot.vue';
-import { HERO_SLOTS, LOGO_SLOTS, kindOf, type AssetKind, type BrandAsset, type Branding, type HeroSlotKey, type LogoSlot } from './Partials/brand';
+import { HERO_SLOTS, LOGO_SLOTS, kindOf, logoGround, type AssetKind, type BrandAsset, type Branding, type HeroSlotKey, type LogoSlot } from './Partials/brand';
 
 /**
  * ADM-28 Marke & Theme (06 §3, 03 §2/§3, FS-1, BL-4): the logo set, the hero photos with focal point and live contrast verdict, the OG
@@ -85,7 +85,6 @@ const accents = computed(() =>
 );
 const themeOptions = computed(() => props.themes.map((theme) => ({ value: theme, label: trans(`brand.themes.${theme}`), hint: trans(`brand.themes.${theme}_hint`) })));
 const themeModel = computed({ get: () => form.value.default_theme, set: (value: string | undefined) => (form.value.default_theme = value ?? 'carbon') });
-const grounds: Record<LogoSlot, string> = { wordmark_white: 'bg-black', wordmark_black: 'bg-white', square: 'bg-raised', app_mark: 'bg-raised' };
 // The client's own wordmarks shipped in web/public/brand (M1.4): what the app shows until a logo is published.
 const BUNDLED: Partial<Record<LogoSlot, string>> = { wordmark_white: '/brand/logo-wide-white-640.webp', wordmark_black: '/brand/logo-wide-black-640.webp' };
 // DQ-637: the photos the app and website ship with (web copies in web/public/brand/photos); the splash has none (logo on black).
@@ -154,7 +153,7 @@ const ogAsset = computed(() => (empty.value ? null : asset(form.value.og_default
                                 <Button size="sm" variant="secondary" :icon="PhImage" :data-testid="`ADM-28.logo.${slot}.choose`" @click="openPicker(slot)">{{ form.logos[slot] ? trans('brand.replace') : trans('brand.choose') }}</Button>
                             </div>
                         </div>
-                        <div class="flex h-120 items-center justify-center overflow-hidden rounded-xs px-24" :class="grounds[slot]">
+                        <div class="flex h-120 items-center justify-center overflow-hidden rounded-xs px-24" :class="logoGround(slot).class" :data-theme="logoGround(slot).theme">
                             <img v-if="logoOf(slot)?.url" :src="logoOf(slot)?.url ?? ''" :alt="trans(`brand.logos.${slot}`)" :width="logoOf(slot)?.width" :height="logoOf(slot)?.height" class="block h-auto max-h-80 w-auto max-w-full object-contain" />
                             <img v-else-if="BUNDLED[slot]" :src="BUNDLED[slot]" :alt="trans('brand.logos.bundled')" width="640" height="192" class="block h-auto max-h-80 w-auto max-w-full object-contain" />
                             <span v-else class="text-admin-base text-ink-2">{{ trans('brand.logos.none') }}</span>

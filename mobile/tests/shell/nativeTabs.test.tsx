@@ -201,7 +201,7 @@ describe('native tabs in the route tree', () => {
       (node) => typeof node.props.tabBarItemAccessibilityLabel === 'string',
     );
     expect(labels.map((node) => node.props.tabBarItemAccessibilityLabel)).toEqual(
-      expect.arrayContaining(['Start, Neue Benachrichtigungen', 'Nachrichten, 3\u00A0ungelesen']),
+      expect.arrayContaining(['Start, Neue Mitteilungen', 'Nachrichten, 3\u00A0ungelesen']),
     );
   });
 

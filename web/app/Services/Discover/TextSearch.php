@@ -97,6 +97,17 @@ class TextSearch
     }
 
     /**
+     * countVehicles() of real builds only (neither the build nor its owner a sample): the number a catalogue card shows (DQ-1212,
+     * ADR-457), while countVehicles() stays the length of the result list, badged samples included.
+     *
+     * @param  list<string>|null  $words
+     */
+    public function countRealVehicles(?User $viewer, ?array $words, ?SearchFilters $filters = null): ResultCount
+    {
+        return $this->capped(VisibleBuilds::realOnly($this->matching($viewer, $words, $filters ?? new SearchFilters)));
+    }
+
+    /**
      * @param  list<string>  $words  from SearchTerms::nameWords
      * @return CursorPaginator<int, MemberHit>
      */

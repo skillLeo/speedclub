@@ -38,6 +38,8 @@ async function freshMember(label: string): Promise<{ email: string; username: st
 // and "6-stellig" on one line (DQ-147); "E-Mail-Adresse" carries it too (joinShortCompounds, M4.1 fix round 7) and may still
 // break at its second hyphen. So may AUTH-05's title, which at 200 % is wider than a phone (DQ-252), and the verify notice's sentence.
 const WJ = String.fromCharCode(0x2060);
+/** A no-break space joins a number and its unit: "10 Zeichen" (rules.length), "42 Sekunden" (seconds_other), M4.8. */
+const NBSP = String.fromCharCode(0x00a0);
 /** verify.titleNoMail: AUTH-05 when no mail was just sent. */
 const VERIFY_TITLE_NO_MAIL = `Bestätige deine E-${WJ}Mail-Adresse`;
 /** verifyNotice.body: the row's text in the desktop layout. */
@@ -159,6 +161,17 @@ async function register(page: Page, email: string, password = PASSWORD): Promise
 async function welcomeToPasswordSignIn(page: Page): Promise<void> {
   await id(page, 'AUTH-02.provider.email').click();
   await expect(id(page, 'AUTH-12.root')).toBeVisible();
+  await id(page, 'AUTH-12.withPassword').click();
+  await expect(id(page, 'AUTH-03.root')).toBeVisible();
+}
+
+/**
+ * M4.6 (09 §7.2): the sign-in of the auth sheet and of the session notice opens AUTH-12 "Mit E-Mail fortfahren" with the way
+ * back as returnTo; the password sign-in is one step behind it ("Mit Passwort anmelden" → AUTH-03).
+ */
+async function promptToPasswordSignIn(page: Page, returnTo: string): Promise<void> {
+  await expect(id(page, 'AUTH-12.root')).toBeVisible();
+  expect(new URL(page.url()).searchParams.get('returnTo')).toBe(returnTo);
   await id(page, 'AUTH-12.withPassword').click();
   await expect(id(page, 'AUTH-03.root')).toBeVisible();
 }
@@ -412,8 +425,7 @@ test.describe('F1 onboarding', () => {
     await id(page, 'shell.sidebar.addVehicle').click();
     await expect(id(page, 'shell.authRequired')).toBeVisible();
     await id(page, 'shell.authRequired.signIn').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
-    expect(new URL(page.url()).searchParams.get('returnTo')).toBe('/add-vehicle/new/vehicle');
+    await promptToPasswordSignIn(page, '/add-vehicle/new/vehicle');
 
     const member = await freshMember('sheet');
     expect((await signIn(page, member.email, PASSWORD)).status()).toBe(200);
@@ -426,8 +438,7 @@ test.describe('F1 onboarding', () => {
     await id(page, 'GAR-01.guest.action').click();
     await expect(id(page, 'shell.authRequired')).toBeVisible();
     await id(page, 'shell.authRequired.signIn').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
-    expect(new URL(page.url()).searchParams.get('returnTo')).toBe('/garage');
+    await promptToPasswordSignIn(page, '/garage');
 
     const member = await freshMember('invitation');
     expect((await signIn(page, member.email, PASSWORD)).status()).toBe(200);
@@ -448,7 +459,7 @@ test.describe('F1 onboarding', () => {
     expectFailedResponses([{ status: 422, url: api('auth/register') }]);
     await open(page, '/app/sign-up');
     const rule = (key: string) => id(page, `AUTH-04.rules.${key}`);
-    await expect(rule('length')).toHaveAttribute('aria-label', 'Mindestens 10 Zeichen: noch nicht erfüllt');
+    await expect(rule('length')).toHaveAttribute('aria-label', `Mindestens 10${NBSP}Zeichen: noch nicht erfüllt`);
     await expect(rule('common')).toHaveAttribute('aria-label', 'Kein gängiges Passwort (prüfen wir beim Absenden)');
 
     // Nothing filled in: every field says what it needs, the first one has focus, and nothing is sent.
@@ -468,9 +479,9 @@ test.describe('F1 onboarding', () => {
     const email = address('rules');
     await id(page, 'AUTH-04.email').fill(email);
     await id(page, 'AUTH-04.password').fill('kurz');
-    await expect(rule('length')).toHaveAttribute('aria-label', 'Mindestens 10 Zeichen: noch nicht erfüllt');
+    await expect(rule('length')).toHaveAttribute('aria-label', `Mindestens 10${NBSP}Zeichen: noch nicht erfüllt`);
     await id(page, 'AUTH-04.password').fill(email);
-    await expect(rule('length')).toHaveAttribute('aria-label', 'Mindestens 10 Zeichen: erfüllt');
+    await expect(rule('length')).toHaveAttribute('aria-label', `Mindestens 10${NBSP}Zeichen: erfüllt`);
     await expect(rule('notEmail')).toHaveAttribute('aria-label', `Nicht deine E-${WJ}Mail-Adresse: noch nicht erfüllt`);
     await id(page, 'AUTH-04.password').fill('liverpool1');
     await expect(rule('notEmail')).toHaveAttribute('aria-label', `Nicht deine E-${WJ}Mail-Adresse: erfüllt`);
@@ -920,8 +931,7 @@ test.describe('a session that ended elsewhere', () => {
     await expect(id(page, 'AUTH.sessionNotice')).toBeVisible();
     await expect(id(page, 'AUTH.sessionNotice.title')).toHaveText('Deine Sitzung ist abgelaufen');
     await id(page, 'AUTH.sessionNotice.signIn').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
-    expect(new URL(page.url()).searchParams.get('returnTo')).toBe('/profile');
+    await promptToPasswordSignIn(page, '/profile');
 
     await resetAuthLimits([member.email]);
     expect((await signIn(page, member.email, PASSWORD)).status()).toBe(200);
@@ -966,7 +976,7 @@ test.describe('a session that ended under a form', () => {
     await saveAfterTheEnd(page);
 
     await id(page, 'AUTH.sessionNotice.signIn').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
+    await promptToPasswordSignIn(page, `/garage/${vehicle.id}/basics`);
     await expect(id(page, 'AUTH.sessionNotice')).toHaveCount(0);
     await resetAuthLimits([owner.email]);
     expect((await signIn(page, owner.email, GARAGE_PASSWORD)).status()).toBe(200);
@@ -989,11 +999,11 @@ test.describe('a session that ended under a form', () => {
 
   test('another member never sees the text', async ({ page, expectFailedResponses }) => {
     expectFailedResponses([{ status: 401, url: /\/api\/v1\/vehicles\// }]);
-    await dirtyEditor(page);
+    const { vehicle } = await dirtyEditor(page);
     await saveAfterTheEnd(page);
 
     await id(page, 'AUTH.sessionNotice.signIn').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
+    await promptToPasswordSignIn(page, `/garage/${vehicle.id}/basics`);
     await expect(id(page, 'AUTH.sessionNotice')).toHaveCount(0);
     const other = await freshMember('other');
     expect((await signIn(page, other.email, PASSWORD)).status()).toBe(200);
@@ -1016,13 +1026,17 @@ test.describe('a session that ended under a form', () => {
 
   test('leaving the sign-in without signing in asks again', async ({ page, expectFailedResponses }) => {
     expectFailedResponses([{ status: 401, url: /\/api\/v1\/vehicles\// }]);
-    await dirtyEditor(page);
+    const { vehicle } = await dirtyEditor(page);
     await saveAfterTheEnd(page);
 
     await id(page, 'AUTH.sessionNotice.signIn').click();
-    await expect(id(page, 'AUTH-03.root')).toBeVisible();
+    await promptToPasswordSignIn(page, `/garage/${vehicle.id}/basics`);
     await expect(id(page, 'AUTH.sessionNotice')).toHaveCount(0);
+    // Back from AUTH-03 is still the sign-in (AUTH-12); only leaving that asks again.
     await id(page, 'AUTH-03.header.back').click();
+    await expect(id(page, 'AUTH-12.root')).toBeVisible();
+    await expect(id(page, 'AUTH.sessionNotice')).toHaveCount(0);
+    await id(page, 'AUTH-12.header.back').click();
     await expect(id(page, 'AUTH.sessionNotice')).toBeVisible();
     await expect(id(page, 'GAR-05.description')).toHaveValue(TEXT);
     await expect(id(page, 'GAR-05.cta.primary')).toHaveAttribute('aria-disabled', 'true');
@@ -1048,7 +1062,7 @@ test.describe('server errors keep the form and say so', () => {
 
     next = { status: 429, headers: { 'Retry-After': '42' }, body: { code: 'rate_limited', message: 'Zu viele Versuche.' } };
     await id(page, 'AUTH-03.cta.primary').click();
-    await expect(id(page, 'AUTH-03.notice')).toHaveText(/^Zu viele Versuche\. Versuch es in 4[12] Sekunden noch einmal\.$/);
+    await expect(id(page, 'AUTH-03.notice')).toHaveText(new RegExp(`^Zu viele Versuche\\. Versuch es in 4[12]${NBSP}Sekunden noch einmal\\.$`));
     await expect(id(page, 'AUTH-03.cta.primary')).toHaveAttribute('aria-disabled', 'true');
   });
 

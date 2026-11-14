@@ -4,31 +4,47 @@ namespace App\Console\Commands;
 
 use App\Actions\Auth\DeleteUnverifiedAccount;
 use App\Enums\UserStatus;
+use App\Models\BusinessViewDay;
 use App\Models\DeviceInstall;
 use App\Models\IdempotencyKey;
 use App\Models\KnownDevice;
+use App\Models\LoginAttempt;
+use App\Models\PasskeyChallenge;
 use App\Models\SecurityEvent;
 use App\Models\User;
 use App\Models\VerificationCode;
+use App\Services\Notifications\WebPushSessions;
 use App\Services\Privacy\RetentionPolicy;
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 #[Signature('speedclub:prune-platform')]
-#[Description('Remove expired verification codes, idempotency keys, never-verified accounts, cache rows and sessions')]
+#[Description('Remove expired verification codes, e-mail sign-in codes, passkey ceremonies, idempotency keys, never-verified accounts, cache rows, sessions and their browser push subscriptions, and old daily business profile views')]
 class PrunePlatformDataCommand extends Command
 {
     private const UNVERIFIED_BATCH = 200;
 
-    public function handle(DeleteUnverifiedAccount $unverifiedAccounts): int
+    public function handle(DeleteUnverifiedAccount $unverifiedAccounts, WebPushSessions $webPush): int
     {
         $keys = IdempotencyKey::query()->where('expires_at', '<', now())->delete();
 
         // Spent codes stay for the retention period, because the hourly and daily limits count them (06_ADMIN_SPEC §4).
         $codes = VerificationCode::query()
             ->where('created_at', '<', now()->subHours(max(1, config()->integer('speedclub.verification.retention_hours'))))
+            ->where('expires_at', '<', now())
+            ->delete();
+
+        // M4.6 (09 §8.1): e-mail codes and magic links of the passwordless flows. The hourly budgets and cooldowns of EmailCodes count rows
+        // of the last hour only; a closed row stays the retention period (privacy policy "Wie lange wir Daten speichern") and then goes, consumed or expired.
+        $attempts = LoginAttempt::query()
+            ->where('created_at', '<', now()->subHours(max(1, config()->integer('speedclub.email_code.retention_hours'))))
+            ->where(fn ($closed) => $closed->whereNotNull('consumed_at')->orWhere('expires_at', '<', now()))
+            ->delete();
+        // Passkey ceremonies live 5 minutes and are single use; a spent or expired one is of no use to anybody.
+        $ceremonies = PasskeyChallenge::query()
             ->where('expires_at', '<', now())
             ->delete();
 
@@ -47,7 +63,18 @@ class PrunePlatformDataCommand extends Command
 
         $accounts = $this->pruneUnverifiedAccounts($unverifiedAccounts);
 
-        $this->info("Pruned $keys idempotency keys, $codes verification codes, $devices known devices, $installs app installs, $events security events, $accounts never-verified accounts, {$this->pruneCache()} cache rows and {$this->pruneSessions()} sessions.");
+        // BIZ-03 reads the last views_days (30) days; the daily numbers stay views_retention_days (no personal data, one row per business
+        // and day), then go. Never shorter than the window the dashboard sums.
+        $keepDays = max(config()->integer('speedclub.businesses.views_days'), config()->integer('speedclub.businesses.views_retention_days'));
+        $businessViews = BusinessViewDay::query()
+            ->where('day', '<', CarbonImmutable::now(config()->string('speedclub.display_timezone'))->subDays($keepDays - 1)->toDateString())
+            ->delete();
+
+        $sessions = $this->pruneSessions();
+        // SEC-414-02: after the sessions, so a subscription of a session that just expired goes in the same run.
+        $subscriptions = $webPush->prune();
+
+        $this->info("Pruned $keys idempotency keys, $codes verification codes, $attempts e-mail sign-in codes, $ceremonies passkey ceremonies, $devices known devices, $installs app installs, $events security events, $accounts never-verified accounts, {$this->pruneCache()} cache rows, $sessions sessions, $subscriptions browser push subscriptions and $businessViews daily business profile views.");
 
         return self::SUCCESS;
     }

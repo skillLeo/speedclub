@@ -438,6 +438,12 @@ export const typography = {
     "lineHeight": 13,
     "letterSpacing": 0
   },
+  "webSidebar": {
+    "fontFamily": "Inter-SemiBold",
+    "fontSize": 15,
+    "lineHeight": 22,
+    "letterSpacing": 0
+  },
   "adminBase": {
     "fontFamily": "Inter-Regular",
     "fontSize": 13,
@@ -663,6 +669,15 @@ export const typeScale = {
     "maxFontScale": 1.3,
     "platform": "web"
   },
+  "webSidebar": {
+    "font": "ui",
+    "weight": 600,
+    "size": 15,
+    "lineHeight": 22,
+    "tracking": 0,
+    "maxFontScale": 1.3,
+    "platform": "web"
+  },
   "adminBase": {
     "font": "ui",
     "weight": 400,
@@ -688,7 +703,7 @@ export const typeScale = {
     "platform": "admin"
   }
 } as const;
-export const maxFontScale = {"heroNumeral":1.3,"heroNumeralS":1.3,"displayWordmark":1.3,"labelBadge":1.3,"webTab":1.3} as const;
+export const maxFontScale = {"heroNumeral":1.3,"heroNumeralS":1.3,"displayWordmark":1.3,"labelBadge":1.3,"webTab":1.3,"webSidebar":1.3} as const;
 export const fontScaleCap = {"heroNumeral":1.3,"tabLabel":1.3,"pill":1.3} as const;
 
 export const fonts = {
@@ -1143,7 +1158,9 @@ export const material = {
   },
   "qrBackdrop": {
     "blur": 16,
-    "zoom": 1.6
+    "zoom": 1.6,
+    "zoomCompact": 3.2,
+    "dimCompact": 0.2
   },
   "scrim": {
     "photo": {

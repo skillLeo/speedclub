@@ -176,6 +176,25 @@ describe('HOME-01 Start', () => {
     expect(screen.queryByText(/Likes?|Gefällt|Follower/)).toBeNull();
   });
 
+  it('draws a stream that opens with updates right after the rail, as stream.update rows, the first build card after them (M4.18)', async () => {
+    // lukas.sc's stream opens with two build updates. The visual matrix and the flows wait for "a drawn stream row", which is either
+    // testID below; a wait for HOME-01.card. alone timed out at 1440 when FlashList had not drawn the build card further down yet.
+    stubFetch(
+      answers({
+        '/home/featured': { body: { data: FEATURED } },
+        '/home/new-builds': { body: page([R34]) },
+        '/feed': { body: feedPage([updateItem(buildUpdate({ id: 'first-u' })), updateItem(buildUpdate({ id: 'second-u' })), vehicleItem(M4)]) },
+      }),
+    );
+    await renderWithProviders(<HomeScreen />);
+
+    expect(await screen.findByTestId('HOME-01.stream.update.first-u')).toBeTruthy();
+    expect(screen.getByTestId('HOME-01.stream.update.second-u')).toBeTruthy();
+    expect(screen.getByTestId(`HOME-01.card.${M4.id}`)).toBeTruthy();
+    const kinds = (mockLastList.props?.data as { kind: string; section?: string }[]).map((row) => row.section ?? row.kind);
+    expect(kinds).toEqual(['hero', 'newBuilds', 'rail', 'update', 'update', 'card']);
+  });
+
   it('shows the rail without the lead, and none of its builds again in the stream (DQ-188)', async () => {
     stubFetch(
       answers({

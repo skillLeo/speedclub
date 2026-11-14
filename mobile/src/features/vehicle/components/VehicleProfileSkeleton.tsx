@@ -22,7 +22,7 @@ import type { DisplayTitlePlacement } from '@/ui/displayTitleLayout';
 import { useDesktopType } from '@/ui/Text';
 import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
-import { DESKTOP_CARD_FLEX, DESKTOP_GALLERY_FLEX, heroBox, heroIdentityOverlap, heroIdentityWidth, profileSummaryWidth, summaryTitlePlacement, TABLET_COLUMN, useProfileLayout } from '../layout';
+import { DESKTOP_CARD_FLEX, DESKTOP_GALLERY_FLEX, heroBox, heroIdentityOverlap, heroIdentityWidth, profileSummaryWidth, scrimOverlapDataSet, summaryTitlePlacement, TABLET_COLUMN, useProfileLayout } from '../layout';
 import { keptSubline, PROFILE_TABS, SUBLINE_WHOLE_FONT_SCALE } from '../model';
 import {
   BLUEPRINT_EYEBROW_EM,
@@ -309,9 +309,10 @@ export function VehicleProfileSkeleton({ routeId = 'VEH-01', onBack, owner = fal
 
   const stage = (
     <View style={styles.stage} dataSet={{ qaExempt: 'photo' }} testID={`${routeId}.skeleton.stage`}>
-      <View style={{ aspectRatio: hero.ratio }} testID={`${routeId}.skeleton.hero`} />
+      {/* The photo's place on the stage (a photo region like the stage around it): the identity bars reach up into it. */}
+      <View style={{ aspectRatio: hero.ratio }} dataSet={{ qaExempt: 'photo' }} testID={`${routeId}.skeleton.hero`} />
       <ThemeScope name={STAGE_THEME}>
-        <View style={[styles.stageIdentity, { marginTop: -overlap, paddingHorizontal: gutter }]}>
+        <View style={[styles.stageIdentity, { marginTop: -overlap, paddingHorizontal: gutter }]} dataSet={scrimOverlapDataSet(overlap)}>
           <IdentityBars routeId={routeId} width={heroIdentityWidth(layout, width, gutter)} fontScale={fontScale} known={known} titlePlacement={titlePlacement} />
         </View>
       </ThemeScope>

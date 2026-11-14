@@ -415,9 +415,9 @@ async function endViewAs(): Promise<void> {
             </template>
             <template #actions>
                 <Button v-if="viewAs" size="sm" variant="secondary" :icon="PhStop" :loading="ending" data-testid="ADM-10.view-as-end" @click="endViewAs">{{ trans('members.view_as.end') }}</Button>
-                <!-- neutral → destructive; the red fill only inside the dialog (DQ-530) -->
+                <!-- neutral header actions; the danger tone only inside the dialog (DQ-530, DQ-1207) -->
                 <Button v-if="can('members.edit') && !member.deleted" size="sm" variant="primary" :icon="PhPencilSimple" data-testid="ADM-10.action.edit" @click="show('edit')">{{ trans('members.actions.edit') }}</Button>
-                <Button v-if="can('members.restrict') && !closed" size="sm" variant="destructive" :icon="PhProhibit" data-testid="ADM-10.action.restrict" @click="show('restrict')">{{ trans('members.actions.restrict') }}</Button>
+                <Button v-if="can('members.restrict') && !closed" size="sm" variant="secondary" :icon="PhProhibit" data-testid="ADM-10.action.restrict" @click="show('restrict')">{{ trans('members.actions.restrict') }}</Button>
                 <DropdownMenu v-if="more.length > 0" :items="more" :label="trans('members.actions.more')">
                     <template #trigger>
                         <Button size="sm" variant="secondary" :icon="PhDotsThree" data-testid="ADM-10.action.more">{{ trans('members.actions.more') }}</Button>
@@ -456,7 +456,7 @@ async function endViewAs(): Promise<void> {
                             @lift="openLift"
                         />
                         <VehiclesTab v-else-if="name === 'vehicles' && vehicles" :vehicles="vehicles" />
-                        <SecurityTab v-else-if="name === 'security' && security" :security="security" />
+                        <SecurityTab v-else-if="name === 'security' && security" :security="security" :can-revoke="can('members.revoke_sessions') && !member.deleted" @revoke="show('revoke_sessions')" />
                         <ReportsTab v-else-if="name === 'reports' && reports" :reports="reports" />
                         <template v-else-if="name === 'messages'">
                             <MessagesTab v-if="messages" :metadata="messages" />

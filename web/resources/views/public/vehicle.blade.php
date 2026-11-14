@@ -12,7 +12,10 @@
     $months = collect($vehicle['updates'])->groupBy('month_label');
     // As VEH-01's ModsSection: groups with rows only, and the disclaimer of 08_LEGAL §7 closes every non-empty list (ADR-153).
     $modGroups = array_values(array_filter($vehicle['mods']['groups'], fn (array $group): bool => $group['items'] !== []));
-    $heroSizes = '(min-width: 1560px) 1320px, 100vw';
+    // DQ-1172: from 1280 the hero is the content frame (1200), below it the full width.
+    $heroSizes = '(min-width: 1280px) 1200px, 100vw';
+    // DQ-1168: without photos the hero is the empty stage of the brand layer (a photo no content uses), never a grey glyph tile.
+    $stage = $count === 0 ? \App\Services\PublicPages\PublicPhoto::brand('stage-empty') : null;
 @endphp
 <x-public.layout
     :title="$seo['title']"
@@ -55,23 +58,18 @@
                             <span class="sc-counter rounded-xs bg-on-photo-chip px-8 py-4 text-caption tabular-nums text-on-photo" data-testid="VEH-01.photoCount" data-pager-count data-total="{{ $count }}">1/{{ $count }}</span>
                         @endif
                     @else
-                        <div class="sc-hero-empty" data-testid="VEH-01.heroEmpty">
-                            <x-public.icon name="images" :size="48" class="text-ink-3" />
-                            <p class="mt-12 text-headline text-ink">{{ __('public.vehicle.no_photo') }}</p>
-                            <p class="mt-4 text-callout text-ink-2">{{ $owner ? \App\Support\KeepTogether::sentence('public.vehicle.no_photo_owner', [], ['username' => $owner['username']]) : __('public.vehicle.no_photo_body') }}</p>
-                        </div>
+                        <x-public.photo :photo="$stage" :sizes="$heroSizes" :priority="true" alt="" class="h-full w-full object-cover" data-testid="WEB-01.stagePhoto" />
+                        <span class="sc-hero-scrim" aria-hidden="true"></span>
                     @endif
                 </div>
-                @if ($count > 0)
-                    <x-public.vehicle-identity :vehicle="$vehicle" :owner="$owner" :on-photo="true" class="sc-hero-identity" />
-                @endif
+                <x-public.vehicle-identity :vehicle="$vehicle" :owner="$owner" :on-photo="true" class="sc-hero-identity" />
                 <span class="sc-live text-caption" role="status" data-share-status></span>
             </div>
 
             {{-- Under the hero: the spec strip and the actions; from 1280 the sticky 4-column card beside the 8 columns of sections (DQ-1048). --}}
             <aside class="sc-veh-summary" aria-label="{{ __('public.vehicle.summary_label') }}">
                 @if ($count === 0)
-                    <x-public.vehicle-identity :vehicle="$vehicle" :owner="$owner" :on-photo="false" class="mb-16" />
+                    <p class="mb-16 text-callout text-ink-2" data-testid="VEH-01.heroEmpty"><span class="text-ink">{{ __('public.vehicle.no_photo') }}.</span> {{ $owner ? \App\Support\KeepTogether::sentence('public.vehicle.no_photo_owner', [], ['username' => $owner['username']]) : __('public.vehicle.no_photo_body') }}</p>
                 @endif
                 @if ($vehicle['is_sample'] ?? false)
                     <p class="mb-16 text-caption text-ink-3" data-testid="WEB-01.sampleNote">{{ __('public.sample.vehicle_note') }}</p>
@@ -194,6 +192,13 @@
                             <h3 class="text-callout text-ink-2">{{ $month }}</h3>
                             <ol class="sc-month-list">
                                 @foreach ($updates as $update)
+                                    @php
+                                        // DQ-1178, the app's caption rule (DQ-1093): an entry without changes never says "Notiz"; its title is the first
+                                        // line of its text, the rest follows below.
+                                        $noteLines = is_string($update['note'] ?? null) ? preg_split('/\R/u', trim($update['note']), 2) : [];
+                                        $noteTitle = $update['changes'] === [] && ($noteLines[0] ?? '') !== '' ? $noteLines[0] : null;
+                                        $noteBody = $noteTitle === null ? $update['note'] : (isset($noteLines[1]) && trim($noteLines[1]) !== '' ? trim($noteLines[1]) : null);
+                                    @endphp
                                     <li class="sc-update" data-testid="WEB-01.update">
                                         @forelse ($update['changes'] as $change)
                                             <p class="text-body-strong text-ink">{{ $change['label'] ?: $update['type_label'] }}</p>
@@ -209,10 +214,10 @@
                                                 <p class="text-callout tabular-nums text-ink-2">{{ \App\Support\KeepTogether::figures($change['text']) }}</p>
                                             @endif
                                         @empty
-                                            <p class="text-body-strong text-ink">{{ $update['type_label'] }}</p>
+                                            <p class="text-body-strong text-ink">{{ $noteTitle ?? $update['type_label'] }}</p>
                                         @endforelse
-                                        @if ($update['note'])
-                                            <p class="whitespace-pre-line text-callout text-ink-2">{{ $update['note'] }}</p>
+                                        @if ($noteBody)
+                                            <p class="whitespace-pre-line text-callout text-ink-2">{{ $noteBody }}</p>
                                         @endif
                                     </li>
                                 @endforeach

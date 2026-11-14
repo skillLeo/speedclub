@@ -230,3 +230,46 @@ export function specStripRows(count: number, columns: number): number {
 
 /** The control border, which web draws for every hairline (Hairline, the cell dividers). */
 export const WEB_HAIRLINE = size.border.control;
+
+/**
+ * DQ-1216: the SpecStrip's card form (09 §5 VehicleCard 2.0, ONB-01/02): three `hero.numeral.s` with their `label.unit` over a
+ * `label.caps` data label, no hairlines, `MINI_SPEC_GAP` between columns. The same fit rule as the strip (ADR-422): a column holds
+ * its value line and its label whole, or the spec takes fewer columns. From MINI_SPEC_STACK_FONT_SCALE it is at most two (2 + 1).
+ */
+export const MINI_SPEC_GAP = space[12];
+/** The gap between the rows of a reflowed mini spec. */
+export const MINI_SPEC_ROW_GAP = space[16];
+/** 09 §14.1 200 %: from here the three cells never share one row. */
+export const MINI_SPEC_STACK_FONT_SCALE = 1.5;
+
+export type MiniSpecEntry = Pick<SpecStripEntry, 'value' | 'unit' | 'label'>;
+
+/** The sizes the card's roles render at: `hero.numeral.s` capped at 1.3× (its web desktop size with `desktop`), Inter scaled freely. */
+export function miniSpecType(fontScale: number, desktop: boolean): StripType {
+  const numeral = desktop ? { ...typography.heroNumeralS, ...typographyDesktop.heroNumeralS } : typography.heroNumeralS;
+  const numeralScale = Math.min(fontScale, maxFontScale.heroNumeralS);
+  return { ...specStripType(fontScale, false), valueSize: numeral.fontSize * numeralScale, valueLine: numeral.lineHeight * numeralScale };
+}
+
+/** Every one-line width a mini spec cell must hold: its value line and its data label. */
+export function estimatedMiniSpecWidths(items: readonly MiniSpecEntry[], fontScale: number, desktop: boolean): number[] {
+  const type = miniSpecType(fontScale, desktop);
+  return items.flatMap((item) => [estimatedValueLineWidth(item, type), estimatedSpecLabelWidth(item.label, type)]);
+}
+
+/** The width of one mini spec column. */
+export function miniSpecCellWidth(width: number, columns: number): number {
+  return (width - (columns - 1) * MINI_SPEC_GAP) / columns;
+}
+
+/** Columns for the card's mini spec at `width` (an unknown width counts as no room: one column). */
+export function miniSpecColumns(items: readonly MiniSpecEntry[], width: number, fontScale: number, desktop: boolean): number {
+  if (!Number.isFinite(width) || width <= 0 || items.length === 0) return 1;
+  const widths = estimatedMiniSpecWidths(items, fontScale, desktop);
+  const most = fontScale >= MINI_SPEC_STACK_FONT_SCALE ? Math.min(items.length, 2) : items.length;
+  for (let columns = most; columns > 1; columns -= 1) {
+    const cell = miniSpecCellWidth(width, columns);
+    if (widths.every((contentWidth) => Math.ceil(contentWidth) <= cell)) return columns;
+  }
+  return 1;
+}

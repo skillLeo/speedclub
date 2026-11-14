@@ -2,13 +2,17 @@ import { memberItemWidth } from '@/features/home/components/ActiveMembersStrip';
 import { chipsThatFit } from '@/features/home/components/PopularModsChips';
 import { memberMetaText } from '@/ui/MemberRow';
 import { handleText } from '@/ui/textBreaks';
-import { forYouRows, MODULE_EVERY, streamRows, weeklyBuild, type HomeRow } from '@/features/home/screens/HomeScreen';
-import type { FeedVehicle } from '@/api/queries/home';
+import { firstPageLength, forYouRows, MODULE_EVERY, rowKey, streamRows, weeklyBuild, type HomeRow } from '@/features/home/screens/HomeScreen';
+import { flattenFeed, type FeedItem, type FeedVehicle } from '@/api/queries/home';
+import type { EventCard } from '@/api/queries/events';
 
 import { activeMember, buildUpdate, feedVehicle, GTI, M4, MODS, R34, updateItem, vehicleItem } from './fixtures';
 
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
 jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.resolve(null)) }));
+
+/** The rows only ask whether there are meets; the card's content is the EventsModule's business. */
+const eventCard = (): EventCard => ({ id: '01event' }) as EventCard;
 
 describe('09 §7.3 rows of Für dich', () => {
   const base = { hero: undefined, newBuilds: [], members: [], mods: [], stream: [] };
@@ -34,6 +38,63 @@ describe('09 §7.3 rows of Für dich', () => {
       'mods',
     ]);
     expect(forYouRows({ ...base, stream: [vehicleItem(R34)] }).map((row) => row.kind)).toEqual(['card']);
+  });
+
+  // m4.18 f-home triage: the modules the first page had no room for followed the stream's end and jumped ~8,000 px with every page.
+  it('gives every module a fixed slot that holds across 1, 2 and 3 pages, with stable keys, and never drops one', () => {
+    const page = (n: number) =>
+      Array.from({ length: 20 }, (_, index) => vehicleItem(feedVehicle({ id: `01p${n}i${String(index).padStart(2, '0')}`, slug: `p${n}-${index}` })));
+    const pages: [FeedItem[], FeedItem[], FeedItem[]] = [page(1), page(2), page(3)];
+    // As on the live demo: the lead and seven rail builds come with the first page too, so it has only 12 cards of its own.
+    const above = pages[0].slice(0, 8).map((item) => item.vehicle as FeedVehicle);
+    const weekly = feedVehicle({ id: '01weekly', slug: 'weekly' });
+    const assemble = (count: number) =>
+      forYouRows({
+        ...base,
+        hero: above[0],
+        newBuilds: above.slice(1),
+        weekly,
+        events: [eventCard()],
+        members: [activeMember()],
+        mods: MODS,
+        stream: flattenFeed(pages.slice(0, count).map((data) => ({ data }))),
+        streamHead: firstPageLength(pages.slice(0, count).map((data) => ({ data }))),
+      });
+    const [one, two, three] = [assemble(1), assemble(2), assemble(3)];
+    const keys = (rows: HomeRow[]) => rows.map(rowKey);
+    // The slot of a module: the stream row right before its section (or before the module itself when it has no section row).
+    const slotOf = (rows: HomeRow[], key: string) => {
+      const at = keys(rows).indexOf(key);
+      return rows.slice(0, at).findLast((row) => row.kind === 'card' || row.kind === 'update');
+    };
+
+    for (const rows of [one, two, three]) {
+      expect(new Set(keys(rows)).size).toBe(rows.length);
+      for (const key of ['events', 'section.weekly', `weekly.${weekly.id}`, 'section.members', 'members', 'section.mods', 'mods']) {
+        expect(keys(rows)).toContain(key);
+      }
+    }
+    // A later page only adds rows below: everything the first page drew keeps its place and its key.
+    expect(keys(two).slice(0, one.length)).toEqual(keys(one));
+    expect(keys(three).slice(0, two.length)).toEqual(keys(two));
+    for (const key of ['events', 'section.weekly', 'section.members', 'section.mods']) {
+      expect(rowKey(slotOf(two, key) as HomeRow)).toBe(rowKey(slotOf(one, key) as HomeRow));
+      expect(rowKey(slotOf(three, key) as HomeRow)).toBe(rowKey(slotOf(one, key) as HomeRow));
+      expect(keys(three).indexOf(key)).toBe(keys(one).indexOf(key));
+    }
+    // 09 §7.3: after every 6 items while the first page lasts; the rest at its end, before the second page's first card.
+    expect(shape(one).slice(3)).toEqual([
+      ...Array(MODULE_EVERY).fill('card'),
+      'events',
+      ...Array(MODULE_EVERY).fill('card'),
+      '§weekly',
+      'weekly',
+      '§members',
+      'members',
+      '§mods',
+      'mods',
+    ]);
+    expect(rowKey(two[one.length] as HomeRow)).toBe(`stream.${pages[1][0]?.key}`);
   });
 
   it('leaves out every module without content, and appends the modules a short stream has no room for', () => {

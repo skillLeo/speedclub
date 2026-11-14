@@ -243,7 +243,7 @@ export function MakeScreen() {
                   <View key={generation.slug} role="listitem">
                     <Chip
                       label={years ? `${generation.name} · ${years}` : generation.name}
-                      count={generation.vehicle_count}
+                      count={generation.vehicle_count > 0 ? generation.vehicle_count : undefined}
                       onPress={() => router.push(modelPath(model.key, generation.slug))}
                       testID={`${ROUTE}.model.${model.slug}.generation.${generation.slug}`}
                     />
@@ -263,9 +263,12 @@ export function MakeScreen() {
         <DisplayTitle placement="page" layoutWidth={column.inner} role="heading" {...({ 'aria-level': 1 } as object)} testID={`${ROUTE}.title`}>
           {data.make.name}
         </DisplayTitle>
-        <Text variant="callout" color="text.secondary" numeric testID={`${ROUTE}.count`}>
-          {t('make.count', { count: data.make.vehicle_count, formatted: format.number(data.make.vehicle_count) })}
-        </Text>
+        {/* ADR-466: a make with sample builds only shows no "0 Builds". */}
+        {data.make.vehicle_count > 0 ? (
+          <Text variant="callout" color="text.secondary" numeric testID={`${ROUTE}.count`}>
+            {t('make.count', { count: data.make.vehicle_count, formatted: format.number(data.make.vehicle_count) })}
+          </Text>
+        ) : null}
         <Button
           label={t('make.allBuilds', { make: keepNameTogether(data.make.name) })}
           variant="secondary"
@@ -311,7 +314,11 @@ export function MakeScreen() {
             {item.models.map((model) => (
               <View key={model.key} role="listitem">
                 <Button
-                  label={`${keepNameTogether(model.name)} · ${t('make.modelCount', { count: model.vehicle_count, formatted: format.number(model.vehicle_count) })}`}
+                  label={
+                    model.vehicle_count > 0
+                      ? `${keepNameTogether(model.name)} · ${t('make.modelCount', { count: model.vehicle_count, formatted: format.number(model.vehicle_count) })}`
+                      : keepNameTogether(model.name)
+                  }
                   variant="tertiary"
                   size="s"
                   role="link"

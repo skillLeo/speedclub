@@ -39,6 +39,13 @@ final class DisplayTitleLayout
 
     public const CARD = 'card';
 
+    /**
+     * DQ-1174: a title in a row of public garage cards (WEB-02, the business and brand walls). 30/34 at every width, as the skill's
+     * "in a card 30/34 at every width" (ADR-426 b) reads, with the page rule's only exception: 24/28 when 30 needs more than 2 lines.
+     * Unlike CARD it never shrinks a 2-line name to 1 line, so cards side by side keep one title size and their bodies one top.
+     */
+    public const TILE = 'tile';
+
     /** display.title: 30/34, 44/48 on the web desktop, at most 2 lines at the full size, else minSize/minLineHeight 24/28. */
     public const SIZE = 30;
 
@@ -429,7 +436,7 @@ final class DisplayTitleLayout
                 $block = '';
 
                 foreach ($range['rules'] as $rule) {
-                    $declaration = $scope.'{'.self::declaration($rule['shrunk'] ? 'shrink' : ($range['placement'] === self::CARD ? 'base' : 'full')).'}'
+                    $declaration = $scope.'{'.self::declaration($rule['shrunk'] ? 'shrink' : (in_array($range['placement'], [self::CARD, self::TILE], true) ? 'base' : 'full')).'}'
                         .($rule['bound'] === null ? '' : $scope.' .sc-bind{white-space:'.($rule['bound'] ? 'nowrap' : 'normal').'}');
                     $block .= $rule['belowPx'] === null ? $declaration : '@container '.self::CONTAINER.' (width < '.self::number($rule['belowPx']).'px){'.$declaration.'}';
                 }
@@ -453,7 +460,7 @@ final class DisplayTitleLayout
 
     private static function placement(string $placement): string
     {
-        return $placement === self::CARD ? self::CARD : self::PAGE;
+        return in_array($placement, [self::CARD, self::TILE], true) ? $placement : self::PAGE;
     }
 
     /** The size, leading and tracking of one variant: the role (44 from 1280), its phone pair at every width, or 24/28. */

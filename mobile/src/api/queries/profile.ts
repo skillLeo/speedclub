@@ -31,11 +31,15 @@ export const myVehiclesKey = ['me', 'vehicles'] as const;
  * The member's garage, main vehicle first. One page holds all of it: a member has at most 20 vehicles and the server
  * sends 30 per page.
  */
+export async function fetchMyVehicles({ signal }: { signal?: AbortSignal } = {}): Promise<VehicleCardData[]> {
+  return (await apiData(api.GET('/me/vehicles', { signal }))).data;
+}
+
 export function useMyVehicles() {
   const signedIn = useSessionStore((state) => state.status === 'member');
   return useQuery({
     queryKey: myVehiclesKey,
-    queryFn: async ({ signal }) => (await apiData(api.GET('/me/vehicles', { signal }))).data,
+    queryFn: fetchMyVehicles,
     enabled: signedIn,
   });
 }

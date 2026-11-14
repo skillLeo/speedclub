@@ -8,9 +8,11 @@ use App\Http\Resources\V1\ProductRowResource;
 use App\Http\Resources\V1\VehicleCardResource;
 use App\Models\Brand;
 use App\Models\Business;
+use App\Models\Media;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Businesses\BusinessListing;
+use App\Services\Garage\VehiclePresenter;
 use App\Services\Parts\BrandPages;
 use App\Services\Parts\PartBuilds;
 use App\Services\Parts\ProductPresenter;
@@ -18,9 +20,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * The data of WEB-10 /b/{slug} and WEB-11 /brands/{slug} (09 §9, M4.14): the same resources as BIZ-01 and BRD-01, the first builds of
+ * The data of WEB-14 /b/{slug} and WEB-15 /brands/{slug} (09 §9, M4.14): the same resources as BIZ-01 and BRD-01, the first builds of
  * the portfolio or the brand wall as VehicleCards, SEO (title, description, canonical, OG image, JSON-LD) and the app links. A sample
  * business is noindex (09 §8.19).
+ *
+ * SEC-414-09: both pages are indexed and in the sitemap, so, as on the landing page, no build of a member who switched search engines
+ * off appears on them (portfolio wall, brand wall, lead photo and its credit, build photos). The counts stay as they are.
  */
 final class PartnerPages
 {
@@ -40,8 +45,18 @@ final class PartnerPages
     {
         $business->loadMissing(['owner', 'logo', 'cover']);
         $business->portfolioCount = $this->listing->portfolioCount($viewer, $business);
+        $this->listing->prepareCovers([$business], $viewer);
         $data = $this->resolve(new BusinessResource($business), $request);
-        $vehicles = $this->cards($this->listing->portfolio($viewer, $business, self::WALL)->items(), $request);
+        $portfolio = self::indexable($this->listing->portfolio($viewer, $business, self::WALL)->items());
+        $hero = $this->listing->heroCover($business, $viewer);
+
+        // DQ-1215: a portfolio photo leads only when its build has another one for its card; else the page leads with the brand photo.
+        if (($data['cover_source'] ?? null) === 'portfolio' && $hero === null) {
+            $data['cover'] = null;
+            $data['cover_source'] = null;
+        }
+
+        $vehicles = $this->cards(self::withoutHeroPhoto($portfolio, ($data['cover_source'] ?? null) === 'portfolio' ? $hero : null), $request);
         $canonical = url('/b/'.$business->slug);
         // M4.16: the drawn card (cover, name, kind and city, the confirmed builds), the brand card while a guest may not see it.
         $images = $this->og->cards($business);
@@ -91,8 +106,14 @@ final class PartnerPages
     public function brand(Brand $brand, ?User $viewer, Request $request): array
     {
         $page = $this->brands->page($viewer, $brand);
+
+        if ($page['lead_photo'] !== null && self::indexable([$page['lead_photo']['vehicle']]) === []) {
+            $page['lead_photo'] = null;
+        }
+
+        $page['build_photos'] = array_values(array_filter($page['build_photos'], fn (array $photo): bool => self::indexable([$photo['vehicle']]) !== []));
         $data = $this->resolve(new BrandPageResource($page), $request);
-        $products = $this->brands->products($brand, 12);
+        $products = $this->brands->products($brand, 12, $viewer);
         app(ProductPresenter::class)->prepare($products->items(), $viewer);
         $canonical = url('/brands/'.$brand->slug);
         $images = $this->og->cards($brand);
@@ -102,7 +123,7 @@ final class PartnerPages
             'brand' => $data,
             'products' => array_map(fn ($product): array => $this->resolve(new ProductRowResource($product), $request), $products->items()),
             'more_products' => $products->hasMorePages(),
-            'vehicles' => $this->cards($this->builds->forBrand($viewer, $brand, self::WALL)->items(), $request),
+            'vehicles' => $this->cards(self::indexable($this->builds->forBrand($viewer, $brand, self::WALL)->items()), $request),
             'seo' => [
                 'title' => __('public.brand.meta_title', ['name' => $brand->name]),
                 'description' => mb_strimwidth($about.__('public.brand.meta_description', ['name' => $brand->name]), 0, 160, '…'),
@@ -139,6 +160,57 @@ final class PartnerPages
         }
 
         return $cards;
+    }
+
+    /**
+     * DQ-1215 (SKILL rule 6, the DQ-1173 class): when the hero is the cover fallback (a portfolio build's cover, ADR-457), that build's
+     * card below takes its next photo others may see, so the same image is not shown twice in the first scroll. A build with no other
+     * photo keeps its cover.
+     *
+     * @param  array<int, Vehicle>  $vehicles
+     * @return array<int, Vehicle>
+     */
+    private static function withoutHeroPhoto(array $vehicles, ?Media $hero): array
+    {
+        if ($hero === null) {
+            return $vehicles;
+        }
+
+        $presenter = app(VehiclePresenter::class);
+
+        foreach ($vehicles as $vehicle) {
+            $vehicle->loadMissing(['cover', 'media']);
+
+            if ($vehicle->cover?->getKey() !== $hero->getKey() && ! ($vehicle->cover === null && $vehicle->media->contains($hero))) {
+                continue;
+            }
+
+            $next = $vehicle->media
+                ->filter(fn (Media $media): bool => $media->getKey() !== $hero->getKey() && $presenter->photoVisibleTo($media, false))
+                ->sortBy([['sort', 'asc'], ['id', 'asc']])
+                ->first();
+
+            if ($next instanceof Media) {
+                $vehicle->setRelation('cover', $next);
+            }
+        }
+
+        return $vehicles;
+    }
+
+    /**
+     * The builds whose owner lets search engines index them (users.indexable).
+     *
+     * @param  array<int, Vehicle>  $vehicles
+     * @return array<int, Vehicle>
+     */
+    private static function indexable(array $vehicles): array
+    {
+        return array_values(array_filter($vehicles, function (Vehicle $vehicle): bool {
+            $vehicle->loadMissing('owner');
+
+            return $vehicle->owner instanceof User && $vehicle->owner->getAttribute('indexable') !== false;
+        }));
     }
 
     /**

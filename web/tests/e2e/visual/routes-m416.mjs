@@ -2,10 +2,10 @@
 // fields as the entries in routes.mjs, which merges this list. WEB-01, WEB-02 and WEB-03 keep their entries in routes.mjs (redesigned
 // in place, same paths and ready selectors).
 //
-// IDs: 09 §9 numbers the event, business and brand pages WEB-09, WEB-10 and WEB-11, while docs/04_SCREEN_REGISTER.md already uses
-// WEB-09 (Melden) and WEB-10 (Kontakt), whose registry entries stay as they are. Until the lead renumbers one side, these entries
-// carry the 09 number and the page's kind (WEB-09-event, WEB-10-business, WEB-11-brand); the pages' test IDs are WEB-09.*, WEB-10.*
-// and WEB-11.* as M4.14 already did for the business and brand pages.
+// IDs (ADR-459 a): the register's WEB-09 (Melden) and WEB-10 (Kontakt) keep their numbers; 09 §9's new pages are WEB-13 (meet
+// /e/{slug}), WEB-14 (business /b/{slug}) and WEB-15 (brand /brands/{slug}), and their test IDs are WEB-13.*, WEB-14.* and WEB-15.*.
+// WEB-16, the magic-link hand-off: /auth/magic is a 302 into the member web (routes/web.php), so its cells capture where it lands,
+// /app/auth/magic (the app screen's test IDs are WEB-16.* since ADR-459).
 //
 // Data: the seeded sample events of the SPEED CLUB Editorial account (ShowcaseEvents, stable slugs, badged "Beispiel", no counts)
 // and the answerable demo meet of jann.ptrs ({memberEvent}, real counts). The business and brand pages are behind the flags
@@ -28,45 +28,46 @@ const pageOr = (root) => `[data-testid="${root}"], [data-qa-state="error"] [data
 
 export const routesM416 = [
   {
-    id: 'WEB-09-event',
+    id: 'WEB-13',
+    p4: { en: true, tablet: true, black: true },
     path: `/e/${HAFEN}`,
     phase: 3,
     auth: 'guest',
     states: ['default', 'error'],
-    ready: pageOr('WEB-09.root'),
+    ready: pageOr('WEB-13.root'),
     notes:
       'Treffen as a public page (EVT-02 ★ on the web): the sample cover 16:9 full-bleed with the Beispiel badge, the date block (hero.numeral.s day + label.caps month), "Treffen · Samstag" with the glyph, the time range (tnum), title.1, "Organisiert von @speedclub.editorial"; Ort with "Kaiplatz", the address, "Karte anzeigen" and "Route" (tertiary links to openstreetmap.org, nothing loads before the tap); Worum es geht, Regeln (Nur legal first), Wer kommt "Bei Beispiel-Treffen zeigen wir keine Zahlen."; the sticky bar "In der App zusagen" (the one filled CTA) + "In Kalender". From 1280 the 8/4 grid with the sticky card (date, time, place, the two actions, "Noch kein Konto? Kostenlos beitreten").',
   },
   {
-    id: 'WEB-09-event-private',
+    id: 'WEB-13-private',
     path: `/e/${PRIVATE}`,
     phase: 3,
     auth: 'guest',
     states: ['default'],
-    ready: '[data-testid="WEB-09.root"]',
+    ready: '[data-testid="WEB-13.root"]',
     notes:
       'A place after RSVP (09 §8.7, ADR-437 c): the lock glyph, "München" and "Den genauen Ort siehst du nach deiner Zusage in der App.", "Gegend auf der Karte" (the area point at zoom 12) and no "Route"; no venue, street or point anywhere in the page, its JSON-LD or its card.',
   },
   {
-    id: 'WEB-09-event-member',
+    id: 'WEB-13-member',
     path: '/e/{memberEvent}',
     phase: 3,
     auth: 'guest',
     states: ['default'],
-    ready: '[data-testid="WEB-09.root"]',
+    ready: '[data-testid="WEB-13.root"]',
     notes: 'A member-organised demo meet (not a sample): real counts in Wer kommt ("2 Zusagen · 1 interessiert", tnum) and the places left when it has a capacity; indexable.',
   },
   {
-    id: 'WEB-09-event-past',
+    id: 'WEB-13-past',
     path: `/e/${PAST}`,
     phase: 3,
     auth: 'guest',
     states: ['default'],
-    ready: '[data-testid="WEB-09.root"][data-state="past"]',
+    ready: '[data-testid="WEB-13.root"][data-state="past"]',
     notes: 'A meet that is over: "Dieses Treffen ist vorbei." under the header, no "In Kalender"; the filled CTA reads "In der App öffnen".',
   },
   {
-    id: 'WEB-09-event-missing',
+    id: 'WEB-13-missing',
     path: '/e/gibt-es-nicht',
     phase: 3,
     auth: 'guest',
@@ -76,18 +77,19 @@ export const routesM416 = [
     notes: 'A meet a guest may not see (missing, draft, in review, removed, followers only) answers the same 404 page: "Treffen nicht verfügbar".',
   },
   {
-    id: 'WEB-10-business',
+    id: 'WEB-14',
+    p4: { en: true, tablet: true, black: true },
     path: `/b/${STAGE_BUSINESS}`,
     phase: 3,
     auth: 'guest',
     states: ['default', 'error'],
-    ready: pageOr('WEB-10.root'),
+    ready: pageOr('WEB-14.root'),
     fixture: FIXTURE,
     notes:
       'Betriebsseite (BIZ-01 ★ on the web, M4.14) inside the stage fixture m414-flags: the cover, logo, name, "Werkstatt · Hamburg", Verifiziert, services, actions, opening hours with today, the address and "Route", the portfolio with the confirmed build, and the Impressum (§ 5 DDG). M4.16 adds the drawn OG card (cover, name, kind and city, confirmed builds).',
   },
   {
-    id: 'WEB-10-business-off',
+    id: 'WEB-14-off',
     path: `/b/${STAGE_BUSINESS}`,
     phase: 3,
     auth: 'guest',
@@ -97,13 +99,24 @@ export const routesM416 = [
     notes: 'businesses off (every environment today, ADR-455): the 404 page "Betrieb nicht verfügbar".',
   },
   {
-    id: 'WEB-11-brand',
+    id: 'WEB-15',
+    p4: { en: true, tablet: true, black: true },
     path: '/brands/kw',
     phase: 3,
     auth: 'guest',
     states: ['default', 'error'],
-    ready: pageOr('WEB-11.root'),
+    ready: pageOr('WEB-15.root'),
     fixture: FIXTURE,
     notes: 'Markenseite (BRD-01 on the web, M4.14) inside the stage fixture m414-flags: "KW" as the wordmark on the surface band with the real counts, product lines, parts, "Builds mit KW". M4.16 adds the drawn OG card (the wordmark, builds and parts).',
+  },
+  {
+    id: 'WEB-16',
+    path: '/app/auth/magic',
+    phase: 3,
+    auth: 'guest',
+    states: ['default', 'loading'],
+    ready: '[data-testid="WEB-16.root"]',
+    notes:
+      'Magic-link hand-off (09 §9, ADR-459 a) as a browser without the sign-in attempt sees it: the link cannot sign in here, so it says to type the code in the app; loading = "Wird geprüft …" while a token is checked.',
   },
 ];

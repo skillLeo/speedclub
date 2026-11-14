@@ -53,6 +53,7 @@ return [
     ],
     'state' => [
         'home' => 'Zur Startseite',
+        'retry' => 'Erneut laden',
         'discover' => 'Builds entdecken',
         'vehicle_unavailable' => ['title' => 'Fahrzeug nicht verfügbar', 'body' => 'Es wurde entfernt oder ist gerade nicht öffentlich.'],
         'member_unavailable' => ['title' => 'Mitglied nicht gefunden', 'body' => 'Dieses Profil gibt es nicht oder es ist gerade nicht öffentlich.'],
@@ -110,7 +111,7 @@ return [
     ],
     'sample' => [
         'sample' => 'Beispiel',
-        'editorial' => 'Editorial',
+        'editorial' => 'Redaktion',
         'vehicle_note' => 'Beispiel: So kann ein Build bei SPEED CLUB aussehen. Das ist kein Fahrzeug eines echten Mitglieds.',
         'member_note' => 'Beispiel-Konto: Es zeigt, wie SPEED CLUB aussieht. Bei Beispielen zeigen wir keine Zahlen.',
     ],
@@ -145,6 +146,8 @@ return [
         'og_portfolio' => 'Portfolio',
     ],
     'brand' => [
+        'lead_credit' => 'Titelfoto:',
+        'more_parts' => 'Weitere Teile',
         'meta_title' => ':name: Teile und Builds | SPEED CLUB',
         'meta_description' => 'Teile von :name und die Builds, in denen sie verbaut sind.',
         'builds' => 'Build|Builds',
@@ -194,7 +197,7 @@ return [
         'report' => 'Treffen melden',
         'og_start' => 'Beginn',
     ],
-    'card' => ['power' => 'Leistung', 'torque' => 'Drehmoment', 'model_year' => 'Baujahr'],
+    'card' => ['power' => 'Leistung', 'torque' => 'Drehmoment', 'model_year' => 'Baujahr', 'drivetrain' => 'Antrieb'],
     'member' => [
         'meta_title' => ':name (@:username) | SPEED CLUB',
         'meta_description' => 'Die Garage von :name auf SPEED CLUB.',
@@ -204,6 +207,10 @@ return [
         'garage' => 'Garage',
         'garage_empty' => 'Noch keine öffentlichen Fahrzeuge',
         'garage_empty_body' => 'Sobald @:username ein Auto veröffentlicht, steht es hier.',
+        'garage_empty_action' => 'Eigene Garage anlegen',
+        'garage_sample_label' => 'Beispiel: So steht ein Auto in einer Garage.',
+        'garage_sample_title' => 'VW Scirocco',
+        'garage_sample_caption' => 'So steht ein Auto in einer Garage.',
         'since' => 'Mitglied seit :date',
         'vehicles' => 'Fahrzeug|Fahrzeuge',
         'followers' => 'Follower|Follower',
@@ -258,7 +265,7 @@ return [
     'account_deletion' => [
         'title' => 'Konto löschen',
         'description' => 'Lösch dein SPEED CLUB Konto mit E-Mail-Adresse und Passwort, auch ohne App.',
-        'intro' => 'Hier kannst du dein SPEED CLUB Konto löschen, auch ohne die App. In der App geht es unter Einstellungen › Daten › Konto löschen.',
+        'intro' => 'Hier kannst du dein SPEED CLUB Konto löschen, auch ohne die App. In der App geht es unter Einstellungen › Daten & Speicher › Konto löschen.',
         'consequences_title' => 'Was beim Löschen passiert',
         'consequences' => [
             'Dein Konto wird sofort deaktiviert. Dein Profil und deine Fahrzeuge sind für niemanden mehr zu sehen.',
@@ -266,7 +273,7 @@ return [
             'Alle Geräte werden abgemeldet. Niemand folgt dir mehr, und du folgst niemandem mehr.',
             'In Unterhaltungen sieht die andere Person deine Nachrichten weiterhin, als Absender steht dann „Gelöschtes Mitglied“.',
             'Spätestens nach 30 Tagen löschen wir das Konto mit allen Fotos und Daten endgültig.',
-            'Die Löschung lässt sich nicht zurücknehmen. Willst du deine Daten behalten, fordere vorher in der App unter Einstellungen › Daten einen Export an.',
+            'Die Löschung lässt sich nicht zurücknehmen. Willst du deine Daten behalten, fordere vorher in der App unter Einstellungen › Daten & Speicher einen Export an.',
             "Hast du vor dem Löschen einen Datenexport angefordert, kannst du ihn noch bis zu 7 Tage lang über den Link aus der Export-\u{2060}E-\u{2060}Mail herunterladen.",
         ],
         'form_title' => 'Mit deinen Zugangsdaten bestätigen',
@@ -288,7 +295,7 @@ return [
     'contact' => [
         'title' => 'Kontakt',
         'description' => 'Schreib dem SPEED-CLUB-Team: Fragen zu Konto, Fahrzeugen, QR-Stickern, Nachrichten oder Sicherheit.',
-        'intro' => "Du hast eine Frage oder ein Problem? Schreib uns. Wir antworten per E-\u{2060}Mail, meist innerhalb von zwei Werktagen. Mit Konto geht es auch in der App unter Einstellungen › Hilfe & FAQ › Support kontaktieren. Die Antwort bekommst du dann in der App.",
+        'intro' => "Du hast eine Frage oder ein Problem? Schreib uns. Wir antworten per E-\u{2060}Mail, meist innerhalb von zwei Werktagen. Mit Konto geht es auch in der App unter Einstellungen › Hilfe & Support › Support kontaktieren. Die Antwort bekommst du dann in der App.",
         'report_hint' => 'Du willst einen Inhalt melden, der gegen unsere Regeln oder gegen Gesetze verstößt? Nutz dafür das Meldeformular.',
         'report_link' => 'Inhalt melden',
         'name' => 'Name',

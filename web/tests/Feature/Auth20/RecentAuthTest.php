@@ -48,6 +48,54 @@ describe('RequireRecentAuthentication', function () {
         'delete account' => ['api.v1.me.delete', true],
     ]);
 
+    /**
+     * G4 (docs/reports/security/phase-4.md §4): closed world over the route table. Every write route of the member's sign-in methods,
+     * second factor, sessions, export and account (by URI, so a route added there later is checked without being named) carries the
+     * middleware, unless the allow-list below gives the reason it must not.
+     */
+    it('sits on every write route of the sensitive families, by the route table, except the reasoned allow-list', function () {
+        $families = '#^api/v1/me/(email|password|passkeys|providers|two-factor|sessions|export|exports|delete|account|security|tokens|devices)(/|$)#';
+        $allowed = [
+            // The 6-digit code mailed to the new address is the proof; the request that sent it (me.email.request) needed recent auth.
+            'api.v1.me.email.confirm' => 'code to the new address',
+            // Confirms with a TOTP code the setup that me.two-factor.store (recent auth) started; it adds no factor of its own.
+            'api.v1.me.two-factor.confirm' => 'finishes a recent setup',
+            // SET-06 "Abmelden" of one other device only takes access away (and must stay quick when a phone is lost).
+            'api.v1.me.sessions.destroy' => 'removes one device',
+            // ADR-435 / SEC-M47-06: "Das war ich nicht" must work without sudo; it can only force a recovery the owner finishes by e-mail code.
+            'api.v1.me.security.secure' => 'ADR-435',
+        ];
+        $guarded = fn (array $middleware): bool => collect($middleware)->contains(fn (mixed $entry): bool => is_string($entry)
+            && (str_starts_with($entry, RequireRecentAuthentication::class.':') || str_starts_with($entry, 'recent.auth:')));
+
+        $sensitive = [];
+        $missing = [];
+
+        foreach (Route::getRoutes()->getRoutes() as $route) {
+            if (preg_match($families, $route->uri()) !== 1 || array_diff($route->methods(), ['GET', 'HEAD']) === []) {
+                continue;
+            }
+
+            $name = (string) $route->getName();
+            $sensitive[] = $name;
+
+            if (! $guarded($route->gatherMiddleware()) && ! array_key_exists($name, $allowed)) {
+                $missing[] = $name.' '.$route->uri();
+            }
+        }
+
+        // A stale entry (renamed route, or one that gained the middleware) must leave the list, so it never hides a new route.
+        $stale = array_values(array_filter(array_keys($allowed), fn (string $name): bool => ! in_array($name, $sensitive, true)
+            || $guarded(Route::getRoutes()->getByName($name)?->gatherMiddleware() ?? [])));
+
+        expect($missing)->toBe([])
+            ->and($stale)->toBe([])
+            // The route table really is what decides: the 09 §8.1 list is part of what it found.
+            ->and($sensitive)->toContain('api.v1.me.email.request', 'api.v1.me.password', 'api.v1.me.passkeys.store', 'api.v1.me.providers.destroy',
+                'api.v1.me.two-factor.store', 'api.v1.me.two-factor.destroy', 'api.v1.me.two-factor.recovery-codes', 'api.v1.me.sessions.destroy-others',
+                'api.v1.me.exports.store', 'api.v1.me.delete');
+    });
+
     it('counts a fresh sign-in as recent, a token older than 10 minutes not', function () {
         [$user, $token] = a20Passwordless();
         a20Flag('auth.passkeys');

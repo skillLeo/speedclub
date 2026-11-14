@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppConfig\AppConfig;
 use App\Services\AppConfig\FeatureFlags;
+use App\Services\Garage\MemberCovers;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Media\MediaService;
 use App\Services\Qr\QrCodes;
@@ -554,7 +555,7 @@ class OgImages
      */
     private function memberSpec(User $member): array
     {
-        $cover = $this->usable($member->cover);
+        $cover = $this->usable(MemberCovers::visible($member));
         $avatar = $this->usable($member->avatar);
 
         return [
@@ -669,7 +670,7 @@ class OgImages
 
     private function drawMember(User $member, string $format): string
     {
-        $cover = $this->usable($member->cover);
+        $cover = $this->usable(MemberCovers::visible($member));
         $avatar = $this->usable($member->avatar);
         $name = $member->getAttribute('display_name');
         $city = $member->getAttribute('city');

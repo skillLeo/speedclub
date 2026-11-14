@@ -20,11 +20,12 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * M4.16 (09 §9): the link previews of WEB-09 /e/{slug}, WEB-10 /b/{slug} and WEB-11 /brands/{slug}, a 1200 × 630 JPEG and a 1080 × 1080
+ * M4.16 (09 §9): the link previews of WEB-13 /e/{slug}, WEB-14 /b/{slug} and WEB-15 /brands/{slug}, a 1200 × 630 JPEG and a 1080 × 1080
  * square each, drawn by OgImageCanvas::feature() from real photos only (the cover, else the brand layer's own night photo; a part brand
  * has no photo and gets its name as the wordmark). No AI imagery.
  *
@@ -34,6 +35,10 @@ use Throwable;
  * page view itself never waits for GD. Whatever a guest may not see (a followers-only or removed event, an unverified business, the
  * flag off, a sample while samples are hidden) has no card: cards() answers the brand card and serve() nothing (404). The exact place
  * of an after_rsvp event is never drawn, only the city (09 §8.7, ADR-437 c). og:prune removes files no current card names.
+ *
+ * SEC-414-05: a subject keeps one pair on disk. The pair last drawn for it is remembered (cache, forever) and deleted once a new pair
+ * is written, as OgImages does for its column; draws are capped per owner and hour (speedclub.public_pages.og_partner_draws_per_hour),
+ * and a draw that waits too long for the lock answers the brand card instead of drawing outside the lock.
  */
 final class PartnerOgImages
 {
@@ -47,7 +52,7 @@ final class PartnerOgImages
     private const URL_HASH = 16;
 
     /** The brand layer's photo for an event or business without a cover. */
-    private const FALLBACK_PHOTO = 'landing-hero';
+    public const FALLBACK_PHOTO = 'landing-hero';
 
     private const ORPHAN_AGE_SECONDS = 3600;
 
@@ -117,25 +122,79 @@ final class PartnerOgImages
 
         try {
             if (! $this->drawn($paths)) {
-                Cache::lock('og-draw:'.$paths[OgImageCanvas::LANDSCAPE], self::LOCK_SECONDS)->block(self::LOCK_WAIT_SECONDS, function () use ($subject, $paths): void {
-                    if (! $this->drawn($paths)) {
-                        foreach ($paths as $format => $path) {
-                            $this->disk()->put($path, $this->draw($subject, $format), ['visibility' => 'public', 'CacheControl' => 'public, max-age=31536000, immutable']);
-                        }
+                $drew = Cache::lock('og-draw:'.$type.':'.$subject->getKey(), self::LOCK_SECONDS)->block(self::LOCK_WAIT_SECONDS, function () use ($subject, $type, $paths): bool {
+                    if ($this->drawn($paths)) {
+                        return true;
                     }
+
+                    if (! RateLimiter::attempt('og-partner-draw:'.$this->ownerKey($subject), max(1, config()->integer('speedclub.public_pages.og_partner_draws_per_hour')), fn (): bool => true, 3600)) {
+                        return false;
+                    }
+
+                    foreach ($paths as $format => $path) {
+                        $this->disk()->put($path, $this->draw($subject, $format), ['visibility' => 'public', 'CacheControl' => 'public, max-age=31536000, immutable']);
+                    }
+
+                    $this->forgetPrevious($type, $subject, $paths);
+
+                    return true;
                 });
+
+                if ($drew !== true) {
+                    return $this->fallback('limited');
+                }
             }
 
             $bytes = $this->disk()->get($paths[$format]) ?? throw new \RuntimeException('A drawn card is missing.');
 
             return ['bytes' => $bytes, 'current' => $current, 'etag' => basename($paths[$format], '.jpg')];
         } catch (LockTimeoutException) {
-            return ['bytes' => $this->draw($subject, $format), 'current' => false, 'etag' => 'pending'];
+            return $this->fallback('pending');
         } catch (Throwable $exception) {
             report($exception);
 
-            return ['bytes' => (string) file_get_contents(public_path(config()->string('speedclub.public_pages.og_default'))), 'current' => false, 'etag' => 'fallback'];
+            return $this->fallback('fallback');
         }
+    }
+
+    /**
+     * The brand card, never cached for long: the subject's own card follows once it can be drawn.
+     *
+     * @return array{bytes: string, current: bool, etag: string}
+     */
+    private function fallback(string $etag): array
+    {
+        return ['bytes' => (string) file_get_contents(public_path(config()->string('speedclub.public_pages.og_default'))), 'current' => false, 'etag' => $etag];
+    }
+
+    /**
+     * Remembers $paths as the subject's pair and deletes the pair drawn before it, when that is another one.
+     *
+     * @param  array{landscape: string, square: string}  $paths
+     */
+    private function forgetPrevious(string $type, Event|Business|Brand $subject, array $paths): void
+    {
+        $key = 'og-partner:'.$type.':'.$subject->getKey();
+        $previous = Cache::get($key);
+        Cache::forever($key, $paths[OgImageCanvas::LANDSCAPE]);
+
+        if (! is_string($previous) || $previous === $paths[OgImageCanvas::LANDSCAPE] || ! str_starts_with($previous, self::TYPES[$type].'/')) {
+            return;
+        }
+
+        $this->disk()->delete([$previous, substr($previous, 0, -4).'-square.jpg']);
+    }
+
+    /**
+     * Who the draw counts against: the organiser of an event, the owner of a business, a brand on its own.
+     */
+    private function ownerKey(Event|Business|Brand $subject): string
+    {
+        return match (true) {
+            $subject instanceof Event => 'u:'.$subject->organiser_id,
+            $subject instanceof Business => 'u:'.$subject->owner_id,
+            default => 'brand:'.$subject->getKey(),
+        };
     }
 
     /**
@@ -205,7 +264,7 @@ final class PartnerOgImages
                 return null;
             }
 
-            $cover = $this->usable($subject->cover);
+            $cover = $this->businessCover($subject);
             $count = $subject->is_sample ? 0 : $this->listing->portfolioCount(null, $subject);
 
             return [
@@ -273,7 +332,7 @@ final class PartnerOgImages
         $focalY = null;
 
         if (! $subject instanceof Brand) {
-            $cover = $this->usable($subject->cover);
+            $cover = $subject instanceof Business ? $this->businessCover($subject) : $this->usable($subject->cover);
 
             if ($cover !== null) {
                 $photo = $this->media->largestVariant($cover);
@@ -302,6 +361,14 @@ final class PartnerOgImages
             $spec['facts'],
             $format,
         );
+    }
+
+    /**
+     * DQ-1215: the cover WEB-14 shows a guest (BusinessListing::heroCover), so share card and page agree; null: the brand layer's photo.
+     */
+    private function businessCover(Business $business): ?Media
+    {
+        return $this->usable($this->listing->heroCover($business, null));
     }
 
     private function type(Event|Business|Brand $subject): string

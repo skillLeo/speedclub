@@ -172,8 +172,64 @@ function openApp(): void {
     });
 }
 
-// §8 radios and checkboxes (DQ-425) show their focus ring on :focus, because WebKit drops :focus-visible when the arrow keys move
-// through a radio group. A pointer press marks the document so a click alone draws no ring; the next key takes the mark away.
+/**
+ * M4.16 LCP (DQ-1170): photos below the hero carry their files in data-sc-src/-srcset (components/public/photo.blade.php). They get
+ * them only once the page's largest paint is on screen: the hero's LCP entry (the one img with fetchpriority="high", on a member page
+ * the cover every profile has: ADR-469), or on a page without a hero the first entry after load. Every other photo is deferred, a
+ * member page's first garage card included, so no photo can outsize the hero and take its entry before the swap (DQ-1237 also waited
+ * for that card while it was eager). Until then the hero, the fonts and the page have the bandwidth to themselves. Without LCP
+ * entries (Safari) they follow the load event and one frame; 2.5 s after load they come in any case. They stay loading="lazy": one
+ * far below the fold still waits for the scroll.
+ */
+function deferredPhotos(): void {
+    if (!document.querySelector('img[data-sc-src]')) return;
+
+    let done = false;
+    const swap = (): void => {
+        if (done) return;
+        done = true;
+        all<HTMLImageElement>('img[data-sc-src]').forEach((img) => {
+            const { scSrc, scSrcset } = img.dataset;
+
+            if (scSrcset) img.srcset = scSrcset;
+            if (scSrc) img.src = scSrc;
+            img.removeAttribute('data-sc-src');
+            img.removeAttribute('data-sc-srcset');
+        });
+    };
+    const soon = (): void => {
+        window.setTimeout(swap, 0);
+    };
+    const afterLoad = (then: () => void): void => {
+        if (document.readyState === 'complete') then();
+        else window.addEventListener('load', then, { once: true });
+    };
+    const hero = document.querySelector<HTMLImageElement>('img[fetchpriority="high"]');
+    const lcp = typeof PerformanceObserver !== 'undefined' && PerformanceObserver.supportedEntryTypes.includes('largest-contentful-paint');
+
+    afterLoad(() => window.setTimeout(swap, 2500));
+
+    if (!lcp) {
+        afterLoad(() => requestAnimationFrame(soon));
+
+        return;
+    }
+
+    const painted = (entries: PerformanceEntry[]): boolean =>
+        hero ? entries.some((entry) => (entry as LargestContentfulPaint).element === hero) : entries.length > 0 && document.readyState === 'complete';
+    const observer = new PerformanceObserver((list) => {
+        if (!painted(list.getEntries())) return;
+        observer.disconnect();
+        soon();
+    });
+
+    observer.observe({ type: 'largest-contentful-paint', buffered: true });
+    // A page without a hero whose largest paint came before the load event: the next frame after load.
+    afterLoad(() => {
+        if (!hero && performance.getEntriesByType('largest-contentful-paint').length > 0) requestAnimationFrame(soon);
+    });
+}
+
 function pointerFocus(): void {
     const root = document.documentElement;
 
@@ -181,6 +237,7 @@ function pointerFocus(): void {
     document.addEventListener('keydown', () => root.removeAttribute('data-sc-pointer'), true);
 }
 
+deferredPhotos();
 pointerFocus();
 pager();
 clamp();

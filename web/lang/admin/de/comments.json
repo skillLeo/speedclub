@@ -37,8 +37,8 @@
     "reports": ":count offen",
     "flag": {
         "on": "Kommentare sind für Mitglieder eingeschaltet.",
-        "off": "Kommentare sind für Mitglieder ausgeschaltet (Flag build_comments). Hier stehen nur Kommentare aus Tests und Vorschauen.",
-        "open": "Flag öffnen"
+        "off": "Kommentare unter Builds sind für Mitglieder ausgeschaltet. Hier stehen nur Kommentare aus Tests und Vorschauen.",
+        "open": "Feature-Flag öffnen"
     },
     "empty_title": "Noch keine Kommentare",
     "empty_body_on": "Sobald Mitglieder unter Build-Updates kommentieren, stehen die Kommentare hier.",

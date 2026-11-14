@@ -13,7 +13,9 @@
     "morePhotos": "+{{count}}",
     "noPhotoTitle": "Noch keine Fotos",
     "noPhotoOwner": "@{{username}} hat für dieses Fahrzeug noch keine Bilder hochgeladen.",
-    "noPhotoBody": "Für dieses Fahrzeug gibt es noch keine Bilder."
+    "noPhotoBody": "Für dieses Fahrzeug gibt es noch keine Bilder.",
+    "noPhotoSelf": "Zeig deinen Build mit dem ersten Foto.",
+    "addPhotos": "Fotos hinzufügen"
   },
   "actions": {
     "share": "Teilen",
@@ -31,7 +33,7 @@
     "edit": "Bearbeiten",
     "photos": "Fotos",
     "mods": "Mods",
-    "qr": "QR-Code",
+    "qr": "QR-⁠Code",
     "ownerLabel": "Aktionen für deinen Build",
     "savedShort": "Gespeichert"
   },
@@ -63,7 +65,14 @@
     "empty": "Noch keine Mods eingetragen.",
     "disclaimer": "Angaben des Besitzers, keine rechtliche Prüfung",
     "count_one": "{{count}} Mod",
-    "count_other": "{{count}} Mods"
+    "count_other": "{{count}} Mods",
+    "links": {
+      "brand": "Mehr von {{brand}}",
+      "brandLabel": "Marke {{brand}} ansehen",
+      "productLabel": "Produkt {{product}} im Katalog ansehen",
+      "installedBy": "Eingebaut von {{business}}",
+      "installedByLabel": "Eingebaut von {{business}}, {{city}}: Betriebsprofil ansehen"
+    }
   },
   "history": {
     "empty": "Noch keine Einträge im Verlauf.",
@@ -76,7 +85,7 @@
       "added": "{{name}} verbaut",
       "replaced": "{{name}} statt {{before}}",
       "changed": "{{name}} geändert",
-      "removed": "{{name}} ausgebaut"
+      "removed": "{{name}} entfernt"
     }
   },
   "unavailable": {

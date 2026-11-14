@@ -142,6 +142,13 @@ describe('SM6 odometer and SM18 live count', () => {
     expect(zeroed('3,9')).toBe('0,0');
   });
 
+  it('at rest a cell holds its digit alone: the 0–9 column only exists while it rolls (m4.18 DEV-01 clipped text)', async () => {
+    await act(async () => setReducedMotionPreview(true));
+    await renderUi(<OdometerNumber value="510" rollFrom={zeroed('510')} testID="t.rest" />);
+    const digits = screen.getAllByText(/^[0-9]$/, { includeHiddenElements: true }).map((node) => String(node.props.children));
+    expect(digits).toEqual(['5', '1', '0']);
+  });
+
   it('rolls once per vehicle per session', async () => {
     const seen: boolean[] = [];
     function Probe({ id }: { id: string }) {

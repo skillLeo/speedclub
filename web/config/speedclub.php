@@ -107,7 +107,7 @@ return [
         'max_background_codes_per_day' => 3,
         // Spent codes stay this long: both limits count them, so never below 24. 06_ADMIN_SPEC §4.
         'retention_hours' => 24,
-        // An account nobody proved the address of is removed after this long (ADR-135, privacy policy section 9).
+        // An account nobody proved the address of is removed after this long (ADR-135, privacy policy "Wie lange wir Daten speichern").
         'unverified_account_retention_days' => 7,
         // SEC-P1-51 (M2.8): top-level names no public relay delivers to (RFC 2606, RFC 6761, RFC 6762, ICANN's .internal). DeliverableEmail
         // refuses them for sign-up and the e-mail change. "test" stays open on local and testing hosts, whose demo and e2e accounts live
@@ -192,7 +192,7 @@ return [
         // Not in the spec: start answers no sooner than this, known address or not, so its duration says nothing (the mail itself
         // leaves after the response, ADR-130).
         'min_response_ms' => 250,
-        // Not in the spec: spent rows are kept for the hourly counters, then pruned (auth:prune-login-attempts).
+        // Not in the spec: spent rows are kept for the hourly counters, then pruned (speedclub:prune-platform, hourly; privacy policy "Wie lange wir Daten speichern").
         'retention_hours' => 24,
     ],
 
@@ -323,6 +323,9 @@ return [
         'members_max' => 10,
         // Pending tag proposals a business may have open at once (not in the spec): bounds a business tagging builds it never touched.
         'open_proposals_max' => 100,
+        // SEC-414-03: how long the staff member who verified a business may reopen it (their own undo); later only the four-eyes
+        // suspension takes a verified business offline.
+        'reopen_window_minutes' => 1440,
         // BIZ-03 "Profilaufrufe": the days summed, and how long the daily numbers are kept.
         'views_days' => 30,
         'views_retention_days' => 400,
@@ -405,6 +408,15 @@ return [
         'variant_widths' => [320, 640, 1080, 1600],
         'original_quality' => 90,
         'variant_quality' => 80,
+        // M4.18 (LCP budget of the public pages, 2.0 s): the most a WebP variant of each width may weigh. The encoder steps the
+        // quality down from variant_quality by variant_quality_step until a variant fits, never below variant_min_quality and never
+        // by changing dimensions. The values follow 80 KB at 640 w scaled by (width / 640) ^ variant_budget_exponent, which also
+        // gives the budget of an unlisted width (a photo narrower than 1600 px keeps its own width). Typical photos stay at
+        // variant_quality: on the demo set the budget only touches those above p90. media:recompress applies it to stored variants.
+        'variant_budget_kb' => [320 => 28, 640 => 80, 1080 => 176, 1600 => 316],
+        'variant_budget_exponent' => 1.5,
+        'variant_min_quality' => 55,
+        'variant_quality_step' => 5,
         'blurhash_size' => 32,
         'orphan_prune_hours' => 24,
         // Not in the spec, ADR-146: bytes on the disks per member, public files and private originals. A draft of 30 photos at
@@ -639,6 +651,9 @@ return [
         'sitemap_max_urls' => 50000,
         'sitemap_path' => 'sitemap/sitemap.xml',
         'og_default' => '/brand/og-default.jpg',
+        // SEC-414-05: link-preview cards of events, businesses and brands drawn per owner (organiser, business owner; a brand on its
+        // own) and hour; beyond it the address answers the brand card until the hour is over. A changed subject draws one new pair.
+        'og_partner_draws_per_hour' => 30,
         // M2.7 WEB-04 on staging: the tester APK and its SHA-256 (64 hex digits). Empty in production, where the stores take over.
         'tester_apk_url' => env('TESTER_APK_URL'),
         'tester_apk_sha256' => env('TESTER_APK_SHA256'),
@@ -800,6 +815,9 @@ return [
         'max_per_member' => 5,
         // Failed sends in a row (other than 404/410, which remove the subscription at once) after which a subscription is dropped.
         'max_failures' => 5,
+        // SEC-414-02: a subscription the browser has not renewed (a sign-in re-registers it) for this many days goes in the hourly prune,
+        // whatever the session driver; one of an ended browser session goes at once (database sessions).
+        'orphan_days' => 30,
         // The longest stored endpoint; browsers send a few hundred characters.
         'endpoint_max_length' => 2048,
     ],

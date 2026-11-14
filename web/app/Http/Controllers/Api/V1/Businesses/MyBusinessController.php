@@ -17,7 +17,9 @@ use App\Http\Requests\Api\V1\Businesses\StoreBusinessRequest;
 use App\Http\Requests\Api\V1\Businesses\UpdateBusinessRequest;
 use App\Http\Resources\V1\MediaResource;
 use App\Http\Resources\V1\MyBusinessResource;
+use App\Http\Resources\V1\NoBusinessResource;
 use App\Models\Business;
+use App\Models\BusinessInvite;
 use App\Models\BusinessMember;
 use App\Models\User;
 use App\Services\Businesses\BusinessListing;
@@ -28,7 +30,8 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * The member's own business (09 §8.10): BIZ-02 Bewerbung and status, BIZ-03 dashboard, profile edits, logo and cover, team. Flag
- * `businesses`. "My business" is the one the member owns or works for; none: 404 business_unavailable.
+ * `businesses`. "My business" is the one the member owns or works for; none: GET answers `data: null`, every other route 404
+ * business_unavailable.
  */
 class MyBusinessController extends Controller
 {
@@ -38,12 +41,18 @@ class MyBusinessController extends Controller
      * Show my business.
      *
      * BIZ-02 status screen and BIZ-03: the profile with status, staff reason (rejected, suspended), team, open requests and the private
-     * 30-day profile views.
+     * 30-day profile views. A member without a business gets 200 with `data: null` (BIZ-02 then offers the application): asking before
+     * applying is no error.
      */
-    public function show(Request $request, BusinessListing $listing): MyBusinessResource
+    public function show(Request $request, BusinessListing $listing): MyBusinessResource|NoBusinessResource
     {
         /** @var User $user */
         $user = $request->user();
+
+        if (! BusinessMember::query()->where('user_id', $user->id)->exists()) {
+            return new NoBusinessResource;
+        }
+
         $business = $this->myBusiness($user, 'view');
         $business->portfolioCount = $listing->portfolioCount($user, $business);
 
@@ -72,8 +81,8 @@ class MyBusinessController extends Controller
     /**
      * Change my business.
      *
-     * Owner and staff. Only the keys sent change. Once verified, name, legal form, representative, address and register details are
-     * locked (422 naming the fields): they change through support.
+     * Owner and staff. Only the keys sent change. Once verified, name, kind, legal form, representative, address, e-mail, phone,
+     * website, map point and register details are locked (`locked_fields`; 422 naming the fields): they change through support.
      */
     public function update(UpdateBusinessRequest $request, UpdateBusiness $action, BusinessListing $listing): MyBusinessResource
     {
@@ -135,44 +144,58 @@ class MyBusinessController extends Controller
     }
 
     /**
-     * Add a team member.
+     * Invite a team member.
      *
-     * Accepts an Idempotency-Key header. Answers the business with its team. The owner adds a member (@username) as staff: they edit the profile and decide tags. One
-     * business per member (422), at most 10 staff (409 limit_reached).
+     * Accepts an Idempotency-Key header. Answers the business with its team and open invitations. The owner invites a member
+     * (@username); SEC-414-01: they join as staff (edit the profile, decide tags) only once they accept (POST
+     * me/business-invites/{invite}/accept), and hear about the invitation in the app. A member of a business already or invited already:
+     * 422; at most 10 staff and open invitations together (409 limit_reached).
      */
     public function addMember(AddMemberRequest $request, ChangeBusinessTeam $team): MyBusinessResource
     {
         /** @var User $user */
         $user = $request->user();
         $business = $this->myBusiness($user, 'manage');
-        $team->add($business, $user, $request->username());
+        $team->invite($business, $user, $request->username());
         $business->portfolioCount = null;
 
         return new MyBusinessResource($business);
     }
 
     /**
-     * Remove a team member.
+     * Remove a team member or withdraw an invitation.
      *
-     * The owner removes staff; staff may remove themselves (leave). The owner cannot be removed (403). Answers 204.
+     * The owner removes staff or withdraws an open invitation of that member; staff may remove themselves (leave). The owner cannot be
+     * removed (403). The member (or, when staff leave, the owner) hears about it. Answers 204.
      */
     public function removeMember(Request $request, string $username, ChangeBusinessTeam $team): Response
     {
         /** @var User $user */
         $user = $request->user();
         $business = $this->myBusiness($user, 'view');
-        $member = BusinessMember::query()->where('business_id', $business->id)
-            ->whereHas('user', fn ($query) => $query->where('username', mb_strtolower($username)))->first();
+        $name = mb_strtolower(ltrim($username, '@'));
+        $member = BusinessMember::query()->with('user')->where('business_id', $business->id)
+            ->whereHas('user', fn ($query) => $query->where('username', $name))->first();
 
         if (! $member instanceof BusinessMember) {
-            throw new ApiException(ErrorCode::NotFound);
+            $invite = BusinessInvite::query()->with('user')->where('business_id', $business->id)
+                ->whereHas('user', fn ($query) => $query->where('username', $name))->first();
+
+            if (! $invite instanceof BusinessInvite) {
+                throw new ApiException(ErrorCode::NotFound);
+            }
+
+            Gate::forUser($user)->authorize('manage', $business);
+            $team->withdraw($business, $user, $invite);
+
+            return response()->noContent();
         }
 
         if ($member->user_id !== $user->id) {
             Gate::forUser($user)->authorize('manage', $business);
         }
 
-        $team->remove($business, $member);
+        $team->remove($business, $user, $member);
 
         return response()->noContent();
     }

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { createStyles, size, useBreakpoint } from '@/theme';
 import { Skeleton, SkeletonBlock, SkeletonText, VehicleCardSkeleton } from '@/ui';
 
-import { PROFILE_COLUMN_MAX, profileCoverHeight, profileCoverWidth } from './ProfileHeader';
+import { AVATAR_OVERLAP_EXEMPT, PROFILE_COLUMN_MAX, profileCoverHeight, profileCoverWidth } from './ProfileHeader';
 
 const useStyles = createStyles((t) => ({
   identity: { maxWidth: PROFILE_COLUMN_MAX, width: '100%' },
@@ -58,7 +58,7 @@ export function ProfileSkeleton({
       {withCover && width > 0 ? <SkeletonBlock width={profileCoverWidth(width, kind)} height={profileCoverHeight(width, kind)} testID={`${routeId}.skeleton.cover`} /> : null}
       <View style={[styles.identity, column]}>
         {withCover ? (
-          <View style={styles.avatarOverlap}>
+          <View style={styles.avatarOverlap} dataSet={AVATAR_OVERLAP_EXEMPT}>
             <View style={styles.ring} />
             <SkeletonBlock width={size.avatar.xl} height={size.avatar.xl} corner="full" />
           </View>

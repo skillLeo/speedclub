@@ -72,7 +72,7 @@ Route::withoutMiddleware(PublicPages::WITHOUT_SESSION)->group(function (): void 
         Route::get('/email/{action}', EmailActionPageController::class)->whereIn('action', array_keys(EmailActionPageController::ACTIONS))->middleware('throttle:public-read')->name('email-action');
         Route::post('/kontakt', [ContactPageController::class, 'store'])->middleware('throttle:contact-form')->name('contact.store');
 
-        // M4.6 WEB-12 (09 §8.1): the magic link of the e-mail code. The installed app claims the path (APP_PATHS); a browser lands in the
+        // M4.6 WEB-16 (09 §8.1): the magic link of the e-mail code. The installed app claims the path (APP_PATHS); a browser lands in the
         // member web, which signs in only where its attempt id is stored and otherwise asks for the code. The token stays in the fragment,
         // which a redirect keeps and no server sees (ADR-138).
         Route::redirect('/auth/magic', '/app/auth/magic', 302)->middleware('throttle:public-read')->name('auth.magic');

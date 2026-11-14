@@ -7,6 +7,7 @@ use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Signature\CompareRequest;
 use App\Http\Resources\V1\CompareResource;
+use App\Http\Resources\V1\ModificationRowResource;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Signature\CompareBuilds;
@@ -49,6 +50,9 @@ class CompareController extends Controller
             throw new ApiException(ErrorCode::VehicleUnavailable);
         }
 
-        return $vehicle->load(CompareBuilds::RELATIONS)->loadCount('modifications');
+        $vehicle->load(CompareBuilds::RELATIONS)->loadCount('modifications');
+        ModificationRowResource::loadLinks($vehicle->modifications);
+
+        return $vehicle;
     }
 }

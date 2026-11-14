@@ -18,6 +18,8 @@ export type BrandTile = components['schemas']['BrandTileResource'];
 export type BrandPage = components['schemas']['BrandPageResource'];
 export type ProductRowData = components['schemas']['ProductRowResource'];
 export type ProductDetail = components['schemas']['ProductResource'];
+/** ADR-457: a real build's photo with the build and the catalogue product it carries (lead photo, "Beliebt in Builds"). */
+export type BuildPhoto = components['schemas']['BuildPhotoResource'];
 
 /** 09 §8.18: the catalogue flag (off until the M4.14 design QA passed, ADR-455). */
 export const PARTS_FLAG = 'parts_catalogue';
@@ -36,6 +38,8 @@ export const QUERY_MIN = 2;
 export const PRODUCT_RAIL_SIZE = 8;
 
 type Page<T> = { data: T[]; meta: { next_cursor: string | null } };
+/** The Teile scope's page: with `counts`, the first page carries the lead photo and up to 8 build photos (null and [] later). */
+export type ProductSearchPage = Page<ProductRowData> & { lead_photo?: BuildPhoto | null; build_photos?: BuildPhoto[] };
 
 export const partsKeys = {
   all: ['parts'] as const,
@@ -76,7 +80,7 @@ export const partsApi = {
   async products(
     query: { q?: string; brand?: string | null; category?: string | null; counts?: boolean; perPage?: number; cursor?: string | null },
     signal?: AbortSignal,
-  ): Promise<Page<ProductRowData>> {
+  ): Promise<ProductSearchPage> {
     return apiData(
       api.GET('/products', {
         params: {

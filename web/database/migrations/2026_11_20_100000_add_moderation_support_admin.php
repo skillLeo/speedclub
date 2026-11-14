@@ -144,19 +144,21 @@ return new class extends Migration
 
     private function seedTemplates(): void
     {
+        // Sections of the AGB and Community-Richtlinien as numbered since M4.18 (database/data/legal); hosts migrated before get them
+        // from 2026_12_10_100000, which leaves this fresh seed alone.
         $now = now();
         $rows = [];
         $templates = [
-            ['spam', 'remove_content', 'community', '4', 1,
+            ['spam', 'remove_content', 'community', '6', 1,
                 ['Spam oder Werbung', 'Der Inhalt „{target}“ wirbt für einen Verkauf oder ein Gewerbe statt dein Auto zu zeigen. Er wurde am {date} gemeldet.', 'Community-Richtlinien: keine Werbung und kein Spam'],
                 ['Spam or advertising', 'The content “{target}” advertises a sale or a business instead of showing your car. It was reported on {date}.', 'Community guidelines: no advertising and no spam']],
             ['harassment', 'restrict', 'community', '2', 2,
                 ['Belästigung oder Beleidigung', 'Du hast andere Mitglieder in Nachrichten beleidigt und nach einer Ablehnung weiter angeschrieben ({target}, gemeldet am {date}).', 'Community-Richtlinien: respektvoller Umgang'],
                 ['Harassment or insults', 'You insulted other members in messages and kept writing after they declined ({target}, reported on {date}).', 'Community guidelines: treat others with respect']],
-            ['impersonation', 'suspend', 'terms', '6', 3,
+            ['impersonation', 'suspend', 'terms', '3', 3,
                 ['Identitätsmissbrauch', 'Das Konto {target} gibt sich als eine andere Person oder Firma aus. Uns liegen dazu Meldungen vom {date} vor.', 'AGB: echte Identität und eigene Inhalte'],
                 ['Impersonation', 'The account {target} pretends to be another person or company. We received reports about it on {date}.', 'Terms: real identity and your own content']],
-            ['nudity', 'remove_content', 'community', '3', 4,
+            ['nudity', 'remove_content', 'community', '4', 4,
                 ['Nacktheit oder sexuelle Inhalte', 'Der Inhalt „{target}“ zeigt Nacktheit oder sexuelle Inhalte. Er wurde am {date} gemeldet.', 'Community-Richtlinien: keine sexuellen Inhalte'],
                 ['Nudity or sexual content', 'The content “{target}” shows nudity or sexual content. It was reported on {date}.', 'Community guidelines: no sexual content']],
             ['illegal', 'remove_content', 'law', null, 5,

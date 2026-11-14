@@ -365,7 +365,9 @@ export const R34: PublicVehicle = {
       "cost": null,
       "legal_status": "unknown",
       "legal_status_label": "Unbekannt",
-      "thumb": null
+      "thumb": null,
+      "product": null,
+      "installed_by": null
     },
     {
       "id": "01m6f7zv8p20aegc91c91pa94a",
@@ -385,7 +387,9 @@ export const R34: PublicVehicle = {
       "cost": null,
       "legal_status": "parts_certificate",
       "legal_status_label": "Teilegutachten",
-      "thumb": null
+      "thumb": null,
+      "product": null,
+      "installed_by": null
     },
     {
       "id": "01m6f7zv9g5n8phxvmj4r2zzqj",
@@ -405,7 +409,9 @@ export const R34: PublicVehicle = {
       "cost": null,
       "legal_status": "unknown",
       "legal_status_label": "Unbekannt",
-      "thumb": null
+      "thumb": null,
+      "product": null,
+      "installed_by": null
     }
   ],
   "mods": {
@@ -437,7 +443,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "unknown",
             "legal_status_label": "Unbekannt",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           }
         ]
       },
@@ -467,7 +475,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "parts_certificate",
             "legal_status_label": "Teilegutachten",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           }
         ]
       },
@@ -497,7 +507,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "unknown",
             "legal_status_label": "Unbekannt",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           },
           {
             "id": "01m6f7zvaamz0p0s3kk23tgrvk",
@@ -517,7 +529,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "unknown",
             "legal_status_label": "Unbekannt",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           },
           {
             "id": "01m6f7zvb011rvdkqckz8ngf15",
@@ -537,7 +551,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "unknown",
             "legal_status_label": "Unbekannt",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           }
         ]
       },
@@ -567,7 +583,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "individual_approval",
             "legal_status_label": "Einzelabnahme",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           }
         ]
       },
@@ -597,7 +615,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "parts_certificate",
             "legal_status_label": "Teilegutachten",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           }
         ]
       },
@@ -627,7 +647,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "not_required",
             "legal_status_label": "Eintragungsfrei",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           },
           {
             "id": "01m6f7zvecmq97whxekqr678x2",
@@ -647,7 +669,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "not_required",
             "legal_status_label": "Eintragungsfrei",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           }
         ]
       },
@@ -677,7 +701,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "parts_certificate",
             "legal_status_label": "Teilegutachten",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           },
           {
             "id": "01m6f7zvgc39sj60009m9hbx18",
@@ -697,7 +723,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "unknown",
             "legal_status_label": "Unbekannt",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           }
         ]
       },
@@ -727,7 +755,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "not_required",
             "legal_status_label": "Eintragungsfrei",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           },
           {
             "id": "01m6f7zvjzrrawwy5f2pna8ys9",
@@ -747,7 +777,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "unknown",
             "legal_status_label": "Unbekannt",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           }
         ]
       },
@@ -777,7 +809,9 @@ export const R34: PublicVehicle = {
             "cost": null,
             "legal_status": "not_required",
             "legal_status_label": "Eintragungsfrei",
-            "thumb": null
+            "thumb": null,
+            "product": null,
+            "installed_by": null
           }
         ]
       }

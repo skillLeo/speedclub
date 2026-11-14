@@ -1,7 +1,8 @@
 ---
 status: draft
-review: lawyer review required before launch
-source: docs/08_LEGAL_COMPLIANCE.md section 2
+review: lawyer review required before launch. Entwurf – rechtliche Prüfung ausstehend (Phase-4-Änderungen, OA-35)
+source: docs/08_LEGAL_COMPLIANCE.md section 2; docs/09_PREMIUM_2_0.md sections 8.10 and 13
+changes: docs/legal/phase-4-changes.md
 ---
 
 # Legal notice
@@ -46,6 +47,10 @@ Authorities and users can reach us under Art. 11 and 12 DSA at [[DSA-Kontakt-E-M
 Vehicles, photos, modifications and texts come from our members and reflect their own view. If you believe a piece of content is illegal, use the "Report" function or write to the address above.
 
 We use manufacturer names descriptively only. We are not affiliated with the manufacturers mentioned.
+
+## Businesses, meets and advertising
+
+Business profiles show their own imprint. The business concerned, not SPEED CLUB, is responsible for its profile and its details. Meets are run by their organisers. Links to shops that we label "Ad" are advertising for which we may receive a commission.
 
 ## Dispute resolution
 

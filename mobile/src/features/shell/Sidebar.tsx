@@ -7,6 +7,7 @@ import { View } from 'react-native';
 import { isWeb } from '@/lib/platform';
 import { clearAuthIntent, useSessionStore } from '@/state/session';
 import { createStyles, layout, size, space, useTheme } from '@/theme';
+import { maxFontScale } from '@/theme/tokens.generated';
 import { AppWordmark } from '@/features/auth/AppWordmark';
 import { Avatar, Button, Hairline, Icon, PressableScale, Text } from '@/ui';
 import type { PressableVisualState } from '@/ui/PressableScale';
@@ -57,11 +58,12 @@ const useStyles = createStyles((t) => ({
 }));
 
 /**
- * DQ-078: at this font scale "Nachrichten" still fits a row of 216. Above it the word hyphenates and its row grows, which breaks the
- * rhythm of the list: the destinations and the sign-in stop growing here, as the labels of the tab bar and the rail do at theirs
- * (ADR-162). A cap of its own: it is measured against the row, and does not follow LARGE_FONT_SCALE.
+ * DQ-078: above a cap "Nachrichten" hyphenates in the row of 216 and its row grows, which breaks the rhythm of the list: the
+ * destinations and the sign-in stop growing, as the labels of the tab bar and the rail do. CARRY-M4.12-18 (amends ADR-162's 1.5):
+ * the cap is the web tab role's (`web.tab` maxFontScale, 1.3), one cap for every navigation label on the web; at 1.3 "Nachrichten"
+ * ends well inside the row. It does not follow LARGE_FONT_SCALE.
  */
-export const SIDEBAR_LABEL_CAP = 1.5;
+export const SIDEBAR_LABEL_CAP: number = maxFontScale.webSidebar;
 
 /**
  * The account menu slot: the signed-in name opens the profile, a guest gets the sign-in action. DQ-129: a name, unlike the
@@ -89,10 +91,10 @@ export function AccountSlot() {
       >
         <Icon name="sign-in" size={24} color="text.primary" />
         <Text
-          variant="bodyStrong"
+          variant="webSidebar"
           selectable={false}
           maxFontSizeMultiplier={SIDEBAR_LABEL_CAP}
-          style={[styles.signInLabel, isWeb ? typeStyle('bodyStrong', Math.min(fontScale, SIDEBAR_LABEL_CAP)) : null]}
+          style={[styles.signInLabel, isWeb ? typeStyle('webSidebar', Math.min(fontScale, SIDEBAR_LABEL_CAP)) : null]}
         >
           {t('auth.signIn')}
         </Text>

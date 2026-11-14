@@ -56,7 +56,7 @@ class PublicVehicleController extends Controller
     public function modification(Request $request, string $slug, string $modification): ModificationResource
     {
         $vehicle = $this->visible($request, $slug);
-        $mod = $vehicle->modifications()->with(['category.fields', 'brand.mergedInto', 'media', 'vehicle'])->whereKey($modification)->first();
+        $mod = $vehicle->modifications()->with(['category.fields', 'brand.mergedInto', 'media', 'vehicle', 'product.brand', 'installedBy.owner'])->whereKey($modification)->first();
 
         if (! $mod instanceof Modification) {
             throw new ApiException(ErrorCode::NotFound);

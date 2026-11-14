@@ -225,7 +225,7 @@ describe('DISC-02 filters', () => {
     // No text: no Mitglieder tab, and the count and sort above the results.
     expect(screen.queryByTestId('DISC-02.tabs')).toBeNull();
     expect(screen.getByTestId('DISC-02.results.count')).toHaveTextContent(/^1 Build\s·/);
-    expect(screen.getByTestId('DISC-02.results.sort')).toHaveTextContent('Meiste PS');
+    expect(screen.getByTestId('DISC-02.results.sort')).toHaveTextContent('Höchste Leistung');
     await waitFor(() => expect(screen.getByTestId('DISC-02.chips.drivetrain.rear')).toHaveTextContent('Heck'));
     expect(screen.getByTestId('DISC-02.chips.make.bmw')).toHaveTextContent('BMW');
     expect(screen.getByTestId('DISC-02.chips.suspension_type.coilover')).toHaveTextContent('Gewindefahrwerk');

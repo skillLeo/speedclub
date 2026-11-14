@@ -98,10 +98,17 @@ test.describe('web shortcuts on the desktop', () => {
 
   test('⌘K / Ctrl+K opens the quick switcher; typing and Enter go to Garage', async ({ page, context, browserName }) => {
     await applyAuth(context, 'member');
+    // sig.web_shortcuts comes with the server's app-config (the bundled config has no flag on), and the keyboard layer listens only
+    // once that answer is applied, which can be after DISC-01 is drawn: a press before it does nothing, by design (Phase 4 gate, both
+    // engines once). So the press follows the answer, and is made again only while the layer was not listening yet.
+    const config = page.waitForResponse((r) => new URL(r.url()).pathname === '/api/v1/app-config' && [200, 304].includes(r.status()));
     await open(page, '/app/discover');
     await expect(id(page, 'DISC-01.root')).toBeVisible();
-    await page.keyboard.press(browserName === 'webkit' ? 'Meta+k' : 'Control+k');
-    await expect(id(page, 'shell.switcher')).toBeVisible();
+    await config;
+    await expect(async () => {
+      if ((await id(page, 'shell.switcher').count()) === 0) await page.keyboard.press(browserName === 'webkit' ? 'Meta+k' : 'Control+k');
+      await expect(id(page, 'shell.switcher')).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 15_000 });
     await expect(id(page, 'shell.switcher.search')).toBeFocused();
     await page.keyboard.type('Garage');
     await expect(id(page, 'shell.switcher.option.tab.garage')).toHaveAttribute('aria-selected', 'true');

@@ -194,7 +194,7 @@
         "locked": "Locked since :date",
         "force_password_change": "Password change forced",
         "devices": "Signed-in devices",
-        "no_devices": "No device signed in.",
+        "no_devices": "No device or browser is signed in right now.",
         "device": "Device",
         "platform": "Platform",
         "platform_ios": "iOS",
@@ -206,7 +206,7 @@
         "no_expiry": "No expiry",
         "unknown_device": "Unknown device",
         "view_as": "View-as",
-        "sign_ins": "Sign-ins by device",
+        "sign_ins": "Past sign-ins by device",
         "sign_ins_note": "Date and time only, no IP addresses and no device fingerprints.",
         "no_sign_ins": "No sign-in counted yet.",
         "device_n": "Device :n",
@@ -225,7 +225,11 @@
         "linked_at": "linked :date",
         "events": "Security events",
         "events_note": "The member's last 50 security log events, with device and approximate city. No IP addresses.",
-        "no_events": "No security events yet."
+        "no_events": "No security events yet.",
+        "active_count": ":count active",
+        "browser_session": "Browser session",
+        "times": ":count×",
+        "events_repeat": ":date, :from–:to"
     },
     "reports": {
         "as_target": "Cases on the member",

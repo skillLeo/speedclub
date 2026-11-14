@@ -11,7 +11,11 @@ import {
   disableM414Flags,
   disablePremiumFixture,
   enableM414Flags,
+  enableM414Affiliate,
+  disableM414Affiliate,
   enablePremiumFixture,
+  ensureM417Fixture,
+  ensureSessionsFixture,
   ensureReconsentFixture,
   ensureSupportFixture,
   legalDocumentsState,
@@ -153,6 +157,14 @@ export const STAGE_FIXTURES = {
     teardown: () => disableM414Flags(),
     teardownSync: () => backendSync(['disable-m414-flags']),
   },
+  // DQ-1150: BRD-02 with an affiliate link ("Anzeige"): the M4.14 flags plus affiliate_links on and a test affiliate URL on KW
+  // Variante 3 (shop.speedclub.test), all undone after the capture (support/backend.php m414AffiliateFixture).
+  'm414-affiliate': {
+    what: 'parts_catalogue, businesses and affiliate_links on, KW Variante 3 with a test affiliate URL',
+    setup: () => enableM414Affiliate(),
+    teardown: () => disableM414Affiliate(),
+    teardownSync: () => backendSync(['disable-m414-affiliate']),
+  },
   // ADM-48: a local demo has no cron, so a fresh seed has no health run and the default cells would be the empty state (visual run 3).
   // One run of the checks the scheduler makes (no notification, no audit row); only its own batches are removed after.
   'health-run': {
@@ -163,6 +175,22 @@ export const STAGE_FIXTURES = {
   },
   // M4.13: MNT-01/02 and GAR-01-due over lukas.sc's R34 (support/maintenance.mjs).
   maintenance: maintenanceFixture,
+  // M4.17 part 2: ADM-55 and ADM-60 show their real states (one application waiting, two comments) instead of the local zero state.
+  // The business and the comments go with the account (foreign keys cascade).
+  'm417-queues': {
+    what: 'm417.fixture with one open business application and two comments under a demo build update',
+    setup: () => ensureM417Fixture(),
+    teardown: () => deleteTestAccounts('m417.fixture'),
+    teardownSync: () => backendSync(['delete-accounts', 'm417.fixture']),
+  },
+  // M4.17 DQ-1197: ADM-59 with active sessions. sessions.fixture (@mia.sessions, the SET-06 account) with its three fixed app devices;
+  // every setup ends what the account had and seeds the same devices, so nothing needs removing after.
+  'm417-sessions': {
+    what: 'sessions.fixture (@mia.sessions) with its three fixed app devices, for ADM-59 and its revoke dialog',
+    setup: () => ensureSessionsFixture(),
+    teardown: async () => undefined,
+    teardownSync: () => true,
+  },
   'support-tickets': {
     what: 'support.fixture with two support requests, one answered by the team',
     setup: () => ensureSupportFixture(),

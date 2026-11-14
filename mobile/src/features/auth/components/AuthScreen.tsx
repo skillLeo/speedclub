@@ -94,7 +94,7 @@ export type AuthScreenProps = {
   dirty?: boolean;
   /**
    * How many label + input pairs the skeleton draws: required, so no screen inherits fields it does not have (DQ-1003: AUTH-12 has
-   * one, WEB-12 none).
+   * one, WEB-16 none).
    */
   skeletonFields: number;
   /** Replaces the fields of the skeleton where they are not plain inputs, as the code cells. */

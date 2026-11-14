@@ -78,9 +78,10 @@
         {{ $head ?? '' }}
     </head>
     <body class="flex min-h-screen flex-col bg-canvas font-ui text-body text-ink antialiased">
-        <x-icons.phosphor-sprite />
+        {{-- Only the symbols this page uses: the body has rendered by now (App\Support\PublicIcons, M4.18 LCP). --}}
+        {{ \App\Support\PublicIcons::sprite('components.icons.phosphor-sprite') }}
         @if ($autoIcons)
-            <x-icons.auto-sprite />
+            {{ \App\Support\PublicIcons::sprite('components.icons.auto-sprite') }}
         @endif
         <a href="#main" class="sc-skip text-callout" data-testid="WEB.skip">{{ __('public.nav.skip') }}</a>
         <div class="flex min-w-0 flex-1 flex-col">

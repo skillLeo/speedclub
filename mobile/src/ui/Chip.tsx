@@ -58,7 +58,8 @@ const useStyles = createStyles((t) => ({
   disabled: { borderColor: t.color.border.subtle },
   hover: { backgroundColor: t.color.state.hover },
   removableShell: { alignItems: 'center', flexDirection: 'row', paddingHorizontal: 0 },
-  body: { flexShrink: 1, minWidth: 0 },
+  // A 44 target at least: a short value ("M4") left the body 34 wide (m4.18 DISC-02-filtered-none). It still shrinks to that floor.
+  body: { flexShrink: 1, minWidth: t.size.touchMin },
   bodyVisual: {
     alignItems: 'center',
     flexDirection: 'row',

@@ -19,18 +19,26 @@ import { photoFields } from '@/features/profile/media';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
-import { createStyles, size } from '@/theme';
+import { createStyles, size, space, useBreakpoint, type BreakpointKind } from '@/theme';
 import { BusinessCard, BusinessCardSkeleton, Button, Chip, EmptyState, ErrorState } from '@/ui';
 
-import { distanceLabel, sampleBusiness } from '../model';
+import { businessCardCover, distanceLabel, FALLBACK_COVER, sampleBusiness } from '../model';
 import { TYPING_MS } from './EmbeddedParts';
 
 const SKELETON_CARDS = 3;
+/** DQ-1142: one card per row on a phone, two from 768, three in the desktop content width (09 §7.15 12-column grid). */
+const CARD_COLUMNS: Readonly<Record<BreakpointKind, number>> = { phone: 1, tablet: 2, desktop: 3 };
+const CARD_GAP = space[12];
+
+/** A card's width in `columns` across `width`. */
+export function businessCardWidth(width: number, columns: number): number {
+  return columns > 1 ? Math.floor((width - CARD_GAP * (columns - 1)) / columns) : width;
+}
 
 const useStyles = createStyles((t) => ({
   root: { gap: t.space[16] },
   chips: { flexDirection: 'row', gap: t.space[8] },
-  list: { gap: t.space[12] },
+  list: { flexDirection: 'row', flexWrap: 'wrap', gap: CARD_GAP },
   more: { alignSelf: 'flex-start' },
 }));
 
@@ -39,7 +47,7 @@ const useStyles = createStyles((t) => ({
  * the distance when the list knows a point), a kind filter, and what is typed in Entdecken's search narrows them. A member without a
  * business finds "Betrieb anmelden" at the end. Shown only while `businesses` is on.
  */
-export function EmbeddedBusinesses({ query: typed, bleed, routeId }: { query: string; bleed: number; routeId: string }) {
+export function EmbeddedBusinesses({ query: typed, width, bleed, routeId }: { query: string; width: number; bleed: number; routeId: string }) {
   const { t } = useTranslation('parts');
   const styles = useStyles();
   const router = useRouter();
@@ -54,13 +62,16 @@ export function EmbeddedBusinesses({ query: typed, bleed, routeId }: { query: st
   const list = useBusinessList({ ...DEFAULT_BUSINESS_FILTERS, q: query, kind }, live);
   const rows = useMemo(() => (qaState === 'empty' ? [] : flattenById<BusinessCardData>(list.data?.pages)), [list.data?.pages, qaState]);
   const filtered = kind !== null || query !== '';
+  const columns = CARD_COLUMNS[useBreakpoint().kind];
+  const cardWidth = businessCardWidth(width, columns);
+  const cell = { width: cardWidth };
 
   let body;
   if (qaState === 'loading' || (live && list.isPending && list.fetchStatus !== 'paused')) {
     body = (
       <View style={styles.list} testID={`${id}.skeleton`}>
-        {Array.from({ length: SKELETON_CARDS }, (_, index) => (
-          <BusinessCardSkeleton key={index} />
+        {Array.from({ length: Math.max(SKELETON_CARDS, columns) }, (_, index) => (
+          <BusinessCardSkeleton key={index} style={cell} />
         ))}
       </View>
     );
@@ -79,7 +90,18 @@ export function EmbeddedBusinesses({ query: typed, bleed, routeId }: { query: st
     const sample = sampleBusiness(t);
     body = (
       <EmptyState
-        preview={<BusinessCard name={sample.name} subline={sample.subline} services={sample.services} sample inert testID={`${id}.empty.sample`} />}
+        preview={
+          <BusinessCard
+            name={sample.name}
+            subline={sample.subline}
+            services={sample.services}
+            cover={FALLBACK_COVER}
+            sample
+            inert
+            style={{ width: businessCardWidth(width, Math.min(columns, 2)) }}
+            testID={`${id}.empty.sample`}
+          />
+        }
         title={filtered ? t('scope.businessesNoMatch') : t('scope.businessesEmptyTitle')}
         body={filtered ? t('scope.businessesNoMatchBody') : t('scope.businessesEmptyBody')}
         action={
@@ -95,21 +117,31 @@ export function EmbeddedBusinesses({ query: typed, bleed, routeId }: { query: st
   } else {
     body = (
       <View role="list" style={styles.list} testID={`${id}.list`}>
-        {rows.map((business) => (
-          <View key={business.id} role="listitem">
+        {rows.map((business) => {
+          const cover = businessCardCover(business, cardWidth);
+          return (
+          <View key={business.id} role="listitem" style={cell}>
             <BusinessCard
               name={business.name}
               subline={business.subline}
               distance={distanceLabel(business.distance_km, t, (km) => format.distance(km))}
               services={business.services}
+              cover={cover.photo}
+              coverNote={cover.symbolic ? t('scope.symbolic') : null}
               logo={business.logo ? photoFields(business.logo, size.avatar.lg) : null}
-              verified={business.verified}
+              verified={business.verified && !business.is_sample}
               sample={business.is_sample}
               onPress={() => router.push({ pathname: '/b/[slug]', params: { slug: business.slug } })}
               testID={`${id}.business.${business.slug}`}
             />
           </View>
-        ))}
+          );
+        })}
+      </View>
+    );
+    body = (
+      <>
+        {body}
         {list.hasNextPage ? (
           <Button
             label={t('scope.moreBusinesses')}
@@ -121,7 +153,7 @@ export function EmbeddedBusinesses({ query: typed, bleed, routeId }: { query: st
             testID={`${id}.more`}
           />
         ) : null}
-      </View>
+      </>
     );
   }
 

@@ -41,9 +41,14 @@ export const MAX_EXPANDED_HEIGHT = 12000;
  * @property {boolean} [volatile] ADR-223: the picture is the platform's live activity (ADM-06, ADM-08, ADM-44): audited, never pixel-compared
  * @property {boolean} [liveChrome] ADR-257, only beside `volatile`: the forced states still show the live page around them (the list
  *   behind a dialog, the record header and activity, the run time of the last health run), so they are volatile too
+ * @property {{en?: boolean, tablet?: boolean, black?: boolean}} [p4] tier p4 opt-ins: EN cells, the 820 tablet, Schwarz (p4.mjs, DQ-1183)
  * @property {boolean} [fs2] tier p4: a 200 % text cell (iphone15pro and desktop1440, Carbon DE) for a route outside the flagship and form
  *   sets whose text is known to crowd at large sizes (EVT-05's tab row, DQ-1115)
  * @property {string} [fixture] a stage fixture (support/stage-fixtures.mjs): in place only while this route's cells run, after all others
+ * @property {(ctx: import('./route-steps.mjs').RouteStepContext) => Promise<void>} [prepare] before the route loads: stage API answers
+ *   (route-steps.mjs); they end with the cell
+ * @property {(ctx: import('./route-steps.mjs').RouteStepContext) => Promise<void>} [walk] after the route loaded, before its ready
+ *   element: the taps and typing that reach a state no URL can set (DQ-1213)
  */
 
 /** ADR-223: forced states that render a fixture instead of live data, so a volatile route's cells in them are still compared. */
@@ -236,7 +241,9 @@ export function validateRoutes(routes) {
     // m3.2-contract §3, whose testIDs carry `VIEWAS.` as their route ID; it has no register number either, only named cells.
     // CONSENT: the re-consent sheet (m3.5-contract §3), an overlay over any route with its own testIDs (`CONSENT.`), no register number.
     // ADM-F<n>: the flagged memberships scaffold (04_SCREEN_REGISTER §5 numbers them F1, F2).
-    if (!/^(?:(?:[A-Z]+-(?:\d+|F\d+|DEV(?=-|$))|VIEWAS-[A-Z0-9]+)[A-Za-z0-9-]*|CONSENT)$/.test(r.id ?? '')) problems.push(`Invalid route id "${r.id}"`);
+    // REAUTH: the re-authentication sheet (09 §8.4, M4.6), an overlay over the screen that asked, with its own testIDs (`REAUTH.`) and no
+    // register number, like CONSENT; its variants are `REAUTH-<variant>` (DQ-1213).
+    if (!/^(?:(?:[A-Z]+-(?:\d+|F\d+|DEV(?=-|$))|VIEWAS-[A-Z0-9]+)[A-Za-z0-9-]*|CONSENT|REAUTH(?:-[a-z0-9]+)*)$/.test(r.id ?? '')) problems.push(`Invalid route id "${r.id}"`);
     if (seen.has(r.id)) problems.push(`Duplicate route id ${r.id}`);
     seen.add(r.id);
     if (!r.path?.startsWith('/')) problems.push(`${r.id}: path must start with /`);
@@ -254,6 +261,9 @@ export function validateRoutes(routes) {
     if (r.volatile !== undefined && typeof r.volatile !== 'boolean') problems.push(`${r.id}: volatile must be true or false`);
     if (r.liveChrome !== undefined && (r.liveChrome !== true || r.volatile !== true)) problems.push(`${r.id}: liveChrome is only true, and only beside volatile`);
     if (r.fixture !== undefined && !STAGE_FIXTURE_NAMES.includes(r.fixture)) problems.push(`${r.id}: unknown stage fixture "${r.fixture}"`);
+    for (const step of /** @type {const} */ (['prepare', 'walk'])) {
+      if (r[step] !== undefined && typeof r[step] !== 'function') problems.push(`${r.id}: ${step} must be a function (route-steps.mjs)`);
+    }
     if (r.expectStatus !== undefined && !(Number.isInteger(r.expectStatus) && r.expectStatus >= 100 && r.expectStatus <= 599)) {
       problems.push(`${r.id}: expectStatus must be an HTTP status code`);
     }

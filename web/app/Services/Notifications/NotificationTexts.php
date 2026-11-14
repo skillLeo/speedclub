@@ -107,10 +107,15 @@ class NotificationTexts
             // M4.13: the owner's own vehicle and item (MaintenanceTexts), in their distance unit.
             NotificationType::MaintenanceDue => $vehicle === null ? null : app(MaintenanceTexts::class)->sentence($row->data ?? [], $this->presenter->title($vehicle), $recipient, $locale),
             // M4.14: in-app only (no push switch); the business's own name, never a reason in the text.
-            NotificationType::BusinessReview => ($business = $this->business($row)) === null ? null : (string) __('notifications.business_review.'.self::oneOf($row->data['outcome'] ?? null, ['verified', 'rejected', 'suspended', 'reinstated'], 'rejected'), ['name' => $business->name], $locale),
+            NotificationType::BusinessReview => ($business = $this->business($row)) === null ? null : (string) __('notifications.business_review.'.self::oneOf($row->data['outcome'] ?? null, ['verified', 'rejected', 'suspended', 'reinstated', 'reopened'], 'rejected'), ['name' => $business->name], $locale),
             NotificationType::BusinessTag => ($business = $this->business($row)) === null || $vehicle === null ? null : (string) __('notifications.business_tag.'.(($row->data['side'] ?? null) === 'business' ? 'business' : 'member').'.'.self::oneOf($row->data['state'] ?? null, ['requested', 'accepted', 'declined'], 'requested'), [
                 'name' => $business->name,
                 'vehicle' => $this->presenter->title($vehicle),
+            ], $locale),
+            // SEC-414-01: in-app only; the business's name and the member's username, nothing else.
+            NotificationType::BusinessInvite => ($business = $this->business($row)) === null ? null : (string) __('notifications.business_invite.'.self::oneOf($row->data['state'] ?? null, ['invited', 'removed', 'accepted', 'declined', 'left'], 'invited'), [
+                'name' => $business->name,
+                'username' => is_string($row->data['username'] ?? null) ? $row->data['username'] : '',
             ], $locale),
         };
 
@@ -144,6 +149,8 @@ class NotificationTexts
             NotificationType::MaintenanceDue => $vehicle !== null ? '/garage/'.$vehicle->id.'/maintenance'.(is_string($row->data['item_id'] ?? null) ? '?item='.$row->data['item_id'] : '') : '/notifications',
             // M4.14: BIZ-03 for the business owner, BIZ-04 for a tag waiting for the business, else the build.
             NotificationType::BusinessReview => '/business',
+            // SEC-414-01: the member's open invitations, or BIZ-03 for the owner.
+            NotificationType::BusinessInvite => ($row->data['state'] ?? null) === 'invited' ? '/business/invites' : (($row->data['side'] ?? null) === 'business' ? '/business' : '/notifications'),
             NotificationType::BusinessTag => ($row->data['side'] ?? null) === 'business'
                 ? '/business/requests'
                 : ($vehicle !== null ? '/v/'.$vehicle->slug.(is_string($row->data['mod_id'] ?? null) ? '?mod='.$row->data['mod_id'] : '') : '/notifications'),

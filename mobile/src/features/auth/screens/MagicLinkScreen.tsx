@@ -38,7 +38,7 @@ const useStyles = createStyles((t) => ({
 }));
 
 /**
- * WEB-12 / AUTH-13 magic link (09 §7.2, §8.1): `/auth/magic#t=…` signs in only on the device that asked for the code, because only
+ * WEB-16 / AUTH-13 magic link (09 §7.2, §8.1): `/auth/magic#t=…` signs in only on the device that asked for the code, because only
  * there is the attempt kept (features/auth/emailAttempt.ts). Anywhere else it says to type the code in the app. The fragment
  * leaves the address bar at once.
  */
@@ -100,7 +100,7 @@ export function MagicLinkScreen() {
   if (phase === 'elsewhere') {
     return (
       <AuthScreen
-        routeId="WEB-12"
+        routeId="WEB-16"
         title={t('magic.elsewhereTitle')}
         titleVariant="title2"
         subtitle={t('magic.elsewhereBody')}
@@ -116,7 +116,7 @@ export function MagicLinkScreen() {
             flush="start"
             role="link"
             onPress={() => router.replace('/auth/email')}
-            testID="WEB-12.newCode"
+            testID="WEB-16.newCode"
           />
         }
       />
@@ -126,7 +126,7 @@ export function MagicLinkScreen() {
   if (phase === 'failed') {
     return (
       <AuthScreen
-        routeId="WEB-12"
+        routeId="WEB-16"
         title={t('magic.failedTitle')}
         titleVariant="title2"
         onBack={() => router.replace('/')}
@@ -138,7 +138,7 @@ export function MagicLinkScreen() {
               variant="secondary"
               size="m"
               onPress={() => router.replace('/auth/code')}
-              testID="WEB-12.enterCode"
+              testID="WEB-16.enterCode"
             />
             <Button
               label={t('magic.newCode')}
@@ -146,12 +146,12 @@ export function MagicLinkScreen() {
               size="m"
               flush="start"
               onPress={() => router.replace('/auth/email')}
-              testID="WEB-12.newCode"
+              testID="WEB-16.newCode"
             />
           </View>
         }
       >
-        {message ? <FormNotice message={message} testID="WEB-12.notice" /> : null}
+        {message ? <FormNotice message={message} testID="WEB-16.notice" /> : null}
       </AuthScreen>
     );
   }
@@ -159,8 +159,8 @@ export function MagicLinkScreen() {
   // Checking and signing in: the screen's own geometry as a skeleton, never a spinner (§14).
   return (
     // DQ-1003: no field here; its skeleton is the waiting lines below.
-    <AuthScreen routeId="WEB-12" title={t('magic.signingIn')} titleVariant="title2" onBack={null} skeletonFields={0} skeletonAfter={<SkeletonText variant="body" lines={2} />}>
-      <Skeleton testID="WEB-12.skeleton">
+    <AuthScreen routeId="WEB-16" title={t('magic.signingIn')} titleVariant="title2" onBack={null} skeletonFields={0} skeletonAfter={<SkeletonText variant="body" lines={2} />}>
+      <Skeleton testID="WEB-16.skeleton">
         <View style={styles.waiting}>
           <SkeletonText variant="body" lines={2} />
         </View>

@@ -28,6 +28,8 @@ Route::middleware([...AdminRoutes::signedIn(), 'can:moderation.view'])->prefix('
 
     Route::middleware('throttle:60,1')->group(function () use ($ulid): void {
         Route::post('cases/{case}/assign', [CaseActionsController::class, 'assign'])->middleware('can:moderation.decide')->where('case', $ulid)->name('cases.assign');
+        // M4.17: the 5-s undo of "Übernehmen" in the SplitQueue (ReleaseCase), only with the record the take left in this session.
+        Route::post('cases/{case}/release', [CaseActionsController::class, 'release'])->middleware('can:moderation.decide')->where('case', $ulid)->name('cases.release');
         Route::post('cases/{case}/decide', [CaseActionsController::class, 'decide'])->middleware(['can:moderation.decide', 'staff.recent-password'])->where('case', $ulid)->name('cases.decide');
         Route::post('cases/{case}/preview', [CaseJsonController::class, 'preview'])->middleware('can:moderation.decide')->where('case', $ulid)->name('cases.preview');
         Route::post('cases/{case}/evidence', [CaseJsonController::class, 'evidence'])->middleware('throttle:30,1')->where('case', $ulid)->name('cases.evidence');

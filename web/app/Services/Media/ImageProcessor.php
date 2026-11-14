@@ -55,14 +55,74 @@ class ImageProcessor
         $variants = [];
 
         foreach ($widths as $target) {
-            $variants[$target] = Image::fromBytes($jpeg)
-                ->scale(width: max(1, $target))
-                ->toWebp()
-                ->quality($this->quality('variant_quality'))
-                ->toBytes();
+            $variants[$target] = $this->variant($jpeg, $target);
         }
 
         return $variants;
+    }
+
+    /**
+     * One WebP variant of the clean JPEG at the given width. Starts at variant_quality and steps the quality down by
+     * variant_quality_step until the bytes fit budgetBytes(), never below variant_min_quality. The dimensions never change: a
+     * photo still above its budget at the floor keeps that last, smallest encoding (M4.18, LCP of the public pages).
+     */
+    public function variant(string $jpeg, int $width): string
+    {
+        $scaled = Image::fromBytes($jpeg)->scale(width: max(1, $width));
+        $budget = $this->budgetBytes($width);
+        $quality = $this->quality('variant_quality');
+        $floor = min($quality, $this->quality('variant_min_quality'));
+        $step = max(1, config()->integer('speedclub.media.variant_quality_step'));
+
+        while (true) {
+            $bytes = $scaled->toWebp()->quality($quality)->toBytes();
+
+            if (strlen($bytes) <= $budget || $quality <= $floor) {
+                return $bytes;
+            }
+
+            $quality = max($floor, min(100, $quality - $step));
+        }
+    }
+
+    /**
+     * Byte budget of a variant of this width. A configured width has its own value. Any other width (a photo narrower than the
+     * largest configured one gets its own width as a variant) is scaled from the nearest configured width at or above it, else
+     * the largest, by (width ratio) ^ variant_budget_exponent. No configured budget means no limit.
+     */
+    public function budgetBytes(int $width): int
+    {
+        /** @var array<int|string, int|float> $configured */
+        $configured = config('speedclub.media.variant_budget_kb', []);
+        $budgets = [];
+
+        foreach ($configured as $budgetWidth => $kilobytes) {
+            $budgets[(int) $budgetWidth] = (float) $kilobytes;
+        }
+
+        if ($budgets === []) {
+            return PHP_INT_MAX;
+        }
+
+        ksort($budgets);
+
+        if (isset($budgets[$width])) {
+            return (int) round($budgets[$width] * 1024);
+        }
+
+        $reference = max(array_keys($budgets));
+
+        foreach (array_keys($budgets) as $budgetWidth) {
+            if ($budgetWidth >= $width) {
+                $reference = $budgetWidth;
+
+                break;
+            }
+        }
+
+        $exponent = config()->float('speedclub.media.variant_budget_exponent');
+
+        return max(1, (int) round($budgets[$reference] * 1024 * (max(1, $width) / max(1, $reference)) ** $exponent));
     }
 
     private function blurhash(string $jpeg, int $width, int $height): string

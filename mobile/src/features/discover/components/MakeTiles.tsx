@@ -14,7 +14,9 @@ import { joinLabel } from '@/ui/rowParts';
 const GAP = space[8];
 const PADDING = space[8];
 /** 09 §7.5: three columns of BrandTiles where every wordmark fits its tile, then two, then one row per make. */
-const COLUMN_STEPS = [3, 2] as const;
+const COLUMN_STEPS: readonly number[] = [3, 2];
+/** DQ-1142: the Teile scope's brand tiles in the desktop content width, six across (09 §7.15 12-column grid). */
+export const WIDE_COLUMN_STEPS: readonly number[] = [6, 4, 3, 2];
 /** DISC-01 shows the top makes (most builds first, the API's order); "Alle Marken" opens the rest. */
 export const TOP_MAKES = 12;
 /** DQ-1036 (ADR-438 b): a phone shows 6 makes (3 rows of 2), so the first photograph still reaches its first screen. */
@@ -79,9 +81,9 @@ export function widestWordmarkWord(names: readonly string[], scale: number): num
  * inside a word; 1 is the list of full-width rows. Decided before the first paint from the column width and the shipped font's
  * advances (ADR-425's estimate, never narrower than the screen draws), so nothing is measured and nothing renders twice.
  */
-export function columnsFor(width: number, widestWord: number): number {
-  if (width <= 0) return COLUMN_STEPS[0];
-  for (const columns of COLUMN_STEPS) if (tileWidth(width, columns) - 2 * PADDING >= widestWord) return columns;
+export function columnsFor(width: number, widestWord: number, steps: readonly number[] = COLUMN_STEPS): number {
+  if (width <= 0) return steps[0] ?? 1;
+  for (const columns of steps) if (tileWidth(width, columns) - 2 * PADDING >= widestWord) return columns;
   return 1;
 }
 
@@ -97,7 +99,7 @@ const Tile = memo(function Tile({ make, row, scale, onOpen, testID }: TileProps)
       // Draws its own pressed fill from state.pressed: no second tone layer (SM7).
       toneShift={false}
       role="link"
-      aria-label={isWeb ? undefined : joinLabel([make.name, count])}
+      aria-label={isWeb ? undefined : joinLabel([make.name, make.vehicle_count > 0 ? count : null])}
       onPress={() => onOpen(make)}
       style={styles.fill}
       contentStyle={(state) => [styles.tile, row ? styles.tileRow : null, state.hovered || state.pressed ? styles.hover : null]}
@@ -113,9 +115,12 @@ const Tile = memo(function Tile({ make, row, scale, onOpen, testID }: TileProps)
       >
         {make.name}
       </Text>
-      <Text variant="caption" color="text.tertiary" numeric>
-        {count}
-      </Text>
+      {/* DQ-1140: a count of 0 is never shown. */}
+      {make.vehicle_count > 0 ? (
+        <Text variant="caption" color="text.tertiary" numeric>
+          {count}
+        </Text>
+      ) : null}
     </PressableScale>
   );
 });
@@ -125,16 +130,18 @@ export type MakeTilesProps = {
   /** The column's inner width: the grid decides its columns from it before it is drawn. */
   width: number;
   onOpen: (make: MakeTile) => void;
+  /** The column counts to try, most first (default 3, 2). */
+  steps?: readonly number[];
   /** `<ROUTE-ID>.makes`; each tile adds `.<slug>`. */
   testID: string;
 };
 
 /** 09 §7.5 "Marken": BrandTiles (text wordmarks in Archivo SemiExpanded, no marks), the make and its real count of builds. */
-export function MakeTiles({ makes, width, onOpen, testID }: MakeTilesProps) {
+export function MakeTiles({ makes, width, onOpen, steps = COLUMN_STEPS, testID }: MakeTilesProps) {
   const styles = useStyles();
   const { fontScale } = useTheme();
   const scale = wordmarkScale(fontScale);
-  const columns = useMemo(() => columnsFor(width, widestWordmarkWord(makes.map((make) => make.name), scale)), [makes, scale, width]);
+  const columns = useMemo(() => columnsFor(width, widestWordmarkWord(makes.map((make) => make.name), scale), steps), [makes, scale, steps, width]);
   const tile = columns > 1 ? tileWidth(width, columns) : 0;
   return (
     <View role="list" style={columns > 1 ? styles.grid : styles.list} testID={testID}>
@@ -148,11 +155,24 @@ export function MakeTiles({ makes, width, onOpen, testID }: MakeTilesProps) {
 }
 
 /** The same grid while the tiles load: the top makes' tiles at the columns the common makes take. */
-export function MakeTilesSkeleton({ width, count = TOP_MAKES, testID }: { width: number; count?: number; testID: string }) {
+export function MakeTilesSkeleton({
+  width,
+  count = TOP_MAKES,
+  sample = SAMPLE_MAKE,
+  steps = COLUMN_STEPS,
+  testID,
+}: {
+  width: number;
+  count?: number;
+  /** The measurement word: the widest name the loaded tiles usually carry (DQ-1149: part brands are shorter than makes). */
+  sample?: string;
+  steps?: readonly number[];
+  testID: string;
+}) {
   const styles = useStyles();
   const theme = useTheme();
   const scale = wordmarkScale(theme.fontScale);
-  const columns = columnsFor(width, widestWordmarkWord([SAMPLE_MAKE], scale));
+  const columns = columnsFor(width, widestWordmarkWord([sample], scale), steps);
   const tile = columns > 1 ? tileWidth(width, columns) : 0;
   // The loaded tile: a one-line wordmark and the count, inside the padding, never under the tile's minimum.
   const wordmark = typography.displayWordmark.lineHeight * scale;

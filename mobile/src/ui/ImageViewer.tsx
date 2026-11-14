@@ -80,7 +80,7 @@ const EDGE_RESISTANCE = 0.3;
 
 const useStyles = createStyles((t) => ({
   root: { flex: 1, overflow: 'hidden' },
-  // §7: always pure black. qr.fg is the only token that is #000000 in every theme.
+  // §7: always pure black. qr.fg is the only token that is pure black in every theme.
   black: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.color.qr.fg },
   stage: { flex: 1 },
   slide: { bottom: 0, position: 'absolute', top: 0 },

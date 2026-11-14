@@ -131,12 +131,25 @@ describe('MEM-01 Mitgliedschaft (09 §7.13, flag membership)', () => {
     await renderScreen(<MembershipScreen routeId="MEM-01" />);
     expect(screen.getByTestId('MEM-01.plan')).toHaveTextContent(de('membership.plan'));
     expect(screen.getByTestId('MEM-01.sample')).toBeTruthy();
-    expect(screen.getByTestId('MEM-01.perk.garage')).toBeTruthy();
+    const part = (text: string) => new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    // DQ-1161: 3–5 perks, each a real UI fragment badged "Beispiel".
+    for (const perk of ['garage', 'stickers', 'costs', 'accent']) {
+      expect(screen.getByTestId(`MEM-01.perk.${perk}`)).toHaveTextContent(part(de(`membership.perks.${perk}`)));
+      expect(screen.getByTestId(`MEM-01.perk.${perk}.sample`)).toBeTruthy();
+      // The fragments are decorative: hidden from screen readers, which read the title and the line.
+      expect(screen.getByTestId(`MEM-01.perk.${perk}.fragment`, { includeHiddenElements: true })).toBeTruthy();
+    }
+    // More than three builds in the sample garage.
+    for (const car of ['r34', 'rs3', 'p911', 'e46']) {
+      expect(screen.getByTestId('MEM-01.perk.garage.fragment', { includeHiddenElements: true })).toHaveTextContent(part(de(`membership.samples.cars.${car}`)));
+    }
     expect(screen.getByTestId('MEM-01.cta')).toHaveTextContent(de('membership.cta'));
     expect(screen.getByTestId('MEM-01.cta')).toBeDisabled();
     expect(screen.getByTestId('MEM-01.cancel')).toHaveTextContent(de('membership.cancelAnytime'));
-    // No figure anywhere: neither a price nor a count.
-    expect(screen.getByTestId('MEM-01.content')).not.toHaveTextContent(/\d|€/);
+    // No figure: neither a price nor a count nor a cost (model names such as "M3 E46" are the cars' names, not figures).
+    expect(screen.getByTestId('MEM-01.price')).not.toHaveTextContent(/\d|€/);
+    expect(screen.getByTestId('MEM-01.perk.costs')).not.toHaveTextContent(/\d|€/);
+    expect(screen.getByTestId('MEM-01.perk.accent')).not.toHaveTextContent(/\d|€/);
     await fireEvent.press(screen.getByTestId('MEM-01.legal.privacy'));
     expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/settings/legal/[doc]', params: { doc: 'privacy' } });
   });

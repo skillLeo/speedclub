@@ -42,11 +42,22 @@ function isExpected(message: ConsoleMessage, expected: readonly ExpectedFailure[
   return expected.some((e) => e.status === status && e.url.test(url));
 }
 
+/**
+ * ADM-61's mail frame runs no script by design (ADR-468: `sandbox` CSP and attribute, no script source). Playwright's trace recorder
+ * injects its DOM snapshotter into every frame, and Chromium refuses it there with this console error, once per snapshot (proved
+ * with a bare context: no error without tracing, one per snapshot with it). The mail itself holds no script. Only this message, only
+ * for that frame's URL, is the recorder's and not the page's.
+ */
+const SCRIPTLESS_FRAME_URL = /\/admin\/system\/mail-preview\/\d+\/frame\?/;
+const isRecorderInScriptlessFrame = (m: ConsoleMessage): boolean =>
+  SCRIPTLESS_FRAME_URL.test(m.location().url) &&
+  /^Blocked script execution in '[^']+' because the document's frame is sandboxed and the 'allow-scripts' permission is not set\.$/.test(m.text());
+
 export const watchPageErrors = (page: Page, sink: string[], expected: readonly ExpectedFailure[] = []): void => {
   page.on('pageerror', (e) => sink.push(`pageerror: ${e.message}`));
   page.on('console', (m) => {
     // Aborting third-party requests logs a network error; they are asserted through blockedRequests.
-    if (m.type() === 'error' && !m.text().includes('net::ERR_BLOCKED_BY_CLIENT') && !isExpected(m, expected)) {
+    if (m.type() === 'error' && !m.text().includes('net::ERR_BLOCKED_BY_CLIENT') && !isExpected(m, expected) && !isRecorderInScriptlessFrame(m)) {
       sink.push(`console.error: ${m.text().slice(0, 500)} (${m.location().url})`);
     }
   });

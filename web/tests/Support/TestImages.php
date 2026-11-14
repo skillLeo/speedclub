@@ -30,6 +30,32 @@ final class TestImages
     }
 
     /**
+     * Seeded random pixels: the worst case for an encoder, so its WebP variants run far above the byte budget at any quality (M4.18).
+     */
+    public static function noisyJpeg(int $width = 1100, int $height = 733, int $seed = 418): string
+    {
+        $image = imagecreatetruecolor($width, $height);
+
+        if ($image === false) {
+            throw new RuntimeException('GD could not create an image.');
+        }
+
+        mt_srand($seed);
+
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                imagesetpixel($image, $x, $y, (mt_rand(0, 255) << 16) | (mt_rand(0, 255) << 8) | mt_rand(0, 255));
+            }
+        }
+
+        mt_srand();
+        ob_start();
+        imagejpeg($image, null, 90);
+
+        return (string) ob_get_clean();
+    }
+
+    /**
      * A JPEG carrying Orientation and GPSLatitude N 52° 31' in an APP1 EXIF segment. Tests assert with exif_read_data()
      * that the fixture really holds them, so "no GPS in the output" proves something.
      */

@@ -1,0 +1,129 @@
+{
+    "title": "Editorial & Beispiele",
+    "nav": {
+        "title": "Editorial & Beispiele"
+    },
+    "intro": "Beispielinhalte (Editorial- und Beispielkonten): wo sie zu sehen sind und welche du einzeln ausgeblendet hast. In Produktion bleiben sie aus, bis echte Builds mit schriftlicher Zustimmung vorliegen.",
+    "sample": "Beispiel",
+    "environments": {
+        "local": "Lokal",
+        "staging": "Staging",
+        "production": "Produktion"
+    },
+    "flag": {
+        "title": "Sichtbarkeit je Umgebung",
+        "hint": "Feature-Flag „Beispielinhalte“",
+        "caption": "Beispielinhalte je Umgebung",
+        "environment": "Umgebung",
+        "samples": "Beispiele",
+        "note": "Hinweis",
+        "here": "Diese Umgebung",
+        "on": "Sichtbar",
+        "off": "Ausgeblendet",
+        "effective": "Gilt hier sofort",
+        "documented": "Vorgesehener Stand, gilt dort",
+        "turn_on": "Beispiele zeigen",
+        "turn_off": "Beispiele ausblenden",
+        "pending": "Eine Änderung wartet auf Freigabe (Vier-Augen).",
+        "view_only": "Nur Owner und Admins schalten die Beispiele um.",
+        "updated": "Zuletzt geändert am :date",
+        "error": "Der Schalter konnte nicht geladen werden.",
+        "missing_title": "Der Schalter für Beispielinhalte fehlt",
+        "missing_body": "Er wird mit den Grunddaten der Plattform angelegt. Sag dem Entwicklungsteam Bescheid."
+    },
+    "flag_dialog": {
+        "on_title": "Beispiele in :environment zeigen?",
+        "off_title": "Beispiele in :environment ausblenden?",
+        "on_body": "Beispiel-Builds, -Treffen und -Betriebe erscheinen wieder in der App und auf den öffentlichen Seiten, jeweils mit dem Hinweis „Beispiel“. Einzeln ausgeblendete bleiben ausgeblendet.",
+        "off_body": "Kein Mitglied und keine öffentliche Seite zeigt dann noch Beispielinhalte. Die Daten bleiben erhalten."
+    },
+    "summary": {
+        "title": "Bestand",
+        "account": "Editorial-Konto:",
+        "vehicles": "Beispiel-Builds",
+        "updates": "Build-Updates",
+        "events": "Beispiel-Treffen",
+        "businesses": "Beispiel-Betriebe",
+        "members": "Beispielkonten",
+        "hidden": "Einzeln ausgeblendet",
+        "none": "Hier gibt es keine Beispielinhalte. Die Beispiele kommen mit dem Demo-Datensatz, lokal und auf Staging."
+    },
+    "items": {
+        "title": "Beispielinhalte",
+        "view_only": "Du siehst die Beispiele nur. Ausblenden dürfen Rollen mit Inhalte bearbeiten.",
+        "caption_vehicle": "Beispiel-Builds mit Konto, Sichtbarkeit und Anlagedatum",
+        "caption_event": "Beispiel-Treffen mit Konto, Sichtbarkeit und Anlagedatum",
+        "caption_business": "Beispiel-Betriebe mit Konto, Sichtbarkeit und Anlagedatum"
+    },
+    "tabs": {
+        "label": "Art der Beispiele",
+        "vehicle": "Builds",
+        "event": "Treffen",
+        "business": "Betriebe"
+    },
+    "columns": {
+        "cover": "Foto",
+        "title": "Name",
+        "owner": "Konto",
+        "state": "Für Mitglieder",
+        "created": "Angelegt",
+        "actions": "Aktionen"
+    },
+    "states": {
+        "shown": "Sichtbar",
+        "hidden": "Ausgeblendet",
+        "withdrawn": "Nicht öffentlich"
+    },
+    "state_hint": {
+        "shown": "Mitglieder sehen es, solange Beispiele hier sichtbar sind.",
+        "hidden": "Hier ausgeblendet, für Mitglieder unsichtbar.",
+        "withdrawn": "Privat oder entfernt, nicht über diese Seite."
+    },
+    "hidden_by": "Ausgeblendet von :name am :date",
+    "filters": {
+        "label": "Beispiele filtern",
+        "q": "Suche",
+        "q_vehicle": "Name, Marke oder Modell",
+        "q_event": "Titel oder Ort",
+        "q_business": "Name oder Ort",
+        "state": "Für Mitglieder",
+        "any": "Alle",
+        "state_shown": "Nicht ausgeblendet",
+        "state_hidden": "Ausgeblendet",
+        "apply": "Filtern"
+    },
+    "empty": {
+        "vehicle_title": "Keine Beispiel-Builds",
+        "vehicle_body": "Die Beispiel-Builds kommen mit dem Demo-Datensatz.",
+        "event_title": "Keine Beispiel-Treffen",
+        "event_body": "Die Beispiel-Treffen kommen mit dem Demo-Datensatz.",
+        "business_title": "Keine Beispiel-Betriebe",
+        "business_body": "Die Beispiel-Betriebe kommen mit dem Demo-Datensatz."
+    },
+    "actions": {
+        "hide": "Ausblenden",
+        "show": "Wieder zeigen",
+        "hide_named": ":name ausblenden",
+        "show_named": ":name wieder zeigen"
+    },
+    "item_dialog": {
+        "hide_title": "„:name“ ausblenden?",
+        "show_title": "„:name“ wieder zeigen?",
+        "hide_body_vehicle": "Der Build wird privat: Er verschwindet aus Start, Entdecken, Suche und seiner öffentlichen Seite. Benachrichtigt wird niemand.",
+        "hide_body_event": "Das Treffen verschwindet aus Kalender, Karte und seiner öffentlichen Seite. Benachrichtigt wird niemand.",
+        "hide_body_business": "Der Betrieb verschwindet aus Listen und seiner öffentlichen Seite. Benachrichtigt wird niemand.",
+        "show_body": "Es erscheint wieder so wie vor dem Ausblenden, solange Beispiele hier sichtbar sind."
+    },
+    "errors": {
+        "not_sample": "Das ist kein Beispielinhalt. Echte Inhalte blendest du über Moderation aus.",
+        "already_hidden": "Ist schon ausgeblendet.",
+        "not_visible": "Ist gerade nicht öffentlich, es gibt nichts auszublenden.",
+        "not_hidden": "Ist nicht über diese Seite ausgeblendet."
+    },
+    "flash": {
+        "hidden": "Ausgeblendet. Mitglieder sehen es nicht mehr.",
+        "shown": "Wieder sichtbar.",
+        "changed": "Inzwischen anders geändert, deshalb nicht wiederhergestellt. Prüf den Datensatz.",
+        "flag": "Sichtbarkeit der Beispiele geändert."
+    }
+}

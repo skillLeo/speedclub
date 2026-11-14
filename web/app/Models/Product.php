@@ -40,6 +40,12 @@ class Product extends Model
      */
     public ?int $buildCount = null;
 
+    /**
+     * ADR-457: the cover of the newest real public build with this product (PartPhotos::thumbnails, set by ProductPresenter for a
+     * page), null when no such build exists or the list does not prepare it.
+     */
+    public ?Media $thumbnail = null;
+
     /** @var list<string> */
     protected $fillable = ['brand_id', 'category_id', 'name', 'line', 'slug', 'attributes', 'url', 'affiliate_url', 'aliases'];
 

@@ -526,6 +526,36 @@ class Notifier
         ]);
     }
 
+    /**
+     * SEC-414-01: a team invitation or membership of $business changed. $state invited|removed reaches the member ($toBusiness false),
+     * accepted|declined|left the business owner. $key names the invitation (or the membership for removed and left): one row per key and
+     * state. Nothing reaches a recipient with a block with the other side.
+     */
+    public function businessInvite(User $recipient, Business $business, User $other, string $key, string $state, bool $toBusiness): ?Notification
+    {
+        if ($recipient->hasBlockWith($other)) {
+            return null;
+        }
+
+        return $this->grouped(NotificationType::BusinessInvite, $recipient, null, 'business_invite:'.$key.':'.$state, null, fn (array $data): array => [
+            'business_id' => $business->id,
+            'invite_id' => $state === 'invited' ? $key : null,
+            'username' => $other->username,
+            'state' => $state,
+            'side' => $toBusiness ? 'business' : 'member',
+        ]);
+    }
+
+    /**
+     * SEC-414-01: a withdrawn, accepted or declined invitation takes its "invited" row out of the member's list, so nothing offers an
+     * invitation that is gone.
+     */
+    public function forgetBusinessInvite(User $recipient, string $inviteId): void
+    {
+        Notification::query()->where('notifiable_id', $recipient->id)->where('type', NotificationType::BusinessInvite->value)
+            ->where('group_key', 'business_invite:'.$inviteId.':invited')->delete();
+    }
+
     private function blockedFromEvent(User $member, Event $event): bool
     {
         $organiser = $event->organiser;

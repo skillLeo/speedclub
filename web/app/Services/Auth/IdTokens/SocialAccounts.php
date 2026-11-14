@@ -53,6 +53,8 @@ final class SocialAccounts
                     'user_id' => $user->id,
                     'provider' => $identity->provider,
                     'provider_sub' => $identity->subject,
+                    // SEC-P4-03: the client the tokens were issued to; Apple revokes a refresh token only with that client_id.
+                    'client_id' => $identity->audience,
                     'email' => $identity->email,
                     'email_verified' => $identity->emailVerified,
                     'is_private_relay' => $identity->privateRelay,
@@ -88,20 +90,20 @@ final class SocialAccounts
     }
 
     /**
-     * Apple's refresh token is revoked first (09 §8.1: the outcome is logged, a 200 is no proof), then the row goes.
+     * The row goes, then Apple's refresh token is revoked after the response the way account deletion does it (AppleTokens::revokeLater,
+     * 09 §8.1: audited as `member.apple_revoked`, a 200 is no proof), so the member does not wait for Apple's answer.
      */
     public function unlink(User $user, SocialAccount $account, bool $notify = true): void
     {
-        $revoke = $account->provider->value === 'apple' ? $this->apple->revoke($account) : null;
-
-        DB::transaction(function () use ($user, $account, $revoke): void {
+        DB::transaction(function () use ($user, $account): void {
             $account->delete();
 
             Audit::record(MemberSecurityEvent::ProviderUnlinked->value, $user, after: [
                 'provider' => $account->provider->value,
-                'apple_revoke' => $revoke,
             ], actor: $user);
         });
+
+        $this->apple->revokeLater($user, [$account]);
 
         if ($notify) {
             $this->notifier->security($user, SecurityNotice::ProviderUnlinked, $account->provider->label((string) $user->getAttribute('locale')));

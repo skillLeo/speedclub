@@ -1,10 +1,11 @@
 <?php
 
-use App\Enums\SignupRef;
 use App\Models\Appeal;
+use App\Models\BuildUpdate;
+use App\Models\Decision;
 use App\Models\Make;
-use App\Models\Message;
 use App\Models\ModerationCase;
+use App\Models\PushToken;
 use App\Models\QrCode;
 use App\Models\SupportTicket;
 use App\Models\User;
@@ -50,7 +51,8 @@ describe('queues', function () {
 
         $owner = app(Kpi::class)->queues(m31Staff('owner'));
 
-        expect($owner['reports'])->toMatchArray(['count' => 2, 'status' => 'warning'])
+        // DQ-1194: open work is not a warning by itself; the queue turns `warning` once its oldest item is a day old (Kpi::SLA_MINUTES).
+        expect($owner['reports'])->toMatchArray(['count' => 2, 'status' => 'ok'])
             ->and($owner['reports']['since'])->toBeString()
             ->and($owner['appeals']['count'])->toBe(1)
             ->and($owner['support_tickets']['count'])->toBe(1)
@@ -58,6 +60,17 @@ describe('queues', function () {
             ->and(array_keys(app(Kpi::class)->queues(m31Staff('support'))))->toBe(['support_tickets', 'privacy_due'])
             ->and(array_keys(app(Kpi::class)->queues(m31Staff('moderator'))))->toBe(['reports', 'appeals', 'support_tickets'])
             ->and(app(Kpi::class)->queues(m31Staff('content_editor')))->toBe([]);
+    });
+
+    it('marks a queue overdue once its oldest item waits a day', function () {
+        ModerationCase::factory()->create(['created_at' => now()->subHours(23)]);
+        $owner = m31Staff('owner');
+
+        expect(app(Kpi::class)->queues($owner)['reports']['status'])->toBe('ok');
+
+        ModerationCase::factory()->create(['created_at' => now()->subHours(25)]);
+
+        expect(app(Kpi::class)->queues($owner)['reports'])->toMatchArray(['count' => 2, 'status' => 'warning']);
     });
 
     it('reads the scheduler heartbeat and the queue backlog', function () {
@@ -78,82 +91,130 @@ describe('queues', function () {
     });
 });
 
-describe('KPI tiles', function () {
-    it('counts new members per German day, with the previous period', function () {
+describe('KPI tiles (09 §10.2: six tiles)', function () {
+    it('has the six tiles in order, each with a unit, the previous period and 14 days', function () {
+        $kpis = m31Kpis();
+
+        expect(array_keys($kpis))->toBe(['members_7d', 'active_builds', 'qr_scans_7d', 'open_reports', 'median_decision', 'push_opt_in'])
+            ->and(array_map(fn (array $kpi): string => $kpi['unit'], array_values($kpis)))->toBe(['count', 'count', 'count', 'count', 'minutes', 'percent'])
+            ->and(collect($kpis)->every(fn (array $kpi): bool => count($kpi['series']) === 14))->toBeTrue();
+    });
+
+    it('counts new members per German day, with the previous week, and leaves samples out', function () {
         // 23:30 UTC on 8 November is 00:30 on 9 November in Berlin: today.
         User::factory()->create(['created_at' => CarbonImmutable::parse('2026-11-08 23:30', 'UTC')]);
         User::factory()->create(['created_at' => CarbonImmutable::parse('2026-11-08 22:30', 'UTC')]);
         User::factory()->count(2)->create(['created_at' => m31Noon()->subDays(10)]);
         User::factory()->create(['created_at' => m31Noon()->subDays(40)]);
+        User::factory()->create(['created_at' => m31Noon(), 'is_sample' => true]);
 
         $kpis = m31Kpis();
 
-        expect($kpis['members_today'])->toMatchArray(['value' => 1, 'previous' => 1])
-            ->and($kpis['members_7d'])->toMatchArray(['value' => 2, 'previous' => 2])
-            ->and($kpis['members_30d'])->toMatchArray(['value' => 4, 'previous' => 1])
-            ->and($kpis['members_today']['series'])->toHaveCount(14)
-            ->and($kpis['members_today']['series'][13])->toBe(1)
-            ->and($kpis['members_today']['series'][12])->toBe(1)
-            ->and($kpis['members_today']['series'][3])->toBe(2);
+        expect($kpis['members_7d'])->toMatchArray(['value' => 2, 'previous' => 2])
+            ->and($kpis['members_7d']['series'][13])->toBe(1)
+            ->and($kpis['members_7d']['series'][12])->toBe(1)
+            ->and($kpis['members_7d']['series'][3])->toBe(2);
     });
 
-    it('takes today\'s DAU and the WAU from last_seen_at (one source, DQ-571) and the history from the counters', function () {
-        DB::table('activity_days')->insert([
-            ['day' => '2026-11-09', 'members' => 7, 'weekly' => null],
-            ['day' => '2026-11-08', 'members' => 5, 'weekly' => 9],
-            ['day' => '2026-11-02', 'members' => 3, 'weekly' => 4],
-        ]);
-        User::factory()->create(['last_seen_at' => now()]);
-        User::factory()->count(3)->create(['last_seen_at' => now()->subDays(2)]);
-        User::factory()->create(['last_seen_at' => now()->subDays(9)]);
-        User::factory()->create(['last_seen_at' => now(), 'deleted_at' => now()]);
+    it('counts active builds: published, real, with a visible update in 30 days', function () {
+        $active = Vehicle::factory()->published()->create();
+        BuildUpdate::factory()->count(2)->create(['vehicle_id' => $active->id, 'created_at' => now()->subDays(2)]);
+        BuildUpdate::factory()->create(['vehicle_id' => Vehicle::factory()->published()->create()->id, 'created_at' => now()->subDays(40)]);
+        BuildUpdate::factory()->create(['vehicle_id' => Vehicle::factory()->create()->id, 'created_at' => now()]);
+        BuildUpdate::factory()->create(['vehicle_id' => Vehicle::factory()->published()->create(['is_sample' => true])->id, 'created_at' => now()]);
+        BuildUpdate::factory()->create(['vehicle_id' => Vehicle::factory()->published()->create()->id, 'created_at' => now(), 'hidden' => true]);
 
         $kpis = m31Kpis();
 
-        // The day counter said 7 (it also counts accounts deleted since); the tile shows who is here and was active today.
-        expect($kpis['dau'])->toMatchArray(['value' => 1, 'previous' => 5])
-            ->and($kpis['dau']['series'][13])->toBe(1)
-            ->and($kpis['wau']['value'])->toBe(4)
-            ->and($kpis['wau']['previous'])->toBe(4)
-            ->and($kpis['wau']['series'][12])->toBe(9)
-            ->and($kpis['wau']['series'][13])->toBe(4);
+        expect($kpis['active_builds'])->toMatchArray(['value' => 1, 'previous' => 1])
+            ->and($kpis['active_builds']['series'][11])->toBe(1)
+            ->and($kpis['active_builds']['series'][13])->toBe(0);
     });
 
-    it('never shows fewer active members for a longer window: DAU ≤ WAU ≤ MAU (DQ-571)', function () {
-        DB::table('activity_days')->insert(['day' => now(config()->string('speedclub.display_timezone'))->toDateString(), 'members' => 42, 'weekly' => null]);
-        foreach ([0, 0, 1, 3, 6, 7, 12, 29, 31] as $daysAgo) {
-            User::factory()->create(['last_seen_at' => now()->subDays($daysAgo)]);
-        }
-
-        $active = app(Kpi::class)->activeMembers();
-        $kpis = m31Kpis();
-
-        expect($active['dau'])->toBeLessThanOrEqual($active['wau'])
-            ->and($active['wau'])->toBeLessThanOrEqual($active['mau'])
-            ->and($kpis['dau']['value'])->toBe($active['dau'])
-            ->and($kpis['wau']['value'])->toBe($active['wau'])
-            ->and($kpis['dau']['value'])->toBeLessThanOrEqual($kpis['wau']['value']);
-    });
-
-    it('counts published vehicles, QR scans, QR sign-ups and messages', function () {
-        Vehicle::factory()->published()->count(2)->create();
-        Vehicle::factory()->create();
+    it('counts QR scans of the week against the week before', function () {
         $qr = QrCode::factory()->create();
         DB::table('qr_scan_daily')->insert([
             ['qr_code_id' => $qr->id, 'day' => '2026-11-09', 'count' => 4],
             ['qr_code_id' => $qr->id, 'day' => '2026-11-01', 'count' => 6],
         ]);
-        User::factory()->create(['signup_ref' => SignupRef::Qr->value]);
-        User::factory()->create(['signup_ref' => SignupRef::PublicVehicle->value]);
-        Message::factory()->count(3)->create();
+
+        expect(m31Kpis()['qr_scans_7d'])->toMatchArray(['value' => 4, 'previous' => 6]);
+    });
+
+    it('counts open reports now and at the end of each earlier day', function () {
+        ModerationCase::factory()->count(2)->create(['created_at' => now()->subDays(3)]);
+        ModerationCase::factory()->decided()->create(['created_at' => now()->subDays(10), 'decided_at' => now()->subDays(1)]);
 
         $kpis = m31Kpis();
 
-        expect($kpis['vehicles_published']['value'])->toBe(3)
-            ->and($kpis['qr_scans_7d'])->toMatchArray(['value' => 4, 'previous' => 6])
-            ->and($kpis['qr_registrations_7d']['value'])->toBe(1)
-            ->and($kpis['messages_7d']['value'])->toBe(3)
-            ->and(array_keys(m31Kpis()))->toBe(['members_today', 'members_7d', 'members_30d', 'dau', 'wau', 'vehicles_published', 'qr_scans_7d', 'qr_registrations_7d', 'messages_7d']);
+        expect($kpis['open_reports'])->toMatchArray(['value' => 2, 'previous' => 1])
+            ->and($kpis['open_reports']['series'][13])->toBe(2)
+            ->and($kpis['open_reports']['series'][12])->toBe(2)
+            ->and($kpis['open_reports']['series'][0])->toBe(0);
+    });
+
+    it('takes the median minutes from the first report to a staff decision, null without decisions', function () {
+        expect(m31Kpis()['median_decision'])->toMatchArray(['value' => null, 'previous' => null]);
+
+        $staff = m31Staff('moderator');
+        foreach ([30, 90, 600] as $minutes) {
+            $case = ModerationCase::factory()->decided()->create(['created_at' => now()->subMinutes($minutes), 'decided_at' => now()]);
+            Decision::factory()->create(['case_id' => $case->id, 'decided_by' => $staff->id, 'decided_at' => now()]);
+        }
+        $old = ModerationCase::factory()->decided()->create(['created_at' => now()->subDays(9)->subMinutes(20), 'decided_at' => now()->subDays(9)]);
+        Decision::factory()->create(['case_id' => $old->id, 'decided_by' => $staff->id, 'decided_at' => now()->subDays(9)]);
+
+        $kpis = m31Kpis();
+
+        expect($kpis['median_decision'])->toMatchArray(['value' => 90, 'previous' => 20])
+            ->and($kpis['median_decision']['series'][13])->toBe(90)
+            ->and($kpis['median_decision']['series'][12])->toBeNull();
+    });
+
+    it('gives the Push-Opt-in of active members, with history only from snapshots', function () {
+        expect(m31Kpis()['push_opt_in']['value'])->toBeNull();
+
+        $withPush = User::factory()->count(2)->create(['last_seen_at' => now()]);
+        User::factory()->create(['last_seen_at' => now()]);
+        User::factory()->create(['last_seen_at' => now()->subDays(40)]);
+        PushToken::factory()->create(['user_id' => $withPush[0]->id]);
+        DB::table('push_subscriptions')->insert([
+            'id' => strtolower((string) Str::ulid()), 'user_id' => $withPush[1]->id, 'endpoint_hash' => str_repeat('a', 64), 'endpoint' => 'x',
+            'public_key' => 'x', 'auth_token' => 'x', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('activity_days')->insert(['day' => '2026-11-02', 'members' => 0, 'push_members' => 1, 'push_base' => 4]);
+
+        $kpis = m31Kpis();
+
+        expect($kpis['push_opt_in'])->toMatchArray(['value' => 0.667, 'previous' => 0.25])
+            ->and($kpis['push_opt_in']['series'][13])->toBe(0.667)
+            ->and($kpis['push_opt_in']['series'][12])->toBeNull();
+    });
+
+    it('stores the Push-Opt-in on the day before with the snapshot command', function () {
+        PushToken::factory()->create(['user_id' => User::factory()->create(['last_seen_at' => now()])->id]);
+
+        $this->artisan('speedclub:kpi-snapshot')->assertSuccessful();
+
+        expect(DB::table('activity_days')->where('day', '2026-11-08')->first(['push_members', 'push_base']))->toEqual((object) ['push_members' => 1, 'push_base' => 1]);
+    });
+
+    it('caches the tiles for the dashboard', function () {
+        expect(app(Kpi::class)->tiles()[0]['value'])->toBe(0);
+        User::factory()->create(['created_at' => now()]);
+
+        expect(app(Kpi::class)->tiles()[0]['value'])->toBe(0)
+            ->and(app(Kpi::class)->kpis()[0]['value'])->toBe(1);
+    });
+
+    it('never shows fewer active members for a longer window: DAU ≤ WAU ≤ MAU (DQ-571)', function () {
+        foreach ([0, 0, 1, 3, 6, 7, 12, 29, 31] as $daysAgo) {
+            User::factory()->create(['last_seen_at' => now()->subDays($daysAgo)]);
+        }
+
+        $active = app(Kpi::class)->activeMembers();
+
+        expect($active)->toBe(['dau' => 2, 'wau' => 5, 'mau' => 8]);
     });
 });
 
@@ -164,14 +225,31 @@ describe('charts and the DSA average', function () {
         Vehicle::factory()->published()->count(3)->create(['make_id' => $bmw->id]);
         Vehicle::factory()->published()->create(['make_id' => $vw->id]);
         Vehicle::factory()->create(['make_id' => $vw->id]);
+        User::factory()->create(['signup_ref' => 'qr', 'created_at' => now()->subDay()]);
+        // DQ-1196: today is still running and stays out of the charts.
         User::factory()->create(['signup_ref' => 'qr']);
 
         $charts = app(Kpi::class)->charts();
 
         expect($charts['registrations'])->toHaveCount(30)
-            ->and($charts['registrations'][29]['date'])->toBe('2026-11-09')
-            ->and($charts['qr_funnel'][29])->toMatchArray(['date' => '2026-11-09', 'registrations' => 1])
+            ->and($charts['registrations'][0]['date'])->toBe('2026-10-10')
+            ->and($charts['registrations'][29]['date'])->toBe('2026-11-08')
+            ->and($charts['qr_funnel'][29])->toMatchArray(['date' => '2026-11-08', 'registrations' => 1])
             ->and(array_slice($charts['top_makes'], 0, 2))->toBe([['label' => 'BMW', 'value' => 3], ['label' => 'Volkswagen', 'value' => 1]]);
+    });
+
+    it('ends the day windows on a frozen moment (QaClock) and caches that day apart', function () {
+        User::factory()->create(['created_at' => CarbonImmutable::parse('2026-11-01 10:00', 'Europe/Berlin')]);
+
+        $frozen = app(Kpi::class)->at(CarbonImmutable::parse('2026-11-02 12:00', 'Europe/Berlin'));
+        $charts = $frozen->charts();
+        $tiles = collect($frozen->tiles())->keyBy('key');
+
+        expect($charts['registrations'][29])->toBe(['date' => '2026-11-01', 'value' => 1])
+            ->and($tiles['members_7d']['value'])->toBe(1)
+            ->and(Cache::has(Kpi::CACHE_KEY.':2026-11-02'))->toBeTrue()
+            ->and(Cache::has(Kpi::CACHE_KEY))->toBeFalse()
+            ->and(app(Kpi::class)->charts()['registrations'][29]['date'])->toBe('2026-11-08');
     });
 
     it('averages the last six full months that have a count', function () {

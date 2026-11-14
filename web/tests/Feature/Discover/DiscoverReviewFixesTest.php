@@ -131,7 +131,7 @@ describe('facets under every visibility case (review #14)', function () {
 describe('collections under blocks and suspended owners (review #14)', function () {
     it('counts and covers a collection with visible builds only', function (string $case) {
         [$visible, $hidden] = m23VisibilityPair();
-        DiscoverCollection::factory()->create(['key' => 'alle', 'filters' => [], 'position' => 1, 'cover_vehicle_id' => $hidden->id]);
+        DiscoverCollection::factory()->create(['key' => 'alle', 'filters' => ['year_min' => 1990], 'position' => 1, 'cover_vehicle_id' => $hidden->id]);
         DiscoverCollection::factory()->create(['key' => 'audi', 'filters' => ['make' => 'audi'], 'position' => 2]);
         m23ActAs(m23HidingCases()[$case]($hidden));
 
@@ -220,9 +220,9 @@ describe('GET discover', function () {
         DiscoverCollection::factory()->create(['key' => 'zahl', 'filters' => ['power_min' => 'viel'], 'position' => 3]);
         DiscoverCollection::factory()->create(['key' => 'liste', 'filters' => ['make' => ['bmw']], 'position' => 4]);
         DiscoverCollection::factory()->create(['key' => 'felge', 'filters' => ['wheel_diameter' => [19.25]], 'position' => 5]);
-        DiscoverCollection::factory()->create(['key' => 'sortiert', 'filters' => [], 'position' => 6]);
+        DiscoverCollection::factory()->create(['key' => 'sortiert', 'filters' => ['make' => 'bmw'], 'position' => 6]);
         DB::table('collections')->where('key', 'sortiert')->update(['sort' => 'beliebt']);
-        DiscoverCollection::factory()->create(['key' => 'leistung', 'filters' => [], 'position' => 7]);
+        DiscoverCollection::factory()->create(['key' => 'leistung', 'filters' => ['make' => 'bmw'], 'position' => 7]);
         DB::table('collections')->where('key', 'leistung')->update(['sort' => 'power']);
 
         $collections = $this->getJson('/api/v1/discover')->assertOk()->json('data.collections');

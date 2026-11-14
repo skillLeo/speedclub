@@ -2,6 +2,7 @@
 
 use App\Enums\LegalDocumentKey;
 use App\Enums\QrRevocationReason;
+use App\Enums\Visibility;
 use App\Models\FeatureFlag;
 use App\Models\LegalDocument;
 use App\Models\Media;
@@ -121,16 +122,23 @@ describe('WEB-01 without JavaScript', function () {
             ->toContain('background-image:url(data:image/png;base64,');
     });
 
-    it('has a designed hero without photos', function () {
+    it('has a designed hero without photos: the empty stage photo with the identity on it, one line below (DQ-1168)', function () {
         $this->vehicle->media()->delete();
+        $html = (string) $this->withHeader('Accept-Language', 'de')->get($this->url)->assertOk()->getContent();
 
-        expect($this->withHeader('Accept-Language', 'de')->get($this->url)->assertOk()->getContent())
+        expect($html)
             ->toContain('data-testid="VEH-01.heroEmpty"')
             ->toContain('Noch keine Fotos')
             // DQ-927: the handle as it is, never hyphenated (KeepTogether::identifier).
             ->toContain('@<span class="sc-ident">lukas.<wbr>sc</span> hat für dieses Fahrzeug')
             ->toContain('data-testid="VEH-01.hero"')
-            ->not->toContain('fetchpriority');
+            ->toContain('data-testid="WEB-01.stagePhoto"')
+            ->toContain('/brand/photos/stage-empty-')
+            // The stage is the page's LCP: the one high-priority image and its preload.
+            ->and(substr_count($html, 'fetchpriority="high"'))->toBe(2)
+            ->and($html)->toMatch('~class="sc-title-box sc-veh-identity sc-hero-identity"~')
+            // No glyph tile where the hero belongs.
+            ->not->toContain('sc-hero-empty');
     });
 
     it('names no owner when the owner said so', function () {
@@ -527,13 +535,19 @@ describe('WEB-02', function () {
             ->and($stats)->not->toMatch('~\s·~u');
     });
 
-    it('prints the cover only when there is one, and overlaps the avatar then', function () {
-        expect($this->get('/u/lukas.sc')->getContent())->not->toContain('data-testid="WEB-02.cover"');
+    it('prints the member\'s own cover when there is one, the brand stage otherwise, and overlaps the avatar (DQ-1234)', function () {
+        $stage = PublicPhoto::brand('stage-empty');
+        $html = (string) $this->get('/u/lukas.sc')->getContent();
+
+        expect($html)->toContain('data-testid="WEB-02.cover" data-cover-source="stage"')->toContain('sc-prof is-covered')
+            ->toContain((string) $stage['variants'][0]['path']);
 
         $cover = Media::factory()->forModel($this->owner)->create(['owner_id' => $this->owner->id]);
         $this->owner->forceFill(['cover_media_id' => $cover->id])->save();
+        $html = (string) $this->get('/u/lukas.sc')->getContent();
 
-        expect($this->get('/u/lukas.sc')->getContent())->toContain('data-testid="WEB-02.cover"')->toContain('sc-prof is-covered');
+        expect($html)->toContain('data-testid="WEB-02.cover" data-cover-source="own"')->toContain('sc-prof is-covered')
+            ->toContain('sc-ph-'.strtolower((string) $cover->id))->not->toContain((string) $stage['variants'][0]['path']);
     });
 
     it('has a designed empty garage', function () {
@@ -545,6 +559,82 @@ describe('WEB-02', function () {
     });
 });
 
+describe('WEB-02 cover (DQ-1169, DQ-1173)', function () {
+    it('keeps a cover taken from a car only while that car is public, and never stacks it on the car\'s card', function () {
+        $first = $this->vehicle->media()->firstOrFail();
+        $second = Media::factory()->forModel($this->vehicle)->create(['owner_id' => $this->owner->id, 'sort' => 5]);
+        $this->owner->forceFill(['cover_media_id' => $first->id])->save();
+
+        $html = (string) $this->get('/u/lukas.sc')->assertOk()->getContent();
+        preg_match('~data-testid="WEB-02.garage".*?</ul>~s', $html, $garage);
+
+        expect($html)->toContain('data-testid="WEB-02.cover"')
+            ->and($garage[0])->toContain('sc-ph-'.strtolower((string) $second->id))->not->toContain('sc-ph-'.strtolower((string) $first->id));
+
+        $this->vehicle->forceFill(['visibility' => Visibility::Private])->save();
+
+        // The car's photo leaves the page with the car: the brand stage stands in (DQ-1234).
+        expect($this->get('/u/lukas.sc')->assertOk()->getContent())->toContain('data-cover-source="stage"')
+            ->not->toContain('sc-ph-'.strtolower((string) $first->id))
+            ->and($this->get('/u/lukas.sc?qaState=empty')->getContent())->toContain('data-cover-source="stage"')
+            ->not->toContain('sc-ph-'.strtolower((string) $first->id));
+    });
+
+    it('takes no build photo a garage card shows: 2 builds with 1 photo each give the brand stage (DQ-1234)', function () {
+        $second = publishedVehicle($this->owner, ['make_id' => null, 'model_id' => null, 'generation_id' => null, 'make_text' => 'BMW', 'model_text' => 'M2', 'model_year' => 2018]);
+        $photos = [$this->vehicle->media()->firstOrFail(), $second->media()->firstOrFail()];
+
+        $html = (string) $this->get('/u/lukas.sc')->assertOk()->getContent();
+        preg_match('~data-testid="WEB-02.cover".*?</div>~s', $html, $cover);
+        preg_match('~data-testid="WEB-02.garage".*?</ul>~s', $html, $garage);
+
+        expect($cover[0])->toContain('data-cover-source="stage"')
+            ->toContain((string) PublicPhoto::brand('stage-empty')['variants'][0]['path']);
+
+        foreach ($photos as $photo) {
+            expect($cover[0])->not->toContain('sc-ph-'.strtolower((string) $photo->id))
+                ->and($garage[0])->toContain('sc-ph-'.strtolower((string) $photo->id));
+        }
+    });
+
+    it('takes a build photo only when that build\'s card can show its next one, main build first (DQ-1234)', function () {
+        $second = publishedVehicle($this->owner, ['make_id' => null, 'model_id' => null, 'generation_id' => null, 'make_text' => 'BMW', 'model_text' => 'M2', 'model_year' => 2018]);
+        $mainPhoto = $this->vehicle->media()->firstOrFail();
+        $secondCover = $second->media()->firstOrFail();
+        $secondNext = Media::factory()->forModel($second)->create(['owner_id' => $this->owner->id, 'sort' => 5]);
+
+        $html = (string) $this->get('/u/lukas.sc')->assertOk()->getContent();
+        preg_match('~data-testid="WEB-02.cover".*?</div>~s', $html, $cover);
+        preg_match('~data-testid="WEB-02.garage".*?</ul>~s', $html, $garage);
+
+        // The main build has one photo, so its card keeps it; the second build gives its cover and shows its next photo.
+        expect($cover[0])->toContain('data-cover-source="build"')->toContain('sc-ph-'.strtolower((string) $secondCover->id))
+            ->and($garage[0])->toContain('sc-ph-'.strtolower((string) $mainPhoto->id))
+            ->toContain('sc-ph-'.strtolower((string) $secondNext->id))
+            ->not->toContain('sc-ph-'.strtolower((string) $secondCover->id));
+    });
+
+    it('shows the badged sample card and one action in the empty garage (DQ-1169)', function () {
+        User::factory()->create(['username' => 'nina.neu']);
+
+        expect($this->withHeader('Accept-Language', 'de')->get('/u/nina.neu')->assertOk()->getContent())
+            ->toContain('data-testid="WEB-02.garageSample"')->toContain('data-testid="WEB-02.garageSample.badges.sample"')
+            ->toContain('data-testid="WEB-02.garageEmptyAction"')->toContain('Eigene Garage anlegen')
+            ->not->toContain('<use href="#auto-wheel">');
+    });
+});
+
+describe('public error state (DQ-1171)', function () {
+    it('offers "Erneut laden" to the same address first and "Zur Startseite" as the quiet second, and no discover link', function () {
+        $html = (string) $this->withHeader('Accept-Language', 'de')->get($this->url.'?qaState=error')->getContent();
+        preg_match('~<a href="([^"]*)"[^>]*data-testid="WEB-STATE.retry"~', $html, $retry);
+
+        expect($html)->toContain('Erneut laden')->toContain('Zur Startseite')->not->toContain('data-testid="WEB-STATE.discover"')
+            ->and(html_entity_decode($retry[1]))->toEndWith($this->url)
+            ->and(strpos($html, 'WEB-STATE.retry'))->toBeLessThan((int) strpos($html, 'WEB-STATE.home'));
+    });
+});
+
 describe('WEB-03', function () {
     it('tells the story with the real build and its real, scannable code', function () {
         $qr = app(QrCodes::class)->ensureActive($this->vehicle);
@@ -553,7 +643,7 @@ describe('WEB-03', function () {
 
         expect($html)
             // M4.16 (09 §9 WEB-03 (1)): the claim of the spec, left-aligned in display.title.
-            ->toContain('Dein Auto. Dein Build. Dein Club.')
+            ->toContain("Dein\u{00A0}Auto. Dein\u{00A0}Build. Dein\u{00A0}Club.")
             ->toContain('data-testid="WEB-03.step1"')
             ->toContain('data-testid="WEB-03.step2"')
             ->toContain('data-testid="WEB-03.step3"')

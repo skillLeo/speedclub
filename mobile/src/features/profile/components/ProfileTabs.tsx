@@ -10,7 +10,8 @@ import { CollectionsGrid, CollectionsGridSkeleton, useCollectionActions } from '
 import { SampleCollections } from '@/features/collections/components/SampleCollections';
 import { garageCardProps } from '@/features/garage/card';
 import { withoutRepeatedKind } from '@/features/home/components/HomeFeedCard';
-import { historyMetaLine, updateGlyph, updateHeadline } from '@/features/vehicle/model';
+import { useDistinctCover } from '@/features/vehicle/distinctCover';
+import { historyMetaLine, provenanceCaption, updateGlyph, updateHeadline, type ProvenanceKey } from '@/features/vehicle/model';
 import { keepNameTogether } from '@/lib/format';
 import { bindTrailingCode } from '@/ui/textBreaks';
 import { useQaState, type QaState } from '@/lib/qa';
@@ -114,6 +115,8 @@ export type GaragePanelProps = {
   /** The column's inner width (without gutters): the cards take it. */
   width: number;
   onAdd?: () => void;
+  /** The profile's cover: a card showing the same photo takes its next one (DQ-1160, `garageCardCover`). */
+  profileCover?: MediaData | null;
 };
 
 /** Cards per row in the Garage tab: one under the other on phones (09 §7.7), side by side in the wide desktop column. */
@@ -127,9 +130,8 @@ const GARAGE_TWO_UP = 724;
 const GARAGE_THREE_UP = 1098;
 
 /** Garage: the published builds as VehicleCards, one under the other (09 §7.7), main vehicle first. */
-export function GaragePanel({ routeId, own, vehicles, query, width, onAdd }: GaragePanelProps) {
+export function GaragePanel({ routeId, own, vehicles, query, width, onAdd, profileCover }: GaragePanelProps) {
   const { t } = useTranslation('profile');
-  const garage = useTranslation('garage').t;
   const styles = useStyles();
   const router = useRouter();
   const qaState = useQaState();
@@ -178,14 +180,7 @@ export function GaragePanel({ routeId, own, vehicles, query, width, onAdd }: Gar
         <View style={columns > 1 ? styles.cardsGrid : styles.cards} role="list" testID={`${routeId}.garage.list`}>
           {vehicles.map((vehicle) => (
             <View key={vehicle.id} role="listitem">
-              {/* 09 §7.7 Garage tab: the 2.0 VehicleCards (09 §5), without the status pill: the profile lists published builds only. */}
-              <VehicleCard
-                {...garageCardProps(vehicle, cardWidth, garage)}
-                status={undefined}
-                onPress={() => open(vehicle)}
-                style={{ width: cardWidth }}
-                testID={`${routeId}.vehicle.${vehicle.id}`}
-              />
+              <ProfileGarageCard vehicle={vehicle} width={cardWidth} avoid={profileCover?.id} onOpen={open} testID={`${routeId}.vehicle.${vehicle.id}`} />
             </View>
           ))}
         </View>
@@ -202,6 +197,36 @@ export function GaragePanel({ routeId, own, vehicles, query, width, onAdd }: Gar
   );
 }
 
+/**
+ * 09 §7.7 Garage tab: the 2.0 VehicleCard (09 §5), without the status pill: the profile lists published builds only. DQ-1160: a
+ * card whose cover is the profile's cover (the member's choice, which stays) shows the build's next gallery photo instead.
+ */
+function ProfileGarageCard({
+  vehicle,
+  width,
+  avoid,
+  onOpen,
+  testID,
+}: {
+  vehicle: VehicleCardData;
+  width: number;
+  avoid: string | undefined;
+  onOpen: (vehicle: VehicleCardData) => void;
+  testID: string;
+}) {
+  const garage = useTranslation('garage').t;
+  const cover = useDistinctCover(vehicle, avoid);
+  return (
+    <VehicleCard
+      {...garageCardProps({ ...vehicle, cover }, width, garage)}
+      status={undefined}
+      onPress={() => onOpen(vehicle)}
+      style={{ width }}
+      testID={testID}
+    />
+  );
+}
+
 type HistoryTitle = Parameters<typeof updateHeadline>[1];
 
 /**
@@ -214,6 +239,7 @@ export function profileUpdateText(
   entry: ProfileUpdate,
   title: HistoryTitle,
   date: (date: Date) => string,
+  source?: (key: ProvenanceKey) => string,
 ): { title: string; diff: string | undefined; meta: string } {
   const { update, vehicle } = entry;
   const when = update.created_at ? date(new Date(update.created_at)) : null;
@@ -226,7 +252,9 @@ export function profileUpdateText(
   }
   const head = updateHeadline(update, title);
   const summary = update.summary.trim();
-  const diff = head.namesChange ? (historyMetaLine(update)?.diff ?? undefined) : withoutRepeatedKind(update.type_label, summary) || undefined;
+  const raw = head.namesChange ? (historyMetaLine(update)?.diff ?? undefined) : withoutRepeatedKind(update.type_label, summary) || undefined;
+  // DQ-1178: the source of a figure in the words of ADR-431 c ("Prüfstand", "Geschätzt"), never "gemessen" or "Besitzerangabe".
+  const diff = raw && source ? provenanceCaption(raw, source) : raw;
   return {
     title: head.title.trim() || build,
     diff,
@@ -269,6 +297,8 @@ export function UpdatesPanel({ routeId, own, vehicles, ready, onPost }: UpdatesP
   const updates = useMemo(() => (qaState === 'empty' ? [] : (query.data ?? [])), [qaState, query.data]);
   const vehicleT = useTranslation('vehicle').t;
   const historyTitle: HistoryTitle = (key, values) => vehicleT(`history.title.${key}`, values);
+  const garageT = useTranslation('garage').t;
+  const sourceLabel = (key: ProvenanceKey) => garageT(`specs.source.${key}`);
   const photos = useMemo(() => profileUpdatePhotos(updates), [updates]);
   const state: QueryState = {
     data: vehicles.length === 0 ? [] : query.data,
@@ -311,7 +341,7 @@ export function UpdatesPanel({ routeId, own, vehicles, ready, onPost }: UpdatesP
       // DQ-1093: the updates sit on the canvas as a hairline list, not in a raised box.
       <View role="list" testID={`${routeId}.updates.list`}>
         {updates.map((entry, index) => {
-          const text = profileUpdateText(entry, historyTitle, format.date);
+          const text = profileUpdateText(entry, historyTitle, format.date, sourceLabel);
           return (
             <BuildUpdateRow
               key={entry.update.id}

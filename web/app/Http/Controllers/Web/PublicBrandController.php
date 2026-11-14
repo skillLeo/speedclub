@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * WEB-11 /brands/{slug} (09 §9, M4.14): a part brand's page (BRD-01 on the web), behind the flag `parts_catalogue`. A brand without a
+ * WEB-15 /brands/{slug} (09 §9, M4.14): a part brand's page (BRD-01 on the web), behind the flag `parts_catalogue`. A brand without a
  * page and the flag off answer the 404 page; a merged brand's old slug answers 301 to its survivor.
  */
 class PublicBrandController extends Controller

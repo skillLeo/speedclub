@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAppConfig, useFlag } from '@/api/queries/appConfig';
 import { vapidPublicKey } from '@/api/queries/webPush';
 import { isWeb } from '@/lib/platform';
+import { qa } from '@/lib/qa';
 
 import { currentSubscription, disableWebPush, enableWebPush, webPushPermission, webPushSupport, type EnableOutcome } from './webPush';
 
@@ -76,6 +77,8 @@ export function useWebPush(): {
     if (answer) state = { kind: answer };
     else if (subscribed !== null) state = { kind: subscribed ? 'on' : 'off' };
   }
+  // DQ-1162: the matrix's forced state (never in production): the row as it reads in that state, while the flag is on.
+  if (qa.push && isWeb && flag) state = { kind: qa.push };
 
   const enable = useCallback(async (): Promise<EnableOutcome> => {
     if (!key) return 'unavailable';

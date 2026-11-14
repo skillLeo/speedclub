@@ -36,11 +36,16 @@ test.describe('A0 admin shell', () => {
     await expect(id(page, 'ADM-06')).toBeVisible();
     await expect(page).toHaveURL(/\/admin(\?|$)/);
 
-    // Queues first, every tile with a number or its zero state; then the nine KPI tiles (deferred props).
+    // Queues first, every tile with a number or its zero state; then the six KPI tiles of 09 §10.2 (deferred props), in their order; a tile
+    // without data says so (".empty") instead of a zero.
     await expect(id(page, 'ADM-06.queues')).toBeVisible();
     expect(await page.locator('[data-testid^="ADM-06.queue."]:visible').count()).toBeGreaterThan(0);
     await expect(id(page, 'ADM-06.kpis')).toBeVisible();
-    await expect(page.locator('[data-testid^="ADM-06.kpi."]:visible')).toHaveCount(9);
+    const tiles = page.locator('[data-testid^="ADM-06.kpi."]:not([data-testid$=".empty"]):visible');
+    await expect(tiles).toHaveCount(6);
+    expect(await tiles.evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-testid')))).toEqual(
+      ['members_7d', 'active_builds', 'qr_scans_7d', 'open_reports', 'median_decision', 'push_opt_in'].map((key) => `ADM-06.kpi.${key}`),
+    );
     await expect(id(page, 'ADM-06.kpis.error')).toHaveCount(0);
 
     // ADM-44 export: four-eyes (ADR-214) and a sensitive action without a recent password (ADR-215): the dialog asks first.

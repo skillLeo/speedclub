@@ -103,8 +103,9 @@ final class CaseListQuery
      * @param  list<ModerationCase>  $cases
      * @return list<array<string, mixed>>
      */
-    public static function rows(array $cases, Staff $staff): array
+    public static function rows(array $cases, Staff $staff, ?CarbonImmutable $now = null): array
     {
+        $now ??= CarbonImmutable::now();
         $ids = array_map(fn (ModerationCase $case): string => $case->id, $cases);
         $reasons = [];
 
@@ -112,7 +113,7 @@ final class CaseListQuery
             $reasons[$report->case_id][] = $report;
         }
 
-        return array_map(function (ModerationCase $case) use ($reasons, $staff): array {
+        return array_map(function (ModerationCase $case) use ($reasons, $staff, $now): array {
             $reports = $reasons[$case->id] ?? [];
             $top = null;
 
@@ -142,6 +143,9 @@ final class CaseListQuery
                 'web_form' => in_array(ReportSource::WebForm, array_map(fn (Report $r): ReportSource => $r->source, $reports), true),
                 'priority' => CasePriority::parts($case),
                 'first_report_at' => $case->created_at?->toIso8601String(),
+                // DQ-1193 SLA timer of the SplitQueue (as ADM-53/55): minutes an open case has waited since its first report.
+                'waiting_minutes' => in_array($case->status, [CaseStatus::New, CaseStatus::InReview], true) && $case->created_at !== null
+                    ? max(0, (int) $case->created_at->diffInMinutes($now, true)) : null,
                 'last_report_at' => is_string($lastReport) ? CarbonImmutable::parse($lastReport, 'UTC')->toIso8601String() : $case->created_at?->toIso8601String(),
                 'assigned' => $case->assignedStaff instanceof Staff ? ['id' => $case->assignedStaff->id, 'name' => $case->assignedStaff->name, 'me' => $case->assignedStaff->id === $staff->id] : null,
                 'ai_score' => $case->ai_score === null ? null : round((float) $case->ai_score, 2),

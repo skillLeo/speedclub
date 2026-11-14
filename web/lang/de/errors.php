@@ -90,5 +90,6 @@ return [
     'business_unavailable' => 'Diesen Betrieb gibt es nicht oder du kannst ihn nicht sehen.',
     'business_exists' => 'Du hast schon einen Betrieb oder arbeitest in einem mit. Pro Konto geht ein Betrieb.',
     'business_not_verified' => 'Das geht erst, wenn der Betrieb verifiziert ist.',
+    'business_tag_taken' => 'Diesen Einbau hat schon ein anderer Betrieb bestätigt. Nimm dessen Markierung zuerst heraus, wenn du sie ändern willst.',
     'product_unavailable' => 'Dieses Teil gibt es im Katalog nicht mehr.',
 ];

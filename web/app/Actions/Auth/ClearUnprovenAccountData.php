@@ -10,6 +10,7 @@ use App\Models\PasskeyChallenge;
 use App\Models\SocialAccount;
 use App\Models\User;
 use App\Services\Audit\Audit;
+use App\Services\Auth\IdTokens\AppleTokens;
 
 /**
  * For the moment a password reset proves the address of an account nobody had verified yet. Whatever was set before that
@@ -22,7 +23,10 @@ use App\Services\Audit\Audit;
  */
 class ClearUnprovenAccountData
 {
-    public function __construct(private readonly DeleteAllMedia $media) {}
+    public function __construct(
+        private readonly DeleteAllMedia $media,
+        private readonly AppleTokens $apple,
+    ) {}
 
     public function handle(User $user): void
     {
@@ -41,13 +45,17 @@ class ClearUnprovenAccountData
             'cover_media_id' => null,
         ])->save();
 
+        // A removed Apple link is revoked at Apple too, after the response (09 §8.1, like at account deletion).
+        $links = SocialAccount::query()->where('user_id', $user->id)->get();
         $removed = [
             'passkeys' => MemberPasskey::query()->where('user_id', $user->id)->delete(),
-            'providers' => SocialAccount::query()->where('user_id', $user->id)->delete(),
+            'providers' => SocialAccount::query()->whereKey($links->modelKeys())->delete(),
             'passkey_ceremonies' => PasskeyChallenge::query()->where('user_id', $user->id)->delete(),
             'open_codes' => LoginAttempt::query()->where('user_id', $user->id)->whereNull('consumed_at')->delete(),
         ];
 
         Audit::record(MemberSecurityEvent::UnprovenDataCleared->value, $user, after: $removed, actor: $user);
+
+        $this->apple->revokeLater($user, $links);
     }
 }

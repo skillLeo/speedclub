@@ -157,7 +157,7 @@ async function copy(text: string): Promise<void> {
                     <div class="w-160"><Field :label="trans('config.releases.filters.q')"><Input v-model="filters.q" size="sm" maxlength="32" tnum :placeholder="trans('config.releases.filters.q_placeholder')" /></Field></div>
                     <div class="w-160"><Field :label="trans('config.releases.filters.platform')"><Select v-model="platformModel" :options="platformOptions" size="sm" :placeholder="trans('config.releases.any')" /></Field></div>
                     <div class="w-160"><Field :label="trans('config.releases.filters.channel')"><Select v-model="channelModel" :options="channelOptions" size="sm" :placeholder="trans('config.releases.any')" /></Field></div>
-                    <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading">{{ trans('config.releases.filters.apply') }}</Button>
+                    <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading">{{ trans('config.releases.filters.apply') }}</Button>
                 </form>
             </template>
             <template #cell-version_name="{ row }"><span class="whitespace-nowrap tabular-nums text-ink">{{ row.version_name }}</span></template>

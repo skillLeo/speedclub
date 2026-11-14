@@ -23,6 +23,12 @@ export interface SavedView {
     id: string;
     name: string;
     query: Partial<TableQuery> & { columns?: string[] };
+    /** 09 §10.2: the role the view is shared with (null = personal). */
+    shared_role?: string | null;
+    /** False for a colleague's shared view (read-only here). */
+    mine?: boolean;
+    /** The colleague who shared it. */
+    author?: string | null;
 }
 
 /** A preset view defined in the page code (not stored). `name` is an i18n key. */

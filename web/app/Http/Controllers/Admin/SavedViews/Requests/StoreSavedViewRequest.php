@@ -23,6 +23,8 @@ class StoreSavedViewRequest extends FormRequest
             // The DataTable's `id`. Any module's table, without a shared list: a view only stores a query for its own owner.
             'table' => ['required', 'string', 'max:60', 'regex:/^[a-z][a-z0-9_-]*$/'],
             'name' => ['required', 'string', 'min:2', 'max:80'],
+            // 09 §10.2: shared with the author's role (SavedViews::roleOf), else personal.
+            'shared' => ['sometimes', 'boolean'],
             'query' => ['required', 'array:filter,sort,per_page,columns'],
             'query.filter' => ['sometimes', 'array', 'max:12'],
             'query.filter.*' => ['nullable', 'string', 'max:200'],
@@ -51,6 +53,6 @@ class StoreSavedViewRequest extends FormRequest
 
     private function replacesOwnView(Staff $staff, string $table): bool
     {
-        return collect(SavedViews::for($staff, $table))->contains('name', $this->string('name')->value());
+        return collect(SavedViews::for($staff, $table))->where('mine', true)->contains('name', $this->string('name')->value());
     }
 }

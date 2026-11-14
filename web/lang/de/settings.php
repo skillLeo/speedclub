@@ -89,6 +89,8 @@ return [
                 'web_push_browsers.json' => 'Browser, die Browser-Mitteilungen bekommen, mit Browser, System und Datum.',
                 'device_installs.json' => 'App-Installationen mit Gerät, System- und App-Version, erster und letzter Anmeldung.',
                 'browser_sessions.json' => 'Angemeldete Browser mit Browser, System und letzter Nutzung.',
+                'business.json' => 'Dein Betrieb: als Inhaber die Bewerbung mit Impressum, Nachweis-Notiz, Status und Begründung des Teams, dazu das Team; als Teammitglied Betrieb und Rolle; offene Team-Einladungen.',
+                'business_tags.json' => '„Eingebaut von“-Markierungen an deinen Modifikationen und die Markierungen, die du für deinen Betrieb entschieden hast (ohne andere Mitglieder).',
             ],
             'not_included' => 'Nicht enthalten: dein Passwort und deine Zwei-Faktor-Schlüssel (nur als Prüfwert gespeichert), Fotos, die andere Mitglieder dir geschickt haben, und die Daten anderer Mitglieder. IP-Adressen speichern wir zu Mitgliedern nicht.',
             'staff_copy' => 'Kopie für das SPEED-CLUB-Team (Vier-Augen-Freigabe): ohne Nachrichtentexte, Chat-Fotos und Reaktionen. Zu jeder Unterhaltung stehen nur Gesprächspartner, Ordner, Daten und Anzahlen darin.',

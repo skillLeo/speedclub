@@ -3,20 +3,25 @@ import { computed } from 'vue';
 
 defineOptions({ name: 'SparkLine' });
 
-/** 14-day trend line of a KpiTile (03 §14). SVG in currentColor; decorative, the tile states the number. */
-const props = withDefaults(defineProps<{ values: number[]; accent?: boolean }>(), { accent: false });
+/**
+ * 14-day trend line of a KpiTile (03 §14). SVG in currentColor; decorative, the tile states the number. A null is a day without a
+ * value (no decision that day, before the first snapshot): it is left out, never drawn as a zero; fewer than two values draw the
+ * dashed "no trend" line.
+ */
+const props = withDefaults(defineProps<{ values: (number | null)[]; accent?: boolean }>(), { accent: false });
 
 const W = 112;
 const H = 32;
 const points = computed(() => {
-    const values = props.values;
-    if (values.length < 2) return '';
-    const max = Math.max(...values);
-    const min = Math.min(...values);
+    const all = props.values;
+    const known = all.map((value, index) => ({ value, index })).filter((point): point is { value: number; index: number } => point.value !== null);
+    if (known.length < 2) return '';
+    const max = Math.max(...known.map((point) => point.value));
+    const min = Math.min(...known.map((point) => point.value));
     const span = max - min || 1;
-    return values
-        .map((value, index) => {
-            const x = (index / (values.length - 1)) * W;
+    return known
+        .map(({ value, index }) => {
+            const x = (index / (all.length - 1)) * W;
             const y = H - 2 - ((value - min) / span) * (H - 4);
             return `${x.toFixed(1)},${y.toFixed(1)}`;
         })

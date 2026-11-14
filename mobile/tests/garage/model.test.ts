@@ -37,7 +37,8 @@ describe('GAR-01 list', () => {
   });
 
   it('turns the completeness into the line and the 2-px bar of FS-4', () => {
-    expect(completenessBar(card())).toEqual({ label: 'Build zu 70 % vollständig', value: 0.7 });
+    // DQ-1217: the figure and its "%" never part.
+    expect(completenessBar(card())).toEqual({ label: 'Build zu 70\u00A0% vollständig', value: 0.7 });
     expect(completenessBar(card({ completeness: null }))).toBeUndefined();
     expect(completenessBar(card({ completeness: { percent: 140, is_complete: true, line: 'x', hint: null, missing: [] } }))?.value).toBe(1);
   });

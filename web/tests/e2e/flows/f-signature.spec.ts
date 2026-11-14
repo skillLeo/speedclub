@@ -111,7 +111,8 @@ test.describe('QR-02 signature parts', () => {
     await useSession(context, owner.session);
     await open(page, `/app/qr/${vehicle.id}`);
     // "Weitere Formate" waits for the code's SVG (a click before it lands does nothing); under load that can take a while.
-    const more = page.locator('[data-testid="QR-02.download"]:visible');
+    // ListRow: the pressable that carries aria-disabled is `<testID>.body`; the testID itself names its wrapper, which is never disabled.
+    const more = page.locator('[data-testid="QR-02.download.body"]:visible');
     await expect(more).toBeEnabled({ timeout: 30_000 });
     await more.click();
     await expect(id(page, 'QR-02.downloadSheet')).toBeVisible();

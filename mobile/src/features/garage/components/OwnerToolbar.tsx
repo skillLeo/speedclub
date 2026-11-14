@@ -7,6 +7,8 @@ import type { PublicVehicle } from '@/api/queries/vehicles';
 import { createStyles, space } from '@/theme';
 import { ListRow, Progress, Sheet, Text, type ContextMenuItem, type OwnerCapsuleAction } from '@/ui';
 
+import { completenessLine } from '../model';
+
 const useStyles = createStyles((t) => ({
   card: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, gap: t.space[12], padding: t.space[16] },
   head: { gap: t.space[8] },
@@ -85,13 +87,14 @@ export function CompletenessHints({ vehicle, routeId }: { vehicle: PublicVehicle
   const completeness = vehicle.completeness;
   if (!completeness || completeness.is_complete) return null;
   const missing = completeness.missing;
+  const line = completenessLine(completeness.line);
   return (
     <View style={styles.card} testID={`${routeId}.completeness`}>
       <View style={styles.head}>
         <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)}>
-          {completeness.line}
+          {line}
         </Text>
-        <Progress value={completeness.percent / 100} label={completeness.line} />
+        <Progress value={completeness.percent / 100} label={line} />
         {completeness.hint ? (
           <Text variant="callout" color="text.secondary" testID={`${routeId}.completeness.hint`}>
             {completeness.hint}

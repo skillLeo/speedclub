@@ -22,8 +22,10 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   // A worker stuck in teardown must fail the gate, not block it forever (seen once with axe on WebKit). A ceiling for the
   // whole suite, sized to it: 663 tests took 11 min (M1.5); with M1.6 and M1.7 (903 tests, axe on 31 more screens, flows
-  // that upload real photos) 20 min ended a healthy run half way.
-  globalTimeout: 60 * 60_000,
+  // that upload real photos) 20 min ended a healthy run half way. Phase 4 gate (2026-11-14): 2,788 tests; 60 min ended the run with
+  // 329 not run and its teardown cut off (the test accounts stayed for the visual matrix), at 2,461 done. 100 min fits the suite
+  // at that pace with headroom; it stays a ceiling for a stuck worker, never a wait inside a test.
+  globalTimeout: 100 * 60_000,
   globalSetup: './support/global-setup.ts',
   reporter: [
     ['list'],

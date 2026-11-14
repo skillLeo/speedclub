@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+// design-lint-disable-next-line DL04 -- AUTH-02's photo scrim (FS-1, ADR-129): the one allowed gradient, laid out with the block
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -144,11 +145,18 @@ function LogoShadow({ slot, logoWidth }: { slot: { width: number; height: number
   );
 }
 
-/** AUTH-02: the brand moment of 09 §7.2, in the brand layer's theme. */
+const scope = StyleSheet.create({ root: { flex: 1 } });
+
+/**
+ * AUTH-02: the brand moment of 09 §7.2, in the brand layer's theme. DQ-1045: on web `data-theme-scope` tells the DOM audit that the
+ * stage is drawn in Carbon whatever the page's theme, so its colours are read against Carbon's tokens (as ONB and AUTH-01).
+ */
 export function WelcomeScreen() {
   return (
     <ThemeScope name={BRAND_THEME}>
-      <Welcome />
+      <View style={scope.root} dataSet={{ themeScope: BRAND_THEME }}>
+        <Welcome />
+      </View>
     </ThemeScope>
   );
 }
@@ -427,6 +435,7 @@ function Welcome() {
         showsVerticalScrollIndicator={false}
         testID="AUTH-02.scroller"
       >
+        {/* design-lint-disable-next-line DL04 -- the photo scrim (FS-1, ADR-129): overlay.photoScrimEnd, solid by the block's top */}
         <LinearGradient
           aria-hidden
           colors={['transparent', end, end]}

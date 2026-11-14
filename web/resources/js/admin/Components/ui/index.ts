@@ -13,6 +13,7 @@ export { default as Drawer } from './Drawer.vue';
 export { default as DropdownMenu, type MenuEntry } from './DropdownMenu.vue';
 export { default as EmptyQueue } from './EmptyQueue.vue';
 export { default as Field } from './Field.vue';
+export { default as HoverPreview } from './HoverPreview.vue';
 export { default as IconButton } from './IconButton.vue';
 export { default as Input } from './Input.vue';
 export { default as Kbd } from './Kbd.vue';

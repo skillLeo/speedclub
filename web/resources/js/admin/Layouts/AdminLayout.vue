@@ -56,7 +56,7 @@ onBeforeUnmount(() => {
             <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-16 focus:top-16 focus:z-50 focus:inline-flex focus:h-40 focus:items-center focus:rounded-sm focus:bg-inverse focus:px-16 focus:text-admin-base-strong focus:text-ink-inverse focus:outline-2 focus:outline-offset-2 focus:outline-focus">
                 {{ trans('shell.skip') }}
             </a>
-            <aside class="hidden shrink-0 border-r border-line-subtle bg-surface shell:block" :class="sidebarCollapsed ? 'w-64' : 'w-240'" :aria-label="trans('shell.sidebar')" data-testid="shell.sidebar">
+            <aside class="hidden shrink-0 border-r border-line-subtle bg-surface shell:block" :class="sidebarCollapsed ? 'w-72' : 'w-240'" :aria-label="trans('shell.sidebar')" data-testid="shell.sidebar">
                 <div class="sticky top-0 h-dvh">
                     <Sidebar collapsible />
                 </div>

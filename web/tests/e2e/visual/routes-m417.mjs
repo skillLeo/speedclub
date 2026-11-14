@@ -1,8 +1,10 @@
 // Visual registry entries of M4.17 Admin 2.0 (09 §10): ADM-55/56 Betriebe, ADM-57 Teile & Produkte, and the shell's new parts (the five
 // sidebar sections, the rail, compact rows, the ⌘K actions and the `?` cheat sheet). Same fields as routes.mjs, which merges this list.
 // Data: the seeded sample business "Beispiel-Werkstatt Nord" ({sampleBusiness}) and KW Variante 3 ({kwProduct}), both read from the
-// database (support/backend.php m414-ids). The local seed has no open application, so ADM-55's default tab shows its empty state; the
-// pane and the record use the verified sample. The behaviour of an application (Verifizieren/Ablehnen, undo) is A5's.
+// database (support/backend.php m414-ids). The local seed has no open application and no comment; the stage fixture `m417-queues`
+// (support/stage-fixtures.mjs) adds one application and two comments for ADM-55-applied and ADM-60 and removes them after. The pane and
+// the record use the verified sample. The behaviour of an application (Verifizieren/Ablehnen, undo) is A5's.
+// Part 2: ADM-58 Editorial & Beispiele, the ADM-20 SplitQueue pane and composer, and the saved-views dialog (shared per role).
 
 export const routesM417 = [
   {
@@ -21,8 +23,19 @@ export const routesM417 = [
     phase: 3,
     auth: 'staff-moderator',
     states: ['default'],
+    fixture: 'm417-queues',
     ready: '[data-testid="ADM-55"] [data-testid="ADM-55.table"]',
-    notes: 'Anträge (the default tab, oldest first with the SLA timer). The local seed has no open application, so this is its zero state "Keine offenen Anträge"; volatile while A5 runs.',
+    notes: 'Anträge (the default tab, oldest first with the SLA timer) with the m417-queues fixture: "Fahrwerk Atelier Brandt" (Werkstatt, Köln) waiting three hours, applicant @mila.fahrwerk, opened in the pane from 1280 (DQ-1202: the oldest application is preselected); volatile while A5 runs.',
+  },
+  {
+    id: 'ADM-55-applied-zero',
+    volatile: true,
+    path: '/admin/businesses',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default'],
+    ready: '[data-testid="ADM-55"] [data-testid="ADM-55.table"]',
+    notes: 'Anträge without an open application (the local seed): the zero state "Keine offenen Anträge".',
   },
   {
     id: 'ADM-55-pane',
@@ -107,13 +120,25 @@ export const routesM417 = [
   },
   {
     id: 'ADM-60',
+    volatile: true,
     path: '/admin/comments',
     phase: 3,
     auth: 'staff-moderator',
-    // The local seed has no comments (build_comments is off), so the default cell is the zero state; no separate empty cell.
+    // M4.17 part 2: the m417-queues fixture writes two comments of @mila.fahrwerk, so the default cell shows rows; the seed alone has
+    // none (build_comments is off): that zero state is ADM-60-zero.
     states: ['default', 'loading', 'error'],
+    fixture: 'm417-queues',
     ready: '[data-testid="ADM-60"] [data-testid="ADM-60.table"]',
     notes: 'Kommentare: the flag line (build_comments off), comments newest first with author, build link, open reports linking the case, date and status; filters Suche · Status · Gemeldet.',
+  },
+  {
+    id: 'ADM-60-zero',
+    path: '/admin/comments',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default'],
+    ready: '[data-testid="ADM-60"] [data-testid="ADM-60.table"]',
+    notes: 'Kommentare without any comment (the local seed): the zero state.',
   },
   {
     id: 'ADM-09-palette',
@@ -135,11 +160,113 @@ export const routesM417 = [
   },
   {
     id: 'ADM-09-rail',
+    // DQ-1196: the member list shows "Zuletzt aktiv" of members the e2e flows sign in as, so the picture moves with every run.
+    volatile: true,
     path: '/admin/members?qaSidebar=collapsed&qaDensity=compact',
     phase: 3,
     auth: 'staff-admin',
     states: ['default'],
     ready: '[data-testid="ADM-09"] [data-testid="ADM-09.table"]',
-    notes: 'The collapsed sidebar (64 rail, icons with tooltips, hairlines between the five sections) and compact 32 px rows.',
+    notes: 'The collapsed sidebar (72 rail as layout.rail, DQ-1208; icons with tooltips, hairlines between the five sections) and compact 32 px rows.',
+  },
+  // ---- M4.17 part 2 ------------------------------------------------------------------------------------------------------------
+  {
+    id: 'ADM-58',
+    path: '/admin/editorial',
+    phase: 3,
+    auth: 'staff-content',
+    states: ['default', 'loading', 'empty', 'error'],
+    ready: '[data-testid="ADM-58"] [data-testid="ADM-58.table"]',
+    notes: 'Editorial & Beispiele as content editor: editorial_samples per environment (Lokal effective, Staging/Produktion documented; no switch without flags.manage), the inventory (builds, updates, meets, businesses, sample accounts, hidden), the sample builds with photo, @speedclub.editorial, state for members and Ausblenden.',
+  },
+  {
+    id: 'ADM-58-admin',
+    path: '/admin/editorial?tab=event',
+    phase: 3,
+    auth: 'staff-admin',
+    states: ['default'],
+    ready: '[data-testid="ADM-58"] [data-testid="ADM-58.table"]',
+    notes: 'As admin on the Treffen tab: the "Beispiele ausblenden" switch for this environment and the sample meets.',
+  },
+  {
+    id: 'ADM-58-hide',
+    path: '/admin/editorial?dialog=hide',
+    phase: 3,
+    auth: 'staff-content',
+    states: ['default'],
+    ready: '[data-testid="ADM-58.item-dialog"]',
+    notes: 'Ausblenden of the first visible sample build: what happens (private, out of Start/Entdecken/Suche, nobody notified) and the reason first.',
+  },
+  {
+    id: 'ADM-58-flag',
+    path: '/admin/editorial?dialog=flag',
+    phase: 3,
+    auth: 'staff-admin',
+    states: ['default'],
+    ready: '[data-testid="ADM-58.flag-dialog"]',
+    notes: 'Beispiele in Lokal ausblenden?: what members and public pages lose, the reason; four-eyes only for a critical flag in production.',
+  },
+  {
+    id: 'ADM-20-pane',
+    volatile: true,
+    path: '/admin/moderation/reports?case=01m66awqg0mg086app44e8jg60',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default', 'loading', 'error'],
+    ready: '[data-testid="ADM-20"] [data-testid="ADM-20.pane"]',
+    notes: 'Meldungen on the SplitQueue from 1280: compact filters (search + one select row, apply on change, DQ-1200), the narrow list (priority, content with type, reference and reason on one truncated line, Wartet with the SLA timer, the open case marked: DQ-1193) and the pane with status, reference, priority, assignee, Maßnahme ergreifen (a, the one filled button) · Keine Maßnahme (r) · Übernehmen, the key line, the target as members see it and its reports.',
+  },
+  {
+    id: 'ADM-20-pane-decide',
+    volatile: true,
+    path: '/admin/moderation/reports?case=01m66awqg0mg086app44e8jg60&dialog=decide',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default'],
+    ready: '[data-testid="ADM-20.composer"]',
+    // DQ-1210: the drawer is a viewport overlay, so the cell is the viewport (the page behind it is taller than 800).
+    capture: 'viewport',
+    notes: '"Maßnahme ergreifen" from the pane: the ADM-21 composer with no action chosen and "Entscheidung senden" off until action, statement and reason are there (DQ-1199), the statement of reasons (template, facts, ground, document, section), the automated flags, the DE/EN preview and the reason.',
+  },
+  {
+    id: 'ADM-20-pane-analyst',
+    volatile: true,
+    path: '/admin/moderation/reports?case=01m66awqg0mg086app44e8jg60',
+    phase: 3,
+    auth: 'staff-analyst',
+    states: ['default'],
+    ready: '[data-testid="ADM-20"] [data-testid="ADM-20.pane"]',
+    notes: 'The pane read-only (moderation.view without moderation.decide): the lock line instead of the decisions.',
+  },
+  // DQ-1197: ADM-59 Mitglied-Sicherheit with signed-in devices (the sessions.fixture account, three fixed app devices) and the
+  // "Alle Sitzungen beenden" dialog, the screen's main action. Owner: members.revoke_sessions.
+  {
+    id: 'ADM-59-sessions',
+    path: '/admin/members/mia.sessions?tab=security',
+    phase: 3,
+    auth: 'staff-owner',
+    states: ['default'],
+    fixture: 'm417-sessions',
+    ready: '[data-testid="ADM-10"] [data-testid="ADM-10.security.active"]',
+    notes: 'Sicherheit & Sitzungen of @mia.sessions: "Angemeldete Geräte · 3 aktiv" with iPhone 15 Pro, Pixel 8 and iPad Air (dates fixed by the fixture) and "Alle Sitzungen beenden" beside them; past sign-ins and grouped security events below.',
+  },
+  {
+    id: 'ADM-59-revoke',
+    path: '/admin/members/mia.sessions?tab=security&dialog=revoke-sessions',
+    phase: 3,
+    auth: 'staff-owner',
+    states: ['default'],
+    fixture: 'm417-sessions',
+    ready: '[data-testid="ADM-10.revoke-sessions"]',
+    notes: 'Alle Sitzungen beenden?: what ends (every device, browser and push sign-in), the security notice the member gets, the reason.',
+  },
+  {
+    id: 'ADM-20-views',
+    path: '/admin/moderation/reports?dialog=views',
+    phase: 3,
+    auth: 'staff-moderator',
+    states: ['default'],
+    ready: '[data-testid="ADM-20.table.views.dialog"]',
+    notes: 'Ansichten verwalten: name, "Mit meiner Rolle teilen" with who sees it (Moderation), my views, views shared by others of the role.',
   },
 ];

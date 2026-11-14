@@ -154,6 +154,9 @@ test.describe('A2 report handling', () => {
     await expect(queued).toHaveCount(1);
     await expect(queued).toContainText(admin('moderation', 'target_types.photo'));
     await queued.click();
+    // From 1280 px the row opens the M4.17 SplitQueue pane (09 §10.2); "Fall öffnen" leads on to ADM-21.
+    await expect(id(page, 'ADM-20.pane')).toBeVisible();
+    await id(page, 'ADM-20.pane.open').click();
 
     // ADM-21: new, the evidence on request (logged), then Übernehmen.
     await expect(id(page, 'ADM-21')).toBeVisible();

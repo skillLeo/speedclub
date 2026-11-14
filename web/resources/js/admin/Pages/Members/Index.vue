@@ -300,7 +300,7 @@ onMounted(() => {
                             </Field>
                         </div>
                         <div class="grow" />
-                        <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-09.filter.apply">{{ trans('members.filters.apply') }}</Button>
+                        <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-09.filter.apply">{{ trans('members.filters.apply') }}</Button>
                     </div>
                 </form>
             </template>

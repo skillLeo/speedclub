@@ -65,7 +65,8 @@
             "Composer\\Config::disableProcessTimeout",
             "@php vendor/bin/pint --test",
             "@php vendor/bin/phpstan analyse --no-progress --memory-limit=1G",
-            "@php vendor/bin/pest --parallel",
+            "@php vendor/bin/pest --testsuite=Arch",
+            "@php vendor/bin/pest --parallel --exclude-testsuite=Arch",
             "@composer audit"
         ],
         "setup": [

@@ -18,6 +18,7 @@
  *   php tests/e2e/support/backend.php run-test-jobs <test email>
  *   php tests/e2e/support/backend.php decide-test-case <test email>
  *   php tests/e2e/support/backend.php ensure-sessions-fixture
+ *   php tests/e2e/support/backend.php ensure-finish-fixture
  *   E2E_STAFF_PASSWORD=… E2E_STAFF_SECRETS='{"owner":"…"}' [E2E_STAFF_LABELS='["owner",…]'] php tests/e2e/support/backend.php ensure-staff
  *   php tests/e2e/support/backend.php delete-staff
  *   php tests/e2e/support/backend.php remove-branding-fixture
@@ -29,6 +30,8 @@
  *   php tests/e2e/support/backend.php disable-premium-fixture
  *   php tests/e2e/support/backend.php enable-m414-flags
  *   php tests/e2e/support/backend.php disable-m414-flags
+ *   php tests/e2e/support/backend.php enable-m414-affiliate
+ *   php tests/e2e/support/backend.php disable-m414-affiliate
  *   php tests/e2e/support/backend.php review-test-business <slug of a test owner's business> verify|reject
  *   php tests/e2e/support/backend.php run-health-fixture
  *   php tests/e2e/support/backend.php remove-health-fixture
@@ -44,9 +47,10 @@
  *   php tests/e2e/support/backend.php announcements-state
  *   php tests/e2e/support/backend.php ensure-reconsent-fixture
  *   php tests/e2e/support/backend.php remove-reconsent-fixture
- *   php tests/e2e/support/backend.php reconsent-fixture-plan '<rows json>'   (pure: what ensure-reconsent-fixture would make of these rows)
+ *   php tests/e2e/support/backend.php reconsent-fixture-plan '<rows json>' ['<now, UTC>']   (pure: what ensure-reconsent-fixture would make of these rows)
  *   php tests/e2e/support/backend.php legal-documents-state
  *   php tests/e2e/support/backend.php ensure-support-fixture
+ *   php tests/e2e/support/backend.php ensure-m417-fixture
  *
  * Prints one JSON object. Refuses to run outside the local and testing environments.
  */
@@ -272,11 +276,14 @@ const ANNOUNCEMENT_FIXTURES = [
 const ANNOUNCEMENT_FIXTURE_REASON = 'QA-Fixture HOME-01-announcement (visual registry): wird nach der Aufnahme wieder entfernt';
 
 /**
- * CONSENT: a re-consent version of AGB and of Datenschutz (DE and EN, the current text's body, a summary of the change) published at a
- * fixed time after the seeded version, and consent.fixture, who accepted the seeded version. Marked by RECONSENT_FIXTURE_REASON and
- * removed after the capture, so SET-17/18 and the Blade pages show the seeded texts again. Its version is the one above every version of
- * that document (both locales, drafts too): BrandContentDemoSeeder seeds a Datenschutz draft "2" (ADM-31), so with the seeded data the
+ * CONSENT: a re-consent version of AGB and of Datenschutz (DE and EN, the current text's body, a summary of the change) published after
+ * every real version, and consent.fixture, who accepted the version current before it. Marked by RECONSENT_FIXTURE_REASON and removed
+ * after the capture, so SET-17/18 and the Blade pages show the real texts again. Its version is the one above every version of that
+ * document (both locales, drafts too): BrandContentDemoSeeder seeds a Datenschutz draft "2" (ADM-31), so with the seeded data alone the
  * fixture is AGB "2" and Datenschutz "3", and the draft stays as it is (reconsentFixturePlan()).
+ * Its time is RECONSENT_FIXTURE_PUBLISHED_AT, or one minute after the newest real publication of the two documents when that is later
+ * (M4.18: the Phase 4 legal drafts migration publishes new versions at its own run time), so the fixture is the current text relative to
+ * the data that exists, and the same data always gives the same time. Real versions are never changed or removed.
  */
 const RECONSENT_FIXTURE_PUBLISHED_AT = '2026-11-01 08:00:00';
 const RECONSENT_FIXTURE_REASON = 'QA-Fixture CONSENT (visual registry): wird nach der Aufnahme wieder entfernt';
@@ -706,7 +713,11 @@ function m414BusinessFixture(): array
         ->whereNull('v.deleted_at')->whereNull('m.deleted_at')->whereNull('m.installed_by_business_id')
         ->whereNotExists(fn ($tags) => $tags->selectRaw('1')->from('mod_business_tags as t')->whereColumn('t.mod_id', 'm.id'))
         ->orderBy('m.created_at')->value('m.id');
-    $cover = DB::table('businesses')->where('slug', 'beispiel-werkstatt-nord')->value('cover_media_id');
+    // DQ-1181: plausible fictional Impressum data, no "(Testdaten)": the phone number is from the Bundesnetzagentur range kept free for
+    // film and TV (040 66969 xxx), so it reaches nobody; the mail domain is reserved (.test); the register number is made up.
+    // DQ-1144: no cover of its own, so the stage business never shares the sample's tool-wall photo; its cards and BIZ-01 take the
+    // newest portfolio build (cover_source "portfolio", ADR-457), jann.ptrs's confirmed build below.
+    $cover = null;
     $now = now();
     DB::table('businesses')->insert([
         'id' => M414_BUSINESS_ID,
@@ -714,20 +725,20 @@ function m414BusinessFixture(): array
         'slug' => 'werkstatt-am-kanal-m414',
         'name' => 'Werkstatt am Kanal',
         'kind' => 'workshop',
-        'legal_name' => 'Werkstatt am Kanal GmbH (Testdaten)',
+        'legal_name' => 'Werkstatt am Kanal GmbH',
         'legal_form' => 'gmbh',
-        'representative' => 'Lukas Scholz (Testdaten)',
+        'representative' => 'Lukas Scholz',
         'street' => 'Kanalstraße 12',
         'postcode' => '22085',
         'city' => 'Hamburg',
         'country' => 'DE',
         'lat' => 53.5725,
         'lng' => 10.0237,
-        'phone' => '+49 40 0000000',
+        'phone' => '+49 40 66969 214',
         'email' => 'werkstatt-am-kanal@speedclub.test',
         'website' => null,
         'register_court' => 'Amtsgericht Hamburg',
-        'register_number' => 'HRB 000000 (Testdaten)',
+        'register_number' => 'HRB 171 482',
         'vat_id' => null,
         'about' => 'Fahrwerk, Abgasanlage und Achsvermessung für Japaner und Youngtimer. Eigene Bühne, Termine nach Absprache.',
         'services' => json_encode(['Fahrwerk', 'Abgasanlage', 'Achsvermessung', 'Bremsen', 'Einzelabnahme']),
@@ -747,6 +758,10 @@ function m414BusinessFixture(): array
         ['id' => M414_PREFIX.'000000000000000m01', 'business_id' => M414_BUSINESS_ID, 'user_id' => $users['lukas.sc'], 'role' => 'owner', 'created_at' => $now, 'updated_at' => $now],
         ['id' => M414_PREFIX.'000000000000000m02', 'business_id' => M414_BUSINESS_ID, 'user_id' => $users['kenji.r34'], 'role' => 'staff', 'created_at' => $now, 'updated_at' => $now],
     ]);
+    // DQ-1155: the tags' dates lie before the visual matrix's clock (support/qa.mjs QA_NOW, Monday 2026-11-02), so BIZ-04 never shows
+    // a date after "today"; on a host clock before it, the host's now.
+    $qaNow = \Illuminate\Support\Carbon::parse('2026-11-02 10:00:00', 'UTC');
+    $tagAnchor = $now->lt($qaNow) ? $now->copy() : $qaNow;
     $tags = [];
     foreach ([['jann.ptrs', 'accepted', 'member', 't01'], ['max.e46', 'pending', 'member', 't02'], ['nina.neu', 'pending', 'business', 't03']] as [$member, $status, $by, $suffix]) {
         $mod = $publicMod($member);
@@ -761,8 +776,8 @@ function m414BusinessFixture(): array
             'initiated_by' => $by,
             'requested_by' => $by === 'member' ? $users[$member] : $users['lukas.sc'],
             'decided_by' => $status === 'accepted' ? $users['lukas.sc'] : null,
-            'decided_at' => $status === 'accepted' ? $now->copy()->subDays(3) : null,
-            'created_at' => $now->copy()->subDays($status === 'accepted' ? 5 : 1),
+            'decided_at' => $status === 'accepted' ? $tagAnchor->copy()->subDays(3) : null,
+            'created_at' => $tagAnchor->copy()->subDays($status === 'accepted' ? 5 : 1),
             'updated_at' => $now,
         ]);
         if ($status === 'accepted') {
@@ -775,8 +790,67 @@ function m414BusinessFixture(): array
         $views[] = ['business_id' => M414_BUSINESS_ID, 'day' => $now->copy()->subDays($day)->toDateString(), 'views' => 3 + ($day * 7) % 11];
     }
     DB::table('business_view_days')->insert($views);
+    // SEC-414-01: BIZ-05 with a row: the stage business invited nina.neu to its team (she has no business; one open invitation).
+    DB::table('business_invites')->insert([
+        'id' => M414_PREFIX.'000000000000000i01',
+        'business_id' => M414_BUSINESS_ID,
+        'user_id' => $users['nina.neu'],
+        'invited_by' => $users['lukas.sc'],
+        'created_at' => $tagAnchor->copy()->subDay(),
+        'updated_at' => $tagAnchor->copy()->subDay(),
+    ]);
+    $applicants = m414ApplicantsFixture($now);
 
-    return ['id' => M414_BUSINESS_ID, 'tags' => $tags];
+    return ['id' => M414_BUSINESS_ID, 'tags' => $tags, 'applicants' => $applicants];
+}
+
+/** DQ-1151: the BIZ-02 status screen, "In Prüfung" (paul.roadster) and "Abgelehnt" with the staff's reason (tobi.quattro). */
+const M414_APPLICANTS = [
+    'paul.roadster' => ['id' => '01m414fx000000000000000002', 'status' => 'applied', 'slug' => 'roadster-garage-m414', 'name' => 'Roadster Garage', 'city' => 'Bremen', 'reason' => null],
+    'tobi.quattro' => ['id' => '01m414fx000000000000000003', 'status' => 'rejected', 'slug' => 'quattro-tuning-m414', 'name' => 'Quattro Tuning', 'city' => 'Ingolstadt', 'reason' => 'Im Impressum fehlt der Registereintrag. Ergänze Registergericht und Registernummer und schick die Bewerbung noch einmal.'],
+];
+
+/** Applications of two demo members (test data); a member who already belongs to a business is skipped, never touched. */
+function m414ApplicantsFixture(\Illuminate\Support\Carbon $now): array
+{
+    $made = [];
+    foreach (M414_APPLICANTS as $username => $row) {
+        $user = DB::table('users')->where('username', $username)->value('id');
+        if ($user === null || DB::table('business_members')->where('user_id', $user)->exists()) {
+            continue;
+        }
+        DB::table('businesses')->insert([
+            'id' => $row['id'],
+            'owner_id' => $user,
+            'slug' => $row['slug'],
+            'name' => $row['name'],
+            'kind' => 'tuner',
+            'legal_name' => $row['name'].' (Testdaten)',
+            'legal_form' => 'gmbh',
+            'representative' => 'Testdaten',
+            'street' => 'Teststraße 1',
+            'postcode' => '28195',
+            'city' => $row['city'],
+            'country' => 'DE',
+            'phone' => '+49 421 0000000',
+            'email' => $row['slug'].'@speedclub.test',
+            'about' => 'Fahrwerk und Leistungssteigerung, Testdaten für die Bewerbung.',
+            'services' => json_encode(['Fahrwerk', 'Leistungssteigerung']),
+            'opening_hours' => json_encode(['mon' => [['09:00', '18:00']], 'tue' => [['09:00', '18:00']]]),
+            'document_note' => 'Gewerbeanmeldung liegt vor.',
+            'status' => $row['status'],
+            'submitted_at' => $now->copy()->subDays(2),
+            'review_reason' => $row['reason'],
+            'reviewed_at' => $row['reason'] === null ? null : $now->copy()->subDay(),
+            'is_sample' => false,
+            'created_at' => $now->copy()->subDays(2),
+            'updated_at' => $now,
+        ]);
+        DB::table('business_members')->insert(['id' => substr($row['id'], 0, 22).'m'.substr($row['id'], -3), 'business_id' => $row['id'], 'user_id' => $user, 'role' => 'owner', 'created_at' => $now, 'updated_at' => $now]);
+        $made[] = $row['status'];
+    }
+
+    return $made;
 }
 
 /** Removes the stage business and everything hanging on it (its tags, team, view days, the mods' installed_by). */
@@ -787,9 +861,50 @@ function removeM414BusinessFixture(): array
     DB::table('mod_business_tags')->where('business_id', M414_BUSINESS_ID)->delete();
     DB::table('business_members')->where('business_id', M414_BUSINESS_ID)->delete();
     DB::table('business_view_days')->where('business_id', M414_BUSINESS_ID)->delete();
+    DB::table('business_invites')->where('business_id', M414_BUSINESS_ID)->delete();
     $business = DB::table('businesses')->where('id', M414_BUSINESS_ID)->delete();
+    $applicantIds = array_column(M414_APPLICANTS, 'id');
+    DB::table('business_members')->whereIn('business_id', $applicantIds)->delete();
+    $business += DB::table('businesses')->whereIn('id', $applicantIds)->delete();
 
     return ['removed' => $business, 'tags' => $tags, 'mods' => $mods];
+}
+
+/** DQ-1150 (stage fixture `m414-affiliate`): the cache key that says this fixture switched affiliate_links on and set the test URL. */
+const M414_AFFILIATE_MARK = 'e2e.m414-affiliate-fixture';
+/** A test address on the e2e domain, never a real shop (the "Anzeige" state of BRD-02 is test data only). */
+const M414_AFFILIATE_URL = 'https://shop.speedclub.test/kw-variante-3';
+
+/**
+ * BRD-02 with an affiliate link: the M4.14 flags plus `affiliate_links` on, and KW Variante 3 carrying the test affiliate URL; off
+ * again restores what it found. Refused when a person switched affiliate_links on or the product has an affiliate URL of its own.
+ */
+function m414AffiliateFixture(bool $on): array
+{
+    $cache = app(CacheRepository::class);
+    $marked = $cache->get(M414_AFFILIATE_MARK) === true;
+    $flag = DB::table('feature_flags')->where('key', 'affiliate_links')->first(['id', 'enabled']) ?? refuse('refusing: affiliate_links is missing; run the FeatureFlagSeeder');
+    $product = DB::table('products as p')->join('brands as b', 'b.id', '=', 'p.brand_id')
+        ->where('b.slug', 'kw')->where('p.slug', 'variante-3')->first(['p.id', 'p.affiliate_url']) ?? refuse('no KW Variante 3; run the catalogue seeder');
+    if ($on) {
+        if (! $marked && ((bool) $flag->enabled || ($product->affiliate_url !== null && $product->affiliate_url !== M414_AFFILIATE_URL))) {
+            refuse('refusing: affiliate_links is on or KW Variante 3 has an affiliate URL, and not by this fixture');
+        }
+        m414FlagsFixture(true);
+        DB::table('feature_flags')->where('id', $flag->id)->update(['enabled' => true]);
+        DB::table('products')->where('id', $product->id)->update(['affiliate_url' => M414_AFFILIATE_URL]);
+        $cache->forever(M414_AFFILIATE_MARK, true);
+    } else {
+        if ($marked) {
+            DB::table('feature_flags')->where('id', $flag->id)->update(['enabled' => false]);
+            DB::table('products')->where('id', $product->id)->where('affiliate_url', M414_AFFILIATE_URL)->update(['affiliate_url' => null]);
+            $cache->forget(M414_AFFILIATE_MARK);
+        }
+        m414FlagsFixture(false);
+    }
+    app(AppConfig::class)->flush();
+
+    return ['affiliate_links' => (bool) DB::table('feature_flags')->where('id', $flag->id)->value('enabled'), 'by_fixture' => $on || $marked];
 }
 
 /**
@@ -1050,17 +1165,29 @@ function removeReconsentFixture(): int
  * What ensure-reconsent-fixture makes of the legal_documents rows of AGB and Datenschutz, without touching anything (also the self-test's
  * entry, `reconsent-fixture-plan`). Per document key: the fixture's version is one above the highest version of that key in any locale,
  * drafts included, so it never meets a real row's (key, locale, version) and never replaces a draft; the version the fixture member
- * accepted is the current published one in the binding locale. Refuses when a key has no published text in a locale, when a published
- * text is dated at or after the fixture (the fixture would not be the current text), or when a version is not a whole number (there is
- * no "above" it).
+ * accepted is the current published one in the binding locale. The fixture's time (`at`) is `$floor`, or one minute after the newest
+ * published row of the keys when that is later, so the fixture is always the newest text. Refuses when a key has no published text in a
+ * locale, when that time is after `$now` (a real text is scheduled for later: the fixture would not be the current text now), or when a
+ * version is not a whole number (there is no "above" it).
  *
  * @param  list<array{key: string, locale: string, version: string, published_at: string|null, reason?: string|null}>  $rows
  * @param  list<string>  $keys
  * @param  list<string>  $locales  the binding locale first
- * @return array{versions: array<string, string>, accepted: array<string, string>}|string  the plan, or the reason to refuse
+ * @return array{versions: array<string, string>, accepted: array<string, string>, at: string}|string  the plan, or the reason to refuse
  */
-function reconsentFixturePlan(array $rows, array $keys, array $locales, CarbonImmutable $at): array|string
+function reconsentFixturePlan(array $rows, array $keys, array $locales, CarbonImmutable $floor, CarbonImmutable $now): array|string
 {
+    $real = array_values(array_filter($rows, fn (array $row): bool => in_array($row['key'], $keys, true) && ($row['reason'] ?? null) !== RECONSENT_FIXTURE_REASON));
+    $at = $floor;
+    foreach ($real as $row) {
+        if ($row['published_at'] !== null) {
+            $after = CarbonImmutable::parse((string) $row['published_at'], 'UTC')->addMinute()->startOfMinute();
+            $at = $after->greaterThan($at) ? $after : $at;
+        }
+    }
+    if ($at->greaterThan($now)) {
+        return 'refusing: a real terms or privacy text is published after now ('.$at->subMinute()->format('Y-m-d H:i').' UTC); the fixture would not be the current text';
+    }
     $versions = [];
     $accepted = [];
     foreach ($keys as $key) {
@@ -1078,15 +1205,12 @@ function reconsentFixturePlan(array $rows, array $keys, array $locales, CarbonIm
                 return "refusing: no published {$key} ({$locale}): run the seeders";
             }
             usort($published, fn (array $a, array $b): int => strcmp((string) $b['published_at'], (string) $a['published_at']));
-            if (CarbonImmutable::parse((string) $published[0]['published_at'], 'UTC')->greaterThanOrEqualTo($at)) {
-                return "refusing: {$key} ({$locale}) has a version published at or after the fixture's time; the fixture would not be the current text";
-            }
             $accepted[$key] ??= $published[0]['version'];
         }
         $versions[$key] = (string) ($highest + 1);
     }
 
-    return ['versions' => $versions, 'accepted' => $accepted];
+    return ['versions' => $versions, 'accepted' => $accepted, 'at' => $at->format('Y-m-d H:i:s')];
 }
 
 /** Every legal_documents row with all its columns, in id order, and their hash: the stage fixture's proof that it left them as they were. */
@@ -1350,6 +1474,34 @@ switch ($command) {
             'status' => $case->status->value,
         ])->values()->all()]);
 
+    case 'ensure-finish-fixture':
+        // AUTH-09b "Fast geschafft" (DQ-1213): a new passwordless account at its AGB step, as PasswordlessAccounts makes one: verified,
+        // onboarding_state pending_terms, no consent, no accepted versions, no username or profile yet. Unlike a real one it has the demo
+        // password, so the visual runner can sign in over HTTP (support/auth.mjs member-finish); the screen never shows it. Every call ends
+        // its sessions and puts the step back, so a capture never finds the account past it.
+        $password = config('speedclub.demo.member_password');
+        if (! is_string($password) || $password === '') {
+            refuse('DEMO_MEMBER_PASSWORD is not set in web/.env');
+        }
+        $email = 'finish.fixture'.E2E_DOMAIN;
+        $user = User::withTrashed()->where('email', $email)->first() ?? new User(['email' => $email, 'locale' => 'de']);
+        $user->fill(['username' => null, 'display_name' => null, 'city' => null, 'bio' => null, 'locale' => 'de']);
+        $user->forceFill([
+            'password' => $password,
+            'email_verified_at' => now(),
+            'onboarding_state' => \App\Enums\OnboardingState::PendingTerms,
+            'consented_at' => null,
+            'terms_version' => null,
+            'privacy_version' => null,
+            'profile_setup_at' => null,
+            'deleted_at' => null,
+        ])->save();
+        $user->tokens()->delete();
+        if (Schema::hasTable('sessions')) {
+            DB::table('sessions')->where('user_id', $user->getKey())->delete();
+        }
+        finish(['email' => $email, 'next_step' => $user->refresh()->onboardingStep()?->value]);
+
     case 'ensure-sessions-fixture':
         // DQ-453: SET-06 of a member nobody else signs in as, with a fixed set of app devices. Every call ends whatever sessions and
         // tokens the account had (a capture run's own sign-in included) and seeds the same three devices again, so the list is the
@@ -1362,7 +1514,9 @@ switch ($command) {
         $user = User::withTrashed()->where('email', $email)->first()
             ?? new User(['email' => $email, 'password' => $password, 'locale' => 'de', 'consented_at' => now()]);
         $user->fill(['username' => 'mia.sessions', 'display_name' => 'Mia Brandt', 'city' => 'Leipzig']);
-        $user->forceFill(['email_verified_at' => now(), 'profile_setup_at' => now(), 'deleted_at' => null])->save();
+        // M4.17 DQ-1197 (ADM-59-sessions): registered before its devices and last seen with the newest, so the record does not contradict
+        // the device list; fixed values, the same in every run.
+        $user->forceFill(['email_verified_at' => now(), 'profile_setup_at' => now(), 'deleted_at' => null, 'created_at' => '2026-09-14 10:00:00', 'last_seen_at' => '2026-10-30 18:20:00'])->save();
         $user->tokens()->delete();
         if (Schema::hasTable('sessions')) {
             DB::table('sessions')->where('user_id', $user->getKey())->delete();
@@ -1535,6 +1689,12 @@ switch ($command) {
 
     case 'disable-m414-flags':
         finish(m414FlagsFixture(false));
+
+    case 'enable-m414-affiliate':
+        finish(m414AffiliateFixture(true));
+
+    case 'disable-m414-affiliate':
+        finish(m414AffiliateFixture(false));
 
     case 'review-test-business':
         // M4.14 F13: the ADM-55 decision on a test applicant's business, without the admin queue (lane B's UI): verify makes it
@@ -1718,9 +1878,9 @@ switch ($command) {
             'type' => RestrictionType::Messaging->value,
             'until' => now()->addDays(7)->toIso8601String(),
             'facts' => 'Mehrere Mitglieder haben dieselbe Werbenachricht für einen Teile-Shop bekommen, aus einer Kontaktanfrage heraus.',
-            'ground' => 'Community-Richtlinien §4: keine Werbung und keine Massennachrichten an Mitglieder, die dich nicht kennen.',
+            'ground' => 'Community-Richtlinien §6: keine Werbung und keine Massennachrichten an Mitglieder, die dich nicht kennen.',
             'ground_document' => GroundDocument::Community->value,
-            'ground_section' => '4',
+            'ground_section' => '6',
         ];
 
         $made = DB::transaction(function () use ($approvals, $owner, $admin, $moderator, $member, $ids, $statement): array {
@@ -1838,17 +1998,17 @@ switch ($command) {
         finish(announcementsState());
 
     case 'ensure-reconsent-fixture':
-        // CONSENT (stage fixture): a version of AGB and of Datenschutz with requires_reconsent, in both locales, published at a fixed time
-        // after the seeded current version, with the current body (so SET-18 would read the same text) and a summary of the change; and
-        // consent.fixture, who accepted the version current before it. The version is the one above every row of that document, drafts
-        // included (the seeded Datenschutz draft of ADM-31 stays untouched); refuses when the seeded texts are not what it expects
-        // (a version published at or after the fixture's time, a version that is no whole number), rather than hide or change a real text.
+        // CONSENT (stage fixture): a version of AGB and of Datenschutz with requires_reconsent, in both locales, published after every
+        // real version (RECONSENT_FIXTURE_PUBLISHED_AT, or a minute after the newest real one), with the current body (so SET-18 would read
+        // the same text) and a summary of the change; and consent.fixture, who accepted the version current before it. The version is the
+        // one above every row of that document, drafts included (the seeded Datenschutz draft of ADM-31 stays untouched); refuses when the
+        // texts are not what it expects (a real text scheduled after now, a version that is no whole number), rather than hide or change a
+        // real text.
         removeReconsentFixture();
-        $at = CarbonImmutable::parse(RECONSENT_FIXTURE_PUBLISHED_AT, 'UTC');
         $accepted = [];
         $versions = [];
         $made = 0;
-        DB::transaction(function () use ($at, &$accepted, &$versions, &$made): void {
+        DB::transaction(function () use (&$accepted, &$versions, &$made): void {
             /** @var list<string> $locales */
             $locales = array_values(config()->array('speedclub.locales'));
             $keys = array_map(fn (LegalDocumentKey $key): string => $key->value, LegalDocuments::RECONSENT);
@@ -1860,11 +2020,12 @@ switch ($command) {
                     'published_at' => $document->published_at?->utc()->format('Y-m-d H:i:s'),
                     'reason' => $document->reason,
                 ])->all();
-            $plan = reconsentFixturePlan(array_values($rows), $keys, $locales, $at);
+            $plan = reconsentFixturePlan(array_values($rows), $keys, $locales, CarbonImmutable::parse(RECONSENT_FIXTURE_PUBLISHED_AT, 'UTC'), CarbonImmutable::now('UTC'));
             if (is_string($plan)) {
                 refuse($plan);
             }
             ['versions' => $versions, 'accepted' => $accepted] = $plan;
+            $at = CarbonImmutable::parse($plan['at'], 'UTC');
             foreach (LegalDocuments::RECONSENT as $key) {
                 foreach ($locales as $locale) {
                     $current = LegalDocument::query()->where('key', $key)->where('locale', $locale)->whereNotNull('published_at')
@@ -1896,9 +2057,11 @@ switch ($command) {
         finish(['removed' => removeReconsentFixture()]);
 
     case 'reconsent-fixture-plan':
-        // Pure, for the harness self-test: the plan for the rows given as JSON (key, locale, version, published_at, reason).
+        // Pure, for the harness self-test: the plan for the rows given as JSON (key, locale, version, published_at, reason), at the given
+        // "now" (second argument, UTC; default the real clock).
         $given = json_decode($args[0] ?? '[]', true, 8, JSON_THROW_ON_ERROR);
-        $plan = reconsentFixturePlan(is_array($given) ? array_values($given) : [], ['terms', 'privacy'], ['de', 'en'], CarbonImmutable::parse(RECONSENT_FIXTURE_PUBLISHED_AT, 'UTC'));
+        $now = isset($args[1]) ? CarbonImmutable::parse($args[1], 'UTC') : CarbonImmutable::now('UTC');
+        $plan = reconsentFixturePlan(is_array($given) ? array_values($given) : [], ['terms', 'privacy'], ['de', 'en'], CarbonImmutable::parse(RECONSENT_FIXTURE_PUBLISHED_AT, 'UTC'), $now);
         finish(is_string($plan) ? ['refused' => $plan] : $plan);
 
     case 'legal-documents-state':
@@ -1946,6 +2109,57 @@ switch ($command) {
         });
         finish(['email' => $user->email, 'tickets' => $ids]);
 
+    case 'ensure-m417-fixture':
+        // M4.17 part 2 (stage fixture `m417-queues`): ADM-55 and ADM-60 show their real states instead of the zero state, for the capture
+        // and the A5 run only. m417.fixture applies for one business (status applied, waiting three hours) and writes two comments
+        // under the newest visible build update of a demo member. Written directly (no mail, no notification, no audit); the business,
+        // its membership row and the comments go with the account (delete-accounts m417.fixture, foreign keys cascade).
+        $user = fixtureMember('m417.fixture'.E2E_DOMAIN, 'mila.fahrwerk', 'Mila Brandt', 'Köln');
+        $update = BuildUpdate::query()->where('hidden', false)->whereHas('vehicle', fn ($vehicle) => $vehicle->where('status', 'published')->where('visibility', 'public')
+            ->whereHas('owner', fn ($owner) => $owner->where('email', 'like', '%@'.DemoSeeder::EMAIL_DOMAIN)->where('is_sample', false)))
+            ->latest('created_at')->first();
+        if ($update === null) {
+            refuse('m417 fixture: no visible build update of a demo member; seed the demo first');
+        }
+        $made = DB::transaction(function () use ($user, $update): array {
+            DB::table('businesses')->where('owner_id', $user->getKey())->delete();
+            DB::table('comments')->where('user_id', $user->getKey())->delete();
+            $business = new App\Models\Business([
+                'name' => 'Fahrwerk Atelier Brandt',
+                'kind' => App\Enums\BusinessKind::Workshop,
+                'legal_name' => 'Mila Brandt Fahrwerkstechnik',
+                'legal_form' => App\Enums\BusinessLegalForm::RegisteredMerchant,
+                'representative' => 'Mila Brandt',
+                'street' => 'Deutzer Werft 12',
+                'postcode' => '50679',
+                'city' => 'Köln',
+                'country' => 'DE',
+                'email' => 'werkstatt'.E2E_DOMAIN,
+                'register_court' => 'Amtsgericht Köln',
+                'register_number' => 'HRA 41720',
+                'about' => 'Fahrwerksabstimmung und Achsvermessung für Straße und Trackday, Termine nach Absprache.',
+                'services' => ['Achsvermessung', 'Fahrwerk', 'Eintragung'],
+                'document_note' => 'Gewerbeanmeldung und Handelsregisterauszug liegen als PDF vor.',
+            ]);
+            $business->forceFill([
+                'owner_id' => $user->getKey(),
+                'slug' => 'fahrwerk-atelier-brandt-'.strtolower(substr((string) $user->getKey(), -6)),
+                'status' => App\Enums\BusinessStatus::Applied,
+                'submitted_at' => now()->subHours(3),
+                'is_sample' => false,
+            ])->save();
+            DB::table('business_members')->insert(['id' => strtolower((string) Str::ulid()), 'business_id' => $business->getKey(), 'user_id' => $user->getKey(), 'role' => 'owner', 'created_at' => now(), 'updated_at' => now()]);
+            $comments = [];
+            foreach (['Die Spurplatten stehen dem Auto richtig gut. Welche Stärke fährst du hinten?', 'Saubere Arbeit am Unterboden, sieht nach Hohlraumschutz aus. Selbst gemacht?'] as $index => $body) {
+                $id = strtolower((string) Str::ulid());
+                DB::table('comments')->insert(['id' => $id, 'build_update_id' => $update->getKey(), 'user_id' => $user->getKey(), 'body' => $body, 'status' => 'visible', 'created_at' => now()->subMinutes(40 - $index * 25), 'updated_at' => now()->subMinutes(40 - $index * 25)]);
+                $comments[] = $id;
+            }
+
+            return ['business' => (string) $business->getKey(), 'comments' => $comments];
+        });
+        finish(['email' => $user->email, ...$made]);
+
     default:
-        refuse('usage: backend.php reset-limits|age-codes|ensure-onboarding|create-member|delete-accounts|close-updates|qr-scans|set-discoverable|set-who-can-message|run-test-jobs|decide-test-case|ensure-sessions-fixture|ensure-staff|delete-staff|reset-staff-limits|seeded-audit-event|start-view-as|ensure-decisions-fixture|ensure-two-factor-fixture|ensure-approvals-fixture|publish-announcement-fixture|remove-announcement-fixture|announcement-fixture-plan|announcements-state|ensure-reconsent-fixture|remove-reconsent-fixture|reconsent-fixture-plan|legal-documents-state|ensure-support-fixture|remove-branding-fixture|branding-state|enable-premium-fixture|disable-premium-fixture|run-health-fixture|remove-health-fixture|remove-maintenance-fixture');
+        refuse('usage: backend.php reset-limits|age-codes|ensure-onboarding|create-member|delete-accounts|close-updates|qr-scans|set-discoverable|set-who-can-message|run-test-jobs|decide-test-case|ensure-sessions-fixture|ensure-staff|delete-staff|reset-staff-limits|seeded-audit-event|start-view-as|ensure-decisions-fixture|ensure-two-factor-fixture|ensure-approvals-fixture|publish-announcement-fixture|remove-announcement-fixture|announcement-fixture-plan|announcements-state|ensure-reconsent-fixture|remove-reconsent-fixture|reconsent-fixture-plan|legal-documents-state|ensure-support-fixture|ensure-m417-fixture|remove-branding-fixture|branding-state|enable-premium-fixture|disable-premium-fixture|run-health-fixture|remove-health-fixture|remove-maintenance-fixture');
 }

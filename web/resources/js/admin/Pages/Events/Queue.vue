@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { PhArrowCounterClockwise, PhArrowSquareOut, PhArrowsClockwise, PhCalendarDots, PhCheck, PhFunnel, PhLockSimple, PhX } from '@phosphor-icons/vue';
 import { useMediaQuery } from '@vueuse/core';
 import { trans } from 'laravel-vue-i18n';
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import DataTable from '../../Components/data-table/DataTable.vue';
 import type { TableColumn } from '../../Components/data-table/table';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
@@ -12,6 +12,7 @@ import { Badge, Button, ConfirmDialog, Field, Input, Select, Skeleton, StatusPil
 import { focusRing } from '../../Components/ui/styles';
 import { usePageState } from '../../composables/pageState';
 import { qaDialog } from '../../composables/qaDialog';
+import { useSplitQueue } from '../../composables/splitQueue';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
 import { motionOff } from '../../lib/qa';
@@ -57,13 +58,54 @@ const tabModel = computed({
 });
 
 const sel = computed(() => props.selected ?? null);
-// The page URL (reactive), so a pane closed or switched by a partial visit is seen at once; `sel` is null for an unknown id ("gone").
-const page = usePage();
-const selectedId = computed(() => sel.value?.id ?? new URLSearchParams(page.url.split('?')[1] ?? '').get('event'));
-// An event named in the URL always opens the pane: beside the list from 1280 (the narrow list), under it below (200 % zoom).
-const paneOpen = computed(() => selectedId.value !== null);
-const split = computed(() => desktop.value && paneOpen.value);
 const pending = computed(() => props.tab === 'pending');
+
+// ---- decisions + SplitQueue (composables/splitQueue.ts, shared with ADM-20 and ADM-55) ------------------------------------------
+const writes = useEventWrites();
+const rejectOpen = ref(qaDialog() === 'reject');
+
+const queue = useSplitQueue<EventRow, DecidedEvent>({
+    param: 'event',
+    url: queueUrl,
+    rows: () => props.rows.data,
+    selected: () => props.selected,
+    decided: () => props.decided,
+    undoable: ['approved', 'rejected'],
+    advance: () => pending.value,
+    enabled: desktop,
+    onApprove: () => approve(),
+    onReject: () => {
+        if (sel.value?.can.reject && mayDecide.value) rejectOpen.value = true;
+    },
+    onUndo: () => undo(),
+});
+const { selectedId, paneOpen, split, lastDecided, select } = queue;
+const rowHref = (row: EventRow): string => (desktop.value ? queue.paneHref(row.id) : eventHref(row.id));
+
+function approve(): void {
+    if (!sel.value?.can.approve || !mayDecide.value || writes.processing.value) return;
+    writes.post(sel.value, 'approve', {}, queue.advanceFrom(sel.value.id));
+}
+function reject(reason: string | null): void {
+    if (!sel.value) return;
+    const advance = queue.advanceFrom(sel.value.id);
+    writes.post(sel.value, 'reject', { reason }, () => {
+        rejectOpen.value = false;
+        advance();
+    });
+}
+function undo(): void {
+    const decided = lastDecided.value;
+    if (!decided || writes.processing.value) return;
+    writes.post({ id: decided.id, version: decided.version }, 'reopen', {}, () => {
+        queue.clearUndo();
+        select(decided.id);
+    });
+}
+// A refused reject shows its message in the dialog; a conflict closes it, the pane says what happened.
+watch(writes.conflict, (conflict) => {
+    if (conflict) rejectOpen.value = false;
+});
 
 const columns = computed<TableColumn[]>(() =>
     split.value
@@ -99,98 +141,6 @@ const typeModel = computed({ get: () => filters.type || undefined, set: (v: stri
 const locationModel = computed({ get: () => filters.location_visibility || undefined, set: (v: string | undefined) => (filters.location_visibility = v === undefined || v === ANY ? '' : v) });
 const typeOptions = computed(() => [{ value: ANY, label: trans('events.filters.any') }, ...(['meet', 'cruise', 'track_day', 'show'] as const).map((v) => ({ value: v, label: trans(`events.types.${v}`) }))]);
 const locationOptions = computed(() => [{ value: ANY, label: trans('events.filters.any') }, ...(['public', 'after_rsvp'] as const).map((v) => ({ value: v, label: trans(`events.location.${v}`) }))]);
-
-// ---- selection (SplitQueue) -------------------------------------------------------------------------------------------------
-function paneHref(id: string): string {
-    const params = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
-    params.set('event', id);
-    return `${queueUrl()}?${params.toString()}`;
-}
-const rowHref = (row: EventRow): string => (desktop.value ? paneHref(row.id) : eventHref(row.id));
-function select(id: string | null): void {
-    const params = Object.fromEntries(new URLSearchParams(window.location.search).entries());
-    if (id === null) delete params.event;
-    else params.event = id;
-    router.get(queueUrl(), params, { only: ['selected', 'decided'], preserveState: true, preserveScroll: true, replace: true });
-}
-function neighbour(step: 1 | -1): string | null {
-    const list = props.rows.data;
-    if (list.length === 0) return null;
-    const index = list.findIndex((row) => row.id === selectedId.value);
-    if (index === -1) return list[0]?.id ?? null;
-    return list[index + step]?.id ?? null;
-}
-
-// ---- decisions ----------------------------------------------------------------------------------------------------------------
-const writes = useEventWrites();
-const rejectOpen = ref(qaDialog() === 'reject');
-const lastDecided = ref<DecidedEvent | null>(null);
-let undoTimer: number | undefined;
-watch(
-    () => props.decided,
-    (decided) => {
-        if (!decided || (decided.outcome !== 'approved' && decided.outcome !== 'rejected')) return;
-        lastDecided.value = decided;
-        window.clearTimeout(undoTimer);
-        undoTimer = window.setTimeout(() => (lastDecided.value = null), 5000);
-    },
-    { immediate: true },
-);
-
-/** After a decision in the pending queue, the next event (or the one before the last) opens: auto-advance. */
-function advanceFrom(id: string): () => void {
-    const list = props.rows.data;
-    const index = list.findIndex((row) => row.id === id);
-    const next = list[index + 1]?.id ?? list[index - 1]?.id ?? null;
-    return () => {
-        if (pending.value) select(next);
-    };
-}
-function approve(): void {
-    if (!sel.value?.can.approve || !mayDecide.value || writes.processing.value) return;
-    writes.post(sel.value, 'approve', {}, advanceFrom(sel.value.id));
-}
-function reject(reason: string | null): void {
-    if (!sel.value) return;
-    const advance = advanceFrom(sel.value.id);
-    writes.post(sel.value, 'reject', { reason }, () => {
-        rejectOpen.value = false;
-        advance();
-    });
-}
-function undo(): void {
-    const decided = lastDecided.value;
-    if (!decided || writes.processing.value) return;
-    writes.post({ id: decided.id, version: decided.version }, 'reopen', {}, () => {
-        lastDecided.value = null;
-        select(decided.id);
-    });
-}
-// A refused reject shows its message in the dialog; a conflict closes it, the pane says what happened.
-watch(writes.conflict, (conflict) => {
-    if (conflict) rejectOpen.value = false;
-});
-
-// ---- keyboard: j/k/a/r/u (09 §10.2), never while typing or with a dialog open --------------------------------------------------
-function onKey(event: KeyboardEvent): void {
-    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || !desktop.value) return;
-    const target = event.target as HTMLElement | null;
-    if (target?.closest('input,textarea,select,[contenteditable="true"],[role="dialog"],[role="alertdialog"],[role="listbox"],[role="menu"]')) return;
-    const key = event.key.toLowerCase();
-    if (key === 'j' || key === 'k') {
-        const id = neighbour(key === 'j' ? 1 : -1);
-        if (id !== null) select(id);
-    } else if (key === 'a') approve();
-    else if (key === 'r' && sel.value?.can.reject && mayDecide.value) rejectOpen.value = true;
-    else if (key === 'u') undo();
-    else return;
-    event.preventDefault();
-}
-onMounted(() => window.addEventListener('keydown', onKey));
-onBeforeUnmount(() => {
-    window.removeEventListener('keydown', onKey);
-    window.clearTimeout(undoTimer);
-});
 
 const paneState = computed(() => (state.value === 'loading' ? 'loading' : state.value === 'error' ? 'error' : 'ready'));
 const forcedTable = computed(() => (state.value === 'loading' || state.value === 'error' || state.value === 'empty' ? state.value : undefined));
@@ -230,6 +180,7 @@ const caption = (row: EventRow): string =>
                     :empty-title="trans(`events.empty.${tab}_title`)"
                     :empty-body="trans(`events.empty.${tab}_body`)"
                     :row-href="rowHref"
+                    :current-row-id="split ? selectedId : null"
                     :force-state="forcedTable"
                     test-id="ADM-53.table"
                 >

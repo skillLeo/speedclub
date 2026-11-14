@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\Rules\RateLimitOverrides;
 use App\Support\Cache\LosslessRateLimiter;
 use App\Support\Cache\RetryingDatabaseStore;
 use Illuminate\Cache\RateLimiter;
@@ -47,6 +48,10 @@ afterEach(function () {
     DB::connection('cache_probe')->table('cache')
         ->where('key', 'like', '%deadlock-test-%')
         ->orWhereIn('key', [$throttled, $throttled.':timer'])
+        // A worker boots the app on the database store: RateLimits::register() fills the cold cache with the rate-limit overrides
+        // (a forever row, committed outside RefreshDatabase's transaction). Left behind, it reached later tests of the directory
+        // (ScheduleTest's cache prune).
+        ->orWhere('key', ($this->raw)(RateLimitOverrides::CACHE_KEY))
         ->delete();
     DB::purge('cache_probe');
 });
@@ -252,4 +257,17 @@ it('answers a throttled request instead of 500 when the limiter\'s insert is a d
         ->assertOk()
         ->assertHeader('X-RateLimit-Remaining', '4');
     expect($inserts->runs)->toBe(4);
+});
+
+it('leaves no committed cache row behind, not even the overrides a worker\'s boot fills', function () {
+    workerOutput(cacheWorker(['add', $this->key]));
+
+    // The worker's boot committed the overrides row on its own connection, outside this test's transaction (the next test checks
+    // that afterEach took it away again; Pest keeps the order within a file).
+    expect($this->probe->table('cache')->where('key', ($this->raw)(RateLimitOverrides::CACHE_KEY))->exists())->toBeTrue();
+});
+
+it('starts the next test without the worker\'s rows', function () {
+    expect($this->probe->table('cache')->where('key', ($this->raw)(RateLimitOverrides::CACHE_KEY))->exists())->toBeFalse()
+        ->and($this->probe->table('cache')->where('key', 'like', '%deadlock-test-%')->exists())->toBeFalse();
 });

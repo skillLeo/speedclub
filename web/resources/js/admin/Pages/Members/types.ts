@@ -53,6 +53,8 @@ export interface MemberSecurity {
     two_factor: { on: boolean; confirmed_at: string | null; locked_at: string | null };
     force_password_change: boolean;
     devices: { id: number; device_name: string | null; platform: string | null; app_version: string | null; view_as: boolean; created_at: string | null; last_used_at: string | null; expires_at: string | null }[];
+    /** DQ-1197: browser sessions still alive (browser and OS without versions, dates); they count as signed in with `devices`. */
+    browser_sessions?: { browser: string | null; os: string | null; last_active_at: string; expires_at: string }[];
     /** Matched to the member's tokens and browser sessions on the server (never a user agent, IP or fingerprint); all null when unknown. */
     sign_ins: {
         first_seen_at: string | null;

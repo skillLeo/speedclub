@@ -39,7 +39,7 @@ class LegalDocumentSeeder extends Seeder
 
         foreach (LegalDocumentKey::cases() as $key) {
             foreach (self::LOCALES as $locale) {
-                [$metadata, $body] = $this->read($key, $locale);
+                [$metadata, $body] = self::read($key, $locale);
 
                 LegalDocument::query()->firstOrCreate(
                     ['key' => $key, 'locale' => $locale, 'version' => self::VERSION],
@@ -62,9 +62,18 @@ class LegalDocumentSeeder extends Seeder
     }
 
     /**
+     * The member-facing Markdown of database/data/legal/{key}.{locale}.md, as this seeder stores it (BrandContentDemoSeeder builds its
+     * ADM-31 draft on it).
+     */
+    public static function body(LegalDocumentKey $key, string $locale): string
+    {
+        return self::read($key, $locale)[1];
+    }
+
+    /**
      * @return array{0: array<string, string>, 1: string} metadata and member-facing Markdown
      */
-    private function read(LegalDocumentKey $key, string $locale): array
+    private static function read(LegalDocumentKey $key, string $locale): array
     {
         $path = database_path("data/legal/{$key->value}.$locale.md");
         $contents = is_file($path) ? file_get_contents($path) : false;

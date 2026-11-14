@@ -78,7 +78,8 @@ export function Collections({ collections, column, gutter, testID }: Collections
         <MediaCard
           variant="rail"
           title={item.title}
-          spec={t('collections.count', { count: item.count, formatted: count })}
+          // ADR-466: a collection of sample builds only counts 0 and shows no count.
+          spec={item.count > 0 ? t('collections.count', { count: item.count, formatted: count }) : undefined}
           photo={photoFields(item.cover, width)}
           onPress={() => router.push(collectionPath(item.filters, item.sort))}
           style={cardStyle}

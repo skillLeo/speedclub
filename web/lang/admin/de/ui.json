@@ -54,14 +54,21 @@
         "views": {
             "label": "Ansichten",
             "manage": "Ansichten verwalten",
-            "manage_body": "Speichere Filter, Sortierung und Seitengröße unter einem Namen. Nur du siehst deine Ansichten.",
+            "manage_body": "Speichere Filter, Sortierung und Seitengröße unter einem Namen. Für dich allein oder für alle mit deiner Rolle.",
             "name": "Name der Ansicht",
             "name_short": "Der Name braucht mindestens 2 Zeichen.",
             "save": "Aktuelle speichern",
             "saved": "Ansicht gespeichert",
             "deleted": "Ansicht gelöscht",
             "delete": "Ansicht „:name“ löschen",
-            "none": "Noch keine eigenen Ansichten."
+            "none": "Noch keine eigenen Ansichten.",
+            "share": "Mit meiner Rolle teilen",
+            "share_hint": "Alle mit der Rolle :role sehen die Ansicht. Ändern und löschen kannst nur du.",
+            "shared_badge": "Geteilt mit :role",
+            "shared_by": "Geteilt von :name",
+            "shared_group": "Von anderen geteilt",
+            "mine_group": "Meine Ansichten",
+            "none_shared": "Noch keine geteilten Ansichten deiner Rolle."
         },
         "export_csv": "CSV, Adressen maskiert",
         "export_menu": "Exportieren",
@@ -77,7 +84,11 @@
         "next": "Nächste Seite"
     },
     "kpi": {
-        "delta": "Veränderung zum Vorzeitraum: "
+        "delta": "Veränderung zum Vorzeitraum: ",
+        "points": ":value Pp.",
+        "up": "gestiegen um",
+        "down": "gesunken um",
+        "flat": "unverändert"
     },
     "chart": {
         "legend": "Legende",
@@ -135,5 +146,11 @@
     "tabs": {
         "more": "Mehr",
         "more_label": "Mehr: :count weitere Bereiche"
+    },
+    "waiting": {
+        "minutes": ":count Min.",
+        "hours": ":count Std.",
+        "days": ":count Tg.",
+        "label": "Wartet seit :date"
     }
 }

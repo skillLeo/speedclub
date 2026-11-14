@@ -6,8 +6,9 @@ import { View } from 'react-native';
 
 import { social2Keys, useCreateCollection, useDeleteCollection, useRenameCollection, type MemberCollection } from '@/api/queries/social2';
 import { hapticFor, haptics } from '@/lib/haptics';
-import { createStyles, space } from '@/theme';
+import { createStyles, space, useTheme } from '@/theme';
 import { Icon, PressableScale, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { LARGE_FONT_SCALE } from '@/ui/rowParts';
 
 import { removeWithUndo, useHiddenRemovals } from '../deferred';
 import { CollectionNameSheet } from './CollectionNameSheet';
@@ -19,6 +20,14 @@ export function collectionColumns(width: number): number {
   if (width >= 900) return 4;
   if (width >= 600) return 3;
   return 2;
+}
+
+/**
+ * "Neue Sammlung" in a row of its own: two columns at a large font, where "Sammlung" (8 letters, below DQ-181's 10 for a hyphen)
+ * is wider than a tile (m4.10/m4.18 PROF-01-saved fs2: 173 px word in a 168 px line). Its square stays tile-sized.
+ */
+export function createTileSpansRow(width: number, fontScale: number): boolean {
+  return collectionColumns(width) === 2 && fontScale >= LARGE_FONT_SCALE;
 }
 
 export function collectionTileWidth(width: number): number {
@@ -127,8 +136,10 @@ export function CollectionsGrid({ collections, width, actions, withCreate = true
   const { t } = useTranslation('profile');
   const styles = useStyles();
   const hidden = useHiddenRemovals();
+  const { fontScale } = useTheme();
   const tile = collectionTileWidth(width);
   if (tile <= 0) return null;
+  const createWidth = createTileSpansRow(width, fontScale) ? width : tile;
   return (
     <View style={styles.grid} role="list" testID={`${routeId}.grid`}>
       {visibleCollections(collections, hidden).map((collection) => (
@@ -144,9 +155,9 @@ export function CollectionsGrid({ collections, width, actions, withCreate = true
         </View>
       ))}
       {withCreate ? (
-        <View role="listitem" style={{ width: tile }}>
+        <View role="listitem" style={{ width: createWidth }}>
           <PressableScale role="button" aria-label={t('collections.new')} onPress={actions.openCreate} contentStyle={styles.newTile} testID={`${routeId}.new`}>
-            <View style={styles.newMark}>
+            <View style={[styles.newMark, { width: tile }]}>
               <Icon name="plus" size={24} color="text.secondary" />
             </View>
             {/* DQ-1107 c: the same `headline` as the collection names beside it. "Sammlung" may hyphenate like a name does, so it

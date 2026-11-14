@@ -95,14 +95,16 @@ it('counts and lists only builds the reader may see ("Builds mit {Produkt}")', f
     $this->getJson("/api/v1/products/{$this->v3->id}/builds")->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->vehicle_id);
 });
 
-it('hides sample builds from counts while editorial_samples is off', function () {
+it('never counts sample builds (DQ-1140), and lists them only while editorial_samples is on', function () {
     $mod = bizBuildWithMod(User::factory()->create(['is_sample' => true]), $this->v3);
     Vehicle::query()->whereKey($mod->vehicle_id)->update(['is_sample' => true]);
     bizRebuild($mod->vehicle);
 
-    $this->getJson("/api/v1/products/{$this->v3->id}")->assertJsonPath('data.builds', 1);
+    $this->getJson("/api/v1/products/{$this->v3->id}")->assertJsonPath('data.builds', 0);
+    $this->getJson("/api/v1/products/{$this->v3->id}/builds")->assertJsonCount(1, 'data');
     bizFlags(['editorial_samples' => false]);
     $this->getJson("/api/v1/products/{$this->v3->id}")->assertJsonPath('data.builds', 0);
+    $this->getJson("/api/v1/products/{$this->v3->id}/builds")->assertJsonCount(0, 'data');
 });
 
 it('shows BRD-01 with about, real counts, lines, products and builds', function () {
@@ -112,7 +114,8 @@ it('shows BRD-01 with about, real counts, lines, products and builds', function 
         ->assertJsonPath('data.name', 'KW')->assertJsonPath('data.about', 'Fahrwerkshersteller aus Fichtenberg.')
         ->assertJsonPath('data.builds', 1)->assertJsonPath('data.products', 2)
         ->assertJsonPath('data.lines', [['name' => 'Gewindefahrwerke', 'products' => 2]]);
-    $this->getJson('/api/v1/brands/kw/products')->assertOk()->assertJsonCount(2, 'data')->assertJsonPath('data.1.builds', 1);
+    // Most real builds first (ADR-457).
+    $this->getJson('/api/v1/brands/kw/products')->assertOk()->assertJsonCount(2, 'data')->assertJsonPath('data.0.builds', 1)->assertJsonPath('data.1.builds', 0);
     $this->getJson('/api/v1/brands/kw/builds')->assertOk()->assertJsonCount(1, 'data');
     $this->getJson('/api/v1/brands')->assertOk()->assertJsonPath('data.0', ['slug' => 'kw', 'name' => 'KW', 'builds' => 1]);
 });

@@ -138,6 +138,23 @@ test.describe('DOM audit self-test: every rule catches its violation', () => {
     expect(found[0]?.severity).toBe('High');
   });
 
+  // AUTH-09b: two document links in one sentence, the second wrapping onto the next line. Their line boxes never touch, so no overlap;
+  // the bounding box of the wrapped link (both lines, edge to edge) would have reported one.
+  test('a wrapped inline link is compared by its line boxes', async ({ page }) => {
+    const sentence = (second: string) =>
+      page_(`<div style="width:220px">Ich akzeptiere die <a href="#a" data-testid="agb">AGB</a> und habe die <a href="#d" data-testid="ds">${second}</a> gelesen.</div>`);
+    const wrapped = await audit(page, sentence('Datenschutzerklärung und alles Weitere'));
+    expect(await page.locator('[data-testid="ds"]').evaluate((el) => el.getClientRects().length)).toBeGreaterThan(1);
+    expect(of(wrapped, 'overlap')).toHaveLength(0);
+    // Real overlap of inline links is still found.
+    const stacked = await audit(
+      page,
+      page_(`<div style="position:relative;height:60px"><a href="#a" data-testid="x" style="position:absolute;left:0">AGB lesen</a>
+        <a href="#b" data-testid="y" style="position:absolute;left:10px">Datenschutz</a></div>`),
+    );
+    expect(of(stacked, 'overlap')).toHaveLength(1);
+  });
+
   test('touch target below 44x44', async ({ page }) => {
     const report = await audit(page, page_('<button class="btn" aria-label="Klein" data-testid="s" style="width:32px;height:32px"></button>'));
     const found = of(report, 'touch-target');
@@ -393,6 +410,60 @@ test.describe('DOM audit self-test: every rule catches its violation', () => {
 });
 
 test.describe('DOM audit self-test: exemptions for one kind of element', () => {
+  // M4.18: an identity reaches up into its photo to the photo's large-text-safe line, a derived margin (BIZ-01, VEH-01/GAR-02, EVT-02,
+  // the GAR-03 preview and the VEH-01/GAR-02 skeleton stages: the overlaps design QA accepted).
+  const stage = (id: string, margin: string, extra = '', photo = `<div data-qa-exempt="photo" style="height:200px;background:${color('bg.raised')}"></div>`) =>
+    page_(`<div data-testid="${id}">${photo}
+      <div data-qa-exempt="scrim-overlap" style="margin-top:${margin};height:120px${extra}"></div></div>`);
+  test('scrim-overlap frees the negative margin-top of a listed stage identity only, and is counted', async ({ page }) => {
+    for (const id of ['BIZ-01.stage', 'VEH-01.stage', 'GAR-02.stage', 'EVT-02.stage', 'GAR-03.vehPreview.empty', 'VEH-01.skeleton.stage']) {
+      const report = await audit(page, stage(id, '-102.96px'));
+      expect(report.violations, id).toEqual([]);
+      expect(report.exemptions['scrim-overlap'], id).toBe(1);
+    }
+    // VEH-01 on a phone: the photo sits inside the stretchy-hero wrapper, the identity's previous sibling.
+    const wrapped = await audit(page, stage('VEH-01.stage', '-86.453125px', '', `<div><div data-qa-exempt="photo" style="height:200px"></div></div>`));
+    expect(wrapped.violations).toEqual([]);
+    expect(wrapped.exemptions['scrim-overlap']).toBe(1);
+  });
+
+  test('scrim-overlap keeps paddings on the scale and refuses another stage, a positive margin, one past the photo or no photo', async ({ page }) => {
+    const padded = await audit(page, stage('BIZ-01.stage', '-102.96px', ';padding-top:13px'));
+    expect(of(padded, 'off-scale-spacing').map((v) => v.message)).toEqual([expect.stringContaining('padding-top')]);
+    for (const html of [
+      stage('HOME-01.stage', '-102.96px'),
+      stage('VEH-01.identity', '-102.96px'),
+      stage('BIZ-01.stage', '102.96px'),
+      stage('VEH-01.stage', '-230.5px'),
+      stage('EVT-02.stage', '-102.96px', '', '<div style="height:200px"></div>'),
+    ]) {
+      const report = await audit(page, html);
+      expect(of(report, 'unknown-exemption')).toHaveLength(1);
+      expect(of(report, 'off-scale-spacing')).toHaveLength(1);
+      expect(report.exemptions['scrim-overlap']).toBeUndefined();
+    }
+  });
+
+  // 09 §7.7: the profile avatar (88) overlaps the cover by half its height.
+  const overlapBox = (side: number, margin: number) =>
+    page_(`<div style="height:100px"></div><div data-qa-exempt="avatar-overlap" style="width:${side}px;height:${side}px;margin-top:${margin}px"></div>`);
+  test('avatar-overlap frees minus half an avatar size on an avatar-sized box, and is counted', async ({ page }) => {
+    const side = Number(tokens.size.avatar.xl);
+    const report = await audit(page, overlapBox(side, -side / 2));
+    expect(report.violations).toEqual([]);
+    expect(report.exemptions['avatar-overlap']).toBe(1);
+  });
+
+  test('avatar-overlap on another size or another margin is an unknown exemption and frees nothing', async ({ page }) => {
+    const side = Number(tokens.size.avatar.xl);
+    for (const html of [overlapBox(side + 2, -(side + 2) / 2), overlapBox(side, -side / 2 + 3)]) {
+      const report = await audit(page, html);
+      expect(of(report, 'unknown-exemption')).toHaveLength(1);
+      expect(of(report, 'off-scale-spacing')).toHaveLength(1);
+      expect(report.exemptions['avatar-overlap']).toBeUndefined();
+    }
+  });
+
   // ADR-149: FS-1 puts the Welcome logo's top at 28 % of the height.
   test('brand-position frees the margins of the AUTH-02 logo slot only, and is counted', async ({ page }) => {
     const slot = await audit(page, page_('<div data-testid="AUTH-02.logoSlot" data-qa-exempt="brand-position" style="margin-top:236.32px;height:40px"></div>'));

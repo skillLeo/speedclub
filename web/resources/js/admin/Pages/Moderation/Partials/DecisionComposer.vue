@@ -20,12 +20,25 @@ import { fillPlaceholders, type ComposerOptions, type SorTemplate } from '../sha
  * the mail), and the audit reason. A suspension is four-eyes: the notice says so and the server only creates the approval.
  */
 const open = defineModel<boolean>('open', { default: false });
-const props = withDefaults(defineProps<{ caseId: string; composer: ComposerOptions; templates: SorTemplate[]; testId: string; failed?: boolean }>(), { failed: false });
+const props = withDefaults(
+    defineProps<{
+        caseId: string;
+        composer: ComposerOptions;
+        templates: SorTemplate[];
+        testId: string;
+        failed?: boolean;
+        /** The action the form starts with (ADM-20 SplitQueue: `a` = Inhalt entfernen, `r` = Keine Maßnahme); else the usual default. */
+        initialAction?: ComposerOptions['actions'][number] | null;
+    }>(),
+    { failed: false, initialAction: null },
+);
+const emit = defineEmits<{ decided: [] }>();
 
 type PreviewLocale = 'de' | 'en';
 type Action = ComposerOptions['actions'][number];
 interface Form {
-    action: Action;
+    /** Null until the moderator picks one (DQ-1199): a decision is a deliberate act, no sanction is the default. */
+    action: Action | null;
     restriction: 'messaging' | 'publishing';
     duration: Duration;
     day: string;
@@ -36,7 +49,9 @@ interface Form {
     ground_section: string;
     reason: string;
 }
-const blank = (): Form => ({ action: props.composer.actions.includes('remove_content') ? 'remove_content' : 'no_action', restriction: 'messaging', duration: '7', day: '', template: '', facts: '', ground: '', ground_document: 'community', ground_section: '', reason: '' });
+// Only a one-key decision (`a` / `r` in a SplitQueue) arrives with its action; every other way in starts without one (DQ-1199).
+const startAction = (): Action | null => (props.initialAction !== null && props.composer.actions.includes(props.initialAction) ? props.initialAction : null);
+const blank = (): Form => ({ action: startAction(), restriction: 'messaging', duration: '7', day: '', template: '', facts: '', ground: '', ground_document: 'community', ground_section: '', reason: '' });
 const form = reactive<Form>(blank());
 const errors = ref<Partial<Record<string, string>>>({});
 const action = useAdminAction();
@@ -70,7 +85,7 @@ const durationOptions = computed(() =>
     (['1', '7', '30', 'date', 'none'] as const).filter((v) => !(limited.value && v === 'none')).map((value) => ({ value, label: trans(`decisions.durations.${value}`) })),
 );
 const documentOptions = computed(() => (['community', 'terms', 'law'] as const).map((value) => ({ value, label: trans(`decisions.documents.${value}`) })));
-const needsStatement = computed(() => form.action !== 'no_action');
+const needsStatement = computed(() => form.action !== null && form.action !== 'no_action');
 const timed = computed(() => form.action === 'restrict' || form.action === 'suspend');
 
 // Templates in the member's language first; the action of a template is a suggestion, every template can be used.
@@ -80,7 +95,7 @@ const templateOptions = computed(() => [
         .filter((t) => t.locale === props.composer.member_locale)
         .map((t) => ({ value: t.id, label: t.label })),
 ]);
-const actionModel = computed({ get: () => form.action, set: (v: string | undefined) => (form.action = (props.composer.actions.find((a) => a === v) ?? form.action)) });
+const actionModel = computed({ get: () => form.action ?? undefined, set: (v: string | undefined) => (form.action = (props.composer.actions.find((a) => a === v) ?? form.action)) });
 const restrictionModel = computed({ get: () => form.restriction, set: (v: string | undefined) => (form.restriction = v === 'publishing' ? 'publishing' : 'messaging') });
 const durationModel = computed({ get: () => form.duration, set: (v: string | undefined) => (form.duration = (v ?? '7') as Duration) });
 const documentModel = computed({ get: () => form.ground_document, set: (v: string | undefined) => (form.ground_document = (v ?? 'community') as Form['ground_document']) });
@@ -105,7 +120,7 @@ watch(limited, (value) => {
 const preview = ref<{ de: string[]; en: string[] } | null>(null);
 const memberLocale = computed<PreviewLocale>(() => (props.composer.member_locale === 'en' ? 'en' : 'de'));
 const otherLocale = computed<PreviewLocale>(() => (memberLocale.value === 'en' ? 'de' : 'en'));
-const previewReady = computed(() => form.action === 'no_action' || (form.facts.trim().length >= 10 && form.ground.trim().length >= 3));
+const previewReady = computed(() => form.action !== null && (form.action === 'no_action' || (form.facts.trim().length >= 10 && form.ground.trim().length >= 3)));
 const previewError = ref(false);
 const previewLoading = ref(false);
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -151,7 +166,19 @@ onMounted(() => {
     if (open.value) onOpen();
 });
 
+// DQ-1199/1205: "Entscheidung senden" stays off until an action, the statement (where one is needed) and the reason are there, as in
+// every reason dialog of the admin; the server validates again. Dates and limits are still checked on submit.
+const canSend = computed(() => {
+    if (form.action === null) return false;
+    const reason = form.reason.trim().length;
+    if (reason < 10 || reason > 1000) return false;
+    return !needsStatement.value || (form.facts.trim().length >= 10 && form.ground.trim().length >= 3);
+});
+/** Red only when the decision restricts (remove, restrict, suspend); "Keine Maßnahme" and no choice yet are neutral. */
+const restricting = computed(() => form.action !== null && form.action !== 'no_action');
+
 function submit(): void {
+    if (form.action === null) return;
     const next: Partial<Record<string, string>> = needsStatement.value ? { ...statementErrors({ template: '', facts: form.facts, ground: form.ground, ground_document: form.ground_document, ground_section: form.ground_section }) } : {};
     const reason = form.reason.trim().length;
     if (reason < 10 || reason > 1000) next.reason = trans('ui.confirm.reason_length');
@@ -180,7 +207,13 @@ function submit(): void {
             ground_section: needsStatement.value && form.ground_section.trim() !== '' ? form.ground_section.trim() : null,
             reason: form.reason.trim(),
         },
-        { sensitive: true, onSuccess: () => (open.value = false) },
+        {
+            sensitive: true,
+            onSuccess: () => {
+                open.value = false;
+                emit('decided');
+            },
+        },
     );
 }
 const serverError = computed(() => (props.failed ? trans('ui.state.server_error') : action.error.value));
@@ -228,7 +261,7 @@ const serverError = computed(() => (props.failed ? trans('ui.state.server_error'
                     </div>
                 </div>
             </fieldset>
-            <p v-else class="text-admin-base text-ink-2">{{ trans('moderation.composer.no_action_note') }}</p>
+            <p v-else-if="form.action === 'no_action'" class="text-admin-base text-ink-2">{{ trans('moderation.composer.no_action_note') }}</p>
 
             <div class="flex flex-col gap-4" :data-testid="`${testId}.automated`">
                 <p class="text-admin-base-strong text-ink">{{ trans('moderation.composer.automated') }}</p>
@@ -269,7 +302,7 @@ const serverError = computed(() => (props.failed ? trans('ui.state.server_error'
         <template #footer>
             <DialogError :message="serverError" />
             <Button variant="ghost" :disabled="action.processing.value" @click="open = false">{{ trans('ui.actions.cancel') }}</Button>
-            <Button type="submit" :form="`${testId}-form`" :variant="form.action === 'no_action' ? 'primary' : 'danger'" :loading="action.processing.value" :data-testid="`${testId}.submit`">
+            <Button type="submit" :form="`${testId}-form`" :variant="restricting ? 'danger' : 'primary'" :disabled="!canSend" :loading="action.processing.value" :data-testid="`${testId}.submit`">
                 {{ form.action === 'suspend' ? trans('moderation.composer.submit_suspend') : trans('moderation.composer.submit') }}
             </Button>
         </template>

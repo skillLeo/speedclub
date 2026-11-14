@@ -33,6 +33,7 @@ use App\Enums\QrStatus;
 use App\Enums\ReportReason;
 use App\Enums\ReportSource;
 use App\Enums\ReportTargetType;
+use App\Enums\SearchSort;
 use App\Enums\SecurityNotice;
 use App\Enums\StaffSecurityEvent;
 use App\Enums\StaffStatus;
@@ -69,6 +70,7 @@ use App\Models\VehicleModel;
 use App\Services\Audit\Audit;
 use App\Services\Auth\KnownDevices;
 use App\Services\Config\ConfigVersions;
+use App\Services\Config\Schemas\HomeCurationSchema;
 use App\Services\Garage\BuildUpdates;
 use App\Services\Garage\ModFields;
 use App\Services\Media\MediaService;
@@ -147,6 +149,9 @@ class DemoShowcaseSeeder extends Seeder
      * process-photos.mjs (SETTINGS.v), so a corrected grade re-imports the sample photos once: #graded2 = net contrast exactly +6 %.
      */
     public const GRADED = '#graded2';
+
+    /** The newest model year of the "Nissan-Klassiker" collection's filter (DQ-1214). */
+    public const CLASSICS_YEAR_MAX = 2002;
 
     private CarbonImmutable $clock;
 
@@ -1597,9 +1602,15 @@ class DemoShowcaseSeeder extends Seeder
     }
 
     /**
-     * Build der Woche: the strongest sample build (most parts, then photos) goes first into HOME-01's featured slot, and a hand-picked
-     * Home collection "JDM-Klassiker" of the published Japanese sample builds is added, both through the home_curation draft and
-     * publish, as ADM-29 does it. Already there: nothing changes.
+     * Build der Woche: the strongest sample build (most parts, then photos) goes first into HOME-01's featured slot, and the Entdecken
+     * collection "Nissan-Klassiker" (Showcase::COLLECTION_KEY) is added, both through the home_curation draft and publish, as ADM-29 does
+     * it. Already there: nothing changes.
+     *
+     * DQ-1214: the collection is a real DISC-02 filter (Nissan up to model year 2002), so its card counts and lists exactly the builds it
+     * names. It used to be a hand-picked set ("JDM-Klassiker", mode vehicles), which DISC-01/02 cannot list: the row was synced with an
+     * empty filter and counted every public build. An earlier hand-picked entry is replaced. The editorial collections that are rows of
+     * `collections` but not yet entries of the payload (ConfigSeeder's v1 predates CollectionSeeder) are carried into it first, so this
+     * publish does not deactivate them.
      */
     private function seedCuration(): void
     {
@@ -1644,31 +1655,52 @@ class DemoShowcaseSeeder extends Seeder
             $changes[] = 'Build der Woche: '.$best->slug;
         }
 
-        if (! in_array(Showcase::COLLECTION_KEY, array_column($collections, 'key'), true) && count($collections) < config()->integer('speedclub.content.collections_max')) {
-            $jdm = [];
+        $listed = array_column($collections, 'key');
+
+        foreach (app(HomeCurationSchema::class)->initial()['collections'] as $row) {
+            if (! in_array($row['key'], $listed, true) && $row['key'] !== Showcase::COLLECTION_KEY) {
+                $collections[] = $row;
+                $listed[] = $row['key'];
+            }
+        }
+
+        $showcase = array_search(Showcase::COLLECTION_KEY, $listed, true);
+
+        if ($showcase !== false && ($collections[$showcase]['mode'] ?? null) !== 'filter') {
+            array_splice($collections, (int) $showcase, 1);
+            $showcase = false;
+        }
+
+        if ($showcase === false && count($collections) < config()->integer('speedclub.content.collections_max')) {
+            $classics = [];
 
             foreach ($this->vehicles as $key => $vehicle) {
-                if (! isset($this->editorialKeys[$key]) && in_array($this->vehicleData[$key]['make'], ['Nissan', 'Toyota', 'Mazda', 'Honda', 'Subaru'], true) && $vehicle->status === VehicleStatus::Published) {
-                    $jdm[] = (string) $vehicle->id;
+                // Every build the filter takes counts here, the Editorial account's too; a member's build goes first as the cover.
+                if ($this->vehicleData[$key]['make'] === 'Nissan' && $this->vehicleData[$key]['year'] <= self::CLASSICS_YEAR_MAX && $vehicle->status === VehicleStatus::Published) {
+                    if (isset($this->editorialKeys[$key])) {
+                        $classics[] = (string) $vehicle->id;
+                    } else {
+                        array_unshift($classics, (string) $vehicle->id);
+                    }
                 }
             }
 
-            $jdm = array_slice($jdm, 0, min(12, config()->integer('speedclub.content.collection_vehicles_max')));
-
-            if (count($jdm) >= 3) {
-                $collections[] = [
+            if (count($classics) >= 3) {
+                $collections = [[
                     'key' => Showcase::COLLECTION_KEY,
-                    'title' => ['de' => 'JDM-Klassiker', 'en' => 'JDM classics'],
-                    'subtitle' => ['de' => 'Skyline, Supra, RX-7 und Co. aus der Community', 'en' => 'Skyline, Supra, RX-7 and more from the community'],
-                    'mode' => 'vehicles',
-                    'filters' => null,
-                    'sort' => null,
-                    'vehicle_ids' => $jdm,
-                    'cover_vehicle_id' => $jdm[0],
+                    'title' => ['de' => 'Nissan-Klassiker', 'en' => 'Nissan classics'],
+                    'subtitle' => ['de' => 'Skyline, Silvia und 200SX bis Baujahr 2002', 'en' => 'Skyline, Silvia and 200SX up to 2002'],
+                    'mode' => 'filter',
+                    'filters' => ['make' => 'nissan', 'year_max' => self::CLASSICS_YEAR_MAX],
+                    'sort' => SearchSort::Updated->value,
+                    'vehicle_ids' => [],
+                    'cover_vehicle_id' => $classics[0],
                     'active' => true,
-                ];
-                $changes[] = 'Sammlung JDM-Klassiker';
+                ], ...$collections];
+                $changes[] = 'Sammlung Nissan-Klassiker';
             }
+        } elseif ($listed !== array_column(is_array($payload['collections'] ?? null) ? $payload['collections'] : [], 'key')) {
+            $changes[] = 'Sammlungen übernommen';
         }
 
         if ($changes === []) {

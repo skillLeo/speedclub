@@ -79,13 +79,17 @@ test.describe('F10 passkey sign-in', () => {
     // SET-19: the passkey with its provider line; rename, then remove (the passkey sign-in counts as recent authentication).
     await page.goto(qaUrl('/app/settings/security/sign-in'));
     await expect(id(page, 'SET-19.root')).toBeVisible();
-    const row = page.locator('[data-testid^="SET-19.passkey."][data-testid$=".rename"]:visible');
-    await expect(row).toHaveCount(1);
-    await row.click();
+    // M4.7: rename and remove sit in the row's actions menu ("Aktionen für Passkey", ContextMenuButton → `<row>.more.menu.<key>`).
+    const actions = page.locator('[data-testid^="SET-19.passkey."][data-testid$=".more"]:visible');
+    const action = (key: 'rename' | 'remove') => page.locator(`[data-testid^="SET-19.passkey."][data-testid$=".more.menu.${key}"]:visible`);
+    await expect(actions).toHaveCount(1);
+    await actions.click();
+    await action('rename').click();
     await id(page, 'SET-19.renameSheet.name').fill('Testrechner Chromium');
     await id(page, 'SET-19.renameSheet.save').click();
     await expect(page.getByText('Testrechner Chromium')).toBeVisible();
-    await page.locator('[data-testid^="SET-19.passkey."][data-testid$=".remove"]:visible').click();
+    await actions.click();
+    await action('remove').click();
     await id(page, 'SET-19.dialog.confirm').click();
     await expect(id(page, 'SET-19.passkeys.empty')).toBeVisible();
   });

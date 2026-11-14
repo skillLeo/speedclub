@@ -6,6 +6,7 @@ use App\Models\ModCategory;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Garage\BuildUpdates;
 use Illuminate\Support\Facades\Storage;
 
 require_once dirname(__DIR__).'/Garage/GarageTestHelpers.php';
@@ -71,8 +72,26 @@ describe('WEB-03', function () {
     it('starts the claim at the text-safe line and keeps one filled CTA in English too', function () {
         $html = $this->get('/?lang=en')->assertOk()->getContent();
 
-        expect($html)->toContain('Your car. Your build. Your club.')->toContain('How the QR code works')->toContain('<div class="sc-land-hero-inner">')
+        expect($html)->toContain("Your\u{00A0}car. Your\u{00A0}build. Your\u{00A0}club.")->toContain('How the QR code works')->toContain('<div class="sc-land-hero-inner">')
             ->and(pw2Filled($html))->toBe(1);
+    });
+});
+
+describe('WEB-01 Verlauf', function () {
+    it('titles a note with its first line, never "Notiz" (DQ-1178)', function () {
+        app(BuildUpdates::class)->note($this->vehicle, "Neue Felgen montiert.\nBilder folgen am Wochenende.");
+
+        $html = (string) $this->withHeader('Accept-Language', 'de')->get('/v/'.$this->vehicle->canonicalSlug())->assertOk()->getContent();
+        preg_match('~data-testid="WEB-01.update">(.*?)</li>~s', $html, $entry);
+
+        expect($entry[1])->toMatch('~<p class="text-body-strong text-ink">Neue Felgen montiert.</p>~')
+            ->toContain('Bilder folgen am Wochenende.')
+            ->not->toContain('Notiz')
+            ->and(substr_count($entry[1], 'Neue Felgen montiert.'))->toBe(1);
+    });
+
+    it('lets the section tabs wrap instead of clipping them at a large font (DQ-1179)', function () {
+        expect((string) file_get_contents(resource_path('css/public.css')))->toMatch('~\.sc-tabs-row \{[^}]*flex-wrap: wrap;~');
     });
 });
 
@@ -81,7 +100,9 @@ describe('WEB-02', function () {
         $html = $this->withHeader('Accept-Language', 'de')->get('/u/lukas.sc')->assertOk()->getContent();
 
         expect($html)->toMatch('~class="mt-12 t-title-1 text-ink" data-testid="WEB-02.name"~')
-            ->toContain('data-testid="WEB-02.vehicle.title"')->toContain('data-testid="WEB-02.vehicle.spec"')->toContain(' · 2002</span>')
+            ->toContain('data-testid="WEB-02.vehicle.title"')
+            // DQ-1175: the meta is WEB-01's sub-line (year, engine), never the name again; the mini spec has its label above the numeral.
+            ->toMatch('~data-testid="WEB-02.vehicle.meta">2002(?: · |</span>)~')->not->toContain('Nissan · Skyline')
             ->toContain('aspect-[4/5] rounded-xl')
             ->and(pw2Filled($html))->toBe(1)
             ->and($html)->toMatch('~bg-inverse text-ink-inverse[^>]*data-testid="WEB-02.follow"~');
@@ -103,7 +124,7 @@ describe('WEB-01', function () {
     });
 });
 
-describe('WEB-10 and WEB-11 cards', function () {
+describe('WEB-14 and WEB-15 cards', function () {
     it('draws the business and brand cards and names them in og:image while their flags are on', function () {
         bizFlags();
         bizBusiness(User::factory()->create(), ['slug' => 'fahrwerkstatt-elbe', 'name' => 'Fahrwerkstatt Elbe']);

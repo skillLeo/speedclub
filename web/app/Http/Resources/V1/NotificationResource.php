@@ -83,11 +83,14 @@ class NotificationResource extends JsonResource
              * place changed), update_id}, event_cancelled {by_staff}. Never the text of an update. M4.13 maintenance_due (vehicle: the
              * reader's own): {kind: "date"|"km", item_id, item_type, due_on (YYYY-MM-DD) or due_km, lead_days, reminder_key (the id of the
              * app's local backup notification, also in the push data)}; MNT-01 opens. M4.14 (in-app only): business_review {outcome:
-             * "verified"|"rejected"|"suspended"|"reinstated", business_id, reason (rejected and suspended only)}, BIZ-03 opens; business_tag
+             * "verified"|"rejected"|"suspended"|"reinstated"|"reopened" (SEC-414-03: a verified business went back to review), business_id, reason (rejected and suspended only)}, BIZ-03 opens; business_tag
              * {state: "requested"|"accepted"|"declined", side: "business" (the business must act or hears back; BIZ-04 opens) | "member" (the
-             * build's owner; VEH-02 opens), tag_id, business_id, mod_id} (vehicle: the build of the mod).
+             * build's owner; VEH-02 opens), tag_id, business_id, mod_id} (vehicle: the build of the mod). SEC-414-01 business_invite
+             * {state: "invited"|"removed" (side "member": a business invited the reader to its team, open it with GET me/business-invites;
+             * or removed them) | "accepted"|"declined"|"left" (side "business": the member answered or left; BIZ-03 opens), business_id,
+             * invite_id (invited only; the id for POST me/business-invites/{invite}/accept), username (the other side)}.
              *
-             * @var array{kind?: 'vehicle'|'update'|'changed'|'24h'|'2h'|'date'|'km', update_id?: string|null, vehicles?: int, updates?: int, count?: int, week?: string|null, event?: string|null, device_name?: string|null, decision_id?: string|null, action?: string|null, outcome?: string|null, milestone?: int, due?: string|null, requested?: string|null, reason?: string|null, ticket_id?: string|null, reference?: string|null, target?: 'vehicle'|'build_update', comment_id?: string|null, reply?: bool, security_event_id?: string|null, by_staff?: bool, item_id?: string|null, item_type?: string|null, due_on?: string|null, due_km?: int|null, lead_days?: int|null, reminder_key?: string|null, business_id?: string|null, state?: string|null, side?: string|null, tag_id?: string|null, mod_id?: string|null}
+             * @var array{kind?: 'vehicle'|'update'|'changed'|'24h'|'2h'|'date'|'km', update_id?: string|null, vehicles?: int, updates?: int, count?: int, week?: string|null, event?: string|null, device_name?: string|null, decision_id?: string|null, action?: string|null, outcome?: string|null, milestone?: int, due?: string|null, requested?: string|null, reason?: string|null, ticket_id?: string|null, reference?: string|null, target?: 'vehicle'|'build_update', comment_id?: string|null, reply?: bool, security_event_id?: string|null, by_staff?: bool, item_id?: string|null, item_type?: string|null, due_on?: string|null, due_km?: int|null, lead_days?: int|null, reminder_key?: string|null, business_id?: string|null, state?: string|null, side?: string|null, tag_id?: string|null, mod_id?: string|null, invite_id?: string|null, username?: string|null}
              */
             'details' => $this->data($row),
             /** @var string|null */
@@ -98,7 +101,7 @@ class NotificationResource extends JsonResource
     }
 
     /**
-     * @return array{kind?: string, update_id?: string|null, vehicles?: int, updates?: int, count?: int, week?: string|null, event?: string|null, device_name?: string|null, decision_id?: string|null, action?: string|null, outcome?: string|null, milestone?: int, due?: string|null, requested?: string|null, reason?: string|null, ticket_id?: string|null, reference?: string|null, target?: string, comment_id?: string|null, reply?: bool, security_event_id?: string|null, by_staff?: bool, item_id?: string|null, item_type?: string|null, due_on?: string|null, due_km?: int|null, lead_days?: int|null, reminder_key?: string|null, business_id?: string|null, state?: string|null, side?: string|null, tag_id?: string|null, mod_id?: string|null}
+     * @return array{kind?: string, update_id?: string|null, vehicles?: int, updates?: int, count?: int, week?: string|null, event?: string|null, device_name?: string|null, decision_id?: string|null, action?: string|null, outcome?: string|null, milestone?: int, due?: string|null, requested?: string|null, reason?: string|null, ticket_id?: string|null, reference?: string|null, target?: string, comment_id?: string|null, reply?: bool, security_event_id?: string|null, by_staff?: bool, item_id?: string|null, item_type?: string|null, due_on?: string|null, due_km?: int|null, lead_days?: int|null, reminder_key?: string|null, business_id?: string|null, state?: string|null, side?: string|null, tag_id?: string|null, mod_id?: string|null, invite_id?: string|null, username?: string|null}
      */
     private function data(Notification $row): array
     {
@@ -146,6 +149,7 @@ class NotificationResource extends JsonResource
             NotificationType::EventCancelled => ['by_staff' => ($data['by_staff'] ?? false) === true],
             NotificationType::BusinessReview => ['outcome' => $string('outcome'), 'business_id' => $string('business_id'), 'reason' => $string('reason')],
             NotificationType::BusinessTag => ['state' => $string('state'), 'side' => $string('side'), 'tag_id' => $string('tag_id'), 'business_id' => $string('business_id'), 'mod_id' => $string('mod_id')],
+            NotificationType::BusinessInvite => ['state' => $string('state'), 'side' => $string('side'), 'business_id' => $string('business_id'), 'invite_id' => $string('invite_id'), 'username' => $string('username')],
             NotificationType::MaintenanceDue => [
                 'kind' => $string('kind') ?? 'date',
                 'item_id' => $string('item_id'),

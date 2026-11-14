@@ -9,7 +9,7 @@ import { ApiError } from '@/api/client';
 import { useFlag } from '@/api/queries/appConfig';
 import { useMe } from '@/api/queries/auth';
 import { fetchProviderNonce, type SocialProvider } from '@/api/queries/passwordless';
-import { isReauthCancelled } from '@/api/queries/recentAuth';
+import { isReauthCancelled, useRecentAuthStore } from '@/api/queries/recentAuth';
 import {
   useAddPasskey,
   useDeletePasskey,
@@ -182,6 +182,7 @@ export function SignInMethodsScreen() {
   const format = useFormat();
   const qaState = useQaState();
   const online = useOnline();
+  const reauthOpen = useRecentAuthStore((state) => state.pending !== null);
   const readOnly = useViewAsReadOnly();
   const failure = useFailureMessage();
   const status = useSessionStore((state) => state.status);
@@ -443,6 +444,9 @@ export function SignInMethodsScreen() {
   }
 
   const busy = remove.isPending || unlink.isPending;
+  // REAUTH over the dialog: while the server asks for a recent sign-in the confirm dialog steps aside, so the reauth sheet is the one
+  // overlay on screen (no "Entfernen" left live under its controls); the removal goes on or ends when the sheet settles.
+  const confirmVisible = confirm !== null && !reauthOpen;
   const confirmName =
     confirm?.kind === 'passkey' ? confirm.passkey.name : confirm ? t(`signIn.provider.${confirm.provider}`) : '';
 
@@ -456,7 +460,7 @@ export function SignInMethodsScreen() {
       overlays={
         <>
           <Dialog
-            visible={confirm !== null}
+            visible={confirmVisible}
             onClose={busy ? undefined : () => setConfirm(null)}
             title={
               confirm?.kind === 'provider'

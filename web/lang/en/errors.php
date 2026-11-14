@@ -90,5 +90,6 @@ return [
     'business_unavailable' => 'This business does not exist or you cannot see it.',
     'business_exists' => 'You already have a business or work for one. One business per account.',
     'business_not_verified' => 'That works once the business is verified.',
+    'business_tag_taken' => 'Another business already confirmed this install. Remove its tag first if you want to change it.',
     'product_unavailable' => 'This part is no longer in the catalogue.',
 ];

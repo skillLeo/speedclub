@@ -35,6 +35,7 @@ import { photoFields } from '@/features/profile/media';
 import { CentredState, GoneState, LoadErrorState, SignInState, useGarageAccess } from '../components/frames';
 import { isGone } from '../errors';
 import { useCloseModal } from '../navigation';
+import { compactCardWidth } from '@/features/qr/stage';
 
 const ROUTE = 'GAR-04';
 const EDGES: readonly Edge[] = ['left', 'right', 'bottom'];
@@ -48,6 +49,12 @@ const CARD_EXTRA = space[12] + space[4] * 2 + typography.headline.lineHeight + t
 const SHORT_WINDOW = 760;
 /** Below this font scale the page fits its window; above it the text grows and the page scrolls (200 % reflow). */
 const FIT_SCALE = 1.3;
+/**
+ * ADR-463: on a phone the stage's dim is light (ADR-462), so a bright photo (the R35's sky) left the white wordmark at 3.4:1.
+ * `scrim.top` reaches this many times the mark's bottom edge, so the whole mark, the small katakana included, sits in the upper
+ * half of the scrim, where it is at least half its strength.
+ */
+const MARK_SCRIM_SPAN = 2;
 
 const useStyles = createStyles((t) => ({
   scroll: { flex: 1 },
@@ -154,7 +161,8 @@ export function PublishedScreen() {
   const desktop = kind === 'desktop';
   // DQ-1064: on a phone the moment fits its window up to font scale 1.3 — the card shrinks (floor 0.75), short windows tighten
   // the stage and pair the two quiet actions. QrReveal centres its card: the column gets a number for its percentages.
-  const natural = Math.min(windowWidth - 2 * gutter, COLUMN_MAX);
+  // ADR-458: on a phone the card is the compact one, so both side bands of the stage show the car.
+  const natural = desktop || kind === 'tablet' ? Math.min(windowWidth - 2 * gutter, COLUMN_MAX) : compactCardWidth(windowWidth - 2 * gutter);
   const short = !desktop && fontScale < FIT_SCALE && viewport > 0 && viewport < SHORT_WINDOW;
   const stagePad = short ? space[16] + space[16] : space[32] + space[40];
   // Everything under the card counts: the copy column, the stage's padding, the mark and its gap, the scroller's end padding.
@@ -173,6 +181,9 @@ export function PublishedScreen() {
       ? Math.max(floor, Math.min(natural, fit))
       : natural;
   const publicUrl = qr.data?.vehicle.public_url ?? null;
+  // ADR-463: the wordmark's top scrim, on phones while the mark shows (its height measured).
+  const stageTop = short ? space[16] : space[32];
+  const markScrim = kind === 'phone' && !cramped && mark > 0 ? MARK_SCRIM_SPAN * (stageTop + mark) : undefined;
 
   const share = async () => {
     if (!publicUrl) return;
@@ -197,6 +208,7 @@ export function PublishedScreen() {
           <QrReveal
             photo={vehicle.cover ? photoFields(vehicle.cover, windowWidth) : undefined}
             revealed={ready}
+            topScrim={markScrim}
             // While the code loads: the stage keeps the column's shape, the hidden column below holds its height.
             placeholder={
               <Skeleton style={[styles.stageColumn, { width: columnWidth }]} testID={`${ROUTE}.skeleton`}>

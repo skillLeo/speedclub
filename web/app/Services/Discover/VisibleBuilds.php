@@ -2,6 +2,8 @@
 
 namespace App\Services\Discover;
 
+use App\Enums\MediaStatus;
+use App\Enums\ModerationStatus;
 use App\Enums\UserStatus;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
@@ -129,6 +131,41 @@ class VisibleBuilds
      * with vehicle_id appended by InnoDB as the tie-break, and its cursor is a range on that index rather than a filter on every row.
      */
     public const CHANGED_AT = 'vs.updated_at';
+
+    /**
+     * 1 for a sample row of query() (the build or its owner is_sample, 09 §8.19), else 0: walls sort real builds before samples on it
+     * (ADR-457). Portable CASE, so MySQL 8 and MariaDB read it alike.
+     */
+    public const SAMPLE_RANK = 'CASE WHEN v.is_sample = 1 OR u.is_sample = 1 THEN 1 ELSE 0 END';
+
+    /**
+     * The real builds of a grouped query() row (neither the build nor its owner a sample): the number a catalogue tile or page shows
+     * (DQ-1212, ADR-457 "counts shown anywhere exclude sample builds"). COUNT(*) of the same row still decides whether the entry is
+     * listed at all, so a make whose builds are all samples keeps its tile, without a count, while samples are shown.
+     */
+    public const REAL_COUNT = 'COUNT(CASE WHEN v.is_sample = 0 AND u.is_sample = 0 THEN 1 END)';
+
+    /**
+     * Narrows a query() to real builds (neither the build nor its owner a sample): every number shown anywhere counts these only
+     * (DQ-1140, ADR-457; brief §10 "no fake counts"), whether samples are shown or not.
+     */
+    public static function realOnly(Builder $query): Builder
+    {
+        return $query->where('v.is_sample', false)->where('u.is_sample', false);
+    }
+
+    /**
+     * Keeps builds with a photo others may see (ready, not rejected), for the photo-led catalogue modules (ADR-457).
+     */
+    public static function withPhoto(Builder $query): Builder
+    {
+        return $query->whereExists(fn (Builder $media) => $media->selectRaw('1')->from('media as ph')
+            ->where('ph.mediable_type', 'vehicle')
+            ->whereColumn('ph.mediable_id', 'vs.vehicle_id')
+            ->whereNull('ph.deleted_at')
+            ->where('ph.status', MediaStatus::Ready->value)
+            ->where('ph.moderation_status', '!=', ModerationStatus::Rejected->value));
+    }
 
     /**
      * A column of a row the query builder returned.

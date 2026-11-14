@@ -88,6 +88,8 @@ return [
                 'web_push_browsers.json' => 'Browsers that get browser notifications, with browser, system and date.',
                 'device_installs.json' => 'App installs with device, system and app version, first and last sign-in.',
                 'browser_sessions.json' => 'Signed-in browsers with browser, system and last use.',
+                'business.json' => 'Your business: as owner the application with Impressum, document note, status and the team’s reason, plus the team; as team member the business and your role; open team invitations.',
+                'business_tags.json' => '“Installed by” tags on your modifications and the tags you decided for your business (without other members).',
             ],
             'not_included' => 'Not included: your password and your two-factor keys (stored only as check values), photos other members sent you, and other members’ data. We do not store IP addresses of members.',
             'staff_copy' => 'Copy for the SPEED CLUB team (four-eyes approval): without message texts, chat photos and reactions. Each conversation lists only the other members, folder, dates and counts.',

@@ -298,6 +298,10 @@ it('seeds the showcase from matching photos only and changes nothing when run ag
         ->and(Vehicle::query()->where('is_sample', true)->pluck('color')->filter(fn (?string $c): bool => $c !== null && preg_match('/^(black|white|silver|red|blue|grey|gray|yellow|green|orange)\b/i', $c) === 1)->all())->toBe([])
         ->and($first['featured_on_home'])->toBe(1)
         ->and(homeCollectionKeys())->toContain(Showcase::COLLECTION_KEY)
+        // DQ-1214: the showcase collection is a real filter (Nissan up to 2002), active in DISC-01, never an empty filter.
+        ->and(json_decode((string) DB::table('collections')->where('key', Showcase::COLLECTION_KEY)->value('filters'), true))->toBe(['make' => 'nissan', 'year_max' => 2002])
+        ->and(DB::table('collections')->where('key', Showcase::COLLECTION_KEY)->value('active'))->toBe(1)
+        ->and(DB::table('collections')->where('active', true)->pluck('filters')->filter(fn (string $filters): bool => in_array(json_decode($filters, true), [[], null], true))->all())->toBe([])
         ->and(DB::table('audit_events')->where('action', Showcase::AUDIT_SEEDED)->count())->toBe(1);
 
     // The crawl's staff account: role admin, password and TOTP enrolled.

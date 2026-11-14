@@ -12,7 +12,7 @@ import { Chip } from './Chip';
 import { DisplayTitle } from './DisplayTitle';
 import { IconButton } from './IconButton';
 import { Icon, type IconName } from './icons/Icon';
-import { leadAspect, leadBodyGap, leadOverlapShare, MEDIA_ASPECT, pageAt } from './mediaCardLayout';
+import { leadAspect, leadBodyGap, leadOverlapShare, MEDIA_ASPECT, pageAt, wallTitleBand } from './mediaCardLayout';
 import { SaveToggle } from './motion/FollowMorph';
 import { PageIndicator } from './motion/Pager';
 import { ReactionPicker, type ReactionPickerProps } from './motion/ReactionPicker';
@@ -22,7 +22,7 @@ import { PressableScale } from './PressableScale';
 import { joinLabel, useStacksAtFontScale } from './rowParts';
 import { SkeletonBlock, SkeletonText } from './Skeleton';
 import { Text } from './Text';
-import { metaLineText, vehicleNameText } from './textBreaks';
+import { keepModelLettersTogether, metaLineText, vehicleNameText } from './textBreaks';
 
 /** What every variant knows about the build it shows. */
 type MediaCardBase = {
@@ -47,11 +47,12 @@ export type MediaCardLeadProps = MediaCardBase & {
   /** "510 PS · 650 Nm · 3,9 s": one quiet line under the name. */
   spec?: string;
   owner?: MediaCardOwner;
-  save?: MediaCardSave;
   /** The card's width when the parent knows it before layout (the screen's width for a full-bleed lead). */
   layoutWidth?: number;
   /** 16:9 at every width (09 §7.3 "Build der Woche"); the page lead is 4:5 on phones and tablets. */
   wide?: boolean;
+  /** The first screen's hero: its photo loads first (Photo `priority`). */
+  priority?: 'high';
 };
 
 export type MediaCardFeedProps = MediaCardBase & {
@@ -99,13 +100,14 @@ export type MediaCardProps = MediaCardLeadProps | MediaCardFeedProps | MediaCard
 
 const CAPTION_LINES = 3;
 const RAIL_TITLE_LINES = 2;
+/** A text box taller than this many lines has wrapped (its height is a whole number of lines). */
+const WRAPPED_AT_LINES = 1.5;
 
 const useStyles = createStyles((t) => ({
   hover: { ...StyleSheet.absoluteFill, backgroundColor: t.color.state.hover },
   badgesTopLeft: { left: t.space[12], position: 'absolute', top: t.space[12] },
   // lead
   lead: { backgroundColor: t.color.scrim.photoEnd },
-  leadSave: { position: 'absolute', right: t.space[4], top: t.space[4] },
   leadIdentity: { gap: t.space[8], paddingBottom: t.space[24] },
   leadMeta: { alignItems: 'center', flexDirection: 'row', gap: t.space[8] },
   leadMetaText: { flexShrink: 1 },
@@ -130,13 +132,14 @@ const useStyles = createStyles((t) => ({
   ownerName: { flexShrink: 1 },
   feedChips: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
   feedActions: { alignItems: 'center', flexDirection: 'row', gap: t.space[4], paddingHorizontal: t.space[8] },
-  more: { alignSelf: 'flex-start', justifyContent: 'center', minHeight: t.size.touchMin },
+  // A 44 target at least in both directions: "mehr" is narrower than that (DEV-01 m4.18: 37.5 wide).
+  more: { alignSelf: 'flex-start', justifyContent: 'center', minHeight: t.size.touchMin, minWidth: t.size.touchMin },
   probe: { left: 0, opacity: 0, pointerEvents: 'none', position: 'absolute', right: 0, top: 0 },
   // rail
   railVisual: { borderRadius: t.radius.md },
   railText: { gap: t.space[2], marginTop: t.space[8] },
   // wall
-  // One caption line in the scrim's darkest band, below the text-safe line of a 1:1 tile from 160 wide (24 of 180 is 13 %).
+  // The name in the scrim's darkest band, below the text-safe line: one line, or two where the tile is tall enough (DQ-1156).
   wallText: { bottom: 0, left: 0, paddingBottom: t.space[8], paddingHorizontal: t.space[8], position: 'absolute', right: 0 },
   wallBelow: { marginTop: t.space[8] },
 }));
@@ -194,8 +197,11 @@ function Shell({
   );
 }
 
-function LeadCard({ title, photo, spec, owner, save, sample, onPress, layoutWidth, wide = false, style, testID }: MediaCardLeadProps) {
-  const { t } = useTranslation('common');
+/**
+ * The lead has no save of its own (M4.18): a save over the photo lies inside the card's open target, two targets on one spot (the
+ * DOM audit's `overlap`, M4.8 r2). Save and share go in an action row under the card, as HomeLead and the gallery show it.
+ */
+function LeadCard({ title, photo, spec, owner, sample, onPress, layoutWidth, wide = false, priority, style, testID }: MediaCardLeadProps) {
   const styles = useStyles();
   const theme = useTheme();
   const { gutter, kind } = useBreakpoint();
@@ -215,7 +221,7 @@ function LeadCard({ title, photo, spec, owner, save, sample, onPress, layoutWidt
       <Shell onPress={onPress} label={joinLabel([...badges, title, owner ? `@${owner.username}` : null, spec])} testID={testID ? `${testID}.open` : undefined}>
         {(hovered) => (
           <>
-            <Photo {...photo} aspect={ratio} testID={testID ? `${testID}.photo` : undefined}>
+            <Photo {...photo} aspect={ratio} priority={priority} testID={testID ? `${testID}.photo` : undefined}>
               {hovered ? <View style={styles.hover} /> : null}
               <PhotoTopScrim />
               <PhotoStageScrim />
@@ -244,12 +250,6 @@ function LeadCard({ title, photo, spec, owner, save, sample, onPress, layoutWidt
           </>
         )}
       </Shell>
-      {/* A control of its own over the photo, after the card in the reading order. */}
-      {save ? (
-        <View style={styles.leadSave}>
-          <SaveToggle saved={save.saved} onToggle={save.onToggle} saveLabel={t('actions.save')} tone="onPhoto" testID={testID ? `${testID}.save` : undefined} />
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -446,9 +446,16 @@ function RailCard({ title, photo, spec, sample, onPress, style, testID }: MediaC
 
 function WallCard({ title, photo, tall = false, sample, onPress, style, testID }: MediaCardWallProps) {
   const styles = useStyles();
+  const theme = useTheme();
   // ADR-128 / ADR-426 d: a car name is never cut. At a large font it leaves the photo and sits under it in page colours.
   const largeFont = useStacksAtFontScale();
   const badges = useSampleBadgeLabels(sample);
+  // DQ-1156: a second line on the scrim where it stays below the text-safe line; the tile's width comes from the name's band.
+  const line = typography.caption.lineHeight * theme.fontScale;
+  const [tileWidth, setTileWidth] = useState(0);
+  const [wrapped, setWrapped] = useState(false);
+  const band = wallTitleBand(tileWidth, theme.name, line, tall ? MEDIA_ASPECT.wallTall : MEDIA_ASPECT.wall);
+  const twoLines = band.lines === 2;
   return (
     <Shell onPress={onPress} label={joinLabel([...badges, title])} style={style} testID={testID}>
       {(hovered) => (
@@ -458,9 +465,26 @@ function WallCard({ title, photo, tall = false, sample, onPress, style, testID }
             {largeFont ? null : <PhotoStageScrim />}
             <SampleBadges flags={sample} tone="onPhoto" style={styles.badgesTopLeft} testID={testID ? `${testID}.sample` : undefined} />
             {largeFont ? null : (
-              <View style={styles.wallText}>
-                <Text variant="caption" color="onPhoto.primary" numberOfLines={1} hyphenate={false} testID={testID ? `${testID}.title` : undefined}>
-                  {title}
+              <View
+                style={[styles.wallText, twoLines && wrapped ? { paddingBottom: band.twoLinePadding } : null]}
+                onLayout={(event) => {
+                  const next = event.nativeEvent.layout.width;
+                  setTileWidth((current) => (current === next ? current : next));
+                }}
+                testID={testID ? `${testID}.titleBand` : undefined}
+              >
+                <Text
+                  variant="caption"
+                  color="onPhoto.primary"
+                  numberOfLines={band.lines}
+                  hyphenate={false}
+                  onLayout={(event) => {
+                    const next = twoLines && event.nativeEvent.layout.height > line * WRAPPED_AT_LINES;
+                    setWrapped((current) => (current === next ? current : next));
+                  }}
+                  testID={testID ? `${testID}.title` : undefined}
+                >
+                  {twoLines ? keepModelLettersTogether(title) : title}
                 </Text>
               </View>
             )}
@@ -489,12 +513,14 @@ export type MediaCardSkeletonProps = {
   lines?: number;
   /** `feed`: the action row under the caption (DQ-984). */
   actions?: boolean;
+  /** `lead`: the 16:9 crop below the desktop too, as the loaded card's `wide`. */
+  wide?: boolean;
   /** `feed`: the card has no header row (the parent draws its own). */
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
 
-export function MediaCardSkeleton({ variant, lines, actions = false, style, testID }: MediaCardSkeletonProps) {
+export function MediaCardSkeleton({ variant, lines, actions = false, wide = false, style, testID }: MediaCardSkeletonProps) {
   const styles = useSkeletonStyles();
   const theme = useTheme();
   const { gutter, kind } = useBreakpoint();
@@ -516,7 +542,7 @@ export function MediaCardSkeleton({ variant, lines, actions = false, style, test
     // DQ-980: the loaded lead is its photo, with the name on the scrim inside it. So is the skeleton: the stage block of the lead's
     // aspect (every theme, ADR-421 b), the bars in the stage's tones. DQ-983: the bars are the loaded identity block, with its line
     // heights at the font scale and the same overlap into the photo, so a 2-line name at 200 % grows the skeleton as it grows the card.
-    const ratio = leadAspect(kind === 'desktop');
+    const ratio = leadAspect(kind === 'desktop' || wide);
     const titleLines = lines ?? (theme.fontScale >= LEAD_TWO_LINE_SCALE ? 2 : 1);
     return (
       <View style={[styles.leadStage, style]} dataSet={{ qaExempt: 'photo' }} testID={testID}>

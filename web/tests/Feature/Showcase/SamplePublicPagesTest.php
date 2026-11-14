@@ -26,7 +26,7 @@ it('badges a sample vehicle page, names the Editorial owner and keeps it out of 
 
     expect($html)->toContain('data-testid="WEB-01.sampleBadges"')
         ->toContain('data-testid="WEB-01.sampleBadges.sample">Beispiel<')
-        ->toContain('data-testid="WEB-01.sampleBadges.editorial">Editorial<')
+        ->toContain('data-testid="WEB-01.sampleBadges.editorial">Redaktion<')
         ->toContain(e(__('public.sample.vehicle_note', [], 'de')))
         ->toContain('<meta name="robots" content="noindex">');
 });
@@ -42,7 +42,7 @@ it('badges a sample member page, shows no numbers and badges the cards of its ga
     $html = $this->get('/u/speedclub.editorial?lang=de')->assertOk()->getContent();
 
     expect($html)->toContain('data-testid="WEB-02.sampleBadges.sample">Beispiel<')
-        ->toContain('data-testid="WEB-02.sampleBadges.editorial">Editorial<')
+        ->toContain('data-testid="WEB-02.sampleBadges.editorial">Redaktion<')
         ->toContain('data-testid="WEB-02.vehicle.sample.sample"')
         ->toContain('<meta name="robots" content="noindex">')
         ->not->toContain('data-testid="WEB-02.stats"');
@@ -66,5 +66,5 @@ it('badges a sample build featured on the landing page', function () {
     $html = $this->get('/?lang=de')->assertOk()->getContent();
 
     expect($html)->toContain('data-testid="WEB-03.featuredSample.sample">Beispiel<')
-        ->toContain('data-testid="WEB-03.featuredSample.editorial">Editorial<');
+        ->toContain('data-testid="WEB-03.featuredSample.editorial">Redaktion<');
 });

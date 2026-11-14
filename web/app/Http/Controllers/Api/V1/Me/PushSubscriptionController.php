@@ -22,7 +22,8 @@ class PushSubscriptionController extends Controller
      * Register this browser's Web Push subscription.
      *
      * Upsert per `endpoint`: calling it again leaves one row, and an endpoint another member registered before moves to you. Only
-     * endpoints of the browsers' push services are accepted. 404 `feature_disabled` while the flag `web_push` is off. Answers 204.
+     * endpoints of the browsers' push services are accepted. The subscription lives as long as the sign-in that registered it (the browser
+     * session, or the app token): signing that device out in SET-06 ends it. 404 `feature_disabled` while the flag `web_push` is off. Answers 204.
      */
     public function store(StorePushSubscriptionRequest $request, RegisterPushSubscription $action, DeviceSessions $sessions): Response
     {
@@ -33,7 +34,7 @@ class PushSubscriptionController extends Controller
 
         /** @var array{endpoint: string, keys: array{p256dh: string, auth: string}, user_agent?: string|null} $data */
         $data = $request->validated();
-        $action->handle($user, $data['endpoint'], $data['keys']['p256dh'], $data['keys']['auth'], $data['user_agent'] ?? null, $sessions->currentSessionId($user, $request));
+        $action->handle($user, $data['endpoint'], $data['keys']['p256dh'], $data['keys']['auth'], $data['user_agent'] ?? null, $sessions->currentSessionId($user, $request), $sessions->currentTokenId($user));
 
         return response()->noContent();
     }

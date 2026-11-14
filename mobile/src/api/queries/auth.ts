@@ -186,9 +186,25 @@ export async function hasStoredToken(): Promise<boolean> {
   return (await storedToken()) !== null;
 }
 
+const meUnauthenticatedListeners = new Set<() => void>();
+
+/**
+ * SEC-414-02: auth/me answered 401, so this browser holds no session any more (the server dropped its push subscriptions with it).
+ * The member web's Web Push listens here to drop the browser's own subscription as well.
+ */
+export function onMeUnauthenticated(listener: () => void): () => void {
+  meUnauthenticatedListeners.add(listener);
+  return () => meUnauthenticatedListeners.delete(listener);
+}
+
 export async function fetchMe(signal?: AbortSignal): Promise<Me> {
-  const { data } = await apiData(api.GET('/auth/me', { signal }));
-  return data;
+  try {
+    const { data } = await apiData(api.GET('/auth/me', { signal }));
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError && error.kind === 'unauthenticated' && error.status === 401) meUnauthenticatedListeners.forEach((listener) => listener());
+    throw error;
+  }
 }
 
 /**

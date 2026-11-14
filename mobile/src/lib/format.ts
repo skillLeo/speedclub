@@ -2,7 +2,10 @@
  * Locale-aware numbers and dates (02_PRODUCT_SPEC.md §3.9). Dates always render in Europe/Berlin.
  * Hermes has no Intl.RelativeTimeFormat, so the relative labels are a small table in this file.
  */
-import { differenceInCalendarDays, differenceInHours, differenceInMinutes } from 'date-fns';
+// Per-function entries: the package root re-exports all of date-fns (≈ 200 KB of the web bundle without tree shaking, m4.18).
+import { differenceInCalendarDays } from 'date-fns/differenceInCalendarDays';
+import { differenceInHours } from 'date-fns/differenceInHours';
+import { differenceInMinutes } from 'date-fns/differenceInMinutes';
 
 import { now as clockNow } from './clock';
 

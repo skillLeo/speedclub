@@ -52,6 +52,16 @@ export function heroBox(layout: ProfileLayout, contentWidth: number): { width: n
  */
 export const HERO_TEXT_SAFE = Math.max(scrimSafe.carbon.text, scrimSafe.black.text, scrimSafe.light.text);
 
+/**
+ * The DOM audit's counted exemption for that reach (`scrim-overlap`, web/tests/e2e/support/dom-audit.mjs): the identity's negative
+ * margin-top is a layout result of the photo's size, never a spacing step. Allowed only on the identity right after the photo of the
+ * stages design QA accepted (VEH-01/GAR-02, EVT-02, the GAR-03 preview, BIZ-01, the profile skeleton); `undefined` without a reach,
+ * so a block that does not overlap carries nothing.
+ */
+export function scrimOverlapDataSet(overlap: number): { qaExempt: 'scrim-overlap' } | undefined {
+  return overlap > 0 ? { qaExempt: 'scrim-overlap' } : undefined;
+}
+
 /** How far the identity reaches up into a hero `width` wide at `ratio`: from its bottom edge to the text-safe line. */
 export function heroIdentityOverlap(width: number, ratio: number): number {
   return ratio > 0 ? ((1 - HERO_TEXT_SAFE) * width) / ratio : 0;

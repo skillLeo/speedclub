@@ -224,6 +224,15 @@ test.describe('HOME-01 Start', () => {
     const featuredAnswer = answerOf(page, 'home/featured');
     const buildsAnswer = answerOf(page, 'home/new-builds');
     const streamAnswer = answerOf(page, 'feed');
+    // DQ-289: a build's card leaves out its latest change while that change has a card of its own among the loaded pages.
+    const ownCards = new Set<string>();
+    page.on('response', (response) => {
+      if (new URL(response.url()).pathname !== '/api/v1/feed' || response.status() !== 200) return;
+      void response
+        .json()
+        .then((body: FeedPage) => body.data.forEach((item) => item.type === 'update' && item.update && ownCards.add(item.update.id)))
+        .catch(() => undefined);
+    });
     await open(page, '/app/');
     const featured = await json<{ vehicle: FeedVehicle }[]>(await featuredAnswer);
     const builds = await json<FeedVehicle[]>(await buildsAnswer);
@@ -261,8 +270,15 @@ test.describe('HOME-01 Start', () => {
       await page.mouse.wheel(0, 500);
       await page.waitForTimeout(150);
     }
-    if (streamCar!.latest_update) {
-      await expect(id(page, `HOME-01.card.${streamCar!.id}.caption`)).toContainText(plain(streamCar!.latest_update.summary).slice(0, 12));
+    const latest = streamCar!.latest_update;
+    if (latest) {
+      // The caption is "<kind>: <summary>"; a summary that repeats its kind ("Innenraum: Serie → Recaro", kind "Innenraum hinzugefügt")
+      // loses that prefix (changeCaption, withoutRepeatedKind), so the text after it is what every caption shows.
+      const told = plain(latest.summary).replace(/^[^:·→]{1,40}:\s+/u, '');
+      const caption = page.locator(`[data-testid="HOME-01.card.${streamCar!.id}.caption"]:visible`);
+      // Either the card tells the change, or (DQ-289) a later page brought the change's own card and the build's card has no caption.
+      await expect.poll(async () => (await caption.count()) > 0 || ownCards.has(latest.id)).toBe(true);
+      if (!ownCards.has(latest.id)) await expect(caption).toContainText(told.slice(0, 12));
     }
     await header.click();
     await expect(id(page, 'VEH-01.title')).toBeVisible();
@@ -347,7 +363,12 @@ test.describe('HOME-01 Start', () => {
   });
 
   test('empty: no public builds yet', async ({ page }) => {
-    // With no public build every source of FS-2 is empty: the hero, Neue Builds, the three modules and the stream (M2.2).
+    // With no public build every source of FS-2 is empty: the hero, Neue Builds, the three modules and the stream (M2.2), and since
+    // Phase 4 the Treffen and Werkstätten modules of Start (09 §7.3). Other specs switch their flags and the editorial samples on
+    // while this runs, and their "Beispiel" meets then filled the page instead of the empty state (final Phase 4 gate, run 2).
+    const emptyPage = (path: string) => ({ data: [], meta: { path: `/api/v1/${path}`, per_page: 20, next_cursor: null, prev_cursor: null } });
+    await page.route(api('events'), (route) => route.fulfill({ json: emptyPage('events') }));
+    await page.route(api('businesses'), (route) => route.fulfill({ json: emptyPage('businesses') }));
     await page.route(api('home/featured'), (route) => route.fulfill({ json: { data: [] } }));
     await page.route(api('home/new-builds'), (route) =>
       route.fulfill({ json: { data: [], meta: { path: '/api/v1/home/new-builds', per_page: 20, next_cursor: null, prev_cursor: null } } }),
@@ -509,6 +530,30 @@ test.describe('DISC-02 Suche', () => {
   });
 
   test('typing is debounced, the old results stay while the next load, and an older request is cancelled', async ({ page }) => {
+    // The cancellation as the app does it: the AbortSignal the app hands to its request fires (TanStack Query cancels the query the
+    // member typed past). Read at that signal, not at the network: WebKit reports neither "requestfailed" nor the abort on the
+    // Request's own derived signal for a request a route holds (final Phase 4 gate: 4 of 4 WebKit runs), Chromium does both.
+    await page.addInitScript(() => {
+      const aborted: string[] = [];
+      (window as unknown as { __scAbortedFetches: string[] }).__scAbortedFetches = aborted;
+      const watch = (url: string, signal: AbortSignal | null | undefined) => signal?.addEventListener('abort', () => aborted.push(url), { once: true });
+      const RequestBefore = window.Request;
+      window.Request = class extends RequestBefore {
+        constructor(input: RequestInfo | URL, init?: RequestInit) {
+          super(input, init);
+          watch(this.url, init?.signal);
+        }
+      };
+      const fetchBefore = window.fetch.bind(window);
+      window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+        watch(input instanceof RequestBefore ? input.url : String(input), init?.signal);
+        return fetchBefore(input, init);
+      };
+    });
+    const abortedQueries = () =>
+      page.evaluate(() =>
+        (window as unknown as { __scAbortedFetches: string[] }).__scAbortedFetches.map((url) => new URL(url, location.href).searchParams.get('q')),
+      );
     const r34 = answerOf(page, 'search', 'r34');
     await open(page, '/app/discover/search?q=r34');
     const first = await json<Overview>(await r34);
@@ -545,7 +590,6 @@ test.describe('DISC-02 Suche', () => {
     await expect(id(page, 'DISC-02.member.max.e46')).toBeVisible();
 
     // A slow "bmw" is overtaken by "bmw m4": its request is cancelled and its late answer never replaces the newer one.
-    const cancelled = page.waitForEvent('requestfailed', (request) => new URL(request.url()).searchParams.get('q') === 'bmw');
     const bmwHeld = await holdSearch(page, 'bmw');
     await field.press('ControlOrMeta+a');
     await field.pressSequentially('bmw', { delay: 40 });
@@ -553,7 +597,7 @@ test.describe('DISC-02 Suche', () => {
     const m4 = answerOf(page, 'search', 'bmw m4');
     await field.pressSequentially(' m4', { delay: 40 });
     const final = await json<Overview>(await m4);
-    await cancelled;
+    await expect.poll(abortedQueries, { message: 'the "bmw" request is cancelled' }).toContain('bmw');
     await bmwHeld.stop();
     // Long enough for the cancelled answer to have arrived, had it been let through.
     await page.waitForTimeout(500);
@@ -777,7 +821,10 @@ test.describe('privacy of the lists', () => {
       await expect(id(page, 'DISC-02.noResults')).toBeVisible();
     }
 
-    // Start: the public build is among the newest, the others nowhere.
+    // Start: the public build is among the newest, the others nowhere. Start stays mounted under DISC-02 and asks home/new-builds on
+    // every load there too; the last one may still be on its way, and its body is gone once /app/ replaces the page. So the
+    // listener waits until that page is quiet and then hears only Start's own request.
+    await page.waitForLoadState('networkidle');
     const builds = answerOf(page, 'home/new-builds');
     await open(page, '/app/');
     const feed = (await json<FeedVehicle[]>(await builds)).map((v) => v.id);

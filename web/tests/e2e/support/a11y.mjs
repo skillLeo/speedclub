@@ -4,6 +4,14 @@ import { AxeBuilder } from '@axe-core/playwright';
 const FAILING_IMPACTS = ['serious', 'critical'];
 
 /**
+ * A frame that may run no script (a sandbox without allow-scripts: ADM-61's mail frame, ADR-468). @axe-core/playwright injects axe
+ * into every frame of its context; such a frame refuses ("Blocked script execution … sandboxed", a console error) and the analysis
+ * then hangs until the test times out. Its document stays out of the check, by design nothing of ours runs there; the frame element
+ * itself keeps axe's frame-title rule (serious), which runAxe asserts on its own because the exclusion takes the element out too.
+ */
+const SCRIPTLESS_FRAME = 'iframe[sandbox]:not([sandbox~="allow-scripts"])';
+
+/**
  * @param {import('@playwright/test').Page} page
  * @param {{include?:string[],exclude?:string[]}} [opts]
  * @returns {Promise<{failing:import('axe-core').Result[],minor:import('axe-core').Result[]}>}
@@ -12,7 +20,25 @@ export async function runAxe(page, { include = [], exclude = [] } = {}) {
   let builder = new AxeBuilder({ page });
   for (const selector of include) builder = builder.include(selector);
   for (const selector of exclude) builder = builder.exclude(selector);
+  const scriptless = await page.locator(SCRIPTLESS_FRAME).evaluateAll((frames) =>
+    frames.map((frame) => ({
+      target: frame.getAttribute('data-testid') ? `iframe[data-testid="${frame.getAttribute('data-testid')}"]` : frame.outerHTML.slice(0, 120),
+      named: (frame.getAttribute('title') ?? frame.getAttribute('aria-label') ?? '').trim() !== '',
+    })),
+  );
+  if (scriptless.length > 0) builder = builder.exclude(SCRIPTLESS_FRAME);
   const { violations } = await builder.analyze();
+  const untitled = scriptless.filter((frame) => !frame.named);
+  if (untitled.length > 0) {
+    violations.push(
+      /** @type {import('axe-core').Result} */ ({
+        id: 'frame-title',
+        impact: 'serious',
+        help: 'Frames must have an accessible name (checked outside axe: a frame that may run no script)',
+        nodes: untitled.map((frame) => ({ target: [frame.target] })),
+      }),
+    );
+  }
   return {
     failing: violations.filter((v) => FAILING_IMPACTS.includes(v.impact ?? '')),
     minor: violations.filter((v) => !FAILING_IMPACTS.includes(v.impact ?? '')),

@@ -171,6 +171,34 @@ describe('POST auth/email/verify with attempt_id', function () {
             ->assertOk()->assertJsonPath('data.member.id', $user->id);
     });
 
+    // G3 / SEC-P4-05 (docs/reports/security/phase-4.md §13 "magic link: replay … expiry"): probe P1 as gates.
+    it('spends the magic token at its first use: a replay is invalid_code, and so is the code it came with', function () {
+        $user = User::factory()->create(['email' => 'da@beispiel.test']);
+        [$attempt, $code, $magic] = a20Start('da@beispiel.test');
+        $body = ['email' => 'da@beispiel.test', 'attempt_id' => $attempt, ...a20Device()];
+
+        $this->postJson('/api/v1/auth/email/verify', [...$body, 'magic_token' => $magic])->assertOk()->assertJsonPath('data.member.id', $user->id);
+        $tokens = $user->tokens()->count();
+
+        $this->postJson('/api/v1/auth/email/verify', [...$body, 'magic_token' => $magic])
+            ->assertStatus(422)->assertJsonPath('code', ErrorCode::InvalidCode->value)->assertJsonMissingPath('data.token');
+        $this->postJson('/api/v1/auth/email/verify', [...$body, 'code' => $code])
+            ->assertStatus(422)->assertJsonPath('code', ErrorCode::InvalidCode->value);
+
+        expect($user->tokens()->count())->toBe($tokens);
+    });
+
+    it('answers code_expired for a magic token after 10 minutes, and signs nobody in', function () {
+        $user = User::factory()->create(['email' => 'da@beispiel.test']);
+        [$attempt, , $magic] = a20Start('da@beispiel.test');
+        $this->travel(11)->minutes();
+
+        $this->postJson('/api/v1/auth/email/verify', ['email' => 'da@beispiel.test', 'attempt_id' => $attempt, 'magic_token' => $magic, ...a20Device()])
+            ->assertStatus(422)->assertJsonPath('code', ErrorCode::CodeExpired->value)->assertJsonMissingPath('data.token');
+
+        expect($user->tokens()->count())->toBe(0);
+    });
+
     it('needs a code or a magic token', function () {
         $this->postJson('/api/v1/auth/email/verify', ['email' => 'da@beispiel.test', 'attempt_id' => a20Attempt(), ...a20Device()])
             ->assertStatus(422)->assertJsonValidationErrors(['code', 'magic_token']);

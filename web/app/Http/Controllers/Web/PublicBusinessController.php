@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * WEB-10 /b/{slug} (09 §9, M4.14): the business page with its Impressum block, behind the flag `businesses`. A business the reader may
+ * WEB-14 /b/{slug} (09 §9, M4.14): the business page with its Impressum block, behind the flag `businesses`. A business the reader may
  * not see (not verified, removed, sample while hidden, a block with the owner), a missing one and the flag off answer the same 404 page.
  */
 class PublicBusinessController extends Controller
@@ -34,7 +34,7 @@ class PublicBusinessController extends Controller
             return redirect('/b/'.$business->slug.($query === null ? '' : '?'.$query), 301);
         }
 
-        $views->record($business, $viewer);
+        $views->record($business, $viewer, $request);
 
         return response()->view('public.business', $pages->business($business, $viewer, $request));
     }

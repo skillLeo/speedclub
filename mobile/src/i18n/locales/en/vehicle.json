@@ -13,7 +13,9 @@
     "morePhotos": "+{{count}}",
     "noPhotoTitle": "No photos yet",
     "noPhotoOwner": "@{{username}} has not uploaded any pictures of this vehicle yet.",
-    "noPhotoBody": "There are no pictures of this vehicle yet."
+    "noPhotoBody": "There are no pictures of this vehicle yet.",
+    "noPhotoSelf": "Show your build with its first photo.",
+    "addPhotos": "Add photos"
   },
   "actions": {
     "share": "Share",
@@ -63,7 +65,14 @@
     "empty": "No mods listed yet.",
     "disclaimer": "Stated by the owner, no legal review",
     "count_one": "{{count}} mod",
-    "count_other": "{{count}} mods"
+    "count_other": "{{count}} mods",
+    "links": {
+      "brand": "More from {{brand}}",
+      "brandLabel": "View the brand {{brand}}",
+      "productLabel": "View {{product}} in the catalogue",
+      "installedBy": "Installed by {{business}}",
+      "installedByLabel": "Installed by {{business}}, {{city}}: view the business profile"
+    }
   },
   "history": {
     "empty": "Nothing in the history yet.",
@@ -308,7 +317,7 @@
     "noVehicle": "You need a published vehicle first.",
     "noVehicleAction": "Go to garage",
     "suggestions": "Suggestions",
-    "noSuggestions": "Nobody found you can mention.",
+    "noSuggestions": "No one found that you can mention.",
     "close": "Close",
     "saved": "Update saved"
   },

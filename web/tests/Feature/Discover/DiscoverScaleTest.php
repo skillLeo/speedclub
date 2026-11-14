@@ -127,6 +127,9 @@ function scaleStatus(): array
  */
 function scalePage(?array $words, SearchSort $sort, int $perPage, ?string $cursor): array
 {
+    // Each page in a request of its own, as the endpoint serves it: the once-per-request reads (FeatureFlags, keyed on the request's
+    // attributes) count on every page, not only on the first one the test process happens to run.
+    request()->attributes->replace([]);
     CursorPaginator::currentCursorResolver(fn () => $cursor === null ? null : Cursor::fromEncoded($cursor));
     DB::flushQueryLog();
     DB::enableQueryLog();
@@ -245,7 +248,11 @@ it('pages every sort over 2,000 builds in bounded time and reads, first and 51st
     // the very first page of the process), nothing sorted; relevance 16–19 ms with every match read and sorted. Before: newest and power
     // read 2,204 and 2,003 rows and sorted 2,000 and 1,000 on every page. A plan may still lean on InnoDB's background statistics right
     // after the bulk insert, so only the deep page's reads are bounded here.
-    expect($first['queries'])->toBe($deep['queries'])
+    // 11 queries a page since M4.2 (3bf1d0c6): the hits, the vehicles, eight card relations, and VisibleBuilds::constrain's one read
+    // of the editorial_samples flag (SampleContent, 09 §8.19, ADR-412; a lookup on feature_flags.key, once per request whatever the
+    // data or the page). Before, the flag was read on the first page only, as the pages shared the test's request.
+    expect($first['queries'])->toBe(11)
+        ->and($deep['queries'])->toBe(11)
         ->and($first['ms'])->toBeLessThan(250.0)
         ->and($deep['ms'])->toBeLessThan(250.0);
 

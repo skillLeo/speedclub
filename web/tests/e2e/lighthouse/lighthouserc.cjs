@@ -3,7 +3,7 @@
 // 200 ms). Mobile profile is the Lighthouse default. INP cannot be measured without real interaction, so Total Blocking Time is the
 // lab stand-in.
 //
-// URLs: `/`, `/v/{demo-slug}`, `/u/{demo-username}`, `/e/{demo-event}` (09 §9 WEB-09), and with SPEEDCLUB_LHCI_PARTNERS=1 also
+// URLs: `/`, `/v/{demo-slug}`, `/u/{demo-username}`, `/e/{demo-event}` (09 §9 WEB-13), and with SPEEDCLUB_LHCI_PARTNERS=1 also
 // `/b/{demo-business}` and `/brands/{demo-brand}`: those two pages exist only while the flags businesses and parts_catalogue are on
 // (off everywhere until ADR-455's design QA), so a run that measures them switches them on around itself (the M4.16 report names the
 // command: backend.php enable-m414-flags … disable-m414-flags). The demo values come from the deterministic DemoSeeder:

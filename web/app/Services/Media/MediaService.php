@@ -343,6 +343,86 @@ class MediaService
     }
 
     /**
+     * M4.18: encodes again every stored variant above its byte budget (ImageProcessor::budgetBytes()), from the private original as
+     * process() does, under a new content-hash name. A variant is only replaced by a smaller one, so a second run changes nothing:
+     * a photo already at variant_min_quality encodes to the same bytes and stays. The old file goes after the row points at the
+     * new one; a photo blurred, withdrawn or encoded again in between keeps what that wrote.
+     *
+     * @return array{over: int, replaced: int, saved_bytes: int} variants above the budget, of them replaced, bytes saved
+     */
+    public function recompressVariants(Media $media, bool $dryRun = false): array
+    {
+        $result = ['over' => 0, 'replaced' => 0, 'saved_bytes' => 0];
+        /** @var array<int|string, string> $variants */
+        $variants = $media->getAttribute('variants') ?? [];
+        $original = $media->getAttribute('original_path');
+        $disk = $this->publicDisk($media);
+        $jpeg = null;
+
+        foreach ($variants as $width => $path) {
+            $size = $disk->exists($path) ? $disk->size($path) : null;
+
+            if ($size === null || $size <= $this->processor->budgetBytes((int) $width)) {
+                continue;
+            }
+
+            $result['over']++;
+
+            if ($dryRun) {
+                continue;
+            }
+
+            $jpeg ??= is_string($original) ? $this->privateDisk()->get($original) : null;
+
+            if ($jpeg === null) {
+                report(new RuntimeException("The original of media [{$media->getKey()}] is gone, so its variants cannot be encoded again."));
+
+                break;
+            }
+
+            $webp = $this->processor->variant($jpeg, (int) $width);
+
+            if (strlen($webp) >= $size) {
+                continue;
+            }
+
+            $newPath = $this->directory($media).'/'.$this->hash($webp).'-'.$width.'.webp';
+            $this->assertWritten($disk->put($newPath, $webp, ['visibility' => 'public']), $newPath);
+
+            $swapped = DB::transaction(function () use ($media, $width, $path, $newPath, $size, $webp): bool {
+                $current = Media::query()->whereKey($media->getKey())->lockForUpdate()->first();
+                /** @var array<int|string, string>|null $currentVariants */
+                $currentVariants = $current?->getAttribute('variants');
+
+                if ($current === null || ($currentVariants[$width] ?? null) !== $path) {
+                    return false;
+                }
+
+                $currentVariants[$width] = $newPath;
+                $current->forceFill([
+                    'variants' => $currentVariants,
+                    'variant_bytes' => max(0, (int) $current->getAttribute('variant_bytes') - $size + strlen($webp)),
+                ])->save();
+                $media->setRawAttributes($current->getAttributes(), true);
+
+                return true;
+            });
+
+            if (! $swapped) {
+                $disk->delete($newPath);
+
+                break;
+            }
+
+            $disk->delete($path);
+            $result['replaced']++;
+            $result['saved_bytes'] += $size - strlen($webp);
+        }
+
+        return $result;
+    }
+
+    /**
      * @return array<int, string> URL by pixel width, smallest first
      */
     public function variantUrls(Media $media): array

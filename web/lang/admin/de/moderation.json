@@ -38,7 +38,8 @@
             "original": "Angefochtene Entscheidung",
             "role": "Von",
             "filed": "Eingegangen",
-            "decider": "Entschieden von"
+            "decider": "Entschieden von",
+            "waiting": "Wartet"
         },
         "more_reasons": "+:count weitere",
         "take": "Übernehmen",
@@ -495,7 +496,9 @@
                 "events": "Treffen anlegen",
                 "rsvps": "Zusagen ändern",
                 "event_updates": "Treffen-Updates senden",
-                "geocode": "Ortssuche"
+                "geocode": "Ortssuche",
+                "businesses": "Betrieb anlegen und bearbeiten",
+                "business_tags": "Portfolio-Builds markieren"
             },
             "groups": {
                 "account": "Konto",
@@ -509,7 +512,7 @@
     },
     "templates": {
         "title": "Begründungsvorlagen",
-        "intro": "Vorlagen für die Begründung nach Art. 17 DSA, auf Deutsch und Englisch. Platzhalter: {target}, {date}, {member}. Die Hinweise zum Einspruch setzt das System immer selbst ein.",
+        "intro": "Vorlagen für die Begründung nach Art. 17 DSA, auf Deutsch und Englisch. Platzhalter: {target}, :date, {member}. Die Hinweise zum Einspruch setzt das System immer selbst ein.",
         "caption": "Vorlagen",
         "columns": {
             "label": "Vorlage",
@@ -537,7 +540,7 @@
             "action": "Für Maßnahme",
             "label": "Name",
             "facts": "Sachverhalt",
-            "facts_hint": "Mit Platzhaltern {target}, {date}, {member}.",
+            "facts_hint": "Mit Platzhaltern {target}, :date, {member}.",
             "ground": "Grundlage",
             "document": "Steht in",
             "section": "Abschnitt",
@@ -561,6 +564,20 @@
         "keyword_removed": "Begriff entfernt.",
         "limits_published": "Limits veröffentlicht. Sie gelten ab der nächsten Anfrage.",
         "template_saved": "Vorlage gespeichert.",
-        "template_deleted": "Vorlage gelöscht."
+        "template_deleted": "Vorlage gelöscht.",
+        "released": "Übernahme rückgängig gemacht.",
+        "undo_expired": "Zu spät zum Rückgängigmachen. Übergib den Fall bei Bedarf über den Fall."
+    },
+    "pane": {
+        "label": "Ausgewählter Fall",
+        "select_body": "Wähl einen Fall, um ihn hier zu prüfen. j/k springt, a entfernt, r schließt ohne Maßnahme.",
+        "gone": "Diesen Fall gibt es nicht mehr.",
+        "open": "Fall öffnen",
+        "decide": "Maßnahme ergreifen",
+        "no_action": "Keine Maßnahme",
+        "keys": "a Maßnahme · r keine Maßnahme · j/k weiter · u Übernahme zurück",
+        "view_only": "Du siehst den Fall nur. Entscheiden dürfen Rollen mit Moderation entscheiden.",
+        "undo_taken": "Fall :reference übernommen.",
+        "undo": "Rückgängig"
     }
 }

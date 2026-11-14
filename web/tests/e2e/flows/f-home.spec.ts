@@ -44,6 +44,9 @@ async function bodyOf<T>(response: Promise<Response>): Promise<T> {
   return (await answered.json()) as T;
 }
 
+/** react-native-web reports a scroll that ended after 100 ms without a scroll event; a little more, so it has. */
+const SCROLL_END_MS = 150;
+
 /** Wheels Start down in small steps until `target` is drawn and on screen: FlashList draws only a window around what is visible. */
 async function reveal(page: Page, target: Locator): Promise<void> {
   const list = page.locator('[data-testid="HOME-01.list"]:visible');
@@ -52,19 +55,37 @@ async function reveal(page: Page, target: Locator): Promise<void> {
   await page.mouse.move(box.x + box.width / 2, box.y + Math.min(box.height, page.viewportSize()?.height ?? box.height) / 2);
   // 09 §7.3: the modules sit between 4:5 feed cards (one card is about a screen), so the walk is long; a step of 500 stays below a
   // window minus a row, so it never skips one.
+  // Where the target is now, or null once FlashList has recycled its cell (a locator call would wait for it until the test's end).
+  const placeOf = async (): Promise<{ top: number; bottom: number } | null> =>
+    target
+      .first()
+      .evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return { top: Math.round(r.top), bottom: Math.round(r.bottom) };
+      }, undefined, { timeout: 2_000 })
+      .catch(() => null);
   for (let step = 0; step < 90; step++) {
     if ((await target.count()) > 0 && (await target.first().isVisible())) {
       // Drawn: the browser brings it the rest of the way (WebKit's wheel steps are not the ones asked for).
-      await target.first().scrollIntoViewIfNeeded();
+      await target.first().scrollIntoViewIfNeeded({ timeout: 2_000 }).catch(() => undefined);
       await restingOffset(list);
-      const inView = await target.first().evaluate((el) => {
-        const r = el.getBoundingClientRect();
-        return r.top >= 0 && r.bottom <= window.innerHeight;
-      });
-      if (inView) return;
+      // FlashList corrects the estimated places of the rows above as it measures them, after the offset has come to rest: in the
+      // Phase 4 gate a revealed chip moved out of the window before the click and was recycled. Done only once it stays put.
+      let place = await placeOf();
+      for (let read = 0; read < 10 && place; read++) {
+        await page.waitForTimeout(150);
+        const again = await placeOf();
+        if (again && again.top === place.top) break;
+        place = again;
+      }
+      if (place && place.top >= 0 && place.bottom <= (page.viewportSize()?.height ?? 0)) return;
     }
     await page.mouse.wheel(0, 500);
     await restingOffset(list);
+    // The page's Date is frozen (qa.mjs setFixedTime), so react-native-web's scrollEventThrottle never lets a scroll tick through:
+    // FlashList hears of a scroll only when it ends, 100 ms after the last scroll event. Without this pause the walk's steps came
+    // ~85 ms apart, FlashList's offset stood still for thousands of pixels, and a module row passed by without ever being drawn.
+    await page.waitForTimeout(SCROLL_END_MS);
   }
   await expect(target.first(), 'reached by scrolling').toBeInViewport();
 }
@@ -276,7 +297,7 @@ test.describe('FS-2 Für dich (M2.2)', () => {
     expect(count, `${DEMO_MEMBER} has unread rows (DemoSeeder::seedNotifications)`).toBeGreaterThan(0);
     await expect(id(page, 'HOME-01.bell')).toHaveAccessibleName(`Mitteilungen, ${count} ungelesen`);
     await expect(id(page, 'tab.home.dot')).toBeVisible();
-    await expect(id(page, 'tab.home')).toHaveAccessibleName(/Neue Benachrichtigungen/);
+    await expect(id(page, 'tab.home')).toHaveAccessibleName(/Neue Mitteilungen/); // a11y.unreadNotifications (copy review, c854ac27)
     const list = answerOf(page, 'notifications');
     await id(page, 'HOME-01.bell').click();
     await expect(id(page, 'HOME-02.root')).toBeVisible();

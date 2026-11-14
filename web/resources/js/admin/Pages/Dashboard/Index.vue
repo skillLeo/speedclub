@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Deferred, Head, Link, router, usePage } from '@inertiajs/vue3';
-import { PhArrowRight, PhCheck } from '@phosphor-icons/vue';
+import { PhCaretRight, PhCheck } from '@phosphor-icons/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import ChartCard from '../../Components/patterns/ChartCard.vue';
@@ -11,7 +11,7 @@ import EmptyQueue from '../../Components/ui/EmptyQueue.vue';
 import Skeleton from '../../Components/ui/Skeleton.vue';
 import { focusRing } from '../../Components/ui/styles';
 import { usePageState } from '../../composables/pageState';
-import { formatDayShort, formatMonth, formatNumber, formatRelative } from '../../lib/format';
+import { formatDayShort, formatDecimal, formatMonth, formatNumber, formatRelative, formatShare } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
 import { hasRoute, routeOr } from '../../lib/routes';
 import { queueTiles, type QueueTile } from '../../modules/registry';
@@ -50,10 +50,29 @@ function queueHref(tile: QueueTile): string | null {
     return tile.route !== undefined && hasRoute(tile.route) ? routeOr(tile.route, '/admin', tile.params) : null;
 }
 
-const KPI_ORDER = ['members_today', 'members_7d', 'members_30d', 'dau', 'wau', 'vehicles_published', 'qr_scans_7d', 'qr_registrations_7d', 'messages_7d'];
-// Tiles whose number is a total over a period while the sparkline counts new ones per day (DQ-517).
-const PER_DAY = ['members_7d', 'members_30d', 'vehicles_published'];
-const kpiList = computed(() => [...(props.kpis ?? [])].sort((a, b) => KPI_ORDER.indexOf(a.key) - KPI_ORDER.indexOf(b.key)));
+// 09 §10.2: six tiles at most, in this order.
+const KPI_ORDER = ['members_7d', 'active_builds', 'qr_scans_7d', 'open_reports', 'median_decision', 'push_opt_in'];
+// What the line shows where it is not the tile's own number per day (DQ-517).
+const LINE: Record<string, string> = {
+    members_7d: 'dashboard.kpis.per_day',
+    active_builds: 'dashboard.kpis.line_active_builds',
+    open_reports: 'dashboard.kpis.line_open_reports',
+    median_decision: 'dashboard.kpis.line_median_decision',
+    push_opt_in: 'dashboard.kpis.line_push_opt_in',
+};
+const period = (key: string): string | undefined => (LINE[key] ? trans(LINE[key]) : undefined);
+const kpiList = computed(() => [...(props.kpis ?? [])].filter((kpi) => KPI_ORDER.includes(kpi.key)).sort((a, b) => KPI_ORDER.indexOf(a.key) - KPI_ORDER.indexOf(b.key)));
+
+/** "45 Min.", "3,5 Std.", "2 Tg."; a share as "62,5 %". */
+function display(kpi: Kpi): string | undefined {
+    if (kpi.value === null || kpi.unit === 'count') return undefined;
+    if (kpi.unit === 'percent') return formatShare(kpi.value);
+    const minutes = kpi.value;
+    if (minutes < 60) return trans('dashboard.kpis.minutes', { count: formatDecimal(minutes) });
+    if (minutes < 48 * 60) return trans('dashboard.kpis.hours', { count: formatDecimal(minutes / 60) });
+    return trans('dashboard.kpis.days', { count: formatDecimal(minutes / (24 * 60)) });
+}
+const emptyText = (key: string): string | undefined => (key === 'median_decision' || key === 'push_opt_in' ? trans(`dashboard.kpis.none_${key}`) : undefined);
 
 const registrations = computed(() => props.charts?.registrations ?? []);
 const funnel = computed(() => props.charts?.qr_funnel ?? []);
@@ -68,6 +87,12 @@ const intro = computed(() => trans(props.canAnalytics ? 'dashboard.intro' : 'das
 
 function isClear(value: QueueValue): boolean {
     return (value.count === 0 || value.count === null) && (value.status ?? 'ok') === 'ok';
+}
+
+/** The count is ink; only a late queue (warning) or a broken one (danger) takes a state colour (DQ-1194). */
+function countTone(tile: QueueTile): string {
+    const status = queue(tile).status;
+    return status === 'danger' ? 'text-danger' : status === 'warning' ? 'text-warning' : 'text-ink';
 }
 </script>
 
@@ -84,46 +109,66 @@ function isClear(value: QueueValue): boolean {
             <h2 id="dash-queues" class="text-headline text-ink">{{ trans('dashboard.queues.title') }}</h2>
             <StateBlock v-if="forcedError" kind="error" :title="trans('dashboard.queues.error')" :retryable="false" />
             <EmptyQueue v-else-if="tiles.length === 0" variant="quiet" :title="trans('dashboard.queues.none_title')" :body="trans('dashboard.queues.none_body')" />
-            <ul v-else class="grid grid-cols-1 gap-12 tablet:grid-cols-2 desktop:grid-cols-3">
-                <li v-for="tile in tiles" :key="tile.key" class="flex min-h-120 flex-col gap-12 rounded-sm border border-line-subtle bg-surface px-16 py-16" :data-testid="`ADM-06.queue.${tile.testId}`">
-                    <div class="flex items-start justify-between gap-12">
-                        <h3 class="text-admin-base-strong text-ink-2">{{ trans(tile.label) }}</h3>
-                        <Link
-                            v-if="queueHref(tile) && !forcedLoading"
-                            :href="queueHref(tile) ?? ''"
-                            :class="[focusRing, '-my-8 -mr-8 inline-flex h-32 min-w-32 items-center gap-4 rounded-xs px-8 text-admin-base-strong text-ink-2 hover:bg-hover hover:text-ink']"
-                            :aria-label="trans('dashboard.queues.open', { queue: trans(tile.label) })"
+            <!-- DQ-1194: one compact table (count · oldest · link), so the six KPI tiles below are the page's only numeral heroes. Colour
+                 only where a queue is late (warning) or broken (danger). -->
+            <div v-else class="overflow-hidden rounded-sm border border-line-subtle bg-surface">
+                <table class="w-full border-collapse text-admin-base">
+                    <caption class="sr-only">{{ trans('dashboard.queues.title') }}</caption>
+                    <thead>
+                        <tr class="h-32 border-b border-line text-caption text-ink-2">
+                            <th scope="col" class="px-16 text-left font-normal">{{ trans('dashboard.queues.col_queue') }}</th>
+                            <th scope="col" class="w-96 px-12 text-right font-normal">{{ trans('dashboard.queues.col_open') }}</th>
+                            <th scope="col" class="px-12 text-left font-normal">{{ trans('dashboard.queues.col_oldest') }}</th>
+                            <th scope="col" class="w-48 px-12"><span class="sr-only">{{ trans('dashboard.queues.open_short') }}</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="tile in tiles"
+                            :key="tile.key"
+                            class="group/queue relative h-40 border-b border-line-subtle last:border-b-0"
+                            :class="queueHref(tile) && !forcedLoading ? 'hover:bg-hover' : ''"
+                            :data-testid="`ADM-06.queue.${tile.testId}`"
+                            :data-queue="forcedLoading ? undefined : isClear(queue(tile)) ? 'clear' : (queue(tile).status ?? 'ok')"
                         >
-                            {{ trans('dashboard.queues.open_short') }}<PhArrowRight :size="16" aria-hidden="true" />
-                        </Link>
-                    </div>
-                    <template v-if="forcedLoading">
-                        <Skeleton class="h-28 w-64" />
-                    </template>
-                    <!-- queue zero on the same baseline as a count, no box (DQ-504) -->
-                    <div v-else-if="isClear(queue(tile))" class="flex flex-col gap-4" data-queue="clear">
-                        <p class="font-numeral text-hero-numeral-s text-ink-3 tabular-nums">{{ formatNumber(0) }}</p>
-                        <p class="flex items-center gap-4 text-caption text-ink-2">
-                            <PhCheck :size="16" class="shrink-0 text-success" aria-hidden="true" />
-                            <span>{{ queue(tile).since ? trans('dashboard.queues.clear_since', { time: formatRelative(queue(tile).since) }) : trans('dashboard.queues.clear') }}</span>
-                            <span class="sr-only">{{ trans(tile.empty) }}</span>
-                        </p>
-                    </div>
-                    <div v-else-if="queue(tile).count === null" class="flex flex-col gap-4">
-                        <p class="text-admin-base-strong" :class="queue(tile).status === 'danger' ? 'text-danger' : 'text-warning'">{{ trans('dashboard.queues.stale') }}</p>
-                        <p v-if="queue(tile).since" class="text-caption text-ink-3">{{ trans('dashboard.queues.last', { time: formatRelative(queue(tile).since) }) }}</p>
-                    </div>
-                    <div v-else class="flex flex-col gap-4">
-                        <p class="font-numeral text-hero-numeral-s tabular-nums" :class="queue(tile).status === 'danger' ? 'text-danger' : queue(tile).status === 'warning' ? 'text-warning' : 'text-ink'">
-                            {{ formatNumber(queue(tile).count) }}
-                        </p>
-                        <p class="text-caption text-ink-2">
-                            <template v-if="tile.key === 'queue'">{{ trans('dashboard.queues.waiting', { count: formatNumber(queue(tile).count) }) }}<template v-if="queue(tile).since"> · </template></template>
-                            <template v-if="queue(tile).since">{{ trans('dashboard.queues.since', { time: formatRelative(queue(tile).since) }) }}</template>
-                        </p>
-                    </div>
-                </li>
-            </ul>
+                            <th scope="row" class="px-16 text-left font-normal">
+                                <Link
+                                    v-if="queueHref(tile) && !forcedLoading"
+                                    :href="queueHref(tile) ?? ''"
+                                    :class="[focusRing, 'inline-flex min-h-32 items-center rounded-xs text-ink after:absolute after:inset-0 group-hover/queue:underline']"
+                                    :aria-label="trans('dashboard.queues.open', { queue: trans(tile.label) })"
+                                    :data-testid="`ADM-06.queue.${tile.testId}.open`"
+                                >
+                                    {{ trans(tile.label) }}
+                                </Link>
+                                <span v-else class="text-ink">{{ trans(tile.label) }}</span>
+                            </th>
+                            <td class="px-12 text-right tabular-nums">
+                                <Skeleton v-if="forcedLoading" shape="text" class="ml-auto w-32" />
+                                <span v-else-if="queue(tile).count === null" class="text-ink-3">–</span>
+                                <span v-else class="text-admin-base-strong" :class="countTone(tile)">{{ formatNumber(queue(tile).count) }}</span>
+                            </td>
+                            <td class="px-12 text-ink-2 tabular-nums">
+                                <Skeleton v-if="forcedLoading" shape="text" class="w-120" />
+                                <!-- queue zero: a quiet check, no number twice (DQ-504) -->
+                                <span v-else-if="isClear(queue(tile))" class="flex items-center gap-4" data-queue-clear>
+                                    <PhCheck :size="16" class="shrink-0 text-success" aria-hidden="true" />
+                                    <span>{{ queue(tile).since ? trans('dashboard.queues.clear_since', { time: formatRelative(queue(tile).since) }) : trans('dashboard.queues.clear') }}</span>
+                                    <span class="sr-only">{{ trans(tile.empty) }}</span>
+                                </span>
+                                <span v-else-if="queue(tile).count === null" :class="queue(tile).status === 'danger' ? 'text-danger' : 'text-warning'">
+                                    {{ trans('dashboard.queues.stale') }}<template v-if="queue(tile).since"> · {{ trans('dashboard.queues.last', { time: formatRelative(queue(tile).since) }) }}</template>
+                                </span>
+                                <span v-else-if="queue(tile).since" :class="queue(tile).status === 'warning' ? 'text-warning' : ''">{{ trans('dashboard.queues.since', { time: formatRelative(queue(tile).since) }) }}</span>
+                                <span v-else class="text-ink-3">–</span>
+                            </td>
+                            <td class="px-12 text-right text-ink-3">
+                                <PhCaretRight v-if="queueHref(tile) && !forcedLoading" :size="16" class="ml-auto group-hover/queue:text-ink" aria-hidden="true" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <!-- view-only: no analytics -->
@@ -140,13 +185,13 @@ function isClear(value: QueueValue): boolean {
                     <p class="text-caption text-ink-3">{{ trans('dashboard.kpis.series') }}</p>
                 </div>
                 <div v-if="forcedLoading" data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-line-subtle bg-line-subtle tablet:grid-cols-3">
-                    <KpiTile v-for="key in KPI_ORDER" :key="key" :label="trans(`dashboard.kpis.${key}`)" :value="null" :period="PER_DAY.includes(key) ? trans('dashboard.kpis.per_day') : undefined" loading />
+                    <KpiTile v-for="key in KPI_ORDER" :key="key" :label="trans(`dashboard.kpis.${key}`)" :value="null" :period="period(key)" loading />
                 </div>
                 <StateBlock v-else-if="forcedError" kind="error" :title="trans('dashboard.kpis.error')" :retryable="false" />
                 <Deferred v-else data="kpis">
                     <template #fallback>
                         <div data-qa-exempt="hairline" class="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-line-subtle bg-line-subtle tablet:grid-cols-3">
-                            <KpiTile v-for="key in KPI_ORDER" :key="key" :label="trans(`dashboard.kpis.${key}`)" :value="null" :period="PER_DAY.includes(key) ? trans('dashboard.kpis.per_day') : undefined" loading />
+                            <KpiTile v-for="key in KPI_ORDER" :key="key" :label="trans(`dashboard.kpis.${key}`)" :value="null" :period="period(key)" loading />
                         </div>
                     </template>
                     <template #rescue="{ reloading }">
@@ -161,7 +206,10 @@ function isClear(value: QueueValue): boolean {
                             :value="kpi.value"
                             :previous="kpi.previous"
                             :series="kpi.series"
-                            :period="PER_DAY.includes(kpi.key) ? trans('dashboard.kpis.per_day') : undefined"
+                            :display="display(kpi)"
+                            :empty="emptyText(kpi.key)"
+                            :unit="kpi.unit"
+                            :period="period(kpi.key)"
                             :test-id="`ADM-06.kpi.${kpi.key}`"
                         />
                     </div>

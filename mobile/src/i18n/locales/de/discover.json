@@ -93,7 +93,7 @@
     "relevance": "Relevanz",
     "newest": "Neueste",
     "updated": "Zuletzt aktualisiert",
-    "power": "Meiste PS"
+    "power": "Höchste Leistung"
   },
   "filters": {
     "title": "Filter",
@@ -158,7 +158,7 @@
     "action": "Filter zurücksetzen"
   },
   "collections": {
-    "title": "Kollektionen",
+    "title": "Sammlungen",
     "count_one": "{{formatted}} Build",
     "count_other": "{{formatted}} Builds"
   },
@@ -195,7 +195,7 @@
     "allGenerations": "Alle",
     "segments": "Ansicht",
     "builds": "Builds",
-    "wheels": "Räder-Vergleich",
+    "wheels": "Rädervergleich",
     "notFoundTitle": "Modell nicht gefunden",
     "notFoundBody": "Zu diesem Modell gibt es keine öffentlichen Builds. Wähle in Entdecken ein anderes Modell.",
     "errorTitle": "Das Modell konnte nicht geladen werden",
@@ -203,11 +203,11 @@
     "buildsEmptyBody": "Wähle eine andere Generation oder „Alle“.",
     "wheelsEmptyTitle": "Noch keine Räder angegeben",
     "wheelsEmptyBody": "Sobald bei einem Build dieses Modells Räder angegeben sind, erscheinen sie hier.",
-    "wheelsError": "Der Räder-Vergleich konnte nicht geladen werden.",
+    "wheelsError": "Der Rädervergleich konnte nicht geladen werden.",
     "showAllGenerations": "Alle Generationen zeigen"
   },
   "wheelTable": {
-    "caption": "Räder-Vergleich: {{model}}",
+    "caption": "Rädervergleich: {{model}}",
     "build": "Build",
     "wheel": "Felgen",
     "suspension": "Fahrwerk",

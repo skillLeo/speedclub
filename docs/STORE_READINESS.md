@@ -158,7 +158,7 @@ Ergebnis: Apple vergibt die Stufe aus den Antworten; liegt sie unter 16+, **höh
 
 ## 5. Google Play: Data-Safety-Formular
 
-Grundlage: was die App an den Server (oder über ihn an Dienstleister) überträgt. Daten nur auf dem Gerät (letzte Suchen, Offline-Cache, Upload-Warteschlange, Theme) gelten nicht als erhoben. Übermittlungen an Auftragsverarbeiter (Hoster, E-Mail, Expo/FCM/APNs für Push, Pusher, optional KI-Anbieter) gelten nach Play-Definition **nicht als Weitergabe**; öffentlich sichtbare Inhalte, die das Mitglied selbst veröffentlicht, ebenfalls nicht.
+Grundlage: was die App an den Server (oder über ihn an Dienstleister) überträgt. Daten nur auf dem Gerät (letzte Suchen, Offline-Cache, Upload-Warteschlange, Theme, App-Sperre mit Fingerabdruck oder Gesicht) gelten nicht als erhoben. Übermittlungen an Auftragsverarbeiter (Hoster, E-Mail, Expo/FCM/APNs für Push, Pusher, optional KI-Anbieter) gelten nach Play-Definition **nicht als Weitergabe**; öffentlich sichtbare Inhalte, die das Mitglied selbst veröffentlicht, ebenfalls nicht. Stand: Phase 4 (M4.18), abgeglichen mit der Datenschutzerklärung §2 und §6–§12 (`web/database/data/legal/privacy.de.md`).
 
 **Allgemeine Fragen**
 
@@ -173,48 +173,61 @@ Grundlage: was die App an den Server (oder über ihn an Dienstleister) überträ
 
 | Play-Datentyp | Erhoben | Pflicht/optional | Zwecke | Was genau |
 |---|---|---|---|---|
-| Persönliche Daten → E-Mail-Adresse | ja | Pflicht | App-Funktionalität, Kontoverwaltung, Betrugsprävention/Sicherheit, Entwickler-Kommunikation | Anmeldung, Codes, Sicherheits-Mails, Support |
-| Persönliche Daten → Name | ja | optional | App-Funktionalität | Anzeigename im Profil |
-| Persönliche Daten → Nutzer-IDs | ja | Pflicht | App-Funktionalität, Kontoverwaltung | Benutzername, Konto-ID |
-| Persönliche Daten → Sonstige Daten | ja | optional | App-Funktionalität | Stadt (Freitext), Kurzbeschreibung, Bestätigung 16+ |
-| Fotos und Videos → Fotos | ja | optional | App-Funktionalität | Fahrzeug-, Profil- und Chat-Fotos (Metadaten/GPS entfernt) |
-| Nachrichten → Sonstige In-App-Nachrichten | ja | optional | App-Funktionalität | Direktnachrichten; Support-Anfragen |
-| App-Aktivitäten → App-Interaktionen | ja | optional | App-Funktionalität | Folgen, Merken, Blockieren, Meldungen |
-| App-Aktivitäten → Suchverlauf in der App | ja | optional | App-Funktionalität | Suchanfragen werden zur Suche an den Server gesendet (nicht gespeichert, außer in Server-Protokollen bis 14 Tage) |
-| App-Aktivitäten → Sonstige nutzergenerierte Inhalte | ja | optional | App-Funktionalität | Fahrzeuge, technische Daten, Mods (auch Kosten, wenn eingetragen), Beschreibungen, Build-Updates |
-| Geräte- oder andere IDs | ja | optional | App-Funktionalität | Push-Token (nur wenn Mitteilungen erlaubt), Gerätename/Plattform/App-Version in „Geräte & Sitzungen“ |
-| Standort (ungefähr/genau) | **nein** | — | — | kein GPS, Stadt ist Freitext (siehe oben) |
-| Finanzdaten, Gesundheit, Kontakte, Kalender, Audio, Dateien, Web-Browsing | **nein** | — | — | — |
-| App-Informationen und -Leistung (Absturzberichte, Diagnose) | **nein** | — | — | kein Crash-SDK in der App. **Falls** später Sentry o. Ä. in die App kommt, hier nachtragen |
-| Werbe-ID | **nein** | — | — | keine Werbe- oder Analyse-SDKs (ADR-029) |
+| Persönliche Daten → E-Mail-Adresse | ja | Pflicht | App-Funktionalität, Kontoverwaltung, Betrugsprävention/Sicherheit, Entwickler-Kommunikation | Anmeldung (E-Mail-Code, Anmeldelink), Sicherheits-Mails, Support; bei Anmeldung mit Apple oder Google die Adresse, die der Anbieter nennt (bei Apple ggf. eine Weiterleitungsadresse); E-Mail eines Betriebs im Betriebsprofil |
+| Persönliche Daten → Name | ja | optional | App-Funktionalität | Anzeigename im Profil; Name, den Apple bei der ersten Anmeldung mitschickt; vertretungsberechtigte Person im Impressum eines Betriebs |
+| Persönliche Daten → Nutzer-IDs | ja | Pflicht | App-Funktionalität, Kontoverwaltung | Benutzername, Konto-ID; Kennung bei Apple oder Google, wenn verknüpft |
+| Persönliche Daten → Adresse | ja | optional | App-Funktionalität | nur Betriebe: Anschrift im Betriebsprofil und Impressum (öffentlich, § 5 DDG); Orte von Treffen gibt der Organisator als Inhalt ein (siehe „Sonstige nutzergenerierte Inhalte“) |
+| Persönliche Daten → Telefonnummer | ja | optional | App-Funktionalität | nur Betriebe: Telefon im Betriebsprofil und Impressum. Mitglieder werden nie nach einer Telefonnummer gefragt |
+| Persönliche Daten → Sonstige Daten | ja | optional | App-Funktionalität | Stadt (Freitext), Kurzbeschreibung, Bestätigung 16+; Impressumsangaben eines Betriebs (Firmenname, Rechtsform, Registereintrag, USt-IdNr.) |
+| Standort → Ungefährer Standort | ja | optional | App-Funktionalität | nur die Region, die das Mitglied in den Einstellungen wählt (Stadt und ein Rasterpunkt von etwa 5 km), für Treffen „in deiner Nähe“. Die App fragt keinen Gerätestandort ab (keine Standortberechtigung); nur die Web-App kann einmalig den Browser-Standort nutzen, auf etwa 1 km gerundet und nicht gespeichert |
+| Standort → Genauer Standort | **nein** | — | — | kein GPS, keine Standortberechtigung |
+| Fotos und Videos → Fotos | ja | optional | App-Funktionalität | Fahrzeug-, Profil-, Chat-, Wartungs-, Build-Update-, Treffen- und Betriebsfotos (Metadaten/GPS entfernt) |
+| Nachrichten → Sonstige In-App-Nachrichten | ja | optional | App-Funktionalität | Direktnachrichten (auch Antworten), Neuigkeiten von Organisatoren an Teilnehmende; Support-Anfragen |
+| App-Aktivitäten → App-Interaktionen | ja | optional | App-Funktionalität | Folgen, Merken und Sammlungen, Blockieren, Meldungen, private Reaktionen, Erwähnungen, Zusagen zu Treffen (Zusage, Interesse, Warteliste), Einladungen in ein Betriebsteam |
+| App-Aktivitäten → Suchverlauf in der App | ja | optional | App-Funktionalität | Suchanfragen werden zur Suche an den Server gesendet (nicht gespeichert, außer in Server-Protokollen bis 14 Tage); Ortssuche über unseren Server bei Nominatim ohne Bezug zum Mitglied |
+| App-Aktivitäten → Sonstige nutzergenerierte Inhalte | ja | optional | App-Funktionalität | Fahrzeuge, technische Daten, Mods (auch Kosten, wenn eingetragen), Wartung und Kosten (nur für das Mitglied), Build-Updates, Beschreibungen, Treffen (Zeit, Ort mit Adresse und Koordinaten, Regeln), Betriebsprofile mit Leistungen und Öffnungszeiten, „Eingebaut von“-Markierungen |
+| App-Informationen und -Leistung → Absturzprotokolle, Diagnose | **ja** | Pflicht (automatisch) | App-Funktionalität (Fehler finden) | Fehlerbericht, wenn ein Fehlerbildschirm erscheint: Bildschirm, Fehlermeldung, technischer Ablauf, Plattform, App-Version, Sprache, Schriftgröße, Fenstergröße, Mitglieds-ID wenn angemeldet; nichts Eingegebenes. An unseren eigenen Server (`POST /api/v1/client-errors`), kein externer Dienst |
+| Geräte- oder andere IDs | ja | Pflicht | App-Funktionalität, Betrugsprävention/Sicherheit | Kennung der App-Installation (zufällig pro Installation, auf dem Server nur als verschlüsselte Prüfsumme), Gerätename/-modell, Plattform, Betriebssystem- und App-Version in „Geräte & Sitzungen“ und für Warnungen bei neuen Geräten; Push-Token nur, wenn Mitteilungen erlaubt sind |
+| Finanzdaten, Gesundheit, Kontakte, Kalender, Audio, Dateien, Web-Browsing | **nein** | — | — | Kein Kauf in der App (Mitgliedschaft noch nicht aktiv, der Sticker-Shop ist ein externer Link). Die Kalenderdatei eines Treffens lädt das Mitglied selbst herunter; die App liest keinen Kalender |
+| Werbe-ID | **nein** | — | — | keine Werbe- oder Analyse-SDKs (ADR-029); Partnerlinks („Anzeige“) werden nicht gezählt |
 
-Wenn KI-Funktionen eingeschaltet werden (OA-18): Inhalte, die das Mitglied für eine KI-Funktion auslöst (Suchtext, Mod-Angaben, Fotos beim Vorschlag), gehen an den KI-Anbieter als Auftragsverarbeiter: keine neue Datenkategorie, aber Datenschutzerklärung §7/§8 und ggf. das Formular erneut prüfen.
+Anmeldewege ohne eigene Play-Kategorie: Bei **Passkeys** speichern wir nur den öffentlichen Schlüssel (mit Name, Anbieter, Signaturzähler); Fingerabdruck, Gesicht oder Geräte-PIN prüft das Gerät selbst. Ein Passwort ist optional und nur als Hash gespeichert. Die Anmeldung mit **Apple oder Google** fällt unter E-Mail-Adresse, Name und Nutzer-IDs oben; bei Apple speichern wir zusätzlich ein verschlüsseltes Token, das wir beim Trennen, bei „Das war ich nicht“ und beim Löschen des Kontos bei Apple widerrufen. Die Sicherheitsaktivität speichert keine IP-Adresse; **falls** der Betreiber die ungefähre Stadt aus der IP einschaltet (OA-33), hier „Ungefährer Standort“ auch für Sicherheit angeben.
+
+**Push im Browser** betrifft nur die Web-App unter `/app` (Adresse des Push-Dienstes des Browsers, verschlüsselt), nicht die Store-Apps; im Formular nichts eintragen. Die Store-Apps nutzen den Push-Token oben.
+
+Wenn KI-Funktionen eingeschaltet werden (OA-18): Inhalte, die das Mitglied für eine KI-Funktion auslöst (Suchtext, Mod-Angaben, Fotos beim Vorschlag), gehen an den KI-Anbieter als Auftragsverarbeiter: keine neue Datenkategorie, aber Datenschutzerklärung §15 und ggf. das Formular erneut prüfen. Wenn die Mitgliedschaft mit Käufen im App Store oder bei Google Play startet: „Finanzdaten → Kaufverlauf“ ergänzen.
 
 ## 6. App Store: App-Datenschutz („Privacy Nutrition Label“)
 
-**Tracking:** Nein. Die App verknüpft keine Daten mit Daten Dritter zu Werbezwecken und gibt keine an Datenhändler. Kein App-Tracking-Transparency-Dialog nötig.
+**Tracking:** Nein. Die App verknüpft keine Daten mit Daten Dritter zu Werbezwecken und gibt keine an Datenhändler. Kein App-Tracking-Transparency-Dialog nötig. Partnerlinks („Anzeige“, sobald eingeschaltet) öffnen den Shop außerhalb der App; die App zählt die Klicks nicht.
 
-**Mit dir verknüpfte Daten** (Zweck jeweils **App-Funktionalität**; nichts davon dient Werbung, Analyse oder Personalisierung durch Dritte):
+**Mit dir verknüpfte Daten** (Zweck jeweils **App-Funktionalität**, bei Geräte-ID und E-Mail-Adresse zusätzlich Sicherheit/Betrugsprävention; nichts davon dient Werbung, Analyse oder Personalisierung durch Dritte):
 
 | Apple-Kategorie | Datentyp | Erhoben |
 |---|---|---|
-| Kontaktinformationen | E-Mail-Adresse | ja |
-| Kontaktinformationen | Name | ja (Anzeigename, optional) |
+| Kontaktinformationen | E-Mail-Adresse | ja (auch die von Apple oder Google genannte, ggf. Apples Weiterleitungsadresse) |
+| Kontaktinformationen | Name | ja (Anzeigename, optional; Name aus der ersten Anmeldung mit Apple; vertretungsberechtigte Person eines Betriebs) |
+| Kontaktinformationen | Physische Adresse | ja (nur Betriebe: Anschrift im Impressum) |
+| Kontaktinformationen | Telefonnummer | ja (nur Betriebe; Mitglieder werden nie danach gefragt) |
+| Kontaktinformationen | Andere Kontaktinformationen | ja (Website eines Betriebs) |
+| Standort | Grober Standort | ja (nur die selbst gewählte Region für Treffen in der Nähe, Raster etwa 5 km; keine Standortberechtigung in der App) |
+| Standort | Genauer Standort | **nein** |
 | Nutzerinhalte | Fotos oder Videos | ja |
-| Nutzerinhalte | E-Mails oder Textnachrichten | ja (Direktnachrichten) |
+| Nutzerinhalte | E-Mails oder Textnachrichten | ja (Direktnachrichten, Neuigkeiten von Organisatoren) |
 | Nutzerinhalte | Kundensupport | ja (Support-Anfragen) |
-| Nutzerinhalte | Andere Nutzerinhalte | ja (Fahrzeuge, Mods, Beschreibungen, Profiltexte) |
-| Identifikatoren | Nutzer-ID | ja (Konto-ID, Benutzername) |
+| Nutzerinhalte | Andere Nutzerinhalte | ja (Fahrzeuge, Mods, Wartung, Build-Updates, Beschreibungen, Profiltexte, Treffen mit Ort, Betriebsprofile, Reaktionen, Erwähnungen) |
+| Identifikatoren | Nutzer-ID | ja (Konto-ID, Benutzername, Kennung bei Apple oder Google) |
+| Identifikatoren | Geräte-ID | ja (zufällige Kennung der App-Installation, auf dem Server nur als Prüfsumme, für Geräte & Sitzungen und Warnungen bei neuen Geräten; keine Werbe-ID) |
 | Suchverlauf | Suchverlauf | ja (Suchanfragen an den Server) |
-| Nutzungsdaten | Produktinteraktion | **nein**: es gibt nur anonyme Tageszähler ohne Personenbezug (ADR-216) |
-| Diagnose | Absturzdaten, Leistungsdaten | **nein** |
-| Standort | genau / ungefähr | **nein** |
-| Identifikatoren | Geräte-ID | **nein** (keine Werbe- oder Geräte-ID; der Push-Token dient nur der Zustellung) |
-| Finanzinfos, Gesundheit, Kontakte, Browserverlauf, Sensible Infos | — | **nein** |
+| Diagnose | Absturzdaten, Sonstige Diagnosedaten | ja (Fehlerberichte an den eigenen Server, mit Mitglieds-ID wenn angemeldet; kein externer Dienst) |
+| Nutzungsdaten | Produktinteraktion | **nein**: es gibt nur anonyme Tageszähler ohne Personenbezug (QR-Scans, Profilaufrufe von Betrieben; ADR-216) |
+| Finanzinfos, Käufe, Gesundheit, Kontakte, Browserverlauf, Sensible Infos | — | **nein** (Mitgliedschaft noch nicht aktiv; Sticker-Shop extern) |
 
-**Nicht mit dir verknüpfte Daten:** keine (QR-Scans werden nur als Tageszähler pro Code gespeichert, ohne Daten des Scannenden).
+Passkeys (nur öffentlicher Schlüssel), das optionale Passwort (nur Hash) und die App-Sperre (nur auf dem Gerät) sind keine eigene Apple-Kategorie. **Push im Browser** gilt nur für die Web-App, nicht für die iOS-App.
 
-Berechtigungen und Zweckangaben im Build: Fotomediathek (DE/EN, `docs/IOS_TESTFLIGHT.md`), Mitteilungen (nach dem eigenen Hinweis AUTH-10). **Keine** Kamera, kein Mikrofon, kein Standort, kein Tracking. Android: System-Fotoauswahl, keine Medienberechtigung; die Release-Manifeste werden von `build-apk.ps1` gegen eine Allow-List geprüft.
+**Nicht mit dir verknüpfte Daten:** keine (QR-Scans und Profilaufrufe von Betrieben werden nur als Tageszähler gespeichert, ohne Daten der Besuchenden).
+
+Berechtigungen und Zweckangaben im Build: Fotomediathek (DE/EN, `docs/IOS_TESTFLIGHT.md`), Mitteilungen (nach dem eigenen Hinweis AUTH-10), Face ID nur für die App-Sperre (`NSFaceIDUsageDescription`). **Keine** Kamera, kein Mikrofon, kein Standort, kein Tracking. Android: System-Fotoauswahl, keine Medienberechtigung, keine Standortberechtigung; die Release-Manifeste werden von `build-apk.ps1` gegen eine Allow-List geprüft. Sobald Sign in with Apple, iOS-Passkeys oder iOS-Push eingeschaltet werden (OA-15, OA-38), ändert sich an diesen Angaben nichts; sie sind schon enthalten.
 
 ## 7. Nutzergenerierte Inhalte (Apple 1.2, Google UGC-Richtlinie)
 

@@ -33,8 +33,10 @@ const useStyles = createStyles((t) => ({
     paddingHorizontal: t.space[2],
     ...BOX_PER_LINE,
   },
-  // DQ-998: the error belongs to the sentence, so it starts on the label's edge (box + the row's gap), glyph inline before it.
-  error: { alignItems: 'flex-start', flexDirection: 'row', gap: t.space[4], paddingBottom: t.space[4], paddingLeft: t.size.checkbox + t.space[12] },
+  // DQ-998: the error belongs to the sentence, so it starts on the label's edge, glyph inline before it. The row repeats the consent
+  // row's geometry (a box-wide spacer, then the row's 12 gap) instead of a 34 padding off the spacing scale.
+  errorRow: { columnGap: t.space[12], flexDirection: 'row', paddingBottom: t.space[4] },
+  error: { alignItems: 'flex-start', flex: 1, flexDirection: 'row', gap: t.space[4], minWidth: 0 },
   errorIcon: { paddingTop: t.space[2] },
   errorText: { flexShrink: 1 },
 }));
@@ -191,13 +193,16 @@ export function ConsentCheck<T extends FieldValues>({ control, name, label, href
               </Text>
             </View>
             {error ? (
-              <View style={styles.error}>
-                <View style={styles.errorIcon}>
-                  <Icon name="warning" size={16} color="accent.fg" />
+              <View style={styles.errorRow}>
+                <View style={styles.box} />
+                <View style={styles.error}>
+                  <View style={styles.errorIcon}>
+                    <Icon name="warning" size={16} color="accent.fg" />
+                  </View>
+                  <Text variant="caption" color="accent.fg" role="alert" style={styles.errorText} testID={`${id}.error`}>
+                    {error}
+                  </Text>
                 </View>
-                <Text variant="caption" color="accent.fg" role="alert" style={styles.errorText} testID={`${id}.error`}>
-                  {error}
-                </Text>
               </View>
             ) : null}
           </View>

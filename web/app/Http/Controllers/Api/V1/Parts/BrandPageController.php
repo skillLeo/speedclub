@@ -28,8 +28,8 @@ class BrandPageController extends Controller
     /**
      * List the top part brands.
      *
-     * Guests too. "Marken im Fokus" (`per_page=3`) and the Teile scope: catalogue brands by their real number of visible builds, most
-     * first, at most 24; brands without a build are left out.
+     * Guests too. "Marken im Fokus" (`per_page=3`) and the Teile scope: catalogue brands by their real number of visible builds (samples
+     * never count), most first, at most 24; brands without any visible build are left out.
      *
      * @unauthenticated
      */
@@ -45,7 +45,8 @@ class BrandPageController extends Controller
     /**
      * Show a brand page.
      *
-     * Guests too. Name, about (catalogue), website, real counts of builds and products, and the product lines.
+     * Guests too. Name, about (catalogue), website, real counts of builds and products, the product lines, and the photo-led modules
+     * (ADR-457): `lead_photo` (a build with the brand's most-used product) and `build_photos` (up to 8, real builds first).
      *
      * @unauthenticated
      */
@@ -57,14 +58,16 @@ class BrandPageController extends Controller
     /**
      * List a brand's products.
      *
-     * Guests too. Active products of the brand by line and name, with their real build counts; cursor pages.
+     * Guests too. Active products of the brand, most real builds first, then by name, with their real build counts and `thumbnail`;
+     * cursor pages.
      *
      * @unauthenticated
      */
     public function products(PartsPageRequest $request, string $slug, BrandPages $pages, ProductPresenter $presenter): AnonymousResourceCollection
     {
-        $page = $pages->products($this->find($request, $slug), $request->pageSize());
-        $presenter->prepare($page->items(), Viewer::from($request));
+        $viewer = Viewer::from($request);
+        $page = $pages->products($this->find($request, $slug), $request->pageSize(), $viewer);
+        $presenter->prepare($page->items(), $viewer);
 
         return ProductRowResource::collection($page);
     }
@@ -72,7 +75,8 @@ class BrandPageController extends Controller
     /**
      * List the builds with a brand.
      *
-     * Guests too. "Builds mit {Marke}": visible builds with a mod of the brand, last changed first; cursor pages.
+     * Guests too. "Builds mit {Marke}": visible builds with a mod of the brand, real builds first and badged samples after them
+     * (ADR-457), each last changed first; cursor pages.
      *
      * @unauthenticated
      */

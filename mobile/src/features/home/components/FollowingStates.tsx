@@ -90,17 +90,30 @@ const BuildSuggestion = memo(function BuildSuggestion({ vehicle, width, testID }
       />
       {/* DQ-1081 b: six suggestions are six equal choices, so none of them is the screen's one filled CTA (skill rule 6): secondary,
           with its state as aria-pressed and the check. The name follows what it shows (WCAG 2.5.3). */}
-      <Button
-        label={following ? t('following.build.following') : t('following.build.follow')}
-        icon={following ? 'check' : undefined}
-        variant="secondary"
-        size="m"
-        fullWidth
-        pressed={following}
-        disabled={vehicle.is_sample}
-        onPress={toggle}
-        testID={`${testID}.follow`}
-      />
+      {vehicle.is_sample ? (
+        // DQ-1081: a sample build cannot be followed (nobody posts to it), so it offers what it can: a look at the build. Never a
+        // disabled Folgen.
+        <Button
+          label={t('following.build.view')}
+          accessibilityLabel={t('following.build.viewLabel', { name: vehicle.full_title })}
+          variant="secondary"
+          size="m"
+          fullWidth
+          onPress={() => router.push(vehiclePath(vehicle.slug))}
+          testID={`${testID}.view`}
+        />
+      ) : (
+        <Button
+          label={following ? t('following.build.following') : t('following.build.follow')}
+          icon={following ? 'check' : undefined}
+          variant="secondary"
+          size="m"
+          fullWidth
+          pressed={following}
+          onPress={toggle}
+          testID={`${testID}.follow`}
+        />
+      )}
     </View>
   );
 });
@@ -120,7 +133,9 @@ const Suggestion = memo(function Suggestion({
   testID: string;
 }) {
   const name = ownerName(member);
-  const meta = [`@${member.username}`, carLabel(member)].filter(Boolean).join(' · ');
+  const handle = `@${member.username}`;
+  // Without a display name the handle is the name already: the meta line then carries only the car, not the handle twice.
+  const meta = [name !== handle && handle, carLabel(member)].filter(Boolean).join(' · ');
   return (
     <MemberRow
       name={name}

@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Real-count catalogue strips of M4.8 (09 §7.3, §7.5): "Marken im Fokus" on Home (part brands on the most visible builds as installed
  * mods) and "Beliebte Modelle" on Entdecken (models with the most visible builds). Counts are of the builds the reader may see
- * (VisibleBuilds: blocks, private builds, hidden owners, samples while editorial_samples is off), so nothing is invented. The cover is
- * the newest of those builds' covers.
+ * (VisibleBuilds: blocks, private builds, hidden owners, samples while editorial_samples is off), so nothing is invented; both strips
+ * count real builds only (DQ-1140, DQ-1212). The cover is the newest of those builds' covers, real builds first.
  */
 final class CatalogHighlights
 {
@@ -36,8 +36,11 @@ final class CatalogHighlights
             ->where('mo.status', ModStatus::Installed->value)
             ->groupBy('b.id', 'b.slug', 'b.name')
             ->select('b.id', 'b.slug', 'b.name')
-            ->selectRaw('COUNT(DISTINCT vs.vehicle_id) as vehicle_count')
+            // DQ-1140: the number shown counts real builds only; samples (while shown) only break ties and keep a brand in the strip.
+            ->selectRaw('COUNT(DISTINCT CASE WHEN '.VisibleBuilds::SAMPLE_RANK.' = 0 THEN vs.vehicle_id END) as vehicle_count')
+            ->selectRaw('COUNT(DISTINCT vs.vehicle_id) as visible_count')
             ->orderByDesc('vehicle_count')
+            ->orderByDesc('visible_count')
             ->orderBy('b.name')
             ->limit($limit)
             ->get();
@@ -64,8 +67,11 @@ final class CatalogHighlights
             ->whereNotNull('vs.model_id')
             ->groupBy('vs.model_id')
             ->select('vs.model_id')
-            ->selectRaw('COUNT(*) as vehicle_count')
+            // DQ-1212: real builds only, as "Marken im Fokus"; samples keep a model in the strip and break ties.
+            ->selectRaw(VisibleBuilds::REAL_COUNT.' as vehicle_count')
+            ->selectRaw('COUNT(*) as visible_count')
             ->orderByDesc('vehicle_count')
+            ->orderByDesc('visible_count')
             ->orderBy('vs.model_id')
             ->limit($limit)
             ->get();
@@ -105,8 +111,8 @@ final class CatalogHighlights
     }
 
     /**
-     * The newest visible build's cover per group ($column: a brand or a model id), in two queries for all groups (ROW_NUMBER, MySQL 8 and
-     * MariaDB 10.6+), so a longer strip costs no more queries.
+     * The newest visible build's cover per group ($column: a brand or a model id), real builds before samples (ADR-457), in two
+     * queries for all groups (ROW_NUMBER, MySQL 8 and MariaDB 10.6+), so a longer strip costs no more queries.
      *
      * @param  list<int>  $groups
      * @param  \Closure(Builder): mixed  $narrow
@@ -124,8 +130,8 @@ final class CatalogHighlights
         $ranked->whereIn($column, $groups)
             ->select('vs.vehicle_id', $column.' as group_id')
             ->selectRaw($column === 'mc.brand_id'
-                ? 'ROW_NUMBER() OVER (PARTITION BY mc.brand_id ORDER BY vs.updated_at DESC, vs.vehicle_id DESC) AS position'
-                : 'ROW_NUMBER() OVER (PARTITION BY vs.model_id ORDER BY vs.updated_at DESC, vs.vehicle_id DESC) AS position');
+                ? 'ROW_NUMBER() OVER (PARTITION BY mc.brand_id ORDER BY '.VisibleBuilds::SAMPLE_RANK.', vs.updated_at DESC, vs.vehicle_id DESC) AS position'
+                : 'ROW_NUMBER() OVER (PARTITION BY vs.model_id ORDER BY '.VisibleBuilds::SAMPLE_RANK.', vs.updated_at DESC, vs.vehicle_id DESC) AS position');
         $picked = DB::query()->fromSub($ranked, 'ranked')->where('position', 1)->pluck('vehicle_id', 'group_id');
         $vehicles = $this->builds->vehicles(array_values(array_map(strval(...), $picked->all())));
         $covers = [];

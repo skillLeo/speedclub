@@ -71,18 +71,21 @@ it('sets the WEB-03 claim by the page rule and the featured lead by the page rul
     $response = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk();
     $html = (string) $response->getContent();
     $placements = ['phone' => 'page', 'tablet' => 'card', 'desktop' => 'card'];
-    $claim = expectTitleCss($response, 'Dein Auto. Dein Build. Dein Club.', 'page', false);
+    // DQ-1177: the claim breaks only between its sentences; inside one its spaces are no-break spaces.
+    $text = "Dein\u{00A0}Auto. Dein\u{00A0}Build. Dein\u{00A0}Club.";
+    $claim = expectTitleCss($response, $text, 'page', false);
     $featured = expectTitleCss($response, 'Nissan Skyline GT-R R34', $placements);
     $css = DisplayTitleLayout::css('Nissan Skyline GT-R R34', $featured, $placements, true);
     $scope = '.sc-display-title.'.$featured;
     $full = '{font-size:var(--sc-type-display-title-size);line-height:var(--sc-type-display-title-line);letter-spacing:var(--sc-type-display-title-tracking)}';
     $base = '{font-size:var(--sc-type-display-title-base-size);line-height:var(--sc-type-display-title-base-line);letter-spacing:var(--sc-type-display-title-base-tracking)}';
 
-    expect($html)->toMatch('~<div class="sc-land-hero-inner">\s*(?:\{\{--.*?--\}\}\s*)?<div class="sc-title-box">\s*<h1 class="sc-display-title t-display-title '.$claim.' text-on-photo" id="claim" data-testid="WEB-03.claim">Dein Auto. Dein Build. Dein Club.</h1>~')
+    expect($html)->toMatch('~<div class="sc-land-hero-inner">\s*(?:\{\{--.*?--\}\}\s*)?<div class="sc-title-box">\s*<h1 class="sc-display-title t-display-title '.$claim.' text-on-photo" id="claim" data-testid="WEB-03.claim">'.$text.'</h1>~u')
         ->and($html)->toMatch('~<span class="sc-lead-text sc-title-box">.*?<span class="sc-display-title t-display-title '.$featured.' block text-on-photo" data-testid="WEB-03.featuredTitle">Nissan Skyline <span class="sc-bind"><span class="sc-keep">GT-R</span> R34</span></span>~su')
-        ->and(DisplayTitleLayout::css('Dein Auto. Dein Build. Dein Club.', $claim, 'page'))->toContain('@media (min-width: 1280px){.sc-display-title.'.$claim.'{font-size:var(--sc-type-display-title-size);')
+        ->and(DisplayTitleLayout::words($text))->toBe(["Dein\u{00A0}Auto.", "Dein\u{00A0}Build.", "Dein\u{00A0}Club."])
+        ->and(DisplayTitleLayout::css($text, $claim, 'page'))->toContain('@media (min-width: 1280px){.sc-display-title.'.$claim.'{font-size:var(--sc-type-display-title-size);')
         // The claim is not a car name: nothing to bind.
-        ->and(DisplayTitleLayout::css('Dein Auto. Dein Build. Dein Club.', $claim, 'page'))->not->toContain('sc-bind')
+        ->and(DisplayTitleLayout::css($text, $claim, 'page'))->not->toContain('sc-bind')
         ->and(DisplayTitleLayout::placements($placements))->toBe($placements)
         // Tablet and desktop: the card rule, 30/34 (the phone pair at every width), never the desktop page size.
         ->and($css)->toContain('@media (min-width: 768px) and (max-width: 1279.98px){'.$scope.$base)

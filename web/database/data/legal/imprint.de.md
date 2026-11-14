@@ -1,7 +1,8 @@
 ---
 status: draft
-review: lawyer review required before launch
-source: docs/08_LEGAL_COMPLIANCE.md section 2
+review: lawyer review required before launch. Entwurf – rechtliche Prüfung ausstehend (Phase-4-Änderungen, OA-35)
+source: docs/08_LEGAL_COMPLIANCE.md section 2; docs/09_PREMIUM_2_0.md sections 8.10 and 13
+changes: docs/legal/phase-4-changes.md
 ---
 
 # Impressum
@@ -46,6 +47,10 @@ Behörden und Nutzer erreichen uns nach Art. 11 und 12 DSA unter [[DSA-Kontakt-E
 Fahrzeuge, Fotos, Modifikationen und Texte stammen von unseren Mitgliedern. Sie geben die Sicht des jeweiligen Mitglieds wieder. Wenn du einen Inhalt für rechtswidrig hältst, nutze die Funktion „Melden“ oder schreib an die oben genannte Adresse.
 
 Herstellernamen verwenden wir nur beschreibend. Wir stehen in keiner Verbindung zu den genannten Herstellern.
+
+## Betriebe, Treffen und Anzeigen
+
+Betriebsprofile zeigen ein eigenes Impressum. Für das Profil und dessen Angaben ist der jeweilige Betrieb verantwortlich, nicht SPEED CLUB. Treffen veranstalten die jeweiligen Organisatoren. Links zu Shops, die wir als „Anzeige“ kennzeichnen, sind Werbung, für die wir eine Provision erhalten können.
 
 ## Streitbeilegung
 

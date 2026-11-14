@@ -6,6 +6,7 @@ import Animated, { interpolate, useAnimatedStyle, useSharedValue } from 'react-n
 import { keepShortNamesTogether } from '@/lib/format';
 import { createStyles, size, space } from '@/theme';
 
+import { Button } from './Button';
 import { Icon, type IconName } from './icons/Icon';
 import { useMotionPreference } from './motion';
 import { PressableScale } from './PressableScale';
@@ -33,8 +34,15 @@ export type BuildSheetMod = {
   details?: readonly { label: string; value: string }[];
   /** Opens the mod (VEH-02). */
   onPress?: () => void;
+  /**
+   * M4.14 (09 §7.6, §8.9–§8.10): links under the row, outside its own press target: the catalogue product (BRD-02), its brand
+   * (BRD-01) and "Eingebaut von" (BIZ-01). Tertiary S buttons on the text's edge.
+   */
+  links?: readonly BuildSheetLink[];
   testID?: string;
 };
+
+export type BuildSheetLink = { key: string; label: string; icon?: IconName; accessibilityLabel?: string; onPress: () => void; testID?: string };
 
 export type BuildSheetSection = {
   key: string;
@@ -86,6 +94,16 @@ const useStyles = createStyles((t) => ({
   end: { justifyContent: 'center', paddingRight: t.space[4] },
   toggle: { alignItems: 'center', height: t.size.touchMin, justifyContent: 'center', width: t.size.touchMin },
   details: { gap: t.space[8], paddingBottom: t.space[16], paddingLeft: ROW_INSET + t.size.modTile + t.space[12], paddingRight: ROW_INSET },
+  // The links start on the text's edge (the S button's padding pulled back by `flush`) and wrap as whole buttons.
+  links: {
+    columnGap: t.space[24],
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: -t.space[8],
+    paddingBottom: t.space[8],
+    paddingLeft: ROW_INSET + t.size.modTile + t.space[12],
+    paddingRight: ROW_INSET,
+  },
   detail: { gap: t.space[2] },
 }));
 
@@ -220,6 +238,24 @@ export function BuildSheetRow({ mod, divider = false }: { mod: BuildSheetMod; di
           </View>
         ) : null}
       </View>
+      {mod.links && mod.links.length > 0 ? (
+        <View style={styles.links} testID={testID ? `${testID}.links` : undefined}>
+          {mod.links.map((link) => (
+            <Button
+              key={link.key}
+              label={link.label}
+              icon={link.icon}
+              variant="tertiary"
+              size="s"
+              role="link"
+              flush="start"
+              accessibilityLabel={link.accessibilityLabel}
+              onPress={link.onPress}
+              testID={link.testID}
+            />
+          ))}
+        </View>
+      ) : null}
       {expandable && open ? (
         <Animated.View nativeID={detailsId} style={[styles.details, detailsStyle]} testID={testID ? `${testID}.details` : undefined}>
           {details.map((detail) => (

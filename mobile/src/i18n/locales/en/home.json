@@ -2,7 +2,7 @@
   "offline": "Offline – you're seeing what was loaded last.",
   "offlineSince": "Offline – last updated {{time}}.",
   "featured": {
-    "eyebrow": "FEATURED BUILD"
+    "eyebrow": "Featured build"
   },
   "newBuilds": {
     "title": "New in the garage",
@@ -88,7 +88,9 @@
     "build": {
       "follow": "Follow",
       "following": "Following",
-      "failed": "Couldn’t follow. Please try again."
+      "failed": "Couldn’t follow. Please try again.",
+      "view": "View",
+      "viewLabel": "View {{name}}"
     }
   },
   "notifications": {
@@ -185,7 +187,7 @@
       "label": "Filter notifications",
       "all": "All",
       "builds": "Builds",
-      "social": "Social",
+      "social": "Community",
       "events": "Meets",
       "system": "System"
     },
@@ -195,7 +197,7 @@
     "menu": "More actions",
     "settings": "Settings",
     "markRead": "Read",
-    "sampleUpdate": "{{name}} posted an update to his {{car}}.",
+    "sampleUpdate": "{{name}} posted an update to their {{car}}.",
     "sampleFollow": "{{name}} now follows your {{car}}.",
     "sampleTimeUpdate": "2 h ago",
     "sampleTimeFollow": "yesterday"
@@ -222,5 +224,15 @@
     "failed": "That didn’t work. Please try again.",
     "copied": "Link copied.",
     "shareFailed": "Sharing isn’t available here. The link: {{url}}"
+  },
+  "brands": {
+    "title": "Brands in focus",
+    "all": "All",
+    "allLabel": "Show all part brands in Discover"
+  },
+  "businesses": {
+    "title": "Workshops and businesses",
+    "all": "All",
+    "allLabel": "Show all businesses in Discover"
   }
 }

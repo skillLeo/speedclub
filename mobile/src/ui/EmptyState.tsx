@@ -37,6 +37,11 @@ export type EmptyStateProps = {
    * state is left-aligned on the column, the title is `title.2` and no glyph is drawn: never a centred grey icon with a sentence.
    */
   preview?: ReactNode;
+  /**
+   * `above` (default): the preview leads. `afterBody` (DQ-1116): the line introduces the preview ("So sieht das aus:"), so the
+   * order is title → line → preview → action.
+   */
+  previewPlacement?: 'above' | 'afterBody';
   /** `brand` (FS-4, brand moments only) draws the glyph inside the katakana hairline frame. */
   variant?: 'default' | 'brand';
   /** The one button. */
@@ -72,6 +77,7 @@ const useStyles = createStyles((t) => {
     // DQ-1033: the blueprint pattern, on the column's start edge (§15 left-aligned hierarchy).
     rootPreview: { alignItems: 'stretch', alignSelf: 'stretch', paddingVertical: t.space[24] },
     preview: { marginBottom: t.space[24] },
+    previewAfterBody: { marginTop: t.space[16] },
     titlePreview: { textAlign: 'left' },
     bodyPreview: { marginTop: t.space[8], textAlign: 'left' },
     actionPreview: { alignSelf: 'flex-start', marginTop: t.space[24] },
@@ -130,15 +136,19 @@ function BrandFrame({ icon, testID }: { icon: IconName; testID?: string }) {
  * Empty state. With `preview` (09 §5, DQ-1033): the sample preview, `title.2`, one line `body`, one button, left-aligned. Without
  * (kept for callers not moved yet): one glyph 48 or an illustration up to 120, `headline`, one line `body`, one button, centred.
  */
-export function EmptyState({ title, body, hyphenateBody = true, preview, icon, illustration, variant = 'default', action, role, style, testID }: EmptyStateProps) {
+export function EmptyState({ title, body, hyphenateBody = true, preview, previewPlacement = 'above', icon, illustration, variant = 'default', action, role, style, testID }: EmptyStateProps) {
   const styles = useStyles();
   const part = (name: string) => (testID ? `${testID}.${name}` : undefined);
   if (preview) {
+    const after = previewPlacement === 'afterBody';
+    const previewBlock = (
+      <View style={after ? styles.previewAfterBody : styles.preview} testID={part('preview')}>
+        {preview}
+      </View>
+    );
     return (
       <View role={role} testID={testID} style={[styles.rootPreview, style]}>
-        <View style={styles.preview} testID={part('preview')}>
-          {preview}
-        </View>
+        {after ? null : previewBlock}
         <Text variant="title2" role="heading" {...({ 'aria-level': 2 } as object)} style={styles.titlePreview} testID={part('title')}>
           {title}
         </Text>
@@ -147,6 +157,7 @@ export function EmptyState({ title, body, hyphenateBody = true, preview, icon, i
             {body}
           </Text>
         ) : null}
+        {after ? previewBlock : null}
         {action ? (
           <Button
             label={action.label}

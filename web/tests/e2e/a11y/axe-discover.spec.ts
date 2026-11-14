@@ -23,7 +23,7 @@ const SCREENS: Screen[] = [
     ready: '[data-testid="DISC-02.root"]:has([data-testid="DISC-02.chips.wheel_diameter.20"]) :is([data-testid^="DISC-02.vehicle."], [data-testid^="DISC-02.tile."])',
   },
   { name: 'DISC-02 grid', path: '/app/discover/search?suspension_type[]=coilover&sort=power&view=grid', auth: 'guest', ready: '[data-testid^="DISC-02.tile."]' },
-  { name: 'DISC-02 no build for the filters', path: '/app/discover/search?make=bmw&model=m4&wheel_diameter[]=19', auth: 'guest', ready: '[data-testid="DISC-02.noResultsFiltered"]' },
+  { name: 'DISC-02 no build for the filters', path: '/app/discover/search?make=bmw&model=m4&wheel_diameter[]=18', auth: 'guest', ready: '[data-testid="DISC-02.noResultsFiltered"]' },
   { name: 'DISC-03 BMW', path: '/app/discover/make/bmw', auth: 'guest', ready: '[data-testid^="DISC-03.model."]' },
   { name: 'DISC-04 M3 builds', path: '/app/discover/model/bmw--m3', auth: 'guest', ready: '[data-testid^="DISC-04.vehicle."]' },
   { name: 'DISC-04 R34 wheels', path: '/app/discover/model/nissan--skyline-gt-r?segment=wheels&generation=r34', auth: 'guest', ready: '[data-testid^="DISC-04.wheels."][data-testid$=".size"]' },

@@ -1380,6 +1380,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -1954,7 +1955,7 @@
         "/brands": {
             "get": {
                 "operationId": "v1.brands.index",
-                "description": "Guests too. \"Marken im Fokus\" (`per_page=3`) and the Teile scope: catalogue brands by their real number of visible builds, most\nfirst, at most 24; brands without a build are left out.",
+                "description": "Guests too. \"Marken im Fokus\" (`per_page=3`) and the Teile scope: catalogue brands by their real number of visible builds (samples\nnever count), most first, at most 24; brands without any visible build are left out.",
                 "summary": "List the top part brands",
                 "tags": [
                     "BrandPage"
@@ -1972,6 +1973,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -2049,7 +2051,7 @@
         "/brands/{slug}": {
             "get": {
                 "operationId": "v1.brands.show",
-                "description": "Guests too. Name, about (catalogue), website, real counts of builds and products, and the product lines.",
+                "description": "Guests too. Name, about (catalogue), website, real counts of builds and products, the product lines, and the photo-led modules\n(ADR-457): `lead_photo` (a build with the brand's most-used product) and `build_photos` (up to 8, real builds first).",
                 "summary": "Show a brand page",
                 "tags": [
                     "BrandPage"
@@ -2129,7 +2131,7 @@
         "/brands/{slug}/products": {
             "get": {
                 "operationId": "v1.brands.products",
-                "description": "Guests too. Active products of the brand by line and name, with their real build counts; cursor pages.",
+                "description": "Guests too. Active products of the brand, most real builds first, then by name, with their real build counts and `thumbnail`;\ncursor pages.",
                 "summary": "List a brand's products",
                 "tags": [
                     "BrandPage"
@@ -2155,6 +2157,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -2306,7 +2309,7 @@
         "/brands/{slug}/builds": {
             "get": {
                 "operationId": "v1.brands.builds",
-                "description": "Guests too. \"Builds mit {Marke}\": visible builds with a mod of the brand, last changed first; cursor pages.",
+                "description": "Guests too. \"Builds mit {Marke}\": visible builds with a mod of the brand, real builds first and badged samples after them\n(ADR-457), each last changed first; cursor pages.",
                 "summary": "List the builds with a brand",
                 "tags": [
                     "BrandPage"
@@ -2332,6 +2335,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -3585,7 +3589,7 @@
         "/businesses": {
             "get": {
                 "operationId": "v1.businesses.index",
-                "description": "Guests too. The Betriebe scope of Entdecken and Home \"Werkst\u00e4tten in deiner N\u00e4he\" (`lat`, `lng`, `radius_km`; each card carries\n`distance_km`). Verified businesses by name; cursor pages.",
+                "description": "Guests too. The Betriebe scope of Entdecken and Home \"Werkst\u00e4tten in deiner N\u00e4he\" (`lat`, `lng`, `radius_km`; each card carries\n`distance_km`). Verified businesses, real ones before samples, by name; each card with `cover` (ADR-457 fallback chain); cursor\npages.",
                 "summary": "List businesses",
                 "tags": [
                     "Business"
@@ -3684,6 +3688,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -3835,7 +3840,7 @@
         "/businesses/{slug}": {
             "get": {
                 "operationId": "v1.businesses.show",
-                "description": "Guests too. BIZ-01 and the data of /b/{slug}: profile, opening hours, address, contact, the real portfolio count and the Impressum\n(\u00a7 5 DDG). Counts a private profile view for BIZ-03 (not the team's own).",
+                "description": "Guests too. BIZ-01 and the data of /b/{slug}: profile, opening hours, address, contact, the real portfolio count and the Impressum\n(\u00a7 5 DDG). Counts a private profile view for BIZ-03 (not the team's own). `cover` is the hero (DQ-1215, as on /b/{slug}): the\nbusiness's own cover, else a portfolio build's photo only when that build has a second photo for its card in the portfolio; else\nnull (the client shows its brand stage), so hero and portfolio card never show the same picture.",
                 "summary": "Show a business",
                 "tags": [
                     "Business"
@@ -3915,7 +3920,7 @@
         "/businesses/{slug}/portfolio": {
             "get": {
                 "operationId": "v1.businesses.portfolio",
-                "description": "Guests too. \"Builds aus unserer Werkstatt\": visible builds with a mod whose tag the business and the build's owner both confirmed,\nlast changed first; cursor pages.",
+                "description": "Guests too. \"Builds aus unserer Werkstatt\": visible builds with a mod whose tag the business and the build's owner both confirmed,\nreal builds before samples, each last changed first; cursor pages.",
                 "summary": "List a business's portfolio",
                 "tags": [
                     "Business"
@@ -3941,6 +3946,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -4089,6 +4095,424 @@
                 "security": []
             }
         },
+        "/me/business-invites": {
+            "get": {
+                "operationId": "v1.me.business-invites.index",
+                "description": "Open invitations of businesses to their team, newest first (at most one per business); cursor pages. Never one of a business\ntaken down, or whose owner the member blocked or was blocked by. Each `business` is a BusinessCard with its `cover` (ADR-457: its\nown, else its newest portfolio build's).",
+                "summary": "List my team invitations",
+                "tags": [
+                    "BusinessInvite"
+                ],
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 512
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `BusinessInviteResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BusinessInviteResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "next_cursor": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "The \"cursor\" that points to the next set of items."
+                                                },
+                                                "prev_cursor": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "The \"cursor\" that points to the previous set of items."
+                                                }
+                                            },
+                                            "required": [
+                                                "path",
+                                                "per_page",
+                                                "next_cursor",
+                                                "prev_cursor"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "description": "feature_disabled: the feature flag of this route is off.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeatureDisabledError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limited, or a login delay is running.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RateLimitedError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds until the next attempt.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "unauthenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthenticatedError"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden, or one of the states in the body.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PasswordChangeRequiredError"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ForbiddenError"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/me/business-invites/{invite}/accept": {
+            "post": {
+                "operationId": "v1.me.business-invites.accept",
+                "description": "Accepts an Idempotency-Key header. The member joins the business as staff and gets its dashboard (BIZ-03). 409 business_exists when\nthe member owns or works for a business already; 404 business_unavailable when the business is gone or a block came between;\n409 limit_reached when the team is full. The member's other invitations end.",
+                "summary": "Accept a team invitation",
+                "tags": [
+                    "BusinessInvite"
+                ],
+                "parameters": [
+                    {
+                        "name": "invite",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "description": "Repeating the key replays the first response for 24 hours.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`MyBusinessResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MyBusinessResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "feature_disabled: the feature flag of this route is off.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeatureDisabledError"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limited, or a login delay is running.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RateLimitedError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds until the next attempt.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "unauthenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthenticatedError"
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionExpiredError"
+                                }
+                            }
+                        }
+                    },
+                    "413": {
+                        "description": "payload_too_large: a JSON body over 512 KB.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden, or one of the states in the body.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PasswordChangeRequiredError"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ForbiddenError"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/me/business-invites/{invite}": {
+            "delete": {
+                "operationId": "v1.me.business-invites.decline",
+                "description": "The invitation ends; the business owner hears about it. Answers 204.",
+                "summary": "Decline a team invitation",
+                "tags": [
+                    "BusinessInvite"
+                ],
+                "parameters": [
+                    {
+                        "name": "invite",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "description": "feature_disabled: the feature flag of this route is off.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeatureDisabledError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limited, or a login delay is running.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RateLimitedError"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds until the next attempt.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "unauthenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthenticatedError"
+                                }
+                            }
+                        }
+                    },
+                    "419": {
+                        "description": "session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionExpiredError"
+                                }
+                            }
+                        }
+                    },
+                    "413": {
+                        "description": "payload_too_large: a JSON body over 512 KB.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden, or one of the states in the body.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/PasswordChangeRequiredError"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ForbiddenError"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/me/business/tag-requests": {
             "get": {
                 "operationId": "v1.me.business.tags.index",
@@ -4110,6 +4534,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -11018,6 +11443,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -11407,6 +11833,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -16105,6 +16532,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -17402,6 +17830,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -18596,25 +19025,32 @@
         "/me/business": {
             "get": {
                 "operationId": "v1.me.business.show",
-                "description": "BIZ-02 status screen and BIZ-03: the profile with status, staff reason (rejected, suspended), team, open requests and the private\n30-day profile views.",
+                "description": "BIZ-02 status screen and BIZ-03: the profile with status, staff reason (rejected, suspended), team, open requests and the private\n30-day profile views. A member without a business gets 200 with `data: null` (BIZ-02 then offers the application): asking before\napplying is no error.",
                 "summary": "Show my business",
                 "tags": [
                     "MyBusiness"
                 ],
                 "responses": {
                     "200": {
-                        "description": "`MyBusinessResource`",
+                        "description": "`MyBusinessResource`\n\n`NoBusinessResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/MyBusinessResource"
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/MyBusinessResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "data"
+                                            ]
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/NoBusinessResource"
                                         }
-                                    },
-                                    "required": [
-                                        "data"
                                     ]
                                 }
                             }
@@ -18818,7 +19254,7 @@
             },
             "patch": {
                 "operationId": "v1.me.business.update",
-                "description": "Owner and staff. Only the keys sent change. Once verified, name, legal form, representative, address and register details are\nlocked (422 naming the fields): they change through support.",
+                "description": "Owner and staff. Only the keys sent change. Once verified, name, kind, legal form, representative, address, e-mail, phone,\nwebsite, map point and register details are locked (`locked_fields`; 422 naming the fields): they change through support.",
                 "summary": "Change my business",
                 "tags": [
                     "MyBusiness"
@@ -19416,8 +19852,8 @@
         "/me/business/members": {
             "post": {
                 "operationId": "v1.me.business.members.store",
-                "description": "Accepts an Idempotency-Key header. Answers the business with its team. The owner adds a member (@username) as staff: they edit the profile and decide tags. One\nbusiness per member (422), at most 10 staff (409 limit_reached).",
-                "summary": "Add a team member",
+                "description": "Accepts an Idempotency-Key header. Answers the business with its team and open invitations. The owner invites a member\n(@username); SEC-414-01: they join as staff (edit the profile, decide tags) only once they accept (POST\nme/business-invites/{invite}/accept), and hear about the invitation in the app. A member of a business already or invited already:\n422; at most 10 staff and open invitations together (409 limit_reached).",
+                "summary": "Invite a team member",
                 "tags": [
                     "MyBusiness"
                 ],
@@ -19554,8 +19990,8 @@
         "/me/business/members/{username}": {
             "delete": {
                 "operationId": "v1.me.business.members.destroy",
-                "description": "The owner removes staff; staff may remove themselves (leave). The owner cannot be removed (403). Answers 204.",
-                "summary": "Remove a team member",
+                "description": "The owner removes staff or withdraws an open invitation of that member; staff may remove themselves (leave). The owner cannot be\nremoved (403). The member (or, when staff leave, the owner) hears about it. Answers 204.",
+                "summary": "Remove a team member or withdraw an invitation",
                 "tags": [
                     "MyBusiness"
                 ],
@@ -19686,6 +20122,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -21631,7 +22068,7 @@
         "/products": {
             "get": {
                 "operationId": "v1.products.index",
-                "description": "Guests too. The Teile scope of Entdecken (`counts=true` for \"In 14 Builds\") and the mod editor's autocomplete (`q`, `category`\nof the mod, `per_page=8`). Active products only, by name; cursor pages.",
+                "description": "Guests too. The Teile scope of Entdecken (`counts=true`) and the mod editor's autocomplete (`q`, `category` of the mod,\n`per_page=8`). Active products only; cursor pages. With `counts=true` (ADR-457): rows sorted by their real build count (samples\nnever count), each with \"In 14 Builds\" and a `thumbnail` from a real build, and the response carries `lead_photo` (the most-used\nproduct on a build) and `build_photos` (\"Beliebt in Builds\", up to 8, real builds first) on its first page; null and [] on later\npages and without `counts`. Without `counts`: by name, no counts, no photos.",
                 "summary": "Search products",
                 "tags": [
                     "Product"
@@ -21649,6 +22086,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -21788,12 +22226,30 @@
                                                 "next_cursor",
                                                 "prev_cursor"
                                             ]
+                                        },
+                                        "lead_photo": {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/BuildPhotoResource"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
+                                        },
+                                        "build_photos": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BuildPhotoResource"
+                                            }
                                         }
                                     },
                                     "required": [
                                         "data",
                                         "links",
-                                        "meta"
+                                        "meta",
+                                        "lead_photo",
+                                        "build_photos"
                                     ]
                                 }
                             }
@@ -21920,7 +22376,7 @@
         "/products/{product}/builds": {
             "get": {
                 "operationId": "v1.products.builds",
-                "description": "Guests too. \"Builds mit {Produkt}\" (BRD-02, VEH-02 rail): visible builds with a mod linking the product, last changed first;\ncursor pages.",
+                "description": "Guests too. \"Builds mit {Produkt}\" (BRD-02, VEH-02 rail): visible builds with a mod linking the product, real builds first and\nbadged samples after them (ADR-457), each last changed first; cursor pages.",
                 "summary": "List the builds with a product",
                 "tags": [
                     "Product"
@@ -21946,6 +22402,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": "string",
                             "maxLength": 512
@@ -23842,7 +24299,7 @@
         "/me/push-subscriptions": {
             "post": {
                 "operationId": "v1.me.push-subscriptions.store",
-                "description": "Upsert per `endpoint`: calling it again leaves one row, and an endpoint another member registered before moves to you. Only\nendpoints of the browsers' push services are accepted. 404 `feature_disabled` while the flag `web_push` is off. Answers 204.",
+                "description": "Upsert per `endpoint`: calling it again leaves one row, and an endpoint another member registered before moves to you. Only\nendpoints of the browsers' push services are accepted. The subscription lives as long as the sign-in that registered it (the browser\nsession, or the app token): signing that device out in SET-06 ends it. 404 `feature_disabled` while the flag `web_push` is off. Answers 204.",
                 "summary": "Register this browser's Web Push subscription",
                 "tags": [
                     "PushSubscription"
@@ -28818,7 +29275,7 @@
                     {
                         "name": "cursor",
                         "in": "query",
-                        "description": "The `next_cursor` of the previous page.",
+                        "description": "The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422.",
                         "schema": {
                             "type": [
                                 "string",
@@ -33067,7 +33524,7 @@
             },
             "AddMemberRequest": {
                 "type": "object",
-                "description": "BIZ-03 Team: a member (their @username) joins the business as staff.",
+                "description": "BIZ-03 Team: the owner invites a member (their @username); they join as staff once they accept (SEC-414-01).",
                 "properties": {
                     "username": {
                         "type": "string",
@@ -34078,7 +34535,7 @@
                     },
                     "builds": {
                         "type": "string",
-                        "description": "Visible builds with a mod of this brand (\"1.204 Builds\"), a real count."
+                        "description": "Visible real builds with a mod of this brand (\"1.204 Builds\"); samples never count (DQ-1140), 0 = hide the number."
                     },
                     "products": {
                         "type": "string",
@@ -34103,6 +34560,24 @@
                             ]
                         }
                     },
+                    "lead_photo": {
+                        "anyOf": [
+                            {
+                                "description": "ADR-457: the lead photo, a build carrying the brand's most-used product (a real build; a sample only while samples are shown,\nbadged by `vehicle.is_sample`); null when no build with a photo carries one.",
+                                "$ref": "#/components/schemas/BuildPhotoResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "build_photos": {
+                        "type": "array",
+                        "description": "ADR-457 \"Beliebt in Builds\": up to 8 builds with a mod of the brand, real builds before samples.",
+                        "items": {
+                            "$ref": "#/components/schemas/BuildPhotoResource"
+                        }
+                    },
                     "share_path": {
                         "type": "string",
                         "description": "\"/brands/kw\""
@@ -34118,6 +34593,8 @@
                     "builds",
                     "products",
                     "lines",
+                    "lead_photo",
+                    "build_photos",
                     "share_path"
                 ],
                 "title": "BrandPageResource"
@@ -34167,7 +34644,7 @@
                     },
                     "builds": {
                         "type": "string",
-                        "description": "Visible builds with a mod of this brand, a real count."
+                        "description": "Visible real builds with a mod of this brand; samples never count (DQ-1140), 0 = hide the number."
                     }
                 },
                 "required": [
@@ -34198,6 +34675,95 @@
                     "week"
                 ],
                 "title": "BuildOfWeekResource"
+            },
+            "BuildPhotoResource": {
+                "type": "object",
+                "properties": {
+                    "photo": {
+                        "$ref": "#/components/schemas/MediaResource"
+                    },
+                    "vehicle": {
+                        "type": "object",
+                        "description": "The build behind the photo; `path` opens VEH-01 (\"/v/{slug}\").",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "public_id": {
+                                "type": "string"
+                            },
+                            "slug": {
+                                "type": "string"
+                            },
+                            "title": {
+                                "type": "string"
+                            },
+                            "full_title": {
+                                "type": "string"
+                            },
+                            "is_sample": {
+                                "type": "boolean"
+                            },
+                            "path": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "public_id",
+                            "slug",
+                            "title",
+                            "full_title",
+                            "is_sample",
+                            "path"
+                        ]
+                    },
+                    "product": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "The catalogue product this build carries (BRD-02), or null.",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "full_name": {
+                                "type": "string"
+                            },
+                            "brand": {
+                                "type": "object",
+                                "properties": {
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "slug",
+                                    "name"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "full_name",
+                            "brand"
+                        ]
+                    }
+                },
+                "required": [
+                    "photo",
+                    "vehicle",
+                    "product"
+                ],
+                "title": "BuildPhotoResource"
             },
             "BuildUpdateAudience": {
                 "type": "string",
@@ -34618,9 +35184,32 @@
                             }
                         ]
                     },
+                    "cover": {
+                        "anyOf": [
+                            {
+                                "description": "ADR-457 (amends 09 \u00a75 BusinessCard): the card's 16:9 media. The business's own cover, else the cover of its newest portfolio\nbuild (real builds first; lists prepare it), else null: the client then shows a brand-stage photo, never a glyph tile.",
+                                "$ref": "#/components/schemas/MediaResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "cover_source": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Where `cover` comes from: \"business\" (its own), \"portfolio\" (a build from \"Builds aus unserer Werkstatt\"), null when none.",
+                        "enum": [
+                            "business",
+                            "portfolio",
+                            null
+                        ]
+                    },
                     "verified": {
                         "type": "boolean",
-                        "description": "Staff verified the business (ADM-55): the Verifiziert badge."
+                        "description": "Staff verified the business (ADM-55): the Verifiziert badge. Never on a sample (DQ-1144, 09 \u00a78.19): a fictional business\ncarries the \"Beispiel\" badge alone."
                     },
                     "is_sample": {
                         "type": "boolean",
@@ -34648,12 +35237,44 @@
                     "subline",
                     "services",
                     "logo",
+                    "cover",
+                    "cover_source",
                     "verified",
                     "is_sample",
                     "distance_km",
                     "share_path"
                 ],
                 "title": "BusinessCardResource"
+            },
+            "BusinessInviteResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "business": {
+                        "$ref": "#/components/schemas/BusinessCardResource"
+                    },
+                    "invited_by": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "business",
+                    "invited_by",
+                    "created_at"
+                ],
+                "title": "BusinessInviteResource"
             },
             "BusinessKind": {
                 "type": "string",
@@ -34768,9 +35389,32 @@
                             }
                         ]
                     },
+                    "cover": {
+                        "anyOf": [
+                            {
+                                "description": "ADR-457 (amends 09 \u00a75 BusinessCard): the card's 16:9 media. The business's own cover, else the cover of its newest portfolio\nbuild (real builds first; lists prepare it), else null: the client then shows a brand-stage photo, never a glyph tile.",
+                                "$ref": "#/components/schemas/MediaResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "cover_source": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Where `cover` comes from: \"business\" (its own), \"portfolio\" (a build from \"Builds aus unserer Werkstatt\"), null when none.",
+                        "enum": [
+                            "business",
+                            "portfolio",
+                            null
+                        ]
+                    },
                     "verified": {
                         "type": "boolean",
-                        "description": "Staff verified the business (ADM-55): the Verifiziert badge."
+                        "description": "Staff verified the business (ADM-55): the Verifiziert badge. Never on a sample (DQ-1144, 09 \u00a78.19): a fictional business\ncarries the \"Beispiel\" badge alone."
                     },
                     "is_sample": {
                         "type": "boolean",
@@ -34786,16 +35430,6 @@
                     "share_path": {
                         "type": "string",
                         "description": "\"/b/beispiel-werkstatt-nord\""
-                    },
-                    "cover": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/MediaResource"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
                     },
                     "about": {
                         "type": [
@@ -34916,7 +35550,7 @@
                             "integer",
                             "null"
                         ],
-                        "description": "Builds in \"Builds aus unserer Werkstatt\" (both sides confirmed), a real count; null on a sample (09 \u00a78.19)."
+                        "description": "Real builds in \"Builds aus unserer Werkstatt\" (both sides confirmed; samples never count); null on a sample (09 \u00a78.19)."
                     },
                     "impressum": {
                         "type": "object",
@@ -35031,11 +35665,12 @@
                     "subline",
                     "services",
                     "logo",
+                    "cover",
+                    "cover_source",
                     "verified",
                     "is_sample",
                     "distance_km",
                     "share_path",
-                    "cover",
                     "about",
                     "opening_hours",
                     "address",
@@ -35987,7 +36622,7 @@
                     },
                     "count": {
                         "type": "integer",
-                        "description": "Builds the viewer can find, stops at 1000 (`count_capped`)."
+                        "description": "Real builds the viewer can find (samples never counted; 0 when only samples match), stops at 1000 (`count_capped`)."
                     },
                     "count_capped": {
                         "type": "boolean"
@@ -41042,7 +41677,7 @@
                     },
                     "vehicle_count": {
                         "type": "integer",
-                        "description": "Public builds the viewer can find, never rounded or padded."
+                        "description": "Real public builds the viewer can find (samples never counted; 0 when the make has samples only), never rounded or padded."
                     }
                 },
                 "required": [
@@ -42723,12 +43358,16 @@
                             "object",
                             "null"
                         ],
+                        "description": "The title is null while the reader may not see the build. @var array{id: string, title: string|null, category: string}|null",
                         "properties": {
                             "id": {
                                 "type": "string"
                             },
                             "title": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             },
                             "category": {
                                 "type": "string"
@@ -42743,6 +43382,7 @@
                     "vehicle": {
                         "anyOf": [
                             {
+                                "description": "Null while the reader may not see the build.",
                                 "$ref": "#/components/schemas/VehicleRefResource"
                             },
                             {
@@ -43128,6 +43768,80 @@
                             }
                         ]
                     },
+                    "product": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "M4.14 (09 \u00a78.9): the linked catalogue product, so the Mods tab links BRD-02 and the brand links BRD-01; null without one and\nwhile parts_catalogue is off. `brand_slug` repeats `brand.slug` for older apps.",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "full_name": {
+                                "type": "string"
+                            },
+                            "brand": {
+                                "type": "object",
+                                "properties": {
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "slug",
+                                    "name"
+                                ]
+                            },
+                            "brand_slug": {
+                                "type": "string"
+                            },
+                            "archived": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "full_name",
+                            "brand",
+                            "brand_slug",
+                            "archived"
+                        ]
+                    },
+                    "installed_by": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "M4.14 (09 \u00a78.10): \"Eingebaut von\", only once the business and the owner both confirmed the tag and the reader may see the\nbusiness; null otherwise and while businesses is off. `verified` is never true on a sample business (DQ-1144).",
+                        "properties": {
+                            "slug": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "city": {
+                                "type": "string"
+                            },
+                            "verified": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "slug",
+                            "name",
+                            "city",
+                            "verified"
+                        ]
+                    },
                     "vehicle_id": {
                         "type": "string"
                     },
@@ -43269,64 +43983,6 @@
                             "exhaust_brand"
                         ]
                     },
-                    "product": {
-                        "type": [
-                            "object",
-                            "null"
-                        ],
-                        "description": "M4.14 (09 \u00a78.9): the linked catalogue product (BRD-02, \"Builds mit {Produkt}\"), or null. Null while parts_catalogue is off.",
-                        "properties": {
-                            "id": {
-                                "type": "string"
-                            },
-                            "name": {
-                                "type": "string"
-                            },
-                            "full_name": {
-                                "type": "string"
-                            },
-                            "brand_slug": {
-                                "type": "string"
-                            },
-                            "archived": {
-                                "type": "boolean"
-                            }
-                        },
-                        "required": [
-                            "id",
-                            "name",
-                            "full_name",
-                            "brand_slug",
-                            "archived"
-                        ]
-                    },
-                    "installed_by": {
-                        "type": [
-                            "object",
-                            "null"
-                        ],
-                        "description": "M4.14 (09 \u00a78.10): \"Eingebaut von\", only once the business and the owner both confirmed it and the reader may see the\nbusiness; null otherwise. Null while businesses is off.",
-                        "properties": {
-                            "slug": {
-                                "type": "string"
-                            },
-                            "name": {
-                                "type": "string"
-                            },
-                            "city": {
-                                "type": "string"
-                            },
-                            "verified": {
-                                "type": "boolean"
-                            }
-                        },
-                        "required": [
-                            "slug",
-                            "name",
-                            "city",
-                            "verified"
-                        ]
-                    },
                     "business_tag": {
                         "type": [
                             "object",
@@ -43374,6 +44030,8 @@
                     "legal_status",
                     "legal_status_label",
                     "thumb",
+                    "product",
+                    "installed_by",
                     "vehicle_id",
                     "brand_id",
                     "brand_text",
@@ -43387,8 +44045,6 @@
                     "photos",
                     "failed_photos",
                     "search",
-                    "product",
-                    "installed_by",
                     "business_tag"
                 ],
                 "title": "ModificationResource"
@@ -43501,6 +44157,80 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "product": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "M4.14 (09 \u00a78.9): the linked catalogue product, so the Mods tab links BRD-02 and the brand links BRD-01; null without one and\nwhile parts_catalogue is off. `brand_slug` repeats `brand.slug` for older apps.",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "full_name": {
+                                "type": "string"
+                            },
+                            "brand": {
+                                "type": "object",
+                                "properties": {
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "slug",
+                                    "name"
+                                ]
+                            },
+                            "brand_slug": {
+                                "type": "string"
+                            },
+                            "archived": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "full_name",
+                            "brand",
+                            "brand_slug",
+                            "archived"
+                        ]
+                    },
+                    "installed_by": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "M4.14 (09 \u00a78.10): \"Eingebaut von\", only once the business and the owner both confirmed the tag and the reader may see the\nbusiness; null otherwise and while businesses is off. `verified` is never true on a sample business (DQ-1144).",
+                        "properties": {
+                            "slug": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "city": {
+                                "type": "string"
+                            },
+                            "verified": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "slug",
+                            "name",
+                            "city",
+                            "verified"
+                        ]
                     }
                 },
                 "required": [
@@ -43517,7 +44247,9 @@
                     "cost",
                     "legal_status",
                     "legal_status_label",
-                    "thumb"
+                    "thumb",
+                    "product",
+                    "installed_by"
                 ],
                 "title": "ModificationRowResource"
             },
@@ -43563,9 +44295,32 @@
                             }
                         ]
                     },
+                    "cover": {
+                        "anyOf": [
+                            {
+                                "description": "ADR-457 (amends 09 \u00a75 BusinessCard): the card's 16:9 media. The business's own cover, else the cover of its newest portfolio\nbuild (real builds first; lists prepare it), else null: the client then shows a brand-stage photo, never a glyph tile.",
+                                "$ref": "#/components/schemas/MediaResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "cover_source": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Where `cover` comes from: \"business\" (its own), \"portfolio\" (a build from \"Builds aus unserer Werkstatt\"), null when none.",
+                        "enum": [
+                            "business",
+                            "portfolio",
+                            null
+                        ]
+                    },
                     "verified": {
                         "type": "boolean",
-                        "description": "Staff verified the business (ADM-55): the Verifiziert badge."
+                        "description": "Staff verified the business (ADM-55): the Verifiziert badge. Never on a sample (DQ-1144, 09 \u00a78.19): a fictional business\ncarries the \"Beispiel\" badge alone."
                     },
                     "is_sample": {
                         "type": "boolean",
@@ -43581,16 +44336,6 @@
                     "share_path": {
                         "type": "string",
                         "description": "\"/b/beispiel-werkstatt-nord\""
-                    },
-                    "cover": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/MediaResource"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
                     },
                     "about": {
                         "type": [
@@ -43711,7 +44456,7 @@
                             "integer",
                             "null"
                         ],
-                        "description": "Builds in \"Builds aus unserer Werkstatt\" (both sides confirmed), a real count; null on a sample (09 \u00a78.19)."
+                        "description": "Real builds in \"Builds aus unserer Werkstatt\" (both sides confirmed; samples never count); null on a sample (09 \u00a78.19)."
                     },
                     "impressum": {
                         "type": "object",
@@ -43847,6 +44592,13 @@
                         "type": "boolean",
                         "description": "Verified: name, legal form, address and register details change through support only."
                     },
+                    "locked_fields": {
+                        "type": "array",
+                        "description": "SEC-414-06: the fields that change through support only while `identity_locked` (the Impressum, its contact, the website,\nthe map point and the kind); empty otherwise. A PATCH that changes one answers 422 naming it.",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "team": {
                         "type": "array",
                         "items": {
@@ -43865,6 +44617,31 @@
                             "required": [
                                 "username",
                                 "role"
+                            ]
+                        }
+                    },
+                    "invites": {
+                        "type": "array",
+                        "description": "SEC-414-01: open invitations (the member has not accepted yet; no role until then), oldest first.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "username": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "invited_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "username",
+                                "invited_at"
                             ]
                         }
                     },
@@ -43888,11 +44665,12 @@
                     "subline",
                     "services",
                     "logo",
+                    "cover",
+                    "cover_source",
                     "verified",
                     "is_sample",
                     "distance_km",
                     "share_path",
-                    "cover",
                     "about",
                     "opening_hours",
                     "address",
@@ -43907,7 +44685,9 @@
                     "verified_at",
                     "document_note",
                     "identity_locked",
+                    "locked_fields",
                     "team",
+                    "invites",
                     "pending_requests",
                     "views_30d"
                 ],
@@ -43935,6 +44715,18 @@
                     "resend_after_seconds"
                 ],
                 "title": "NextStepResource"
+            },
+            "NoBusinessResource": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "null"
+                    }
+                },
+                "required": [
+                    "data"
+                ],
+                "title": "NoBusinessResource"
             },
             "NotificationActorResource": {
                 "type": "object",
@@ -44045,7 +44837,7 @@
                     },
                     "details": {
                         "type": "object",
-                        "description": "By type, language-free. Named details, not data: Laravel (and the export) leave a single resource unwrapped when its\nbody already has a key \"data\". followed_published: {kind: \"vehicle\"|\"update\", update_id, vehicles, updates} (kind of the latest\nevent; how many builds were published and updates posted that day). build_saved: {count, week} (\"2026-W45\"). security:\n{event: \"new_device\"|\"password_changed\"|\"email_changed\"|\"two_factor_changed\"|\"deletion_requested\"|\"sessions_revoked\"|\"verification_failed\"|\"recovery_code_used\", device_name, security_event_id (M4.7: the SET-21 row of a login alert, else null)}.\nnew_follower: {}. moderation_decision (a decision about the reader's content or account): {decision_id, action:\n\"remove_content\"|\"restrict\"|\"suspend\"}. report_decided (the outcome of a case the reader reported): {decision_id, outcome:\n\"no_action\"|\"remove_content\"|\"measures\"}, never the measure. SAFE-01 opens the decision.\nqr_milestone [SIG]: {milestone: 10|50|100|500|1000}, total scans of the vehicle's stickers; QR-02 opens. hu_au_reminder [SIG]:\n{due: \"2027-03\"}, the month the HU/AU is due; GAR-06 opens. catalog_request (M3.3): {outcome: \"accepted\"|\"rejected\", requested:\nthe make and model the member typed, reason: why it was declined (rejected only), else null}; the vehicle is the member's own.\nsupport_reply (Phase 3): {ticket_id, reference: \"SC-7H2KQXMB\"}, the team answered that support request; SET-15b opens the\nthread. Never the text of the answer. M4.11: reaction {target: \"vehicle\"|\"build_update\", update_id} (the owner's own item;\nactors are who reacted, never how), mention {update_id, comment_id} (comment_id null for a mention in the update itself),\ncomment [build_comments] {update_id, comment_id (the newest), reply: a reply to the reader's comment}, vehicle_follower {}\n(vehicle is the reader's build). update_id is null once the reader may no longer see the update; the row then opens the build.\nM4.12 (the event is in `event`): event_review {outcome: \"approved\"|\"rejected\", reason (rejected only)}, event_promoted {} (the\nreader moved from the waitlist to going), event_reminder {kind: \"24h\"|\"2h\"}, event_update {kind: \"update\"|\"changed\" (time or\nplace changed), update_id}, event_cancelled {by_staff}. Never the text of an update. M4.13 maintenance_due (vehicle: the\nreader's own): {kind: \"date\"|\"km\", item_id, item_type, due_on (YYYY-MM-DD) or due_km, lead_days, reminder_key (the id of the\napp's local backup notification, also in the push data)}; MNT-01 opens. M4.14 (in-app only): business_review {outcome:\n\"verified\"|\"rejected\"|\"suspended\"|\"reinstated\", business_id, reason (rejected and suspended only)}, BIZ-03 opens; business_tag\n{state: \"requested\"|\"accepted\"|\"declined\", side: \"business\" (the business must act or hears back; BIZ-04 opens) | \"member\" (the\nbuild's owner; VEH-02 opens), tag_id, business_id, mod_id} (vehicle: the build of the mod).",
+                        "description": "By type, language-free. Named details, not data: Laravel (and the export) leave a single resource unwrapped when its\nbody already has a key \"data\". followed_published: {kind: \"vehicle\"|\"update\", update_id, vehicles, updates} (kind of the latest\nevent; how many builds were published and updates posted that day). build_saved: {count, week} (\"2026-W45\"). security:\n{event: \"new_device\"|\"password_changed\"|\"email_changed\"|\"two_factor_changed\"|\"deletion_requested\"|\"sessions_revoked\"|\"verification_failed\"|\"recovery_code_used\", device_name, security_event_id (M4.7: the SET-21 row of a login alert, else null)}.\nnew_follower: {}. moderation_decision (a decision about the reader's content or account): {decision_id, action:\n\"remove_content\"|\"restrict\"|\"suspend\"}. report_decided (the outcome of a case the reader reported): {decision_id, outcome:\n\"no_action\"|\"remove_content\"|\"measures\"}, never the measure. SAFE-01 opens the decision.\nqr_milestone [SIG]: {milestone: 10|50|100|500|1000}, total scans of the vehicle's stickers; QR-02 opens. hu_au_reminder [SIG]:\n{due: \"2027-03\"}, the month the HU/AU is due; GAR-06 opens. catalog_request (M3.3): {outcome: \"accepted\"|\"rejected\", requested:\nthe make and model the member typed, reason: why it was declined (rejected only), else null}; the vehicle is the member's own.\nsupport_reply (Phase 3): {ticket_id, reference: \"SC-7H2KQXMB\"}, the team answered that support request; SET-15b opens the\nthread. Never the text of the answer. M4.11: reaction {target: \"vehicle\"|\"build_update\", update_id} (the owner's own item;\nactors are who reacted, never how), mention {update_id, comment_id} (comment_id null for a mention in the update itself),\ncomment [build_comments] {update_id, comment_id (the newest), reply: a reply to the reader's comment}, vehicle_follower {}\n(vehicle is the reader's build). update_id is null once the reader may no longer see the update; the row then opens the build.\nM4.12 (the event is in `event`): event_review {outcome: \"approved\"|\"rejected\", reason (rejected only)}, event_promoted {} (the\nreader moved from the waitlist to going), event_reminder {kind: \"24h\"|\"2h\"}, event_update {kind: \"update\"|\"changed\" (time or\nplace changed), update_id}, event_cancelled {by_staff}. Never the text of an update. M4.13 maintenance_due (vehicle: the\nreader's own): {kind: \"date\"|\"km\", item_id, item_type, due_on (YYYY-MM-DD) or due_km, lead_days, reminder_key (the id of the\napp's local backup notification, also in the push data)}; MNT-01 opens. M4.14 (in-app only): business_review {outcome:\n\"verified\"|\"rejected\"|\"suspended\"|\"reinstated\"|\"reopened\" (SEC-414-03: a verified business went back to review), business_id, reason (rejected and suspended only)}, BIZ-03 opens; business_tag\n{state: \"requested\"|\"accepted\"|\"declined\", side: \"business\" (the business must act or hears back; BIZ-04 opens) | \"member\" (the\nbuild's owner; VEH-02 opens), tag_id, business_id, mod_id} (vehicle: the build of the mod). SEC-414-01 business_invite\n{state: \"invited\"|\"removed\" (side \"member\": a business invited the reader to its team, open it with GET me/business-invites;\nor removed them) | \"accepted\"|\"declined\"|\"left\" (side \"business\": the member answered or left; BIZ-03 opens), business_id,\ninvite_id (invited only; the id for POST me/business-invites/{invite}/accept), username (the other side)}.",
                         "properties": {
                             "kind": {
                                 "type": "string",
@@ -44233,6 +45025,18 @@
                                     "string",
                                     "null"
                                 ]
+                            },
+                            "invite_id": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "username": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         }
                     },
@@ -44289,7 +45093,8 @@
                     "event_cancelled",
                     "maintenance_due",
                     "business_review",
-                    "business_tag"
+                    "business_tag",
+                    "business_invite"
                 ],
                 "title": "NotificationType"
             },
@@ -44838,7 +45643,18 @@
                             "integer",
                             "null"
                         ],
-                        "description": "Visible builds with this product, a real count; null where the list does not count (the editor's autocomplete)."
+                        "description": "Visible real builds with this product (samples never count, DQ-1140; 0 = hide the number); null where the list does not\ncount (the editor's autocomplete)."
+                    },
+                    "thumbnail": {
+                        "anyOf": [
+                            {
+                                "description": "ADR-457: the cover of the newest real public build with this product (1:1 thumbnail at radius 8); null when there is none\n(the client shows the category glyph) or the list does not count (the editor's autocomplete).",
+                                "$ref": "#/components/schemas/MediaResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "status": {
                         "$ref": "#/components/schemas/ProductStatus"
@@ -44903,6 +45719,7 @@
                     "brand",
                     "category",
                     "builds",
+                    "thumbnail",
                     "status",
                     "attributes",
                     "url",
@@ -44976,7 +45793,18 @@
                             "integer",
                             "null"
                         ],
-                        "description": "Visible builds with this product, a real count; null where the list does not count (the editor's autocomplete)."
+                        "description": "Visible real builds with this product (samples never count, DQ-1140; 0 = hide the number); null where the list does not\ncount (the editor's autocomplete)."
+                    },
+                    "thumbnail": {
+                        "anyOf": [
+                            {
+                                "description": "ADR-457: the cover of the newest real public build with this product (1:1 thumbnail at radius 8); null when there is none\n(the client shows the category glyph) or the list does not count (the editor's autocomplete).",
+                                "$ref": "#/components/schemas/MediaResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "status": {
                         "$ref": "#/components/schemas/ProductStatus"
@@ -44991,6 +45819,7 @@
                     "brand",
                     "category",
                     "builds",
+                    "thumbnail",
                     "status"
                 ],
                 "title": "ProductRowResource"
@@ -46645,6 +47474,80 @@
                             }
                         ]
                     },
+                    "product": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "M4.14 (09 \u00a78.9): the linked catalogue product, so the Mods tab links BRD-02 and the brand links BRD-01; null without one and\nwhile parts_catalogue is off. `brand_slug` repeats `brand.slug` for older apps.",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "full_name": {
+                                "type": "string"
+                            },
+                            "brand": {
+                                "type": "object",
+                                "properties": {
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "slug",
+                                    "name"
+                                ]
+                            },
+                            "brand_slug": {
+                                "type": "string"
+                            },
+                            "archived": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "full_name",
+                            "brand",
+                            "brand_slug",
+                            "archived"
+                        ]
+                    },
+                    "installed_by": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "M4.14 (09 \u00a78.10): \"Eingebaut von\", only once the business and the owner both confirmed the tag and the reader may see the\nbusiness; null otherwise and while businesses is off. `verified` is never true on a sample business (DQ-1144).",
+                        "properties": {
+                            "slug": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "city": {
+                                "type": "string"
+                            },
+                            "verified": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "slug",
+                            "name",
+                            "city",
+                            "verified"
+                        ]
+                    },
                     "vehicle_id": {
                         "type": "string"
                     },
@@ -46786,64 +47689,6 @@
                             "exhaust_brand"
                         ]
                     },
-                    "product": {
-                        "type": [
-                            "object",
-                            "null"
-                        ],
-                        "description": "M4.14 (09 \u00a78.9): the linked catalogue product (BRD-02, \"Builds mit {Produkt}\"), or null. Null while parts_catalogue is off.",
-                        "properties": {
-                            "id": {
-                                "type": "string"
-                            },
-                            "name": {
-                                "type": "string"
-                            },
-                            "full_name": {
-                                "type": "string"
-                            },
-                            "brand_slug": {
-                                "type": "string"
-                            },
-                            "archived": {
-                                "type": "boolean"
-                            }
-                        },
-                        "required": [
-                            "id",
-                            "name",
-                            "full_name",
-                            "brand_slug",
-                            "archived"
-                        ]
-                    },
-                    "installed_by": {
-                        "type": [
-                            "object",
-                            "null"
-                        ],
-                        "description": "M4.14 (09 \u00a78.10): \"Eingebaut von\", only once the business and the owner both confirmed it and the reader may see the\nbusiness; null otherwise. Null while businesses is off.",
-                        "properties": {
-                            "slug": {
-                                "type": "string"
-                            },
-                            "name": {
-                                "type": "string"
-                            },
-                            "city": {
-                                "type": "string"
-                            },
-                            "verified": {
-                                "type": "boolean"
-                            }
-                        },
-                        "required": [
-                            "slug",
-                            "name",
-                            "city",
-                            "verified"
-                        ]
-                    },
                     "business_tag": {
                         "type": [
                             "object",
@@ -46895,6 +47740,8 @@
                     "legal_status",
                     "legal_status_label",
                     "thumb",
+                    "product",
+                    "installed_by",
                     "vehicle_id",
                     "brand_id",
                     "brand_text",
@@ -46908,8 +47755,6 @@
                     "photos",
                     "failed_photos",
                     "search",
-                    "product",
-                    "installed_by",
                     "business_tag",
                     "history_recorded"
                 ],

@@ -333,8 +333,8 @@ export interface paths {
         };
         /**
          * List the top part brands
-         * @description Guests too. "Marken im Fokus" (`per_page=3`) and the Teile scope: catalogue brands by their real number of visible builds, most
-         *     first, at most 24; brands without a build are left out.
+         * @description Guests too. "Marken im Fokus" (`per_page=3`) and the Teile scope: catalogue brands by their real number of visible builds (samples
+         *     never count), most first, at most 24; brands without any visible build are left out.
          */
         get: operations["v1.brands.index"];
         put?: never;
@@ -354,7 +354,8 @@ export interface paths {
         };
         /**
          * Show a brand page
-         * @description Guests too. Name, about (catalogue), website, real counts of builds and products, and the product lines.
+         * @description Guests too. Name, about (catalogue), website, real counts of builds and products, the product lines, and the photo-led modules
+         *     (ADR-457): `lead_photo` (a build with the brand's most-used product) and `build_photos` (up to 8, real builds first).
          */
         get: operations["v1.brands.show"];
         put?: never;
@@ -374,7 +375,8 @@ export interface paths {
         };
         /**
          * List a brand's products
-         * @description Guests too. Active products of the brand by line and name, with their real build counts; cursor pages.
+         * @description Guests too. Active products of the brand, most real builds first, then by name, with their real build counts and `thumbnail`;
+         *     cursor pages.
          */
         get: operations["v1.brands.products"];
         put?: never;
@@ -394,7 +396,8 @@ export interface paths {
         };
         /**
          * List the builds with a brand
-         * @description Guests too. "Builds mit {Marke}": visible builds with a mod of the brand, last changed first; cursor pages.
+         * @description Guests too. "Builds mit {Marke}": visible builds with a mod of the brand, real builds first and badged samples after them
+         *     (ADR-457), each last changed first; cursor pages.
          */
         get: operations["v1.brands.builds"];
         put?: never;
@@ -555,7 +558,8 @@ export interface paths {
         /**
          * List businesses
          * @description Guests too. The Betriebe scope of Entdecken and Home "Werkstätten in deiner Nähe" (`lat`, `lng`, `radius_km`; each card carries
-         *     `distance_km`). Verified businesses by name; cursor pages.
+         *     `distance_km`). Verified businesses, real ones before samples, by name; each card with `cover` (ADR-457 fallback chain); cursor
+         *     pages.
          */
         get: operations["v1.businesses.index"];
         put?: never;
@@ -576,7 +580,9 @@ export interface paths {
         /**
          * Show a business
          * @description Guests too. BIZ-01 and the data of /b/{slug}: profile, opening hours, address, contact, the real portfolio count and the Impressum
-         *     (§ 5 DDG). Counts a private profile view for BIZ-03 (not the team's own).
+         *     (§ 5 DDG). Counts a private profile view for BIZ-03 (not the team's own). `cover` is the hero (DQ-1215, as on /b/{slug}): the
+         *     business's own cover, else a portfolio build's photo only when that build has a second photo for its card in the portfolio; else
+         *     null (the client shows its brand stage), so hero and portfolio card never show the same picture.
          */
         get: operations["v1.businesses.show"];
         put?: never;
@@ -597,12 +603,76 @@ export interface paths {
         /**
          * List a business's portfolio
          * @description Guests too. "Builds aus unserer Werkstatt": visible builds with a mod whose tag the business and the build's owner both confirmed,
-         *     last changed first; cursor pages.
+         *     real builds before samples, each last changed first; cursor pages.
          */
         get: operations["v1.businesses.portfolio"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business-invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my team invitations
+         * @description Open invitations of businesses to their team, newest first (at most one per business); cursor pages. Never one of a business
+         *     taken down, or whose owner the member blocked or was blocked by. Each `business` is a BusinessCard with its `cover` (ADR-457: its
+         *     own, else its newest portfolio build's).
+         */
+        get: operations["v1.me.business-invites.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business-invites/{invite}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept a team invitation
+         * @description Accepts an Idempotency-Key header. The member joins the business as staff and gets its dashboard (BIZ-03). 409 business_exists when
+         *     the member owns or works for a business already; 404 business_unavailable when the business is gone or a block came between;
+         *     409 limit_reached when the team is full. The member's other invitations end.
+         */
+        post: operations["v1.me.business-invites.accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/business-invites/{invite}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Decline a team invitation
+         * @description The invitation ends; the business owner hears about it. Answers 204.
+         */
+        delete: operations["v1.me.business-invites.decline"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2566,7 +2636,8 @@ export interface paths {
         /**
          * Show my business
          * @description BIZ-02 status screen and BIZ-03: the profile with status, staff reason (rejected, suspended), team, open requests and the private
-         *     30-day profile views.
+         *     30-day profile views. A member without a business gets 200 with `data: null` (BIZ-02 then offers the application): asking before
+         *     applying is no error.
          */
         get: operations["v1.me.business.show"];
         put?: never;
@@ -2586,8 +2657,8 @@ export interface paths {
         head?: never;
         /**
          * Change my business
-         * @description Owner and staff. Only the keys sent change. Once verified, name, legal form, representative, address and register details are
-         *     locked (422 naming the fields): they change through support.
+         * @description Owner and staff. Only the keys sent change. Once verified, name, kind, legal form, representative, address, e-mail, phone,
+         *     website, map point and register details are locked (`locked_fields`; 422 naming the fields): they change through support.
          */
         patch: operations["v1.me.business.update"];
         trace?: never;
@@ -2662,9 +2733,11 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Add a team member
-         * @description Accepts an Idempotency-Key header. Answers the business with its team. The owner adds a member (@username) as staff: they edit the profile and decide tags. One
-         *     business per member (422), at most 10 staff (409 limit_reached).
+         * Invite a team member
+         * @description Accepts an Idempotency-Key header. Answers the business with its team and open invitations. The owner invites a member
+         *     (@username); SEC-414-01: they join as staff (edit the profile, decide tags) only once they accept (POST
+         *     me/business-invites/{invite}/accept), and hear about the invitation in the app. A member of a business already or invited already:
+         *     422; at most 10 staff and open invitations together (409 limit_reached).
          */
         post: operations["v1.me.business.members.store"];
         delete?: never;
@@ -2684,8 +2757,9 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Remove a team member
-         * @description The owner removes staff; staff may remove themselves (leave). The owner cannot be removed (403). Answers 204.
+         * Remove a team member or withdraw an invitation
+         * @description The owner removes staff or withdraws an open invitation of that member; staff may remove themselves (leave). The owner cannot be
+         *     removed (403). The member (or, when staff leave, the owner) hears about it. Answers 204.
          */
         delete: operations["v1.me.business.members.destroy"];
         options?: never;
@@ -3041,8 +3115,11 @@ export interface paths {
         };
         /**
          * Search products
-         * @description Guests too. The Teile scope of Entdecken (`counts=true` for "In 14 Builds") and the mod editor's autocomplete (`q`, `category`
-         *     of the mod, `per_page=8`). Active products only, by name; cursor pages.
+         * @description Guests too. The Teile scope of Entdecken (`counts=true`) and the mod editor's autocomplete (`q`, `category` of the mod,
+         *     `per_page=8`). Active products only; cursor pages. With `counts=true` (ADR-457): rows sorted by their real build count (samples
+         *     never count), each with "In 14 Builds" and a `thumbnail` from a real build, and the response carries `lead_photo` (the most-used
+         *     product on a build) and `build_photos` ("Beliebt in Builds", up to 8, real builds first) on its first page; null and [] on later
+         *     pages and without `counts`. Without `counts`: by name, no counts, no photos.
          */
         get: operations["v1.products.index"];
         put?: never;
@@ -3084,8 +3161,8 @@ export interface paths {
         };
         /**
          * List the builds with a product
-         * @description Guests too. "Builds mit {Produkt}" (BRD-02, VEH-02 rail): visible builds with a mod linking the product, last changed first;
-         *     cursor pages.
+         * @description Guests too. "Builds mit {Produkt}" (BRD-02, VEH-02 rail): visible builds with a mod linking the product, real builds first and
+         *     badged samples after them (ADR-457), each last changed first; cursor pages.
          */
         get: operations["v1.products.builds"];
         put?: never;
@@ -3379,7 +3456,8 @@ export interface paths {
         /**
          * Register this browser's Web Push subscription
          * @description Upsert per `endpoint`: calling it again leaves one row, and an endpoint another member registered before moves to you. Only
-         *     endpoints of the browsers' push services are accepted. 404 `feature_disabled` while the flag `web_push` is off. Answers 204.
+         *     endpoints of the browsers' push services are accepted. The subscription lives as long as the sign-in that registered it (the browser
+         *     session, or the app token): signing that device out in SET-06 ends it. 404 `feature_disabled` while the flag `web_push` is off. Answers 204.
          */
         post: operations["v1.me.push-subscriptions.store"];
         /**
@@ -4833,7 +4911,7 @@ export interface components {
         };
         /**
          * AddMemberRequest
-         * @description BIZ-03 Team: a member (their @username) joins the business as staff.
+         * @description BIZ-03 Team: the owner invites a member (their @username); they join as staff once they accept (SEC-414-01).
          */
         AddMemberRequest: {
             username: string;
@@ -5123,7 +5201,7 @@ export interface components {
             country: string;
             /** @description The mod category key the brand is best known for. @var string|null */
             category: string;
-            /** @description Visible builds with a mod of this brand ("1.204 Builds"), a real count. */
+            /** @description Visible real builds with a mod of this brand ("1.204 Builds"); samples never count (DQ-1140), 0 = hide the number. */
             builds: string;
             /** @description Active products in the catalogue. */
             products: string;
@@ -5132,6 +5210,9 @@ export interface components {
                 name: string;
                 products: number;
             }[];
+            lead_photo: components["schemas"]["BuildPhotoResource"] | null;
+            /** @description ADR-457 "Beliebt in Builds": up to 8 builds with a mod of the brand, real builds before samples. */
+            build_photos: components["schemas"]["BuildPhotoResource"][];
             /** @description "/brands/kw" */
             share_path: string;
         };
@@ -5147,7 +5228,7 @@ export interface components {
         BrandTileResource: {
             slug: string;
             name: string;
-            /** @description Visible builds with a mod of this brand, a real count. */
+            /** @description Visible real builds with a mod of this brand; samples never count (DQ-1140), 0 = hide the number. */
             builds: string;
         };
         /** BuildOfWeekResource */
@@ -5157,6 +5238,30 @@ export interface components {
             quote: string;
             /** @description ISO week, "2026-W46". */
             week: string;
+        };
+        /** BuildPhotoResource */
+        BuildPhotoResource: {
+            photo: components["schemas"]["MediaResource"];
+            /** @description The build behind the photo; `path` opens VEH-01 ("/v/{slug}"). */
+            vehicle: {
+                id: string;
+                public_id: string;
+                slug: string;
+                title: string;
+                full_title: string;
+                is_sample: boolean;
+                path: string;
+            };
+            /** @description The catalogue product this build carries (BRD-02), or null. */
+            product: {
+                id: string;
+                name: string;
+                full_name: string;
+                brand: {
+                    slug: string;
+                    name: string;
+                };
+            } | null;
         };
         /**
          * BuildUpdateAudience
@@ -5279,7 +5384,16 @@ export interface components {
             subline: string;
             services: string[];
             logo: components["schemas"]["MediaResource"] | null;
-            /** @description Staff verified the business (ADM-55): the Verifiziert badge. */
+            cover: components["schemas"]["MediaResource"] | null;
+            /**
+             * @description Where `cover` comes from: "business" (its own), "portfolio" (a build from "Builds aus unserer Werkstatt"), null when none.
+             * @enum {string|null}
+             */
+            cover_source: "business" | "portfolio" | null;
+            /**
+             * @description Staff verified the business (ADM-55): the Verifiziert badge. Never on a sample (DQ-1144, 09 §8.19): a fictional business
+             *     carries the "Beispiel" badge alone.
+             */
             verified: boolean;
             /** @description Sample content (09 §8.19): the "Beispiel" badge. */
             is_sample: boolean;
@@ -5287,6 +5401,13 @@ export interface components {
             distance_km: number | null;
             /** @description "/b/beispiel-werkstatt-nord" */
             share_path: string;
+        };
+        /** BusinessInviteResource */
+        BusinessInviteResource: {
+            id: string;
+            business: components["schemas"]["BusinessCardResource"];
+            invited_by: string | null;
+            created_at: string | null;
         };
         /**
          * BusinessKind
@@ -5327,7 +5448,16 @@ export interface components {
             subline: string;
             services: string[];
             logo: components["schemas"]["MediaResource"] | null;
-            /** @description Staff verified the business (ADM-55): the Verifiziert badge. */
+            cover: components["schemas"]["MediaResource"] | null;
+            /**
+             * @description Where `cover` comes from: "business" (its own), "portfolio" (a build from "Builds aus unserer Werkstatt"), null when none.
+             * @enum {string|null}
+             */
+            cover_source: "business" | "portfolio" | null;
+            /**
+             * @description Staff verified the business (ADM-55): the Verifiziert badge. Never on a sample (DQ-1144, 09 §8.19): a fictional business
+             *     carries the "Beispiel" badge alone.
+             */
             verified: boolean;
             /** @description Sample content (09 §8.19): the "Beispiel" badge. */
             is_sample: boolean;
@@ -5335,7 +5465,6 @@ export interface components {
             distance_km: number | null;
             /** @description "/b/beispiel-werkstatt-nord" */
             share_path: string;
-            cover: components["schemas"]["MediaResource"] | null;
             about: string | null;
             /** @description Monday first; `ranges` empty = closed; `today` in Europe/Berlin. */
             opening_hours: {
@@ -5361,7 +5490,7 @@ export interface components {
                 website: string | null;
                 message_username: string | null;
             };
-            /** @description Builds in "Builds aus unserer Werkstatt" (both sides confirmed), a real count; null on a sample (09 §8.19). */
+            /** @description Real builds in "Builds aus unserer Werkstatt" (both sides confirmed; samples never count); null on a sample (09 §8.19). */
             portfolio_count: number | null;
             /** @description § 5 DDG; on a sample its data is a placeholder (`is_sample`). */
             impressum: {
@@ -5668,7 +5797,7 @@ export interface components {
              * @enum {string|null}
              */
             sort: "relevance" | "newest" | "updated" | "power" | null;
-            /** @description Builds the viewer can find, stops at 1000 (`count_capped`). */
+            /** @description Real builds the viewer can find (samples never counted; 0 when only samples match), stops at 1000 (`count_capped`). */
             count: number;
             count_capped: boolean;
         };
@@ -7082,7 +7211,7 @@ export interface components {
             id: number;
             name: string;
             slug: string;
-            /** @description Public builds the viewer can find, never rounded or padded. */
+            /** @description Real public builds the viewer can find (samples never counted; 0 when the make has samples only), never rounded or padded. */
             vehicle_count: number;
         };
         /** MarkReadRequest */
@@ -7558,9 +7687,10 @@ export interface components {
             status: components["schemas"]["ModTagStatus"];
             /** @description Who asked first; the other side decides. @var \App\Enums\ModTagInitiator */
             initiated_by: components["schemas"]["ModTagInitiator"];
+            /** @description The title is null while the reader may not see the build. @var array{id: string, title: string|null, category: string}|null */
             mod: {
                 id: string;
-                title: string;
+                title: string | null;
                 category: string;
             } | null;
             vehicle: components["schemas"]["VehicleRefResource"] | null;
@@ -7673,6 +7803,31 @@ export interface components {
             legal_status: string | null;
             legal_status_label: string | null;
             thumb: components["schemas"]["MediaResource"] | null;
+            /**
+             * @description M4.14 (09 §8.9): the linked catalogue product, so the Mods tab links BRD-02 and the brand links BRD-01; null without one and
+             *     while parts_catalogue is off. `brand_slug` repeats `brand.slug` for older apps.
+             */
+            product: {
+                id: string;
+                name: string;
+                full_name: string;
+                brand: {
+                    slug: string;
+                    name: string;
+                };
+                brand_slug: string;
+                archived: boolean;
+            } | null;
+            /**
+             * @description M4.14 (09 §8.10): "Eingebaut von", only once the business and the owner both confirmed the tag and the reader may see the
+             *     business; null otherwise and while businesses is off. `verified` is never true on a sample business (DQ-1144).
+             */
+            installed_by: {
+                slug: string;
+                name: string;
+                city: string;
+                verified: boolean;
+            } | null;
             vehicle_id: string;
             brand_id: number | null;
             brand_text: string | null;
@@ -7711,24 +7866,6 @@ export interface components {
                 suspension_brand: string | null;
                 exhaust_brand: string | null;
             };
-            /** @description M4.14 (09 §8.9): the linked catalogue product (BRD-02, "Builds mit {Produkt}"), or null. Null while parts_catalogue is off. */
-            product: {
-                id: string;
-                name: string;
-                full_name: string;
-                brand_slug: string;
-                archived: boolean;
-            } | null;
-            /**
-             * @description M4.14 (09 §8.10): "Eingebaut von", only once the business and the owner both confirmed it and the reader may see the
-             *     business; null otherwise. Null while businesses is off.
-             */
-            installed_by: {
-                slug: string;
-                name: string;
-                city: string;
-                verified: boolean;
-            } | null;
             /** @description The owner's alone (null for anybody else): the state of the tag while it waits or after the business declined it. */
             business_tag: {
                 id: string;
@@ -7769,6 +7906,31 @@ export interface components {
             legal_status: string | null;
             legal_status_label: string | null;
             thumb: components["schemas"]["MediaResource"] | null;
+            /**
+             * @description M4.14 (09 §8.9): the linked catalogue product, so the Mods tab links BRD-02 and the brand links BRD-01; null without one and
+             *     while parts_catalogue is off. `brand_slug` repeats `brand.slug` for older apps.
+             */
+            product: {
+                id: string;
+                name: string;
+                full_name: string;
+                brand: {
+                    slug: string;
+                    name: string;
+                };
+                brand_slug: string;
+                archived: boolean;
+            } | null;
+            /**
+             * @description M4.14 (09 §8.10): "Eingebaut von", only once the business and the owner both confirmed the tag and the reader may see the
+             *     business; null otherwise and while businesses is off. `verified` is never true on a sample business (DQ-1144).
+             */
+            installed_by: {
+                slug: string;
+                name: string;
+                city: string;
+                verified: boolean;
+            } | null;
         };
         /** MyBusinessResource */
         MyBusinessResource: {
@@ -7783,7 +7945,16 @@ export interface components {
             subline: string;
             services: string[];
             logo: components["schemas"]["MediaResource"] | null;
-            /** @description Staff verified the business (ADM-55): the Verifiziert badge. */
+            cover: components["schemas"]["MediaResource"] | null;
+            /**
+             * @description Where `cover` comes from: "business" (its own), "portfolio" (a build from "Builds aus unserer Werkstatt"), null when none.
+             * @enum {string|null}
+             */
+            cover_source: "business" | "portfolio" | null;
+            /**
+             * @description Staff verified the business (ADM-55): the Verifiziert badge. Never on a sample (DQ-1144, 09 §8.19): a fictional business
+             *     carries the "Beispiel" badge alone.
+             */
             verified: boolean;
             /** @description Sample content (09 §8.19): the "Beispiel" badge. */
             is_sample: boolean;
@@ -7791,7 +7962,6 @@ export interface components {
             distance_km: number | null;
             /** @description "/b/beispiel-werkstatt-nord" */
             share_path: string;
-            cover: components["schemas"]["MediaResource"] | null;
             about: string | null;
             /** @description Monday first; `ranges` empty = closed; `today` in Europe/Berlin. */
             opening_hours: {
@@ -7817,7 +7987,7 @@ export interface components {
                 website: string | null;
                 message_username: string | null;
             };
-            /** @description Builds in "Builds aus unserer Werkstatt" (both sides confirmed), a real count; null on a sample (09 §8.19). */
+            /** @description Real builds in "Builds aus unserer Werkstatt" (both sides confirmed; samples never count); null on a sample (09 §8.19). */
             portfolio_count: number | null;
             /** @description § 5 DDG; on a sample its data is a placeholder (`is_sample`). */
             impressum: {
@@ -7848,9 +8018,19 @@ export interface components {
             document_note: string | null;
             /** @description Verified: name, legal form, address and register details change through support only. */
             identity_locked: boolean;
+            /**
+             * @description SEC-414-06: the fields that change through support only while `identity_locked` (the Impressum, its contact, the website,
+             *     the map point and the kind); empty otherwise. A PATCH that changes one answers 422 naming it.
+             */
+            locked_fields: string[];
             team: {
                 username: string | null;
                 role: components["schemas"]["BusinessRole"];
+            }[];
+            /** @description SEC-414-01: open invitations (the member has not accepted yet; no role until then), oldest first. */
+            invites: {
+                username: string | null;
+                invited_at: string | null;
             }[];
             /** @description Member requests waiting for the business (BIZ-04 badge). */
             pending_requests: number;
@@ -7862,6 +8042,10 @@ export interface components {
             next: components["schemas"]["AuthNextStep"];
             email: string;
             resend_after_seconds: number | null;
+        };
+        /** NoBusinessResource */
+        NoBusinessResource: {
+            data: null;
         };
         /** NotificationActorResource */
         NotificationActorResource: {
@@ -7911,9 +8095,12 @@ export interface components {
              *     place changed), update_id}, event_cancelled {by_staff}. Never the text of an update. M4.13 maintenance_due (vehicle: the
              *     reader's own): {kind: "date"|"km", item_id, item_type, due_on (YYYY-MM-DD) or due_km, lead_days, reminder_key (the id of the
              *     app's local backup notification, also in the push data)}; MNT-01 opens. M4.14 (in-app only): business_review {outcome:
-             *     "verified"|"rejected"|"suspended"|"reinstated", business_id, reason (rejected and suspended only)}, BIZ-03 opens; business_tag
+             *     "verified"|"rejected"|"suspended"|"reinstated"|"reopened" (SEC-414-03: a verified business went back to review), business_id, reason (rejected and suspended only)}, BIZ-03 opens; business_tag
              *     {state: "requested"|"accepted"|"declined", side: "business" (the business must act or hears back; BIZ-04 opens) | "member" (the
-             *     build's owner; VEH-02 opens), tag_id, business_id, mod_id} (vehicle: the build of the mod).
+             *     build's owner; VEH-02 opens), tag_id, business_id, mod_id} (vehicle: the build of the mod). SEC-414-01 business_invite
+             *     {state: "invited"|"removed" (side "member": a business invited the reader to its team, open it with GET me/business-invites;
+             *     or removed them) | "accepted"|"declined"|"left" (side "business": the member answered or left; BIZ-03 opens), business_id,
+             *     invite_id (invited only; the id for POST me/business-invites/{invite}/accept), username (the other side)}.
              */
             details: {
                 /** @enum {string} */
@@ -7951,6 +8138,8 @@ export interface components {
                 side?: string | null;
                 tag_id?: string | null;
                 mod_id?: string | null;
+                invite_id?: string | null;
+                username?: string | null;
             };
             read_at: string | null;
             /** @description The row's latest event, ISO 8601. */
@@ -7961,7 +8150,7 @@ export interface components {
          * @description The rows of the notification list (02_PRODUCT_SPEC §7). Written by App\Services\Notifications\Notifier only; later modules add their types here (M2.4 messages and requests, M2.6 decisions, M2.7 QR milestones and HU/AU).
          * @enum {string}
          */
-        NotificationType: "new_follower" | "followed_published" | "build_saved" | "security" | "moderation_decision" | "report_decided" | "qr_milestone" | "hu_au_reminder" | "catalog_request" | "support_reply" | "reaction" | "mention" | "comment" | "vehicle_follower" | "event_review" | "event_promoted" | "event_reminder" | "event_update" | "event_cancelled" | "maintenance_due" | "business_review" | "business_tag";
+        NotificationType: "new_follower" | "followed_published" | "build_saved" | "security" | "moderation_decision" | "report_decided" | "qr_milestone" | "hu_au_reminder" | "catalog_request" | "support_reply" | "reaction" | "mention" | "comment" | "vehicle_follower" | "event_review" | "event_promoted" | "event_reminder" | "event_update" | "event_cancelled" | "maintenance_due" | "business_review" | "business_tag" | "business_invite";
         /** OdometerRequest */
         OdometerRequest: {
             /** @description The mileage now, in km (the app converts mi). */
@@ -8145,8 +8334,12 @@ export interface components {
                 name: string;
                 icon: string | null;
             };
-            /** @description Visible builds with this product, a real count; null where the list does not count (the editor's autocomplete). */
+            /**
+             * @description Visible real builds with this product (samples never count, DQ-1140; 0 = hide the number); null where the list does not
+             *     count (the editor's autocomplete).
+             */
             builds: number | null;
+            thumbnail: components["schemas"]["MediaResource"] | null;
             status: components["schemas"]["ProductStatus"];
             /** @description Key attributes from the catalogue, in the reader's language (German where the catalogue has no English). */
             attributes: {
@@ -8182,8 +8375,12 @@ export interface components {
                 name: string;
                 icon: string | null;
             };
-            /** @description Visible builds with this product, a real count; null where the list does not count (the editor's autocomplete). */
+            /**
+             * @description Visible real builds with this product (samples never count, DQ-1140; 0 = hide the number); null where the list does not
+             *     count (the editor's autocomplete).
+             */
             builds: number | null;
+            thumbnail: components["schemas"]["MediaResource"] | null;
             status: components["schemas"]["ProductStatus"];
         };
         /**
@@ -8655,6 +8852,31 @@ export interface components {
             legal_status: string | null;
             legal_status_label: string | null;
             thumb: components["schemas"]["MediaResource"] | null;
+            /**
+             * @description M4.14 (09 §8.9): the linked catalogue product, so the Mods tab links BRD-02 and the brand links BRD-01; null without one and
+             *     while parts_catalogue is off. `brand_slug` repeats `brand.slug` for older apps.
+             */
+            product: {
+                id: string;
+                name: string;
+                full_name: string;
+                brand: {
+                    slug: string;
+                    name: string;
+                };
+                brand_slug: string;
+                archived: boolean;
+            } | null;
+            /**
+             * @description M4.14 (09 §8.10): "Eingebaut von", only once the business and the owner both confirmed the tag and the reader may see the
+             *     business; null otherwise and while businesses is off. `verified` is never true on a sample business (DQ-1144).
+             */
+            installed_by: {
+                slug: string;
+                name: string;
+                city: string;
+                verified: boolean;
+            } | null;
             vehicle_id: string;
             brand_id: number | null;
             brand_text: string | null;
@@ -8693,24 +8915,6 @@ export interface components {
                 suspension_brand: string | null;
                 exhaust_brand: string | null;
             };
-            /** @description M4.14 (09 §8.9): the linked catalogue product (BRD-02, "Builds mit {Produkt}"), or null. Null while parts_catalogue is off. */
-            product: {
-                id: string;
-                name: string;
-                full_name: string;
-                brand_slug: string;
-                archived: boolean;
-            } | null;
-            /**
-             * @description M4.14 (09 §8.10): "Eingebaut von", only once the business and the owner both confirmed it and the reader may see the
-             *     business; null otherwise. Null while businesses is off.
-             */
-            installed_by: {
-                slug: string;
-                name: string;
-                city: string;
-                verified: boolean;
-            } | null;
             /** @description The owner's alone (null for anybody else): the state of the tag while it waits or after the business declined it. */
             business_tag: {
                 id: string;
@@ -11285,6 +11489,7 @@ export interface operations {
                 /** @description The organiser filters by answer; everybody else always gets going members. */
                 status?: components["schemas"]["RsvpStatus"];
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: never;
@@ -11599,6 +11804,7 @@ export interface operations {
         parameters: {
             query?: {
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: {
@@ -11709,6 +11915,7 @@ export interface operations {
         parameters: {
             query?: {
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: {
@@ -11783,6 +11990,7 @@ export interface operations {
         parameters: {
             query?: {
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: {
@@ -12538,6 +12746,7 @@ export interface operations {
                 lng?: number | null;
                 radius_km?: number;
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: {
@@ -12664,6 +12873,7 @@ export interface operations {
         parameters: {
             query?: {
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: {
@@ -12734,10 +12944,260 @@ export interface operations {
             };
         };
     };
+    "v1.me.business-invites.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `BusinessInviteResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BusinessInviteResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business-invites.accept": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                invite: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MyBusinessResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyBusinessResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.business-invites.decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.me.business.tags.index": {
         parameters: {
             query?: {
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
                 status?: components["schemas"]["ModTagStatus"];
                 direction?: "incoming" | "outgoing";
@@ -16590,6 +17050,7 @@ export interface operations {
                 /** @description The map's view: minLng,minLat,maxLng,maxLat. */
                 bbox?: string;
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: {
@@ -16770,6 +17231,7 @@ export interface operations {
                 /** @description The map's view: minLng,minLat,maxLng,maxLat. */
                 bbox?: string;
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: {
@@ -19702,6 +20164,7 @@ export interface operations {
                 /** @description upcoming (default, by start) or past (newest first). */
                 when?: "upcoming" | "past";
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: {
@@ -20496,6 +20959,7 @@ export interface operations {
         parameters: {
             query?: {
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
                 status?: components["schemas"]["ModTagStatus"];
                 direction?: "incoming" | "outgoing";
@@ -21190,7 +21654,11 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description `MyBusinessResource` */
+            /**
+             * @description `MyBusinessResource`
+             *
+             *     `NoBusinessResource`
+             */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -21198,7 +21666,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["MyBusinessResource"];
-                    };
+                    } | components["schemas"]["NoBusinessResource"];
                 };
             };
             /** @description unauthenticated. */
@@ -21938,6 +22406,7 @@ export interface operations {
                 /** @description EVT-05 tabs: going (with the waitlist), interested, organised (every status), past. Default going. */
                 tab?: "going" | "interested" | "organised" | "past";
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: never;
@@ -23175,6 +23644,7 @@ export interface operations {
         parameters: {
             query?: {
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
                 q?: string | null;
                 brand?: string | null;
@@ -23214,6 +23684,8 @@ export interface operations {
                             /** @description The "cursor" that points to the previous set of items. */
                             prev_cursor: string | null;
                         };
+                        lead_photo: components["schemas"]["BuildPhotoResource"] | null;
+                        build_photos: components["schemas"]["BuildPhotoResource"][];
                     };
                 };
             };
@@ -23305,6 +23777,7 @@ export interface operations {
         parameters: {
             query?: {
                 per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string;
             };
             header?: {
@@ -26985,7 +27458,7 @@ export interface operations {
             query?: {
                 /** @description Rows per page, 1 to 50 (default 20). */
                 per_page?: number | null;
-                /** @description The `next_cursor` of the previous page. */
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
                 cursor?: string | null;
             };
             header?: never;

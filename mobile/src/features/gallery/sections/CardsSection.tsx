@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { createStyles, useBreakpoint } from '@/theme';
-import { BUILD_REACTION_GLYPHS } from '@/ui/motion/kit';
+import { BUILD_REACTION_GLYPHS , SaveToggle } from '@/ui/motion/kit';
 import { GridTile, IconButton, MEDIA_WALL_GAP, MediaCard, MediaCardSkeleton, mediaWallTileWidth, VehicleCard } from '@/ui';
 
 import { E46, LUKAS, PHOTOS, R34, noop, photoUri } from '../data';
@@ -14,6 +14,8 @@ const useStyles = createStyles((t) => ({
   rail: { gap: t.space[12] },
   railCard: { width: t.size.railCard },
   wall: { flexDirection: 'row', flexWrap: 'wrap', gap: MEDIA_WALL_GAP },
+  // HomeLead's action row under the lead: save and share beside each other, never over the card's open target.
+  leadActions: { alignItems: 'center', flexDirection: 'row', gap: t.space[4], paddingHorizontal: t.space[8] },
 }));
 
 const REACTIONS = [
@@ -38,18 +40,13 @@ function MediaCards() {
   const owner = { username: 'lukas.sc', avatarUri, avatarBlurhash: PHOTOS.wheels.blurhash };
   return (
     <>
-      <Group title="Media-Karte: Lead" note="Volle Breite, 4:5 (16:9 ab 1280), Radius 0, Scrim in die dunkle Bühne, Name in display.title. Text erst unterhalb der sicheren Linie. Das Skelett ist ein Block im Seitenverhältnis auf der dunklen Bühne, die Balken liegen unten darin.">
+      <Group title="Media-Karte: Lead" note="Volle Breite, 4:5 (16:9 ab 1280), Radius 0, Scrim in die dunkle Bühne, Name in display.title. Text erst unterhalb der sicheren Linie. Speichern und Teilen in einer Zeile darunter, nie über dem Foto: die ganze Karte öffnet den Build. Das Skelett ist ein Block im Seitenverhältnis auf der dunklen Bühne, die Balken liegen unten darin.">
         <FullBleed>
-          <MediaCard
-            variant="lead"
-            title={R34.title}
-            photo={PHOTOS.r34}
-            spec="500 PS · 540 Nm · AWD"
-            owner={owner}
-            save={{ saved, onToggle: () => setSaved((value) => !value) }}
-            onPress={noop}
-            testID="DEV-01.cards.lead"
-          />
+          <MediaCard variant="lead" title={R34.title} photo={PHOTOS.r34} spec="500 PS · 540 Nm · AWD" owner={owner} onPress={noop} testID="DEV-01.cards.lead" />
+          <View style={styles.leadActions} testID="DEV-01.cards.lead.actions">
+            <SaveToggle saved={saved} onToggle={() => setSaved((value) => !value)} saveLabel="Speichern" testID="DEV-01.cards.lead.save" />
+            <IconButton icon="share-network" label="Teilen" onPress={noop} testID="DEV-01.cards.lead.share" />
+          </View>
         </FullBleed>
         <Specimen label="Beispielinhalt" fill>
           <FullBleed>

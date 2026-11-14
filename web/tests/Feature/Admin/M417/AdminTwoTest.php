@@ -18,6 +18,7 @@ use App\Models\SecurityEvent;
 use App\Models\SocialAccount;
 use App\Models\User;
 use App\Services\Audit\Audit;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
 
@@ -100,7 +101,7 @@ it('puts the review queues on the dashboard for moderation.view only', function 
     m417As('moderator');
     $this->get('/admin')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
         ->where('queues.events_review.count', 1)->where('queues.events_review.status', 'warning')->whereType('queues.events_review.since', 'string')
-        ->where('queues.business_applications.count', 1));
+        ->where('queues.business_applications.count', 1)->where('queues.business_applications.status', 'ok'));
 
     auth('staff')->logout();
     app('auth')->forgetGuards();
@@ -189,4 +190,42 @@ it('lists ADM-60 comments with their open case, filtered by report and status, f
         ->where('rows.data.0.author.username', 'lukas.kommentar')->where('rows.data.0.vehicle_id', $update->vehicle_id)->where('flag.canManage', false));
     $this->get('/admin/comments?filter[q]=@jann')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('rows.meta.total', 1));
     $this->get('/admin/comments?filter[status]=removed')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('rows.meta.total', 0));
+});
+
+// ---- design-QA round 3 (DQ-1193, DQ-1196, DQ-1197) ---------------------------------------------------------------------------------
+
+it('sends the SLA timer of every open case to the Meldungen queue, measured on the frozen clock', function () {
+    seedStaffRoles();
+    $waiting = ModerationCase::factory()->create(['created_at' => '2026-11-01 08:00:00']);
+    $decided = ModerationCase::factory()->decided()->create(['created_at' => '2026-11-01 08:00:00']);
+    m417As('moderator');
+
+    $this->get('/admin/moderation/reports?qaNow=2026-11-02T10:30:00Z')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('rows.data', fn ($rows) => collect($rows)->firstWhere('id', $waiting->id)['waiting_minutes'] === 26 * 60 + 30));
+    $this->get('/admin/moderation/reports?tab=decided')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('rows.data', fn ($rows) => array_key_exists('waiting_minutes', collect($rows)->firstWhere('id', $decided->id)) && collect($rows)->firstWhere('id', $decided->id)['waiting_minutes'] === null));
+});
+
+it('ends the dashboard charts on the day before a frozen qaNow', function () {
+    m417As('owner');
+
+    $this->get('/admin?qaNow=2026-11-02T12:00:00%2B01:00')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->loadDeferredProps(['charts'], fn (AssertableInertia $reload) => $reload->where('charts.registrations.29.date', '2026-11-01')->where('charts.registrations.0.date', '2026-10-03')));
+});
+
+it('counts live browser sessions as signed in on ADM-59, as browser and OS only', function () {
+    $member = User::factory()->create(['username' => 'lena.browser']);
+    $agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+    DB::table('sessions')->insert([
+        ['id' => 'm417-live-session', 'user_id' => $member->id, 'ip_address' => '203.0.113.7', 'user_agent' => $agent, 'payload' => 'x', 'last_activity' => now()->subMinutes(5)->getTimestamp()],
+        ['id' => 'm417-old-session', 'user_id' => $member->id, 'ip_address' => '203.0.113.8', 'user_agent' => $agent, 'payload' => 'x', 'last_activity' => now()->subDays(3)->getTimestamp()],
+    ]);
+    m417As('owner');
+
+    $response = $this->get("/admin/members/{$member->id}?tab=security")->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->has('security.browser_sessions', 1)
+        ->where('security.browser_sessions.0.browser', 'Chrome')->where('security.browser_sessions.0.os', 'macOS')
+        ->whereType('security.browser_sessions.0.last_active_at', 'string')->whereType('security.browser_sessions.0.expires_at', 'string')
+        ->missing('security.browser_sessions.0.user_agent')->missing('security.browser_sessions.0.id'));
+    expect((string) $response->getContent())->not->toContain('203.0.113.7')->not->toContain('m417-live-session')->not->toContain('KHTML');
 });

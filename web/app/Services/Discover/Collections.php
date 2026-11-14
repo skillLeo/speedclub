@@ -11,8 +11,9 @@ use App\Services\Garage\VehiclePresenter;
 
 /**
  * "Kollektionen" of DISC-01 (m2.3 contract §5): the active rows of `collections` in their order, each with the real number of builds the
- * viewer can find with its filters. A collection whose filters match no visible build, no longer resolve (a catalogue entry the admin
- * removed) or do not pass the DISC-02 parameter rules (a value of the wrong type, M2.3 review #10) is left out; an unknown stored sort is
+ * viewer can find with its filters (samples never counted, DQ-1212, ADR-457; while shown they keep a collection listed). A collection
+ * whose filters are empty (DQ-1214: that is every public build, not a collection), match no visible build, no longer resolve (a catalogue
+ * entry the admin removed) or do not pass the DISC-02 parameter rules (a value of the wrong type, M2.3 review #10) is left out; an unknown stored sort is
  * read as none. The cover is the chosen build's cover when that build is visible and in the collection, else the cover of the
  * collection's build changed last that has a visible photo; null only when none of them has one.
  *
@@ -56,9 +57,15 @@ final class Collections
             }
 
             $filters = $resolved['filters'];
-            $count = $this->search->countVehicles($viewer, null, $filters);
 
-            if ($count->count === 0) {
+            if ($filters->isEmpty()) {
+                continue;
+            }
+
+            $count = $this->search->countRealVehicles($viewer, null, $filters);
+
+            // Samples alone (while shown) keep the collection listed with 0; the extra query runs only then.
+            if ($count->count === 0 && ! $this->search->matching($viewer, null, $filters)->exists()) {
                 continue;
             }
 

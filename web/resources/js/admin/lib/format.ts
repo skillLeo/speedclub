@@ -57,6 +57,16 @@ export function formatNumber(value: number | null | undefined): string {
     return new Intl.NumberFormat(locale()).format(value);
 }
 
+/** A share 0–1 as "62,5 %" (no sign; formatPercent is for deltas). */
+export function formatShare(value: number): string {
+    return new Intl.NumberFormat(locale(), { style: 'percent', maximumFractionDigits: 1 }).format(value);
+}
+
+/** A number with at most one decimal: "3,5". */
+export function formatDecimal(value: number): string {
+    return new Intl.NumberFormat(locale(), { maximumFractionDigits: 1 }).format(value);
+}
+
 export function formatPercent(value: number): string {
     return new Intl.NumberFormat(locale(), { style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero' }).format(value);
 }

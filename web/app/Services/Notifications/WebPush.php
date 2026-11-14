@@ -79,6 +79,8 @@ class WebPush
             return 0;
         }
 
+        // SEC-414-02: never to a browser whose sign-in has ended (those subscriptions go now).
+        $subscriptions = app(WebPushSessions::class)->live($subscriptions);
         $payload = self::payload($title, $body, $url, $tag, $lang);
         $client = $this->client($vapid);
         $options = ['TTL' => config()->integer('speedclub.web_push.ttl_seconds'), 'urgency' => $urgency];

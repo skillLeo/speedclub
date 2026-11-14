@@ -151,8 +151,22 @@ it('locks the Impressum fields of a verified business, profile fields stay open'
 
     $this->patchJson('/api/v1/me/business', ['legal_name' => 'Andere GmbH', 'street' => 'Neue Straße 1'])->assertUnprocessable()
         ->assertJsonValidationErrors(['legal_name', 'street']);
-    $this->patchJson('/api/v1/me/business', ['about' => 'Fahrwerk und Achsvermessung seit 2009.', 'services' => ['Fahrwerk'], 'phone' => '+49 40 1234567', 'legal_name' => $this->business->legal_name])->assertOk()
-        ->assertJsonPath('data.about', 'Fahrwerk und Achsvermessung seit 2009.')->assertJsonPath('data.services', ['Fahrwerk'])->assertJsonPath('data.identity_locked', true);
+    // SEC-414-06: the Impressum's contact, the website, the point and the kind lock too.
+    $this->patchJson('/api/v1/me/business', ['email' => 'neu@phishing.test', 'phone' => '+49 40 1234567', 'website' => 'https://phishing.test', 'lat' => 52.52, 'lng' => 13.405, 'kind' => 'tuner'])
+        ->assertUnprocessable()->assertJsonValidationErrors(['email', 'phone', 'website', 'lat', 'lng', 'kind']);
+    expect($this->business->refresh()->email)->toBe('kontakt@example.test');
+    // Unchanged values may come along (a form that sends everything), the e-mail in any case.
+    $this->patchJson('/api/v1/me/business', ['about' => 'Fahrwerk und Achsvermessung seit 2009.', 'services' => ['Fahrwerk'], 'legal_name' => $this->business->legal_name, 'email' => 'Kontakt@Example.test', 'lat' => 53.5511, 'lng' => 9.9937, 'kind' => 'workshop'])->assertOk()
+        ->assertJsonPath('data.about', 'Fahrwerk und Achsvermessung seit 2009.')->assertJsonPath('data.services', ['Fahrwerk'])->assertJsonPath('data.identity_locked', true)
+        ->assertJsonPath('data.locked_fields', Business::lockedFields());
+});
+
+it('keeps the contact fields open while the business is not verified yet', function () {
+    $this->business->forceFill(['status' => BusinessStatus::Rejected])->save();
+    Sanctum::actingAs($this->owner);
+
+    $this->patchJson('/api/v1/me/business', ['email' => 'neu@werkstatt.test', 'phone' => '+49 40 1234567'])->assertOk()
+        ->assertJsonPath('data.locked_fields', []);
 });
 
 it('lets staff of the team edit but not withdraw; others get 403 or 404', function () {
@@ -164,8 +178,9 @@ it('lets staff of the team edit but not withdraw; others get 403 or 404', functi
     $this->postJson('/api/v1/me/business/members', ['username' => 'someone'])->assertForbidden();
 
     Sanctum::actingAs(User::factory()->create());
-    $this->getJson('/api/v1/me/business')->assertNotFound()->assertJsonPath('code', 'business_unavailable');
-    $this->patchJson('/api/v1/me/business', ['about' => 'x'])->assertNotFound();
+    // M4.18: no business is an answer (data null), not a 404; the routes that act on one still answer 404.
+    $this->getJson('/api/v1/me/business')->assertOk()->assertExactJson(['data' => null]);
+    $this->patchJson('/api/v1/me/business', ['about' => 'x'])->assertNotFound()->assertJsonPath('code', 'business_unavailable');
 });
 
 it('withdraws an application and resubmits a rejected one; a verified business stays', function () {
@@ -195,16 +210,20 @@ it('uploads logo and cover through the media pipeline', function () {
     $this->post('/api/v1/me/business/logo', ['file' => UploadedFile::fake()->image('cover.jpg', 1600, 900)], ['Accept' => 'application/json'])->assertNotFound();
 });
 
-it('manages the team: the owner adds and removes staff, staff may leave, the owner stays', function () {
+it('manages the team: the owner invites, the member accepts and joins as staff, staff may leave, the owner stays', function () {
     $mechanic = User::factory()->create(['username' => 'tom.schrauber']);
     Sanctum::actingAs($this->owner);
 
-    $this->postJson('/api/v1/me/business/members', ['username' => '@tom.schrauber'])->assertOk()->assertJsonPath('data.team.1.username', 'tom.schrauber');
+    // SEC-414-01: an invitation, not a membership, until the member accepts.
+    $this->postJson('/api/v1/me/business/members', ['username' => '@tom.schrauber'])->assertOk()
+        ->assertJsonPath('data.invites.0.username', 'tom.schrauber')->assertJsonCount(1, 'data.team');
     $this->postJson('/api/v1/me/business/members', ['username' => 'gibt.es.nicht'])->assertUnprocessable()->assertJsonValidationErrors('username');
     $this->postJson('/api/v1/me/business/members', ['username' => 'tom.schrauber'])->assertUnprocessable();
     $this->deleteJson('/api/v1/me/business/members/jana.werkstatt')->assertForbidden();
 
     Sanctum::actingAs($mechanic);
+    $invite = $this->getJson('/api/v1/me/business-invites')->assertJsonCount(1, 'data')->json('data.0.id');
+    $this->postJson("/api/v1/me/business-invites/$invite/accept")->assertOk()->assertJsonPath('data.team.1.username', 'tom.schrauber');
     $this->deleteJson('/api/v1/me/business/members/tom.schrauber')->assertNoContent();
     expect(BusinessMember::query()->where('user_id', $mechanic->id)->exists())->toBeFalse();
 });

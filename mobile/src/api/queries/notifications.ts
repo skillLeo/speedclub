@@ -44,6 +44,9 @@ export function useNotifications() {
     initialPageParam: null as string | null,
     getNextPageParam: (last: NotificationsPage) => last.meta.next_cursor ?? undefined,
     enabled: member !== null,
+    // The stored list (offline reads) is shown at once but always asked again when HOME-02 opens: with the default 60 s a reload
+    // kept a row naming a member the recipient had just blocked (final Phase 4 gate, f-notifications, WebKit).
+    staleTime: 0,
     retry: retryUnlessAnswered,
   });
 }

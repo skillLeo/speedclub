@@ -141,7 +141,7 @@ if (first !== null && dialog === 'reject') reject(first);
                     <div class="min-w-200 grow basis-0">
                         <Field :label="trans('catalog.filters.q')"><Input v-model="filters.q" size="sm" maxlength="100" :placeholder="trans('catalog.filters.q_request')" data-testid="ADM-14-requests.filter.q" /></Field>
                     </div>
-                    <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" class="shrink-0">{{ trans('catalog.filters.apply') }}</Button>
+                    <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" class="shrink-0">{{ trans('catalog.filters.apply') }}</Button>
                 </form>
             </template>
 

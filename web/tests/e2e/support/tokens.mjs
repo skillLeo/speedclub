@@ -55,6 +55,14 @@ export function themeColors(theme) {
     const entry = { name, ...parseColor(/** @type {string} */ (value)) };
     (name.startsWith('qr.') ? qr : general).push(entry);
   }
+  // The member's accent sets (accentPalette in tokens.json, SET-11 / MEM-01 "Akzentfarbe"): token colours too, in the mode of the
+  // theme (dark sets for Carbon and Schwarz, light for Hell). Without them a member's own accent would read as a raw colour.
+  const mode = def.mode === 'light' || theme === 'light' ? 'light' : 'dark';
+  for (const [set, modes] of Object.entries(tokens.accentPalette?.sets ?? {})) {
+    for (const [role, value] of Object.entries(/** @type {Record<string, string>} */ (modes[mode] ?? {}))) {
+      general.push({ name: `accent.${set}.${role}`, ...parseColor(value) });
+    }
+  }
   return { general, qr };
 }
 

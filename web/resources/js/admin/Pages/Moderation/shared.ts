@@ -41,6 +41,8 @@ export interface CaseRow {
     web_form: boolean;
     priority: PriorityParts;
     first_report_at: string | null;
+    /** Minutes an open case has waited since its first report (SLA timer, DQ-1193); null once decided. */
+    waiting_minutes?: number | null;
     last_report_at: string | null;
     assigned: Assigned | null;
     ai_score: number | null;
@@ -68,6 +70,36 @@ export interface CaseSummary {
     priority: PriorityParts;
     created_at: string | null;
     decided_at: string | null;
+}
+
+/** The target as members see it now (CaseRecord::preview); null for a message case and for a target that is gone. */
+export interface CasePreviewData {
+    kind: 'member' | 'vehicle' | 'photo' | 'build_update' | 'modification' | 'comment' | 'event' | 'business';
+    [key: string]: unknown;
+}
+
+/** ADM-20 SplitQueue pane (ReportsQueueController::selected): what ADM-21 shows for a decision. Message content is never part of it. */
+export interface SelectedCase {
+    case: CaseSummary;
+    preview: CasePreviewData | null;
+    reports: ReportItem[];
+    decision: DecisionDetail | null;
+    composer: ComposerOptions;
+    templates: SorTemplate[];
+    messageCase: boolean;
+    ai: { score: number; summary: string | null } | null;
+}
+
+/** The session's last decision (CaseActionsController::DECIDED) and take (::TAKEN). */
+export interface DecidedCase {
+    id: string;
+    reference: string;
+    outcome: DecisionActionKey;
+    approval: boolean;
+}
+export interface TakenCase {
+    id: string;
+    reference: string;
 }
 
 export interface ReportItem {

@@ -69,11 +69,11 @@ export const isForm = (route) =>
   FORMS_EXPLICIT.includes(route.id) ||
   (isSpaRoute(route) && FORM_PATH.test(route.path) && route.states.includes('loading') && !route.states.includes('empty'));
 
-/** @param {{id: string}} route */
-export const isEn12 = (route) => EN12.includes(route.id);
+/** @param {Pick<RouteDef, 'id' | 'p4'>} route */
+export const isEn12 = (route) => EN12.includes(route.id) || route.p4?.en === true;
 
-/** @param {{id: string}} route */
-export const isTablet = (route) => TABLET.includes(route.id);
+/** @param {Pick<RouteDef, 'id' | 'p4'>} route */
+export const isTablet = (route) => TABLET.includes(route.id) || route.p4?.tablet === true;
 
 /** @param {{id: string}} route */
 export const isSpecimen = (route) => SPECIMEN.includes(route.id);

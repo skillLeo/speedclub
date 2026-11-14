@@ -52,7 +52,8 @@ export const ModelTile = memo(function ModelTile({ name, count, cover, width, on
   const { t } = useTranslation('discover');
   const styles = useStyles();
   const format = useFormat();
-  const countLabel = t('make.modelCount', { count, formatted: format.number(count) });
+  // ADR-466: counts are real builds only; a model with samples alone keeps its tile without "0 Builds".
+  const countLabel = count > 0 ? t('make.modelCount', { count, formatted: format.number(count) }) : null;
   return (
     <PressableScale role="link" aria-label={isWeb ? undefined : joinLabel([name, countLabel])} onPress={onOpen} ring="card" testID={testID}>
       {(state) => (
@@ -71,9 +72,11 @@ export const ModelTile = memo(function ModelTile({ name, count, cover, width, on
             >
               {keepNameTogether(name)}
             </Text>
-            <Text variant="caption" color="text.secondary" numeric hyphenate={false} testID={`${testID}.count`}>
-              {countLabel}
-            </Text>
+            {countLabel ? (
+              <Text variant="caption" color="text.secondary" numeric hyphenate={false} testID={`${testID}.count`}>
+                {countLabel}
+              </Text>
+            ) : null}
           </View>
         </>
       )}

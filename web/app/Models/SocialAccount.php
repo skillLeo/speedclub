@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $user_id
  * @property SocialProvider $provider
  * @property string $provider_sub
+ * @property string|null $client_id the ID token's `aud` at linking: the client its Apple tokens were issued to (SEC-P4-03)
  */
 #[Hidden(['provider_sub', 'refresh_token_encrypted'])]
 class SocialAccount extends Model

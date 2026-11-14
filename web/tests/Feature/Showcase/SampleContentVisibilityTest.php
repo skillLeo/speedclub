@@ -8,13 +8,16 @@ use App\Models\Media;
 use App\Models\Save;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Discover\ModelKey;
 use App\Services\PublicPages\LandingPage;
 use App\Services\PublicPages\OgImages;
 use App\Services\PublicPages\SitemapWriter;
+use App\Services\Search\VehicleSearchProjector;
 use App\Services\Showcase\SampleContent;
 use App\Services\Social\MessagingEligibility;
 use Database\Seeders\FeatureFlagSeeder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
 require_once __DIR__.'/../Home/HomeTestHelpers.php';
@@ -176,6 +179,32 @@ describe('lists', function () {
             ->and($members)->toContain('echt.fahrer');
     })->with('sample flag');
 
+    it('Entdecken: make tiles, popular models and the model page count real builds only (DQ-1212)', function (bool $on) {
+        smpFlag($on);
+        $pair = smpPair();
+        $real = $pair['real'];
+        // Two more samples of the real build's make and model, and a third make that has samples only.
+        foreach ([1, 2] as $index) {
+            homeBuild($pair['sampleOwner'], 1 + $index, ['is_sample' => true, 'make_id' => $real->make_id, 'model_id' => $real->model_id, 'generation_id' => $real->generation_id]);
+        }
+
+        $body = test()->getJson('/api/v1/discover')->assertOk()->json('data');
+        $tiles = array_column($body['makes'], 'vehicle_count', 'slug');
+        $models = array_column($body['popular_models'], 'vehicle_count', 'key');
+        $sampleSlug = (string) $pair['sample']->make?->slug;
+        $realKey = ModelKey::of($real->vehicleModel()->firstOrFail());
+        $modelPage = test()->getJson('/api/v1/discover/models/'.$realKey)->assertOk()->json('data');
+
+        // The real make shows 1 however many samples share it; a make of samples alone keeps its tile (count 0, the app hides it)
+        // while samples show, and is gone with them.
+        expect($tiles[(string) $real->make?->slug])->toBe(1)
+            ->and(array_key_exists($sampleSlug, $tiles))->toBe($on)
+            ->and($tiles[$sampleSlug] ?? 0)->toBe(0)
+            ->and($models[$realKey])->toBe(1)
+            ->and($modelPage['model']['vehicle_count'])->toBe(1)
+            ->and($modelPage['make']['vehicle_count'])->toBe(1);
+    })->with('sample flag');
+
     it('Entdecken: the make page and its counts', function (bool $on) {
         smpFlag($on);
         $pair = smpPair();
@@ -184,18 +213,24 @@ describe('lists', function () {
         $response = test()->getJson('/api/v1/discover/makes/'.$sampleMake?->slug);
         $real = test()->getJson('/api/v1/discover/makes/'.$pair['real']->make?->slug)->assertOk()->json('data.make.vehicle_count');
 
-        expect($response->status() === 200 ? $response->json('data.make.vehicle_count') : 0)->toBe($on ? 1 : 0)
+        // DQ-1212 (ADR-457): a make of samples alone has its page while samples show, but its count stays 0: samples never count.
+        expect($response->status())->toBe($on ? 200 : 404)
+            ->and($response->status() === 200 ? $response->json('data.make.vehicle_count') : 0)->toBe(0)
             ->and($real)->toBe(1);
     })->with('sample flag');
 
     it('Entdecken: collections count and cover no sample build', function (bool $on) {
         smpFlag($on);
         $pair = smpPair();
-        DiscoverCollection::factory()->create(['key' => 'alle', 'filters' => [], 'position' => 1, 'cover_vehicle_id' => $pair['sample']->id]);
+        // Both builds of one make, so the collection's filter takes both.
+        DB::table('vehicles')->where('id', $pair['sample']->id)->update(['make_id' => $pair['real']->make_id]);
+        app(VehicleSearchProjector::class)->rebuild($pair['sample']->id);
+        DiscoverCollection::factory()->create(['key' => 'marke', 'filters' => ['make' => (string) $pair['real']->make?->slug], 'position' => 1, 'cover_vehicle_id' => $pair['sample']->id]);
 
         $collection = test()->getJson('/api/v1/discover')->assertOk()->json('data.collections.0');
 
-        expect($collection['count'])->toBe($on ? 2 : 1)
+        // DQ-1212: the sample may be the cover while samples show, but the count is of real builds only.
+        expect($collection['count'])->toBe(1)
             ->and($collection['cover']['id'])->toBe(Media::query()->where('mediable_id', ($on ? $pair['sample'] : $pair['real'])->id)->value('id'));
     })->with('sample flag');
 

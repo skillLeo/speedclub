@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Security;
 
+use App\Rules\ValidCursor;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -17,8 +18,8 @@ class SecurityEventsRequest extends FormRequest
         return [
             /** Rows per page, 1 to 50 (default 20). */
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
-            /** The `next_cursor` of the previous page. */
-            'cursor' => ['nullable', 'string', 'max:500'],
+            /** The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+            'cursor' => ['nullable', 'string', 'max:500', new ValidCursor(['created_at', 'id'])],
         ];
     }
 

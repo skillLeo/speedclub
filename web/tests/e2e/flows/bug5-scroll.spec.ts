@@ -47,8 +47,17 @@ function offsetOf(list: Locator): Promise<{ top: number; max: number }> {
 /**
  * Wheels the list to its end (loading further pages on the way) and back to the top, checking the chips and the error screen at every
  * step. Returns the tallest chip seen.
+ *
+ * `endMarker`: the list's own "this is all" row for a list that loads pages (HOME-01.end). Resting at the bottom while the next page
+ * loads (HOME-01.loadingMore) is not the end: the Phase 4 gate counted such pauses as the end, or ran out of steps before the real
+ * one, since Start's stream holds every public build (157 after the showcase seed, about 138,000 px at 360 to 412).
  */
-async function scrollThrough(page: Page, listId: string, chips: string): Promise<{ tallest: number; widest: number; steps: number }> {
+async function scrollThrough(
+  page: Page,
+  listId: string,
+  chips: string,
+  endMarker?: string,
+): Promise<{ tallest: number; widest: number; steps: number }> {
   const list = id(page, listId);
   const box = await list.boundingBox();
   if (!box) throw new Error(`${listId} is not on screen`);
@@ -64,20 +73,22 @@ async function scrollThrough(page: Page, listId: string, chips: string): Promise
       widest = Math.max(widest, chip.width);
     }
   };
-  // Down: until the offset stops growing at its end three times in a row (a next page may arrive and extend the list).
+  // Down: until the offset stops growing at its end three times in a row (a next page may arrive and extend the list), with the end
+  // marker drawn when the list has one. 400 wheels of 900 cover three times the stream's length today.
+  const ended = async () => endMarker === undefined || (await id(page, endMarker).count()) > 0;
   let still = 0;
   let previous = -1;
-  for (let step = 0; step < 120 && still < 3; step++) {
+  for (let step = 0; step < 400 && still < 3; step++) {
     await page.mouse.wheel(0, 900);
     const { top, max } = await offsetOf(list);
     steps += 1;
     await check();
-    still = top >= max - 2 && top === previous ? still + 1 : 0;
+    still = top >= max - 2 && top === previous && (await ended()) ? still + 1 : 0;
     previous = top;
   }
   expect(still, `${listId} reached its end`).toBeGreaterThanOrEqual(3);
   // And back up to the top.
-  for (let step = 0; step < 120; step++) {
+  for (let step = 0; step < 400; step++) {
     await page.mouse.wheel(0, -1200);
     const { top } = await offsetOf(list);
     await check();
@@ -100,7 +111,7 @@ for (const width of [360, 412]) {
         test.setTimeout(240_000);
         await page.goto(qaUrl('/app/'));
         await expect(id(page, 'HOME-01.featured')).toBeVisible();
-        const seen = await scrollThrough(page, 'HOME-01.list', 'HOME-01.mods.list');
+        const seen = await scrollThrough(page, 'HOME-01.list', 'HOME-01.mods.list', 'HOME-01.end');
         expect(seen.tallest, 'a Beliebte Mods chip was drawn on the way').toBeGreaterThan(0);
         expect(seen.tallest, 'no chip is taller than a chip').toBeLessThanOrEqual(CHIP_MAX_HEIGHT);
         expect(seen.widest, 'no chip is wider than the window').toBeLessThanOrEqual(width);

@@ -19,16 +19,40 @@ use Illuminate\Support\Facades\DB;
  * member approves, as for a member suspension) and reinstate it; reopen sends a decision back to the queue (the SplitQueue's undo).
  * Every decision is audited with its reason; the owner is told in the app after the commit.
  *
- * Optimistic locking (as ADR-439 for events): every write names the `version` (updated_at) the staff member decided on; a business
- * that changed since answers 409 edit_conflict and nothing happens. A state that no longer allows the action is 409 conflict.
+ * Optimistic locking (as ADR-439 for events): every write names the `version` the staff member decided on (SEC-414-07: the
+ * business's monotonic `version` column, raised on every write, so two writes in one second never share it); a business that changed
+ * since answers 409 edit_conflict and nothing happens. A state that no longer allows the action is 409 conflict. The approval of a
+ * suspension checks only that the business is still verified: owner edits after the request never void it (SEC-414-07).
+ *
+ * SEC-414-03: reopen is the undo of one's own decision, not a takedown. A rejected business may go back to the queue; a verified one
+ * only for the staff member who verified it, within speedclub.businesses.reopen_window_minutes of the verification and while no build
+ * is tagged; later only suspend (four-eyes) takes it offline. The owner hears whenever a verified business goes back to review.
  */
 class ReviewBusiness
 {
     public function __construct(private readonly Notifier $notifier) {}
 
-    public static function version(Business $business): ?string
+    public static function version(Business $business): string
     {
-        return $business->updated_at?->toIso8601String();
+        return (string) ($business->version ?? 1);
+    }
+
+    /**
+     * SEC-414-03: whether $staff may reopen $business: a rejected one, or one $staff verified within the window and without tags.
+     */
+    public static function reopenable(Business $business, Staff $staff): bool
+    {
+        if ($business->status === BusinessStatus::Rejected) {
+            return true;
+        }
+
+        $verifiedAt = $business->verified_at;
+
+        return $business->status === BusinessStatus::Verified
+            && (string) $business->getAttribute('verified_by') === (string) $staff->id
+            && $verifiedAt !== null
+            && $verifiedAt->greaterThan(now()->subMinutes(config()->integer('speedclub.businesses.reopen_window_minutes')))
+            && ! $business->tags()->exists();
     }
 
     public function verify(Staff $staff, Business $business, ?string $reason, string $seen): Business
@@ -58,7 +82,8 @@ class ReviewBusiness
     {
         FourEyes::executor(['business.suspend'], $requester, $approver, 'moderation.decide');
 
-        $decided = $this->transition($requester, $business, $seen, [BusinessStatus::Verified], BusinessStatus::Suspended, BusinessAuditEvent::Suspended, $reason, [
+        // SEC-414-07: the reason is about the business, not about one version of its text: only its status still has to allow it.
+        $decided = $this->transition($requester, $business, null, [BusinessStatus::Verified], BusinessStatus::Suspended, BusinessAuditEvent::Suspended, $reason, [
             'suspended_at' => now(), 'review_reason' => $reason,
         ], ['approved_by' => $approver->id]);
         $this->notifier->businessReviewed($decided->owner, $decided, 'suspended', $reason);
@@ -81,12 +106,10 @@ class ReviewBusiness
      */
     public function reopen(Staff $staff, Business $business, ?string $reason, string $seen): Business
     {
-        return DB::transaction(function () use ($staff, $business, $reason, $seen): Business {
+        $reopened = DB::transaction(function () use ($staff, $business, $reason, $seen): array {
             $locked = $this->lock($business, $seen);
-            $reopenable = ($locked->status === BusinessStatus::Verified && ! $locked->tags()->exists())
-                || $locked->status === BusinessStatus::Rejected;
 
-            if (! $reopenable) {
+            if (! self::reopenable($locked, $staff)) {
                 throw new ApiException(ErrorCode::Conflict);
             }
 
@@ -97,8 +120,17 @@ class ReviewBusiness
             ])->save();
             Audit::record(BusinessAuditEvent::Reopened->value, $locked, ['status' => $before], ['status' => BusinessStatus::Applied->value], $reason, $staff);
 
-            return $locked;
+            return [$locked, $before];
         });
+
+        [$locked, $before] = $reopened;
+
+        // SEC-414-03: the owner hears whenever their business stops being public.
+        if ($before === BusinessStatus::Verified->value) {
+            $this->notifier->businessReviewed($locked->owner, $locked, 'reopened', null);
+        }
+
+        return $locked;
     }
 
     /**
@@ -106,7 +138,7 @@ class ReviewBusiness
      * @param  array<string, mixed>  $columns
      * @param  array<string, mixed>  $extraAfter
      */
-    private function transition(Staff $staff, Business $business, string $seen, array $from, BusinessStatus $to, BusinessAuditEvent $event, ?string $reason, array $columns, array $extraAfter = []): Business
+    private function transition(Staff $staff, Business $business, ?string $seen, array $from, BusinessStatus $to, BusinessAuditEvent $event, ?string $reason, array $columns, array $extraAfter = []): Business
     {
         return DB::transaction(function () use ($staff, $business, $seen, $from, $to, $event, $reason, $columns, $extraAfter): Business {
             $locked = $this->lock($business, $seen);
@@ -123,12 +155,15 @@ class ReviewBusiness
         });
     }
 
-    private function lock(Business $business, string $seen): Business
+    /**
+     * @param  string|null  $seen  the version the decision was taken on; null: any (the approval of a suspension)
+     */
+    private function lock(Business $business, ?string $seen): Business
     {
         /** @var Business $locked */
         $locked = Business::query()->whereKey($business->id)->lockForUpdate()->firstOrFail();
 
-        if ($seen !== self::version($locked)) {
+        if ($seen !== null && $seen !== self::version($locked)) {
             throw new ApiException(ErrorCode::EditConflict);
         }
 

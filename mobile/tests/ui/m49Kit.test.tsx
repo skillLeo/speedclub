@@ -117,6 +117,14 @@ describe('QrReveal backdrop (DQ-1053, ADR-451)', () => {
     const compact = (material.qrBackdrop as { zoom: number; zoomCompact?: number }).zoomCompact ?? material.qrBackdrop.zoom;
     expect(backdropZoom({ x: 0.54, y: 0.66 }, true).transform).toEqual([{ scale: compact }]);
     expect(backdropOrigin({ x: 1.4, y: -1 })).toBe('100% 0%');
+    // ADR-458: once the stage is measured the focal point (the car) is moved to the stage's centre, never past what the zoom adds.
+    const zoom = material.qrBackdrop.zoom;
+    const anchored = backdropZoom({ x: 0.54, y: 0.66 }, false, { width: 457, height: 482 });
+    expect(anchored.transformOrigin).toBe('50% 50%');
+    expect(anchored.transform).toEqual([{ translateX: Math.round(-0.04 * 457 * zoom) }, { translateY: Math.round(-0.16 * 482 * zoom) }, { scale: zoom }]);
+    const edge = backdropZoom({ x: 0, y: 1 }, false, { width: 400, height: 400 }).transform;
+    expect(edge[0]).toEqual({ translateX: Math.round(((zoom - 1) / 2) * 400) });
+    expect(edge[1]).toEqual({ translateY: -Math.round(((zoom - 1) / 2) * 400) });
     await renderUi(
       <ThemeProvider>
         <QrReveal revealed photo={{ source: 1, focal: { x: 0.54, y: 0.66 } }} testID="q">

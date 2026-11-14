@@ -16,7 +16,7 @@ test.describe('F11 Social 2.0', () => {
     // The mentioned member follows the owner, so the owner may mention them (mentions/suggest: followers and follows).
     expectStatus(await mentioned.api.post(`users/${owner.username}/follow`), 200, 'follow owner');
     // The follower follows the build only (09 §8.6), not its owner.
-    expectStatus(await follower.api.put(`vehicles/${vehicle.id}/follow`), 200, 'follow build');
+    expectStatus(await follower.api.put(`vehicles/${vehicle.id}/follow`, {}), 200, 'follow build');
 
     // 1. The owner posts from UPD-01 and mentions through the @ autocomplete.
     const own = await browserOf(browser, owner, { pageErrors, blockedRequests, expected: [] });

@@ -15,7 +15,7 @@ import { createStyles, size, useBreakpoint } from '@/theme';
 import { ErrorState, toast, useCollapsingHeader, type HeaderAction } from '@/ui';
 
 import { GuestInvitation, guestHeroHeight } from '../components/GuestInvitation';
-import { PROFILE_COLUMN_MAX, PROFILE_WIDE_MAX, ProfileHeader, profileCover, profileCoverHeight } from '../components/ProfileHeader';
+import { PROFILE_COLUMN_MAX, PROFILE_WIDE_MAX, ProfileHeader, profileCover, profileCoverHeight, profileCoverWidth } from '../components/ProfileHeader';
 import { ProfileFrame } from '../components/ProfileFrame';
 import { ProfileSkeleton } from '../components/ProfileSkeleton';
 import { EventsPanel, GaragePanel, initialProfileTab, ProfileTabBar, profileTabs, SavedPanel, UpdatesPanel, useProfileTabFlags, type ProfileTab } from '../components/ProfileTabs';
@@ -43,8 +43,8 @@ export function useProfileRestriction(me: Me | undefined): string | null {
 }
 
 /**
- * PROF-01 Mein Profil ★ (09 §7.7): header pattern (b) — the 16:9 cover edge to edge (the member's cover, else the main build's
- * photo) with the settings gear floating over `scrim.top`; avatar, name, counts and the actions; then Garage · Updates · Treffen ·
+ * PROF-01 Mein Profil ★ (09 §7.7): header pattern (b) — the 16:9 cover edge to edge (the member's cover, else a build photo no
+ * garage card shows, else the brand stage, DQ-1234; on the desktop across the wide column, DQ-1159) with the settings gear floating on its top-right corner over `scrim.top`; avatar, name, counts and the actions; then Garage · Updates · Treffen ·
  * Gespeichert. Signed in: auth/me and me/vehicles, both kept for offline use. A guest gets the brand invitation.
  */
 export function ProfileScreen() {
@@ -71,8 +71,8 @@ export function ProfileScreen() {
   // The empty state has no vehicles, so its count says 0 (DQ-123).
   const member = loaded && qaState === 'empty' ? { ...loaded, stats: { ...loaded.stats, vehicles: 0 } } : loaded;
   const vehicles = qaState === 'empty' ? [] : profileVehicles(vehiclesQuery.data);
-  const cardCovers = vehicles.map((vehicle) => vehicle.cover);
-  const cover = member ? profileCover(member, cardCovers) : null;
+  // The member's photo for the cover, or null for the brand stage (DQ-1234): a signed-in profile always opens on a cover.
+  const cover = member ? profileCover(member, vehicles) : null;
   const columnWidth = Math.min(width, PROFILE_COLUMN_MAX);
   const inner = Math.max(0, columnWidth - 2 * gutter);
   // Desktop Garage tab: the wide column, the cards side by side (GaragePanel garageColumns).
@@ -98,14 +98,15 @@ export function ProfileScreen() {
   const settings: HeaderAction = { icon: 'gear-six', label: t('rows.settings'), onPress: () => router.push('/settings'), testID: `${ROUTE}.settings` };
   const loading = qaState === 'loading' || status === 'loading' || (status === 'member' && me.isPending && me.fetchStatus !== 'paused' && qaState !== 'error');
   const guest = !loading && status === 'guest';
-  const coverHeight = guest ? guestHeroHeight(width, kind) : cover ? profileCoverHeight(width, kind) : 0;
+  const coverHeight = guest ? guestHeroHeight(width, kind) : member ? profileCoverHeight(width, kind) : 0;
   // The bar turns solid as the cover's bottom passes under it.
   const collapseAt = Math.max(0, coverHeight - size.header);
 
   let content: ReactNode;
   let overPhoto = false;
   if (loading) {
-    const withCover = Boolean(me.data?.cover ?? sessionMember?.hasCover);
+    // A member's profile always has a cover, their photo or the brand stage (DQ-1234); an unknown session may be a guest's.
+    const withCover = Boolean(me.data ?? sessionMember);
     // DQ-1092: the skeleton takes the content's header pattern (b): with a cover the bar floats over it, so the cover block starts
     // at y 0 as the cover will, and nothing jumps 44 up when the profile arrives.
     overPhoto = withCover;
@@ -126,10 +127,20 @@ export function ProfileScreen() {
     overPhoto = true;
     content = <GuestInvitation routeId={ROUTE} returnTo={PROFILE_PATH} width={width} />;
   } else {
-    overPhoto = cover !== null;
+    overPhoto = true;
     let panel: ReactNode;
     if (current === 'garage') {
-      panel = <GaragePanel routeId={ROUTE} own vehicles={vehicles} query={vehiclesQuery} width={kind === 'desktop' ? wideInner : inner} onAdd={addVehicle} />;
+      panel = (
+        <GaragePanel
+          routeId={ROUTE}
+          own
+          vehicles={vehicles}
+          query={vehiclesQuery}
+          width={kind === 'desktop' ? wideInner : inner}
+          onAdd={addVehicle}
+          profileCover={cover}
+        />
+      );
     } else if (current === 'updates') {
       const main = vehicles[0];
       panel = (
@@ -151,14 +162,13 @@ export function ProfileScreen() {
         <ProfileHeader
           me={member}
           width={width}
-          cardCovers={cardCovers}
+          cards={vehicles}
           sharing={sharing}
           onEdit={() => router.push('/profile/edit')}
           onShare={() => void share()}
           onQrCodes={() => router.push('/profile/qr')}
           onFollowers={() => router.push({ pathname: '/profile/connections', params: { tab: 'followers' } })}
           onFollowing={() => router.push({ pathname: '/profile/connections', params: { tab: 'following' } })}
-          onNameBottom={cover ? undefined : (bottom) => header.collapseAt.set(bottom)}
           notice={restriction ? <FormNotice message={restriction} tone="info" testID={`${ROUTE}.restricted`} /> : null}
           readOnly={restriction !== null}
         />
@@ -179,6 +189,8 @@ export function ProfileScreen() {
       actions={[settings]}
       header={header}
       collapseAt={collapseAt}
+      // DQ-1159: the bar spans the cover (the guest's invitation runs across the pane).
+      photoWidth={guest ? undefined : profileCoverWidth(width, kind)}
       onWidth={setWidth}
       bodyTestID="screen.profile"
       // DQ-125: nothing waits to be sent here. A member sees the profile as last loaded, a guest needs the network to sign in.

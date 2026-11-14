@@ -4,5 +4,7 @@
     $auto = ['wheel', 'tyre', 'coilover', 'air-suspension', 'exhaust', 'turbo', 'intake', 'engine', 'ecu-chip', 'brake-disc', 'wing', 'seat', 'light', 'audio', 'gearbox', 'drivetrain', 'workshop', 'part-box', 'garage-bay', 'meet', 'cruise-route', 'track-day', 'qr-sticker'];
     $phosphor = ['arrow-right', 'arrow-square-out', 'bookmark-simple', 'calendar-blank', 'caret-right', 'clock', 'compass', 'device-mobile', 'images', 'list-bullets', 'lock-simple', 'magnifying-glass', 'map-pin', 'prohibit', 'qr-code', 'share-network', 'wrench'];
     $id = in_array($name, $auto, true) ? 'auto-'.$name : 'ph-'.(in_array($name, $phosphor, true) ? $name : 'wrench');
+    // The layout's sprite carries only the symbols a page uses (App\Support\PublicIcons).
+    \App\Support\PublicIcons::use($id);
 @endphp
 <svg {{ $attributes->class('shrink-0') }} width="{{ $size }}" height="{{ $size }}" aria-hidden="true" focusable="false"><use href="#{{ $id }}"></use></svg>

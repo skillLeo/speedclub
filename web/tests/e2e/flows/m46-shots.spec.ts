@@ -9,7 +9,7 @@
 //
 // Round 2 (design QA r1, DQ-1001): the mouse is parked at (0, 0) before every shot, so no bottom button is captured in hover, and the
 // AUTH-13 countdown is captured at a fixed value ("0:20"), so the cells match. The states r1 missed are added: AUTH-02 offline, 1440,
-// Schwarz and EN; AUTH-12 validation, server error, skeleton; AUTH-13 filled, expired, locked; the reauth sheet; WEB-12 verifying and
+// Schwarz and EN; AUTH-12 validation, server error, skeleton; AUTH-13 filled, expired, locked; the reauth sheet; WEB-16 verifying and
 // expired; SET-19 menu, rename sheet, remove dialog, error, offline; the HOME-02 security row. AUTH-16 needs Apple or Google (flags
 // off until OA-38) and stays covered by Jest.
 import { mkdirSync } from 'node:fs';
@@ -154,18 +154,18 @@ test.describe('M4.6 review screenshots', () => {
         });
       }
 
-      // WEB-12 on another browser: the link says to type the code in the app.
+      // WEB-16 on another browser: the link says to type the code in the app.
       const other = await browser.newContext({ viewport: { width: cell.width, height: cell.height } });
       try {
         const tab = await other.newPage();
         const link = new URL(magic);
         await tab.goto(`${BASE_URL}${qaUrl(`/app${link.pathname}`, qa)}${link.hash}`);
-        await expect(tab.locator('[data-testid="WEB-12.root"]:visible')).toBeVisible();
-        await shot(tab, 'WEB-12', cell);
+        await expect(tab.locator('[data-testid="WEB-16.root"]:visible')).toBeVisible();
+        await shot(tab, 'WEB-16', cell);
         if (main) {
           await tab.goto(`${BASE_URL}${qaUrl('/app/auth/magic', qaOf(cell, 'loading'))}`);
-          await expect(tab.locator('[data-testid="WEB-12.root"]:visible')).toBeVisible();
-          await shot(tab, 'WEB-12-verifying', cell);
+          await expect(tab.locator('[data-testid="WEB-16.root"]:visible')).toBeVisible();
+          await shot(tab, 'WEB-16-verifying', cell);
         }
       } finally {
         await other.close();

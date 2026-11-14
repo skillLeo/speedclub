@@ -41,7 +41,8 @@ describe.each(['android', 'ios'] as const)('capped roles on %s', (os) => {
 
   it('covers every role with a cap in the generated typography', () => {
     // DQ-1121: the make wordmark is capped at 1.3 like the other display roles.
-    expect(CAPPED.sort()).toEqual(['displayWordmark', 'heroNumeral', 'heroNumeralS', 'labelBadge', 'webTab']);
+    // ADR-465: the web sidebar labels are capped like web.tab.
+    expect(CAPPED.sort()).toEqual(['displayWordmark', 'heroNumeral', 'heroNumeralS', 'labelBadge', 'webSidebar', 'webTab']);
   });
 
   it.each(CAPPED)('%s: the full role at font scale 1.0', async (variant) => {

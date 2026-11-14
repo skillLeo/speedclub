@@ -1,7 +1,7 @@
 import { mergeProfileUpdates, type ProfileUpdate } from '@/api/queries/profile';
 import type { BuildUpdate } from '@/api/queries/vehicles';
 import { eventDateParts, garageColumns, profileTabs, profileUpdatePhotos, profileUpdateText } from '@/features/profile/components/ProfileTabs';
-import { PROFILE_COLUMN_MAX, profileCover, profileCoverAspect, profileCoverHeight } from '@/features/profile/components/ProfileHeader';
+import { garageCardCover, PROFILE_WIDE_MAX, profileCover, profileCoverAspect, profileCoverHeight, profileCoverWidth } from '@/features/profile/components/ProfileHeader';
 
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
 jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.resolve(null)) }));
@@ -38,27 +38,55 @@ describe('PROF-01/02 tabs (09 §7.7)', () => {
 });
 
 describe('PROF-01 cover', () => {
-  it('takes the member’s own cover, else the main build’s photo', () => {
+  it('takes the member’s own cover, else the photo of the first build with a second one, else none (the brand stage)', () => {
     const own = { id: 'own' } as never;
     const car = { id: 'car' } as never;
-    expect(profileCover({ cover: own }, [car])).toBe(own);
-    expect(profileCover({ cover: null }, [car])).toBe(car);
+    expect(profileCover({ cover: own }, [{ cover: car, photo_count: 3 }])).toBe(own);
+    expect(profileCover({ cover: null }, [{ cover: car, photo_count: 3 }])).toBe(car);
     expect(profileCover({ cover: null }, [])).toBeNull();
   });
 
-  it('never repeats the first garage card’s photo when another build has one (DQ-1090)', () => {
+  it('never takes a photo a garage card keeps showing: a one-photo build gives none (DQ-1234, was DQ-1090)', () => {
     const car = { id: 'car' } as never;
     const second = { id: 'second' } as never;
-    expect(profileCover({ cover: null }, [car, second])).toBe(second);
-    expect(profileCover({ cover: car }, [car, null, second])).toBe(second);
-    expect(profileCover({ cover: car }, [car])).toBe(car);
+    // The main build has one photo, the second build two: the second build’s cover, its card takes the next photo.
+    expect(profileCover({ cover: null }, [{ cover: car, photo_count: 1 }, { cover: second, photo_count: 2 }])).toBe(second);
+    // Main first (09 §7.7 "favourite car photo") when it can give way itself.
+    expect(profileCover({ cover: null }, [{ cover: car, photo_count: 2 }, { cover: second, photo_count: 2 }])).toBe(car);
+    expect(profileCover({ cover: null }, [{ cover: car, photo_count: 1 }, { cover: null, photo_count: 0 }])).toBeNull();
+    expect(profileCover({ cover: null }, [{ cover: null, photo_count: 2 }])).toBeNull();
   });
 
-  it('is 16:9 on every width, in the profile column on the desktop (ADR-451)', () => {
+  it('always shows the member’s chosen cover, also when the first card has the same photo (DQ-1160)', () => {
+    const car = { id: 'car' } as never;
+    const second = { id: 'second' } as never;
+    expect(profileCover({ cover: car }, [{ cover: car, photo_count: 1 }, { cover: null }, { cover: second, photo_count: 2 }])).toBe(car);
+    expect(profileCover({ cover: car }, [{ cover: car, photo_count: 1 }])).toBe(car);
+  });
+
+  it('lets the card give way: its next gallery photo when it shows the cover, else its own cover (DQ-1160)', () => {
+    const car = { id: 'car' } as never;
+    const next = { id: 'next' } as never;
+    const other = { id: 'other' } as never;
+    expect(garageCardCover({ cover: car, photos: [car, next] }, car)).toBe(next);
+    expect(garageCardCover({ cover: car }, car)).toBe(car);
+    expect(garageCardCover({ cover: car, photos: [car] }, car)).toBe(car);
+    expect(garageCardCover({ cover: car, photos: [car, next] }, other)).toBe(car);
+    expect(garageCardCover({ cover: null }, car)).toBeNull();
+    expect(garageCardCover({ cover: car }, null)).toBe(car);
+  });
+
+  it('is 16:9 on every width; on the desktop it spans the wide column, as its tabs and grid do (ADR-451, DQ-1159)', () => {
     expect(profileCoverAspect('phone')).toBe('16:9');
     expect(profileCoverAspect('desktop')).toBe('16:9');
     expect(profileCoverHeight(390, 'phone')).toBeCloseTo(219.375);
-    expect(profileCoverHeight(1200, 'desktop')).toBeCloseTo(PROFILE_COLUMN_MAX / (16 / 9));
+    expect(profileCoverWidth(820, 'tablet')).toBe(820);
+    // 1280: the main area beside the 240 sidebar, x 240–1280; 1440: x 240–1440.
+    expect(profileCoverWidth(1040, 'desktop')).toBe(1040);
+    expect(profileCoverHeight(1040, 'desktop')).toBeCloseTo(585);
+    expect(profileCoverHeight(1200, 'desktop')).toBeCloseTo(675);
+    // Wider panes: the cover stops with the column (1200 content plus its gutters).
+    expect(profileCoverWidth(1680, 'desktop')).toBe(PROFILE_WIDE_MAX);
   });
 });
 

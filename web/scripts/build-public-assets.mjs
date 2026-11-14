@@ -37,6 +37,8 @@ const PHOTOS = [
   { key: 'state-garage', file: 'generic-exterior-04.jpg' },
   { key: 'landing-taillight', file: 'generic-detail-01.jpg' },
   { key: 'landing-wheel', file: 'generic-wheels-03.jpg' },
+  // DQ-1168: the empty stage of a vehicle page without photos, a photo no content uses (no car, no member, no meet).
+  { key: 'stage-empty', file: 'cover-garage-05.jpg' },
 ];
 
 // 828 on top of the media pipeline's four: a phone at 2x gets a hero that fits instead of the next size up, which is what the LCP budget hangs on.
@@ -86,7 +88,7 @@ async function photos() {
 
     const source = sharp(join(seed, file)).rotate();
     const { width, height } = await source.metadata();
-    const steps = [...WIDTHS.filter((step) => step < width), Math.min(width, WIDTHS.at(-1))];
+    const steps = [...new Set([...WIDTHS.filter((step) => step < width), Math.min(width, WIDTHS.at(-1))])];
     const variants = [];
 
     for (const step of steps) {

@@ -5,9 +5,11 @@ namespace App\Services\PublicPages;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
 use App\Http\Middleware\PublicPageContext;
+use App\Http\Resources\V1\MediaResource;
 use App\Http\Resources\V1\MemberProfileResource;
 use App\Http\Resources\V1\PublicVehicleResource;
 use App\Http\Resources\V1\VehicleCardResource;
+use App\Models\Media;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppConfig\FeatureFlags;
@@ -104,9 +106,25 @@ class PublicPageData
         $description = $this->text->member($data, $name, array_values($vehicles->map(fn (Vehicle $vehicle): string => $presenter->fullTitle($vehicle))->filter()->all()), app()->getLocale());
         $avatar = is_array($data['avatar'] ?? null) && is_string($data['avatar']['url'] ?? null) ? $data['avatar']['url'] : null;
 
+        $shown = $this->forcedEmpty($request) ? collect() : $vehicles;
+        // DQ-1169: a cover taken from one of the member's vehicles shows only while that vehicle is in the public garage, so a car that
+        // went private (or the designed empty garage) never stays on the page as its cover.
+        $coverMedia = $member->cover;
+        $coverVehicle = $coverMedia?->getAttribute('mediable_type') === (new Vehicle)->getMorphClass() ? (string) $coverMedia->getAttribute('mediable_id') : null;
+
+        if ($coverVehicle !== null && ! $shown->contains(fn (Vehicle $vehicle): bool => (string) $vehicle->id === $coverVehicle)) {
+            $data['cover'] = null;
+        }
+
+        // A cover still without its files (processing) is not one, as the page has always read it.
+        $own = is_array($data['cover'] ?? null) && ($data['cover']['variants'] ?? []) !== [] ? $data['cover'] : null;
+        [$cards, $cover] = $this->garageCards($shown->all(), $own, $request);
+
         return [
             'member' => $data,
-            'vehicles' => $this->forcedEmpty($request) ? [] : $vehicles->map(fn (Vehicle $vehicle): array => $this->resolve(new VehicleCardResource($vehicle), $request))->all(),
+            // The page's cover (DQ-1234): the member's own, else a build photo no garage card shows, else the brand stage.
+            'cover' => $cover ?? ['photo' => PublicPhoto::brand('stage-empty'), 'source' => 'stage'],
+            'vehicles' => $cards,
             'seo' => [
                 'title' => __('public.member.meta_title', ['name' => $name, 'username' => $member->username]),
                 'description' => $description,
@@ -142,6 +160,73 @@ class PublicPageData
                 'sign_in' => url('/app/sign-in').'?next='.rawurlencode('/u/'.$member->username),
             ],
         ];
+    }
+
+    /**
+     * The garage cards and the page's cover photo, so that one picture never shows twice on the page.
+     *
+     * DQ-1173 (as DQ-1160 in the app): the member's chosen cover always wins, and the card whose cover is that same photo shows its
+     * next visible photo instead (a build with one photo keeps it: the member chose it). DQ-1234 (as `profileCover` in the app):
+     * without a cover of the member's own, a build photo only when no card shows it: the cover of the first build, main first (09 §7.7
+     * "favourite car photo"), that has a second visible photo, whose card then shows that next photo. Otherwise null: the page shows the
+     * brand stage, never the photo of a card beside it.
+     *
+     * @param  array<int, Vehicle>  $vehicles
+     * @param  array<string, mixed>|null  $own  the member's visible cover (MediaResource), or null
+     * @return array{0: list<array<string, mixed>>, 1: array{photo: array<string, mixed>, source: string}|null}
+     */
+    private function garageCards(array $vehicles, ?array $own, Request $request): array
+    {
+        $vehicles = array_values($vehicles);
+        $cards = array_map(fn (Vehicle $vehicle): array => $this->resolve(new VehicleCardResource($vehicle), $request), $vehicles);
+        $cover = $own === null ? null : ['photo' => $own, 'source' => 'own'];
+
+        if ($cover === null) {
+            foreach ($vehicles as $index => $vehicle) {
+                $shows = $this->cardPhotoId($cards[$index]);
+
+                if ($shows !== null && ($cards[$index]['cover']['variants'] ?? []) !== [] && $this->nextPhoto($vehicle, $shows) instanceof Media) {
+                    $cover = ['photo' => $cards[$index]['cover'], 'source' => 'build'];
+
+                    break;
+                }
+            }
+        }
+
+        $avoid = $cover === null ? null : (string) ($cover['photo']['id'] ?? '');
+
+        foreach ($vehicles as $index => $vehicle) {
+            if ($avoid === null || $this->cardPhotoId($cards[$index]) !== $avoid) {
+                continue;
+            }
+
+            $next = $this->nextPhoto($vehicle, $avoid);
+            $cards[$index]['cover'] = $next instanceof Media ? $this->resolve(new MediaResource($next), $request) : $cards[$index]['cover'];
+        }
+
+        return [$cards, $cover];
+    }
+
+    /**
+     * @param  array<string, mixed>  $card
+     */
+    private function cardPhotoId(array $card): ?string
+    {
+        return is_array($card['cover'] ?? null) && ($card['cover']['id'] ?? null) !== null ? (string) $card['cover']['id'] : null;
+    }
+
+    /**
+     * The build's next photo a guest sees after `$photoId`, in gallery order.
+     */
+    private function nextPhoto(Vehicle $vehicle, string $photoId): ?Media
+    {
+        $presenter = app(VehiclePresenter::class);
+        $next = $vehicle->media
+            ->filter(fn (Media $media): bool => (string) $media->id !== $photoId && $presenter->photoVisibleTo($media, false))
+            ->sortBy([['sort', 'asc'], ['id', 'asc']])
+            ->first();
+
+        return $next instanceof Media ? $next : null;
     }
 
     /**

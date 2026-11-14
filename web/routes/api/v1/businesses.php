@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Businesses\BusinessController;
+use App\Http\Controllers\Api\V1\Businesses\BusinessInviteController;
 use App\Http\Controllers\Api\V1\Businesses\BusinessTagController;
 use App\Http\Controllers\Api\V1\Businesses\ModBusinessTagController;
 use App\Http\Controllers\Api\V1\Businesses\MyBusinessController;
@@ -41,10 +42,19 @@ Route::middleware('member')->group(function () use ($ulid, $businesses): void {
         Route::delete('me/business/members/{username}', [MyBusinessController::class, 'removeMember'])
             ->where('username', '[A-Za-z0-9._]{1,40}')->middleware('throttle:businesses')->name('me.business.members.destroy');
 
+        // SEC-414-01: the invited member's side of a team invitation (accept joins the team as staff; decline ends it).
+        Route::get('me/business-invites', [BusinessInviteController::class, 'index'])->middleware('throttle:browse')->name('me.business-invites.index');
+        Route::post('me/business-invites/{invite}/accept', [BusinessInviteController::class, 'accept'])->where('invite', $ulid)
+            ->middleware(['throttle:businesses', 'idempotent'])->name('me.business-invites.accept');
+        Route::delete('me/business-invites/{invite}', [BusinessInviteController::class, 'decline'])->where('invite', $ulid)
+            ->middleware('throttle:businesses')->name('me.business-invites.decline');
+
         // BIZ-03 portfolio, BIZ-04 Anfragen.
         Route::get('me/business/tag-requests', [BusinessTagController::class, 'index'])->middleware('throttle:browse')->name('me.business.tags.index');
         Route::post('me/business/tag-requests', [BusinessTagController::class, 'store'])
             ->middleware(['not-restricted:publishing', 'throttle:business-tags', 'idempotent'])->name('me.business.tags.store');
+        // SEC-414-11: accepting (it publishes "Eingebaut von") is refused under a publishing restriction inside ModTags::decide; declining
+        // stays open.
         Route::patch('me/business/tag-requests/{tag}', [BusinessTagController::class, 'update'])->where('tag', $ulid)
             ->middleware('throttle:business-tags')->name('me.business.tags.update');
         Route::delete('me/business/tag-requests/{tag}', [BusinessTagController::class, 'destroy'])->where('tag', $ulid)

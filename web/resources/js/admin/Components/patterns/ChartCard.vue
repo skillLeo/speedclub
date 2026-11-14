@@ -87,6 +87,12 @@ function token(name: string): string {
     return getComputedStyle(element).getPropertyValue(name).trim();
 }
 
+/** A length token in px for Chart.js options (M4.18, DL08): "8px" -> 8. Space and radius tokens are the same in every theme. */
+function tokenPx(name: string, fallback: number): number {
+    const value = Number.parseFloat(token(name));
+    return Number.isFinite(value) ? value : fallback;
+}
+
 const allZero = computed(() => props.series.length > 0 && props.series.every((s) => s.values.every((v) => v === 0)));
 const view = computed<"loading" | "error" | "empty" | "ready">(() => {
     if (props.state === "loading" || props.state === "error") return props.state;
@@ -142,7 +148,7 @@ const barData = computed<ChartData<"bar">>(() => ({
         label: series.label,
         data: series.values,
         backgroundColor: seriesColor(series, index),
-        borderRadius: 2,
+        borderRadius: tokenPx("--sc-radius-xs", 4),
         barThickness: 12,
     })),
 }));
@@ -162,7 +168,7 @@ const options = computed(() => {
                 bodyColor: c.ink,
                 borderColor: c.line,
                 borderWidth: 1,
-                padding: 8,
+                padding: tokenPx("--sc-space-8", 8),
                 titleFont: { family: c.font, size: 12, weight: 600 },
                 bodyFont: { family: c.font, size: 12 },
                 callbacks: {

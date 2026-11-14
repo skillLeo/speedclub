@@ -25,6 +25,7 @@ use DateTimeInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use stdClass;
 
 /**
  * The read side of the member record ADM-10 (m3.2-contract §1a, §2): plain arrays for the admin pages, dates as ISO 8601 (the page
@@ -124,6 +125,12 @@ class MemberRecord
             ? DB::table('sessions')->where('user_id', $member->id)->orderByDesc('last_activity')->limit(200)->pluck('user_agent')
             : [];
         $labels = DeviceLabel::index($tokens, $agents);
+        // DQ-1197: browser sessions still alive count as signed in, as "Alle Sitzungen beenden" (MemberSessions::revokeAll) ends them too.
+        $lifetime = config()->integer('session.lifetime') * 60;
+        $browserSessions = Schema::hasTable('sessions')
+            ? DB::table('sessions')->where('user_id', $member->id)->where('last_activity', '>=', now()->getTimestamp() - $lifetime)
+                ->orderByDesc('last_activity')->limit(20)->get(['user_agent', 'last_activity'])
+            : collect();
 
         return [
             'two_factor' => [
@@ -141,6 +148,12 @@ class MemberRecord
                 'created_at' => self::iso($token->getAttribute('created_at')),
                 'last_used_at' => self::iso($token->getAttribute('last_used_at')),
                 'expires_at' => self::iso($token->getAttribute('expires_at')),
+            ])->values()->all(),
+            // Browser and OS (coarse, no version) and dates only: never the session id, the user agent or the IP.
+            'browser_sessions' => $browserSessions->map(fn (stdClass $row): array => [
+                ...DeviceLabel::parse(is_string($row->user_agent) ? $row->user_agent : ''),
+                'last_active_at' => CarbonImmutable::createFromTimestamp((int) $row->last_activity)->toIso8601String(),
+                'expires_at' => CarbonImmutable::createFromTimestamp((int) $row->last_activity + $lifetime)->toIso8601String(),
             ])->values()->all(),
             // Sign-ins by device, from known_devices: when first and last seen, and the device's name where the member's own tokens or
             // browser sessions give one (DeviceLabel, DQ-541). The fingerprint is a hash and stays out, like any user agent or IP.

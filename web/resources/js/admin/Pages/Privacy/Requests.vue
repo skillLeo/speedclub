@@ -133,7 +133,7 @@ const count = (n: number | undefined) => formatNumber(zero.value ? 0 : (n ?? 0))
                     <div class="min-w-140 grow basis-0"><Field :label="trans('privacy.requests.filters.type')"><Select v-model="typeModel" :options="typeOptions" size="sm" :placeholder="trans('privacy.requests.filters.any')" /></Field></div>
                     <div class="min-w-120 grow basis-0"><Field :label="trans('privacy.requests.filters.due')"><Select v-model="dueModel" :options="dueOptions" size="sm" :placeholder="trans('privacy.requests.filters.any')" data-testid="ADM-45.filter.due" /></Field></div>
                     <div class="min-w-120 grow basis-0"><Field :label="trans('privacy.requests.filters.assigned')"><Select v-model="assignedModel" :options="assignedOptions" size="sm" :placeholder="trans('privacy.requests.filters.any')" /></Field></div>
-                    <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-45.filter.apply">{{ trans('privacy.requests.filters.apply') }}</Button>
+                    <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-45.filter.apply">{{ trans('privacy.requests.filters.apply') }}</Button>
                 </form>
             </template>
 

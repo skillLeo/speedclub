@@ -195,7 +195,7 @@ watch(
                             </Field>
                         </div>
                         <div class="grow" />
-                        <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-11.filter.apply">{{ trans('vehicles.filters.apply') }}</Button>
+                        <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-11.filter.apply">{{ trans('vehicles.filters.apply') }}</Button>
                     </div>
                 </form>
             </template>

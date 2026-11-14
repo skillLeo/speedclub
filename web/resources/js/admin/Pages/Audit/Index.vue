@@ -292,7 +292,7 @@ function requestExport(reason: string | null): void {
                             <DateRangeField v-model:from="filters.from" v-model:to="filters.to" size="sm" test-id="ADM-44.filter.period" />
                         </Field>
                     </div>
-                    <Button type="submit" size="sm" variant="primary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-44.filter.apply">{{ trans('audit.filters.apply') }}</Button>
+                    <Button type="submit" size="sm" variant="secondary" :icon="PhFunnel" :loading="loading" class="shrink-0" data-testid="ADM-44.filter.apply">{{ trans('audit.filters.apply') }}</Button>
                 </form>
             </template>
 

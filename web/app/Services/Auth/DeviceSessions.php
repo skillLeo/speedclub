@@ -126,6 +126,16 @@ final class DeviceSessions
     }
 
     /**
+     * The stored app token of this request, or null for a member web session. SEC-P4-01: a Web Push registered with it ends with it.
+     */
+    public function currentTokenId(User $user): ?int
+    {
+        $id = $this->currentToken($user)?->getKey();
+
+        return is_int($id) ? $id : null;
+    }
+
+    /**
      * Whether the id names the device of this request.
      */
     public function isCurrent(User $user, string $id, Request $request): bool
@@ -161,6 +171,8 @@ final class DeviceSessions
     private function endDevice(User $user, PersonalAccessToken $token): void
     {
         $device = $token->deviceId();
+        // SEC-P4-01: a Web Push registered with a token of this device ends with it (the foreign key cascades too; this says it here).
+        $user->pushSubscriptions()->whereIn('token_id', $token->onSameDevice()->select('id'))->delete();
         $token->onSameDevice()->delete();
 
         if ($device !== null) {

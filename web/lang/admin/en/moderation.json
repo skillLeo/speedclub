@@ -38,7 +38,8 @@
             "original": "Decision appealed",
             "role": "By",
             "filed": "Received",
-            "decider": "Decided by"
+            "decider": "Decided by",
+            "waiting": "Waiting"
         },
         "more_reasons": "+:count more",
         "take": "Take",
@@ -495,7 +496,9 @@
                 "events": "Creating meets",
                 "rsvps": "Changing answers to meets",
                 "event_updates": "Sending meet updates",
-                "geocode": "Place search"
+                "geocode": "Place search",
+                "businesses": "Create and edit a business",
+                "business_tags": "Tag portfolio builds"
             },
             "groups": {
                 "account": "Account",
@@ -509,7 +512,7 @@
     },
     "templates": {
         "title": "Statement templates",
-        "intro": "Templates for the statement of reasons under Art. 17 DSA, in German and English. Placeholders: {target}, {date}, {member}. The system always adds the redress information itself.",
+        "intro": "Templates for the statement of reasons under Art. 17 DSA, in German and English. Placeholders: {target}, :date, {member}. The system always adds the redress information itself.",
         "caption": "Templates",
         "columns": {
             "label": "Template",
@@ -537,7 +540,7 @@
             "action": "For measure",
             "label": "Name",
             "facts": "Facts",
-            "facts_hint": "With the placeholders {target}, {date}, {member}.",
+            "facts_hint": "With the placeholders {target}, :date, {member}.",
             "ground": "Ground",
             "document": "Written in",
             "section": "Section",
@@ -561,6 +564,20 @@
         "keyword_removed": "Term removed.",
         "limits_published": "Limits published. They apply from the next request.",
         "template_saved": "Template saved.",
-        "template_deleted": "Template deleted."
+        "template_deleted": "Template deleted.",
+        "released": "Take undone.",
+        "undo_expired": "Too late to undo. Hand the case over from the case page if needed."
+    },
+    "pane": {
+        "label": "Selected case",
+        "select_body": "Pick a case to review it here. j/k moves, a removes, r closes without action.",
+        "gone": "This case no longer exists.",
+        "open": "Open case",
+        "decide": "Take action",
+        "no_action": "No action",
+        "keys": "a action · r no action · j/k next · u undo take",
+        "view_only": "You can only view the case. Roles with moderation decide can decide.",
+        "undo_taken": "Case :reference taken.",
+        "undo": "Undo"
     }
 }

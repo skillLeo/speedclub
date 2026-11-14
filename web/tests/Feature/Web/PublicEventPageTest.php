@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 require_once dirname(__DIR__).'/Events/EventTestHelpers.php';
 
 /**
- * M4.16 WEB-09 /e/{slug} (09 §9, EVT-02 as a public page): server-rendered without JavaScript, behind the flag `events`, always read as
+ * M4.16 WEB-13 /e/{slug} (09 §9, EVT-02 as a public page): server-rendered without JavaScript, behind the flag `events`, always read as
  * a guest, so the exact place of an after_rsvp event never reaches the page, its JSON-LD, its OG tags or its card (09 §8.7, ADR-437 c).
  */
 beforeEach(function () {
@@ -29,14 +29,14 @@ it('renders the event page as a guest: date, place, rules, real counts, JSON-LD 
     evRsvp($this->event, User::factory()->create());
     evRsvp($this->event, User::factory()->create(), RsvpStatus::Interested);
 
-    $html = $this->get('/e/abendtreffen-am-hafen', ['Accept-Language' => 'de'])->assertOk()->assertSee('data-testid="WEB-09.root"', false)->getContent();
+    $html = $this->get('/e/abendtreffen-am-hafen', ['Accept-Language' => 'de'])->assertOk()->assertSee('data-testid="WEB-13.root"', false)->getContent();
 
     expect($html)->toContain('Abendtreffen am Hafen')->toContain('Parkplatz am Hafen')->toContain('Am Sandtorkai 1, 20457 Hamburg')
         ->toMatch('/\d{2}:00–\d{2}:00 Uhr/u')->toContain('1 Zusage')->toContain('1 interessiert')->toContain('Noch 39 Plätze frei')
         ->toContain('Nur legal: keine Rennen')->toContain('href="'.url('/u/nina.neu').'"')
         ->toContain('"@type":"Event"')->toContain('"streetAddress":"Am Sandtorkai 1"')->toContain('EventScheduled')
         ->toContain('/og/e/abendtreffen-am-hafen-')->toContain('https://www.openstreetmap.org/directions?to=53.54130%2C9.98450')
-        ->toContain('data-testid="WEB-09.calendar"')->toContain('/e/abendtreffen-am-hafen.ics')
+        ->toContain('data-testid="WEB-13.calendar"')->toContain('/e/abendtreffen-am-hafen.ics')
         ->toContain('In der App zusagen')->toContain('/app/events/abendtreffen-am-hafen')
         ->not->toContain('noindex');
 });
@@ -50,7 +50,7 @@ it('never shows the exact place of an after_rsvp event, not even to a going memb
     foreach ([[], ['Authorization' => 'Bearer '.$token]] as $headers) {
         $html = $this->get('/e/hof-treffen', $headers)->assertOk()->getContent();
 
-        expect($html)->toContain('data-testid="WEB-09.afterRsvp"')->toContain('Hamburg')
+        expect($html)->toContain('data-testid="WEB-13.afterRsvp"')->toContain('Hamburg')
             ->not->toContain('Geheimer Hof')->not->toContain('Hinterweg')->not->toContain('20099')
             ->not->toContain('53.5413')->not->toContain('streetAddress')->not->toContain('openstreetmap.org/directions');
     }
@@ -88,17 +88,17 @@ it('shows a cancelled event with its reason and without the RSVP and calendar ac
 
     $html = $this->get('/e/abendtreffen-am-hafen')->assertOk()->getContent();
     expect($html)->toContain('data-state="cancelled"')->toContain('Sturmwarnung für Hamburg.')->toContain('EventCancelled')
-        ->not->toContain('data-testid="WEB-09.calendar"')->not->toContain('In der App zusagen');
+        ->not->toContain('data-testid="WEB-13.calendar"')->not->toContain('In der App zusagen');
 });
 
 it('marks a past event and a sample, which is noindex and shows no counts', function () {
     $this->event->forceFill(['starts_at' => now()->subDays(3), 'ends_at' => now()->subDays(3)->addHours(2)])->save();
-    $this->get('/e/abendtreffen-am-hafen')->assertOk()->assertSee('data-testid="WEB-09.past"', false)->assertDontSee('data-testid="WEB-09.calendar"', false);
+    $this->get('/e/abendtreffen-am-hafen')->assertOk()->assertSee('data-testid="WEB-13.past"', false)->assertDontSee('data-testid="WEB-13.calendar"', false);
 
     $this->event->forceFill(['is_sample' => true, 'starts_at' => now()->addDay(), 'ends_at' => now()->addDay()->addHours(2)])->save();
     $html = $this->get('/e/abendtreffen-am-hafen')->assertOk()->getContent();
-    expect($html)->toContain('noindex')->toContain('data-testid="WEB-09.sampleNote"')->toContain('data-testid="WEB-09.countsHidden"')
-        ->not->toContain('data-testid="WEB-09.counts"');
+    expect($html)->toContain('noindex')->toContain('data-testid="WEB-13.sampleNote"')->toContain('data-testid="WEB-13.countsHidden"')
+        ->not->toContain('data-testid="WEB-13.counts"');
 });
 
 it('is noindex while unlisted or while the organiser keeps search engines out', function () {

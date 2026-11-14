@@ -26,11 +26,12 @@ use Closure;
 use Database\Seeders\Concerns\SeedClock;
 use Illuminate\Database\Seeder;
 use Illuminate\Http\UploadedFile;
+use RuntimeException;
 
 /**
  * M3.5 demo content of the brand, content and configuration admin (ADM-28…38), through the same Actions the pages use: a published
  * home curation (three featured builds, one of them scheduled) and announcements (one ended, one scheduled months ahead), an
- * announcements draft by the content editor (so ADM-30, ADM-34 and ADM-35 show a draft), a Datenschutz draft asking for renewed consent (ADM-31), one
+ * announcements draft by the content editor (so ADM-30, ADM-34 and ADM-35 show a draft), a Datenschutz draft asking for renewed consent (ADM-31, on the current data file: privacyDraft()), one
  * template override (ADM-33) and the release register from database/data/demo-releases.md (ADM-38, the builds up to 0.2.0 Build 4). Idempotent: a key that already has versions is
  * left alone. Needs the demo staff accounts of StaffSeeder (local/staging) and the demo vehicles.
  */
@@ -100,14 +101,8 @@ class BrandContentDemoSeeder extends Seeder
         }
 
         if (! LegalDocument::query()->where('key', LegalDocumentKey::Privacy)->where('locale', 'de')->whereNull('published_at')->exists()) {
-            $current = LegalDocument::query()->where('key', LegalDocumentKey::Privacy)->where('locale', 'de')->whereNotNull('published_at')->latest('published_at')->first();
-            SeedClock::at($at(44, 20), fn () => app(SaveLegalDraft::class)->handle($editor, LegalDocumentKey::Privacy, 'de', [
-                'version' => '2',
-                'body_md' => ($current !== null ? $current->body_md : "# Datenschutzerklärung\n\nWir verarbeiten deine Daten nur, soweit es für den Club nötig ist.")
-                    ."\n\n## QR-Scans\n\nScans deines QR-Stickers speichern wir nur noch als Tageszahlen, ohne Gerät oder Ort.",
-                'requires_reconsent' => true,
-                'summary' => 'QR-Scans werden nur noch als Tageszahlen gespeichert.',
-            ]));
+            $draft = self::privacyDraft();
+            SeedClock::at($at(44, 20), fn () => app(SaveLegalDraft::class)->handle($editor, LegalDocumentKey::Privacy, 'de', $draft));
         }
 
         if (! MessageTemplate::query()->where('key', 'mail.report_received')->exists()) {
@@ -119,6 +114,38 @@ class BrandContentDemoSeeder extends Seeder
         // A frozen copy of docs/RELEASES.md up to 0.2.0 Build 4: every new build in the real file would change ADM-38 after the next seed
         // (DQ-702). A host's own builds come in through `speedclub:releases-sync` (DEPLOY.md), which keeps these rows (idempotent).
         SeedClock::at($at(50), fn () => app(SyncReleases::class)->handle($owner, database_path('data/demo-releases.md')));
+    }
+
+    /** The sentence of §5 QR-Codes the ADM-31 demo draft is after. */
+    private const PRIVACY_DRAFT_ANCHOR = 'Die IP-Adresse verarbeiten wir beim Aufruf nur kurz, um Missbrauch zu begrenzen.';
+
+    /** What the ADM-31 demo draft adds to it: true of qr_scan_daily, which holds a code, a day and a count. */
+    public const PRIVACY_DRAFT_SENTENCE = 'Gerät, Browser und Ort eines Scans speichern wir nicht.';
+
+    /**
+     * The ADM-31 demo draft of the German Datenschutzerklärung (re-consent on): the current text of database/data/legal/privacy.de.md
+     * with one sentence more in §5 QR-Codes, as the next version after the newest one of the document. Built on the data file, never on
+     * an older stored text, so publishing it on a local or staging host cannot bring an earlier draft back (M4.18).
+     *
+     * @return array{version: string, body_md: string, requires_reconsent: bool, summary: string}
+     */
+    public static function privacyDraft(): array
+    {
+        $body = LegalDocumentSeeder::body(LegalDocumentKey::Privacy, 'de');
+
+        if (! str_contains($body, self::PRIVACY_DRAFT_ANCHOR)) {
+            throw new RuntimeException('The ADM-31 demo draft needs the QR-Codes paragraph of privacy.de.md; update BrandContentDemoSeeder.');
+        }
+
+        $versions = LegalDocument::query()->where('key', LegalDocumentKey::Privacy)->where('locale', 'de')->pluck('version')->all();
+        $numbers = array_map(intval(...), array_filter($versions, ctype_digit(...)));
+
+        return [
+            'version' => (string) (max([1, ...$numbers]) + 1),
+            'body_md' => str_replace(self::PRIVACY_DRAFT_ANCHOR, self::PRIVACY_DRAFT_ANCHOR.' '.self::PRIVACY_DRAFT_SENTENCE, $body),
+            'requires_reconsent' => true,
+            'summary' => 'QR-Scans: Gerät, Browser und Ort eines Scans speichern wir nicht.',
+        ];
     }
 
     /**

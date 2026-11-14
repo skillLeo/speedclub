@@ -41,7 +41,7 @@ export const routesM414 = [
     ready: loadedOr('[data-testid="BRD-01.title"]', 'BRD-01.root'),
     capture: 'expanded',
     fixture: FIXTURE,
-    notes: `${FLAG_NOTE} Marke (09 §7.11): "KW" as a text wordmark in display.title on a surface-1 band with the real counts ("… Builds · 5 Produkte", tnum), the catalogue's about line and the website (S secondary); Produktlinien with their counts; the products as ProductRows (wordmark, product, "Fahrwerk · In 30 Builds"); "Builds mit KW", the photo wall (2 px, 0 radius, edge to edge on phones) and "Weitere Builds". empty = not found with the badged sample wall.`,
+    notes: `${FLAG_NOTE} Marke (09 §7.11, DQ-1141/1142): "KW" as a text wordmark in display.title on a full-width surface-1 band (0 radius, text on the gutter) with the real counts ("… Builds · 5 Produkte", tnum; samples never count, DQ-1140), the catalogue's about line and the website (S secondary); the products grouped by product line as ProductRows with a build thumbnail and without the repeated brand ("Fahrwerk · In 30 Builds"); from 1280 the products in 8 of 12 columns beside about, website and Produktlinien; "Builds mit KW", the photo wall (2 px, 0 radius, edge to edge on phones) and "Weitere Builds". empty = not found with the badged sample wall.`,
   },
   {
     id: 'BRD-01-off',
@@ -137,7 +137,7 @@ export const routesM414 = [
     capture: 'expanded',
     maxHeight: 3200,
     fixture: FIXTURE,
-    notes: `${FLAG_NOTE} Entdecken › Teile (09 §7.5): the scope chips with Treffen · Betriebe · Teile, Marken as BrandTiles with real counts (each opens BRD-01), Produkte as ProductRows "In 30 Builds" (each opens BRD-02) and "Weitere Produkte"; the search field narrows both in place. empty = the badged sample ProductRow and "Zur Garage".`,
+    notes: `${FLAG_NOTE} Entdecken › Teile (09 §7.5, ADR-457, DQ-1138): the scope chips in one sideways-scrolling row (DQ-1152); the lead photo of the most-used product on a real build (4:5 edge to edge on phones, 16:9 from 768, "In n Builds" tnum); Marken as BrandTiles with real counts (six across from 1280); "Beliebt in Builds", a rail of build photos (3:4); Produkte sorted by real build count as ProductRows with a 1:1 build thumbnail (two columns from 768), the first 8 and "Alle Teile"; the search field narrows tiles and products in place. empty = the badged sample ProductRow and "Zur Garage".`,
   },
   {
     id: 'DISC-01-businesses',
@@ -148,7 +148,7 @@ export const routesM414 = [
     ready: loadedOr('[data-testid="DISC-01.businessesScope.list"]', 'DISC-01.root'),
     capture: 'expanded',
     fixture: FIXTURE,
-    notes: `${FLAG_NOTE} Entdecken › Betriebe: the kind chips (Alle · Werkstatt · Tuner · …), BusinessCards (logo 56 radius 12, name, "Werkstatt · Hamburg", Verifiziert, up to three service tags; the sample one badged Beispiel), and "Du hast einen Betrieb? Hier anmelden". empty = the badged sample card.`,
+    notes: `${FLAG_NOTE} Entdecken › Betriebe (ADR-457, DQ-1139): the kind chips (Alle · Werkstatt · Tuner · …), BusinessCards led by the 16:9 cover (own cover, else the newest portfolio build, else the brand-stage photo captioned "Symbolbild"; the logo 56 overlapping it), name, "Werkstatt · Hamburg" with Verifiziert or Beispiel after it (never both), up to two service tags; one per row on phones, 2 from 768, 3 from 1280; and "Du hast einen Betrieb? Hier eintragen". empty = the badged sample card.`,
   },
   {
     id: 'VEH-02-product',
@@ -171,5 +171,63 @@ export const routesM414 = [
     capture: 'expanded',
     fixture: FIXTURE,
     notes: `${FLAG_NOTE} Mod-Editor of the R34 wheels with M4.14: the Katalog group with "Produkt suchen (optional)" (a sheet with the category's catalogue products as the member types), and in Einbau "Eingebaut von" with "Betrieb wählen (optional)": a request to a verified business, which confirms it in BIZ-04.`,
+  },
+
+  // DQ-1150: the affiliate state, test data only (stage fixture m414-affiliate: affiliate_links on, a shop.speedclub.test URL).
+  {
+    id: 'BRD-02-affiliate',
+    path: `/app/products/{kwProduct}?${FLAGS}`,
+    phase: 3,
+    auth: 'member',
+    states: ['default'],
+    ready: '[data-testid="BRD-02.affiliate.label"]',
+    capture: 'expanded',
+    fixture: 'm414-affiliate',
+    notes: `${FLAG_NOTE} BRD-02 with affiliate_links on and a test affiliate URL on KW Variante 3: "Herstellerseite" (secondary) and "Beim Händler ansehen" with the "Anzeige" label beside it (09 §8.9, UWG).`,
+  },
+  // DQ-1151: BIZ-02's later steps (qaStep opens the wizard there) and the status screen of an application in review and a declined one.
+  ...[2, 3, 4, 5].map((step) => ({
+    id: `BIZ-02-step${step}`,
+    path: `/app/settings/business/apply?qaStep=${step}&${FLAGS}`,
+    phase: 3,
+    auth: 'member-empty',
+    states: ['default'],
+    ready: '[data-testid="BIZ-02.progress"]',
+    fixture: FIXTURE,
+    notes: `${FLAG_NOTE} Bewerbung step ${step} of 5 as nina.neu, opened through qaStep: ${
+      { 2: 'Impressum (Rechtsform sheet row, Name laut Register, Vertreten durch, Registergericht/-nummer, USt-IdNr.)', 3: 'Adresse & Kontakt', 4: 'Öffnungszeiten (a switch per day, Mittagspause)', 5: 'Bilder & Abschluss (Logo, Titelbild, Nachweise, the declaration) and "Bewerbung senden"' }[step]
+    }; "Zurück" beside the sticky CTA.`,
+  })),
+  {
+    id: 'BIZ-02-status-applied',
+    path: `/app/settings/business/apply?${FLAGS}`,
+    phase: 3,
+    auth: 'member-blocker',
+    states: ['default'],
+    ready: '[data-testid="BIZ-02.status"]',
+    fixture: FIXTURE,
+    notes: `${FLAG_NOTE} paul.roadster's application "Roadster Garage" (test data in the fixture): the status pill "In Prüfung", what happens next, and "Angaben ändern".`,
+  },
+  {
+    id: 'BIZ-02-status-rejected',
+    path: `/app/settings/business/apply?${FLAGS}`,
+    phase: 3,
+    auth: 'member-affected',
+    states: ['default'],
+    ready: '[data-testid="BIZ-02.status"]',
+    fixture: FIXTURE,
+    notes: `${FLAG_NOTE} tobi.quattro's declined application "Quattro Tuning" (test data): "Abgelehnt", the staff's reason (missing register entry) and "Korrigieren und neu senden" as the one filled CTA.`,
+  },
+  // SEC-414-01: BIZ-05 Einladungen, the member's side of a team invitation (the fixture's stage business invited nina.neu).
+  {
+    id: 'BIZ-05',
+    path: `/app/business/invites?${FLAGS}`,
+    phase: 3,
+    auth: 'member-empty',
+    states: LIST_STATES,
+    ready: loadedOr('[data-testid^="BIZ-05.invite."]', 'BIZ-05.root'),
+    capture: 'expanded',
+    fixture: FIXTURE,
+    notes: `${FLAG_NOTE} Einladungen as nina.neu: "Werkstatt am Kanal" invited her to its team (BusinessCard with its cover, who invited, when), Annehmen (filled) and Ablehnen; she joins only once she accepts (ADR-461 a). empty = the badged sample and what an invitation is.`,
   },
 ];

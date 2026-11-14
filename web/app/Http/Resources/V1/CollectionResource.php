@@ -49,7 +49,7 @@ class CollectionResource extends JsonResource
              * @var 'relevance'|'newest'|'updated'|'power'|null
              */
             'sort' => $card->sort?->value,
-            /** Builds the viewer can find, stops at 1000 (`count_capped`). */
+            /** Real builds the viewer can find (samples never counted; 0 when only samples match), stops at 1000 (`count_capped`). */
             'count' => $card->count,
             'count_capped' => $card->countCapped,
         ];

@@ -149,7 +149,9 @@
                         }
                     ],
                     "created_at": "string"
-                }
+                },
+                "product": "null",
+                "installed_by": "null"
             }
         ],
         "highlights_rail": [],
@@ -202,7 +204,9 @@
                                     }
                                 ],
                                 "created_at": "string"
-                            }
+                            },
+                            "product": "null",
+                            "installed_by": "null"
                         }
                     ]
                 }

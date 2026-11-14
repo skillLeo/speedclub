@@ -70,6 +70,11 @@ const props = withDefaults(
         forceState?: 'loading' | 'error' | 'empty';
         /** A narrow list beside a detail pane (DQ-598): no 960 px minimum, the columns fit the column. */
         narrow?: boolean;
+        /**
+         * DQ-1193: the row open in a SplitQueue pane: the hover surface step (the 10 % selection tone took captions and the overdue timer
+         * under 4.5:1) + a 2 px ink rule on its leading edge and `aria-current`; NameCell sets the name strong.
+         */
+        currentRowId?: string | null;
         /** 09 §10.2 row keys for the page's main list: j/k move the row cursor, x selects it, e (or Enter on it) opens it. One table per page. */
         rowKeys?: boolean;
         testId: string;
@@ -92,6 +97,7 @@ const props = withDefaults(
         clickableRows: false,
         forceState: undefined,
         narrow: false,
+        currentRowId: null,
         rowKeys: false,
     },
 );
@@ -404,7 +410,16 @@ function onRowClick(row: Row, event: MouseEvent): void {
 
         <!-- table -->
         <div v-else class="relative min-w-0">
-        <div ref="scroller" class="relative min-w-0 overflow-auto rounded-sm border border-line-subtle bg-surface" :class="loading ? 'opacity-60' : ''" :data-scrollable="wider || undefined" @scroll.passive="measureScroll">
+        <!-- DQ-553/535: content wider than the frame says so: while there is more to scroll, the frame's right edge turns strong (the cut)
+             and a hint line names it. M4.18: an edge rule, not a fade, as only the photo scrim may be a gradient (DL04). -->
+        <div
+            ref="scroller"
+            class="relative min-w-0 overflow-auto rounded-sm border border-line-subtle bg-surface"
+            :class="[loading ? 'opacity-60' : '', wider && !atEnd ? 'border-r-line-strong' : '']"
+            :data-scrollable="wider || undefined"
+            :data-scroll-edge="(wider && !atEnd) || undefined"
+            @scroll.passive="measureScroll"
+        >
             <div v-if="loading" class="sc-progress absolute inset-x-0 top-0 z-20 h-2 bg-ink" aria-hidden="true" />
             <table class="w-full border-collapse text-admin-base" :class="[fluid ? 'table-auto' : 'table-fixed', narrow ? '' : 'min-w-960']">
                 <caption class="sr-only">{{ caption }}</caption>
@@ -455,7 +470,9 @@ function onRowClick(row: Row, event: MouseEvent): void {
                         v-for="row in table.getRowModel().rows"
                         :key="row.id"
                         class="border-b border-line-subtle last:border-b-0 hover:bg-hover"
-                        :class="[rowHeight, row.getIsSelected() ? 'bg-selected' : '', rowHref || clickableRows ? 'cursor-pointer' : '', keyboardRow === row.id ? 'bg-hover outline-2 -outline-offset-2 outline-focus' : '']"
+                        :class="[rowHeight, row.getIsSelected() ? 'bg-selected' : row.id === currentRowId ? 'bg-hover' : '', rowHref || clickableRows ? 'cursor-pointer' : '', keyboardRow === row.id ? 'bg-hover outline-2 -outline-offset-2 outline-focus' : '']"
+                        :aria-current="row.id === currentRowId ? 'true' : undefined"
+                        :data-current="row.id === currentRowId || undefined"
                         :data-testid="`${testId}.row`"
                         :data-row-id="row.id"
                         :data-row-cursor="keyboardRow === row.id || undefined"
@@ -465,14 +482,18 @@ function onRowClick(row: Row, event: MouseEvent): void {
                             <Checkbox :model-value="row.getIsSelected()" :aria-label="trans('ui.table.select_row')" @update:model-value="(v) => row.toggleSelected(v === true)" />
                         </td>
                         <td
-                            v-for="column in visibleColumns"
+                            v-for="(column, index) in visibleColumns"
                             :key="column.key"
                             :class="[
                                 'px-12 align-middle',
                                 fluid && !column.grow && !column.wrap ? 'whitespace-nowrap' : 'overflow-hidden',
+                                // DQ-1193: beside a pane the grow column takes the rest and its captions truncate instead of widening the table.
+                                narrow && column.grow ? 'w-full max-w-0' : '',
                                 column.numeric || column.align === 'right' ? 'text-right tabular-nums' : 'text-left',
+                                index === 0 && !selectable && row.id === currentRowId ? 'relative' : '',
                             ]"
                         >
+                            <span v-if="index === 0 && !selectable && row.id === currentRowId" class="absolute inset-y-0 left-0 w-2 bg-ink" aria-hidden="true" data-current-rule />
                             <slot :name="`cell-${column.key}`" :row="row.original" :value="cellValue(row.original, column.key)">
                                 <span :class="['block text-ink', fluid ? (column.grow || column.wrap ? 'line-clamp-2' : '') : 'truncate']" :title="display(cellValue(row.original, column.key))">{{ display(cellValue(row.original, column.key)) }}</span>
                             </slot>
@@ -481,8 +502,6 @@ function onRowClick(row: Row, event: MouseEvent): void {
                 </tbody>
             </table>
         </div>
-            <!-- DQ-553/535: content wider than the frame says so: the right edge fades out while there is more to scroll, and a hint line names it. -->
-            <div v-if="wider && !atEnd" class="pointer-events-none absolute inset-y-px right-px w-32 rounded-r-sm" :style="{ background: 'linear-gradient(to left, var(--color-surface), transparent)' }" aria-hidden="true" data-scroll-edge />
         </div>
         <p v-if="view === 'rows' && wider && !atEnd" class="-mt-4 flex items-center gap-4 text-caption text-ink-3" aria-hidden="true" :data-testid="`${testId}.scroll-hint`">
             <PhArrowsHorizontal :size="16" />{{ trans('ui.table.scroll_hint') }}

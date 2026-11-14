@@ -53,7 +53,11 @@ $AllowedPermissions = @(
   'android.permission.VIBRATE',
   'android.permission.POST_NOTIFICATIONS',
   'android.permission.WAKE_LOCK',
-  'com.google.android.c2dm.permission.RECEIVE'
+  'com.google.android.c2dm.permission.RECEIVE',
+  # M4.19 review: androidx.work:work-runtime 2.12.0 (a dependency of react-native-android-widget) declares it. Normal permission,
+  # auto-granted, no prompt. WorkManager needs it for expedited work on API < 31 (the widget's JS task); the app declares no
+  # foreground service of its own.
+  'android.permission.FOREGROUND_SERVICE'
 )
 
 # Parses `aapt dump permissions` / `aapt2 dump permissions` output. Returns the package, the requested and the declared names.

@@ -1,7 +1,7 @@
 /**
  * The e-mail code attempt of AUTH-12/13 (09 §8.1, ADR-429 b). The app makes the attempt id and keeps it with the address on this
  * device, because the mail's "Anmelden" link carries only the token (`/auth/magic#t=…`): the link signs in only where this
- * attempt is kept. Elsewhere WEB-12 says to type the code in the app.
+ * attempt is kept. Elsewhere WEB-16 says to type the code in the app.
  *
  * Memory for the screens; the device keeps a copy for the magic link (native keychain; web localStorage, which a link opened in a
  * new tab can read). It holds no code and no token, lives 15 minutes (the code lives 10), and goes with a sign-in.

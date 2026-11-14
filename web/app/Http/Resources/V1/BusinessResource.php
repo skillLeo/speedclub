@@ -30,7 +30,6 @@ class BusinessResource extends BusinessCardResource
 
         return [
             ...parent::toArray($request),
-            'cover' => self::photo($business->cover),
             /** @var string|null */
             'about' => $business->about,
             /**
@@ -59,7 +58,7 @@ class BusinessResource extends BusinessCardResource
                 'website' => $business->website,
                 'message_username' => $owner->username,
             ],
-            /** Builds in "Builds aus unserer Werkstatt" (both sides confirmed), a real count; null on a sample (09 §8.19). */
+            /** Real builds in "Builds aus unserer Werkstatt" (both sides confirmed; samples never count); null on a sample (09 §8.19). */
             'portfolio_count' => $business->is_sample ? null : $business->portfolioCount,
             /** § 5 DDG; on a sample its data is a placeholder (`is_sample`). */
             'impressum' => BusinessImpressum::for($business),

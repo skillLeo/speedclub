@@ -14,13 +14,19 @@ final class QaClock
 {
     public static function now(Request $request): CarbonImmutable
     {
+        return self::frozen($request) ?? CarbonImmutable::now();
+    }
+
+    /** The frozen moment of `?qaNow=` outside production, or null when the real clock applies. */
+    public static function frozen(Request $request): ?CarbonImmutable
+    {
         $frozen = $request->query('qaNow');
 
         if (! app()->environment('production') && is_string($frozen) && strlen($frozen) <= 40 && strtotime($frozen) !== false) {
             return CarbonImmutable::parse($frozen);
         }
 
-        return CarbonImmutable::now();
+        return null;
     }
 
     /** The current day in Berlin, where the scan days are counted. */

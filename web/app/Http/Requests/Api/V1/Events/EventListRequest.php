@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\Events;
 
 use App\Enums\EventType;
+use App\Rules\ValidCursor;
 use App\Support\Viewer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -32,7 +33,8 @@ class EventListRequest extends FormRequest
             /** The map's view: minLng,minLat,maxLng,maxLat. */
             'bbox' => ['sometimes', 'string', 'regex:/\A-?\d{1,3}(\.\d+)?,-?\d{1,2}(\.\d+)?,-?\d{1,3}(\.\d+)?,-?\d{1,2}(\.\d+)?\z/'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
-            'cursor' => ['sometimes', 'string', 'max:512'],
+            /** The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+            'cursor' => ['sometimes', 'string', 'max:512', new ValidCursor(['events.starts_at', 'events.id'])],
         ];
     }
 

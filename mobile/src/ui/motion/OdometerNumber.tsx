@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import type { ColorToken } from '@/theme';
 import { motion as motionTokens, type TypeVariant } from '@/theme/tokens.generated';
@@ -64,9 +65,24 @@ function DigitColumn({ from, to, variant, color }: { from: number; to: number; v
   const motion = useMotionPreference();
   const [line, setLine] = useState(0);
   const position = useSharedValue(motion.reduced ? to : from);
+  // The digit the column last came to rest on. At rest the cell shows that digit alone: the 0–9 column exists only while it
+  // rolls, so no neighbouring digit sits in the cell's clip at rest (m4.18 DOM audit, DEV-01 SM6 on Chromium: the glyph boxes of
+  // a 1.0 line height reach past the line). Reduced motion never rolls.
+  const [settled, setSettled] = useState<number | null>(motion.reduced || from === to ? to : null);
+  const rolling = !motion.reduced && settled !== to;
 
   useEffect(() => {
-    position.set(motion.reduced ? to : motion.springTo(to, 'default'));
+    if (motion.reduced) {
+      position.set(to);
+      return;
+    }
+    const settle = () => setSettled(to);
+    position.set(
+      motion.springTo(to, 'default', (finished) => {
+        'worklet';
+        if (finished) scheduleOnRN(settle);
+      }),
+    );
   }, [motion, position, to]);
 
   const columnStyle = useAnimatedStyle(() => ({ transform: [{ translateY: digitOffset(position.get(), line) }] }));
@@ -75,11 +91,11 @@ function DigitColumn({ from, to, variant, color }: { from: number; to: number; v
 
   return (
     <View aria-hidden style={styles.cell}>
-      {/* The sizer gives the cell one line of the role; it shows the digit until the column knows the line height. */}
-      <Text variant={variant} color={color} numeric hyphenate={false} onLayout={onLayout} style={measured ? styles.hidden : null}>
+      {/* The sizer gives the cell one line of the role; it shows the digit at rest and until the column knows the line height. */}
+      <Text variant={variant} color={color} numeric hyphenate={false} onLayout={onLayout} style={measured && rolling ? styles.hidden : null}>
         {DIGITS[to]}
       </Text>
-      {measured ? (
+      {measured && rolling ? (
         <Animated.View style={[styles.column, columnStyle]}>
           {DIGITS.map((digit) => (
             <Text key={digit} variant={variant} color={color} numeric hyphenate={false}>

@@ -27,6 +27,28 @@ final class Kpi
 
     private const CHART_DAYS = 30;
 
+    public const CACHE_KEY = 'admin.kpi.tiles.v2';
+
+    /** A queue item waiting longer than this is overdue (09 §10.2 SLA timers; the same day the Events/Business queues use). */
+    public const SLA_MINUTES = 24 * 60;
+
+    private const CACHE_SECONDS = 300;
+
+    /** A frozen moment (QaClock, `?qaNow=` outside production) the day windows end on; null = the real clock. */
+    private ?CarbonImmutable $frozen = null;
+
+    /**
+     * The same figures with the day windows ending on $moment's German day (DQ-1196: the visual matrix freezes the dashboard with the
+     * `?qaNow=` the pages read). Null keeps the real clock. Writes, limits and the work queues always use the real clock.
+     */
+    public function at(?CarbonImmutable $moment): self
+    {
+        $copy = clone $this;
+        $copy->frozen = $moment;
+
+        return $copy;
+    }
+
     /**
      * Work queues, only those the staff member's atoms cover. Keys: reports, appeals, support_tickets (oldest open item as `since`),
      * privacy_due (GDPR requests due within 7 days, earliest due date as `since`, danger when one is overdue),
@@ -80,72 +102,231 @@ final class Kpi
     }
 
     /**
-     * KPI tiles: the value, the previous period for the delta (null where there is none), and 14 daily values for the sparkline,
-     * oldest first. Keys: members_today, members_7d, members_30d, dau, wau, vehicles_published, qr_scans_7d, qr_registrations_7d,
-     * messages_7d.
+     * The six KPI tiles of 09 §10.2, cached for five minutes (the dashboard is opened often, the numbers move slowly). Real counts only:
+     * a tile without data says so (value null) instead of showing a zero that reads like a measurement.
      *
-     * @return list<array{key: string, value: int, previous: int|null, series: list<int>}>
+     * @return list<array{key: string, unit: 'count'|'minutes'|'percent', value: int|float|null, previous: int|float|null, series: list<int|float|null>}>
+     */
+    public function tiles(): array
+    {
+        $key = $this->frozen === null ? self::CACHE_KEY : self::CACHE_KEY.':'.$this->today()->toDateString();
+
+        /** @var list<array{key: string, unit: 'count'|'minutes'|'percent', value: int|float|null, previous: int|float|null, series: list<int|float|null>}> */
+        return Cache::remember($key, self::CACHE_SECONDS, fn (): array => $this->kpis());
+    }
+
+    /**
+     * The six tiles, uncached: neue Mitglieder (7 days), aktive Builds (30 days), QR-Scans (7 days), offene Meldungen (now),
+     * Median-Bearbeitungszeit (7 days, minutes from the first report to the decision) and Push-Opt-in (share of the members active in
+     * 30 days who receive pushes in the app or the browser). Each has the previous period of the same length (null where there is no
+     * history) and 14 German days for the sparkline, oldest first (null for a day without a value). Sample rows (09 §8.19) never count.
+     *
+     * @return list<array{key: string, unit: 'count'|'minutes'|'percent', value: int|float|null, previous: int|float|null, series: list<int|float|null>}>
      */
     public function kpis(): array
     {
         $today = $this->today();
-        $members = $this->perDay(DB::table('users')->whereNull('deleted_at'), 'created_at', $today->subDays(59), 60);
-        $memberSeries = $this->series($members, $today, self::SERIES_DAYS);
         // The $days German days that end $endAgo days before today.
         $sum = fn (array $perDay, int $endAgo, int $days): int => array_sum($this->series($perDay, $today->subDays($endAgo), $days));
 
-        $activity = DB::table('activity_days')
-            ->where('day', '>=', $today->subDays(self::SERIES_DAYS)->toDateString())
-            ->get(['day', 'members', 'weekly'])
-            ->keyBy(fn (object $row): string => substr((string) $row->day, 0, 10));
-        $dau = array_map(fn (string $day): int => (int) ($activity[$day]->members ?? 0), $this->days($today, self::SERIES_DAYS));
-        $weekly = array_map(fn (string $day): int => (int) ($activity[$day]->weekly ?? 0), $this->days($today->subDay(), self::SERIES_DAYS - 1));
-        // DQ-571: today's DAU and the WAU from one source, so the week can never show fewer members than the day; the counters stay
-        // the sparkline history (they also counted accounts deleted since).
-        ['dau' => $dauToday, 'wau' => $wau] = $this->activeMembers();
-        $dau = [...array_slice($dau, 0, -1), $dauToday];
-        $weekAgo = $activity[$today->subDays(7)->toDateString()]->weekly ?? null;
-
-        $published = $this->perDay(DB::table('vehicles')->where('status', VehicleStatus::Published->value)->whereNull('deleted_at'), 'published_at', $today->subDays(self::SERIES_DAYS - 1), self::SERIES_DAYS);
+        $members = $this->perDay(DB::table('users')->whereNull('deleted_at')->where('is_sample', false), 'created_at', $today->subDays(13), 14);
         $scans = $this->scansPerDay($today->subDays(13), 14);
-        $qrSignups = $this->perDay(DB::table('users')->where('signup_ref', SignupRef::Qr->value), 'created_at', $today->subDays(13), 14);
-        $messages = $this->perDay(DB::table('messages'), 'created_at', $today->subDays(13), 14);
+        ['value' => $median, 'previous' => $medianBefore, 'series' => $medianSeries] = $this->medianDecisionMinutes($today);
+        ['value' => $optIn, 'previous' => $optInBefore, 'series' => $optInSeries] = $this->pushOptInTile($today);
 
         return [
-            ['key' => 'members_today', 'value' => $members[$today->toDateString()] ?? 0, 'previous' => $members[$today->subDay()->toDateString()] ?? 0, 'series' => $memberSeries],
-            ['key' => 'members_7d', 'value' => $sum($members, 0, 7), 'previous' => $sum($members, 7, 7), 'series' => $memberSeries],
-            ['key' => 'members_30d', 'value' => $sum($members, 0, 30), 'previous' => $sum($members, 30, 30), 'series' => $memberSeries],
-            ['key' => 'dau', 'value' => $dau[self::SERIES_DAYS - 1], 'previous' => $dau[self::SERIES_DAYS - 2], 'series' => $dau],
-            ['key' => 'wau', 'value' => $wau, 'previous' => $weekAgo === null ? null : (int) $weekAgo, 'series' => [...$weekly, $wau]],
-            [
-                'key' => 'vehicles_published',
-                'value' => DB::table('vehicles')->where('status', VehicleStatus::Published->value)->whereNull('deleted_at')->count(),
-                'previous' => null,
-                'series' => $this->series($published, $today, self::SERIES_DAYS),
-            ],
-            ...array_map(fn (string $key, array $perDay): array => [
-                'key' => $key,
-                'value' => $sum($perDay, 0, 7),
-                'previous' => $sum($perDay, 7, 7),
-                'series' => $this->series($perDay, $today, self::SERIES_DAYS),
-            ], ['qr_scans_7d', 'qr_registrations_7d', 'messages_7d'], [$scans, $qrSignups, $messages]),
+            ['key' => 'members_7d', 'unit' => 'count', 'value' => $sum($members, 0, 7), 'previous' => $sum($members, 7, 7), 'series' => $this->series($members, $today, self::SERIES_DAYS)],
+            ['key' => 'active_builds', 'unit' => 'count', ...$this->activeBuilds($today)],
+            ['key' => 'qr_scans_7d', 'unit' => 'count', 'value' => $sum($scans, 0, 7), 'previous' => $sum($scans, 7, 7), 'series' => $this->series($scans, $today, self::SERIES_DAYS)],
+            ['key' => 'open_reports', 'unit' => 'count', ...$this->openReports($today)],
+            ['key' => 'median_decision', 'unit' => 'minutes', 'value' => $median, 'previous' => $medianBefore, 'series' => $medianSeries],
+            ['key' => 'push_opt_in', 'unit' => 'percent', 'value' => $optIn, 'previous' => $optInBefore, 'series' => $optInSeries],
         ];
     }
 
     /**
-     * The three charts: registrations per day (30 days), QR scans against sign-ups that began on a QR scan (30 days), and the ten makes
+     * Push-Opt-in now: members active in the last 30 days (present, not samples) and how many of them have an app push token or a
+     * browser subscription. Stored once a day by speedclub:kpi-snapshot for the tile's history.
+     *
+     * @return array{members: int, base: int}
+     */
+    public function pushOptIn(): array
+    {
+        $active = fn () => DB::table('users')->whereNull('deleted_at')->where('is_sample', false)
+            ->where('last_seen_at', '>=', $this->utc($this->today()->subDays(29)));
+        $base = $active()->count();
+        $members = $base === 0 ? 0 : $active()
+            ->where(fn (Builder $query) => $query
+                ->whereExists(fn (Builder $tokens) => $tokens->selectRaw('1')->from('push_tokens')->whereColumn('push_tokens.user_id', 'users.id'))
+                ->orWhereExists(fn (Builder $browsers) => $browsers->selectRaw('1')->from('push_subscriptions')->whereColumn('push_subscriptions.user_id', 'users.id')))
+            ->count();
+
+        return ['members' => $members, 'base' => $base];
+    }
+
+    /**
+     * Stores today's Push-Opt-in on the day before (the snapshot runs just after midnight, like the WAU).
+     *
+     * @return array{members: int, base: int}
+     */
+    public function snapshotPushOptIn(): array
+    {
+        $figure = $this->pushOptIn();
+        $day = $this->today()->subDay()->toDateString();
+        DB::table('activity_days')->upsert([['day' => $day, 'members' => 0, 'push_members' => $figure['members'], 'push_base' => $figure['base']]], ['day'], ['push_members', 'push_base']);
+        Cache::forget(self::CACHE_KEY);
+
+        return $figure;
+    }
+
+    /**
+     * Published builds (not deleted, not samples) with a visible build update in the last 30 German days; the previous 30 days before;
+     * the series counts the builds with an update per day.
+     *
+     * @return array{value: int, previous: int, series: list<int>}
+     */
+    private function activeBuilds(CarbonImmutable $today): array
+    {
+        $updates = fn (CarbonImmutable $from, CarbonImmutable $to) => DB::table('build_updates')
+            ->join('vehicles', 'vehicles.id', '=', 'build_updates.vehicle_id')
+            ->where('build_updates.hidden', false)
+            ->where('vehicles.status', VehicleStatus::Published->value)
+            ->whereNull('vehicles.deleted_at')
+            ->where('vehicles.is_sample', false)
+            ->where('build_updates.created_at', '>=', $this->utc($from))
+            ->where('build_updates.created_at', '<', $this->utc($to));
+        $distinct = fn (CarbonImmutable $from, CarbonImmutable $to): int => (int) $updates($from, $to)->distinct()->count('build_updates.vehicle_id');
+
+        $rows = $updates($today->subDays(self::SERIES_DAYS - 1), $today->addDay())
+            ->selectRaw("DATE_FORMAT(build_updates.created_at, '%Y-%m-%d %H') AS bucket, build_updates.vehicle_id AS vehicle")
+            ->get();
+        $perDay = [];
+
+        foreach ($rows as $row) {
+            $day = CarbonImmutable::createFromFormat('Y-m-d H', (string) $row->bucket, 'UTC');
+
+            if ($day !== null) {
+                $perDay[$day->setTimezone(config()->string('speedclub.display_timezone'))->toDateString()][(string) $row->vehicle] = true;
+            }
+        }
+
+        return [
+            'value' => $distinct($today->subDays(29), $today->addDay()),
+            'previous' => $distinct($today->subDays(59), $today->subDays(29)),
+            'series' => array_map(fn (string $day): int => count($perDay[$day] ?? []), $this->days($today, self::SERIES_DAYS)),
+        ];
+    }
+
+    /**
+     * Open cases now; at the end of each of the last 14 German days (opened before, decided after or not yet) for the series; a week
+     * ago for the previous value.
+     *
+     * @return array{value: int, previous: int, series: list<int>}
+     */
+    private function openReports(CarbonImmutable $today): array
+    {
+        $now = (int) DB::table('moderation_cases')->whereIn('status', [CaseStatus::New->value, CaseStatus::InReview->value])->count();
+        $from = $today->subDays(self::SERIES_DAYS);
+        $cases = DB::table('moderation_cases')
+            ->where('created_at', '<', $this->utc($today->addDay()))
+            ->where(fn (Builder $query) => $query->whereNull('decided_at')->orWhere('decided_at', '>=', $this->utc($from)))
+            ->whereIn('status', [CaseStatus::New->value, CaseStatus::InReview->value, CaseStatus::Decided->value])
+            ->get(['created_at', 'decided_at']);
+        $openAt = fn (CarbonImmutable $end): int => $cases->filter(function (object $case) use ($end): bool {
+            $opened = CarbonImmutable::parse((string) $case->created_at, 'UTC');
+            $decided = $case->decided_at === null ? null : CarbonImmutable::parse((string) $case->decided_at, 'UTC');
+
+            return $opened->lessThan($end) && ($decided === null || $decided->greaterThanOrEqualTo($end));
+        })->count();
+
+        $series = array_map(fn (string $day): int => $openAt(CarbonImmutable::parse($day, config()->string('speedclub.display_timezone'))->addDay()), $this->days($today->subDay(), self::SERIES_DAYS - 1));
+
+        return ['value' => $now, 'previous' => $openAt($today->subDays(6)), 'series' => [...$series, $now]];
+    }
+
+    /**
+     * The median minutes from a case's first report to its decision, over the cases decided by staff in the last 7 German days (null
+     * without one), the 7 days before, and per day for the series (null on a day without a decision).
+     *
+     * @return array{value: int|null, previous: int|null, series: list<int|null>}
+     */
+    private function medianDecisionMinutes(CarbonImmutable $today): array
+    {
+        $zone = config()->string('speedclub.display_timezone');
+        $rows = DB::table('decisions')
+            ->join('moderation_cases', 'moderation_cases.id', '=', 'decisions.case_id')
+            ->whereNotNull('decisions.decided_by')
+            ->where('decisions.decided_at', '>=', $this->utc($today->subDays(self::SERIES_DAYS - 1)))
+            ->get(['decisions.decided_at', 'moderation_cases.created_at']);
+        $byDay = [];
+
+        foreach ($rows as $row) {
+            $decided = CarbonImmutable::parse((string) $row->decided_at, 'UTC');
+            $minutes = max(0, intdiv($decided->getTimestamp() - CarbonImmutable::parse((string) $row->created_at, 'UTC')->getTimestamp(), 60));
+            $byDay[$decided->setTimezone($zone)->toDateString()][] = $minutes;
+        }
+
+        $days = $this->days($today, self::SERIES_DAYS);
+        $window = fn (array $list): array => array_merge(...array_map(fn (string $day): array => $byDay[$day] ?? [], $list));
+
+        return [
+            'value' => self::median($window(array_slice($days, 7))),
+            'previous' => self::median($window(array_slice($days, 0, 7))),
+            'series' => array_map(fn (string $day): ?int => self::median($byDay[$day] ?? []), $days),
+        ];
+    }
+
+    /**
+     * Now from pushOptIn(); history from the daily snapshots (a day before the first snapshot is null, never a guess).
+     *
+     * @return array{value: float|null, previous: float|null, series: list<float|null>}
+     */
+    private function pushOptInTile(CarbonImmutable $today): array
+    {
+        $share = fn (int $members, int $base): ?float => $base === 0 ? null : round($members / $base, 3);
+        $now = $this->pushOptIn();
+        $stored = DB::table('activity_days')->where('day', '>=', $today->subDays(self::SERIES_DAYS)->toDateString())->whereNotNull('push_base')
+            ->get(['day', 'push_members', 'push_base'])->keyBy(fn (object $row): string => substr((string) $row->day, 0, 10));
+        $at = fn (string $day): ?float => isset($stored[$day]) ? $share((int) $stored[$day]->push_members, (int) $stored[$day]->push_base) : null;
+        $value = $share($now['members'], $now['base']);
+
+        return [
+            'value' => $value,
+            'previous' => $at($today->subDays(7)->toDateString()),
+            'series' => [...array_map($at, $this->days($today->subDay(), self::SERIES_DAYS - 1)), $value],
+        ];
+    }
+
+    /**
+     * @param  list<int>  $values
+     */
+    private static function median(array $values): ?int
+    {
+        if ($values === []) {
+            return null;
+        }
+
+        sort($values);
+        $middle = intdiv(count($values), 2);
+
+        return count($values) % 2 === 1 ? $values[$middle] : intdiv($values[$middle - 1] + $values[$middle], 2);
+    }
+
+    /**
+     * The three charts: registrations per day (the 30 full days before today), QR scans against sign-ups that began on a QR scan (30 days), and the ten makes
      * with the most published vehicles.
      *
      * @return array{registrations: list<array{date: string, value: int}>, qr_funnel: list<array{date: string, scans: int, registrations: int}>, top_makes: list<array{label: string, value: int}>}
      */
     public function charts(): array
     {
-        $today = $this->today();
-        $from = $today->subDays(self::CHART_DAYS - 1);
+        // DQ-1196: the last 30 full days. Today is still running, and its partial count read as a drop to zero at the line's end.
+        $lastDay = $this->today()->subDay();
+        $from = $lastDay->subDays(self::CHART_DAYS - 1);
         $members = $this->perDay(DB::table('users')->whereNull('deleted_at'), 'created_at', $from, self::CHART_DAYS);
         $scans = $this->scansPerDay($from, self::CHART_DAYS);
         $qrSignups = $this->perDay(DB::table('users')->where('signup_ref', SignupRef::Qr->value), 'created_at', $from, self::CHART_DAYS);
-        $days = $this->days($today, self::CHART_DAYS);
+        $days = $this->days($lastDay, self::CHART_DAYS);
 
         $makes = DB::table('vehicles')
             ->leftJoin('makes', 'makes.id', '=', 'vehicles.make_id')
@@ -201,10 +382,23 @@ final class Kpi
         $count = (int) ($row->open_count ?? 0);
         $oldest = $row->oldest ?? null;
 
+        return self::waitingSince($count, is_string($oldest) ? CarbonImmutable::parse($oldest, 'UTC') : null);
+    }
+
+    /**
+     * A work queue's count with its oldest item as `since`. DQ-1194: `warning` only once that item is overdue (SLA_MINUTES), so the
+     * dashboard colours late queues, not every queue that has work.
+     *
+     * @return array{count: int, status: 'ok'|'warning', since: string|null}
+     */
+    public static function waitingSince(int $count, ?CarbonImmutable $oldest): array
+    {
+        $overdue = $count > 0 && $oldest !== null && $oldest->diffInMinutes(now(), true) >= self::SLA_MINUTES;
+
         return [
             'count' => $count,
-            'status' => $count > 0 ? 'warning' : 'ok',
-            'since' => is_string($oldest) ? CarbonImmutable::parse($oldest, 'UTC')->toIso8601String() : null,
+            'status' => $overdue ? 'warning' : 'ok',
+            'since' => $oldest?->toIso8601String(),
         ];
     }
 
@@ -319,7 +513,9 @@ final class Kpi
 
     private function today(): CarbonImmutable
     {
-        return CarbonImmutable::now(config()->string('speedclub.display_timezone'))->startOfDay();
+        $zone = config()->string('speedclub.display_timezone');
+
+        return ($this->frozen?->setTimezone($zone) ?? CarbonImmutable::now($zone))->startOfDay();
     }
 
     private function utc(CarbonImmutable $germanDay): string

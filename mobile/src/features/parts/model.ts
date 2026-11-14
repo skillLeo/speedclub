@@ -112,13 +112,39 @@ export const FALLBACK_COVER: PhotoFields = {
   focal: { x: 0.35, y: 0.5 },
 };
 
+/**
+ * BIZ-01's stage without a usable cover (ADR-466, WEB-14 parity): the licensed GT86 at night in a dark alley, bundled from the very
+ * pixels of the web's `landing-hero` rendition (WEB-14) at its full 1282 px, with only the front plate pixelated (DQ-973 treatment,
+ * DQ-1235: the windscreen banner stays as photographed, no blur box). Focal point and thumbhash from the seed manifest.
+ */
+export const BUSINESS_STAGE: PhotoFields = {
+  source: require('@/assets/gallery/generic-exterior-01.jpg') as number,
+  thumbhash: 'CQgGDQLXqZB4WVaXaIWYlUaAUlAn',
+  focal: { x: 0.5, y: 0.69 },
+};
+
 export type BusinessHero = { photo: PhotoFields; source: 'own' | 'portfolio' | 'fallback'; alt: string | null; vehicle: FeedVehicle | null };
 
-export function businessHero(business: Pick<BusinessDetail, 'cover'>, portfolio: readonly FeedVehicle[], width: number): BusinessHero {
-  if (business.cover) return { photo: photoFields(business.cover, width), source: 'own', alt: business.cover.alt, vehicle: null };
-  const build = portfolio.find((vehicle) => vehicle.cover);
-  if (build?.cover) return { photo: photoFields(build.cover, width), source: 'portfolio', alt: build.cover.alt, vehicle: build };
-  return { photo: FALLBACK_COVER, source: 'fallback', alt: null, vehicle: null };
+/**
+ * BIZ-01's hero (ADR-466, DQ-1215): the business's own cover; else the portfolio photo the API chose (`cover_source = portfolio`,
+ * only when its build has a second photo for the card below), named after its build when the portfolio lists it; else the brand
+ * stage. The app never picks a portfolio photo itself, so the hero and the first card never show the same picture.
+ */
+export function businessHero(business: Pick<BusinessDetail, 'cover' | 'cover_source'>, portfolio: readonly FeedVehicle[], width: number): BusinessHero {
+  const cover = business.cover;
+  if (!cover) return { photo: BUSINESS_STAGE, source: 'fallback', alt: null, vehicle: null };
+  if (business.cover_source !== 'portfolio') return { photo: photoFields(cover, width), source: 'own', alt: cover.alt, vehicle: null };
+  const vehicle = portfolio.find((build) => build.cover?.id === cover.id) ?? null;
+  return { photo: photoFields(cover, width), source: 'portfolio', alt: cover.alt, vehicle };
+}
+
+/**
+ * ADR-457 (DQ-1139): a BusinessCard's 16:9 photo. The API already chose the business's own cover, else its newest portfolio build
+ * (`cover_source`); without either the card takes the brand-stage photo and says "Symbolbild", never a glyph in a square.
+ */
+export function businessCardCover(business: Pick<BusinessCardData, 'cover'>, width: number): { photo: PhotoFields; symbolic: boolean } {
+  if (business.cover) return { photo: photoFields(business.cover, width), symbolic: false };
+  return { photo: FALLBACK_COVER, symbolic: true };
 }
 
 /** "In 14 Builds" / "In 1 Build"; nothing for zero or an uncounted list (never "In 0 Builds"). */
@@ -145,6 +171,8 @@ export function sampleBusiness(t: T): BusinessCardData {
     subline: `${tx(t, 'kinds.workshop')} · ${tx(t, 'sample.businessCity')}`,
     services: [tx(t, 'sample.serviceSuspension'), tx(t, 'sample.serviceExhaust'), tx(t, 'sample.serviceAlignment')],
     logo: null,
+    cover: null,
+    cover_source: null,
     verified: false,
     is_sample: true,
     distance_km: null,
@@ -163,6 +191,7 @@ export function sampleProduct(t: T): ProductRowData {
     brand: { slug: 'sample', name: tx(t, 'sample.productBrand') },
     category: { key: 'suspension', name: tx(t, 'sample.productCategory'), icon: 'coilover' },
     builds: null,
+    thumbnail: null,
     status: 'active',
   };
 }

@@ -13,7 +13,8 @@
 //          --locales=de,en  --states=default[,loading,…]  --font-scales=1[,2]  --capture-only (audit findings are reported in the summary, not failed on;
 //          capture failures, picture-integrity findings (INTEGRITY_CHECKS), baseline mismatches and a changed export still fail). p4 writes into docs/reports/visual/p4/ (or --out)
 //          and compares with tests/e2e/__screenshots__/p4/.
-//          --routes-file=FILE.json (other registry, for the harness self-test)  --ready-timeout=MS
+//          --routes-file=FILE.json|FILE.mjs (other registry, for the harness self-test; a module exports `routes`, so its routes can
+//          carry `prepare`/`walk` steps)  --ready-timeout=MS
 //          --limits-file=FILE.json ({routes, config} as artisan gives them, instead of asking artisan; for the harness self-test)
 //          --cell-timeout=MS (watchdog of one attempt after its rate-limit room, default 120000)
 //          --idle-timeout=MS (the whole run aborts when no cell finished for this long, default 600000)
@@ -37,8 +38,8 @@
 import { availableParallelism } from 'node:os';
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, resolve as absolutePath } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { chromium, webkit } from '@playwright/test';
 import { runDomAudit } from '../support/dom-audit.mjs';
@@ -74,13 +75,14 @@ import {
 } from './matrix.mjs';
 import { RateBudget, buildLimits, loadServerLimits } from './rate-budget.mjs';
 import { missingTokens, tokenValues } from '../support/path-tokens.mjs';
-import { ensureApprovalsFixture } from '../support/backend.mjs';
+import { deleteTestAccounts, ensureApprovalsFixture } from '../support/backend.mjs';
 import { staffRun } from '../support/staff.mjs';
 import { STAGE_FIXTURES } from '../support/stage-fixtures.mjs';
 import { routes as registry } from './routes.mjs';
 import { filterP4Cells, p4ContextOptions, P4_DEVICE_IDS, planLines, planP4Route, validateP4Filters } from './p4.mjs';
 import { p4Device } from './p4-devices.mjs';
 import { describeSets } from './p4-sets.mjs';
+import { stagerFor, unstage } from './route-steps.mjs';
 
 /**
  * The server whose host the baselines show. Routes with `hostDependent` (a QR code of APP_URL in the picture) are compared with
@@ -260,7 +262,7 @@ class CaptureSession {
   /** One browser per engine: Chromium for the module and phase tiers and the p4 Chromium devices, WebKit for the p4 Apple devices. */
   /** @type {Map<'chromium'|'webkit', import('@playwright/test').Browser>} */
   #browsers = new Map();
-  /** @type {Map<string, {context:import('@playwright/test').BrowserContext,page:import('@playwright/test').Page,network:ReturnType<typeof trackNetwork>,log:{pageErrors:string[],consoleErrors:string[],thirdParty:string[],rateLimited:string[],serverErrors:string[]},uses:number,epoch:string|null,lastUsed:number}>} */
+  /** @type {Map<string, {context:import('@playwright/test').BrowserContext,page:import('@playwright/test').Page,network:ReturnType<typeof trackNetwork>,log:{pageErrors:string[],consoleErrors:string[],thirdParty:string[],rateLimited:string[],serverErrors:string[]},staged:WeakSet<import('@playwright/test').Request>,uses:number,epoch:string|null,lastUsed:number}>} */
   #slots = new Map();
 
   /** @param {'chromium'|'webkit'} engine */
@@ -302,6 +304,9 @@ class CaptureSession {
       serverErrors: /** @type {string[]} */ ([]),
     };
     const origin = new URL(BASE_URL).origin;
+    // Requests a route's steps answered themselves (route-steps.mjs): their status is the harness's, not the server's.
+    /** @type {WeakSet<import('@playwright/test').Request>} */
+    const staged = new WeakSet();
     page.on('pageerror', (e) => log.pageErrors.push(e.message));
     page.on('console', (m) => {
       if (m.type() === 'error' && !m.text().includes('net::ERR_NAME_NOT_RESOLVED')) log.consoleErrors.push(m.text().slice(0, 300));
@@ -313,7 +318,7 @@ class CaptureSession {
     });
     page.on('response', (r) => {
       const url = new URL(r.url());
-      if (url.origin !== origin) return;
+      if (url.origin !== origin || staged.has(r.request())) return;
       const status = r.status();
       this.#budget.observe(r.request().method(), url.pathname, status, r.headers());
       if (status === 429) log.rateLimited.push(`${url.pathname}${url.search}`);
@@ -322,7 +327,7 @@ class CaptureSession {
     page.on('websocket', (ws) => {
       if (new URL(ws.url()).hostname !== new URL(origin).hostname) log.thirdParty.push(ws.url());
     });
-    return { context, page, network: trackNetwork(page), log, uses: 0, epoch: lease.epoch, lastUsed: 0 };
+    return { context, page, network: trackNetwork(page), log, staged, uses: 0, epoch: lease.epoch, lastUsed: 0 };
   }
 
   async #slot(/** @type {'de'|'en'} */ locale, /** @type {string} */ auth, /** @type {string|undefined} */ deviceId) {
@@ -423,6 +428,8 @@ class CaptureSession {
   async #park() {
     this.#at('parking the page');
     for (const slot of this.#slots.values()) {
+      // A route's staged answers (route-steps.mjs) end with its cell.
+      await Promise.race([unstage(slot.page).catch(() => {}), new Promise((resolve) => setTimeout(resolve, CLOSE_TIMEOUT_MS).unref())]);
       // Bounded: page.evaluate has no timeout of its own.
       await Promise.race([clearStoredState(slot.page).catch(() => {}), new Promise((resolve) => setTimeout(resolve, CLOSE_TIMEOUT_MS).unref())]);
       await slot.page.goto('about:blank', { timeout: CLOSE_TIMEOUT_MS }).catch(() => {});
@@ -435,7 +442,7 @@ class CaptureSession {
    * @param {string} pngPath
    */
   async #capture(route, cell, pngPath) {
-    const { page, network, log } = await this.#slot(cell.locale, route.auth, cell.device);
+    const { page, network, log, staged } = await this.#slot(cell.locale, route.auth, cell.device);
     this.#at('clearing stored state');
     log.pageErrors.length = 0;
     log.consoleErrors.length = 0;
@@ -455,11 +462,21 @@ class CaptureSession {
     await page.emulateMedia({ colorScheme: tokens.themes[cell.theme].colorScheme, reducedMotion: 'reduce' });
 
     const url = qaUrl(route.path, { theme: cell.theme, locale: cell.locale, fontScale: cell.fontScale, state: cell.state });
+    /** @type {import('./route-steps.mjs').RouteStepContext} */
+    const steps = { page, cell, stage: stagerFor(page, staged), baseUrl: BASE_URL };
+    if (route.prepare) {
+      this.#at('preparing (staged answers)');
+      await route.prepare(steps);
+    }
     this.#at('loading the route');
     const response = await page.goto(`${BASE_URL}${url}`, { waitUntil: 'load' });
     if (!response) throw new Error(`No response for ${url}`);
     if (!isExpectedStatus(route, response.status())) {
       throw new Error(`HTTP ${response.status()} for ${url}${route.expectStatus === undefined ? '' : ` (expected ${route.expectStatus})`}`);
+    }
+    if (route.walk) {
+      this.#at('walking to the state');
+      await route.walk(steps);
     }
     // A 429 means the screen shows an error state instead of the route; checked again right before the picture, as expanding an
     // inner scroller can load more.
@@ -736,7 +753,13 @@ function topFindings(results, limit = 12) {
 
 async function main() {
   const cli = parseCli();
-  const allRoutes = /** @type {RouteDef[]} */ (cli.routesFile ? JSON.parse(await readFile(cli.routesFile, 'utf8')) : registry);
+  const allRoutes = /** @type {RouteDef[]} */ (
+    cli.routesFile
+      ? cli.routesFile.endsWith('.mjs')
+        ? (await import(pathToFileURL(absolutePath(cli.routesFile)).href)).routes
+        : JSON.parse(await readFile(cli.routesFile, 'utf8'))
+      : registry
+  );
   const problems = validateRoutes(allRoutes);
   if (problems.length) throw new Error(`Invalid route registry:\n  ${problems.join('\n  ')}`);
 
@@ -756,6 +779,16 @@ async function main() {
   if (chosen.selected.length === 0) {
     printNotRun();
     throw new Error('No routes selected.');
+  }
+  // Test accounts (E2E_DOMAIN) an aborted e2e run left behind: its teardown deletes them, but a run stopped by the global timeout
+  // never reaches it (Phase 4 gate, 418 accounts), and their builds and handles then showed in HOME-01's suggestions and the
+  // Discover lists of this matrix. Nothing else runs here meanwhile (scripts/dev/qa-run.mjs). This comes before anything that makes
+  // a fixture account: the path tokens below create decisions.fixture (SAFE-01-staff/-reversal), which a later cleanup removed
+  // again, so every one of those cells failed its login with 401 (final Phase 4 gate, second run). Never inside Playwright: the
+  // runner's own self-tests (self-test/visual-matrix.spec.ts) start it while other workers' flows still use their test accounts.
+  if (!cli.dryRun && !cli.plan && process.env.TEST_WORKER_INDEX === undefined) {
+    const leftovers = await deleteTestAccounts();
+    if (leftovers.deleted > 0) console.log(`Removed ${leftovers.deleted} test account(s) an earlier run left.`);
   }
   // Seeded ids that change with every seed (`{r34}` and the like), read once per run as the demo member.
   const names = [...new Set(chosen.selected.flatMap((r) => pathTokens(r.path)))];

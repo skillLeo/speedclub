@@ -5,13 +5,13 @@ import type { GarageVehicle } from '@/api/queries/garage';
 import { usePublicVehicle } from '@/api/queries/vehicles';
 import { ProfileHero } from '@/features/vehicle/components/ProfileHero';
 import { ProfileSummary, VehicleIdentity } from '@/features/vehicle/components/ProfileSummary';
-import { heroIdentityOverlap } from '@/features/vehicle/layout';
+import { heroIdentityOverlap, scrimOverlapDataSet } from '@/features/vehicle/layout';
 import { visiblePhotos } from '@/features/vehicle/media';
 import { aspect, createStyles, space } from '@/theme';
-import { Badge, Button, Photo, PhotoScrim, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { Badge, Button, DisplayTitle, Photo, PhotoScrim, Skeleton, SkeletonBlock, SkeletonText, Text, type PhotoFields } from '@/ui';
 import { ratioOf } from '@/ui/Photo';
 
-import { cardCaption } from '../card';
+import { catalogueCaption } from '../card';
 import { EMPTY_HERO } from '../sample';
 
 const ROUTE = 'GAR-03.vehPreview';
@@ -72,58 +72,123 @@ function PreviewBody({ draft, width, onAddPhoto }: Omit<WizardVehiclePreviewProp
       );
     }
     // Not readable (offline before the first read): the draft's own words on the same stage, so the step never shows a hole.
-    return <EmptyStage title={draft.full_title.trim() || t('wizard.untitled')} caption={cardCaption(draft)} overlap={overlap} onAddPhoto={onAddPhoto} />;
+    return <EmptyStage title={draft.full_title.trim() || t('wizard.untitled')} caption={catalogueCaption(draft)} overlap={overlap} onAddPhoto={onAddPhoto} width={width} />;
   }
 
   const photos = visiblePhotos(vehicle.photos);
   return (
     <View role="group" aria-label={t('review.previewLabel')} testID={ROUTE}>
       {photos.length > 0 ? (
-        <View style={styles.stage}>
+        <View style={styles.stage} testID={`${ROUTE}.stage`}>
           <ProfileHero
             photos={photos}
             width={width}
             corner="none"
             vehicleTitle={vehicle.full_title}
-            ownerUsername={vehicle.owner?.username}
             onOpen={() => undefined}
             ratio={HERO_RATIO}
             aspect="4:5"
             identityOverlap={overlap}
             routeId={ROUTE}
           />
-          <VehicleIdentity vehicle={vehicle} routeId={ROUTE} tone="photo" layoutWidth={inner} style={[styles.identity, { marginTop: -overlap }]} />
+          <VehicleIdentity
+            vehicle={vehicle}
+            routeId={ROUTE}
+            tone="photo"
+            layoutWidth={inner}
+            dataSet={scrimOverlapDataSet(overlap)}
+            style={[styles.identity, { marginTop: -overlap }]}
+          />
         </View>
       ) : (
-        <EmptyStage title={vehicle.title} caption={cardCaption(draft)} overlap={overlap} onAddPhoto={onAddPhoto} />
+        <EmptyStage title={vehicle.title} caption={catalogueCaption(draft)} overlap={overlap} onAddPhoto={onAddPhoto} width={width} />
       )}
       <ProfileSummary vehicle={vehicle} routeId={ROUTE} layoutWidth={width} style={styles.summary} />
     </View>
   );
 }
 
-function EmptyStage({ title, caption, overlap, onAddPhoto }: { title: string; caption?: string; overlap: number; onAddPhoto: () => void }) {
+function EmptyStage({ title, caption, overlap, onAddPhoto, width }: { title: string; caption?: string; overlap: number; onAddPhoto: () => void; width: number }) {
+  return <Stage photo={null} title={title} caption={caption} overlap={overlap} onAddPhoto={onAddPhoto} route={ROUTE} width={width} />;
+}
+
+/**
+ * The stage both previews share: the draft's cover, or (without one) the GAR-01 empty photo badged "Beispiel" with "Foto
+ * hinzufügen" on it (DQ-1052), never a grey box; the name in `display.title` and the meta line on the scrim.
+ */
+function Stage({
+  photo,
+  title,
+  caption,
+  overlap,
+  onAddPhoto,
+  route,
+  width,
+}: {
+  photo: PhotoFields | null;
+  title: string;
+  caption?: string;
+  overlap: number;
+  onAddPhoto?: () => void;
+  route: string;
+  /** The stage's width: the title is laid out at it less the side padding. */
+  width: number;
+}) {
   const { t } = useTranslation('garage');
   const styles = useStyles();
+  const inner = Math.max(0, width - 2 * space[16]);
+  const own = photo?.source ? photo : null;
   return (
-    <View style={styles.stage} testID={`${ROUTE}.empty`}>
-      <Photo {...EMPTY_HERO} aspect="4:5">
+    <View style={styles.stage} testID={`${route}.${own ? 'stage' : 'empty'}`}>
+      <Photo {...(own ?? EMPTY_HERO)} aspect="4:5">
         <PhotoScrim />
-        <View style={styles.emptyAction}>
-          <Badge kind="sample" tone="onPhoto" testID={`${ROUTE}.emptySample`} />
-          <Button label={t('photos.addShort')} variant="secondary" size="s" icon="camera" onPress={onAddPhoto} testID={`${ROUTE}.addPhoto`} />
-        </View>
+        {own ? null : (
+          <View style={styles.emptyAction}>
+            <Badge kind="sample" tone="onPhoto" testID={`${route}.emptySample`} />
+            {onAddPhoto ? (
+              <Button label={t('photos.addShort')} variant="secondary" size="s" icon="camera" onPress={onAddPhoto} testID={`${route}.addPhoto`} />
+            ) : null}
+          </View>
+        )}
       </Photo>
-      <View style={[styles.emptyText, { marginTop: -overlap }]}>
-        <Text variant="displayTitle" color="onPhoto.primary" hyphenate={false}>
+      <View style={[styles.emptyText, { marginTop: -overlap }]} dataSet={scrimOverlapDataSet(overlap)}>
+        {/* A card title (30/34 at every width, 24/28 when that saves a line), never the desktop page size in the narrow pane. The
+            placeholder "Neues Fahrzeug" is copy, which may hyphenate; a car name only wraps at its spaces. */}
+        <DisplayTitle placement="card" kind={title === t('wizard.untitled') ? 'copy' : 'vehicle'} color="onPhoto.primary" layoutWidth={inner}>
           {title}
-        </Text>
+        </DisplayTitle>
         {caption ? (
           <Text variant="caption" color="onPhoto.secondary" hyphenate={false}>
             {caption}
           </Text>
         ) : null}
       </View>
+    </View>
+  );
+}
+
+export type WizardDraftPreviewProps = {
+  /** The live card data of steps 1–3 (`usePreview`): name, sub-line, cover, spec chips. */
+  preview: { title: string; subtitle?: string; photo: PhotoFields; specs?: readonly string[] };
+  /** The pane's inner width. */
+  width: number;
+  /** "Foto hinzufügen" on the sample stage; left out where the step itself adds photos or no draft exists yet. */
+  onAddPhoto?: () => void;
+  testID: string;
+};
+
+/**
+ * DQ-1218: the desktop Vorschau pane of steps 1–3, the review step's stage at the pane's width: the draft's cover, else the badged
+ * sample stage with "Foto hinzufügen"; the name on the scrim and one meta line ("2002 · 2,6 l R6 Biturbo · AWD"), never a pill.
+ */
+export function WizardDraftPreview({ preview, width, onAddPhoto, testID }: WizardDraftPreviewProps) {
+  const overlap = heroIdentityOverlap(width, HERO_RATIO);
+  const meta = [preview.subtitle, ...(preview.specs ?? [])].filter((part): part is string => Boolean(part && part.trim())).join(' · ');
+  return (
+    // The stage keeps the review step's ids (`GAR-03.vehPreview.empty|stage`): steps 1–3 and step 4 never show both panes at once, and
+    // they are the stages whose identity may reach into the photo (dom-audit SCRIM_OVERLAP_STAGES, ADR-465 c).
+    <View style={{ width }} testID={testID}>
+      <Stage photo={preview.photo} title={preview.title} caption={meta || undefined} overlap={overlap} onAddPhoto={onAddPhoto} route={ROUTE} width={width} />
     </View>
   );
 }

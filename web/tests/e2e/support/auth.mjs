@@ -10,7 +10,7 @@
 // read here and never printed. The two onboarding accounts are fixtures under E2E_DOMAIN (support/backend.php).
 import { readFileSync } from 'node:fs';
 import { request } from '@playwright/test';
-import { deleteTestAccountsSync, ensureDecisionsFixture, ensureOnboardingAccounts, ensureSessionsFixture, ensureTwoFactorFixture, resetAuthLimits, resetCsrfLimit, startViewAs } from './backend.mjs';
+import { deleteTestAccountsSync, ensureDecisionsFixture, ensureFinishFixture, ensureOnboardingAccounts, ensureSessionsFixture, ensureTwoFactorFixture, resetAuthLimits, resetCsrfLimit, startViewAs } from './backend.mjs';
 import { BASE_URL, QA_USER_AGENT } from './qa.mjs';
 import { STAFF_KINDS, STAFF_SESSION_COOKIE, staffRun, staffSession } from './staff.mjs';
 import { msToNextStep, newTotpSecret, totpCode } from './totp.mjs';
@@ -227,6 +227,22 @@ function sessionsFixtureEmail() {
   return sessionsFixture;
 }
 
+/** @type {Promise<string>|null} */
+let finishFixture = null;
+
+/**
+ * DQ-1213: AUTH-09b's account, set back to its AGB step once per process, right before this process signs in as it. Removed on exit, as
+ * the Playwright teardown removes test accounts and the visual runner has none.
+ */
+function finishFixtureEmail() {
+  finishFixture ??= ensureFinishFixture().then(({ email }) => {
+    if (process.env.TEST_WORKER_INDEX === undefined) process.once('exit', () => deleteTestAccountsSync('finish.fixture'));
+    return email;
+  });
+  finishFixture.catch(() => (finishFixture = null));
+  return finishFixture;
+}
+
 /** @type {Promise<{email:string, staff_decision:string, reversal:string, original:string}>|null} */
 let decisionsFixture = null;
 
@@ -362,6 +378,8 @@ export const authStrategies = {
   'member-reporter': member(async () => DEMO_REPORTER),
   // SET-06 with a fixed list: a member nobody else signs in as, its devices seeded the same in every run (DQ-453).
   'member-sessions': member(sessionsFixtureEmail),
+  // AUTH-09b "Fast geschafft" (DQ-1213): a new passwordless account at its AGB step (next_step accept_terms).
+  'member-finish': member(finishFixtureEmail),
   // SET-03 / SET-04 with two-factor on: the code field from the start (SEC-P2-07, M3.2).
   'member-two-factor': async (context) => useSession(context, await twoFactorFixtureSession()),
   // SAFE-01 of a staff-origin decision and of a reversal (M3.2, ADR-224): decisions.fixture, see decisionsFixtureIds.

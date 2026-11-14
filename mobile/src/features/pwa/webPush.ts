@@ -8,10 +8,12 @@
  * - A subscription made with an older VAPID key is replaced, so a key rotation on the server does not strand the browser.
  * - Sign-out removes the subscription from the server and from the browser while the session still exists (`beforeSignOut`), so the
  *   next member on this browser never gets the previous member's notifications.
+ * - SEC-414-02: when auth/me answers 401 the session is gone and the server pruned its subscriptions with it; the browser drops its
+ *   own subscription too (`dropLocalWebPush`), so a later member never inherits it and nothing stays half on.
  * - Every sign-in posts an existing subscription again (`relinkWebPushAfterSignIn`): the POST is idempotent per endpoint and ties it
  *   to the new session, so "Alle anderen Geräte abmelden" from a later session does not silently drop this browser.
  */
-import { beforeSignOut } from '@/api/queries/auth';
+import { beforeSignOut, onMeUnauthenticated } from '@/api/queries/auth';
 import { deletePushSubscription, savePushSubscription, type PushSubscriptionOutcome } from '@/api/queries/webPush';
 import { isWeb } from '@/lib/platform';
 import { useSessionStore } from '@/state/session';
@@ -130,6 +132,13 @@ export async function dropWebPushAtSignOut(): Promise<void> {
   await subscription.unsubscribe().catch(() => false);
 }
 
+/** auth/me answered 401: the session ended without a sign-out here. Only the browser's subscription goes (no server call). */
+export async function dropLocalWebPush(): Promise<boolean> {
+  const subscription = await currentSubscription();
+  if (!subscription) return false;
+  return subscription.unsubscribe().catch(() => false);
+}
+
 /**
  * After a sign-in: when this browser already has notifications on (a PushSubscription and the permission), the subscription goes to
  * the server again for the new session. Nothing is asked of the member, nothing is created; a server without Web Push (404) or a
@@ -163,6 +172,7 @@ export function isSignIn(
 
 if (isWeb) {
   beforeSignOut(dropWebPushAtSignOut);
+  onMeUnauthenticated(() => void dropLocalWebPush());
   useSessionStore.subscribe((state, previous) => {
     if (isSignIn(previous, state)) void relinkWebPushAfterSignIn();
   });

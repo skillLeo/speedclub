@@ -1,14 +1,14 @@
-import type { ReactNode } from 'react';
-import { View, type StyleProp, type ViewStyle } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 
-import { createStyles, size, space } from '@/theme';
+import { createStyles, size, space, typography, useTheme } from '@/theme';
 
 import { Avatar } from './Avatar';
 import { SampleBadges, useSampleBadgeLabels, type SampleFlags } from './Badge';
 import { WithoutForcedState } from './qaVisualState';
 import { joinLabel, RowBody, RowDivider, useRowInset, useStacksAtFontScale, type RowInset } from './rowParts';
 import { Text } from './Text';
-import { handleText, metaLineText } from './textBreaks';
+import { metaLineText } from './textBreaks';
 
 export type MemberRowProps = {
   name: string;
@@ -57,7 +57,35 @@ export function memberMetaText(meta: string): string {
   return metaLineText(meta);
 }
 
-/** A name that is only the username ("@lukas.sc", when there is no display name): one word, which must not be hyphenated. */
+/** "@lukas.sc · Stuttgart" → the leading handle and the rest; null when the meta does not start with a handle. */
+export function splitMetaHandle(meta: string): { handle: string; rest: string } | null {
+  const at = meta.indexOf(' · ');
+  const first = at < 0 ? meta : meta.slice(0, at);
+  if (!/^@\S+$/.test(first)) return null;
+  return { handle: first, rest: at < 0 ? '' : meta.slice(at + ' · '.length) };
+}
+
+/**
+ * An upper bound of the advance of a handle's characters in Inter Medium, in em (the bound Text's title rule uses: lowercase
+ * runs measure 0.50–0.56, "m" and "w" pull a handle up).
+ */
+const HANDLE_ADVANCE = 0.6;
+
+/**
+ * Whether a handle surely fits one line `width` wide in `callout` at `fontScale`. A handle breaks only after "." or "_" (DQ-282);
+ * one without them ("@wolfgangschwarzenberger", up to 24 characters) that is wider than the line has no place to break, so the
+ * row then sets it on a line of its own, cut with an ellipsis (m4.18 final gate, HOME-01 suggestions at 200 %).
+ */
+export function handleFitsLine(handle: string, width: number, fontScale: number): boolean {
+  return [...handle].length * typography.callout.fontSize * fontScale * HANDLE_ADVANCE <= width;
+}
+
+/**
+ * A name that is only the username ("@lukas.sc", when there is no display name): one word, which must not be hyphenated. It is
+ * one line, cut with an ellipsis where it is wider than its column, as the identity card sets it (DQ-1017): a handle without "."
+ * or "_" ("@gmwfgv0nd9wtp21") has no place to break, and at 200 % the browser then split it inside its letters (m4.18 final gate,
+ * HOME-01 suggestions). Text keeps the whole handle as the accessible name of a cut line.
+ */
 const isHandle = (name: string) => name.startsWith('@');
 
 /** §8 member row: avatar 40, `body.strong` name, `supporting` meta, trailing Follow button. */
@@ -67,6 +95,15 @@ export function MemberRow({ name, meta, avatarUri, avatarBlurhash, sample, onPre
   const largeFont = useStacksAtFontScale();
   const stacked = largeFont && Boolean(trailing);
   const sampleLabels = useSampleBadgeLabels(sample);
+  const { fontScale } = useTheme();
+  // The text column's width, for the handle rule (handleFitsLine); 0 until the first layout, which keeps the one-line meta.
+  const [textWidth, setTextWidth] = useState(0);
+  const onTextLayout = (event: LayoutChangeEvent) => {
+    const next = event.nativeEvent.layout.width;
+    setTextWidth((current) => (Math.abs(current - next) < 1 ? current : next));
+  };
+  const metaHandle = meta ? splitMetaHandle(meta) : null;
+  const handleOwnLine = metaHandle !== null && textWidth > 0 && !handleFitsLine(metaHandle.handle, textWidth, fontScale);
   return (
     <View testID={testID} style={[stacked ? styles.rootStacked : styles.root, style]}>
       <RowBody
@@ -77,11 +114,28 @@ export function MemberRow({ name, meta, avatarUri, avatarBlurhash, sample, onPre
         testID={testID ? `${testID}.body` : undefined}
       >
         <Avatar decorative name={name} uri={avatarUri} blurhash={avatarBlurhash} size={size.avatar.md} />
-        <View style={styles.text}>
-          <Text variant="bodyStrong" hyphenate={!isHandle(name)}>
-            {isHandle(name) ? handleText(name) : name}
-          </Text>
-          {meta ? (
+        <View style={styles.text} onLayout={onTextLayout} testID={testID ? `${testID}.text` : undefined}>
+          {isHandle(name) ? (
+            <Text variant="bodyStrong" hyphenate={false} numberOfLines={1} testID={testID ? `${testID}.name` : undefined}>
+              {name}
+            </Text>
+          ) : (
+            <Text variant="bodyStrong" testID={testID ? `${testID}.name` : undefined}>
+              {name}
+            </Text>
+          )}
+          {meta && metaHandle && handleOwnLine ? (
+            <>
+              <Text variant="callout" color="text.secondary" hyphenate={false} numberOfLines={1} testID={testID ? `${testID}.handle` : undefined}>
+                {metaHandle.handle}
+              </Text>
+              {metaHandle.rest ? (
+                <Text variant="callout" color="text.secondary" hyphenate={false}>
+                  {memberMetaText(metaHandle.rest)}
+                </Text>
+              ) : null}
+            </>
+          ) : meta ? (
             <Text variant="callout" color="text.secondary" hyphenate={false}>
               {memberMetaText(meta)}
             </Text>

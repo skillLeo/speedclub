@@ -15,6 +15,7 @@ import Toaster from '../Components/ui/Toaster.vue';
 import { qaDialog } from '../composables/qaDialog';
 import { trackWrites } from '../composables/recentPassword';
 import { useShortcuts } from '../composables/shortcuts';
+import { reportVisitFailures } from '../composables/visitFailures';
 import { initDensity } from '../lib/density';
 import { sidebarCollapsed } from '../lib/sidebar';
 
@@ -38,15 +39,19 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 let offWrites: (() => void) | undefined;
+let offFailures: (() => void) | undefined;
 onMounted(() => {
     window.addEventListener('keydown', onKeydown);
     offWrites = trackWrites();
+    // Client round 7: a write that got no answer from the app says so on every page (composables/visitFailures).
+    offFailures = reportVisitFailures();
     // The first page may have been the sign-in: the density belongs to the staff member now signed in.
     initDensity(page.props.staff?.id);
 });
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKeydown);
     offWrites?.();
+    offFailures?.();
 });
 </script>
 

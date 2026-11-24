@@ -77,18 +77,17 @@ describe('SpecStrip 2.0', () => {
     expect(cell.gap).toBe(space[4]);
   });
 
-  it('sets the data label in label.caps, the value in hero.numeral.xs on a phone (CF-2, R5-2b) with its label.unit unit, the provenance in caption', async () => {
+  it('on a phone sets the data label in caption capitals, the value in hero.numeral.s with its caption unit (R7-2), the provenance in caption', async () => {
     await renderUi(<SpecStrip items={items} layoutWidth={600} testID="s" />);
     const label = flat(screen.getByTestId('s.1.label').props.style);
-    expect(label.fontSize).toBe(typography.labelCaps.fontSize);
+    // Client round 7 (R7-2, "just a little bit bigger on phone"): one type step up from label.caps (11) and hero.numeral.xs (32).
+    expect(label.fontSize).toBe(typography.caption.fontSize);
     expect(textOf(screen.getByTestId('s.1.label').props.style).textTransform).toBe('uppercase');
     expect(label.color).toBe(themes.carbon.color.text.secondary);
-    // Client feedback CF-2 and R5-2b (ADR-536): on a phone (Jest's window is 750 wide) the numeral is hero.numeral.xs (32); a tablet's
-    // page keeps hero.numeral.
-    expect(flat(screen.getByTestId('s.1.value').props.style).fontSize).toBe(typography.heroNumeralXs.fontSize);
-    expect(typography.heroNumeralXs.fontSize).toBeLessThan(typography.heroNumeralS.fontSize);
+    // Jest's window is 750 wide: a phone. A tablet's page keeps hero.numeral (the desktop card hero.numeral.s).
+    expect(flat(screen.getByTestId('s.1.value').props.style).fontSize).toBe(typography.heroNumeralS.fontSize);
     const unit = flat(screen.getByTestId('s.1.unit').props.style);
-    expect(unit.fontSize).toBe(typography.labelUnit.fontSize);
+    expect(unit.fontSize).toBe(typography.caption.fontSize);
     // ADR-420: "Nm" keeps its case.
     expect(textOf(screen.getByTestId('s.1.unit').props.style).textTransform).toBeUndefined();
     const provenance = flat(screen.getByTestId('s.1.provenance').props.style);

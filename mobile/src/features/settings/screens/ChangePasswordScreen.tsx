@@ -7,6 +7,7 @@ import { View, type TextInput as RNTextInput } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import type { Me } from '@/api/queries/auth';
+import { isReauthCancelled } from '@/api/queries/recentAuth';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { RuleList } from '@/features/auth/components/RuleList';
 import { applyServerErrors, isCode } from '@/features/auth/forms';
@@ -14,9 +15,11 @@ import { passwordChecks } from '@/features/auth/schemas';
 import { useSingleFlight } from '@/lib/useSingleFlight';
 import { createStyles, size } from '@/theme';
 import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { TextInput } from '@/ui/TextInput';
 import { toast } from '@/ui/toast';
 
+import { hasPassword } from '../account';
 import { useMemberGate } from '../components/MemberGate';
 import { RestrictionNotice } from '../components/RestrictionNotice';
 import { RowGroup } from '@/ui/RowGroup';
@@ -119,7 +122,12 @@ function ChangePasswordForm({ me }: { me: Me }) {
   const [locked, setLocked] = useState(false);
   const newRef = useRef<InputRef>(null);
   const repeatRef = useRef<InputRef>(null);
-  const schema = useMemo(() => changePasswordSchema(me.email, askCode), [askCode, me.email]);
+  /**
+   * Client round 6 (L1): a passwordless member sets a first password here. There is no current one to ask for; the call sends
+   * `current_password: ''` and withRecentAuth asks for recent authentication when the server wants it.
+   */
+  const passwordSet = hasPassword(me);
+  const schema = useMemo(() => changePasswordSchema(me.email, askCode, passwordSet), [askCode, me.email, passwordSet]);
   const { control, handleSubmit, setError, setFocus, formState } = useForm<ChangePasswordValues>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
@@ -140,14 +148,17 @@ function ChangePasswordForm({ me }: { me: Me }) {
     const secondFactor = (values.code ?? '').replace(/\s/g, '');
     try {
       await change.mutateAsync({
-        currentPassword: values.currentPassword,
+        currentPassword: passwordSet ? values.currentPassword : '',
         password: values.password,
         revokeOtherSessions: values.revokeOtherSessions,
         ...(secondFactor ? { code: secondFactor } : {}),
       });
-      toast(t(values.revokeOtherSessions ? 'password.changedOthersOut' : 'password.changed'), { haptic: 'success', testID: `${ROUTE}.changed` });
+      const doneKey = passwordSet ? 'password.changed' : 'password.setDone';
+      toast(t(values.revokeOtherSessions ? `${doneKey}OthersOut` : doneKey), { haptic: 'success', testID: `${ROUTE}.changed` });
       setDone(true);
     } catch (error) {
+      // The member closed the REAUTH sheet: nothing was sent, so nothing is said.
+      if (isReauthCancelled(error)) return;
       if (isSecondFactorLocked(error)) {
         setLocked(true);
         setNotice(t('reauth.locked'));
@@ -170,27 +181,33 @@ function ChangePasswordForm({ me }: { me: Me }) {
   return (
     <SettingsPage
       routeId={ROUTE}
-      title={t('password.title')}
+      title={t(passwordSet ? 'password.title' : 'password.setTitle')}
       fallback="/settings"
       offlineLabel={t('offlineForm')}
       section="password"
       form={{
         dirty: formState.isDirty && !change.isPending && !done,
-        cta: { label: t('password.submit'), onPress: () => void onSubmit(), loading: change.isPending, disabled: locked },
+        cta: { label: t(passwordSet ? 'password.submit' : 'password.setSubmit'), onPress: () => void onSubmit(), loading: change.isPending, disabled: locked },
       }}
     >
       <View style={styles.body}>
         <RestrictionNotice routeId={ROUTE} />
         {notice ? <FormNotice message={notice} tone={locked ? 'info' : 'error'} testID={`${ROUTE}.notice`} /> : null}
         {/* DQ-570: the code belongs to the current password, as on SET-03: right under it, before the new one. */}
-        <PasswordInput
-          control={control}
-          name="currentPassword"
-          label={t('password.current')}
-          next={askCode ? undefined : newRef}
-          onSubmit={askCode ? () => setFocus('code') : undefined}
-          onChange={unlock}
-        />
+        {passwordSet ? (
+          <PasswordInput
+            control={control}
+            name="currentPassword"
+            label={t('password.current')}
+            next={askCode ? undefined : newRef}
+            onSubmit={askCode ? () => setFocus('code') : undefined}
+            onChange={unlock}
+          />
+        ) : (
+          <Text variant="callout" color="text.secondary" testID={`${ROUTE}.noPassword`}>
+            {t('reauth.noPassword')}
+          </Text>
+        )}
         {askCode ? (
           <SecondFactorField control={control} name="code" onChange={unlock} onSubmit={() => newRef.current?.focus()} testID={`${ROUTE}.secondFactor`} />
         ) : null}

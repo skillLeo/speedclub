@@ -49,7 +49,12 @@ const useStyles = createStyles((t) => ({
 export type ShareCardCustomiserProps = {
   options: ShareCardOptions;
   choices: ShareCardChoices;
-  onChange: (next: ShareCardOptions) => void;
+  /**
+   * R7-4b: every change is an update of the options as they are when it applies (React's functional update), never a copy of the
+   * options this render saw. A copy brought a switched-off element or a cleared line back when a second change came from an older
+   * render (two taps in one frame, the cropper's gesture end).
+   */
+  onChange: (update: (current: ShareCardOptions) => ShareCardOptions) => void;
   /** Whether the options are the stored card's: "Standard" then has nothing to restore. */
   isDefault: boolean;
   onReset: () => void;
@@ -102,7 +107,7 @@ export function ShareCardCustomiser({ options, choices, onChange, isDefault, onR
           theme={options.theme}
           media={media}
           focus={crop ? { x: crop.crop.x, y: crop.crop.y } : null}
-          onChange={(template) => onChange({ ...options, template })}
+          onChange={(template) => onChange((current) => ({ ...current, template }))}
           disabled={disabled}
           routeId={routeId}
         />
@@ -120,7 +125,7 @@ export function ShareCardCustomiser({ options, choices, onChange, isDefault, onR
                   aria-checked={on}
                   aria-label={item.id === choices.coverId ? t('shareCard.photoCover') : t('shareCard.photoNumber', { index: index + 1, count: choices.photos.length })}
                   disabled={disabled}
-                  onPress={() => onChange(withPhoto(options, item.id === choices.coverId ? null : item.id))}
+                  onPress={() => onChange((current) => withPhoto(current, item.id === choices.coverId ? null : item.id))}
                   style={[styles.thumb, on ? styles.thumbOn : null]}
                   testID={`${routeId}.photo.${item.id}`}
                 >
@@ -142,8 +147,8 @@ export function ShareCardCustomiser({ options, choices, onChange, isDefault, onR
             box={photoBoxOf(options)}
             crop={crop.crop}
             isDefault={crop.isDefault}
-            onChange={(next) => onChange({ ...options, crop: next })}
-            onReset={() => onChange({ ...options, crop: null })}
+            onChange={(next) => onChange((current) => ({ ...current, crop: next }))}
+            onReset={() => onChange((current) => ({ ...current, crop: null }))}
             disabled={disabled}
             maxStageHeight={maxCropHeight}
             routeId={routeId}
@@ -160,7 +165,7 @@ export function ShareCardCustomiser({ options, choices, onChange, isDefault, onR
               selected={options.show.includes(element)}
               selectionRole="checkbox"
               disabled={disabled}
-              onPress={() => onChange(toggleShareCardElement(options, element))}
+              onPress={() => onChange((current) => toggleShareCardElement(current, element))}
               testID={`${routeId}.element.${element}`}
             />
           ))}
@@ -168,7 +173,7 @@ export function ShareCardCustomiser({ options, choices, onChange, isDefault, onR
       </Section>
 
       {/* R5DQ-14: one label for one field. The field's own label ("Eigener Text") stands where a section title would. */}
-      <ShareCardTextField value={options.text} onChange={(text) => onChange({ ...options, text })} serverError={textError} disabled={disabled} routeId={routeId} />
+      <ShareCardTextField value={options.text} onChange={(text) => onChange((current) => ({ ...current, text }))} serverError={textError} disabled={disabled} routeId={routeId} />
 
       {takesTheme ? (
         <Section title={t('shareCard.theme')}>
@@ -178,7 +183,7 @@ export function ShareCardCustomiser({ options, choices, onChange, isDefault, onR
               { value: 'light', label: t('shareCard.themes.light') },
             ]}
             value={options.theme}
-            onChange={(theme) => onChange({ ...options, theme })}
+            onChange={(theme) => onChange((current) => ({ ...current, theme }))}
             label={t('shareCard.theme')}
             role="radiogroup"
             disabled={disabled}

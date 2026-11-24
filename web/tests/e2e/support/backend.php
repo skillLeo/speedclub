@@ -38,6 +38,7 @@
  *   php tests/e2e/support/backend.php run-health-fixture
  *   php tests/e2e/support/backend.php remove-health-fixture
  *   php tests/e2e/support/backend.php reset-staff-limits
+ *   php tests/e2e/support/backend.php age-staff-session <staff fixture label> password|end
  *   php tests/e2e/support/backend.php seeded-audit-event
  *   php tests/e2e/support/backend.php start-view-as <staff fixture label>
  *   php tests/e2e/support/backend.php ensure-decisions-fixture
@@ -2010,6 +2011,34 @@ switch ($command) {
         DB::table('vehicles')->where('id', $vehicle)->update(['hu_au_due' => null, 'hu_au_reminded_for' => null]);
         finish(['logs' => $logs, 'items' => $items]);
 
+    case 'age-staff-session':
+        // Client round 7 (flows/a10-admin-writes.spec.ts): what time does to a staff fixture's open sessions, without waiting for it.
+        // `password`: the password confirmation (ADR-215) is an hour old, so the next ⚿ write is refused with the password prompt
+        // although the page still believes it recent. `end`: the session is gone, as after 30 idle minutes (ADR-217).
+        $label = (string) ($args[0] ?? '');
+        $what = (string) ($args[1] ?? '');
+        if (! array_key_exists($label, STAFF_FIXTURES) || ! in_array($what, ['password', 'end'], true)) {
+            refuse('usage: backend.php age-staff-session <staff fixture label> password|end');
+        }
+        $staff = Staff::query()->where('email', staffFixtureEmail($label))->first() ?? refuse('no staff fixture '.$label.': run ensure-staff first');
+        $aged = 0;
+        foreach (DB::table('sessions')->where('user_id', $staff->getKey())->get(['id', 'payload']) as $row) {
+            // config/session.php serialization `json`: the payload is base64 of a JSON object.
+            $data = json_decode((string) base64_decode((string) $row->payload), true);
+            // Only staff sessions (the staff guard's login key), never a member's session with the same numeric id.
+            if (! is_array($data) || ! collect(array_keys($data))->contains(fn (string $key): bool => str_starts_with($key, 'login_staff_'))) {
+                continue;
+            }
+            if ($what === 'end') {
+                DB::table('sessions')->where('id', $row->id)->delete();
+            } else {
+                $data['auth'] = [...(is_array($data['auth'] ?? null) ? $data['auth'] : []), 'password_confirmed_at' => time() - 3600];
+                DB::table('sessions')->where('id', $row->id)->update(['payload' => base64_encode((string) json_encode($data))]);
+            }
+            $aged++;
+        }
+        finish(['aged' => $aged]);
+
     case 'reset-staff-limits':
         // The staff sign-in limiter (FortifyServiceProvider 'login': per address + client, and per client) of the loopback clients, for
         // the fixture addresses only, and their progressive delay (LoginThrottle). Called once when a sign-in of a run answered 429
@@ -2847,5 +2876,5 @@ switch ($command) {
         finish(['done' => $result['done'] ?? false, 'tasks' => $result['tasks'] ?? []]);
 
     default:
-        refuse('usage: backend.php build-score-free-generation|build-score-peers|build-score-run|build-score-nightly|dex-free-cities|dex-spot-fixture|dex-run-alerts|dex-forget-spot-map|ensure-spots-fixture|remove-spots-fixture|reset-limits|age-codes|ensure-onboarding|create-member|delete-accounts|close-updates|qr-scans|set-discoverable|set-who-can-message|run-test-jobs|decide-test-case|ensure-sessions-fixture|ensure-staff|delete-staff|reset-staff-limits|seeded-audit-event|start-view-as|ensure-decisions-fixture|ensure-two-factor-fixture|ensure-approvals-fixture|publish-announcement-fixture|remove-announcement-fixture|announcement-fixture-plan|announcements-state|ensure-reconsent-fixture|remove-reconsent-fixture|reconsent-fixture-plan|legal-documents-state|ensure-support-fixture|ensure-m417-fixture|remove-branding-fixture|branding-state|enable-premium-fixture|disable-premium-fixture|run-health-fixture|remove-health-fixture|remove-maintenance-fixture');
+        refuse('usage: backend.php build-score-free-generation|build-score-peers|build-score-run|build-score-nightly|dex-free-cities|dex-spot-fixture|dex-run-alerts|dex-forget-spot-map|ensure-spots-fixture|remove-spots-fixture|reset-limits|age-codes|ensure-onboarding|create-member|delete-accounts|close-updates|qr-scans|set-discoverable|set-who-can-message|run-test-jobs|decide-test-case|ensure-sessions-fixture|ensure-staff|delete-staff|reset-staff-limits|age-staff-session|seeded-audit-event|start-view-as|ensure-decisions-fixture|ensure-two-factor-fixture|ensure-approvals-fixture|publish-announcement-fixture|remove-announcement-fixture|announcement-fixture-plan|announcements-state|ensure-reconsent-fixture|remove-reconsent-fixture|reconsent-fixture-plan|legal-documents-state|ensure-support-fixture|ensure-m417-fixture|remove-branding-fixture|branding-state|enable-premium-fixture|disable-premium-fixture|run-health-fixture|remove-health-fixture|remove-maintenance-fixture');
 }

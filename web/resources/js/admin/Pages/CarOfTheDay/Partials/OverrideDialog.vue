@@ -54,7 +54,12 @@ function submit(): void {
             onStart: () => (processing.value = true),
             onFinish: () => (processing.value = false),
             onSuccess: (next) => {
-                if ((next.props.flash as { confirm_password?: true } | undefined)?.confirm_password === true) return;
+                if ((next.props.flash as { confirm_password?: true } | undefined)?.confirm_password === true) {
+                    // Client round 7: the server found the confirmation stale (ADR-215). Repeat this request after the password, not the shell's
+                    // bare copy of it, so its own callbacks run (close, saved state, field errors) instead of leaving the form as if unsaved.
+                    confirmPasswordFirst(go);
+                    return;
+                }
                 open.value = false;
             },
             onError: (bag) => (errors.value = bag),

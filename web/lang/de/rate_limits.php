@@ -53,6 +53,7 @@ return [
     'support_tickets' => 'Du hast gerade mehrere Anfragen an den Support geschickt. Versuch es in :time noch einmal.',
     'contact_form' => 'Von hier kamen gerade viele Nachrichten. Versuch es in :time noch einmal.',
     'web_account_deletion' => 'Zu viele Versuche. Versuch es in :time noch einmal.',
+    'web_account_deletion_code' => 'Zu viele Codes angefordert. Versuch es in :time noch einmal.',
     'auth_email_start' => 'Zu viele Codes angefordert. Versuch es in :time noch einmal.',
     'auth_email_verify' => 'Zu viele Versuche. Versuch es in :time noch einmal.',
     'auth_social' => 'Zu viele Anmeldeversuche. Versuch es in :time noch einmal.',

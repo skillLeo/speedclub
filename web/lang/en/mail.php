@@ -31,6 +31,11 @@ return [
             'heading' => 'Confirm your new e-mail address',
             'intro' => 'Enter this code in the app to confirm your new address.',
         ],
+        'account_deletion' => [
+            'subject' => ':code confirms the deletion of your account',
+            'heading' => 'Confirm deleting your account',
+            'intro' => 'Enter this code on the “Delete account” page to delete your Speedclub account. It is deactivated straight away, and we delete all data for good within 30 days at the latest.',
+        ],
     ],
     'verification' => [
         'subject' => ':code is your Speedclub code',

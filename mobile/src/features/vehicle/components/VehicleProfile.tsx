@@ -33,7 +33,7 @@ import { visiblePhotos } from '../media';
 import { ownerName } from '../model';
 import { planHref } from '../navigation';
 import { sectionsFor, type ProfileAnchor, type ProfileSection, type SpyGeometry } from '../sections';
-import { SHARE_CARD_FLAG } from '../shareCard';
+import { canShareCard, SHARE_CARD_FLAG, shareCardHref } from '../shareCard';
 import { useVehicleShare } from '../share';
 import { CarCommentsEntry, carCommentsEntryMode } from './CarComments';
 import { ComparePicker } from './ComparePicker';
@@ -265,8 +265,8 @@ export function VehicleProfile({
       ? [{ key: 'qr', icon: 'qr-code', label: t('more.qr'), onPress: () => router.push(`/stickers/${vehicle.id}`) } satisfies MoreAction]
       : []),
     // [SIG] Only a published build has a card and can be compared: a draft or private car has no public counterpart.
-    ...(shareCardEnabled && vehicle.status === 'published' && vehicle.visibility !== 'private'
-      ? [{ key: 'shareCard', icon: 'image', label: t('more.shareCard'), onPress: () => router.push({ pathname: '/share-card/[vehicleId]', params: { vehicleId: vehicle.id } }) } satisfies MoreAction]
+    ...(canShareCard(vehicle, shareCardEnabled)
+      ? [{ key: 'shareCard', icon: 'image', label: t('more.shareCard'), onPress: () => router.push(shareCardHref(vehicle.id)) } satisfies MoreAction]
       : []),
     ...(compareEnabled && vehicle.status === 'published'
       ? [{ key: 'compare', icon: 'arrows-left-right', label: t('more.compare'), onPress: () => setComparing(true) } satisfies MoreAction]
@@ -456,12 +456,8 @@ export function VehicleProfile({
               ownerContent={ownerContent}
               // M5.9c ★: the Build Score section brings its own gap (none when it has nothing to show).
               // DQ-M53-17: the forced empty state has no score to show either.
-              // R6-3: on the web desktop the gauge sits in the right-hand side card; Überblick keeps the owner's "Nächstes Upgrade".
-              score={(first) =>
-                qaState === 'empty' ? null : (
-                  <BuildScoreSection vehicle={vehicle} routeId={routeId} part={columns ? 'next' : 'all'} style={first ? styles.sectionGapBelow : styles.sectionGap} />
-                )
-              }
+              // R7-1: the Build Score in Überblick on every width again (round 6 had moved it into the desktop's side card).
+              score={(first) => (qaState === 'empty' ? null : <BuildScoreSection vehicle={vehicle} routeId={routeId} style={first ? styles.sectionGapBelow : styles.sectionGap} />)}
               pins={(first) => (
                 // DQ-1056: the rail brings its own gap, so a rail that has nothing to show leaves no ghost space.
                 <HighlightsRail
@@ -618,8 +614,6 @@ export function VehicleProfile({
           {/* 10 §5 web desktop: the right sticky card — owner, spec summary, actions (the owner's capsule), sticker preview for the owner. */}
           <DesktopCard vehicle={vehicle} routeId={routeId} onOpenOwner={openOwner} width={columns.card - 2 * space[24]}>
             {summary('card')}
-            {/* R6-3: the Build Score inside the side card at 144, not across the content column. */}
-            {qaState === 'empty' ? null : <BuildScoreSection vehicle={vehicle} routeId={routeId} part="score" layoutWidth={columns.card - 2 * space[24]} />}
           </DesktopCard>
         </Pinned>
       </>

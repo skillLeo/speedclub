@@ -209,3 +209,14 @@ export async function holdFourEyes(on: boolean): Promise<() => Promise<void>> {
     }
   };
 }
+
+/**
+ * Client round 7: what time does to a staff fixture's open sessions, without waiting (support/backend.php age-staff-session). `password`:
+ * the password confirmation (ADR-215) is an hour old, so the next ⚿ write is refused with the password prompt although the page still
+ * believes it recent; `end`: the session is gone, as after 30 idle minutes (ADR-217). Local server only.
+ */
+export function ageStaffSession(label: string, what: 'password' | 'end'): number {
+  if (!['localhost', '127.0.0.1'].includes(new URL(BASE_URL).hostname)) throw new Error('Staff sessions are aged only on a local server');
+  const out = execFileSync(process.env.SPEEDCLUB_PHP ?? 'php', [`${WEB}tests/e2e/support/backend.php`, 'age-staff-session', label, what], { encoding: 'utf8', timeout: 60_000 });
+  return (JSON.parse(out.trim().split('\n').pop() ?? '{}') as { aged?: number }).aged ?? 0;
+}

@@ -31,6 +31,11 @@ return [
             'heading' => 'Neue E-Mail-Adresse bestätigen',
             'intro' => 'Gib diesen Code in der App ein, um deine neue Adresse zu bestätigen.',
         ],
+        'account_deletion' => [
+            'subject' => ':code bestätigt die Löschung deines Kontos',
+            'heading' => 'Konto löschen bestätigen',
+            'intro' => 'Gib diesen Code auf der Seite „Konto löschen“ ein, um dein Speedclub Konto zu löschen. Danach ist es sofort deaktiviert, und spätestens nach 30 Tagen löschen wir alle Daten endgültig.',
+        ],
     ],
     'verification' => [
         'subject' => ':code ist dein Speedclub Code',

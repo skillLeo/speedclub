@@ -8,7 +8,7 @@ import { usePlayer } from '@/features/wrapped/usePlayer';
 import { hydrateThemePreference } from '@/theme';
 import { __setAccessibilityForTests } from '@/ui/motion';
 
-import { newQueryClient, rawCards, rawPayload, renderScreen, SEASON, signIn, signOut, stubFetch, type Answer } from './helpers';
+import { newQueryClient, rawCards, rawPayload, renderScreen, SEASON, signIn, signOut, stubFetch, wrappedClient, type Answer } from './helpers';
 
 const mockRouter = { push: jest.fn(), back: jest.fn(), replace: jest.fn(), navigate: jest.fn(), canGoBack: jest.fn(() => true) };
 let mockParams: { season?: string; card?: string } = {};
@@ -45,7 +45,8 @@ async function open(answers: Parameters<typeof stubFetch>[0] = { [PAYLOAD_PATH]:
 async function show(answers: Parameters<typeof stubFetch>[0]) {
   mockParams = { season: SEASON };
   const stub = stubFetch(answers);
-  await renderScreen(<WrappedPlayerScreen />, newQueryClient());
+  // The flag `wrapped` is on: the list (for the countdown) is read only then (client round 6, L2).
+  await renderScreen(<WrappedPlayerScreen />, wrappedClient());
   return stub;
 }
 

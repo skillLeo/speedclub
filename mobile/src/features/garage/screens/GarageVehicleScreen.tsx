@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { View } from 'react-native';
 
 import { useFlag } from '@/api/queries/appConfig';
@@ -9,7 +10,7 @@ import { useCachedCard, useSetMainVehicle, useVehicle } from '@/api/queries/gara
 import { MAINTENANCE_FLAG } from '@/api/queries/maintenance';
 import { NextHuChip, useNextHu } from '@/features/maintenance/components/NextHuChip';
 import { myVehiclesKey } from '@/api/queries/profile';
-import { usePublicVehicle } from '@/api/queries/vehicles';
+import { usePublicVehicle, type PublicVehicle } from '@/api/queries/vehicles';
 import { MoreSheet, type MoreAction } from '@/features/vehicle/components/MoreSheet';
 import { StateScreen } from '@/features/vehicle/components/StateScreen';
 import { VehicleProfile } from '@/features/vehicle/components/VehicleProfile';
@@ -18,6 +19,7 @@ import { withoutContent } from '@/features/vehicle/model';
 import { anchorFromParams } from '@/features/vehicle/sections';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
 import { useVehicleShare } from '@/features/vehicle/share';
+import { canShareCard, SHARE_CARD_FLAG, shareCardHref } from '@/features/vehicle/shareCard';
 import { RouteStateBody, routeStateOf } from '@/features/vehicle/states';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
@@ -33,6 +35,35 @@ const ROUTE = 'GAR-02';
 const useStyles = createStyles((t) => ({
   owner: { gap: t.space[16] },
 }));
+
+/**
+ * GAR-02's "Mehr" (the hero's dots): the owner's actions on this car. R7-4a: "Als Karte teilen" (VEH-07) is here too, as in VEH-01's
+ * "Mehr", for a published, not private build while `sig.share_cards` is on; the garage's own sheet had left it out.
+ */
+export function garageMoreActions(
+  vehicle: Pick<PublicVehicle, 'id' | 'status' | 'visibility' | 'is_main' | 'qr'>,
+  deps: {
+    t: TFunction<'garage'>;
+    go: (path: string | ReturnType<typeof shareCardHref>) => void;
+    maintenance: boolean;
+    shareCards: boolean;
+    makeMain: () => void;
+    share: () => void;
+    copy: () => void;
+  },
+): MoreAction[] {
+  const { t, go } = deps;
+  return [
+    // M4.13 MNT-01: the owner's maintenance of this car (09 §8.8), behind the `maintenance` flag.
+    ...(deps.maintenance ? [{ key: 'maintenance', icon: 'service-wrench' as const, label: t('maintenance.open'), onPress: () => go(`/garage/${vehicle.id}/maintenance`) }] : []),
+    ...(vehicle.status === 'published' && !vehicle.is_main ? [{ key: 'main', icon: 'star' as const, label: t('owner.makeMain'), onPress: deps.makeMain }] : []),
+    ...(vehicle.qr ? [{ key: 'preview', icon: 'eye' as const, label: t('owner.viewPublic'), onPress: () => go(`/stickers/${vehicle.id}/preview`) }] : []),
+    ...(vehicle.status === 'published' && vehicle.visibility !== 'private' ? [{ key: 'share', icon: 'share-network' as const, label: t('owner.share'), onPress: deps.share }] : []),
+    ...(canShareCard(vehicle, deps.shareCards) ? [{ key: 'shareCard', icon: 'image' as const, label: t('owner.shareCard'), onPress: () => go(shareCardHref(vehicle.id)) }] : []),
+    { key: 'visibility', icon: vehicle.visibility === 'private' ? ('lock-simple' as const) : ('eye' as const), label: t('owner.visibility'), onPress: () => go(`/garage/${vehicle.id}/visibility`) },
+    { key: 'copyLink', icon: 'link', label: t('owner.copyLink'), onPress: deps.copy },
+  ];
+}
 
 /**
  * GAR-02 /garage/[id]: the public layout of VEH-01 with the owner toolbar and the completeness hints (04_SCREEN_REGISTER).
@@ -60,6 +91,7 @@ export function GarageVehicleScreen() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const maintenance = useFlag(MAINTENANCE_FLAG);
+  const shareCardEnabled = useFlag(SHARE_CARD_FLAG);
   // DQ-M53R2-03: the HU chip only when there is an HU to name (the hook answers null with the flag off or without an HU/AU item).
   const nextHu = useNextHu(id);
   // M5.3 (ADR-505): one scroll; `?section=` (or a 2.0 link's `?tab=`) opens GAR-02 at that section.
@@ -126,33 +158,22 @@ export function GarageVehicleScreen() {
     go: (path) => router.push(path as never),
     onEdit: () => setEditing(true),
     onShare: () => void share(vehicle),
+    // R7-4a: the garage's way to the share card (VEH-07), as VEH-01's "Mehr" has it; [SIG] behind `sig.share_cards`.
+    onShareCard: canShareCard(vehicle, shareCardEnabled) ? () => router.push(shareCardHref(vehicle.id)) : undefined,
   });
-  const moreActions: MoreAction[] = [
-    // M4.13 MNT-01: the owner's maintenance of this car (09 §8.8), behind the `maintenance` flag.
-    ...(maintenance
-      ? [{ key: 'maintenance', icon: 'service-wrench' as const, label: t('maintenance.open'), onPress: () => router.push(`/garage/${vehicle.id}/maintenance`) }]
-      : []),
-    ...(vehicle.status === 'published' && !vehicle.is_main
-      ? [
-          {
-            key: 'main',
-            icon: 'star' as const,
-            label: t('owner.makeMain'),
-            onPress: () =>
-              setMain.mutate(vehicle.id, {
-                onSuccess: () => toast(t('owner.mainSet'), { testID: `${ROUTE}.toast` }),
-                onError: (error) => toast(saveErrorMessage(t, error), { testID: `${ROUTE}.toast` }),
-              }),
-          },
-        ]
-      : []),
-    ...(vehicle.qr ? [{ key: 'preview', icon: 'eye' as const, label: t('owner.viewPublic'), onPress: () => router.push(`/stickers/${vehicle.id}/preview`) }] : []),
-    ...(vehicle.status === 'published' && vehicle.visibility !== 'private'
-      ? [{ key: 'share', icon: 'share-network' as const, label: t('owner.share'), onPress: () => void share(vehicle) }]
-      : []),
-    { key: 'visibility', icon: vehicle.visibility === 'private' ? ('lock-simple' as const) : ('eye' as const), label: t('owner.visibility'), onPress: () => router.push(`/garage/${vehicle.id}/visibility`) },
-    { key: 'copyLink', icon: 'link', label: t('owner.copyLink'), onPress: () => void copy(vehicle) },
-  ];
+  const moreActions = garageMoreActions(vehicle, {
+    t,
+    go: (path) => router.push(path as never),
+    maintenance,
+    shareCards: shareCardEnabled,
+    makeMain: () =>
+      setMain.mutate(vehicle.id, {
+        onSuccess: () => toast(t('owner.mainSet'), { testID: `${ROUTE}.toast` }),
+        onError: (error) => toast(saveErrorMessage(t, error), { testID: `${ROUTE}.toast` }),
+      }),
+    share: () => void share(vehicle),
+    copy: () => void copy(vehicle),
+  });
 
   return (
     <>

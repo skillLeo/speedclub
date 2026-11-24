@@ -89,21 +89,17 @@ describe('gauge geometry (ADR-508)', () => {
     expect(gaugeHeight(120, 56, 4, 130)).toBe(130);
   });
 
-  it('sets the details beside a gauge with room, centred under a narrow one, start-aligned under it at a large font (R4DQ-10, R6-3)', () => {
-    expect(detailsLayout(true, 1)).toBe('beside');
-    expect(detailsLayout(true, 1.3)).toBe('beside');
-    expect(detailsLayout(true, 2)).toBe('start');
-    expect(detailsLayout(false, 1)).toBe('centred');
-    expect(detailsLayout(false, 1.3)).toBe('centred');
-    expect(detailsLayout(false, 2)).toBe('start');
+  it('centres the details under the gauge, start-aligned at a large font (R4DQ-10; R7-1: no more "beside")', () => {
+    expect(detailsLayout(1)).toBe('centred');
+    expect(detailsLayout(1.3)).toBe('centred');
+    expect(detailsLayout(2)).toBe('start');
   });
 
-  it('grows the box with the font scale up to the numerals’ cap (1.3×) and never past the column (R6-3: 120, desktop 144)', () => {
-    expect(gaugeBoxFor(390, 1)).toBe(120);
-    expect(gaugeBoxFor(390, 2)).toBe(156);
+  it('grows the box with the font scale up to the numerals’ cap (1.3×) and never past the column (R7-1: 144 on every width)', () => {
+    expect(gaugeBoxFor(390, 1)).toBe(144);
+    expect(gaugeBoxFor(390, 2)).toBe(187);
     expect(gaugeBoxFor(130, 2)).toBe(130);
-    // The web desktop's hero.numeral.s is 48 instead of 40: the gauge grows by that ratio.
-    expect(gaugeBoxFor(1200, 1, true)).toBe(144);
+    expect(gaugeBoxFor(1200, 1)).toBe(144);
   });
 });
 

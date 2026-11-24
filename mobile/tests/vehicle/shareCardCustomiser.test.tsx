@@ -229,12 +229,13 @@ describe('options → query', () => {
 describe('ShareCardCustomiser', () => {
   const choices = shareCardChoices(source({ dex_number: null }), null);
 
+  /** R7-4b: the customiser hands over updates; `onChange` sees what each makes of the rendered options. */
   function customiser(options: ShareCardOptions, onChange = jest.fn(), extra: { textError?: string | null; isDefault?: boolean } = {}) {
     return renderScreen(
       <ShareCardCustomiser
         options={options}
         choices={choices}
-        onChange={onChange}
+        onChange={(update) => onChange(update(options))}
         isDefault={extra.isDefault ?? true}
         onReset={jest.fn()}
         username="lukas.sc"
@@ -456,6 +457,52 @@ describe('VEH-07 with the customiser', () => {
     expect(screen.getByTestId('VEH-07.customiseSkeleton')).toBeTruthy();
     expect(screen.queryByTestId('VEH-07.customise')).toBeNull();
     qa.mockRestore();
+  });
+
+  /**
+   * Client round 7, item 4b (R7-4b): "when you disable text on the card, it's still there". Every change used to be a copy of the
+   * options its render had seen: a second change from an older render (two switches in one frame, the cropper's gesture end, the own
+   * line's field) put a switched-off element or a cleared line back, on the chip and on the card. Changes are updates now.
+   */
+  it('R7-4b: two switches in one frame both go off, on the chips and on the drawn card', async () => {
+    await open(vehicle());
+    await waitFor(() => expect(screen.getByTestId('VEH-07.preview')).toBeTruthy());
+    const specs = screen.getByTestId('VEH-07.element.specs');
+    const username = screen.getByTestId('VEH-07.element.username');
+    expect(specs).toBeChecked();
+    expect(username).toBeChecked();
+    // Both presses before React renders again, as a fast thumb or a gesture end does it.
+    await act(async () => {
+      void fireEvent.press(specs);
+      void fireEvent.press(username);
+    });
+    expect(screen.getByTestId('VEH-07.element.specs')).not.toBeChecked();
+    expect(screen.getByTestId('VEH-07.element.username')).not.toBeChecked();
+    await waitFor(() => expect(mockDownloadFile).toHaveBeenCalledTimes(1), { timeout: 2000 });
+    const [url, target] = mockDownloadFile.mock.calls[0]!;
+    expect(url).toBe(`https://speedclub.test/api/v1/vehicles/${VEHICLE}/share-card.png?format=story&show=score%2Cdex%2Cqr`);
+    // The preview and what Teilen exports are that drawing, not the stored card with the data line and @username.
+    await waitFor(() => expect(screen.getByTestId('VEH-07.cta.primary')).toBeEnabled(), { timeout: 2000 });
+    expect(screen.getByTestId('VEH-07.preview.image').props.source).toEqual([{ uri: target.uri }]);
+    // A new card replaces the picture instead of crossfading over the last one (WebKit kept the old one on top).
+    expect(screen.getByTestId('VEH-07.preview.image').props.recyclingKey).toBe(target.uri);
+  });
+
+  it('R7-4b: a cleared own line leaves the card, also after a later change from the same render', async () => {
+    await open(vehicle());
+    await fireEvent.changeText(screen.getByTestId('VEH-07.text'), 'Freitag am Ring');
+    await waitFor(() => expect(mockDownloadFile).toHaveBeenCalledTimes(1), { timeout: 2000 });
+    expect(mockDownloadFile.mock.calls[0]![0]).toContain('text=Freitag+am+Ring');
+    // The line is cleared and, in the same frame, the theme of another template is picked: the line must stay cleared.
+    await act(async () => {
+      void fireEvent.changeText(screen.getByTestId('VEH-07.text'), '');
+      void fireEvent.press(screen.getByTestId('VEH-07.template.poster'));
+    });
+    await waitFor(() => expect(mockDownloadFile).toHaveBeenCalledTimes(2), { timeout: 2000 });
+    const last = mockDownloadFile.mock.calls[1]![0];
+    expect(last).toContain('template=poster');
+    expect(last).not.toContain('text=');
+    await waitFor(() => expect(screen.getByTestId('VEH-07.preview.image').props.source).toEqual([{ uri: mockDownloadFile.mock.calls[1]![1].uri }]), { timeout: 2000 });
   });
 
   it('is unavailable without the flag', async () => {

@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { useMyWrapped } from '@/api/queries/wrapped';
+import { useFlag } from '@/api/queries/appConfig';
+import { useMyWrapped, wrappedQa } from '@/api/queries/wrapped';
 import { now } from '@/lib/clock';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles } from '@/theme';
@@ -40,7 +41,10 @@ export function WrappedCountdownBanner({ routeId, style }: WrappedCountdownBanne
   const styles = useStyles();
   const format = useFormat();
   const dismissed = useDismissedCountdowns();
-  const query = useMyWrapped();
+  // Client round 6 (L2): Home asks only while the banner can show at all, `wrapped` (in the hook) and `wrapped.countdown` on.
+  // The bundled `qaWrapped` sample reads no server and keeps its countdown cells.
+  const countdownOn = useFlag('wrapped.countdown');
+  const query = useMyWrapped(countdownOn || wrappedQa() !== null);
   const countdown = query.data?.countdown;
   const today = now();
   if (!showsCountdown(countdown, today, dismissed)) return null;

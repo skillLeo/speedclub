@@ -6,7 +6,7 @@ use App\Enums\LoginPurpose;
 use App\Enums\SocialProvider;
 
 /**
- * M4.6 (09 §8.1): the 6-digit code of a passwordless sign-in, a new account, an AUTH-16 link or a re-authentication. A sign-in carries the
+ * M4.6 (09 §8.1): the 6-digit code of a passwordless sign-in, a new account, an AUTH-16 link, a re-authentication or a WEB-05 deletion. A sign-in carries the
  * "Anmelden" button: the same-device magic link /auth/magic with the token in the fragment only (ADR-138), which works only on the device
  * that holds the attempt id. Sent synchronously after the response (ADR-130).
  */
@@ -60,6 +60,7 @@ class EmailCodeMail extends AuthMail
             LoginPurpose::Link => 'link',
             LoginPurpose::Reauth => 'reauth',
             LoginPurpose::ChangeEmail => 'change_email',
+            LoginPurpose::AccountDeletion => 'account_deletion',
         };
     }
 }

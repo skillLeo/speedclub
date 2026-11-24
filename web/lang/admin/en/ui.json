@@ -35,7 +35,10 @@
         "retry": "Try again",
         "reloading": "Reloading …",
         "server_error": "The server did not answer. Nothing was changed; try again.",
-        "password_cancelled": "Password not confirmed: nothing was saved."
+        "password_cancelled": "Password not confirmed: nothing was saved.",
+        "write_connection_lost": "The connection to the server dropped before an answer came. Reload the page: you will see whether the change arrived, and can try again if not.",
+        "page_connection_lost": "The connection to the server dropped. Check your connection and try again.",
+        "page_failed": "The page could not be loaded. Try again."
     },
     "table": {
         "columns": "Columns",

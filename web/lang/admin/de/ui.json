@@ -35,7 +35,10 @@
         "retry": "Erneut versuchen",
         "reloading": "Wird neu geladen …",
         "server_error": "Der Server hat nicht geantwortet. Es wurde nichts geändert; versuche es erneut.",
-        "password_cancelled": "Passwort nicht bestätigt: Es wurde nichts gespeichert."
+        "password_cancelled": "Passwort nicht bestätigt: Es wurde nichts gespeichert.",
+        "write_connection_lost": "Die Verbindung zum Server ist abgebrochen, bevor eine Antwort kam. Lade die Seite neu: Dann siehst du, ob die Änderung angekommen ist, und kannst es sonst erneut versuchen.",
+        "page_connection_lost": "Die Verbindung zum Server ist abgebrochen. Prüfe deine Verbindung und versuche es erneut.",
+        "page_failed": "Die Seite konnte nicht geladen werden. Versuche es erneut."
     },
     "table": {
         "columns": "Spalten",

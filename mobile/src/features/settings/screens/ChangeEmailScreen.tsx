@@ -8,6 +8,7 @@ import { View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { meKey, type Me } from '@/api/queries/auth';
+import { isReauthCancelled } from '@/api/queries/recentAuth';
 import { CodeInput } from '@/features/auth/components/CodeInput';
 import { EMAIL_INPUT, FormField } from '@/features/auth/components/FormField';
 import { FormNotice } from '@/features/auth/components/FormNotice';
@@ -21,6 +22,7 @@ import { toast } from '@/ui/toast';
 import { SlotText, slot } from '@/ui/SlotText';
 import { identifierText } from '@/ui/textBreaks';
 
+import { hasPassword } from '../account';
 import { useMemberGate } from '../components/MemberGate';
 import { RestrictionNotice } from '../components/RestrictionNotice';
 import { SecondFactorField } from '../components/SecondFactorField';
@@ -76,7 +78,9 @@ function ChangeEmailForm({ me }: { me: Me }) {
   const [askCode, setAskCode] = useState(me.two_factor_enabled);
   /** The second factor is locked (ADR-203 f): the button rests until a field changes. */
   const [locked, setLocked] = useState(false);
-  const schema = useMemo(() => changeEmailSchema(me.email, askCode), [askCode, me.email]);
+  /** Client round 6 (L1): a passwordless member confirms through recent authentication instead (withRecentAuth). */
+  const passwordSet = hasPassword(me);
+  const schema = useMemo(() => changeEmailSchema(me.email, askCode, passwordSet), [askCode, me.email, passwordSet]);
 
   const address = useForm<ChangeEmailValues>({
     resolver: zodResolver(schema),
@@ -96,11 +100,17 @@ function ChangeEmailForm({ me }: { me: Me }) {
     setNotice(null);
     const secondFactor = (values.code ?? '').replace(/\s/g, '');
     try {
-      await request.mutateAsync({ email: values.email.trim(), password: values.password, ...(secondFactor ? { code: secondFactor } : {}) });
+      await request.mutateAsync({
+        email: values.email.trim(),
+        password: passwordSet ? values.password : '',
+        ...(secondFactor ? { code: secondFactor } : {}),
+      });
       address.resetField('password');
       address.resetField('code');
       setStep({ kind: 'code', email: values.email.trim() });
     } catch (error) {
+      // The member closed the REAUTH sheet: nothing was sent, so nothing is said.
+      if (isReauthCancelled(error)) return;
       if (isSecondFactorLocked(error)) {
         setLocked(true);
         setNotice(t('reauth.locked'));
@@ -219,30 +229,36 @@ function ChangeEmailForm({ me }: { me: Me }) {
           returnKeyType="next"
           testID={`${ROUTE}.email`}
         />
-        <Controller
-          control={address.control}
-          name="password"
-          render={({ field, fieldState }) => (
-            <TextInput
-              ref={field.ref}
-              value={field.value}
-              onChangeText={(next) => {
-                field.onChange(next);
-                setLocked(false);
-              }}
-              onBlur={field.onBlur}
-              label={t('email.password')}
-              helper={t('email.passwordHelper')}
-              error={fieldMessage(fieldState.error)}
-              secure
-              autoComplete="current-password"
-              textContentType="password"
-              returnKeyType={askCode ? 'next' : 'go'}
-              onSubmitEditing={askCode ? () => address.setFocus('code') : () => void sendCode()}
-              testID={`${ROUTE}.password`}
-            />
-          )}
-        />
+        {passwordSet ? (
+          <Controller
+            control={address.control}
+            name="password"
+            render={({ field, fieldState }) => (
+              <TextInput
+                ref={field.ref}
+                value={field.value}
+                onChangeText={(next) => {
+                  field.onChange(next);
+                  setLocked(false);
+                }}
+                onBlur={field.onBlur}
+                label={t('email.password')}
+                helper={t('email.passwordHelper')}
+                error={fieldMessage(fieldState.error)}
+                secure
+                autoComplete="current-password"
+                textContentType="password"
+                returnKeyType={askCode ? 'next' : 'go'}
+                onSubmitEditing={askCode ? () => address.setFocus('code') : () => void sendCode()}
+                testID={`${ROUTE}.password`}
+              />
+            )}
+          />
+        ) : (
+          <Text variant="callout" color="text.secondary" testID={`${ROUTE}.noPassword`}>
+            {t('reauth.noPassword')}
+          </Text>
+        )}
         {askCode ? (
           <SecondFactorField
             control={address.control}

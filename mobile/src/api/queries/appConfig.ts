@@ -1,5 +1,5 @@
 /**
- * Runtime config (05_ARCHITECTURE.md §12): polled on start and every 5 minutes in the foreground, ETag aware. The last
+ * Runtime config (05_ARCHITECTURE.md §12): polled on start, every 5 minutes in the foreground and on a focus after 30 s, ETag aware. The last
  * good copy lives in AsyncStorage and bundled defaults cover a first launch without network, so this query never
  * fails and nothing ever waits for it. A payload that does not match the schema is ignored.
  *
@@ -117,6 +117,12 @@ export const BUNDLED_APP_CONFIG: AppConfig = {
 
 export const APP_CONFIG_STORAGE_KEY = 'sc.appConfig';
 export const APP_CONFIG_POLL_MS = 5 * 60 * 1000;
+/**
+ * Client round 7 ("admin changes still don't work all the time"): an admin change (flag, announcement, branding) waited up to 5
+ * minutes before the app asked again, because a focus or a new screen only refetches a stale query. After 30 s the next focus or
+ * mount asks; the ETag keeps an unchanged answer a 304. The 5-minute poll in the foreground stays.
+ */
+export const APP_CONFIG_STALE_MS = 30 * 1000;
 export const APP_CONFIG_GATE_REFETCH_MS = 30 * 1000;
 /** A connection that hangs instead of failing, such as a captive portal, counts as no answer after this long. */
 export const APP_CONFIG_TIMEOUT_MS = 10 * 1000;
@@ -217,7 +223,8 @@ export function useAppConfig() {
     initialData: { config: BUNDLED_APP_CONFIG, confirmed: false },
     // Marks the bundled copy as old, so the first mount fetches.
     initialDataUpdatedAt: 0,
-    staleTime: APP_CONFIG_POLL_MS,
+    staleTime: APP_CONFIG_STALE_MS,
+    refetchOnWindowFocus: true,
     refetchInterval: APP_CONFIG_POLL_MS,
     refetchIntervalInBackground: false,
     retry: false,

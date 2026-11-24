@@ -11,7 +11,7 @@ import { useFormat } from '@/lib/useFormat';
 import { createStyles, fontScaleCap, layout, size, space, ThemeScope, typography, typographyDesktop, useTheme } from '@/theme';
 import { BeforeAfterPair } from '@/ui/BeforeAfterPair';
 import { AppWordmark } from '@/features/auth/AppWordmark';
-// R6-3: the page's gauge size (120, was half the card), so the photo keeps more of the card and the gauge stays a companion.
+// R6-3/R7-1: the page's gauge size (144; half the card before round 6), so the photo keeps most of the card and the gauge stays a companion.
 import { BuildScoreGauge, GAUGE_BOX } from '@/ui/BuildScoreGauge';
 import { Button } from '@/ui/Button';
 import { DisplayTitle } from '@/ui/DisplayTitle';

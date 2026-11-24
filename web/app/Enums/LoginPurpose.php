@@ -4,7 +4,8 @@ namespace App\Enums;
 
 /**
  * What an e-mail code of login_attempts proves (09 §8.1): a sign-in or new account, an AUTH-16 provider link, a recent authentication
- * ("sudo mode"), an e-mail change. A code only ever counts for its own purpose.
+ * ("sudo mode"), an e-mail change, a WEB-05 account deletion without a password (client round 6, L3). A code only ever counts for its own
+ * purpose.
  */
 enum LoginPurpose: string
 {
@@ -12,4 +13,5 @@ enum LoginPurpose: string
     case Link = 'link';
     case Reauth = 'reauth';
     case ChangeEmail = 'change_email';
+    case AccountDeletion = 'account_deletion';
 }

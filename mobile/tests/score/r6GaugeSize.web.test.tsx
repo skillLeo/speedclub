@@ -1,13 +1,12 @@
 /**
- * Client round 6, item 3 (R6-3): on the web desktop the Build Score gauge is about 140 (144: 120 × 48/40) inside the right-hand side
- * card, not across the content column, and its number is set in hero.numeral.s at its desktop size (48).
+ * Client round 6, item 3 (R6-3) set the web desktop's gauge to about 140 in the side card; client round 7 (R7-1) puts it back in
+ * Überblick's content column, still about 140 (144), its number in hero.numeral.s at its desktop size (48) and the stage inside it.
  */
-import { screen } from '@testing-library/react-native';
+import { screen, within } from '@testing-library/react-native';
 import { Platform, useWindowDimensions } from 'react-native';
 
 import { BuildScoreSection } from '@/features/score/components/BuildScoreSection';
-import { profileSummaryWidth } from '@/features/vehicle/layout';
-import { hydrateThemePreference, layout, typographyDesktop } from '@/theme';
+import { hydrateThemePreference, typographyDesktop } from '@/theme';
 import { __resetOdometerSessionForTests } from '@/ui/motion/OdometerNumber';
 
 import { flat } from '../ui/helpers';
@@ -63,25 +62,21 @@ afterEach(() => {
   Platform.OS = originalOS;
 });
 
-describe('R6-3 Build Score gauge on the web desktop', () => {
-  it('is about 140 inside the side card (its inner width), not the card or the content column wide', async () => {
-    // The content column beside the 240 sidebar, and the side card's inner width in it (as VehicleProfile passes it).
-    const card = profileSummaryWidth('desktop', WINDOW - layout.sidebar, layout.gutter.desktop);
+describe('R7-1 Build Score gauge on the web desktop', () => {
+  it('is about 140 in the content column, the stage inside it (not the side card’s 144 beside the stage)', async () => {
     stubFetch({ [`/vehicles/${R34.id}/build-score`]: { body: { data: SCORE } } });
-    await renderWithProviders(<BuildScoreSection vehicle={R34} routeId="VEH-01" part="score" layoutWidth={card} />);
-    const gauge = flat((await screen.findByTestId('VEH-01.score.gauge')).props.style);
+    await renderWithProviders(<BuildScoreSection vehicle={R34} routeId="VEH-01" />);
+    const node = await screen.findByTestId('VEH-01.score.gauge');
+    const gauge = flat(node.props.style);
     expect(gauge.width).toBe(144);
     expect(Math.abs(Number(gauge.width) - 140)).toBeLessThanOrEqual(5);
-    expect(Number(gauge.width)).toBeLessThan(card / 2);
-    // The stage sits beside it in the card, and the card part leaves "Nächstes Upgrade" to Überblick.
-    expect(screen.getByTestId('VEH-01.score.gauge.stage', { includeHiddenElements: true })).toHaveTextContent('Stufe 3');
-    expect(screen.queryByTestId('VEH-01.score.next')).toBeNull();
+    expect(gauge.alignSelf).toBe('center');
+    expect(within(node).getByTestId('VEH-01.score.gauge.stage', { includeHiddenElements: true })).toHaveTextContent('Stufe 3');
   });
 
   it('sets the number in hero.numeral.s at its desktop size (48), not hero.numeral (88)', async () => {
-    const card = profileSummaryWidth('desktop', WINDOW - layout.sidebar, layout.gutter.desktop);
     stubFetch({ [`/vehicles/${R34.id}/build-score`]: { body: { data: SCORE } } });
-    await renderWithProviders(<BuildScoreSection vehicle={R34} routeId="VEH-01" part="score" layoutWidth={card} />);
+    await renderWithProviders(<BuildScoreSection vehicle={R34} routeId="VEH-01" />);
     await screen.findByTestId('VEH-01.score.gauge');
     const digit = flat(screen.getAllByText('4', { includeHiddenElements: true })[0]?.props.style);
     expect(digit.fontSize).toBe(typographyDesktop.heroNumeralS.fontSize);

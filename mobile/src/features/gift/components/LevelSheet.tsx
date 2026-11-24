@@ -35,6 +35,10 @@ const useStyles = createStyles((t) => ({
   ruleTextStacked: { alignSelf: 'stretch', flexBasis: 'auto', flexGrow: 0 },
   ruleValueStacked: { textAlign: 'left' },
   section: { gap: t.space[12] },
+  // R7-3: a badge to earn is a column (name, then how to get it) inside the list's column. `ruleText` is made for a row (flexBasis 0,
+  // so the rule shares the line with its points); in a column that basis is the height, the box collapsed to nothing and the next
+  // badge's name was set over this one's description ("text on top of each other"). Its own lines take the height they need.
+  badge: { gap: t.space[2], minWidth: 0 },
   // The member's own line is the only one in the primary tone; reached levels step back.
   memberHero: { gap: t.space[4] },
 }));
@@ -124,7 +128,7 @@ function BadgesToEarn({ badges, onAll, testID }: { badges: readonly Badge[]; onA
         {badges.map((badge, index) => (
           <View key={badge.key} role="listitem" style={styles.rules}>
             {index > 0 ? <Hairline /> : null}
-            <View style={styles.ruleText} testID={`${testID}.badge.${badge.key}`}>
+            <View style={styles.badge} testID={`${testID}.badge.${badge.key}`}>
               <Text variant="callout">{badge.hidden ? t('gift.badges.hiddenName') : (badge.name ?? '')}</Text>
               {(badge.hidden ? badge.hint : badge.description) ? (
                 <Text variant="caption" color="text.secondary">

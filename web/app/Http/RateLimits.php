@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class RateLimits
 {
-    private const PER_IP = ['member_register', 'member_login', 'member_verify', 'member_email', 'qr', 'public_read', 'two_factor_challenge', 'contact_form', 'web_account_deletion', 'client_errors',
+    private const PER_IP = ['member_register', 'member_login', 'member_verify', 'member_email', 'qr', 'public_read', 'two_factor_challenge', 'contact_form', 'web_account_deletion', 'web_account_deletion_code', 'client_errors',
         // M4.6 Auth 2.0 (09 §8.1): passwordless sign-ins per IP; the per-address limits live in App\Services\Auth\EmailCodes.
         'auth_email_start', 'auth_email_verify', 'auth_social', 'auth_passkeys',
         // M4.7 (09 §8.4): "Das war ich nicht" links per IP.

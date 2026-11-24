@@ -169,7 +169,8 @@
         "code": "Code from your app or recovery code",
         "codeHelper": "6 digits from your authenticator app, or one of your recovery codes.",
         "codeNeeded": "Two-factor protection is on for your account. Enter a code as well.",
-        "locked": "Too many wrong codes. The two-factor check is locked until you reset your password under “Forgot password” with a code by email. You stay signed in."
+        "locked": "Too many wrong codes. The two-factor check is locked until you reset your password under “Forgot password” with a code by email. You stay signed in.",
+        "noPassword": "You haven't set a password. If needed, you'll confirm it's you in the next step, for example with a code sent to your email address."
     },
     "account": {
         "title": "Account",
@@ -203,7 +204,11 @@
         "revokeOthersHelper": "Every other device and browser has to sign in with the new password. This device stays signed in.",
         "submit": "Change password",
         "changed": "Your password has been changed.",
-        "changedOthersOut": "Your password has been changed. Other devices are signed out."
+        "changedOthersOut": "Your password has been changed. Other devices are signed out.",
+        "setTitle": "Set password",
+        "setSubmit": "Set password",
+        "setDone": "Your password is set.",
+        "setDoneOthersOut": "Your password is set. Other devices are signed out."
     },
     "twoFactor": {
         "title": "Two-factor protection",
@@ -248,7 +253,10 @@
         "turnOffDialogTitle": "Turn off two-factor protection?",
         "turnOffDialogBody": "Your password will be enough to sign in. Your recovery codes stop working.",
         "turnOffConfirm": "Turn off",
-        "turnedOff": "Two-factor protection is off."
+        "turnedOff": "Two-factor protection is off.",
+        "startBodyNoPassword": "Confirm that it's you.",
+        "newCodesBodyNoPassword": "Your current codes will stop working, and we'll only show the new ones once. Confirm with a code from your app or a recovery code.",
+        "turnOffBodyNoPassword": "Confirm with a code from your app or a recovery code."
     },
     "sessions": {
         "title": "Devices & sessions",
@@ -492,7 +500,8 @@
         "retentionNote": "Your export stays available for up to 7 days.",
         "unavailableTitle": "Exports aren’t possible right now",
         "unavailableBody": "We can’t create an export right now. Please try again later.",
-        "unavailableBodyIn": "We can’t create an export right now. Please try again in {{time}}."
+        "unavailableBodyIn": "We can’t create an export right now. Please try again in {{time}}.",
+        "reauthBodyNoPassword": "Confirm that it's you. We'll send the link to your account's email address."
     },
     "delete": {
         "title": "Delete account",

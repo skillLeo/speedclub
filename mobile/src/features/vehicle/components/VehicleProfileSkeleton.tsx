@@ -96,8 +96,6 @@ const useStyles = createStyles((t) => ({
   desktopAside: { flex: DESKTOP_CARD_FLEX, minWidth: 0 },
   card: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, padding: t.space[24] },
   cardHead: { gap: t.space[8], marginBottom: t.space[16] },
-  // R6-3: the Build Score block under the strip and the actions, at DesktopCard's gap of 16.
-  cardScore: { marginTop: t.space[16] },
 }));
 
 /** FS-3's title or sub-line, line by line as the page breaks it (DQ-178). */
@@ -309,17 +307,14 @@ function SideIndexSkeleton({ labels }: { labels: readonly string[] }) {
   );
 }
 
-/**
- * Überblick's first lines. `scoreWidth`: the column the Build Score section is laid out in (phones and tablets); null on the desktop,
- * where the gauge sits in the side card (R6-3).
- */
-function PanelSkeleton({ gutter, scoreWidth }: { gutter: number; scoreWidth: number | null }) {
+/** Überblick's first lines. `scoreWidth`: the column the Build Score section is laid out in (R7-1: Überblick on every width). */
+function PanelSkeleton({ gutter, scoreWidth }: { gutter: number; scoreWidth: number }) {
   const styles = useStyles();
   return (
     <View style={[styles.panel, { paddingHorizontal: gutter }]}>
       {/* M5.3: Überblick's heading (title.2), then the Build Score section (M5.9c), the first thing that lands. */}
       <SkeletonText variant="title2" width={size.railCard} style={styles.sectionTitle} />
-      {scoreWidth === null ? null : <BuildScoreSectionSkeleton width={scoreWidth} />}
+      <BuildScoreSectionSkeleton width={scoreWidth} />
       <SkeletonText variant="body" lines={ROW_COUNT} />
     </View>
   );
@@ -387,7 +382,8 @@ export function VehicleProfileSkeleton({ routeId = 'VEH-01', onBack, owner = fal
           ) : null}
           <View style={sideIndex ? styles.desktopGalleryNarrow : styles.desktopGallery}>
             {sideIndex ? null : <TabsSkeleton gutter={0} labels={tabLabels} />}
-            <PanelSkeleton gutter={0} scoreWidth={null} />
+            {/* R7-1: the gauge in Überblick; its box (144) only meets a column narrower than itself, never this one. */}
+            <PanelSkeleton gutter={0} scoreWidth={summaryWidth} />
           </View>
           <View style={styles.desktopAside}>
             {/* DQ-M53-02: the card names the car and its owner above the strip, as DesktopCard. */}
@@ -400,7 +396,6 @@ export function VehicleProfileSkeleton({ routeId = 'VEH-01', onBack, owner = fal
                 </View>
               </View>
               {canvas}
-              <BuildScoreSectionSkeleton width={summaryWidth} style={styles.cardScore} />
             </View>
           </View>
         </View>

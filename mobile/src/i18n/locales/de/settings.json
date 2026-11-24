@@ -169,7 +169,8 @@
         "code": "Code aus der App oder Wiederherstellungscode",
         "codeHelper": "6 Ziffern aus deiner Authenticator-App oder einer deiner Wiederherstellungscodes.",
         "codeNeeded": "Für dein Konto ist der Zwei-Faktor-Schutz an. Gib zusätzlich einen Code ein.",
-        "locked": "Zu viele falsche Codes. Die Zwei-Faktor-Prüfung ist gesperrt, bis du dein Passwort über „Passwort vergessen“ mit einem Code per E-⁠Mail zurücksetzt. Abgemeldet wirst du nicht."
+        "locked": "Zu viele falsche Codes. Die Zwei-Faktor-Prüfung ist gesperrt, bis du dein Passwort über „Passwort vergessen“ mit einem Code per E-⁠Mail zurücksetzt. Abgemeldet wirst du nicht.",
+        "noPassword": "Du hast kein Passwort festgelegt. Falls nötig, bestätigst du im nächsten Schritt, dass du es bist, etwa mit einem Code an deine E-⁠Mail-Adresse."
     },
     "account": {
         "title": "Konto",
@@ -203,7 +204,11 @@
         "revokeOthersHelper": "Alle anderen Geräte und Browser müssen sich mit dem neuen Passwort anmelden. Dieses Gerät bleibt angemeldet.",
         "submit": "Passwort ändern",
         "changed": "Dein Passwort ist geändert.",
-        "changedOthersOut": "Dein Passwort ist geändert. Andere Geräte sind abgemeldet."
+        "changedOthersOut": "Dein Passwort ist geändert. Andere Geräte sind abgemeldet.",
+        "setTitle": "Passwort festlegen",
+        "setSubmit": "Passwort festlegen",
+        "setDone": "Dein Passwort ist festgelegt.",
+        "setDoneOthersOut": "Dein Passwort ist festgelegt. Andere Geräte sind abgemeldet."
     },
     "twoFactor": {
         "title": "Zwei-Faktor-Schutz",
@@ -248,7 +253,10 @@
         "turnOffDialogTitle": "Zwei-Faktor-Schutz ausschalten?",
         "turnOffDialogBody": "Danach reicht dein Passwort zum Anmelden. Deine Wiederherstellungscodes werden ungültig.",
         "turnOffConfirm": "Ausschalten",
-        "turnedOff": "Der Zwei-Faktor-Schutz ist aus."
+        "turnedOff": "Der Zwei-Faktor-Schutz ist aus.",
+        "startBodyNoPassword": "Bestätige, dass du es bist.",
+        "newCodesBodyNoPassword": "Die bisherigen Codes funktionieren danach nicht mehr, und die neuen zeigen wir nur einmal. Bestätige mit einem Code aus deiner App oder einem Wiederherstellungscode.",
+        "turnOffBodyNoPassword": "Bestätige mit einem Code aus deiner App oder einem Wiederherstellungscode."
     },
     "sessions": {
         "title": "Geräte & Sitzungen",
@@ -492,7 +500,8 @@
         "retentionNote": "Dein Export bleibt bis zu 7 Tage abrufbar.",
         "unavailableTitle": "Exporte sind gerade nicht möglich",
         "unavailableBody": "Wir können gerade keinen Export erstellen. Versuch es später noch einmal.",
-        "unavailableBodyIn": "Wir können gerade keinen Export erstellen. Versuch es in {{time}} noch einmal."
+        "unavailableBodyIn": "Wir können gerade keinen Export erstellen. Versuch es in {{time}} noch einmal.",
+        "reauthBodyNoPassword": "Bestätige, dass du es bist. Den Link schicken wir an die E-⁠Mail-Adresse deines Kontos."
     },
     "delete": {
         "title": "Konto löschen",

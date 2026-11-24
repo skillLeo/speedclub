@@ -128,6 +128,10 @@ function CardImage({ card, ratio, label, drawing }: { card: ShareCard; ratio: nu
     <View style={[styles.card, { aspectRatio: ratio }]} aria-busy={drawing} testID={`${ROUTE}.preview`}>
       <Image
         source={{ uri: card.url }}
+        // R7-4b: a new card is a new picture, never a crossfade over the last one. On the web expo-image keeps the previous <img> under
+        // the new one until the new one reports `load`, and drops a new one that errors: WebKit (the client's iPhone) went on showing
+        // the card with the switched-off line. A new recycling key per card clears the old picture at once.
+        recyclingKey={card.url}
         contentFit="contain"
         draggable={false}
         accessible

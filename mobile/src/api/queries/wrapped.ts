@@ -13,6 +13,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { api, apiData, ApiError, withIdempotency } from '@/api/client';
+import { useFlag } from '@/api/queries/appConfig';
 import { qa } from '@/lib/qa';
 import { selectMayReadOwned, useSessionStore } from '@/state/session';
 
@@ -342,14 +343,19 @@ export const wrappedKeys = {
   season: (seasonKey: string, language: string) => ['wrapped', 'season', seasonKey, language] as const,
 };
 
-/** `GET me/wrapped`: the member's seasons and the countdown. Nothing for a guest; quiet when the feature is off (404). */
+/**
+ * `GET me/wrapped`: the member's seasons and the countdown. Nothing for a guest, and nothing at all while the app-config flag
+ * `wrapped` is off (client round 6, L2: Home asked every member and logged a 404 in production). The bundled sample of `qaWrapped`
+ * reads no server and needs no flag.
+ */
 export function useMyWrapped(enabled: boolean = true) {
   const signedIn = useSessionStore(selectMayReadOwned);
+  const featureOn = useFlag('wrapped');
   const sample = wrappedQa() !== null;
   return useQuery({
     queryKey: [...wrappedKeys.mine(), sample ? 'qa' : 'live'],
     queryFn: async ({ signal }) => (sample ? fromWrappedQa((qaSource) => qaSource.list()) : parseMyWrapped(await apiData(api.GET('/me/wrapped', { signal })))),
-    enabled: signedIn && enabled,
+    enabled: signedIn && enabled && (featureOn || sample),
     retry: sample ? false : retryUnlessAnswered,
     staleTime: 5 * 60_000,
   });

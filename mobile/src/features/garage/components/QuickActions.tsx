@@ -8,7 +8,7 @@ import { Button } from '@/ui/Button';
 import { IconButton } from '@/ui/IconButton';
 import { SkeletonBlock } from '@/ui/Skeleton';
 
-export type QuickAction = 'update' | 'mods' | 'photos' | 'qr';
+export type QuickAction = 'update' | 'mods' | 'photos' | 'qr' | 'shareCard';
 
 const useStyles = createStyles((t) => ({
   // One row (DQ-1051): the filled "Update posten" first, Mods and Fotos as secondary buttons beside it. At large text the row wraps
@@ -28,15 +28,17 @@ export type QuickActionsProps = {
    * is filled, the others are secondary.
    */
   primary?: boolean;
+  /** R7-4a: the card can be shared as a picture (VEH-07; canShareCard): a tonal glyph button after the sticker's. */
+  shareCard?: boolean;
   /** `GAR-01.card.<id>`. */
   testID: string;
 };
 
 /**
  * GAR-01 quick actions for the focused car (09 §7.6, DQ-1051): "Update posten" as the screen's one filled control (S), Mods and
- * Fotos as secondary S. No icon-on-top tiles (09 §14.3).
+ * Fotos as secondary S, then the sticker and (R7-4a) the share card as tonal glyph buttons. No icon-on-top tiles (09 §14.3).
  */
-export const QuickActions = memo(function QuickActions({ card, onAction, disabled = false, primary = true, testID }: QuickActionsProps) {
+export const QuickActions = memo(function QuickActions({ card, onAction, disabled = false, primary = true, shareCard = false, testID }: QuickActionsProps) {
   const { t } = useTranslation('garage');
   const styles = useStyles();
   const vehicle = card.full_title;
@@ -67,6 +69,16 @@ export const QuickActions = memo(function QuickActions({ card, onAction, disable
       {card.qr ? (
         // QR stays usable under a restriction (DQ-1067 a): it only shows the code.
         <IconButton icon="qr-code" variant="tonal" label={t('garage.quick.qrLabel', { vehicle })} onPress={() => onAction('qr', card)} testID={`${testID}.qr`} />
+      ) : null}
+      {shareCard ? (
+        // Sharing only shows the build: usable under a restriction, as the QR code.
+        <IconButton
+          icon="share-network"
+          variant="tonal"
+          label={t('garage.quick.shareCardLabel', { vehicle })}
+          onPress={() => onAction('shareCard', card)}
+          testID={`${testID}.shareCard`}
+        />
       ) : null}
     </View>
   );

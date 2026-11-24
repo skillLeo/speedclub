@@ -31,8 +31,8 @@ export type BuildScoreGaugeProps = {
   /** "von 1000" under the numeral. */
   scaleText: string;
   /**
-   * "Stufe 4" under "von 1000", for a gauge that stands alone (the Journey and Wrapped pictures). R6-3: on the page the stage is
-   * the label the gauge sits beside, and the section draws it (with the rise) next to the gauge; it then leaves this out.
+   * "Stufe 4" under "von 1000". R7-1: the page draws it inside the gauge again (as the Journey and Wrapped pictures do); without it
+   * the gauge shows the score and "von 1000" only.
    */
   stageText?: string;
   /** "+25" for the rise, from `scoreDelta`, as a chip above the numeral; the caller formats it. Without it no chip is drawn here. */
@@ -78,10 +78,11 @@ const useStyles = createStyles((t) => ({
 }));
 
 /**
- * Client round 6 (R6-3, "clearly smaller and quieter"): the gauge's box on the page and on the Journey card, 120 (a large avatar and a
- * small one; 208 in round 4, 232 in round 3, 264 at first). The section grows it with the font and on the web desktop.
+ * The gauge's box on the page and on the Journey card: 144 (a large avatar and an `lg` one). Client round 7 (R7-1, "a little bit
+ * bigger on mobile"): one step up from round 6's 120 (R6-3, "clearly smaller and quieter"; 208 in round 4, 232 in round 3, 264 at
+ * first), the same on the web desktop. The section grows it with the font.
  */
-export const GAUGE_BOX = size.avatar.xl + size.avatar.sm;
+export const GAUGE_BOX = size.avatar.xl + size.avatar.lg;
 
 /** R6-3: the gauge's labels are part of its drawing, so they stop growing where its numeral does (1.3, the numerals' cap). */
 export const GAUGE_TEXT_CAP = maxFontScale.heroNumeralS;
@@ -177,7 +178,7 @@ export function BuildScoreGauge({
   const motion = useMotionPreference();
   const desktop = useDesktopType() && desktopSize;
   const fraction = scoreFraction(total);
-  // R6-3: the drawing scales with the box (ratios of the radius), so the 120 gauge is the 208 one made smaller; strokes stay tokens.
+  // R6-3: the drawing scales with the box (ratios of the radius), so the 144 gauge is the 208 one made smaller; strokes stay tokens.
   const { centre, radius, tickInner, tickOuter, tickMinorInset, needleInner, tipStart, needleOuter } = gaugeGeometry(box, ARC_STROKE, space[2]);
   const length = arcLength(radius);
   const track = arcPath(centre, centre, radius);
@@ -340,7 +341,7 @@ export function BuildScoreGauge({
 /**
  * The centre number's role. Client round 6 (R6-3): `hero.numeral.s`, so the gauge is a quiet companion of the stage, not a hero. The
  * full score with a group separator ("1.000", "1,000") is five glyphs, 2.0 em wide; R4-1.2 keeps it inside the needle's inner
- * circle (0.6 r, 67 at the 120 box), so it takes the next step, `hero.numeral.xs` (64). Up to three digits are 1.35 em (54).
+ * circle (0.6 r: 82 across at the 144 box), so it takes the next step, `hero.numeral.xs` (64). Up to three digits are 1.35 em (54).
  */
 export function gaugeNumeralVariant(valueText: string): 'heroNumeralS' | 'heroNumeralXs' {
   return /\D/.test(valueText) ? 'heroNumeralXs' : 'heroNumeralS';

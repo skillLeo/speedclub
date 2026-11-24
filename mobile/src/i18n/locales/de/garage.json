@@ -46,7 +46,8 @@
       "photos": "Fotos",
       "photosLabel": "Fotos von {{vehicle}}",
       "qr": "Sticker",
-      "qrLabel": "Sticker für {{vehicle}}"
+      "qrLabel": "Sticker für {{vehicle}}",
+      "shareCardLabel": "{{vehicle}} als Karte teilen"
     },
     "statsVehicles_one": "{{formatted}} Fahrzeug",
     "statsVehicles_other": "{{formatted}} Fahrzeuge",
@@ -345,6 +346,7 @@
     "mainSet": "Hauptfahrzeug geändert",
     "viewPublic": "Öffentliche Seite ansehen",
     "copyLink": "Link kopieren",
+    "shareCard": "Als Karte teilen",
     "note": {
       "draft": {
         "title": "Entwurf – noch nicht veröffentlicht",

@@ -16,7 +16,9 @@ import {
   SPEC_CELL_PADDING_Y,
   SPEC_UNIT_GAP,
   specStripColumns,
+  specStripLabelVariant,
   specStripNumeralVariant,
+  specStripUnitVariant,
   WEB_HAIRLINE,
   type SpecStripEntry,
   type StripSize,
@@ -67,6 +69,8 @@ const useStyles = createStyles((t) => ({
   // One-line copies of the texts, as wide as they want to be: out of sight, out of the accessibility tree and outside the
   // strip, so the strip's own text stays what a reader reads (the Blade/app parity test compares it).
   measure: { alignItems: 'flex-start', left: 0, opacity: 0, pointerEvents: 'none', position: 'absolute', top: 0 },
+  // R7-2: a phone's data label is set in `caption`, still in capitals as `label.caps` sets them.
+  caps: { textTransform: 'uppercase' },
 }));
 
 function rowsOf<T>(items: readonly T[], columns: number): T[][] {
@@ -141,7 +145,7 @@ export function SpecStrip({ items, layoutWidth, rollKey, style, testID }: SpecSt
   const desktopType = useDesktopType();
   const motion = useMotionPreference();
   const { width: windowWidth, gutter, kind } = useBreakpoint();
-  // CF-2: a phone's strip one numeral role smaller; the desktop card compact as before; a tablet's page keeps hero.numeral.
+  // A phone's strip (R7-2: hero.numeral.s, caption labels); the desktop card compact as before; a tablet's page keeps hero.numeral.
   const desktop: StripSize = desktopType ? true : kind === 'phone' ? 'phone' : false;
   const [width, setWidth] = useState(0);
   const [measured, setMeasured] = useState<Readonly<Record<string, number>>>({});
@@ -160,6 +164,9 @@ export function SpecStrip({ items, layoutWidth, rollKey, style, testID }: SpecSt
     : estimated;
   const rows = rowsOf(items, columns);
   const numeral = specStripNumeralVariant(desktop);
+  const labelVariant = specStripLabelVariant(desktop);
+  const unitVariant = specStripUnitVariant(desktop);
+  const labelCaps = labelVariant === 'labelCaps' ? null : styles.caps;
   // Equal columns whatever their padding (the first cell has none on its leading side, ADR-431 b), as the public page's grid:
   // a share of the row, borders and padding inside it.
   const share = { width: `${100 / columns}%` } as const;
@@ -192,7 +199,7 @@ export function SpecStrip({ items, layoutWidth, rollKey, style, testID }: SpecSt
                     testID={testID ? `${testID}.${index}` : undefined}
                     style={[styles.cell, share, cellIndex > 0 ? styles.divided : styles.leading]}
                   >
-                    <Text hyphenate={false} variant="labelCaps" color="text.secondary" testID={testID ? `${testID}.${index}.label` : undefined}>
+                    <Text hyphenate={false} variant={labelVariant} color="text.secondary" style={labelCaps} testID={testID ? `${testID}.${index}.label` : undefined}>
                       {item.label}
                     </Text>
                     <View style={styles.valueLine}>
@@ -204,7 +211,7 @@ export function SpecStrip({ items, layoutWidth, rollKey, style, testID }: SpecSt
                         </Text>
                       )}
                       {item.unit ? (
-                        <Text hyphenate={false} variant="labelUnit" color="text.secondary" testID={testID ? `${testID}.${index}.unit` : undefined}>
+                        <Text hyphenate={false} variant={unitVariant} color="text.secondary" testID={testID ? `${testID}.${index}.unit` : undefined}>
                           {item.unit}
                         </Text>
                       ) : null}
@@ -233,11 +240,11 @@ export function SpecStrip({ items, layoutWidth, rollKey, style, testID }: SpecSt
               {item.value}
             </Text>,
             keys.unit ? (
-              <Text key={keys.unit} hyphenate={false} variant="labelUnit" selectable={false} onLayout={measuredAs(keys.unit)}>
+              <Text key={keys.unit} hyphenate={false} variant={unitVariant} selectable={false} onLayout={measuredAs(keys.unit)}>
                 {item.unit}
               </Text>
             ) : null,
-            <Text key={keys.label} hyphenate={false} variant="labelCaps" selectable={false} onLayout={measuredAs(keys.label)}>
+            <Text key={keys.label} hyphenate={false} variant={labelVariant} style={labelCaps} selectable={false} onLayout={measuredAs(keys.label)}>
               {item.label}
             </Text>,
             keys.provenance ? (

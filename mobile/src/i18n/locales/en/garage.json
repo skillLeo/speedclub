@@ -46,7 +46,8 @@
       "photos": "Photos",
       "photosLabel": "Photos of {{vehicle}}",
       "qr": "Sticker",
-      "qrLabel": "Sticker for {{vehicle}}"
+      "qrLabel": "Sticker for {{vehicle}}",
+      "shareCardLabel": "Share {{vehicle}} as a card"
     },
     "statsVehicles_one": "{{formatted}} vehicle",
     "statsVehicles_other": "{{formatted}} vehicles",
@@ -345,6 +346,7 @@
     "mainSet": "Main vehicle changed",
     "viewPublic": "View public page",
     "copyLink": "Copy link",
+    "shareCard": "Share as card",
     "note": {
       "draft": {
         "title": "Draft – not published yet",

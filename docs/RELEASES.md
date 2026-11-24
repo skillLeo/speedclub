@@ -465,3 +465,12 @@ Superseded Build 3 facts, kept for the record:
 - Changes: _(release engineer: summarise commits since the previous release)_
 - Known issues (Low): _(release engineer)_
 - Test status: _(release engineer: copy from the latest verify report - only what actually ran)_
+## 2.1.0 (Build 29) - production - 2026-11-25 00:26
+- APK: releases/android/speedclub-2.1.0-b29-production-20261124-2327.apk (71.3 MB)
+- SHA-256: F7078CED522126201003B62095362276A21A4B40BCE22975E0BC1748989EA650
+- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- API: https://joinspeedclub.com
+- Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.CAMERA, android.permission.FOREGROUND_SERVICE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+- Changes: _(release engineer: summarise commits since the previous release)_
+- Known issues (Low): _(release engineer)_
+- Test status: _(release engineer: copy from the latest verify report - only what actually ran)_

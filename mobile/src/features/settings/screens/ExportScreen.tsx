@@ -268,6 +268,7 @@ export function ExportScreen() {
           onClose={() => setAsking(false)}
           title={t('export.reauthTitle')}
           body={t('export.reauthBody')}
+          bodyWithoutPassword={t('export.reauthBodyNoPassword')}
           confirmLabel={t('export.reauthConfirm')}
           onConfirm={confirm}
           testID={`${ROUTE}.reauth`}

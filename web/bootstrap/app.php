@@ -10,6 +10,7 @@ use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\Idempotency;
 use App\Http\Middleware\LimitJsonBody;
+use App\Http\Middleware\RedirectToCanonicalHost;
 use App\Http\Middleware\RefuseLongQuery;
 use App\Http\Middleware\RejectInvalidText;
 use App\Http\Middleware\RequireRecentAuthentication;
@@ -20,6 +21,7 @@ use App\Http\Middleware\StatefulFrontendWithSession;
 use App\Http\Middleware\TrustConfiguredProxies;
 use App\Http\OpenApi\ApiDocumentation;
 use App\Http\RateLimits;
+use App\Support\StaleBootstrapCache;
 use App\Support\TrustedHosts;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
@@ -30,6 +32,10 @@ use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpFoundation\Response;
+
+// FTP deploys (ADR-539, go-live 2026-11-24): a cached config/route/event file older than its sources would answer for the new code
+// until the web installer runs, and a new config key read at boot made every request a 500. Such a cache is dropped first.
+StaleBootstrapCache::clear(dirname(__DIR__));
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -51,6 +57,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->replace(TrustProxies::class, TrustConfiguredProxies::class);
         $middleware->append(SecurityHeaders::class);
         $middleware->append(ForceHttps::class);
+        // Round 7: www (a TRUSTED_HOSTS entry) and the APP_URL host were two admin sessions; one canonical host (301 GET/HEAD, 308 writes).
+        $middleware->append(RedirectToCanonicalHost::class);
         $middleware->alias([
             'etag' => ETag::class,
             'idempotent' => Idempotency::class,

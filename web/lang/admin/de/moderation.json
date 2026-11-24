@@ -532,6 +532,7 @@
                 "username_check": "Benutzernamen prüfen",
                 "views": "Aufrufe zählen (Beacon)",
                 "web_account_deletion": "Konto löschen im Web (pro IP)",
+                "web_account_deletion_code": "Löschcodes im Web anfordern (pro IP)",
                 "wrapped": "Wrapped teilen und Karten laden"
             },
             "groups": {

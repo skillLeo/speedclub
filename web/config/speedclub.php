@@ -653,6 +653,9 @@ return [
         // Not in the spec (M2.5): WEB-10 /kontakt and WEB-05 /konto-loeschen posts per IP.
         'contact_form' => ['max' => 5, 'minutes' => 60],
         'web_account_deletion' => ['max' => 10, 'minutes' => 15],
+        // Client round 6 (L3): WEB-05 deletion codes asked for per IP; the per-address limits (cooldowns, 5 codes an hour, the lock) are
+        // in email_code.
+        'web_account_deletion_code' => ['max' => 10, 'minutes' => 60],
         // Not in the spec (SEC-P1-53): anonymous GET /sanctum/csrf-cookie per IP (/64 for IPv6), ahead of the session, because each one
         // writes a session row. The member web asks once per sign-in.
         'csrf_cookie' => ['max' => 30, 'minutes' => 1],

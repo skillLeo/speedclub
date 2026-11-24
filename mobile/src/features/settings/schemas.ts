@@ -20,6 +20,11 @@ const EMAIL_PATTERN =
   /^(?:[A-Za-z0-9_'+-]+\.)*[A-Za-z0-9_'+-]*[A-Za-z0-9_+-]@(?:[\p{L}\p{N}][\p{L}\p{M}\p{N}-]*\.)+(?:\p{L}[\p{L}\p{M}]+|xn--[A-Za-z0-9-]+)$/u;
 
 const password = z.string().min(1, 'validation.passwordRequired');
+/**
+ * Client round 6 (L1): a passwordless member has no password to type. The form sends `password: ''` and the server takes recent
+ * authentication instead (RequireRecentAuthentication `or-password`); the app asks for it on the 403 (withRecentAuth).
+ */
+const passwordFor = (passwordSet: boolean) => (passwordSet ? password : z.string());
 const code = z.string().regex(new RegExp(`^\\d{${CODE_LENGTH}}$`), 'validation.codeInvalid');
 
 const newPassword = z
@@ -38,12 +43,15 @@ function checkSecondFactor(value: string, needsCode: boolean, context: z.Refinem
   }
 }
 
-/** SET-03. A new address that is the current one is no change. `needsCode`: two-factor is on (SEC-P2-07). */
-export function changeEmailSchema(currentEmail: string, needsCode: boolean = false) {
+/**
+ * SET-03. A new address that is the current one is no change. `needsCode`: two-factor is on (SEC-P2-07). `passwordSet`: false for a
+ * passwordless member, who confirms by recent authentication instead.
+ */
+export function changeEmailSchema(currentEmail: string, needsCode: boolean = false, passwordSet: boolean = true) {
   return z
     .object({
       email: z.string().trim().min(1, 'validation.emailRequired').pipe(z.email({ pattern: EMAIL_PATTERN, error: 'validation.emailInvalid' })),
-      password,
+      password: passwordFor(passwordSet),
       /** Only with two-factor on; the form starts it empty. */
       code: z.string().optional(),
     })
@@ -59,11 +67,14 @@ export type ChangeEmailValues = z.infer<ReturnType<typeof changeEmailSchema>>;
 export const codeSchema = z.object({ code });
 export type CodeValues = z.infer<typeof codeSchema>;
 
-/** SET-04: §3.1 password policy; the common-password list is the server's. `needsCode`: two-factor is on (SEC-P2-07). */
-export function changePasswordSchema(email: string, needsCode: boolean = false) {
+/**
+ * SET-04: §3.1 password policy; the common-password list is the server's. `needsCode`: two-factor is on (SEC-P2-07). `passwordSet`:
+ * false when the member sets a first password, so there is no current one to ask for.
+ */
+export function changePasswordSchema(email: string, needsCode: boolean = false, passwordSet: boolean = true) {
   return z
     .object({
-      currentPassword: password,
+      currentPassword: passwordFor(passwordSet),
       password: newPassword,
       passwordRepeat: z.string().min(1, 'validation.passwordRepeatRequired'),
       /** Only with two-factor on; the form starts it empty. */
@@ -87,19 +98,19 @@ export type ChangePasswordValues = z.infer<ReturnType<typeof changePasswordSchem
 
 /**
  * Re-authentication before export, deletion and the two-factor changes. `needsCode`: two-factor is on, so a code from the app
- * or a recovery code comes with the password.
+ * or a recovery code comes with the password. `passwordSet`: false for a passwordless member, who has no password field.
  */
-export function reauthSchema(needsCode: boolean) {
+export function reauthSchema(needsCode: boolean, passwordSet: boolean = true) {
   return z
-    .object({ password, code: z.string() })
+    .object({ password: passwordFor(passwordSet), code: z.string() })
     .superRefine((data, context) => checkSecondFactor(data.code, needsCode, context));
 }
 export type ReauthValues = z.infer<ReturnType<typeof reauthSchema>>;
 
-/** SET-13: re-authentication plus the checkbox that says the member read what happens. */
-export function deleteAccountSchema(needsCode: boolean) {
+/** SET-13: re-authentication plus the checkbox that says the member read what happens. `passwordSet` as in reauthSchema. */
+export function deleteAccountSchema(needsCode: boolean, passwordSet: boolean = true) {
   return z
-    .object({ password, code: z.string(), understood: z.boolean() })
+    .object({ password: passwordFor(passwordSet), code: z.string(), understood: z.boolean() })
     .superRefine((data, context) => {
       checkSecondFactor(data.code, needsCode, context);
       if (!data.understood) context.addIssue({ code: 'custom', path: ['understood'], message: 'validation.understoodRequired' });

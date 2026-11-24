@@ -6,12 +6,14 @@ import { View } from 'react-native';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import type { Edge } from 'react-native-safe-area-context';
 
+import { useFlag } from '@/api/queries/appConfig';
 import { useDeleteVehicle, useReorderVehicles } from '@/api/queries/garage';
 import { useMyVehicles, type VehicleCardData } from '@/api/queries/profile';
 import { photoFields } from '@/features/profile/media';
 import { useScanAction } from '@/features/dex/entry';
 import { BuildScoreCompact, BuildScoreCompactSkeleton, showsBuildScore } from '@/features/score/components/BuildScoreCompact';
 import { UpcomingSection } from '@/features/maintenance/components/UpcomingSection';
+import { canShareCard, SHARE_CARD_FLAG, shareCardHref } from '@/features/vehicle/shareCard';
 import { useTabScrollToTop } from '@/features/shell/retap';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarInset, useTabBarPadding } from '@/features/shell/tabBarLayout';
@@ -181,13 +183,15 @@ type CardProps = {
   locked?: boolean;
   /** DQ-1120: this card's "Update posten" is the screen's one filled control (the main car in the desktop grid). */
   primary?: boolean;
+  /** R7-4a: `sig.share_cards` is on (the card itself decides with canShareCard). */
+  shareCards?: boolean;
 };
 
 /**
  * FS-4 / 09 §7.6: the card with the neutral Hauptfahrzeug badge (ADR-431 f) and its Build Score (the completeness line and bar
  * only for an answer without a score), then the quick actions of this car. The actions sit below the pressable card, because controls must not nest.
  */
-const GarageCard = memo(function GarageCard({ card, width, onOpen, onAction, locked = false, primary = true }: CardProps) {
+const GarageCard = memo(function GarageCard({ card, width, onOpen, onAction, locked = false, primary = true, shareCards = false }: CardProps) {
   const { t } = useTranslation('garage');
   const styles = useStyles();
   return (
@@ -200,7 +204,9 @@ const GarageCard = memo(function GarageCard({ card, width, onOpen, onAction, loc
       />
       {/* M5.9c: the car's Build Score and stage; nothing for an answer without the field. */}
       <BuildScoreCompact card={card} style={styles.score} testID={`${ROUTE}.score.${card.id}`} />
-      {onAction ? <QuickActions card={card} onAction={onAction} disabled={locked} primary={primary} testID={`${ROUTE}.card.${card.id}`} /> : null}
+      {onAction ? (
+        <QuickActions card={card} onAction={onAction} disabled={locked} primary={primary} shareCard={canShareCard(card, shareCards)} testID={`${ROUTE}.card.${card.id}`} />
+      ) : null}
     </View>
   );
 });
@@ -296,6 +302,7 @@ export function GarageScreen() {
   const addVehicle = useAddVehicle();
   const header = useCollapsingHeader();
   const scan = useScanAction(ROUTE);
+  const shareCards = useFlag(SHARE_CARD_FLAG);
   const padding = useTabBarPadding();
   const inset = useTabBarInset();
   const { gutter, kind, width } = useBreakpoint();
@@ -387,6 +394,7 @@ export function GarageScreen() {
       if (action === 'update') router.push(postUpdateHref(card.id));
       else if (action === 'mods') router.push(`/garage/${card.id}/mods`);
       else if (action === 'photos') router.push(`/garage/${card.id}/photos`);
+      else if (action === 'shareCard') router.push(shareCardHref(card.id));
       else router.push(`/stickers/${card.id}`);
     },
     [router],
@@ -521,7 +529,7 @@ export function GarageScreen() {
           {focusedCard ? (
             // One row for the centred car (09 §7.6); its ids follow the car, so `GAR-01.card.<id>.qr` stays the car's own.
             <View style={[styles.focusedRow, { width: carouselWidth }]}>
-              <QuickActions card={focusedCard} onAction={onAction} disabled={locked} testID={`${ROUTE}.card.${focusedCard.id}`} />
+              <QuickActions card={focusedCard} onAction={onAction} disabled={locked} shareCard={canShareCard(focusedCard, shareCards)} testID={`${ROUTE}.card.${focusedCard.id}`} />
             </View>
           ) : null}
         </View>
@@ -535,7 +543,7 @@ export function GarageScreen() {
               const card = item.cards[index];
               return (
                 <View key={card?.id ?? `gap.${index}`} style={styles.gridCell}>
-                  {card ? <GarageCard card={card} width={gridCardWidth} onOpen={open} onAction={onAction} locked={locked} primary={card.id === primaryCardId} /> : null}
+                  {card ? <GarageCard card={card} width={gridCardWidth} onOpen={open} onAction={onAction} locked={locked} primary={card.id === primaryCardId} shareCards={shareCards} /> : null}
                 </View>
               );
             })}

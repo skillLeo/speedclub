@@ -30,7 +30,7 @@ final class RateLimitOverrides
      */
     public const PROTECTED = [
         'member_register', 'member_login', 'member_verify', 'member_email', 'two_factor_challenge', 'account_security', 'token_rotate',
-        'web_account_deletion', 'ai', 'ai_translate',
+        'web_account_deletion', 'web_account_deletion_code', 'ai', 'ai_translate',
     ];
 
     /**

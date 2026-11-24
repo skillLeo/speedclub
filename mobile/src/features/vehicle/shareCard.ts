@@ -16,6 +16,20 @@ import i18n from '@/i18n';
 import { isWeb } from '@/lib/platform';
 
 export const SHARE_CARD_FLAG = 'sig.share_cards';
+
+/**
+ * Whether a build can be shared as a card: the flag is on and the build is published and not private (a draft or a private car has no
+ * public counterpart). VEH-01's "Mehr", GAR-02's "Mehr" and its capsule menu, and GAR-01's quick actions ask the same (client round 7,
+ * R7-4a: the garage had no way to the card).
+ */
+export function canShareCard(vehicle: { status: string; visibility: string }, enabled: boolean): boolean {
+  return enabled && vehicle.status === 'published' && vehicle.visibility !== 'private';
+}
+
+/** VEH-07's route for a build. */
+export function shareCardHref(vehicleId: string) {
+  return { pathname: '/share-card/[vehicleId]', params: { vehicleId } } as const;
+}
 export const SHARE_CARD_FORMATS: readonly ShareCardFormat[] = ['story', 'square'];
 
 /** 9:16 and 1:1, the frames of the preview. */

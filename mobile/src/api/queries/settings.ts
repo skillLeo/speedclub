@@ -301,11 +301,16 @@ export function useDataExports() {
   });
 }
 
-/** `POST me/export {password}`: 202, one per 24 hours (429 with Retry-After). */
+/**
+ * `POST me/export {password}`: 202, one per 24 hours (429 with Retry-After). Every M2.5 call below that proves the password goes
+ * through withRecentAuth (client round 6, L1): a passwordless member sends `password: ''`, and outside the 10-minute window the
+ * server answers 403 reauthentication_required, the reauth sheet confirms it is them, and the call goes once more. A member with a
+ * password never meets that 403 (`or-password`), so their path is unchanged. Each attempt has its own idempotency key.
+ */
 export function useRequestExport() {
   return useMutation({
     mutationFn: async ({ password }: ReauthInput) =>
-      toDataExport((await apiData(api.POST('/me/export', { body: { password }, ...withIdempotency() }))).data),
+      withRecentAuth(async () => toDataExport((await apiData(api.POST('/me/export', { body: { password }, ...withIdempotency() }))).data)),
     ...SECRET,
   });
 }
@@ -316,7 +321,7 @@ export function useRequestExport() {
 export function useStartTwoFactor() {
   return useMutation({
     mutationFn: async (password: string): Promise<TwoFactorSetup> => {
-      const { data } = await apiData(api.POST('/me/two-factor', { body: { password } }));
+      const { data } = await withRecentAuth(() => apiData(api.POST('/me/two-factor', { body: { password } })));
       return { secret: data.secret, otpauthUrl: data.otpauth_url, qrSvg: data.qr_svg };
     },
     ...SECRET,
@@ -336,7 +341,7 @@ export function useDisableTwoFactor() {
   return useMutation({
     mutationFn: async (input: Required<ReauthInput>) => {
       // In the body: a password never belongs in a URL or an access log.
-      await apiData(api.DELETE('/me/two-factor', { body: input }));
+      await withRecentAuth(() => apiData(api.DELETE('/me/two-factor', { body: input })));
     },
     ...SECRET,
   });
@@ -346,7 +351,7 @@ export function useDisableTwoFactor() {
 export function useRegenerateRecoveryCodes() {
   return useMutation({
     mutationFn: async (input: Required<ReauthInput>) =>
-      recoveryCodesOf((await apiData(api.POST('/me/two-factor/recovery-codes', { body: input }))).data.recovery_codes),
+      recoveryCodesOf((await withRecentAuth(() => apiData(api.POST('/me/two-factor/recovery-codes', { body: input })))).data.recovery_codes),
     ...SECRET,
   });
 }
@@ -357,7 +362,7 @@ export function useRegenerateRecoveryCodes() {
 export function useRequestEmailChange() {
   return useMutation({
     mutationFn: async (input: ChangeEmailInput) => {
-      await apiData(api.POST('/me/email', { body: input }));
+      await withRecentAuth(() => apiData(api.POST('/me/email', { body: input })));
     },
     ...SECRET,
   });
@@ -376,22 +381,29 @@ export function useConfirmEmailChange() {
   });
 }
 
-/** `POST me/password`. This device stays signed in; other browsers always end, other apps on request. */
+/**
+ * `POST me/password`. This device stays signed in; other browsers always end, other apps on request. A passwordless member sets
+ * their first one here with `current_password: ''` (recent authentication); Me then reports `password_set: true`.
+ */
 export function useChangePassword() {
+  const client = useQueryClient();
   return useMutation({
     mutationFn: async ({ currentPassword, password, revokeOtherSessions, code }: ChangePasswordInput) => {
-      await apiData(
-        api.POST('/me/password', {
-          body: {
-            current_password: currentPassword,
-            password,
-            password_confirmation: password,
-            revoke_other_sessions: revokeOtherSessions,
-            ...(code ? { code } : {}),
-          },
-        }),
+      await withRecentAuth(() =>
+        apiData(
+          api.POST('/me/password', {
+            body: {
+              current_password: currentPassword,
+              password,
+              password_confirmation: password,
+              revoke_other_sessions: revokeOtherSessions,
+              ...(code ? { code } : {}),
+            },
+          }),
+        ),
       );
     },
+    onSuccess: () => void client.invalidateQueries({ queryKey: meKey }),
     ...SECRET,
   });
 }
@@ -400,7 +412,7 @@ export function useChangePassword() {
 export function useDeleteAccount() {
   return useMutation({
     mutationFn: async ({ password, code }: ReauthInput) => {
-      await apiData(api.POST('/me/delete', { body: { password, ...(code ? { code } : {}) } }));
+      await withRecentAuth(() => apiData(api.POST('/me/delete', { body: { password, ...(code ? { code } : {}) } })));
     },
     ...SECRET,
   });

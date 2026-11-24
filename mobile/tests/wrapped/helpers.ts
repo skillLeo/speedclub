@@ -1,5 +1,19 @@
 /** Season Wrapped tests: the payload and the list as the contract (m5.9e §3/§5) has the server send them. */
+import { appConfigKey, BUNDLED_APP_CONFIG } from '@/api/queries/appConfig';
+
+import { newQueryClient } from '../qr/harness';
+
 export { newQueryClient, renderScreen, signIn, signOut, stubFetch, type Answer } from '../qr/harness';
+
+/**
+ * A query client whose app config has the Wrapped flags as given; both on by default. Client round 6 (L2): `GET me/wrapped` goes
+ * out only while `wrapped` is on (and, for the Home banner, `wrapped.countdown`).
+ */
+export function wrappedClient(flags: Record<string, boolean> = { wrapped: true, 'wrapped.countdown': true }) {
+  const client = newQueryClient();
+  client.setQueryData(appConfigKey, { config: { ...BUNDLED_APP_CONFIG, flags: { ...BUNDLED_APP_CONFIG.flags, ...flags } }, confirmed: true });
+  return client;
+}
 
 export const SEASON = '2027-saison';
 

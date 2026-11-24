@@ -5,6 +5,7 @@ import { Linking, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { meKey, type Me } from '@/api/queries/auth';
+import { isReauthCancelled } from '@/api/queries/recentAuth';
 import { CodeInput } from '@/features/auth/components/CodeInput';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { isCode } from '@/features/auth/forms';
@@ -133,6 +134,8 @@ function TwoFactorContent({ me }: { me: Me }) {
       toast(t('twoFactor.turnedOff'), { testID: `${ROUTE}.turnedOff` });
     } catch (error) {
       setConfirmingOff(null);
+      // A passwordless member closed the REAUTH sheet (client round 6, L1): nothing changed, so nothing is said.
+      if (isReauthCancelled(error)) return;
       setNotice(error instanceof ApiError ? error.message : failure(error));
     }
   };
@@ -243,6 +246,7 @@ function TwoFactorContent({ me }: { me: Me }) {
             onClose={() => setSheet(null)}
             title={t('twoFactor.startTitle')}
             body={t('twoFactor.startBody')}
+            bodyWithoutPassword={t('twoFactor.startBodyNoPassword')}
             confirmLabel={t('twoFactor.continue')}
             onConfirm={async ({ password }) => {
               const next = await start.mutateAsync(password);
@@ -257,6 +261,7 @@ function TwoFactorContent({ me }: { me: Me }) {
             onClose={() => setSheet(null)}
             title={t('twoFactor.newCodesTitle')}
             body={t('twoFactor.newCodesBody')}
+            bodyWithoutPassword={t('twoFactor.newCodesBodyNoPassword')}
             confirmLabel={t('twoFactor.newCodesConfirm')}
             needsCode
             onConfirm={async ({ password, code: second }) => {
@@ -271,6 +276,7 @@ function TwoFactorContent({ me }: { me: Me }) {
             onClose={() => setSheet(null)}
             title={t('twoFactor.turnOffTitle')}
             body={t('twoFactor.turnOffBody')}
+            bodyWithoutPassword={t('twoFactor.turnOffBodyNoPassword')}
             confirmLabel={t('twoFactor.continue')}
             needsCode
             onConfirm={async ({ password, code: second }) => {

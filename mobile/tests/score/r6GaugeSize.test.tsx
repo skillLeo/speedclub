@@ -1,7 +1,9 @@
 /**
- * Client round 6, item 3 (R6-3): the Build Score gauge "clearly smaller and quieter". On a phone at most 120, inline next to the
- * stage label (not a hero block), with the number in hero.numeral.s; on the desktop layout inside the right-hand side card, not in
- * the content column; the loading skeleton in the same geometry. The web desktop's 144 is proven in r6GaugeSize.web.test.tsx.
+ * Client round 6, item 3 (R6-3) made the Build Score gauge smaller (120 beside the stage, the desktop's in the side card); client
+ * round 7, item 1 (R7-1: "move build score back to the place where it was before, and make it just a little bit bigger on mobile")
+ * puts it back: the centred block under "Build Score" in Überblick on every width, the stage inside the gauge, the ranks under it,
+ * at 144 (one step up from 120, still well under round 4's 208), with the number in hero.numeral.s. The skeleton keeps the geometry.
+ * The web desktop's size is proven in r6GaugeSize.web.test.tsx.
  */
 import { screen, waitFor, within } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
@@ -13,7 +15,7 @@ import { hydrateThemePreference, typography } from '@/theme';
 import { gaugeLayout, gaugeNumeralVariant, gaugeTextScale } from '@/ui/BuildScoreGauge';
 import { __resetOdometerSessionForTests } from '@/ui/motion/OdometerNumber';
 
-import { flat, renderUi } from '../ui/helpers';
+import { flat, renderUi, textOf } from '../ui/helpers';
 import { R34 } from '../vehicle/fixtures';
 import { renderWithProviders, stubFetch } from '../vehicle/harness';
 
@@ -80,15 +82,20 @@ const SCORE = {
 const dimensions = useWindowDimensions as jest.Mock;
 const windowOf = (width: number, height: number, fontScale = 1) => dimensions.mockReturnValue({ width, height, scale: 2, fontScale });
 type Node = ReturnType<typeof screen.getByTestId>;
-/** The nearest ancestor laid out as a row (the gauge's line), within three levels; fails when there is none. */
-function rowOf(node: Node): Node {
+/** The nearest ancestor laid out as a row within three levels, or null. */
+function rowOf(node: Node): Node | null {
   let current: Node | null = node.parent;
   for (let level = 0; current && level < 3; level += 1, current = current.parent) {
     if (flat(current.props.style)?.flexDirection === 'row') return current;
   }
-  throw new Error('the gauge is not in a row');
+  return null;
 }
 const widthOf = (testID: string) => Number(flat(screen.getByTestId(testID, { includeHiddenElements: true }).props.style).width);
+/** Whether `inner` lies inside `outer` in the rendered tree. */
+function contains(outer: Node, inner: Node): boolean {
+  for (let current: Node | null = inner; current; current = current.parent) if (current === outer) return true;
+  return false;
+}
 
 beforeAll(hydrateThemePreference);
 beforeEach(() => {
@@ -97,13 +104,15 @@ beforeEach(() => {
   windowOf(393, 852);
 });
 
-describe('R6-3 gauge size rules', () => {
-  it('draws the page gauge at 120 on a phone, 144 (≈ 140) on the web desktop, growing with the font only to the numerals’ cap', () => {
-    expect(gaugeBoxFor(353, 1)).toBe(120);
-    expect(gaugeBoxFor(320, 1)).toBe(120);
-    expect(gaugeBoxFor(320, 1, true)).toBe(144);
+describe('R7-1 gauge size rules', () => {
+  it('draws the page gauge at 144 on a phone and on the desktop (120 in round 6), growing with the font only to the numerals’ cap', () => {
+    expect(gaugeBoxFor(353, 1)).toBe(144);
+    expect(gaugeBoxFor(320, 1)).toBe(144);
+    // One step bigger than round 6, still smaller than round 4's 208.
+    expect(gaugeBoxFor(353, 1)).toBeGreaterThanOrEqual(136);
+    expect(gaugeBoxFor(353, 1)).toBeLessThan(208);
     // 200 %: the numeral stops at 1.3×, and so does its box.
-    expect(gaugeBoxFor(353, 2)).toBe(156);
+    expect(gaugeBoxFor(353, 2)).toBe(187);
     expect(gaugeBoxFor(100, 2)).toBe(100);
   });
 
@@ -113,51 +122,59 @@ describe('R6-3 gauge size rules', () => {
     expect(gaugeNumeralVariant('1.000')).toBe('heroNumeralXs');
   });
 
-  it('lays the 120 gauge out shorter than its square: the arc ends and "von 1.000" under the numeral', () => {
-    const { height, numeralTop, numeralLine } = gaugeLayout(120, { valueText: '482', scale: gaugeTextScale(1), desktop: false, stage: false });
+  it('lays the 144 gauge out with the stage inside it: numeral on the pivot, "von 1.000" and "Stufe 3" under it, inside the square', () => {
+    const { height, numeralTop, numeralLine, belowTop } = gaugeLayout(144, { valueText: '482', scale: gaugeTextScale(1), desktop: false, stage: true });
     expect(numeralLine).toBe(typography.heroNumeralS.lineHeight);
-    expect(numeralTop + numeralLine / 2).toBe(60);
-    expect(height).toBeLessThan(120);
+    expect(numeralTop + numeralLine / 2).toBe(72);
+    expect(belowTop).toBeGreaterThan(numeralTop + numeralLine);
+    expect(height).toBeLessThanOrEqual(144);
   });
 });
 
-describe('R6-3 on a phone (VEH-01 / GAR-02)', () => {
-  it('is at most 120, inline next to the stage label, with the number in hero.numeral.s', async () => {
+describe('R7-1 on a phone (VEH-01 / GAR-02)', () => {
+  it('is 144, centred as its own block (not beside the stage), the stage inside the gauge, the ranks centred under it', async () => {
     stubFetch({ [`/vehicles/${R34.id}/build-score`]: { body: { data: SCORE } } });
     await renderWithProviders(<BuildScoreSection vehicle={R34} routeId="GAR-02" />);
-    await screen.findByTestId('GAR-02.score.gauge');
-    expect(widthOf('GAR-02.score.gauge')).toBeLessThanOrEqual(120);
-    // Inline: the gauge and the stage (with its rise) share one row.
-    const row = rowOf(screen.getByTestId('GAR-02.score.gauge'));
-    expect(within(row).getByTestId('GAR-02.score.gauge.stage', { includeHiddenElements: true })).toHaveTextContent('Stufe 3');
-    expect(within(row).getByTestId('GAR-02.score.gauge.delta', { includeHiddenElements: true })).toHaveTextContent('+25');
+    const gauge = await screen.findByTestId('GAR-02.score.gauge');
+    expect(widthOf('GAR-02.score.gauge')).toBe(144);
+    expect(flat(gauge.props.style).alignSelf).toBe('center');
+    // Not inline: no row holds the gauge (round 6 set it beside "Stufe 3").
+    expect(rowOf(gauge)).toBeNull();
+    // The stage is part of the gauge's drawing again, under "von 1.000".
+    expect(within(gauge).getByTestId('GAR-02.score.gauge.stage', { includeHiddenElements: true })).toHaveTextContent('Stufe 3');
+    expect(within(gauge).getByText('von 1.000', { includeHiddenElements: true })).toBeTruthy();
+    // The rise and the ranks follow under the gauge, centred.
+    expect(contains(gauge, screen.getByTestId('GAR-02.score.gauge.delta', { includeHiddenElements: true }))).toBe(false);
+    expect(screen.getByTestId('GAR-02.score.gauge.delta', { includeHiddenElements: true })).toHaveTextContent('+25');
+    expect(textOf(screen.getByTestId('GAR-02.score.rank.generation').props.style).textAlign).toBe('center');
     const digit = flat(screen.getAllByText('4', { includeHiddenElements: true })[0]?.props.style);
     expect(digit.fontSize).toBe(typography.heroNumeralS.fontSize);
     expect(digit.fontSize).not.toBe(typography.heroNumeral.fontSize);
   });
 
-  it('loads in the same geometry: the skeleton’s track has the ready gauge’s box and height, beside the stage line', async () => {
+  it('loads in the same geometry: the skeleton’s track has the ready gauge’s box and height, centred', async () => {
     await renderUi(<BuildScoreSectionSkeleton width={353} testID="sk" />);
-    const track = flat(screen.getByTestId('sk.track', { includeHiddenElements: true }).props.style);
-    // Beside the stage line, as the ready state.
-    expect(rowOf(screen.getByTestId('sk.track', { includeHiddenElements: true }))).toBeTruthy();
+    const trackNode = screen.getByTestId('sk.track', { includeHiddenElements: true });
+    const track = flat(trackNode.props.style);
+    expect(rowOf(trackNode)).toBeNull();
     await screen.unmount();
     stubFetch({ [`/vehicles/${R34.id}/build-score`]: { body: { data: SCORE } } });
     await renderWithProviders(<BuildScoreSection vehicle={R34} routeId="VEH-01" />);
     await screen.findByTestId('VEH-01.score.gauge');
     const ready = flat(screen.getByTestId('VEH-01.score.gauge').props.style);
     expect({ width: track.width, height: track.height }).toEqual({ width: ready.width, height: ready.height });
-    expect(ready.width).toBe(120);
+    expect(ready.width).toBe(144);
   });
 });
 
-describe('R6-3 on the desktop layout (VEH-01 ≥ 1280)', () => {
-  it('puts the gauge inside the right-hand side card, not in Überblick’s content column', async () => {
+describe('R7-1 on the desktop layout (VEH-01 ≥ 1280)', () => {
+  it('puts the gauge back in Überblick’s content column, not in the right-hand side card', async () => {
     windowOf(1440, 900);
     stubFetch({ [`/vehicles/${R34.id}/build-score`]: { body: { data: SCORE } } });
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />);
-    await waitFor(() => expect(within(screen.getByTestId('VEH-01.card')).getByTestId('VEH-01.score.gauge')).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId('VEH-01.score.gauge')).toBeTruthy());
     expect(screen.getAllByTestId('VEH-01.score.gauge')).toHaveLength(1);
+    expect(within(screen.getByTestId('VEH-01.card')).queryByTestId('VEH-01.score.gauge')).toBeNull();
     expect(widthOf('VEH-01.score.gauge')).toBeLessThanOrEqual(144);
   });
 });

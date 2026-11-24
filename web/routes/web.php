@@ -85,8 +85,10 @@ Route::withoutMiddleware(PublicPages::WITHOUT_SESSION)->group(function (): void 
 
         // WEB-05 and WEB-10 (M2.5): sessionless GET and POST (ADR-115). The POSTs carry no CSRF token; Sec-Fetch-Site or Origin refuses
         // cross-site posts, the deletion needs the credentials, and both are limited per IP (plus per account for the deletion).
+        // Client round 6 (L3): /konto-loeschen/code mails a deletion code where there is no password (per IP here, per address in EmailCodes).
         Route::get('/konto-loeschen', [AccountDeletionPageController::class, 'show'])->middleware('throttle:public-read')->name('account-deletion.show');
         Route::post('/konto-loeschen', [AccountDeletionPageController::class, 'store'])->middleware('throttle:web-account-deletion')->name('account-deletion.store');
+        Route::post('/konto-loeschen/code', [AccountDeletionPageController::class, 'requestCode'])->middleware('throttle:web-account-deletion-code')->name('account-deletion.code');
         Route::get('/kontakt', [ContactPageController::class, 'show'])->middleware('throttle:public-read')->name('contact.show');
 
         // WEB-04 and WEB-07 (M2.7): sessionless GETs. The e-mail landing carries its code in the fragment only (ADR-138), never in the URL.

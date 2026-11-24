@@ -7,6 +7,7 @@ import { Linking, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { endLocalSessionQuietly, type Me } from '@/api/queries/auth';
+import { isReauthCancelled } from '@/api/queries/recentAuth';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
 import { useSingleFlight } from '@/lib/useSingleFlight';
@@ -19,7 +20,7 @@ import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
 import { Text } from '@/ui/Text';
 import { TextInput } from '@/ui/TextInput';
 
-import { twoFactorEnabledOf } from '../account';
+import { hasPassword, twoFactorEnabledOf } from '../account';
 import { useMemberGate } from '../components/MemberGate';
 import { RestrictionNotice } from '../components/RestrictionNotice';
 import { RowGroup } from '@/ui/RowGroup';
@@ -103,6 +104,10 @@ export function DeletionConsequences() {
  * SET-13 /settings/data/delete: the consequences first, then the export, then password (and the second factor when two-factor
  * is on), the checkbox, "Konto löschen" (Destructive L) and a last dialog with the only filled red button. Success ends the
  * session on this device and shows the final screen. Deactivation is immediate; deletion follows after 30 days.
+ *
+ * Client round 6 (L1, GDPR): a passwordless member (Me `password_set: false`) has no password field. The form sends
+ * `password: ''`; outside the 10-minute window the server answers 403 reauthentication_required, the REAUTH sheet opens over the
+ * dialog (withRecentAuth in useDeleteAccount), and after the member confirmed the deletion goes once more.
  */
 function DeleteAccountForm({ me }: { me: Me }) {
   const { t } = useTranslation('settings');
@@ -117,7 +122,8 @@ function DeleteAccountForm({ me }: { me: Me }) {
   /** ADR-203 (f): the second factor is locked; the button rests until a field changes. Nobody is signed out. */
   const [locked, setLocked] = useState(false);
   const webDeletion = webDeletionUrl();
-  const schema = useMemo(() => deleteAccountSchema(askCode), [askCode]);
+  const passwordSet = hasPassword(me);
+  const schema = useMemo(() => deleteAccountSchema(askCode, passwordSet), [askCode, passwordSet]);
   const { control, handleSubmit, setError, formState, resetField } = useForm<DeleteAccountValues>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
@@ -132,11 +138,13 @@ function DeleteAccountForm({ me }: { me: Me }) {
   const run = useSingleFlight(handleSubmit(async (values) => {
     const code = values.code.replace(/\s/g, '');
     try {
-      await remove.mutateAsync({ password: values.password, ...(askCode && code ? { code } : {}) });
+      await remove.mutateAsync({ password: passwordSet ? values.password : '', ...(askCode && code ? { code } : {}) });
       // DeleteAccountScreen takes over: this form and its guard go, then the session, then the final screen.
       markAccountDeleted();
     } catch (error) {
       setConfirming(false);
+      // The member closed the REAUTH sheet: nothing was deleted, so nothing is said.
+      if (isReauthCancelled(error)) return;
       if (isSecondFactorLocked(error)) {
         setLocked(true);
         setNotice(t('reauth.locked'));
@@ -248,27 +256,33 @@ function DeleteAccountForm({ me }: { me: Me }) {
           <Text variant="headline" role="heading" {...({ 'aria-level': 2 } as object)}>
             {t('delete.confirmTitle')}
           </Text>
-          <Controller
-            control={control}
-            name="password"
-            render={({ field, fieldState }) => (
-              <TextInput
-                ref={field.ref}
-                value={field.value}
-                onChangeText={(next) => {
-                  field.onChange(next);
-                  setLocked(false);
-                }}
-                onBlur={field.onBlur}
-                label={t('delete.password')}
-                error={fieldMessage(fieldState.error)}
-                secure
-                autoComplete="current-password"
-                textContentType="password"
-                testID={`${ROUTE}.password`}
-              />
-            )}
-          />
+          {passwordSet ? (
+            <Controller
+              control={control}
+              name="password"
+              render={({ field, fieldState }) => (
+                <TextInput
+                  ref={field.ref}
+                  value={field.value}
+                  onChangeText={(next) => {
+                    field.onChange(next);
+                    setLocked(false);
+                  }}
+                  onBlur={field.onBlur}
+                  label={t('delete.password')}
+                  error={fieldMessage(fieldState.error)}
+                  secure
+                  autoComplete="current-password"
+                  textContentType="password"
+                  testID={`${ROUTE}.password`}
+                />
+              )}
+            />
+          ) : (
+            <Text variant="callout" color="text.secondary" testID={`${ROUTE}.noPassword`}>
+              {t('reauth.noPassword')}
+            </Text>
+          )}
           {askCode ? (
             <Controller
               control={control}

@@ -532,6 +532,7 @@
                 "username_check": "Username checks",
                 "views": "Count views (beacon)",
                 "web_account_deletion": "Web account deletion (per IP)",
+                "web_account_deletion_code": "Web deletion code requests (per IP)",
                 "wrapped": "Share Wrapped and load cards"
             },
             "groups": {

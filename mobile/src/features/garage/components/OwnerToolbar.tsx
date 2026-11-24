@@ -29,7 +29,13 @@ const useStyles = createStyles((t) => ({
 export function ownerCapsuleOf(
   vehicle: PublicVehicle,
   routeId: string,
-  { t, go, onEdit, onShare }: { t: TFunction<'garage'>; go: (path: string) => void; onEdit: () => void; onShare: () => void },
+  {
+    t,
+    go,
+    onEdit,
+    onShare,
+    onShareCard,
+  }: { t: TFunction<'garage'>; go: (path: string) => void; onEdit: () => void; onShare: () => void; onShareCard?: () => void },
 ): { actions: OwnerCapsuleAction[]; more: ContextMenuItem[] } {
   const base = `/garage/${vehicle.id}`;
   const actions: OwnerCapsuleAction[] = [
@@ -42,6 +48,8 @@ export function ownerCapsuleOf(
   const more: ContextMenuItem[] = [
     { key: 'visibility', icon: vehicle.visibility === 'private' ? 'lock-simple' : 'eye', label: t('owner.visibility'), onSelect: () => go(`${base}/visibility`) },
     ...(vehicle.status === 'published' && vehicle.visibility !== 'private' ? [{ key: 'share', icon: 'share-network' as const, label: t('owner.share'), onSelect: onShare }] : []),
+    // R7-4a: given only where the card can be drawn (canShareCard).
+    ...(onShareCard ? [{ key: 'shareCard', icon: 'image' as const, label: t('owner.shareCard'), onSelect: onShareCard }] : []),
   ];
   return { actions, more };
 }

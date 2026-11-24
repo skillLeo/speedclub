@@ -155,27 +155,41 @@ export type StripSize = boolean | 'phone';
 
 /**
  * ADR-431 b: the numeral role of the strip. On a tablet's page (and the public page between 768 and 1280) it is `hero.numeral`; in
- * the desktop's side card (VEH-01/GAR-02 and WEB-01 from 1280) the compact `hero.numeral.s`; on a phone `hero.numeral.xs` (client
- * feedback CF-2, M5.3: one step smaller; R5-2b, ADR-536: once more). The public page's SpecStripLayout.php makes the same choice by
- * width.
+ * the desktop's side card (VEH-01/GAR-02 and WEB-01 from 1280) the compact `hero.numeral.s`. On a phone client feedback CF-2 (M5.3)
+ * and R5-2b (ADR-536) had taken it down to `hero.numeral.xs`; client round 7 (R7-2, "just a little bit bigger on phone") takes it one
+ * step back up, to `hero.numeral.s`. The public page's SpecStripLayout.php chooses by width on its own.
  */
-export function specStripNumeralVariant(size: StripSize): 'heroNumeral' | 'heroNumeralS' | 'heroNumeralXs' {
-  return size === false ? 'heroNumeral' : size === 'phone' ? 'heroNumeralXs' : 'heroNumeralS';
+export function specStripNumeralVariant(size: StripSize): 'heroNumeral' | 'heroNumeralS' {
+  return size === false ? 'heroNumeral' : 'heroNumeralS';
+}
+
+/**
+ * R7-2: the data label ("LEISTUNG") and the unit ("PS") one type step bigger on a phone too: `caption` (12/16) instead of
+ * `label.caps` / `label.unit` (11/14); the label keeps its capitals (SpecStrip sets them), the unit its case. Elsewhere unchanged.
+ */
+export function specStripLabelVariant(size: StripSize): 'labelCaps' | 'caption' {
+  return size === 'phone' ? 'caption' : 'labelCaps';
+}
+
+/** R7-2: the unit's role, as specStripLabelVariant. */
+export function specStripUnitVariant(size: StripSize): 'labelUnit' | 'caption' {
+  return size === 'phone' ? 'caption' : 'labelUnit';
 }
 
 /** The sizes the strip's roles render at: the numeral capped at 1.3× (09 §4.2), the Inter roles scaled freely. */
 export function specStripType(fontScale: number, desktop: StripSize) {
-  const numeral =
-    desktop === true ? { ...typography.heroNumeralS, ...typographyDesktop.heroNumeralS } : desktop === 'phone' ? typography.heroNumeralXs : typography.heroNumeral;
-  const numeralScale = Math.min(fontScale, desktop === false ? maxFontScale.heroNumeral : desktop === 'phone' ? maxFontScale.heroNumeralXs : maxFontScale.heroNumeralS);
+  const numeral = desktop === true ? { ...typography.heroNumeralS, ...typographyDesktop.heroNumeralS } : desktop === 'phone' ? typography.heroNumeralS : typography.heroNumeral;
+  const numeralScale = Math.min(fontScale, desktop === false ? maxFontScale.heroNumeral : maxFontScale.heroNumeralS);
+  const label = typography[specStripLabelVariant(desktop)];
+  const unit = typography[specStripUnitVariant(desktop)];
   return {
     valueSize: numeral.fontSize * numeralScale,
     valueLine: numeral.lineHeight * numeralScale,
-    labelSize: typography.labelCaps.fontSize * fontScale,
-    labelLine: typography.labelCaps.lineHeight * fontScale,
-    labelTracking: typography.labelCaps.letterSpacing * fontScale,
-    unitSize: typography.labelUnit.fontSize * fontScale,
-    unitTracking: typography.labelUnit.letterSpacing * fontScale,
+    labelSize: label.fontSize * fontScale,
+    labelLine: label.lineHeight * fontScale,
+    labelTracking: label.letterSpacing * fontScale,
+    unitSize: unit.fontSize * fontScale,
+    unitTracking: unit.letterSpacing * fontScale,
     provenanceSize: typography.caption.fontSize * fontScale,
     provenanceLine: typography.caption.lineHeight * fontScale,
     provenanceTracking: typography.caption.letterSpacing * fontScale,

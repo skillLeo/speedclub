@@ -16,22 +16,17 @@ import { clearAuthIntent, useSessionStore } from '@/state/session';
 import { isWeb } from '@/lib/platform';
 import { createStyles, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import {
-  CollapsingFlashList,
-  Dialog,
-  EmptyState,
-  ErrorState,
-  Header,
-  HeaderLargeTitle,
-  ListRow,
-  OfflineBanner,
-  SearchBar,
-  SegmentedControl,
-  Spinner,
-  toast,
-  useCollapsingHeader,
-  type HeaderAction,
-} from '@/ui';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Header, HeaderLargeTitle, type HeaderAction } from '@/ui/Header';
+import { ListRow } from '@/ui/ListRow';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { SearchBar } from '@/ui/SearchBar';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Spinner } from '@/ui/Spinner';
+import { toast } from '@/ui/toast';
+import { CollapsingFlashList, useCollapsingHeader } from '@/ui/useCollapsingHeader';
 import { SwipeRow, type SwipeAction } from '@/ui/motion/kit';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
@@ -72,8 +67,13 @@ export type InboxPaneProps = {
   /** The conversation open beside the list (web split view). */
   selectedId?: string;
   onOpen: (conversation: ConversationSummary) => void;
-  /** Archiviert is a pushed page with back; the tab root has none. */
+  /** Archiviert is a pushed page with back and a compact bar. */
   onBack?: () => void;
+  /**
+   * M5.2 (10 §1): the inbox itself is pushed from the Start or Entdecken header on phones and under native tabs, so it keeps its large
+   * title and gets a back button. Where the rail or sidebar lists Nachrichten it is a destination and has none.
+   */
+  onLeave?: () => void;
 };
 
 /** "Nichts für q" while searching; otherwise the folder's own empty state. */
@@ -87,7 +87,7 @@ function emptyFor(folder: Folder, q: string): 'noResults' | 'emptyChats' | 'empt
  * search field [SIG organise], rows, and "Archiviert" at the end. Polls every 15 s in front (the badge counts come along), and
  * at once on a realtime event. The phone screen shows it alone; the web from 1280 puts the thread beside it.
  */
-export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: InboxPaneProps) {
+export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack, onLeave }: InboxPaneProps) {
   const { t } = useTranslation('messages');
   const common = useTranslation('common').t;
   const styles = useStyles();
@@ -264,7 +264,7 @@ export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: Inbo
   const keepsArchived = emptyFolder && rows.some((row) => row.kind === 'archived');
   const listRows: Row[] = !state ? rows : keepsArchived ? [{ kind: 'state' }, { kind: 'archived' }] : [];
 
-  const title = folder === 'archived' ? t('inbox.archivedTitle') : common('tabs.messages');
+  const title = folder === 'archived' ? t('inbox.archivedTitle') : common('places.messages');
   const headerActions: HeaderAction[] =
     signedIn && folder !== 'archived'
       ? [{ icon: 'plus', label: t('inbox.newMessage'), onPress: () => router.push('/new-message'), testID: `${ROUTE}.new` }]
@@ -305,7 +305,7 @@ export function InboxPane({ folder, onFolder, selectedId, onOpen, onBack }: Inbo
         variant={onBack ? 'compact' : 'large'}
         title={title}
         scroll={header}
-        onBack={onBack}
+        onBack={onBack ?? onLeave}
         actions={headerActions}
         testID={`${ROUTE}.header`}
       />

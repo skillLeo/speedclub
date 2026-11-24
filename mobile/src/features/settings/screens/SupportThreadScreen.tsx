@@ -16,7 +16,14 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { EmptyState, ErrorState, Icon, Skeleton, SkeletonText, StatusPill, Text, TextInput, toast } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Icon } from '@/ui/icons/Icon';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 
 import { SettingsPage } from '../components/SettingsPage';
 import { useFailureMessage, useFieldMessage } from '../forms';

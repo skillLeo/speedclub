@@ -265,7 +265,7 @@ it('uses ULID keys for user content', function (string $model) {
 
 it('registers a policy and a morph name for every model', function () {
     $root = dirname(__DIR__, 3);
-    $adminModels = ['App\Models\Staff', 'App\Models\Role', 'App\Models\Permission', 'App\Models\ApprovalRequest', 'App\Models\CatalogImport', 'App\Models\ModCategorySchemaVersion', 'App\Models\BrandAsset', 'App\Models\MessageTemplate', 'App\Models\Release', 'App\Models\KeywordRule', 'App\Models\KeywordRuleHit', 'App\Models\SorTemplate', 'App\Models\SupportMacro', 'App\Models\StaffInvitation', 'App\Models\PrivacyRequest', 'App\Models\MembershipPlan', 'App\Models\Entitlement']; // Staff policies come with the admin modules.
+    $adminModels = ['App\Models\Staff', 'App\Models\Role', 'App\Models\Permission', 'App\Models\ApprovalRequest', 'App\Models\CatalogImport', 'App\Models\ModCategorySchemaVersion', 'App\Models\BrandAsset', 'App\Models\MessageTemplate', 'App\Models\Release', 'App\Models\KeywordRule', 'App\Models\KeywordRuleHit', 'App\Models\SorTemplate', 'App\Models\SupportMacro', 'App\Models\StaffInvitation', 'App\Models\PrivacyRequest', 'App\Models\MembershipPlan', 'App\Models\Entitlement', 'App\Models\ApproverChange', 'App\Models\StaffAlert']; // Staff policies come with the admin modules.
 
     $classes = SourceScanner::classesIn("$root/app", ["$root/app/Models"]);
     expect(count($classes))->toBeGreaterThan(25);

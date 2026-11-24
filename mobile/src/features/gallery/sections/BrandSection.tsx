@@ -1,7 +1,13 @@
 import { View } from 'react-native';
 
 import { createStyles, useTheme } from '@/theme';
-import { BrandWordmark, Button, EmptyState, Hairline, Photo, PhotoScrim, Text } from '@/ui';
+import { BrandWordmark } from '@/ui/BrandWordmark';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { Hairline } from '@/ui/Hairline';
+import { Photo } from '@/ui/Photo';
+import { PhotoScrim } from '@/ui/PhotoScrim';
+import { Text } from '@/ui/Text';
 
 import { PHOTOS, noop } from '../data';
 import { Group, SectionScreen, Specimen } from '../parts';

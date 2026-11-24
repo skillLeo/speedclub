@@ -1,0 +1,676 @@
+[
+  {
+    "author": "jonas.e46",
+    "category": "fahrwerk",
+    "title": "Gewindefahrwerk im Alltag: wie hart ist zu hart?",
+    "days": 2,
+    "tags": [
+      "gewinde",
+      "alltag"
+    ],
+    "vehicle": "jonas-e46",
+    "photos": [
+      "generic-wheels-03.jpg"
+    ],
+    "body": "Ich fahre meinen E46 jeden Tag zur Arbeit und überlege, ein Gewindefahrwerk einzubauen. Mir geht es um **ruhigeres Einlenken**, nicht um maximale Tieferlegung.\n\nWorauf achtet ihr bei der Auswahl?\n- Federrate vorne/hinten\n- einstellbare Dämpfung ja/nein\n- Kopfstützlager neu mitmachen?",
+    "replies": [
+      {
+        "author": "fabian.e92",
+        "days": 2,
+        "helpful": 4,
+        "body": "Nimm eins mit einstellbarer Zugstufe, dann kannst du es nach dem Einbau weicher stellen. Und ja: Domlager gleich mit tauschen, die alten sind nach 20 Jahren durch.",
+        "children": [
+          {
+            "author": "jonas.e46",
+            "body": "Danke, Domlager kommen auf die Liste."
+          }
+        ]
+      },
+      {
+        "author": "robin.e30",
+        "days": 1,
+        "helpful": 2,
+        "body": "Nach dem Einbau unbedingt vermessen lassen. Bei mir war die Spur hinten komplett daneben und der Wagen lief unruhig auf der Autobahn."
+      },
+      {
+        "author": "nora.m3",
+        "days": 1,
+        "body": "Ich bin von Sportfedern auf Gewinde gewechselt und fahre die Dämpfung auf der zweitweichsten Stufe. Im Alltag völlig okay."
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "lea.gti",
+    "category": "bremsen",
+    "title": "Bremsen quietschen nach Belagwechsel – normal?",
+    "days": 3,
+    "tags": [
+      "bremsen",
+      "quietschen"
+    ],
+    "vehicle": "lea-gti7",
+    "photos": [
+      "generic-wheels-01.jpg"
+    ],
+    "body": "Seit dem Wechsel auf neue Beläge vorne quietscht es beim leichten Bremsen kurz vor dem Stillstand. Scheiben sind neu. Muss das erst eingebremst werden oder habe ich beim Einbau etwas vergessen?",
+    "replies": [
+      {
+        "author": "laura.golf2",
+        "days": 3,
+        "helpful": 5,
+        "body": "Hast du die Belagrückseiten mit Anti-Quietsch-Paste behandelt und die Führungen gereinigt? Das war bei mir die Ursache. Und die ersten 200 km sanft einbremsen."
+      },
+      {
+        "author": "nele.scirocco",
+        "days": 2,
+        "body": "Manche Sportbeläge sind einfach lauter. Steht meistens im Datenblatt."
+      },
+      {
+        "author": "lea.gti",
+        "days": 2,
+        "body": "Paste fehlte tatsächlich. Nachgeholt, jetzt ist Ruhe. Danke!"
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "hannah.mx5",
+    "category": "pflege-detailing",
+    "title": "Welche Versiegelung hält im Winter am längsten?",
+    "days": 4,
+    "tags": [
+      "versiegelung",
+      "winter"
+    ],
+    "photos": [
+      "mazda-mx5-01.jpg"
+    ],
+    "body": "Mein MX-5 steht zwar in der Garage, wird im Winter aber trotzdem gefahren. Was hält bei euch über die Salzsaison: Wachs, Keramik oder Sprühversiegelung?",
+    "replies": [
+      {
+        "author": "kathi.rx8",
+        "days": 4,
+        "helpful": 3,
+        "body": "Keramik hält bei mir eine ganze Saison, aber die Vorarbeit (Reinigen, Kneten, Polieren) ist der eigentliche Aufwand."
+      },
+      {
+        "author": "selin.yaris",
+        "days": 3,
+        "body": "Ich mache im Herbst eine Sprühversiegelung und frische sie alle sechs Wochen auf. Günstig und schnell."
+      }
+    ]
+  },
+  {
+    "author": "timo.rs",
+    "category": "kaufberatung",
+    "title": "Gebrauchter Audi RS3 8V – worauf beim Kauf achten?",
+    "days": 5,
+    "tags": [
+      "rs3",
+      "gebrauchtwagen"
+    ],
+    "photos": [
+      "audi-rs3-8v-02.jpg"
+    ],
+    "body": "Ich schaue mir am Wochenende einen RS3 8V mit 80.000 km an. Was sollte ich mir genau ansehen und welche Unterlagen sollte der Verkäufer haben?",
+    "replies": [
+      {
+        "author": "sophie.quattro",
+        "days": 5,
+        "helpful": 6,
+        "body": "Scheckheft mit allen Getriebeölwechseln der Haldex und des DSG. Probefahrt kalt starten und auf Geräusche beim Anfahren achten. Bremsen und Reifen kosten bei dem Auto richtig Geld, also Zustand einpreisen."
+      },
+      {
+        "author": "philipp.rs4",
+        "days": 4,
+        "helpful": 2,
+        "body": "Lass ihn vorher in einer Werkstatt deines Vertrauens durchsehen. Die 150 € sind gut investiert.",
+        "children": [
+          {
+            "author": "timo.rs",
+            "body": "Guter Punkt, mache ich so."
+          }
+        ]
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "lars.skyline",
+    "category": "marke-nissan",
+    "title": "R34 Ersatzteile: wo bestellt ihr in Deutschland?",
+    "days": 6,
+    "tags": [
+      "r34",
+      "teile"
+    ],
+    "vehicle": "lars-r34",
+    "photos": [
+      "cover-workshop-04.jpg"
+    ],
+    "body": "Für meinen Skyline suche ich verlässliche Quellen für Originalteile. Bestellt ihr direkt in Japan oder habt ihr Händler in Deutschland, mit denen ihr gute Erfahrungen gemacht habt?",
+    "replies": [
+      {
+        "author": "jan.s15",
+        "days": 6,
+        "helpful": 3,
+        "body": "Ich bestelle über einen Importeur, der die Teile sammelt und alle zwei Monate verschifft. Dauert, aber Zoll und Papiere sind dann sauber."
+      },
+      {
+        "author": "luca.r35",
+        "days": 5,
+        "body": "Für Verschleißteile lohnt sich auch ein Blick in Foren für den Stagea, viele Teile sind identisch."
+      }
+    ]
+  },
+  {
+    "author": "emma.typer",
+    "category": "marke-honda",
+    "title": "Civic Type R FK8: Ölwechselintervall auf der Rennstrecke kürzen?",
+    "days": 7,
+    "tags": [
+      "fk8",
+      "oel"
+    ],
+    "vehicle": "emma-fk8",
+    "photos": [
+      "generic-engine-02.jpg"
+    ],
+    "body": "Ich nehme an zwei Trackdays im Jahr teil. Haltet ihr euch an das Serviceintervall oder wechselt ihr das Öl danach zusätzlich?",
+    "replies": [
+      {
+        "author": "sarah.fk8",
+        "days": 7,
+        "helpful": 4,
+        "body": "Nach jedem Trackday wechseln. Das Öl ist danach deutlich dünner und kostet weniger als jeder Folgeschaden."
+      },
+      {
+        "author": "johanna.civic",
+        "days": 6,
+        "body": "Ich lasse zusätzlich eine Ölanalyse machen. So siehst du schwarz auf weiß, ob dein Intervall passt."
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "mia.s2k",
+    "category": "motor",
+    "title": "S2000: Ventilspiel selbst einstellen – lohnt sich das?",
+    "days": 8,
+    "tags": [
+      "s2000",
+      "ventilspiel"
+    ],
+    "vehicle": "mia-s2k",
+    "photos": [
+      "generic-engine-01.jpg"
+    ],
+    "body": "Die Werkstatt will für das Einstellen des Ventilspiels einiges an Arbeitszeit berechnen. Hat das schon jemand selbst gemacht und kann sagen, wie viel Werkzeug und Zeit man braucht?",
+    "replies": [
+      {
+        "author": "clara.ae86",
+        "days": 8,
+        "helpful": 3,
+        "body": "Mit Fühlerlehre, Drehmomentschlüssel und einer neuen Ventildeckeldichtung kommst du hin. Plan einen ganzen Nachmittag ein und arbeite nur bei kaltem Motor."
+      },
+      {
+        "author": "mia.s2k",
+        "days": 6,
+        "body": "Hat geklappt, zwei Ventile waren leicht außerhalb. Danke für die Tipps!"
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "david.supra",
+    "category": "raeder-reifen",
+    "title": "Sommerreifen für Supra A90: eure Erfahrungen",
+    "days": 9,
+    "tags": [
+      "reifen",
+      "supra"
+    ],
+    "vehicle": "david-a90",
+    "body": "Die ersten Reifen sind runter. Was fahrt ihr auf der A90 im Sommer und wie sind sie bei Nässe?",
+    "replies": [
+      {
+        "author": "felix.gt3",
+        "days": 9,
+        "helpful": 2,
+        "body": "Ich achte vor allem auf das EU-Label für Nasshaftung. Bei Regen auf der Autobahn ist das für mich wichtiger als jeder Trockenwert."
+      },
+      {
+        "author": "maxi.g82",
+        "days": 8,
+        "body": "Bei Mischbereifung unbedingt auf die richtige Kennung achten und den Reifendruck nach dem Wechsel neu anlernen."
+      }
+    ]
+  },
+  {
+    "author": "ben.m2",
+    "category": "treffen-regionen",
+    "title": "Wer kommt mit zum Saisonabschluss in Berlin?",
+    "days": 3,
+    "tags": [
+      "berlin",
+      "treffen"
+    ],
+    "body": "Ich würde gern mit ein paar Leuten aus Berlin gemeinsam zum Saisonabschluss fahren. Treffpunkt wäre ein Parkplatz im Süden, ruhig und ohne Stress. Wer hat Lust?",
+    "replies": [
+      {
+        "author": "kathi.rx8",
+        "days": 3,
+        "body": "Ich komme aus Potsdam dazu, wenn das Wetter mitspielt."
+      },
+      {
+        "author": "ben.m2",
+        "days": 2,
+        "body": "Super, ich lege das Treffen auch unter Treffen an, dann sieht jeder den Ort."
+      }
+    ]
+  },
+  {
+    "author": "sophie.quattro",
+    "category": "marke-audi",
+    "title": "Quattro-Antrieb: Haldex-Service selbst machen?",
+    "days": 10,
+    "tags": [
+      "haldex",
+      "quattro"
+    ],
+    "vehicle": "sophie-ttrs",
+    "photos": [
+      "generic-wheels-04.jpg"
+    ],
+    "body": "Bei meinem Audi steht der Haldex-Service an. Hat jemand eine gute Anleitung oder lasst ihr das immer in der Werkstatt machen?",
+    "replies": [
+      {
+        "author": "alina.a45",
+        "days": 10,
+        "helpful": 2,
+        "body": "Filter und Öl sind machbar, aber du brauchst eine Hebebühne und das richtige Öl. Ich habe es einmal selbst gemacht und danach wieder abgegeben."
+      }
+    ]
+  },
+  {
+    "author": "kai.c63",
+    "category": "abgasanlage",
+    "title": "Abgasanlage nachrüsten: auf welche Unterlagen achten?",
+    "days": 11,
+    "tags": [
+      "abgasanlage",
+      "eintragung"
+    ],
+    "vehicle": "kai-c63",
+    "photos": [
+      "mercedes-w204-03.jpg"
+    ],
+    "body": "Ich möchte eine andere Endschalldämpferanlage verbauen. Welche Unterlagen sollte der Hersteller mitliefern, damit die Eintragung später nicht zum Problem wird?",
+    "replies": [
+      {
+        "author": "elias.amg",
+        "days": 11,
+        "helpful": 5,
+        "body": "Frag vor dem Kauf, ob es ein Teilegutachten oder eine ABE für genau dein Modell gibt, und kläre die Eintragung mit deiner Prüfstelle. Die wissen am besten, was sie brauchen."
+      },
+      {
+        "author": "kai.c63",
+        "days": 10,
+        "body": "Danke, ich rufe vorher bei der Prüfstelle an."
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "moritz.rx7",
+    "category": "marke-mazda",
+    "title": "RX-7 FD: Kühlung im Sommer verbessern",
+    "days": 12,
+    "tags": [
+      "rx7",
+      "kuehlung"
+    ],
+    "photos": [
+      "mazda-fd-07.jpg"
+    ],
+    "body": "Im Stau steigt die Temperatur bei meinem FD schnell an. Habt ihr Kühler, Lüfter oder Schläuche getauscht? Was hat am meisten gebracht?",
+    "replies": [
+      {
+        "author": "kathi.rx8",
+        "days": 12,
+        "helpful": 3,
+        "body": "Erst alle Schläuche und die Wasserpumpe prüfen. Danach ein größerer Alukühler mit gutem Lüfter, das war bei Bekannten die Lösung."
+      },
+      {
+        "author": "clara.ae86",
+        "days": 11,
+        "body": "Und die Luftführung vorne kontrollieren. Fehlende Dichtungen zwischen Stoßstange und Kühler machen viel aus."
+      }
+    ]
+  },
+  {
+    "author": "laura.golf2",
+    "category": "marke-volkswagen",
+    "title": "Golf 2 Rostvorsorge: Hohlraumversiegelung jetzt oder im Frühjahr?",
+    "days": 13,
+    "tags": [
+      "golf2",
+      "rost"
+    ],
+    "vehicle": "laura-gti2",
+    "photos": [
+      "vw-golf2-02.jpg"
+    ],
+    "body": "Mein Golf 2 ist erstaunlich rostfrei. Damit das so bleibt, will ich Hohlräume versiegeln. Macht man das besser vor dem Winter oder bei warmem Wetter?",
+    "replies": [
+      {
+        "author": "erik.corrado",
+        "days": 13,
+        "helpful": 4,
+        "body": "Bei Wärme, das Mittel kriecht dann besser in die Falze. Vorher gründlich trocknen lassen, sonst schließt du Feuchtigkeit ein."
+      },
+      {
+        "author": "nele.scirocco",
+        "days": 12,
+        "body": "Ich habe es in einer beheizten Halle machen lassen, das war die beste Entscheidung."
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "anna.964",
+    "category": "marke-porsche",
+    "title": "964: Klimaanlage auf neues Kältemittel umbauen?",
+    "days": 14,
+    "tags": [
+      "964",
+      "klima"
+    ],
+    "vehicle": "anna-964",
+    "photos": [
+      "generic-interior-01.jpg"
+    ],
+    "body": "Die Klima in meinem 964 funktioniert nicht mehr. Lohnt sich die Reparatur mit Umstellung, oder lasst ihr sie bei einem Klassiker einfach weg?",
+    "replies": [
+      {
+        "author": "florian.997",
+        "days": 14,
+        "body": "Ich habe umstellen lassen, die Kühlleistung ist etwas schwächer, aber im Sommer trotzdem viel angenehmer."
+      },
+      {
+        "author": "jana.718",
+        "days": 13,
+        "body": "Frag bei einer Werkstatt mit Klassikererfahrung nach, die kennen die typischen Undichtigkeiten."
+      }
+    ]
+  },
+  {
+    "author": "tim.sti",
+    "category": "marke-subaru",
+    "title": "STI: Kupplung rupft beim Anfahren",
+    "days": 15,
+    "tags": [
+      "sti",
+      "kupplung"
+    ],
+    "vehicle": "tim-gd",
+    "photos": [
+      "generic-interior-02.jpg"
+    ],
+    "body": "Seit ein paar Wochen rupft die Kupplung meines STI beim Anfahren am Berg. Hat jemand Erfahrungen, ob das eher Kupplung oder Motorlager sind?",
+    "replies": [
+      {
+        "author": "dominik.r32",
+        "days": 15,
+        "helpful": 3,
+        "body": "Bei mir waren es die Getriebelager. Lass beide prüfen, bevor du die Kupplung tauschst."
+      },
+      {
+        "author": "tim.sti",
+        "days": 13,
+        "body": "Es waren tatsächlich die Lager. Kupplung ist noch gut."
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "lina.rs6",
+    "category": "werkstaetten-teile",
+    "title": "Werkstatt für Audi in Wiesbaden gesucht",
+    "days": 16,
+    "tags": [
+      "werkstatt",
+      "wiesbaden"
+    ],
+    "photos": [
+      "cover-workshop-01.jpg"
+    ],
+    "body": "Ich suche eine freie Werkstatt im Raum Wiesbaden, die sich mit großen Audi-Motoren auskennt und auch mitgebrachte Teile verbaut. Habt ihr Empfehlungen?",
+    "replies": [
+      {
+        "author": "philipp.rs4",
+        "days": 16,
+        "body": "Schreib mir eine Nachricht, ich kenne zwei Betriebe in der Ecke. Ich will hier keine Werbung machen."
+      }
+    ]
+  },
+  {
+    "author": "niklas.z33",
+    "category": "elektronik",
+    "title": "Z33: Batterie entlädt sich über Nacht",
+    "days": 17,
+    "tags": [
+      "z33",
+      "ruhestrom"
+    ],
+    "vehicle": "niklas-z33",
+    "photos": [
+      "nissan-z33-02.jpg"
+    ],
+    "body": "Mein 350Z springt nach zwei Tagen Standzeit nicht mehr an. Neue Batterie hilft nur kurz. Wie findet ihr einen Ruhestromverbraucher?",
+    "replies": [
+      {
+        "author": "jan.s15",
+        "days": 17,
+        "helpful": 4,
+        "body": "Multimeter in Reihe zum Minuspol, warten bis alle Steuergeräte schlafen, dann eine Sicherung nach der anderen ziehen. Bei mir war es das nachgerüstete Radio."
+      },
+      {
+        "author": "niklas.z33",
+        "days": 15,
+        "body": "Gefunden: die Kofferraumbeleuchtung blieb an. Danke!"
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "johanna.civic",
+    "category": "off-topic",
+    "title": "Welche Auto-Podcasts hört ihr auf langen Fahrten?",
+    "days": 5,
+    "tags": [
+      "podcast"
+    ],
+    "body": "Für die nächste Urlaubsfahrt suche ich Podcasts rund um Autos, Technik oder Motorsportgeschichte. Gern auf Deutsch. Was könnt ihr empfehlen?",
+    "replies": [
+      {
+        "author": "erik.corrado",
+        "days": 5,
+        "body": "Ich höre gern Folgen über Firmengeschichten, zum Beispiel über die Entstehung bekannter Modelle."
+      },
+      {
+        "author": "marie.gr86",
+        "days": 4,
+        "body": "Ich hole mir oft Technikfolgen über Elektromobilität, auch als Verbrennerfahrerin spannend."
+      }
+    ]
+  },
+  {
+    "author": "marie.gr86",
+    "category": "marke-toyota",
+    "title": "GR86: Erfahrungen mit Domstrebe vorne?",
+    "days": 18,
+    "tags": [
+      "gr86",
+      "domstrebe"
+    ],
+    "vehicle": "marie-gr86",
+    "photos": [
+      "generic-engine-03.jpg"
+    ],
+    "body": "Bringt eine Domstrebe beim GR86 im Alltag spürbar etwas oder ist das eher Optik im Motorraum?",
+    "replies": [
+      {
+        "author": "clara.ae86",
+        "days": 18,
+        "helpful": 2,
+        "body": "Bei mir eher subtil. Ich würde zuerst in gute Reifen und eine Achsvermessung investieren."
+      }
+    ]
+  },
+  {
+    "author": "florian.997",
+    "category": "kaufberatung",
+    "title": "997 mit oder ohne Motorrevision kaufen?",
+    "days": 19,
+    "tags": [
+      "997",
+      "kauf"
+    ],
+    "body": "Ich habe zwei 997 im Blick: einer mit dokumentierter Motorrevision und etwas mehr Kilometern, einer ohne. Wie würdet ihr entscheiden?",
+    "replies": [
+      {
+        "author": "anna.964",
+        "days": 19,
+        "helpful": 3,
+        "body": "Ich würde den mit Dokumentation nehmen, wenn die Revision in einer Fachwerkstatt gemacht wurde. Lass dir die Rechnungen zeigen."
+      },
+      {
+        "author": "jana.718",
+        "days": 18,
+        "body": "Endoskopie der Zylinder vor dem Kauf ist bei beiden Pflicht."
+      }
+    ]
+  },
+  {
+    "author": "selin.yaris",
+    "category": "raeder-reifen",
+    "title": "Felgen lackieren lassen: Pulver oder Nasslack?",
+    "days": 20,
+    "tags": [
+      "felgen",
+      "lack"
+    ],
+    "photos": [
+      "generic-wheels-02.jpg"
+    ],
+    "body": "Meine Felgen haben Bordsteinschäden und ich will sie neu machen lassen. Was ist haltbarer und wie viel habt ihr ungefähr bezahlt?",
+    "replies": [
+      {
+        "author": "hannah.mx5",
+        "days": 20,
+        "helpful": 2,
+        "body": "Pulver ist robuster gegen Steinschläge. Achte darauf, dass der Betrieb die Felgen vorher prüft, nicht nur lackiert."
+      }
+    ]
+  },
+  {
+    "author": "dominik.r32",
+    "category": "marke-volkswagen",
+    "title": "R32: Steuerkette rasselt kurz beim Kaltstart",
+    "days": 21,
+    "tags": [
+      "r32",
+      "steuerkette"
+    ],
+    "body": "Beim Kaltstart rasselt es bei meinem R32 für etwa eine Sekunde. Danach ist Ruhe. Muss ich mir Sorgen machen?",
+    "replies": [
+      {
+        "author": "erik.corrado",
+        "days": 21,
+        "helpful": 3,
+        "body": "Lass es zeitnah ansehen. Kettenspanner und Gleitschienen sind bei dem Motor ein bekanntes Thema, früh entdeckt ist es günstiger."
+      },
+      {
+        "author": "nele.scirocco",
+        "days": 20,
+        "body": "Ein Video vom Kaltstart hilft der Werkstatt sehr bei der Diagnose."
+      }
+    ]
+  },
+  {
+    "author": "kathi.rx8",
+    "category": "treffen-regionen",
+    "title": "Kleine Ausfahrt im Havelland im Frühjahr?",
+    "days": 22,
+    "tags": [
+      "brandenburg",
+      "ausfahrt"
+    ],
+    "body": "Ich plane für das Frühjahr eine entspannte Ausfahrt durchs Havelland mit Kaffeestopp. Keine Raserei, nur schöne Straßen. Wer hätte Interesse?",
+    "replies": [
+      {
+        "author": "ben.m2",
+        "days": 22,
+        "body": "Bin dabei, gern mit Fotostopp am Wasser."
+      }
+    ]
+  },
+  {
+    "author": "alina.a45",
+    "category": "pflege-detailing",
+    "title": "Innenraum: Alcantara-Lenkrad reinigen",
+    "days": 23,
+    "tags": [
+      "innenraum",
+      "alcantara"
+    ],
+    "vehicle": "alina-a45s",
+    "photos": [
+      "generic-interior-03.jpg"
+    ],
+    "body": "Mein Alcantara-Lenkrad glänzt schon an den Griffstellen. Womit reinigt ihr es, ohne dass es kaputtgeht?",
+    "replies": [
+      {
+        "author": "sarah.fk8",
+        "days": 23,
+        "helpful": 4,
+        "body": "Spezieller Alcantara-Reiniger, weiche Bürste, wenig Feuchtigkeit und danach in Strichrichtung aufbürsten. Regelmäßig machen, dann bleibt es weich."
+      },
+      {
+        "author": "alina.a45",
+        "days": 22,
+        "body": "Sieht wieder fast neu aus, danke!"
+      }
+    ],
+    "solution": 0
+  },
+  {
+    "author": "maxi.g82",
+    "category": "werkstaetten-teile",
+    "title": "Teile vom Hersteller oder vom freien Handel?",
+    "days": 24,
+    "tags": [
+      "teile",
+      "qualitaet"
+    ],
+    "photos": [
+      "cover-workshop-03.jpg"
+    ],
+    "body": "Bei Verschleißteilen wie Bremsen und Filtern: kauft ihr Original vom Hersteller oder Markenteile im freien Handel? Woran erkennt ihr gute Qualität?",
+    "replies": [
+      {
+        "author": "fabian.e92",
+        "days": 24,
+        "helpful": 2,
+        "body": "Ich kaufe Markenteile von Erstausrüstern. Oft ist es exakt dasselbe Teil ohne Herstellerlogo."
+      },
+      {
+        "author": "robin.e30",
+        "days": 23,
+        "body": "Bei sicherheitsrelevanten Teilen spare ich nicht, bei Innenraumteilen schon eher."
+      }
+    ]
+  }
+]

@@ -1,0 +1,120 @@
+{
+    "nav": {
+        "title": "Sticker-Designs"
+    },
+    "designs": {
+        "title": "Sticker-Designs",
+        "intro": "Jede Version eines Sticker-Designs mit Vorlage, Größe und Stand. Geprüfte Designs mit aktivem Code gibt es als Druckdatei; jeder Download landet im Audit-Log.",
+        "caption": "Sticker-Designs, zuletzt bestellte zuerst",
+        "empty_title": "Noch keine Sticker-Designs",
+        "empty_body": "Ein Design entsteht, sobald ein Mitglied in der App seinen Sticker gestaltet.",
+        "empty_action": "Sticker-Register öffnen",
+        "columns": {
+            "reference": "Design-ID",
+            "state": "Stand",
+            "template": "Vorlage",
+            "colourway": "Druck",
+            "material": "Folie",
+            "scan_test": "Scan-Test",
+            "code": "Code",
+            "vehicle": "Fahrzeug",
+            "owner": "Besitzer",
+            "validated_at": "Geprüft",
+            "order_requested_at": "Bestellung",
+            "created_at": "Erstellt",
+            "downloads": "Druckdateien"
+        },
+        "presets": {
+            "ordered": "Bestellung geöffnet",
+            "validated": "Geprüft",
+            "drafts": "Entwürfe"
+        },
+        "filters": {
+            "label": "Sticker-Designs filtern",
+            "q": "Suche",
+            "q_placeholder": "SD…, Code oder @username",
+            "state": "Stand",
+            "template": "Vorlage",
+            "any": "Alle",
+            "apply": "Anwenden"
+        },
+        "state": {
+            "draft": "Entwurf",
+            "validated": "Geprüft",
+            "ordered": "Bestellung geöffnet"
+        },
+        "scan_test": {
+            "passed": "Bestanden",
+            "failed": "Fehlgeschlagen",
+            "not_applicable": "Ohne QR-Code",
+            "none": "Noch nicht"
+        },
+        "templates": {
+            "classic": "Classic",
+            "minimal": "Minimal",
+            "banner": "Banner",
+            "plate": "Plate",
+            "vertical_jdm": "Vertical JDM",
+            "round": "Round"
+        },
+        "colourways": {
+            "white": "Weißer Druck",
+            "black": "Schwarzer Druck",
+            "white_red": "Weiß mit Signalrot"
+        },
+        "materials": {
+            "transparent": "Transparente Folie",
+            "white_vinyl": "Weiße Folie"
+        },
+        "size": ":size · :width × :height mm",
+        "mm": ":value mm",
+        "mirrored": "Gespiegelt",
+        "mirrored_hint": "Gespiegelt gedruckt, für die Innenseite der Scheibe",
+        "no_qr": "Ohne QR-Code",
+        "code_inactive": "Nicht mehr aktiv",
+        "vehicle_deleted": "Fahrzeug gelöscht",
+        "no_vehicle": "Kein Fahrzeug",
+        "version": "v:version",
+        "download": {
+            "pdf": "PDF",
+            "svg": "SVG",
+            "pdf_label": "Druck-PDF von :reference laden",
+            "svg_label": "Druck-SVG von :reference laden",
+            "pdf_long": "Druck-PDF laden",
+            "svg_long": "Druck-SVG laden",
+            "audited": "Jeder Download wird mit deinem Namen im Audit-Log festgehalten.",
+            "not_validated": "Erst nach bestandenem Scan-Test",
+            "code_inactive": "Code nicht mehr aktiv: nicht drucken",
+            "none": "–"
+        },
+        "detail": {
+            "title": "Design :reference",
+            "description": "Version :version · :template",
+            "open": "Design :reference öffnen",
+            "sketch": "Maße mit Beschnittkante",
+            "sketch_note": "Maßskizze, keine Druckvorschau. Das Motiv steht in der Druckdatei.",
+            "sketch_unavailable": "Maßskizze, keine Druckvorschau. Druckdateien gibt es erst nach bestandenem Scan-Test.",
+            "facts": "Angaben",
+            "state": "Stand",
+            "scan_test": "Scan-Test",
+            "template": "Vorlage",
+            "size": "Größe",
+            "colourway": "Druck",
+            "material": "Folie",
+            "mirrored": "Gespiegelt",
+            "qr": "QR-Code",
+            "code": "Code",
+            "vehicle": "Fahrzeug",
+            "owner": "Besitzer",
+            "created_at": "Erstellt",
+            "validated_at": "Geprüft",
+            "order_requested_at": "Bestelllink geöffnet",
+            "order_note": "Ob die Bestellung bei Shopify abgeschlossen wurde, sehen wir hier nicht.",
+            "yes": "Ja",
+            "no": "Nein",
+            "never": "–",
+            "missing": "Dieses Design steht nicht auf der aktuellen Seite. Such es über die Design-ID.",
+            "open_hint": "Design öffnen"
+        }
+    }
+}

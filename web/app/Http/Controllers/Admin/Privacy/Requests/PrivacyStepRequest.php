@@ -32,7 +32,7 @@ class PrivacyStepRequest extends FormRequest
             'template' => ['nullable', Rule::enum(PrivacyReplyTemplate::class)],
             'locale' => ['nullable', Rule::in(config('speedclub.locales'))],
             'detail' => ['nullable', 'string', 'max:2000'],
-            'reason' => ['nullable', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
             'note' => ['nullable', 'string', 'max:5000'],
             'evidence' => ['nullable', 'file'],
         ];

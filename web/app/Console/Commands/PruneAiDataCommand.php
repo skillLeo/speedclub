@@ -4,7 +4,10 @@ namespace App\Console\Commands;
 
 use App\Enums\TranslationSource;
 use App\Models\AiCall;
+use App\Models\AiSpecSuggestion;
+use App\Models\AiTextNormalisation;
 use App\Models\AiTranslation;
+use App\Services\Ai\ForumSummaries;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -15,7 +18,7 @@ use Illuminate\Database\Query\Builder;
  * message is gone (a deleted message's translation must not outlive it). Batches of 5,000 per table and run.
  */
 #[Signature('ai:prune')]
-#[Description('Delete AI call log rows after 90 days and expired or orphaned cached translations')]
+#[Description('Delete AI call log rows after 90 days, expired or orphaned cached translations, expired AI caches and stale forum summaries')]
 class PruneAiDataCommand extends Command
 {
     private const BATCH = 5000;
@@ -33,7 +36,12 @@ class PruneAiDataCommand extends Command
         $ids = $expired->merge($orphans)->unique()->values()->all();
         $deletedTranslations = $ids === [] ? 0 : AiTranslation::query()->whereKey($ids)->delete();
 
-        $this->info("Deleted {$deletedCalls} AI call rows and {$deletedTranslations} cached translations.");
+        // M5.9 (m5.9-contract §7): expired shared caches (no member data), and forum summaries that must not be shown any more.
+        $specs = AiSpecSuggestion::query()->where('expires_at', '<=', now())->limit(self::BATCH)->delete();
+        $normalisations = AiTextNormalisation::query()->where('expires_at', '<=', now())->limit(self::BATCH)->delete();
+        $summaries = app(ForumSummaries::class)->sweep();
+
+        $this->info("Deleted {$deletedCalls} AI call rows, {$deletedTranslations} cached translations, {$specs} spec suggestions, {$normalisations} part normalisations and {$summaries} forum summaries.");
 
         return self::SUCCESS;
     }

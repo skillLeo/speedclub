@@ -1,5 +1,5 @@
 {{-- WEB-08. $html is the HtmlString of App\Support\SafeMarkdown, the only thing {{ }} prints as markup here. A short text needs no table of contents, so $toc is empty then. --}}
-<x-public.layout :title="$title.' · SPEED CLUB'" :description="__('public.legal.description', ['title' => $title])" :canonical="$canonical">
+<x-public.layout :title="$title.' · Speedclub'" :description="__('public.legal.description', ['title' => $title])" :canonical="$canonical">
     <x-public.top-bar />
     <main id="main" class="sc-legal flex-1" data-testid="WEB-08.root" data-document="{{ $key }}">
         <header class="sc-legal-head">

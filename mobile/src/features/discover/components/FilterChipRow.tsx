@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Chip } from '@/ui';
+import { Chip } from '@/ui/Chip';
 
 export type ActiveChip = {
   id: string;

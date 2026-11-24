@@ -11,6 +11,7 @@ use App\Http\Middleware\EnsureStaffTwoFactor;
 use App\Http\Middleware\LimitCsrfCookieRequests;
 use App\Http\Middleware\LimitStaffStepInput;
 use App\Http\RateLimits;
+use App\Http\Responses\Staff\StaffAuthChanged;
 use App\Http\Responses\Staff\StaffPasswordResetFailed;
 use App\Http\Responses\Staff\StaffResetLinkRequested;
 use App\Models\Staff;
@@ -49,7 +50,10 @@ use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
 use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Contracts\FailedPasswordResetResponse;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\LogoutResponse;
 use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
+use Laravel\Fortify\Contracts\TwoFactorLoginResponse;
 use Laravel\Fortify\Events\RecoveryCodesGenerated;
 use Laravel\Fortify\Events\TwoFactorAuthenticationConfirmed;
 use Laravel\Fortify\Events\TwoFactorAuthenticationDisabled;
@@ -83,6 +87,10 @@ class FortifyServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Runs after Fortify's own provider, so these replace its bindings. The controllers pass the broker status in.
+        // A change of the signed-in state reloads the page fully, so the admin's route list matches it (StaffAuthChanged).
+        $this->app->bind(LoginResponse::class, StaffAuthChanged::class);
+        $this->app->bind(TwoFactorLoginResponse::class, fn (): StaffAuthChanged => new StaffAuthChanged(twoFactor: true));
+        $this->app->bind(LogoutResponse::class, StaffAuthChanged::class);
         $this->app->bind(SuccessfulPasswordResetLinkRequestResponse::class, StaffResetLinkRequested::class);
         $this->app->bind(FailedPasswordResetLinkRequestResponse::class, StaffResetLinkRequested::class);
         $this->app->bind(FailedPasswordResetResponse::class, StaffPasswordResetFailed::class);

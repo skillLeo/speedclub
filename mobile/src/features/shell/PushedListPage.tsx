@@ -6,7 +6,11 @@ import type { Edge } from 'react-native-safe-area-context';
 import { useOnline } from '@/state/online';
 import { createStyles, layout, space, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import { Hairline, Header, OfflineBanner, Screen, useCollapsingHeader } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { Header } from '@/ui/Header';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Screen } from '@/ui/Screen';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { useTabScrollToTop } from './retap';
 import { useTabBarPadding } from './tabBarLayout';

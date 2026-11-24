@@ -6,6 +6,8 @@ use App\Enums\PowerSource;
 use App\Enums\PowerUnit;
 use App\Models\Vehicle;
 use App\Models\VehicleSpec;
+use App\Services\Ai\SpecProvenance;
+use App\Services\BuildScore\BuildScores;
 use App\Services\Garage\BuildUpdates;
 use App\Services\PublicPages\OgImages;
 use App\Services\Search\VehicleSearchProjector;
@@ -60,6 +62,9 @@ class UpdateVehicleSpecs
                 is_string($unit) ? PowerUnit::from($unit) : null,
                 is_string($source) ? PowerSource::from($source) : null,
             );
+            // M5.9: which values still stand as taken over from "Daten übernehmen?" (SpecProvenance).
+            $suggestion = $attributes['ai_suggestion'] ?? null;
+            $specs->setAttribute('ai_fields', app(SpecProvenance::class)->fields($specs, is_array($suggestion) ? $suggestion : null));
             $specs->save();
 
             if (! $specs->wasRecentlyCreated && ! $specs->wasChanged()) {
@@ -68,6 +73,8 @@ class UpdateVehicleSpecs
 
             $recorded = $this->updates->specsChanged($vehicle, $before, $this->snapshot($specs));
             $this->search->changed($vehicle);
+            // M5.9c: which key specs are filled (never their values).
+            app(BuildScores::class)->touch($vehicle->id);
             $this->og->queue($vehicle);
 
             return $recorded;

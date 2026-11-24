@@ -10,6 +10,7 @@ use App\Models\Modification;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Media\MediaService;
+use App\Services\Media\PlateBlurChoice;
 use App\Services\Search\VehicleSearchProjector;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -30,11 +31,11 @@ class UploadModificationMedia
     /**
      * @param  array{alt?: string|null, focal_x?: float|null, focal_y?: float|null, category?: string|null}  $attributes  validated
      */
-    public function handle(User $user, Modification $mod, UploadedFile $file, array $attributes): Media
+    public function handle(User $user, Modification $mod, UploadedFile $file, array $attributes, ?PlateBlurChoice $plateBlur = null): Media
     {
         $bytes = $this->media->inspectUpload($file);
 
-        $reserved = DB::transaction(function () use ($user, $mod, $attributes, $bytes): Media {
+        $reserved = DB::transaction(function () use ($user, $mod, $attributes, $bytes, $plateBlur): Media {
             User::query()->whereKey($user->id)->lockForUpdate()->value('id');
             Vehicle::query()->whereKey($mod->vehicle_id)->lockForUpdate()->firstOrFail();
             $locked = Modification::query()->whereKey($mod->getKey())->lockForUpdate()->firstOrFail();
@@ -46,7 +47,7 @@ class UploadModificationMedia
 
             $sort = $locked->media()->max('sort');
 
-            return $this->media->reserve($user, $locked, [...$attributes, 'sort' => is_numeric($sort) ? (int) $sort + 1 : 0], strlen($bytes));
+            return $this->media->reserve($user, $locked, [...$attributes, 'sort' => is_numeric($sort) ? (int) $sort + 1 : 0], strlen($bytes), plateBlur: $plateBlur);
         });
 
         $media = $this->media->processOrQueue($reserved, $bytes);

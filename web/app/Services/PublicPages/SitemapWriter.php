@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppConfig\FeatureFlags;
 use App\Services\AppConfig\LegalDocuments;
+use App\Services\Dex\GhostMode;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -193,6 +194,8 @@ class SitemapWriter
             ->where('visibility', Visibility::Public)
             // Sample pages are noindex (09 §8.19), so never in the sitemap, whatever editorial_samples says.
             ->where('is_sample', false)
+            // M5.9b: a ghost car is never in the sitemap.
+            ->where(fn ($query) => GhostMode::constrain($query))
             ->whereHas('owner', fn ($owner) => $owner->where('indexable', true)->where('is_sample', false))
             ->with(['owner', 'make', 'vehicleModel', 'generation'])
             ->orderByDesc('updated_at')

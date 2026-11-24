@@ -49,6 +49,8 @@
   --sc-color-avatar-inner-border: rgba(255,255,255,0.08);
   --sc-color-skeleton-base: #1C1C1F;
   --sc-color-skeleton-highlight: #242428;
+  --sc-color-skeleton-raised: #2C2C31;
+  --sc-color-skeleton-raised-highlight: #35353A;
   --sc-color-tab-bar-background: rgba(20,20,22,0.92);
   --sc-color-on-photo-primary: #FFFFFF;
   --sc-color-on-photo-secondary: rgba(255,255,255,0.80);
@@ -109,6 +111,8 @@
   --sc-color-avatar-inner-border: rgba(255,255,255,0.08);
   --sc-color-skeleton-base: #17171A;
   --sc-color-skeleton-highlight: #202024;
+  --sc-color-skeleton-raised: #29292E;
+  --sc-color-skeleton-raised-highlight: #323237;
   --sc-color-tab-bar-background: rgba(14,14,16,0.92);
   --sc-color-on-photo-primary: #FFFFFF;
   --sc-color-on-photo-secondary: rgba(255,255,255,0.80);
@@ -169,6 +173,8 @@
   --sc-color-avatar-inner-border: rgba(0,0,0,0.06);
   --sc-color-skeleton-base: #EFEFEC;
   --sc-color-skeleton-highlight: #E4E4E0;
+  --sc-color-skeleton-raised: #E4E4E0;
+  --sc-color-skeleton-raised-highlight: #DADAD5;
   --sc-color-tab-bar-background: rgba(255,255,255,0.92);
   --sc-color-on-photo-primary: #FFFFFF;
   --sc-color-on-photo-secondary: rgba(255,255,255,0.80);
@@ -230,6 +236,8 @@
     --sc-color-avatar-inner-border: rgba(255,255,255,0.08);
     --sc-color-skeleton-base: #1C1C1F;
     --sc-color-skeleton-highlight: #242428;
+    --sc-color-skeleton-raised: #2C2C31;
+    --sc-color-skeleton-raised-highlight: #35353A;
     --sc-color-tab-bar-background: rgba(20,20,22,0.92);
     --sc-color-on-photo-primary: #FFFFFF;
     --sc-color-on-photo-secondary: rgba(255,255,255,0.80);
@@ -292,6 +300,8 @@
     --sc-color-avatar-inner-border: rgba(0,0,0,0.06);
     --sc-color-skeleton-base: #EFEFEC;
     --sc-color-skeleton-highlight: #E4E4E0;
+    --sc-color-skeleton-raised: #E4E4E0;
+    --sc-color-skeleton-raised-highlight: #DADAD5;
     --sc-color-tab-bar-background: rgba(255,255,255,0.92);
     --sc-color-on-photo-primary: #FFFFFF;
     --sc-color-on-photo-secondary: rgba(255,255,255,0.80);
@@ -395,6 +405,30 @@
   --sc-header: 44px;
   --sc-content-max: 1200px;
   --sc-full-bleed-max: 1320px;
+  --sc-aspect-vehicle-hero: 4 / 3;
+  --sc-aspect-vehicle-hero-height: 0.75;
+  --sc-aspect-card: 4 / 3;
+  --sc-aspect-card-height: 0.75;
+  --sc-aspect-editorial: 16 / 9;
+  --sc-aspect-editorial-height: 0.5625;
+  --sc-aspect-cover: 3 / 1;
+  --sc-aspect-cover-height: 0.3333;
+  --sc-aspect-avatar: 1 / 1;
+  --sc-aspect-avatar-height: 1;
+  --sc-aspect-story-card: 9 / 16;
+  --sc-aspect-story-card-height: 1.7778;
+  --sc-aspect-hero: 4 / 5;
+  --sc-aspect-hero-height: 1.25;
+  --sc-aspect-hero-web: 16 / 9;
+  --sc-aspect-hero-web-height: 0.5625;
+  --sc-aspect-hero-desktop: 21 / 9;
+  --sc-aspect-hero-desktop-height: 0.4286;
+  --sc-aspect-rail: 3 / 4;
+  --sc-aspect-rail-height: 1.3333;
+  --sc-aspect-grid: 1 / 1;
+  --sc-aspect-grid-height: 1;
+  --sc-aspect-grid-tall: 4 / 5;
+  --sc-aspect-grid-tall-height: 1.25;
   --sc-feed-column: 640px;
   --sc-rail: 72px;
   --sc-sidebar: 240px;
@@ -413,6 +447,9 @@
   --sc-type-hero-numeral-s-size: calc(40px * min(var(--sc-type-scale, 1), 1.3));
   --sc-type-hero-numeral-s-line: calc(40px * min(var(--sc-type-scale, 1), 1.3));
   --sc-type-hero-numeral-s-tracking: calc(0px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-hero-numeral-xs-size: calc(32px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-hero-numeral-xs-line: calc(32px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-hero-numeral-xs-tracking: calc(0px * min(var(--sc-type-scale, 1), 1.3));
   --sc-type-display-title-size: calc(30px * var(--sc-type-scale, 1));
   --sc-type-display-title-line: calc(34px * var(--sc-type-scale, 1));
   --sc-type-display-title-tracking: calc(-0.3px * var(--sc-type-scale, 1));
@@ -452,6 +489,12 @@
   --sc-type-label-badge-size: calc(11px * min(var(--sc-type-scale, 1), 1.3));
   --sc-type-label-badge-line: calc(14px * min(var(--sc-type-scale, 1), 1.3));
   --sc-type-label-badge-tracking: calc(0px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-label-control-size: calc(14px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-label-control-line: calc(20px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-label-control-tracking: calc(0px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-caption-chrome-size: calc(12px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-caption-chrome-line: calc(16px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-caption-chrome-tracking: calc(0.1px * min(var(--sc-type-scale, 1), 1.3));
   --sc-type-input-size: calc(16px * var(--sc-type-scale, 1));
   --sc-type-input-line: calc(24px * var(--sc-type-scale, 1));
   --sc-type-input-tracking: calc(0px * var(--sc-type-scale, 1));
@@ -494,6 +537,9 @@
   --sc-type-display-title-shrink-size: calc(24px * var(--sc-type-scale, 1));
   --sc-type-display-title-shrink-line: calc(28px * var(--sc-type-scale, 1));
   --sc-type-display-title-shrink-tracking: calc(-0.24px * var(--sc-type-scale, 1));
+  --sc-type-display-wordmark-shrink-size: calc(14px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-display-wordmark-shrink-line: calc(18px * min(var(--sc-type-scale, 1), 1.3));
+  --sc-type-display-wordmark-shrink-tracking: calc(-0.14px * min(var(--sc-type-scale, 1), 1.3));
 }
 @media (min-width: 430px) {
   :root { --sc-gutter: 24px; }
@@ -539,6 +585,7 @@
 /* Type styles (Blade + admin). Use these or the Tailwind text-* utilities — never ad-hoc sizes. */
 .t-hero-numeral { font-family: var(--sc-font-numeral); font-size: var(--sc-type-hero-numeral-size); line-height: var(--sc-type-hero-numeral-line); letter-spacing: var(--sc-type-hero-numeral-tracking); font-weight: 600; font-variant-numeric: tabular-nums;}
 .t-hero-numeral-s { font-family: var(--sc-font-numeral); font-size: var(--sc-type-hero-numeral-s-size); line-height: var(--sc-type-hero-numeral-s-line); letter-spacing: var(--sc-type-hero-numeral-s-tracking); font-weight: 600; font-variant-numeric: tabular-nums;}
+.t-hero-numeral-xs { font-family: var(--sc-font-numeral); font-size: var(--sc-type-hero-numeral-xs-size); line-height: var(--sc-type-hero-numeral-xs-line); letter-spacing: var(--sc-type-hero-numeral-xs-tracking); font-weight: 600; font-variant-numeric: tabular-nums;}
 .t-display-title { font-family: var(--sc-font-marque); font-size: var(--sc-type-display-title-size); line-height: var(--sc-type-display-title-line); letter-spacing: var(--sc-type-display-title-tracking); font-weight: 600; }
 .t-display-wordmark { font-family: var(--sc-font-marque); font-size: var(--sc-type-display-wordmark-size); line-height: var(--sc-type-display-wordmark-line); letter-spacing: var(--sc-type-display-wordmark-tracking); font-weight: 600; }
 .t-title-1 { font-family: var(--sc-font-ui-display); font-size: var(--sc-type-title-1-size); line-height: var(--sc-type-title-1-line); letter-spacing: var(--sc-type-title-1-tracking); font-weight: 600; }
@@ -552,6 +599,8 @@
 .t-label-caps { font-family: var(--sc-font-ui); font-size: var(--sc-type-label-caps-size); line-height: var(--sc-type-label-caps-line); letter-spacing: var(--sc-type-label-caps-tracking); font-weight: 600; text-transform: uppercase;}
 .t-label-unit { font-family: var(--sc-font-ui); font-size: var(--sc-type-label-unit-size); line-height: var(--sc-type-label-unit-line); letter-spacing: var(--sc-type-label-unit-tracking); font-weight: 600; }
 .t-label-badge { font-family: var(--sc-font-ui); font-size: var(--sc-type-label-badge-size); line-height: var(--sc-type-label-badge-line); letter-spacing: var(--sc-type-label-badge-tracking); font-weight: 600; }
+.t-label-control { font-family: var(--sc-font-ui); font-size: var(--sc-type-label-control-size); line-height: var(--sc-type-label-control-line); letter-spacing: var(--sc-type-label-control-tracking); font-weight: 500; }
+.t-caption-chrome { font-family: var(--sc-font-ui); font-size: var(--sc-type-caption-chrome-size); line-height: var(--sc-type-caption-chrome-line); letter-spacing: var(--sc-type-caption-chrome-tracking); font-weight: 500; }
 .t-numeric-inline { font-family: var(--sc-font-ui); font-weight: 500; font-variant-numeric: tabular-nums;}
 .t-input { font-family: var(--sc-font-ui); font-size: var(--sc-type-input-size); line-height: var(--sc-type-input-line); letter-spacing: var(--sc-type-input-tracking); font-weight: 400; }
 .t-web-tab { font-family: var(--sc-font-ui); font-size: var(--sc-type-web-tab-size); line-height: var(--sc-type-web-tab-line); letter-spacing: var(--sc-type-web-tab-tracking); font-weight: 500; }

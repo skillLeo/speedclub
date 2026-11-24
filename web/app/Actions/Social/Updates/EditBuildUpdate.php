@@ -7,6 +7,7 @@ use App\Enums\KeywordField;
 use App\Models\BuildUpdate;
 use App\Models\Media;
 use App\Models\User;
+use App\Services\BuildScore\BuildScores;
 use App\Services\Rules\ContentScreen;
 use App\Services\Social\BuildUpdateMentions;
 use Illuminate\Support\Facades\DB;
@@ -88,6 +89,8 @@ class EditBuildUpdate
         });
 
         $this->screen->flagAfterCommit($flags, $update);
+        // M5.9c: the pair, the date and the linked mods count for the Build Score.
+        app(BuildScores::class)->touch($update->vehicle_id);
 
         return $update->refresh();
     }

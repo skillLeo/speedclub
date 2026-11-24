@@ -236,7 +236,7 @@ return [
         'power_source' => 'source of the power figure',
         'power_unit' => 'power unit',
         'power_value' => 'power',
-        'show_owner_on_qr' => 'owner on the QR page',
+        'show_owner_on_qr' => 'owner on the sticker page',
         'torque_nm' => 'torque',
         'torque_source' => 'source of the torque figure',
         'wizard_step' => 'step',

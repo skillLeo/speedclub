@@ -28,19 +28,19 @@ export type BrandWordmarkProps = {
 };
 
 /** The product name: the accessible name of the logo, the same in every language. */
-const BRAND_NAME = 'SPEED CLUB';
+const BRAND_NAME = 'Speedclub';
 
 const FILES = {
   wide: {
     white: require('../../assets/brand/logo-wide-white.png') as number,
     black: require('../../assets/brand/logo-wide-black.png') as number,
     // Pixel size of the client's files.
-    ratio: 1200 / 359,
+    ratio: 696 / 184,
   },
   square: {
     white: require('../../assets/brand/logo-square-white.png') as number,
     black: require('../../assets/brand/logo-square-black.png') as number,
-    ratio: 900 / 591,
+    ratio: 900 / 463,
   },
 } as const;
 

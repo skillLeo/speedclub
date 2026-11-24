@@ -11,7 +11,9 @@ import { isWeb } from '@/lib/platform';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { Button, SkeletonText, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { FormNotice } from '../components/FormNotice';

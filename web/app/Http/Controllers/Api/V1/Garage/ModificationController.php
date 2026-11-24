@@ -143,12 +143,12 @@ class ModificationController extends Controller
         /** @var User $user */
         $user = $request->user();
         /** @var array{alt?: string|null, focal_x?: float|null, focal_y?: float|null, category?: string|null} $attributes */
-        $attributes = $request->safe()->except('file');
+        $attributes = $request->safe()->except(['file', ...StoreVehicleMediaRequest::PLATE_BLUR_FIELDS]);
 
         /** @var UploadedFile $file */
         $file = $request->file('file');
 
         /** @status 201 */
-        return new MediaResource($action->handle($user, $modification, $file, $attributes));
+        return new MediaResource($action->handle($user, $modification, $file, $attributes, $request->plateBlur()));
     }
 }

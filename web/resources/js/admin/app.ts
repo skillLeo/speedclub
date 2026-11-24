@@ -27,7 +27,7 @@ void createInertiaApp({
     defaults: {
         nonce,
     },
-    title: (title) => (title ? `${title} · SPEED CLUB Admin` : 'SPEED CLUB Admin'),
+    title: (title) => (title ? `${title} · Speedclub Admin` : 'Speedclub Admin'),
     resolve: async (name) => {
         const loader = pages[`./Pages/${name}.vue`];
         if (loader === undefined) throw new Error(`Unknown admin page ${name}`);

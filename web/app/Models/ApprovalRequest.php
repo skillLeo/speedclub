@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property array{title: string, subject_label: string|null, lines: list<array{label: string, before?: string|null, after?: string|null}>} $summary
  * @property string $reason
  * @property int $requested_by
+ * @property list<int>|null $eligible_at_request who could approve it when it was asked (OwnerOverride::ACTIONS only, SEC-P5-01)
  * @property ApprovalStatus $status
  * @property string|null $pending_key
  * @property int|null $decided_by
@@ -54,6 +55,7 @@ class ApprovalRequest extends Model
             'decided_at' => 'datetime',
             'expires_at' => 'datetime',
             'executed_at' => 'datetime',
+            'eligible_at_request' => 'array',
         ];
     }
 

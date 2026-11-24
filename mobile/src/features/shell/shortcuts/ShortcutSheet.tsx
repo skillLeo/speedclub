@@ -2,7 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Hairline, Sheet, Text } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
 
 import { SHORTCUT_ROWS } from './keys';
 

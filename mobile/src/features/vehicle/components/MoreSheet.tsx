@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
-import { ListRow, Sheet, type IconName } from '@/ui';
+import { type IconName } from '@/ui/icons/Icon';
+import { ListRow } from '@/ui/ListRow';
+import { Sheet } from '@/ui/Sheet';
 
 export type MoreAction = { key: string; icon: IconName; label: string; onPress: () => void };
 

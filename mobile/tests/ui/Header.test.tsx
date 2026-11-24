@@ -1,7 +1,7 @@
 import { act, fireEvent, renderHook, screen } from '@testing-library/react-native';
 import { useWindowDimensions } from 'react-native';
 
-import { hydrateThemePreference, size } from '@/theme';
+import { hydrateThemePreference, size, space } from '@/theme';
 import { Button } from '@/ui/Button';
 import { Header, HeaderLargeTitle } from '@/ui/Header';
 import { useCollapsingHeader, type CollapsingHeader } from '@/ui/useCollapsingHeader';
@@ -82,6 +82,26 @@ describe('Header', () => {
     expect(flat(bell.props.style).width).toBe(size.iconButton);
     await fireEvent.press(bell);
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('anchors a count pill on the glyph\'s top-right corner, ringed in the header ground, growing rightwards (DQ-M52-01)', async () => {
+    await renderUi(
+      <Header
+        variant="large"
+        title="Start"
+        testID="h"
+        actions={[{ icon: 'paper-plane-tilt', label: 'Nachrichten', onPress: jest.fn(), unread: { count: 12, max: 9, label: '9+ ungelesen' }, testID: 'h.messages' }]}
+      />,
+    );
+    const pill = screen.getByTestId('h.messages.badge', { includeHiddenElements: true });
+    expect(pill).toHaveTextContent('9+');
+    const ring = flat(pill.parent?.props.style);
+    // DQ-M52-01 round 2: on the glyph's corner, outside the paper plane's ink (4 px inside the glyph's right edge, 2 px above).
+    expect(ring.left).toBe(size.iconButton / 2 + space[8]);
+    expect(ring.top).toBe(-space[2]);
+    expect(ring.right).toBeUndefined();
+    expect(ring.backgroundColor).toBeDefined();
+    expect(screen.getByTestId('h.messages').props.accessibilityLabel).toBe('Nachrichten, 9+ ungelesen');
   });
 
   it.each(['large', 'compact'] as const)('%s: the hairline fades in over the first 8 of scroll, with content under the bar', async (variant) => {

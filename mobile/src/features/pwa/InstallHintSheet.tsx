@@ -2,7 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Button, Icon, Sheet, Text, type IconName } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
 
 import type { InstallVariant } from './installHint';
 
@@ -32,7 +35,7 @@ export type InstallHintSheetProps = {
 };
 
 /**
- * The install hint (09 §7.15): what SPEED CLUB is like from the home screen, and how to get it there. iOS names Safari's steps
+ * The install hint (09 §7.15): what Speedclub is like from the home screen, and how to get it there. iOS names Safari's steps
  * with the real share glyph; a Chromium browser offers its install dialog. One action each, the sheet's own close and drag
  * dismiss it; the Sheet primitive brings the reduced-motion crossfade.
  */

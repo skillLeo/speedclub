@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { StyleSheet, useWindowDimensions, View, type LayoutChangeEvent, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import type Animated from 'react-native-reanimated';
 
+import { BuildScoreSectionSkeleton } from '@/features/score/components/BuildScoreSection';
 import { isWeb } from '@/lib/platform';
 import {
   createStyles,
@@ -10,6 +11,7 @@ import {
   ThemeScope,
   type ThemeName,
   size,
+  space,
   typography,
   typographyDesktop,
   useBreakpoint,
@@ -17,13 +19,15 @@ import {
   type SizedTypeVariant,
   type TypeVariant,
 } from '@/theme';
-import { Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text, useDesktopType } from '@/ui/Text';
 import type { DisplayTitlePlacement } from '@/ui/displayTitleLayout';
-import { useDesktopType } from '@/ui/Text';
+import type { StripSize } from '@/ui/specStripLayout';
 import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
-import { DESKTOP_CARD_FLEX, DESKTOP_GALLERY_FLEX, heroBox, heroIdentityOverlap, heroIdentityWidth, profileSummaryWidth, scrimOverlapDataSet, summaryTitlePlacement, TABLET_COLUMN, useProfileLayout } from '../layout';
-import { keptSubline, PROFILE_TABS, SUBLINE_WHOLE_FONT_SCALE } from '../model';
+import { DESKTOP_CARD_FLEX, DESKTOP_GALLERY_FLEX, hasSideIndex, heroBox, heroIdentityOverlap, heroIdentityWidth, profileSummaryWidth, scrimOverlapDataSet, SIDE_INDEX_COLS, summaryTitlePlacement, TABLET_COLUMN, useProfileLayout } from '../layout';
+import { keptSubline, SUBLINE_WHOLE_FONT_SCALE } from '../model';
+import { PROFILE_SECTIONS } from '../sections';
 import {
   BLUEPRINT_EYEBROW_EM,
   BLUEPRINT_SUBLINE,
@@ -49,7 +53,8 @@ const useStyles = createStyles((t) => ({
   stage: { alignSelf: 'center', backgroundColor: t.color.media.ground, maxWidth: layoutTokens.fullBleedMax, overflow: 'hidden', width: '100%' },
   stageIdentity: { paddingBottom: t.space[24] },
   chip: { alignItems: 'center', flexDirection: 'row', gap: t.space[8], marginTop: t.space[8], minHeight: t.size.touchMin },
-  canvas: { paddingTop: t.space[24] },
+  // 16 under the actions before the section index, as VehicleProfile's summary row.
+  canvas: { paddingBottom: t.space[16], paddingTop: t.space[24] },
   actionRow: { gap: t.space[8], marginTop: t.space[16] },
   actionTriple: { flexDirection: 'row', gap: t.space[8] },
   actionItem: { flex: 1 },
@@ -68,9 +73,11 @@ const useStyles = createStyles((t) => ({
   toolbar: { marginTop: t.space[16] },
   // Measures the labels on one line each. Invisible, and out of the layout and the accessibility tree.
   measure: { alignItems: 'flex-start', left: 0, opacity: 0, pointerEvents: 'none', position: 'absolute', top: 0 },
-  tabs: { marginTop: t.space[24] },
-  // ContentTabs: 12 of padding around each label, so 24 between two; it scrolls where this one clips.
-  tabRow: { alignItems: 'center', flexDirection: 'row', gap: t.space[24], minHeight: t.size.contentTab, overflow: 'hidden' },
+  // M5.3 section index (SectionIndex): pills 32 in 44 targets, 8 apart, 4 above and below, then the hairline; it scrolls where this clips.
+  tabRow: { alignItems: 'center', flexDirection: 'row', gap: t.space[8], minHeight: t.size.chip, overflow: 'hidden', paddingVertical: t.space[4] },
+  sideIndex: { gap: t.space[2] },
+  sideLink: { justifyContent: 'center', minHeight: t.size.touchMin, paddingLeft: t.space[12] },
+  sectionTitle: { marginBottom: t.space[16] },
   hairline: { backgroundColor: t.color.border.subtle, height: isWeb ? t.size.border.control : StyleSheet.hairlineWidth },
   panel: { gap: t.space[12], paddingBottom: t.space[32], paddingTop: t.space[24] },
   tabletColumn: { alignSelf: 'center', maxWidth: TABLET_COLUMN, width: '100%' },
@@ -83,8 +90,14 @@ const useStyles = createStyles((t) => ({
     width: '100%',
   },
   desktopGallery: { flex: DESKTOP_GALLERY_FLEX, minWidth: 0 },
+  // From 1440 (hasSideIndex): 2 · 6 · 4 of the 12 columns.
+  desktopIndex: { flex: SIDE_INDEX_COLS, minWidth: 0 },
+  desktopGalleryNarrow: { flex: DESKTOP_GALLERY_FLEX - SIDE_INDEX_COLS, minWidth: 0 },
   desktopAside: { flex: DESKTOP_CARD_FLEX, minWidth: 0 },
   card: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, padding: t.space[24] },
+  cardHead: { gap: t.space[8], marginBottom: t.space[16] },
+  // R6-3: the Build Score block under the strip and the actions, at DesktopCard's gap of 16.
+  cardScore: { marginTop: t.space[16] },
 }));
 
 /** FS-3's title or sub-line, line by line as the page breaks it (DQ-178). */
@@ -227,9 +240,18 @@ function IdentityBars({ routeId, width, fontScale, known, titlePlacement }: Pick
 }
 
 /** Under the hero: the strip, then the visitor's action row (Folgen, then Speichern · Teilen · Nachricht); the owner's capsule floats. */
+/** The height of one of VehicleActions' tonal tiles: glyph 20, 2, the callout label, 8 above and below, the 1 border twice. */
+function actionTileHeight(fontScale: number): number {
+  const label = typography.callout.lineHeight * fontScale;
+  return Math.max(size.button.l, size.icon.m + space[2] + label + 2 * space[8] + 2 * size.border.control);
+}
+
 function CanvasBars({ routeId, width, fontScale, owner }: { routeId: string; width: number; fontScale: number; owner: boolean }) {
   const styles = useStyles();
-  const desktop = useDesktopType();
+  const desktopType = useDesktopType();
+  const { kind } = useBreakpoint();
+  // As SpecStrip (CF-2): a phone's strip takes the compact numeral too.
+  const desktop: StripSize = desktopType ? true : kind === 'phone' ? 'phone' : false;
   const hairline = isWeb ? size.border.control : StyleSheet.hairlineWidth;
   return (
     <View testID={`${routeId}.skeleton.canvas`}>
@@ -239,7 +261,8 @@ function CanvasBars({ routeId, width, fontScale, owner }: { routeId: string; wid
           <SkeletonBlock width="100%" height={size.button.m} corner="sm" />
           <View style={styles.actionTriple}>
             {[0, 1, 2].map((key) => (
-              <SkeletonBlock key={key} height={size.button.m} corner="sm" style={styles.actionItem} />
+              // DQ-M53-06: VehicleActions' tiles are glyph over label (20 + 2 + the callout line + 8 above and below + the border), not 44.
+              <SkeletonBlock key={key} height={actionTileHeight(fontScale)} corner="sm" style={styles.actionItem} />
             ))}
           </View>
         </View>
@@ -248,17 +271,22 @@ function CanvasBars({ routeId, width, fontScale, owner }: { routeId: string; wid
   );
 }
 
-/** The content tabs: each label where ContentTabs sets it, 12 of padding on either side of it, then the hairline. */
+/** The section index's chip row (SectionIndex): each label in its pill, 12 of padding on either side, then the hairline. */
 function TabsSkeleton({ gutter, labels }: { gutter: number; labels: readonly string[] }) {
   const styles = useStyles();
   const { fontScale } = useTheme();
-  // As ContentTabs: its labels are body.strong (15/22, 600).
-  const { widths, measure } = useLabelWidths(labels, 'bodyStrong');
+  // As SectionIndex: its labels are callout (14/20, 500).
+  const { widths, measure } = useLabelWidths(labels, 'callout');
   return (
-    <View style={styles.tabs}>
+    <View>
       <View style={[styles.tabRow, { paddingHorizontal: gutter }]}>
         {labels.map((label) => (
-          <SkeletonText key={label} variant="bodyStrong" width={widths[label] ?? estimatedLabelWidth(label, 's', fontScale)} />
+          <SkeletonBlock
+            key={label}
+            width={(widths[label] ?? estimatedLabelWidth(label, 's', fontScale)) + 2 * (size.buttonPaddingX.s + size.border.control)}
+            height={size.chip}
+            corner="full"
+          />
         ))}
         {measure}
       </View>
@@ -267,10 +295,31 @@ function TabsSkeleton({ gutter, labels }: { gutter: number; labels: readonly str
   );
 }
 
-function PanelSkeleton({ gutter }: { gutter: number }) {
+/** From 1440 the index is a vertical list beside the content: one line per section. */
+function SideIndexSkeleton({ labels }: { labels: readonly string[] }) {
+  const styles = useStyles();
+  return (
+    <View style={styles.sideIndex}>
+      {labels.map((label) => (
+        <View key={label} style={styles.sideLink}>
+          <SkeletonText variant="callout" width={estimatedLabelWidth(label, 's', 1)} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * Überblick's first lines. `scoreWidth`: the column the Build Score section is laid out in (phones and tablets); null on the desktop,
+ * where the gauge sits in the side card (R6-3).
+ */
+function PanelSkeleton({ gutter, scoreWidth }: { gutter: number; scoreWidth: number | null }) {
   const styles = useStyles();
   return (
     <View style={[styles.panel, { paddingHorizontal: gutter }]}>
+      {/* M5.3: Überblick's heading (title.2), then the Build Score section (M5.9c), the first thing that lands. */}
+      <SkeletonText variant="title2" width={size.railCard} style={styles.sectionTitle} />
+      {scoreWidth === null ? null : <BuildScoreSectionSkeleton width={scoreWidth} />}
       <SkeletonText variant="body" lines={ROW_COUNT} />
     </View>
   );
@@ -302,8 +351,11 @@ export function VehicleProfileSkeleton({ routeId = 'VEH-01', onBack, owner = fal
   const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const [width, setWidth] = useContentWidth(layout);
   const bar = useEstimatedOverlayHeight();
-  const tabLabels = PROFILE_TABS.map((value) => t(`tabs.${value}`));
-  const hero = heroBox(layout, width);
+  // The four sections every build has; Pläne and Galerie join when the page knows the build.
+  const tabLabels = PROFILE_SECTIONS.filter((value) => value !== 'plans' && value !== 'gallery').map((value) => t(`sections.${value}`));
+  const sideIndex = hasSideIndex(layout, width);
+  const { height: windowHeight } = useWindowDimensions();
+  const hero = heroBox(layout, width, windowHeight);
   const overlap = heroIdentityOverlap(hero.width, hero.ratio);
   const titlePlacement = summaryTitlePlacement(layout);
 
@@ -328,12 +380,28 @@ export function VehicleProfileSkeleton({ routeId = 'VEH-01', onBack, owner = fal
       <View>
         {stage}
         <View style={styles.desktopRow}>
-          <View style={styles.desktopGallery}>
-            <TabsSkeleton gutter={0} labels={tabLabels} />
-            <PanelSkeleton gutter={0} />
+          {sideIndex ? (
+            <View style={styles.desktopIndex}>
+              <SideIndexSkeleton labels={tabLabels} />
+            </View>
+          ) : null}
+          <View style={sideIndex ? styles.desktopGalleryNarrow : styles.desktopGallery}>
+            {sideIndex ? null : <TabsSkeleton gutter={0} labels={tabLabels} />}
+            <PanelSkeleton gutter={0} scoreWidth={null} />
           </View>
           <View style={styles.desktopAside}>
-            <View style={styles.card}>{canvas}</View>
+            {/* DQ-M53-02: the card names the car and its owner above the strip, as DesktopCard. */}
+            <View style={styles.card}>
+              <View style={styles.cardHead}>
+                <SkeletonText variant="displayWordmark" width="70%" />
+                <View style={styles.chip}>
+                  <SkeletonBlock width={size.avatar.sm} height={size.avatar.sm} corner="full" />
+                  <SkeletonText variant="callout" width="35%" />
+                </View>
+              </View>
+              {canvas}
+              <BuildScoreSectionSkeleton width={summaryWidth} style={styles.cardScore} />
+            </View>
           </View>
         </View>
       </View>
@@ -345,7 +413,7 @@ export function VehicleProfileSkeleton({ routeId = 'VEH-01', onBack, owner = fal
         <View style={[styles.tabletColumn, { paddingHorizontal: gutter }]}>
           <View style={styles.canvas}>{canvas}</View>
           <TabsSkeleton gutter={0} labels={tabLabels} />
-          <PanelSkeleton gutter={0} />
+          <PanelSkeleton gutter={0} scoreWidth={summaryWidth} />
         </View>
       </View>
     );
@@ -355,7 +423,7 @@ export function VehicleProfileSkeleton({ routeId = 'VEH-01', onBack, owner = fal
         {stage}
         <View style={[styles.canvas, { paddingHorizontal: gutter }]}>{canvas}</View>
         <TabsSkeleton gutter={gutter} labels={tabLabels} />
-        <PanelSkeleton gutter={gutter} />
+        <PanelSkeleton gutter={gutter} scoreWidth={summaryWidth} />
       </View>
     );
   }

@@ -15,7 +15,6 @@ use Database\Seeders\StaffSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
-use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -119,7 +118,7 @@ describe('ADM-42 permission matrix', function () {
         $this->patch('/admin/team/permissions', ['matrix' => ['support' => array_values(array_diff($support, ['support.macros']))]])->assertSessionHas('success', 'team.flash.permissions_saved');
         expect(Role::findByName('support', StaffSeeder::GUARD)->hasPermissionTo('support.macros'))->toBeFalse();
 
-        $this->patch('/admin/team/permissions', ['matrix' => ['analyst' => [...StaffSeeder::ROLES['analyst'], 'audit.export']]])->assertSessionHasErrors();
+        $this->patch('/admin/team/permissions', ['matrix' => ['analyst' => [...StaffSeeder::ROLES['analyst'], 'audit.export']], 'reason' => str_repeat('x', 1001)])->assertSessionHasErrors();
         $this->patch('/admin/team/permissions', ['matrix' => ['analyst' => [...StaffSeeder::ROLES['analyst'], 'audit.export']], 'reason' => adm36Reason()])->assertSessionHas('approval');
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -141,8 +140,6 @@ describe('SF-2: a custom role with a sensitive atom given to a person is four-ey
         adm36CustomRole('Freigabe-Team', ['staff.view', $atom]);
         $target = adm36Staff('support');
         $requester = adm36Staff('admin');
-
-        expect(fn () => app(ChangeStaffRoles::class)->handle($requester, $target, ['Freigabe-Team', 'support']))->toThrow(ValidationException::class);
 
         $outcome = app(ChangeStaffRoles::class)->handle($requester, $target, ['Freigabe-Team', 'support'], adm36Reason());
         expect($outcome->applied)->toBeFalse()
@@ -240,11 +237,10 @@ describe('SF-6: demoting an Admin and reactivating an Owner are four-eyes', func
             ->and(adm36Roles($target))->toBe(['support']);
     });
 
-    it('also makes an Admin stepping down four-eyes, and needs a reason', function () {
+    it('also makes an Admin stepping down four-eyes (ADR-540: without a reason)', function () {
         $admin = adm36Staff('admin');
 
-        expect(fn () => app(ChangeStaffRoles::class)->handle($admin, $admin, ['support']))->toThrow(ValidationException::class)
-            ->and(app(ChangeStaffRoles::class)->handle($admin, $admin, ['support'], adm36Reason())->approval?->action)->toBe('staff.role_elevation');
+        expect(app(ChangeStaffRoles::class)->handle($admin, $admin, ['support'])->approval?->action)->toBe('staff.role_elevation');
     });
 
     it('makes reactivating an Owner a staff.reactivate_owner request, asked and approved by Owners', function () {

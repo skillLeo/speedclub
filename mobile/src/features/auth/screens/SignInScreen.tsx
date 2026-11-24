@@ -8,7 +8,8 @@ import { View, type TextInput as RNTextInput } from 'react-native';
 import { ApiError } from '@/api/client';
 import { useFlag } from '@/api/queries/appConfig';
 import { useLogin } from '@/api/queries/auth';
-import { Button } from '@/ui';
+import { useSingleFlight } from '@/lib/useSingleFlight';
+import { Button } from '@/ui/Button';
 
 import { AuthScreen, FooterLink } from '../components/AuthScreen';
 import { EMAIL_INPUT, FormField } from '../components/FormField';
@@ -41,7 +42,7 @@ export function SignInScreen() {
   // Read during render: React Hook Form only tracks the parts of formState that render reads.
   const { isDirty, dirtyFields } = formState;
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     // M4.6 AUTH-14: a device that can hold a passkey gets the offer after this sign-in.
     await armPasskeyOffer(passkeysOn);
@@ -69,7 +70,7 @@ export function SignInScreen() {
         setNotice(t('common.serverError'));
       }
     }
-  });
+  }));
 
   const toSignUp = () => {
     handEmailTo('/sign-up', getValues('email'));

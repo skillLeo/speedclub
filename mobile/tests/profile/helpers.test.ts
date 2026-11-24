@@ -36,6 +36,7 @@ const vehicle = (overrides: Partial<VehicleCardData> = {}): VehicleCardData => (
   visibility: 'public',
   is_main: true,
   is_sample: false,
+  build_score: null,
   eyebrow: 'NISSAN',
   make: 'Nissan',
   model: 'Skyline GT-R',
@@ -158,8 +159,8 @@ describe('sharing the profile', () => {
 
   it('opens the native share sheet with title and link', async () => {
     const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
-    await expect(shareLink({ url: 'https://speedclub.de/u/lukas.sc', title: 'Lukas Scholz auf SPEED CLUB' })).resolves.toBe('shared');
-    expect(share).toHaveBeenCalledWith({ message: 'Lukas Scholz auf SPEED CLUB', url: 'https://speedclub.de/u/lukas.sc' });
+    await expect(shareLink({ url: 'https://speedclub.de/u/lukas.sc', title: 'Lukas Scholz auf Speedclub' })).resolves.toBe('shared');
+    expect(share).toHaveBeenCalledWith({ message: 'Lukas Scholz auf Speedclub', url: 'https://speedclub.de/u/lukas.sc' });
     share.mockResolvedValue({ action: Share.dismissedAction, activityType: undefined });
     await expect(shareLink({ url: 'https://speedclub.de/u/lukas.sc', title: 'x' })).resolves.toBe('dismissed');
     share.mockRejectedValue(new Error('no sheet'));

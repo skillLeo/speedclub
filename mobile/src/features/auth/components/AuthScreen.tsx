@@ -8,20 +8,15 @@ import type { Edge } from 'react-native-safe-area-context';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { createStyles, layout, size, space, useBreakpoint } from '@/theme';
-import {
-  Button,
-  DiscardGuardDialog,
-  Header,
-  OfflineBanner,
-  Screen,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  StickyCTABar,
-  Text,
-  useCollapsingHeader,
-  type StickyCTASecondary,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { DiscardGuardDialog } from '@/ui/DiscardGuardDialog';
+import { Header } from '@/ui/Header';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { StickyCTABar, type StickyCTASecondary } from '@/ui/StickyCTABar';
+import { Text } from '@/ui/Text';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 import { SlotText } from '@/ui/SlotText';
 import { PRODUCT_NAMES } from '@/ui/textBreaks';
 

@@ -24,7 +24,7 @@ class PermissionMatrixRequest extends FormRequest
             'matrix' => ['required', 'array', 'min:1', 'max:50'],
             'matrix.*' => ['present', 'array', 'max:100'],
             'matrix.*.*' => ['string', 'max:60'],
-            'reason' => ['nullable', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

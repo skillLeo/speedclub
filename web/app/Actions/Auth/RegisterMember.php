@@ -15,6 +15,7 @@ use App\Services\AppConfig\LegalDocuments;
 use App\Services\Audit\Audit;
 use App\Services\Auth\AuthMailer;
 use App\Services\Auth\VerificationCodes;
+use App\Services\Invites\InviteCodes;
 use App\Support\Auth\NextStep;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +37,7 @@ class RegisterMember
     ) {}
 
     /**
-     * @param  array{email: string, password: string, marketing_consent?: bool|null, locale?: string|null, ref?: string|null}  $input
+     * @param  array{email: string, password: string, marketing_consent?: bool|null, locale?: string|null, ref?: string|null, invite_code?: string|null}  $input
      */
     public function handle(array $input): NextStep
     {
@@ -63,7 +64,7 @@ class RegisterMember
     }
 
     /**
-     * @param  array{email: string, password: string, marketing_consent?: bool|null, locale?: string|null, ref?: string|null}  $input
+     * @param  array{email: string, password: string, marketing_consent?: bool|null, locale?: string|null, ref?: string|null, invite_code?: string|null}  $input
      */
     private function create(array $input, string $hash): void
     {
@@ -81,7 +82,8 @@ class RegisterMember
                 'marketing_consent_at' => ($input['marketing_consent'] ?? false) ? $now : null,
             ]);
             // ADR-216: where sign-up began, for "QR-Scans → Registrierungen". Counts only.
-            $user->forceFill(['signup_ref' => SignupRef::tryFrom($input['ref'] ?? '')?->value]);
+            // M5.9d: the invite code of the sign-up, redeemed when the account activates (MemberActivation); a known address ignores it.
+            $user->forceFill(['signup_ref' => SignupRef::tryFrom($input['ref'] ?? '')?->value, 'pending_invite_code' => InviteCodes::normalize($input['invite_code'] ?? null)]);
             $user->save();
 
             $code = $this->codes->issue($user, VerificationPurpose::EmailVerification);

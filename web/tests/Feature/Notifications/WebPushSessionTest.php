@@ -124,7 +124,7 @@ it('never sends to a browser whose session is gone, and deletes it on the way', 
     $live = wpsSubscription($this->member, 'live-session');
     $gone = wpsSubscription($this->member, 'gone-session');
 
-    $delivered = app(WebPush::class)->send(PushSubscription::query()->where('user_id', $this->member->id)->get(), 'SPEED CLUB', 'Neue Anmeldung', '/notifications');
+    $delivered = app(WebPush::class)->send(PushSubscription::query()->where('user_id', $this->member->id)->get(), 'Speedclub', 'Neue Anmeldung', '/notifications');
 
     expect($delivered)->toBe(1)
         ->and($calls)->toHaveCount(1)

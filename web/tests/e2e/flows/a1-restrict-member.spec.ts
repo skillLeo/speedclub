@@ -2,13 +2,13 @@
 // WebKit. Staff: admins (not Owners: ADR-237's maximum of 3) and a moderator of their own per browser project (support/backend.php STAFF_FIXTURES `a1-*`), each signed in
 // here over HTTP in a session of its own, because every one of them confirms its password (ADR-215) and the shared sessions must stay as
 // they are. The member is a test member of its own (createGarageMember, removed with what the decisions made about it), never a demo
-// member: ADM-09 → filter → ADM-10 → Einschränken (messaging, 7 days, template + edited facts, reason) → the password dialog → the audit
+// member: ADM-09 → filter → ADM-10 → Einschränken (messaging, 7 days, template + edited facts; ADR-540: no reason) → the password dialog → the audit
 // row on the Audit tab, the statement-of-reasons mail in the local mailbox, the restriction in the member's thread and on SAFE-01; then
 // Aufheben → the reversal on SAFE-01 and the composer back. The four-eyes half: the moderator asks for a suspension of the same member,
 // cannot approve it, and an admin approves it on ADM-43 in a second browser context. The admin pages run on the real clock: the end of a
 // measure is "now + 7 days" on the device, and the server refuses an end in its past.
 import type { BrowserContext } from '@playwright/test';
-import { admin, choose, confirmPassword, DESKTOP, lead, pageProps, realClock, serverCopy, staffContext, toast, xsrfOf } from '../support/admin-flow';
+import { admin, choose, confirmPassword, DESKTOP, holdFourEyes, lead, pageProps, realClock, serverCopy, staffContext, toast, xsrfOf } from '../support/admin-flow';
 import { apiLogin } from '../support/auth.mjs';
 import { deleteTestAccounts, runTestJobs, waitForMail } from '../support/backend.mjs';
 import { expect, test } from '../support/fixtures';
@@ -38,6 +38,16 @@ async function approvalsOf(context: BrowserContext, tab: 'mine' | 'for_me'): Pro
 test.describe.configure({ mode: 'serial' });
 
 test.describe('A1 restrict member', () => {
+  // ADR-540: four-eyes is off by default; this spec proves the engine with it switched on (support/admin-flow holdFourEyes).
+  let releaseFourEyes: (() => Promise<void>) | null = null;
+  test.beforeEach(async () => {
+    releaseFourEyes = await holdFourEyes(true);
+  });
+  test.afterEach(async () => {
+    await releaseFourEyes?.();
+    releaseFourEyes = null;
+  });
+
   let target: Member;
   let conversationId: string;
   let prefix: string;
@@ -83,7 +93,7 @@ test.describe('A1 restrict member', () => {
     await expect(id(page, 'ADM-10')).toBeVisible();
     await expect(id(page, 'ADM-10.status')).toHaveText(admin('members', 'status.active'));
 
-    // Einschränken: messaging, 7 days, the template, its facts edited, a reason.
+    // Einschränken: messaging, 7 days, the template, its facts edited (ADR-540: no internal reason).
     await id(page, 'ADM-10.action.restrict').click();
     const dialog = id(page, 'ADM-10.restrict');
     await expect(dialog).toBeVisible();
@@ -95,8 +105,6 @@ test.describe('A1 restrict member', () => {
     await expect(id(page, 'ADM-10.restrict.statement.ground')).toHaveValue(admin('decisions', 'templates.spam.ground'));
     const editedFacts = `${admin('decisions', 'templates.spam.facts_member')} Zuletzt am 7. November an elf Mitglieder mit demselben Shop-Link.`;
     await facts.fill(editedFacts);
-    const reason = `A1 ${browserName}: wiederholte Werbenachrichten, drei Meldungen per Support-Mail`;
-    await id(page, 'ADM-10.restrict.reason').fill(reason);
     await flowShot(page, testInfo, 'ADM-10-restrictDialog', { phase: 3 });
     await id(page, 'ADM-10.restrict.confirm').click();
     await confirmPassword(page);
@@ -106,7 +114,7 @@ test.describe('A1 restrict member', () => {
     await expect(id(page, 'ADM-10.restrictions')).toContainText(admin('decisions', 'measures.messaging'));
     await expect(id(page, 'ADM-10.lift.messaging')).toBeVisible();
 
-    // Audit tab: the decision with the staff member and the reason.
+    // Audit tab: the decision with the staff member (ADR-540: no reason; the newest row is this decision).
     // A tab that does not fit the strip sits in the last "Mehr" menu (DQ-525).
     const auditTab = page.getByRole('tab', { name: admin('members', 'tabs.audit'), exact: true });
     if ((await auditTab.count()) > 0) await auditTab.click();
@@ -115,8 +123,7 @@ test.describe('A1 restrict member', () => {
       await page.getByRole('menuitem', { name: admin('members', 'tabs.audit'), exact: true }).click();
     }
     await expect(id(page, 'ADM-10.audit')).toBeVisible();
-    const auditRow = id(page, 'ADM-10.audit').locator('tbody tr').filter({ hasText: reason });
-    await expect(auditRow).toHaveCount(1);
+    const auditRow = id(page, 'ADM-10.audit').locator('tbody tr').first();
     await expect(auditRow).toContainText(owner.name);
 
     // The mail: an own-initiative decision with the facts as written and the full redress (Art. 17 DSA).
@@ -157,7 +164,6 @@ test.describe('A1 restrict member', () => {
       await expect(id(page, 'ADM-10.lift')).toBeVisible();
       const liftFacts = 'Der Shop-Link stammte aus einer Club-Aktion, die wir selbst angekündigt hatten. Die Einschränkung war nicht nötig.';
       await id(page, 'ADM-10.lift.facts').fill(liftFacts);
-      await id(page, 'ADM-10.lift.reason').fill(`A1 ${browserName}: Rückmeldung des Mitglieds geprüft, Aktion war freigegeben`);
       await id(page, 'ADM-10.lift.confirm').click();
       await expect(toast(page, admin('members', 'flash.lifted'))).toBeVisible();
       await expect(id(page, 'ADM-10.status')).toHaveText(admin('members', 'status.active'));
@@ -204,8 +210,6 @@ test.describe('A1 restrict member', () => {
     await choose(page, dialog, admin('decisions', 'template'), admin('decisions', 'templates.harassment.label'));
     const facts = `${admin('decisions', 'templates.harassment.facts_member')} Betroffen waren zwei Mitglieder aus dem Club Dortmund.`;
     await id(page, 'ADM-10.restrict.statement.facts').fill(facts);
-    const reason = `A1 ${browserName}: Beleidigungen nach der Aufhebung, Sperre für eine Woche`;
-    await id(page, 'ADM-10.restrict.reason').fill(reason);
     await expect(id(page, 'ADM-10.restrict.confirm')).toHaveText(admin('decisions', 'submit_suspend'));
     await id(page, 'ADM-10.restrict.confirm').click();
     await confirmPassword(page);
@@ -241,7 +245,6 @@ test.describe('A1 restrict member', () => {
       const card = second.page.locator('[data-testid="ADM-43.request"][data-action="moderation.suspend"]:visible').filter({ hasText: `@${target.username}` });
       await expect(card).toHaveCount(1);
       await expect(card).toContainText(moderator.name);
-      await expect(card).toContainText(reason);
       await card.locator('[data-testid="ADM-43.approve"]').click();
       await expect(id(second.page, 'ADM-43.decide')).toBeVisible();
       await id(second.page, 'ADM-43.comment').fill('Geprüft, Belege im Support-Ticket.');

@@ -1,4 +1,4 @@
-import { useRef, type ComponentRef, type ReactNode } from 'react';
+import { useRef, type ComponentRef, type ReactNode, type RefObject } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import type { Edge } from 'react-native-safe-area-context';
@@ -8,7 +8,8 @@ import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarPadding } from '@/features/shell/tabBarLayout';
 import { createStyles, zIndex } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import { Header, Screen, type HeaderAction } from '@/ui';
+import { Header, type HeaderAction } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
 import type { CollapsingHeader } from '@/ui/useCollapsingHeader';
 
 const EDGES: readonly Edge[] = ['left', 'right'];
@@ -54,6 +55,8 @@ export type ProfileFrameProps = {
   children: ReactNode;
   /** Sheets and dialogs of the page. */
   overlays?: ReactNode;
+  /** The page's scroller, for a caller that places it (the tab switch of CR2-3); the frame keeps its own otherwise. */
+  scrollRef?: RefObject<ComponentRef<typeof Animated.ScrollView> | null>;
 };
 
 /** The frame of PROF-01/02: the header pattern (b), the offline banner under it, one scroller that clears the tab bar, re-tap to top. */
@@ -72,11 +75,13 @@ export function ProfileFrame({
   scrollEnabled = true,
   children,
   overlays,
+  scrollRef: callerRef,
 }: ProfileFrameProps) {
   const styles = useStyles();
   const motion = useMotionPreference();
   const padding = useTabBarPadding();
-  const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
+  const ownRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
+  const scrollRef = callerRef ?? ownRef;
 
   useTabScrollToTop(() => {
     if (header.scrollY.get() <= 0) return false;

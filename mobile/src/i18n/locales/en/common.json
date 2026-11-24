@@ -3,8 +3,14 @@
         "home": "Home",
         "discover": "Discover",
         "garage": "Garage",
-        "messages": "Messages",
+        "shop": "Shop",
         "profile": "Profile"
+    },
+    "places": {
+        "messages": "Messages",
+        "events": "Meets",
+        "forum": "Forum",
+        "crews": "Crews"
     },
     "actions": {
         "back": "Back",
@@ -81,7 +87,7 @@
     "gate": {
         "checkAgain": "Check again",
         "maintenanceTitle": "Back in a moment",
-        "maintenanceBody": "SPEED CLUB is under maintenance. Please try again shortly.",
+        "maintenanceBody": "Speedclub is under maintenance. Please try again shortly.",
         "updateTitle": "Update required",
         "updateBody": "This version is out of date. Please install the update."
     },
@@ -93,6 +99,8 @@
             "title": "This screen couldn’t load",
             "bodyBack": "Try again or go back a step.",
             "bodyClose": "Try again or close this screen.",
+            "offlineTitle": "You’re offline",
+            "offlineBody": "This screen loads as soon as you’re back online.",
             "bodyAlone": "Try again in a moment.",
             "reload": "Reload"
         }
@@ -110,10 +118,10 @@
         "vehicleGallery": "Photos",
         "vehicleMod": "Modification",
         "vehicleUpdate": "Build update",
-        "qrDetail": "QR code",
+        "qrDetail": "Sticker",
         "qrPlacement": "Place sticker",
         "qrPreview": "Public page",
-        "qrList": "My QR codes",
+        "qrList": "My stickers",
         "qrResolve": "QR code",
         "search": "Search",
         "garageVehicle": "Your vehicle",
@@ -150,6 +158,7 @@
                 "home": "Go to Home",
                 "discover": "Go to Discover",
                 "garage": "Go to Garage",
+                "shop": "Go to Shop",
                 "messages": "Go to Messages",
                 "profile": "Go to Profile",
                 "help": "This overview"
@@ -195,7 +204,9 @@
             "processing": "The photo is still being processed. Try again in a moment.",
             "failed": "That didn’t work just now. Try again in a moment.",
             "emailNotVerified": "AI features need a confirmed email address.",
-            "dailyLimit": "You’ve used up today’s allowance for this AI feature. It resets tomorrow."
+            "dailyLimit": "You’ve used up today’s allowance for this AI feature. It resets tomorrow.",
+            "notNow": "Not available right now.",
+            "noSuggestion": "No suggestion found."
         },
         "verifyEmail": "Confirm email address"
     },
@@ -212,8 +223,8 @@
             "reload": "Reload"
         },
         "install": {
-            "title": "Put SPEED CLUB on your home screen",
-            "lead": "From the home screen, SPEED CLUB opens like an app: full screen, without the browser bar.",
+            "title": "Put Speedclub on your home screen",
+            "lead": "From the home screen, Speedclub opens like an app: full screen, without the browser bar.",
             "steps": {
                 "share": "In Safari, tap “Share”.",
                 "add": "Choose “Add to Home Screen”.",

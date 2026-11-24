@@ -1,72 +1,57 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { View, type LayoutChangeEvent } from 'react-native';
 
 import { ApiError } from '@/api/client';
-import { useAppConfig, useFlag } from '@/api/queries/appConfig';
+import { useFlag } from '@/api/queries/appConfig';
 import { useMe } from '@/api/queries/auth';
 import { useQrCode, useQrSvg, type QrCodeData } from '@/api/queries/qr';
+import { useMyStickers, useStickerStats } from '@/api/queries/stickers';
 import { photoFields } from '@/features/profile/media';
-import { shareLink } from '@/features/profile/share';
+import { shareLink, withShareVia } from '@/features/profile/share';
 import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
 import { keepNameTogether } from '@/lib/format';
-import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
+import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
-import { createStyles, size, space, useBreakpoint, useTheme } from '@/theme';
-import {
-  Button,
-  ErrorState,
-  Hairline,
-  ListRow,
-  QRDisplay,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Text,
-  toast,
-} from '@/ui';
-import { QrReveal } from '@/ui/motion/kit';
+import { createStyles, size, space, useBreakpoint } from '@/theme';
+import { Button } from '@/ui/Button';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { ListRow } from '@/ui/ListRow';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { displayQrCode, displayQrUrl } from '../code';
 import { DownloadSheet } from '../components/DownloadSheet';
 import { QrPage } from '../components/QrPage';
 import { QrNotice, QrRowGroup, QrSignInState, QrState } from '../components/parts';
 import { ReissueDialog } from '../components/ReissueDialog';
-import { SCAN_STATS_FLAG, ScanStats } from '../components/ScanStats';
-import { openPublicPage } from '../openPublicPage';
-import { useRevealOnce } from '../reveal';
+import { CardArt, STAGE_RATIO } from '../components/StickerHubCard';
+import { StickerStage } from '../components/StickerStage';
+import { SCAN_STATS_FLAG } from '../stats';
 import { isBlockedByStaff } from '../status';
-import { STICKER_SHOP_FLAG, stickerShopUrl } from '../stickerShop';
-import { compactCardWidth } from '../stage';
 import { useQrDownload } from '../useQrDownload';
 
-const ROUTE = 'QR-02';
-/** QrPage's column from 768: the QR card at its §8 maximum (QR 320 + 2 × 24). */
-const QR_COLUMN = size.qrMaxOnScreen + space[24] * 2;
-/** Mehr Formate, Teilen, Vorschau, Platzierung: the rows under the two buttons. */
-const SKELETON_ROWS = 4;
+const ROUTE = 'STK-02';
+/** QR-Code, Teilen, Öffentliche Seite, Platzierung, Scan-Statistik: the rows under the two buttons (DQ-M54R2-12). */
+const SKELETON_ROWS = 5;
+/** The default design's proportion (Classic, 156 × 65 mm) while the drawing loads. */
+const ART_RATIO = 156 / 65;
 
 const useStyles = createStyles((t) => ({
-  // §8 QR display, stretched to the column so its edges meet the title's and the buttons' (DQ-035).
-  card: { alignSelf: 'stretch', maxWidth: '100%' },
-  stage: { paddingVertical: t.space[32] },
+  // DQ-M54-10: the sticker on its car leads, 16:9 like the hub's cards; full bleed on a phone, inset (radius 20) from 768.
+  stage: { aspectRatio: STAGE_RATIO, padding: t.space[24] },
   stageInset: { borderRadius: t.radius.xl },
-  // DQ-1065: from 768 the stage (7) and the actions (5) stand side by side across the content width; the stage spans its whole
-  // column, never a framed box around the card (DQ-1053).
+  // DQ-1065: from 768 the stage (7) and the actions (5) stand side by side across the content width.
   split: { alignItems: 'flex-start', columnGap: t.space[32], flexDirection: 'row' },
   splitStage: { flexBasis: 0, flexGrow: 7, minWidth: 0 },
   splitSide: { flexBasis: 0, flexGrow: 5, minWidth: 0 },
-  stageWide: {
-    alignSelf: 'stretch',
-    borderRadius: t.radius.xl,
-    paddingHorizontal: t.space[24],
-    paddingVertical: t.space[64],
-  },
   firstInSide: { marginTop: t.space[0] },
-  stageSkeleton: { backgroundColor: t.color.media.ground },
+  stageSkeleton: { alignItems: 'center', backgroundColor: t.color.media.ground, justifyContent: 'center' },
   notice: { marginTop: t.space[16] },
   actions: { gap: t.space[12], marginTop: t.space[24] },
   rows: { marginTop: t.space[24] },
@@ -79,33 +64,11 @@ const useStyles = createStyles((t) => ({
     gap: t.space[8],
     padding: t.space[24],
   },
-  skeletonCard: {
-    alignItems: 'center',
-    backgroundColor: t.color.qr.bg,
-    borderRadius: t.radius.md,
-    gap: t.space[4],
-    padding: t.space[24],
-  },
-  skeletonCode: { marginBottom: t.space[12], maxWidth: t.size.qrMaxOnScreen },
-  skeletonShortCode: { width: '40%' },
-  skeletonUrl: { width: '60%' },
   skeletonGroup: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
   skeletonRow: { justifyContent: 'center', minHeight: t.size.row.single, paddingHorizontal: t.space[16] },
 }));
 
-/** The white card's skeleton: code, short code, URL. */
-function CardSkeleton({ testID }: { testID?: string }) {
-  const styles = useStyles();
-  return (
-    <View style={styles.skeletonCard} testID={testID}>
-      <SkeletonBlock width="100%" aspectRatio={1} corner="sm" style={styles.skeletonCode} />
-      {/* Centred like the code and the URL: the line takes the width of its box, so the box carries the width. */}
-      <SkeletonText variant="headline" style={styles.skeletonShortCode} />
-      <SkeletonText variant="caption" style={styles.skeletonUrl} />
-    </View>
-  );
-}
-
+/** DQ-M54-11: the page's geometry while it loads: the stage in its place and ratio, the two buttons, the rows. */
 function DetailSkeleton() {
   const styles = useStyles();
   const stage = useStageInset();
@@ -114,20 +77,8 @@ function DetailSkeleton() {
       <SplitLayout
         split={stage.split}
         stage={
-          <View
-            style={
-              stage.split
-                ? [styles.stageWide, styles.stageSkeleton, { alignItems: 'center' }]
-                : [
-                    styles.stage,
-                    styles.stageSkeleton,
-                    { marginHorizontal: -stage.inset, paddingHorizontal: stage.inset },
-                  ]
-            }
-          >
-            <View style={{ width: stage.columnWidth }}>
-              <CardSkeleton />
-            </View>
+          <View style={[styles.stage, styles.stageSkeleton, stage.style]}>
+            <SkeletonBlock width="100%" aspectRatio={ART_RATIO} corner="sm" />
           </View>
         }
         side={
@@ -146,6 +97,13 @@ function DetailSkeleton() {
                 </View>
               ))}
             </View>
+            {/* "QR-Code ersetzen" on its own, and its hint. */}
+            <View style={[styles.danger, styles.skeletonGroup]}>
+              <View style={styles.skeletonRow}>
+                <SkeletonText variant="body" width="45%" />
+              </View>
+            </View>
+            <SkeletonText variant="callout" width="80%" style={styles.hint} />
           </>
         }
       />
@@ -175,16 +133,14 @@ function useSuspended(): boolean {
   return qaState === 'restricted' || me.data?.restrictions.suspended === true;
 }
 
-/** The stage reaches past the column: to the screen's edges on a phone (full bleed), by 24 on each side from 768 (inset media). */
-function useStageInset(): { inset: number; columnWidth: number; bleed: boolean; split: boolean } {
-  const { gutter, kind, width } = useBreakpoint();
+/** The stage reaches past the column to the screen's edges on a phone (full bleed); from 768 it is inset media with radius 20. */
+function useStageInset() {
+  const styles = useStyles();
+  const { gutter, kind } = useBreakpoint();
   const bleed = kind === 'phone';
   return {
-    inset: bleed ? gutter : space[24],
-    // ADR-458: on a phone the card leaves both side bands to the car (the stage still runs edge to edge).
-    columnWidth: bleed ? compactCardWidth(width - 2 * gutter) : QR_COLUMN,
-    bleed,
     split: !bleed,
+    style: bleed ? { marginHorizontal: -gutter } : styles.stageInset,
   };
 }
 
@@ -214,30 +170,23 @@ function DetailBody({ qr, vehicleId }: { qr: QrCodeData; vehicleId: string }) {
   const readOnly = useViewAsReadOnly();
   const styles = useStyles();
   const router = useRouter();
-  const theme = useTheme();
+  const format = useFormat();
   const suspended = useSuspended();
   const code = useQrCode(vehicleId);
   const blocked = isBlockedByStaff(qr);
   const active = qr.status === 'active' && qr.code !== null;
   const svg = useQrSvg(vehicleId, qr.code, active);
+  const cards = useMyStickers();
+  const card = cards.data?.find((entry) => entry.vehicle.id === vehicleId);
+  const scans = useFlag(SCAN_STATS_FLAG);
+  const stats = useStickerStats(scans ? vehicleId : undefined);
   const [sheet, setSheet] = useState(false);
   const [dialog, setDialog] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const scans = useFlag(SCAN_STATS_FLAG);
-  const shop = useFlag(STICKER_SHOP_FLAG);
-  const { config } = useAppConfig();
-  const shopUrl = shop ? stickerShopUrl(config.links) : null;
+  const [stageWidth, setStageWidth] = useState(0);
   const vehicle = qr.vehicle.full_title;
-  const revealed = useRevealOnce(Boolean(svg.data));
   const stage = useStageInset();
-  const stageStyle = useMemo(
-    () =>
-      stage.split
-        ? [styles.stageWide]
-        : [styles.stage, { marginHorizontal: -stage.inset, paddingHorizontal: stage.inset }],
-    [stage.split, stage.inset, styles.stage, styles.stageWide],
-  );
-  // "In Fotos sichern" and "Sticker-PDF" start their file at once; the sheet keeps every other format.
+  // "Sticker-PDF" (the A6 sheet) starts its file at once; the QR sheet keeps every other format.
   const direct = useQrDownload(
     { vehicleId, code: qr.code ?? '', dialogTitle: t('download.shareTitle', { vehicle }) },
     (outcome) => {
@@ -253,7 +202,8 @@ function DetailBody({ qr, vehicleId }: { qr: QrCodeData; vehicleId: string }) {
   const share = async () => {
     setSharing(true);
     const outcome = await shareLink({
-      url: qr.vehicle.public_url,
+      // M5.7 (contract §2.4): the shared address carries `?via=share`.
+      url: withShareVia(qr.vehicle.public_url),
       title: t('detail.shareTitle', { vehicle }),
     });
     setSharing(false);
@@ -261,67 +211,40 @@ function DetailBody({ qr, vehicleId }: { qr: QrCodeData; vehicleId: string }) {
     if (outcome === 'failed') toast(t('detail.shareFailed'), { testID: `${ROUTE}.shareToast` });
   };
 
-  const openShop = async () => {
-    if (!shopUrl) return;
-    if (!(await openPublicPage(shopUrl, theme)))
-      toast(t('detail.shopFailed'), { testID: `${ROUTE}.shopToast` });
-  };
-
-  const svgFailed = svg.isError || svg.fetchStatus === 'paused';
   const live = active && !blocked;
+  // DQ-M54-10: one filled action. "Sticker bestellen" once the design passed its Scan-Test (its print files exist) and the shop can take
+  // the order, else "Sticker gestalten" (DQ-P5-301: with no store set up the order screen could only say "bald verfügbar", as STK-01 does).
+  const ordering = card?.actions.download === true && card.actions.order.reason !== 'not_configured';
+  const writable = !suspended && !readOnly;
 
-  let card: ReactNode;
-  if (blocked) {
-    card = <BlockedCard />;
-  } else if (live && !svgFailed) {
-    // SM13: the car's photo blurred behind, the card scales in once its code is drawn (medium haptic).
-    card = (
-      <QrReveal
-        photo={
-          qr.vehicle.cover ? photoFields(qr.vehicle.cover, stage.columnWidth + 2 * stage.inset) : undefined
-        }
-        revealed={revealed}
-        placeholder={
-          <View style={{ width: stage.columnWidth }}>
-            <CardSkeleton testID={`${ROUTE}.cardSkeleton`} />
-          </View>
-        }
-        style={stageStyle}
-        testID={`${ROUTE}.stage`}
-      >
-        <View style={{ width: stage.columnWidth }}>
-          {svg.data ? (
-            <QRDisplay
-              svg={svg.data}
-              label={t('detail.cardLabel', { vehicle })}
-              code={qr.display_code ?? displayQrCode(qr.code ?? '')}
-              url={qr.url ? displayQrUrl(qr.url) : undefined}
-              style={styles.card}
-              testID={`${ROUTE}.card`}
-            />
-          ) : (
-            // Hidden under the placeholder: the card's shape, so the stage keeps its height when the code appears.
-            <CardSkeleton />
-          )}
-        </View>
-      </QrReveal>
-    );
-  } else {
-    card = (
-      <ErrorState
-        title={t('detail.cardErrorTitle')}
-        onRetry={() => void svg.refetch()}
-        retrying={svg.isFetching}
-        testID={`${ROUTE}.cardError`}
-      />
-    );
-  }
+  const hero = blocked ? (
+    <BlockedCard />
+  ) : (
+    <StickerStage
+      cover={photoFields(qr.vehicle.cover, stageWidth || size.railCard * 2)}
+      style={[styles.stage, stage.style]}
+      onLayout={(event: LayoutChangeEvent) => setStageWidth(event.nativeEvent.layout.width)}
+      testID={`${ROUTE}.stage`}
+    >
+      {card ? (
+        <CardArt
+          card={card}
+          width={stageWidth}
+          label={t('hub.artLabel', { vehicle, design: designLineOf(card, t) })}
+          testID={ROUTE}
+        />
+      ) : (
+        <SkeletonBlock width="80%" aspectRatio={ART_RATIO} corner="sm" />
+      )}
+    </StickerStage>
+  );
 
   const busy = direct.active;
+  const thirty = stats.data?.total_30_days;
   return (
     <SplitLayout
       split={stage.split}
-      stage={card}
+      stage={hero}
       side={
         <>
           {live && qr.scan_state === 'private' ? (
@@ -340,26 +263,31 @@ function DetailBody({ qr, vehicleId }: { qr: QrCodeData; vehicleId: string }) {
             />
           ) : null}
           {live ? (
-            // Stacked at every width: side by side in the 368 column, "In Fotos sichern" would wrap.
             <View
               style={[
                 styles.actions,
                 stage.split && !(qr.scan_state === 'private') && !suspended ? styles.firstInSide : null,
               ]}
             >
-              <Button
-                label={isWeb ? t('detail.saveImage') : t('detail.savePhoto')}
-                icon="download-simple"
-                size="l"
-                fullWidth
-                disabled={!svg.data || (busy !== null && busy !== 'png')}
-                loading={busy === 'png'}
-                onPress={() => void direct.start('png')}
-                testID={`${ROUTE}.savePhoto`}
-              />
+              {/* DQ-M54-23: a suspended owner gets no way into the designer or the order they cannot use. */}
+              {writable ? (
+                <Button
+                  label={ordering ? t('detail.orderSticker') : t('detail.design')}
+                  icon={ordering ? 'bag' : 'pencil-simple'}
+                  size="l"
+                  fullWidth
+                  onPress={() =>
+                    router.push({
+                      pathname: ordering ? '/stickers/[vehicleId]/order' : '/stickers/[vehicleId]/design',
+                      params: { vehicleId },
+                    })
+                  }
+                  testID={`${ROUTE}.primary`}
+                />
+              ) : null}
               <Button
                 label={t('detail.stickerPdf')}
-                icon="qr-code"
+                icon="download-simple"
                 variant="secondary"
                 size="l"
                 fullWidth
@@ -371,11 +299,24 @@ function DetailBody({ qr, vehicleId }: { qr: QrCodeData; vehicleId: string }) {
             </View>
           ) : null}
           <QrRowGroup style={styles.rows} testID={`${ROUTE}.rows`}>
+            {live && ordering && writable ? (
+              <ListRow
+                icon="pencil-simple"
+                title={t('detail.design')}
+                onPress={() =>
+                  router.push({ pathname: '/stickers/[vehicleId]/design', params: { vehicleId } })
+                }
+                inset={space[16]}
+                divider
+                testID={`${ROUTE}.design`}
+              />
+            ) : null}
             {live ? (
               <>
                 <ListRow
-                  icon="grid-four"
-                  title={t('detail.moreFormats')}
+                  icon="qr-code"
+                  title={t('detail.qrCode')}
+                  value={qr.display_code ?? displayQrCode(qr.code ?? '')}
                   role="button"
                   disabled={!svg.data}
                   onPress={() => setSheet(true)}
@@ -399,34 +340,43 @@ function DetailBody({ qr, vehicleId }: { qr: QrCodeData; vehicleId: string }) {
             <ListRow
               icon="eye"
               title={t('detail.publicPage')}
-              onPress={() => router.push({ pathname: '/qr/[vehicleId]/preview', params: { vehicleId } })}
+              onPress={() =>
+                router.push({ pathname: '/stickers/[vehicleId]/preview', params: { vehicleId } })
+              }
               inset={space[16]}
-              divider={!blocked}
+              divider={!blocked || scans}
               testID={`${ROUTE}.publicPage`}
             />
             {blocked ? null : (
               <ListRow
                 icon="qr-sticker"
                 title={t('detail.placement')}
-                onPress={() => router.push({ pathname: '/qr/[vehicleId]/placement', params: { vehicleId } })}
+                onPress={() =>
+                  router.push({ pathname: '/stickers/[vehicleId]/placement', params: { vehicleId } })
+                }
                 inset={space[16]}
-                divider={live && shopUrl !== null}
+                divider={scans}
                 testID={`${ROUTE}.placement`}
               />
             )}
-            {live && shopUrl ? (
+            {/* FS-9 [SIG]: the scan counts, private; the 30 days fold into the row's value (DQ-M54-10). */}
+            {scans ? (
               <ListRow
-                icon="arrow-square-out"
-                title={t('detail.orderSticker')}
-                role="link"
-                chevron={false}
-                onPress={() => void openShop()}
+                icon="chart-bar"
+                title={t('detail.scanStats')}
+                value={
+                  thirty === undefined
+                    ? undefined
+                    : t('detail.scansThirty', { count: thirty, total: format.number(thirty) })
+                }
+                adaptiveValue
+                onPress={() =>
+                  router.push({ pathname: '/stickers/[vehicleId]/stats', params: { vehicleId } })
+                }
                 inset={space[16]}
-                testID={`${ROUTE}.orderSticker`}
+                testID={`${ROUTE}.stats`}
               />
             ) : null}
-            {/* FS-9 [SIG]: the scan counts, private; a code taken down by staff still counted its scans. */}
-            {scans ? <ScanStats vehicleId={vehicleId} routeId={ROUTE} /> : null}
           </QrRowGroup>
           {live ? (
             <>
@@ -458,6 +408,16 @@ function DetailBody({ qr, vehicleId }: { qr: QrCodeData; vehicleId: string }) {
                 code={qr.code ?? ''}
                 vehicleTitle={vehicle}
                 onGone={() => void code.refetch()}
+                card={
+                  svg.data
+                    ? {
+                        svg: svg.data,
+                        label: t('detail.cardLabel', { vehicle }),
+                        code: qr.display_code ?? displayQrCode(qr.code ?? ''),
+                        url: qr.url ? displayQrUrl(qr.url) : undefined,
+                      }
+                    : undefined
+                }
               />
               <ReissueDialog visible={dialog} onClose={() => setDialog(false)} vehicleId={vehicleId} />
             </>
@@ -468,7 +428,19 @@ function DetailBody({ qr, vehicleId }: { qr: QrCodeData; vehicleId: string }) {
   );
 }
 
-/** QR-02 (FS-9): the card, downloads, sharing, the public page, the placement guide and "QR-Code ersetzen". */
+/** "Classic · M · 156 × 65 mm" or "Noch nicht gestaltet", for the drawing's accessible description. */
+function designLineOf(
+  card: NonNullable<ReturnType<typeof useMyStickers>['data']>[number],
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
+  const design = card.design;
+  if (!design) return t('hub.notDesigned');
+  return [t(`designer.template.names.${design.template}`), t(`designer.size.${design.options.size}`)].join(
+    ' · ',
+  );
+}
+
+/** STK-02 (FS-9, DQ-M54-10): the sticker on its car, design or order, the QR code, sharing, the public page, placement, scans, "QR-Code ersetzen". */
 export function QrDetailScreen() {
   const { t } = useTranslation('qr');
   const router = useRouter();
@@ -545,7 +517,7 @@ export function QrDetailScreen() {
         session !== 'guest' &&
         (qaState === 'loading' || session === 'loading' || query.fetchStatus === 'fetching')
       }
-      fallback="/profile/qr"
+      fallback="/stickers"
       offlineLabel={t('common.offlineBanner')}
     >
       {body}

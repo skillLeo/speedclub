@@ -10,6 +10,7 @@ import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
 import { Button, ConfirmDialog, Drawer, EmptyQueue, Field, IconButton, Input, Skeleton, Textarea, Tooltip } from '../../Components/ui';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { formatNumber } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
@@ -20,7 +21,7 @@ import { roleDescription, roleLabel } from './shared';
 /**
  * ADM-41 roles (06 §3 Team & roles, m3.6 §1): the six base roles and custom ones, each with its description, number of permissions and
  * team members. Custom roles are added with name, description and permissions; edits of permissions follow the matrix rules (a
- * sensitive permission waits for `roles.sensitive_atoms`); a custom role nobody holds can be deleted with a reason.
+ * sensitive permission waits for `roles.sensitive_atoms`); a custom role nobody holds can be deleted.
  */
 interface MatrixRole {
     name: string;
@@ -45,25 +46,23 @@ const kind = (role: MatrixRole) => (role.locked ? 'locked' : role.system ? 'syst
 const action = useAdminAction();
 const drawerOpen = ref(false);
 const editing = ref<MatrixRole | null>(null);
-const form = reactive({ name: '', description: '', atoms: [] as string[], reason: '' });
-const errors = reactive<{ name: string | null; reason: string | null }>({ name: null, reason: null });
+const form = reactive({ name: '', description: '', atoms: [] as string[] });
+const errors = reactive<{ name: string | null }>({ name: null });
 const addedSensitive = computed(() => form.atoms.filter((a) => props.matrix.sensitive.includes(a) && !(editing.value?.atoms ?? []).includes(a)));
-const fourEyes = computed(() => addedSensitive.value.length > 0);
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && addedSensitive.value.length > 0);
 function openDrawer(role: MatrixRole | null): void {
     editing.value = role;
-    Object.assign(form, { name: role?.name ?? '', description: role?.description ?? '', atoms: [...(role?.atoms ?? [])], reason: '' });
+    Object.assign(form, { name: role?.name ?? '', description: role?.description ?? '', atoms: [...(role?.atoms ?? [])] });
     errors.name = null;
-    errors.reason = null;
     action.reset();
     drawerOpen.value = true;
 }
 function save(): void {
     const name = form.name.trim();
     errors.name = /^[\p{L}\p{N}][\p{L}\p{N} _.-]{2,59}$/u.test(name) ? null : trans('team.role_form.errors.name');
-    const reason = form.reason.trim();
-    errors.reason = fourEyes.value && (reason.length < 10 || reason.length > 1000) ? trans('team.role_form.errors.reason') : null;
-    if (errors.name || errors.reason) return;
-    const data = { name, description: form.description.trim() === '' ? null : form.description.trim(), atoms: form.atoms, reason: reason === '' ? null : reason };
+    if (errors.name) return;
+    const data = { name, description: form.description.trim() === '' ? null : form.description.trim(), atoms: form.atoms };
     const role = editing.value;
     if (role === null) action.run('post', routeOr('admin.team.roles.store', '/admin/team/roles'), data, { sensitive: true, onSuccess: () => (drawerOpen.value = false) });
     else {
@@ -75,11 +74,11 @@ function save(): void {
 // ---- delete -------------------------------------------------------------------------------------------------------------------
 const deleting = ref<MatrixRole | null>(null);
 const deleteOpen = computed({ get: () => deleting.value !== null, set: (v: boolean) => (v ? null : (deleting.value = null)) });
-function remove(reason: string | null): void {
+function remove(): void {
     const role = deleting.value;
     if (role === null) return;
     const id = props.ids[role.name] ?? 0;
-    action.run('delete', routeOr('admin.team.roles.destroy', `/admin/team/roles/${id}`, { role: id }), { reason: reason ?? '' }, { sensitive: true, onSuccess: () => (deleting.value = null) });
+    action.run('delete', routeOr('admin.team.roles.destroy', `/admin/team/roles/${id}`, { role: id }), {}, { sensitive: true, onSuccess: () => (deleting.value = null) });
 }
 
 // ---- QA overlays --------------------------------------------------------------------------------------------------------------
@@ -93,7 +92,6 @@ onMounted(async () => {
         if (role) {
             openDrawer(role);
             form.atoms = [...new Set([...form.atoms, 'approvals.decide'])].sort();
-            form.reason = 'Übernimmt ab Montag die Freigaben der Moderation.';
         }
     } else if (overlay === 'delete') {
         const role = customRoles.value.find((r) => r.staff === 0);
@@ -172,10 +170,7 @@ onMounted(async () => {
                 </Field>
                 <p class="text-admin-base text-ink-2">{{ transChoice('team.role_form.atoms_count', form.atoms.length, { count: formatNumber(form.atoms.length) }) }} · {{ trans('team.role_form.sensitive') }}</p>
                 <AtomPicker v-model="form.atoms" :atoms="matrix.atoms" :sensitive="matrix.sensitive" :legend="trans('team.role_form.atoms')" test-id="ADM-41.drawer.atoms" />
-                <template v-if="fourEyes">
-                    <ApprovalNotice test-id="ADM-41.drawer.four-eyes" />
-                    <Field :label="trans('ui.confirm.reason')" :hint="trans('team.role_form.reason_hint')" :error="errors.reason" required><Textarea v-model="form.reason" :rows="2" :maxlength="1000" show-count data-testid="ADM-41.drawer.reason" /></Field>
-                </template>
+                <ApprovalNotice v-if="fourEyes" test-id="ADM-41.drawer.four-eyes" />
             </form>
             <template #footer>
                 <Button variant="ghost" :disabled="action.processing.value" @click="drawerOpen = false">{{ trans('ui.actions.cancel') }}</Button>
@@ -183,6 +178,6 @@ onMounted(async () => {
             </template>
         </Drawer>
 
-        <ConfirmDialog v-model:open="deleteOpen" :title="trans('team.role_delete.title', { name: deleting?.name ?? '' })" :body="trans('team.role_delete.body')" :confirm-label="trans('team.roles_page.delete')" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-41.delete-dialog" @confirm="(r: string | null) => remove(r)" />
+        <ConfirmDialog v-model:open="deleteOpen" :title="trans('team.role_delete.title', { name: deleting?.name ?? '' })" :body="trans('team.role_delete.body')" :confirm-label="trans('team.roles_page.delete')" :processing="action.processing.value" :error="action.error.value" test-id="ADM-41.delete-dialog" @confirm="remove()" />
     </div>
 </template>

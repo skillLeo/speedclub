@@ -127,9 +127,24 @@ body { overflow-wrap: break-word; }
 }
 
 .sc-topbar-app { display: inline-flex; }
+.sc-topbar-shop { display: inline-flex; }
+/* R4DQ-06: a top-bar label never wraps ("App / laden", "Sign / in" at 390). */
+.sc-topbar-row a { white-space: nowrap; }
+
+/* R4DQ-06: below 430 px the bar keeps the logo and "Anmelden" only; the landing's hero carries the way to the app, the footer the shop. */
+@media (max-width: 429.98px) {
+  .sc-topbar-app,
+  .sc-topbar-shop { display: none; }
+}
 
 @container (max-width: 24em) {
   .sc-topbar-app { display: none; }
+}
+
+/* R4B-011 (client round 4 hunt): at large text the Shop link gives way too, so logo and "Anmelden" stay on one line (16 px overflow at
+   390 px and 200 %). The footer keeps the way to the shop. At the system text size it shows from 360 px. */
+@container (max-width: 22em) {
+  .sc-topbar-shop { display: none; }
 }
 
 /* ---- WEB-01 ---- */
@@ -167,7 +182,7 @@ body { overflow-wrap: break-word; }
 .sc-veh-content { padding-inline: var(--sc-gutter); padding-bottom: var(--sc-space-32); }
 .sc-veh-cta { display: none; }
 
-.sc-hero { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--color-surface); }
+.sc-hero { position: relative; aspect-ratio: var(--sc-aspect-hero); overflow: hidden; background: var(--color-surface); }
 
 .sc-pager {
   display: flex;
@@ -281,14 +296,24 @@ body { overflow-wrap: break-word; }
 
 .sc-strip-cell:first-child { border-left-width: 0; padding-left: 0; }
 
-/* ADR-431 b: hero.numeral on the page, hero.numeral.s in the side card from 1280 (SpecStripLayout::NUMERAL_SIZE*). */
+/* ADR-431 b + client feedback CF-2 (M5.3) + R5-2b, as the app's specStripNumeralVariant (SpecStripLayout::NUMERAL_SIZE*):
+   hero.numeral.xs (32/32) on a phone's page, hero.numeral from 768, hero.numeral.s (48/48) in the side card from 1280; tabular
+   figures throughout. */
 .sc-strip-numeral {
   font-family: var(--sc-font-numeral);
-  font-size: var(--sc-type-hero-numeral-size);
-  line-height: var(--sc-type-hero-numeral-line);
-  letter-spacing: var(--sc-type-hero-numeral-tracking);
+  font-size: var(--sc-type-hero-numeral-xs-size);
+  line-height: var(--sc-type-hero-numeral-xs-line);
+  letter-spacing: var(--sc-type-hero-numeral-xs-tracking);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .sc-strip-numeral {
+    font-size: var(--sc-type-hero-numeral-size);
+    line-height: var(--sc-type-hero-numeral-line);
+    letter-spacing: var(--sc-type-hero-numeral-tracking);
+  }
 }
 
 @media (min-width: 1280px) {
@@ -304,6 +329,10 @@ body { overflow-wrap: break-word; }
 
 /* No line of a cell wraps: the rule only keeps columns in which each fits on one line with 12 on both sides. */
 .sc-strip-cell span { white-space: nowrap; }
+/* Except the provenance caption, as in SpecStrip.tsx: a long one ("Herstellerangabe (KI-Vorschlag)") wraps at its spaces, in the 2 × 2
+   grid (ADR-422 e: there the rule only needs its widest unbreakable part to fit) and when even one column is too narrow, e.g. at
+   200 % text, instead of being cut off. Where it fits, it stays one line. Never hyphenated (the app's hyphenate={false}). */
+.sc-strip-cell .sc-strip-caption { white-space: normal; -webkit-hyphens: none; hyphens: none; }
 
 /* The empty slot of a short last row (3 or 5 items in two columns): a hairline on its left and above it, as in the app. */
 .sc-strip::after {
@@ -425,9 +454,10 @@ body { overflow-wrap: break-word; }
 .sc-grow { flex: 1 1 auto; }
 
 @media (min-width: 768px) {
-  /* DQ-1048: 16:9 across the content (at most 1320), no radius; the summary and the sections in the 768 column under it. */
-  .sc-hero { aspect-ratio: 16 / 9; }
-  .sc-hero-identity { margin-top: -9.9%; }
+  /* DQ-1048: 16:9 across the content (at most 1320), no radius; the summary and the sections in the 768 column under it. The
+     identity starts on the scrim's text-safe line, 17.6 % of the hero's height above its bottom, written in % of the width. */
+  .sc-hero { aspect-ratio: var(--sc-aspect-hero-web); }
+  .sc-hero-identity { margin-top: calc(-17.6% * var(--sc-aspect-hero-web-height)); }
   .sc-veh-summary, .sc-veh-content { width: 100%; max-width: 768px; margin-inline: auto; }
   .sc-tabs { margin-inline: 0; }
   .sc-tabs-row { padding-inline: 0; }
@@ -445,8 +475,11 @@ body { overflow-wrap: break-word; }
     column-gap: var(--sc-space-24);
   }
 
-  /* DQ-1172: the hero is the content frame exactly (40–1240 at 1280, 120–1320 at 1440), edges shared with the 8/4 grid below. */
+  /* DQ-1172: the hero is the content frame exactly (40–1240 at 1280, 120–1320 at 1440), edges shared with the 8/4 grid below.
+     Client feedback CF-1 (M5.3): 21:9 from 1280 (aspect.heroDesktop), as the app; the identity keeps the same text-safe line. */
   .sc-veh-stage { grid-column: 1 / -1; grid-row: 1; width: 100%; margin-inline: 0; max-width: none; }
+  .sc-hero { aspect-ratio: var(--sc-aspect-hero-desktop); }
+  .sc-hero-identity { margin-top: calc(-17.6% * var(--sc-aspect-hero-desktop-height)); }
   .sc-veh-content { grid-column: 1 / span 8; grid-row: 2 / span 2; padding: var(--sc-space-24) 0 0; max-width: none; }
 
   .sc-veh-summary {
@@ -570,19 +603,38 @@ body { overflow-wrap: break-word; }
 .sc-prose hr { margin-top: var(--sc-space-32); border-color: var(--color-hairline); }
 
 /* ---- WEB-03 (M4.16, 09 §9) ---- */
-/* (1) The photo, 88 svh on phones and tablets (76 svh from 1280, so the claim and the CTA stay in the first viewport), fades into the
-   dark stage; the claim starts at the text-safe line (0.824 of the photo, ADR-421 b) and every further line flows onto the stage. The
-   stage is scrim.photo's end in every theme, as VEH-01's (photos sit on a dark stage, also in Hell). */
+/* (1) R4DQ-06: claim, lead and the one action in the first viewport (390 × 844, 1280 × 800). The photo is 72 svh on phones and tablets,
+   64 svh from 1280, and fades into the dark stage. The copy lies over the photo from the large-text line (0.78 of the photo: the claim is
+   display.title, large text, ADR-421 b), so the lead starts below the body text-safe line (0.824), and at larger text sizes everything
+   flows on onto the stage under the photo. The stage is scrim.photo's end in every theme, as VEH-01's (photos sit on a dark stage, also
+   in Hell). No hero logo (R4DQ-61): the top bar carries the brand. */
 .sc-land-hero {
+  /* R4DQ-43: on a short phone (360 × 640) the photo gives way, so claim, lead and the way in still fit under the bar: the copy block is
+     at most about 19rem (three claim lines, five lead lines, the button), it starts at 0.78 of the photo, never under 40 svh of photo. */
+  --sc-land-photo: max(40svh, min(72svh, calc((100svh - var(--sc-bar) - 19rem) / 0.78)));
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  /* Row 1 ends at the text-safe line of the photo; the photo spans both rows, the text sits in row 2 (no negative margin). */
-  grid-template-rows: calc(0.824 * 88svh) auto;
+  /* Row 1 ends at the large-text line of the photo; the photo spans both rows, the text sits in row 2 (no negative margin). */
+  grid-template-rows: calc(0.78 * var(--sc-land-photo)) auto;
   background: var(--sc-color-scrim-photo-end);
   isolation: isolate;
 }
-.sc-land-hero-media { position: relative; grid-row: 1 / span 2; grid-column: 1; align-self: start; height: 88svh; overflow: hidden; }
+.sc-land-hero-media { position: relative; grid-row: 1 / span 2; grid-column: 1; align-self: start; height: var(--sc-land-photo); overflow: hidden; }
+/* R4DQ-51: the scrim lies over the grain, so the photo ends exactly on the stage colour (the grain lifted it to luma 15 against 11). */
+.sc-land-hero-media { isolation: isolate; }
+.sc-land-hero-media > .sc-hero-scrim { z-index: 1; }
+
+/* R4DQ-43/58: below the desktop layout (phones and tablets) the car sits above the copy. The photo shows its lower part and is drawn
+   15 % larger from its bottom edge, which lifts the car (focal y 0.69) to about 0.63 of the frame, clear of the claim at 0.78; the top
+   bar carries the logo, so the hero's goes. A landscape tablet's wide frame (1024 × 768) would cut the roof at the bottom position, so
+   it shows the photo from 82 % down: the car ends at about 0.70 of the frame there. */
+@media (max-width: 1279.98px) {
+  .sc-land-hero-media > img { object-position: 50% 100%; transform: scale(1.15); transform-origin: 50% 100%; }
+}
+@media (min-width: 768px) and (max-width: 1279.98px) and (orientation: landscape) {
+  .sc-land-hero-media > img { object-position: 50% 82%; }
+}
 .sc-land-hero-inner {
   position: relative;
   grid-row: 2;
@@ -595,85 +647,52 @@ body { overflow-wrap: break-word; }
 .sc-land-hero-inner > * { max-width: 640px; }
 
 @media (min-width: 1280px) {
-  .sc-land-hero { grid-template-rows: calc(0.824 * 76svh) auto; }
-  .sc-land-hero-media { height: 76svh; }
+  .sc-land-hero { --sc-land-photo: 64svh; }
 }
 
 .sc-rule { display: block; width: var(--sc-space-32); height: var(--sc-space-2); background: var(--color-accent); }
 
-/* (2) The QR story: three steps of different weight and shape, each with a crop of the real interface. */
-.sc-steps { width: 100%; max-width: var(--sc-frame); margin-inline: auto; padding: var(--sc-space-64) 0; }
-.sc-steps-head { padding-inline: var(--sc-gutter); }
-.sc-steps-head > h2, .sc-steps-head > p { max-width: 640px; }
+/* (2)-(4): one column of content under a hairline, inside the frame. */
+.sc-land-section { width: 100%; max-width: var(--sc-frame); margin-inline: auto; padding: var(--sc-space-48) var(--sc-gutter); border-top: 1px solid var(--color-hairline); }
 
-.sc-step { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: var(--sc-space-32); }
-.sc-step + .sc-step { margin-top: var(--sc-space-48); }
-.sc-step-media { aspect-ratio: 16 / 9; overflow: hidden; background: var(--color-surface); }
-.sc-step-copy { padding: var(--sc-space-16) var(--sc-gutter) 0; }
-.sc-crop { padding: var(--sc-space-16); border-radius: var(--sc-radius-md); background: var(--color-surface); }
+/* (2) R4DQ-07 "Was du mit Speedclub machst": an editorial list, not a feature grid. Each item has its glyph inline at the left and the
+   title and body beside it, with a hairline over every item; 2 × 2 from 768; from 1280 the heading takes the left third beside the list. */
+.sc-land-do-wrap { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--sc-space-24); }
+.sc-land-do { display: grid; grid-template-columns: minmax(0, 1fr); }
+.sc-land-do-item { display: grid; grid-template-columns: var(--sc-space-24) minmax(0, 1fr); column-gap: var(--sc-space-16); align-items: start; padding-block: var(--sc-space-20); border-top: 1px solid var(--color-hairline); }
+.sc-land-do-item > .sc-land-do-glyph { margin-top: var(--sc-space-2); }
+.sc-land-do-copy { min-width: 0; }
 
-/* Step 3: the code on a white card, in front of a dark photo and beside the tail light, never on it. */
-.sc-step-qr .sc-step-copy { padding-top: 0; }
-.sc-step-stage { position: relative; display: flex; justify-content: center; margin-top: var(--sc-space-16); padding: var(--sc-space-32) var(--sc-gutter); overflow: hidden; background: var(--sc-color-scrim-photo-end); isolation: isolate; }
-.sc-step-stage-img { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; }
+/* (3) The sticker: the copy, then the code on a white card in front of the dark tail-light photo (never on it). */
+.sc-land-sticker { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--sc-space-32); align-items: center; }
+.sc-land-sticker-copy { max-width: 640px; }
+.sc-land-points > li { padding-block: var(--sc-space-8); }
+.sc-land-points > li + li { border-top: 1px solid var(--color-hairline); }
+.sc-land-sticker-stage { position: relative; display: flex; justify-content: center; margin-inline: calc(-1 * var(--sc-gutter)); padding: var(--sc-space-32) var(--sc-gutter); overflow: hidden; background: var(--sc-color-scrim-photo-end); isolation: isolate; }
+.sc-land-sticker-img { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; }
 .sc-qr { width: 100%; max-width: 256px; padding: var(--sc-space-24); border-radius: var(--sc-radius-md); background: var(--color-qr-bg); }
 .sc-qr-code svg { display: block; width: 100%; height: auto; }
 .sc-qr-code:focus-visible { outline-color: var(--color-black); }
 
-@media (min-width: 768px) {
-  .sc-step { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--sc-space-24); align-items: center; padding-inline: var(--sc-gutter); }
-  .sc-step + .sc-step { margin-top: var(--sc-space-64); }
-  .sc-step-media { border-radius: var(--sc-radius-md); aspect-ratio: 4 / 3; }
-  .sc-step-copy { padding: 0; }
-  .sc-step-photo-left .sc-step-media { grid-column: 1 / span 7; }
-  .sc-step-photo-left .sc-step-copy { grid-column: 8 / span 5; }
-  .sc-step-qr .sc-step-copy { grid-column: 1 / span 5; }
-  .sc-step-stage { grid-column: 6 / span 7; margin-top: 0; padding-block: var(--sc-space-48); border-radius: var(--sc-radius-md); }
-  .sc-step-photo-right .sc-step-media { grid-column: 6 / span 7; grid-row: 1; }
-  .sc-step-photo-right .sc-step-copy { grid-column: 1 / span 5; grid-row: 1; }
-}
-
-/* (3) Featured builds: the lead edge to edge on phones (4:5 like a hero), 8 columns 16:9 beside two 4-column cards from 1280. */
-.sc-builds { width: 100%; max-width: var(--sc-frame); margin-inline: auto; padding-bottom: var(--sc-space-64); }
-.sc-builds-title { padding-inline: var(--sc-gutter); }
-.sc-builds-grid { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--sc-space-32); margin-top: var(--sc-space-16); }
-.sc-builds-lead > :not(.sc-lead-link), .sc-builds-side { margin-inline: var(--sc-gutter); }
-.sc-lead-link { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; background: var(--sc-color-scrim-photo-end); }
-.sc-lead-link:focus-visible { outline-offset: calc(-1 * var(--sc-space-4)); }
-.sc-lead-text { position: absolute; inset-inline: 0; bottom: 0; display: block; padding: 0 var(--sc-space-16) var(--sc-space-16); }
+/* (4) The download section. */
+.sc-land-app { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--sc-space-24); align-items: center; }
+.sc-land-app > div:first-child { max-width: 640px; }
 
 @media (min-width: 768px) {
-  .sc-builds-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--sc-space-24); padding-inline: var(--sc-gutter); }
-  .sc-builds-lead { grid-column: 1 / -1; }
-  .sc-builds-lead > :not(.sc-lead-link), .sc-builds-side { margin-inline: 0; }
-  .sc-lead-link { aspect-ratio: 16 / 9; border-radius: var(--sc-radius-md); }
-  .sc-lead-text { padding: 0 var(--sc-space-24) var(--sc-space-24); }
+  .sc-land-do { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--sc-space-48); }
+  .sc-land-do-item { padding-block: var(--sc-space-24); }
+  .sc-land-sticker { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--sc-space-24); }
+  .sc-land-sticker-copy { grid-column: 1 / span 5; }
+  .sc-land-sticker-stage { grid-column: 6 / span 7; margin-inline: 0; padding-block: var(--sc-space-48); border-radius: var(--sc-radius-md); }
 }
 
 @media (min-width: 1280px) {
-  .sc-builds-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: start; }
-  .sc-builds-lead { grid-column: 1 / span 8; grid-row: 1 / span 2; }
-  .sc-builds-side { grid-column: 9 / span 4; }
-  .sc-builds-grid.is-single .sc-builds-lead { grid-column: 1 / -1; }
-}
-
-/* (4) and (5): the teasers, one column of content under a header. */
-.sc-land-section { width: 100%; max-width: var(--sc-frame); margin-inline: auto; padding: var(--sc-space-48) var(--sc-gutter); border-top: 1px solid var(--color-hairline); }
-.sc-event-row { min-height: calc(var(--sc-space-64) + var(--sc-space-16)); }
-.sc-land-business, .sc-land-app { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--sc-space-24); align-items: center; }
-.sc-land-business > div, .sc-land-app > div:first-child { max-width: 640px; }
-
-@media (min-width: 1280px) {
-  .sc-land-business, .sc-land-app { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--sc-space-24); }
-  .sc-land-business > :first-child, .sc-land-app > :first-child { grid-column: 1 / span 7; }
-  .sc-land-business > :last-child, .sc-land-app > :last-child { grid-column: 9 / span 4; justify-self: end; }
-}
-
-.sc-rows:has(.sc-event-row) { overflow: hidden; }
-
-@media (hover: hover) {
-  .sc-event-row:hover { background: var(--color-hover); }
-  .sc-lead-link:hover img { filter: brightness(1.08); }
+  .sc-land-do-wrap { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--sc-space-24); }
+  .sc-land-do-wrap > h2 { grid-column: 1 / span 4; padding-top: var(--sc-space-24); }
+  .sc-land-do-wrap > .sc-land-do { grid-column: 5 / span 8; }
+  .sc-land-app { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--sc-space-24); }
+  .sc-land-app > :first-child { grid-column: 1 / span 6; }
+  .sc-land-app > :last-child { grid-column: 7 / span 6; justify-self: end; justify-content: flex-end; }
 }
 
 /* ---- Footer ---- */

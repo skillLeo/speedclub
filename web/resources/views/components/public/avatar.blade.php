@@ -10,6 +10,7 @@
     @if ($media && ($media['variants'] ?? []) !== [])
         <x-public.photo :photo="$media" :sizes="$size.'px'" alt="" class="h-full w-full object-cover" />
     @else
-        <span aria-hidden="true" class="{{ $size >= 88 ? 't-title-2' : ($size <= 32 ? 'text-callout' : 'text-body-strong') }} text-ink-2">{{ $initial }}</span>
+        {{-- The 32 circle uses label.control (14/20 like callout, capped at 1.3×), so two letters still fit it at 200 % text (ADR-150). --}}
+        <span aria-hidden="true" class="{{ $size >= 88 ? 't-title-2' : ($size <= 32 ? 'text-label-control' : 'text-body-strong') }} text-ink-2">{{ $initial }}</span>
     @endif
 </span>

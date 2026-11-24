@@ -8,7 +8,7 @@ import type { TFunction } from 'i18next';
 import type { EventCard, EventDetail, EventLocation, EventStatus, EventType } from '@/api/queries/events';
 import { photoFields } from '@/features/profile/media';
 import type { FormatLocale } from '@/lib/format';
-import type { PhotoFields } from '@/ui';
+import type { PhotoFields } from '@/ui/Photo';
 
 export const ZONE = 'Europe/Berlin';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -140,6 +140,29 @@ export function timeRange(start: Date, end: Date | null, locale: FormatLocale, t
   });
 }
 
+/** M5.6: "19:12 Uhr" in Berlin (a check-in time). */
+export function clockText(date: Date, locale: FormatLocale, t: TFunction): string {
+  return t('events:time.clock', { time: clock(date, locale) });
+}
+
+/** M5.6: "Sa., 21. November, 17:00 Uhr" in Berlin (when the check-in opens). */
+export function momentText(date: Date, locale: FormatLocale, t: TFunction): string {
+  return `${dayWithMonth(date, locale, true)}, ${clockText(date, locale, t)}`;
+}
+
+/** M5.6: "21. November" (with the year when it is not this one) in Berlin: the day of a check-in, the gallery's last day. */
+export function dayText(date: Date, locale: FormatLocale, now: Date): string {
+  const sameYear = berlinParts(date).year === berlinParts(now).year;
+  return new Intl.DateTimeFormat(intl(locale), {
+    timeZone: ZONE,
+    day: 'numeric',
+    month: 'long',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+    .format(date)
+    .replace(/(\d{1,2}\.?) /, '$1\u00a0');
+}
+
 /** "Sa., 14. Juni · 18:00–21:00 Uhr": the whole when in one caption. */
 export function whenLine(start: Date, end: Date | null, locale: FormatLocale, t: TFunction): string {
   if (end && berlinDayKey(start) !== berlinDayKey(end)) return timeRange(start, end, locale, t);
@@ -193,7 +216,84 @@ export function weekGroupLabel(date: Date, now: Date, locale: FormatLocale, t: T
 }
 
 export type EventListRow<T extends Pick<EventCard, 'id' | 'starts_at'>> =
-  { kind: 'day'; key: string; label: string } | { kind: 'event'; key: string; event: T };
+  /** `date`: M5.6's day header line beside the label ("Heute" · "Montag, 16. November"); `accessibilityLabel` reads both. */
+  | { kind: 'day'; key: string; label: string; date?: string | null; accessibilityLabel?: string }
+  | { kind: 'event'; key: string; event: T };
+
+/** M5.6 (10 §4) day header of EVT-01: the day's name and its date, so the reader always sees the real day. */
+export type DayHeader = { key: string; label: string; date: string | null; accessibilityLabel: string };
+
+/**
+ * "Heute · Montag, 16. November", "Morgen · Dienstag, 17. November", "Mittwoch · 18. November" (the year when it is not this one). An
+ * event that started before today and is still running is today's.
+ */
+export function dayHeader(date: Date, now: Date, locale: FormatLocale, t: TFunction): DayHeader {
+  const today = berlinDayKey(now);
+  const ahead = daysBetween(today, berlinDayKey(date));
+  const day = ahead <= 0 ? now : date;
+  const key = berlinDayKey(day);
+  const sameYear = key.slice(0, 4) === today.slice(0, 4);
+  const full = new Intl.DateTimeFormat(intl(locale), {
+    timeZone: ZONE,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+    .format(day)
+    .replace(/(\d{1,2}\.?) /, '$1\u00a0');
+  if (ahead <= 1) {
+    const label = t(ahead <= 0 ? 'events:groups.today' : 'events:groups.tomorrow');
+    return { key, label, date: full, accessibilityLabel: `${label}, ${full}` };
+  }
+  const weekday = new Intl.DateTimeFormat(intl(locale), { timeZone: ZONE, weekday: 'long' }).format(day);
+  const rest = new Intl.DateTimeFormat(intl(locale), {
+    timeZone: ZONE,
+    day: 'numeric',
+    month: 'long',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+    .format(day)
+    .replace(/(\d{1,2}\.?) /, '$1\u00a0');
+  return { key, label: weekday, date: rest, accessibilityLabel: `${weekday}, ${rest}` };
+}
+
+/**
+ * M5.6 EVT-01 "Diese Woche" (and Heute · Wochenende · Monat): a header per Berlin day (`dayHeader`), cards soonest first as the server
+ * sends them. Without a start the card goes under "Ohne Termin".
+ */
+export function groupByDayHeaders<T extends Pick<EventCard, 'id' | 'starts_at'>>(
+  events: readonly T[],
+  now: Date,
+  locale: FormatLocale,
+  t: TFunction,
+): EventListRow<T>[] {
+  const rows: EventListRow<T>[] = [];
+  let current: string | null = null;
+  for (const event of events) {
+    const start = parseInstant(event.starts_at);
+    const header: DayHeader = start
+      ? dayHeader(start, now, locale, t)
+      : { key: 'none', label: t('events:groups.noDate'), date: null, accessibilityLabel: t('events:groups.noDate') };
+    if (header.key !== current) {
+      current = header.key;
+      rows.push({
+        kind: 'day',
+        key: `day.${header.key}`,
+        label: header.label,
+        date: header.date,
+        accessibilityLabel: header.accessibilityLabel,
+      });
+    }
+    rows.push({ kind: 'event', key: event.id, event });
+  }
+  return rows;
+}
+
+/** The indices of the day headers, for the list's sticky headers. */
+export function headerIndices(rows: readonly EventListRow<Pick<EventCard, 'id' | 'starts_at'>>[]): number[] {
+  return rows.flatMap((row, index) => (row.kind === 'day' ? [index] : []));
+}
 
 /** Cards by their Berlin start day, soonest first as the server sends them; a header before each day. */
 export function groupByDay<T extends Pick<EventCard, 'id' | 'starts_at'>>(
@@ -300,6 +400,20 @@ export function countsLine(
   const going = t('events:counts.going', { count: counts.going, value: format(counts.going) });
   if (counts.interested === 0) return going;
   return `${going} · ${t('events:counts.interested', { count: counts.interested, value: format(counts.interested) })}`;
+}
+
+/**
+ * DQ-P5-011: the answers after the meet, as history: "8 waren angemeldet" ("Niemand hatte zugesagt" for none). Who was only
+ * interested and how many places were free no longer matter once it is over.
+ */
+export function endedCountsLine(
+  counts: EventCard['counts'],
+  t: TFunction,
+  format: (n: number) => string,
+): string | null {
+  if (!counts) return null;
+  if (counts.going === 0) return t('events:counts.endedNone');
+  return t('events:counts.ended', { count: counts.going, value: format(counts.going) });
 }
 
 /**
@@ -471,7 +585,7 @@ export function sampleEvent(now: Date, t: TFunction): EventCard {
     cover: null,
     organiser: {
       username: 'speedclub.editorial',
-      display_name: 'SPEED CLUB Editorial',
+      display_name: 'Speedclub Editorial',
       city: null,
       avatar: null,
       is_sample: false,

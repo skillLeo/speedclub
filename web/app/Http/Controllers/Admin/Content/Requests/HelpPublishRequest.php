@@ -17,7 +17,7 @@ class HelpPublishRequest extends ContentRequest
     {
         return [
             'published' => ['required', 'boolean'],
-            'reason' => ['nullable', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

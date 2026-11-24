@@ -56,7 +56,8 @@ const props = defineProps<{
     templates: SorTemplate[];
     staffOptions: { id: number; name: string }[];
     messageCase: boolean;
-    ai?: { score: number; summary: string | null } | null;
+    /** M5.9: `template_key`, the statement-of-reasons template the triage suggests (DecisionComposer offers it, a human applies it). */
+    ai?: { score: number; summary: string | null; template_key?: string | null } | null;
 }>();
 
 const { can } = usePermissions();
@@ -311,7 +312,7 @@ const restrictionText = (d: DecisionDetail): string | null => {
             </template>
         </RecordLayout>
 
-        <DecisionComposer v-if="canDecide || qaDialog() === 'decide'" v-model:open="composerOpen" :case-id="c.id" :composer="composer" :templates="templates" :failed="failedDialog" test-id="ADM-21.composer" />
+        <DecisionComposer v-if="canDecide || qaDialog() === 'decide'" v-model:open="composerOpen" :case-id="c.id" :composer="composer" :templates="templates" :failed="failedDialog" :ai-template-key="ai?.template_key ?? null" test-id="ADM-21.composer" />
         <AppealDialog v-model:open="appealOpen" :appeal="appeal" :composer="composer" :templates="templates" :failed="failedDialog" test-id="ADM-21.appeal-dialog" />
         <Dialog v-model:open="reassignOpen" :title="trans('moderation.reassign.title')" size="sm" test-id="ADM-21.reassign-dialog">
             <Field :label="trans('moderation.reassign.staff')">

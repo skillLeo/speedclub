@@ -99,7 +99,9 @@
         "modification": "Modifikation",
         "comment": "Kommentar",
         "event": "Treffen",
-        "business": "Betrieb"
+        "business": "Betrieb",
+        "forum_post": "Forumsbeitrag",
+        "crew": "Crew"
     },
     "status": {
         "received": "Eingegangen",
@@ -160,7 +162,9 @@
             "restrict": "Wir haben Funktionen deines Kontos eingeschränkt.",
             "reverse": "Wir haben eine frühere Maßnahme aufgehoben.",
             "reverseAccount": "Wir haben die Maßnahme gegen dein Konto aufgehoben. Du kannst es wieder wie vorher nutzen.",
-            "reverseContent": "Wir haben die frühere Entscheidung aufgehoben. „{{label}}“ ist wieder für alle sichtbar."
+            "reverseContent": "Wir haben die frühere Entscheidung aufgehoben. „{{label}}“ ist wieder für alle sichtbar.",
+            "restrictForum": "Du kannst vorerst nichts im Forum schreiben.",
+            "restrictForumUntil": "Du kannst bis zum {{until}} nichts im Forum schreiben."
         },
         "reporterOutcome": {
             "no_action": "Wir haben „{{label}}“ geprüft und keinen Verstoß gegen unsere Regeln oder geltendes Recht festgestellt. Der Inhalt bleibt sichtbar.",
@@ -198,7 +202,7 @@
         "decisionAutomated": "Die Entscheidung wurde mit automatisierten Mitteln getroffen.",
         "decisionHuman": "Eine Person aus unserem Team hat entschieden, kein automatisiertes System.",
         "scope": {
-            "contentOpen": "Gilt für diesen Inhalt auf ganz SPEED CLUB. Er bleibt entfernt, es sei denn, ein Einspruch hat Erfolg.",
+            "contentOpen": "Gilt für diesen Inhalt auf ganz Speedclub. Er bleibt entfernt, es sei denn, ein Einspruch hat Erfolg.",
             "contentUntil": "Gilt für diesen Inhalt bis zum {{date}}.",
             "accountOpen": "Gilt für dein Konto und hat kein Enddatum.",
             "accountUntil": "Gilt für dein Konto bis zum {{date}}."
@@ -214,6 +218,7 @@
             "publishing": "Für dein Konto gilt noch eine Einschränkung: Veröffentlichen ist gesperrt. Entscheidungen ansehen und Einspruch einlegen kannst du trotzdem.",
             "messaging": "Für dein Konto gilt noch eine Einschränkung: Nachrichten schreiben ist gesperrt. Entscheidungen ansehen und Einspruch einlegen kannst du trotzdem.",
             "both": "Für dein Konto gelten noch Einschränkungen: Veröffentlichen und Nachrichten schreiben sind gesperrt. Entscheidungen ansehen und Einspruch einlegen kannst du trotzdem.",
+            "forum": "Für dein Konto gilt noch eine Einschränkung: Schreiben im Forum ist gesperrt. Entscheidungen ansehen und Einspruch einlegen kannst du trotzdem.",
             "reversalPrefix": "Diese Maßnahme ist aufgehoben."
         }
     },
@@ -250,6 +255,7 @@
         "modification": "Mod an {{label}}",
         "comment": "Kommentar von {{label}}",
         "event": "Treffen „{{label}}“",
+        "forum_post": "Beitrag in „{{label}}“",
         "gone": "Nicht mehr verfügbar"
     }
 }

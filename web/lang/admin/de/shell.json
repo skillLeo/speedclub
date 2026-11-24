@@ -1,5 +1,5 @@
 {
-    "brand": "SPEED CLUB",
+    "brand": "Speedclub",
     "brand_suffix": "Admin",
     "brand_short": "SC",
     "build": "Build :version",
@@ -39,7 +39,7 @@
     },
     "search": {
         "open": "Suche öffnen",
-        "placeholder": "Mitglied, Fahrzeug, QR-Code oder Fall suchen"
+        "placeholder": "Mitglied, Fahrzeug, Sticker-Code oder Fall suchen"
     },
     "env": {
         "local": "LOCAL",
@@ -86,13 +86,16 @@
         "submit": "Bestätigen und fortfahren",
         "required": "Gib dein Passwort ein.",
         "failed": "Das Passwort stimmt nicht.",
-        "throttled": "Zu viele Versuche. Warte kurz und versuche es dann erneut."
+        "throttled": "Zu viele Versuche. Warte kurz und versuche es dann erneut.",
+        "session_expired": "Deine Sitzung ist abgelaufen. Melde dich neu an, dann klappt es wieder. Gespeichert wurde nichts.",
+        "forbidden": "Dafür fehlt dir die Berechtigung.",
+        "sign_in": "Neu anmelden"
     },
     "palette": {
         "title": "Befehlspalette",
         "description": "Seiten öffnen und Datensätze finden",
         "input": "Seite oder Datensatz suchen",
-        "placeholder": "Wohin? Seite, @username, Kennung, QR-Code …",
+        "placeholder": "Wohin? Seite, @username, Kennung, Sticker-Code …",
         "results": "Treffer",
         "empty": "Nichts gefunden.",
         "failed": "Die Suche hat nicht geantwortet. Versuche es erneut.",

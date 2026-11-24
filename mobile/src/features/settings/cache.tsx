@@ -6,7 +6,8 @@ import { appConfigKey } from '@/api/queries/appConfig';
 import { meKey } from '@/api/queries/auth';
 import { memberSettingsKey } from '@/api/queries/settings';
 import { queryClient, removePersistedCache } from '@/api/queryClient';
-import { Dialog, toast } from '@/ui';
+import { Dialog } from '@/ui/Dialog';
+import { toast } from '@/ui/toast';
 
 /** What survives "Cache leeren": who is signed in, their settings and app-config. Everything else loads again. */
 const KEPT: readonly (readonly string[])[] = [meKey, memberSettingsKey, appConfigKey];

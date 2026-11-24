@@ -3,8 +3,19 @@ import { useEffect, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Button, ContextMenu, ContextMenuArea, ContextMenuButton, Dialog, ImageViewer, ListRow, OwnerCapsule, Photo, Sheet, Switch, Text, TextInput, ToastHost, dismissToast, toast, type ContextMenuItem } from '@/ui';
-import { useCurrentToast } from '@/ui/toast';
+import { Button } from '@/ui/Button';
+import { ContextMenu, ContextMenuArea, ContextMenuButton, type ContextMenuItem } from '@/ui/ContextMenu';
+import { Dialog } from '@/ui/Dialog';
+import { ImageViewer } from '@/ui/ImageViewer';
+import { ListRow } from '@/ui/ListRow';
+import { OwnerCapsule } from '@/ui/OwnerCapsule';
+import { Photo } from '@/ui/Photo';
+import { Sheet } from '@/ui/Sheet';
+import { Switch } from '@/ui/Switch';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { dismissToast, toast, useCurrentToast } from '@/ui/toast';
+import { ToastHost } from '@/ui/ToastHost';
 
 import { PHOTOS, noop, viewerImages } from '../data';
 import { FullBleed, Group, Panel, SectionScreen, Specimen, Wrap } from '../parts';

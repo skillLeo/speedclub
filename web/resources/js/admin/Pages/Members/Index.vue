@@ -13,6 +13,7 @@ import PageHeader from '../../Components/shell/PageHeader.vue';
 import { Button, ConfirmDialog, DateRangeField, Field, Input, Select, StatusPill, type Tone } from '../../Components/ui';
 import { focusRing } from '../../Components/ui/styles';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { usePermissions } from '../../lib/permissions';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
@@ -153,8 +154,8 @@ function postBulk(data: Record<string, unknown>, done: () => void): void {
     });
 }
 
-function confirmBulk(reason: string | null): void {
-    postBulk({ reason: reason ?? '' }, () => (confirmOpen.value = false));
+function confirmBulk(): void {
+    postBulk({}, () => (confirmOpen.value = false));
 }
 
 function submitRestrict(payload: Record<string, string | null>): void {
@@ -172,8 +173,8 @@ const exportEntries = computed<MenuEntry[]>(() =>
 );
 const listExportError = ref<string | null>(null);
 const listExporting = ref(false);
-function requestListExport(reason: string | null): void {
-    router.post(routeOr('admin.members.list-export', '/admin/members/export-request'), { reason: reason ?? '', filter: props.query.filter, sort: props.query.sort } as never, {
+function requestListExport(): void {
+    router.post(routeOr('admin.members.list-export', '/admin/members/export-request'), { filter: props.query.filter, sort: props.query.sort } as never, {
         preserveScroll: true,
         preserveState: true,
         onStart: () => {
@@ -194,7 +195,8 @@ const confirmTexts = computed(() => {
         confirm: trans(`members.bulk.${key}`),
     };
 });
-const fourEyes = computed(() => bulkAction.value === 'export' || bulkAction.value === 'delete' || bulkIds.value.length > 100);
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && (bulkAction.value === 'export' || bulkAction.value === 'delete' || bulkIds.value.length > 100));
 
 const resultOpen = ref(false);
 watch(
@@ -365,7 +367,6 @@ onMounted(() => {
             :confirm-label="confirmTexts.confirm"
             :tone="bulkAction === 'delete' ? 'danger' : 'neutral'"
             :typed="bulkAction === 'delete'"
-            reason
             :four-eyes="fourEyes"
             :processing="processing"
             :error="bulkError"
@@ -392,7 +393,6 @@ onMounted(() => {
             :body="trans('members.list_export.body', { count: formatNumber(rows.meta.total) })"
             :confirm-label="trans('members.list_export.submit')"
             tone="neutral"
-            reason
             four-eyes
             :processing="listExporting"
             :error="listExportError"

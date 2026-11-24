@@ -6,6 +6,7 @@ import { formatNumber } from '../../lib/format';
 import { qaState } from '../../lib/qa';
 import { usePermissions } from '../../lib/permissions';
 import { hasRoute, isCurrentRoute, routeOr } from '../../lib/routes';
+import { useFourEyes } from '../../composables/fourEyes';
 import { navigation, type NavItem } from '../../modules/registry';
 import Tooltip from '../ui/Tooltip.vue';
 import { focusRing } from '../ui/styles';
@@ -19,10 +20,11 @@ const props = withDefaults(defineProps<{ collapsed?: boolean }>(), { collapsed: 
 const emit = defineEmits<{ navigate: [] }>();
 const page = usePage();
 const { can, canAny } = usePermissions();
+const fourEyes = useFourEyes();
 
 const sections = computed(() => {
     void page.url;
-    return navigation((atom) => (Array.isArray(atom) ? canAny(atom) : can(atom)), hasRoute);
+    return navigation((atom) => (Array.isArray(atom) ? canAny(atom) : can(atom)), hasRoute, fourEyes.value);
 });
 
 function active(item: NavItem): boolean {

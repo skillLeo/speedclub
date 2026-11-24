@@ -102,6 +102,20 @@ const ADMIN_WRITES_WITHOUT_RECENT_PASSWORD = [
     'admin.config.releases.store' => 'a register entry; no runtime effect, audited',
     'admin.config.releases.update' => 'corrects a register entry; no runtime effect, audited',
     'admin.config.releases.sync' => 'reads docs/RELEASES.md idempotently; no runtime effect, audited',
+    // M5.5 ADM-66/67 Shop: reversible, audited catalogue edits; the two deletes keep the guard.
+    'admin.shop.products.store' => 'a new shop product starts hidden; audited',
+    'admin.shop.products.update' => 'edits a product; audited with before and after, a visible one must stay complete',
+    'admin.shop.products.visibility' => 'show / hide a product: reversible, audited',
+    'admin.shop.products.reorder' => 'the order of the grid: reversible, audited with before and after',
+    'admin.shop.products.restore' => 'brings a deleted product back hidden; audited',
+    'admin.shop.products.images.store' => 'adds a re-encoded photo; audited, removable',
+    'admin.shop.products.images.update' => 'alt text and focal point, re-cropped from the kept original; audited',
+    'admin.shop.products.images.reorder' => 'the order of the gallery: reversible, audited',
+    'admin.shop.products.images.destroy' => 'removes one photo (a visible product keeps one); audited, a new upload replaces it',
+    'admin.shop.banners.store' => 'a new banner starts inactive; audited',
+    'admin.shop.banners.update' => 'banner wording, link or photo; audited with before and after',
+    'admin.shop.banners.activate' => 'switches the hero: reversible, audited',
+    'admin.shop.banners.deactivate' => 'switches the hero off: reversible, audited',
 ];
 
 /** Admin write routes without a can:<atom> on the route, each with the reason. */
@@ -117,6 +131,7 @@ const ADMIN_WRITES_WITHOUT_ATOM = [
     'two-factor.confirm' => 'the staff member\'s own second factor',
     'admin.two-factor.skip' => 'the staff member\'s own enrolment (ADR-427)',
     'two-factor.disable' => 'the staff member\'s own second factor',
+    'admin.account.two-factor.disable' => 'the staff member\'s own second factor (ADR-540, Optional mode only)',
     'two-factor.regenerate-recovery-codes' => 'the staff member\'s own second factor',
     'admin.session.keep-alive' => 'every signed-in staff member',
     'admin.saved-views.store' => 'own views, scoped to the staff member in the Action',

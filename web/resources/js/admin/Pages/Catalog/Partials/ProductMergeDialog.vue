@@ -3,22 +3,20 @@ import { router } from '@inertiajs/vue3';
 import { trans, transChoice } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
 import DialogError from '../../../Components/patterns/DialogError.vue';
-import { Button, Combobox, Dialog, Field, Skeleton, Textarea, type SelectOption } from '../../../Components/ui';
+import { Button, Combobox, Dialog, Field, Skeleton, type SelectOption } from '../../../Components/ui';
 import { qaDialogFailed } from '../../../composables/pageState';
 import { formatNumber } from '../../../lib/format';
 import { useCatalogWrite } from '../shared';
 import { productWriteUrl, type ProductDetail } from './products';
 
 /**
- * ADM-57 "Zusammenführen" (09 §8.9; catalog.manage, ⚿, reason): a duplicate part hands its mods to the survivor (active, same category;
+ * ADM-57 "Zusammenführen" (09 §8.9; catalog.manage, ⚿): a duplicate part hands its mods to the survivor (active, same category;
  * the same brand first), its name becomes one of the survivor's spellings and it is archived. The candidates load when the dialog opens.
  */
 const open = defineModel<boolean>('open', { default: false });
 const props = defineProps<{ product: ProductDetail; candidates?: { value: string; label: string; mods: number }[]; testId: string }>();
 
 const target = ref<string | undefined>(undefined);
-const reason = ref('');
-const reasonError = ref<string | null>(null);
 const loading = ref(false);
 const loadFailed = ref(false);
 const write = useCatalogWrite();
@@ -43,8 +41,6 @@ watch(
     (value) => {
         if (!value) return;
         target.value = undefined;
-        reason.value = '';
-        reasonError.value = null;
         write.reset();
         if (props.candidates === undefined) load();
     },
@@ -56,13 +52,7 @@ const chosen = computed(() => props.candidates?.find((c) => c.value === target.v
 
 function submit(): void {
     if (chosen.value === null) return;
-    const length = reason.value.trim().length;
-    if (length < 10 || length > 1000) {
-        reasonError.value = trans('ui.confirm.reason_length');
-        return;
-    }
-    reasonError.value = null;
-    write.run('post', productWriteUrl(props.product.id, 'merge'), { into: chosen.value.value, reason: reason.value.trim() }, { sensitive: true, onSuccess: () => (open.value = false) });
+    write.run('post', productWriteUrl(props.product.id, 'merge'), { into: chosen.value.value }, { sensitive: true, onSuccess: () => (open.value = false) });
 }
 
 const serverError = computed(() => (failed ? trans('ui.state.server_error') : (write.errors.value.into ?? write.error.value)));
@@ -88,9 +78,6 @@ const formId = `${props.testId}-form`;
                 <p v-if="chosen" class="rounded-sm border border-line px-12 py-8 text-admin-base text-ink-2" :data-testid="`${testId}.outcome`">
                     {{ transChoice('catalog.products.merge.outcome', product.mods, { count: formatNumber(product.mods), survivor: chosen.label, name: product.name }) }}
                 </p>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="reasonError ?? write.errors.value.reason ?? null" required>
-                    <Textarea v-model="reason" :rows="3" :maxlength="1000" show-count :data-testid="`${testId}.reason`" />
-                </Field>
             </template>
         </form>
         <template #footer>

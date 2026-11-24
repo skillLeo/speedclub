@@ -1,5 +1,6 @@
+import { AppWordmark } from '@/features/auth/AppWordmark';
 import type { FlashListRef } from '@shopify/flash-list';
-import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
@@ -24,39 +25,42 @@ import {
 import { DEFAULT_BUSINESS_FILTERS, useBusinessList, type BusinessCardData } from '@/api/queries/businesses';
 import type { MakeTile } from '@/api/queries/discover';
 import { useHomeEvents, type EventCard } from '@/api/queries/events';
+import { useForumActive, type ForumThreadRow } from '@/api/queries/forum';
+import { ForumActiveModule } from '@/features/forum/components/ForumModules';
 import { usePartsOn } from '@/api/queries/parts';
+import { resolveCarOfTheDay, ownsCarOfTheDay, type CarOfTheDay } from '@/api/queries/carOfTheDay';
+import { useScanAction } from '@/features/dex/entry';
+import { useBadgeUnlockToast } from '@/features/gift/components/BadgeUnlock';
+import { CarOfTheDayModule } from '@/features/gift/components/CarOfTheDayModule';
+import '@/features/gift/qaGift';
 import { searchPath } from '@/features/discover/navigation';
-import { EventsModule } from '@/features/events/components/EventsModule';
+import { useInboxActions } from '@/features/shell/inboxActions';
 import { useTabScrollToTop } from '@/features/shell/retap';
 import { AnnouncementBanner } from '@/features/announcements/AnnouncementBanner';
+import { WrappedCountdownBanner } from '@/features/wrapped/components/WrappedCountdownBanner';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarInset } from '@/features/shell/tabBarLayout';
 import { useAddVehicle } from '@/features/shell/useAddVehicle';
 import { useRetainedListScroll } from '@/features/shell/useRetainedListScroll';
-import { useTabBadges } from '@/features/shell/useTabBadges';
+import { now } from '@/lib/clock';
 import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
-import { useRequireAuth, useSessionStore } from '@/state/session';
+import { useSessionStore } from '@/state/session';
 import { createStyles, layout, space, useBreakpoint, useTheme } from '@/theme';
 import { motionDuration, useMotionPreference } from '@/ui/motion';
-import {
-  BrandHeader,
-  Button,
-  CollapsingFlashList,
-  EmptyState,
-  MediaCardSkeleton,
-  Screen,
-  SectionHeader,
-  SegmentedControl,
-  Skeleton,
-  SkeletonText,
-  Spinner,
-  Text,
-  useCollapsingHeader,
-  type HeaderAction,
-} from '@/ui';
+import { BrandHeader, BRAND_HEADER_LOGO_HEIGHT, BRAND_HEADER_LOGO_WIDTH } from '@/ui/BrandHeader';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { MediaCardSkeleton } from '@/ui/MediaCard';
+import { Screen } from '@/ui/Screen';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { CollapsingFlashList, useCollapsingHeader } from '@/ui/useCollapsingHeader';
 import { LARGE_FONT_SCALE } from '@/ui/rowParts';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
@@ -70,8 +74,11 @@ import { HomeRail, HomeRailSkeleton } from '../components/HomeRail';
 import { SampleLead } from '../components/SampleLead';
 import { UpdateGroupCard, UpdateGroupCardSkeletonRows } from '../components/UpdateGroupCard';
 import { NewInGarageRail, NewInGarageRailSkeleton } from '../components/NewInGarageRail';
+import { NextEventsModule } from '../components/NextEventsModule';
 import { PopularModsChips } from '../components/PopularModsChips';
-import { offlineLine } from '../model';
+import { CotdVoteModule } from '../components/CotdVoteModule';
+import { useCotdVote, useCotdVoteEnabled, voteView } from '../cotdVote';
+import { nextEvents, offlineLine } from '../model';
 import { updatePath, useOpenMember, vehiclePath } from '../navigation';
 
 const ROUTE = 'HOME-01';
@@ -82,8 +89,6 @@ const NO_ANCHOR = { disabled: true } as const;
 const NEWEST_PATH = { pathname: '/discover/search', params: { sort: 'updated' } } as const;
 /** 09 §7.3: a module after every ~6 items of the stream. */
 export const MODULE_EVERY = 6;
-/** 09 §7.3 "Treffen in deiner Nähe": two EventCards and "Alle Treffen". */
-const HOME_EVENT_CARDS = 2;
 
 type Module = 'weekly' | 'members' | 'mods';
 type Section = 'newBuilds' | Module;
@@ -91,6 +96,10 @@ type Section = 'newBuilds' | Module;
 /** The rows of the list. 09 §7.3 order: lead → Neu in der Garage → the stream, with a module after every 6 items. */
 export type HomeRow =
   | { kind: 'hero'; vehicle: FeedVehicle }
+  /** M5.9d "Car of the Day": the lead from 18:00 to 18:00, in the hero's place (one lead, never two). */
+  | { kind: 'cotd'; pick: CarOfTheDay }
+  /** R4-2.1 "Wähle das Car of the Day von morgen": under the lead while the vote module has something to show. */
+  | { kind: 'vote' }
   | { kind: 'section'; section: Section }
   | { kind: 'rail'; vehicles: readonly FeedVehicle[] }
   | { kind: 'card'; vehicle: FeedVehicle; key: string; showLatest?: boolean }
@@ -101,6 +110,8 @@ export type HomeRow =
   | { kind: 'mods'; mods: readonly PopularMod[] }
   /** M4.12 "Treffen in deiner Nähe": the module brings its own header and "Alle Treffen". */
   | { kind: 'events'; events: readonly EventCard[] }
+  /** M5.8 "Gerade im Forum" (10 §7.4): up to three active threads, with their header and "Zum Forum". */
+  | { kind: 'forum'; threads: readonly ForumThreadRow[] }
   /** M4.14 "Marken im Fokus" (09 §7.3): three BrandTiles with their header. */
   | { kind: 'brands'; brands: readonly MakeTile[] }
   /** M4.14 "Werkstätten" (09 §7.3): a BusinessCard rail with its header. */
@@ -212,12 +223,18 @@ export function frameOf(pane: number, gutter: number, desktop: boolean): HomeFra
  */
 export function forYouRows(input: {
   hero: FeedVehicle | undefined;
+  /** M5.9d: today's Car of the Day; when there is one it is the lead and the curated hero gives way (ADR request in the report). */
+  carOfTheDay?: CarOfTheDay | null;
+  /** R4-2.1: the vote module shows (its round, its skeleton or its error line); it follows the lead. */
+  vote?: boolean;
   newBuilds: readonly FeedVehicle[];
   weekly?: FeedVehicle | undefined;
   members: readonly ActiveMember[];
   mods: readonly PopularMod[];
   /** M4.12: the next meets, the first module of the stream (09 §7.3 order: Treffen, Build der Woche, …). */
   events?: readonly EventCard[];
+  /** M5.8: "Gerade im Forum", the module after the meets (10 §7.4); empty hides it. */
+  forum?: readonly ForumThreadRow[];
   /** M4.14: "Marken im Fokus" and "Werkstätten", after Build der Woche (09 §7.3 order); empty hides them. */
   brands?: readonly MakeTile[];
   businesses?: readonly BusinessCardData[];
@@ -227,10 +244,14 @@ export function forYouRows(input: {
 }): HomeRow[] {
   const rows: HomeRow[] = [];
   const shown = new Set<string>();
-  if (input.hero) {
+  if (input.carOfTheDay) {
+    rows.push({ kind: 'cotd', pick: input.carOfTheDay });
+    shown.add(input.carOfTheDay.vehicle.id);
+  } else if (input.hero) {
     rows.push({ kind: 'hero', vehicle: input.hero });
     shown.add(input.hero.id);
   }
+  if (input.vote) rows.push({ kind: 'vote' });
   const rail = input.newBuilds.filter((vehicle) => !shown.has(vehicle.id)).slice(0, NEW_BUILDS_PREVIEW);
   if (rail.length > 0) {
     rows.push({ kind: 'section', section: 'newBuilds' }, { kind: 'rail', vehicles: rail });
@@ -238,6 +259,7 @@ export function forYouRows(input: {
   }
   const modules: HomeRow[][] = [];
   if (input.events && input.events.length > 0) modules.push([{ kind: 'events', events: input.events }]);
+  if (input.forum && input.forum.length > 0) modules.push([{ kind: 'forum', threads: input.forum }]);
   if (input.weekly && !shown.has(input.weekly.id)) {
     shown.add(input.weekly.id);
     modules.push([{ kind: 'section', section: 'weekly' }, { kind: 'weekly', vehicle: input.weekly }]);
@@ -383,24 +405,22 @@ export function HomeScreen() {
   const { t } = useTranslation('home');
   const format = useFormat();
   const tabs = useTranslation('common').t;
-  const tEvents = useTranslation('events').t;
   const styles = useStyles();
   const router = useRouter();
-  const pathname = usePathname();
   const motion = useMotionPreference();
   const online = useOnline();
   // M3.5: Start behind a pushed screen or another tab loads no further pages.
   const shown = useScreenFocused();
   const qaState = useQaState();
   const session = useSessionStore((state) => state.status);
-  const member = session === 'member';
   const me = useSessionStore((state) => state.member?.username ?? null);
-  const requireAuth = useRequireAuth();
   const restriction = useBrowseRestriction();
   const addVehicle = useAddVehicle();
   const openMember = useOpenMember();
-  const badges = useTabBadges();
   const header = useCollapsingHeader();
+  const scan = useScanAction(ROUTE);
+  // M5.9d: the one badge unlock toast of this app start (also mounted on Profil).
+  useBadgeUnlockToast(ROUTE);
   const inset = useTabBarInset();
   const { gutter, kind, width: windowWidth } = useBreakpoint();
   const { fontScale } = useTheme();
@@ -411,6 +431,7 @@ export function HomeScreen() {
   const preview = useNewBuildsPreview();
   const modules = useHomeModules();
   const homeEvents = useHomeEvents();
+  const forumActive = useForumActive(tab === 'for_you');
   const partsOn = usePartsOn();
   const homeBusinessList = useBusinessList(DEFAULT_BUSINESS_FILTERS, tab === 'for_you');
   const forYou = useFeed('for_you');
@@ -433,6 +454,12 @@ export function HomeScreen() {
   const mediaWidth = bleed ? pane : frame.column;
 
   const hero = qaEmpty ? undefined : featured.data?.[0]?.vehicle;
+  // M5.9d: from 18:00 the Car of the Day leads Start (contract §3); the curated lead yields for that day.
+  const carOfTheDay = useMemo(() => (qaEmpty ? null : resolveCarOfTheDay(modules.data, me)), [me, modules.data, qaEmpty]);
+  // R4-2.1: the vote module's row exists while it draws something (flag on, a member, a round that is not unavailable).
+  const voteQuery = useCotdVote();
+  const voteEnabled = useCotdVoteEnabled();
+  const vote = tab === 'for_you' && voteView(voteQuery, qaState, voteEnabled) !== 'hidden';
   const weekly = qaEmpty ? undefined : weeklyBuild(featured.data);
   const quote = weeklyQuote(featured.data);
   const stream = useMemo(() => (qaEmpty ? [] : flattenFeed(feed.data?.pages)), [feed.data?.pages, qaEmpty]);
@@ -446,17 +473,21 @@ export function HomeScreen() {
     const data = modules.data;
     return forYouRows({
       hero,
+      carOfTheDay,
+      vote,
       newBuilds: qaEmpty ? [] : (preview.data ?? []),
       weekly,
       members: qaEmpty ? [] : (data?.active_members ?? []),
       mods: qaEmpty ? [] : (data?.popular_mods ?? []),
-      events: qaEmpty ? [] : (homeEvents.data ?? []),
+      // M5.6 "Nächste Treffen": two coming meets, without cancelled or ended ones; none → no module.
+      events: qaEmpty ? [] : nextEvents(homeEvents.data ?? [], now()),
+      forum: qaEmpty ? [] : (forumActive.data ?? []),
       brands: qaEmpty || !partsOn ? [] : focusBrands(data?.brands_in_focus),
       businesses: qaEmpty ? [] : homeBusinesses(homeBusinessList.data?.pages[0]?.data),
       stream,
       streamHead: firstPageLength(feed.data?.pages),
     });
-  }, [feed.data?.pages, hero, homeBusinessList.data?.pages, homeEvents.data, modules.data, partsOn, preview.data, qaEmpty, stream, tab, weekly]);
+  }, [carOfTheDay, vote, feed.data?.pages, hero, homeBusinessList.data?.pages, forumActive.data, homeEvents.data, modules.data, partsOn, preview.data, qaEmpty, stream, tab, weekly]);
 
   const guestFollowing = tab === 'following' && session === 'guest';
   const hasData = feed.data !== undefined;
@@ -464,7 +495,8 @@ export function HomeScreen() {
   // The lead and the rail are requests of their own above the stream: the skeleton holds until they answer (or fail), so the page
   // never jumps down when they arrive after the stream.
   const pending = (query: { isPending: boolean; fetchStatus: string }) => query.isPending && query.fetchStatus !== 'paused';
-  const topPending = tab === 'for_you' && !qaEmpty && (pending(featured) || pending(preview));
+  // M5.9d: the modules carry the Car of the Day, which takes the lead: waiting for them keeps the lead from swapping under the reader.
+  const topPending = tab === 'for_you' && !qaEmpty && (pending(featured) || pending(preview) || pending(modules));
   const loading =
     !guestFollowing && (qaState === 'loading' || (qaState === 'default' && ((!hasData && pending(feed)) || (hasData && topPending))));
   let state: ReactNode = null;
@@ -548,7 +580,6 @@ export function HomeScreen() {
     [router],
   );
   const openMod = useCallback((mod: PopularMod) => router.navigate(searchPath(mod.query)), [router]);
-  const openNotifications = () => requireAuth(() => router.push('/notifications'), { returnTo: pathname });
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -622,6 +653,8 @@ export function HomeScreen() {
         {restriction ? <RestrictionNotice message={restriction} style={styles.notice} testID={`${ROUTE}.restricted`} /> : null}
         {/* M3.5 ADM-30: the current announcement, under the segments on both tabs. */}
         <AnnouncementBanner routeId={ROUTE} style={styles.announcement} />
+        {/* M5.9e: the Wrapped countdown in the last 7 days before a release (server flag), dismissed for the session. */}
+        <WrappedCountdownBanner routeId={ROUTE} style={styles.announcement} />
       </View>
       {railInPage ? (
         <View style={[styles.railInPage, { width: frame.rail ?? 0 }]}>
@@ -707,6 +740,24 @@ export function HomeScreen() {
     switch (item.kind) {
       case 'hero':
         return media(<HomeLead vehicle={item.vehicle} width={mediaWidth} onOpen={open} testID={`${ROUTE}.featured`} />, styles.heroGap);
+      case 'cotd':
+        return media(
+          <CarOfTheDayModule
+            pick={item.pick}
+            width={mediaWidth}
+            own={ownsCarOfTheDay(item.pick, me)}
+            onOpen={open}
+            textStyle={bleed ? gutterStyle : null}
+            testID={`${ROUTE}.cotd`}
+          />,
+          styles.heroGap,
+        );
+      case 'vote':
+        return (
+          <InColumn frame={frameStyle} style={moduleColumnStyle}>
+            <CotdVoteModule column={frame.column} bleed={bleed ? gutter : 0} onOpen={open} testID={`${ROUTE}.vote`} />
+          </InColumn>
+        );
       case 'section':
         return (
           <InColumn frame={frameStyle} style={[columnStyle, styles.section]}>
@@ -769,7 +820,13 @@ export function HomeScreen() {
       case 'events':
         return (
           <InColumn frame={frameStyle} style={moduleColumnStyle}>
-            <EventsModule title={tEvents('home.titleAll')} events={item.events} limit={HOME_EVENT_CARDS} width={frame.column} routeId={ROUTE} />
+            <NextEventsModule events={item.events} width={frame.column} routeId={ROUTE} />
+          </InColumn>
+        );
+      case 'forum':
+        return (
+          <InColumn frame={frameStyle} style={moduleColumnStyle}>
+            <ForumActiveModule threads={item.threads} routeId={ROUTE} />
           </InColumn>
         );
       case 'brands':
@@ -795,13 +852,8 @@ export function HomeScreen() {
     }
   };
 
-  const bell: HeaderAction = {
-    icon: 'bell',
-    label: t('bell.label'),
-    onPress: openNotifications,
-    ...(member && badges.home ? { unread: { count: badges.notifications, label: t('bell.unread', { count: badges.notifications }) } } : {}),
-    testID: `${ROUTE}.bell`,
-  };
+  // M5.9b: the SCAN button (STREET DEX) before the bell; M5.2 (10 §1): Nachrichten after it, on the trailing edge.
+  const inbox = useInboxActions(ROUTE);
 
   return (
     <Screen edges={EDGES} testID={`${ROUTE}.root`}>
@@ -850,9 +902,10 @@ export function HomeScreen() {
         {/* 09 §6.2 d: the wordmark and the bell float over the list and hide on scroll down; the segments stay (§7.3 sticky). */}
         <BrandHeader
           scroll={header}
-          actions={[bell]}
+          actions={[scan, ...inbox]}
           title={tabs('tabs.home')}
-          logo={desktop ? false : undefined}
+          // Client round 3: the logo published in ADM-28, not the bundled one.
+          logo={desktop ? false : <AppWordmark width={BRAND_HEADER_LOGO_WIDTH} height={BRAND_HEADER_LOGO_HEIGHT} />}
           contentWidth={bleed ? undefined : frame.width}
           onHeight={onHeaderHeight}
           accessory={

@@ -6,7 +6,7 @@ source: docs/04_SCREEN_REGISTER.md SET-17
 
 # Lizenzen
 
-SPEED CLUB baut auf Open-Source-Software auf. Wir danken allen, die daran mitarbeiten.
+Speedclub baut auf Open-Source-Software auf. Wir danken allen, die daran mitarbeiten.
 
 ## Wichtige Bestandteile
 
@@ -20,5 +20,9 @@ SPEED CLUB baut auf Open-Source-Software auf. Wir danken allen, die daran mitarb
 | Inter und Inter Display (Schriftarten) | SIL Open Font License 1.1 |
 | Archivo (Schriftart) | SIL Open Font License 1.1 |
 | SecLists (Pwdb top 1000000), Auszug: häufige Passwörter ab 10 Zeichen | MIT |
+
+## Daten
+
+Ortsdaten: GeoNames ([geonames.org](https://www.geonames.org/)), CC BY 4.0 ([Lizenz](https://creativecommons.org/licenses/by/4.0/deed.de)). Für STREET DEX haben wir die Liste auf Orte in Deutschland ab 1.000 Einwohnern gekürzt und die deutschen Ortsnamen übernommen.
 
 Die vollständige Liste mit allen Lizenztexten ergänzen wir vor dem Start. Wenn du vorab einen Lizenztext brauchst, schreib an [[Kontakt-E-Mail]].

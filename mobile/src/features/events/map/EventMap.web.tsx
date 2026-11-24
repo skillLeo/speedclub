@@ -65,6 +65,7 @@ export function EventMap(props: EventMapProps) {
     center,
     zoom,
     pins,
+    areas,
     selectedId,
     exact,
     picked,
@@ -90,11 +91,11 @@ export function EventMap(props: EventMapProps) {
   const state = useMemo(
     () =>
       mapState(
-        { mode, center, zoom, pins, selectedId, exact, picked, attribution },
+        { mode, center, zoom, pins, areas, selectedId, exact, picked, attribution },
         theme,
         motion.reduced || !motion.enabled,
       ),
-    [attribution, center, exact, mode, motion.enabled, motion.reduced, picked, pins, selectedId, theme, zoom],
+    [areas, attribution, center, exact, mode, motion.enabled, motion.reduced, picked, pins, selectedId, theme, zoom],
   );
   const latestState = useEffectEvent(() => state);
   const deliver = useEffectEvent((raw: unknown) => {

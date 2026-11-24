@@ -34,6 +34,11 @@ jest.mock('expo-router', () => ({
   router: mockRouter,
   useLocalSearchParams: () => mockParams,
   usePathname: () => '/discover',
+  // M5.2: the segment swipe asks the stack where the page sits (Entdecken's root here).
+  useNavigation: () => ({
+    getState: () => ({ routeNames: ['discover/index', 'events/index'], routes: [{ key: 'discover-1', name: 'discover/index' }] }),
+    addListener: jest.fn(() => jest.fn()),
+  }),
   useFocusEffect: (effect: () => void | (() => void)) => {
     const { useEffect } = jest.requireActual<typeof import('react')>('react');
     useEffect(effect, [effect]);
@@ -147,13 +152,21 @@ describe('DISC-01 2.0 (09 §7.5)', () => {
   it('sends the chosen scope with the search, and "Alles" sends none', async () => {
     stubFetch({ '/discover': { body: { data: { makes: MAKES, collections: [], popular_mods: [], similar_members: null } } } });
     await renderWithProviders(<DiscoverScreen />);
+    // DQ-M52-04: the chips show once there is something to search for.
+    await screen.findByTestId('DISC-01.search');
+    expect(screen.queryByTestId('DISC-01.scope.all')).toBeNull();
+    await fireEvent.changeText(screen.getByTestId('DISC-01.search'), 'lukas');
     expect(await screen.findByTestId('DISC-01.scope.all')).toBeChecked();
+    expect(screen.getByTestId('DISC-01.scope.vehicles')).toHaveTextContent('Fahrzeuge');
     await fireEvent.press(screen.getByTestId('DISC-01.scope.members'));
     expect(screen.getByTestId('DISC-01.scope.members')).toBeChecked();
-    await fireEvent.changeText(screen.getByTestId('DISC-01.search'), 'lukas');
     expect(screen.getByTestId('DISC-01.searchSubmit')).toHaveTextContent('Mitglieder zu „lukas“ suchen');
     await fireEvent(screen.getByTestId('DISC-01.search'), 'submitEditing');
     expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/discover/search', params: { q: 'lukas', understand: '1', scope: 'members' } });
+    // The submitted search left the field empty, so the chips are gone; the scope stays chosen for the next one.
+    expect(screen.queryByTestId('DISC-01.scope.all')).toBeNull();
+    await fireEvent.changeText(screen.getByTestId('DISC-01.search'), 'e46');
+    expect(await screen.findByTestId('DISC-01.scope.members')).toBeChecked();
     await fireEvent.press(screen.getByTestId('DISC-01.scope.all'));
   });
 
@@ -432,7 +445,9 @@ describe('DISC-02 query understanding (contract §3)', () => {
     await renderWithProviders(<SearchScreen />);
     await fireEvent.changeText(screen.getByTestId('DISC-02.search'), 'nissan');
     await fireEvent(screen.getByTestId('DISC-02.search'), 'submitEditing');
-    await waitFor(() => expect(mockRouter.setParams).toHaveBeenLastCalledWith(expect.objectContaining({ make: 'nissan' })));
+    // The understanding answer arrives after the plain `q` update; since M5.8 the forum search link adds a render pass, and under
+    // the full suite on a loaded machine that took longer than waitFor's default second. The assertion is unchanged.
+    await waitFor(() => expect(mockRouter.setParams).toHaveBeenLastCalledWith(expect.objectContaining({ make: 'nissan' })), { timeout: 5000 });
     expect(screen.getByTestId('DISC-02.understood')).toHaveProp('aria-live', 'polite');
   });
 

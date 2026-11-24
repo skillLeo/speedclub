@@ -25,8 +25,8 @@ return [
     'security' => [
         'secure_link_invalid' => 'This link has expired or was already used. Sign in and check Settings › Security activity to see what happened.',
         'ticket_subject' => 'This wasn’t me: account secured',
-        'ticket_message' => 'Created automatically: I did not do ":event" on :time (:device). SPEED CLUB signed out every device. Please check my account.',
-        'ticket_message_plain' => 'Created automatically: I did not do an activity in my account. SPEED CLUB signed out every device. Please check my account.',
+        'ticket_message' => 'Created automatically: I did not do ":event" on :time (:device). Speedclub signed out every device. Please check my account.',
+        'ticket_message_plain' => 'Created automatically: I did not do an activity in my account. Speedclub signed out every device. Please check my account.',
         'ticket_removed' => 'Removed because it was added after the reported sign-in: :items.',
         'removed' => [
             'passkeys' => '{1} 1 passkey|[2,*] :count passkeys',
@@ -63,14 +63,14 @@ return [
     'export' => [
         'busy' => 'A lot of exports are being created right now. Try again in an hour.',
         'readme' => [
-            'title' => 'SPEED CLUB – your data export',
+            'title' => 'Speedclub – your data export',
             'created' => 'Created on :date for @:username (:email).',
-            'intro' => 'This ZIP file holds the data SPEED CLUB stores about your account (Art. 15 and 20 GDPR). The files are JSON (UTF-8) and open in any text editor.',
+            'intro' => 'This ZIP file holds the data Speedclub stores about your account (Art. 15 and 20 GDPR). The files are JSON (UTF-8) and open in any text editor.',
             'files' => [
                 'profile.json' => 'Profile: e-mail address, username, name, city, bio, status, member since.',
                 'settings.json' => 'Settings: language, theme, power display, privacy, notifications, two-factor protection on or off.',
                 'consents.json' => 'Consents: versions of the terms and the privacy policy, times, marketing consent.',
-                'vehicles.json' => 'Vehicles with specs, modifications, history and QR codes, drafts and deleted ones (within the 30 days) included.',
+                'vehicles.json' => 'Vehicles with specs, modifications, history, stickers (codes and designs), Dex number and Build Score (with its parts and history), drafts and deleted ones (within the 30 days) included.',
                 'photos.json' => 'Every photo you uploaded; the originals are in the folder photos/.',
                 'follows.json' => 'Whom you follow and who follows you (usernames only).',
                 'blocks.json' => 'Accounts you blocked.',
@@ -90,11 +90,27 @@ return [
                 'browser_sessions.json' => 'Signed-in browsers with browser, system and last use.',
                 'business.json' => 'Your business: as owner the application with Impressum, document note, status and the team’s reason, plus the team; as team member the business and your role; open team invitations.',
                 'business_tags.json' => '“Installed by” tags on your modifications and the tags you decided for your business (without other members).',
+                'social.json' => 'Your reactions to builds, builds you follow, your collections, comments and the mentions you wrote.',
+                'events.json' => 'Meets you organised (with the place and your updates) and your answers.',
+                'maintenance.json' => 'Your maintenance items and service log with costs, odometer readings and the reminders sent.',
+                'spots.json' => 'Cars you spotted (vehicle, Dex number, city and state, time, counted or removed), your Dex progress and your First Spotter foils. No coordinates.',
+                'spots_of_my_cars.json' => 'What you see in the app about the spots of your cars: counts, cities (day spots only), the last 30 days and spotters only when they show their spots; plus ghost mode, pause and hidden cities.',
+                'progress.json' => 'Your XP with type, points and date, level and title, your badges and your Founding Member number.',
+                'invites.json' => 'Your invite codes with their status and the code you joined with. Other members by username only, otherwise “a member”.',
+                'car_of_the_day.json' => 'Days one of your cars was Car of the Day, with the story line.',
+                'car_of_the_day_votes.json' => 'Your Car of the Day votes: the day, the car you chose, when you voted and last changed it.',
+                'wrapped.json' => 'Your Season Wrapped with every card as the app shows it (without photo links).',
+                // M5.8 Forum.
+                'forum.json' => 'Your forum topics (title, category, status, dates), your posts with your text as you wrote it, your “helpful” marks and the topics you follow. Of topics by other members only the title.',
+                // M5.7 Statistiken.
+                'insights.json' => 'How often your profile and cars were viewed per day, by source (app, web, sticker scan, shared link). Totals only, never who.',
             ],
             'not_included' => 'Not included: your password and your two-factor keys (stored only as check values), photos other members sent you, and other members’ data. We do not store IP addresses of members.',
-            'staff_copy' => 'Copy for the SPEED CLUB team (four-eyes approval): without message texts, chat photos and reactions. Each conversation lists only the other members, folder, dates and counts.',
+            'staff_copy' => 'Copy for the Speedclub team (four-eyes approval): without message texts, chat photos and reactions. Each conversation lists only the other members, folder, dates and counts.',
             'questions' => 'Questions? Write to us at :support.',
         ],
         'cooldown' => 'You can request one export every 24 hours. You can request the next one from :date.',
+        // M5.9d invites.json: the other side of an invite who is not public.
+        'a_member' => 'a member',
     ],
 ];

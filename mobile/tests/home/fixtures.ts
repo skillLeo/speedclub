@@ -13,6 +13,7 @@ export function feedVehicle(overrides: Partial<FeedVehicle> = {}): FeedVehicle {
     visibility: 'public',
     is_main: true,
     is_sample: false,
+    build_score: null,
     eyebrow: 'NISSAN',
     make: 'Nissan',
     model: 'Skyline GT-R',
@@ -48,6 +49,7 @@ export function feedVehicle(overrides: Partial<FeedVehicle> = {}): FeedVehicle {
     mod_count: 9,
     updates_count: null,
     viewer: null,
+    comment_thread: { enabled: true, can_write: false },
     published_at: '2026-03-01T10:00:00+00:00',
     updated_at: '2026-11-04T09:00:00+00:00',
     wizard: null,
@@ -162,6 +164,7 @@ export function modules(overrides: Partial<HomeModules> = {}): HomeModules {
     build_updates: [buildUpdate()],
     active_members: [activeMember()],
     popular_mods: MODS,
+    car_of_the_day: null,
     ...overrides,
   };
 }
@@ -182,9 +185,39 @@ export function notification(overrides: Partial<AppNotification> = {}): AppNotif
     actor_count: 1,
     vehicle: null,
     event: null,
+    forum_thread: null,
     details: {},
     read_at: null,
     created_at: '2026-11-08T09:00:00+00:00',
     ...overrides,
   };
 }
+
+/** R4-2.1: a candidate of the Car of the Day round (contract-cotd-voting §2.1). */
+export const voteCandidate = (position: number, vehicle: FeedVehicle, extra: Record<string, unknown> = {}) => ({
+  position,
+  own: false,
+  votable: true,
+  vehicle,
+  ...extra,
+});
+
+/** R4-2.1: GET car-of-the-day/vote, an open round for 22 Nov with R34 · M4 · GTI (Picker order 1…3), no vote yet. */
+export const voteRoundBody = (round: Record<string, unknown> = {}, last: unknown = null) => ({
+  data: {
+    round: {
+      day: '2026-11-22',
+      status: 'open',
+      unavailable_reason: null,
+      opens_at: '2026-11-21T18:00:00+01:00',
+      closes_at: '2026-11-22T17:00:00+01:00',
+      can_vote: true,
+      cannot_vote_reason: null,
+      can_vote_from: null,
+      my_vote: null,
+      candidates: [voteCandidate(2, M4), voteCandidate(1, R34), voteCandidate(3, GTI)],
+      ...round,
+    },
+    last_result: last,
+  },
+});

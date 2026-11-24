@@ -64,7 +64,7 @@ it('queues an export, builds a valid ZIP of JSON and photo originals, and mails 
         ->and($export->expires_at?->diffInDays($export->ready_at, true))->toEqualWithDelta(7, 0.01);
 
     $files = setReadZip($export);
-    expect(array_keys($files))->toContain('README.txt', 'profile.json', 'settings.json', 'consents.json', 'vehicles.json', 'photos.json', 'follows.json', 'blocks.json', 'saves.json', 'reports.json', 'support_tickets.json', 'devices.json', 'security_events.json', 'reactions.json', 'push_devices.json', 'browser_sessions.json')
+    expect(array_keys($files))->toContain('README.txt', 'profile.json', 'settings.json', 'consents.json', 'vehicles.json', 'photos.json', 'follows.json', 'blocks.json', 'saves.json', 'reports.json', 'support_tickets.json', 'devices.json', 'security_events.json', 'reactions.json', 'push_devices.json', 'browser_sessions.json', 'spots.json', 'spots_of_my_cars.json', 'progress.json', 'invites.json', 'car_of_the_day.json', 'wrapped.json')
         ->and(collect(array_keys($files))->filter(fn ($name) => str_starts_with($name, 'photos/'))->count())->toBe(3);
 
     $profile = json_decode($files['profile.json'], true);

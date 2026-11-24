@@ -7,6 +7,7 @@ use App\Models\BuildUpdate;
 use App\Models\Reaction;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\BuildScore\BuildScores;
 use App\Services\Notifications\Notifier;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -40,6 +41,11 @@ class React
 
             return [$reaction, $inserted];
         });
+
+        if ($new) {
+            // M5.9c: a new reactor counts for the car's Build Score (each member once).
+            app(BuildScores::class)->touch($target instanceof Vehicle ? $target->id : $target->vehicle_id);
+        }
 
         if ($new) {
             $vehicle = $target instanceof Vehicle ? $target : $target->vehicle;

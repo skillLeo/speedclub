@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Button, Icon, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 
 import { SettingsPage } from '../components/SettingsPage';
 import { resetAccountDeleted, useAccountDeleted } from '../deletion';

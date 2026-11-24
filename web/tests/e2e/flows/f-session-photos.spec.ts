@@ -29,11 +29,19 @@ async function meOf(page: Page): Promise<{ status: number; data?: Record<string,
   return { status: response.status(), data: response.ok() ? (await response.json()).data : undefined };
 }
 
-/** Picks a real photo through the browser's file chooser, and returns the upload's answer. */
-async function uploadThrough(page: Page, button: string, path: string): Promise<Response> {
+/**
+ * Picks a real photo through the browser's file chooser and returns the upload's answer. A cover can show a car, so it passes the
+ * plate blur step first (M5.9a, 10 §16, ADR-509: the blur on with its suggested rectangle; `plateBlur` names that step's route); an
+ * avatar goes up as it is (ProfileImagesEditor).
+ */
+async function uploadThrough(page: Page, button: string, path: string, plateBlur: string | null = null): Promise<Response> {
   const answer = page.waitForResponse(isPost(path), { timeout: 60_000 });
   const [chooser] = await Promise.all([page.waitForEvent('filechooser'), id(page, button).click()]);
   await chooser.setFiles(photoFile('generic-exterior-01.jpg'));
+  if (plateBlur !== null) {
+    await expect(id(page, `${plateBlur}.plateBlur.confirm`)).toBeVisible();
+    await id(page, `${plateBlur}.plateBlur.confirm`).click();
+  }
   return answer;
 }
 
@@ -71,7 +79,7 @@ test.describe('profile photos on the member web (OBS-R11-1)', () => {
     expect(avatar.status(), 'POST me/avatar').toBeLessThan(300);
     await expect(id(page, 'PROF-03.avatar.image')).toBeVisible();
 
-    const cover = await uploadThrough(page, 'PROF-03.cover.pick', 'me/cover');
+    const cover = await uploadThrough(page, 'PROF-03.cover.pick', 'me/cover', 'PROF-03');
     expect(cover.status(), 'POST me/cover').toBeGreaterThanOrEqual(200);
     expect(cover.status(), 'POST me/cover').toBeLessThan(300);
     await expect(id(page, 'PROF-03.images.error')).toHaveCount(0);

@@ -23,4 +23,6 @@ enum CatalogEvent: string
     case ImportStarted = 'catalog.import_started';
     case ImportFinished = 'catalog.import_finished';
     case Exported = 'catalog.exported';
+    // M5.9 (m5.9-contract §8): staff deleted a generation's cached AI spec suggestion.
+    case AiSpecsDeleted = 'catalog.ai_specs_deleted';
 }

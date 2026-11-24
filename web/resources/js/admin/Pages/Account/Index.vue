@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { PhArrowsClockwise, PhCopy, PhDownloadSimple, PhEye, PhEyeSlash, PhKey, PhSignOut } from '@phosphor-icons/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, onMounted, reactive, ref } from 'vue';
@@ -82,6 +82,15 @@ async function changePassword(): Promise<void> {
     } finally {
         passwordBusy.value = false;
     }
+}
+
+// ---- ADR-540: switching the own 2FA off (2FA für Admin-Konten Optional; recent password only) --------------------------------------
+const page = usePage();
+const twoFactorOptional = computed(() => page.props.governance?.staff_two_factor === 'optional');
+const disableOpen = ref(false);
+const disableAction = useAdminAction();
+function disableTwoFactor(): void {
+    disableAction.run('delete', routeOr('admin.account.two-factor.disable', '/admin/account/two-factor'), {}, { sensitive: true, onSuccess: () => (disableOpen.value = false) });
 }
 
 // ---- rotation -----------------------------------------------------------------------------------------------------------------
@@ -234,12 +243,18 @@ onMounted(() => {
                     <h2 id="adm51-2fa" class="text-headline text-ink">{{ trans('account.two_factor.title') }}</h2>
                     <p class="text-admin-base text-ink-2 tabular-nums">{{ account.two_factor_confirmed_at ? trans('account.two_factor.on', { date: formatDate(account.two_factor_confirmed_at) }) : trans('account.two_factor.off') }}</p>
                 </div>
-                <template v-if="rotation.step === 'idle'">
+                <!-- ADR-540: 2FA für Admin-Konten Optional: an account without TOTP can set it up; one with TOTP may switch it off. -->
+                <p v-if="twoFactorOptional" class="text-admin-base text-warning" role="note" data-testid="ADM-51.two-factor.warning">{{ trans('account.two_factor.optional_warning') }}</p>
+                <div v-if="!account.two_factor_confirmed_at" class="flex flex-wrap gap-8">
+                    <Button size="sm" variant="secondary" :href="routeOr('admin.two-factor.setup', '/admin/two-factor/setup')" data-testid="ADM-51.two-factor.setup">{{ trans('account.two_factor.set_up') }}</Button>
+                </div>
+                <template v-else-if="rotation.step === 'idle'">
                     <p v-if="account.rotation_expires_at" class="text-admin-base text-warning" data-testid="ADM-51.rotation.pending">{{ trans('account.two_factor.pending', { time: formatTime(account.rotation_expires_at) }) }}</p>
                     <p class="text-admin-base text-ink-2">{{ trans('account.two_factor.rotate_body') }}</p>
                     <div class="flex flex-wrap gap-8">
                         <Button size="sm" variant="secondary" :icon="PhArrowsClockwise" data-testid="ADM-51.rotation.begin" @click="(rotation.step = 'code', (rotation.error = null))">{{ account.rotation_expires_at ? trans('account.two_factor.restart') : trans('account.two_factor.rotate') }}</Button>
                         <Button v-if="account.rotation_expires_at" size="sm" variant="ghost" data-testid="ADM-51.rotation.cancel-pending" @click="cancelRotation()">{{ trans('account.two_factor.cancel') }}</Button>
+                        <Button v-if="twoFactorOptional" size="sm" variant="ghost" data-testid="ADM-51.two-factor.disable" @click="(disableAction.reset(), (disableOpen = true))">{{ trans('account.two_factor.disable') }}</Button>
                     </div>
                 </template>
                 <form v-else-if="rotation.step === 'code'" class="flex flex-col gap-16" novalidate @submit.prevent="startRotation()">
@@ -272,6 +287,16 @@ onMounted(() => {
                         </div>
                     </form>
                 </div>
+                <ConfirmDialog
+                    v-model:open="disableOpen"
+                    :title="trans('account.two_factor.disable_title')"
+                    :body="trans('account.two_factor.disable_body')"
+                    :confirm-label="trans('account.two_factor.disable')"
+                    :processing="disableAction.processing.value"
+                    :error="disableAction.error.value"
+                    test-id="ADM-51.two-factor.disable-dialog"
+                    @confirm="disableTwoFactor()"
+                />
             </section>
 
             <!-- Recovery codes -->

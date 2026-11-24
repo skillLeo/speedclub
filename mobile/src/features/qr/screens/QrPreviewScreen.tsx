@@ -12,21 +12,29 @@ import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Button, ErrorState, Photo, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { ErrorState } from '@/ui/ErrorState';
+import { Photo } from '@/ui/Photo';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { urlSegments } from '@/ui/QRDisplay';
 
 import { displayQrUrl, guestViewUrl } from '../code';
 import { QrPage } from '../components/QrPage';
-import { QrNotice, QrSignInState, QrState } from '../components/parts';
+import { QrColumns, QrNotice, QrSignInState, QrState } from '../components/parts';
 import { openPublicPage } from '../openPublicPage';
 import { isBlockedByStaff } from '../status';
 
-const ROUTE = 'QR-04';
+const ROUTE = 'STK-02-preview';
 /** The 4:3 photo spans the column (QR card width from 768, the phone's column below); the variant is picked for that. */
 const PHOTO_WIDTH = size.qrMaxOnScreen + space[24] * 2;
 
 const useStyles = createStyles((t) => ({
   card: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
   cardText: { gap: t.space[4], padding: t.space[16] },
+  // As QRDisplay: inline blocks give the browser a break after the last slash, so the address never breaks inside a word.
+  urlSegmentWeb: { display: 'inline-block' as 'flex' },
   notice: { marginTop: t.space[16] },
   explain: { marginTop: t.space[16] },
   open: { marginTop: t.space[24] },
@@ -84,35 +92,63 @@ function PreviewBody({ qr }: { qr: QrCodeData }) {
   };
 
   return (
-    <>
-      <View style={styles.card} testID={`${ROUTE}.card`}>
-        <Photo {...photo} aspect="4:3" corner="none" label={qr.vehicle.cover?.alt ?? undefined} testID={`${ROUTE}.photo`} />
-        <View style={styles.cardText}>
-          <Text variant="headline">{keepNameTogether(qr.vehicle.full_title)}</Text>
-          <Text variant="callout" color="text.secondary" hyphenate={false} selectable testID={`${ROUTE}.url`}>
-            {displayQrUrl(url)}
-          </Text>
+    <QrColumns
+      main={
+        <View style={styles.card} testID={`${ROUTE}.card`}>
+          <Photo
+            {...photo}
+            aspect="4:3"
+            corner="none"
+            label={qr.vehicle.cover?.alt ?? undefined}
+            testID={`${ROUTE}.photo`}
+          />
+          <View style={styles.cardText}>
+            <Text variant="displayWordmark">{keepNameTogether(qr.vehicle.full_title)}</Text>
+            <Text
+              variant="callout"
+              color="text.secondary"
+              hyphenate={false}
+              selectable
+              testID={`${ROUTE}.url`}
+            >
+              {urlSegments(displayQrUrl(url)).map((segment) => (
+                <Text
+                  key={segment}
+                  variant="callout"
+                  color="text.secondary"
+                  hyphenate={false}
+                  style={isWeb ? styles.urlSegmentWeb : undefined}
+                >
+                  {segment}
+                </Text>
+              ))}
+            </Text>
+          </View>
         </View>
-      </View>
-      {isBlockedByStaff(qr) ? (
-        <QrNotice message={t('preview.blocked')} style={styles.notice} testID={`${ROUTE}.blocked`} />
-      ) : null}
-      <Text variant="body" color="text.secondary" style={styles.explain} testID={`${ROUTE}.explain`}>
-        {t(explanationKey(qr))}
-      </Text>
-      <Button
-        label={t('preview.open')}
-        icon="arrow-right"
-        role="link"
-        href={isWeb ? guestUrl : undefined}
-        size="l"
-        fullWidth
-        loading={opening}
-        onPress={onPress}
-        style={styles.open}
-        testID={`${ROUTE}.open`}
-      />
-    </>
+      }
+      side={
+        <>
+          {isBlockedByStaff(qr) ? (
+            <QrNotice message={t('preview.blocked')} style={styles.notice} testID={`${ROUTE}.blocked`} />
+          ) : null}
+          <Text variant="body" color="text.secondary" style={styles.explain} testID={`${ROUTE}.explain`}>
+            {t(explanationKey(qr))}
+          </Text>
+          <Button
+            label={t('preview.open')}
+            icon="arrow-right"
+            role="link"
+            href={isWeb ? guestUrl : undefined}
+            size="l"
+            fullWidth
+            loading={opening}
+            onPress={onPress}
+            style={styles.open}
+            testID={`${ROUTE}.open`}
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -127,12 +163,17 @@ export function QrPreviewScreen() {
   const session = useSessionStore((state) => state.status);
   const query = useQrCode(vehicleId);
   const qr = query.data;
-  const answered = query.error instanceof ApiError && (query.error.status === 403 || query.error.status === 404);
+  const answered =
+    query.error instanceof ApiError && (query.error.status === 403 || query.error.status === 404);
 
   let body: ReactNode;
   if (session === 'guest') {
     body = <QrSignInState routeId={ROUTE} />;
-  } else if (qaState === 'loading' || session === 'loading' || (!qr && query.isPending && query.fetchStatus !== 'paused' && qaState === 'default')) {
+  } else if (
+    qaState === 'loading' ||
+    session === 'loading' ||
+    (!qr && query.isPending && query.fetchStatus !== 'paused' && qaState === 'default')
+  ) {
     body = <PreviewSkeleton />;
   } else if (qaState === 'empty' || (!qr && answered)) {
     body = (
@@ -142,7 +183,12 @@ export function QrPreviewScreen() {
         icon="qr-code"
         title={t('unavailable.title')}
         body={t('unavailable.body')}
-        action={{ label: t('unavailable.garage'), onPress: () => router.navigate('/garage'), variant: 'secondary', size: 'm' }}
+        action={{
+          label: t('unavailable.garage'),
+          onPress: () => router.navigate('/garage'),
+          variant: 'secondary',
+          size: 'm',
+        }}
       />
     );
   } else if (qaState === 'error' || !qr) {
@@ -165,8 +211,10 @@ export function QrPreviewScreen() {
       routeId={ROUTE}
       title={t('preview.title')}
       subtitle={qr ? keepNameTogether(qr.vehicle.full_title) : undefined}
-      subtitlePending={!qr && session !== 'guest' && (qaState === 'loading' || query.fetchStatus === 'fetching')}
-      fallback="/profile/qr"
+      subtitlePending={
+        !qr && session !== 'guest' && (qaState === 'loading' || query.fetchStatus === 'fetching')
+      }
+      fallback="/stickers"
       offlineLabel={t('common.offlineBanner')}
     >
       {body}

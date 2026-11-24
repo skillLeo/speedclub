@@ -4,9 +4,11 @@ namespace App\Services\Approvals;
 
 use App\Enums\ApprovalEvent;
 use App\Enums\ApprovalStatus;
+use App\Enums\StaffStatus;
 use App\Models\ApprovalRequest;
 use App\Models\Staff;
 use App\Services\Audit\Audit;
+use App\Services\Governance\Governance;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,6 +32,12 @@ use Throwable;
  * payload again, in one transaction under the request's row lock (a bulk handler runs record by record after that commit,
  * RunsRecordByRecord). Every step is audited; the executed action writes its own event. The executors refuse to run anywhere else
  * (FourEyes, Approvals::executing()).
+ *
+ * ADR-540 (client decision 2026-11-23): four-eyes is a governance switch (Governance::fourEyes(), default off). While it is off,
+ * request() records the request and executes it at once with the requester as the executor (direct()): the same handler, the same
+ * re-validation, the same executor checks (FourEyes accepts requester = executor only for such a direct run), audited as
+ * `approval.direct` instead of `approval.approved`, next to the action's own event. Never for a request about the requester
+ * themselves, and an Owner-only action still needs an Owner. Switched back on, everything waits for a second person as before.
  *
  * Errors: AuthorizationException (403) when a staff member may not ask or decide, ValidationException (422) for a bad reason, comment
  * or payload at the request, ApprovalConflict (409) when the request is no longer pending.
@@ -55,9 +63,10 @@ final class Approvals
     public function request(string $action, array $payload, string $reason, Staff $by, ?Model $subject = null): ApprovalRequest
     {
         $handler = $this->handlers->get($action);
+        // ADR-540: the internal reason is optional ('' when none, stored as '' in the NOT NULL column, null in the audit event).
         $reason = trim($reason);
 
-        Validator::make(['reason' => $reason], ['reason' => ['required', 'string', 'min:10', 'max:1000']])->validate();
+        Validator::make(['reason' => $reason], ['reason' => ['nullable', 'string', 'max:1000']])->validate();
 
         if (! $by->isActive() || ! $by->can($handler->atom())) {
             throw new AuthorizationException;
@@ -71,6 +80,11 @@ final class Approvals
         }
 
         $summary = $handler->describe($payload);
+
+        if (! Governance::fourEyes()) {
+            return $this->direct($handler, $action, $payload, $reason, $by, $subject, $summary);
+        }
+
         $key = $this->pendingKey($action, $by, $payload, $subject);
 
         try {
@@ -97,7 +111,12 @@ final class Approvals
                     'status' => ApprovalStatus::Pending,
                     'pending_key' => $key,
                     'expires_at' => now()->addHours(config()->integer('speedclub.approvals.ttl_hours')),
-                ])->save();
+                ]);
+                // SEC-P5-01 (ADR-507): who could approve an Owner-Override action when it was asked. The override needs this list empty.
+                $request->eligible_at_request = in_array($action, OwnerOverride::ACTIONS, true)
+                    ? array_values($this->eligibleApprovers($request)->map(fn (Staff $staff): int => (int) $staff->getKey())->all())
+                    : null;
+                $request->save();
 
                 Audit::record(ApprovalEvent::Requested->value, $request, after: [
                     'action' => $action,
@@ -143,34 +162,103 @@ final class Approvals
             $handler = $this->handlers->get($locked->action);
             $this->ensureMayDecide($locked, $approver, $handler);
 
-            try {
-                $this->ensureRequesterMayStill($locked, $handler);
-                $handler->validate($locked->payload);
-
-                if ($handler instanceof RunsRecordByRecord) {
-                    $locked->forceFill([
-                        'status' => ApprovalStatus::Executing,
-                        'pending_key' => null,
-                        'decided_by' => $approver->getKey(),
-                        'decided_at' => now(),
-                        'decision_comment' => $comment,
-                    ])->save();
-
-                    return [$locked, $handler];
-                }
-
-                $result = DB::transaction(fn (): array => $this->run($handler, $locked, $approver));
-            } catch (ValidationException|DomainException|InvalidArgumentException $refused) {
-                $this->finish($locked, ApprovalStatus::Failed, $approver, $comment, ['error' => $this->describeRefusal($refused)]);
-
-                return [$locked, null];
-            }
-
-            $this->finish($locked, ApprovalStatus::Executed, $approver, $comment, $result);
-
-            return [$locked, null];
+            return $this->executeLocked($locked, $handler, $approver, $comment, direct: false);
         });
 
+        return $this->finishStepwise($decided, $approver, $comment, direct: false);
+    }
+
+    /**
+     * ADR-540: four-eyes is off, so the request is recorded and executed at once by its requester. Refused (403, nothing recorded) for
+     * a request about the requester themselves (Approvals::isAbout(), ConcernsStaff) and for an Owner-only action asked by a non-Owner:
+     * those are the rules that keep a single person from raising their own rights, and they hold without a second person too.
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  array{title: string, subject_label: string|null, lines: list<array{label: string, before?: string|null, after?: string|null}>}  $summary
+     *
+     * @throws AuthorizationException|ValidationException
+     */
+    private function direct(ApprovalHandler $handler, string $action, array $payload, string $reason, Staff $by, ?Model $subject, array $summary): ApprovalRequest
+    {
+        /** @var array{0: ApprovalRequest, 1: ApprovalHandler|null} $decided */
+        $decided = DB::transaction(function () use ($handler, $action, $payload, $reason, $by, $subject, $summary): array {
+            $request = new ApprovalRequest;
+            $request->forceFill([
+                'action' => $action,
+                'subject_type' => $subject?->getMorphClass(),
+                'subject_id' => $subject === null ? null : (string) $subject->getKey(),
+                'payload' => $payload,
+                'summary' => $summary,
+                'reason' => $reason,
+                'requested_by' => $by->getKey(),
+                'status' => ApprovalStatus::Pending,
+                'pending_key' => null,
+                'expires_at' => now()->addHours(config()->integer('speedclub.approvals.ttl_hours')),
+            ]);
+            $request->eligible_at_request = null;
+
+            $allowed = $by->isActive()
+                && ! self::isAbout($request, $by)
+                && ! ($handler instanceof ConcernsStaff && $handler->concerns($payload, $by))
+                && (! $handler->requiresOwner($payload) || $by->isOwner());
+
+            if (! $allowed) {
+                throw new AuthorizationException;
+            }
+
+            $request->save();
+
+            return $this->executeLocked($request, $handler, $by, null, direct: true);
+        });
+
+        return $this->finishStepwise($decided, $by, null, direct: true);
+    }
+
+    /**
+     * The common part of approve() and direct(), inside the request's transaction: the requester's rights and the payload again, then
+     * the handler in a savepoint (or, for a record-by-record handler, the request marked executing for finishStepwise()).
+     *
+     * @return array{0: ApprovalRequest, 1: ApprovalHandler|null}
+     */
+    private function executeLocked(ApprovalRequest $locked, ApprovalHandler $handler, Staff $executor, ?string $comment, bool $direct): array
+    {
+        try {
+            $this->ensureRequesterMayStill($locked, $handler);
+            $handler->validate($locked->payload);
+
+            if ($handler instanceof RunsRecordByRecord) {
+                $locked->forceFill([
+                    'status' => ApprovalStatus::Executing,
+                    'pending_key' => null,
+                    'decided_by' => $executor->getKey(),
+                    'decided_at' => now(),
+                    'decision_comment' => $comment,
+                ])->save();
+
+                return [$locked, $handler];
+            }
+
+            $result = DB::transaction(fn (): array => $this->run($handler, $locked, $executor, direct: $direct));
+        } catch (ValidationException|DomainException|InvalidArgumentException $refused) {
+            $this->finish($locked, ApprovalStatus::Failed, $executor, $comment, ['error' => $this->describeRefusal($refused), ...($direct ? ['direct' => true] : [])]);
+
+            return [$locked, null];
+        }
+
+        $direct
+            ? $this->finish($locked, ApprovalStatus::Executed, $executor, $comment, [...$result, 'direct' => true], ApprovalEvent::Direct)
+            : $this->finish($locked, ApprovalStatus::Executed, $executor, $comment, $result);
+
+        return [$locked, null];
+    }
+
+    /**
+     * A record-by-record handler (the bulk actions) runs after the commit that marked it executing, each record in its own transaction.
+     *
+     * @param  array{0: ApprovalRequest, 1: ApprovalHandler|null}  $decided
+     */
+    private function finishStepwise(array $decided, Staff $executor, ?string $comment, bool $direct): ApprovalRequest
+    {
         [$locked, $stepwise] = $decided;
 
         if ($stepwise === null || $locked->status !== ApprovalStatus::Executing) {
@@ -179,22 +267,133 @@ final class Approvals
 
         // A closed browser tab must not stop a run half-way; each record commits on its own anyway.
         ignore_user_abort(true);
+        $marker = $direct ? ['direct' => true] : [];
 
         try {
-            $result = $this->run($stepwise, $locked, $approver);
+            $result = $this->run($stepwise, $locked, $executor, direct: $direct);
         } catch (ValidationException|DomainException|InvalidArgumentException $refused) {
-            DB::transaction(fn () => $this->finish($locked, ApprovalStatus::Failed, $approver, $comment, ['error' => $this->describeRefusal($refused)]));
+            DB::transaction(fn () => $this->finish($locked, ApprovalStatus::Failed, $executor, $comment, ['error' => $this->describeRefusal($refused), ...$marker]));
 
             return $locked;
         } catch (Throwable $failure) {
-            DB::transaction(fn () => $this->finish($locked, ApprovalStatus::Failed, $approver, $comment, ['error' => 'interrupted']));
+            DB::transaction(fn () => $this->finish($locked, ApprovalStatus::Failed, $executor, $comment, ['error' => 'interrupted', ...$marker]));
 
             throw $failure;
         }
 
-        DB::transaction(fn () => $this->finish($locked, ApprovalStatus::Executed, $approver, $comment, $result));
+        DB::transaction(fn () => $this->finish($locked, ApprovalStatus::Executed, $executor, $comment, [...$result, ...$marker], $direct ? ApprovalEvent::Direct : null));
 
         return $locked;
+    }
+
+    /**
+     * ADR-507 Owner-Override: the requesting Owner executes their own pending request of a publishing action (OwnerOverride::ACTIONS)
+     * with a reason, because no second eligible approver exists, nobody could approve it when it was asked, no approval rights were taken
+     * from anyone within the cool-down and the governance switch allows it. Inside the request's row lock (with the governance row
+     * share-locked) the policy is checked again, so a second approver who appeared in the meantime closes this door; then the handler
+     * runs exactly as in approve(), with the Owner as approver and the override marked on the execution (checked by the executor rule of
+     * FourEyes). Audited as `approval.owner_override` INSTEAD of `approval.approved` (SEC-P5-04: no filter on approvals counts it as a
+     * four-eyes approval), with who was not counted and why (SF-2), besides the executed action's own event; the request ends executed
+     * (decided by the Owner, the reason as the decision comment) or failed. The alert mail is the caller's (OverrideApproval).
+     *
+     * @throws AuthorizationException|OwnerOverrideRefused|ApprovalConflict|ValidationException
+     */
+    public function overrideByOwner(ApprovalRequest $request, Staff $owner, string $reason, OwnerOverride $policy): ApprovalRequest
+    {
+        $reason = trim($reason);
+        Validator::make(['reason' => $reason], ['reason' => ['nullable', 'string', 'max:1000']])->validate();
+
+        return DB::transaction(function () use ($request, $owner, $reason, $policy): ApprovalRequest {
+            $locked = $this->lockPending($request);
+
+            if ($locked->hasExpired()) {
+                $this->expireLocked($locked);
+
+                return $locked;
+            }
+
+            $policy->ensureAllowed($locked, $owner, $this->eligibleApprovers($locked), lock: true);
+            $handler = $this->handlers->get($locked->action);
+
+            if ($handler instanceof RunsRecordByRecord) {
+                throw new AuthorizationException('An Owner-Override never runs a bulk action.');
+            }
+
+            try {
+                $this->ensureRequesterMayStill($locked, $handler);
+                $handler->validate($locked->payload);
+                $result = DB::transaction(fn (): array => $this->run($handler, $locked, $owner, ownerOverride: true));
+            } catch (ValidationException|DomainException|InvalidArgumentException $refused) {
+                $this->finish($locked, ApprovalStatus::Failed, $owner, $reason, ['error' => $this->describeRefusal($refused), 'owner_override' => true]);
+
+                return $locked;
+            }
+
+            $this->finish($locked, ApprovalStatus::Executed, $owner, $reason, [...$result, 'owner_override' => true], ApprovalEvent::OwnerOverride, [
+                'eligible_at_request' => 0,
+                'eligible_now' => 0,
+                'not_counted' => $this->notCounted($locked),
+                'subject_type' => $locked->subject_type,
+                'subject_id' => $locked->subject_id,
+            ]);
+
+            return $locked;
+        });
+    }
+
+    /**
+     * The staff who may be asked to approve at all (ADR-507, SF-2): active, not deleted, through their invitation (the mailbox is proved:
+     * password_proof_required is false, which also excludes an account whose second factor was reset until its new password is set).
+     * A staff member who accepted the invitation but has not enrolled the second factor yet COUNTS: EnsureStaffTwoFactor takes them to the
+     * enrolment at their next sign-in, so they can approve minutes later. Roles and atoms eager-loaded, sorted by name.
+     *
+     * @return Collection<int, Staff>
+     */
+    public function approverCandidates(): Collection
+    {
+        return Staff::query()
+            ->where('status', StaffStatus::Active)
+            ->where('password_proof_required', false)
+            ->whereNull('anonymised_at')
+            ->with(['roles.permissions', 'permissions'])
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Who could approve this request now (ADR-507, the pending notice names them): approverCandidates() other than the requester for whom
+     * mayDecide() holds (approvals.decide, the action's atoms, Owner where the handler says so, never the subject). Sorted by name.
+     *
+     * @return Collection<int, Staff>
+     */
+    public function eligibleApprovers(ApprovalRequest $request): Collection
+    {
+        return $this->approverCandidates()
+            ->reject(fn (Staff $staff): bool => $staff->getKey() === $request->requested_by)
+            ->filter(fn (Staff $staff): bool => $this->mayDecide($request, $staff))
+            ->values();
+    }
+
+    /**
+     * For the override's audit event (SF-2): the staff with approvals.decide who were not counted, and why (`deactivated`, `suspended`,
+     * or `not_through_invitation` for an invitation not accepted yet or a second factor reset waiting for its new password).
+     *
+     * @return list<array{id: int, why: string}>
+     */
+    private function notCounted(ApprovalRequest $request): array
+    {
+        return array_values(Staff::query()
+            ->whereNull('anonymised_at')
+            ->whereKeyNot($request->requested_by)
+            ->where(fn (Builder $query) => $query->where('status', '!=', StaffStatus::Active)->orWhere('password_proof_required', true))
+            ->with(['roles.permissions', 'permissions'])
+            ->get()
+            ->filter(fn (Staff $staff): bool => $staff->can('approvals.decide'))
+            ->map(fn (Staff $staff): array => [
+                'id' => (int) $staff->getKey(),
+                'why' => $staff->status !== StaffStatus::Active ? $staff->status->value : 'not_through_invitation',
+            ])
+            ->all());
     }
 
     /**
@@ -210,7 +409,7 @@ final class Approvals
      */
     public function deny(ApprovalRequest $request, Staff $by, string $comment): ApprovalRequest
     {
-        $comment = $this->comment($comment, required: true);
+        $comment = $this->comment($comment, required: false); // ADR-540: no required reason, also not on a denial
 
         return DB::transaction(function () use ($request, $by, $comment): ApprovalRequest {
             $locked = $this->lockPending($request);
@@ -391,10 +590,10 @@ final class Approvals
     /**
      * @return array<string, mixed>
      */
-    private function run(ApprovalHandler $handler, ApprovalRequest $request, Staff $approver): array
+    private function run(ApprovalHandler $handler, ApprovalRequest $request, Staff $approver, bool $ownerOverride = false, bool $direct = false): array
     {
         $previous = self::$executing;
-        self::$executing = new ApprovalExecution($request, $approver);
+        self::$executing = new ApprovalExecution($request, $approver, $ownerOverride, $direct);
 
         try {
             return $handler->execute($request, $approver);
@@ -483,8 +682,9 @@ final class Approvals
 
     /**
      * @param  array<string, mixed>|null  $result
+     * @param  array<string, mixed>  $extra  more `after` fields of the event
      */
-    private function finish(ApprovalRequest $request, ApprovalStatus $status, Staff $by, ?string $comment, ?array $result): void
+    private function finish(ApprovalRequest $request, ApprovalStatus $status, Staff $by, ?string $comment, ?array $result, ?ApprovalEvent $event = null, array $extra = []): void
     {
         $now = now();
 
@@ -498,7 +698,7 @@ final class Approvals
             'result' => $result,
         ])->save();
 
-        $event = match ($status) {
+        $event ??= match ($status) {
             ApprovalStatus::Executed => ApprovalEvent::Approved,
             ApprovalStatus::Failed => ApprovalEvent::Failed,
             ApprovalStatus::Denied => ApprovalEvent::Denied,
@@ -511,6 +711,7 @@ final class Approvals
             'requested_by' => $request->requested_by,
             'decided_by' => $request->decided_by,
             'result' => $result,
+            ...$extra,
         ], reason: $comment, actor: $by);
     }
 

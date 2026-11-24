@@ -53,7 +53,7 @@ it('lists every versioned key the staff member may open, with rollback only wher
     adm32SignedIn('owner');
 
     $this->get('/admin/content/versions')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
-        ->where('keys', ['branding', 'home_curation', 'announcements', 'remote_config', 'rate_limits', 'org', 'retention']));
+        ->where('keys', ['branding', 'home_curation', 'announcements', 'remote_config', 'rate_limits', 'org', 'retention', 'governance']));
     $this->get('/admin/content/versions?key=rate_limits')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p
         ->where('configKey', 'rate_limits')->where('canRollback', false)->where('editRoute', 'admin.moderation.rules'));
     $this->get('/admin/content/versions?key=branding')->assertOk()->assertInertia(fn (AssertableInertia $p) => $p->where('canRollback', true));

@@ -4,7 +4,12 @@ import { View } from 'react-native';
 import { variantUrl } from '@/features/profile/media';
 import { isWeb } from '@/lib/platform';
 import { createStyles, size } from '@/theme';
-import { Avatar, Hairline, Header, PressableScale, Skeleton, SkeletonBlock, SkeletonText, Text, type HeaderAction } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { Hairline } from '@/ui/Hairline';
+import { Header, type HeaderAction } from '@/ui/Header';
+import { PressableScale } from '@/ui/PressableScale';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import type { ChatMember } from '../model';
 

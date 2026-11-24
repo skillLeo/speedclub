@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Auth;
 
+use App\Http\Requests\Api\V1\Auth\Concerns\CarriesInviteCode;
 use App\Http\Requests\Api\V1\Auth\Concerns\SignsIn;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -11,7 +12,7 @@ use Illuminate\Validation\Rule;
  */
 class GoogleSignInRequest extends FormRequest
 {
-    use SignsIn;
+    use CarriesInviteCode, SignsIn;
 
     /**
      * @return array<string, mixed>
@@ -24,11 +25,12 @@ class GoogleSignInRequest extends FormRequest
             'nonce' => ['required', 'string', 'min:16', 'max:256'],
             'locale' => ['nullable', 'string', Rule::in(config()->array('speedclub.locales'))],
             ...$this->deviceRules(),
+            ...$this->inviteCodeRules(),
         ];
     }
 
     /**
-     * @return array{id_token: string, raw_nonce: string|null, locale: string|null}
+     * @return array{id_token: string, raw_nonce: string|null, locale: string|null, invite_code: string|null}
      */
     public function signInInput(): array
     {
@@ -39,6 +41,7 @@ class GoogleSignInRequest extends FormRequest
             'id_token' => $this->string('id_token')->toString(),
             'raw_nonce' => is_string($nonce) && $nonce !== '' ? $nonce : null,
             'locale' => is_string($locale) && $locale !== '' ? $locale : null,
+            'invite_code' => $this->inviteCode(),
         ];
     }
 }

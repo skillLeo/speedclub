@@ -14,6 +14,7 @@ use App\Services\Businesses\BusinessListing;
 use App\Services\Media\MediaService;
 use App\Services\Parts\BrandPages;
 use App\Services\Showcase\SampleContent;
+use App\Support\BrandFiles;
 use App\Support\PublicUrl;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -396,7 +397,7 @@ final class PartnerOgImages
      */
     private function hash(array $spec): string
     {
-        return substr(hash_hmac('sha256', (string) json_encode(['v' => self::VERSION, ...$spec]), config()->string('app.key')), 0, 40);
+        return substr(hash_hmac('sha256', (string) json_encode(['v' => self::VERSION, 'brand' => BrandFiles::logoVersion(), ...$spec]), config()->string('app.key')), 0, 40);
     }
 
     /**

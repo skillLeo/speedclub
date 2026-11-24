@@ -4,7 +4,7 @@
  * the focal point. Unset or unreadable: null, and the bundled photo stays.
  */
 import type { AppConfig, BrandHero } from '@/api/queries/appConfig';
-import type { CustomWordmark } from '@/ui';
+import type { CustomWordmark } from '@/ui/BrandWordmark';
 
 export type HeroPick = { uri: string; blurhash: string | null; focal: { x: number; y: number } };
 

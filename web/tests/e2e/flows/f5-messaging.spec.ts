@@ -267,6 +267,9 @@ test.describe('F5 messaging: sending', () => {
     const uploaded = page.waitForResponse(isCall('POST', `conversations/${conversationId}/media`), { timeout: 90_000 });
     await row(page, 'MSG-02.attach.photo').click();
     await (await chooser).setFiles(photoFile('generic-wheels-01.jpg'));
+    // M5.9a (10 §16, ADR-509): the plate blur step comes first; its last button sends the photo.
+    await expect(id(page, 'MSG-02.plateBlur.confirm')).toContainText('Senden');
+    await id(page, 'MSG-02.plateBlur.confirm').click();
     expect((await uploaded).status()).toBe(201);
     const sent = await page.waitForResponse(isCall('POST', `conversations/${conversationId}/messages`), { timeout: 60_000 });
     expect(sent.status()).toBe(201);

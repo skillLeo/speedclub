@@ -34,7 +34,8 @@
         "error_body": "Die Daten konnten nicht geladen werden. Versuche es erneut.",
         "retry": "Erneut versuchen",
         "reloading": "Wird neu geladen …",
-        "server_error": "Der Server hat nicht geantwortet. Es wurde nichts geändert; versuche es erneut."
+        "server_error": "Der Server hat nicht geantwortet. Es wurde nichts geändert; versuche es erneut.",
+        "password_cancelled": "Passwort nicht bestätigt: Es wurde nichts gespeichert."
     },
     "table": {
         "columns": "Spalten",
@@ -123,11 +124,23 @@
     },
     "approval": {
         "requested": "Freigabe angefragt: :title",
-        "next": "Ein zweites Teammitglied muss bis :until zustimmen. Erst dann wird die Aktion ausgeführt; du bekommst einen Hinweis.",
+        "next": "Sie muss bis :until zustimmen. Erst dann wird die Aktion ausgeführt; du bekommst einen Hinweis.",
         "preview_title": "Braucht eine Freigabe",
         "preview_body": "Diese Aktion fällt unter das Vier-Augen-Prinzip. Sie wird erst ausgeführt, wenn ein zweites Teammitglied zustimmt.",
         "open_queue": "Zu den Freigaben",
-        "already": "Diese Anfrage wartet schon auf Freigabe: :title"
+        "already": "Diese Anfrage wartet schon auf Freigabe: :title",
+        "waiting": "Wartet auf Freigabe durch eine zweite Person.",
+        "approvers": "{1} Freigeben kann: :names.|[2,*] Freigeben können: :names.",
+        "approvers_more": ":names und :count weitere",
+        "nobody": "Im Team kann gerade niemand sonst diese Anfrage freigeben. Lade eine zweite Person mit Freigaberecht ein, sonst läuft die Anfrage ab.",
+        "nobody_override": "Im Team kann gerade niemand sonst diese Anfrage freigeben. Als Owner kannst du sie mit Begründung selbst freigeben (Owner-Override).",
+        "override": "Selbst freigeben",
+        "override_title": "Selbst freigeben (Owner-Override)?",
+        "override_body": "„:title“ wird sofort ausgeführt, ohne zweite Person. Das ist nur möglich, weil niemand sonst im Team freigeben kann. Der Override steht im Audit-Log; Owner, Admins und alle, die in den letzten 90 Tagen freigegeben haben, bekommen eine E-Mail.",
+        "override_confirm": "Jetzt ausführen",
+        "approvers_count": "{1} Eine Person im Team kann freigeben.|[2,*] :count Personen im Team können freigeben.",
+        "direct_done": "Ausgeführt: :title",
+        "direct_failed": "Nicht ausgeführt: :title. :error"
     },
     "bulk": {
         "summary": ":done erledigt, :failed fehlgeschlagen",
@@ -141,6 +154,7 @@
         "to": "Bis"
     },
     "time": {
+        "placeholder": "HH:MM",
         "just_now": "gerade eben"
     },
     "tabs": {

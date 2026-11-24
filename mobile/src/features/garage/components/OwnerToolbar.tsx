@@ -5,7 +5,12 @@ import { View } from 'react-native';
 
 import type { PublicVehicle } from '@/api/queries/vehicles';
 import { createStyles, space } from '@/theme';
-import { ListRow, Progress, Sheet, Text, type ContextMenuItem, type OwnerCapsuleAction } from '@/ui';
+import { type ContextMenuItem } from '@/ui/ContextMenu';
+import { ListRow } from '@/ui/ListRow';
+import { type OwnerCapsuleAction } from '@/ui/OwnerCapsule';
+import { Progress } from '@/ui/Progress';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
 
 import { completenessLine } from '../model';
 
@@ -29,7 +34,7 @@ export function ownerCapsuleOf(
   const base = `/garage/${vehicle.id}`;
   const actions: OwnerCapsuleAction[] = [
     // In the garage "Bearbeiten" is the first tool (priority 0): it stays in the capsule wherever only one glyph fits.
-    ...(vehicle.qr ? [{ key: 'qr', icon: 'qr-code' as const, label: t('owner.qr'), onPress: () => go(`/qr/${vehicle.id}`), priority: 1, testID: `${routeId}.tool.qr` }] : []),
+    ...(vehicle.qr ? [{ key: 'qr', icon: 'qr-code' as const, label: t('owner.qr'), onPress: () => go(`/stickers/${vehicle.id}`), priority: 1, testID: `${routeId}.tool.qr` }] : []),
     { key: 'edit', icon: 'pencil-simple', label: t('owner.edit'), onPress: onEdit, priority: 0, testID: `${routeId}.tool.edit` },
     { key: 'mods', icon: 'wrench', label: t('owner.mods'), onPress: () => go(`${base}/mods`), priority: 2, testID: `${routeId}.tool.mods` },
     { key: 'photos', icon: 'image', label: t('owner.photos'), onPress: () => go(`${base}/photos`), priority: 3, testID: `${routeId}.tool.photos` },

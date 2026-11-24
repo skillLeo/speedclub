@@ -2,7 +2,11 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
 import { createStyles, size } from '@/theme';
-import { Button, IconButton, Photo, PhotoScrim, StickyCTABar, type ButtonVariant } from '@/ui';
+import { Button, type ButtonVariant } from '@/ui/Button';
+import { IconButton } from '@/ui/IconButton';
+import { Photo } from '@/ui/Photo';
+import { PhotoScrim } from '@/ui/PhotoScrim';
+import { StickyCTABar } from '@/ui/StickyCTABar';
 
 import { PHOTOS, noop } from '../data';
 import { FORCED, FullBleed, Group, Panel, SectionScreen, Specimen, Wrap } from '../parts';

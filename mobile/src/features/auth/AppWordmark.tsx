@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { apiOrigin } from '@/api/client';
 import { useAppConfig } from '@/api/queries/appConfig';
-import { BrandWordmark, type BrandWordmarkProps, type CustomWordmark } from '@/ui';
+import { BrandWordmark, type BrandWordmarkProps, type CustomWordmark } from '@/ui/BrandWordmark';
 
 import { customWordmark } from './brand';
 

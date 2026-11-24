@@ -45,6 +45,6 @@ class ProfileImageController extends Controller
         /** @var UploadedFile $file */
         $file = $request->file('file');
 
-        return new MeResource($action->handle($user, $file, $slot));
+        return new MeResource($action->handle($user, $file, $slot, $request->plateBlur()));
     }
 }

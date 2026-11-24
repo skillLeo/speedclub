@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Services\Content\MessageTemplates;
+use App\Support\BrandFiles;
 use App\Support\Mail\MailTheme;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -55,7 +56,7 @@ abstract class AuthMail extends Mailable
             'actions' => $this->actions(),
             'note' => $this->note(),
             'colors' => MailTheme::values(),
-            'logoUrl' => $this->url('/brand/logo-wide-black-320.png'),
+            'logoUrl' => $this->url(BrandFiles::path('brand/logo-wide-black-320.png')),
             'homeUrl' => $this->url('/'),
         ]);
     }

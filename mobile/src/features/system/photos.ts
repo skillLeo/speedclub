@@ -3,7 +3,7 @@
  * the app (design/seed-photos/CREDITS.md, the files DEV-01 and the empty garage use), so a gate shows them with no network. Focal
  * points from the seed manifest; blurhashes computed once from these files (features/gallery/data.ts).
  */
-import type { PhotoFields } from '@/ui';
+import type { PhotoFields } from '@/ui/Photo';
 
 /** SYS-01 update: a wheel and caliper in the garage, the car waiting for its next part. */
 export const UPDATE_PHOTO: PhotoFields = {

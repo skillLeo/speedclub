@@ -11,9 +11,12 @@ import { PopularModsChips } from '@/features/home/components/PopularModsChips';
 import { photoFields } from '@/features/profile/media';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, space, useBreakpoint, useTheme } from '@/theme';
-import { MediaCard, MediaCardSkeleton, SectionHeader, Skeleton, SkeletonText } from '@/ui';
+import { MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
 
 import { collectionPath, searchPath } from '../navigation';
+import { SegmentRailScrollView } from './DiscoverSegments';
 import { SearchMemberRow } from './SearchMemberRow';
 
 /** A rail card at font scale 1: two cards and the start of a third on a 390 phone, so the row shows that it scrolls (09 §5 rail). */
@@ -116,6 +119,8 @@ export function Collections({ collections, column, gutter, testID }: Collections
           ItemSeparatorComponent={Gap}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: gutter }}
+          // Inside DISC-01's page swipe the rail keeps its own horizontal drags (review SF-3).
+          renderScrollComponent={SegmentRailScrollView}
           testID={`${testID}.list`}
         />
       </View>

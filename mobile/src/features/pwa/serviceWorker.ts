@@ -117,11 +117,28 @@ export function startServiceWorker(navigate: (route: string) => void): void {
   container.addEventListener('message', (event: MessageEvent<unknown>) => {
     if (isNavigateMessage(event.data)) navigate(appRouteOf(event.data.route));
   });
-  container
-    .register(SERVICE_WORKER_URL, { scope: APP_BASE, updateViaCache: 'none' })
-    .then(watch)
-    .catch((error: unknown) => console.warn('The service worker did not register', error));
+  // M5.12a (09 §12): the worker installs once the page has loaded and the browser is idle, so its precache never competes with the
+  // first screen's scripts and photo for the network on a first visit.
+  afterLoadAndIdle(() =>
+    container
+      .register(SERVICE_WORKER_URL, { scope: APP_BASE, updateViaCache: 'none' })
+      .then(watch)
+      .catch((error: unknown) => console.warn('The service worker did not register', error)),
+  );
   document.addEventListener('visibilitychange', checkForUpdate);
+}
+
+/** The longest an idle callback may wait after `load` before the worker registers anyway. */
+const REGISTER_IDLE_TIMEOUT_MS = 5_000;
+
+/** Runs `task` after the window's `load` event, in the browser's next idle period (or after the timeout). */
+function afterLoadAndIdle(task: () => void): void {
+  const idle = () => {
+    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(task, { timeout: REGISTER_IDLE_TIMEOUT_MS });
+    else setTimeout(task, 0);
+  };
+  if (document.readyState === 'complete') idle();
+  else window.addEventListener('load', idle, { once: true });
 }
 
 /** The registration, once there is one (Web Push subscribes through it). */

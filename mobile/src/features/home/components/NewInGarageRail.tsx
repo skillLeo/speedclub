@@ -4,7 +4,7 @@ import type { FeedVehicle } from '@/api/queries/home';
 import { railCardWidth } from '@/features/discover/components/DiscoverSections';
 import { photoFields } from '@/features/profile/media';
 import { createStyles, space, useTheme } from '@/theme';
-import { MediaCard, MediaCardSkeleton } from '@/ui';
+import { MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
 
 const useStyles = createStyles((t) => ({
   row: { flexDirection: 'row', gap: t.space[12] },

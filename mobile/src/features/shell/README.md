@@ -15,7 +15,7 @@ export default function Route() {
 }
 ```
 
-Never add a `_layout.tsx` in `(home)`, `(discover)`, `(garage)`, `(messages)` or `(profile)`.
+Never add a `_layout.tsx` in `(home)`, `(discover)`, `(garage)`, `(shop)` or `(profile)`.
 
 ## What a screen has to do
 
@@ -25,6 +25,12 @@ Never add a `_layout.tsx` in `(home)`, `(discover)`, `(garage)`, `(messages)` or
 - **The tab bar floats over the content** on phones, so its blur has something to blur. Scroll content ends with `useTabBarPadding()` (`useTabBarInset()` for a number). A non-scrolling screen puts the padding on its body. Both are zero with a rail, a sidebar, or outside the tabs.
 - **Editors pushed inside a tab** (`/garage/[id]/basics` and similar) call `useHideTabBar()` (§9).
 - **Scrolling screens other than tab roots** call `useTabScrollToTop()`, so re-tap scrolls first.
+
+## Navigation 3.0 (M5.2, 10 §1, ADR-501)
+
+- Tabs Start · Entdecken · Garage · Shop · Profil (`TAB_DESTINATIONS`). The rail adds the place Nachrichten, the sidebar Treffen, Forum (flag) and Nachrichten (`RAIL_ITEMS`, `SIDEBAR_ITEMS`, `PLACE_DESTINATIONS`; `useShellBar` picks the current item and the press handlers).
+- Nachrichten is a shared route: `useInboxActions(routeId)` (`inboxActions.ts`) gives a tab root the bell and the Nachrichten link with its "9+" pill; it leaves Nachrichten out where the rail or sidebar lists it.
+- Entdecken's pages Builds (`/discover`) and Treffen (`/events`) are segment roots (`features/discover/segments.ts`): `DiscoverSegmentBar` and `SegmentSwipe` swap them in place with `router.dismissTo`; the shared layout fades them in `(discover)`.
 
 ## Tab chrome (M4.5, 09 §6.1)
 

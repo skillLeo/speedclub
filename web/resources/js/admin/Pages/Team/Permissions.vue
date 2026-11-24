@@ -9,8 +9,9 @@ import DialogError from '../../Components/patterns/DialogError.vue';
 import ScrollRegion from '../../Components/patterns/ScrollRegion.vue';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
-import { Button, Checkbox, Dialog, Field, Skeleton, Textarea } from '../../Components/ui';
+import { Button, Checkbox, Dialog, Skeleton } from '../../Components/ui';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { formatNumber } from '../../lib/format';
 import { JsonError, requestJson } from '../../lib/http';
@@ -22,7 +23,7 @@ import { atomGroupLabel, atomLabel, groupAtoms, roleLabel } from './shared';
  * ADM-42 permission matrix (role × atom, m3.6 §1). Owner and Admin keep every atom (shown, not editable). Changes are collected here;
  * "Änderungen prüfen" asks the server for the diff (added and removed per role, staff affected, the sensitive grants) and shows it before
  * saving. Saving removals and plain grants applies at once; a grant of a sensitive atom asks for the four-eyes `roles.sensitive_atoms`
- * (with reason), which nobody holding one of the changed roles may approve.
+ * , which nobody holding one of the changed roles may approve.
  */
 interface MatrixRole {
     name: string;
@@ -77,16 +78,13 @@ const diffError = ref<string | null>(null);
 const diff = ref<Record<string, DiffRow>>({});
 const sensitive = ref<string[]>([]);
 const affected = ref(0);
-const reason = ref('');
-const reasonError = ref<string | null>(null);
-const fourEyes = computed(() => sensitive.value.length > 0);
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && sensitive.value.length > 0);
 const proposal = () => Object.fromEntries(changedRoles.value.map((r) => [r.name, draft[r.name] ?? []]));
 async function review(): Promise<void> {
     diffLoading.value = true;
     diffError.value = null;
     action.reset();
-    reason.value = '';
-    reasonError.value = null;
     try {
         const answer = await requestJson<{ diff: Record<string, DiffRow>; sensitive: string[]; staff: number }>('post', routeOr('admin.team.permissions.diff', '/admin/team/permissions/diff'), { matrix: proposal() });
         diff.value = answer.diff;
@@ -100,10 +98,7 @@ async function review(): Promise<void> {
     }
 }
 function save(): void {
-    const text = reason.value.trim();
-    reasonError.value = fourEyes.value && (text.length < 10 || text.length > 1000) ? trans('team.role_form.errors.reason') : null;
-    if (reasonError.value) return;
-    action.run('patch', routeOr('admin.team.permissions.update', '/admin/team/permissions'), { matrix: proposal(), reason: text === '' ? null : text }, { sensitive: true, onSuccess: () => (diffOpen.value = false) });
+    action.run('patch', routeOr('admin.team.permissions.update', '/admin/team/permissions'), { matrix: proposal() }, { sensitive: true, onSuccess: () => (diffOpen.value = false) });
 }
 
 // ---- QA overlay (?dialog=diff): a sensitive grant to Support, a removal from Analyse -------------------------------------------
@@ -114,7 +109,6 @@ onMounted(async () => {
     if (support) toggle(support, 'approvals.decide', true);
     if (analyst) toggle(analyst, 'moderation.view', false);
     await review();
-    reason.value = 'Support entscheidet ab sofort mit über Vier-Augen-Anfragen; Analyse braucht die Meldungen nicht mehr.';
     await nextTick();
     if (failedDialog) action.error.value = trans('ui.state.server_error');
 });
@@ -199,9 +193,6 @@ onMounted(async () => {
                     <ApprovalNotice test-id="ADM-42.diff.four-eyes" />
                     <p class="text-admin-base text-ink-2">{{ trans('team.matrix.diff_four_eyes', { atoms: sensitive.map(atomLabel).join(', ') }) }}</p>
                 </template>
-                <Field :label="trans('ui.confirm.reason')" :hint="fourEyes ? trans('team.invite.reason_hint') : trans('team.matrix.reason_optional')" :error="reasonError" :required="fourEyes" :optional="!fourEyes">
-                    <Textarea v-model="reason" :rows="2" :maxlength="1000" show-count data-testid="ADM-42.diff.reason" />
-                </Field>
             </div>
             <template #footer>
                 <DialogError :message="action.error.value" test-id="ADM-42.diff.error" />

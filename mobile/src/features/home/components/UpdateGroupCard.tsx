@@ -7,7 +7,12 @@ import { photoFields } from '@/features/profile/media';
 import { isWeb } from '@/lib/platform';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, useTheme } from '@/theme';
-import { IconButton, Photo, PressableScale, SampleBadges, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { SampleBadges } from '@/ui/Badge';
+import { IconButton } from '@/ui/IconButton';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { ReactionPicker, SaveToggle } from '@/ui/motion/kit';
 import { joinLabel } from '@/ui/rowParts';
 import { metaLineText, vehicleNameText } from '@/ui/textBreaks';
@@ -26,7 +31,8 @@ const useStyles = createStyles((t) => ({
   thumb: { flexShrink: 0, width: t.size.thumb.row },
   text: { flex: 1, gap: t.space[2], minWidth: 0 },
   caption: { marginTop: t.space[2] },
-  actions: { alignItems: 'center', flexDirection: 'row', gap: t.space[4] },
+  // R4DQ-37: the first glyph (24 in its 44 target, 10 in) starts on the thumbnail's edge: 12 out, 2 back, both on the scale.
+  actions: { alignItems: 'center', flexDirection: 'row', gap: t.space[4], marginLeft: -t.space[12], paddingLeft: t.space[2] },
   // The skeleton's rows in the loaded card's geometry.
   skeletonBody: { flexDirection: 'row', gap: t.space[12], paddingVertical: t.space[8] },
   skeletonText: { flex: 1, gap: t.space[4] },
@@ -53,7 +59,13 @@ export const UpdateGroupCard = memo(function UpdateGroupCard({ updates, onOpen, 
   const { fontScale } = useTheme();
   const latest = updates[0];
   const vehicle = latest.vehicle;
-  const actions = useFeedCardActions({ vehicle, updateId: latest.id, routeId: testID.split('.')[0] ?? 'HOME-01', returnTo: FOLLOWING_PATH });
+  const actions = useFeedCardActions({
+    vehicle,
+    updateId: latest.id,
+    viewerReaction: latest.viewer?.reaction ?? null,
+    routeId: testID.split('.')[0] ?? 'HOME-01',
+    returnTo: FOLLOWING_PATH,
+  });
   const when = parseDate(latest.created_at);
   const count = updates.length;
   const meta = [vehicle.owner ? `@${vehicle.owner.username}` : null, when ? format.relative(when) : null, count > 1 ? t('following.updates', { count }) : null]
@@ -61,7 +73,7 @@ export const UpdateGroupCard = memo(function UpdateGroupCard({ updates, onOpen, 
     .join(' · ');
   const caption = changeCaption(latest);
   const large = fontScale > 1;
-  const { reaction, save, onShare, sheet } = actions;
+  const { reaction, comment, save, onShare, sheet } = actions;
 
   return (
     <View style={styles.card} testID={testID}>
@@ -88,9 +100,11 @@ export const UpdateGroupCard = memo(function UpdateGroupCard({ updates, onOpen, 
           </Text>
         </View>
       </PressableScale>
-      {reaction || save || onShare ? (
+      {reaction || comment || save || onShare ? (
         <View style={styles.actions}>
           {reaction ? <ReactionPicker {...reaction} testID={`${testID}.reaction`} /> : null}
+          {/* R4-2.2: the update's comments in a sheet; no count (the API sends none). */}
+          {comment ? <IconButton icon="chat-circle" label={comment.label} onPress={comment.onPress} testID={`${testID}.comment`} /> : null}
           {save ? <SaveToggle saved={save.saved} onToggle={save.onToggle} saveLabel={common('actions.save')} itemKey={latest.id} testID={`${testID}.save`} /> : null}
           {onShare ? <IconButton icon="share-network" label={common('actions.share')} onPress={onShare} testID={`${testID}.share`} /> : null}
         </View>
@@ -131,5 +145,5 @@ export function UpdateGroupCardSkeletonRows() {
   );
 }
 
-/** Reaction, save and share: the loaded card's action row. */
+/** Reaction, save and share: the loaded card's action row (the comments button joins them while build_comments is on). */
 const ACTION_KEYS = ['reaction', 'save', 'share'] as const;

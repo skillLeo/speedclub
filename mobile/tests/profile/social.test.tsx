@@ -5,6 +5,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
+import { Share } from 'react-native';
 
 import { appConfigKey, BUNDLED_APP_CONFIG } from '@/api/queries/appConfig';
 import { memberKeys, type MemberProfile } from '@/api/queries/social';
@@ -42,7 +43,7 @@ jest.mock('expo-router', () => ({
     const { useEffect } = jest.requireActual<typeof import('react')>('react');
     useEffect(effect, [effect]);
   },
-  useNavigation: () => ({ dispatch: jest.fn(), addListener: jest.fn(() => jest.fn()), getParent: () => undefined, canGoBack: () => true, goBack: jest.fn() }),
+  useNavigation: () => ({ dispatch: jest.fn(), addListener: jest.fn(() => jest.fn()), getParent: () => undefined, getState: () => undefined, canGoBack: () => true, goBack: jest.fn() }),
   Link: ({ children }: { children: unknown }) => children,
 }));
 jest.mock('@shopify/flash-list', () => ({
@@ -78,6 +79,9 @@ jest.mock('@/api/client', () => {
 
 const JANN: MemberProfile = {
   username: 'jann.ptrs',
+  share_url: 'https://speedclub.test/u/jann.ptrs?via=share',
+  level: { level: 1, title: 'Street Rookie' },
+  founding_number: null,
   display_name: 'Jann Petersen',
   city: 'Hamburg',
   bio: 'Hamburg, M-Autos, viel zu viele Felgenkataloge.',
@@ -510,6 +514,23 @@ describe('PROF-04 connections', () => {
     await waitFor(() => expect(text('PROF-04.empty')).toHaveTextContent(/Du folgst noch niemandem/));
     await fireEvent.press(text('PROF-04.empty.action'));
     expect(mockRouter.navigate).toHaveBeenCalledWith('/discover');
+  });
+
+  it('QA-C04: the empty state of your own Follower tab has one action, "Profil teilen", with PROF-01\'s link', async () => {
+    signIn();
+    mockParams.tab = 'followers';
+    const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
+    try {
+      stub({ 'GET /auth/me': { body: { data: null } }, 'GET /public/users/lukas.sc/followers': { body: PAGE([]) } });
+      await render(<ConnectionsScreen own />);
+      await waitFor(() => expect(text('PROF-04.empty')).toBeTruthy());
+      expect(text('PROF-04.empty.action')).toHaveTextContent('Profil teilen');
+      await act(async () => fireEvent.press(text('PROF-04.empty.action')));
+      await waitFor(() => expect(share).toHaveBeenCalledTimes(1));
+      expect(JSON.stringify(share.mock.calls[0])).toMatch(/\/u\/lukas\.sc\?via=share/);
+    } finally {
+      share.mockRestore();
+    }
   });
 
   it('shows "Profil nicht verfügbar" when the member is hidden', async () => {

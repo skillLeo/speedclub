@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Messaging;
 
+use App\Http\Requests\Concerns\ValidatesPlateBlur;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -9,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class UploadMessagePhotoRequest extends FormRequest
 {
+    use ValidatesPlateBlur;
+
     /**
      * @return array<string, mixed>
      */
@@ -16,6 +19,7 @@ class UploadMessagePhotoRequest extends FormRequest
     {
         return [
             'file' => ['required', 'file'],
+            ...$this->plateBlurRules(),
         ];
     }
 }

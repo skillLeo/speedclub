@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\Media;
 
 use App\Enums\MediaCategory;
+use App\Http\Requests\Concerns\ValidatesPlateBlur;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rule;
  */
 class StoreVehicleMediaRequest extends FormRequest
 {
+    use ValidatesPlateBlur;
+
     /**
      * @return array<string, mixed>
      */
@@ -21,7 +24,8 @@ class StoreVehicleMediaRequest extends FormRequest
             'alt' => ['nullable', 'string', 'max:500'],
             'focal_x' => ['nullable', 'numeric', 'between:0,1', 'required_with:focal_y'],
             'focal_y' => ['nullable', 'numeric', 'between:0,1', 'required_with:focal_x'],
-            'category' => ['nullable', Rule::enum(MediaCategory::class)],
+            'category' => ['nullable', Rule::enum(MediaCategory::class)->except(MediaCategory::Event)],
+            ...$this->plateBlurRules(),
         ];
     }
 }

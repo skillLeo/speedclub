@@ -67,6 +67,8 @@ export interface NavItem {
     testId: string;
     /** Extra words the ⌘K palette matches (i18n keys not needed: plain search words in both languages). */
     keywords?: string[];
+    /** ADR-540: shown only while the governance four-eyes switch is on (the approvals queue). */
+    fourEyesOnly?: boolean;
 }
 
 export interface PaletteEntry {
@@ -138,12 +140,12 @@ export interface NavSection {
     items: NavItem[];
 }
 
-export function navigation(can: Can, exists: (route: string) => boolean): NavSection[] {
+export function navigation(can: Can, exists: (route: string) => boolean, fourEyes = true): NavSection[] {
     const rank = (group: NavGroup, item: NavItem): number => NAV_GROUPS.indexOf(group) * 1000 + (item.order ?? 100);
     const entries = modules
         .flatMap((module) => module.nav ?? [])
         .flatMap((section) => section.items.map((item) => ({ group: section.group, item })))
-        .filter(({ item }) => exists(item.route) && can(item.atom));
+        .filter(({ item }) => exists(item.route) && can(item.atom) && (fourEyes || item.fourEyesOnly !== true));
     return NAV_SECTIONS.map((section) => ({
         group: section,
         items: entries
@@ -153,8 +155,8 @@ export function navigation(can: Can, exists: (route: string) => boolean): NavSec
     })).filter((section) => section.items.length > 0);
 }
 
-export function paletteEntries(can: Can, exists: (route: string) => boolean): (PaletteEntry & { group: NavSectionKey | null })[] {
-    const fromNav = navigation(can, exists).flatMap((section) =>
+export function paletteEntries(can: Can, exists: (route: string) => boolean, fourEyes = true): (PaletteEntry & { group: NavSectionKey | null })[] {
+    const fromNav = navigation(can, exists, fourEyes).flatMap((section) =>
         section.items.map((item) => ({ key: `nav:${item.route}`, label: item.label, route: item.route, icon: item.icon, keywords: item.keywords, group: section.group })),
     );
     const extra = modules

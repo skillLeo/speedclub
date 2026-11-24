@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Icon, Text, type IconName } from '@/ui';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 import { joinLabel } from '@/ui/rowParts';
 
 const NO_BREAK_SPACE = '\u00A0';

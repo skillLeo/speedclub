@@ -5,7 +5,7 @@
  */
 
 /** What can be reported (contract §1 `target_type`). */
-export type ReportTargetType = 'member' | 'vehicle' | 'photo' | 'message' | 'build_update' | 'modification' | 'comment' | 'event' | 'business';
+export type ReportTargetType = 'member' | 'vehicle' | 'photo' | 'message' | 'build_update' | 'modification' | 'comment' | 'event' | 'business' | 'forum_post' | 'crew';
 
 export type ReportTarget = {
   type: ReportTargetType;
@@ -79,7 +79,8 @@ export type DecisionSummary = {
   appealStatus: AppealStatus | null;
 };
 
-export type RestrictionKind = 'messaging' | 'publishing' | 'suspension';
+/** M5.8: `forum` is the forum ban (m5.8-contract D3). */
+export type RestrictionKind = 'messaging' | 'publishing' | 'forum' | 'suspension';
 
 export type DecisionRestriction = { kind: RestrictionKind; until: string | null };
 

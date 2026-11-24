@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Auth;
 
+use App\Http\Requests\Api\V1\Auth\Concerns\CarriesInviteCode;
 use App\Http\Requests\Api\V1\Auth\Concerns\SignsIn;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -12,7 +13,7 @@ use Illuminate\Validation\Rule;
  */
 class AppleSignInRequest extends FormRequest
 {
-    use SignsIn;
+    use CarriesInviteCode, SignsIn;
 
     /**
      * @return array<string, mixed>
@@ -28,11 +29,12 @@ class AppleSignInRequest extends FormRequest
             'email' => ['nullable', 'string', 'max:255'],
             'locale' => ['nullable', 'string', Rule::in(config()->array('speedclub.locales'))],
             ...$this->deviceRules(),
+            ...$this->inviteCodeRules(),
         ];
     }
 
     /**
-     * @return array{id_token: string, raw_nonce: string|null, authorization_code: string|null, full_name: string|null, locale: string|null}
+     * @return array{id_token: string, raw_nonce: string|null, authorization_code: string|null, full_name: string|null, locale: string|null, invite_code: string|null}
      */
     public function signInInput(): array
     {
@@ -42,6 +44,7 @@ class AppleSignInRequest extends FormRequest
             'authorization_code' => $this->stringOrNull('authorization_code'),
             'full_name' => $this->stringOrNull('full_name'),
             'locale' => $this->stringOrNull('locale'),
+            'invite_code' => $this->inviteCode(),
         ];
     }
 

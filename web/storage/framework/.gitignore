@@ -8,3 +8,5 @@ routes.scanned.php
 schedule-*
 services.json
 secprobe/
+# ADR-539: the web installer's run lock
+setup.lock

@@ -28,7 +28,7 @@ it('describes one valid Editorial account and 30 to 40 builds across the makes 0
     $makes = array_unique(array_column($data['vehicles'], 'make'));
 
     expect(Username::violations($data['member']['username']))->toBe([])
-        ->and($data['member']['display_name'])->toBe('SPEED CLUB Editorial')
+        ->and($data['member']['display_name'])->toBe('Speedclub Editorial')
         ->and(count($data['vehicles']))->toBeGreaterThanOrEqual(30)->toBeLessThanOrEqual(40)
         ->and(array_values(array_diff(['BMW', 'Porsche', 'Volkswagen', 'Audi', 'Mercedes-Benz', 'Toyota', 'Nissan', 'Honda', 'Mazda', 'Subaru'], $makes)))->toBe([])
         ->and(array_unique(array_column($data['vehicles'], 'key')))->toHaveCount(count($data['vehicles']))

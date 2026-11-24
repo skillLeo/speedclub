@@ -15,7 +15,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="SPEED CLUB" />
+    <meta name="apple-mobile-web-app-title" content="Speedclub" />
     <meta name="format-detection" content="telephone=no" />
     <!--sc:pwa-startup-->
     <!-- react-native-web full-height reset, as in the Expo template. -->
@@ -41,6 +41,49 @@
         flex: 1;
       }
     </style>
+    <!--
+      CR2-2: a press and drag on a photo or a card scrolls the page. Photos are never dragged out as images, never offer the
+      iOS save/copy callout, and never start a text selection; pressables (cards, buttons, links, tabs, chips) select no text.
+      Text outside pressables (posts, descriptions, messages) and every input stays selectable. Once for the whole member web.
+    -->
+    <style id="sc-press">
+      img {
+        -webkit-user-drag: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      a,
+      [role='button'],
+      [role='link'],
+      [role='tab'],
+      [role='switch'],
+      [role='checkbox'],
+      [role='radio'],
+      [role='menuitem'],
+      [role='option'] {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      input,
+      textarea,
+      [contenteditable='true'] {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+    </style>
+    <!-- CR2-2: the same for browsers without -webkit-user-drag (Firefox): a photo never starts a native drag. -->
+    <script id="sc-no-image-drag">
+      document.addEventListener(
+        'dragstart',
+        function (event) {
+          var target = event.target;
+          if (target && target.tagName === 'IMG') event.preventDefault();
+        },
+        true,
+      );
+    </script>
     <!--
       Canvas colours per theme, painted before the first frame. mobile/tests/indexHtml.test.ts fails
       when these values or the ones in the script below drift from design/tokens/tokens.json.
@@ -120,7 +163,7 @@
     </script>
   </head>
   <body>
-    <noscript>Bitte aktiviere JavaScript, um SPEED CLUB zu nutzen.</noscript>
+    <noscript>Bitte aktiviere JavaScript, um Speedclub zu nutzen.</noscript>
     <div id="root"></div>
   </body>
 </html>

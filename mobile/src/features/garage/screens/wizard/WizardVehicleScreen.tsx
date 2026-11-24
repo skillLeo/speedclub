@@ -10,8 +10,10 @@ import { myVehiclesKey, useMyVehicles, type VehicleCardData } from '@/api/querie
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
 import { now } from '@/lib/clock';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
-import { EmptyState, toast } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { toast } from '@/ui/toast';
 
 import { FormSkeleton, RestrictedNotice } from '../../components/frames';
 import { useBasicsCatalogueLoading, VehicleBasicsFields } from '../../components/VehicleBasicsFields';
@@ -19,7 +21,7 @@ import { WizardFrame } from '../../components/WizardFrame';
 import { useCreateOnce } from '../../createOnce';
 import { saveErrorMessage } from '../../errors';
 import { basicsPatch, basicsPatchOver, basicsValues, laterStep, VEHICLE_LIMIT, type BasicsValues } from '../../model';
-import { useCloseModal, wizardPath } from '../../navigation';
+import { useCloseModal, useLeavePublishedWizard, wizardPath } from '../../navigation';
 import { basicsSchema, maxModelYear, yearIssue } from '../../schemas';
 import { useMountedRef, usePreview, useWizardDraft } from '../../wizard';
 import { WizardStateBody } from './WizardStateBody';
@@ -44,7 +46,8 @@ export function WizardVehicleScreen() {
   const wizard = useWizardDraft();
   const preview = usePreview(wizard.draft);
   const catalogueLoading = useBasicsCatalogueLoading(wizard.draft?.model_id);
-  const state = wizard.state === 'ready' && catalogueLoading ? 'loading' : wizard.state;
+  const leaving = useLeavePublishedWizard(wizard.draftId, wizard.state === 'ready' && wizard.draft?.status === 'published');
+  const state = leaving || (wizard.state === 'ready' && catalogueLoading) ? 'loading' : wizard.state;
   if (state !== 'ready') {
     return (
       <WizardFrame
@@ -161,10 +164,10 @@ function VehicleStep({ wizard }: { wizard: Wizard }) {
     }
   };
 
-  const next = handleSubmit(async (values) => {
+  const next = useSingleFlight(handleSubmit(async (values) => {
     const saved = await persist(values, 2);
     if (saved && mounted.current) router.push(wizardPath(saved, 'specs'));
-  });
+  }));
 
   const saveDraft = async () => {
     const values = getValues();

@@ -219,7 +219,11 @@ describe('me/profile', function () {
                 'username', 'username_change_available_at', 'display_name', 'city', 'bio', 'avatar', 'cover', 'locale', 'theme',
                 'power_display', 'member_since',
                 'stats' => ['vehicles', 'followers', 'following'],
+                // R4-1.4: when the introduction was seen.
+                'intro_seen_at',
                 'is_sample', 'is_editorial',
+                // M5.9d: the quiet level and the founding number.
+                'level' => ['level', 'title'], 'founding_number',
                 'two_factor_enabled',
                 // M4.6: false for a passwordless account.
                 'password_set',
@@ -227,6 +231,8 @@ describe('me/profile', function () {
                     'suspended',
                     'messaging' => ['restricted', 'until', 'decision_id'],
                     'publishing' => ['restricted', 'until', 'decision_id'],
+                    // M5.8: the forum ban.
+                    'forum' => ['restricted', 'until', 'decision_id'],
                 ],
             ]]);
     });
@@ -312,8 +318,8 @@ describe('error texts', function () {
         ['de', '/api/v1/me/settings', ['power_display' => 'x'], 'power_display', 'Der ausgewählte Wert ist ungültig.'],
         ['en', '/api/v1/me/profile', ['display_name' => str_repeat('x', 61)], 'display_name', 'The display name field must not be greater than 60 characters.'],
         ['en', '/api/v1/me/settings', ['locale' => 'fr'], 'locale', 'The selected language is invalid.'],
-        ['de', '/api/v1/me/settings', ['show_owner_on_qr' => 'nein'], 'show_owner_on_qr', 'Besitzer auf der QR-Seite muss an oder aus sein.'],
-        ['en', '/api/v1/me/settings', ['show_owner_on_qr' => 'no'], 'show_owner_on_qr', 'The owner on the QR page field must be on or off.'],
+        ['de', '/api/v1/me/settings', ['show_owner_on_qr' => 'nein'], 'show_owner_on_qr', 'Besitzer auf der Sticker-Seite muss an oder aus sein.'],
+        ['en', '/api/v1/me/settings', ['show_owner_on_qr' => 'no'], 'show_owner_on_qr', 'The owner on the sticker page field must be on or off.'],
     ]);
 });
 
@@ -342,7 +348,7 @@ describe('real stats', function () {
     it('counts for others in the public resource, which holds nothing private', function () {
         $public = (new MemberPublicResource($this->member))->resolve(new Request);
 
-        expect(array_keys($public))->toBe(['username', 'display_name', 'city', 'bio', 'avatar', 'cover', 'member_since', 'stats', 'is_sample', 'is_editorial'])
+        expect(array_keys($public))->toBe(['username', 'share_url', 'display_name', 'city', 'bio', 'avatar', 'cover', 'member_since', 'stats', 'is_sample', 'is_editorial', 'level', 'founding_number'])
             ->and($public['stats'])->toBe(['vehicles' => 1, 'followers' => 2, 'following' => 1]);
     });
 });
@@ -449,7 +455,7 @@ describe('me/settings', function () {
 
         $this->getJson('/api/v1/me/settings')
             ->assertOk()
-            ->assertExactJson(['data' => ['theme' => 'carbon', 'locale' => 'de', 'effective_locale' => 'de', 'home_region' => null, 'power_display' => 'ps_kw', 'distance_unit' => 'km', 'torque_unit' => 'nm', 'weight_unit' => 'kg', 'maintenance' => MaintenancePrefs::DEFAULTS, 'show_owner_on_qr' => true, 'who_can_message' => 'everyone', 'mention_privacy' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
+            ->assertExactJson(['data' => ['theme' => 'carbon', 'locale' => 'de', 'effective_locale' => 'de', 'home_region' => null, 'power_display' => 'ps_kw', 'distance_unit' => 'km', 'torque_unit' => 'nm', 'weight_unit' => 'kg', 'maintenance' => MaintenancePrefs::DEFAULTS, 'show_owner_on_qr' => true, 'who_can_message' => 'everyone', 'mention_privacy' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'show_my_spots' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
     });
 
     it('updates what is sent', function () {
@@ -457,7 +463,7 @@ describe('me/settings', function () {
 
         $this->patchJson('/api/v1/me/settings', ['theme' => 'light', 'locale' => 'en', 'power_display' => 'hp'])
             ->assertOk()
-            ->assertExactJson(['data' => ['theme' => 'light', 'locale' => 'en', 'effective_locale' => 'en', 'home_region' => null, 'power_display' => 'hp', 'distance_unit' => 'km', 'torque_unit' => 'nm', 'weight_unit' => 'kg', 'maintenance' => MaintenancePrefs::DEFAULTS, 'show_owner_on_qr' => true, 'who_can_message' => 'everyone', 'mention_privacy' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
+            ->assertExactJson(['data' => ['theme' => 'light', 'locale' => 'en', 'effective_locale' => 'en', 'home_region' => null, 'power_display' => 'hp', 'distance_unit' => 'km', 'torque_unit' => 'nm', 'weight_unit' => 'kg', 'maintenance' => MaintenancePrefs::DEFAULTS, 'show_owner_on_qr' => true, 'who_can_message' => 'everyone', 'mention_privacy' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'show_my_spots' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
 
         $this->patchJson('/api/v1/me/settings', ['theme' => 'black'])
             ->assertOk()
@@ -470,7 +476,7 @@ describe('me/settings', function () {
 
         $this->patchJson('/api/v1/me/settings', ['show_owner_on_qr' => false])
             ->assertOk()
-            ->assertExactJson(['data' => ['theme' => 'light', 'locale' => 'en', 'effective_locale' => 'en', 'home_region' => null, 'power_display' => 'hp', 'distance_unit' => 'km', 'torque_unit' => 'nm', 'weight_unit' => 'kg', 'maintenance' => MaintenancePrefs::DEFAULTS, 'show_owner_on_qr' => false, 'who_can_message' => 'everyone', 'mention_privacy' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
+            ->assertExactJson(['data' => ['theme' => 'light', 'locale' => 'en', 'effective_locale' => 'en', 'home_region' => null, 'power_display' => 'hp', 'distance_unit' => 'km', 'torque_unit' => 'nm', 'weight_unit' => 'kg', 'maintenance' => MaintenancePrefs::DEFAULTS, 'show_owner_on_qr' => false, 'who_can_message' => 'everyone', 'mention_privacy' => 'everyone', 'discoverable' => true, 'indexable' => true, 'read_receipts' => true, 'show_my_spots' => true, 'ai_suggestions' => false, 'notification_prefs' => NotificationPrefs::defaults()]]);
 
         expect($member->refresh()->getAttribute('show_owner_on_qr'))->toBeFalse();
 

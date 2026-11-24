@@ -8,6 +8,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { applyAuth } from '../support/auth.mjs';
 import { expect, test } from '../support/fixtures';
+import { HOME_LEAD } from '../support/home.mjs';
 import { qaUrl } from '../support/qa.mjs';
 
 const id = (page: Page, testId: string): Locator => page.locator(`[data-testid="${testId}"]:visible`);
@@ -110,7 +111,8 @@ for (const width of [360, 412]) {
       test('Start scrolls to its end and back without an error screen, and the Beliebte Mods chips stay chips', async ({ page, pageErrors }) => {
         test.setTimeout(240_000);
         await page.goto(qaUrl('/app/'));
-        await expect(id(page, 'HOME-01.featured')).toBeVisible();
+        // Start has drawn its lead: today's Car of the Day or, without one, the first featured build (support/home.mjs).
+        await expect(page.locator(HOME_LEAD).first()).toBeVisible();
         const seen = await scrollThrough(page, 'HOME-01.list', 'HOME-01.mods.list', 'HOME-01.end');
         expect(seen.tallest, 'a Beliebte Mods chip was drawn on the way').toBeGreaterThan(0);
         expect(seen.tallest, 'no chip is taller than a chip').toBeLessThanOrEqual(CHIP_MAX_HEIGHT);

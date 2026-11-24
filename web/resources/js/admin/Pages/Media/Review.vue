@@ -167,7 +167,7 @@ function openUnhide(item: Item): void {
     action.reset();
     unhideOpen.value = true;
 }
-function unhide(reason: string | null): void {
+function unhide(): void {
     if (!target.value) return;
     const length = unhideFacts.value.trim().length;
     if (length < 10 || length > 5000) {
@@ -175,7 +175,7 @@ function unhide(reason: string | null): void {
         return;
     }
     unhideError.value = null;
-    action.run('post', url(target.value, 'unhide'), { facts: unhideFacts.value.trim(), reason: reason ?? '' }, { sensitive: true, onSuccess: () => (unhideOpen.value = false) });
+    action.run('post', url(target.value, 'unhide'), { facts: unhideFacts.value.trim() }, { sensitive: true, onSuccess: () => (unhideOpen.value = false) });
 }
 
 const vehicleHref = (id: string) => routeOr('admin.vehicles.show', `/admin/vehicles/${id}`, { vehicle: id });
@@ -362,7 +362,6 @@ onMounted(async () => {
             :body="trans('media.unhide.body')"
             :confirm-label="trans('media.actions.unhide')"
             tone="neutral"
-            reason
             :processing="action.processing.value"
             :error="unhideError ?? action.error.value"
             test-id="ADM-13.unhide-dialog"

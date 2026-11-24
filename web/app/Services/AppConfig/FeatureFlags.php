@@ -52,6 +52,15 @@ class FeatureFlags
         return (int) (hexdec(substr(hash('sha256', $key.'|'.$memberId), 0, 8)) % 100);
     }
 
+    /**
+     * For the flags that are on unless someone switches them off (ADR-520: `auth.email_code`; the app reads them the same way,
+     * authFlags.ts `onUnlessOff`): true only when the flag exists and is not on for everyone. A host without the row keeps the feature.
+     */
+    public function switchedOff(string $key): bool
+    {
+        return FeatureFlag::query()->where('key', $key)->exists() && ! $this->enabled($key);
+    }
+
     private function read(string $key): bool
     {
         $flag = FeatureFlag::query()->where('key', $key)->first();

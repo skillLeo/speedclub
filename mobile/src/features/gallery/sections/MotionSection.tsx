@@ -5,26 +5,23 @@ import Animated, { useAnimatedScrollHandler, useDerivedValue, useSharedValue, ty
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { createStyles, size, space, type ThemeName } from '@/theme';
-import {
-  BrandWordmark,
-  Button,
-  ChatBubble,
-  Chip,
-  Hairline,
-  Icon,
-  ListRow,
-  Photo,
-  PhotoScrim,
-  PressableScale,
-  QRDisplay,
-  Sheet,
-  Skeleton,
-  SkeletonBlock,
-  Switch,
-  Text,
-  ToastHost,
-  toast,
-} from '@/ui';
+import { BrandWordmark } from '@/ui/BrandWordmark';
+import { Button } from '@/ui/Button';
+import { ChatBubble } from '@/ui/ChatBubble';
+import { Chip } from '@/ui/Chip';
+import { Hairline } from '@/ui/Hairline';
+import { Icon } from '@/ui/icons/Icon';
+import { ListRow } from '@/ui/ListRow';
+import { Photo, ratioOf } from '@/ui/Photo';
+import { PhotoScrim } from '@/ui/PhotoScrim';
+import { PressableScale } from '@/ui/PressableScale';
+import { QRDisplay } from '@/ui/QRDisplay';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
+import { Switch } from '@/ui/Switch';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { ToastHost } from '@/ui/ToastHost';
 import { setReducedMotionPreview, useMotionPreference } from '@/ui/motion';
 import {
   BeforeAfter,
@@ -56,7 +53,6 @@ import {
   zeroed,
   type Reaction,
 } from '@/ui/motion/kit';
-import { ratioOf } from '@/ui/Photo';
 
 import { E46, PHOTOS, R34, noop } from '../data';
 import { Group, NoteText, SectionScreen, Specimen, Wrap } from '../parts';

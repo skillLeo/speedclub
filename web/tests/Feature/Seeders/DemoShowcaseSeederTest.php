@@ -15,6 +15,7 @@ use App\Services\Showcase\SampleContent;
 use App\Services\Showcase\Showcase;
 use App\Services\Showcase\ShowcasePhotos;
 use App\Services\Showcase\ShowcasePurge;
+use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoShowcaseSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -192,7 +193,7 @@ it('seeds the showcase from matching photos only and changes nothing when run ag
     // Members, the showcase account and its three builds: one BMW, one Porsche, one JDM.
     $sebastian = User::query()->where('username', Showcase::SHOWCASE_USERNAME)->firstOrFail();
     $garage = Vehicle::query()->where('owner_id', $sebastian->id)->where('status', VehicleStatus::Published)->with('make')->get();
-    // 41 sample members and the SPEED CLUB Editorial account.
+    // 41 sample members and the Speedclub Editorial account.
     expect($first['members'])->toBe(42)
         ->and($sebastian->getAttribute('is_sample'))->toBeTrue()
         ->and($sebastian->hasVerifiedEmail())->toBeTrue()
@@ -242,13 +243,13 @@ it('seeds the showcase from matching photos only and changes nothing when run ag
     expect($sources->filter(fn (?string $source): bool => str_contains((string) $source, 'm3-e46') || str_contains((string) $source, 'generic'))->all())->toBe([])
         ->and($sources->duplicates()->all())->toBe([]);
 
-    // The SPEED CLUB Editorial account (09 §8.19): a sample account with the editorial marker, its builds from exactly the shoots
+    // The Speedclub Editorial account (09 §8.19): a sample account with the editorial marker, its builds from exactly the shoots
     // editorial.json names (the 964 shoot shows another generation here, so that build is left out), manufacturer figures, real parts
     // with an unknown legal status, Verlauf in the editorial voice, and nothing social that would invent a number.
     $editorialBuilds = Vehicle::query()->where('owner_id', $editorial->id)->with(['make', 'vehicleModel', 'generation', 'specs'])->get()->keyBy(fn (Vehicle $vehicle): string => (string) $vehicle->generation?->name);
     expect($editorial->getAttribute('is_sample'))->toBeTrue()
         ->and($editorial->getAttribute('is_editorial'))->toBeTrue()
-        ->and($editorial->getAttribute('display_name'))->toBe('SPEED CLUB Editorial')
+        ->and($editorial->getAttribute('display_name'))->toBe('Speedclub Editorial')
         ->and(User::query()->where('is_editorial', true)->count())->toBe(1)
         ->and($editorialBuilds->keys()->sort()->values()->all())->toBe(['B9', 'NA1/NA2', 'S13'])
         ->and(DB::table('follows')->where('follower_id', $editorial->id)->orWhere('followee_id', $editorial->id)->count())->toBe(0)
@@ -288,11 +289,13 @@ it('seeds the showcase from matching photos only and changes nothing when run ag
         ->and($first['messages'])->toBeGreaterThan(200)
         ->and($first['message_reactions'])->toBeGreaterThan(0)
         ->and(DB::table('conversation_participants')->whereIn('user_id', User::query()->where('is_sample', true)->select('id'))->where('folder', 'requests')->whereNull('accepted_at')->count())->toBeGreaterThan(0)
+        // M5.9f: badge_unlocked = the gift demo's two unseen badges of the showcase account (GiftDemoSeeder).
         ->and(array_keys(array_filter($first, fn (int $count, string $key): bool => str_starts_with($key, 'type:') && $count > 0, ARRAY_FILTER_USE_BOTH)))
-        ->toEqualCanonicalizing(['type:new_follower', 'type:followed_published', 'type:build_saved', 'type:security', 'type:moderation_decision', 'type:report_decided', 'type:qr_milestone', 'type:hu_au_reminder', 'type:catalog_request', 'type:support_reply'])
+        ->toEqualCanonicalizing(['type:new_follower', 'type:followed_published', 'type:build_saved', 'type:security', 'type:moderation_decision', 'type:report_decided', 'type:qr_milestone', 'type:hu_au_reminder', 'type:catalog_request', 'type:support_reply', 'type:badge_unlocked'])
         ->and(DB::table('moderation_cases')->where('status', 'new')->whereIn('subject_id', User::query()->where('is_sample', true)->select('id'))->count())->toBeGreaterThanOrEqual(3)
         ->and(DB::table('support_tickets')->distinct()->pluck('status')->sort()->values()->all())->toBe(['closed', 'open', 'pending'])
-        ->and(DB::table('approval_requests')->where('status', 'pending')->count())->toBe(3)
+        // ADR-540: four-eyes is off by default, so the showcase asks for no approval (one would run at once and delete a sample).
+        ->and(DB::table('approval_requests')->count())->toBe(0)
         ->and(DB::table('catalog_requests')->where('status', 'pending')->count())->toBe(1)
         // Colours are German (the manifest notes them in English).
         ->and(Vehicle::query()->where('is_sample', true)->pluck('color')->filter(fn (?string $c): bool => $c !== null && preg_match('/^(black|white|silver|red|blue|grey|gray|yellow|green|orange)\b/i', $c) === 1)->all())->toBe([])
@@ -304,9 +307,9 @@ it('seeds the showcase from matching photos only and changes nothing when run ag
         ->and(DB::table('collections')->where('active', true)->pluck('filters')->filter(fn (string $filters): bool => in_array(json_decode($filters, true), [[], null], true))->all())->toBe([])
         ->and(DB::table('audit_events')->where('action', Showcase::AUDIT_SEEDED)->count())->toBe(1);
 
-    // The crawl's staff account: role admin, password and TOTP enrolled.
+    // The crawl's (and the client's, round 6) staff account: role owner, password and TOTP enrolled.
     $staff = Staff::query()->where('email', Showcase::STAFF_EMAIL)->firstOrFail();
-    expect($staff->hasRole('admin'))->toBeTrue()
+    expect($staff->hasRole('owner'))->toBeTrue()
         ->and($staff->hasEnabledTwoFactorAuthentication())->toBeTrue()
         ->and(Hash::check('showcase-staff-password', $staff->password))->toBeTrue()
         ->and($staff->getAttribute('password_proof_required'))->toBeFalse();
@@ -355,6 +358,44 @@ it('purges only sample data, files included, and keeps real members', function (
         ->and(User::query()->whereKey($real->id)->exists())->toBeTrue()
         ->and(Vehicle::query()->whereKey($realVehicle->id)->exists())->toBeTrue()
         ->and(DB::table('audit_events')->where('action', Showcase::AUDIT_PURGED)->count())->toBe(1);
+});
+
+/**
+ * QA-C01, QA-C03 (full app QA 2026-11-23): the documented reset of a demo host is `db:seed` (DatabaseSeeder, which runs DemoSeeder,
+ * ForumSampleSeeder and ShowcaseCrewsSeeder) and then `db:seed --class=DemoShowcaseSeeder`. The forum samples and the sample crews are
+ * written by showcase members, who do not exist yet when DatabaseSeeder runs, so the showcase has to bring them; and since ADR-436 a a
+ * save is a build in the member's "Gespeichert", so every seeded save has to be one.
+ */
+it('leaves the sample forum, the sample crews and every save in Gespeichert after the documented reset', function () {
+    prepareShowcaseHost();
+    config(['speedclub.demo.seed_on_staging' => true, 'speedclub.demo.photo_limit' => 0]);
+
+    $this->seed(DatabaseSeeder::class);
+    runShowcase();
+
+    $sampleAuthors = User::query()->where('is_sample', true)->select('id');
+    expect(DB::table('forum_threads')->where('is_sample', true)->whereIn('user_id', $sampleAuthors)->count())->toBe(count(json_decode((string) file_get_contents(database_path('data/showcase/forum.json')), true)))
+        ->and(DB::table('crews')->where('is_sample', true)->count())->toBe(5);
+
+    $saves = DB::table('saves')->get(['user_id', 'vehicle_id']);
+    $inGespeichert = DB::table('member_collection_items as i')->join('member_collections as c', 'c.id', '=', 'i.collection_id')
+        ->where('c.is_default', true)->where('i.item_type', 'vehicle')->get(['c.user_id', 'i.item_id'])
+        ->map(fn (object $row): string => $row->user_id.'|'.$row->item_id)->all();
+    $missing = $saves->map(fn (object $save): string => $save->user_id.'|'.$save->vehicle_id)->diff($inGespeichert)->values()->all();
+
+    // DemoSeeder's members (lukas.sc's four) and the showcase members (sebastian.demo's) both save.
+    expect($saves->count())->toBeGreaterThan(20)
+        ->and(DB::table('saves')->where('user_id', User::query()->where('username', 'lukas.sc')->value('id'))->count())->toBe(4)
+        ->and(DB::table('saves')->where('user_id', User::query()->where('username', Showcase::SHOWCASE_USERNAME)->value('id'))->count())->toBeGreaterThan(0)
+        ->and($missing)->toBe([]);
+
+    // A second showcase run adds nothing twice.
+    $items = DB::table('member_collection_items')->count();
+    $threads = DB::table('forum_threads')->count();
+    runShowcase();
+    expect(DB::table('member_collection_items')->count())->toBe($items)
+        ->and(DB::table('forum_threads')->count())->toBe($threads)
+        ->and(DB::table('crews')->where('is_sample', true)->count())->toBe(5);
 });
 
 it('matches photos on make, model and generation names only', function () {

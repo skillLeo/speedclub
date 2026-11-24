@@ -5,7 +5,7 @@ import { useWindowDimensions } from 'react-native';
 import { hydrateThemePreference, radius, size, space, themes, typography } from '@/theme';
 import { BuildSheet } from '@/ui/BuildSheet';
 import { ContextMenu, orderMenuItems, type ContextMenuItem } from '@/ui/ContextMenu';
-import { MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
+import { feedActionInset, MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
 import { OwnerCapsule, ownerCapsuleVisibleActions } from '@/ui/OwnerCapsule';
 import { BACKDROP_DIM_COMPACT, QrReveal } from '@/ui/motion/QrReveal';
 import { Timeline } from '@/ui/Timeline';
@@ -93,10 +93,46 @@ describe('MediaCard', () => {
     expect(screen.getByTestId('f')).not.toHaveTextContent(/\d+ (Reaktionen|Likes)/);
   });
 
+  it('feed: the comment slot sits after the reaction, and the first glyph starts on the gutter (R4DQ-37)', async () => {
+    const onComment = jest.fn();
+    await renderUi(
+      <MediaCard
+        variant="feed"
+        title="BMW M3 E46"
+        photos={[PHOTO]}
+        time="jetzt"
+        comment={{ label: 'Kommentare', onPress: onComment }}
+        save={{ saved: false, onToggle: jest.fn() }}
+        testID="f"
+      />,
+    );
+    expect(screen.getByTestId('f.actions')).toBeTruthy();
+    expect(screen.getByTestId('f.comment').props.accessibilityLabel).toBe('Kommentare');
+    await fireEvent.press(screen.getByTestId('f.comment'));
+    expect(onComment).toHaveBeenCalled();
+    // 24 glyph centred in its 44 target: 10 in, so the row starts 10 before the gutter.
+    expect(feedActionInset(20)).toBe(20 - (size.touchMin - size.icon.l) / 2);
+    expect(feedActionInset(24)).toBe(14);
+    expect(feedActionInset(0)).toBe(0);
+  });
+
   it('feed: one photo has no pager and a square crop when asked', async () => {
     await renderUi(<MediaCard variant="feed" square title="BMW M3 E46" photos={[PHOTO]} owner={{ username: 'lukas.sc' }} time="jetzt" testID="f" />);
     expect(screen.queryByTestId('f.pages')).toBeNull();
     expect(flat(screen.getByTestId('f.page.0').props.style).aspectRatio).toBe(1);
+  });
+
+  it('feed: a single photo is no ScrollView, so a vertical swipe that starts on it scrolls the feed on the web (R5-4)', async () => {
+    // react-native-web turns a ScrollView with scrolling off into `touch-action: none`: the page could not be scrolled from the photo.
+    await renderUi(<MediaCard variant="feed" title="BMW M3 E46" photos={[PHOTO]} owner={{ username: 'lukas.sc' }} time="jetzt" testID="f" />);
+    expect(screen.getByTestId('f.media').props.horizontal).toBeUndefined();
+    expect(screen.getByTestId('f.media').props.scrollEnabled).toBeUndefined();
+  });
+
+  it('feed: two or more photos page in a horizontal ScrollView that is always scrollable', async () => {
+    await renderUi(<MediaCard variant="feed" title="BMW M3 E46" photos={[PHOTO, PHOTO]} owner={{ username: 'lukas.sc' }} time="jetzt" testID="f" />);
+    expect(screen.getByTestId('f.media').props.horizontal).toBe(true);
+    expect(screen.getByTestId('f.media').props.scrollEnabled).not.toBe(false);
   });
 
   it('rail: 3:4 at radius 12 with the name and the spec below', async () => {

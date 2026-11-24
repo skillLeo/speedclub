@@ -7,13 +7,15 @@ import { View, type TextInput as RNTextInput } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { useRegister } from '@/api/queries/auth';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { createStyles } from '@/theme';
-import { Button } from '@/ui';
+import { Button } from '@/ui/Button';
 
 import { AuthScreen, FooterLink } from '../components/AuthScreen';
 import { ConsentCheck } from '../components/ConsentCheck';
 import { EMAIL_INPUT, FormField } from '../components/FormField';
 import { FormNotice } from '../components/FormNotice';
+import { InviteNotice } from '../components/InviteNotice';
 import { RuleList } from '../components/RuleList';
 import { handEmailTo, useHandedEmail } from '../emailHandoff';
 import { applyServerErrors, onlyEmailDirty, useLeaveForm, useReturnToParam } from '../forms';
@@ -59,7 +61,7 @@ export function SignUpScreen() {
   const email = useWatch({ control, name: 'email' });
   const checks = passwordChecks(password, email);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     try {
       const next = await register.mutateAsync({
@@ -88,7 +90,7 @@ export function SignUpScreen() {
         setNotice(t('common.serverError'));
       }
     }
-  });
+  }));
 
   const toSignIn = () => {
     handEmailTo('/sign-in', getValues('email'));
@@ -119,6 +121,7 @@ export function SignUpScreen() {
         </FooterLink>
       }
     >
+      <InviteNotice routeId="AUTH-04" />
       {notice ? <FormNotice message={notice} testID="AUTH-04.notice" /> : null}
       <FormField
         control={control}

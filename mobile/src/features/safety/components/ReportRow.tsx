@@ -2,7 +2,9 @@ import { memo, type ReactNode } from 'react';
 import { View } from 'react-native';
 
 import { createStyles, size, space } from '@/theme';
-import { Icon, StatusPill, Text, type IconName } from '@/ui';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
 import { endsWord, joinLabel, RowBody, RowDivider, useStacksAtFontScale } from '@/ui/rowParts';
 import { metaLineText, vehicleNameText } from '@/ui/textBreaks';
 

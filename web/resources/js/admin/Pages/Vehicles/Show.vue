@@ -212,21 +212,21 @@ function openDialog(which: 'hide' | 'unhide' | 'delete' | 'edit'): void {
 function hide(payload: Record<string, string | null>): void {
     action.run('post', url('hide', '/hide'), payload, { sensitive: true, onSuccess: () => (hideOpen.value = false) });
 }
-function unhide(reason: string | null): void {
+function unhide(): void {
     const length = unhideFacts.value.trim().length;
     if (length < 10 || length > 5000) {
         unhideError.value = trans('decisions.errors.facts');
         return;
     }
     unhideError.value = null;
-    action.run('post', url('unhide', '/unhide'), { facts: unhideFacts.value.trim(), reason: reason ?? '' }, { sensitive: true, onSuccess: () => (unhideOpen.value = false) });
+    action.run('post', url('unhide', '/unhide'), { facts: unhideFacts.value.trim() }, { sensitive: true, onSuccess: () => (unhideOpen.value = false) });
 }
 function destroy(payload: Record<string, string | null>): void {
     action.run('delete', url('destroy', ''), payload, { sensitive: true, onSuccess: () => (deleteOpen.value = false) });
 }
 
 // edit drawer: catalogue relink and title fields
-const edit = reactive({ make_id: '', model_id: '', generation_id: '', make_text: '', model_text: '', model_year: '', nickname: '', reason: '' });
+const edit = reactive({ make_id: '', model_id: '', generation_id: '', make_text: '', model_text: '', model_year: '', nickname: '' });
 const editErrors = ref<Record<string, string>>({});
 const catalogLoading = ref(false);
 function loadCatalog(data: Record<string, string> = {}): void {
@@ -243,7 +243,6 @@ watch(editOpen, (value) => {
         model_text: v.model_text ?? '',
         model_year: v.model_year === null ? '' : String(v.model_year),
         nickname: v.nickname ?? '',
-        reason: '',
     });
     editErrors.value = {};
     loadCatalog();
@@ -271,8 +270,6 @@ const generationModel = computed({
 });
 function submitEdit(): void {
     const errors: Record<string, string> = {};
-    const reason = edit.reason.trim().length;
-    if (reason < 10 || reason > 1000) errors.reason = trans('ui.confirm.reason_length');
     if (edit.model_year !== '' && !/^\d{4}$/.test(edit.model_year)) errors.model_year = trans('vehicles.edit.year_invalid');
     editErrors.value = errors;
     if (Object.keys(errors).length > 0) return;
@@ -289,7 +286,6 @@ function submitEdit(): void {
             model_text: edit.model_id === '' ? text(edit.model_text) : null,
             model_year: id(edit.model_year),
             nickname: text(edit.nickname),
-            reason: edit.reason.trim(),
         },
         { sensitive: true, onSuccess: () => (editOpen.value = false) },
     );
@@ -527,7 +523,6 @@ v-for="item in [
             :body="trans('vehicles.unhide.body')"
             :confirm-label="trans('vehicles.actions.unhide')"
             tone="neutral"
-            reason
             :processing="action.processing.value"
             :error="unhideError ?? action.error.value"
             test-id="ADM-12.unhide"
@@ -567,9 +562,6 @@ v-for="item in [
                         </Field>
                     </div>
                 </div>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="editErrors.reason" required>
-                    <Textarea v-model="edit.reason" :rows="3" :maxlength="1000" show-count data-testid="ADM-12.edit.reason" />
-                </Field>
             </form>
             <template #footer>
                 <p v-if="action.error.value" class="flex basis-full items-start gap-8 rounded-sm border border-line px-12 py-8 text-admin-base text-ink" role="alert">

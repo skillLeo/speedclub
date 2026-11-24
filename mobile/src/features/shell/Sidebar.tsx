@@ -2,25 +2,29 @@ import { TabTrigger } from 'expo-router/ui';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { View, type LayoutChangeEvent } from 'react-native';
 
 import { isWeb } from '@/lib/platform';
 import { clearAuthIntent, useSessionStore } from '@/state/session';
-import { createStyles, layout, size, space, useTheme } from '@/theme';
+import { createStyles, layout, space, useTheme } from '@/theme';
 import { maxFontScale } from '@/theme/tokens.generated';
 import { AppWordmark } from '@/features/auth/AppWordmark';
-import { Avatar, Button, Hairline, Icon, PressableScale, Text } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { Button } from '@/ui/Button';
+import { Hairline } from '@/ui/Hairline';
+import { Icon } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text, typeStyle } from '@/ui/Text';
 import type { PressableVisualState } from '@/ui/PressableScale';
 import { LARGE_FONT_SCALE } from '@/ui/rowParts';
-import { typeStyle } from '@/ui/Text';
 import { useSafeEdge } from '@/ui/safeArea';
 
-import { TAB_DESTINATIONS } from './destinations';
+import { itemKey, SIDEBAR_ITEMS } from './destinations';
 import { SlidingIndicator } from './SlidingIndicator';
 import { TabButton } from './TabButton';
 import { useAddVehicle } from './useAddVehicle';
 import { useTabBadges } from './useTabBadges';
-import { useTabNavigation } from './useTabNavigation';
+import { useShellBar } from './useShellBar';
 
 const useStyles = createStyles((t) => ({
   sidebar: {
@@ -120,26 +124,44 @@ export function AccountSlot() {
   );
 }
 
-type RowLayout = { y: number; height: number };
+/**
+ * DQ-P5-004: the indicator's y for the active item: the heights of the rows above it (each measured row by its item's key; a row not
+ * measured yet counts as the 56 single row) plus the half of its own. By key, never by index: the Treffen and Forum flags arrive
+ * after the first layout and move every row below them, while react-native-web reports a row's layout only when its size changes,
+ * not when it moves. Null until the active row and every row above it are measured, so the indicator never slides from a stale y.
+ */
+export function sidebarIndicatorOffset(keys: readonly string[], activeKey: string, heights: Readonly<Record<string, number>>): number | null {
+  const index = keys.indexOf(activeKey);
+  if (index === -1) return null;
+  let y = 0;
+  for (const key of keys.slice(0, index)) {
+    const height = heights[key];
+    if (height === undefined) return null;
+    y += height;
+  }
+  const own = heights[activeKey];
+  if (own === undefined) return null;
+  return y + (own - space[16]) / 2;
+}
 
 /** The file's ratio gives 35.9 at this width, which would put every row below it on a fractional y. */
 const LOGO_HEIGHT = space[32] + space[4];
 
-/** From 1280: 240 wide with the small logo, the five destinations, "Fahrzeug hinzufügen" and the account slot. */
+/**
+ * From 1280: 240 wide with the small logo, the destinations of 10 §1 (Start · Entdecken · Treffen · Forum · Garage · Shop · Nachrichten ·
+ * Profil; Treffen and Forum while their flags are on), "Fahrzeug hinzufügen" and the account slot.
+ */
 export function Sidebar() {
   const { t } = useTranslation('common');
   const styles = useStyles();
   const padding = useSafeEdge('top');
   const badges = useTabBadges();
   const addVehicle = useAddVehicle();
-  const { activeIndex, pressHandler } = useTabNavigation();
-  // Rows grow with the font scale, so the indicator follows their real positions.
-  const [rows, setRows] = useState<Record<number, RowLayout>>({});
-
-  const row = rows[activeIndex];
-  const offset = row
-    ? row.y + (row.height - space[16]) / 2
-    : activeIndex * size.row.single + (size.row.single - space[16]) / 2;
+  const { items, activeKey, tabPress, placePress } = useShellBar(SIDEBAR_ITEMS);
+  // Rows grow with the font scale, so the indicator follows their real heights, kept by item (DQ-P5-004).
+  const [heights, setHeights] = useState<Record<string, number>>({});
+  const keys = items.map(itemKey);
+  const offset = sidebarIndicatorOffset(keys, activeKey, heights);
 
   return (
     <View dataSet={{ qaExempt: 'safe-area' }} style={[styles.sidebar, padding]} testID="shell.sidebar">
@@ -151,24 +173,45 @@ export function Sidebar() {
         style={styles.list}
         testID="shell.sidebar.list"
       >
-        <SlidingIndicator axis="y" offset={offset} style={styles.indicator} testID="shell.sidebar.indicator" />
-        {TAB_DESTINATIONS.map((destination, index) => (
-          <TabTrigger key={destination.name} name={destination.name} asChild onPress={pressHandler(destination.name)}>
-            <TabButton
-              variant="sidebar"
-              icon={destination.icon}
-              label={t(destination.labelKey)}
-              labelCap={SIDEBAR_LABEL_CAP}
-              testID={destination.testID}
-              count={destination.name === 'messages' ? badges.messages : undefined}
-              dotLabel={destination.name === 'home' && badges.home ? t('a11y.unreadNotifications') : undefined}
-              onLayout={(event) => {
-                const { y, height } = event.nativeEvent.layout;
-                setRows((current) => ({ ...current, [index]: { y, height } }));
-              }}
-            />
-          </TabTrigger>
-        ))}
+        {offset === null ? null : <SlidingIndicator axis="y" offset={offset} style={styles.indicator} testID="shell.sidebar.indicator" />}
+        {items.map((item) => {
+          const key = itemKey(item);
+          const onLayout = (event: LayoutChangeEvent) => {
+            const { height } = event.nativeEvent.layout;
+            setHeights((current) => (current[key] === height ? current : { ...current, [key]: height }));
+          };
+          if (item.kind === 'place') {
+            return (
+              <TabButton
+                key={itemKey(item)}
+                variant="sidebar"
+                icon={item.place.icon}
+                label={t(item.place.labelKey)}
+                labelCap={SIDEBAR_LABEL_CAP}
+                testID={item.place.testID}
+                isFocused={activeKey === item.place.name}
+                count={item.place.name === 'messages' ? badges.messages : undefined}
+                onPress={placePress(item.place)}
+                onLayout={onLayout}
+              />
+            );
+          }
+          const { tab } = item;
+          return (
+            <TabTrigger key={tab.name} name={tab.name} asChild onPress={tabPress(tab.name)}>
+              <TabButton
+                variant="sidebar"
+                icon={tab.icon}
+                label={t(tab.labelKey)}
+                labelCap={SIDEBAR_LABEL_CAP}
+                testID={tab.testID}
+                isFocused={activeKey === tab.name}
+                dotLabel={tab.name === 'home' && badges.home ? t('a11y.unreadNotifications') : undefined}
+                onLayout={onLayout}
+              />
+            </TabTrigger>
+          );
+        })}
       </View>
       <Button
         label={t('shell.addVehicle')}

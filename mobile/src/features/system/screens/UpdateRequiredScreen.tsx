@@ -4,7 +4,7 @@ import { Linking, Platform } from 'react-native';
 
 import { apiOrigin } from '@/api/client';
 import { useAppConfig } from '@/api/queries/appConfig';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 
 import { currentAppVersion } from '../AppConfigGate';
 import { storeLinkFor } from '../storeLink';

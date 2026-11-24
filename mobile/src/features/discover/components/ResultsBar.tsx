@@ -2,7 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Icon, IconButton, PressableScale, Text } from '@/ui';
+import { IconButton } from '@/ui/IconButton';
+import { Icon } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text } from '@/ui/Text';
 
 import type { ResultView, SearchSort } from '../filters';
 

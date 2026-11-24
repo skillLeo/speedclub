@@ -87,7 +87,7 @@ class MessageController extends Controller
         $file = $request->file('file');
 
         /** @status 201 */
-        return (new ChatMediaResource($action->handle($member, $participant, $file)))->delivered(true, false);
+        return (new ChatMediaResource($action->handle($member, $participant, $file, $request->plateBlur())))->delivered(true, false);
     }
 
     /**

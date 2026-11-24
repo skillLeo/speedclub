@@ -2,7 +2,7 @@ import { useSegments } from 'expo-router';
 
 import { useShellStore } from '@/state/shell';
 import { size, useBreakpoint } from '@/theme';
-import { ToastHost } from '@/ui';
+import { ToastHost } from '@/ui/ToastHost';
 import { useStickyBarHeight } from '@/ui/toastPlacement';
 import { PwaHost } from '@/features/pwa/PwaHost';
 

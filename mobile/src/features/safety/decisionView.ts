@@ -46,7 +46,7 @@ export function affectedOutcome(decision: DecisionDetail): { key: string; until:
     case 'remove_content':
       return { key: 'decision.outcome.remove_content', until: null };
     case 'restrict': {
-      const kind = decision.restriction?.kind === 'publishing' ? 'Publishing' : 'Messaging';
+      const kind = decision.restriction?.kind === 'publishing' ? 'Publishing' : decision.restriction?.kind === 'forum' ? 'Forum' : 'Messaging';
       // A restriction without its kind says what it does in general.
       if (!decision.restriction) return { key: 'decision.outcome.restrict', until: null };
       const until = decision.restriction?.until ?? null;

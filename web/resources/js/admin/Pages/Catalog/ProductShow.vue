@@ -23,8 +23,8 @@ import { useCatalogWrite } from './shared';
 /**
  * ADM-57 part record (09 §8.9, §10.2 record page): the part as members see it when they link a mod (brand, name, line, the maker's
  * facts per language, maker and affiliate links, other spellings), how many mods link it, and the activity column from the audit log.
- * catalog.manage: Bearbeiten (drawer), Archivieren / Wiederherstellen (reason; an archived part is not offered to new mods), Zusammenführen
- * (⚿, reason). A merged part only says where it went.
+ * catalog.manage: Bearbeiten (drawer), Archivieren / Wiederherstellen (an archived part is not offered to new mods), Zusammenführen
+ * (⚿). A merged part only says where it went.
  */
 type Activity = { id: number; occurred_at: string; action: string; actor: string | null; actor_type?: string; actor_id?: string | null; reason: string | null };
 const props = defineProps<{
@@ -65,8 +65,8 @@ const mergeOpen = ref(manage.value && qa === 'merge');
 const stateDialog = ref(manage.value && (qa === 'archive' || qa === 'restore'));
 const archived = computed(() => p.value.status === 'archived');
 const write = useCatalogWrite();
-function setArchived(reason: string | null): void {
-    write.run('post', productWriteUrl(p.value.id, archived.value ? 'restore' : 'archive'), { reason }, { onSuccess: () => (stateDialog.value = false) });
+function setArchived(): void {
+    write.run('post', productWriteUrl(p.value.id, archived.value ? 'restore' : 'archive'), {}, { onSuccess: () => (stateDialog.value = false) });
 }
 </script>
 
@@ -172,7 +172,6 @@ function setArchived(reason: string | null): void {
                 :body="trans(archived ? 'catalog.products.restore_dialog.body' : 'catalog.products.archive_dialog.body')"
                 :confirm-label="trans(archived ? 'catalog.products.actions.restore' : 'catalog.products.actions.archive')"
                 :tone="archived ? 'neutral' : 'danger'"
-                reason
                 :processing="write.processing.value"
                 :error="write.error.value"
                 :test-id="`ADM-57-record.${archived ? 'restore' : 'archive'}-dialog`"

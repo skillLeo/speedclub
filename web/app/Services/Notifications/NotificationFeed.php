@@ -8,6 +8,7 @@ use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
 use App\Models\BuildUpdate;
 use App\Models\Event;
+use App\Models\ForumThread;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -112,6 +113,7 @@ class NotificationFeed
         $vehicles = $this->vehicles($member, $rows);
         $visibleUpdates = $this->visibleUpdates($rows);
         $events = $this->events($member, $rows);
+        $threads = $this->forumThreads($member, $rows);
 
         foreach ($rows as $row) {
             $mine = $top->where('notification_id', $row->id);
@@ -126,6 +128,8 @@ class NotificationFeed
             $row->visibleUpdateIds = array_values(array_filter($updateIds, fn (mixed $id): bool => is_string($id) && isset($visibleUpdates[$id])));
             $eventId = $row->data['event_id'] ?? null;
             $row->setRelation('event', is_string($eventId) ? ($events[$eventId] ?? null) : null);
+            $threadId = $row->data['thread_id'] ?? null;
+            $row->setRelation('forumThread', is_string($threadId) ? ($threads[$threadId] ?? null) : null);
         }
     }
 
@@ -149,6 +153,29 @@ class NotificationFeed
         return Event::query()->whereKey($ids)->with('organiser')->get()
             ->filter(fn (Event $event): bool => $gate->allows('view', $event))
             ->keyBy(fn (Event $event): string => $event->id)
+            ->all();
+    }
+
+    /**
+     * M5.8: the threads of forum rows the member may still see (ForumThreadPolicy::view: blocks, removed threads, hidden samples), so a
+     * row of a thread that is gone opens HOME-02. One query per page.
+     *
+     * @param  Collection<int, Notification>  $rows
+     * @return array<string, ForumThread>
+     */
+    private function forumThreads(User $member, Collection $rows): array
+    {
+        $ids = $rows->map(fn (Notification $row): mixed => $row->data['thread_id'] ?? null)->filter(fn (mixed $id): bool => is_string($id))->unique()->values()->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $gate = Gate::forUser($member);
+
+        return ForumThread::query()->whereKey($ids)->with('category')->get()
+            ->filter(fn (ForumThread $thread): bool => $gate->allows('view', $thread))
+            ->keyBy(fn (ForumThread $thread): string => $thread->id)
             ->all();
     }
 

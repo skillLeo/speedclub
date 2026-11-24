@@ -86,13 +86,13 @@ if (qaDialog() === 'notes') notesOf.value = props.rows.data.find((row) => row.no
 // Manual entry and correction.
 const editing = ref<ReleaseRow | null>(null);
 const drawerOpen = ref(false);
-const form = reactive({ version_name: '', version_code: '', platform: 'android', channel: 'production', apk_sha256: '', notes: '', day: '', reason: '' });
+const form = reactive({ version_name: '', version_code: '', platform: 'android', channel: 'production', apk_sha256: '', notes: '', day: '' });
 const errors = ref<Record<string, string>>({});
 function open(row: ReleaseRow | null): void {
     editing.value = row;
     Object.assign(form, row === null
-        ? { version_name: '', version_code: '', platform: 'android', channel: 'production', apk_sha256: '', notes: '', day: '', reason: '' }
-        : { version_name: row.version_name, version_code: String(row.version_code), platform: row.platform, channel: row.channel, apk_sha256: row.apk_sha256 ?? '', notes: row.notes ?? '', day: instantToDay(row.released_at), reason: '' });
+        ? { version_name: '', version_code: '', platform: 'android', channel: 'production', apk_sha256: '', notes: '', day: '' }
+        : { version_name: row.version_name, version_code: String(row.version_code), platform: row.platform, channel: row.channel, apk_sha256: row.apk_sha256 ?? '', notes: row.notes ?? '', day: instantToDay(row.released_at) });
     errors.value = {};
     action.reset();
     drawerOpen.value = true;
@@ -104,7 +104,6 @@ function save(): void {
     if (!/^\d+\.\d+\.\d+([.-][0-9A-Za-z.-]+)?$/.test(form.version_name.trim())) next.version_name = trans('config.releases.version_hint');
     if (!/^\d{1,10}$/.test(form.version_code.trim())) next.version_code = trans('config.releases.code_hint');
     if (form.apk_sha256.trim() !== '' && !/^[0-9A-Fa-f]{64}$/.test(form.apk_sha256.trim())) next.apk_sha256 = trans('config.releases.sha_hint');
-    if (form.reason.trim() !== '' && form.reason.trim().length < 10) next.reason = trans('ui.confirm.reason_length');
     errors.value = next;
     if (Object.keys(next).length > 0) return;
     const data = {
@@ -115,7 +114,6 @@ function save(): void {
         apk_sha256: form.apk_sha256.trim() === '' ? null : form.apk_sha256.trim(),
         notes: form.notes.trim() === '' ? null : form.notes.trim(),
         released_at: form.day === '' ? null : dayToInstant(form.day),
-        ...(editing.value && form.reason.trim() !== '' ? { reason: form.reason.trim() } : {}),
     };
     const url = editing.value ? routeOr('admin.config.releases.update', `/admin/config/releases/${editing.value.id}`, { release: editing.value.id }) : routeOr('admin.config.releases.store', '/admin/config/releases');
     action.run(editing.value ? 'patch' : 'post', url, data, { onSuccess: () => (drawerOpen.value = false) });
@@ -216,7 +214,6 @@ async function copy(text: string): Promise<void> {
                 <Field :label="trans('config.releases.fields.sha')" :hint="trans('config.releases.sha_hint')" :error="errors.apk_sha256" optional><Input v-model="form.apk_sha256" maxlength="64" spellcheck="false" class="sc-key" /></Field>
                 <Field :label="trans('config.releases.fields.released')" optional><DateRangeField v-model:from="form.day" single test-id="ADM-38.form.day" /></Field>
                 <Field :label="trans('config.releases.fields.notes')" optional><Textarea v-model="form.notes" :rows="4" :maxlength="5000" /></Field>
-                <Field v-if="editing" :label="trans('config.releases.fields.reason')" :hint="trans('config.releases.reason_hint')" :error="errors.reason" optional><Textarea v-model="form.reason" :rows="2" :maxlength="1000" /></Field>
             </form>
             <template #footer>
                 <Button variant="ghost" :disabled="action.processing.value" @click="drawerOpen = false">{{ trans('ui.actions.cancel') }}</Button>

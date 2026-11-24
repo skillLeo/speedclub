@@ -3,7 +3,7 @@
  * (design/seed-photos/CREDITS.md, the same files DEV-01 shows) and a real car, always badged "Beispiel". Focal points come from
  * the seed manifest, the blurhashes were computed once from these files (features/gallery/data.ts).
  */
-import type { PhotoFields } from '@/ui';
+import type { PhotoFields } from '@/ui/Photo';
 
 export const EMPTY_HERO: PhotoFields = {
   source: require('@/assets/gallery/bmw-e46-01.jpg') as number,

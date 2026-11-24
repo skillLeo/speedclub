@@ -6,6 +6,7 @@ use App\Enums\UserStatus;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
 use App\Models\User;
+use App\Services\Dex\GhostMode;
 use App\Services\Showcase\SampleContent;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -25,7 +26,8 @@ final class MemberStats
         return [
             'vehicles' => $member->vehicles()
                 ->where('status', VehicleStatus::Published)
-                ->when(! $asOwner, fn ($query) => $query->where('visibility', Visibility::Public))
+                // M5.9b: others count the public cars they can list, so no ghost car.
+                ->when(! $asOwner, fn ($query) => GhostMode::constrain($query->where('visibility', Visibility::Public)))
                 ->count(),
             'followers' => $this->followers($member),
             'following' => self::visible($member->following())->count(),

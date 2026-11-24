@@ -2,12 +2,14 @@
 
 namespace App\Actions\Admin\Team;
 
+use App\Enums\ApproverChangeCause;
 use App\Enums\TeamEvent;
 use App\Models\ApprovalRequest;
 use App\Models\Role;
 use App\Models\Staff;
 use App\Services\Admin\Members\StaffAtoms;
 use App\Services\Approvals\Approvals;
+use App\Services\Approvals\ApproverChanges;
 use App\Services\Approvals\FourEyes;
 use App\Services\Audit\Audit;
 use App\Services\Catalog\Reason;
@@ -144,6 +146,10 @@ class ApplyPermissionMatrix
      */
     private function apply(array $diff, ?string $reason, Staff $requester, ?Staff $approver): void
     {
+        // SEC-P5-01: who held approvals.decide before atoms were removed from their role (the Owner-Override cool-down).
+        $removing = array_keys(array_filter($diff, fn (array $change): bool => $change['removed'] !== []));
+        $watched = $removing === [] ? [] : ApproverChanges::watch(Staff::query()->role($removing, StaffSeeder::GUARD)->get());
+
         foreach ($diff as $name => $change) {
             $role = Role::query()->where('guard_name', StaffSeeder::GUARD)->where('name', $name)->lockForUpdate()->firstOrFail();
             $role->givePermissionTo($change['added']);
@@ -161,5 +167,7 @@ class ApplyPermissionMatrix
                 'approved_by' => $approver?->getKey(),
             ],
             reason: $reason, actor: $approver ?? $requester);
+
+        ApproverChanges::recordLosses($watched, ApproverChangeCause::AtomsRemoved, $approver ?? $requester);
     }
 }

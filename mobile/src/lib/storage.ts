@@ -44,6 +44,11 @@ export type StorageSchema = {
    * features/settings/appLock.ts).
    */
   'sc.appLock': string;
+  /**
+   * Native, M5.9b DEX-02: the location explanation was answered on this device ('asked': the system asked; 'skipped': "Ohne
+   * Standort"). Either way the app does not explain again (features/dex/location.ts). Holds no position.
+   */
+  'sc.dexLocation': 'asked' | 'skipped';
 };
 
 export type StorageKey = keyof StorageSchema;

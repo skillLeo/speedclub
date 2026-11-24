@@ -24,10 +24,20 @@ export const SKELETON_DELAY_MS = 300;
 
 const ShimmerContext = createContext<SharedValue<number> | null>(null);
 
+/**
+ * DQ-P5G-03: the surface a skeleton is drawn on. `raised` inside a Sheet (bg.raised) or a Dialog (bg.overlay), where
+ * `skeleton.base` would equal the panel and vanish: there the blocks take `skeleton.raised` / `skeleton.raisedHighlight`, one
+ * OKLCH step above bg.overlay in the dark themes and below bg.raised in Hell (09 §4.1).
+ */
+export type SkeletonSurface = 'canvas' | 'raised';
+export const SkeletonSurfaceContext = createContext<SkeletonSurface>('canvas');
+
 const useStyles = createStyles((t) => ({
   hidden: { opacity: 0 },
   block: { backgroundColor: t.color.skeleton.base, overflow: 'hidden' },
   highlight: { backgroundColor: t.color.skeleton.highlight },
+  blockRaised: { backgroundColor: t.color.skeleton.raised },
+  highlightRaised: { backgroundColor: t.color.skeleton.raisedHighlight },
   lineBox: { justifyContent: 'center' },
 }));
 
@@ -116,13 +126,14 @@ export function SkeletonBlock(props: SkeletonBlockProps) {
 function Block({ width, height, aspectRatio, corner = 'xs', style, testID }: SkeletonBlockProps) {
   const styles = useStyles();
   const shimmer = use(ShimmerContext);
+  const raised = use(SkeletonSurfaceContext) === 'raised';
   const animatedStyle = useAnimatedStyle(() => ({ opacity: shimmer?.get() ?? 0 }));
   return (
     <View
       testID={testID}
-      style={[styles.block, { width, height, aspectRatio, borderRadius: radius[corner] }, style]}
+      style={[styles.block, raised ? styles.blockRaised : null, { width, height, aspectRatio, borderRadius: radius[corner] }, style]}
     >
-      <Animated.View style={[StyleSheet.absoluteFill, styles.highlight, animatedStyle]} />
+      <Animated.View style={[StyleSheet.absoluteFill, styles.highlight, raised ? styles.highlightRaised : null, animatedStyle]} />
     </View>
   );
 }
@@ -182,6 +193,22 @@ export function SkeletonText(props: SkeletonTextProps) {
   return <Lines {...props} />;
 }
 
+/**
+ * The scaled size and line height of a type role as a Text of that role takes them (font scale and its cap, the web desktop size), for
+ * skeleton geometry built from several lines, such as a grouped row with a subtitle (DQ-P5-204).
+ */
+export function useSkeletonType(desktopSize: boolean = true): (variant: SizedTypeVariant) => { fontSize: number; lineHeight: number } {
+  const theme = useTheme();
+  const desktop = useDesktopType() && desktopSize;
+  return (variant) => {
+    const cap = (maxFontScale as Partial<Record<TypeVariant, number>>)[variant];
+    const scale = Math.min(theme.fontScale, cap ?? theme.fontScale);
+    const desktopType = desktop ? (typographyDesktop as Partial<Record<SizedTypeVariant, { fontSize: number; lineHeight: number }>>)[variant] : undefined;
+    const type = desktopType ?? typography[variant];
+    return { fontSize: type.fontSize * scale, lineHeight: type.lineHeight * scale };
+  };
+}
+
 function Lines({
   variant = 'body',
   lines = 1,
@@ -192,18 +219,13 @@ function Lines({
   testID,
 }: SkeletonTextProps) {
   const styles = useStyles();
-  const theme = useTheme();
-  const desktop = useDesktopType() && desktopSize;
-  const cap = (maxFontScale as Partial<Record<TypeVariant, number>>)[variant];
-  const scale = Math.min(theme.fontScale, cap ?? theme.fontScale);
-  const desktopType = desktop ? (typographyDesktop as Partial<Record<SizedTypeVariant, { fontSize: number; lineHeight: number }>>)[variant] : undefined;
-  const type = desktopType ?? typography[variant];
+  const type = useSkeletonType(desktopSize)(variant);
   return (
     <View testID={testID} style={style}>
       {Array.from({ length: lines }, (_, index) => (
-        <View key={index} style={[styles.lineBox, { height: type.lineHeight * scale }]}>
+        <View key={index} style={[styles.lineBox, { height: type.lineHeight }]}>
           <SkeletonBlock
-            height={type.fontSize * scale}
+            height={type.fontSize}
             width={lines > 1 && index === lines - 1 ? lastLineWidth : width}
           />
         </View>

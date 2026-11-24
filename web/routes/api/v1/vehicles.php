@@ -13,7 +13,8 @@ Route::middleware('member')->group(function (): void {
         ->name('vehicles.store');
 
     Route::get('vehicles/{vehicle}', [VehicleController::class, 'show'])->name('vehicles.show');
-    Route::patch('vehicles/{vehicle}', [VehicleController::class, 'update'])->middleware(['not-restricted:publishing', 'throttle:garage-edits'])->name('vehicles.update');
+    // M5.9b part 2: a restricted owner may still switch on Ghost mode, pause spotting or hide cities, so the controller decides.
+    Route::patch('vehicles/{vehicle}', [VehicleController::class, 'update'])->middleware('throttle:garage-edits')->name('vehicles.update');
     // Stays open under a restriction: a member can always take their own content down.
     Route::delete('vehicles/{vehicle}', [VehicleController::class, 'destroy'])->middleware('throttle:garage-edits')->name('vehicles.destroy');
 

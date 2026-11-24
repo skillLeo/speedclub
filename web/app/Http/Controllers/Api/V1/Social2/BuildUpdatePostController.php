@@ -35,7 +35,9 @@ class BuildUpdatePostController extends Controller
      *
      * Accepts an Idempotency-Key header. The photos follow with POST build-updates/{id}/media (up to 10). Followers of the owner and of the
      * build hear about it once it has text, a photo or a linked mod; mentioned members at once (mentions flag). A draft vehicle: 403.
-     * Unknown or foreign vehicle: 404 vehicle_unavailable.
+     * Unknown or foreign vehicle: 404 vehicle_unavailable. M5.9c: `kind=before_after` (optional `modification_id`, the mod it shows)
+     * takes exactly two photos, before then after; they are paired when the second arrives (or by PATCH photo_pairs), and the pair
+     * counts for the Build Score once both photos are ready.
      */
     public function store(StoreBuildUpdatePostRequest $request, PostBuildUpdate $action): BuildUpdateResource
     {
@@ -49,11 +51,8 @@ class BuildUpdatePostController extends Controller
 
         Gate::authorize('create', [BuildUpdate::class, $vehicle]);
 
-        /** @var array{text?: string|null, mileage_km?: int|null, happened_on?: string|null, audience?: string|null, modification_ids?: list<string>|null} $data */
-        $data = $request->safe()->except('vehicle_id');
-
         /** @status 201 */
-        return (new BuildUpdateResource($action->handle($user, $vehicle, $data)->refresh()))->complete();
+        return (new BuildUpdateResource($action->handle($user, $vehicle, $request->postData())->refresh()))->complete();
     }
 
     /**
@@ -119,9 +118,9 @@ class BuildUpdatePostController extends Controller
         /** @var UploadedFile $file */
         $file = $request->file('file');
         /** @var array{alt?: string|null, focal_x?: float|null, focal_y?: float|null} $attributes */
-        $attributes = $request->safe()->except('file');
+        $attributes = $request->safe()->except(['file', ...StoreBuildUpdatePhotoRequest::PLATE_BLUR_FIELDS]);
 
         /** @status 201 */
-        return new MediaResource($action->handle($user, $update, $file, $attributes));
+        return new MediaResource($action->handle($user, $update, $file, $attributes, $request->plateBlur()));
     }
 }

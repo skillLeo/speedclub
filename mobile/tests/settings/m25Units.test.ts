@@ -37,6 +37,7 @@ const SETTINGS: MemberSettings = {
   indexable: true,
   read_receipts: true,
   ai_suggestions: false,
+  show_my_spots: true,
   notification_prefs: {
     types: {
       new_follower: { push: true, web_push: false },
@@ -52,6 +53,15 @@ const SETTINGS: MemberSettings = {
       vehicle_follower: { push: true, web_push: false },
       event_reminder: { push: true, email: false, web_push: false },
       event_update: { push: true, web_push: false },
+      spot_alert: { push: true, web_push: false },
+      badge_unlocked: { push: false, web_push: false },
+      car_of_the_day: { push: false, web_push: false },
+      car_of_the_day_owner: { push: true, web_push: false },
+      invite_accepted: { push: true, web_push: false },
+      forum_reply: { push: true, web_push: false },
+      forum_mention: { push: true, web_push: false },
+      forum_solved: { push: true, web_push: false },
+      event_nearby: { push: false, web_push: false, email: false },
     },
     quiet_hours: { enabled: true, from: '22:00', to: '07:00' },
     message_previews: false,
@@ -206,6 +216,7 @@ describe('security notices of M2.5', () => {
             actor_count: 0,
             vehicle: null,
             event: null,
+            forum_thread: null,
             details: { event, device_name: null },
             read_at: null,
             created_at: '2026-11-08T10:00:00Z',
@@ -264,7 +275,8 @@ describe('SET-16 report title (DQ-456)', () => {
 describe('deviceNameText (DQ-910)', () => {
   it('keeps a device name from breaking inside', () => {
     expect(deviceNameText('iPhone 15 Pro')).toBe('iPhone\u00A015\u00A0Pro');
-    expect(deviceNameText('sdk_gphone64_arm64')).toBe('sdk_gphone64_arm64');
+    // R4B-010: a machine name may break after its "_" (a zero-width space there).
+    expect(deviceNameText('sdk_gphone64_arm64')).toBe('sdk_\u200Bgphone64_\u200Barm64');
     expect(deviceNameText('Galaxy S24-Ultra')).toBe('Galaxy\u00A0S24-\u2060Ultra');
   });
 

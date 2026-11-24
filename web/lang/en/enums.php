@@ -27,6 +27,11 @@ return [
         'planned' => 'Planned',
         'removed' => 'Removed',
     ],
+    'mod_priority' => [
+        'low' => 'Low',
+        'normal' => 'Normal',
+        'high' => 'High',
+    ],
     'legal_status' => [
         'abe' => 'ABE',
         'parts_certificate' => 'Parts certificate',
@@ -42,11 +47,17 @@ return [
         'wheels' => 'Wheels',
         'detail' => 'Details',
         'other' => 'Other',
+        'event' => 'Event gallery',
     ],
     'media_status' => [
         'processing' => 'Processing',
         'ready' => 'Ready',
         'failed' => 'Failed',
+    ],
+    'plate_blur_state' => [
+        'blurred' => 'Blurred',
+        'declined' => 'No plate visible',
+        'unchecked' => 'Not checked',
     ],
     'moderation_status' => [
         'pending' => 'Pending',
@@ -104,6 +115,7 @@ return [
     'restriction_type' => [
         'messaging' => 'Messaging',
         'publishing' => 'Publishing',
+        'forum' => 'Forum',
     ],
     'verification_purpose' => [
         'email_verification' => 'Verify email',
@@ -189,7 +201,7 @@ return [
     'support_category' => [
         'account' => 'Account and sign-in',
         'vehicle' => 'Vehicles and garage',
-        'qr' => 'QR stickers',
+        'qr' => 'Stickers',
         'messaging' => 'Messages',
         'safety' => 'Safety and reports',
         'other' => 'Other',
@@ -213,6 +225,7 @@ return [
         'web' => 'Browser',
     ],
     'reaction_type' => [
+        'like' => 'Like',
         'strong' => 'Strong',
         'clean' => 'Clean',
         'low' => 'Low',
@@ -320,4 +333,76 @@ return [
     ],
     'business_role' => ['owner' => 'Owner', 'staff' => 'Team'],
     'mod_tag_status' => ['pending' => 'Pending', 'accepted' => 'Confirmed', 'declined' => 'Declined'],
+    // M5.9b STREET DEX.
+    'rarity' => ['street' => 'Street', 'tuned' => 'Tuned', 'rare' => 'Rare', 'legend' => 'Legend', 'ghost' => 'Ghost'],
+    'dex_set_kind' => ['jdm' => 'JDM', 'brand' => 'Make', 'city' => 'City', 'season' => 'Season'],
+    // M5.8 Forum.
+    'forum_category_kind' => ['standard' => 'Category', 'make' => 'Make', 'region' => 'Region'],
+    'forum_thread_status' => ['pending' => 'In review', 'published' => 'Published', 'rejected' => 'Not approved', 'removed' => 'Removed', 'merged' => 'Merged'],
+    'forum_post_status' => ['pending' => 'In review', 'published' => 'Published', 'rejected' => 'Not approved', 'removed' => 'Removed'],
+    'bundesland' => [
+        'BW' => 'Baden-Württemberg', 'BY' => 'Bavaria', 'BE' => 'Berlin', 'BB' => 'Brandenburg', 'HB' => 'Bremen', 'HH' => 'Hamburg',
+        'HE' => 'Hesse', 'MV' => 'Mecklenburg-Western Pomerania', 'NI' => 'Lower Saxony', 'NW' => 'North Rhine-Westphalia',
+        'RP' => 'Rhineland-Palatinate', 'SL' => 'Saarland', 'SN' => 'Saxony', 'ST' => 'Saxony-Anhalt', 'SH' => 'Schleswig-Holstein',
+        'TH' => 'Thuringia',
+    ],
+    // M5.4 Sticker (10 §2.3).
+    'sticker_template' => [
+        'classic' => 'Classic',
+        'minimal' => 'Minimal',
+        'banner' => 'Banner',
+        'plate' => 'Plate',
+        'vertical_jdm' => 'Vertical JDM',
+        'round' => 'Round',
+    ],
+    'sticker_colourway' => [
+        'white' => 'White print',
+        'black' => 'Black print',
+        'white_red' => 'White with Signal Red',
+    ],
+    'sticker_material' => [
+        'transparent' => 'Transparent vinyl',
+        'white_vinyl' => 'White vinyl',
+    ],
+    'sticker_size' => [
+        's' => 'S',
+        'm' => 'M',
+        'l' => 'L',
+    ],
+    'sticker_scan_test' => [
+        'passed' => 'Scan test passed',
+        'failed' => 'Scan test failed',
+        'not_applicable' => 'Without QR code',
+    ],
+    'sticker_client_scan_test' => [
+        'passed' => 'Passed',
+        'failed' => 'Failed',
+        'unavailable' => 'Not possible',
+    ],
+    // M5.5 Shop (10 §3).
+    'shop_category' => [
+        'sticker' => 'Stickers',
+        'apparel' => 'Apparel',
+        'accessories' => 'Accessories',
+    ],
+    'shop_variant_kind' => [
+        'size' => 'Size',
+        'colour' => 'Colour',
+        'variant' => 'Option',
+    ],
+    'shop_purchase_mode' => [
+        'shopify' => 'In the online shop',
+        'sticker_designer' => 'Through the sticker designer',
+    ],
+    'shop_banner_link' => [
+        'product' => 'Product',
+        'category' => 'Category',
+    ],
+    // M5.7 (10 §6.1): the sources of a counted view (INS-01 "Top-Quellen").
+    'view_source' => [
+        'app' => 'App',
+        'web' => 'Web',
+        'sticker_scan' => 'Sticker scan',
+        'shared_link' => 'Shared link',
+    ],
 ];

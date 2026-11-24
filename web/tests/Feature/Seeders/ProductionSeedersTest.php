@@ -259,7 +259,7 @@ it('turns signature flags off in production and keeps AI flags off everywhere', 
     app(FeatureFlagSeeder::class)->setContainer(app())->__invoke();
 
     expect(FeatureFlag::query()->where('key', 'like', 'sig.%')->count())->toBe(14)
-        ->and(FeatureFlag::query()->where('key', 'like', 'ai.%')->count())->toBe(6)
+        ->and(FeatureFlag::query()->where('key', 'like', 'ai.%')->count())->toBe(9) // M5.9 adds ai.vehicle_specs, ai.product_match, ai.forum_summary (all off)
         ->and(FeatureFlag::query()->where('key', 'like', 'sig.%')->where('enabled', ! $signature)->count())->toBe(0)
         ->and(FeatureFlag::query()->where('key', 'like', 'ai.%')->where('enabled', true)->count())->toBe(0)
         // ADR-153 lifted with M2.7: the legal status follows the other sig.* flags, on outside production only.
@@ -310,18 +310,21 @@ it('creates roles and atoms on the staff guard with the spec bundles', function 
 
     $this->seed(StaffSeeder::class);
 
-    expect(Permission::query()->where('guard_name', 'staff')->count())->toBe(58) // 56 of 06 §2 + lists.export (ADR-232) + system.mail_preview (SEC-M46-04)
+    expect(Permission::query()->where('guard_name', 'staff')->count())->toBe(60) // 56 of 06 §2 + lists.export (ADR-232) + system.mail_preview (SEC-M46-04) + stickers.print (M5.4) + shop.manage (M5.5, ADM-66/67)
         ->and(Role::query()->where('guard_name', 'staff')->pluck('name')->sort()->values()->all())
         ->toBe(['admin', 'analyst', 'content_editor', 'moderator', 'owner', 'support']);
 
     $atoms = fn (string $role): array => Role::findByName($role, 'staff')->permissions->pluck('name')->all();
 
-    expect($atoms('owner'))->toHaveCount(58)
+    expect($atoms('owner'))->toHaveCount(60)
         ->and($atoms('owner'))->toContain('system.mail_preview')
-        ->and($atoms('admin'))->toHaveCount(57)
+        ->and($atoms('admin'))->toHaveCount(59)
         ->and($atoms('admin'))->not->toContain('system.mail_preview')
         ->and($atoms('analyst'))->toEqualCanonicalizing(['analytics.view', 'members.view', 'vehicles.view', 'qr.view', 'moderation.view'])
         ->and($atoms('content_editor'))->not->toContain('legal.publish')
+        // M5.5: the content editor runs the shop catalogue (ADM-66/67); moderator, support and analyst do not.
+        ->and($atoms('content_editor'))->toContain('shop.manage')
+        ->and($atoms('moderator'))->not->toContain('shop.manage')
         ->and($atoms('moderator'))->not->toContain('members.view_pii')
         ->and($atoms('support'))->toContain('members.view_pii')->not->toContain('members.edit');
 

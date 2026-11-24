@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Policies\EventPolicy;
 use App\Services\Events\EventFeed;
 use App\Services\Events\EventPresenter;
+use App\Support\QaClock;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -54,7 +55,9 @@ class EventController extends Controller
     public function index(EventListRequest $request, EventFeed $feed, EventPresenter $presenter): AnonymousResourceCollection
     {
         $viewer = Viewer::from($request);
-        $page = $feed->filter($feed->listed($viewer), $request->filters())
+        // The windows count from the QA clock outside production (DQ-P5-201), else from the real now.
+        $now = QaClock::frozen($request);
+        $page = $feed->filter($feed->listed($viewer, $now), $request->filters(), $now)
             ->orderBy('events.starts_at')
             ->orderBy('events.id')
             ->cursorPaginate($request->pageSize())
@@ -75,7 +78,8 @@ class EventController extends Controller
      */
     public function pins(EventListRequest $request, EventFeed $feed): AnonymousResourceCollection
     {
-        $events = $feed->filter($feed->listed(Viewer::from($request)), $request->filters())
+        $now = QaClock::frozen($request);
+        $events = $feed->filter($feed->listed(Viewer::from($request), $now), $request->filters(), $now)
             ->with('organiser')
             ->orderBy('events.starts_at')
             ->orderBy('events.id')
@@ -207,7 +211,7 @@ class EventController extends Controller
         $attributes = array_intersect_key($request->validated(), array_flip(['alt', 'focal_x', 'focal_y']));
 
         /** @status 201 */
-        return new MediaResource($action->handle($user, $event, $file, $attributes));
+        return new MediaResource($action->handle($user, $event, $file, $attributes, $request->plateBlur()));
     }
 
     /**

@@ -41,25 +41,23 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, layout, typography, useBreakpoint, useTheme } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import {
-  Button,
-  ContentTabs,
-  EmptyState,
-  GuardedFlashList,
-  Hairline,
-  Header,
-  Screen,
-  SearchBar,
-  Sheet,
-  Skeleton,
-  SkeletonText,
-  Spinner,
-  Text,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { ContentTabs } from '@/ui/ContentTabs';
+import { EmptyState } from '@/ui/EmptyState';
+import { GuardedFlashList } from '@/ui/flashListCell';
+import { Hairline } from '@/ui/Hairline';
+import { Header } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
+import { SearchBar } from '@/ui/SearchBar';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { chipLabel, knownLabel, rememberLabel, slugWords, type LabelField, type LabelLookup } from '../chipLabels';
+import { ForumSearchLink } from '../components/ForumSearchLink';
 import { SampleWall } from '../components/SampleWall';
 import { ResultFeedCard, ResultFeedCardSkeleton } from '../components/ResultFeedCard';
 import { FilterChipRow, type ActiveChip, type FieldChip } from '../components/FilterChipRow';
@@ -821,6 +819,18 @@ export function SearchScreen() {
       <View style={footerStyle} testID={`${ROUTE}.moreRow`}>
         <Button label={t('list.more')} variant="secondary" size="m" disabled={!online} onPress={loadMore} testID={`${ROUTE}.more`} />
       </View>
+    );
+  }
+
+  // M5.8 (10 §7.4): the same words in the forum's search, under the results (nothing while `forum` is off).
+  if (data?.query) {
+    footer = (
+      <>
+        {footer}
+        <View style={footerStyle}>
+          <ForumSearchLink query={data.query} routeId={ROUTE} />
+        </View>
+      </>
     );
   }
 

@@ -4,7 +4,7 @@ import type { ViewStyle } from 'react-native';
 
 import { setTabBarHidden } from '@/state/shell';
 import { size } from '@/theme';
-import { useSafeEdge, useSafeInset } from '@/ui/safeArea';
+import { useCssSafeInset, useSafeEdge, useSafeInset } from '@/ui/safeArea';
 
 /** True while the tab bar floats over this part of the tree. Outside (tabs), and with a rail or sidebar, it is false. */
 export const TabBarOverlayContext = createContext(false);
@@ -18,11 +18,15 @@ export function useTabBarPadding(): ViewStyle {
   return overlay ? padding : NO_PADDING;
 }
 
-/** The same as a number, for lists that need one (FlashList). On web the CSS safe-area inset is not part of it. */
+/**
+ * The same as a number, for lists that need one (FlashList) and controls that float above the bar. QA-C05: on web the bar grows by the
+ * CSS safe-area inset (TabBar's `useSafeEdge('bottom')`), so that inset, measured from CSS, is part of the number there too.
+ */
 export function useTabBarInset(): number {
   const overlay = use(TabBarOverlayContext);
   const inset = useSafeInset('bottom');
-  return overlay ? size.tabBar + inset : 0;
+  const cssInset = useCssSafeInset('bottom');
+  return overlay ? size.tabBar + inset + cssInset : 0;
 }
 
 /** §9: an editor pushed inside a tab hides the bar while it is focused. Wizards and modals do not need this. */

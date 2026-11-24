@@ -1,5 +1,5 @@
 import { keepNameTogether } from '@/lib/format';
-import { metaLineText, WHOLE_PART_MAX } from '@/ui/textBreaks';
+import { machineNameText, metaLineText, WHOLE_PART_MAX } from '@/ui/textBreaks';
 
 const PLATFORM_LABELS: Readonly<Record<string, string>> = { ios: 'iOS', android: 'Android' };
 
@@ -51,7 +51,8 @@ export function deviceNameText(name: string, fontScale: number = 1): string {
     }
   }
   if (run.length > 0) parts.push(bindPart(run, max));
-  return keepNameTogether(parts.join(' '));
+  // R4B-010: a machine name without spaces ("sdk_gphone64_arm64") may break after its "_" or "." (ui/textBreaks).
+  return machineNameText(keepNameTogether(parts.join(' ')));
 }
 
 /**

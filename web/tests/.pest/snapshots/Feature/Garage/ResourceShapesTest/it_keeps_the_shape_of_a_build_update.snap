@@ -2,6 +2,7 @@
     "data": {
         "id": "string",
         "type": "string",
+        "kind": "string",
         "type_label": "string",
         "note": "null",
         "summary": "string",

@@ -8,6 +8,7 @@ import { IsRestoringProvider, QueryClient, QueryClientProvider } from '@tanstack
 import { act, configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Text } from 'react-native';
+import { IsFocusedContext } from 'expo-router/build/react-navigation/core/useIsFocused';
 
 import { garageKeys } from '@/api/queries/garage';
 import { myVehiclesKey } from '@/api/queries/profile';
@@ -922,5 +923,42 @@ describe('a photo the server could not process, on step 3 (BH-46)', () => {
     });
     expect(screen.getByTestId('GAR-03.photos.failed.01bad')).toHaveAccessibleName(/konnte nicht verarbeitet werden/);
     expect(screen.getByTestId('GAR-03.photos.failed.01bad.status')).toBeTruthy();
+  });
+});
+
+describe('a step of a published draft never shows the wizard again (R4B-L01)', () => {
+  const steps = [
+    ['vehicle', () => <WizardVehicleScreen />, 'GAR-03.vehicle.cta.primary'],
+    ['specs', () => <WizardSpecsScreen />, 'GAR-03.specs.cta.primary'],
+    ['photos', () => <WizardPhotosScreen />, 'GAR-03.photos.cta.primary'],
+  ] as const;
+
+  it.each(steps)('step %s, reached again by browser back from GAR-04 or a link, leaves the wizard and shows no form', async (_step, element, cta) => {
+    mockParams = { draftId: DRAFT_ID };
+    stubFetch({ ...CATALOG, [`GET /api/v1/vehicles/${DRAFT_ID}`]: { body: { data: draftVehicle({ status: 'published' }) } } });
+    await renderScreen(element());
+    // Nothing below the modal in this test (useCloseModal's fallback): the garage.
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/garage'));
+    expect(mockRouter.replace).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId(cta)).toBeNull();
+  });
+
+  it.each(steps)('step %s under the review stays put while the review publishes: only the step on show leaves (R4B-005)', async (_step, element, cta) => {
+    mockParams = { draftId: DRAFT_ID };
+    const { calls } = stubFetch({ ...CATALOG, [`GET /api/v1/vehicles/${DRAFT_ID}`]: { body: { data: draftVehicle({ status: 'published' }) } } });
+    await renderScreen(<IsFocusedContext value={false}>{element()}</IsFocusedContext>);
+    await waitFor(() => expect(vehicleGets(calls).length).toBeGreaterThan(0));
+    await flushQueryNotifications();
+    await flushQueryNotifications();
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+    expect(screen.queryByTestId(cta)).toBeNull();
+  });
+
+  it('a draft still shows its form and stays', async () => {
+    mockParams = { draftId: DRAFT_ID };
+    stubFetch({ ...CATALOG, [`GET /api/v1/vehicles/${DRAFT_ID}`]: { body: { data: draftVehicle({ wizard: { step: 3, total_steps: 4 } }) } } });
+    await renderScreen(<WizardPhotosScreen />);
+    await waitFor(() => expect(screen.getByTestId('GAR-03.photos.cta.primary')).toBeTruthy());
+    expect(mockRouter.replace).not.toHaveBeenCalled();
   });
 });

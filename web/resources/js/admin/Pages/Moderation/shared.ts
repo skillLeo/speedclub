@@ -4,7 +4,7 @@ import { formatNumber } from '../../lib/format';
 import { routeOr } from '../../lib/routes';
 
 /** Shared shapes and labels of the moderation pages (ADM-20…24); the server builds them in CaseListQuery / CaseRecord. */
-export type TargetType = 'member' | 'vehicle' | 'photo' | 'message' | 'build_update' | 'modification' | 'comment' | 'event' | 'business';
+export type TargetType = 'member' | 'vehicle' | 'photo' | 'message' | 'build_update' | 'modification' | 'comment' | 'event' | 'business' | 'forum_post' | 'crew';
 export type CaseStatus = 'new' | 'in_review' | 'decided' | 'closed';
 export type DecisionActionKey = 'no_action' | 'remove_content' | 'restrict' | 'suspend' | 'reverse';
 
@@ -74,7 +74,7 @@ export interface CaseSummary {
 
 /** The target as members see it now (CaseRecord::preview); null for a message case and for a target that is gone. */
 export interface CasePreviewData {
-    kind: 'member' | 'vehicle' | 'photo' | 'build_update' | 'modification' | 'comment' | 'event' | 'business';
+    kind: 'member' | 'vehicle' | 'photo' | 'build_update' | 'modification' | 'comment' | 'event' | 'business' | 'forum_post' | 'crew';
     [key: string]: unknown;
 }
 

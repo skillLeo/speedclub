@@ -3,7 +3,8 @@ import { View } from 'react-native';
 
 import type { PopularMod } from '@/api/queries/home';
 import { createStyles, size, space, typography, useTheme } from '@/theme';
-import { Chip, SkeletonBlock } from '@/ui';
+import { Chip } from '@/ui/Chip';
+import { SkeletonBlock } from '@/ui/Skeleton';
 import { estimatedInterWidth } from '@/ui/specLabelMetrics';
 
 /** FS-2: the chips take at most two lines. */

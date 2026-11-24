@@ -6,7 +6,7 @@
 import { render, screen } from '@testing-library/react-native';
 import { Platform, StyleSheet, useWindowDimensions, type TextStyle } from 'react-native';
 
-import { hydrateThemePreference, maxFontScale, ThemeProvider, typography, type TypeVariant } from '@/theme';
+import { hydrateThemePreference, maxFontScale, ThemeProvider, ThemeScope, typography, type TypeVariant } from '@/theme';
 import { nativeFixedScale, Text } from '@/ui/Text';
 
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
@@ -42,7 +42,9 @@ describe.each(['android', 'ios'] as const)('capped roles on %s', (os) => {
   it('covers every role with a cap in the generated typography', () => {
     // DQ-1121: the make wordmark is capped at 1.3 like the other display roles.
     // ADR-465: the web sidebar labels are capped like web.tab.
-    expect(CAPPED.sort()).toEqual(['displayWordmark', 'heroNumeral', 'heroNumeralS', 'labelBadge', 'webSidebar', 'webTab']);
+    // ADR-523: the navigation-chrome roles label.control (segment labels, e.g. STK-05's mode switch) and caption.chrome.
+    // ADR-536 (R5-2b): hero.numeral.xs, the phone's SpecStrip, is capped like the other numerals.
+    expect(CAPPED.sort()).toEqual(['captionChrome', 'displayWordmark', 'heroNumeral', 'heroNumeralS', 'heroNumeralXs', 'labelBadge', 'labelControl', 'webSidebar', 'webTab']);
   });
 
   it.each(CAPPED)('%s: the full role at font scale 1.0', async (variant) => {
@@ -104,5 +106,44 @@ describe('nativeFixedScale', () => {
   it('takes the lowest of the role cap, fontScaleCap and maxFontSizeMultiplier', () => {
     expect(nativeFixedScale('webTab', 2, { maxFontSizeMultiplier: 1 }, 'ios')).toBe(1);
     expect(nativeFixedScale('webTab', 0.85, {}, 'android')).toBe(0.85);
+  });
+});
+
+describe.each(['android', 'ios'] as const)('a ThemeScope cap on %s (DQ-P5G-04, review SF-3)', (os) => {
+  beforeEach(() => {
+    Platform.OS = os;
+  });
+
+  it('caps an uncapped role inside the scope at the scope cap, the OS scaling off', async () => {
+    const { props, style } = await textAt(
+      2,
+      <ThemeScope name="carbon" fontScaleCap={1.3}>
+        <Text testID="t" variant="caption">
+          Stufe 4
+        </Text>
+      </ThemeScope>,
+    );
+    expect(props.allowFontScaling).toBe(false);
+    expect(style.fontSize).toBeCloseTo(roleOf('caption').fontSize * 1.3);
+    expect(style.lineHeight).toBeCloseTo(roleOf('caption').lineHeight * 1.3);
+  });
+
+  it('keeps the lower of a caller cap and the scope cap, and a nested scope inherits the cap', async () => {
+    const { style } = await textAt(
+      2,
+      <ThemeScope name="carbon" fontScaleCap={1.3}>
+        <ThemeScope name="light">
+          <Text testID="t" variant="body" fontScaleCap={1.1}>
+            Saison 2026
+          </Text>
+        </ThemeScope>
+      </ThemeScope>,
+    );
+    expect(style.fontSize).toBeCloseTo(roleOf('body').fontSize * 1.1);
+  });
+
+  it('leaves text outside a capped scope to the OS', async () => {
+    const { props } = await textAt(2, <Text testID="t" variant="caption">Stufe 4</Text>);
+    expect(props.allowFontScaling).not.toBe(false);
   });
 });

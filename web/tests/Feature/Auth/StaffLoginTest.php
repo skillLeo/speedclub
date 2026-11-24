@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Staff;
@@ -43,7 +44,10 @@ it('signs staff in on the staff guard only', function () {
         ->and(Auth::guard('web')->check())->toBeFalse();
 });
 
-it('redirects signed-in staff away from the login page, to enrolment while TOTP is missing', function () {
+it('redirects signed-in staff away from the login page, to enrolment while TOTP is missing in Pflicht mode', function () {
+    // ADR-540: enrolment is enforced only while 2FA für Admin-Konten is Pflicht (the Optional default is GovernanceOptionalTest's).
+    strictGovernance();
+
     $this->actingAs(Staff::factory()->twoFactorConfirmed()->create(), 'staff')
         ->get('/admin/login')
         ->assertRedirect('/admin');
@@ -51,6 +55,14 @@ it('redirects signed-in staff away from the login page, to enrolment while TOTP 
     $this->actingAs(Staff::factory()->create(), 'staff')
         ->get('/admin/login')
         ->assertRedirect('/admin/two-factor/setup');
+});
+
+it('redirects signed-in staff without TOTP to the admin while 2FA is Optional (ADR-540)', function () {
+    publishGovernance(fourEyes: false, staffTwoFactor: 'optional');
+
+    $this->actingAs(Staff::factory()->create(), 'staff')
+        ->get('/admin/login')
+        ->assertRedirect('/admin');
 });
 
 it('rejects wrong staff credentials with a validation error', function () {
@@ -119,4 +131,38 @@ it('defaults roles and permissions to the staff guard', function () {
     $this->actingAs($staff, 'staff')
         ->get('/admin')
         ->assertInertia(fn (AssertableInertia $page) => $page->where('staff.permissions', ['members.view']));
+});
+
+/**
+ * Owner bug report 2026-11-16: after signing in the admin sidebar stayed empty until a reload. The page's route list (@routes) is
+ * rendered on a full load only and a guest's list holds the sign-in routes alone (SEC-P3-04), so every change of the signed-in state
+ * must load the next page fully: Inertia requests get 409 + X-Inertia-Location (Inertia::location), plain posts keep the redirect.
+ */
+function staffInertiaHeaders(): array
+{
+    return ['X-Inertia' => 'true', 'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()), 'X-Requested-With' => 'XMLHttpRequest'];
+}
+
+it('loads the dashboard fully after an Inertia sign-in, so its route list is the staff one', function () {
+    Staff::factory()->create(['email' => 'team@speedclub.test']);
+
+    $this->post('/admin/login', ['email' => 'team@speedclub.test', 'password' => 'password-for-tests'], staffInertiaHeaders())
+        ->assertStatus(409)
+        ->assertHeader('X-Inertia-Location', '/admin');
+});
+
+it('loads the sign-in page fully after an Inertia sign-out, so the staff routes leave the page', function () {
+    $this->actingAs(Staff::factory()->create(), 'staff')
+        ->post('/admin/logout', [], staffInertiaHeaders())
+        ->assertStatus(409)
+        ->assertHeader('X-Inertia-Location', '/admin/login');
+
+    expect(Auth::guard('staff')->check())->toBeFalse();
+});
+
+it('renders the staff route list on the full load of the dashboard, the guest list on the sign-in page', function () {
+    $this->get('/admin/login')->assertOk()->assertSee('"login":{"uri"', false)->assertDontSee('"admin.dashboard":{"uri"', false);
+
+    $staff = Staff::factory()->twoFactorConfirmed()->create();
+    $this->actingAs($staff, 'staff')->get('/admin')->assertOk()->assertSee('"admin.dashboard":{"uri"', false);
 });

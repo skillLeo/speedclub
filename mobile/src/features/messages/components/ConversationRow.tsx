@@ -7,7 +7,12 @@ import { now } from '@/lib/clock';
 import { isWeb } from '@/lib/platform';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Icon, IconButton, PressableScale, Skeleton, SkeletonBlock, SkeletonText, Text, UnreadBadge } from '@/ui';
+import { IconButton } from '@/ui/IconButton';
+import { Icon } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { UnreadBadge } from '@/ui/UnreadBadge';
 import { joinLabel, RowDivider } from '@/ui/rowParts';
 
 import { inboxTime } from '../dates';
@@ -208,6 +213,8 @@ export const ConversationRow = memo(function ConversationRow({
             {unread > 0 ? (
               <UnreadBadge
                 count={unread}
+                // DQ-M52-17: a muted conversation still counts, without the accent that asks for attention.
+                tone={muted ? 'neutral' : 'accent'}
                 decorative={!isWeb}
                 label={t('inbox.unread', { count: unread, formatted: format.number(unread) })}
                 testID={`${testID}.unread`}

@@ -51,6 +51,13 @@ final class AdminErrorPage
             return $response;
         }
 
+        // M5.1: a write from a page (an Inertia POST, PATCH, DELETE) with a stale form token goes back to that page with a message instead
+        // of replacing it with the error page, so a dialog or a draft is not silently gone. An ended session then lands on the sign-in
+        // with "Deine Sitzung ist abgelaufen" (ADR-217) through the same redirect.
+        if ($response->getStatusCode() === 419 && $request->header('X-Inertia') && ! $request->isMethod('GET') && $request->hasSession()) {
+            return back(303)->with('error', 'errors.419_write');
+        }
+
         AdminLocale::apply($request);
         $middleware = app(HandleInertiaRequests::class);
         Inertia::version(fn (): ?string => $middleware->version($request));

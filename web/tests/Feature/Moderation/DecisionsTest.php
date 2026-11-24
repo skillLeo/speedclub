@@ -203,7 +203,7 @@ describe('DecideCase', function () {
                 && str_contains($html, 'Wir haben eine Meldung zu einem Foto deines Builds')
                 && str_contains($html, 'automatisierte Mittel haben ihn nicht erkannt')
                 && str_contains($html, 'nicht automatisiert getroffen')
-                && str_contains($html, 'Umfang und Dauer: Wir haben den Inhalt auf ganz SPEED CLUB entfernt')
+                && str_contains($html, 'Umfang und Dauer: Wir haben den Inhalt auf ganz Speedclub entfernt')
                 && str_contains($html, e(config('speedclub.legal.dispute_settlement_url')))
                 && str_contains($html, '10.05.2027')
                 && str_contains($html, 'Streitbeilegungsstelle')

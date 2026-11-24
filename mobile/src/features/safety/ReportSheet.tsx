@@ -15,7 +15,14 @@ import { isWeb } from '@/lib/platform';
 import { useOnline } from '@/state/online';
 import { isInternalPath, useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { Button, Dialog, Hairline, Icon, ListRow, Sheet, Text, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { Hairline } from '@/ui/Hairline';
+import { Icon } from '@/ui/icons/Icon';
+import { ListRow } from '@/ui/ListRow';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 import { SlotText, slot } from '@/ui/SlotText';
 
 import { useSafety } from './data';

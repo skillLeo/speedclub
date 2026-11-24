@@ -13,24 +13,25 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(AdminRoutes::signedIn())->prefix('config')->name('config.')->group(function (): void {
     Route::middleware('can:flags.manage')->group(function (): void {
         Route::get('flags', [FlagsController::class, 'index'])->name('flags');
-        Route::patch('flags/{flag}', [FlagsController::class, 'update'])->middleware(['staff.recent-password', 'throttle:30,1'])->whereNumber('flag')->name('flags.update');
+        Route::patch('flags/{flag}', [FlagsController::class, 'update'])->middleware(['staff.recent-password', 'throttle:30,1,admin-config-1'])->whereNumber('flag')->name('flags.update');
     });
 
     Route::middleware('can:remote_config.manage')->group(function (): void {
         Route::get('remote', RemoteController::class)->name('remote');
-        Route::middleware(['staff.recent-password', 'throttle:30,1'])->group(function (): void {
+        Route::middleware(['staff.recent-password', 'throttle:30,1,admin-config-2'])->group(function (): void {
             Route::post('remote/draft', [ConfigDraftController::class, 'save'])->defaults('key', 'remote_config')->name('remote.draft.save');
             Route::delete('remote/draft', [ConfigDraftController::class, 'discard'])->defaults('key', 'remote_config')->name('remote.draft.discard');
+            Route::post('remote/draft/take-over', [ConfigDraftController::class, 'takeOver'])->defaults('key', 'remote_config')->name('remote.draft.take-over');
             Route::post('remote/publish', [ConfigDraftController::class, 'publish'])->defaults('key', 'remote_config')->name('remote.publish');
         });
     });
 
     Route::middleware('can:releases.manage')->group(function (): void {
         Route::get('releases', [ReleasesController::class, 'index'])->name('releases');
-        Route::middleware('throttle:30,1')->group(function (): void {
+        Route::middleware('throttle:30,1,admin-config-3')->group(function (): void {
             Route::post('releases', [ReleasesController::class, 'store'])->name('releases.store');
             Route::patch('releases/{release}', [ReleasesController::class, 'update'])->whereNumber('release')->name('releases.update');
-            Route::post('releases/sync', [ReleasesController::class, 'sync'])->middleware('throttle:6,1')->name('releases.sync');
+            Route::post('releases/sync', [ReleasesController::class, 'sync'])->middleware('throttle:6,1,admin-config-4')->name('releases.sync');
         });
     });
 });

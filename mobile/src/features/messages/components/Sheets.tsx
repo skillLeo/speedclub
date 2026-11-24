@@ -5,7 +5,12 @@ import { View } from 'react-native';
 import { photoFields } from '@/features/profile/media';
 import { keepNameTogether } from '@/lib/format';
 import { createStyles, size } from '@/theme';
-import { EmptyState, ErrorState, ListRow, Sheet, Skeleton, SkeletonBlock, SkeletonText, type IconName } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { type IconName } from '@/ui/icons/Icon';
+import { ListRow } from '@/ui/ListRow';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
 import { nameInText } from '@/ui/textBreaks';
 
 import type { Loadable, MuteChange } from '../data';

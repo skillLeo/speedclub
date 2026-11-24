@@ -48,7 +48,7 @@ jest.mock('expo-notifications', () => ({
 const mockLastResponse: { current: unknown } = { current: null };
 const responseOf = (identifier: string, data: Record<string, unknown>) => ({
   actionIdentifier: 'expo.modules.notifications.actions.DEFAULT',
-  notification: { date: 0, request: { identifier, content: { title: 'SPEED CLUB', body: null, data }, trigger: null } },
+  notification: { date: 0, request: { identifier, content: { title: 'Speedclub', body: null, data }, trigger: null } },
 });
 const mockNotifications = jest.requireMock<Record<string, jest.Mock>>('expo-notifications');
 const mockDevice = { isDevice: true };

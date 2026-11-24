@@ -6,7 +6,7 @@ import { parseDate } from '@/features/home/model';
 import { photoFields, variantUrl } from '@/features/profile/media';
 import { useFormat } from '@/lib/useFormat';
 import { size } from '@/theme';
-import { MediaCard, MediaCardSkeleton } from '@/ui';
+import { MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
 
 export type ResultFeedCardProps = {
   vehicle: FeedVehicle;

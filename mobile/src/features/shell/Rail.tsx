@@ -3,14 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useWindowDimensions, View } from 'react-native';
 
 import { createStyles, layout, size, space, useTheme } from '@/theme';
-import { Hairline } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
 import { useSafeEdge } from '@/ui/safeArea';
 
-import { TAB_DESTINATIONS } from './destinations';
+import { RAIL_ITEMS } from './destinations';
 import { SlidingIndicator } from './SlidingIndicator';
 import { TabButton } from './TabButton';
 import { useTabBadges } from './useTabBadges';
-import { useTabNavigation } from './useTabNavigation';
+import { useShellBar } from './useShellBar';
 
 const useStyles = createStyles((t) => ({
   rail: { backgroundColor: t.color.bg.canvas },
@@ -34,14 +34,14 @@ export function useRailWidth(): number {
   return theme.fontScale > 1 || window.fontScale > 1 ? layout.rail + space[16] : layout.rail;
 }
 
-/** 768 to 1279: 72 wide, icon + label, the same active language as the tab bar. */
+/** 768 to 1279: 72 wide, icon + label, the same active language as the tab bar. The five tabs + Nachrichten (10 §1). */
 export function Rail() {
   const { t } = useTranslation('common');
   const styles = useStyles();
   const padding = useSafeEdge('top');
   const width = useRailWidth();
   const badges = useTabBadges();
-  const { activeIndex, pressHandler } = useTabNavigation();
+  const { items, activeKey, activeIndex, tabPress, placePress } = useShellBar(RAIL_ITEMS);
 
   return (
     <View dataSet={{ qaExempt: 'safe-area' }} style={[styles.rail, { width }, padding]} testID="shell.rail">
@@ -58,18 +58,31 @@ export function Rail() {
           style={[styles.indicator, { left: (width - space[16]) / 2 }]}
           testID="shell.rail.indicator"
         />
-        {TAB_DESTINATIONS.map((destination) => (
-          <TabTrigger key={destination.name} name={destination.name} asChild onPress={pressHandler(destination.name)}>
+        {items.map((item) =>
+          item.kind === 'tab' ? (
+            <TabTrigger key={item.tab.name} name={item.tab.name} asChild onPress={tabPress(item.tab.name)}>
+              <TabButton
+                variant="rail"
+                icon={item.tab.icon}
+                label={t(item.tab.labelKey)}
+                testID={item.tab.testID}
+                isFocused={activeKey === item.tab.name}
+                dotLabel={item.tab.name === 'home' && badges.home ? t('a11y.unreadNotifications') : undefined}
+              />
+            </TabTrigger>
+          ) : (
             <TabButton
+              key={item.place.name}
               variant="rail"
-              icon={destination.icon}
-              label={t(destination.labelKey)}
-              testID={destination.testID}
-              count={destination.name === 'messages' ? badges.messages : undefined}
-              dotLabel={destination.name === 'home' && badges.home ? t('a11y.unreadNotifications') : undefined}
+              icon={item.place.icon}
+              label={t(item.place.labelKey)}
+              testID={item.place.testID}
+              isFocused={activeKey === item.place.name}
+              count={item.place.name === 'messages' ? badges.messages : undefined}
+              onPress={placePress(item.place)}
             />
-          </TabTrigger>
-        ))}
+          ),
+        )}
       </View>
       <Hairline style={styles.divider} />
     </View>

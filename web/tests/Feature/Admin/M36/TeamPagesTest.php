@@ -103,10 +103,8 @@ describe('ADM-39 staff list', function () {
     it('invites an Admin only through an approval: the account starts with the plain roles (A4)', function () {
         adm36As('admin');
 
-        $this->post('/admin/team/invite', ['name' => 'Jana Wolff', 'email' => 'jana.admin@speedclub.test', 'roles' => ['admin'], 'locale' => 'de'])
-            ->assertSessionHasErrors();
-
-        $this->post('/admin/team/invite', ['name' => 'Jana Wolff', 'email' => 'jana.admin@speedclub.test', 'roles' => ['admin', 'support'], 'locale' => 'de', 'reason' => adm36Reason()])
+        // ADR-540: no reason is needed for the elevation request any more.
+        $this->post('/admin/team/invite', ['name' => 'Jana Wolff', 'email' => 'jana.admin@speedclub.test', 'roles' => ['admin', 'support'], 'locale' => 'de'])
             ->assertSessionHas('approval')->assertSessionHas('success', 'team.flash.invited');
 
         $staff = Staff::query()->where('email', 'jana.admin@speedclub.test')->sole();
@@ -234,7 +232,7 @@ describe('ADM-40 staff detail', function () {
         expect($target->fresh()->status)->toBe(StaffStatus::Active);
 
         $this->post("/admin/team/{$target->id}/deactivate", ['reason' => 'Verlässt das Team zum Monatsende.']);
-        $this->post("/admin/team/{$target->id}/delete", ['reason' => 'x'])->assertSessionHasErrors('reason');
+        $this->post("/admin/team/{$target->id}/delete", ['reason' => str_repeat('x', 1001)])->assertSessionHasErrors('reason');
         $this->post("/admin/team/{$target->id}/delete", ['reason' => 'Konto wird nicht mehr gebraucht.'])->assertSessionHas('success', 'team.flash.deleted');
         expect($target->fresh()->anonymised_at)->not->toBeNull();
     });

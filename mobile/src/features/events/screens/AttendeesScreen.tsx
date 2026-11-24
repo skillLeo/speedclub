@@ -23,22 +23,18 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, layout, size, useBreakpoint } from '@/theme';
-import {
-  Button,
-  Dialog,
-  EmptyState,
-  ErrorState,
-  GuardedFlashList,
-  Hairline,
-  MemberRow,
-  SegmentedControl,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Spinner,
-  Text,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { GuardedFlashList } from '@/ui/flashListCell';
+import { Hairline } from '@/ui/Hairline';
+import { MemberRow } from '@/ui/MemberRow';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { EventPage } from '../components/EventPage';
 
@@ -207,6 +203,7 @@ export function AttendeesScreen() {
             setTab(TABS.includes(next) ? next : 'going');
           }}
           label={t('attendees.tabs')}
+          labelVariant="labelControl"
           role="tablist"
           testID={`${ROUTE}.tabs`}
         />

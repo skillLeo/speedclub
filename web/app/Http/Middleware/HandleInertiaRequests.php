@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Errors\AdminErrorPage;
 use App\Http\Controllers\Admin\Support\AdminLocale;
 use App\Http\Controllers\Admin\Support\StaffCounts;
 use App\Models\Staff;
+use App\Services\Governance\Governance;
 use App\Services\Memberships\Memberships;
 use Closure;
 use Illuminate\Http\Request;
@@ -64,6 +65,11 @@ class HandleInertiaRequests extends Middleware
                 'confirm_password' => $session->get('confirm_password') === true ? true : null,
                 'session_expired' => $session->get('session_expired') === true ? true : null,
             ], fn (mixed $value): bool => $value !== null),
+            // ADR-540: the governance switches the shell needs (four-eyes notices and badges only while on; the 2FA mode for ADM-51).
+            'governance' => fn (): ?array => $staff === null ? null : [
+                'four_eyes' => Governance::fourEyes(),
+                'staff_two_factor' => Governance::staffTwoFactorRequired() ? Governance::TWO_FACTOR_REQUIRED : Governance::TWO_FACTOR_OPTIONAL,
+            ],
             // The sidebar badges. Not `counts`: ten pages pass a `counts` of their own, which replaced this one and hid the badges (DQ-708).
             'nav_counts' => fn (): array => StaffCounts::for($staff),
         ];

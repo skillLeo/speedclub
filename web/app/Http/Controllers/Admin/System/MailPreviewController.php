@@ -61,7 +61,7 @@ class MailPreviewController extends Controller
     }
 
     /**
-     * A code-mail subject names its code ("123456 ist dein SPEED CLUB Code"): the list shows it masked.
+     * A code-mail subject names its code ("123456 ist dein Speedclub Code"): the list shows it masked.
      */
     private static function redact(string $subject, ?string $code): string
     {

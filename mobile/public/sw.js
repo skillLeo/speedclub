@@ -1,9 +1,9 @@
 /*
- * SPEED CLUB member web service worker (09 §8.13), scope /app/. scripts/export-web.mjs fills in VERSION and PRECACHE
+ * Speedclub member web service worker (09 §8.13), scope /app/. scripts/export-web.mjs fills in VERSION and PRECACHE
  * (scripts/pwa-shell.js) for each export, so every new export is a new worker and the app offers "Neu laden".
  *
- * - Precache: the shell only (the /app/ document as the offline fallback, the entry bundle, the two preloaded faces, the
- *   manifest and its icons).
+ * - Precache: the shell only (the /app/ document as the offline fallback, the runtime and entry bundles,
+ *   the two preloaded faces, the manifest and its icons). Registered after the page's load (src/features/pwa/serviceWorker.ts).
  * - Fingerprinted files (/app/_expo/static/, /app/assets/): cache first, in this version's cache, cleared on the next version.
  * - Pages: network first; offline, the cached shell answers. A page response is never stored (it can carry a share head or a
  *   preview token's frame).
@@ -29,13 +29,18 @@ const LINK_ROUTES = [
   ['/b/', '/app/b/'],
   ['/brands/', '/app/brands/'],
   ['/e/', '/app/events/'],
+  ['/join/', '/app/join/'],
   ['/auth/magic', '/app/auth/magic'],
   ['/settings/security/activity', '/app/settings/security/activity'],
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(PRECACHE.map((url) => new Request(url, { cache: 'reload' })))),
+    // M5.12a: a fingerprinted file never changes, so the copy the page just loaded (HTTP cache) is the right one and is not downloaded a
+    // second time; the document, the manifest and the icons are fetched fresh.
+    caches
+      .open(SHELL_CACHE)
+      .then((cache) => cache.addAll(PRECACHE.map((url) => new Request(url, isFingerprinted(new URL(url, self.location.origin).pathname) ? {} : { cache: 'reload' })))),
   );
 });
 
@@ -135,7 +140,7 @@ self.addEventListener('push', (event) => {
     payload = { body: event.data ? event.data.text() : '' };
   }
   const data = payload.data && typeof payload.data === 'object' ? payload.data : {};
-  const title = typeof payload.title === 'string' && payload.title !== '' ? payload.title : 'SPEED CLUB';
+  const title = typeof payload.title === 'string' && payload.title !== '' ? payload.title : 'Speedclub';
   event.waitUntil(
     self.registration.showNotification(title, {
       body: typeof payload.body === 'string' ? payload.body : '',
@@ -159,6 +164,7 @@ self.addEventListener('notificationclick', (event) => {
         open.postMessage({ type: 'sc:navigate', route });
         return open.focus();
       }
+      // A cold window lands on the route itself; a message route then moves into Start (src/features/messages/coldLink.tsx).
       return self.clients.openWindow(route);
     }),
   );

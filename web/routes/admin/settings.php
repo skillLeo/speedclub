@@ -8,5 +8,7 @@ use Illuminate\Support\Facades\Route;
 // and a recent password (ADR-215); the controller's FormRequest refuses everyone else.
 Route::middleware([...AdminRoutes::signedIn(), 'can:staff.manage'])->group(function (): void {
     Route::get('settings', [OrgSettingsController::class, 'show'])->name('settings');
-    Route::patch('settings', [OrgSettingsController::class, 'update'])->middleware(['staff.recent-password', 'throttle:20,1'])->name('settings.update');
+    Route::patch('settings', [OrgSettingsController::class, 'update'])->middleware(['staff.recent-password', 'throttle:20,1,admin-settings-1'])->name('settings.update');
+    // M5.1 Governance (ADR-507): the Owner-Override switch, Owner only (FormRequest), reason, recent password.
+    Route::patch('settings/governance', [OrgSettingsController::class, 'updateGovernance'])->middleware(['staff.recent-password', 'throttle:20,1,admin-settings-2'])->name('settings.governance');
 });

@@ -5,6 +5,7 @@ namespace App\Services\Config;
 use App\Enums\ConfigKey;
 use App\Services\Config\Schemas\AnnouncementsSchema;
 use App\Services\Config\Schemas\BrandingSchema;
+use App\Services\Config\Schemas\GovernanceSchema;
 use App\Services\Config\Schemas\HomeCurationSchema;
 use App\Services\Config\Schemas\OrgSchema;
 use App\Services\Config\Schemas\RateLimitsSchema;
@@ -23,6 +24,7 @@ final class ConfigSchemas
             ConfigKey::RateLimits => RateLimitsSchema::class,
             ConfigKey::Org => OrgSchema::class,
             ConfigKey::Retention => RetentionSchema::class,
+            ConfigKey::Governance => GovernanceSchema::class,
         });
     }
 }

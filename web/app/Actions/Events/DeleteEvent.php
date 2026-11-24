@@ -8,6 +8,7 @@ use App\Enums\EventStatus;
 use App\Exceptions\ApiException;
 use App\Models\Event;
 use App\Models\Media;
+use App\Services\Events\EventGallery;
 use App\Services\Media\MediaService;
 use App\Services\PublicPages\SitemapWriter;
 use App\Services\Social\Collections;
@@ -32,6 +33,8 @@ class DeleteEvent
             }
 
             $photos = Media::withTrashed()->where('mediable_type', $locked->getMorphClass())->where('mediable_id', $locked->id)->get();
+            // M5.6: the gallery's pictures go with the event (the rows cascade).
+            $photos = $photos->merge(EventGallery::mediaOf($locked));
             $locked->delete();
             // No collection points at an event that is gone (09 §8.6).
             Collections::forgetItem(CollectionItemType::Event, $locked->id);

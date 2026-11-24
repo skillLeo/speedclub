@@ -16,7 +16,7 @@ return [
         'vehicle' => 'Fahrzeug',
     ],
     'digest' => [
-        'subject' => 'Ungelesene Nachrichten bei SPEED CLUB',
+        'subject' => 'Ungelesene Nachrichten bei Speedclub',
         'heading' => 'Du hast ungelesene Nachrichten',
         'intro' => '{1} In einer Unterhaltung wartet seit über 12 Stunden eine Nachricht auf dich.|[2,*] In :count Unterhaltungen warten seit über 12 Stunden Nachrichten auf dich.',
         'action' => 'Nachrichten öffnen',

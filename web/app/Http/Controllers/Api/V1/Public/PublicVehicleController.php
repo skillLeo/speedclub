@@ -43,7 +43,8 @@ class PublicVehicleController extends Controller
             return redirect()->route('api.v1.public.vehicles.show', ['slug' => $canonical], 301, ['Cache-Control' => 'no-cache, private']);
         }
 
-        return new PublicVehicleResource($vehicle->load(PublicVehicleResource::DETAIL_RELATIONS));
+        // loadMissing: the catalogue names and the owner are loaded already (canonical slug, policy); M5.9c's build score is one query.
+        return new PublicVehicleResource($vehicle->loadMissing(PublicVehicleResource::DETAIL_RELATIONS));
     }
 
     /**

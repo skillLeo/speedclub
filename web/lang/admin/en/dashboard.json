@@ -51,7 +51,7 @@
         "empty_body": "Counting starts with the first member activity. Only totals are stored, never the history of individuals.",
         "series": "Trend: last 14 days, change from the previous period",
         "members_7d": "New members, 7 days",
-        "qr_scans_7d": "QR scans, 7 days",
+        "qr_scans_7d": "Sticker scans, 7 days",
         "active_builds": "Active builds, 30 days",
         "open_reports": "Open reports",
         "median_decision": "Median handling time, 7 days",
@@ -72,15 +72,15 @@
         "error": "Charts could not be loaded",
         "registrations": "How many people sign up each day?",
         "registrations_body": "Sign-ups per day, last 30 days",
-        "qr_funnel": "How many QR scans turn into members?",
-        "qr_funnel_body": "QR scans and sign-ups after a scan, per day, last 30 days",
+        "qr_funnel": "How many sticker scans turn into members?",
+        "qr_funnel_body": "Sticker scans and sign-ups after a scan, per day, last 30 days",
         "top_makes": "Which makes are in the garages?",
         "top_makes_body": "Top 10 makes by published vehicles",
         "series_registrations": "Sign-ups",
-        "series_scans": "QR scans",
+        "series_scans": "Sticker scans",
         "series_vehicles": "Vehicles",
         "registrations_zero": "No sign-ups in the last 30 days",
-        "qr_funnel_zero": "No QR scans in the last 30 days"
+        "qr_funnel_zero": "No sticker scans in the last 30 days"
     },
     "dsa": {
         "title": "Average monthly active users (6 months)",

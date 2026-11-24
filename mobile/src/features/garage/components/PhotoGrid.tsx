@@ -6,7 +6,12 @@ import type { GarageMedia } from '@/api/queries/garage';
 import { photoFields } from '@/features/vehicle/media';
 import type { UploadItem } from '@/state/uploads';
 import { createStyles, space } from '@/theme';
-import { Icon, Photo, PressableScale, Progress, Spinner, Text } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Progress } from '@/ui/Progress';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 
 /** The grid's columns and gap, also the geometry of GAR-07's skeleton. */

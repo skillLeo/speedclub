@@ -16,4 +16,4 @@
 {!! $note !!}
 
 @endif
-SPEED CLUB
+Speedclub

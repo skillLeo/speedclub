@@ -8,6 +8,7 @@ use App\Http\Resources\V1\MaintenanceReminderPlanResource;
 use App\Http\Resources\V1\MaintenanceUpcomingResource;
 use App\Models\User;
 use App\Services\Maintenance\MaintenanceOverview;
+use App\Support\QaClock;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -26,7 +27,10 @@ class MyMaintenanceController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return MaintenanceUpcomingResource::collection($overview->upcoming($user, (int) ($request->validated('days') ?? 60), (int) ($request->validated('limit') ?? 20)));
+        // The countdowns count from the QA clock outside production (DQ-P5-201), else from the real now (MaintenanceItemResource too).
+        $now = QaClock::frozen($request);
+
+        return MaintenanceUpcomingResource::collection($overview->upcoming($user, (int) ($request->validated('days') ?? 60), (int) ($request->validated('limit') ?? 20), $now));
     }
 
     /**

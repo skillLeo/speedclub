@@ -4,9 +4,13 @@ import { useTranslation } from 'react-i18next';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { reportClientError } from '@/api/clientErrors';
+import { onlySyntheticRootBelow } from '@/lib/backNavigation';
 import { isWeb } from '@/lib/platform';
+import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { ErrorState, Header, Screen } from '@/ui';
+import { ErrorState } from '@/ui/ErrorState';
+import { Header } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
 
 import { ShellOfflineBanner } from './ShellOfflineBanner';
 import { useTabBarPadding } from './tabBarLayout';
@@ -38,14 +42,26 @@ function RouteErrorScreen({ error, onRetry, leave }: { error: unknown; onRetry: 
   const styles = useStyles();
   const padding = useTabBarPadding();
   const connection = isConnectionError(error);
+  const online = useOnline();
+  const offline = connection && !online;
   const pathname = usePathname();
+  // R4B-001: a route chunk that could not load offline loads by itself once the connection is back. React keeps the rejected lazy
+  // route for the life of the page, so on web that is a reload, and only when the browser reports the way back online.
+  useEffect(() => {
+    if (!connection || !isWeb || typeof window === 'undefined') return undefined;
+    const reload = () => window.location.reload();
+    window.addEventListener('online', reload);
+    return () => window.removeEventListener('online', reload);
+  }, [connection]);
   // A render error is reported once (the class boundary below adds its component stack); a lost connection is not a bug.
   useEffect(() => {
     if (!connection) reportClientError(error, pathname);
   }, [connection, error, pathname]);
   // §8 error state: the plain cause and what to do next. A render error is not the member's connection, and on web the retry is a reload.
-  const title = connection ? t('states.errorTitle') : t('shell.routeError.title');
-  const message = connection
+  const title = offline ? t('shell.routeError.offlineTitle') : connection ? t('states.errorTitle') : t('shell.routeError.title');
+  const message = offline
+    ? t('shell.routeError.offlineBody')
+    : connection
     ? t('states.errorBody')
     : t(leave === null ? 'shell.routeError.bodyAlone' : leave.kind === 'close' ? 'shell.routeError.bodyClose' : 'shell.routeError.bodyBack');
   return (
@@ -92,7 +108,10 @@ function useLeave(): Leave {
       },
     };
   }
-  return router.canGoBack() ? { kind: 'back', onPress: () => router.back() } : null;
+  // R4B-001: a tab's first screen has nothing below it in its own stack, whatever the tab history says: no back chevron there.
+  const stack = (typeof navigation.getState === 'function' ? navigation.getState() : undefined) as unknown;
+  const below = typeof stack === 'object' && stack !== null && 'index' in stack ? Number((stack as { index: unknown }).index) : 0;
+  return below > 0 && router.canGoBack() && !onlySyntheticRootBelow(stack) ? { kind: 'back', onPress: () => router.back() } : null;
 }
 
 /**

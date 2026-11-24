@@ -32,26 +32,19 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { concentric, createStyles, layout, size, space, typography, typographyDesktop, useBreakpoint, useTheme } from '@/theme';
-import {
-  Badge,
-  Button,
-  Chip,
-  Header,
-  Hairline,
-  Photo,
-  PhotoStageScrim,
-  PhotoTopScrim,
-  SampleBadge,
-  Screen,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  ListRow,
-  Text,
-  toast,
-  useCollapsingHeader,
-  type HeaderAction,
-} from '@/ui';
+import { Badge, SampleBadge } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { Chip } from '@/ui/Chip';
+import { Hairline } from '@/ui/Hairline';
+import { Header, type HeaderAction } from '@/ui/Header';
+import { ListRow } from '@/ui/ListRow';
+import { Photo } from '@/ui/Photo';
+import { PhotoStageScrim, PhotoTopScrim } from '@/ui/PhotoStageScrim';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 import { identifierText } from '@/ui/textBreaks';
 
 import { OpeningHours } from '../components/business/OpeningHours';

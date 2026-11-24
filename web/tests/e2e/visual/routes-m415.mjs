@@ -53,7 +53,7 @@ export const routesM415 = [
     states: ['default'],
     ready: '[data-testid="shell.installHint.dismiss"]',
     notes:
-      'The install hint (09 §7.15) over SET-01, forced by qaOpen=installHint: "SPEED CLUB auf den Home-Bildschirm", one line, and on the iPhone cells Safari\'s three steps with the share glyph; a Chromium cell without the browser\'s install event shows the same steps. "Verstanden" closes it, once per browser.',
+      'The install hint (09 §7.15) over SET-01, forced by qaOpen=installHint: "Speedclub auf den Home-Bildschirm", one line, and on the iPhone cells Safari\'s three steps with the share glyph; a Chromium cell without the browser\'s install event shows the same steps. "Verstanden" closes it, once per browser.',
   },
   // DQ-1162: SET-09's "In diesem Browser" row in its states, forced through qaPush (mobile/src/lib/qa.ts) with web_push on; an automated
   // browser has neither a VAPID key nor a permission prompt. The member web only (native never shows the row).
@@ -67,17 +67,4 @@ export const routesM415 = [
     capture: 'expanded',
     notes: `Mitteilungen with the browser group (09 §8.13, ADR-452/453 b) in the state "${push}": the switch and its helper line; with "on" the per-type switches drive the web_push channel.`,
   })),
-  // DQ-1162: QR-02's "Sticker bestellen" row behind sticker_shop; on a host without STICKER_SHOP_URL the forced flag uses the test shop
-  // address shop.speedclub.test (mobile/src/features/qr/stickerShop.ts, never in production).
-  {
-    id: 'QR-02-shop',
-    path: '/app/qr/{r34}?qaFlags=sticker_shop',
-    phase: 3,
-    hostDependent: true,
-    auth: 'member',
-    states: ['default'],
-    ready: '[data-testid="QR-02.orderSticker"]',
-    capture: 'expanded',
-    notes: 'QR-02 with the sticker_shop flag: the last row "Sticker bestellen" (external link glyph, no chevron) under Sticker-Platzierung; no price, no order in the app (09 §8.16).',
-  },
 ];

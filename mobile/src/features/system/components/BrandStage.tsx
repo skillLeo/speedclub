@@ -5,7 +5,9 @@ import type { Edge } from 'react-native-safe-area-context';
 
 import { AppWordmark } from '@/features/auth/AppWordmark';
 import { createStyles, layout, ThemeScope, useBreakpoint, type ThemeName } from '@/theme';
-import { Photo, Screen, Text, type PhotoFields } from '@/ui';
+import { Photo, type PhotoFields } from '@/ui/Photo';
+import { Screen } from '@/ui/Screen';
+import { Text } from '@/ui/Text';
 import { PhotoStageScrim } from '@/ui/PhotoStageScrim';
 
 /** §2 brand layer (ADR-143, DQ-102): the system states are a Carbon stage in every theme, like Welcome. */

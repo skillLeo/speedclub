@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next';
 
 import type { VehicleCardData } from '@/api/queries/profile';
 import { photoFields } from '@/features/profile/media';
-import type { VehicleCardProps, VehicleCardStat } from '@/ui';
+import type { VehicleCardProps, VehicleCardStat } from '@/ui/VehicleCard';
 
 /** The mini spec of the 2.0 card (09 §5): power, torque, model year — the drivetrain stays on the vehicle page. */
 const STAT_KEYS = ['power', 'torque', 'model_year'] as const;

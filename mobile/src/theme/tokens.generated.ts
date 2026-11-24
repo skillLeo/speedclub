@@ -85,7 +85,9 @@ export const themes = {
       },
       "skeleton": {
         "base": "#1C1C1F",
-        "highlight": "#242428"
+        "highlight": "#242428",
+        "raised": "#2C2C31",
+        "raisedHighlight": "#35353A"
       },
       "tabBar": {
         "background": "rgba(20,20,22,0.92)"
@@ -188,7 +190,9 @@ export const themes = {
       },
       "skeleton": {
         "base": "#17171A",
-        "highlight": "#202024"
+        "highlight": "#202024",
+        "raised": "#29292E",
+        "raisedHighlight": "#323237"
       },
       "tabBar": {
         "background": "rgba(14,14,16,0.92)"
@@ -291,7 +295,9 @@ export const themes = {
       },
       "skeleton": {
         "base": "#EFEFEC",
-        "highlight": "#E4E4E0"
+        "highlight": "#E4E4E0",
+        "raised": "#E4E4E0",
+        "raisedHighlight": "#DADAD5"
       },
       "tabBar": {
         "background": "rgba(255,255,255,0.92)"
@@ -336,6 +342,15 @@ export const typography = {
     "fontFamily": "ArchivoCondensed-SemiBold",
     "fontSize": 40,
     "lineHeight": 40,
+    "letterSpacing": 0,
+    "fontVariant": [
+      "tabular-nums"
+    ]
+  },
+  "heroNumeralXs": {
+    "fontFamily": "ArchivoCondensed-SemiBold",
+    "fontSize": 32,
+    "lineHeight": 32,
     "letterSpacing": 0,
     "fontVariant": [
       "tabular-nums"
@@ -419,6 +434,18 @@ export const typography = {
     "fontSize": 11,
     "lineHeight": 14,
     "letterSpacing": 0
+  },
+  "labelControl": {
+    "fontFamily": "Inter-Medium",
+    "fontSize": 14,
+    "lineHeight": 20,
+    "letterSpacing": 0
+  },
+  "captionChrome": {
+    "fontFamily": "Inter-Medium",
+    "fontSize": 12,
+    "lineHeight": 16,
+    "letterSpacing": 0.1
   },
   "numericInline": {
     "fontFamily": "Inter-Medium",
@@ -528,6 +555,15 @@ export const typeScale = {
     "numeric": "tabular",
     "maxFontScale": 1.3
   },
+  "heroNumeralXs": {
+    "font": "numeral",
+    "weight": 600,
+    "size": 32,
+    "lineHeight": 32,
+    "tracking": 0,
+    "numeric": "tabular",
+    "maxFontScale": 1.3
+  },
   "displayTitle": {
     "font": "marque",
     "weight": 600,
@@ -549,7 +585,9 @@ export const typeScale = {
     "lineHeight": 22,
     "tracking": "-1%",
     "maxLines": 2,
-    "maxFontScale": 1.3
+    "maxFontScale": 1.3,
+    "minSize": 14,
+    "minLineHeight": 18
   },
   "title1": {
     "font": "uiDisplay",
@@ -646,6 +684,22 @@ export const typeScale = {
     "tracking": 0,
     "maxFontScale": 1.3
   },
+  "labelControl": {
+    "font": "ui",
+    "weight": 500,
+    "size": 14,
+    "lineHeight": 20,
+    "tracking": 0,
+    "maxFontScale": 1.3
+  },
+  "captionChrome": {
+    "font": "ui",
+    "weight": 500,
+    "size": 12,
+    "lineHeight": 16,
+    "tracking": 0.1,
+    "maxFontScale": 1.3
+  },
   "numericInline": {
     "font": "ui",
     "weight": 500,
@@ -703,7 +757,7 @@ export const typeScale = {
     "platform": "admin"
   }
 } as const;
-export const maxFontScale = {"heroNumeral":1.3,"heroNumeralS":1.3,"displayWordmark":1.3,"labelBadge":1.3,"webTab":1.3,"webSidebar":1.3} as const;
+export const maxFontScale = {"heroNumeral":1.3,"heroNumeralS":1.3,"heroNumeralXs":1.3,"displayWordmark":1.3,"labelBadge":1.3,"labelControl":1.3,"captionChrome":1.3,"webTab":1.3,"webSidebar":1.3} as const;
 export const fontScaleCap = {"heroNumeral":1.3,"tabLabel":1.3,"pill":1.3} as const;
 
 export const fonts = {
@@ -902,7 +956,7 @@ export const layout = {
   "adminTableRowDense": 32,
   "adminContentMax": 1440
 } as const;
-export const aspect = {"vehicleHero":"4:3","card":"4:3","editorial":"16:9","cover":"3:1","avatar":"1:1","storyCard":"9:16","hero":"4:5","heroWeb":"16:9","rail":"3:4","grid":"1:1","gridTall":"4:5"} as const;
+export const aspect = {"vehicleHero":"4:3","card":"4:3","editorial":"16:9","cover":"3:1","avatar":"1:1","storyCard":"9:16","hero":"4:5","heroWeb":"16:9","heroDesktop":"21:9","rail":"3:4","grid":"1:1","gridTall":"4:5"} as const;
 /** Reanimated 4 withSpring configs — mass is explicit because the installed default is 4 (springConfigs.ts). */
 export const motion = {
   "spring": {

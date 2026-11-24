@@ -10,7 +10,8 @@ import type { ApprovalFlash, SharedFlash } from '../../types/inertia';
 
 /**
  * Turns the shared `flash` of each response into UI: success/error toasts, the four-eyes notice, the password dialog. Only on
- * responses, never on history navigation, so a flash is not shown twice.
+ * responses, never on history navigation, so a flash is not shown twice. ADR-540: an approval flash marked `direct` (four-eyes off, the
+ * action ran at once) is a toast, never the waiting notice: "Ausgeführt" or the refusal with its reason.
  */
 const page = usePage();
 const approval = ref<ApprovalFlash | null>(null);
@@ -23,7 +24,11 @@ function handle(flash: SharedFlash | undefined): void {
     handled.add(flash);
     if (flash.success) toast('success', flashText(flash.success, trans));
     if (flash.error) toast('error', flashText(flash.error, trans));
-    if (flash.approval) approval.value = flash.approval;
+    if (flash.approval?.direct === true) {
+        const title = flashText(flash.approval.title, trans);
+        if (flash.approval.status === 'failed') toast('error', trans('ui.approval.direct_failed', { title, error: flash.approval.error ?? trans('ui.state.server_error') }));
+        else if (!flash.success) toast('success', trans('ui.approval.direct_done', { title }));
+    } else if (flash.approval) approval.value = flash.approval;
     if (flash.confirm_password) askToRepeatLastWrite();
 }
 

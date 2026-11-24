@@ -8,7 +8,7 @@ import { ApiError } from '@/api/client';
 import { isClosed, useRsvp, type EventCard, type EventDetail, type RsvpAnswer } from '@/api/queries/events';
 import { haptics } from '@/lib/haptics';
 import { useRequireAuth } from '@/state/session';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 
 type Answerable = Pick<EventDetail, 'id' | 'slug' | 'my_rsvp' | 'counts' | 'spots_left'>;
 

@@ -12,7 +12,12 @@ import { CODE_LENGTH } from '@/features/auth/schemas';
 import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
 import { isNative } from '@/lib/platform';
 import { createStyles, size } from '@/theme';
-import { Button, Dialog, QRDisplay, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { QRDisplay } from '@/ui/QRDisplay';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { SlotText } from '@/ui/SlotText';
 import { PRODUCT_NAMES } from '@/ui/textBreaks';
 

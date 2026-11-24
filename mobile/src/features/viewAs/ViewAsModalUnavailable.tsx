@@ -2,7 +2,8 @@ import { View } from 'react-native';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { createStyles, useBreakpoint } from '@/theme';
-import { Header, Screen } from '@/ui';
+import { Header } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
 
 import { ViewAsUnavailable } from './ViewAsUnavailable';
 

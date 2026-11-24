@@ -4,14 +4,15 @@ import { computed, nextTick, ref, watch } from 'vue';
 import ApprovalNotice from '../../../Components/patterns/ApprovalNotice.vue';
 import DialogError from '../../../Components/patterns/DialogError.vue';
 import StateBlock from '../../../Components/patterns/StateBlock.vue';
-import { Button, Combobox, Dialog, Field, Skeleton, Textarea, type SelectOption } from '../../../Components/ui';
+import { Button, Combobox, Dialog, Field, Skeleton, type SelectOption } from '../../../Components/ui';
 import { qaDialogFailed } from '../../../composables/pageState';
+import { useFourEyes } from '../../../composables/fourEyes';
 import { formatNumber } from '../../../lib/format';
 import { routeOr } from '../../../lib/routes';
 import { fetchImpact, FOUR_EYES_ABOVE, useCatalogWrite, type CatalogLevel, type Impact } from '../shared';
 
 /**
- * ADM-14 / ADM-16 "Zusammenführen" (m3.3 §1, ADR-234; catalog.manage, ⚿, reason): pick the survivor of the same level (under the same
+ * ADM-14 / ADM-16 "Zusammenführen" (m3.3 §1, ADR-234; catalog.manage, ⚿): pick the survivor of the same level (under the same
  * make or model), see what moves before anything happens (vehicles, models/generations, modifications; the merged slug stays as a
  * redirect), and send. More than 100 affected vehicles only create a four-eyes request (ADR-214/229): the dialog says so ahead.
  */
@@ -21,8 +22,6 @@ const props = withDefaults(defineProps<{ level: CatalogLevel; entry: { id: numbe
 const impact = ref<Impact | null>(null);
 const loadState = ref<'loading' | 'ready' | 'error'>('loading');
 const target = ref<string | undefined>(undefined);
-const reason = ref('');
-const reasonError = ref<string | null>(null);
 const write = useCatalogWrite();
 const failed = qaDialogFailed();
 
@@ -48,8 +47,6 @@ watch(
         if (!value) return;
         impact.value = null;
         target.value = undefined;
-        reason.value = '';
-        reasonError.value = null;
         write.reset();
         void load();
     },
@@ -65,7 +62,8 @@ const options = computed<SelectOption[]>(() =>
 );
 const chosen = computed(() => impact.value?.candidates.find((c) => String(c.id) === target.value) ?? null);
 const moving = computed(() => impact.value?.entry.vehicles ?? 0);
-const fourEyes = computed(() => moving.value > FOUR_EYES_ABOVE);
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && moving.value > FOUR_EYES_ABOVE);
 const facts = computed(() => {
     const i = impact.value;
     if (i === null) return [];
@@ -80,14 +78,8 @@ const facts = computed(() => {
 
 function submit(): void {
     if (props.entry === null || chosen.value === null) return;
-    const length = reason.value.trim().length;
-    if (length < 10 || length > 1000) {
-        reasonError.value = trans('ui.confirm.reason_length');
-        return;
-    }
-    reasonError.value = null;
     const url = routeOr('admin.catalog.entries.merge', `/admin/catalog/entries/${props.level}/${props.entry.id}/merge`, { level: props.level, id: props.entry.id });
-    write.run('post', url, { target_id: chosen.value.id, reason: reason.value.trim() }, { sensitive: true, onSuccess: () => (open.value = false) });
+    write.run('post', url, { target_id: chosen.value.id }, { sensitive: true, onSuccess: () => (open.value = false) });
 }
 
 const serverError = computed(() => (failed ? trans('ui.state.server_error') : write.error.value));
@@ -135,9 +127,6 @@ const formId = `${props.testId}-form`;
                     }}
                 </p>
                 <ApprovalNotice v-if="fourEyes" :test-id="`${testId}.four-eyes`" />
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="reasonError ?? write.errors.value.reason ?? null" required>
-                    <Textarea v-model="reason" :rows="3" :maxlength="1000" show-count :data-testid="`${testId}.reason`" />
-                </Field>
             </template>
         </form>
         <template #footer>

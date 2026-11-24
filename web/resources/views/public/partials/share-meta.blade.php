@@ -36,7 +36,7 @@
 <meta name="twitter:image:alt" content="{{ $alt }}">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="{{ \App\Support\DesignTokens::color('bg-canvas') }}">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="{{ \App\Support\DesignTokens::color('bg-canvas', 'light') }}">
-<link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-<link rel="icon" type="image/png" href="{{ asset('favicon-32.png') }}" sizes="32x32">
-<link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}" sizes="180x180">
+<link rel="icon" href="{{ \App\Support\BrandFiles::asset('favicon.ico') }}" sizes="any">
+<link rel="icon" type="image/png" href="{{ \App\Support\BrandFiles::asset('favicon-32.png') }}" sizes="32x32">
+<link rel="apple-touch-icon" href="{{ \App\Support\BrandFiles::asset('apple-touch-icon.png') }}" sizes="180x180">
 <link rel="manifest" href="{{ asset('site.webmanifest') }}">

@@ -86,11 +86,8 @@ test.describe('A5 Meldungen', () => {
     await page.locator('body').press('r');
     await expect(composer).toBeVisible();
     await expect(composer.getByRole('radio', { name: new RegExp(`^${admin('moderation', 'composer.actions.no_action')}`) })).toBeChecked();
-    // DQ-1199: "Entscheidung senden" stays off until the reason is given; nothing is sent.
-    await expect(id(page, 'ADM-20.composer.submit')).toBeDisabled();
     await expect(composer).toBeVisible();
     expect((await caseOf(firstIsOne ? first : second)).status).not.toBe('decided');
-    await id(page, 'ADM-20.composer.reason').fill('Profil geprüft, kein Spam erkennbar.');
     await id(page, 'ADM-20.composer.submit').click();
     await expect(toast(page, admin('moderation', 'flash.decided'))).toBeVisible();
     await expect(composer).toBeHidden();

@@ -10,6 +10,7 @@ import ApprovalNotice from '../../../Components/patterns/ApprovalNotice.vue';
 import { Button, DateRangeField, Drawer, Field, Input, RadioGroup, Select, Skeleton, Textarea } from '../../../Components/ui';
 import { formatNumber } from '../../../lib/format';
 import { isCancelled, JsonError, requestJson } from '../../../lib/http';
+import { useFourEyes } from '../../../composables/fourEyes';
 import { routeOr } from '../../../lib/routes';
 import { fillPlaceholders, type ComposerOptions, type SorTemplate } from '../shared';
 
@@ -17,7 +18,9 @@ import { fillPlaceholders, type ComposerOptions, type SorTemplate } from '../sha
  * The ADM-21/22 decision composer (06 §3 Moderation, m3.4-contract §1): action (keine Maßnahme · Inhalt entfernen · Einschränken ·
  * Sperren), for restrict what and how long, a statement-of-reasons template in the member's language (placeholders filled, every field
  * editable), facts, ground, where it is written, the automated flags read-only, the DE/EN preview of what the member reads (SAFE-01 and
- * the mail), and the audit reason. A suspension is four-eyes: the notice says so and the server only creates the approval.
+ * the mail). A suspension is four-eyes (when the governance switch is on): the notice says so and the server only creates the approval.
+ * M5.9 (10 §8.6): when the triage suggested a template the composer has, one line "KI-Vorschlag: <Vorlage>" with "Übernehmen", which
+ * applies it exactly like a pick in the template field. Nothing is preselected or sent by itself; a key the composer lacks shows nothing.
  */
 const open = defineModel<boolean>('open', { default: false });
 const props = withDefaults(
@@ -29,8 +32,10 @@ const props = withDefaults(
         failed?: boolean;
         /** The action the form starts with (ADM-20 SplitQueue: `a` = Inhalt entfernen, `r` = Keine Maßnahme); else the usual default. */
         initialAction?: ComposerOptions['actions'][number] | null;
+        /** M5.9: the triage's suggested statement-of-reasons template key (`ai.template_key` of the case), never applied by itself. */
+        aiTemplateKey?: string | null;
     }>(),
-    { failed: false, initialAction: null },
+    { failed: false, initialAction: null, aiTemplateKey: null },
 );
 const emit = defineEmits<{ decided: [] }>();
 
@@ -39,7 +44,8 @@ type Action = ComposerOptions['actions'][number];
 interface Form {
     /** Null until the moderator picks one (DQ-1199): a decision is a deliberate act, no sanction is the default. */
     action: Action | null;
-    restriction: 'messaging' | 'publishing';
+    /** M5.8: `forum` = the forum ban (DSA restriction type forum, m5.8-contract D3). */
+    restriction: 'messaging' | 'publishing' | 'forum';
     duration: Duration;
     day: string;
     template: string;
@@ -47,12 +53,12 @@ interface Form {
     ground: string;
     ground_document: 'community' | 'terms' | 'law';
     ground_section: string;
-    reason: string;
 }
 // Only a one-key decision (`a` / `r` in a SplitQueue) arrives with its action; every other way in starts without one (DQ-1199).
 const startAction = (): Action | null => (props.initialAction !== null && props.composer.actions.includes(props.initialAction) ? props.initialAction : null);
-const blank = (): Form => ({ action: startAction(), restriction: 'messaging', duration: '7', day: '', template: '', facts: '', ground: '', ground_document: 'community', ground_section: '', reason: '' });
+const blank = (): Form => ({ action: startAction(), restriction: 'messaging', duration: '7', day: '', template: '', facts: '', ground: '', ground_document: 'community', ground_section: '' });
 const form = reactive<Form>(blank());
+const fourEyesOn = useFourEyes();
 const errors = ref<Partial<Record<string, string>>>({});
 const action = useAdminAction();
 
@@ -79,7 +85,7 @@ function onOpen(): void {
 }
 
 const actionOptions = computed(() => props.composer.actions.map((value) => ({ value, label: trans(`moderation.composer.actions.${value}`), hint: trans(`moderation.composer.hints.${value}`) })));
-const restrictionOptions = computed(() => (['messaging', 'publishing'] as const).map((value) => ({ value, label: trans(`decisions.measures.${value}`), hint: trans(`decisions.measures.${value}_hint`) })));
+const restrictionOptions = computed(() => (['messaging', 'publishing', 'forum'] as const).map((value) => ({ value, label: trans(`decisions.measures.${value}`), hint: trans(`decisions.measures.${value}_hint`) })));
 const limited = computed(() => form.action === 'suspend' && props.composer.max_suspension_days !== null);
 const durationOptions = computed(() =>
     (['1', '7', '30', 'date', 'none'] as const).filter((v) => !(limited.value && v === 'none')).map((value) => ({ value, label: trans(`decisions.durations.${value}`) })),
@@ -96,7 +102,7 @@ const templateOptions = computed(() => [
         .map((t) => ({ value: t.id, label: t.label })),
 ]);
 const actionModel = computed({ get: () => form.action ?? undefined, set: (v: string | undefined) => (form.action = (props.composer.actions.find((a) => a === v) ?? form.action)) });
-const restrictionModel = computed({ get: () => form.restriction, set: (v: string | undefined) => (form.restriction = v === 'publishing' ? 'publishing' : 'messaging') });
+const restrictionModel = computed({ get: () => form.restriction, set: (v: string | undefined) => (form.restriction = v === 'publishing' || v === 'forum' ? v : 'messaging') });
 const durationModel = computed({ get: () => form.duration, set: (v: string | undefined) => (form.duration = (v ?? '7') as Duration) });
 const documentModel = computed({ get: () => form.ground_document, set: (v: string | undefined) => (form.ground_document = (v ?? 'community') as Form['ground_document']) });
 const templateModel = computed({
@@ -112,6 +118,13 @@ const templateModel = computed({
         if ((props.composer.actions as string[]).includes(template.action)) form.action = template.action as Action;
     },
 });
+// The suggested template in the member's language, as the template field offers it; null when the key is not one of them.
+const aiTemplate = computed(() => (props.aiTemplateKey ? (props.templates.find((t) => t.key === props.aiTemplateKey && t.locale === props.composer.member_locale) ?? null) : null));
+const aiTemplateApplied = computed(() => aiTemplate.value !== null && form.template === aiTemplate.value.id);
+function applyAiTemplate(): void {
+    if (aiTemplate.value !== null) templateModel.value = aiTemplate.value.id;
+}
+
 watch(limited, (value) => {
     if (value && form.duration === 'none') form.duration = '30';
 });
@@ -166,12 +179,10 @@ onMounted(() => {
     if (open.value) onOpen();
 });
 
-// DQ-1199/1205: "Entscheidung senden" stays off until an action, the statement (where one is needed) and the reason are there, as in
-// every reason dialog of the admin; the server validates again. Dates and limits are still checked on submit.
+// DQ-1199/1205: "Entscheidung senden" stays off until an action and the statement (where one is needed) are there; the server
+// validates again. Dates and limits are still checked on submit.
 const canSend = computed(() => {
     if (form.action === null) return false;
-    const reason = form.reason.trim().length;
-    if (reason < 10 || reason > 1000) return false;
     return !needsStatement.value || (form.facts.trim().length >= 10 && form.ground.trim().length >= 3);
 });
 /** Red only when the decision restricts (remove, restrict, suspend); "Keine Maßnahme" and no choice yet are neutral. */
@@ -180,8 +191,6 @@ const restricting = computed(() => form.action !== null && form.action !== 'no_a
 function submit(): void {
     if (form.action === null) return;
     const next: Partial<Record<string, string>> = needsStatement.value ? { ...statementErrors({ template: '', facts: form.facts, ground: form.ground, ground_document: form.ground_document, ground_section: form.ground_section }) } : {};
-    const reason = form.reason.trim().length;
-    if (reason < 10 || reason > 1000) next.reason = trans('ui.confirm.reason_length');
     const until = timed.value ? untilFrom(form.duration, form.day) : null;
     if (timed.value && form.duration === 'date' && until === null) next.until = trans('decisions.errors.date');
     if (until !== null && Date.parse(until) <= Date.now()) next.until = trans('decisions.errors.date_past');
@@ -205,7 +214,6 @@ function submit(): void {
             ground: needsStatement.value ? form.ground.trim() : null,
             ground_document: needsStatement.value ? form.ground_document : null,
             ground_section: needsStatement.value && form.ground_section.trim() !== '' ? form.ground_section.trim() : null,
-            reason: form.reason.trim(),
         },
         {
             sensitive: true,
@@ -222,8 +230,24 @@ const serverError = computed(() => (props.failed ? trans('ui.state.server_error'
 <template>
     <Drawer v-model:open="open" :title="trans('moderation.composer.title')" :description="trans('moderation.composer.description')" size="lg" :dismissible="!action.processing.value" :test-id="testId">
         <form :id="`${testId}-form`" class="flex flex-col gap-20" novalidate @submit.prevent="submit">
+            <div v-if="aiTemplate" class="flex flex-wrap items-center justify-between gap-x-12 gap-y-4 rounded-sm border border-line-subtle px-12 py-8" :data-testid="`${testId}.ai-template`">
+                <div class="flex min-w-0 flex-col gap-2">
+                    <p class="text-admin-base-strong text-ink">{{ trans('moderation.composer.ai_template', { template: aiTemplate.label }) }}</p>
+                    <p class="text-caption text-ink-3">{{ trans('moderation.composer.ai_template_note') }}</p>
+                </div>
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    :disabled="aiTemplateApplied"
+                    :data-autofocus="aiTemplateApplied ? undefined : ''"
+                    :data-testid="`${testId}.ai-template.apply`"
+                    @click="applyAiTemplate"
+                >
+                    {{ trans(aiTemplateApplied ? 'moderation.composer.ai_template_applied' : 'moderation.composer.ai_template_apply') }}
+                </Button>
+            </div>
             <RadioGroup v-model="actionModel" :legend="trans('moderation.composer.action')" :options="actionOptions" :data-testid="`${testId}.action`" />
-            <ApprovalNotice v-if="form.action === 'suspend'" :test-id="`${testId}.four-eyes`" />
+            <ApprovalNotice v-if="fourEyesOn && form.action === 'suspend'" :test-id="`${testId}.four-eyes`" />
 
             <div v-if="form.action === 'restrict'">
                 <RadioGroup v-model="restrictionModel" :legend="trans('moderation.composer.restriction')" :options="restrictionOptions" :data-testid="`${testId}.restriction`" />
@@ -294,16 +318,12 @@ const serverError = computed(() => (props.failed ? trans('ui.state.server_error'
                     </details>
                 </div>
             </section>
-
-            <Field :label="trans('ui.confirm.reason')" :hint="trans('decisions.reason_hint')" :error="errors.reason" required>
-                <Textarea v-model="form.reason" :rows="3" :maxlength="1000" show-count :data-testid="`${testId}.reason`" />
-            </Field>
         </form>
         <template #footer>
             <DialogError :message="serverError" />
             <Button variant="ghost" :disabled="action.processing.value" @click="open = false">{{ trans('ui.actions.cancel') }}</Button>
             <Button type="submit" :form="`${testId}-form`" :variant="restricting ? 'danger' : 'primary'" :disabled="!canSend" :loading="action.processing.value" :data-testid="`${testId}.submit`">
-                {{ form.action === 'suspend' ? trans('moderation.composer.submit_suspend') : trans('moderation.composer.submit') }}
+                {{ form.action === 'suspend' ? trans(fourEyesOn ? 'moderation.composer.submit_suspend' : 'decisions.submit_suspend_direct') : trans('moderation.composer.submit') }}
             </Button>
         </template>
     </Drawer>

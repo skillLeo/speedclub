@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * The sample business of the showcase (09 §8.19, ADR-412, M4.14) from database/data/showcase/businesses.json: an obviously fictional
- * workshop owned by the SPEED CLUB Editorial account, verified, is_sample, with placeholder Impressum data the page marks as such and a
+ * workshop owned by the Speedclub Editorial account, verified, is_sample, with placeholder Impressum data the page marks as such and a
  * graded seed photo as cover. Its portfolio: Editorial builds whose suspension part is linked to the catalogue (both sides are the
  * Editorial account, so the tag is confirmed). It also links the mods of sample builds to catalogue products by brand and part name
  * (only exact slug matches; nothing is guessed). Local and staging only; ShowcasePurge removes it with the Editorial account.
@@ -171,7 +171,7 @@ class ShowcaseBusinesses
         }
 
         $service = app(MediaService::class);
-        $imported = $service->storeFromPath($path, $owner, $business, ['alt' => $alt]);
+        $imported = $service->storeFromPath($path, $owner, $business, ['alt' => $alt], ShowcasePlates::for($photos)->choice($file));
         $imported->forceFill(['sample_source' => $source, 'moderation_status' => ModerationStatus::Approved, 'thumbhash' => $thumbhash ?? null])->save();
         $business->forceFill(['cover_media_id' => $imported->id])->save();
 

@@ -103,24 +103,100 @@ test.describe('VEH-06 and VEH-07', () => {
   });
 });
 
+test.describe('VEH-07 2.0 share card (R5-2e)', () => {
+  test('template, crop with the buttons, Mods and an own line: the redraw carries them; Speichern downloads the PNG', async ({ page }, testInfo) => {
+    test.setTimeout(120_000);
+    // The choices are read from the build's page in the cache, so the card opens from VEH-01 as a member does it.
+    await open(page, `/app/v/${R34.slug}?qaFlags=sig.share_cards`);
+    await id(page, 'VEH-01.moreActions').first().click();
+    await id(page, 'VEH-01.moreSheet.shareCard').first().click();
+    await expect(id(page, 'VEH-07.customise')).toBeVisible();
+    const image = id(page, 'VEH-07.preview.image');
+    await expect(image).toBeVisible();
+
+    // The template picker is a radio group of three; the poster takes over.
+    await expect(id(page, 'VEH-07.template.band')).toHaveAttribute('aria-checked', 'true');
+    await id(page, 'VEH-07.template.poster').click();
+    await expect(id(page, 'VEH-07.template.poster')).toHaveAttribute('aria-checked', 'true');
+
+    // The crop: twice "+", once "−" is zoom 1.25; "Zurücksetzen" is now possible.
+    await expect(id(page, 'VEH-07.crop')).toBeVisible();
+    await expect(id(page, 'VEH-07.crop.reset')).toBeDisabled();
+    await id(page, 'VEH-07.crop.zoomIn').click();
+    await id(page, 'VEH-07.crop.zoomIn').click();
+    await id(page, 'VEH-07.crop.zoomOut').click();
+    await expect(id(page, 'VEH-07.crop.zoom')).toHaveText('1,25×');
+    await expect(id(page, 'VEH-07.crop.reset')).toBeEnabled();
+    // Keyboard on the web: an arrow moves the window.
+    await id(page, 'VEH-07.crop').focus();
+    await page.keyboard.press('ArrowRight');
+
+    // Mods is off by default and only offered for a build with fitted parts (the demo R34 has them).
+    const mods = id(page, 'VEH-07.element.mods');
+    await expect(mods).toHaveAttribute('aria-checked', 'false');
+    await mods.click();
+    await expect(mods).toHaveAttribute('aria-checked', 'true');
+
+    // One redraw once the choices settle (400 ms), carrying every choice.
+    const redrawn = page.waitForRequest((request) => {
+      if (request.method() !== 'GET' || !/\/api\/v1\/vehicles\/[^/]+\/share-card\.png\?/.test(request.url())) return false;
+      return new URL(request.url()).searchParams.get('text') === 'Saisonstart am Nürburgring';
+    });
+    await id(page, 'VEH-07.text').fill('Saisonstart am Nürburgring');
+    await expect(id(page, 'VEH-07.text.helper')).toHaveText('26 / 60 Zeichen');
+    const redraw = await redrawn;
+    const query = new URL(redraw.url()).searchParams;
+    expect(query.get('format')).toBe('story');
+    expect(query.get('template')).toBe('poster');
+    expect(query.get('zoom')).toBe('1.25');
+    expect(Number(query.get('x'))).toBeGreaterThanOrEqual(0);
+    expect(Number(query.get('y'))).toBeLessThanOrEqual(1);
+    expect(query.get('show')?.split(',')).toContain('mods');
+    expect(query.has('theme')).toBe(false);
+    const answer = await redraw.response();
+    expect(answer?.status()).toBe(200);
+    expect(answer?.headers()['content-type']).toBe('image/png');
+
+    // The PNG at its exact aspect, uncropped (contain), and "Teilen" back once it is drawn.
+    await expect(id(page, 'VEH-07.cta.primary')).toBeEnabled({ timeout: 30_000 });
+    expect(await image.evaluate((el) => getComputedStyle((el.tagName === 'IMG' ? el : el.querySelector('img')) ?? el).objectFit)).toBe('contain');
+    await flowShot(page, testInfo, 'VEH-07-poster-custom', { phase: 5 });
+
+    // "Speichern" on the web downloads the same PNG.
+    const download = page.waitForEvent('download');
+    await id(page, 'VEH-07.save').click();
+    const file = await download;
+    expect(file.suggestedFilename()).toMatch(/^speedclub-[0-9a-z]+-story-[0-9a-z]+\.png$/);
+    const path = await file.path();
+    const { readFile } = await import('node:fs/promises');
+    expect(pngSize(await readFile(path))).toEqual({ width: 1080, height: 1920 });
+
+    // "Standard" goes back to the stored card.
+    await id(page, 'VEH-07.reset').click();
+    await expect(id(page, 'VEH-07.template.band')).toHaveAttribute('aria-checked', 'true');
+    await expect(id(page, 'VEH-07.element.mods')).toHaveAttribute('aria-checked', 'false');
+    await expect(id(page, 'VEH-07.text')).toHaveValue('');
+  });
+});
+
 test.describe('QR-02 signature parts', () => {
   test('the download sheet offers the placards; A5 downloads a PDF named after the code', async ({ page, context }, testInfo) => {
     test.setTimeout(120_000);
     const [owner] = await members('fsigplacard');
     const vehicle = await buildVehicle(owner.api);
     await useSession(context, owner.session);
-    await open(page, `/app/qr/${vehicle.id}`);
+    await open(page, `/app/stickers/${vehicle.id}`);
     // "Weitere Formate" waits for the code's SVG (a click before it lands does nothing); under load that can take a while.
     // ListRow: the pressable that carries aria-disabled is `<testID>.body`; the testID itself names its wrapper, which is never disabled.
-    const more = page.locator('[data-testid="QR-02.download.body"]:visible');
+    const more = page.locator('[data-testid="STK-02.download.body"]:visible');
     await expect(more).toBeEnabled({ timeout: 30_000 });
     await more.click();
-    await expect(id(page, 'QR-02.downloadSheet')).toBeVisible();
-    await expect(id(page, 'QR-02.download.placardA4')).toBeVisible();
-    await flowShot(page, testInfo, 'QR-02-downloadSheet');
+    await expect(id(page, 'STK-02.downloadSheet')).toBeVisible();
+    await expect(id(page, 'STK-02.download.placardA4')).toBeVisible();
+    await flowShot(page, testInfo, 'STK-02-downloadSheet');
     const pdf = page.waitForResponse(isCall('GET', `vehicles/${vehicle.id}/placard.pdf`));
     const download = page.waitForEvent('download');
-    await id(page, 'QR-02.download.placardA5').click();
+    await id(page, 'STK-02.download.placardA5').click();
     const answer = await pdf;
     expect(answer.status()).toBe(200);
     expect(new URL(answer.url()).searchParams.get('size')).toBe('a5');
@@ -132,13 +208,13 @@ test.describe('QR-02 signature parts', () => {
     expect((await stranger.api.get(`vehicles/${vehicle.id}/placard.pdf?size=a4`)).status).toBe(403);
   });
 
-  test('the scans row counts a stranger\'s scan', async ({ page, context, browser, pageErrors, blockedRequests }) => {
+  test('the scan statistics count a stranger\'s scan (STK-04; DQ-M54-10 folded the scans row into it)', async ({ page, context, browser, pageErrors, blockedRequests }) => {
     test.setTimeout(120_000);
     const [owner] = await members('fsigscans');
     const vehicle = await buildVehicle(owner.api);
     await useSession(context, owner.session);
-    await open(page, `/app/qr/${vehicle.id}`);
-    await expect(id(page, 'QR-02.scans.bars')).toBeVisible();
+    await open(page, `/app/stickers/${vehicle.id}/stats`);
+    await expect(id(page, 'STK-04.root')).toBeVisible();
     const before = expectStatus(await owner.api.get(`vehicles/${vehicle.id}/qr/stats`), 200, 'GET qr/stats').data;
     // QrStatsResource: exactly 30 days since M4.9 (QR-02 shows the 30-day bars), 14 before.
     expect(before.days).toHaveLength(30);
@@ -154,8 +230,7 @@ test.describe('QR-02 signature parts', () => {
     expect(after.total).toBe(before.total + 1);
     expect(after.total_14_days).toBe(before.total_14_days + 1);
     await page.reload();
-    await expect(id(page, 'QR-02.scans.summary')).toContainText(`${after.total_14_days} `);
-    await expect(id(page, 'QR-02.scans.bars')).toHaveAttribute('aria-label', new RegExp(`${after.total}`));
+    await expect(id(page, 'STK-04.total')).toHaveText(String(after.total));
   });
 });
 

@@ -4,7 +4,7 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import type { FeedVehicle } from '@/api/queries/home';
 import { photoFields, specChips } from '@/features/profile/media';
 import { keepNameTogether } from '@/lib/format';
-import { GridTile } from '@/ui';
+import { GridTile } from '@/ui/GridTile';
 
 /** The grid's one spec line (§8): power and drivetrain, "500 PS · AWD". */
 export function tileSpec(vehicle: Pick<FeedVehicle, 'spec_strip'>): string | undefined {

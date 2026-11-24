@@ -7,7 +7,11 @@ import { photoFields } from '@/features/profile/media';
 import { hapticFor } from '@/lib/haptics';
 import { isWeb } from '@/lib/platform';
 import { createStyles, space } from '@/theme';
-import { ContextMenu, ContextMenuButton, Icon, Photo, PressableScale, Text, useContextMenu, type ContextMenuItem } from '@/ui';
+import { ContextMenu, ContextMenuButton, useContextMenu, type ContextMenuItem } from '@/ui/ContextMenu';
+import { Icon } from '@/ui/icons/Icon';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text } from '@/ui/Text';
 
 /** 09 §7.7: covers of a collection are a 2 × 2 mosaic with hairline gaps; one photo fills the tile. */
 const MOSAIC = 4;

@@ -52,10 +52,10 @@ it('deactivates a plain account at once: sessions, remember token, epoch and vie
         ->and(AuditEvent::query()->where('action', TeamEvent::Deactivated->value)->sole()->after['sessions_ended'])->toBe(1);
 });
 
-it('needs a reason and refuses the own account', function () {
+it('refuses a reason over 1000 characters (ADR-540: none is needed) and the own account', function () {
     $admin = m31Staff('admin');
 
-    expect(fn () => app(DeactivateStaff::class)->handle($admin, m31Staff('analyst'), 'kurz'))->toThrow(ValidationException::class)
+    expect(fn () => app(DeactivateStaff::class)->handle($admin, m31Staff('analyst'), str_repeat('x', 1001)))->toThrow(ValidationException::class)
         ->and(fn () => app(DeactivateStaff::class)->handle($admin, $admin, m36Reason()))->toThrow(TeamRefused::class);
 });
 

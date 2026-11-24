@@ -6,7 +6,10 @@ import { View } from 'react-native';
 
 import type { EventDetail } from '@/api/queries/events';
 import { createStyles, useBreakpoint, useTheme } from '@/theme';
-import { Button, ChromeSurface, Icon, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { ChromeSurface } from '@/ui/chrome';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 
 import { spotsLeft, waitlistPosition } from '../model';
 import { useEventRsvp } from '../useEventRsvp';

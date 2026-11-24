@@ -3,7 +3,7 @@ import { useWindowDimensions, type TextStyle } from 'react-native';
 
 import { hydrateThemePreference, radius, size, space, themes, typography } from '@/theme';
 import { BuildUpdateRow, BuildUpdateRowSkeleton, updateMetaText } from '@/ui/BuildUpdateRow';
-import { diffSegments, metaLineText, vehicleNameText } from '@/ui/textBreaks';
+import { diffSegments, machineNameText, metaLineText, vehicleNameText } from '@/ui/textBreaks';
 import { Button } from '@/ui/Button';
 import { adaptiveValueStacks, ListRow, longestWord } from '@/ui/ListRow';
 import { handleFitsLine, MemberRow, splitMetaHandle } from '@/ui/MemberRow';
@@ -33,6 +33,16 @@ describe('name and diff breaks (M2.8)', () => {
   it('a status meta wraps before its "·", never after it (DQ-445a); the feed keeps the "·" at the line end', () => {
     expect(metaLineText('Inhalt entfernt · 23.10.2026', undefined, 'starts')).toBe(`Inhalt${NBSP}entfernt ·${NBSP}23.10.2026`);
     expect(metaLineText('Inhalt entfernt · 23.10.2026')).toBe(`Inhalt${NBSP}entfernt${NBSP}· 23.10.2026`);
+  });
+
+  it('breaks a machine name only after its "_" or a "." before a letter (R4B-010)', () => {
+    const ZWSP = '\u200B';
+    expect(machineNameText('sdk_gphone64_arm64')).toBe(`sdk_${ZWSP}gphone64_${ZWSP}arm64`);
+    expect(machineNameText('moto.g54')).toBe(`moto.${ZWSP}g54`);
+    // A figure after the ".", a trailing "_" or "." and a name with spaces keep their characters.
+    expect(machineNameText('Android 2.0')).toBe('Android 2.0');
+    expect(machineNameText('build_ und.')).toBe('build_ und.');
+    expect(machineNameText(`iPhone${NBSP}15${NBSP}Pro`)).toBe(`iPhone${NBSP}15${NBSP}Pro`);
   });
 
   it('keeps a model letter with its number, "C 63" and "A 45" (DQ-310)', () => {

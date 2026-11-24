@@ -122,6 +122,25 @@ class BrandContentDemoSeeder extends Seeder
     /** What the ADM-31 demo draft adds to it: true of qr_scan_daily, which holds a code, a day and a count. */
     public const PRIVACY_DRAFT_SENTENCE = 'Gerät, Browser und Ort eines Scans speichern wir nicht.';
 
+    /** The changes summary of the ADM-31 demo draft (DQ-P5-116: "Sticker" since the M5 rename). */
+    public const PRIVACY_DRAFT_SUMMARY = 'Sticker-Scans: Gerät, Browser und Ort eines Scans speichern wir nicht.';
+
+    /** $body with the demo sentence after its anchor, or null when $body has no anchor paragraph. */
+    public static function withDemoSentence(string $body): ?string
+    {
+        return str_contains($body, self::PRIVACY_DRAFT_ANCHOR)
+            ? str_replace(self::PRIVACY_DRAFT_ANCHOR, self::PRIVACY_DRAFT_ANCHOR.' '.self::PRIVACY_DRAFT_SENTENCE, $body)
+            : null;
+    }
+
+    /** $body without the demo sentence, or null when $body does not carry it. */
+    public static function withoutDemoSentence(string $body): ?string
+    {
+        $needle = self::PRIVACY_DRAFT_ANCHOR.' '.self::PRIVACY_DRAFT_SENTENCE;
+
+        return str_contains($body, $needle) ? str_replace($needle, self::PRIVACY_DRAFT_ANCHOR, $body) : null;
+    }
+
     /**
      * The ADM-31 demo draft of the German Datenschutzerklärung (re-consent on): the current text of database/data/legal/privacy.de.md
      * with one sentence more in §5 QR-Codes, as the next version after the newest one of the document. Built on the data file, never on
@@ -131,9 +150,9 @@ class BrandContentDemoSeeder extends Seeder
      */
     public static function privacyDraft(): array
     {
-        $body = LegalDocumentSeeder::body(LegalDocumentKey::Privacy, 'de');
+        $body = self::withDemoSentence(LegalDocumentSeeder::body(LegalDocumentKey::Privacy, 'de'));
 
-        if (! str_contains($body, self::PRIVACY_DRAFT_ANCHOR)) {
+        if ($body === null) {
             throw new RuntimeException('The ADM-31 demo draft needs the QR-Codes paragraph of privacy.de.md; update BrandContentDemoSeeder.');
         }
 
@@ -142,9 +161,9 @@ class BrandContentDemoSeeder extends Seeder
 
         return [
             'version' => (string) (max([1, ...$numbers]) + 1),
-            'body_md' => str_replace(self::PRIVACY_DRAFT_ANCHOR, self::PRIVACY_DRAFT_ANCHOR.' '.self::PRIVACY_DRAFT_SENTENCE, $body),
+            'body_md' => $body,
             'requires_reconsent' => true,
-            'summary' => 'QR-Scans: Gerät, Browser und Ort eines Scans speichern wir nicht.',
+            'summary' => self::PRIVACY_DRAFT_SUMMARY,
         ];
     }
 

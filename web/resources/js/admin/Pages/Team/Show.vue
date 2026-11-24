@@ -8,8 +8,9 @@ import ApprovalNotice from '../../Components/patterns/ApprovalNotice.vue';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
 import type { TimelineEntry } from '../../Components/record/ActivityTimeline.vue';
 import RecordLayout from '../../Components/record/RecordLayout.vue';
-import { Button, ConfirmDialog, Drawer, Field, Skeleton, Textarea } from '../../Components/ui';
+import { Button, ConfirmDialog, Drawer, Skeleton } from '../../Components/ui';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { actorName } from '../../lib/audit';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
@@ -81,8 +82,6 @@ function show(name: DialogName): void {
     action.reset();
     if (name === 'roles') {
         draftRoles.value = [...props.member.roles];
-        rolesReason.value = '';
-        rolesError.value = null;
     }
     open.value = name;
 }
@@ -104,14 +103,12 @@ const resetOpen = dialogOpen('reset_two_factor');
 const resendOpen = dialogOpen('resend');
 const rolesOpen = dialogOpen('roles');
 
-function post(step: 'deactivate' | 'reactivate' | 'delete' | 'revoke-sessions' | 'reset-two-factor' | 'resend-invite', reason: string | null): void {
-    action.run('post', url(step), reason === null ? {} : { reason }, { sensitive: true, onSuccess: close });
+function post(step: 'deactivate' | 'reactivate' | 'delete' | 'revoke-sessions' | 'reset-two-factor' | 'resend-invite'): void {
+    action.run('post', url(step), {}, { sensitive: true, onSuccess: close });
 }
 
 // ---- roles drawer: the atom diff before asking ------------------------------------------------------------------------------
 const draftRoles = ref<string[]>([]);
-const rolesReason = ref('');
-const rolesError = ref<string | null>(null);
 const before = computed(() => atomsOf(props.member.roles, props.roles));
 const after = computed(() => atomsOf(draftRoles.value, props.roles));
 const ordered = (atoms: string[]) => props.atomOrder.filter((a) => atoms.includes(a));
@@ -119,7 +116,8 @@ const added = computed(() => ordered(after.value.filter((a) => !before.value.inc
 const removed = computed(() => ordered(before.value.filter((a) => !after.value.includes(a))));
 const changed = computed(() => [...draftRoles.value].sort().join('|') !== [...props.member.roles].sort().join('|'));
 const reasons = computed(() => (changed.value ? roleChangeReasons(props.member.roles, draftRoles.value, props.roles) : []));
-const fourEyes = computed(() => reasons.value.length > 0);
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && reasons.value.length > 0);
 const disabledRoles = computed(() => {
     const list = props.can.viewer_is_owner ? [] : ['owner'];
     // Nobody adds a role to their own account (stepping down is allowed).
@@ -127,13 +125,7 @@ const disabledRoles = computed(() => {
     return list;
 });
 function saveRoles(): void {
-    const reason = rolesReason.value.trim();
-    if (fourEyes.value && (reason.length < 10 || reason.length > 1000)) {
-        rolesError.value = trans('team.invite.errors.reason');
-        return;
-    }
-    rolesError.value = null;
-    action.run('patch', routeOr('admin.team.roles.update', `/admin/team/${props.member.id}/roles`, { staff: props.member.id }), { roles: draftRoles.value, reason: reason === '' ? null : reason }, { sensitive: true, onSuccess: close });
+    action.run('patch', routeOr('admin.team.roles.update', `/admin/team/${props.member.id}/roles`, { staff: props.member.id }), { roles: draftRoles.value }, { sensitive: true, onSuccess: close });
 }
 watch(open, (value) => {
     if (value === null) action.reset();
@@ -288,9 +280,6 @@ const sessionText = (s: Session) => (s.browser || s.os ? trans('team.show.sessio
                         <ul class="flex flex-col gap-2"><li v-for="why in reasons" :key="why">{{ trans(`team.roles_drawer.why.${why}`) }}</li></ul>
                     </div>
                 </template>
-                <Field :label="trans('ui.confirm.reason')" :hint="fourEyes ? trans('team.invite.reason_hint') : trans('team.roles_drawer.reason_optional')" :error="rolesError" :required="fourEyes" :optional="!fourEyes">
-                    <Textarea v-model="rolesReason" :rows="2" :maxlength="1000" show-count data-testid="ADM-40.roles-drawer.reason" />
-                </Field>
             </div>
             <template #footer>
                 <Button variant="ghost" :disabled="action.processing.value" @click="close()">{{ trans('ui.actions.cancel') }}</Button>
@@ -298,11 +287,11 @@ const sessionText = (s: Session) => (s.browser || s.os ? trans('team.show.sessio
             </template>
         </Drawer>
 
-        <ConfirmDialog v-model:open="deactivateOpen" :title="trans('team.deactivate.title', { name: member.name })" :body="trans('team.deactivate.body')" :confirm-label="trans('team.actions.deactivate')" reason :four-eyes="member.privileged" :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.deactivate-dialog" @confirm="(r: string | null) => post('deactivate', r)" />
-        <ConfirmDialog v-model:open="reactivateOpen" :title="trans('team.reactivate.title', { name: member.name })" :body="trans('team.reactivate.body')" :confirm-label="trans('team.actions.reactivate')" tone="neutral" reason :four-eyes="member.owner" :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.reactivate-dialog" @confirm="(r: string | null) => post('reactivate', r)" />
-        <ConfirmDialog v-model:open="deleteOpen" :title="trans('team.delete.title', { name: member.name })" :body="trans('team.delete.body')" :confirm-label="trans('team.actions.delete')" typed reason :four-eyes="member.owner" :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.delete-dialog" @confirm="(r: string | null) => post('delete', r)" />
-        <ConfirmDialog v-model:open="revokeOpen" :title="trans('team.revoke_sessions.title', { name: member.name })" :body="trans('team.revoke_sessions.body')" :confirm-label="trans('team.actions.revoke_sessions')" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.revoke-dialog" @confirm="(r: string | null) => post('revoke-sessions', r)" />
-        <ConfirmDialog v-model:open="resetOpen" :title="trans('team.reset_two_factor.title', { name: member.name })" :body="trans('team.reset_two_factor.body')" :confirm-label="trans('team.actions.reset_two_factor')" reason four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.reset-2fa-dialog" @confirm="(r: string | null) => post('reset-two-factor', r)" />
-        <ConfirmDialog v-model:open="resendOpen" :title="trans('team.resend.title', { name: member.name })" :body="trans('team.resend.body')" :confirm-label="trans('team.resend.submit')" tone="neutral" :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.resend-dialog" @confirm="() => post('resend-invite', null)" />
+        <ConfirmDialog v-model:open="deactivateOpen" :title="trans('team.deactivate.title', { name: member.name })" :body="trans('team.deactivate.body')" :confirm-label="trans('team.actions.deactivate')" :four-eyes="member.privileged" :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.deactivate-dialog" @confirm="post('deactivate')" />
+        <ConfirmDialog v-model:open="reactivateOpen" :title="trans('team.reactivate.title', { name: member.name })" :body="trans('team.reactivate.body')" :confirm-label="trans('team.actions.reactivate')" tone="neutral" :four-eyes="member.owner" :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.reactivate-dialog" @confirm="post('reactivate')" />
+        <ConfirmDialog v-model:open="deleteOpen" :title="trans('team.delete.title', { name: member.name })" :body="trans('team.delete.body')" :confirm-label="trans('team.actions.delete')" typed :four-eyes="member.owner" :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.delete-dialog" @confirm="post('delete')" />
+        <ConfirmDialog v-model:open="revokeOpen" :title="trans('team.revoke_sessions.title', { name: member.name })" :body="trans('team.revoke_sessions.body')" :confirm-label="trans('team.actions.revoke_sessions')" :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.revoke-dialog" @confirm="post('revoke-sessions')" />
+        <ConfirmDialog v-model:open="resetOpen" :title="trans('team.reset_two_factor.title', { name: member.name })" :body="trans('team.reset_two_factor.body')" :confirm-label="trans('team.actions.reset_two_factor')" four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.reset-2fa-dialog" @confirm="post('reset-two-factor')" />
+        <ConfirmDialog v-model:open="resendOpen" :title="trans('team.resend.title', { name: member.name })" :body="trans('team.resend.body')" :confirm-label="trans('team.resend.submit')" tone="neutral" :processing="action.processing.value" :error="action.error.value" test-id="ADM-40.resend-dialog" @confirm="post('resend-invite')" />
     </div>
 </template>

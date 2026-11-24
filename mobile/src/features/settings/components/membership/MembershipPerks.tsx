@@ -12,7 +12,13 @@ import { SvgXml } from 'react-native-svg';
 
 import { QR_SAMPLE_SVG } from '@/features/gallery/qrSample';
 import { accentPalette, createStyles, size, space, typography, type AccentSet } from '@/theme';
-import { Avatar, BrandWordmark, Icon, Photo, SampleBadge, SkeletonBlock, SkeletonText, Text, type PhotoFields } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { SampleBadge } from '@/ui/Badge';
+import { AppWordmark } from '@/features/auth/AppWordmark';
+import { Icon } from '@/ui/icons/Icon';
+import { Photo, type PhotoFields } from '@/ui/Photo';
+import { SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { ratioOf } from '@/ui/Photo';
 
 export const MEMBERSHIP_PERKS = ['garage', 'stickers', 'costs', 'accent'] as const;
@@ -194,7 +200,7 @@ function StickerDesigns({ width }: { width: number }) {
           <View style={styles.plateCode}>
             <SvgXml xml={QR_SAMPLE_SVG} width={plateCode} height={plateCode} />
           </View>
-          <BrandWordmark width={plateCode} height={WORDMARK_HEIGHT} tone="white" decorative />
+          <AppWordmark width={plateCode} height={WORDMARK_HEIGHT} tone="white" decorative />
         </View>
         <Text variant="caption" color="text.secondary" style={styles.stickerCaption}>
           {t('membership.samples.stickers.plate')}

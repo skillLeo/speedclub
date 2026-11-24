@@ -48,6 +48,7 @@ use App\Services\Messaging\Conversations;
 use App\Services\Notifications\Notifier;
 use App\Services\Notifications\PublicationFanout;
 use App\Services\Search\VehicleSearchProjector;
+use App\Services\Social\Collections;
 use App\Support\Codes;
 use App\Support\Slug;
 use Carbon\CarbonImmutable;
@@ -194,6 +195,10 @@ class DemoSeeder extends Seeder
                 $this->faker->seed(self::FAKER_SEED);
                 $this->seedFollowsAndSaves($data['members']);
                 $this->seedQaSocialStates();
+                // QA-C03 (ADR-436 a): a save is a build in the member's "Gespeichert".
+                foreach ($this->users as $user) {
+                    app(Collections::class)->adoptSaves($user);
+                }
                 $this->seedQrScans();
             });
 

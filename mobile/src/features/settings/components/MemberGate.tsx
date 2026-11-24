@@ -5,7 +5,7 @@ import { useMe, type Me } from '@/api/queries/auth';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
-import { ErrorState } from '@/ui';
+import { ErrorState } from '@/ui/ErrorState';
 import { SettingsGuest } from './SettingsGuest';
 
 export type MemberGateInput = {

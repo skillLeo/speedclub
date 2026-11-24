@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { trans } from 'laravel-vue-i18n';
 import { computed, reactive, ref, watch } from 'vue';
-import { Button, Drawer, Field, Input, Select, Switch, Textarea, type SelectOption } from '../../../Components/ui';
+import { Button, Drawer, Field, Input, Select, Switch, type SelectOption } from '../../../Components/ui';
 import { qaDialogFailed } from '../../../composables/pageState';
 import { fetchImpact, entryUrl, useCatalogWrite, type CatalogEntry, type CatalogLevel } from '../shared';
 import FormError from './FormError.vue';
@@ -9,7 +9,7 @@ import AliasChips from './AliasChips.vue';
 
 /**
  * ADM-14 / ADM-16 "Neu" and "Bearbeiten" (m3.3-contract §2, catalog.manage): the fields of the level. The slug follows the name until
- * someone types one; once anything points at the entry it is locked (the drawer asks the server, CatalogReferences). Reason optional.
+ * someone types one; once anything points at the entry it is locked (the drawer asks the server, CatalogReferences).
  * Field errors and refusals (slug taken, slug locked) come back at their field.
  */
 const open = defineModel<boolean>('open', { default: false });
@@ -29,9 +29,8 @@ interface Form {
     year_to: string;
     category_hint: string;
     aliases: string[];
-    reason: string;
 }
-const blank = (): Form => ({ name: '', slug: '', country: '', is_popular: false, sort: '', active: true, year_from: '', year_to: '', category_hint: '', aliases: [], reason: '' });
+const blank = (): Form => ({ name: '', slug: '', country: '', is_popular: false, sort: '', active: true, year_from: '', year_to: '', category_hint: '', aliases: [] });
 const form = reactive<Form>(blank());
 const write = useCatalogWrite();
 const slugLocked = ref(false);
@@ -80,7 +79,7 @@ const categoryOptions = computed<SelectOption[]>(() => [{ value: NONE, label: tr
 const int = (value: string): number | null => (value.trim() === '' ? null : Number.parseInt(value, 10));
 
 function payload(): Record<string, unknown> {
-    const data: Record<string, unknown> = { name: form.name.trim(), reason: form.reason.trim() || null };
+    const data: Record<string, unknown> = { name: form.name.trim() };
     const e = props.entry;
     if (form.slug.trim() !== '' && form.slug.trim() !== e?.slug) data.slug = form.slug.trim();
     if (props.level === 'make') Object.assign(data, { country: form.country.trim() || null, is_popular: form.is_popular, ...(form.sort.trim() !== '' ? { sort: int(form.sort) } : {}) });
@@ -103,7 +102,7 @@ function save(): void {
 }
 
 const errorOf = (key: string): string | null => write.errors.value[key] ?? null;
-const formError = computed(() => (failed ? trans('ui.state.server_error') : (write.errors.value.refused ?? write.errors.value.reason ?? null)));
+const formError = computed(() => (failed ? trans('ui.state.server_error') : (write.errors.value.refused ?? null)));
 const formId = computed(() => `${props.testId}-form`);
 </script>
 
@@ -156,10 +155,6 @@ const formId = computed(() => `${props.testId}-form`);
             </template>
 
             <Switch v-if="!editing && level !== 'brand'" v-model="form.active" :label="trans('catalog.fields.active')" />
-
-            <Field :label="trans('catalog.fields.reason')" :hint="trans('catalog.fields.reason_optional_hint')" :error="errorOf('reason')" optional>
-                <Textarea v-model="form.reason" :rows="2" :maxlength="1000" :data-testid="`${testId}.reason`" />
-            </Field>
         </form>
         <template #footer>
             <Button variant="ghost" :disabled="write.processing.value" @click="open = false">{{ trans('ui.actions.cancel') }}</Button>

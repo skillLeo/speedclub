@@ -5,7 +5,7 @@
    "version": "2.0.0",
    "date": "2026-11-14",
    "de": {
-    "title": "SPEED CLUB 2.0",
+    "title": "Speedclub 2.0",
     "items": [
      "Neues Design: größere Fotos, klarere Schrift und ruhigere Seiten, in der App, im Web und auf den öffentlichen Build-Seiten.",
      "Anmelden mit E-Mail-Code: kein Passwort nötig. Dein bisheriges Passwort funktioniert weiter.",
@@ -16,7 +16,7 @@
     ]
    },
    "en": {
-    "title": "SPEED CLUB 2.0",
+    "title": "Speedclub 2.0",
     "items": [
      "New design: bigger photos, clearer type and calmer pages, in the app, on the web and on the public build pages.",
      "Sign in with an e-mail code: no password needed. Your existing password keeps working.",
@@ -31,7 +31,7 @@
    "version": "1.0.0",
    "date": "2026-11-10",
    "de": {
-    "title": "SPEED CLUB 1.0",
+    "title": "Speedclub 1.0",
     "items": [
      "Deine Garage: Fahrzeuge mit Fotos, technischen Daten und Modifikationen anlegen, Schritt für Schritt.",
      "QR-Sticker: Jeder Build bekommt einen eigenen Code, der zu seiner öffentlichen Seite führt.",
@@ -41,7 +41,7 @@
     ]
    },
    "en": {
-    "title": "SPEED CLUB 1.0",
+    "title": "Speedclub 1.0",
     "items": [
      "Your garage: add vehicles with photos, specs and modifications, step by step.",
      "QR stickers: every build gets its own code that leads to its public page.",

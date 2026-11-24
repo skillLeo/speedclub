@@ -19,8 +19,11 @@ class EventListRequest extends FormRequest
     public function rules(): array
     {
         return [
-            /** today · weekend (Sat–Sun of this week) · month (until its end) · upcoming (default). Europe/Berlin. */
-            'when' => ['sometimes', Rule::in(['today', 'weekend', 'month', 'upcoming'])],
+            /**
+             * today · week (the next seven days, today 00:00 to today + 6 days 23:59:59) · weekend (Sat–Sun of this week) · month (until its
+             * end) · upcoming (default). Europe/Berlin.
+             */
+            'when' => ['sometimes', Rule::in(['today', 'week', 'weekend', 'month', 'upcoming'])],
             'type' => ['sometimes', Rule::enum(EventType::class)],
             /** `home`: around the member's SET-11 region (ignored without one, and when lat/lng are given). */
             'near' => ['sometimes', Rule::in(['home'])],

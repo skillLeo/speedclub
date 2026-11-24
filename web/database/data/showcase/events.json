@@ -1,5 +1,5 @@
 {
- "_comment": "Sample events (09 §8.19, ADR-412, M4.12, DQ-1112): fictional meets with plausible, generic public places (squares, car parks, streets without a real business or a real house) in real German cities (the coordinates are the city areas). The names carry no \"Beispiel\": the app's Beispiel badge says it (is_sample). Organised by the SPEED CLUB Editorial account. Each event has its own cover, a real seed photo (design/seed-photos, graded rendition in processed/) that no other sample uses and that fits the event (DQ-1132): cars at the kind of place the event names (a harbour quay for the Hafen meet, a car park at sunset for the Elbdeich meet, a show hall for the Messe, a lake for the Seenplatte), never a foreign street or an empty scene where a meet is promised. A car photo used as a cover is kept off every build (DemoShowcaseSeeder::coverFiles). Dates are relative to the moment of seeding (the next `weekday` plus `weeks` weeks, local time Europe/Berlin) and move forward by whole weeks once they are over (events:housekeeping), so the showcase never runs dry. Counts on samples are hidden; no attendees are invented beyond the showcase account itself. `member_events` (DQ-1110): a published meet of a classic demo member (DemoSeeder, not a sample, so it shows whatever editorial_samples says) that members can answer, with going and interested demo members and an organiser update, and one that is over; seeded only where the demo members exist. `going`/`interested` name demo members; `days` counts from now.",
+ "_comment": "Sample events (09 §8.19, ADR-412, M4.12, DQ-1112): fictional meets with plausible, generic public places (squares, car parks, streets without a real business or a real house) in real German cities (the coordinates are the city areas). The names carry no \"Beispiel\": the app's Beispiel badge says it (is_sample). Organised by the Speedclub Editorial account. Each event has its own cover, a real seed photo (design/seed-photos, graded rendition in processed/) that no other sample uses and that fits the event (DQ-1132): cars at the kind of place the event names (a harbour quay for the Hafen meet, a car park at sunset for the Elbdeich meet, a show hall for the Messe, a lake for the Seenplatte), never a foreign street or an empty scene where a meet is promised. A car photo used as a cover is kept off every build (DemoShowcaseSeeder::coverFiles). Dates are relative to the moment of seeding (the next `weekday` plus `weeks` weeks, local time Europe/Berlin) and move forward by whole weeks once they are over (events:housekeeping), so the showcase never runs dry. Counts on samples are hidden; no attendees are invented beyond the showcase account itself. `member_events` (DQ-1110): a published meet of a classic demo member (DemoSeeder, not a sample, so it shows whatever editorial_samples says) that members can answer, with going and interested demo members and an organiser update, and one that is over; seeded only where the demo members exist. `going`/`interested` name demo members; `days` counts from now. `showcase_events` (crawl triage, M5.9f): the showcase account's own meets that are not live yet, so EVT-05 \"Organisiert\" has rows and the organiser screens open: one sent for review (pending_review, frozen while the team checks it, ADR-439) and one draft; is_sample, dated from now by `days`, no cover (a draft has none yet), never published. DQ-P5-012: the past demo meet (Saugmotor-Abend) carries an approved gallery of its organiser and attendees (member_events[].gallery): night photos at a car park, each a seed photo no other sample shows (never an event cover), is_sample like every seeded sample row; the two with `status` pending (M5.10) still wait in the organiser's queue, within the 10 photos per attendee.",
  "events": [
   {
    "key": "hafen",
@@ -308,7 +308,105 @@
    "interested": [
     "tobi.quattro"
    ],
-   "updates": []
+   "updates": [],
+   "gallery": [
+    {
+     "member": "max.e46",
+     "photo": "cover-garage-02.jpg"
+    },
+    {
+     "member": "lena.911",
+     "photo": "porsche-964-01.jpg"
+    },
+    {
+     "member": "finn.jdm",
+     "photo": "toyota-ae86-02.jpg"
+    },
+    {
+     "member": "lukas.sc",
+     "photo": "honda-na1-03.jpg"
+    },
+    {
+     "member": "sara.gti",
+     "photo": "vw-scirocco-06.jpg"
+    },
+    {
+     "member": "max.e46",
+     "photo": "generic-detail-01.jpg"
+    },
+    {
+     "member": "lukas.sc",
+     "photo": "toyota-gt86-01.jpg"
+    },
+    {
+     "member": "finn.jdm",
+     "photo": "generic-exterior-01.jpg"
+    },
+    {
+     "member": "lena.911",
+     "photo": "vw-scirocco-01.jpg"
+    },
+    {
+     "member": "sara.gti",
+     "photo": "generic-exterior-03.jpg",
+     "status": "pending"
+    },
+    {
+     "member": "finn.jdm",
+     "photo": "generic-detail-02.jpg",
+     "status": "pending"
+    }
+   ]
+  }
+ ],
+ "showcase_events": [
+  {
+   "key": "isarufer",
+   "status": "pending_review",
+   "title": "Sonntagsrunde am Isarufer",
+   "type": "meet",
+   "city": "München",
+   "postcode": "81379",
+   "venue_name": "Parkplatz am Isarufer",
+   "street": "Uferweg 2",
+   "lat": 48.1046,
+   "lng": 11.5519,
+   "days": 24,
+   "start": "10:00",
+   "hours": 3,
+   "location_visibility": "public",
+   "capacity": 30,
+   "description": "Kaffee, Builds und ein ruhiger Vormittag am Fluss. Wir stellen uns locker auf den Parkplatz, jeder zeigt, woran er gerade schraubt.",
+   "organiser_rules": "Bitte leise an- und abfahren, nebenan wohnen Leute.",
+   "rules": [
+    "legal_only",
+    "no_racing",
+    "respect_residents",
+    "no_litter"
+   ]
+  },
+  {
+   "key": "winterprojekte",
+   "status": "draft",
+   "title": "Garagenabend: Winterprojekte",
+   "type": "meet",
+   "city": "München",
+   "postcode": "80807",
+   "venue_name": "Parkdeck Nord",
+   "street": "Nordring 5",
+   "lat": 48.182,
+   "lng": 11.587,
+   "days": 38,
+   "start": "19:00",
+   "hours": 3,
+   "location_visibility": "public",
+   "capacity": null,
+   "description": "Was steht bei euch über den Winter an? Ein Abend zum Austauschen: Teile, Pläne, Werkstatt-Tipps.",
+   "organiser_rules": null,
+   "rules": [
+    "legal_only",
+    "no_racing"
+   ]
   }
  ]
 }

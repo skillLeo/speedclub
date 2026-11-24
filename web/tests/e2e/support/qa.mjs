@@ -240,13 +240,22 @@ export async function decodeImagesForCapture(page, timeoutMs) {
     const urlOf = (/** @type {HTMLImageElement} */ img) => img.currentSrc || img.src;
     /** @type {Map<HTMLImageElement, 'ok'|'failed'>} */
     const settled = new Map();
+    // What a failed decode said, for triage (a broken file, or an element the page replaced or removed while it decoded).
+    /** @type {Map<HTMLImageElement, string>} */
+    const why = new Map();
     const all = Promise.all(
-      images.map((img) =>
-        img.decode().then(
+      images.map((img) => {
+        const asked = urlOf(img);
+        return img.decode().then(
           () => void settled.set(img, 'ok'),
-          () => void settled.set(img, 'failed'),
-        ),
-      ),
+          (/** @type {unknown} */ error) => {
+            settled.set(img, 'failed');
+            const name = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+            const now = urlOf(img);
+            why.set(img, `${name}; connected ${img.isConnected}${now === asked ? '' : `; src changed from ${asked.slice(0, 80)}`}`);
+          },
+        );
+      }),
     );
     /** @type {ReturnType<typeof setTimeout>|undefined} */
     let timer;
@@ -255,7 +264,7 @@ export async function decodeImagesForCapture(page, timeoutMs) {
     if (forced.size > 0) await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(null))));
     return {
       eager: forced.size,
-      failed: [...forced].filter((img) => settled.get(img) === 'failed').map(urlOf),
+      failed: [...forced].filter((img) => settled.get(img) === 'failed').map((img) => `${urlOf(img)} [${why.get(img) ?? 'no reason'}]`),
       undecoded: images.filter((img) => !settled.has(img)).map(urlOf),
     };
   }, timeoutMs);

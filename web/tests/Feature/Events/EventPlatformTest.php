@@ -87,9 +87,16 @@ describe('sample events (ShowcaseEvents)', function () {
 
         expect(app(ShowcaseEvents::class)->seed(photos: $photos))->toBe(8)
             ->and(app(ShowcaseEvents::class)->seed(photos: $photos))->toBe(8);
-        $samples = Event::query()->where('is_sample', true)->get();
+        $samples = Event::query()->where('is_sample', true)->where('organiser_id', $editorial->id)->get();
+        // The showcase account's own meet in review and its draft (crawl triage, M5.9f): sample, upcoming, never published.
+        $own = Event::query()->where('organiser_id', $demo->id)->get();
 
-        expect($samples)->toHaveCount(8)
+        expect(Event::query()->where('is_sample', true)->count())->toBe(10)
+            ->and($own->map(fn (Event $event): string => $event->status->value)->sort()->values()->all())->toBe(['draft', 'pending_review'])
+            ->and($own->every(fn (Event $event): bool => $event->getAttribute('is_sample') === true && $event->published_at === null && $event->starts_at?->isFuture()))->toBeTrue()
+            ->and($own->firstWhere('status', EventStatus::Draft)?->submitted_at)->toBeNull()
+            ->and($own->firstWhere('status', EventStatus::PendingReview)?->submitted_at)->not->toBeNull()
+            ->and($samples)->toHaveCount(8)
             ->and($samples->every(fn (Event $event): bool => $event->organiser_id === $editorial->id && $event->starts_at?->isFuture()))->toBeTrue()
             ->and(evStrings($samples->map(fn (Event $event): array => $event->only(['title', 'venue_name', 'street', 'description', 'organiser_rules']))->all()))->not->toContain('Beispiel')
             ->and($samples->where('location_visibility.value', 'after_rsvp'))->toHaveCount(1)

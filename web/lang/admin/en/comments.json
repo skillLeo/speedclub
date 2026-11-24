@@ -3,7 +3,7 @@
     "nav": {
         "title": "Comments"
     },
-    "intro": "Every comment under build updates, newest first. A comment is taken down through its case with a statement of reasons, not here.",
+    "intro": "Every comment under build updates and on cars themselves, newest first. A comment is taken down through its case with a statement of reasons, not here.",
     "caption": "Comments with author, build, open reports, date and status",
     "columns": {
         "comment": "Comment",
@@ -34,6 +34,10 @@
     },
     "reply": "Reply to a comment",
     "open_build": "Open build",
+    "on": {
+        "vehicle": "On the car",
+        "build_update": "Under an update"
+    },
     "reports": ":count open",
     "flag": {
         "on": "Comments are switched on for members.",
@@ -41,6 +45,6 @@
         "open": "Open feature flag"
     },
     "empty_title": "No comments yet",
-    "empty_body_on": "As soon as members comment under build updates, the comments are listed here.",
+    "empty_body_on": "As soon as members comment on cars or build updates, the comments are listed here.",
     "empty_body_off": "Comments are switched off. Once the flag is on and members comment, they are listed here."
 }

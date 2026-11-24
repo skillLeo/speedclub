@@ -8,7 +8,7 @@ const styles = StyleSheet.create({ routes: { display: 'none' } });
 
 /**
  * Headless tabs (ADR-019): the web shell, and native's fallback while `nav.native_tabs` is off (09 §6.1). The hidden TabList
- * only defines the five routes; the visible bars in ShellFrame (floating bar < 768, rail 768–1279, sidebar ≥ 1280) use
+ * only defines the five routes (10 §1: Start · Entdecken · Garage · Shop · Profil); the visible bars in ShellFrame (floating bar < 768, rail 768–1279, sidebar ≥ 1280) use
  * name-only triggers (docs.expo.dev/router/advanced/custom-tabs, "Multiple tab bars").
  */
 export function JsTabsLayout() {
@@ -18,7 +18,7 @@ export function JsTabsLayout() {
         <TabTrigger name="home" href="/(tabs)/(home)" />
         <TabTrigger name="discover" href="/(tabs)/(discover)/discover" />
         <TabTrigger name="garage" href="/(tabs)/(garage)/garage" />
-        <TabTrigger name="messages" href="/(tabs)/(messages)/messages" />
+        <TabTrigger name="shop" href="/(tabs)/(shop)/shop" />
         <TabTrigger name="profile" href="/(tabs)/(profile)/profile" />
       </TabList>
       <ShellFrame />

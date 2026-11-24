@@ -76,8 +76,11 @@ describe('estimates (what the app decides before it measures)', function () {
             ->and(Layout::estimatedContentWidths([R34_ITEMS[2]], 1, false))->toHaveCount(2);
     });
 
-    it('sets hero.numeral on the page and hero.numeral.s in the desktop card (ADR-431 b), capped at 1.3×', function () {
+    it('sets hero.numeral on the page, hero.numeral.xs on a phone (CF-2, R5-2b) and hero.numeral.s in the desktop card (ADR-431 b), capped at 1.3×', function () {
         expect(Layout::type(1, false)['valueSize'])->toBe(64.0)
+            ->and(Layout::type(1, Layout::PHONE)['valueSize'])->toBe(32.0)
+            ->and(Layout::type(2, Layout::PHONE)['valueSize'])->toBe(32 * 1.3)
+            ->and(Layout::type(2, Layout::PHONE)['labelSize'])->toBe(11 * 2.0)
             ->and(Layout::type(2, false)['valueSize'])->toBe(64 * 1.3)
             ->and(Layout::type(1, true)['valueSize'])->toBe(48.0)
             ->and(Layout::type(2, false)['labelSize'])->toBe(11 * 2.0)
@@ -110,7 +113,7 @@ describe('estimates (what the app decides before it measures)', function () {
 
 describe('the R34 on /v/{slug}', function () {
     it('takes the columns of the app at every width and both font scales', function (int $viewport, float $strip, int $scale1, int $scale2) {
-        $desktop = $viewport >= Layout::DESKTOP_WIDTH;
+        $desktop = $viewport >= Layout::DESKTOP_WIDTH ? true : ($viewport < Layout::TABLET_WIDTH ? Layout::PHONE : false);
 
         expect(Layout::estimatedColumns(R34_ITEMS, $strip, 1, $desktop))->toBe($scale1)
             ->and(Layout::estimatedColumns(R34_ITEMS, $strip, 2, $desktop))->toBe($scale2);
@@ -148,12 +151,81 @@ describe('the R34 on /v/{slug}', function () {
         expect(Layout::breakpoints(R34_ITEMS))->toBe([
             'count' => 4,
             'regimes' => [
+                // CF-2: a phone's strip at hero.numeral.s 40, so its value lines are narrower than on the 768–1279 page.
+                '1-phone' => [['columns' => 4, 'belowEm' => 30.0667], ['columns' => 2, 'belowEm' => 15.0], ['columns' => 1, 'belowEm' => null]],
                 '1-narrow' => [['columns' => 4, 'belowEm' => 39.1334], ['columns' => 2, 'belowEm' => 19.5334], ['columns' => 1, 'belowEm' => null]],
                 '1-desktop' => [['columns' => 4, 'belowEm' => 29.1875], ['columns' => 2, 'belowEm' => 14.5625], ['columns' => 1, 'belowEm' => null]],
+                '2-phone' => [['columns' => 2, 'belowEm' => 13.3667], ['columns' => 1, 'belowEm' => null]],
                 '2-narrow' => [['columns' => 2, 'belowEm' => 13.3667], ['columns' => 1, 'belowEm' => null]],
                 '2-desktop' => [['columns' => 2, 'belowEm' => 12.5313], ['columns' => 1, 'belowEm' => null]],
             ],
         ]);
+    });
+});
+
+/** DQ-P5-066: the R34 of VEH-01-aiSpecs / WEB-01-aiSpecs, power and torque taken from the AI suggestion (lang/de/ai.php). */
+const AI_CAPTION = "Herstellerangabe (KI-\u{2060}Vorschlag)";
+const AI_CAPTION_EN = "Manufacturer figure (AI\u{00A0}suggestion)";
+const R34_AI_ITEMS = [
+    ['value' => '280', 'unit' => 'PS', 'label' => 'Leistung', 'provenance' => AI_CAPTION],
+    ['value' => '392', 'unit' => 'Nm', 'label' => 'Drehmoment', 'provenance' => AI_CAPTION],
+    ['value' => '2001', 'unit' => null, 'label' => 'Baujahr', 'provenance' => null],
+    ['value' => 'AWD', 'unit' => null, 'label' => 'Antrieb', 'provenance' => null],
+];
+
+describe('a provenance caption in the 2×2 grid (ADR-422 e)', function () {
+    it('splits a caption at regular spaces only: U+00A0 and U+2060 keep their parts together', function () {
+        expect(Layout::WRAP_MAX_COLUMNS)->toBe(2)
+            ->and(Layout::segments(AI_CAPTION))->toBe(['Herstellerangabe', "(KI-\u{2060}Vorschlag)"])
+            ->and(Layout::segments(AI_CAPTION_EN))->toBe(['Manufacturer', 'figure', "(AI\u{00A0}suggestion)"])
+            ->and(Layout::segments('Prüfstand'))->toBe(['Prüfstand']);
+    });
+
+    it('keeps the 2×2 grid for a two-part caption on every phone and in the desktop card, not one column (DQ-P5-066)', function () {
+        foreach ([353, 335, 372] as $width) {
+            expect(Layout::estimatedColumns(R34_AI_ITEMS, $width, 1, Layout::PHONE))->toBe(2);
+        }
+
+        $english = array_map(fn (array $item): array => $item['provenance'] === null ? $item : [...$item, 'provenance' => AI_CAPTION_EN], R34_AI_ITEMS);
+
+        expect(Layout::estimatedColumns(R34_AI_ITEMS, 400, 1, true))->toBe(2)
+            ->and(Layout::estimatedColumns($english, 353, 1, Layout::PHONE))->toBe(2)
+            // The widest part decides the grid, the whole caption the row: one row needs it on one line.
+            ->and(Layout::columns(353, 4, [187], 1, 1.0, [102]))->toBe(2)
+            ->and(Layout::columns(353, 4, [187], 1))->toBe(1)
+            ->and(Layout::columns(1000, 4, [187], 1, 1.0, [102]))->toBe(4)
+            ->and(Layout::estimatedColumns(R34_ITEMS, 700, 1, false))->toBe(4)
+            ->and(Layout::estimatedColumns(R34_AI_ITEMS, 700, 1, false))->toBe(2);
+    });
+
+    it('turns it into thresholds: the grid from the widest part, one row from the whole caption, exact to the pixel', function () {
+        foreach ([[1.0, Layout::PHONE], [1.0, false], [1.0, true], [2.0, false], [2.0, true]] as [$scale, $desktop]) {
+            $thresholds = Layout::thresholds(R34_AI_ITEMS, $scale, $desktop);
+
+            foreach ($thresholds as $threshold) {
+                if ($threshold['minWidth'] !== null) {
+                    expect(Layout::estimatedColumns(R34_AI_ITEMS, $threshold['minWidth'], $scale, $desktop))->toBe($threshold['columns'])
+                        ->and(Layout::estimatedColumns(R34_AI_ITEMS, $threshold['minWidth'] - 0.01, $scale, $desktop))->toBeLessThan($threshold['columns']);
+                }
+            }
+        }
+
+        $phone = Layout::thresholds(R34_AI_ITEMS, 1, Layout::PHONE);
+
+        // The 2×2 grid from a 335 strip (375 less its margins): the half holds "Herstellerangabe".
+        expect($phone[1]['columns'])->toBe(2)
+            ->and($phone[1]['minWidth'])->toBeLessThanOrEqual(335.0)
+            ->and($phone[0]['minWidth'])->toBeGreaterThan(4 * (187 + 24));
+    });
+
+    it('leaves a one-word caption exactly as before: the same widths, thresholds and class', function () {
+        foreach ([1.0, 2.0] as $scale) {
+            foreach ([false, true, Layout::PHONE] as $desktop) {
+                expect(Layout::estimatedGridContentWidths(R34_ITEMS, $scale, $desktop))->toBe(Layout::estimatedContentWidths(R34_ITEMS, $scale, $desktop));
+            }
+        }
+
+        expect(Layout::className(R34_ITEMS))->not->toBe(Layout::className(R34_AI_ITEMS));
     });
 });
 
@@ -164,7 +236,8 @@ describe('css', function () {
 
         expect($class)->toMatch('/^sc-strip--[0-9a-f]{8}$/')
             ->and($css)->toStartWith('.'.$class.' .sc-strip{grid-auto-flow:row;grid-template-columns:repeat(4,minmax(0,1fr))}')
-            ->and($css)->toContain('@media (max-width: 1279.98px){@container sc-strip (width < 39.1334em){.'.$class.' .sc-strip{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}')
+            ->and($css)->toContain('@media (max-width: 767.98px){@container sc-strip (width < 30.0667em){.'.$class.' .sc-strip{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}')
+            ->and($css)->toContain('@media (min-width: 768px) and (max-width: 1279.98px){@container sc-strip (width < 39.1334em){.'.$class.' .sc-strip{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}')
             ->and($css)->toContain('@container sc-strip (width < 19.5334em){.'.$class.' .sc-strip{grid-auto-flow:row;grid-template-columns:repeat(1,minmax(0,1fr))}')
             ->and($css)->toContain('@media (min-width: 1280px){@container sc-strip (width < 29.1875em)')
             // N-2: Safari 16.0–16.3 read container queries but not media range syntax.
@@ -234,6 +307,7 @@ it('keeps its sizes in step with the generated tokens', function () {
     $size = fn (string $haystack, string $role): ?string => preg_match('/--sc-type-'.$role.'-size: calc\((\d+)px \* (?:min\(var\(--sc-type-scale, 1\), ([\d.]+)\)|var\(--sc-type-scale, 1\))\)/', $haystack, $match) === 1 ? $match[1].'|'.($match[2] ?? '') : null;
 
     expect($size($css, 'hero-numeral'))->toBe(Layout::NUMERAL_SIZE.'|'.Layout::NUMERAL_MAX_SCALE)
+        ->and($size($css, 'hero-numeral-xs'))->toBe(Layout::NUMERAL_SIZE_PHONE.'|'.Layout::NUMERAL_MAX_SCALE)
         ->and($size($desktop, 'hero-numeral-s'))->toBe(Layout::NUMERAL_SIZE_DESKTOP.'|'.Layout::NUMERAL_MAX_SCALE)
         ->and($size($css, 'caption'))->toBe(Layout::CAPTION_SIZE.'|')
         ->and($css)->toContain('--sc-type-caption-line: calc('.Layout::CAPTION_LINE.'px')
@@ -461,6 +535,7 @@ it('takes its geometry from the tokens, and public.css draws the cell with the s
         ->and(Layout::UNIT_GAP)->toBe($tokens['space']['4'])
         ->and(Layout::DIVIDER)->toBe($tokens['size']['border']['control'])
         ->and(Layout::DESKTOP_WIDTH)->toBe($tokens['layout']['breakpoints']['desktop'])
+        ->and(Layout::TABLET_WIDTH)->toBe($tokens['layout']['breakpoints']['tablet'])
         // Phase 4 (09 §14.4): public.css spells the scale steps as token variables, `--sc-space-<n>` being n px.
         ->and($cell[1] ?? '')->toContain('padding: var(--sc-space-'.Layout::CELL_PADDING_Y.') var(--sc-space-'.Layout::CELL_PADDING_X.');')
         ->and($cell[1] ?? '')->toContain('gap: var(--sc-space-'.Layout::CELL_GAP.');');

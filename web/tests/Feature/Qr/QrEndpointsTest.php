@@ -514,7 +514,7 @@ describe('POST vehicles/{id}/qr/reissue', function () {
         $this->withHeader('Accept-Language', 'de')->postJson('/api/v1/vehicles/'.$this->vehicle->id.'/qr/reissue')
             ->assertForbidden()
             ->assertJsonPath('code', 'qr_revoked_by_staff')
-            ->assertJsonPath('message', "Das SPEED-CLUB-Team hat diesen QR-\u{2060}Code gesperrt. Einen neuen bekommst du über den Support.");
+            ->assertJsonPath('message', 'Das Speedclub-Team hat diesen Sticker gesperrt. Einen neuen bekommst du über den Support.');
 
         expect($this->vehicle->qrCodes()->where('status', QrStatus::Active)->exists())->toBeFalse();
         $this->getJson('/api/v1/vehicles/'.$this->vehicle->id.'/qr.svg')->assertNotFound();
@@ -613,7 +613,7 @@ describe('GET qr/{code}', function () {
             app(QrCodes::class)->revoke($vehicle, QrRevocationReason::Reissued);
 
             return $qr->code;
-        }, 'revoked', "Dieser QR-\u{2060}Code ist nicht mehr gültig"],
+        }, 'revoked', 'Dieser Sticker ist nicht mehr gültig'],
         'deleted vehicle' => [function (Vehicle $vehicle, QrCode $qr) {
             app(QrCodes::class)->revoke($vehicle, QrRevocationReason::VehicleDeleted);
             $vehicle->delete();
@@ -624,7 +624,7 @@ describe('GET qr/{code}', function () {
             app(QrCodes::class)->revoke($vehicle, QrRevocationReason::Moderation);
 
             return $qr->code;
-        }, 'revoked', "Dieser QR-\u{2060}Code ist nicht mehr gültig"],
+        }, 'revoked', 'Dieser Sticker ist nicht mehr gültig'],
         'private' => [function (Vehicle $vehicle, QrCode $qr) {
             $vehicle->forceFill(['visibility' => 'private'])->save();
 
@@ -635,8 +635,8 @@ describe('GET qr/{code}', function () {
 
             return $qr->code;
         }, 'private', 'Dieses Fahrzeug ist privat'],
-        'unknown' => [fn () => '00000000', 'not_found', "Diesen QR-\u{2060}Code kennen wir nicht"],
-        'not a code at all' => [fn () => 'nonsense-code', 'not_found', "Diesen QR-\u{2060}Code kennen wir nicht"],
+        'unknown' => [fn () => '00000000', 'not_found', 'Diesen Sticker kennen wir nicht'],
+        'not a code at all' => [fn () => 'nonsense-code', 'not_found', 'Diesen Sticker kennen wir nicht'],
     ]);
 
     it('shows an owner their own private vehicle, but never a revoked code', function () {
@@ -662,7 +662,7 @@ describe('GET qr/{code}', function () {
         app(QrCodes::class)->revoke($this->vehicle, QrRevocationReason::Reissued);
 
         $this->withHeader('Accept-Language', 'en')->getJson('/api/v1/qr/'.$this->qr->code)
-            ->assertJsonPath('data.title', 'This QR code is no longer valid');
+            ->assertJsonPath('data.title', 'This sticker is no longer valid');
     });
 
     it('gives a revoked code no reason, and says unavailable only when the vehicle or the account is gone', function (QrRevocationReason $reason, bool $deleteVehicle, string $locale, string $title, string $message) {
@@ -686,7 +686,7 @@ describe('GET qr/{code}', function () {
         app(DeleteVehicle::class)->handle($this->owner, $this->vehicle->fresh());
 
         $this->withHeader('Accept-Language', 'de')->getJson('/api/v1/qr/'.$old)
-            ->assertJsonPath('data.title', "Dieser QR-\u{2060}Code ist nicht mehr gültig");
+            ->assertJsonPath('data.title', 'Dieser Sticker ist nicht mehr gültig');
     });
 
     it('keeps a tombstone of the code after the hard delete, which still reads unavailable and is never handed out again', function () {

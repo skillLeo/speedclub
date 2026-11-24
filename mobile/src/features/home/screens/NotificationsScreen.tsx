@@ -14,7 +14,16 @@ import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { clearAuthIntent, useSessionStore } from '@/state/session';
 import { createStyles, size, space } from '@/theme';
-import { Button, Chip, CollapsingFlashList, ContextMenuButton, EmptyState, ErrorState, Skeleton, SkeletonBlock, SkeletonText, Spinner, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Chip } from '@/ui/Chip';
+import { ContextMenuButton } from '@/ui/ContextMenu';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { CollapsingFlashList } from '@/ui/useCollapsingHeader';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { RestrictionNotice, useBrowseRestriction } from '../components/BrowseStates';

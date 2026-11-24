@@ -27,7 +27,7 @@ final class PublishConfigVersion
     public function handle(Staff $staff, ConfigKey $key, string $reason, int $revision): ConfigOutcome
     {
         StaffAtoms::ensure($staff, $key->publishAtom());
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
         $action = $this->versions->approvalFor($key);
 
         if ($action === null) {

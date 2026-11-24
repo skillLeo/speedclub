@@ -1,7 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { QrDetailScreen } from '@/features/qr/screens/QrDetailScreen';
-import { QrListScreen } from '@/features/qr/screens/QrListScreen';
 import { QrPlacementScreen } from '@/features/qr/screens/QrPlacementScreen';
 import { QrPreviewScreen } from '@/features/qr/screens/QrPreviewScreen';
 import i18n from '@/i18n';
@@ -11,7 +10,7 @@ import { useSessionStore } from '@/state/session';
 import { hydrateThemePreference, themes } from '@/theme';
 
 import { visualOf } from '../ui/helpers';
-import { QR_SVG, qrRow, renderScreen, signIn, signOut, stubFetch } from './harness';
+import { QR_SVG, qrRow, renderScreen, signIn, stubFetch } from './harness';
 
 const carbon = themes.carbon.color;
 
@@ -81,59 +80,6 @@ beforeEach(() => {
 });
 afterAll(() => useSessionStore.setState({ status: 'loading', member: null }));
 
-describe('QR-01 My QR codes', () => {
-  it('keeps its place while a pushed page or another tab hides it (BH-41)', async () => {
-    stubFetch({ '/api/v1/auth/me': ME, '/api/v1/me/qr-codes': { body: { data: [qrRow()] } } });
-    await renderScreen(<QrListScreen />);
-    expect(mockRetained).toHaveBeenCalled();
-  });
-
-  it('lists one row per vehicle with its code and what a scan leads to', async () => {
-    stubFetch({
-      '/api/v1/auth/me': ME,
-      '/api/v1/me/qr-codes': {
-        body: {
-          data: [
-            qrRow(),
-            qrRow({ code: 'WNF4ZRE3', display_code: 'WNF4 ZRE3', scan_state: 'private' }, { id: '01silvia', full_title: 'Nissan Silvia S15' }),
-            qrRow(
-              { status: 'revoked', scan_state: 'revoked', revoked_reason: 'moderation', code: 'H4QW2ZRT', display_code: 'H4QW 2ZRT', downloads: null },
-              { id: '01e46', full_title: 'BMW M3 E46' },
-            ),
-          ],
-          links: {},
-          meta: { next_cursor: null },
-        },
-      },
-    });
-    await renderScreen(<QrListScreen />);
-    await waitFor(() => expect(screen.getByTestId(`QR-01.row.${VEHICLE}`)).toBeTruthy());
-    expect(screen.getByText('8TR0 Q3MC')).toBeTruthy();
-    expect(screen.getByText('Aktiv')).toBeTruthy();
-    expect(screen.getByText('Privat')).toBeTruthy();
-    expect(screen.getByText('Gesperrt')).toBeTruthy();
-    await fireEvent.press(screen.getByTestId(`QR-01.row.${VEHICLE}.body`));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/qr/[vehicleId]', params: { vehicleId: VEHICLE } });
-  });
-
-  it('leads to adding a vehicle when nothing is published yet', async () => {
-    stubFetch({ '/api/v1/auth/me': ME, '/api/v1/me/qr-codes': { body: { data: [], links: {}, meta: { next_cursor: null } } } });
-    await renderScreen(<QrListScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-01.empty')).toBeTruthy());
-    expect(screen.getByText('Noch keine QR-\u2060Codes')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Fahrzeug hinzufügen'));
-    expect(mockRouter.push).toHaveBeenCalledWith('/add-vehicle/new/vehicle');
-  });
-
-  it('asks a guest to sign in instead of loading anything', async () => {
-    signOut();
-    const { fetchMock } = stubFetch({});
-    await renderScreen(<QrListScreen />);
-    expect(screen.getByTestId('QR-01.guest')).toBeTruthy();
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-});
-
 describe('QR-02 QR detail (FS-9)', () => {
   function stubDetail(row: ReturnType<typeof qrRow> = qrRow(), extra: Parameters<typeof stubFetch>[0] = {}) {
     return stubFetch({
@@ -144,18 +90,29 @@ describe('QR-02 QR detail (FS-9)', () => {
     });
   }
 
-  it('shows the card with the code, the URL without its scheme, and the actions of FS-9', async () => {
+  /** DQ-M54-10: the QR card lives in the "QR-Code" sheet; the row opens once the code is drawn. */
+  async function openQrSheet() {
+    await waitFor(() => expect(screen.getByTestId('STK-02.download.body')).toBeEnabled());
+    await fireEvent.press(screen.getByTestId('STK-02.download.body'));
+    await waitFor(() => expect(screen.getByTestId('STK-02.card')).toBeTruthy());
+  }
+
+  it('leads with the sticker, and keeps the code with its URL in the QR-Code sheet (DQ-M54-10)', async () => {
     mockParams = { vehicleId: VEHICLE };
     stubDetail();
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.card')).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId('STK-02.stage')).toBeTruthy());
+    expect(screen.getByTestId('STK-02.download')).toHaveTextContent(/8TR0 Q3MC/);
+    // One filled action: no design yet, so "Sticker gestalten".
+    expect(screen.getByTestId('STK-02.primary')).toHaveTextContent('Sticker gestalten');
+    await openQrSheet();
     // DQ-047: "GT-R" holds together at a large font.
-    expect(screen.getByTestId('QR-02.subtitle')).toHaveTextContent('Nissan Skyline GT-\u2060R R34');
-    expect(screen.getByTestId('QR-02.card.shortCode')).toHaveTextContent('8TR0 Q3MC');
-    expect(screen.getByTestId('QR-02.card.url')).toHaveTextContent('speedclub.de/C/8TR0Q3MC');
-    expect(screen.getByLabelText('QR-\u2060Code für Nissan Skyline GT-R R34')).toBeTruthy();
-    expect(screen.getByTestId('QR-02.download')).toBeTruthy();
-    expect(screen.getByTestId('QR-02.share')).toBeTruthy();
+    expect(screen.getByTestId('STK-02.subtitle')).toHaveTextContent('Nissan Skyline GT-\u2060R R34');
+    expect(screen.getByTestId('STK-02.card.shortCode')).toHaveTextContent('8TR0 Q3MC');
+    expect(screen.getByTestId('STK-02.card.url')).toHaveTextContent('speedclub.de/C/8TR0Q3MC');
+    expect(screen.getByLabelText('QR-\u2060Code deines Stickers für Nissan Skyline GT-R R34')).toBeTruthy();
+    expect(screen.getByTestId('STK-02.download')).toBeTruthy();
+    expect(screen.getByTestId('STK-02.share')).toBeTruthy();
     expect(screen.getByText('Öffentliche Seite ansehen')).toBeTruthy();
     expect(screen.getByText('Sticker-Platzierung')).toBeTruthy();
     expect(screen.getByText('QR-\u2060Code ersetzen')).toBeTruthy();
@@ -168,10 +125,9 @@ describe('QR-02 QR detail (FS-9)', () => {
     mockParams = { vehicleId: VEHICLE };
     stubDetail();
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.card')).toBeTruthy());
-    await fireEvent.press(screen.getByTestId('QR-02.download'));
-    await waitFor(() => expect(screen.getByTestId('QR-02.download.pdf')).toBeTruthy());
-    for (const format of ['png', 'png2048', 'svg', 'pdf']) expect(screen.getByTestId(`QR-02.download.${format}`)).toBeTruthy();
+    await openQrSheet();
+    await waitFor(() => expect(screen.getByTestId('STK-02.download.pdf')).toBeTruthy());
+    for (const format of ['png', 'png2048', 'svg', 'pdf']) expect(screen.getByTestId(`STK-02.download.${format}`)).toBeTruthy();
     expect(screen.getByText('A6-\u2060Bogen mit Logo, Code und Platzierungshinweis')).toBeTruthy();
   });
 
@@ -179,14 +135,13 @@ describe('QR-02 QR detail (FS-9)', () => {
     mockParams = { vehicleId: VEHICLE };
     stubDetail();
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.card')).toBeTruthy());
-    await fireEvent.press(screen.getByTestId('QR-02.download'));
-    await waitFor(() => expect(screen.getByTestId('QR-02.download.png')).toBeTruthy());
-    await fireEvent.press(screen.getByTestId('QR-02.download.png'));
+    await openQrSheet();
+    await waitFor(() => expect(screen.getByTestId('STK-02.download.png')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('STK-02.download.png'));
     await waitFor(() => expect(mockShareFile).toHaveBeenCalled());
     expect(mockDownloadFile.mock.calls[0]![0]).toBe(`https://speedclub.test/api/v1/vehicles/${VEHICLE}/qr.png?size=1024`);
     expect(mockShareFile.mock.calls[0]![0]).toBe('file:///cache/speedclub-qr-8TR0Q3MC.png');
-    await waitFor(() => expect(screen.queryByTestId('QR-02.download.png')).toBeNull());
+    await waitFor(() => expect(screen.queryByTestId('STK-02.download.png')).toBeNull());
   });
 
   it('keeps a failed download on its row with the reason, and the sheet open', async () => {
@@ -194,37 +149,82 @@ describe('QR-02 QR detail (FS-9)', () => {
     mockDownloadFile.mockRejectedValueOnce(new Error('UnableToDownloadException: response has status: 429'));
     stubDetail();
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.card')).toBeTruthy());
-    await fireEvent.press(screen.getByTestId('QR-02.download'));
-    await waitFor(() => expect(screen.getByTestId('QR-02.download.svg')).toBeTruthy());
-    await fireEvent.press(screen.getByTestId('QR-02.download.svg'));
-    await waitFor(() => expect(screen.getByTestId('QR-02.download.svg.error')).toBeTruthy());
+    await openQrSheet();
+    await waitFor(() => expect(screen.getByTestId('STK-02.download.svg')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('STK-02.download.svg'));
+    await waitFor(() => expect(screen.getByTestId('STK-02.download.svg.error')).toBeTruthy());
     expect(screen.getByText('Das war etwas schnell. Warte kurz und versuch es noch einmal.')).toBeTruthy();
     expect(mockShareFile).not.toHaveBeenCalled();
   });
 
-  it('saves the PNG at once from "In Fotos sichern", on the blurred stage of SM13, with no shop link while the flag is off', async () => {
+  it('opens the designer from the one filled action and saves the A6 sticker PDF at once (DQ-M54-10)', async () => {
     mockParams = { vehicleId: VEHICLE };
     stubDetail();
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.card')).toBeTruthy());
-    expect(screen.getByTestId('QR-02.stage')).toBeTruthy();
-    expect(screen.getByTestId('QR-02.savePhoto')).toHaveTextContent('In Fotos sichern');
-    expect(screen.getByTestId('QR-02.stickerPdf')).toHaveTextContent('Sticker-PDF');
-    expect(screen.queryByTestId('QR-02.orderSticker')).toBeNull();
-    await fireEvent.press(screen.getByTestId('QR-02.savePhoto'));
+    await waitFor(() => expect(screen.getByTestId('STK-02.primary')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('STK-02.primary'));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/stickers/[vehicleId]/design', params: { vehicleId: VEHICLE } });
+    await waitFor(() => expect(screen.getByTestId('STK-02.stickerPdf')).toBeEnabled());
+    expect(screen.getByTestId('STK-02.stickerPdf')).toHaveTextContent('Sticker-PDF');
+    await fireEvent.press(screen.getByTestId('STK-02.stickerPdf'));
     await waitFor(() => expect(mockShareFile).toHaveBeenCalled());
-    expect(mockDownloadFile.mock.calls[0]![0]).toBe(`https://speedclub.test/api/v1/vehicles/${VEHICLE}/qr.png?size=1024`);
+    expect(mockDownloadFile.mock.calls[0]![0]).toBe(`https://speedclub.test/api/v1/vehicles/${VEHICLE}/qr.pdf`);
+  });
+
+  it('offers "Sticker bestellen" once the design passed its Scan-Test, and keeps the designer as a row', async () => {
+    mockParams = { vehicleId: VEHICLE };
+    stubDetail(qrRow(), {
+      '/api/v1/me/stickers': {
+        body: {
+          data: [
+            {
+              vehicle: { id: VEHICLE, slug: 'nissan-skyline-gt-r-r34-5tf974vj', title: 'Skyline GT-R R34', full_title: 'Nissan Skyline GT-R R34', cover: null, public_url: 'https://speedclub.de/v/x' },
+              sticker: { status: 'active', scan_state: 'active', display_code: '8TR0 Q3MC', url: 'https://speedclub.de/C/8TR0Q3MC' },
+              scans_this_week: 0,
+              design: null,
+              actions: { design: true, order: { available: true, reason: null }, download: true },
+            },
+          ],
+          links: {},
+          meta: { next_cursor: null },
+        },
+      },
+    });
+    await renderScreen(<QrDetailScreen />);
+    await waitFor(() => expect(screen.getByTestId('STK-02.primary')).toHaveTextContent('Sticker bestellen'));
+    await fireEvent.press(screen.getByTestId('STK-02.primary'));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/stickers/[vehicleId]/order', params: { vehicleId: VEHICLE } });
+    expect(screen.getByTestId('STK-02.design')).toBeTruthy();
+  });
+
+  it('gives a suspended owner no way into the designer or the order (DQ-M54-23)', async () => {
+    mockParams = { vehicleId: VEHICLE };
+    stubDetail(qrRow(), {
+      '/api/v1/auth/me': {
+        body: {
+          data: {
+            id: '01lukas',
+            username: 'lukas.sc',
+            restrictions: { suspended: true, messaging: { restricted: false, until: null }, publishing: { restricted: false, until: null } },
+          },
+        },
+      },
+    });
+    await renderScreen(<QrDetailScreen />);
+    await waitFor(() => expect(screen.getByTestId('STK-02.restricted')).toBeTruthy());
+    expect(screen.queryByTestId('STK-02.primary')).toBeNull();
+    expect(screen.queryByTestId('STK-02.design')).toBeNull();
   });
 
   it('shares the public page, not the sticker address, so a share is never counted as a scan', async () => {
     mockParams = { vehicleId: VEHICLE };
     stubDetail();
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.share')).toBeTruthy());
-    await fireEvent.press(screen.getByTestId('QR-02.share'));
+    await waitFor(() => expect(screen.getByTestId('STK-02.share')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('STK-02.share'));
     await waitFor(() => expect(mockShare).toHaveBeenCalled());
-    expect(mockShare.mock.calls[0]![0]).toMatchObject({ url: 'https://speedclub.de/v/nissan-skyline-gt-r-r34-5tf974vj' });
+    // M5.7 (m5.7-contract §2.4): the shared address carries `?via=share` (a view through it counts as "geteilter Link").
+    expect(mockShare.mock.calls[0]![0]).toMatchObject({ url: 'https://speedclub.de/v/nissan-skyline-gt-r-r34-5tf974vj?via=share' });
   });
 
   it('replaces the code after the dialog, with one idempotency key, and shows the new one', async () => {
@@ -239,43 +239,43 @@ describe('QR-02 QR detail (FS-9)', () => {
       },
     });
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.reissue')).toBeTruthy());
-    await fireEvent.press(screen.getByTestId('QR-02.reissue.body'));
-    await waitFor(() => expect(screen.getByTestId('QR-02.reissueDialog')).toBeTruthy());
-    expect(screen.getByText(/Wer den alten Sticker scannt, sieht danach nur noch „Dieser QR-\u2060Code ist nicht mehr gültig“/)).toBeTruthy();
-    await fireEvent.press(screen.getByTestId('QR-02.reissueConfirm'));
+    await waitFor(() => expect(screen.getByTestId('STK-02.reissue')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('STK-02.reissue.body'));
+    await waitFor(() => expect(screen.getByTestId('STK-02.reissueDialog')).toBeTruthy());
+    expect(screen.getByText(/Wer den alten Sticker scannt, sieht danach nur noch „Dieser Sticker ist nicht mehr gültig“/)).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('STK-02.reissueConfirm'));
     await waitFor(() => expect(calls.some((call) => call.method === 'POST')).toBe(true));
     const post = calls.find((call) => call.method === 'POST')!;
     expect(new URL(post.url).pathname).toBe(`/api/v1/vehicles/${VEHICLE}/qr/reissue`);
     expect(post.headers.get('Idempotency-Key')).toBe('uuid-1');
-    await waitFor(() => expect(screen.getByTestId('QR-02.card.shortCode')).toHaveTextContent('K7M2 P9QA'));
+    await waitFor(() => expect(screen.getByTestId('STK-02.download')).toHaveTextContent(/K7M2 P9QA/));
   });
 
   it('shows the blocked state after a staff takedown: no downloads, no reissue', async () => {
     mockParams = { vehicleId: VEHICLE };
     stubDetail(qrRow({ status: 'revoked', scan_state: 'revoked', revoked_reason: 'moderation', downloads: null }));
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.blocked')).toBeTruthy());
-    expect(screen.getByText('Dieser QR-\u2060Code ist gesperrt')).toBeTruthy();
-    expect(screen.queryByTestId('QR-02.download')).toBeNull();
-    expect(screen.queryByTestId('QR-02.reissue')).toBeNull();
-    expect(screen.queryByTestId('QR-02.card')).toBeNull();
+    await waitFor(() => expect(screen.getByTestId('STK-02.blocked')).toBeTruthy());
+    expect(screen.getByText('Dieser Sticker ist gesperrt')).toBeTruthy();
+    expect(screen.queryByTestId('STK-02.download')).toBeNull();
+    expect(screen.queryByTestId('STK-02.reissue')).toBeNull();
+    expect(screen.queryByTestId('STK-02.card')).toBeNull();
   });
 
   it('explains what a scan of a private vehicle shows', async () => {
     mockParams = { vehicleId: VEHICLE };
     stubDetail(qrRow({ scan_state: 'private' }, { visibility: 'private' }));
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.private')).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId('STK-02.private')).toBeTruthy());
   });
 
   it('turns a draft or someone else’s vehicle into "nicht verfügbar"', async () => {
     mockParams = { vehicleId: VEHICLE };
     stubFetch({ '/api/v1/auth/me': ME });
     await renderScreen(<QrDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-02.unavailable')).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId('STK-02.unavailable')).toBeTruthy());
     // DQ-226: an action that leaves the page is Secondary.
-    expect(visualOf('QR-02.unavailable.action').backgroundColor).toBe(carbon.bg.raised);
+    expect(visualOf('STK-02.unavailable.action').backgroundColor).toBe(carbon.bg.raised);
     await fireEvent.press(screen.getByText('Zur Garage'));
     expect(mockRouter.navigate).toHaveBeenCalledWith('/garage');
   });
@@ -286,14 +286,14 @@ describe('QR-04 without a page to open', () => {
     mockParams = { vehicleId: VEHICLE };
     stubFetch({ '/api/v1/auth/me': ME });
     await renderScreen(<QrPreviewScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-04.unavailable')).toBeTruthy());
-    expect(visualOf('QR-04.unavailable.action').backgroundColor).toBe(carbon.bg.raised);
+    await waitFor(() => expect(screen.getByTestId('STK-02-preview.unavailable')).toBeTruthy());
+    expect(visualOf('STK-02-preview.unavailable.action').backgroundColor).toBe(carbon.bg.raised);
   });
 });
 
 describe('QR-03 copy', () => {
   it.each([
-    ['de', deQr.placement.print, '4\u00A0Modulen'],
+    ['de', deQr.placement.print, '4\u00A0Module'],
     ['en', enQr.placement.print, '4\u00A0modules'],
   ])('keeps the figure with its noun in the %s print line (DQ-210)', (_language, line, kept) => {
     expect(line).toContain(kept);
@@ -315,10 +315,9 @@ describe('QR-03 placement guide', () => {
     ]) {
       expect(screen.getByText(sentence)).toBeTruthy();
     }
-    // The sticker PDF prints placement.rules.body, .rearWindow, the second sentence of .size and this line word for word.
-    expect(
-      screen.getByText('Druck: mindestens 30 × 30 mm für Scans aus etwa 1 m, für größere Entfernungen größer. Rund um den Code einen weißen Rand von 4 Modulen (Kästchen) frei lassen. Matte Folie, schwarz auf weiß.'),
-    ).toBeTruthy();
+    // DQ-M54-17: the print line follows the designer (10 §2.3: QR from 25 mm, white print on dark glass, black on light paint).
+    expect(screen.getByText(deQr.placement.print)).toBeTruthy();
+    expect(deQr.placement.print).toContain('25\u00A0mm');
     expect(screen.getByLabelText(/Auto von oben/)).toBeTruthy();
   });
 
@@ -334,7 +333,7 @@ describe('QR-03 placement guide', () => {
         'Front side windows: no stickers.',
         'Windscreen: preferably not at all. If you must, only right at the edge outside the field of view and never in the wiper area.',
         'Keep it small: well under 0.1 m² and never more than a quarter of a window. Not reflective, not illuminated, never covering number plates, lights or inspection stickers.',
-        'Printing: at least 30 × 30 mm for scans from about 1 m, larger for longer distances. Leave a white margin of 4 modules (squares) around the code. Matte vinyl, black on white.',
+        enQr.placement.print,
         'Not legal advice. The German StVZO (including §§ 35b, 40) and how the authorities apply it are decisive. Violations can result in a fine.',
       ]) {
         expect(screen.getByText(sentence)).toBeTruthy();
@@ -350,9 +349,9 @@ describe('QR-04 public page preview', () => {
     mockParams = { vehicleId: VEHICLE };
     stubFetch({ '/api/v1/auth/me': ME, [`/api/v1/vehicles/${VEHICLE}/qr`]: { body: { data: qrRow() } } });
     await renderScreen(<QrPreviewScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-04.open')).toBeTruthy());
-    expect(screen.getByTestId('QR-04.url')).toHaveTextContent('speedclub.de/v/nissan-skyline-gt-r-r34-5tf974vj');
-    await fireEvent.press(screen.getByTestId('QR-04.open'));
+    await waitFor(() => expect(screen.getByTestId('STK-02-preview.open')).toBeTruthy());
+    expect(screen.getByTestId('STK-02-preview.url')).toHaveTextContent('speedclub.de/v/nissan-skyline-gt-r-r34-5tf974vj');
+    await fireEvent.press(screen.getByTestId('STK-02-preview.open'));
     await waitFor(() => expect(mockOpenBrowser).toHaveBeenCalled());
     expect(mockOpenBrowser.mock.calls[0]![0]).toBe('https://speedclub.de/v/nissan-skyline-gt-r-r34-5tf974vj?view=public');
   });
@@ -361,6 +360,6 @@ describe('QR-04 public page preview', () => {
     mockParams = { vehicleId: VEHICLE };
     stubFetch({ '/api/v1/auth/me': ME, [`/api/v1/vehicles/${VEHICLE}/qr`]: { body: { data: qrRow({}, { visibility: 'unlisted' }) } } });
     await renderScreen(<QrPreviewScreen />);
-    await waitFor(() => expect(screen.getByTestId('QR-04.explain')).toHaveTextContent(/Nicht gelistet/));
+    await waitFor(() => expect(screen.getByTestId('STK-02-preview.explain')).toHaveTextContent(/Nicht gelistet/));
   });
 });

@@ -45,9 +45,13 @@ jest.mock('@/api/client', () => {
 });
 
 const ME: Me = {
+  // Client round 4 (R4-1.4): this member has seen the first-login intro.
+  intro_seen_at: '2026-11-01T10:00:00Z',
   id: '01lukas',
   email: 'lukas@speedclub.test',
   email_verified: true,
+  level: { level: 1, title: 'Street Rookie' },
+  founding_number: null,
   is_sample: false,
   is_editorial: false,
   has_username: true,
@@ -68,7 +72,7 @@ const ME: Me = {
   power_display: 'ps_kw',
   member_since: '2023-03-12T10:00:00+00:00',
   stats: { vehicles: 0, followers: 0, following: 0 },
-  restrictions: { suspended: false, messaging: { restricted: false, until: null, decision_id: null }, publishing: { restricted: false, until: null, decision_id: null } },
+  restrictions: { suspended: false, messaging: { restricted: false, until: null, decision_id: null }, publishing: { restricted: false, until: null, decision_id: null }, forum: { restricted: false, until: null, decision_id: null } },
 };
 const OTHER: Me = { ...ME, id: '01nina', username: 'nina.neu', display_name: 'Nina', email: 'nina@speedclub.test' };
 const memberOf = (me: Me, nextStep: Me['next_step'] = null) => ({ id: me.id, username: me.username ?? '', displayName: me.display_name, avatarUrl: null, nextStep });

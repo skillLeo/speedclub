@@ -11,13 +11,25 @@ import { conversationTarget } from '@/features/safety/targets';
 import { useReport } from '@/features/safety/useReport';
 import { useTabBarPadding } from '@/features/shell/tabBarLayout';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
+import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
+import { ViewAsMessagesScreen } from '@/features/viewAs/ViewAsMessagesScreen';
 import { now } from '@/lib/clock';
 import { keepNameTogether } from '@/lib/format';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { RowGroup } from '@/ui/RowGroup';
 import { createStyles, layout, size, space, useBreakpoint } from '@/theme';
-import { Dialog, EmptyState, ErrorState, Header, ListRow, MemberRow, OfflineBanner, Screen, Skeleton, SkeletonBlock, SkeletonText, Switch, toast } from '@/ui';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Header } from '@/ui/Header';
+import { ListRow } from '@/ui/ListRow';
+import { MemberRow } from '@/ui/MemberRow';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Switch } from '@/ui/Switch';
+import { toast } from '@/ui/toast';
 import { RowDivider } from '@/ui/rowParts';
 
 import { MuteSheet, muteChange } from '../components/Sheets';
@@ -52,7 +64,13 @@ export type ConversationInfoScreenProps = {
  * MSG-05 `/messages/[conversationId]/info` (contract §7): the member (→ PROF-02), the conversation's vehicle, Stummschalten
  * [SIG organise], Blockieren, Melden (M2.6) and Unterhaltung löschen behind a dialog.
  */
-export function ConversationInfoScreen({ onReport }: ConversationInfoScreenProps) {
+export function ConversationInfoScreen(props: ConversationInfoScreenProps) {
+  const readOnly = useViewAsReadOnly();
+  // DQ-P5-208: a view-as tab never opens messaging, also not a conversation's info page reached by its address.
+  return readOnly ? <ViewAsMessagesScreen /> : <ConversationInfoBody {...props} />;
+}
+
+function ConversationInfoBody({ onReport }: ConversationInfoScreenProps) {
   const { t } = useTranslation('messages');
   const styles = useStyles();
   const router = useRouter();

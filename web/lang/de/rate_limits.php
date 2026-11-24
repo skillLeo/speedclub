@@ -45,7 +45,7 @@ return [
     'notification_reads' => 'Zu viele Anfragen zu deinen Mitteilungen. Versuch es in :time noch einmal.',
     'push_tokens' => 'Zu viele Versuche, Mitteilungen auf diesem Gerät einzurichten. Versuch es in :time noch einmal.',
     'qr_downloads' => 'Zu viele Downloads. Versuch es in :time noch einmal.',
-    'qr_reissues' => 'Du hast gerade mehrere QR-⁠Codes ersetzt. Versuch es in :time noch einmal.',
+    'qr_reissues' => 'Du hast gerade mehrere Sticker ersetzt. Versuch es in :time noch einmal.',
     'token_rotate' => 'Zu viele Versuche. Versuch es in :time noch einmal.',
     'staff_password_reset' => 'Zu viele Versuche. Versuch es in :time noch einmal.',
     'account_security' => 'Zu viele Sicherheitsänderungen in kurzer Zeit. Versuch es in :time noch einmal.',
@@ -67,4 +67,26 @@ return [
     ],
     'businesses' => 'Du hast deinen Betrieb gerade sehr oft geändert. Versuch es in :time noch einmal.',
     'business_tags' => 'Du hast gerade sehr viele Markierungen angefragt oder entschieden. Versuch es in :time noch einmal.',
+    'crews' => 'Du hast deine Crews gerade sehr oft geändert. Versuch es in :time noch einmal.',
+    'crew_actions' => 'Du warst gerade sehr aktiv in Crews. Versuch es in :time noch einmal.',
+    // M5.9b STREET DEX: POST spots.
+    'spots' => 'Du hast in der letzten Stunde sehr viele Autos gespottet. Versuch es in :time noch einmal.',
+    'wrapped' => 'Du hast dein Wrapped gerade sehr oft geteilt oder geladen. Versuch es in :time noch einmal.',
+    // M5.9d: GET invites/{code} and /join/{code}, per IP.
+    'invite_lookup' => 'Von hier wurden gerade sehr viele Einladungscodes abgefragt. Versuch es in :time noch einmal.',
+    // M5.4 Sticker.
+    'sticker_designs' => 'Du hast gerade sehr oft gespeichert. Versuch es in :time noch einmal.',
+    'sticker_previews' => 'Zu viele Vorschauen auf einmal. Versuch es in :time noch einmal.',
+    'sticker_validations' => 'Du hast den Scan-Test gerade oft gestartet. Versuch es in :time noch einmal.',
+    'sticker_orders' => 'Zu viele Bestellversuche. Versuch es in :time noch einmal.',
+    'forum_threads' => 'Du hast heute schon fünf Themen eröffnet. Neue Themen kannst du in :time wieder starten.',
+    'forum_replies' => 'Du hast heute schon sehr viele Antworten geschrieben. Versuch es in :time noch einmal.',
+    'cotd_votes' => 'Du hast deine Stimme gerade sehr oft geändert. Versuch es in :time noch einmal.',
+    'forum_votes' => 'Du hast heute schon sehr viele Beiträge als hilfreich markiert. Versuch es in :time noch einmal.',
+    // M5.6 Treffen: Check-ins und falsche Codes.
+    'checkins' => 'Du hast in der letzten Stunde sehr oft eingecheckt. Versuch es in :time noch einmal.',
+    'checkin_codes' => 'Das waren zu viele falsche Codes für dieses Treffen. Versuch es in :time noch einmal.',
+    // M5.7: Aufrufe zählen und Statistiken.
+    'views' => 'Von hier wurden gerade sehr viele Seiten aufgerufen. Versuch es in :time noch einmal.',
+    'insights' => 'Du hast deine Statistiken gerade sehr oft geladen. Versuch es in :time noch einmal.',
 ];

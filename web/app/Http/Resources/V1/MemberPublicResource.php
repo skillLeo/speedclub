@@ -4,11 +4,14 @@ namespace App\Http\Resources\V1;
 
 use App\Enums\MediaStatus;
 use App\Enums\ModerationStatus;
+use App\Enums\ViewSource;
 use App\Models\Media;
 use App\Models\User;
 use App\Services\Auth\MemberStats;
 use App\Services\Garage\MemberCovers;
+use App\Services\Progress\Levels;
 use App\Services\Showcase\SampleContent;
+use App\Support\PublicUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -32,6 +35,11 @@ class MemberPublicResource extends JsonResource
 
         return [
             'username' => $member->username,
+            /**
+             * M5.7: the profile address for the share sheet, `/u/{username}?via=share` (a view through it counts as "geteilter Link" in the
+             * member's statistics); null without a username.
+             */
+            'share_url' => $member->username === null ? null : PublicUrl::absolute('/u/'.$member->username.'?via='.ViewSource::SHARE_PARAMETER),
             /** @var string|null */
             'display_name' => $member->getAttribute('display_name'),
             /** @var string|null */
@@ -50,8 +58,12 @@ class MemberPublicResource extends JsonResource
             'stats' => SampleContent::stats($member, app(MemberStats::class)->for($member, asOwner: false)),
             /** Sample content (09 §8.19): the "Beispiel" badge. */
             'is_sample' => $member->getAttribute('is_sample') === true,
-            /** The SPEED CLUB Editorial account: the "Editorial" badge. */
+            /** The Speedclub Editorial account: the "Editorial" badge. */
             'is_editorial' => $member->getAttribute('is_editorial') === true,
+            /** M5.9d: the quiet level next to the name ("Lvl 4 · Parts Hunter"). */
+            'level' => new LevelSummaryResource(app(Levels::class)->summary((int) $member->getAttribute('xp'))),
+            /** @var int|null M5.9d: "Founding Member #0042" (1–1000); null for everybody else. */
+            'founding_number' => $member->getAttribute('founding_number'),
         ];
     }
 

@@ -8,6 +8,7 @@ import { Text } from '@/ui';
 import { setReducedMotionPreview } from '@/ui/motion';
 import { CarouselSnap, QrReveal } from '@/ui/motion/kit';
 import { backdropOrigin, backdropZoom } from '@/ui/motion/QrReveal';
+import { CAROUSEL_CARD_TOUCH_ACTION, CAROUSEL_WEB_SNAP } from '@/ui/motion/CarouselSnap';
 import { material } from '@/theme/tokens.generated';
 import { carouselIndex, carouselProgress } from '@/ui/motion/math';
 
@@ -133,5 +134,17 @@ describe('QrReveal backdrop (DQ-1053, ADR-451)', () => {
       </ThemeProvider>,
     );
     expect(screen.getByTestId('q.backdrop', { includeHiddenElements: true })).toBeTruthy();
+  });
+});
+
+describe('CR2-1 garage carousel on the web', () => {
+  it('snaps with CSS scroll snap, one centred card per swipe (react-native-web ignores snapToInterval)', () => {
+    expect(CAROUSEL_WEB_SNAP.scroll).toEqual({ scrollSnapType: 'x mandatory' });
+    expect(CAROUSEL_WEB_SNAP.card).toEqual({ scrollSnapAlign: 'center', scrollSnapStop: 'always' });
+  });
+
+  it('leaves both pans to the browser on a card, so a finger scrolls the carousel and the page', () => {
+    // `none` (RNGH's default) froze both on iPhone Safari; `pan-x` alone kept the page from scrolling over a card.
+    expect(CAROUSEL_CARD_TOUCH_ACTION).toBe('manipulation');
   });
 });

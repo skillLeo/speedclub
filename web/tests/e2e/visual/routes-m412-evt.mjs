@@ -1,7 +1,7 @@
 // Visual registry entries of M4.12 Events and meets, app part (EVT-01…06, the HOME-01 and DISC-01 modules). Same fields as the
 // entries in routes.mjs, which merges this list. One file per module, so parallel workstreams never edit the same registry file.
 //
-// Data: the public cells read the eight seeded sample events of the SPEED CLUB Editorial account (ShowcaseEvents, ADR-437; titles and places without "Beispiel" since DQ-1112; slugs are
+// Data: the public cells read the eight seeded sample events of the Speedclub Editorial account (ShowcaseEvents, ADR-437; titles and places without "Beispiel" since DQ-1112; slugs are
 // the same on every seed, `php artisan db:seed --class=DemoShowcaseSeeder` or ShowcaseEvents::seed()), badged "Beispiel", with no
 // counts (09 §8.19). The organiser cells use lukas.sc's own events {pendingEvent} (in review, frozen, ADR-439) and {draftEvent}
 // (draft, place after RSVP), made through the member API on first use by support/events.mjs and seen by nobody else. The runner
@@ -39,8 +39,11 @@ export const routesM412Evt = [
     ready: loadedOr('[data-testid^="EVT-01.event."]', 'EVT-01.root'),
     capture: 'expanded',
     maxHeight: 2400,
+    // DQ-M52-09: the M5.2 band at 200 %, in Schwarz and EN, and the 820 rail with Treffen.
+    fs2: true,
+    p4: { en: true, tablet: true, black: true },
     notes:
-      'Treffen (09 §7.10): large title, Liste · Karte, chips Heute · Wochenende · Diesen Monat · Entfernung · Treffen · Ausfahrt · Trackday · Messe; the sample events by Berlin day ("Samstag, 21. November"), each with its own 16:9 seed cover, each a date block (hero.numeral.s day, label.caps month), headline title, "Hamburg · 18:00–21:00 Uhr" caption, Beispiel badge, no counts, "Zusagen" (S secondary); "+" in the header. empty = the badged sample card, "Gerade keine Treffen in deiner Nähe." and "Region ändern"; restricted = the notice that creating is off, browsing on.',
+      'Treffen (09 §7.10): large title, Liste · Karte, chips Heute · Wochenende · Diesen Monat · Entfernung · Treffen · Ausfahrt · Trackday · Messe; the sample events by Berlin day ("Samstag, 21. November"), each with its own 16:9 seed cover, each a date block (hero.numeral.s day, label.caps month), headline title, "Hamburg · 18:00–21:00 Uhr" caption, Beispiel badge, no counts, "Zusagen" (S secondary); "+" in the header. empty = the badged sample card, "Gerade keine Treffen in deiner Nähe." and "Region ändern"; restricted = the notice that creating is off, browsing on. M5.2 (10 §1): /events is Entdecken › Treffen: a cold link lands in Entdecken, so the cell shows the tab title Entdecken, no back, the segmented control Builds · Treffen, the new search field (title and city), then Liste · Karte and the chips; the bell and (below 768) Nachrichten in the header after "+". Pushed from Start (Nächste Treffen) it keeps the title Treffen and back. M5.2 fix round: the search row ends in a 44 Karte toggle (no Liste · Karte segmented control, DQ-M52-05), the chips are Heute · Wochenende · Diesen Monat · Entfernung · Art (one "Art" chip with a sheet, DQ-M52-04); from 1280 the page is titled Treffen without the segmented control, as the sidebar marks Treffen (DQ-M52-03). M5.6 (10 §4): the default view is "Diese Woche" (the next seven Berlin days): the chips Diese Woche (selected) · Heute · Wochenende · Monat · Entfernung · Art, one sticky header per day ("Heute" with "Montag, 16. November", "Mittwoch" with "18. November"), and "Alle kommenden Treffen" (secondary M) after the week when later meets exist; every coming meet is EVT-01-upcoming, the empty week EVT-01-weekEmpty (routes-m56.mjs).',
   },
   {
     id: 'EVT-01-map',
@@ -49,8 +52,11 @@ export const routesM412Evt = [
     auth: 'member',
     states: ['default'],
     ready: '[data-testid="EVT-01.map"]',
+    // DQ-M52-09: the band at 200 % and in Schwarz in the map view too (DQ-M52-06).
+    fs2: true,
+    p4: { black: true },
     notes:
-      'Karte opened by link: the segmented control on Karte, the chips, and the map frame with its gate ("Die Karte lädt Daten von OpenFreeMap und OpenStreetMap. Erst wenn du tippst." + "Karte anzeigen"): a link never loads third-party tiles, a tap on Karte does. After the tap a device shows the clustered area pins with date labels and the selected card under the map.',
+      'Karte opened by link: the large title (it stays in the map view, DQ-M52-06), the search row with the Liste toggle, the chips, and the map frame with its gate ("Die Karte lädt Daten von OpenFreeMap und OpenStreetMap. Erst wenn du tippst." + "Karte anzeigen"): a link never loads third-party tiles, a tap on Karte does. After the tap a device shows the clustered area pins with date labels and the selected card under the map.',
   },
   {
     id: 'EVT-02',

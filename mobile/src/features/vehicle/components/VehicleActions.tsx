@@ -15,7 +15,11 @@ import { useViewAsLock } from '@/features/viewAs/useViewAs';
 import { hapticFor } from '@/lib/haptics';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { Button, Icon, PressableScale, Text, toast, type IconName } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 import { FollowButton } from '@/ui/motion/kit';
 

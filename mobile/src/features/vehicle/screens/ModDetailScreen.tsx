@@ -6,8 +6,15 @@ import { View } from 'react-native';
 import { useCachedPublicVehicle, usePublicMod, type PublicMod, type PublicModRow } from '@/api/queries/vehicles';
 import { SearchSimilarButton } from '@/features/discover/components/SearchSimilarButton';
 import { ModLinksCard, OwnerTagPanel, ProductBuildsRail } from '@/features/parts/components/ModParts';
+import { isRegistered } from '@/features/score/model';
 import { createStyles, space, useBreakpoint } from '@/theme';
-import { Icon, Photo, PressableScale, Skeleton, SkeletonBlock, SkeletonText, SpecRow, StatusPill, Text } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { SpecRow } from '@/ui/SpecRow';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
 
 import { PhotoViewer } from '../components/PhotoViewer';
 import { PushedPage } from '../components/PushedPage';
@@ -51,13 +58,18 @@ const useStyles = createStyles((t) => ({
   skeletonCard: { marginTop: t.space[32] },
 }));
 
-type ModHead = Pick<PublicModRow, 'title' | 'category' | 'status_label' | 'installed_label' | 'legal_status' | 'legal_status_label'>;
+/** `is_registered` (M5.9c contract §1): derived by the API from the owner-declared legal status. */
+type ModHead = Pick<PublicModRow, 'title' | 'category' | 'status_label' | 'installed_label' | 'legal_status' | 'legal_status_label' | 'is_registered'>;
 
 /** Category, `title.m` name, status and month: shown from the vehicle's cached row while the detail loads. */
 function ModHeader({ mod }: { mod: ModHead }) {
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
-  const legal = useLegalLabel()(mod);
+  const label = useLegalLabel();
+  // M5.9c: "TÜV-eingetragen" (the owner's statement, "Angabe des Besitzers"); the stated status stays beside it where it says more
+  // ("Einzelabnahme"), and goes where it would only repeat it ("Eingetragen").
+  const registered = isRegistered(mod);
+  const legal = registered && mod.legal_status === 'registered' ? null : label(mod);
   return (
     <View>
       <View style={styles.category}>
@@ -72,6 +84,11 @@ function ModHeader({ mod }: { mod: ModHead }) {
       <View style={styles.meta}>
         <StatusPill label={mod.status_label} testID={`${ROUTE_ID}.status`} />
         {/* [SIG] The owner's statement, in the same shape (§8); the disclaimer under the details says so. */}
+        {registered ? (
+          <View accessible aria-label={t('score.registeredA11y')} testID={`${ROUTE_ID}.registered`}>
+            <StatusPill label={t('score.registered')} />
+          </View>
+        ) : null}
         {legal ? (
           <View accessible aria-label={`${t('mod.legalStatus')}: ${legal}`}>
             <StatusPill label={legal} testID={`${ROUTE_ID}.legalStatus`} />

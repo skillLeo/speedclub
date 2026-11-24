@@ -368,6 +368,14 @@ const rootVars = [
   `  --sc-header: ${T.size.header}px;`,
   `  --sc-content-max: ${T.layout.contentMax}px;`,
   `  --sc-full-bleed-max: ${T.layout.fullBleedMax}px;`,
+  // Photo crops (aspect.*, SKILL §6) for Blade: `aspect-ratio: var(--sc-aspect-hero-desktop)`, and the height per width of the same
+  // crop, for a length that follows the photo's height in % of its width (client feedback CF-1: the 21:9 hero from 1280).
+  ...Object.entries(T.aspect)
+    .filter(([, v]) => typeof v === 'string' && /^\d+:\d+$/.test(v))
+    .flatMap(([k, v]) => {
+      const [w, h] = v.split(':').map(Number);
+      return [`  --sc-aspect-${kebab(k)}: ${w} / ${h};`, `  --sc-aspect-${kebab(k)}-height: ${Math.round((h / w) * 10000) / 10000};`];
+    }),
   `  --sc-feed-column: ${T.layout.feedColumn}px;`,
   `  --sc-rail: ${T.layout.rail}px;`,
   `  --sc-sidebar: ${T.layout.sidebar}px;`,

@@ -51,7 +51,12 @@
         "errors": {
             "code": "Gib die sechs Ziffern ein.",
             "failed": "Das hat nicht geklappt. Versuche es erneut."
-        }
+        },
+        "optional_warning": "Ohne 2FA ist dein Admin-Konto leichter angreifbar.",
+        "set_up": "2FA einrichten",
+        "disable": "2FA ausschalten",
+        "disable_title": "Zwei-Faktor-Anmeldung ausschalten?",
+        "disable_body": "Dein Schlüssel und deine Wiederherstellungscodes werden gelöscht. Du meldest dich danach nur mit dem Passwort an. Du kannst 2FA jederzeit neu einrichten."
     },
     "recovery": {
         "title": "Wiederherstellungscodes",
@@ -63,7 +68,7 @@
         "list_hint": "Bewahre sie an einem sicheren Ort auf, nicht auf demselben Telefon. Sie verschwinden, wenn du die Seite verlässt.",
         "hide": "Ausblenden",
         "download": "Als Textdatei sichern",
-        "file_title": "SPEED CLUB Admin: Wiederherstellungscodes",
+        "file_title": "Speedclub Admin: Wiederherstellungscodes",
         "copy": "Alle kopieren",
         "new_done": "Neue Codes erzeugt. Die alten gelten nicht mehr."
     },
@@ -85,6 +90,7 @@
     },
     "flash": {
         "session_ended": "Sitzung abgemeldet.",
-        "sessions_ended": "Alle anderen Sitzungen abgemeldet."
+        "sessions_ended": "Alle anderen Sitzungen abgemeldet.",
+        "two_factor_disabled": "Zwei-Faktor-Anmeldung ist aus."
     }
 }

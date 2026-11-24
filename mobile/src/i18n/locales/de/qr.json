@@ -12,20 +12,13 @@
         "none": "Kein Code"
     },
     "list": {
-        "title": "Meine QR-⁠Codes",
-        "subtitle": "Jedes veröffentlichte Fahrzeug hat seinen eigenen Code.",
-        "emptyTitle": "Noch keine QR-⁠Codes",
-        "emptyBody": "Veröffentliche ein Fahrzeug, dann bekommst du seinen QR-⁠Code.",
-        "addVehicle": "Fahrzeug hinzufügen",
-        "errorTitle": "Deine QR-⁠Codes konnten nicht geladen werden",
-        "offlineBody": "Sobald du wieder online bist, laden wir deine QR-⁠Codes.",
-        "suspendedNotice": "Dein Konto ist gesperrt. Wer deine Codes scannt, sieht gerade „Dieses Fahrzeug ist privat“."
+        "addVehicle": "Fahrzeug hinzufügen"
     },
     "detail": {
-        "title": "QR-⁠Code",
-        "cardLabel": "QR-⁠Code für {{vehicle}}",
+        "title": "Sticker",
+        "cardLabel": "QR-⁠Code deines Stickers für {{vehicle}}",
         "share": "Teilen",
-        "shareTitle": "{{vehicle}} auf SPEED CLUB",
+        "shareTitle": "{{vehicle}} auf Speedclub",
         "linkCopied": "Link kopiert",
         "shareFailed": "Teilen hat nicht geklappt. Versuch es noch einmal.",
         "publicPage": "Öffentliche Seite ansehen",
@@ -34,40 +27,40 @@
         "reissueHint": "Alte Sticker zeigen danach nur noch „nicht mehr gültig“.",
         "privateNotice": "Dein Fahrzeug ist privat. Wer den Code scannt, sieht „Dieses Fahrzeug ist privat“.",
         "suspendedNotice": "Dein Konto ist gesperrt. Solange die Sperre gilt, kannst du den QR-⁠Code nicht ersetzen.",
-        "errorTitle": "Der QR-⁠Code konnte nicht geladen werden",
-        "cardErrorTitle": "Der Code konnte nicht angezeigt werden",
-        "savePhoto": "In Fotos sichern",
-        "saveImage": "Als Bild sichern",
+        "errorTitle": "Dein Sticker konnte nicht geladen werden",
         "stickerPdf": "Sticker-PDF",
-        "moreFormats": "Weitere Formate",
         "orderSticker": "Sticker bestellen",
-        "shopFailed": "Der Sticker-Shop ließ sich nicht öffnen. Versuch es noch einmal.",
-        "downloadFailed": "Die Datei konnte nicht geladen werden. Versuch es noch einmal."
+        "downloadFailed": "Die Datei konnte nicht geladen werden. Versuch es noch einmal.",
+        "design": "Sticker gestalten",
+        "scanStats": "Scan-Statistik",
+        "qrCode": "QR-⁠Code",
+        "scansThirty_one": "{{total}} Scan in 30 Tagen",
+        "scansThirty_other": "{{total}} Scans in 30 Tagen"
     },
     "reissue": {
         "title": "QR-⁠Code ersetzen?",
-        "body": "Du bekommst einen neuen Code. Wer den alten Sticker scannt, sieht danach nur noch „Dieser QR-⁠Code ist nicht mehr gültig“. Das lässt sich nicht rückgängig machen.",
+        "body": "Du bekommst einen neuen Code. Wer den alten Sticker scannt, sieht danach nur noch „Dieser Sticker ist nicht mehr gültig“. Das lässt sich nicht rückgängig machen.",
         "cancel": "Abbrechen",
         "confirm": "QR-⁠Code ersetzen",
         "done": "Neuer QR-⁠Code ist aktiv. Lade ihn herunter und tausch den alten Sticker aus.",
         "failed": "Das Ersetzen hat nicht geklappt. Versuch es noch einmal."
     },
     "blocked": {
-        "title": "Dieser QR-⁠Code ist gesperrt",
-        "body": "Unser Team hat ihn gesperrt. Wer ihn scannt, sieht „Dieser QR-⁠Code ist nicht mehr gültig“. Einen neuen Code kann nur unser Team ausstellen."
+        "title": "Dieser Sticker ist gesperrt",
+        "body": "Unser Team hat seinen QR-⁠Code gesperrt. Wer ihn scannt, sieht „Dieser Sticker ist nicht mehr gültig“. Einen neuen Code kann nur unser Team ausstellen."
     },
     "inactive": {
         "title": "Gerade kein aktiver QR-⁠Code",
         "body": "Für dieses Fahrzeug ist im Moment kein Code aktiv. Versuch es gleich noch einmal."
     },
     "unavailable": {
-        "title": "QR-⁠Code nicht verfügbar",
+        "title": "Sticker nicht verfügbar",
         "body": "Das Fahrzeug ist noch nicht veröffentlicht oder gehört nicht zu deiner Garage.",
         "garage": "Zur Garage"
     },
     "guest": {
-        "title": "Melde dich an, um deine QR-⁠Codes zu sehen",
-        "body": "Jedes Fahrzeug, das du veröffentlichst, bekommt einen QR-⁠Code für deinen Sticker.",
+        "title": "Melde dich an, um deine Sticker zu sehen",
+        "body": "Jedes Fahrzeug, das du veröffentlichst, bekommt seinen eigenen Sticker mit QR-⁠Code.",
         "signIn": "Anmelden"
     },
     "download": {
@@ -107,7 +100,7 @@
     },
     "placement": {
         "title": "Sticker-Platzierung",
-        "subtitle": "Wo dein QR-⁠Sticker hingehört",
+        "subtitle": "Wo dein Sticker hingehört",
         "diagramLabel": "Auto von oben, vorne links: 1 Kofferraumdeckel und Stoßfänger, 2 Heckscheibe, 3 vordere Seitenscheiben, 4 Windschutzscheibe.",
         "front": "Vorne",
         "rear": "Hinten",
@@ -123,7 +116,7 @@
             "windscreen": "Windschutzscheibe: möglichst gar nicht. Wenn überhaupt, nur ganz am Rand außerhalb des Sichtfelds und nie im Wischerbereich.",
             "size": "Klein halten: deutlich unter 0,1 m² und nie mehr als ein Viertel einer Scheibe. Nicht spiegelnd, nicht leuchtend, keine Kennzeichen, Leuchten oder Plaketten verdecken."
         },
-        "print": "Druck: mindestens 30 × 30 mm für Scans aus etwa 1 m, für größere Entfernungen größer. Rund um den Code einen weißen Rand von 4 Modulen (Kästchen) frei lassen. Matte Folie, schwarz auf weiß.",
+        "print": "Druck: Der Designer hält den QR-⁠Code bei mindestens 25 mm und lässt rundherum 4 Module frei. Für Scans aus mehr als 1 m nimm Größe M oder L. Auf dunklem Glas weißer Druck, auf hellem Lack schwarzer.",
         "disclaimer": "Keine Rechtsberatung. Maßgeblich sind die StVZO (u. a. §§ 35b, 40) und die Auslegung der Behörden. Verstöße können ein Bußgeld nach sich ziehen."
     },
     "preview": {
@@ -132,7 +125,7 @@
         "active": "So sieht dein Fahrzeug für alle aus, die deinen Sticker scannen – ohne App und ohne Konto.",
         "unlisted": "Nicht gelistet: Die Seite ist nur über deinen Sticker und den Link erreichbar, nicht über Suche und Feed.",
         "private": "Dein Fahrzeug ist privat. Wer den Sticker scannt, sieht „Dieses Fahrzeug ist privat“ und nicht diese Seite.",
-        "blocked": "Dein QR-⁠Code ist gesperrt. Wer ihn scannt, sieht „Dieser QR-⁠Code ist nicht mehr gültig“.",
+        "blocked": "Dein Sticker ist gesperrt. Wer seinen QR-⁠Code scannt, sieht „Dieser Sticker ist nicht mehr gültig“.",
         "openFailed": "Die Seite ließ sich nicht öffnen. Versuch es noch einmal.",
         "errorTitle": "Die Seite konnte nicht geladen werden"
     },
@@ -140,7 +133,7 @@
         "checking": "QR-⁠Code wird geprüft",
         "states": {
             "revoked": {
-                "title": "Dieser QR-⁠Code ist nicht mehr gültig",
+                "title": "Dieser Sticker ist nicht mehr gültig",
                 "body": "Dieser Sticker führt zu keinem Fahrzeug mehr."
             },
             "private": {
@@ -148,7 +141,7 @@
                 "body": "Der Besitzer zeigt es gerade nicht öffentlich. Vielleicht klappt es später."
             },
             "not_found": {
-                "title": "Diesen QR-⁠Code kennen wir nicht",
+                "title": "Diesen Sticker kennen wir nicht",
                 "body": "Prüf den Code auf dem Sticker oder scanne ihn noch einmal."
             }
         },
@@ -160,17 +153,277 @@
         "offlineBody": "Um den QR-⁠Code zu prüfen, brauchst du eine Verbindung."
     },
     "stats": {
-        "title": "Scans",
-        "summary": "{{recent}} in 14 Tagen · {{total}} gesamt",
-        "label": "Scans: {{recent}} in den letzten 14 Tagen, {{total}} insgesamt. {{milestone}}",
-        "milestoneNext": "Nächster Meilenstein: {{next}} Scans",
-        "milestoneReached": "Meilenstein erreicht: {{reached}} Scans. Der nächste kommt bei {{next}}.",
-        "milestoneLast": "Meilenstein erreicht: {{reached}} Scans",
         "privacy": "Wir zählen nur Scans, nicht wer scannt.",
-        "errorTitle": "Die Scans konnten nicht geladen werden",
-        "summaryNone": "Noch keine Scans",
-        "summaryNoneRecent": "{{total}} gesamt · keine in den letzten 14 Tagen",
-        "labelNone": "Scans: noch keine. {{milestone}}",
         "milestoneFirst": "Erster Meilenstein: {{next}} Scans"
+    },
+    "hub": {
+        "title": "Meine Sticker",
+        "subtitle": "Jedes veröffentlichte Fahrzeug hat seinen eigenen Sticker.",
+        "errorTitle": "Deine Sticker konnten nicht geladen werden",
+        "offlineBody": "Sobald du wieder online bist, laden wir deine Sticker.",
+        "emptyTitle": "Dein erster Sticker wartet",
+        "emptyBody": "Veröffentliche ein Fahrzeug, dann gestaltest du hier seinen Sticker für die Scheibe.",
+        "suspendedNotice": "Dein Konto ist gesperrt. Du kannst deine Sticker ansehen und herunterladen, aber nicht ändern. Wer sie scannt, sieht gerade „Dieses Fahrzeug ist privat“.",
+        "design": "Gestalten",
+        "order": "Bestellen",
+        "download": "Herunterladen",
+        "status": {
+            "active": "Aktiv",
+            "revoked": "Gesperrt",
+            "none": "Kein Code"
+        },
+        "notDesigned": "Noch nicht gestaltet",
+        "draft": "Entwurf",
+        "scanPassed": "Scan-Test bestanden",
+        "noScanNeeded": "Ohne QR-⁠Code",
+        "orderSoon": "Bestellung bald verfügbar.",
+        "afterScanTest": "Herunterladen und Bestellen gehen nach dem Scan-Test.",
+        "openCard": "Sticker von {{vehicle}} öffnen",
+        "artLabel": "Sticker von {{vehicle}}: {{design}}",
+        "blockedStage": "Gesperrt – unser Team hat den Code gesperrt.",
+        "scansLabel_one": "Ein Scan diese Woche. Scan-Statistik öffnen",
+        "scansLabel_other": "{{count}} Scans diese Woche. Scan-Statistik öffnen",
+        "scansThisWeek_one": "Scan diese Woche",
+        "scansThisWeek_other": "Scans diese Woche",
+        "sampleLabel": "Beispiel: ein Sticker mit Speedclub-⁠Logo und deinem Namen",
+        "sampleName": "@dein.name",
+        "noScansThisWeek": "Noch keine Scans diese Woche",
+        "scansLabelNone": "Noch keine Scans diese Woche. Scan-Statistik öffnen",
+        "scanTest": "Scan-Test"
+    },
+    "designer": {
+        "title": "Sticker gestalten",
+        "errorTitle": "Der Designer konnte nicht geladen werden",
+        "offlineBanner": "Offline – deine Änderungen werden gespeichert, sobald du wieder online bist.",
+        "suspended": "Dein Konto ist gesperrt. Du kannst deinen Sticker ansehen, aber nicht ändern.",
+        "undo": "Rückgängig",
+        "redo": "Wiederholen",
+        "order": "Sticker bestellen",
+        "history": "Frühere Versionen",
+        "status": {
+            "saved": "Gespeichert",
+            "draft": "Noch nicht gestaltet",
+            "pending": "Ungespeicherte Änderung",
+            "saving": "Speichert …",
+            "offline": "Offline – wird später gespeichert",
+            "conflict": "Auf einem anderen Gerät geändert",
+            "invalid": "Nicht gespeichert",
+            "forbidden": "Nur ansehen",
+            "error": "Speichern fehlgeschlagen"
+        },
+        "dock": {
+            "label": "Einstellungen",
+            "expand": "Alle Einstellungen zeigen",
+            "collapse": "Einstellungen verkleinern"
+        },
+        "template": {
+            "group": "Vorlage",
+            "names": {
+                "classic": "Classic",
+                "minimal": "Minimal",
+                "banner": "Banner",
+                "plate": "Plate",
+                "vertical_jdm": "Vertical JDM",
+                "round": "Round"
+            }
+        },
+        "content": {
+            "title": "Inhalt",
+            "qr": "QR-⁠Code",
+            "qrOn": "Führt zu deiner Build-Seite",
+            "qrOffWarning": "Ohne QR-⁠Code kann niemand deinen Build scannen.",
+            "username": "Benutzername",
+            "carName": "Fahrzeugname",
+            "customLine": "Eigene Zeile",
+            "customLineHelper": "{{count}} von {{max}} Zeichen, eine Zeile",
+            "customLineErrors": {
+                "tooLong": "Höchstens {{max}} Zeichen.",
+                "lineBreak": "Nur eine Zeile, ohne Zeilenumbruch.",
+                "characters": "Nur lateinische, griechische und kyrillische Buchstaben, Ziffern und Satzzeichen – keine Emojis."
+            },
+            "templateShows": "Diese Vorlage druckt nur: {{lines}}. Deine anderen Angaben bleiben gespeichert.",
+            "short": {
+                "username": "Benutzername",
+                "car_name": "Fahrzeugname",
+                "custom_line": "eigene Zeile"
+            }
+        },
+        "print": {
+            "title": "Druck",
+            "colourway": "Druckfarbe",
+            "colourways": {
+                "white": {
+                    "name": "Weißer Druck",
+                    "hint": "Für dunkle Scheiben"
+                },
+                "black": {
+                    "name": "Schwarzer Druck",
+                    "hint": "Für helle Lackierung"
+                },
+                "white_red": {
+                    "name": "Weiß mit Signalrot",
+                    "hint": "Für dunkle Scheiben, mit Akzent in Signalrot"
+                }
+            },
+            "material": "Folie",
+            "materials": {
+                "transparent": "Transparente Folie",
+                "white_vinyl": "Weiße Folie"
+            },
+            "mirrored": "Spiegelverkehrt drucken",
+            "mirroredHelper": "Für die Innenseite der Scheibe: von außen liest man ihn richtig herum."
+        },
+        "size": {
+            "title": "Größe",
+            "s": "S",
+            "m": "M",
+            "l": "L",
+            "mm": "{{width}} × {{height}} mm",
+            "withQr": "{{size}}, QR-⁠Code {{qr}} mm"
+        },
+        "rules": {
+            "mirroredOff": "Spiegelverkehrt geht nur auf transparenter Folie – wir haben es ausgeschaltet.",
+            "materialTransparent": "Weißer Druck geht nur auf transparenter Folie – wir haben sie gewählt."
+        },
+        "preview": {
+            "modes": "Vorschau",
+            "flat": "Flach",
+            "car": "Am Auto",
+            "ruler": "Originalgröße",
+            "label": "Sticker {{template}}, {{width}} × {{height}} mm, {{colourway}}, {{qr}}, Text: {{lines}}. {{mirrored}}",
+            "withQr": "mit QR-⁠Code",
+            "withoutQr": "ohne QR-⁠Code",
+            "noLines": "nur Logo",
+            "mirrored": "Spiegelverkehrt gedruckt.",
+            "carLabel": "{{sticker}} Auf einem Foto: {{photo}}.",
+            "photoGroup": "Foto für die Vorschau",
+            "photos": {
+                "day": "Tag",
+                "evening": "Abend",
+                "lightPaint": "Heller Lack"
+            },
+            "rulerNote": "Ungefähr in Originalgröße – genau {{width}} × {{height}} mm. Jeder Bildschirm zeigt Millimeter etwas anders.",
+            "paused": "Die Vorschau wartet, bis die eigene Zeile passt.",
+            "errorTitle": "Die Vorschau konnte nicht geladen werden",
+            "warnings": {
+                "username_too_long": "Dein Benutzername ist für diese Größe zu lang und wird weggelassen.",
+                "car_name_too_long": "Der Fahrzeugname ist für diese Größe zu lang und wird weggelassen.",
+                "custom_line_too_long": "Die eigene Zeile ist für diese Größe zu lang und wird weggelassen."
+            },
+            "rulerScroll": "Er ist größer als dein Bildschirm. Wisch zur Seite, um alles zu sehen.",
+            "rulerShort": "1:1",
+            "carCaption": "Beispielfoto · echte Größe",
+            "rulerUnit": "Zentimeter"
+        },
+        "scan": {
+            "run": "Scan-Test starten",
+            "passed": "Scan-Test bestanden",
+            "notApplicable": "Ohne QR-⁠Code ist kein Scan-Test nötig.",
+            "failed": "Scan-Test nicht bestanden. Ändere Größe oder Druckfarbe und teste noch einmal.",
+            "failedBody": "Der gedruckte Code ließ sich nicht sicher lesen. Ändere Größe oder Druckfarbe und teste noch einmal.",
+            "noActiveCode": "Für dieses Fahrzeug ist gerade kein QR-⁠Code aktiv. Ohne QR-⁠Code kannst du weiter gestalten.",
+            "needsSave": "Deine Änderungen werden gespeichert, dann kannst du den Scan-Test starten.",
+            "needsTest": "Vor dem Bestellen prüfen wir, ob sich dein Sticker sicher scannen lässt.",
+            "rateLimited": "Das waren gerade viele Scan-Tests. Versuch es in ein paar Minuten noch einmal.",
+            "offline": "Für den Scan-Test brauchst du eine Verbindung.",
+            "error": "Der Scan-Test hat nicht geklappt. Versuch es noch einmal.",
+            "changedDuringTest": "Dein Sticker wurde während des Tests geändert. Starte den Scan-Test erneut."
+        },
+        "conflict": {
+            "title": "Auf einem anderen Gerät geändert",
+            "body": "Dein Sticker wurde inzwischen auf einem anderen Gerät gespeichert. Willst du diese neuere Version laden oder deine behalten?",
+            "load": "Neuere Version laden",
+            "keep": "Meine Version behalten",
+            "failed": "Die neuere Version konnte nicht geladen werden. Versuch es noch einmal.",
+            "resolve": "Konflikt lösen",
+            "later": "Später"
+        },
+        "discard": {
+            "title": "Änderungen verwerfen?",
+            "body": "Deine letzten Änderungen sind noch nicht gespeichert.",
+            "offline": "Du bist offline. Deine letzten Änderungen sind noch nicht gespeichert und gehen verloren, wenn du jetzt gehst."
+        },
+        "qaLine": "Built not bought"
+    },
+    "stickerFiles": {
+        "title": "Herunterladen",
+        "shareTitle": "Sticker für {{vehicle}}",
+        "stale": "Diese Version ist nicht mehr aktuell. Die Seite lädt den neuesten Stand.",
+        "formats": {
+            "pdf": {
+                "title": "Druck-PDF",
+                "detail": "Exakte Größe, 3 mm Beschnitt, Schnittmarken und Design-ID – für die Druckerei"
+            },
+            "svg": {
+                "title": "SVG",
+                "detail": "Vektorgrafik mit einer Ebene pro Druckfarbe und Schneidekontur"
+            },
+            "share": {
+                "title": "Bild zum Teilen",
+                "detail": "PNG mit deinem Sticker; der Code führt zu deiner Build-Seite"
+            }
+        }
+    },
+    "stickerStats": {
+        "title": "Scan-Statistik",
+        "total": "Scans insgesamt",
+        "thisWeek": "Diese Woche",
+        "lastWeek": "Letzte Woche",
+        "days": "Letzte 30 Tage · {{total}} Scans",
+        "chartLabel_one": "Scans der letzten 30 Tage: ein Scan.",
+        "chartLabel_other": "Scans der letzten 30 Tage: {{total}}, an einem Tag höchstens {{busiest}}.",
+        "chartNone": "In den letzten 30 Tagen keine Scans.",
+        "emptyBody": "Sobald es passiert, siehst du den Tag hier.",
+        "sourceSticker": "Sticker-Scans (30 Tage)",
+        "sourceLink": "Geteilte Links (30 Tage)",
+        "sourceLinkPending": "Aufrufe über geteilte Links zählen wir erst bald mit.",
+        "notCounted": "Noch nicht erfasst",
+        "firstScan": "Erster Scan",
+        "noScanYet": "Noch keiner",
+        "milestones": "Meilensteine",
+        "disabledTitle": "Die Scan-Statistik ist gerade aus",
+        "disabledBody": "Wir zählen deine Scans weiter. Sobald die Statistik wieder an ist, siehst du sie hier.",
+        "errorTitle": "Die Scan-Statistik konnte nicht geladen werden",
+        "zeroTitle": "Noch hat niemand deinen Sticker gescannt."
+    },
+    "order": {
+        "title": "Sticker bestellen",
+        "errorTitle": "Dein Sticker konnte nicht geladen werden",
+        "notReadyTitle": "Erst der Scan-Test",
+        "notReadyBody": "Bestellen kannst du einen Sticker, dessen Scan-Test bestanden ist.",
+        "suspended": "Dein Konto ist gesperrt. Solange die Sperre gilt, kannst du keinen Sticker bestellen.",
+        "reference": "Design-ID",
+        "template": "Vorlage",
+        "size": "Größe",
+        "print": "Druckfarbe",
+        "material": "Folie",
+        "mirrored": "spiegelverkehrt",
+        "cta": "Im Shop bestellen",
+        "hint": "Bezahlt wird im Speedclub Shop bei Shopify, nicht in der App. Die Design-ID {{reference}} hängt an deiner Bestellung, damit genau dieser Sticker gedruckt wird.",
+        "soon": "Bestellung bald verfügbar",
+        "openFailed": "Der Shop ließ sich nicht öffnen. Versuch es noch einmal.",
+        "stale": "Diese Version ist nicht mehr bestellbar, weil sich dein Sticker oder sein Code geändert hat. Mach den Scan-Test im Designer noch einmal.",
+        "forbidden": "Bestellen geht gerade nicht für dein Konto.",
+        "offline": "Zum Bestellen brauchst du eine Verbindung.",
+        "failed": "Der Bestelllink konnte nicht erstellt werden. Versuch es noch einmal.",
+        "toDesigner": "Zum Designer",
+        "artLabel": "Dein Sticker {{template}}, {{size}}",
+        "notReadyHint": "Der Test läuft im Designer und dauert ein paar Sekunden."
+    },
+    "history": {
+        "title": "Frühere Versionen",
+        "intro": "Jede geprüfte Version bleibt hier. Holst du eine zurück, wird sie dein neuer Entwurf.",
+        "validated": "Geprüft am {{date}}",
+        "draft": "Entwurf",
+        "version": "Version {{version}}",
+        "restore": "Zurückholen",
+        "restoreLabel": "Version {{version}} zurückholen",
+        "restored": "Version {{version}} ist jetzt dein Entwurf (Version {{draft}}).",
+        "restoreFailed": "Die Version konnte nicht zurückgeholt werden. Versuch es noch einmal.",
+        "errorTitle": "Die Versionen konnten nicht geladen werden",
+        "emptyTitle": "Noch keine Versionen",
+        "emptyBody": "Sobald dein Sticker den Scan-Test bestanden hat, steht jede Version hier.",
+        "restoreConflict": "Dein Sticker wurde inzwischen geändert. Die Liste zeigt jetzt den neuesten Stand – versuch es noch einmal.",
+        "currentPill": "Aktuell"
     }
 }

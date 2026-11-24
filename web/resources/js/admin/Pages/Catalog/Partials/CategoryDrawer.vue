@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { trans } from 'laravel-vue-i18n';
 import { computed, reactive, watch } from 'vue';
-import { Button, Drawer, Field, Input, Switch, Textarea } from '../../../Components/ui';
+import { Button, Drawer, Field, Input, Switch } from '../../../Components/ui';
 import { qaDialogFailed } from '../../../composables/pageState';
 import { routeOr } from '../../../lib/routes';
 import FormError from './FormError.vue';
@@ -9,7 +9,7 @@ import { categoryGlyph, useCatalogWrite } from '../shared';
 
 /**
  * ADM-15 category create / edit (catalog.manage): key (fixed once a modification uses the category), names DE/EN, icon, sort (also its
- * search bit: 1–63; a sort taken by another category swaps the two), active. Edits need a reason (they rebuild the search rows).
+ * search bit: 1–63; a sort taken by another category swaps the two), active. Edits rebuild the search rows.
  */
 export interface CategoryRow {
     id: number;
@@ -24,7 +24,7 @@ export interface CategoryRow {
 const open = defineModel<boolean>('open', { default: false });
 const props = defineProps<{ category: CategoryRow | null; testId: string }>();
 
-const form = reactive({ key: '', de: '', en: '', icon: '', sort: '', active: true, reason: '' });
+const form = reactive({ key: '', de: '', en: '', icon: '', sort: '', active: true });
 const write = useCatalogWrite();
 const failed = qaDialogFailed();
 const editing = computed(() => props.category !== null);
@@ -36,13 +36,13 @@ watch(
         if (!value) return;
         write.reset();
         const c = props.category;
-        Object.assign(form, { key: c?.key ?? '', de: c?.name.de ?? '', en: c?.name.en ?? '', icon: c?.icon ?? '', sort: c ? String(c.sort) : '', active: c?.active ?? true, reason: '' });
+        Object.assign(form, { key: c?.key ?? '', de: c?.name.de ?? '', en: c?.name.en ?? '', icon: c?.icon ?? '', sort: c ? String(c.sort) : '', active: c?.active ?? true });
     },
     { immediate: true },
 );
 
 function save(): void {
-    const data: Record<string, unknown> = { name: { de: form.de.trim(), en: form.en.trim() }, icon: form.icon.trim() || null, active: form.active, reason: form.reason.trim() || null };
+    const data: Record<string, unknown> = { name: { de: form.de.trim(), en: form.en.trim() }, icon: form.icon.trim() || null, active: form.active };
     if (!editing.value || (!keyLocked.value && form.key.trim() !== props.category?.key)) data.key = form.key.trim();
     if (form.sort.trim() !== '' && Number(form.sort) !== props.category?.sort) data.sort = Number.parseInt(form.sort, 10);
     const c = props.category;
@@ -84,15 +84,6 @@ const formId = `${props.testId}-form`;
                 </div>
             </div>
             <Switch v-model="form.active" :label="trans('catalog.category.active')" />
-            <Field
-                :label="trans('catalog.fields.reason')"
-                :hint="editing ? trans('ui.confirm.reason_hint') : trans('catalog.fields.reason_optional_hint')"
-                :error="err('reason')"
-                :required="editing"
-                :optional="!editing"
-            >
-                <Textarea v-model="form.reason" :rows="2" :maxlength="1000" :data-testid="`${testId}.reason`" />
-            </Field>
         </form>
         <template #footer>
             <Button variant="ghost" :disabled="write.processing.value" @click="open = false">{{ trans('ui.actions.cancel') }}</Button>

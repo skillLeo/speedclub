@@ -73,7 +73,9 @@ use App\Services\Config\ConfigVersions;
 use App\Services\Config\Schemas\HomeCurationSchema;
 use App\Services\Garage\BuildUpdates;
 use App\Services\Garage\ModFields;
+use App\Services\Governance\Governance;
 use App\Services\Media\MediaService;
+use App\Services\Media\PlateBlurChoice;
 use App\Services\Messaging\ChatMedia;
 use App\Services\Messaging\Conversations;
 use App\Services\Moderation\DecisionInput;
@@ -88,8 +90,11 @@ use App\Services\Showcase\Showcase;
 use App\Services\Showcase\ShowcaseBusinesses;
 use App\Services\Showcase\ShowcaseEvents;
 use App\Services\Showcase\ShowcaseMaintenance;
+use App\Services\Showcase\ShowcasePhase5;
 use App\Services\Showcase\ShowcasePhotos;
+use App\Services\Showcase\ShowcasePlates;
 use App\Services\Showcase\ShowcasePurge;
+use App\Services\Social\Collections;
 use App\Support\Codes;
 use App\Support\Slug;
 use App\Support\Username;
@@ -114,7 +119,7 @@ use Throwable;
  * for the admin. Everything is read from database/data/showcase/*.json (no Faker: staging has no dev dependencies) and the seed
  * photos' manifest; `speedclub:demo --purge` removes it again (ShowcasePurge).
  *
- * The SPEED CLUB Editorial account (09 §8.19, ADR-412: is_sample and is_editorial) owns the editorial sample builds of
+ * The Speedclub Editorial account (09 §8.19, ADR-412: is_sample and is_editorial) owns the editorial sample builds of
  * database/data/showcase/editorial.json: each names one shoot of the manifest (`car`) that shows exactly its make, model and generation
  * and that no showcase or classic demo build uses, with the manufacturer's figures and their source. Editorial builds take part in
  * nothing social (no follows, saves, chats, QR scans, curation or notifications), so no count on them is invented. Every sample photo is
@@ -190,7 +195,7 @@ class DemoShowcaseSeeder extends Seeder
     /** @var array{notes: list<string>, tracks: list<string>} */
     private array $stories = ['notes' => [], 'tracks' => []];
 
-    /** The SPEED CLUB Editorial account's username (database/data/showcase/editorial.json). */
+    /** The Speedclub Editorial account's username (database/data/showcase/editorial.json). */
     private ?string $editorial = null;
 
     /** @var array<string, true> data keys of the editorial builds */
@@ -198,6 +203,9 @@ class DemoShowcaseSeeder extends Seeder
 
     /** @var list<string> Verlauf notes in the editorial voice */
     private array $editorialNotes = [];
+
+    /** M5.9f (ADR-509): the plate decision every imported sample photo carries. */
+    private ShowcasePlates $plates;
 
     public function run(): void
     {
@@ -239,8 +247,16 @@ class DemoShowcaseSeeder extends Seeder
                 app(ShowcaseBusinesses::class)->seed(photos: $this->photoDirectory());
                 // M4.13 (09 §8.19): sample maintenance on the showcase member's and the Editorial account's main build (owner-only).
                 app(ShowcaseMaintenance::class)->seed();
+                // M5.10: sticker designs through the Scan-Test, plans, the owner-only view history, check-ins at the past demo meet.
+                $this->seedPhase5();
                 app(VehicleSearchProjector::class)->rebuildAll();
                 $this->seedNotifications();
+                // QA-C01: the 25 forum sample threads and the five sample crews are written by showcase members. DatabaseSeeder calls
+                // both seeders as well, but on the documented reset (db:seed, then this seeder) it runs before these members exist,
+                // and both skip a missing author. Both are idempotent. Before the gift demo, which counts crews and forum posts.
+                $this->seedCommunitySamples();
+                // M5.9f: the gift demo (plates, STREET DEX, Build Score, XP and badges, Car of the Day, invites, Wrapped) on top.
+                $this->seedGifts();
                 $this->restoreStoryDates();
                 $this->recordSeeded();
             });
@@ -249,6 +265,46 @@ class DemoShowcaseSeeder extends Seeder
         }
 
         $this->say(sprintf('Showcase ready in %.0f s: %s', microtime(true) - $started, json_encode(app(ShowcasePurge::class)->counts(), JSON_UNESCAPED_UNICODE)));
+    }
+
+    /**
+     * M5.10 (ShowcasePhase5), at the showcase clock.
+     */
+    private function seedPhase5(): void
+    {
+        $started = microtime(true);
+        $written = app(ShowcasePhase5::class)->seed($this->clock);
+        $this->say(sprintf('Phase 5 demo in %.1f s: %s', microtime(true) - $started, json_encode($written, JSON_UNESCAPED_UNICODE)));
+    }
+
+    /**
+     * QA-C01: ForumSampleSeeder and ShowcaseCrewsSeeder with this run's photo folder and console.
+     */
+    private function seedCommunitySamples(): void
+    {
+        foreach ([new ForumSampleSeeder, new ShowcaseCrewsSeeder] as $seeder) {
+            $seeder->withPhotos($this->photoDirectory())->setContainer($this->container ?? app());
+
+            if (isset($this->command)) {
+                $seeder->setCommand($this->command);
+            }
+
+            $seeder->__invoke();
+        }
+    }
+
+    /**
+     * M5.9f: GiftDemoSeeder with this run's photo folder and console.
+     */
+    private function seedGifts(): void
+    {
+        $gift = (new GiftDemoSeeder)->withPhotos($this->photoDirectory())->setContainer($this->container ?? app());
+
+        if (isset($this->command)) {
+            $gift->setCommand($this->command);
+        }
+
+        $gift->__invoke();
     }
 
     /**
@@ -310,6 +366,7 @@ class DemoShowcaseSeeder extends Seeder
         $this->stories = $stories;
 
         $directory = $this->photoDirectory();
+        $this->plates = ShowcasePlates::for($directory);
         $manifestPath = $directory.'/manifest.json';
         $manifest = is_file($manifestPath) ? json_decode((string) file_get_contents($manifestPath), true) : null;
 
@@ -516,8 +573,9 @@ class DemoShowcaseSeeder extends Seeder
     }
 
     /**
-     * admin.demo@speedclub.test (role admin) for the crawl, with DEMO_STAFF_PASSWORD and, when DEMO_STAFF_TOTP_SECRET is set, TOTP
-     * already enrolled with that key. Without a staff password the admin side of the showcase is left out.
+     * admin.demo@speedclub.test (role owner) for the crawl and the client, with DEMO_STAFF_PASSWORD and, when DEMO_STAFF_TOTP_SECRET is
+     * set, TOTP already enrolled with that key. Client round 6 (ADR-540): the client signs in with this account on staging and owns the
+     * platform, so it is an Owner (it was an Admin and could not save the company data, ADR-239). Without a staff password the admin side of the showcase is left out.
      */
     private function seedStaff(): void
     {
@@ -548,7 +606,7 @@ class DemoShowcaseSeeder extends Seeder
             ])->save();
         }
 
-        $staff->syncRoles(['admin']);
+        $staff->syncRoles(['owner']);
         $this->staff = $staff->refresh();
         $this->enrolTotp($this->staff);
     }
@@ -734,8 +792,8 @@ class DemoShowcaseSeeder extends Seeder
      */
     private function description(array $data): string
     {
+        // No acceleration or speed figure in a description (10 §16: no 0–100, top-speed or lap-time numbers; gift copy review M5.9f).
         $facts = array_filter([
-            $data['factory']['zero_to_100_s'] === null ? null : '0–100 km/h in '.number_format((float) $data['factory']['zero_to_100_s'], 1, ',', '.').' s',
             $data['factory']['weight_kg'] === null ? null : 'Leergewicht '.number_format($data['factory']['weight_kg'], 0, ',', '.').' kg (DIN)',
         ]);
 
@@ -818,6 +876,9 @@ class DemoShowcaseSeeder extends Seeder
             $result[] = ['mod' => $row, 'at' => $at, 'after' => $isAfter && $status === ModStatus::Installed, 'installed' => $status === ModStatus::Installed];
         }
 
+        // M5.10: the plans ShowcasePhase5 adds are not in the data, and stay.
+        $titles = [...$titles, ...ShowcasePhase5::planTitles()];
+
         foreach ($existing as $title => $row) {
             if (! in_array($title, $titles, true)) {
                 $row->forceDelete();
@@ -850,7 +911,7 @@ class DemoShowcaseSeeder extends Seeder
                     'focal_y' => $photo['focal_y'],
                     'category' => MediaCategory::tryFrom($photo['category']) ?? MediaCategory::Other,
                     'sort' => $index + 1,
-                ]));
+                ], $this->plates->choice($photo['file'])));
             }
 
             $media->forceFill(['sample_source' => $source, 'sort' => $index + 1, 'moderation_status' => ModerationStatus::Approved, 'thumbhash' => $photo['graded'] ? $photo['thumbhash'] : null]); // the manifest's ThumbHash is of the graded rendition
@@ -961,7 +1022,7 @@ class DemoShowcaseSeeder extends Seeder
             'focal_y' => $photo['focal_y'],
             'category' => MediaCategory::tryFrom($photo['category']) ?? MediaCategory::Other,
             'sort' => 1,
-        ]));
+        ], $this->plates->choice($photo['file'])));
         $media->forceFill(['sample_source' => 'update:'.$photo['file'], 'moderation_status' => ModerationStatus::Approved, 'thumbhash' => $photo['graded'] ? $photo['thumbhash'] : null]);
         $media->timestamps = false;
         $media->save();
@@ -996,10 +1057,10 @@ class DemoShowcaseSeeder extends Seeder
                 $avatar = Media::query()->where('mediable_type', $user->getMorphClass())->where('mediable_id', $user->id)->where('sample_source', $source)->first();
 
                 if (! $avatar instanceof Media) {
-                    $path = $this->squareCrop($photo);
+                    [$path, $plate] = $this->squareCrop($photo);
 
                     try {
-                        $avatar = SeedClock::at(CarbonImmutable::parse((string) $user->getAttribute('created_at'))->addHour(), fn (): Media => $service->storeFromPath($path, $user, $user, ['alt' => null, 'category' => MediaCategory::Other]));
+                        $avatar = SeedClock::at(CarbonImmutable::parse((string) $user->getAttribute('created_at'))->addHour(), fn (): Media => $service->storeFromPath($path, $user, $user, ['alt' => null, 'category' => MediaCategory::Other], $plate));
                     } finally {
                         @unlink($path);
                     }
@@ -1025,9 +1086,12 @@ class DemoShowcaseSeeder extends Seeder
     }
 
     /**
+     * The square crop and the plate decision moved into it (M5.9f).
+     *
      * @param  Photo  $photo
+     * @return array{0: string, 1: PlateBlurChoice}
      */
-    private function squareCrop(array $photo): string
+    private function squareCrop(array $photo): array
     {
         $image = @imagecreatefromstring((string) file_get_contents($photo['path']));
 
@@ -1037,16 +1101,14 @@ class DemoShowcaseSeeder extends Seeder
 
         $width = imagesx($image);
         $height = imagesy($image);
-        $side = min($width, $height);
-        $x = (int) max(0, min($width - $side, ($photo['focal_x'] ?? 0.5) * $width - $side / 2));
-        $y = (int) max(0, min($height - $side, ($photo['focal_y'] ?? 0.5) * $height - $side / 2));
+        [$x, $y, $side] = ShowcasePlates::squareAround($width, $height, $photo['focal_x'] ?? null, $photo['focal_y'] ?? null);
         $size = max(1, min(800, $side));
         $square = imagecreatetruecolor($size, $size);
         imagecopyresampled($square, $image, 0, 0, $x, $y, $size, $size, $side, $side);
         $path = storage_path('framework/cache/showcase-avatar-'.Str::random(12).'.jpg');
         imagejpeg($square, $path, 90);
 
-        return $path;
+        return [$path, $this->plates->forCrop($photo['file'], $width, $height, $x, $y, $side, $side)];
     }
 
     // ---------------------------------------------------------------------------------------------------------------------------
@@ -1111,6 +1173,11 @@ class DemoShowcaseSeeder extends Seeder
 
         foreach (array_chunk($saves, 300) as $chunk) {
             Save::query()->insertOrIgnore($chunk);
+        }
+
+        // QA-C03 (ADR-436 a): a save is a build in the member's "Gespeichert".
+        foreach ($this->users as $user) {
+            app(Collections::class)->adoptSaves($user);
         }
     }
 
@@ -1321,7 +1388,7 @@ class DemoShowcaseSeeder extends Seeder
 
         $service = app(MediaService::class);
         $bytes = $service->inspectPath($photo['path']);
-        $media = $service->processOrQueue($service->reserve($author, $conversation, ['alt' => $photo['alt'], 'category' => MediaCategory::tryFrom($photo['category']) ?? MediaCategory::Other], strlen($bytes), ChatMedia::disk()), $bytes);
+        $media = $service->processOrQueue($service->reserve($author, $conversation, ['alt' => $photo['alt'], 'category' => MediaCategory::tryFrom($photo['category']) ?? MediaCategory::Other], strlen($bytes), ChatMedia::disk(), $this->plates->choice($photo['file'])), $bytes);
         $media->forceFill(['moderation_status' => ModerationStatus::Approved, 'sample_source' => 'chat:'.$photo['file']])->save();
 
         return [...$draft, 'type' => MessageType::Photo, 'media_id' => $media->id];
@@ -1505,13 +1572,20 @@ class DemoShowcaseSeeder extends Seeder
 
     /**
      * Pending four-eyes requests by the showcase staff (exports and a deletion of sample members). They expire after
-     * speedclub.approvals.ttl_hours like every request; a re-run asks again.
+     * speedclub.approvals.ttl_hours like every request; a re-run asks again. ADR-540: only while four-eyes is on; with it off a request
+     * would run at once and really delete the sample member, so none is asked.
      */
     private function seedApprovals(): void
     {
         $staff = $this->staff;
 
         if ($staff === null) {
+            return;
+        }
+
+        if (! Governance::fourEyes()) {
+            $this->warn('Vier-Augen-Prinzip is off (ADR-540): no sample approval requests.');
+
             return;
         }
 

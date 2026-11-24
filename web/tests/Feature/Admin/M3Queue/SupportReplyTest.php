@@ -168,7 +168,7 @@ describe('support_reply notification', function () {
         $texts = app(NotificationTexts::class);
         $reference = 'SC-'.strtoupper(substr($this->ticket->id, -8));
 
-        expect($texts->push($row, $this->member->refresh()))->toBe(['title' => 'SPEED CLUB', 'body' => str_replace(':reference', $reference, $expected)])
+        expect($texts->push($row, $this->member->refresh()))->toBe(['title' => 'Speedclub', 'body' => str_replace(':reference', $reference, $expected)])
             ->and($texts->path($row))->toBe('/settings/help/requests/'.$this->ticket->id)
             ->and(NotificationType::SupportReply->pushPreference())->toBeNull()
             ->and(NotificationType::SupportReply->alwaysPushes())->toBeFalse();

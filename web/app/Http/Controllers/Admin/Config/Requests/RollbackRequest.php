@@ -17,7 +17,7 @@ class RollbackRequest extends ConfigKeyRequest
      */
     public function rules(): array
     {
-        return ['reason' => ['required', 'string', 'min:10', 'max:1000']];
+        return ['reason' => ['nullable', 'string', 'max:1000']];
     }
 
     public function version(): int

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { View, type AccessibilityActionEvent, type LayoutChangeEvent } from 'react-native';
+import { View, type AccessibilityActionEvent, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -14,6 +14,25 @@ import { carouselIndex, carouselNeighbour, carouselProgress, lerp, reorderShift,
 import { useMotionPreference } from './preference';
 
 const CAROUSEL = motionTokens.signature.carousel;
+
+/**
+ * CR2-1 (web): react-native-web ignores `snapToInterval` and `decelerationRate`, so the browser scrolled the cards freely and a
+ * swipe stopped on half cards. CSS scroll snap does the snapping there: every card centres (the first and last through the
+ * inset spacers), and `scroll-snap-stop: always` stops a fling at the next card, one card per swipe. Native keeps snapToInterval.
+ */
+export const CAROUSEL_WEB_SNAP = {
+  scroll: { scrollSnapType: 'x mandatory' },
+  card: { scrollSnapAlign: 'center', scrollSnapStop: 'always' },
+} as const;
+/**
+ * CR2-1 (web): the reorder pan left `touch-action: none` on every card (RNGH's default for an enabled handler), so on iPhone
+ * Safari a finger on a card scrolled neither the carousel nor the page. `manipulation` keeps both pans with the browser; the long-press reorder still
+ * works with a mouse, and a touch screen reorders in "Sortieren" (the drag handles).
+ */
+export const CAROUSEL_CARD_TOUCH_ACTION = 'manipulation';
+
+const webScrollStyle = isWeb ? (CAROUSEL_WEB_SNAP.scroll as unknown as ViewStyle) : null;
+const webCardStyle = isWeb ? (CAROUSEL_WEB_SNAP.card as unknown as ViewStyle) : null;
 
 const useStyles = createStyles(() => ({
   root: { alignSelf: 'stretch' },
@@ -119,6 +138,7 @@ export function CarouselSnap<T>({
         snapToInterval={interval}
         decelerationRate="fast"
         scrollEnabled={!reordering}
+        style={webScrollStyle}
         onScroll={onScroll}
         scrollEventThrottle={16}
         contentContainerStyle={styles.row}
@@ -192,6 +212,11 @@ function CarouselCard(props: CardProps) {
   const pan = usePanGesture({
     enabled: reorderable,
     activateAfterLongPress: CAROUSEL.longPress,
+    // CR2-1: in the handler's own config as well. RNGH 3 web resets a handler's config whenever the hook's config changes (every
+    // render here), which dropped the detector's `touchAction` and left the card at `none` (measured in WebKit). The prop is on the
+    // hook's native whitelist, only missing from its public type (a spread here breaks the worklets Babel plugin).
+    // @ts-expect-error -- touchAction is an allowed native prop of the pan handler (RNGH propsWhiteList) but not in PanGestureConfig
+    touchAction: CAROUSEL_CARD_TOUCH_ACTION,
     testID: `${testID}.reorder`,
     onActivate: () => {
       'worklet';
@@ -261,8 +286,8 @@ function CarouselCard(props: CardProps) {
   const focusable = !isWeb && actions.length > 0;
 
   return (
-    <View style={{ width }}>
-      <GestureDetector gesture={pan} touchAction="pan-x">
+    <View style={[{ width }, webCardStyle]}>
+      <GestureDetector gesture={pan} touchAction={CAROUSEL_CARD_TOUCH_ACTION}>
         <Animated.View
           accessible={focusable}
           role={focusable && onOpen ? 'button' : undefined}

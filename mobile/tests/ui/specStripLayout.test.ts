@@ -11,6 +11,7 @@ import {
 } from '@/ui/specLabelMetrics';
 import {
   estimatedSpecContentWidths,
+  estimatedSpecGridWidths,
   estimatedSpecLabelWidth,
   estimatedSpecStripColumns,
   estimatedValueLineWidth,
@@ -20,9 +21,11 @@ import {
   NUMERAL_FALLBACK_EM,
   NUMERAL_KERNING,
   provenanceRowsOf,
+  provenanceSegments,
   SPEC_CELL_GAP,
   SPEC_CELL_PADDING_X,
   SPEC_UNIT_GAP,
+  SPEC_WRAP_MAX_COLUMNS,
   specCellWidth,
   specStripColumns,
   specStripHeight,
@@ -35,6 +38,16 @@ const R34 = [
   { value: '500', unit: 'PS', label: 'Leistung', provenance: 'Prüfstand' },
   { value: '540', unit: 'Nm', label: 'Drehmoment', provenance: 'Prüfstand' },
   { value: '2002', label: 'Baujahr' },
+  { value: 'AWD', label: 'Antrieb' },
+];
+
+/** DQ-P5-066: the R34 of VEH-01-aiSpecs, power and torque taken from the AI suggestion (web/lang/de/ai.php factory_suggestion). */
+const AI_CAPTION = 'Herstellerangabe (KI-\u2060Vorschlag)';
+const AI_CAPTION_EN = 'Manufacturer figure (AI\u00A0suggestion)';
+const R34_AI = [
+  { value: '280', unit: 'PS', label: 'Leistung', provenance: AI_CAPTION },
+  { value: '392', unit: 'Nm', label: 'Drehmoment', provenance: AI_CAPTION },
+  { value: '2001', label: 'Baujahr' },
   { value: 'AWD', label: 'Antrieb' },
 ];
 
@@ -161,6 +174,41 @@ describe('estimates (before measuring, and for the skeleton)', () => {
     expect(estimatedSpecStripColumns(R34, 600, 2, false, 1)).toBe(2);
     expect(estimatedSpecStripColumns(R34, 400.99, 2, false, 1)).toBe(1);
     expect(estimatedSpecStripColumns(R34, 401, 2, true, 1)).toBe(2);
+  });
+
+  it('keeps the 2×2 grid for an AI-marked caption on every phone and in the desktop card: it may wrap there (ADR-422 e, DQ-P5-066)', () => {
+    // 393, 375 and 412 less the 20 side margins; the whole caption (≈ 187) never fits a half, its widest part (≈ 102) does.
+    for (const width of [353, 335, 372]) expect(estimatedSpecStripColumns(R34_AI, width, 1, 'phone', 1)).toBe(2);
+    expect(estimatedSpecStripColumns(R34_AI, 400, 1, true, 1)).toBe(2);
+    const en = R34_AI.map((item) => (item.provenance ? { ...item, provenance: AI_CAPTION_EN } : item));
+    for (const width of [353, 335, 372]) expect(estimatedSpecStripColumns(en, width, 1, 'phone', 1)).toBe(2);
+  });
+
+  it('keeps measuring the whole caption on one line for a row of three to five (ADR-422 e)', () => {
+    expect(SPEC_WRAP_MAX_COLUMNS).toBe(2);
+    // FS-3's R34 takes one row from 587; the AI caption whole (≈ 187 + 24 a quarter) keeps the grid there.
+    expect(estimatedSpecStripColumns(R34, 700, 1, false, 1)).toBe(4);
+    expect(estimatedSpecStripColumns(R34_AI, 700, 1, false, 1)).toBe(2);
+    const [line] = estimatedSpecContentWidths([R34_AI[0]!], 1, false).slice(2);
+    expect(estimatedSpecStripColumns(R34_AI, 4 * (Math.ceil(line!) + 2 * SPEC_CELL_PADDING_X) + 3, 1, false, 1)).toBe(4);
+    expect(fitsColumns({ width: 353, count: 4, divider: 1, contentWidths: [187], gridContentWidths: [102] }, 2)).toBe(true);
+    expect(fitsColumns({ width: 353, count: 4, divider: 1, contentWidths: [187], gridContentWidths: [102] }, 4)).toBe(false);
+    expect(fitsColumns({ width: 353, count: 4, divider: 1, contentWidths: [187] }, 2)).toBe(false);
+  });
+
+  it('splits a caption at regular spaces only; a one-word caption measures the same in both checks (ADR-422 e)', () => {
+    expect(provenanceSegments(AI_CAPTION)).toEqual(['Herstellerangabe', '(KI-\u2060Vorschlag)']);
+    expect(provenanceSegments(AI_CAPTION_EN)).toEqual(['Manufacturer', 'figure', '(AI\u00A0suggestion)']);
+    expect(provenanceSegments('Prüfstand')).toEqual(['Prüfstand']);
+    for (const scale of [1, 2]) {
+      for (const size of [false, true, 'phone'] as const) {
+        expect(estimatedSpecGridWidths(R34, scale, size)).toEqual(estimatedSpecContentWidths(R34, scale, size));
+      }
+    }
+    const [, , whole] = estimatedSpecContentWidths([R34_AI[0]!], 1, 'phone');
+    const [, , part] = estimatedSpecGridWidths([R34_AI[0]!], 1, 'phone');
+    expect(part).toBeLessThan(whole!);
+    expect(part).toBe(Math.max(...estimatedSpecContentWidths([{ ...R34_AI[0]!, provenance: 'Herstellerangabe' }], 1, 'phone').slice(2), ...estimatedSpecContentWidths([{ ...R34_AI[0]!, provenance: '(KI-\u2060Vorschlag)' }], 1, 'phone').slice(2)));
   });
 
   it('measures the height row by row, a provenance line only where a row has one, a hairline between rows', () => {

@@ -3,6 +3,7 @@
 namespace App\Http\Resources\V1;
 
 use App\Models\Media;
+use App\Models\User;
 use App\Services\Media\MediaService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -53,6 +54,21 @@ class MediaResource extends JsonResource
             /** @var list<array{width: int, height: int, url: string}> */
             'variants' => $variants,
             'created_at' => $this->created_at?->toIso8601String(),
+            /**
+             * M5.9a: the owner's plate decision. Only on the requesting member's own photos in member API answers (garage, vehicle, mod,
+             * update, profile); never for anyone else's photo and never on the public reads.
+             */
+            'plate_blur' => $this->when($this->forOwner($request), fn (): array => ['state' => $this->plate_blur]),
         ];
+    }
+
+    private function forOwner(Request $request): bool
+    {
+        $user = $request->user();
+
+        return $user instanceof User
+            && $this->resource->owner_id === $user->id
+            && $request->routeIs('api.v1.*')
+            && ! $request->routeIs('api.v1.public.*');
     }
 }

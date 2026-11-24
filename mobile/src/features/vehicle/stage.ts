@@ -4,7 +4,7 @@
  * `design/seed-photos/cover-garage-05.jpg` (CREDITS.md), bundled at 1280 px so the state shows with no network; focal point and
  * thumbhash from the seed manifest.
  */
-import type { PhotoFields } from '@/ui';
+import type { PhotoFields } from '@/ui/Photo';
 
 export const STAGE_EMPTY_PHOTO: PhotoFields = {
   source: require('@/assets/gallery/stage-empty.jpg') as number,

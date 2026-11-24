@@ -67,7 +67,8 @@ it('describes every Phase 4 processing in the German and the English privacy pol
     'client error reports' => ['## 12. Fehlerberichte der App', '## 12. App error reports'],
     'browser id cookie' => ['„sc_browser“', '"sc_browser"'],
     'membership scaffold' => ['Mitgliedschaft (noch nicht aktiv)', 'Membership (not active yet)'],
-    'sticker shop' => ['Externer Sticker-Shop', 'External sticker shop'],
+    // Since M5.5 (ADR-524) the recipient row names the one Shopify store for stickers and merch.
+    'sticker shop' => ['Unser Online-Shop bei Shopify (Sticker und Merch)', 'Our online shop on Shopify (stickers and merch)'],
 ]);
 
 it('states the storage periods the code applies', function () {
@@ -131,8 +132,8 @@ it('covers meets, businesses, the catalogue and the new social features in the t
 it('keeps the numbers of the sections statements of reasons cite', function (LegalDocumentKey $key, string $locale, array $first) {
     expect(array_slice(phase4LegalHeadings($key, $locale), 0, count($first)))->toBe($first);
 })->with([
-    'terms de' => [LegalDocumentKey::Terms, 'de', ['1. Anbieter und Geltung', '2. Was SPEED CLUB ist', '3. Konto', '4. Deine Inhalte', '5. Angaben zu Fahrzeugen und Modifikationen', '6. QR-Sticker', '7. Regeln']],
-    'terms en' => [LegalDocumentKey::Terms, 'en', ['1. Provider and scope', '2. What SPEED CLUB is', '3. Account', '4. Your content', '5. Vehicle and modification details', '6. QR stickers', '7. Rules']],
+    'terms de' => [LegalDocumentKey::Terms, 'de', ['1. Anbieter und Geltung', '2. Was Speedclub ist', '3. Konto', '4. Deine Inhalte', '5. Angaben zu Fahrzeugen und Modifikationen', '6. QR-Sticker', '7. Regeln']],
+    'terms en' => [LegalDocumentKey::Terms, 'en', ['1. Provider and scope', '2. What Speedclub is', '3. Account', '4. Your content', '5. Vehicle and modification details', '6. QR stickers', '7. Rules']],
     'community de' => [LegalDocumentKey::Community, 'de', ['1. Autos zuerst', '2. Respekt', '3. Nur Legales', '4. Deine Inhalte', '5. Privatsphäre', '6. Kein Spam', '7. Modifikationen und Rechtliches']],
     'community en' => [LegalDocumentKey::Community, 'en', ['1. Cars first', '2. Respect', '3. Legal only', '4. Your content', '5. Privacy', '6. No spam', '7. Modifications and the law']],
 ]);
@@ -167,7 +168,7 @@ it('publishes the Phase 4 drafts over a seeded draft without asking anybody to a
         ->toContain('[[Datenschutz-E-Mail]]')
         ->and($row->requires_reconsent)->toBeFalse()
         ->and($row->summary)->toBeNull()
-        ->and($row->reason)->toContain('OA-35')
+        ->and($row->reason)->toBe(phase4LegalMigration()::REASON)->not->toMatch('/\b(?:M\d|OA-\d|BL-\d)/')
         ->and($v1->fresh()?->body_md)->toBe($old)
         ->and(AuditEvent::query()->where('action', 'legal.published')->where('target_id', (string) $row->id)
             ->where('actor_type', AuditActorType::System->value)->exists())->toBeTrue()

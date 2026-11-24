@@ -118,13 +118,15 @@ describe('GAR-01 Garage', () => {
     mockWindow.current = null;
   });
 
-  it('shows the main vehicle with its badge, completeness and QR button, then the drafts (FS-4)', async () => {
+  it('shows the main vehicle with its badge, Build Score and QR button, then the drafts (FS-4)', async () => {
     width(390);
     stubFetch({ '/api/v1/auth/me': ME, '/api/v1/me/vehicles': list([card(), draftCard()]) });
     await renderScreen(<GarageScreen />);
     await waitFor(() => expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}`)).toBeTruthy());
     expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.badge`)).toHaveTextContent('Hauptfahrzeug');
-    expect(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.completeness`)).toHaveTextContent('Build zu 70 % vollständig');
+    // DQ-P5G-24: the Build Score (here still being computed) is the card's progress; no completeness line beside it.
+    expect(screen.queryByTestId(`GAR-01.card.${VEHICLE_ID}.completeness`)).toBeNull();
+    expect(screen.getByTestId(`GAR-01.score.${VEHICLE_ID}.pending`)).toBeTruthy();
     expect(screen.getByText('Entwürfe')).toBeTruthy();
     // DQ-152: it wraps after the dot only, "Schritt 2 von 4" stays together.
     expect(screen.getByText('Entwurf · Schritt 2 von 4')).toBeTruthy();
@@ -133,7 +135,7 @@ describe('GAR-01 Garage', () => {
     expect(screen.getByTestId('GAR-01.stats.line')).toHaveTextContent('1\u00a0Fahrzeug · 14\u00a0Mods · 3\u00a0Fotos');
     // The quick actions of the car: QR keeps the card's `.qr` id the flows press.
     await fireEvent.press(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.qr`));
-    expect(mockRouter.push).toHaveBeenCalledWith(`/qr/${VEHICLE_ID}`);
+    expect(mockRouter.push).toHaveBeenCalledWith(`/stickers/${VEHICLE_ID}`);
     await fireEvent.press(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.mods`));
     expect(mockRouter.push).toHaveBeenCalledWith(`/garage/${VEHICLE_ID}/mods`);
     await fireEvent.press(screen.getByTestId(`GAR-01.card.${VEHICLE_ID}.update`));
@@ -142,7 +144,7 @@ describe('GAR-01 Garage', () => {
     expect(mockRouter.push).toHaveBeenCalledWith('/add-vehicle/01draft/specs', { withAnchor: true });
   });
 
-  it('loads in the shape of FS-4’s card, with the completeness line and the QR button (DQ-166)', async () => {
+  it('loads in the shape of FS-4’s card, with the compact Build Score and the QR button (DQ-166, DQ-P5G-24)', async () => {
     width(390);
     stubFetch({ '/api/v1/auth/me': ME });
     globalThis.fetch = (() => new Promise<Response>(() => undefined)) as typeof fetch;
@@ -498,6 +500,7 @@ describe('GAR-11 entries', () => {
   const update = (overrides: Partial<OwnerUpdate>): OwnerUpdate => ({
     id: '01upd',
     type: 'mod_changed',
+    kind: 'post',
     type_label: 'Modifikation geändert',
     note: null,
     summary: 'Fahrwerk: Serie → KW V3 · −35 mm',

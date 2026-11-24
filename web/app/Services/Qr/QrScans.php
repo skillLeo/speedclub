@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Support\KnownBots;
 use App\Support\ViewAs;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -41,13 +42,15 @@ class QrScans
 
     /**
      * Thirty days, oldest first, also those without a scan, over all codes the vehicle ever had: replacing a sticker does not
-     * start the count over.
+     * start the count over. The 30 days end on the day of $now (STK-04 passes the QA clock outside production, DQ-P5-201); null is the
+     * real now.
      *
      * @return QrStats
      */
-    public function stats(Vehicle $vehicle): array
+    public function stats(Vehicle $vehicle, ?CarbonImmutable $now = null): array
     {
-        $today = now(config()->string('speedclub.display_timezone'))->startOfDay();
+        $zone = config()->string('speedclub.display_timezone');
+        $today = ($now === null ? CarbonImmutable::now($zone) : $now->setTimezone($zone))->startOfDay();
         $codes = $vehicle->qrCodes()->select('id');
 
         $perDay = [];

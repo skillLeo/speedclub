@@ -84,9 +84,13 @@ const EMAIL = 'sven.e30@speedclub.test';
 const ATTEMPT = '0d4c6a0e-7a3b-4c1e-9d55-3f1a2b3c4d5e';
 
 const ME: Me = {
+  // Client round 4 (R4-1.4): this member has seen the first-login intro.
+  intro_seen_at: '2026-11-01T10:00:00Z',
   id: '01m6f7ztzfs0gd39t08rs9zmmp',
   email: EMAIL,
   email_verified: true,
+  level: { level: 1, title: 'Street Rookie' },
+  founding_number: null,
   is_sample: false,
   is_editorial: false,
   has_username: true,
@@ -107,7 +111,7 @@ const ME: Me = {
   power_display: 'ps_kw',
   member_since: '2024-03-12T10:00:00+00:00',
   stats: { vehicles: 1, followers: 0, following: 0 },
-  restrictions: { suspended: false, messaging: { restricted: false, until: null, decision_id: null }, publishing: { restricted: false, until: null, decision_id: null } },
+  restrictions: { suspended: false, messaging: { restricted: false, until: null, decision_id: null }, publishing: { restricted: false, until: null, decision_id: null }, forum: { restricted: false, until: null, decision_id: null } },
 };
 
 const NEW_ME: Me = { ...ME, has_username: false, username: null, profile_complete: false, next_step: 'accept_terms', password_set: false };
@@ -223,6 +227,40 @@ describe('AUTH-12 e-mail entry', () => {
     withFlags({ 'auth.password_login': false });
     await renderScreen(<EmailEntryScreen />);
     expect(screen.queryAllByTestId('AUTH-12.withPassword')).toHaveLength(0);
+  });
+});
+
+describe('ADR-520: the e-mail code switched off (a host without mail delivery)', () => {
+  it('Welcome\'s E-Mail opens the password sign-in', async () => {
+    withFlags({ 'auth.email_code': false, 'auth.password_login': false });
+    await renderScreen(<WelcomeScreen />);
+    await fireEvent.press(screen.getByTestId('AUTH-02.provider.email'));
+    expect(mockRouter.push).toHaveBeenCalledWith('/sign-in');
+    expect(mockRouter.push).not.toHaveBeenCalledWith('/auth/email');
+  });
+
+  it('AUTH-12, AUTH-13 and the magic link leave for AUTH-03 and send nothing', async () => {
+    const { calls } = stubFetch({});
+    withFlags({ 'auth.email_code': false });
+    await renderScreen(<EmailEntryScreen />);
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/sign-in'));
+    mockRouter.replace.mockClear();
+    holdEmailAttempt(attemptFrom(ATTEMPT, EMAIL, 30));
+    await renderScreen(<CodeEntryScreen />);
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/sign-in'));
+    expect(mockRouter.replace).not.toHaveBeenCalledWith('/auth/email');
+    mockRouter.replace.mockClear();
+    await renderScreen(<MagicLinkScreen />);
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/sign-in'));
+    expect(calls.filter((call) => call.url.includes('/auth/email/'))).toHaveLength(0);
+  });
+
+  it('keeps the code and the password link where the flag row is missing or on', async () => {
+    stubFetch({});
+    withFlags({});
+    await renderScreen(<EmailEntryScreen />);
+    expect(screen.getByTestId('AUTH-12.withPassword')).toBeTruthy();
+    expect(mockRouter.replace).not.toHaveBeenCalledWith('/sign-in');
   });
 });
 
@@ -471,6 +509,14 @@ describe('SET-19 Anmeldung & Passkeys', () => {
     expect(screen.getByTestId('SET-19.emailCode')).toBeTruthy();
     expect(screen.getByTestId('SET-19.password')).toBeTruthy();
     expect(screen.getByText(/iCloud-Schlüsselbund · Angelegt am/)).toBeTruthy();
+    expect(screen.getByTestId('SET-19.emailCode')).toHaveTextContent(/Immer an/);
+  });
+
+  it('ADR-520: says the e-mail code is off while it is switched off', async () => {
+    withFlags({ 'auth.email_code': false });
+    stubFetch({});
+    await renderScreen(<SignInMethodsScreen />);
+    expect(await screen.findByTestId('SET-19.emailCode')).toHaveTextContent(/Gerade aus/);
   });
 
   it('empty: a sample row badged Beispiel, never a grey state', async () => {

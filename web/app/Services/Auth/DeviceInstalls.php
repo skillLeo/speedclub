@@ -33,7 +33,8 @@ final class DeviceInstalls
     /**
      * push_tokens.install_key: the install without the member, so a sign-in on a phone can end the previous member's push token there
      * (M2.2 review #5). One install has at most one push token row at any time (IssueDeviceToken, RegisterPushToken), so this value never
-     * stands in two accounts' rows at once.
+     * stands in two accounts' rows at once. ADR-511: device_installs.install_key holds the same value on every member's row of the
+     * install, read only by the Spots admin's "Gleiches Gerät" signal (App\Services\Admin\Spots\SharedDevices).
      */
     public static function installKey(string $installId): string
     {
@@ -87,7 +88,7 @@ final class DeviceInstalls
         if ($install === null) {
             try {
                 $install = new DeviceInstall([...$values, 'first_seen_at' => now(), 'last_seen_at' => now()]);
-                $install->forceFill(['user_id' => $user->getKey(), 'install_id_hash' => $device->id])->save();
+                $install->forceFill(['user_id' => $user->getKey(), 'install_id_hash' => $device->id, 'install_key' => $device->installKey])->save();
 
                 return $install;
             } catch (UniqueConstraintViolationException) {
@@ -100,7 +101,14 @@ final class DeviceInstalls
             }
         }
 
-        $install->fill([...$values, 'last_seen_at' => now()])->save();
+        $install->fill([...$values, 'last_seen_at' => now()]);
+
+        // ADR-511: rows from before the column get the key at their next sign-in or rotation.
+        if ($device->installKey !== null) {
+            $install->forceFill(['install_key' => $device->installKey]);
+        }
+
+        $install->save();
 
         return $install;
     }

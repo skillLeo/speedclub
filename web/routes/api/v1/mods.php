@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Garage\ModificationController;
+use App\Http\Controllers\Api\V1\Garage\PlanController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('member')->group(function (): void {
@@ -20,4 +21,12 @@ Route::middleware('member')->group(function (): void {
     Route::post('mods/{modification}/media', [ModificationController::class, 'uploadPhoto'])
         ->middleware(['not-restricted:publishing', 'throttle:uploads', 'idempotent'])
         ->name('mods.media.store');
+
+    // M5.3 "Pläne" (m5.3-contract §4.2, §4.3).
+    Route::post('mods/{modification}/install', [PlanController::class, 'install'])
+        ->middleware(['not-restricted:publishing', 'throttle:garage-edits', 'idempotent'])
+        ->name('mods.install');
+    Route::put('vehicles/{vehicle}/plans/order', [PlanController::class, 'reorder'])
+        ->middleware(['not-restricted:publishing', 'throttle:garage-reorders'])
+        ->name('vehicles.plans.order');
 });

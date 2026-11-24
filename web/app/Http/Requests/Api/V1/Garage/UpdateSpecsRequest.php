@@ -35,6 +35,14 @@ class UpdateSpecsRequest extends FormRequest
             'torque_source' => ['nullable', Rule::enum(PowerSource::class)],
             'drivetrain' => ['nullable', Rule::enum(Drivetrain::class)],
             'gearbox' => ['nullable', Rule::enum(Gearbox::class)],
+            /**
+             * M5.9: the "Daten übernehmen?" suggestion the values were taken from (`cache_id` and the variant's `key` of POST
+             * ai/specs/suggest). The fields still equal to it carry "Herstellerangabe (KI-Vorschlag)" until changed. Ignored while
+             * ai.vehicle_specs is off; 422 `errors.ai_suggestion` when the suggestion is unknown or expired.
+             */
+            'ai_suggestion' => ['sometimes', 'nullable', 'array:cache_id,variant'],
+            'ai_suggestion.cache_id' => ['required_with:ai_suggestion', 'string', 'ulid'],
+            'ai_suggestion.variant' => ['required_with:ai_suggestion', 'string', 'max:40'],
         ];
     }
 }

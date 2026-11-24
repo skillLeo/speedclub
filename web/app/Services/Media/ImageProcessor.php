@@ -2,8 +2,10 @@
 
 namespace App\Services\Media;
 
+use GdImage;
 use Illuminate\Image\ImageException;
 use Illuminate\Support\Facades\Image;
+use Intervention\Image\Interfaces\ImageInterface;
 use kornrunner\Blurhash\Blurhash;
 
 /**
@@ -12,15 +14,39 @@ use kornrunner\Blurhash\Blurhash;
  */
 class ImageProcessor
 {
+    public function __construct(private readonly Pixelator $pixelator = new Pixelator) {}
+
     /**
+     * M5.9a/GAR-08: `$regions` are pixelated into the decoded, oriented pixels before the first encoding, so the JPEG master and
+     * everything drawn from it never hold the picture under them (a turned region as its rotated rectangle, Pixelator).
+     *
+     * @param  list<array{x: float|int, y: float|int, w: float|int, h: float|int, angle?: float|int}>  $regions
+     *
      * @throws ImageException when the bytes do not decode as an image
      */
-    public function process(string $bytes): ProcessedImage
+    public function process(string $bytes, array $regions = []): ProcessedImage
     {
         // Intervention already applies the EXIF orientation while decoding and marks the image as aligned, so this
-        // call does not rotate twice.
-        $jpeg = Image::fromBytes($bytes)
-            ->orient()
+        // call does not rotate twice. The regions are normalised to that oriented picture: what the member saw.
+        $image = Image::fromBytes($bytes)->orient();
+
+        if ($regions !== []) {
+            // On GD, whatever the default driver: the step works on the decoded GdImage itself (ADR-509).
+            Image::transformUsing('gd', PixelateRegions::class, function (ImageInterface $decoded, PixelateRegions $step): ImageInterface {
+                $native = $decoded->core()->native();
+
+                if (! $native instanceof GdImage) {
+                    throw new ImageException('Pixelation needs a GD image.');
+                }
+
+                $this->pixelator->pixelate($native, $step->regions);
+
+                return $decoded;
+            });
+            $image = $image->usingGd()->transform(new PixelateRegions($regions));
+        }
+
+        $jpeg = $image
             ->toJpeg()
             ->quality($this->quality('original_quality'))
             ->toBytes();

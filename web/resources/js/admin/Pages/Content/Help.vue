@@ -19,7 +19,7 @@ import MarkdownEditor from './Partials/MarkdownEditor.vue';
 /**
  * ADM-32 Hilfe (06 §3; Hilfe in der App und WEB-10): the help articles per language with category, order and state. Content editors
  * write and publish; an article that is live changes for members as soon as it is saved, so editing one needs content.publish too.
- * Deleting asks for a reason ⚿.
+ * Deleting asks for confirmation ⚿.
  */
 interface Article {
     id: number;
@@ -86,9 +86,9 @@ function askDelete(article: Article): void {
     action.reset();
     deleteOpen.value = true;
 }
-function destroy(reason: string | null): void {
+function destroy(): void {
     if (!deleting.value) return;
-    action.run('delete', routeOr('admin.content.help.destroy', `/admin/content/help/${deleting.value.id}`, { article: deleting.value.id }), { reason }, { sensitive: true, onSuccess: () => (deleteOpen.value = false) });
+    action.run('delete', routeOr('admin.content.help.destroy', `/admin/content/help/${deleting.value.id}`, { article: deleting.value.id }), {}, { sensitive: true, onSuccess: () => (deleteOpen.value = false) });
 }
 const serverError = computed(() => (failedDialog ? trans('ui.state.server_error') : action.error.value));
 const localeModel = computed({ get: () => form.locale, set: (value: string | undefined) => (form.locale = value === 'en' ? 'en' : 'de') });
@@ -179,7 +179,6 @@ const categoryLabel = (category: string | null): string => category ?? '–';
             :title="trans('content.help.delete_title', { title: deleting?.title ?? '' })"
             :body="trans('content.help.delete_body')"
             :confirm-label="trans('content.help.delete_confirm')"
-            reason
             :processing="action.processing.value"
             :error="serverError"
             test-id="ADM-32.delete-dialog"

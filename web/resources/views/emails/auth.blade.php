@@ -13,7 +13,7 @@
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:{{ $colors['surface'] }};border:1px solid {{ $colors['border'] }};border-radius:12px;">
                     <tr>
                         <td style="padding:32px 24px;font-family:{{ $colors['font'] }};color:{{ $colors['text'] }};">
-                            <a href="{{ $homeUrl }}"><img src="{{ $logoUrl }}" width="120" height="36" alt="SPEED CLUB" style="display:block;border:0;width:120px;height:auto;"></a>
+                            <a href="{{ $homeUrl }}"><img src="{{ $logoUrl }}" width="120" height="36" alt="Speedclub" style="display:block;border:0;width:120px;height:auto;"></a>
                             <h1 style="margin:24px 0 12px;font-size:22px;line-height:28px;font-weight:600;">{{ $heading }}</h1>
                             @foreach ($lines as $line)
                                 <p style="margin:0 0 16px;font-size:16px;line-height:24px;color:{{ $colors['secondary'] }};">{{ $line }}</p>

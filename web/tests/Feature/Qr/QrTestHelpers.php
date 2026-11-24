@@ -10,8 +10,8 @@ use App\Enums\QrRevocationReason;
  */
 function qrRevokedCopy(): array
 {
-    $revokedDe = ["Dieser QR-\u{2060}Code ist nicht mehr gültig", 'Dieser Sticker führt zu keinem Fahrzeug mehr.'];
-    $revokedEn = ['This QR code is no longer valid', 'This sticker no longer leads to a vehicle.'];
+    $revokedDe = ['Dieser Sticker ist nicht mehr gültig', 'Dieser Sticker führt zu keinem Fahrzeug mehr.'];
+    $revokedEn = ['This sticker is no longer valid', 'This sticker no longer leads to a vehicle.'];
     $goneDe = ['Dieses Fahrzeug ist nicht mehr verfügbar', 'Die Seite zu diesem Sticker gibt es nicht mehr.'];
     $goneEn = ['This vehicle is no longer available', 'The page behind this sticker no longer exists.'];
 

@@ -1,3 +1,14 @@
+# ALL-INKL (ADR-539): deploy-allinkl.sh puts a deny-all .htaccess into the folder above public/ (in case the domain ever points
+# there). Apache applies the .htaccess of every parent folder, so the web root grants access itself; without this every URL of
+# joinspeedclub.com answered 403 at the go-live (2026-11-24). Files and folders below can still refuse (storage, dotfiles).
+<IfModule mod_authz_core.c>
+    Require all granted
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Allow from all
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -42,6 +53,9 @@
     SetEnvIf Request_URI "^/(app/_expo/static|app/assets|build/assets|storage/media|storage/og|lib)/" SC_IMMUTABLE_ASSET=1
     SetEnvIf Request_URI "^/app/(sw\.js|manifest\.webmanifest)$" SC_PWA_REVALIDATE=1
     SetEnvIf Request_URI "^/app/pwa/" SC_PWA_ASSET=1
+    # M5.9b STREET DEX: the public city centroids (GeoNames, CC BY 4.0) keep their URL across data versions (`v` inside), so a week, not
+    # immutable; the app revalidates with the ETag Apache sends for static files.
+    SetEnvIf Request_URI "^/geo/de-cities\.json$" SC_GEO_ASSET=1
 </IfModule>
 <IfModule mod_headers.c>
     Header set Cache-Control "public, max-age=31536000, immutable" env=SC_IMMUTABLE_ASSET
@@ -49,6 +63,8 @@
     Header set Cache-Control "no-cache" env=SC_PWA_REVALIDATE
     Header set X-Content-Type-Options "nosniff" env=SC_PWA_REVALIDATE
     Header set Cache-Control "public, max-age=604800" env=SC_PWA_ASSET
+    Header set Cache-Control "public, max-age=604800" env=SC_GEO_ASSET
+    Header set X-Content-Type-Options "nosniff" env=SC_GEO_ASSET
 </IfModule>
 
 # The web manifest of the public pages (site.webmanifest): browsers want this type, and not every host's mime.types has it.

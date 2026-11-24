@@ -7,8 +7,12 @@ import { View } from 'react-native';
 import { ApiError } from '@/api/client';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { createStyles } from '@/theme';
-import { Button, Sheet, Text, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 
 import { asksForSecondFactor, isSecondFactorLocked, useFailureMessage, useFieldMessage } from '../forms';
 import { reauthSchema, type ReauthValues } from '../schemas';
@@ -63,7 +67,7 @@ export function ReauthSheet({ visible, onClose, title, body, confirmLabel, needs
     onClose();
   };
 
-  const submit = handleSubmit(async (values) => {
+  const submit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     const code = values.code.replace(/\s/g, '');
     try {
@@ -82,7 +86,7 @@ export function ReauthSheet({ visible, onClose, title, body, confirmLabel, needs
         setNotice(failure(error));
       }
     }
-  });
+  }));
   const busy = formState.isSubmitting;
 
   return (

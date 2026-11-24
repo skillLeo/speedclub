@@ -34,7 +34,8 @@
         "error_body": "The data could not be loaded. Try again.",
         "retry": "Try again",
         "reloading": "Reloading …",
-        "server_error": "The server did not answer. Nothing was changed; try again."
+        "server_error": "The server did not answer. Nothing was changed; try again.",
+        "password_cancelled": "Password not confirmed: nothing was saved."
     },
     "table": {
         "columns": "Columns",
@@ -123,11 +124,23 @@
     },
     "approval": {
         "requested": "Approval requested: :title",
-        "next": "A second team member has to approve by :until. Only then does the action run; you will get an alert.",
+        "next": "They have to approve by :until. Only then does the action run; you will get an alert.",
         "preview_title": "Needs approval",
         "preview_body": "This action falls under the four-eyes rule. It only runs once a second team member approves.",
         "open_queue": "Go to approvals",
-        "already": "This request is already waiting for approval: :title"
+        "already": "This request is already waiting for approval: :title",
+        "waiting": "Waiting for approval by a second person.",
+        "approvers": "{1} Can approve: :names.|[2,*] Can approve: :names.",
+        "approvers_more": ":names and :count more",
+        "nobody": "Nobody else on the team can approve this request right now. Invite a second person who may approve, or the request expires.",
+        "nobody_override": "Nobody else on the team can approve this request right now. As an Owner you can approve it yourself with a reason (owner override).",
+        "override": "Approve myself",
+        "override_title": "Approve yourself (owner override)?",
+        "override_body": "“:title” runs at once, without a second person. This is only possible because nobody else on the team can approve. The override is in the audit log; Owners, Admins and everyone who approved in the last 90 days get an email.",
+        "override_confirm": "Run now",
+        "approvers_count": "{1} One person on the team can approve.|[2,*] :count people on the team can approve.",
+        "direct_done": "Done: :title",
+        "direct_failed": "Not done: :title. :error"
     },
     "bulk": {
         "summary": ":done done, :failed failed",
@@ -141,6 +154,7 @@
         "to": "To"
     },
     "time": {
+        "placeholder": "HH:MM",
         "just_now": "just now"
     },
     "tabs": {

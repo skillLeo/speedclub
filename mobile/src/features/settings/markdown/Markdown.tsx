@@ -1,12 +1,13 @@
 import * as WebBrowser from 'expo-web-browser';
 import { Link, type Href } from 'expo-router';
-import { Fragment, useMemo, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, View } from 'react-native';
+import { Linking, View, type LayoutChangeEvent } from 'react-native';
 
 import { isWeb } from '@/lib/platform';
-import { createStyles, type TypeVariant } from '@/theme';
-import { Hairline, Text } from '@/ui';
+import { createStyles, space, typography, useTheme, type TypeVariant } from '@/theme';
+import { Hairline } from '@/ui/Hairline';
+import { Text } from '@/ui/Text';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 
 import { resolveLink, siteUrl } from './links';
@@ -31,7 +32,9 @@ const useStyles = createStyles((t) => ({
   pairStacked: { gap: t.space[2], paddingVertical: t.space[12] },
   pairLabel: { flex: 1, minWidth: 0 },
   pairValue: { flexShrink: 1, maxWidth: '50%', textAlign: 'right' },
-  pairValueStacked: { textAlign: 'left' },
+  // R4B-010: stacked under its label, the value takes the whole line. The half-width cap of the side-by-side pair made a 159 line
+  // at 200 % (WebKit 390), narrower than "Gelöschtes" or "kommenden", which then split without a hyphen.
+  pairValueStacked: { maxWidth: '100%', textAlign: 'left' },
   record: { gap: t.space[12], paddingVertical: t.space[16] },
   field: { gap: t.space[2] },
 }));
@@ -130,13 +133,57 @@ function spacingFor(block: MdBlock, previous: MdBlock | undefined, styles: Retur
   return styles.block;
 }
 
+/** An upper bound of Inter's average advance in em, as Text's title rule and MemberRow's handle rule take it. */
+const RUN_ADVANCE = 0.6;
+/** A break opportunity: white space (not the no-break space), a zero-width space, a hard hyphen no word joiner follows. */
+const BREAK = /[ \t\r\n\u200B]+/;
+const HYPHEN_BREAK = /-(?!\u2060)/g;
+/** Characters that bind a run: a word joiner ("Sicherheits-⁠E-⁠Mail", parse joinShortPrefixes), a no-break space ("§ 27a"). */
+const BINDS = /[\u2060\u00A0]/;
+
+/**
+ * The longest run of `text` the parse step bound together (word joiners, no-break spaces), in characters. A plain word is left out:
+ * it may hyphenate (DQ-181), and one too short to hyphenate is short enough for any cell.
+ */
+export function longestBoundRun(text: string): number {
+  return text
+    .replace(HYPHEN_BREAK, '-\n')
+    .split(BREAK)
+    .filter((run) => BINDS.test(run))
+    .reduce((longest, run) => Math.max(longest, [...run.replace(/\u2060/g, '')].length), 0);
+}
+
+/**
+ * R4B-L02: whether a two-column table sits side by side in `inner` (its width inside the padding). The value takes at most half of
+ * it and the label the rest beside a space.16 gap; a bound run wider than its column ("Sicherheits-E-Mail" at 360: about 150 in a
+ * 128 label) has no break opportunity, so the browser split it inside its letters ("Ma / il"). Such a table stacks every row.
+ */
+export function pairsFitSideBySide(rows: readonly (readonly MdInline[][])[], inner: number, fontScale: number): boolean {
+  const label = (inner - space[16]) / 2;
+  const value = inner / 2;
+  const width = (chars: number, variant: 'bodyStrong' | 'callout') => chars * typography[variant].fontSize * fontScale * RUN_ADVANCE;
+  return rows.every(
+    (row, index) =>
+      width(longestBoundRun(plainText(row[0] ?? [])), index === 0 ? 'callout' : 'bodyStrong') <= label &&
+      width(longestBoundRun(plainText(row[1] ?? [])), 'callout') <= value,
+  );
+}
+
 function Table({ block, site, keyPrefix }: { block: Extract<MdBlock, { type: 'table' }>; site: string | null; keyPrefix: string }) {
   const styles = useStyles();
-  const stacked = useStacksAtFontScale();
+  const largeFont = useStacksAtFontScale();
+  const { fontScale } = useTheme();
   const pairs = block.header.length === 2;
   const rows = pairs ? [block.header, ...block.rows] : block.rows;
+  // The width inside the table's padding, 0 until the first layout (side by side until then).
+  const [inner, setInner] = useState(0);
+  const onLayout = (event: LayoutChangeEvent) => {
+    const next = event.nativeEvent.layout.width - 2 * space[16];
+    setInner((current) => (Math.abs(current - next) < 1 ? current : next));
+  };
+  const stacked = largeFont || (pairs && inner > 0 && !pairsFitSideBySide(rows, inner, fontScale));
   return (
-    <View style={styles.table}>
+    <View style={styles.table} onLayout={pairs ? onLayout : undefined}>
       {rows.map((row, rowIndex) => {
         const rowKey = `${keyPrefix}.${rowIndex}`;
         const divider = rowIndex < rows.length - 1 ? <Hairline /> : null;

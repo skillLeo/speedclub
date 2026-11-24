@@ -4,11 +4,14 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { createStyles } from '@/theme';
 import { useOnline } from '@/state/online';
-import { Button, Icon, SkeletonBlock, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Icon } from '@/ui/icons/Icon';
+import { SkeletonBlock } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import { grantMapConsent } from './mapConsent';
 
-import type { MapMode, MapPin, MapPoint } from './mapConfig';
+import type { MapArea, MapMode, MapPin, MapPoint } from './mapConfig';
 
 export type EventMapProps = {
   mode: MapMode;
@@ -17,6 +20,8 @@ export type EventMapProps = {
   center: MapPoint | null;
   zoom?: number;
   pins?: readonly MapPin[];
+  /** M5.9b: the "Spots" layer's city circles (pins mode). */
+  areas?: readonly MapArea[];
   selectedId?: string | null;
   /** Snippet: false draws the area ring of a private place (ADR-437 c) instead of the pin. */
   exact?: boolean;

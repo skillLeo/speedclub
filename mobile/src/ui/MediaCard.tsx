@@ -4,7 +4,7 @@ import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyl
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 
 import { isWeb } from '@/lib/platform';
-import { createStyles, ThemeScope, typography, useBreakpoint, useTheme, type ThemeName } from '@/theme';
+import { aspect, createStyles, size, ThemeScope, typography, useBreakpoint, useTheme, type ThemeName } from '@/theme';
 
 import { Avatar } from './Avatar';
 import { SampleBadges, useSampleBadgeLabels, type SampleFlags } from './Badge';
@@ -41,6 +41,8 @@ export type MediaCardOwner = { username: string; avatarUri?: string | null; avat
 
 export type MediaCardSave = { saved: boolean; onToggle: () => void };
 
+export type MediaCardComment = { label: string; onPress: () => void };
+
 export type MediaCardLeadProps = MediaCardBase & {
   variant: 'lead';
   photo: PhotoFields;
@@ -51,6 +53,11 @@ export type MediaCardLeadProps = MediaCardBase & {
   layoutWidth?: number;
   /** 16:9 at every width (09 §7.3 "Build der Woche"); the page lead is 4:5 on phones and tablets. */
   wide?: boolean;
+  /**
+   * A page hero from 1280: `aspect.heroDesktop` (21:9, client feedback CF-1, ADR-521), as VEH-01 and WEB-01, so the page under it
+   * starts above the fold (SHOP-01, DQ-P5-006). Phones and tablets keep the lead's own crop.
+   */
+  cinema?: boolean;
   /** The first screen's hero: its photo loads first (Photo `priority`). */
   priority?: 'high';
 };
@@ -78,6 +85,8 @@ export type MediaCardFeedProps = MediaCardBase & {
   mods?: readonly { key: string; label: string; icon?: IconName; onPress: () => void }[];
   /** SM9 reaction button (counts are never shown here). */
   reaction?: Omit<ReactionPickerProps, 'testID'>;
+  /** R4-2.2 "Kommentare": opens the item's comments (a sheet); never a count. */
+  comment?: MediaCardComment;
   save?: MediaCardSave;
   onShare?: () => void;
 };
@@ -131,7 +140,8 @@ const useStyles = createStyles((t) => ({
   ownerRow: { alignItems: 'center', flexDirection: 'row', gap: t.space[8], minHeight: t.size.touchMin },
   ownerName: { flexShrink: 1 },
   feedChips: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space[8] },
-  feedActions: { alignItems: 'center', flexDirection: 'row', gap: t.space[4], paddingHorizontal: t.space[8] },
+  feedActionRow: { flexDirection: 'row' },
+  feedActions: { alignItems: 'center', flexDirection: 'row', gap: t.space[4] },
   // A 44 target at least in both directions: "mehr" is narrower than that (DEV-01 m4.18: 37.5 wide).
   more: { alignSelf: 'flex-start', justifyContent: 'center', minHeight: t.size.touchMin, minWidth: t.size.touchMin },
   probe: { left: 0, opacity: 0, pointerEvents: 'none', position: 'absolute', right: 0, top: 0 },
@@ -201,16 +211,20 @@ function Shell({
  * The lead has no save of its own (M4.18): a save over the photo lies inside the card's open target, two targets on one spot (the
  * DOM audit's `overlap`, M4.8 r2). Save and share go in an action row under the card, as HomeLead and the gallery show it.
  */
-function LeadCard({ title, photo, spec, owner, sample, onPress, layoutWidth, wide = false, priority, style, testID }: MediaCardLeadProps) {
+function LeadCard({ title, photo, spec, owner, sample, onPress, layoutWidth, wide = false, cinema = false, priority, style, testID }: MediaCardLeadProps) {
   const styles = useStyles();
   const theme = useTheme();
   const { gutter, kind } = useBreakpoint();
   const [width, setWidth] = useState(layoutWidth ?? 0);
   const badges = useSampleBadgeLabels(sample);
   const titleLine = typography.displayTitle.lineHeight * theme.fontScale;
-  const ratio = leadAspect(kind === 'desktop' || wide);
+  const ratio = cinema && kind === 'desktop' ? aspect.heroDesktop : leadAspect(kind === 'desktop' || wide);
   const bodyGap = width > 0 ? leadBodyGap(width, theme.name, titleLine, ratio) : undefined;
-  const overlap = `${-leadOverlapShare(theme.name, ratio) * 100}%` as const;
+  const share = leadOverlapShare(theme.name, ratio);
+  const overlap = `${-share * 100}%` as const;
+  // DQ-P5-001: the identity rises into the photo by `share` of the width; a short one (a name without a line under it) must still
+  // reach the photo's foot, or what follows the card (SHOP-01's chips on desktop) is drawn on the photo's stage.
+  const identityFloor = width > 0 ? { minHeight: Math.ceil(width * share) } : null;
   const onLayout = (event: LayoutChangeEvent) => {
     const next = event.nativeEvent.layout.width;
     setWidth((current) => (current === next ? current : next));
@@ -227,7 +241,7 @@ function LeadCard({ title, photo, spec, owner, sample, onPress, layoutWidth, wid
               <PhotoStageScrim />
               <SampleBadges flags={sample} tone="onPhoto" style={styles.badgesTopLeft} testID={testID ? `${testID}.sample` : undefined} />
             </Photo>
-            <View style={[styles.leadIdentity, { marginTop: overlap, paddingHorizontal: gutter }]}>
+            <View style={[styles.leadIdentity, { marginTop: overlap, paddingHorizontal: gutter }, identityFloor]}>
               <DisplayTitle placement="card" color="onPhoto.primary" layoutWidth={width > 0 ? width - 2 * gutter : undefined} testID={testID ? `${testID}.title` : undefined}>
                 {title}
               </DisplayTitle>
@@ -254,7 +268,33 @@ function LeadCard({ title, photo, spec, owner, sample, onPress, layoutWidth, wid
   );
 }
 
-function FeedCard({ title, photos, square = false, vehicleAvatar, owner, onOwnerPress, time, caption, mods, reaction, save, onShare, sample, onPress, style, testID }: MediaCardFeedProps) {
+/**
+ * R4DQ-37: the action row's inset, so the first glyph (24, centred in its 44 target) starts on the gutter, the left edge of the
+ * header's avatar, the caption and the chips above it.
+ */
+export function feedActionInset(gutter: number): number {
+  return Math.max(0, gutter - (size.touchMin - size.icon.l) / 2);
+}
+
+function FeedCard({
+  title,
+  photos,
+  square = false,
+  vehicleAvatar,
+  owner,
+  onOwnerPress,
+  time,
+  caption,
+  mods,
+  reaction,
+  comment,
+  save,
+  onShare,
+  sample,
+  onPress,
+  style,
+  testID,
+}: MediaCardFeedProps) {
   const { t } = useTranslation('common');
   const styles = useStyles();
   const ratio = square ? MEDIA_ASPECT.feedSquare : MEDIA_ASPECT.feed;
@@ -303,14 +343,12 @@ function FeedCard({ title, photos, square = false, vehicleAvatar, owner, onOwner
         )}
       </Shell>
       <View onLayout={(event) => setPageWidth(event.nativeEvent.layout.width)}>
-        <Animated.ScrollView
-          horizontal
-          pagingEnabled
-          scrollEnabled={many}
-          showsHorizontalScrollIndicator={false}
+        {/* R5-4: one photo is no pager. A ScrollView with scrolling off is `touch-action: none` on the web (react-native-web), so a
+            finger that landed on a single-photo card could not scroll the feed on a phone. */}
+        <FeedPager
+          many={many}
           onScroll={onScroll}
-          scrollEventThrottle={16}
-          onMomentumScrollEnd={(event) => setPage(pageAt(event.nativeEvent.contentOffset.x, pageWidth, photos.length))}
+          onPageEnd={(x) => setPage(pageAt(x, pageWidth, photos.length))}
           testID={testID ? `${testID}.media` : undefined}
         >
           {photos.map((photo, index) => (
@@ -331,7 +369,7 @@ function FeedCard({ title, photos, square = false, vehicleAvatar, owner, onOwner
               </Shell>
             </View>
           ))}
-        </Animated.ScrollView>
+        </FeedPager>
       </View>
       {many ? (
         <View style={styles.feedPages}>
@@ -366,11 +404,16 @@ function FeedCard({ title, photos, square = false, vehicleAvatar, owner, onOwner
           ) : null}
         </View>
       ) : null}
-      {reaction || save || onShare ? (
-        <View style={styles.feedActions}>
-          {reaction ? <ReactionPicker {...reaction} testID={testID ? `${testID}.reaction` : 'reaction'} /> : null}
-          {save ? <SaveToggle saved={save.saved} onToggle={save.onToggle} saveLabel={t('actions.save')} testID={testID ? `${testID}.save` : undefined} /> : null}
-          {onShare ? <IconButton icon="share-network" label={t('actions.share')} onPress={onShare} testID={testID ? `${testID}.share` : undefined} /> : null}
+      {reaction || comment || save || onShare ? (
+        <View style={styles.feedActionRow} testID={testID ? `${testID}.actions` : undefined}>
+          {/* A spacer, not a padding: the inset (gutter − 10) is off the spacing scale by design. */}
+          <View style={{ width: feedActionInset(gutter) }} />
+          <View style={styles.feedActions}>
+            {reaction ? <ReactionPicker {...reaction} testID={testID ? `${testID}.reaction` : 'reaction'} /> : null}
+            {comment ? <IconButton icon="chat-circle" label={comment.label} onPress={comment.onPress} testID={testID ? `${testID}.comment` : undefined} /> : null}
+            {save ? <SaveToggle saved={save.saved} onToggle={save.onToggle} saveLabel={t('actions.save')} testID={testID ? `${testID}.save` : undefined} /> : null}
+            {onShare ? <IconButton icon="share-network" label={t('actions.share')} onPress={onShare} testID={testID ? `${testID}.share` : undefined} /> : null}
+          </View>
         </View>
       ) : null}
     </View>
@@ -378,6 +421,36 @@ function FeedCard({ title, photos, square = false, vehicleAvatar, owner, onOwner
 }
 
 /** Three lines, then "mehr" (09 §5 feed caption). A hidden full copy at the same width tells whether the clamp hides text. */
+type FeedPagerProps = {
+  many: boolean;
+  onScroll: ReturnType<typeof useAnimatedScrollHandler>;
+  onPageEnd: (offsetX: number) => void;
+  testID?: string;
+  children: ReactNode;
+};
+
+/**
+ * The feed card's photos: a paging ScrollView only when there are two or more. A single photo is a plain box, because a ScrollView with
+ * `scrollEnabled={false}` is `touch-action: none` on the web (react-native-web ScrollViewBase), which held the feed still on a phone
+ * whenever a vertical swipe began on the photo (R5-4).
+ */
+function FeedPager({ many, onScroll, onPageEnd, testID, children }: FeedPagerProps) {
+  if (!many) return <View testID={testID}>{children}</View>;
+  return (
+    <Animated.ScrollView
+      horizontal
+      pagingEnabled
+      showsHorizontalScrollIndicator={false}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      onMomentumScrollEnd={(event) => onPageEnd(event.nativeEvent.contentOffset.x)}
+      testID={testID}
+    >
+      {children}
+    </Animated.ScrollView>
+  );
+}
+
 function ClampedCaption({ text, testID }: { text: string; testID?: string }) {
   const { t } = useTranslation('common');
   const styles = useStyles();
@@ -515,15 +588,23 @@ export type MediaCardSkeletonProps = {
   actions?: boolean;
   /** `lead`: the 16:9 crop below the desktop too, as the loaded card's `wide`. */
   wide?: boolean;
+  /** `lead`: 21:9 from 1280, as the loaded card's `cinema`. */
+  cinema?: boolean;
+  /**
+   * `lead`: the loaded card has an owner (avatar 32 beside the line). False for a lead with only a line under its name (SHOP-01's
+   * hero): the line is a callout line, 12 lower than the avatar (DQ-P5-008).
+   */
+  owner?: boolean;
   /** `feed`: the card has no header row (the parent draws its own). */
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
 
-export function MediaCardSkeleton({ variant, lines, actions = false, wide = false, style, testID }: MediaCardSkeletonProps) {
+export function MediaCardSkeleton({ variant, lines, actions = false, wide = false, cinema = false, owner = true, style, testID }: MediaCardSkeletonProps) {
   const styles = useSkeletonStyles();
   const theme = useTheme();
   const { gutter, kind } = useBreakpoint();
+  const [stageWidth, setStageWidth] = useState(0);
   if (variant === 'rail') {
     return (
       <View style={style} testID={testID}>
@@ -542,18 +623,30 @@ export function MediaCardSkeleton({ variant, lines, actions = false, wide = fals
     // DQ-980: the loaded lead is its photo, with the name on the scrim inside it. So is the skeleton: the stage block of the lead's
     // aspect (every theme, ADR-421 b), the bars in the stage's tones. DQ-983: the bars are the loaded identity block, with its line
     // heights at the font scale and the same overlap into the photo, so a 2-line name at 200 % grows the skeleton as it grows the card.
-    const ratio = leadAspect(kind === 'desktop' || wide);
+    const ratio = cinema && kind === 'desktop' ? aspect.heroDesktop : leadAspect(kind === 'desktop' || wide);
     const titleLines = lines ?? (theme.fontScale >= LEAD_TWO_LINE_SCALE ? 2 : 1);
+    const share = leadOverlapShare(theme.name, ratio);
+    // The loaded card's identity floor (DQ-P5-001), so the skeleton ends where the card ends.
+    const identityFloor = stageWidth > 0 ? { minHeight: Math.ceil(stageWidth * share) } : null;
     return (
-      <View style={[styles.leadStage, style]} dataSet={{ qaExempt: 'photo' }} testID={testID}>
+      <View
+        style={[styles.leadStage, style]}
+        onLayout={(event) => setStageWidth(event.nativeEvent.layout.width)}
+        dataSet={{ qaExempt: 'photo' }}
+        testID={testID}
+      >
         <View style={{ aspectRatio: ratioOf(ratio) }} testID={testID ? `${testID}.photo` : undefined} />
         <ThemeScope name={STAGE_THEME}>
           <View
-            style={[styles.leadBars, { marginTop: `${-leadOverlapShare(theme.name, ratio) * 100}%`, paddingHorizontal: gutter }]}
+            style={[styles.leadBars, { marginTop: `${-share * 100}%`, paddingHorizontal: gutter }, identityFloor]}
             testID={testID ? `${testID}.identity` : undefined}
           >
             <SkeletonText variant="displayTitle" width="70%" lines={titleLines} lastLineWidth="45%" testID={testID ? `${testID}.title` : undefined} />
-            <SkeletonBlock height={Math.max(theme.size.avatar.sm, theme.typography.callout.lineHeight * theme.fontScale)} width="45%" corner="xs" />
+            <SkeletonBlock
+              height={owner ? Math.max(theme.size.avatar.sm, theme.typography.callout.lineHeight * theme.fontScale) : theme.typography.callout.lineHeight * theme.fontScale}
+              width="45%"
+              corner="xs"
+            />
           </View>
         </ThemeScope>
       </View>
@@ -576,9 +669,12 @@ export function MediaCardSkeleton({ variant, lines, actions = false, wide = fals
         </View>
       ) : null}
       {actions ? (
-        <View style={[styles.feedActions, { paddingHorizontal: theme.space[8] }]}>
-          <SkeletonBlock width={theme.size.touchMin} height={theme.size.touchMin} corner="full" />
-          <SkeletonBlock width={theme.size.touchMin} height={theme.size.touchMin} corner="full" />
+        <View style={styles.feedActionRow}>
+          <View style={{ width: feedActionInset(gutter) }} />
+          <View style={styles.feedActions}>
+            <SkeletonBlock width={theme.size.touchMin} height={theme.size.touchMin} corner="full" />
+            <SkeletonBlock width={theme.size.touchMin} height={theme.size.touchMin} corner="full" />
+          </View>
         </View>
       ) : null}
     </View>
@@ -594,7 +690,8 @@ const useSkeletonStyles = createStyles((t) => ({
   feedHeader: { alignItems: 'center', flexDirection: 'row', gap: t.space[12], marginBottom: t.space[12], minHeight: t.size.touchMin },
   feedHeaderText: { flex: 1, gap: t.space[4] },
   feedCaption: { marginTop: t.space[12] },
-  feedActions: { flexDirection: 'row', gap: t.space[4], marginTop: t.space[12] },
+  feedActionRow: { flexDirection: 'row', marginTop: t.space[12] },
+  feedActions: { flexDirection: 'row', gap: t.space[4] },
   leadBars: { gap: t.space[8], paddingBottom: t.space[24] },
   // The lead's dark stage, as on the loaded card; photo blocks of every variant sit on it.
   leadStage: { backgroundColor: t.color.media.ground, overflow: 'hidden' },

@@ -104,7 +104,8 @@ class NotifyFollowersOfPublication implements ShouldQueue
 
     private function stillNews(User $actor, Vehicle $vehicle, ?BuildUpdate $update): bool
     {
-        if ($vehicle->owner_id !== $actor->id || $vehicle->status !== VehicleStatus::Published || $vehicle->visibility !== Visibility::Public) {
+        // M5.9b: a ghost car is no news to anybody (contract §5, Home feeds and lists).
+        if ($vehicle->owner_id !== $actor->id || $vehicle->status !== VehicleStatus::Published || $vehicle->visibility !== Visibility::Public || $vehicle->ghost_mode === true) {
             return false;
         }
 

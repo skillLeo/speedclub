@@ -20,6 +20,8 @@ use App\Services\Account\WithdrawMemberMedia;
 use App\Services\Audit\Audit;
 use App\Services\Auth\IdTokens\AppleTokens;
 use App\Services\Auth\MemberSessions;
+use App\Services\Crews\CrewAccountDeletion;
+use App\Services\Dex\SpotPurger;
 use App\Services\Events\EventHousekeeping;
 use App\Services\Notifications\Notifier;
 use App\Services\PublicPages\OgImages;
@@ -88,12 +90,17 @@ class DeleteAccount
             PasskeyChallenge::query()->where('user_id', $user->id)->delete();
             // M4.7: the app installs go with the sign-ins; SET-21 rows stay with the account until the hard delete (cascade).
             DeviceInstall::query()->where('user_id', $user->id)->delete();
+            // M5.9b (m5.9b contract §0): the member's spots and the spots of their cars, at once.
+            $spots = app(SpotPurger::class)->forMember($user);
+            // R4-2.3 (contract-crews.md C8): requests and invitations go, founded crews pass on (or are deleted), memberships go.
+            app(CrewAccountDeletion::class)->accountClosed($user);
 
             Audit::record(MemberSecurityEvent::DeletionRequested->value, $user, after: [
                 'vehicles' => $vehicles->count(),
                 'follows' => $follows,
                 'passkeys' => $passkeys,
                 'providers' => $providers,
+                'spots' => $spots,
                 ...$revoked,
             ], actor: $user);
 

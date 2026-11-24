@@ -1,0 +1,268 @@
+{
+    "badges": {
+        "nav": {
+            "title": "Badges"
+        },
+        "title": "Badges",
+        "intro": "Badges follow fixed rules over each member's own data only. A changed rule applies from the next nightly run, or at once with “Apply now”. Earned badges stay when a rule changes. Only staff can take a badge back, from one member at a time (member › badges).",
+        "caption": "Badges in app order",
+        "empty_title": "No badges yet",
+        "empty_body": "Create the first badge. The standard badges come with the seeder.",
+        "view_only": "View only: Owner, Admin and the content team may change badges.",
+        "new": "New badge",
+        "columns": {
+            "name": "Badge",
+            "category": "Category",
+            "tier": "Tier",
+            "hidden": "Hidden",
+            "active": "Status",
+            "earned": "Earned",
+            "sort": "Order",
+            "rule": "Rule"
+        },
+        "filters": {
+            "label": "Filters",
+            "q": "Search",
+            "q_placeholder": "Name or key",
+            "category": "Category",
+            "tier": "Tier",
+            "hidden": "Hidden",
+            "active": "Status",
+            "any": "All",
+            "yes": "Yes",
+            "no": "No",
+            "apply": "Apply"
+        },
+        "presets": {
+            "inactive": "Inactive",
+            "hidden": "Hidden"
+        },
+        "status": {
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "hidden_yes": "Hidden",
+        "hidden_no": "Visible",
+        "tiers": {
+            "bronze": "Bronze",
+            "silver": "Silver",
+            "gold": "Gold"
+        },
+        "categories": {
+            "garage": "Garage",
+            "mods": "Mods",
+            "spotting": "Spotting",
+            "sets": "Sets",
+            "treffen": "Meets",
+            "forum": "Forum",
+            "sticker": "Sticker",
+            "founding": "Founding",
+            "community": "Community"
+        },
+        "metrics": {
+            "published_vehicles": "Published cars",
+            "documented_mods": "Documented mods (brand, date, photo)",
+            "mod_categories": "Mod areas",
+            "build_score": "Best Build Score",
+            "maintenance_logs": "Logged services",
+            "cars_spotted": "Cars spotted",
+            "cities_spotted": "Cities with spots (daytime)",
+            "night_spots": "Night spots (no longer available)",
+            "first_spotter_foils": "Among the first three spotters",
+            "unique_spotters_of_my_cars": "Different spotters of one own car",
+            "sets_completed": "Completed Dex sets",
+            "set_completed": "One particular Dex set completed",
+            "events_attended": "Meets attended (check-in)",
+            "forum_solutions": "Forum answers marked as the solution",
+            "sticker_active": "Active sticker on a car",
+            "sticker_scans": "Sticker scans",
+            "founding_member": "Founding Member",
+            "invites_accepted": "Accepted invites",
+            "member_days": "Days since activation",
+            "level": "Level",
+            "views_received": "Views of profile and cars",
+            "helpful_received": "Forum posts marked helpful"
+        },
+        "rule": {
+            "title": "Rule",
+            "intro": "A fixed rule over one approved metric. Never random, nothing for likes, posts or sign-ins.",
+            "metric": "Metric",
+            "operator": "Condition",
+            "gte": "at least",
+            "eq": "holds",
+            "value": "Value",
+            "set": "Dex set",
+            "set_placeholder": "Choose a set",
+            "summary_gte": ":metric: at least :value",
+            "summary_eq": ":metric",
+            "summary_set": "Dex set “:set” completed",
+            "preview": "Would go to :count members today",
+            "preview_one": "Would go to 1 member today",
+            "preview_loading": "Counting …",
+            "preview_failed": "The preview could not be loaded.",
+            "preview_hint": "Real, active members for whom the rule holds today, whether they already have the badge or not. Sample accounts never count."
+        },
+        "form": {
+            "create_title": "New badge",
+            "texts": "Texts",
+            "texts_intro": "This is how it reads in the app. No word about speed, racing or records on the road.",
+            "key": "Key",
+            "key_hint": "3 to 64 characters: a–z, 0–9 and hyphens. Cannot be changed later.",
+            "name_de": "Name (German)",
+            "name_en": "Name (English)",
+            "description_de": "Description (German)",
+            "description_en": "Description (English)",
+            "hint_de": "Hint (German)",
+            "hint_en": "Hint (English)",
+            "hint_hint": "Required for hidden badges: the app shows “???” and this hint until the badge is earned.",
+            "settings": "Placement",
+            "category": "Category",
+            "tier": "Tier",
+            "sort": "Order",
+            "sort_hint": "Smaller numbers come first in the app.",
+            "hidden": "Hidden",
+            "hidden_on": "Hidden until earned",
+            "hidden_off": "Visible to everyone",
+            "active": "Active",
+            "active_on": "Active: awarded",
+            "active_off": "Inactive: not awarded",
+            "save": "Save",
+            "create": "Create",
+            "discard_title": "Discard changes?",
+            "discard_body": "Your changes to this badge are not saved yet.",
+            "discard": "Discard",
+            "error": "The badge could not be saved. Check the marked fields.",
+            "load_error": "The badge could not be loaded.",
+            "earned": "Earned by :count members",
+            "earned_one": "Earned by 1 member",
+            "earned_none": "Not earned by anyone yet"
+        },
+        "actions": {
+            "edit": "Edit",
+            "activate": "Activate",
+            "deactivate": "Deactivate",
+            "apply": "Apply now",
+            "activate_title": "Activate this badge?",
+            "activate_body": "It is awarded from the next run on and shows in the app.",
+            "deactivate_title": "Deactivate this badge?",
+            "deactivate_body": "It is no longer awarded and leaves the app. Members who earned it keep it and see it again once it is active.",
+            "reason_optional": "Reason (optional)",
+            "apply_title": "Apply this badge now?",
+            "apply_body": "Checks every member now, in stages, and awards the badge to everyone who meets the rule. No push is sent.",
+            "apply_count": "According to the preview, :count members meet the rule today.",
+            "apply_inactive": "Only active badges can be applied."
+        },
+        "flash": {
+            "created": "Badge created.",
+            "saved": "Badge saved. The rule applies from the next nightly run.",
+            "activated": "Badge activated.",
+            "deactivated": "Badge deactivated.",
+            "applied": "Applying now. This runs in stages in the background."
+        }
+    },
+    "cotd": {
+        "nav": {
+            "title": "Car of the Day"
+        },
+        "title": "Car of the Day",
+        "intro": "Every day at :pick Speedclub picks a car by fixed rules; from :publish it is on Home. You can choose another car for today or a later day, or skip the day.",
+        "upcoming": "Today and the next 14 days",
+        "past": "The last 14 days",
+        "votes": {
+            "title": "Votes",
+            "intro": "The Picker's three suggestions per day with their votes. Only staff see the numbers, members never do. A team choice or a skipped day always wins over the votes.",
+            "caption": "Vote rounds, newest first, with the votes per suggestion",
+            "off": "Voting is off (flag cotd_voting). The Picker chooses on its own as before.",
+            "off_with_rounds": "Voting is off right now: no new rounds start; the votes below come from earlier rounds.",
+            "empty_title": "No vote round yet",
+            "empty_body": "From 18:00 the Picker sets tomorrow's suggestions; they show up here then.",
+            "columns": {
+                "position": "Rank",
+                "car": "Suggestion",
+                "owner": "Owner",
+                "votes": "Votes",
+                "counted": "Counted"
+            },
+            "counted_hint": "Only votes of active accounts count; deleted and blocked ones drop out.",
+            "total": "Total votes: :count",
+            "winner": "Car of the Day",
+            "gone": "Vehicle deleted",
+            "status": {
+                "open": "Open until :time",
+                "counting": "Closed, picked at :time",
+                "by_vote": "Picked by vote",
+                "picker": "No counted vote: Picker's choice",
+                "staff": "Team decision applies"
+            },
+            "unavailable": {
+                "too_few_candidates": {
+                    "title": "Too few candidates for :day",
+                    "body": "Fewer than two cars meet the rules for a vote. The Picker chooses the day on its own as before."
+                },
+                "staff_decided": {
+                    "title": "The team’s choice applies on :day",
+                    "body": "A team choice or a skipped day wins over the votes, so there is no vote."
+                },
+                "not_ready": {
+                    "title": "The round for :day is starting",
+                    "body": "The suggestions are being set right now. Reload the page in a moment."
+                }
+            }
+        },
+        "caption_upcoming": "Car of the Day from today",
+        "caption_past": "Car of the Day of the last 14 days",
+        "view_only": "View only: Owner, Admin and the content team may choose or skip.",
+        "columns": {
+            "day": "Day",
+            "status": "Status",
+            "car": "Car",
+            "owner": "Owner",
+            "bundesland": "State",
+            "source": "Choice",
+            "story": "Story line",
+            "actions": "Actions"
+        },
+        "today": "Today",
+        "status": {
+            "published": "On Home",
+            "picked": "Chosen, live from :time",
+            "open": "Open, picked at :time",
+            "skipped": "Skipped",
+            "missed": "No car"
+        },
+        "source": {
+            "auto": "Automatic",
+            "staff": "Team",
+            "staff_by": "Team · :name",
+            "vote": "Vote"
+        },
+        "sample": "Sample",
+        "no_story": "No story line",
+        "skipped_reason": "Reason: :reason",
+        "actions": {
+            "override": "Choose another car",
+            "skip": "Skip day",
+            "menu": "Actions for :day"
+        },
+        "override": {
+            "title": "Another car for :day",
+            "body": "The car must be public and not in ghost mode. The Build Score and photo minimums of the automatic pick do not apply here. If the day is live already, the new car shows at once and its owner is told.",
+            "car": "Car",
+            "choose": "Choose car",
+            "change": "Choose another",
+            "picker_title": "Choose a car for Car of the Day",
+            "none": "No car chosen yet",
+            "confirm": "Choose"
+        },
+        "skip": {
+            "title": "Skip Car of the Day on :day?",
+            "body": "There is no Car of the Day on that day. The automatic pick leaves it out and Home shows none until the next car.",
+            "confirm": "Skip"
+        },
+        "error": "Car of the Day could not be loaded.",
+        "flash": {
+            "overridden": "Car chosen.",
+            "skipped": "Day skipped."
+        }
+    }
+}

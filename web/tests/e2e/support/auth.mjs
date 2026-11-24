@@ -31,6 +31,8 @@ export const DEMO_BLOCKER = 'paul.roadster@speedclub.test';
  * kenji, never as lukas.sc, whose one unread message there must stay unread (opening it marks it read). Read only.
  */
 export const DEMO_KENJI = 'kenji.r34@speedclub.test';
+/** M5.9f: the showcase member of DemoShowcaseSeeder + GiftDemoSeeder (spots, Dex, badges, Wrapped), for DEX-04-live. */
+export const DEMO_SHOWCASE = 'sebastian.demo@speedclub.test';
 /** tobi.quattro: the member affected by the seeded decision (m2.6-api-handover.md §7, SAFE-01 and SET-16). Read only. */
 export const DEMO_AFFECTED = 'tobi.quattro@speedclub.test';
 /** nico.sti: the reporter of that decision (SAFE-01 reporter view). Read only. */
@@ -372,6 +374,8 @@ export const authStrategies = {
   'member-blocker': member(async () => DEMO_BLOCKER),
   // MSG-02 with the R34 context card, from kenji.r34's side (M2.4).
   'member-kenji': member(async () => DEMO_KENJI),
+  // M5.9f DEX-04-live: a real spot card of the showcase member.
+  'member-showcase': member(async () => DEMO_SHOWCASE),
   // SAFE-01 affected view and SET-16 "Entscheidungen zu deinen Inhalten" (M2.6).
   'member-affected': member(async () => DEMO_AFFECTED),
   // SAFE-01 reporter view (M2.6).

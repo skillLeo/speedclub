@@ -8,13 +8,15 @@ import { useFlag } from '@/api/queries/appConfig';
 import { errorNumber } from '@/api/queries/errorDetails';
 import { useStartEmailCode, useVerifyEmailCode } from '@/api/queries/passwordless';
 import { createStyles } from '@/theme';
-import { Button, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Text } from '@/ui/Text';
 import { slot } from '@/ui/SlotText';
 import { identifierText } from '@/ui/textBreaks';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { CodeInput, CodeInputSkeleton } from '../components/CodeInput';
 import { FormNotice } from '../components/FormNotice';
+import { useLeaveCodeSignInWhenOff } from '../authFlags';
 import { handEmailTo } from '../emailHandoff';
 import { heldEmailAttempt, holdEmailAttempt, maskEmail, resentAttempt, secondsUntilResend, type EmailAttempt } from '../emailAttempt';
 import { formatClock, formatWait, isCode, useCountdown } from '../forms';
@@ -200,10 +202,12 @@ export function CodeEntryScreen() {
     },
   });
 
+  const leaving = useLeaveCodeSignInWhenOff(attempt?.email);
+
   // Without an attempt (a reload, an expired one) there is nothing to check a code against: back to AUTH-12.
   useEffect(() => {
-    if (!attempt) router.replace('/auth/email');
-  }, [attempt, router]);
+    if (!attempt && !leaving) router.replace('/auth/email');
+  }, [attempt, leaving, router]);
 
   const changeEmail = () => {
     handEmailTo('/auth/email', attempt?.email);

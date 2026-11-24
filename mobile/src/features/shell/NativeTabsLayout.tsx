@@ -7,7 +7,6 @@ import { hapticFor } from '@/lib/haptics';
 import { isAndroid } from '@/lib/platform';
 import { useShellStore } from '@/state/shell';
 import { useTheme } from '@/theme';
-import { unreadCountText } from '@/ui';
 
 import { TAB_DESTINATIONS } from './destinations';
 import { setNativeTabsActive } from './navMode';
@@ -35,7 +34,7 @@ export function onNativeTabPress({ navigation, route }: TabPressProps, android: 
 
 /**
  * 09 §6.1 native tabs (`expo-router/native-tabs`, stable in SDK 58): Liquid Glass on iOS, the Material 3 navigation bar on
- * Android with labels always visible. The five destinations, labels and badges come from the same config as the JS shell
+ * Android with labels always visible. The five destinations of 10 §1 (Start · Entdecken · Garage · Shop · Profil), labels and badges come from the same config as the JS shell
  * (TAB_DESTINATIONS, useTabBadges). Platform symbols only here (SKILL §5): SF Symbols on iOS; on Android the Phosphor pair as
  * PNGs until expo-symbols brings the Material Symbols (destinations.ts `md`).
  *
@@ -72,11 +71,11 @@ export function NativeTabsLayout() {
       screenListeners={(props) => ({ tabPress: () => onNativeTabPress(props as unknown as TabPressProps) })}
     >
       {TAB_DESTINATIONS.map((destination) => {
-        const messages = destination.name === 'messages' && badges.messages > 0 ? unreadCountText(badges.messages) : null;
+        // Nachrichten and its count live in the Start and Entdecken headers since M5.2 (10 §1); the bar keeps Start's dot.
         const dot = destination.name === 'home' && badges.home;
         const label = t(destination.labelKey);
         // As TabButton names it: the label, then what the badge says (the native default is the label alone).
-        const unread = messages !== null ? t('a11y.unreadCount', { count: messages }) : dot ? t('a11y.unreadNotifications') : null;
+        const unread = dot ? t('a11y.unreadNotifications') : null;
         return (
           <NativeTabs.Trigger
             key={destination.name}
@@ -87,7 +86,6 @@ export function NativeTabsLayout() {
             <NativeTabs.Trigger.Label>{label}</NativeTabs.Trigger.Label>
             <NativeTabs.Trigger.Icon sf={destination.sf} src={ANDROID_TAB_ICONS[destination.name]} />
             {/* A Badge without text is the dot (unread notifications on Start); none at all hides it. */}
-            {messages !== null ? <NativeTabs.Trigger.Badge>{messages}</NativeTabs.Trigger.Badge> : null}
             {dot ? <NativeTabs.Trigger.Badge /> : null}
           </NativeTabs.Trigger>
         );

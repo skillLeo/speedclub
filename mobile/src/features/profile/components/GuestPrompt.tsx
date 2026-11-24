@@ -4,7 +4,7 @@ import { useWindowDimensions } from 'react-native';
 
 import { clearAuthIntent } from '@/state/session';
 import { layout, useBreakpoint } from '@/theme';
-import { EmptyState } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
 
 import { SampleGarageCard } from './samples';
 

@@ -19,7 +19,7 @@ import { routeOr } from '../../lib/routes';
 
 /**
  * ADM-19 QR detail (06 §3 QR): daily scans of the last 30 or 90 days (counts only), the code's history (created, revoked, reissued, by
- * whom), the vehicle's other codes, and Sperren / Neu ausgeben (qr.revoke, reason, recent password; the owner is mailed).
+ * whom), the vehicle's other codes, and Sperren / Neu ausgeben (qr.revoke, recent password; the owner is mailed).
  */
 interface Qr {
     id: string;
@@ -85,8 +85,8 @@ const action = useAdminAction();
 const revokeOpen = ref(false);
 const reissueOpen = ref(false);
 const url = (name: 'revoke' | 'reissue') => routeOr(`admin.qr.${name}`, `/admin/qr/${props.qr.id}/${name}`, { qr: props.qr.id });
-function run(name: 'revoke' | 'reissue', reason: string | null): void {
-    action.run('post', url(name), { reason: reason ?? '' }, { sensitive: true, onSuccess: () => ((name === 'revoke' ? revokeOpen : reissueOpen).value = false) });
+function run(name: 'revoke' | 'reissue'): void {
+    action.run('post', url(name), {}, { sensitive: true, onSuccess: () => ((name === 'revoke' ? revokeOpen : reissueOpen).value = false) });
 }
 const vehicleHref = (id: string) => routeOr('admin.vehicles.show', `/admin/vehicles/${id}`, { vehicle: id });
 const memberHref = (id: string) => routeOr('admin.members.show', `/admin/members/${id}`, { member: id });
@@ -185,7 +185,7 @@ onMounted(async () => {
             </aside>
         </div>
 
-        <ConfirmDialog v-model:open="revokeOpen" :title="trans('qr.revoke.title', { code })" :body="trans('qr.revoke.body')" :confirm-label="trans('qr.actions.revoke')" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-19.revoke-dialog" @confirm="(r: string | null) => run('revoke', r)" />
-        <ConfirmDialog v-model:open="reissueOpen" :title="trans('qr.reissue.title')" :body="trans('qr.reissue.body')" :confirm-label="trans('qr.actions.reissue')" tone="neutral" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-19.reissue-dialog" @confirm="(r: string | null) => run('reissue', r)" />
+        <ConfirmDialog v-model:open="revokeOpen" :title="trans('qr.revoke.title', { code })" :body="trans('qr.revoke.body')" :confirm-label="trans('qr.actions.revoke')" :processing="action.processing.value" :error="action.error.value" test-id="ADM-19.revoke-dialog" @confirm="run('revoke')" />
+        <ConfirmDialog v-model:open="reissueOpen" :title="trans('qr.reissue.title')" :body="trans('qr.reissue.body')" :confirm-label="trans('qr.actions.reissue')" tone="neutral" :processing="action.processing.value" :error="action.error.value" test-id="ADM-19.reissue-dialog" @confirm="run('reissue')" />
     </div>
 </template>

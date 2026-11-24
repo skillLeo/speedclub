@@ -8,6 +8,10 @@
   Options: -Quick (static + unit only), -SkipVisual, -SkipLighthouse
   Phase 4 (09_PREMIUM_2_0 §14, §17) adds: fonts manifest check, design-lint --strict, the p4 visual tier (09 §14.1) instead of
   the phase tier, and the member web Lighthouse gate (09 §12, lighthouserc.app-gate.cjs). It is expected to fail until M4.18.
+  Phase 5 (10_CLIENT_ROUND_1 §15 exit gate) adds, on top of Phase 4: the plate-blur leak test and the sticker QR decode suite as
+  gates of their own (both also run inside Laravel verify), and the zero-error crawl (guest, member, admin; WebKit iPhone and
+  desktop; web/tests/e2e/crawl). The flows F15–F19 and A7 run inside E2E. The crawl reads CRAWL_BASE_URL (default this port),
+  CRAWL_MEMBER_EMAIL and CRAWL_MEMBER_PASSWORD from the environment; without a member password the gate fails instead of skipping.
   Report : docs/reports/phase-<N>/verify-<timestamp>.md   Logs: docs/reports/logs/verify-*.log
   Exit   : 0 only if every executed gate passed.
   The npm/composer scripts called here are created in Phase 1 (M1.0) with exactly these names.
@@ -17,7 +21,7 @@
 #>
 [CmdletBinding()]
 param(
-  [ValidateRange(1, 4)][int]$Phase = 1,
+  [ValidateRange(1, 5)][int]$Phase = 1,
   [int]$Port = 8080,
   [switch]$Quick,
   [switch]$SkipVisual,
@@ -109,6 +113,11 @@ Invoke-Gate 'Laravel verify (pint, phpstan, pest, audit)' $Composer @('--working
 # Timings (Pest group perf, excluded from composer verify in web/phpunit.xml): alone, after the parallel suite, on the gate's engine.
 # Absolute: `composer exec` with a relative --working-dir fails with exit 1 ("Could not switch back to working directory web").
 if (-not $Quick) { Invoke-Gate 'Laravel performance probes (pest --group=perf, alone)' $Composer @("--working-dir=$(Join-Path $Root 'web')", 'exec', '--', 'pest', '--group=perf') }
+if ($Phase -ge 5) {
+  # 10 §15: named evidence for the two Phase 5 safety suites (they also ran inside Laravel verify above).
+  Invoke-Gate 'Plate-blur leak test (10 §16, pest --group=plate-blur-leak)' $Composer @("--working-dir=$(Join-Path $Root 'web')", 'exec', '--', 'pest', '--group=plate-blur-leak')
+  Invoke-Gate 'Sticker QR decode suite (M5.4)' $Composer @("--working-dir=$(Join-Path $Root 'web')", 'exec', '--', 'pest', 'tests/Feature/Stickers/StickerDecodeSuiteTest.php')
+}
 Invoke-Gate 'Web assets verify (vue-tsc, eslint, vite build)' $Npm @('--prefix', 'web', 'run', 'verify')
 Invoke-Gate 'Dependency audit web (npm, production deps, high+)' $Npm @('--prefix', 'web', 'audit', '--omit=dev', '--audit-level=high')
 Invoke-Gate 'Dependency audit mobile (npm, production deps, high+)' $Npm @('--prefix', 'mobile', 'audit', '--omit=dev', '--audit-level=high')
@@ -145,6 +154,15 @@ if (-not $Quick) {
         Invoke-Gate 'Visual matrix (p4 tier, 09 §14.1)' $Npm @('--prefix', 'web', 'run', 'visual', '--', '--tier=p4')
       } else {
         Invoke-Gate "Visual matrix (phase $Phase tier)" $Npm @('--prefix', 'web', 'run', 'visual', '--', '--tier=phase', "--phase=$Phase")
+      }
+    }
+    if ($Phase -ge 5) {
+      # 10 §15 / M5.10: the zero-error crawl over the seeded showcase. Credentials only from the environment, never printed.
+      if (-not $env:CRAWL_BASE_URL) { $env:CRAWL_BASE_URL = "http://localhost:$Port" }
+      if ($env:CRAWL_MEMBER_PASSWORD) {
+        Invoke-Gate 'Zero-error crawl (guest, member, admin; 10 §15)' 'node' @('web/node_modules/.bin/playwright', 'test', '--config=web/tests/e2e/crawl/crawl.config.ts')
+      } else {
+        $Results.Add([pscustomobject]@{ Gate = 'Zero-error crawl (guest, member, admin; 10 §15)'; Status = 'FAIL'; Seconds = 0; Exit = 1; Log = 'CRAWL_MEMBER_PASSWORD not set (see web/tests/e2e/crawl/showcase.spec.ts)' })
       }
     }
     if (-not $SkipLighthouse) {

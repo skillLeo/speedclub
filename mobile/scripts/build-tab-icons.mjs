@@ -20,7 +20,7 @@ const out = join(mobile, 'assets', 'tabs');
 const defs = join(mobile, 'node_modules', 'phosphor-react-native', 'src', 'defs');
 
 /** File stem → Phosphor def. Keep in step with TAB_DESTINATIONS (src/features/shell/destinations.ts). */
-export const TAB_ICONS = { house: 'House', 'magnifying-glass': 'MagnifyingGlass', garage: 'Garage', chats: 'Chats', user: 'User' };
+export const TAB_ICONS = { house: 'House', 'magnifying-glass': 'MagnifyingGlass', garage: 'Garage', bag: 'Bag', user: 'User' };
 const WEIGHTS = ['regular', 'fill'];
 /** RN asset suffix → scale of the 24 dp glyph. */
 const DENSITIES = { '': 1, '@1.5x': 1.5, '@2x': 2, '@3x': 3, '@4x': 4 };

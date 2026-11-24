@@ -1,4 +1,4 @@
-import { CODE_LENGTH } from './schemas';
+import { CODE_LENGTH } from './limits';
 
 /** What a typed, pasted or autofilled value holds: digits, at most six. A pasted "123 456" counts as a code. */
 export function sanitizeCode(text: string): string {

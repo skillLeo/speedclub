@@ -9,6 +9,8 @@ use App\Models\Event;
 use App\Models\EventRsvp;
 use App\Models\User;
 use App\Services\Events\EventCalendar;
+use App\Services\Events\EventCheckins;
+use App\Services\Events\EventGallery;
 use App\Services\Events\EventLocation;
 use App\Services\Events\Rsvps;
 use App\Support\Viewer;
@@ -37,6 +39,12 @@ class EventResource extends EventCardResource
         $gate = Gate::forUser($viewer);
         $exact = EventLocation::exactFor($event, $viewer);
         $rules = is_array($event->rules) ? array_values(array_filter(array_map(fn (mixed $rule): ?EventRule => EventRule::tryFrom((string) $rule), $event->rules))) : [];
+        $gallery = app(EventGallery::class);
+        $galleryOn = $gallery->enabled();
+        $checkins = app(EventCheckins::class);
+        $checkinOn = $checkins->enabled();
+        $checkinShown = $checkinOn && $event->status === EventStatus::Published && $checkins->applies($event);
+        $checkinInfo = $checkinShown ? $checkins->info($event, $viewer) : null;
 
         return [
             ...$this->card($exact),
@@ -72,7 +80,11 @@ class EventResource extends EventCardResource
             /**
              * What the reader may do now; the app shows only those actions.
              *
-             * @var array{rsvp: bool, edit: bool, cancel: bool, post_update: bool, view_updates: bool, view_attendees: bool, report: bool}
+             * M5.6, only while their flag is on (otherwise the keys are absent): `add_photos` (the organiser, going or checked-in members
+             * while the gallery is open, not under a publishing restriction), `moderate_photos` (the organiser), `checkin` (a member who
+             * may check in now and has not), `show_checkin_code` (the organiser while the check-in window is open).
+             *
+             * @var array{rsvp: bool, edit: bool, cancel: bool, post_update: bool, view_updates: bool, view_attendees: bool, report: bool, add_photos?: bool, moderate_photos?: bool, checkin?: bool, show_checkin_code?: bool}
              */
             'can' => [
                 'rsvp' => $viewer !== null && $event->isOpen() && $gate->allows('rsvp', $event),
@@ -82,7 +94,37 @@ class EventResource extends EventCardResource
                 'view_updates' => $viewer !== null && $gate->allows('viewUpdates', $event),
                 'view_attendees' => $viewer !== null && $event->status->isPublic(),
                 'report' => $viewer !== null && ! $organiser,
+                ...($galleryOn ? [
+                    'add_photos' => $gallery->mayAdd($event, $viewer),
+                    'moderate_photos' => $organiser && $viewer instanceof User && $gate->allows('moderatePhotos', $event),
+                ] : []),
+                ...($checkinOn ? [
+                    'checkin' => $viewer instanceof User && $checkinInfo !== null && $checkinInfo['open'] && $checkinInfo['mine'] === null
+                        && $gate->allows('checkIn', $event),
+                    'show_checkin_code' => $organiser && $checkinInfo !== null && $checkinInfo['open'] && $gate->allows('showCheckinCode', $event),
+                ] : []),
             ],
+            /**
+             * M5.6 post-event gallery (flag events.gallery; absent while it is off). `open`: uploads are accepted now; `closes_at` = end
+             * (or start + 6 h) + 14 days; `count` approved photos; `pending` the organiser's queue (null for everybody else);
+             * `mine_pending` the reader's own photos waiting (null for guests); `preview` up to six approved, newest approval first.
+             *
+             * @var array{open: bool, opens_at: string|null, closes_at: string|null, count: int, pending: int|null, mine_pending: int|null, preview: list<EventPhotoResource>}
+             */
+            'gallery' => $this->when($galleryOn, function () use ($gallery, $event, $viewer): array {
+                $info = $gallery->info($event, $viewer);
+                $info['preview']->each(fn ($photo) => $photo->setRelation('event', $event));
+                $info['preview'] = EventPhotoResource::collection($info['preview']);
+
+                return $info;
+            }),
+            /**
+             * M5.6 check-in (flag events.checkin; absent while it is off, and for unpublished and sample events). The window runs from
+             * 60 min before the start to 120 min after the end; `mine` is the reader's own check-in; `count` the organiser's only.
+             *
+             * @var array{opens_at: string|null, closes_at: string|null, open: bool, mine: array{checked_in_at: string|null, profile_visible: bool}|null, count: int|null}
+             */
+            'checkin' => $this->when($checkinShown, fn (): ?array => $checkinInfo),
             /**
              * The organiser's review state: submitted_at, reviewed_at and the reason of a rejection. `will_be_reviewed` (a draft or a
              * rejected event): sending it goes to the team's review first (the first events, every after_rsvp event), so EVT-03 says

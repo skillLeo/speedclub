@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { isViewAsTab } from '@/api/clientViewAs';
 import i18n from '@/i18n';
 import { useRequireAuth } from '@/state/session';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 
 const WIZARD = '/add-vehicle/new/vehicle';
 

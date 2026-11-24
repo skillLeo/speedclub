@@ -55,10 +55,10 @@ const messagesHref = computed(() => routeOr('admin.moderation.messages', '/admin
                 <p v-if="!preview.url" class="text-admin-base text-ink-2">{{ trans('moderation.case.preview.removed_photo') }}</p>
                 <p v-else-if="preview.alt" class="text-admin-base text-ink-2">{{ preview.alt }}</p>
             </div>
-            <!-- M4.11: a comment under a build update, as written; its author is the case's subject. -->
+            <!-- M4.11: a comment under a build update or (R5-5) on the car itself, as written; its author is the case's subject. -->
             <div v-else-if="preview.kind === 'comment'" class="flex flex-col gap-8" :data-testid="`${testId}.preview`">
                 <p class="flex flex-wrap items-center gap-8 text-caption text-ink-3 tabular-nums">
-                    <span>{{ preview.reply ? trans('moderation.case.preview.comment_reply') : trans('moderation.case.preview.comment_on') }}</span>
+                    <span>{{ preview.reply ? trans('moderation.case.preview.comment_reply') : trans(preview.on === 'vehicle' ? 'moderation.case.preview.comment_on_vehicle' : 'moderation.case.preview.comment_on') }}</span>
                     <time v-if="preview.created_at" :datetime="String(preview.created_at)">{{ formatDateTime(String(preview.created_at)) }}</time>
                     <Badge v-if="preview.deleted" tone="neutral">{{ trans('moderation.case.preview.comment_deleted') }}</Badge>
                 </p>
@@ -95,6 +95,39 @@ const messagesHref = computed(() => routeOr('admin.moderation.messages', '/admin
                     <p class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ preview.about ?? trans('moderation.case.preview.no_description') }}</p>
                     <Link v-if="hasRoute('admin.businesses.show')" :href="routeOr('admin.businesses.show', `/admin/businesses/${String(preview.id)}`, { business: String(preview.id) })" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 self-start rounded-xs text-admin-base-strong text-ink hover:underline']">
                         {{ trans('moderation.case.preview.open_business') }}<PhArrowSquareOut :size="16" aria-hidden="true" />
+                    </Link>
+                </div>
+            </div>
+            <!-- M5.8: a forum post with its thread, the sanitised Markdown subset as members read it; linked to the thread on ADM-68. -->
+            <div v-else-if="preview.kind === 'forum_post'" class="flex flex-col gap-8" :data-testid="`${testId}.preview`">
+                <p class="text-admin-base-strong text-ink">{{ preview.thread_title }}</p>
+                <p class="flex flex-wrap items-center gap-8 text-caption text-ink-3 tabular-nums">
+                    <span>{{ trans(preview.is_opening ? 'moderation.case.preview.forum_opening' : preview.reply ? 'moderation.case.preview.forum_nested' : 'moderation.case.preview.forum_reply') }}</span>
+                    <time v-if="preview.created_at" :datetime="String(preview.created_at)">{{ formatDateTime(String(preview.created_at)) }}</time>
+                    <Badge v-if="preview.deleted" tone="neutral">{{ trans('moderation.case.preview.comment_deleted') }}</Badge>
+                    <StatusPill v-if="preview.status !== 'published'" :tone="preview.status === 'pending' ? 'warning' : 'danger'" :label="trans(`moderation.case.preview.forum_status.${String(preview.status)}`)" />
+                </p>
+                <!-- eslint-disable-next-line vue/no-v-html -- body_html is the server's sanitised Markdown subset (ForumMarkdown, m5.8-contract D5) -->
+                <div class="max-w-720 border-l-2 border-line-strong pl-12 text-admin-base text-ink break-words [&_a]:underline [&_li]:mb-4 [&_ol]:list-decimal [&_ol]:pl-20 [&_p]:mb-12 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-20" :data-testid="`${testId}.preview.forum`" v-html="String(preview.body_html ?? '')" />
+                <p v-if="preview.status === 'removed' || preview.thread_status === 'removed'" class="text-admin-base text-ink-3">{{ trans('moderation.case.preview.event_removed') }}</p>
+                <Link v-if="hasRoute('admin.forum.queue')" :href="`${routeOr('admin.forum.queue', '/admin/forum')}?tab=threads&item=${String(preview.id)}`" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 self-start rounded-xs text-admin-base-strong text-ink hover:underline']" :data-testid="`${testId}.preview.forum-open`">
+                    {{ trans('moderation.case.preview.open_forum') }}<PhArrowSquareOut :size="16" aria-hidden="true" />
+                </Link>
+            </div>
+            <!-- R4-2.3: a crew as its page shows it now (logo, cover, name, join mode, about), linked to its ADM-81 record. -->
+            <div v-else-if="preview.kind === 'crew'" class="flex flex-col gap-12 desktop:flex-row" :data-testid="`${testId}.preview`">
+                <img v-if="preview.cover" :src="String(preview.cover)" alt="" class="aspect-video w-240 shrink-0 rounded-sm object-cover" />
+                <div class="flex min-w-0 flex-col gap-4">
+                    <p class="flex items-center gap-8 text-admin-base-strong text-ink">
+                        <img v-if="preview.logo" :src="String(preview.logo)" alt="" class="size-32 shrink-0 rounded-sm object-cover" />{{ preview.name }}
+                    </p>
+                    <p class="sc-key text-admin-base text-ink-2">{{ [`/crews/${String(preview.slug)}`, trans(`crews.join_modes.${String(preview.join_mode)}`)].join(' · ') }}</p>
+                    <div class="flex flex-wrap gap-8">
+                        <StatusPill :tone="preview.deleted || preview.status !== 'active' ? 'danger' : 'neutral'" :label="trans(`crews.state.${preview.status === 'removed' ? 'removed' : preview.deleted ? 'deleted' : String(preview.status)}`)" :data-testid="`${testId}.preview.crew-state`" />
+                    </div>
+                    <p class="max-w-720 whitespace-pre-line text-admin-base text-ink">{{ preview.description ?? trans('moderation.case.preview.no_description') }}</p>
+                    <Link v-if="hasRoute('admin.crews.show') && can('moderation.decide')" :href="routeOr('admin.crews.show', `/admin/crews/${String(preview.id)}`, { crew: String(preview.id) })" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 self-start rounded-xs text-admin-base-strong text-ink hover:underline']" :data-testid="`${testId}.preview.crew-open`">
+                        {{ trans('moderation.case.preview.open_crew') }}<PhArrowSquareOut :size="16" aria-hidden="true" />
                     </Link>
                 </div>
             </div>

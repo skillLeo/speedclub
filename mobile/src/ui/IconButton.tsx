@@ -33,6 +33,8 @@ export type IconButtonProps = {
    * the password toggle of TextInput. Ignored on a photo.
    */
   ring?: 'default' | 'inset';
+  /** `link` when the press opens a page (the header's Nachrichten, 10 §1) rather than acting in place. */
+  role?: 'button' | 'link';
   style?: StyleProp<ViewStyle>;
   testID?: string;
   ref?: Ref<ComponentRef<typeof View>>;
@@ -88,6 +90,7 @@ export function IconButton({
   locked,
   loading = false,
   ring = 'default',
+  role = 'button',
   style,
   testID,
   ref,
@@ -103,7 +106,7 @@ export function IconButton({
       // Off the photo it draws its own state.pressed fill; the round photo control takes the tone layer (SM7).
       toneShift={onPhoto || tonal}
       ref={ref}
-      role="button"
+      role={role}
       aria-label={label}
       aria-busy={loading}
       {...(selected === undefined ? {} : isWeb ? ({ "aria-pressed": selected } as object) : { "aria-selected": selected })}

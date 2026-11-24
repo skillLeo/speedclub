@@ -8,7 +8,10 @@ use App\Enums\Visibility;
 use App\Exceptions\ApiException;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\BuildScore\BuildScores;
+use App\Services\Dex\DexNumbers;
 use App\Services\Notifications\PublicationFanout;
+use App\Services\Progress\XpHooks;
 use App\Services\PublicPages\OgImages;
 use App\Services\Qr\QrCodes;
 use App\Services\Search\VehicleSearchProjector;
@@ -33,6 +36,9 @@ class PublishVehicle
 
     public function handle(User $user, Vehicle $vehicle, ?Visibility $visibility = null): Vehicle
     {
+        // M5.9b: the Dex counter row exists before the locking transaction (DexNumbers::prepare, no deadlock between parallel publishes).
+        app(DexNumbers::class)->prepare();
+
         DB::transaction(function () use ($user, $vehicle, $visibility): void {
             $owner = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
             $vehicle->refresh();
@@ -58,12 +64,18 @@ class PublishVehicle
             ])->save();
 
             $this->qr->ensureActive($vehicle);
+            // M5.9b STREET DEX: the car's Dex number, once, at its first publish (the counter's row lock is taken last).
+            app(DexNumbers::class)->ensure($vehicle);
             $this->search->rebuild($vehicle->id);
             $this->og->queue($vehicle);
+            // M5.9c: the first score of the published car (the cover may just have been chosen).
+            app(BuildScores::class)->touch($vehicle->id);
 
             // Followers hear of a build once, at its first publish as public (followed_published, M2.2).
             if ($firstPublish) {
                 $this->fanout->vehiclePublished($vehicle);
+                // M5.9d: 50 XP for the member's first published car (once per member).
+                app(XpHooks::class)->firstVehiclePublished($vehicle);
             }
         }, self::ATTEMPTS);
 

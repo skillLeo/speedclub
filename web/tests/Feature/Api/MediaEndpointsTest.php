@@ -126,6 +126,8 @@ describe('POST vehicles/{id}/media', function () {
         $response->assertExactJsonStructure(['data' => [
             'id', 'status', 'category', 'width', 'height', 'blurhash', 'thumbhash', 'focal_x', 'focal_y', 'alt', 'sort', 'created_at',
             'variants' => ['*' => ['width', 'height', 'url']],
+            // M5.9a: the owner's own photo carries the plate decision.
+            'plate_blur' => ['state'],
         ]]);
 
         $response->assertJsonPath('data.status', 'ready')

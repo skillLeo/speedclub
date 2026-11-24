@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { ApiError } from '@/api/client';
 import { useForgotPassword } from '@/api/queries/auth';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { slot } from '@/ui/SlotText';
 import { identifierText } from '@/ui/textBreaks';
 
@@ -32,7 +33,7 @@ export function ForgotPasswordScreen() {
     defaultValues: { email: handedEmail ?? '' },
   });
 
-  const onSubmit = handleSubmit(async ({ email }) => {
+  const onSubmit = useSingleFlight(handleSubmit(async ({ email }) => {
     setNotice(null);
     try {
       const next = await forgot.mutateAsync(email);
@@ -40,7 +41,7 @@ export function ForgotPasswordScreen() {
     } catch (error) {
       setNotice(error instanceof ApiError ? applyServerErrors(error, setError, { email: 'email' }) : t('common.serverError'));
     }
-  });
+  }));
 
   if (sentTo) {
     return (

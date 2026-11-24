@@ -3,13 +3,19 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
+import { showMySpotsOf } from '@/api/queries/dex';
+import { useSetShowMySpots } from '@/api/queries/dexOwner';
 import { useMemberSettings, useSetShowOwnerOnQr } from '@/api/queries/settings';
 import { useFlag } from '@/api/queries/appConfig';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { ErrorState, ListRow, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { ErrorState } from '@/ui/ErrorState';
+import { ListRow } from '@/ui/ListRow';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { RestrictionNotice } from '../components/RestrictionNotice';
 import { RowGroup } from '@/ui/RowGroup';
@@ -65,6 +71,7 @@ export function PrivacyScreen() {
   const failure = useFailureMessage();
   const settings = useMemberSettings();
   const ownerOnQr = useSetShowOwnerOnQr();
+  const showMySpots = useSetShowMySpots();
   const updatePrivacy = useUpdatePrivacy();
   const readReceipts = useFlag(READ_RECEIPTS_FLAG);
   const mentions = useFlag(MENTIONS_FLAG);
@@ -82,7 +89,7 @@ export function PrivacyScreen() {
   if (status === 'guest') {
     body = <SettingsGuest routeId={ROUTE} returnTo="/settings/privacy" />;
   } else if (qaState === 'loading' || status === 'loading' || (settings.isPending && settings.fetchStatus !== 'paused' && qaState !== 'error')) {
-    body = <PrivacySkeleton groups={[3, ...(mentions ? [3] : []), readReceipts ? 4 : 3, ...(aiFlags ? [1] : []), 1]} />;
+    body = <PrivacySkeleton groups={[3, ...(mentions ? [3] : []), readReceipts ? 4 : 3, 1, ...(aiFlags ? [1] : []), 1]} />;
   } else if (qaState === 'error' || !settings.data) {
     const offline = !online || settings.fetchStatus === 'paused';
     body = (
@@ -168,6 +175,17 @@ export function PrivacyScreen() {
               testID={`${ROUTE}.readReceipts`}
             />
           ) : null}
+        </RowGroup>
+        {/* M5.9b (contract §1/§4): whether owners see the spotter's name or only "jemand". On by default. */}
+        <RowGroup title={t('privacy.spotsGroup')} testID={`${ROUTE}.spotsGroup`}>
+          <SwitchRow
+            title={t('privacy.showMySpots')}
+            helper={t('privacy.showMySpotsHelper')}
+            value={showMySpotsOf(data)}
+            onValueChange={(next) => showMySpots.mutate(next, { onSuccess: saved, onError: refused })}
+            disabled={disabled}
+            testID={`${ROUTE}.showMySpots`}
+          />
         </RowGroup>
         {aiFlags ? (
           // M3.7 (02 §6): the opt-in of the [AI] suggestions, off by default; the helper names the provider as processor.

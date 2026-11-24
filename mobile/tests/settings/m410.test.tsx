@@ -117,7 +117,7 @@ describe('SET-01 (09 §7.9)', () => {
     useSessionStore.setState({ status: 'member', member: { id: 'm', username: 'lukas.sc', displayName: null, avatarUrl: null } });
     await renderScreen(<SettingsScreen />);
     expect(screen.queryByTestId('SET-01.reminders')).toBeNull();
-    expect(screen.getByTestId('SET-01.footer')).toHaveTextContent(/^SPEED CLUB .+ \(Build/);
+    expect(screen.getByTestId('SET-01.footer')).toHaveTextContent(/^Speedclub .+ \(Build/);
     expect(screen.getByTestId('SET-01.cache')).toBeTruthy();
   });
 

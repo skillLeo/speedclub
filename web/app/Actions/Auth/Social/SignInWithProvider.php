@@ -18,6 +18,7 @@ use App\Services\Auth\IdTokens\IdTokenVerifier;
 use App\Services\Auth\IdTokens\SocialAccounts;
 use App\Services\Auth\IdTokens\VerifiedIdentity;
 use App\Services\Auth\PasswordlessAccounts;
+use App\Services\Members\MemberActivation;
 use App\Support\Auth\DeviceInfo;
 use App\Support\Auth\LinkRequired;
 use App\Support\Auth\PasswordlessResult;
@@ -47,7 +48,7 @@ class SignInWithProvider
     ) {}
 
     /**
-     * @param  array{id_token: string, raw_nonce?: string|null, authorization_code?: string|null, full_name?: string|null, locale?: string|null}  $input
+     * @param  array{id_token: string, raw_nonce?: string|null, authorization_code?: string|null, full_name?: string|null, locale?: string|null, invite_code?: string|null}  $input
      */
     public function handle(SocialProvider $provider, array $input, ?DeviceInfo $device, Request $request): PasswordlessResult|LinkRequired|TwoFactorPending
     {
@@ -102,6 +103,8 @@ class SignInWithProvider
         });
 
         $this->social->link($user, $identity, notify: ! $isNew, authorizationCode: $input['authorization_code'] ?? null);
+        // M5.9d: kept until AUTH-09b accepts the terms (MemberActivation); ignored for an account that is active already.
+        app(MemberActivation::class)->noteInvite($user, $input['invite_code'] ?? null);
 
         return new PasswordlessResult($this->signIn->handle($user, $device, $request, method: SignInMethod::forProvider($provider)), $isNew);
     }

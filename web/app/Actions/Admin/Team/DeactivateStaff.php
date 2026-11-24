@@ -2,12 +2,14 @@
 
 namespace App\Actions\Admin\Team;
 
+use App\Enums\ApproverChangeCause;
 use App\Enums\StaffStatus;
 use App\Enums\TeamEvent;
 use App\Models\ApprovalRequest;
 use App\Models\Staff;
 use App\Services\Admin\Members\StaffAtoms;
 use App\Services\Approvals\Approvals;
+use App\Services\Approvals\ApproverChanges;
 use App\Services\Approvals\FourEyes;
 use App\Services\Audit\Audit;
 use App\Services\Auth\StaffCredentials;
@@ -43,7 +45,7 @@ class DeactivateStaff
     public function handle(Staff $by, Staff $target, string $reason): TeamOutcome
     {
         StaffAtoms::ensure($by, 'staff.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
         self::ensureMay($by, $target);
 
         if ($target->isPrivileged()) {
@@ -93,7 +95,10 @@ class DeactivateStaff
 
         $locked = Staff::query()->whereKey($target->getKey())->lockForUpdate()->firstOrFail();
         $before = $locked->status;
+        // SEC-P5-01: deactivating an approver starts the Owner-Override cool-down.
+        $deciders = ApproverChanges::deciders([$locked]);
         $locked->forceFill(['status' => StaffStatus::Deactivated, 'deactivated_at' => now()])->save();
+        ApproverChanges::record($deciders, ApproverChangeCause::Deactivated, $approver ?? $requester);
 
         // First, so the view-as tokens end with this reason rather than the epoch's.
         $viewAs = ViewAs::revokeStartedBy($locked, 'staff_inactive');

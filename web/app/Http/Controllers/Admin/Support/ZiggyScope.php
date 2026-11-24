@@ -23,6 +23,8 @@ final class ZiggyScope
                     && ! ($request->hasSession() && $request->session()->get(EnsureStaffTwoFactor::SIGNED_IN_WITHOUT_CODE) === true))
                 // ADR-427: a session that skipped enrolment reaches the admin, so its shell needs the routes for navigation too.
                 || EnsureStaffTwoFactor::skippedBy($request, $staff)
+                // ADR-540: with 2FA für Admin-Konten Optional an account without TOTP reaches the admin as well.
+                || EnsureStaffTwoFactor::admitsWithoutCode($staff)
             );
 
         return $signedIn ? null : 'guest';

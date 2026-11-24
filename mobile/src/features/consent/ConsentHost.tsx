@@ -21,7 +21,11 @@ import {
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { Button, Dialog, Hairline, Sheet, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { Hairline } from '@/ui/Hairline';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
 
 const ID = 'CONSENT';
 

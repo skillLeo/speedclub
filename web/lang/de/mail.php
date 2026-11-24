@@ -7,19 +7,19 @@ return [
         'action' => 'Anmelden',
         'same_device' => 'Der Button funktioniert nur auf dem Gerät, auf dem du den Code angefordert hast.',
         'sign_in' => [
-            'subject' => ':code ist dein SPEED CLUB Code',
+            'subject' => ':code ist dein Speedclub Code',
             'heading' => 'Dein Code zum Anmelden',
             'intro' => 'Gib diesen Code in der App ein oder tipp auf „Anmelden“.',
         ],
         'sign_up' => [
-            'subject' => ':code ist dein SPEED CLUB Code',
-            'heading' => 'Willkommen im SPEED CLUB',
+            'subject' => ':code ist dein Speedclub Code',
+            'heading' => 'Willkommen im Speedclub',
             'intro' => 'Mit diesem Code legst du dein Konto an. Gib ihn in der App ein oder tipp auf „Anmelden“.',
         ],
         'link' => [
             'subject' => ':code bestätigt die Verknüpfung',
             'heading' => ':provider mit deinem Konto verbinden',
-            'intro' => 'Jemand möchte :provider mit deinem SPEED CLUB Konto verbinden. Warst du das, gib diesen Code in der App ein. Sonst ignorier diese E-Mail, dann bleibt alles, wie es ist.',
+            'intro' => 'Jemand möchte :provider mit deinem Speedclub Konto verbinden. Warst du das, gib diesen Code in der App ein. Sonst ignorier diese E-Mail, dann bleibt alles, wie es ist.',
         ],
         'reauth' => [
             'subject' => ':code ist dein Bestätigungscode',
@@ -33,7 +33,7 @@ return [
         ],
     ],
     'verification' => [
-        'subject' => ':code ist dein SPEED CLUB Code',
+        'subject' => ':code ist dein Speedclub Code',
         'heading' => 'Bestätige deine E-Mail-Adresse',
         'intro' => 'Gib diesen Code in der App ein, um dein Konto zu bestätigen.',
         'action' => 'Im Browser bestätigen',
@@ -45,7 +45,7 @@ return [
         'action' => 'Im Browser zurücksetzen',
     ],
     'exists' => [
-        'subject' => 'Du hast schon ein SPEED CLUB Konto',
+        'subject' => 'Du hast schon ein Speedclub Konto',
         'heading' => 'Für diese Adresse gibt es schon ein Konto',
         'intro' => 'Jemand wollte mit dieser E-Mail-Adresse ein Konto erstellen. Das Konto gibt es bereits. Wenn du das warst, melde dich an oder setze dein Passwort zurück.',
         'sign_in' => 'Anmelden',
@@ -53,7 +53,7 @@ return [
         'note' => 'Warst du das nicht? Dann musst du nichts tun. An deinem Konto hat sich nichts geändert.',
     ],
     'closing' => [
-        'subject' => 'Dein SPEED CLUB Konto wird gerade gelöscht',
+        'subject' => 'Dein Speedclub Konto wird gerade gelöscht',
         'heading' => 'Diese Adresse ist noch belegt',
         'intro' => 'Jemand wollte mit dieser E-Mail-Adresse ein Konto erstellen. Das Konto dazu ist deaktiviert und wird innerhalb von :days Tagen nach dem Löschantrag endgültig gelöscht. Bis dahin kannst du die Adresse nicht neu verwenden.',
         'after' => 'Danach ist die Adresse wieder frei, und du kannst dich damit neu registrieren.',
@@ -62,18 +62,18 @@ return [
     'email_change' => [
         'subject' => ':code ist dein Code für die neue Adresse',
         'heading' => 'Bestätige deine neue E-Mail-Adresse',
-        'intro' => 'Du möchtest die E-Mail-Adresse deines SPEED CLUB Kontos auf diese Adresse ändern. Gib diesen Code in der App ein, um die Änderung abzuschließen.',
+        'intro' => 'Du möchtest die E-Mail-Adresse deines Speedclub Kontos auf diese Adresse ändern. Gib diesen Code in der App ein, um die Änderung abzuschließen.',
     ],
     'email_change_attempt' => [
         'subject' => 'Jemand wollte diese Adresse für ein anderes Konto nutzen',
         'heading' => 'Diese Adresse gehört schon zu deinem Konto',
-        'intro' => 'Jemand wollte die E-Mail-Adresse eines anderen SPEED CLUB Kontos auf diese Adresse ändern. Das haben wir nicht zugelassen. An deinem Konto hat sich nichts geändert.',
+        'intro' => 'Jemand wollte die E-Mail-Adresse eines anderen Speedclub Kontos auf diese Adresse ändern. Das haben wir nicht zugelassen. An deinem Konto hat sich nichts geändert.',
         'note' => 'Du musst nichts tun. Wenn du dir Sorgen machst, schreib uns an :support.',
     ],
     'export' => [
         'subject' => 'Dein Datenexport ist fertig',
         'heading' => 'Deine Daten stehen zum Download bereit',
-        'intro' => 'Dein Export von SPEED CLUB ist fertig: eine ZIP-Datei mit deinen Angaben als JSON und den Originalen deiner Fotos.',
+        'intro' => 'Dein Export von Speedclub ist fertig: eine ZIP-Datei mit deinen Angaben als JSON und den Originalen deiner Fotos.',
         'valid' => 'Der Link gilt bis zum :date Uhr. Danach löschen wir die Datei, und du kannst einen neuen Export anfordern.',
         'ends' => 'Setzt du vorher dein Passwort zurück, änderst deine E-Mail-Adresse oder meldest ein Gerät ab, endet der Link. Einen neuen findest du dann in der App unter Einstellungen › Daten & Speicher › Daten exportieren.',
         'action' => 'Export herunterladen',
@@ -135,7 +135,7 @@ return [
             'intro' => 'Bei einer Anmeldung mit deinem Passkey (:device) sah es so aus, als käme sie von einer Kopie. Wir haben sie abgelehnt. Entferne den Passkey unter Einstellungen › Anmeldung & Passkeys und leg ihn neu an.',
         ],
         'new_device' => [
-            'subject' => 'Neue Anmeldung bei SPEED CLUB',
+            'subject' => 'Neue Anmeldung bei Speedclub',
             'heading' => 'Neue Anmeldung auf einem Gerät',
             'intro' => 'Dein Konto wurde gerade auf :device angemeldet, das wir noch nicht kannten.',
         ],
@@ -190,24 +190,24 @@ return [
         'deletion_requested' => [
             'subject' => 'Dein Konto wird gelöscht',
             'heading' => 'Die Löschung deines Kontos wurde beantragt',
-            'intro' => 'Dein Konto ist ab sofort deaktiviert: Profil und Fahrzeuge sind nicht mehr zu sehen, deine QR-Sticker funktionieren nicht mehr und alle Geräte sind abgemeldet. Spätestens in :days Tagen löschen wir das Konto mit allen Fotos endgültig.',
+            'intro' => 'Dein Konto ist ab sofort deaktiviert: Profil und Fahrzeuge sind nicht mehr zu sehen, deine Sticker funktionieren nicht mehr und alle Geräte sind abgemeldet. Spätestens in :days Tagen löschen wir das Konto mit allen Fotos endgültig.',
             'after' => 'Die Löschung lässt sich nicht zurücknehmen. In Unterhaltungen sieht die andere Person deine Nachrichten weiterhin, als Absender steht dann „Gelöschtes Mitglied“. Hast du vorher einen Datenexport angefordert, kannst du ihn bis zu 7 Tage lang über den Link aus der Export-E-Mail herunterladen.',
             'note' => 'Warst du das nicht? Dann schreib uns sofort an :support.',
             'action' => 'Support schreiben',
         ],
     ],
-    // M3.2: staff took a vehicle's QR code down or issued a new one (ADM-19). :title is the build's title.
+    // M3.2: staff took a vehicle's sticker code down or issued a new one (ADM-19). :title is the build's title.
     'qr_staff' => [
         'revoked' => [
-            'subject' => 'Wir haben deinen QR-Code gesperrt',
-            'heading' => 'Dein QR-Code ist gesperrt',
-            'intro' => 'Unser Team hat den QR-Code deines Builds :title gesperrt. Wer den Sticker scannt, sieht jetzt „nicht mehr gültig“.',
+            'subject' => 'Wir haben deinen Sticker gesperrt',
+            'heading' => 'Dein Sticker ist gesperrt',
+            'intro' => 'Unser Team hat den Sticker deines Builds :title gesperrt. Wer ihn scannt, sieht jetzt „nicht mehr gültig“.',
             'after' => 'Einen neuen Code kann nur unser Team ausgeben. Schreib uns, wenn du einen brauchst.',
         ],
         'reissued' => [
-            'subject' => 'Dein Build hat einen neuen QR-Code',
-            'heading' => 'Neuer QR-Code für deinen Build',
-            'intro' => 'Unser Team hat für deinen Build :title einen neuen QR-Code ausgegeben. Der alte Sticker gilt nicht mehr.',
+            'subject' => 'Dein Build hat einen neuen Sticker-Code',
+            'heading' => 'Neuer Sticker-Code für deinen Build',
+            'intro' => 'Unser Team hat für deinen Build :title einen neuen Sticker-Code ausgegeben. Der alte Sticker gilt nicht mehr: Lade den Sticker neu herunter oder bestell ihn neu.',
             'after' => 'Den neuen Sticker kannst du in der App unter deinem Build herunterladen und drucken.',
         ],
         'note' => 'Fragen dazu? Schreib uns an :support.',

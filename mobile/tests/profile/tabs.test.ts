@@ -1,7 +1,8 @@
 import { mergeProfileUpdates, type ProfileUpdate } from '@/api/queries/profile';
 import type { BuildUpdate } from '@/api/queries/vehicles';
 import { eventDateParts, garageColumns, profileTabs, profileUpdatePhotos, profileUpdateText } from '@/features/profile/components/ProfileTabs';
-import { garageCardCover, PROFILE_WIDE_MAX, profileCover, profileCoverAspect, profileCoverHeight, profileCoverWidth } from '@/features/profile/components/ProfileHeader';
+import { garageCardCover, PROFILE_WIDE_MAX, profileAvatarOverlap, profileAvatarSize, profileCover, profileCoverAspect, profileCoverHeight, profileCoverWidth } from '@/features/profile/components/ProfileHeader';
+import { panelMinHeight, tabSwitchOffset } from '@/features/profile/tabScroll';
 
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()) }));
 jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.resolve(null)) }));
@@ -76,15 +77,16 @@ describe('PROF-01 cover', () => {
     expect(garageCardCover({ cover: car }, null)).toBe(car);
   });
 
-  it('is 16:9 on every width; on the desktop it spans the wide column, as its tabs and grid do (ADR-451, DQ-1159)', () => {
+  it('is 16:9 on phones and tablets, 3:1 on the desktop (R4-1.3); on the desktop it spans the wide column (DQ-1159)', () => {
     expect(profileCoverAspect('phone')).toBe('16:9');
-    expect(profileCoverAspect('desktop')).toBe('16:9');
+    expect(profileCoverAspect('tablet')).toBe('16:9');
+    expect(profileCoverAspect('desktop')).toBe('3:1');
     expect(profileCoverHeight(390, 'phone')).toBeCloseTo(219.375);
     expect(profileCoverWidth(820, 'tablet')).toBe(820);
     // 1280: the main area beside the 240 sidebar, x 240–1280; 1440: x 240–1440.
     expect(profileCoverWidth(1040, 'desktop')).toBe(1040);
-    expect(profileCoverHeight(1040, 'desktop')).toBeCloseTo(585);
-    expect(profileCoverHeight(1200, 'desktop')).toBeCloseTo(675);
+    expect(profileCoverHeight(1040, 'desktop')).toBeCloseTo(346.667);
+    expect(profileCoverHeight(1200, 'desktop')).toBeCloseTo(400);
     // Wider panes: the cover stops with the column (1200 content plus its gutters).
     expect(profileCoverWidth(1680, 'desktop')).toBe(PROFILE_WIDE_MAX);
   });
@@ -139,5 +141,39 @@ describe('PROF-01 Updates rows (DQ-1093)', () => {
       { update: { ...base, id: 'c' }, vehicle: r34 },
     ] as ProfileUpdate[];
     expect(profileUpdatePhotos(rows)).toEqual([r34.cover, own, null]);
+  });
+});
+
+describe('CR2-3 tab switch keeps a sane scroll position', () => {
+  // The tab bar is right under the header once the page is scrolled to `anchor`.
+  const anchor = 700;
+
+  it('leaves the page where it is while the tab bar is still in view', () => {
+    expect(tabSwitchOffset(0, anchor, undefined)).toBe(0);
+    expect(tabSwitchOffset(500, anchor, 1800)).toBe(500);
+    expect(tabSwitchOffset(anchor, anchor, 1800)).toBe(anchor);
+  });
+
+  it('deep in a tab: the new one opens where it was left, at least with its bar under the header', () => {
+    expect(tabSwitchOffset(2400, anchor, undefined)).toBe(anchor);
+    expect(tabSwitchOffset(2400, anchor, 1800)).toBe(1800);
+    // A tab left above its bar (before the member scrolled down) still opens at the bar, never back in the header.
+    expect(tabSwitchOffset(2400, anchor, 200)).toBe(anchor);
+  });
+
+  it('gives a short panel the height that keeps the page at its place (no clamp, no jump)', () => {
+    // The panel starts 765 down; resting at 500 in an 844 window needs 579 of panel.
+    expect(panelMinHeight(500, 844, 765)).toBe(579);
+    expect(panelMinHeight(0, 844, 900)).toBe(0);
+  });
+});
+
+describe('CR2-5 avatar size per breakpoint', () => {
+  it('keeps 88 on phones and tablets and takes 56 on the desktop, overlapping the cover by half', () => {
+    expect(profileAvatarSize('phone')).toBe(88);
+    expect(profileAvatarSize('tablet')).toBe(88);
+    expect(profileAvatarSize('desktop')).toBe(56);
+    expect(profileAvatarOverlap('phone')).toBe(44);
+    expect(profileAvatarOverlap('desktop')).toBe(28);
   });
 });

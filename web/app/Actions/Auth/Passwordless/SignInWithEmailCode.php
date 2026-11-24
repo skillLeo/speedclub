@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Audit\Audit;
 use App\Services\Auth\EmailCodes;
 use App\Services\Auth\PasswordlessAccounts;
+use App\Services\Members\MemberActivation;
 use App\Services\Notifications\Notifier;
 use App\Support\Auth\DeviceInfo;
 use App\Support\Auth\PasswordlessResult;
@@ -33,7 +34,7 @@ class SignInWithEmailCode
         private readonly Notifier $notifier,
     ) {}
 
-    public function handle(string $email, string $attemptId, ?string $code, ?string $magicToken, ?string $locale, ?DeviceInfo $device, Request $request): PasswordlessResult|TwoFactorPending
+    public function handle(string $email, string $attemptId, ?string $code, ?string $magicToken, ?string $locale, ?DeviceInfo $device, Request $request, ?string $inviteCode = null): PasswordlessResult|TwoFactorPending
     {
         /** @var array{0: User, 1: bool}|null $found */
         $found = $this->codes->consume(
@@ -61,6 +62,8 @@ class SignInWithEmailCode
         }
 
         [$user, $isNew] = $found;
+        // M5.9d: kept until AUTH-09b accepts the terms (MemberActivation); ignored for an account that is active already.
+        app(MemberActivation::class)->noteInvite($user, $inviteCode);
         $result = $this->signIn->begin($user, $device, $request, method: SignInMethod::EmailCode);
 
         return $result instanceof TwoFactorPending ? $result : new PasswordlessResult($result, $isNew);

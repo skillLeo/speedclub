@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppConfig\AppConfig;
 use App\Services\AppConfig\FeatureFlags;
+use App\Services\Dex\GhostMode;
 use App\Services\Garage\MemberCovers;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Media\MediaService;
@@ -18,6 +19,7 @@ use App\Services\Qr\QrRenderer;
 use App\Services\Showcase\SampleContent;
 use App\Services\Signature\DrawShareCards;
 use App\Services\Signature\ShareCards;
+use App\Support\BrandFiles;
 use App\Support\PublicUrl;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -50,8 +52,8 @@ class OgImages
 
     public const MEMBER_RELATIONS = ['avatar', 'cover'];
 
-    /** Part of the hash: raising it redraws everything after a change to the drawing. */
-    private const VERSION = 7;
+    /** Part of the hash: raising it redraws everything after a change to the drawing. 8: the QR shows the page, not the sticker (ADR-514). */
+    private const VERSION = 8;
 
     private const VEHICLES = 'og/v';
 
@@ -480,7 +482,7 @@ class OgImages
      */
     private function hash(array $spec): string
     {
-        return substr(hash_hmac('sha256', (string) json_encode(['v' => self::VERSION, ...$spec]), config()->string('app.key')), 0, 40);
+        return substr(hash_hmac('sha256', (string) json_encode(['v' => self::VERSION, 'brand' => BrandFiles::logoVersion(), ...$spec]), config()->string('app.key')), 0, 40);
     }
 
     /**
@@ -546,7 +548,8 @@ class OgImages
             'title' => $this->vehicleTitle($vehicle),
             'specs' => $this->cardSpecs($vehicle),
             'handle' => $this->handle($vehicle),
-            'qr' => $vehicle->activeQrCode?->code,
+            // ADR-514: the page address, never the sticker code (a sticker code proves standing at the car for STREET DEX).
+            'qr' => $this->codes->pageUrl($vehicle),
         ];
     }
 
@@ -586,11 +589,11 @@ class OgImages
     }
 
     /**
-     * What WEB-02 lists: the member's published public builds.
+     * What WEB-02 lists: the member's published public builds, no ghost car (M5.9b).
      */
     private function builds(User $member): int
     {
-        return $member->vehicles()->where('status', VehicleStatus::Published)->where('visibility', Visibility::Public)->count();
+        return GhostMode::constrain($member->vehicles()->where('status', VehicleStatus::Published)->where('visibility', Visibility::Public))->count();
     }
 
     private function vehicleTitle(Vehicle $vehicle): string
@@ -637,7 +640,6 @@ class OgImages
     {
         if ($subject instanceof Vehicle) {
             $photo = $this->vehiclePhoto($subject) ?? throw new \RuntimeException('A vehicle card needs a photo.');
-            $qr = $subject->activeQrCode;
 
             return $this->canvas->vehicle(
                 $this->media->largestVariant($photo) ?? throw new \RuntimeException('A ready photo has no variant.'),
@@ -648,7 +650,7 @@ class OgImages
                 $this->vehicleTitle($subject),
                 $this->cardSpecs($subject),
                 $this->handle($subject),
-                $qr === null ? null : $this->renderer->png($this->codes->payload($qr), $format === OgImageCanvas::SQUARE ? 152 : 112),
+                $this->renderer->png($this->codes->pageUrl($subject), $format === OgImageCanvas::SQUARE ? 152 : 112),
                 $format,
             );
         }

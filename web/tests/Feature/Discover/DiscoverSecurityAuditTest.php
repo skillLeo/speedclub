@@ -180,6 +180,10 @@ describe('documented shape only', function () {
             'viewer', 'updates_count',
             // M4.2 (09 §8.19): the Beispiel badge.
             'is_sample',
+            // M5.9c: the Build Score and its stage (public, no ranks).
+            'build_score',
+            // R5-5 [build_comments]: whether the car's own comment thread is open and the reader may write (no count).
+            'comment_thread',
         ])
             ->and(array_keys($card['owner']))->toEqualCanonicalizing(['username', 'display_name', 'city', 'avatar', 'is_sample', 'is_editorial'])
             ->and(array_keys($card['cover']))->toEqualCanonicalizing([

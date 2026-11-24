@@ -85,6 +85,31 @@ export const routesM410Mnt = [
     phase: 3,
     auth: 'member',
     states: ['default'],
+    // The garage is a FlashList (carousel, plate check, stats, due, drafts): it draws a row only within the window plus its draw
+    // distance. At 200 % on a phone the rows above "Nächste Fälligkeiten" are taller than that, so the row is never drawn until the
+    // list scrolls (Phase 5 gate run 1: only GAR-01-due 393 fs2 failed). Scroll the list as a reader would until the row is drawn,
+    // then put it in the middle of the window; the expanded picture grows the scroller and starts at the top again.
+    walk: async ({ page }) => {
+      await page.locator('[data-testid="GAR-01.root"] :is([data-testid="GAR-01.carousel"], [data-testid="GAR-01.grid"]):visible').first().waitFor({ state: 'visible', timeout: 30_000 });
+      const due = page.locator('[data-testid="GAR-01.due"]');
+      for (let step = 0; step < 20 && (await due.count()) === 0; step++) {
+        await page.locator('[data-testid="GAR-01.root"]').first().evaluate((root) => {
+          let scroller = /** @type {Element|null} */ (null);
+          for (const element of root.querySelectorAll('*')) {
+            const style = getComputedStyle(element);
+            if (/(auto|scroll)/.test(style.overflowY) && element.scrollHeight > element.clientHeight) {
+              scroller = element;
+              break;
+            }
+          }
+          const target = scroller ?? document.scrollingElement;
+          target?.dispatchEvent(new WheelEvent('wheel', { deltaY: 0, bubbles: true }));
+          target?.scrollBy({ top: Math.round((target.clientHeight || window.innerHeight) / 2), behavior: 'instant' });
+        });
+        await due.first().waitFor({ state: 'attached', timeout: 1_000 }).catch(() => undefined);
+      }
+      await due.first().evaluate((element) => element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }), undefined, { timeout: 30_000 });
+    },
     ready: '[data-testid="GAR-01.due"]',
     capture: 'expanded',
     fixture: 'maintenance',

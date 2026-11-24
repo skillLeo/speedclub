@@ -9,6 +9,7 @@ import { createStyles, size, space } from '@/theme';
 import { motion as motionTokens } from '@/theme/tokens.generated';
 
 import { Icon, type IconName } from '../icons/Icon';
+import { Text } from '../Text';
 import { Portal, usePortalAvailable } from '../portal';
 import { PressableScale } from '../PressableScale';
 import { useFocusRing } from '../useFocusRing';
@@ -22,9 +23,10 @@ export type Reaction = { key: string; label: string; icon: IconName };
 /**
  * The build reactions (09 §5, App. C): Stark · Sauber · Tief · Laut, drawn with the custom glyphs (tach at the redline, a
  * clean drop, a car sitting low, an exhaust with sound). Each has a fill variant for the chosen state. Labels come from the
- * caller's namespace; messages add Phosphor Heart.
+ * caller's namespace; messages add Phosphor Heart. Client round 4 (11 R4-2.2): the one-tap heart "Gefällt mir" (Phosphor Heart)
+ * leads: feed cards and VEH-05 pass it as `lastUsed` (a tap likes) and first in `reactions` (the picker shows it first).
  */
-export const BUILD_REACTION_GLYPHS = { stark: 'strong', sauber: 'clean', tief: 'low', laut: 'loud' } as const satisfies Record<string, IconName>;
+export const BUILD_REACTION_GLYPHS = { gefaellt: 'heart', stark: 'strong', sauber: 'clean', tief: 'low', laut: 'loud' } as const satisfies Record<string, IconName>;
 export type BuildReactionKey = keyof typeof BUILD_REACTION_GLYPHS;
 
 const ITEM = size.touchMin;
@@ -38,9 +40,26 @@ const PICKER_Y = -(PICKER_HEIGHT + LIFT);
 /** A finger may stray this far above or below the glyph row and still point at a glyph. */
 const SLOP_Y = space[24];
 
+/** The labelled trigger's glyph (a Button M's leading icon). */
+const LABEL_GLYPH = size.icon.m;
+/** Where the flying glyph's 44 box sits in the labelled trigger: centred on the glyph after the padding. */
+const FLYER_LABELLED_LEFT = size.buttonPaddingX.m + LABEL_GLYPH / 2 - ITEM / 2;
+
 const useStyles = createStyles((t) => ({
   root: { alignSelf: 'flex-start' },
   button: { alignItems: 'center', borderRadius: t.radius.full, height: ITEM, justifyContent: 'center', width: ITEM },
+  // DQ-P5G-60: the labelled trigger is a tertiary Button M (glyph + body.strong label, one target), flush with the column's start:
+  // the padding reaches into the gutter, so the glyph's box starts on the column edge as "Zum Dex"'s label does.
+  rootFlush: { marginHorizontal: -t.size.buttonPaddingX.m },
+  labelled: {
+    alignItems: 'center',
+    borderRadius: t.radius.sm,
+    flexDirection: 'row',
+    gap: t.space[8],
+    minHeight: t.size.button.m,
+    paddingHorizontal: t.size.buttonPaddingX.m,
+    paddingVertical: t.space[8],
+  },
   picker: {
     backgroundColor: t.color.bg.raised,
     borderColor: t.color.border.default,
@@ -59,6 +78,9 @@ const useStyles = createStyles((t) => ({
   item: { alignItems: 'center', borderRadius: t.radius.full, height: ITEM, justifyContent: 'center', width: ITEM },
   hovered: { backgroundColor: t.color.state.selected },
   flyer: { alignItems: 'center', height: ITEM, justifyContent: 'center', left: 0, position: 'absolute', top: 0, width: ITEM },
+  // The labelled trigger's glyph sits after the padding: the flight lands on it, centred on the trigger's height.
+  flyerLabelled: { bottom: 0, height: undefined, left: FLYER_LABELLED_LEFT },
+  glyphSlot: { height: LABEL_GLYPH, width: LABEL_GLYPH },
 }));
 
 export type ReactionPickerProps = {
@@ -71,6 +93,11 @@ export type ReactionPickerProps = {
   onSelect: (key: string | null) => void;
   /** The button's name ("Reagieren"); the chosen reaction is added to it. */
   label: string;
+  /**
+   * Draws the trigger as a tertiary text button: the glyph and this label as one target (DEX-03 "Reaktion senden", DQ-P5G-60),
+   * flush with the column's start. Without it the trigger is the 44 round glyph button.
+   */
+  buttonLabel?: string;
   testID: string;
 };
 
@@ -82,9 +109,10 @@ export type ReactionPickerProps = {
  * Keyboard (web): Enter/Space as the tap, Arrow up opens the picker and focuses its first glyph, Left/Right move between the
  * glyphs, Escape closes it and returns the focus to the button. The picker draws in the root portal where one is mounted
  * (FlightLayer), so a card or list cell cannot clip it.
- * Reduced motion: the picker crossfades, the glyph lands without the flight.
+ * Reduced motion: the picker crossfades, the glyph lands without the flight. Web: the tap is the DOM click and the long press a pointer
+ * timer (the picker's glyphs are then tapped); native keeps the gestures with drag-to-select.
  */
-export function ReactionPicker({ reactions, selected, lastUsed, onSelect, label, testID }: ReactionPickerProps) {
+export function ReactionPicker({ reactions, selected, lastUsed, onSelect, label, buttonLabel, testID }: ReactionPickerProps) {
   const styles = useStyles();
   const motion = useMotionPreference();
   const ring = useFocusRing();
@@ -180,7 +208,43 @@ export function ReactionPicker({ reactions, selected, lastUsed, onSelect, label,
     if (index >= 0) hapticFor('reactionDragOver');
   };
 
+  // R4-2.2: on the web the tap and the long press come from the DOM (click, a pointer timer). The member web's click never reached
+  // the RNGH tap there (the Playwright flow r4-likes-comments saw no reaction request), so the heart's one tap did nothing.
+  const heldOpen = useRef(false);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearPress = () => {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+    pressTimer.current = null;
+  };
+  useEffect(() => clearPress, []);
+  const webPress = isWeb
+    ? {
+        onPointerDown: () => {
+          clearPress();
+          heldOpen.current = false;
+          pressTimer.current = setTimeout(() => {
+            pressTimer.current = null;
+            heldOpen.current = true;
+            openPicker(false);
+          }, motionTokens.signature.reactionPicker.longPress);
+        },
+        onPointerUp: clearPress,
+        onPointerCancel: clearPress,
+        onPointerLeave: clearPress,
+        // A long press opened the picker: the click that ends it is no tap.
+        onClick: () => {
+          if (heldOpen.current) {
+            heldOpen.current = false;
+            return;
+          }
+          tap();
+        },
+        onContextMenu: (event: { preventDefault?: () => void }) => event.preventDefault?.(),
+      }
+    : {};
+
   const hold = usePanGesture({
+    enabled: !isWeb,
     activateAfterLongPress: motionTokens.signature.reactionPicker.longPress,
     minDistance: 0,
     testID: `${testID}.hold`,
@@ -203,6 +267,7 @@ export function ReactionPicker({ reactions, selected, lastUsed, onSelect, label,
     },
   });
   const press = useTapGesture({
+    enabled: !isWeb,
     testID: `${testID}.tap`,
     onActivate: () => {
       'worklet';
@@ -231,7 +296,7 @@ export function ReactionPicker({ reactions, selected, lastUsed, onSelect, label,
   };
 
   const flyerStyle = useAnimatedStyle(() => {
-    const from = flying === null ? 0 : reactionItemX(flying, ITEM, GAP) + PAD;
+    const from = flying === null ? 0 : reactionItemX(flying, ITEM, GAP) + PAD - (buttonLabel ? FLYER_LABELLED_LEFT : 0);
     const p = flight.get();
     return { transform: [{ translateX: from * (1 - p) }, { translateY: (PICKER_Y + PAD) * (1 - p) }] };
   });
@@ -239,27 +304,42 @@ export function ReactionPicker({ reactions, selected, lastUsed, onSelect, label,
   const buttonIcon = current?.icon ?? tapReaction?.icon ?? 'star';
 
   return (
-    <View style={styles.root} testID={testID}>
+    <View style={[styles.root, buttonLabel ? styles.rootFlush : null]} testID={testID}>
       <GestureDetector gesture={gesture} userSelect="none">
         <Animated.View
           ref={button}
           accessible
           role="button"
-          aria-label={current ? `${label}: ${current.label}` : label}
+          // A trigger already named after the chosen reaction ("Gefällt mir") does not repeat it.
+          aria-label={current && current.label !== label ? `${label}: ${current.label}` : label}
           aria-pressed={current !== undefined}
           aria-expanded={open}
           accessibilityActions={[{ name: 'activate' }, ...reactions.map((r) => ({ name: r.key, label: r.label }))]}
           onAccessibilityAction={onAccessibilityAction}
-          {...(isWeb ? { tabIndex: 0 as const, onKeyDown, onFocus: ring.onFocus, onBlur: ring.onBlur } : {})}
-          style={[styles.button, ring.ringStyle]}
+          {...(isWeb ? { tabIndex: 0 as const, onKeyDown, onFocus: ring.onFocus, onBlur: ring.onBlur, ...webPress } : {})}
+          style={[buttonLabel ? styles.labelled : styles.button, ring.ringStyle]}
           testID={`${testID}.button`}
         >
-          {flyer ? null : <Icon name={buttonIcon} size={24} weight={current ? 'fill' : 'regular'} color={current ? 'text.primary' : 'text.secondary'} />}
+          {buttonLabel ? (
+            <>
+              {/* While a glyph flies in, its slot keeps its place empty. */}
+              {flyer ? (
+                <View style={styles.glyphSlot} />
+              ) : (
+                <Icon name={buttonIcon} size={LABEL_GLYPH} weight={current ? 'fill' : 'regular'} color="text.primary" />
+              )}
+              <Text variant="bodyStrong" selectable={false} hyphenate={false} aria-hidden testID={`${testID}.label`}>
+                {buttonLabel}
+              </Text>
+            </>
+          ) : flyer ? null : (
+            <Icon name={buttonIcon} size={24} weight={current ? 'fill' : 'regular'} color={current ? 'text.primary' : 'text.secondary'} />
+          )}
         </Animated.View>
       </GestureDetector>
       {flyer ? (
-        <Animated.View aria-hidden style={[styles.flyer, flyerStyle]}>
-          <Icon name={flyer.icon} size={24} weight="fill" />
+        <Animated.View aria-hidden style={[styles.flyer, buttonLabel ? styles.flyerLabelled : null, flyerStyle]}>
+          <Icon name={flyer.icon} size={buttonLabel ? LABEL_GLYPH : 24} weight="fill" />
         </Animated.View>
       ) : null}
       {mounted && !(portal && anchor) ? picker() : null}

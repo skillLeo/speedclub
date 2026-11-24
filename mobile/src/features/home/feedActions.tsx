@@ -1,37 +1,51 @@
 /**
- * DQ-1025 (09 §5 MediaCard `feed`, §7.3): the action row of a Home feed card, reaction · save · share, without public counts.
+ * DQ-1025 (09 §5 MediaCard `feed`, §7.3): the action row of a Home feed card, Gefällt mir · Kommentare · save · share, without public
+ * counts.
  *
- * The feed sends no viewer state yet (lane B gap: `viewer {saved, reaction}` on FeedVehicleResource and BuildUpdateRowResource), so:
- * - a reaction is offered on update items only, and the card knows only the reaction the member gave in this session (a small store,
- *   so a recycled FlashList cell never shows another item's choice). A vehicle's own reaction stays on VEH-01, where it is known;
+ * - R4-2.2: a tap on the heart is "Gefällt mir" (a second tap takes any reaction back), a long press opens the heart and the four car
+ *   reactions. R5-5: an update card reacts to its update, a car card to the car (`vehicles/{id}/reactions`). The card starts from the
+ *   item's `viewer.reaction` and then follows what the member gave in this session (a small store, so a recycled FlashList cell never
+ *   shows another item's choice);
+ * - R4-2.2, R5-5: "Kommentare" (flag build_comments) opens the item's comments in a sheet (FeedComments): an update card its update's
+ *   thread, a car card the car's own while it is open (`comment_thread.enabled`; the composer while `can_write`); no count;
  * - save opens the save sheet, which reads `contains` per collection; once the sheet was opened, the icon follows those answers;
  * - share opens the system share sheet with the build's public page (`/v/{slug}`).
- * Guests see the row; every control asks to sign in first (§7.3 "guest: actions open a sign-in sheet"). An owner gets no reaction on
- * their own build (own item: 403), and never a count here (counts are owner-only on VEH-05).
+ * Guests see the row; reacting and saving ask to sign in first (§7.3 "guest: actions open a sign-in sheet"), comments open readable.
+ * An owner gets no reaction on their own build (own item: 403), and never a count here (counts are owner-only on VEH-05).
  */
 import { useCallback, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useFlag } from '@/api/queries/appConfig';
 import type { FeedVehicle } from '@/api/queries/home';
-import { REACTION_KEYS, SOCIAL_FLAGS, useCollections, useReact, type CollectionItemType, type ReactionKey } from '@/api/queries/social2';
+import {
+  SOCIAL_FLAGS,
+  useCollections,
+  useReact,
+  vehicleCommentsEnabled,
+  type CollectionItemType,
+  type CommentTarget,
+  type ReactionKey,
+} from '@/api/queries/social2';
 import { SaveSheet } from '@/features/collections/components/SaveSheet';
-import { shareLink } from '@/features/profile/share';
+import { isLikeReactionKey, LIKE, LIKE_REACTION_ORDER, reactionTriggerLabel } from '@/features/updates/reactions';
+import { shareLink, withShareVia } from '@/features/profile/share';
 import { siteUrl } from '@/features/settings/markdown/links';
 import { haptics } from '@/lib/haptics';
 import { useRequireAuth, useSessionStore } from '@/state/session';
-import { toast, type MediaCardFeedProps } from '@/ui';
+import { type MediaCardFeedProps } from '@/ui/MediaCard';
+import { toast } from '@/ui/toast';
 import { BUILD_REACTION_GLYPHS } from '@/ui/motion/kit';
 
-// -- The reactions the member gave in this session, by update id.
+import { FeedComments } from './components/FeedComments';
+
+// -- The reactions the member gave in this session, by item (`build-updates:{id}`, `vehicles:{id}`).
 
 const given = new Map<string, ReactionKey | null>();
 const listeners = new Set<() => void>();
-let lastUsed: ReactionKey = 'strong';
 
 function setGiven(id: string, reaction: ReactionKey | null): void {
   given.set(id, reaction);
-  if (reaction) lastUsed = reaction;
   listeners.forEach((listener) => listener());
 }
 
@@ -45,10 +59,10 @@ function subscribe(listener: () => void) {
 /** Test seam: forget what this session reacted. */
 export function __resetFeedReactionsForTests(): void {
   given.clear();
-  lastUsed = 'strong';
 }
 
 const GLYPHS: Record<ReactionKey, (typeof BUILD_REACTION_GLYPHS)[keyof typeof BUILD_REACTION_GLYPHS]> = {
+  like: BUILD_REACTION_GLYPHS.gefaellt,
   strong: BUILD_REACTION_GLYPHS.stark,
   clean: BUILD_REACTION_GLYPHS.sauber,
   low: BUILD_REACTION_GLYPHS.tief,
@@ -61,7 +75,9 @@ export function publicVehicleUrl(slug: string, site: string | null = siteUrl()):
   return `${site.replace(/\/+$/, '')}/v/${encodeURIComponent(slug)}`;
 }
 
-export type FeedCardActions = Pick<MediaCardFeedProps, 'reaction' | 'save' | 'onShare'> & { sheet: ReactNode };
+export type FeedCardComment = { label: string; onPress: () => void };
+
+export type FeedCardActions = Pick<MediaCardFeedProps, 'reaction' | 'save' | 'onShare'> & { comment?: FeedCardComment; sheet: ReactNode };
 
 /**
  * The action row's props for one feed card, and the save sheet to render next to it. `update` is the change the card tells, when it
@@ -70,11 +86,17 @@ export type FeedCardActions = Pick<MediaCardFeedProps, 'reaction' | 'save' | 'on
 export function useFeedCardActions({
   vehicle,
   updateId,
+  viewerReaction,
   routeId,
   returnTo = '/',
 }: {
   vehicle: FeedVehicle;
   updateId?: string;
+  /**
+   * The update's `viewer.reaction` from the feed: the member's own reaction before this session changed it. A car card leaves it out
+   * and starts from the car's `viewer.reaction`.
+   */
+  viewerReaction?: string | null;
   routeId: string;
   /**
    * Where a guest comes back to after signing in. A constant on purpose: a cell that read the path would render again on every
@@ -88,6 +110,10 @@ export function useFeedCardActions({
   const me = useSessionStore((state) => state.member?.username ?? null);
   const reactionsOn = useFlag(SOCIAL_FLAGS.reactions);
   const collectionsOn = useFlag(SOCIAL_FLAGS.collections);
+  const commentsOn = useFlag(SOCIAL_FLAGS.comments);
+  // The comments sheet is mounted from its first opening on (its report flow outlives it), for the item it was opened for.
+  const [commentsFor, setCommentsFor] = useState<string | null>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const own = me !== null && vehicle.owner?.username === me;
 
   const item = useMemo<{ type: CollectionItemType; id: string }>(
@@ -102,27 +128,31 @@ export function useFeedCardActions({
   const collections = useCollections(item, known && collectionsOn);
   const saved = known && (collections.data ?? []).some((collection) => collection.contains === true);
 
-  const reactionTarget = updateId ?? '';
-  const react = useReact('build-updates', reactionTarget);
-  const mine = useSyncExternalStore(
+  // R5-5: an update card reacts to its update, a car card to the car.
+  const reactionTarget = updateId ? 'build-updates' : 'vehicles';
+  const reactionId = updateId ?? vehicle.id;
+  const reactionKey = `${reactionTarget}:${reactionId}`;
+  const react = useReact(reactionTarget, reactionId);
+  const session = useSyncExternalStore(
     subscribe,
-    () => (updateId ? (given.get(updateId) ?? null) : null),
-    () => null,
+    () => (given.has(reactionKey) ? (given.get(reactionKey) ?? null) : undefined),
+    () => undefined,
   );
-  const reactions = useMemo(() => REACTION_KEYS.map((key) => ({ key, label: t(`actions.reactions.${key}`), icon: GLYPHS[key] })), [t]);
+  const fromFeed = updateId ? (viewerReaction ?? null) : (vehicle.viewer?.reaction ?? null);
+  const mine: ReactionKey | null = session !== undefined ? session : isLikeReactionKey(fromFeed) ? fromFeed : null;
+  const reactions = useMemo(() => LIKE_REACTION_ORDER.map((key) => ({ key, label: t(`actions.reactions.${key}`), icon: GLYPHS[key] })), [t]);
 
   const select = useCallback(
     (key: string | null) => {
-      if (!updateId) return;
       requireAuth(
         () => {
-          const next = (key as ReactionKey | null) ?? null;
-          const before = given.get(updateId) ?? null;
-          setGiven(updateId, next);
+          const next = isLikeReactionKey(key) ? key : null;
+          const before = mine;
+          setGiven(reactionKey, next);
           react.mutate(next, {
-            onSuccess: (state) => setGiven(updateId, state.my_reaction ?? null),
+            onSuccess: (state) => setGiven(reactionKey, state.my_reaction ?? null),
             onError: (error) => {
-              setGiven(updateId, before);
+              setGiven(reactionKey, before);
               toast(error.message || t('actions.failed'), { haptic: 'warning', testID: `${routeId}.toast` });
             },
           });
@@ -130,8 +160,19 @@ export function useFeedCardActions({
         { returnTo: pathname },
       );
     },
-    [pathname, react, requireAuth, routeId, t, updateId],
+    [mine, pathname, react, reactionKey, requireAuth, routeId, t],
   );
+
+  // R5-5: the thread the card opens: its update's, or the car's own.
+  const commentTarget = useMemo<CommentTarget>(
+    () => (updateId ? { type: 'update', id: updateId } : { type: 'vehicle', id: vehicle.id }),
+    [updateId, vehicle.id],
+  );
+  const commentKey = `${commentTarget.type}:${commentTarget.id}`;
+  const openComments = useCallback(() => {
+    setCommentsFor(commentKey);
+    setCommentsOpen(true);
+  }, [commentKey]);
 
   const openSave = useCallback(() => {
     requireAuth(
@@ -145,24 +186,50 @@ export function useFeedCardActions({
   }, [itemKey, pathname, requireAuth]);
 
   const share = useCallback(() => {
-    const url = publicVehicleUrl(vehicle.slug);
-    if (!url) return;
+    const page = publicVehicleUrl(vehicle.slug);
+    if (!page) return;
+    // M5.7 (contract §2.4): a shared link counts as "geteilter Link" in the owner's statistics.
+    const url = withShareVia(page);
     void shareLink({ url, title: vehicle.full_title }).then((outcome) => {
       if (outcome === 'copied') toast(t('actions.copied'), { testID: `${routeId}.toast` });
       if (outcome === 'failed') toast(t('actions.shareFailed', { url }), { testID: `${routeId}.toast` });
     });
   }, [routeId, t, vehicle.full_title, vehicle.slug]);
 
-  const showReaction = reactionsOn && Boolean(updateId) && !own && !vehicle.is_sample;
+  // ADR-538 (R5DQ-08): a badged sample build takes real reactions and comments too (never a count); 09 §8.19 forbids invented
+  // numbers, not members reacting. Samples never show in production.
+  const showReaction = reactionsOn && !own;
   const showSave = collectionsOn && !own;
+  // A car card offers the car's thread only while its owner allows comments; an update card always (a refusal closes the composer).
+  const showComments = commentsOn && (Boolean(updateId) || vehicleCommentsEnabled(vehicle));
   return {
     reaction: showReaction
-      ? { reactions, selected: mine, lastUsed, onSelect: select, label: t('actions.react') }
+      ? {
+          reactions,
+          selected: mine,
+          lastUsed: LIKE,
+          onSelect: select,
+          label: reactionTriggerLabel(mine, { like: t('actions.like'), react: t('actions.react') }),
+        }
       : undefined,
+    comment: showComments ? { label: t('actions.comments'), onPress: openComments } : undefined,
     save: showSave ? { saved, onToggle: openSave } : undefined,
     onShare: vehicle.visibility === 'public' && publicVehicleUrl(vehicle.slug) ? share : undefined,
-    sheet: showSave ? (
-      <SaveSheet visible={sheetFor === itemKey} onClose={() => setSheetFor(null)} item={item} routeId={routeId} />
-    ) : null,
+    sheet: (
+      <>
+        {showSave ? <SaveSheet visible={sheetFor === itemKey} onClose={() => setSheetFor(null)} item={item} routeId={routeId} /> : null}
+        {showComments && commentsFor === commentKey ? (
+          <FeedComments
+            visible={commentsOpen}
+            onClose={() => setCommentsOpen(false)}
+            target={commentTarget}
+            {...(updateId ? {} : { canWrite: vehicle.comment_thread.can_write })}
+            vehicleTitle={vehicle.full_title}
+            own={own}
+            routeId={routeId}
+          />
+        ) : null}
+      </>
+    ),
   };
 }

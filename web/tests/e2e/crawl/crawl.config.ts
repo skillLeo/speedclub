@@ -38,6 +38,16 @@ export default defineConfig({
       metadata: { device: 'iPhone 15 Pro · WebKit 393×852', mobile: true },
     },
     {
+      // The Android member web (client QA 2026-11-23). Chromium is the only engine that emulates CSS env(safe-area-inset-*) (CDP
+      // Emulation.setSafeAreaInsetsOverride, probed on Chromium 156; WebKit cannot), so the safe-area check runs here with the iPhone
+      // 15 Pro home-screen insets (59 px status bar and camera, 34 px home indicator): larger than a Pixel's, so the stricter case of
+      // the same CSS. The iPhone project above checks the tab bar with the insets WebKit gives a page (0).
+      name: 'pixel7',
+      use: { ...devices['Pixel 7'] },
+      grepInvert: /@desktop-only/,
+      metadata: { device: 'Pixel 7 · Chromium 412×839', mobile: true, safeArea: { top: 59, bottom: 34 } },
+    },
+    {
       name: 'desktop1440',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 },
       metadata: { device: 'Desktop 1440 · Chromium', mobile: false },

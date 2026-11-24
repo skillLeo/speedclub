@@ -6,7 +6,7 @@
     $labels = ['ios' => __('public.get_app.app_store'), 'android' => __('public.get_app.google_play')];
     $soon = ['ios' => __('public.get_app.soon_app_store'), 'android' => __('public.get_app.soon_google_play')];
 @endphp
-<x-public.layout :title="__('public.get_app.title').' · SPEED CLUB'" :description="__('public.get_app.description')" :canonical="url('/app-laden')">
+<x-public.layout :title="__('public.get_app.title').' · Speedclub'" :description="__('public.get_app.description')" :canonical="url('/app-laden')">
     <x-public.top-bar />
     <main id="main" class="sc-form-page flex-1" data-testid="WEB-04.root" data-platform="{{ $platform }}">
         <div class="sc-form-measure">

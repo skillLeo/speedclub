@@ -1,0 +1,120 @@
+{
+    "nav": {
+        "title": "Sticker designs"
+    },
+    "designs": {
+        "title": "Sticker designs",
+        "intro": "Every version of a sticker design with its template, size and state. Validated designs with an active code come as print files; every download goes into the audit log.",
+        "caption": "Sticker designs, most recently ordered first",
+        "empty_title": "No sticker designs yet",
+        "empty_body": "A design appears as soon as a member designs their sticker in the app.",
+        "empty_action": "Open sticker register",
+        "columns": {
+            "reference": "Design ID",
+            "state": "State",
+            "template": "Template",
+            "colourway": "Print",
+            "material": "Film",
+            "scan_test": "Scan test",
+            "code": "Code",
+            "vehicle": "Vehicle",
+            "owner": "Owner",
+            "validated_at": "Validated",
+            "order_requested_at": "Order",
+            "created_at": "Created",
+            "downloads": "Print files"
+        },
+        "presets": {
+            "ordered": "Order opened",
+            "validated": "Validated",
+            "drafts": "Drafts"
+        },
+        "filters": {
+            "label": "Filter sticker designs",
+            "q": "Search",
+            "q_placeholder": "SD…, code or @username",
+            "state": "State",
+            "template": "Template",
+            "any": "All",
+            "apply": "Apply"
+        },
+        "state": {
+            "draft": "Draft",
+            "validated": "Validated",
+            "ordered": "Order opened"
+        },
+        "scan_test": {
+            "passed": "Passed",
+            "failed": "Failed",
+            "not_applicable": "No QR code",
+            "none": "Not yet"
+        },
+        "templates": {
+            "classic": "Classic",
+            "minimal": "Minimal",
+            "banner": "Banner",
+            "plate": "Plate",
+            "vertical_jdm": "Vertical JDM",
+            "round": "Round"
+        },
+        "colourways": {
+            "white": "White print",
+            "black": "Black print",
+            "white_red": "White with Signal Red"
+        },
+        "materials": {
+            "transparent": "Clear film",
+            "white_vinyl": "White vinyl"
+        },
+        "size": ":size · :width × :height mm",
+        "mm": ":value mm",
+        "mirrored": "Mirrored",
+        "mirrored_hint": "Printed mirrored, for the inside of the glass",
+        "no_qr": "No QR code",
+        "code_inactive": "No longer active",
+        "vehicle_deleted": "Vehicle deleted",
+        "no_vehicle": "No vehicle",
+        "version": "v:version",
+        "download": {
+            "pdf": "PDF",
+            "svg": "SVG",
+            "pdf_label": "Download the print PDF of :reference",
+            "svg_label": "Download the print SVG of :reference",
+            "pdf_long": "Download print PDF",
+            "svg_long": "Download print SVG",
+            "audited": "Every download is recorded in the audit log with your name.",
+            "not_validated": "Only after a passed scan test",
+            "code_inactive": "Code no longer active: do not print",
+            "none": "–"
+        },
+        "detail": {
+            "title": "Design :reference",
+            "description": "Version :version · :template",
+            "open": "Open design :reference",
+            "sketch": "Dimensions with trim line",
+            "sketch_note": "Dimension sketch, not a print preview. The artwork is in the print file.",
+            "sketch_unavailable": "Dimension sketch, not a print preview. Print files come only after a passed scan test.",
+            "facts": "Details",
+            "state": "State",
+            "scan_test": "Scan test",
+            "template": "Template",
+            "size": "Size",
+            "colourway": "Print",
+            "material": "Film",
+            "mirrored": "Mirrored",
+            "qr": "QR code",
+            "code": "Code",
+            "vehicle": "Vehicle",
+            "owner": "Owner",
+            "created_at": "Created",
+            "validated_at": "Validated",
+            "order_requested_at": "Order link opened",
+            "order_note": "Whether the order was completed in Shopify is not visible here.",
+            "yes": "Yes",
+            "no": "No",
+            "never": "–",
+            "missing": "This design is not on the current page. Search for it by its design ID.",
+            "open_hint": "Open design"
+        }
+    }
+}

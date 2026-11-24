@@ -50,7 +50,7 @@ class SecurityEventResource extends JsonResource
             'approx_city' => $event->approx_city,
             /** @var SignInMethod|null How the member signed in (sign-in rows). */
             'method' => SignInMethod::tryFrom(is_string($meta['method'] ?? null) ? $meta['method'] : ''),
-            /** Done by the SPEED CLUB team (e.g. sessions ended by support). */
+            /** Done by the Speedclub team (e.g. sessions ended by support). */
             'by_staff' => ($meta['by_staff'] ?? false) === true,
             /**
              * What else the row names: `provider` (apple, google), `passkey_provider` (iCloud-Schlüsselbund, …), `count` and `steps`

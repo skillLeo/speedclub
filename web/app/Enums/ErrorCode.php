@@ -90,7 +90,7 @@ enum ErrorCode: string
     case EmailCodeLocked = 'email_code_locked';
     // M4.6: an Apple or Google ID token that fails verification (signature, issuer, audience, time, nonce, unverified e-mail).
     case InvalidIdentityToken = 'invalid_identity_token';
-    // M4.6: this Apple or Google identity already belongs to another SPEED CLUB account.
+    // M4.6: this Apple or Google identity already belongs to another Speedclub account.
     case ProviderAlreadyLinked = 'provider_already_linked';
     // M4.6: unlinking or deleting this sign-in method would leave the account without any way in.
     case LastSignInMethod = 'last_sign_in_method';
@@ -127,25 +127,74 @@ enum ErrorCode: string
     case BusinessTagTaken = 'business_tag_taken';
     // M4.14 (09 §8.9): a product that does not exist or is not in the catalogue any more.
     case ProductUnavailable = 'product_unavailable';
+    // M5.9b STREET DEX (m5.9b contract §2): a scanned code that is no sticker of ours.
+    case QrNotFound = 'qr_not_found';
+    // M5.9b: the sticker leads nowhere a spot can go (revoked or inactive code, a deleted, private or hidden car, a block either way);
+    // the same answer for each, so nothing is learnt about a car one cannot see.
+    case SpotUnavailable = 'spot_unavailable';
+    // M5.9b: a member cannot spot their own car.
+    case SpotOwnCar = 'spot_own_car';
+    // M5.9b: the owner paused spotting of this car.
+    case SpottingPaused = 'spotting_paused';
+    // M5.9e: the Season Wrapped is not released yet (remote config wrapped.releases).
+    case WrappedNotReleased = 'wrapped_not_released';
+    // M5.9d: the story line can be edited only while the car is the Car of the Day on Home.
+    case NotCarOfTheDay = 'not_car_of_the_day';
+    // M5.4 Sticker (m5.4-contract §4, §7): the server could not read the code back from the rendered sticker; the design stays a draft.
+    case StickerScanFailed = 'sticker_scan_failed';
+    // M5.4: print files and the order link need a design that passed the Scan-Test.
+    case StickerNotValidated = 'sticker_not_validated';
+    // M5.4: a design with QR needs the car's active code, and staff took it down (only staff issue the next one).
+    case StickerNoActiveCode = 'sticker_no_active_code';
+    // M5.4: the code this version was validated with is no longer active (replaced or taken down): validate the design again.
+    case StickerCodeReplaced = 'sticker_code_replaced';
+
+    // M5.3: "Als verbaut markieren" on a mod that is not (or no longer) planned.
+    case ModNotPlanned = 'mod_not_planned';
+
+    // M5.5 Shop (m5.5-contract §3): a product that is unknown, hidden, deleted or a sample while samples are off.
+    case ShopProductUnavailable = 'shop_product_unavailable';
+    // M5.5: the catalogue driver cannot answer (the Shopify Storefront driver before it is built, or the store is down).
+    case ShopUnavailable = 'shop_unavailable';
+
+    // M5.8 Forum: a locked thread or one not published yet takes no replies; a thread others answered cannot be deleted by its author.
+    case ForumThreadClosed = 'forum_thread_closed';
+    case ForumThreadHasReplies = 'forum_thread_has_replies';
+
+    // M5.6 Treffen gallery (m5.6-contract §4.4): uploads outside the window (starts_at … end + 14 days; `opens_at`, `closes_at`), by
+    // somebody who is neither the organiser nor going nor checked in, a decision on a photo that is no longer pending, and a photo that
+    // does not exist or that the reader may not see.
+    case GalleryClosed = 'gallery_closed';
+    case GalleryNotAttendee = 'gallery_not_attendee';
+    case PhotoAlreadyReviewed = 'photo_already_reviewed';
+    case EventPhotoUnavailable = 'event_photo_unavailable';
+    // M5.6 check-in (m5.6-contract §5.3): a wrong or expired code, outside the window (`opens_at`, `closes_at`), the organiser's own event.
+    case CheckinCodeInvalid = 'checkin_code_invalid';
+    case CheckinClosed = 'checkin_closed';
+    case CheckinOwnEvent = 'checkin_own_event';
+
+    // R4-2.3 Crews: a crew that does not exist, or one the reader may not see (hidden or removed by staff for everybody but its members,
+    // deleted, a sample while samples are off); the same answer for each.
+    case CrewUnavailable = 'crew_unavailable';
 
     public function status(): int
     {
         return match ($this) {
             self::BadRequest => 400,
             self::Unauthenticated, self::InvalidCredentials, self::InvalidIdentityToken => 401,
-            self::Forbidden, self::AccountRestricted, self::EmailNotVerified, self::PasswordChangeRequired, self::QrRevokedByStaff, self::CannotMessage, self::SecondFactorLocked, self::PasswordConfirmationRequired, self::ViewAsReadOnly, self::ViewAsNoMessages, self::ViewAsPrivate, self::AiOptInRequired, self::ConsentRequired, self::TermsRequired, self::ReauthenticationRequired, self::EditWindowClosed, self::CommentsDisabled, self::OrganiserNotEligible => 403,
-            self::NotFound, self::VehicleUnavailable, self::MemberUnavailable, self::FeatureDisabled, self::EventUnavailable, self::BusinessUnavailable, self::ProductUnavailable => 404,
+            self::Forbidden, self::AccountRestricted, self::EmailNotVerified, self::PasswordChangeRequired, self::QrRevokedByStaff, self::CannotMessage, self::SecondFactorLocked, self::PasswordConfirmationRequired, self::ViewAsReadOnly, self::ViewAsNoMessages, self::ViewAsPrivate, self::AiOptInRequired, self::ConsentRequired, self::TermsRequired, self::ReauthenticationRequired, self::EditWindowClosed, self::CommentsDisabled, self::OrganiserNotEligible, self::WrappedNotReleased, self::GalleryClosed, self::GalleryNotAttendee, self::CheckinOwnEvent => 403,
+            self::NotFound, self::VehicleUnavailable, self::MemberUnavailable, self::FeatureDisabled, self::EventUnavailable, self::BusinessUnavailable, self::ProductUnavailable, self::QrNotFound, self::ShopProductUnavailable, self::EventPhotoUnavailable, self::CrewUnavailable => 404,
             self::MethodNotAllowed => 405,
-            self::Conflict, self::UsernameChangeCooldown, self::TokenRotationNotDue, self::TwoFactorRequired, self::IdempotencyKeyReused, self::FeedStale, self::RequestPending, self::AlreadyReported, self::AppealExists, self::ProviderAlreadyLinked, self::LastSignInMethod, self::LimitReached, self::EventClosed, self::EventInReview, self::EditConflict, self::BusinessExists, self::BusinessNotVerified, self::BusinessTagTaken => 409,
+            self::Conflict, self::UsernameChangeCooldown, self::TokenRotationNotDue, self::TwoFactorRequired, self::IdempotencyKeyReused, self::FeedStale, self::RequestPending, self::AlreadyReported, self::AppealExists, self::ProviderAlreadyLinked, self::LastSignInMethod, self::LimitReached, self::EventClosed, self::EventInReview, self::EditConflict, self::BusinessExists, self::BusinessNotVerified, self::BusinessTagTaken, self::SpotUnavailable, self::SpotOwnCar, self::SpottingPaused, self::NotCarOfTheDay, self::StickerNotValidated, self::StickerNoActiveCode, self::StickerCodeReplaced, self::ModNotPlanned, self::ForumThreadClosed, self::ForumThreadHasReplies, self::PhotoAlreadyReviewed, self::CheckinClosed => 409,
             self::PayloadTooLarge => 413,
             self::UnsupportedMediaType => 415,
             self::SessionExpired => 419,
-            self::ValidationFailed, self::InvalidCode, self::VehicleIncomplete, self::OwnContent, self::AppealPeriodOver, self::ChallengeExpired, self::TwoFactorCodeRequired, self::DecisionNotAppealable, self::ContentBlocked, self::AiRefused, self::AiUnverifiable, self::CodeExpired, self::PasskeyInvalid => 422,
+            self::ValidationFailed, self::InvalidCode, self::VehicleIncomplete, self::OwnContent, self::AppealPeriodOver, self::ChallengeExpired, self::TwoFactorCodeRequired, self::DecisionNotAppealable, self::ContentBlocked, self::AiRefused, self::AiUnverifiable, self::CodeExpired, self::PasskeyInvalid, self::StickerScanFailed, self::CheckinCodeInvalid => 422,
             self::Maintenance => 423,
             self::UpgradeRequired => 426,
             self::RateLimited, self::AiDailyLimit, self::EmailCodeLocked => 429,
             self::ServerError => 500,
-            self::ServiceUnavailable, self::AiUnavailable, self::AiBudgetExhausted, self::GeocodeUnavailable => 503,
+            self::ServiceUnavailable, self::AiUnavailable, self::AiBudgetExhausted, self::GeocodeUnavailable, self::ShopUnavailable => 503,
         };
     }
 

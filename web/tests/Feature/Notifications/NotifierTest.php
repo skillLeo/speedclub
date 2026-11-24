@@ -47,7 +47,7 @@ describe('the matrix', function () {
             ->and($row?->actor_id)->toBe($this->lukas->id)
             ->and($row?->actor_count)->toBe(1)
             ->and(ntfPushes())->toHaveCount(1)
-            ->and(ntfPushes()[0][0])->toMatchArray(['to' => 'ExponentPushToken[aaaaaaaaaaaaaaaaaaaaaa]', 'title' => 'SPEED CLUB', 'body' => '@lukas.sc folgt dir jetzt.'])
+            ->and(ntfPushes()[0][0])->toMatchArray(['to' => 'ExponentPushToken[aaaaaaaaaaaaaaaaaaaaaa]', 'title' => 'Speedclub', 'body' => '@lukas.sc folgt dir jetzt.'])
             ->and(ntfPushes()[0][0]['data'])->toBe(['type' => 'new_follower', 'notification_id' => $row?->id, 'path' => '/u/lukas.sc']);
         Mail::assertNothingOutgoing();
     });

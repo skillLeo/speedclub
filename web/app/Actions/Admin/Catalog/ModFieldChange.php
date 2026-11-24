@@ -31,7 +31,7 @@ final class ModFieldChange
     public static function run(Staff $staff, ModCategory $category, string $reason, string $name, Closure $change, bool $rebuildsSearch = false): mixed
     {
         StaffAtoms::ensure($staff, 'catalog.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         return DB::transaction(function () use ($staff, $category, $reason, $name, $change, $rebuildsSearch): mixed {
             /** @var ModCategory $locked */

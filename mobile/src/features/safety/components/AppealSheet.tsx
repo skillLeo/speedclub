@@ -11,7 +11,12 @@ import { applyServerErrors } from '@/features/auth/forms';
 import { formatNumber } from '@/lib/format';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { Button, Dialog, Icon, Sheet, Text, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { Icon } from '@/ui/icons/Icon';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 
 import { useSafety } from '../data';
 import { APPEAL_MAX_LENGTH } from '../reportFlow';

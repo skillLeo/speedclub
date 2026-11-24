@@ -11,6 +11,7 @@
 import type { Locator, Page, Response } from '@playwright/test';
 import { applyAuth, DEMO_MEMBER, useSession } from '../support/auth.mjs';
 import { expect, test } from '../support/fixtures';
+import { withoutCarOfTheDay } from '../support/home.mjs';
 import { BBS_WHEELS, buildVehicle, createGarageMember, expectStatus } from '../support/garage.mjs';
 import { qaUrl } from '../support/qa.mjs';
 import { readable } from '../support/text.mjs';
@@ -194,6 +195,8 @@ test.describe('FS-2 Für dich (M2.2)', () => {
     page,
   }) => {
     test.setTimeout(120_000);
+    // A day without a Car of the Day: the first featured build leads (the day with one is the next test).
+    await withoutCarOfTheDay(page);
     const featuredAnswer = answerOf(page, 'home/featured');
     const newAnswer = answerOf(page, 'home/new-builds');
     const modulesAnswer = answerOf(page, 'home/modules');
@@ -315,11 +318,34 @@ test.describe('FS-2 Für dich (M2.2)', () => {
     await id(page, 'HOME-01.bell').click();
     await expect(id(page, 'shell.authRequired')).toBeVisible();
   });
+
+  test('M5.9: the day\'s Car of the Day leads Für dich in place of the featured build, and is not repeated in Neu in der Garage', async ({ page }) => {
+    const modulesAnswer = answerOf(page, 'home/modules');
+    const newAnswer = answerOf(page, 'home/new-builds');
+    await page.goto(qaUrl('/app/'));
+    const modules = (await bodyOf<{ data: { car_of_the_day?: { day: string; story_line: string | null; vehicle: FeedVehicle } | null } }>(modulesAnswer)).data;
+    const newBuilds = (await bodyOf<{ data: FeedVehicle[] }>(newAnswer)).data;
+    const pick = modules.car_of_the_day;
+    expect(pick, 'the demo data has a Car of the Day (GiftDemoSeeder: 14 days back to 3 ahead; reseed when older)').toBeTruthy();
+
+    await expect(id(page, 'HOME-01.cotd')).toBeVisible();
+    expect(readable(await id(page, 'HOME-01.cotd.card.title').textContent())).toBe(readable(pick!.vehicle.full_title));
+    if (pick!.story_line) await expect(id(page, 'HOME-01.cotd.story')).toContainText(pick!.story_line);
+    const leadBox = await id(page, 'HOME-01.cotd').boundingBox();
+    const sectionBox = await id(page, 'HOME-01.newBuilds').boundingBox();
+    expect(leadBox!.y, 'the pick heads the column, above Neu in der Garage').toBeLessThan(sectionBox!.y);
+    // One lead only, and the pick is not shown twice above the stream.
+    await expect(anyWithId(page, 'HOME-01.featured')).toHaveCount(0);
+    await expect(anyWithId(page, `HOME-01.newBuilds.item.${pick!.vehicle.id}`)).toHaveCount(0);
+    expect(newBuilds.length, 'the demo data has new builds').toBeGreaterThan(1);
+  });
 });
 
 test.describe('FS-2 Folge ich (M2.2)', () => {
   test('a member with follows: the followed member\'s first publish and build update, newest first, as the answer has them', async ({ page, context }) => {
     test.setTimeout(120_000);
+    // Für dich below is checked by its featured lead, so without a Car of the Day (support/home.mjs).
+    await withoutCarOfTheDay(page);
     const viewer = await createGarageMember('homefollow');
     const followed = await createGarageMember('homefollowed');
     const vehicle = await buildVehicle(followed.api, { photos: 1, mods: [BBS_WHEELS] });

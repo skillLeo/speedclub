@@ -567,6 +567,11 @@ test.describe('F5 discover: from a build page', () => {
     expect(similar.map((vehicle) => vehicle.slug)).toContain('nissan-skyline-gt-r-r34-xmeypf41');
     expect(similar.map((vehicle) => vehicle.owner?.username), 'never the owner\'s own builds').not.toContain('lukas.sc');
     const strip = id(page, 'VEH-01.similar');
+    // M5.3 one scroll: Ähnliche Builds is near the end of the virtualised page, drawn once the list has scrolled near it.
+    await expect(async () => {
+      await page.locator('[data-testid="VEH-01.scroll"]:visible').evaluate((element) => element.scrollTo({ top: element.scrollHeight }));
+      await expect(strip).toBeAttached({ timeout: 1_000 });
+    }).toPass({ timeout: 15_000 });
     await strip.scrollIntoViewIfNeeded();
     await expect(strip).toHaveAttribute('role', 'region');
     await expect(id(page, 'VEH-01.similar.header')).toContainText(de('discover', 'similar.title'));

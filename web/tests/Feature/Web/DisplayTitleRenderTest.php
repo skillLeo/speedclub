@@ -67,21 +67,24 @@ it('sets the WEB-01 title by the page rule on the hero at every width, 30/34 on 
         ->and($css)->toContain($scope.' .sc-bind{white-space:nowrap}');
 });
 
-it('sets the WEB-03 claim by the page rule and the featured lead by the page rule edge to edge on a phone, the card rule in the rounded lead from 768 (ADR-426 b, M4.16)', function () {
+it('sets the WEB-03 claim by the page rule under the hero logo (ADR-426 b, R4-1.5), and splits a lead placed differently on phone and tablet', function () {
     $response = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk();
     $html = (string) $response->getContent();
     $placements = ['phone' => 'page', 'tablet' => 'card', 'desktop' => 'card'];
     // DQ-1177: the claim breaks only between its sentences; inside one its spaces are no-break spaces.
     $text = "Dein\u{00A0}Auto. Dein\u{00A0}Build. Dein\u{00A0}Club.";
     $claim = expectTitleCss($response, $text, 'page', false);
-    $featured = expectTitleCss($response, 'Nissan Skyline GT-R R34', $placements);
+    // The M4.16 featured lead left the landing page (R4-1.5); its placement split is still the layout's (the vehicle card uses it).
+    $featured = DisplayTitleLayout::className('Nissan Skyline GT-R R34', $placements, true);
     $css = DisplayTitleLayout::css('Nissan Skyline GT-R R34', $featured, $placements, true);
     $scope = '.sc-display-title.'.$featured;
     $full = '{font-size:var(--sc-type-display-title-size);line-height:var(--sc-type-display-title-line);letter-spacing:var(--sc-type-display-title-tracking)}';
     $base = '{font-size:var(--sc-type-display-title-base-size);line-height:var(--sc-type-display-title-base-line);letter-spacing:var(--sc-type-display-title-base-tracking)}';
 
-    expect($html)->toMatch('~<div class="sc-land-hero-inner">\s*(?:\{\{--.*?--\}\}\s*)?<div class="sc-title-box">\s*<h1 class="sc-display-title t-display-title '.$claim.' text-on-photo" id="claim" data-testid="WEB-03.claim">'.$text.'</h1>~u')
-        ->and($html)->toMatch('~<span class="sc-lead-text sc-title-box">.*?<span class="sc-display-title t-display-title '.$featured.' block text-on-photo" data-testid="WEB-03.featuredTitle">Nissan Skyline <span class="sc-bind"><span class="sc-keep">GT-R</span> R34</span></span>~su')
+    // R4DQ-61: no second logo in the hero; the claim's box opens the copy.
+    expect($html)->not->toContain('data-testid="WEB-03.logo"')
+        ->and($html)->toMatch('~<div class="sc-land-hero-inner">\s*<div class="sc-title-box">\s*<h1 class="sc-display-title t-display-title '.$claim.' text-on-photo" id="claim" data-testid="WEB-03.claim">'.$text.'</h1>~u')
+        ->and($html)->not->toContain('data-testid="WEB-03.featuredTitle"')
         ->and(DisplayTitleLayout::words($text))->toBe(["Dein\u{00A0}Auto.", "Dein\u{00A0}Build.", "Dein\u{00A0}Club."])
         ->and(DisplayTitleLayout::css($text, $claim, 'page'))->toContain('@media (min-width: 1280px){.sc-display-title.'.$claim.'{font-size:var(--sc-type-display-title-size);')
         // The claim is not a car name: nothing to bind.

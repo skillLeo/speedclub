@@ -5,7 +5,9 @@ import { View } from 'react-native';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { createStyles } from '@/theme';
-import { EmptyState, Header, Screen } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { Header } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
 
 import { ShellOfflineBanner } from './ShellOfflineBanner';
 import { useTabBarPadding } from './tabBarLayout';

@@ -1,7 +1,8 @@
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Icon, Text } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 
 const useStyles = createStyles((t) => ({
   row: { alignItems: 'center', columnGap: t.space[4], flexDirection: 'row', flexWrap: 'wrap' },

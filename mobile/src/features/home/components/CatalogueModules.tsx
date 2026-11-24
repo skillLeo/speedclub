@@ -13,7 +13,8 @@ import { MakeTiles } from '@/features/discover/components/MakeTiles';
 import { businessCardCover } from '@/features/parts/model';
 import { photoFields } from '@/features/profile/media';
 import { createStyles, size, space } from '@/theme';
-import { BusinessCard, SectionHeader } from '@/ui';
+import { BusinessCard } from '@/ui/BusinessCard';
+import { SectionHeader } from '@/ui/SectionHeader';
 
 export type BrandFocus = HomeModules['brands_in_focus'][number];
 

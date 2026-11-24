@@ -8,7 +8,9 @@ use App\Enums\KeywordList;
 use App\Exceptions\ApiException;
 use App\Models\BuildUpdate;
 use App\Models\Comment;
+use App\Models\Crew;
 use App\Models\Event;
+use App\Models\ForumPost;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -72,7 +74,7 @@ class ContentScreen
      *
      * @param  list<array{field: KeywordField, rules: list<array{id: int, term: string, list: string}>}>  $flags
      */
-    public function flagAfterCommit(array $flags, User|Vehicle|BuildUpdate|Message|Comment|Event $target): void
+    public function flagAfterCommit(array $flags, User|Vehicle|BuildUpdate|Message|Comment|Event|ForumPost|Crew $target): void
     {
         if ($flags === []) {
             return;

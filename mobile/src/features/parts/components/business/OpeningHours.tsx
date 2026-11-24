@@ -7,7 +7,9 @@ import { View, type LayoutChangeEvent } from 'react-native';
 import type { OpeningDay } from '@/api/queries/businesses';
 import { GroupHeader, RowCard } from '@/features/vehicle/components/RowCard';
 import { createStyles, space, useTheme } from '@/theme';
-import { Hairline, StatusPill, Text } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
 
 import { dayLabel, hoursText } from '../../model';
 import { withClientToday } from './dates';

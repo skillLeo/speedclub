@@ -3,7 +3,10 @@ import { View } from 'react-native';
 
 import { PHOTOS } from '@/features/gallery/data';
 import { createStyles, layout, space } from '@/theme';
-import { Icon, Photo, SampleBadges, Text, type PhotoFields } from '@/ui';
+import { SampleBadges } from '@/ui/Badge';
+import { Icon } from '@/ui/icons/Icon';
+import { Photo, type PhotoFields } from '@/ui/Photo';
+import { Text } from '@/ui/Text';
 
 const GAP = space[2];
 const COLUMN_GAP = space[16];

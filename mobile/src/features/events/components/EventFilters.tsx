@@ -2,7 +2,7 @@ import '@/features/events/i18n';
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import {
@@ -13,14 +13,21 @@ import {
   type EventType,
   type EventWhen,
 } from '@/api/queries/events';
+import { SegmentRailScrollView } from '@/features/discover/components/DiscoverSegments';
 import { haptics } from '@/lib/haptics';
 import { isWeb } from '@/lib/platform';
 import { useFormat } from '@/lib/useFormat';
 import { useSessionStore } from '@/state/session';
 import { createStyles, useBreakpoint } from '@/theme';
-import { Button, Chip, ListRow, Sheet, Text, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Chip } from '@/ui/Chip';
+import { ListRow } from '@/ui/ListRow';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 
-const WHEN_CHIPS: readonly Exclude<EventWhen, 'upcoming'>[] = ['today', 'weekend', 'month'];
+/** M5.6 (10 §4): "Diese Woche" first, the default view; one time chip at a time, the chosen one again shows every coming event. */
+export const WHEN_CHIPS: readonly Exclude<EventWhen, 'upcoming'>[] = ['week', 'today', 'weekend', 'month'];
 /** "Entfernung" (EVT-01): the radius steps up to the server's 300 km. */
 export const RADIUS_STEPS = [25, 50, 100, 300] as const;
 
@@ -53,8 +60,10 @@ export type EventFilterBarProps = {
 };
 
 /**
- * EVT-01 filter chips (09 §7.10): Heute · Wochenende · Diesen Monat (one at a time; the chosen one again goes back to all) ·
- * Entfernung (sheet) · Art: Treffen · Ausfahrt · Trackday · Messe. One horizontal row that scrolls, so the list stays near the top.
+ * EVT-01 filter chips (09 §7.10, 10 §4): Diese Woche (the default) · Heute · Wochenende · Monat (one at a time; the chosen one again
+ * shows every coming event, which the list then names) ·
+ * Entfernung (sheet) · Art (sheet: Treffen · Ausfahrt · Trackday · Messe). DQ-M52-04: the kinds sit behind one "Art" chip, so no chip
+ * repeats the Treffen segment above and the row stays one row at 1280. One horizontal row that scrolls, so the list stays near the top.
  */
 export function EventFilterBar({
   filters,
@@ -71,16 +80,19 @@ export function EventFilterBar({
   const styles = useStyles();
   const format = useFormat();
   const [ownOpen, setOwnOpen] = useState(false);
+  const [typeOpen, setTypeOpen] = useState(false);
   const open = sheetOpen ?? ownOpen;
   const setOpen = onSheetOpen ?? setOwnOpen;
   const pickWhen = (when: Exclude<EventWhen, 'upcoming'>) => {
     haptics.selection();
     onChange({ ...filters, when: filters.when === when ? 'upcoming' : when });
   };
-  const pickType = (type: EventType) => {
+  const pickType = (type: EventType | null) => {
     haptics.selection();
-    onChange({ ...filters, type: filters.type === type ? null : type });
+    setTypeOpen(false);
+    onChange({ ...filters, type });
   };
+  const typeLabel = filters.type ? t(`type.${filters.type}`) : t('list.type');
   const distance = filters.near
     ? t('list.distanceActive', { distance: format.distance(filters.near.radiusKm) })
     : t('list.distance');
@@ -90,6 +102,7 @@ export function EventFilterBar({
         <Chip
           key={when}
           label={t(`list.when.${when}`)}
+          accessibilityLabel={t(`list.whenLabel.${when}`)}
           selected={filters.when === when}
           selectionRole="radio"
           onPress={() => pickWhen(when)}
@@ -100,21 +113,19 @@ export function EventFilterBar({
         label={distance}
         icon="map-pin"
         selected={filters.near !== null}
-        selectionRole="checkbox"
+        opensSheet
         accessibilityLabel={nearLabel && filters.near ? `${distance}, ${nearLabel}` : distance}
         onPress={() => setOpen(true)}
         testID={`${routeId}.filter.near`}
       />
-      {EVENT_TYPES.map((type) => (
-        <Chip
-          key={type}
-          label={t(`type.${type}`)}
-          selected={filters.type === type}
-          selectionRole="radio"
-          onPress={() => pickType(type)}
-          testID={`${routeId}.filter.type.${type}`}
-        />
-      ))}
+      <Chip
+        label={typeLabel}
+        selected={filters.type !== null}
+        opensSheet
+        accessibilityLabel={filters.type ? t('list.typeActive', { type: typeLabel }) : typeLabel}
+        onPress={() => setTypeOpen(true)}
+        testID={`${routeId}.filter.type`}
+      />
     </>
   );
   return (
@@ -129,8 +140,8 @@ export function EventFilterBar({
           {chips}
         </View>
       ) : (
-        <ScrollView
-          horizontal
+        // Inside Entdecken's page swipe the row keeps its own horizontal drags (review SF-3).
+        <SegmentRailScrollView
           showsHorizontalScrollIndicator={false}
           style={bleed ? { marginHorizontal: -bleed } : null}
           contentContainerStyle={[styles.row, bleed ? { paddingHorizontal: bleed } : null]}
@@ -139,8 +150,9 @@ export function EventFilterBar({
           testID={`${routeId}.filters`}
         >
           {chips}
-        </ScrollView>
+        </SegmentRailScrollView>
       )}
+      <TypeSheet visible={typeOpen} current={filters.type} onPick={pickType} onClose={() => setTypeOpen(false)} routeId={routeId} />
       <NearSheet
         visible={open}
         current={filters.near}
@@ -154,6 +166,48 @@ export function EventFilterBar({
         routeId={routeId}
       />
     </>
+  );
+}
+
+/** "Art": one kind at a time, or all of them; a choice applies at once and closes the sheet. */
+function TypeSheet({
+  visible,
+  current,
+  onPick,
+  onClose,
+  routeId,
+}: {
+  visible: boolean;
+  current: EventType | null;
+  onPick: (type: EventType | null) => void;
+  onClose: () => void;
+  routeId: string;
+}) {
+  const { t } = useTranslation('events');
+  const styles = useStyles();
+  const { kind } = useBreakpoint();
+  return (
+    <Sheet visible={visible} onClose={onClose} title={t('typeSheet.title')} narrow={kind !== 'phone'} testID={`${routeId}.typeSheet`}>
+      <View style={[styles.chips, styles.sheet]} role="radiogroup" aria-label={t('list.type')}>
+        <Chip
+          label={t('typeSheet.all')}
+          selected={current === null}
+          selectionRole="radio"
+          onPress={() => onPick(null)}
+          testID={`${routeId}.filter.type.all`}
+        />
+        {EVENT_TYPES.map((type) => (
+          <Chip
+            key={type}
+            label={t(`type.${type}`)}
+            selected={current === type}
+            selectionRole="radio"
+            onPress={() => onPick(type)}
+            testID={`${routeId}.filter.type.${type}`}
+          />
+        ))}
+      </View>
+    </Sheet>
   );
 }
 

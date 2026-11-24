@@ -9,20 +9,31 @@ import type { FlashListRef } from '@shopify/flash-list';
 
 import { useFlag } from '@/api/queries/appConfig';
 import {
+  afterWeek,
   DEFAULT_FILTERS,
   EVENT_LIMITS,
+  EVENT_QUERY_MAX,
   EVENTS_FLAG,
   flattenEvents,
   useEvent,
   useEventList,
   useEventPins,
   useMayOrganise,
+  useUpcomingAfterWeek,
   type Bbox,
   type EventCard,
   type EventFilters,
   type EventType,
   type EventWhen,
+  weekWindowEnd,
 } from '@/api/queries/events';
+import { DiscoverSegmentBar, SegmentSwipe } from '@/features/discover/components/DiscoverSegments';
+import { useIsSegmentRoot, useSegmentsInSidebar } from '@/features/discover/segments';
+import { useDebouncedValue } from '@/features/discover/useDebouncedValue';
+import { SpotLayerToggle } from '@/features/dex/components/SpotLayerToggle';
+import { qaDexActive } from '@/features/dex/qaDex';
+import { useSpotLayer } from '@/features/dex/spotMap';
+import { useInboxActions } from '@/features/shell/inboxActions';
 import { useTabScrollToTop } from '@/features/shell/retap';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarInset } from '@/features/shell/tabBarLayout';
@@ -33,25 +44,20 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useRequireAuth } from '@/state/session';
-import { createStyles, layout, useBreakpoint } from '@/theme';
+import { createStyles, layout, space, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import {
-  Button,
-  CollapsingFlashList,
-  EmptyState,
-  ErrorState,
-  EventCardSkeleton,
-  Header,
-  HeaderLargeTitle,
-  Screen,
-  SegmentedControl,
-  Skeleton,
-  SkeletonText,
-  Spinner,
-  Text,
-  useCollapsingHeader,
-  type HeaderAction,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { EventCardSkeleton } from '@/ui/EventCard';
+import { Header, HeaderLargeTitle, type HeaderAction } from '@/ui/Header';
+import { IconButton } from '@/ui/IconButton';
+import { Screen } from '@/ui/Screen';
+import { SearchBar } from '@/ui/SearchBar';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { CollapsingFlashList, useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { useOrganiserRestriction } from '../access';
 import { EventCardView } from '../components/EventCardView';
@@ -60,21 +66,40 @@ import { RestrictionLine } from '../components/EventParts';
 import { EventMap } from '../map/EventMap';
 import { grantMapConsent } from '../map/mapConsent';
 import { CITY_ZOOM, COUNTRY_ZOOM, type MapPin } from '../map/mapConfig';
-import { dateBlock, editorPath, groupByWeek, parseInstant, sampleEvent, type EventListRow } from '../model';
+import {
+  berlinDayKey,
+  dateBlock,
+  editorPath,
+  groupByDayHeaders,
+  groupByWeek,
+  headerIndices,
+  parseInstant,
+  sampleEvent,
+  type EventListRow,
+} from '../model';
 
 const ROUTE = 'EVT-01';
 const EDGES: readonly Edge[] = ['left', 'right'];
 type View_ = 'list' | 'map';
 type Row = EventListRow<EventCard>;
 
-const WHEN_PARAMS: readonly EventWhen[] = ['upcoming', 'today', 'weekend', 'month'];
+const WHEN_PARAMS: readonly EventWhen[] = ['week', 'upcoming', 'today', 'weekend', 'month'];
+/** The list follows the search field once typing pauses this long (as DISC-02's facets). */
+const SEARCH_DEBOUNCE_MS = 300;
 const TYPE_PARAMS: readonly EventType[] = ['meet', 'cruise', 'track_day', 'show'];
 
 const useStyles = createStyles((t) => ({
   list: { flex: 1 },
   column: { alignSelf: 'flex-start', maxWidth: layout.feedColumn, width: '100%' },
+  columnSplit: { maxWidth: '100%' },
   controls: { gap: t.space[16], paddingBottom: t.space[16] },
-  day: { paddingBottom: t.space[12], paddingTop: t.space[16] },
+  // DQ-M52-05: the search and the Liste/Karte toggle share one row.
+  searchRow: { alignItems: 'center', flexDirection: 'row', gap: t.space[8] },
+  searchField: { flex: 1, minWidth: 0 },
+  // M5.6: the day header sticks under the header while its cards scroll, on the canvas so no card shows through.
+  day: { backgroundColor: t.color.bg.canvas, paddingBottom: t.space[12], paddingTop: t.space[16] },
+  dayLine: { alignItems: 'baseline', columnGap: t.space[8], flexDirection: 'row', flexWrap: 'wrap' },
+  later: { alignItems: 'flex-start', paddingBottom: t.space[24], paddingTop: t.space[8] },
   card: { paddingBottom: t.space[24] },
   state: { paddingTop: t.space[16] },
   more: { alignItems: 'flex-start', minHeight: t.size.touchMin, paddingVertical: t.space[8] },
@@ -100,9 +125,15 @@ function filtersFrom(params: { when?: string | string[]; type?: string | string[
   const type = paramOf(params.type);
   return {
     ...DEFAULT_FILTERS,
-    when: WHEN_PARAMS.includes(when as EventWhen) ? (when as EventWhen) : 'upcoming',
+    when: WHEN_PARAMS.includes(when as EventWhen) ? (when as EventWhen) : DEFAULT_FILTERS.when,
     type: TYPE_PARAMS.includes(type as EventType) ? (type as EventType) : null,
   };
+}
+
+/** The typed words as `q`: trimmed, inner runs of space collapsed; empty = no search. */
+export function eventQueryOf(text: string): string | null {
+  const q = text.trim().replace(/\s+/g, ' ').slice(0, EVENT_QUERY_MAX);
+  return q === '' ? null : q;
 }
 
 /**
@@ -111,6 +142,16 @@ function filtersFrom(params: { when?: string | string[]; type?: string | string[
  * exact place, ADR-437 c) and the selected event's card under it, and "+" (Treffen erstellen) when allowed. From 1280 the list and the
  * map panel stand side by side (DQ-1114) and the chips wrap (DQ-1119 c). Empty: the badged sample event, "Gerade keine Treffen in
  * deiner Nähe." and "Region ändern".
+ *
+ * M5.2 (10 §1): EVT-01 is also Entdecken › Treffen. As a segment page of the Entdecken stack (useIsSegmentRoot) it carries the tab's
+ * title "Entdecken", the segmented control Builds · Treffen · Forum, the bell and Nachrichten, no back, and the list swipes to the
+ * neighbouring segment; pushed anywhere else (Start's "Nächste Treffen", a push) it is the page "Treffen" with back. Either way it
+ * has its own search (`q`: title and city).
+ *
+ * M5.6 (10 §4): the default view is "Diese Woche", the next seven Berlin days, one sticky header per day (Heute · Morgen · Mittwoch,
+ * each with its date); the chips Diese Woche · Heute · Wochenende · Monat · Entfernung · Art are one row, the chosen time chip again
+ * shows every coming event (grouped by spans of time as before). After the week, or when the week is empty but later meets exist,
+ * "Alle kommenden Treffen" opens the rest.
  */
 export function EventsScreen() {
   const { t } = useTranslation('events');
@@ -128,10 +169,20 @@ export function EventsScreen() {
   const header = useCollapsingHeader();
   const inset = useTabBarInset();
   const back = useBack('/discover');
+  const segmentRoot = useIsSegmentRoot();
+  // DQ-M52-03: from 1280 the sidebar lists Treffen itself, so the page is "Treffen" there, without the segmented control.
+  const inSidebar = useSegmentsInSidebar();
+  const inbox = useInboxActions(ROUTE);
+  const tabs = useTranslation('common').t;
+  const [text, setText] = useState('');
+  const query = useDebouncedValue(eventQueryOf(text), SEARCH_DEBOUNCE_MS);
   const { gutter, kind, width } = useBreakpoint();
   const split = kind === 'desktop';
   const [listWidth, setListWidth] = useState<number | null>(null);
-  const columnWidth = Math.min(layout.feedColumn, (listWidth ?? width) - 2 * gutter);
+  // DQ-P5-014: one width for the search, the chips, the cards and their buttons. From 1280 the column is the list's 7 of 12 columns
+  // (no feed cap, so nothing ends short of the map); below, the feed column. The width between the gutters is what a cover is cut to.
+  const columnMax = split ? Number.POSITIVE_INFINITY : layout.feedColumn;
+  const columnWidth = Math.min(columnMax, listWidth ?? width) - 2 * gutter;
   const [view, setView] = useState<View_>(paramOf(params.view) === 'map' ? 'map' : 'list');
   const [filters, setFilters] = useState<EventFilters>(() => filtersFrom(params));
   const [nearLabel, setNearLabel] = useState<string | null>(null);
@@ -142,18 +193,48 @@ export function EventsScreen() {
   const [mapFailed, setMapFailed] = useState(false);
   const listRef = useRef<FlashListRef<Row>>(null);
 
+  const searched = useMemo<EventFilters>(() => ({ ...filters, q: query }), [filters, query]);
   const list = useEventList(
-    filters,
+    searched,
     qaState === 'default' || qaState === 'offline' || qaState === 'restricted',
   );
   const mapShown = view === 'map' || split;
-  const pins = useEventPins(filters, bbox, mapShown && qaState === 'default' && bbox !== null);
+  const pinsQuery = useEventPins(searched, bbox, mapShown && qaState === 'default' && bbox !== null);
+  const week = filters.when === 'week';
+  // M5.6 "Diese Woche": the next seven Berlin days, asked as `when=week`. Whether meets follow it comes from the first page of
+  // `upcoming` (afterWeek). Stable within a Berlin day (noon of today's key is always that day); after midnight the window moves on.
+  const today = berlinDayKey(now());
+  const windowEnd = useMemo(() => weekWindowEnd(new Date(`${today}T12:00:00Z`)), [today]);
   const events = useMemo(
     () => (qaState === 'empty' ? [] : flattenEvents(list.data?.pages)),
     [list.data?.pages, qaState],
   );
-  const rows = useMemo<Row[]>(() => groupByWeek(events, now(), format.locale, t), [events, format.locale, t]);
-  const filtered = filters.when !== 'upcoming' || filters.type !== null || filters.near !== null;
+  const pins = useMemo(() => pinsQuery.data ?? [], [pinsQuery.data]);
+  const upcoming = useUpcomingAfterWeek(searched, week && (qaState === 'default' || qaState === 'offline' || qaState === 'restricted'));
+  const after = useMemo(
+    () => afterWeek(qaState === 'empty' ? [] : (upcoming.data?.data ?? []), Boolean(upcoming.data?.meta.next_cursor), windowEnd),
+    [qaState, upcoming.data, windowEnd],
+  );
+  /** Events after the week exist: the end of the list (or an empty week) offers "Alle kommenden Treffen". */
+  const later = week && after.exists;
+  const rows = useMemo<Row[]>(
+    () =>
+      filters.when === 'upcoming'
+        ? groupByWeek(events, now(), format.locale, t)
+        : groupByDayHeaders(events, now(), format.locale, t),
+    [events, filters.when, format.locale, t],
+  );
+  const sticky = useMemo(() => headerIndices(rows), [rows]);
+  const filtered =
+    (filters.when !== 'week' && filters.when !== 'upcoming') ||
+    filters.type !== null ||
+    filters.near !== null ||
+    query !== null;
+  const showAll = () => {
+    haptics.selection();
+    setSelected(null);
+    setFilters((current) => ({ ...current, when: 'upcoming' }));
+  };
 
   useTabScrollToTop(() => {
     if (header.scrollY.get() <= 0) return false;
@@ -175,14 +256,21 @@ export function EventsScreen() {
       testID: `${ROUTE}.create`,
     });
   }
+  // 10 §1: Treffen in Entdecken carries the tab's bell and Nachrichten, after "+".
+  if (segmentRoot) actions.push(...inbox);
 
-  const columnStyle = useMemo(() => [styles.column, { paddingHorizontal: gutter }], [gutter, styles.column]);
+  const columnStyle = useMemo(
+    () => [styles.column, split ? styles.columnSplit : null, { paddingHorizontal: gutter }],
+    [gutter, split, styles.column, styles.columnSplit],
+  );
   const pending = list.isPending && list.fetchStatus !== 'paused';
   const loading = qaState === 'loading' || (qaState === 'default' && !list.data && pending);
   const offline =
     qaState === 'offline' || (!online && !list.data) || (!list.data && list.fetchStatus === 'paused');
 
   let state: ReactNode = null;
+  /** DQ-P5-014: a state that keeps the map panel beside it from 1280 (loading, an empty week, no meets): the page keeps its two columns. */
+  let mapBesideState = false;
   if (!flag && qaState === 'default') {
     state = (
       <EmptyState
@@ -193,6 +281,7 @@ export function EventsScreen() {
       />
     );
   } else if (loading) {
+    mapBesideState = true;
     state = (
       <Skeleton testID={`${ROUTE}.skeleton`}>
         <View style={styles.skeleton}>
@@ -214,7 +303,23 @@ export function EventsScreen() {
         testID={`${ROUTE}.${isOffline ? 'offline' : 'error'}`}
       />
     );
+  } else if (events.length === 0 && later) {
+    mapBesideState = true;
+    // M5.6: nothing this week, but later: the next real meet as the preview (no sample, there is real content), the week's own line
+    // and the way to every coming event.
+    const next = after.next;
+    state = (
+      <EmptyState
+        preview={next ? <EventCardView event={next} routeId={`${ROUTE}.weekEmpty`} withCover coverWidth={columnWidth} /> : undefined}
+        previewPlacement="afterBody"
+        title={t('list.weekEmptyTitle')}
+        body={t('list.weekEmptyBody')}
+        action={{ label: t('list.allUpcoming'), onPress: showAll, variant: 'secondary', size: 'm' }}
+        testID={`${ROUTE}.weekEmpty`}
+      />
+    );
   } else if (events.length === 0) {
+    mapBesideState = true;
     state = (
       <EmptyState
         preview={<EventCardView event={sampleEvent(now(), t)} routeId={`${ROUTE}.empty`} withCover inert />}
@@ -224,7 +329,10 @@ export function EventsScreen() {
           filtered
             ? {
                 label: t('list.resetFilters'),
-                onPress: () => setFilters(DEFAULT_FILTERS),
+                onPress: () => {
+                  setFilters(DEFAULT_FILTERS);
+                  setText('');
+                },
                 variant: 'secondary',
                 size: 'm',
               }
@@ -247,24 +355,36 @@ export function EventsScreen() {
 
   const controls = (
     <View style={styles.controls}>
-      {split ? null : (
-        <SegmentedControl<View_>
-          options={[
-            { value: 'list', label: t('list.listView'), testID: `${ROUTE}.view.list` },
-            { value: 'map', label: t('list.mapView'), testID: `${ROUTE}.view.map` },
-          ]}
-          value={view}
-          onChange={(next) => {
-            haptics.selection();
-            // Choosing the map is the reader's consent to its third-party tiles for this session (mapConsent.ts).
-            if (next === 'map') grantMapConsent();
-            setView(next);
-          }}
-          label={t('list.segments')}
-          role="tablist"
-          testID={`${ROUTE}.view`}
+      {/* Hidden from 1280 by the bar itself, where the sidebar lists Treffen (DQ-M52-03). */}
+      {segmentRoot ? <DiscoverSegmentBar current="events" testID={`${ROUTE}.segments`} /> : null}
+      <View style={styles.searchRow}>
+        <SearchBar
+          value={text}
+          onChangeText={setText}
+          onCancel={() => setText('')}
+          placeholder={t('list.search')}
+          maxLength={EVENT_QUERY_MAX}
+          autoCorrect={false}
+          style={styles.searchField}
+          testID={`${ROUTE}.search`}
         />
-      )}
+        {/* DQ-M52-05: Liste · Karte as one 44 toggle at the end of the search row, not a second segmented control (none from 1280,
+            where the list and the map stand side by side). It names what it opens. */}
+        {split ? null : (
+          <IconButton
+            icon={view === 'map' ? 'list-bullets' : 'map-trifold'}
+            label={view === 'map' ? t('list.listView') : t('list.mapView')}
+            onPress={() => {
+              haptics.selection();
+              const next = view === 'map' ? 'list' : 'map';
+              // Choosing the map is the reader's consent to its third-party tiles for this session (mapConsent.ts).
+              if (next === 'map') grantMapConsent();
+              setView(next);
+            }}
+            testID={`${ROUTE}.view.${view === 'map' ? 'list' : 'map'}`}
+          />
+        )}
+      </View>
       <EventFilterBar
         filters={filters}
         onChange={changeFilters}
@@ -285,16 +405,23 @@ export function EventsScreen() {
   const renderItem = ({ item, index }: { item: Row; index: number }) => {
     if (item.kind === 'day') {
       return (
-        <View style={[columnStyle, styles.day]}>
-          <Text
-            variant="calloutStrong"
-            color="text.secondary"
+        <View style={styles.day}>
+          <View
+            style={[columnStyle, styles.dayLine]}
             role="heading"
             aria-level={2}
+            aria-label={item.accessibilityLabel ?? item.label}
             testID={`${ROUTE}.${item.key}`}
           >
-            {item.label}
-          </Text>
+            <Text variant="calloutStrong" color={item.date ? 'text.primary' : 'text.secondary'} aria-hidden={Boolean(item.date)}>
+              {item.label}
+            </Text>
+            {item.date ? (
+              <Text variant="callout" color="text.secondary" numeric aria-hidden testID={`${ROUTE}.${item.key}.date`}>
+                {item.date}
+              </Text>
+            ) : null}
+          </View>
         </View>
       );
     }
@@ -305,7 +432,7 @@ export function EventsScreen() {
     );
   };
 
-  const title = t('title');
+  const title = segmentRoot && !inSidebar ? tabs('tabs.discover') : t('title');
   const listView = (
     <CollapsingFlashList
       ref={listRef}
@@ -316,6 +443,8 @@ export function EventsScreen() {
         row.kind === 'day' ? 'day' : index === 1 ? 'cover' : 'event'
       }
       renderItem={renderItem}
+      // M5.6 (10 §4): the day headers stick while their cards scroll (FlashList's own sticky headers, drawn over the list).
+      stickyHeaderIndices={state ? undefined : sticky}
       style={styles.list}
       contentContainerStyle={{ paddingBottom: inset }}
       ListHeaderComponent={
@@ -330,6 +459,16 @@ export function EventsScreen() {
           <View style={[columnStyle, styles.more]}>
             <Spinner label={t('list.more')} testID={`${ROUTE}.more`} />
           </View>
+        ) : later && !state ? (
+          <View style={[columnStyle, styles.later]}>
+            <Button
+              label={t('list.allUpcoming')}
+              variant="secondary"
+              size="m"
+              onPress={showAll}
+              testID={`${ROUTE}.allUpcoming`}
+            />
+          </View>
         ) : null
       }
       onEndReached={() => {
@@ -342,7 +481,7 @@ export function EventsScreen() {
   const mapPane = (
     <MapPane
       filters={filters}
-      pins={pins.data ?? []}
+      pins={pins}
       events={events}
       selected={selected}
       onSelect={setSelected}
@@ -367,15 +506,19 @@ export function EventsScreen() {
         >
           {listView}
         </View>
-        {state ? null : <View style={[styles.splitMap, { paddingBottom: inset }]}>{mapPane}</View>}
+        {state && !mapBesideState ? null : <View style={[styles.splitMap, { paddingBottom: inset }]}>{mapPane}</View>}
       </View>
     );
   } else if (view === 'list' || state) {
     body = listView;
   } else {
+    // DQ-M52-06: the large title stays in the map view too, so the band under it holds its place when the view changes.
     body = (
       <View style={[styles.mapBody, { paddingBottom: inset }]}>
-        <View style={columnStyle}>{controls}</View>
+        <View>
+          <HeaderLargeTitle title={title} scroll={header} testID={`${ROUTE}.title`} />
+          <View style={columnStyle}>{controls}</View>
+        </View>
         {mapPane}
       </View>
     );
@@ -387,12 +530,19 @@ export function EventsScreen() {
         variant="large"
         title={title}
         scroll={header}
-        onBack={back}
+        onBack={segmentRoot ? undefined : back}
         actions={actions}
+        // DQ-M52-14: from 1280 the actions end with the list and map, not at the far edge of the pane.
+        contentMaxWidth={split ? layout.contentMax + 2 * space[24] : undefined}
+        contentAlign="center"
         testID={`${ROUTE}.header`}
       />
       <ShellOfflineBanner label={t('list.offlineBanner')} />
-      {body}
+      {/* SF-4: always the same tree; only `enabled` changes, so the list and the map never remount when the page becomes a segment.
+          The map takes horizontal drags itself, so only the list turns the page. */}
+      <SegmentSwipe current="events" enabled={segmentRoot && (view === 'list' || Boolean(state))} testID={`${ROUTE}.swipe`}>
+        {body}
+      </SegmentSwipe>
     </Screen>
   );
 }
@@ -460,6 +610,9 @@ function MapPane({
   const capped = pins.length >= EVENT_LIMITS.pinsMax;
   // DQ-1119 a: the hint speaks of points on the map, so it waits until the map has loaded (never under the consent gate).
   const [ready, setReady] = useState(false);
+  // M5.9b: the "Spots" layer, off until the reader turns it on (`qaDex` turns it on for the visual matrix, which cannot tap).
+  const [spotsOn, setSpotsOn] = useState(qaDexActive);
+  const spotLayer = useSpotLayer(spotsOn);
   return (
     <View style={styles.mapBody}>
       <View style={styles.mapBody} onLayout={onLayout}>
@@ -470,6 +623,7 @@ function MapPane({
             center={center}
             zoom={center ? CITY_ZOOM - 3 : COUNTRY_ZOOM}
             pins={mapPins}
+            areas={spotLayer.areas}
             selectedId={selected}
             label={t('map.regionLabel')}
             onSelect={(id) => {
@@ -485,6 +639,7 @@ function MapPane({
         ) : null}
       </View>
       <View style={[columnStyle, styles.mapCard]}>
+        {failed || !ready ? null : <SpotLayerToggle on={spotsOn} onChange={setSpotsOn} failed={spotLayer.failed} testID={`${ROUTE}.map.spots`} />}
         {failed ? (
           onOpenList ? (
             <Button

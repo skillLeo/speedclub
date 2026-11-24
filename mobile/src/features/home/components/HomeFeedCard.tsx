@@ -6,7 +6,8 @@ import { photoFields, variantUrl } from '@/features/profile/media';
 import { keepShortNamesTogether } from '@/lib/format';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, useBreakpoint, useTheme } from '@/theme';
-import { MediaCard, MediaCardSkeleton, SkeletonBlock, SkeletonText } from '@/ui';
+import { feedActionInset, MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
+import { SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
 
 import { useFeedCardActions } from '../feedActions';
 import { parseDate } from '../model';
@@ -51,7 +52,7 @@ export function withoutRepeatedKind(kind: string, summary: string): string {
 export type HomeFeedCardProps = {
   vehicle: FeedVehicle;
   /** An update of the stream: the card tells that change and opens it (VEH-05); without it, the build and its latest change. */
-  update?: Pick<BuildUpdateRowData, 'id' | 'type_label' | 'summary' | 'created_at'>;
+  update?: Pick<BuildUpdateRowData, 'id' | 'type_label' | 'summary' | 'created_at'> & { viewer?: BuildUpdateRowData['viewer'] };
   /** DQ-289: off when the same change has a card of its own on the page. */
   showLatest?: boolean;
   /** The column the card is drawn in (edge to edge on a phone). */
@@ -65,7 +66,8 @@ export type HomeFeedCardProps = {
 /**
  * 09 §7.3 feed card (MediaCard `feed`): the build's cover edge to edge on a phone, the car's name with its owner and the time in the
  * header, the change it tells as the caption. Owners who hide themselves (ADR-148 a) are not named. Badged "Beispiel"/"Editorial"
- * for sample content (09 §8.19). DQ-1025: the action row reaction · save · share (feedActions.ts; no public counts).
+ * for sample content (09 §8.19). DQ-1025, R4-2.2: the action row Gefällt mir · Kommentare · save · share is MediaCard's own (R4DQ-37:
+ * one row, its glyphs on the gutter; feedActions.tsx; no public counts). R5-5: a card without `update` likes and comments on the car.
  */
 export const HomeFeedCard = memo(function HomeFeedCard({ vehicle, update, showLatest = true, width, onOpen, onOpenOwner, testID }: HomeFeedCardProps) {
   const format = useFormat();
@@ -75,7 +77,12 @@ export const HomeFeedCard = memo(function HomeFeedCard({ vehicle, update, showLa
   const owner = vehicle.owner
     ? { username: vehicle.owner.username, avatarUri: variantUrl(vehicle.owner.avatar, size.avatar.sm), avatarBlurhash: vehicle.owner.avatar?.blurhash ?? null }
     : undefined;
-  const { reaction, save, onShare, sheet } = useFeedCardActions({ vehicle, updateId: update?.id, routeId: testID.split('.')[0] ?? 'HOME-01' });
+  const { reaction, comment, save, onShare, sheet } = useFeedCardActions({
+    vehicle,
+    updateId: update?.id,
+    viewerReaction: update?.viewer?.reaction ?? null,
+    routeId: testID.split('.')[0] ?? 'HOME-01',
+  });
   return (
     <>
     <MediaCard
@@ -90,6 +97,7 @@ export const HomeFeedCard = memo(function HomeFeedCard({ vehicle, update, showLa
       sample={{ is_sample: vehicle.is_sample, is_editorial: vehicle.owner?.is_editorial ?? false }}
       onPress={() => onOpen(vehicle, update?.id)}
       reaction={reaction}
+      comment={comment}
       save={save}
       onShare={onShare}
       testID={testID}
@@ -103,7 +111,8 @@ const useSkeletonStyles = createStyles((t) => ({
   // MediaCard `feed`: 12 between header, photo, body and actions; the owner row (min 44) 8 above the caption.
   body: { gap: t.space[8], marginTop: t.space[12] },
   owner: { alignItems: 'center', flexDirection: 'row', gap: t.space[8], minHeight: t.size.touchMin },
-  actions: { flexDirection: 'row', gap: t.space[4], marginTop: t.space[12], paddingHorizontal: t.space[8] },
+  actionRow: { flexDirection: 'row', marginTop: t.space[12] },
+  actions: { flexDirection: 'row', gap: t.space[4] },
 }));
 
 /**
@@ -127,10 +136,14 @@ export function HomeFeedCardSkeleton({ testID, actions = true }: { testID?: stri
         <SkeletonText variant="body" width="100%" lines={lines} lastLineWidth="60%" />
       </View>
       {actions ? (
-        <View style={styles.actions}>
-          <SkeletonBlock width={size.touchMin} height={size.touchMin} corner="full" />
-          <SkeletonBlock width={size.touchMin} height={size.touchMin} corner="full" />
-          <SkeletonBlock width={size.touchMin} height={size.touchMin} corner="full" />
+        <View style={styles.actionRow}>
+          {/* MediaCard's row: the first target starts the glyph inset before the gutter (R4DQ-37). */}
+          <View style={{ width: feedActionInset(gutter) }} />
+          <View style={styles.actions}>
+            <SkeletonBlock width={size.touchMin} height={size.touchMin} corner="full" />
+            <SkeletonBlock width={size.touchMin} height={size.touchMin} corner="full" />
+            <SkeletonBlock width={size.touchMin} height={size.touchMin} corner="full" />
+          </View>
         </View>
       ) : null}
     </View>

@@ -3,19 +3,25 @@
 namespace App\Http\Controllers\Api\V1\Ai;
 
 use App\Actions\Ai\InterpretSearch;
+use App\Actions\Ai\MatchProduct;
 use App\Actions\Ai\SuggestDescription;
 use App\Actions\Ai\SuggestModFields;
 use App\Actions\Ai\SuggestPhotoCategory;
+use App\Actions\Ai\SuggestVehicleSpecs;
 use App\Actions\Ai\TranslateText;
 use App\Enums\TranslationSource;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Ai\InterpretSearchRequest;
+use App\Http\Requests\Api\V1\Ai\MatchProductRequest;
 use App\Http\Requests\Api\V1\Ai\SuggestModRequest;
+use App\Http\Requests\Api\V1\Ai\SuggestSpecsRequest;
 use App\Http\Requests\Api\V1\Ai\TranslateRequest;
 use App\Http\Resources\V1\Ai\DescriptionSuggestionResource;
 use App\Http\Resources\V1\Ai\ModSuggestionResource;
 use App\Http\Resources\V1\Ai\PhotoCategoryResource;
+use App\Http\Resources\V1\Ai\ProductMatchResource;
 use App\Http\Resources\V1\Ai\SearchInterpretationResource;
+use App\Http\Resources\V1\Ai\SpecSuggestionResource;
 use App\Http\Resources\V1\Ai\TranslationResource;
 use App\Models\Media;
 use App\Models\User;
@@ -89,6 +95,34 @@ class AiController extends Controller
         Gate::authorize('update', $vehicle);
 
         return new DescriptionSuggestionResource($action->handle($this->member($request), $vehicle));
+    }
+
+    /**
+     * Typical factory specs for the wizard (ai.vehicle_specs).
+     *
+     * M5.9 "Daten übernehmen?": for a catalogue generation (or a model and year without generations), cached for every member who picks
+     * it, so a cached answer costs no call and no daily share. Only valid spec values; the member confirms in the form and sends
+     * `ai_suggestion` with PUT vehicles/{id}/specs. 422 when the generation is unknown or inactive.
+     */
+    public function suggestSpecs(SuggestSpecsRequest $request, SuggestVehicleSpecs $action): SpecSuggestionResource
+    {
+        /** @var array{generation_id?: int|null, model_id?: int|null, model_year?: int|null} $input */
+        $input = $request->validated();
+
+        return new SpecSuggestionResource($action->handle($this->member($request), $input));
+    }
+
+    /**
+     * Match a typed part to the catalogue (ai.product_match).
+     *
+     * M5.9 mod editor: every word against the catalogue first (no AI); only when nothing matches, the AI turns the text into catalogue
+     * words and the server searches again. Answers catalogue products only, at most 3; empty when nothing matches.
+     */
+    public function matchProduct(MatchProductRequest $request, MatchProduct $action): ProductMatchResource
+    {
+        $category = $request->validated('category_key');
+
+        return new ProductMatchResource($action->handle($this->member($request), (string) $request->validated('text'), is_string($category) ? $category : null));
     }
 
     private function member(Request $request): User

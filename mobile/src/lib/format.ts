@@ -239,6 +239,11 @@ export function keepFiguresTogether(line: string, wholeRuns: boolean = true): st
   return keepValueSlashes(kept);
 }
 
+/** "März": a month's name alone (GAR-10's Zielmonat picker, M5.3). */
+export function formatMonthName(date: Date, locale: FormatLocale = 'de'): string {
+  return dateFormat(locale, { month: 'long' }).format(date);
+}
+
 /** "März 2023" */
 export function formatMonthYear(date: Date, locale: FormatLocale = 'de'): string {
   return dateFormat(locale, { month: 'long', year: 'numeric' }).format(date);
@@ -253,6 +258,11 @@ export function formatDate(date: Date, locale: FormatLocale = 'de'): string {
 export function formatLongDate(date: Date, locale: FormatLocale = 'de'): string {
   // DQ-1005: the day stays with its month ("12. November" / "2026", never "12." / "November 2026").
   return dateFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date).replace(/^(\d{1,2}\.?) /, '$1\u00A0');
+}
+
+/** "14. Nov." / "14 Nov": a day of this year in a label (M5.9d "Car of the Day · 14. Nov."). */
+export function formatDayMonth(date: Date, locale: FormatLocale = 'de'): string {
+  return dateFormat(locale, { day: 'numeric', month: 'short' }).format(date).replace(/^(\d{1,2}\.?) /, '$1\u00A0');
 }
 
 /** "14:30" */

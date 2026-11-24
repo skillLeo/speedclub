@@ -15,6 +15,7 @@ use App\Models\ApprovalRequest;
 use App\Models\AuditEvent;
 use App\Models\ConfigVersion;
 use App\Models\Decision;
+use App\Models\FeatureFlag;
 use App\Models\KeywordRule;
 use App\Models\ModerationCase;
 use App\Models\Notification;
@@ -116,6 +117,23 @@ describe('decisions from the composer', function () {
             ->and($case->refresh()->status)->toBe(CaseStatus::Decided)
             ->and(User::query()->findOrFail($case->subject_id)->restrictions['messaging']['decision_id'] ?? null)->toBe($decision->id)
             ->and(AuditEvent::query()->where('action', 'moderation.decided')->exists())->toBeTrue();
+    });
+
+    it('hands the composer the triage template as a suggestion only, and nothing while the triage is off (M5.9)', function () {
+        $case = adm34VehicleCase();
+        $key = SorTemplate::query()->where('locale', 'de')->orderBy('sort')->value('key');
+        ModerationCase::query()->whereKey($case->id)->update(['ai_score' => 0.74, 'ai_summary' => 'Mögliche Werbung.', 'ai_template_key' => $key, 'ai_scored_at' => now()]);
+        adm34As('moderator');
+        $page = fn () => $this->get("/admin/moderation/cases/{$case->id}")->assertOk();
+
+        $page()->assertInertia(fn (AssertableInertia $p) => $p->component('Moderation/Case')->where('ai', null));
+
+        FeatureFlag::query()->updateOrCreate(['key' => 'ai.moderation_triage'], ['enabled' => true, 'rules' => null]);
+        $page()->assertInertia(fn (AssertableInertia $p) => $p->where('ai.template_key', $key)->where('ai.score', 0.74));
+        expect($case->refresh()->status)->not->toBe(CaseStatus::Decided)->and(Decision::query()->where('case_id', $case->id)->exists())->toBeFalse();
+
+        ModerationCase::query()->whereKey($case->id)->update(['ai_template_key' => null]);
+        $page()->assertInertia(fn (AssertableInertia $p) => $p->where('ai.template_key', null));
     });
 
     it('marks automated detection for a case a keyword rule opened, and never automated decision', function () {

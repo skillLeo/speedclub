@@ -6,8 +6,8 @@ import { ScrollView, View } from 'react-native';
 import { useSessionStore } from '@/state/session';
 import { createStyles, useBreakpoint, useTheme } from '@/theme';
 import { isWeb } from '@/lib/platform';
-import { SettingsSearch, Text } from '@/ui';
-import { useDesktopType } from '@/ui/Text';
+import { SettingsSearch } from '@/ui/SettingsSearch';
+import { Text, useDesktopType } from '@/ui/Text';
 
 import type { SettingsKey } from '../navigation';
 import { PANE_PADDING, PANE_TITLE_ROLE, settingsPaneLabels, settingsPaneWidth } from '../paneWidth';

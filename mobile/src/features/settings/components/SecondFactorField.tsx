@@ -1,7 +1,7 @@
 import { Controller, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { TextInput } from '@/ui';
+import { TextInput } from '@/ui/TextInput';
 
 import { useFieldMessage } from '../forms';
 

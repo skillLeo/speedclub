@@ -9,6 +9,8 @@ enum ContentEvent: string
 {
     case ConfigDraftSaved = 'config.draft_saved';
     case ConfigDraftDiscarded = 'config.draft_discarded';
+    /** M5.1: someone with the key's publish atom took over another staff member's draft (reason), so it can be finished. */
+    case ConfigDraftTakenOver = 'config.draft_taken_over';
     case ConfigPublished = 'config.published';
     case ConfigRolledBack = 'config.rolled_back';
     case PreviewIssued = 'config.preview_issued';
@@ -16,6 +18,8 @@ enum ContentEvent: string
     case LegalDraftSaved = 'legal.draft_saved';
     case LegalDraftDiscarded = 'legal.draft_discarded';
     case LegalPublished = 'legal.published';
+    /** DQ-P5-103: the system replaced a published version's reason that named internal tracker IDs with plain words (data migration). */
+    case LegalReasonReworded = 'legal.reason_reworded';
     case HelpSaved = 'help.saved';
     case HelpPublished = 'help.published';
     case HelpUnpublished = 'help.unpublished';

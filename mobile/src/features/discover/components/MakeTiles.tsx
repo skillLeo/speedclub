@@ -6,7 +6,10 @@ import type { MakeTile } from '@/api/queries/discover';
 import { isWeb } from '@/lib/platform';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, fontScaleCap, space, typeScale, typography, useTheme } from '@/theme';
-import { PressableScale, SampleBadge, Skeleton, SkeletonBlock, Text } from '@/ui';
+import { SampleBadge } from '@/ui/Badge';
+import { PressableScale } from '@/ui/PressableScale';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { estimatedTitleWidth } from '@/ui/displayTitleLayout';
 import { joinLabel } from '@/ui/rowParts';
 

@@ -3,6 +3,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { createStyles, size as sizeTokens, type TypeVariant } from '@/theme';
 
+import { Icon, type IconName } from './icons/Icon';
 import { motionDuration, useMotionPreference } from './motion';
 import { useImagePlaceholder } from './imagePlaceholder';
 import { useEagerImages } from './qaVisualState';
@@ -18,6 +19,11 @@ export type AvatarProps = {
   size?: AvatarSize;
   /** Hides the avatar from screen readers when the name is next to it. */
   decorative?: boolean;
+  /**
+   * A glyph in place of the initials, for a person who is not named (DEX-06 "jemand", DQ-P5G-57): no letter stands in for a name
+   * that is kept private. Drawn at 20 in `text.secondary`, as a ListRow icon.
+   */
+  icon?: IconName;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
@@ -76,7 +82,7 @@ export function initialsOf(name: string, limit: number): string {
 }
 
 /** 09 §5 avatar: 24/32/40/56/88, 1 inner border, initials on bg.raised as the fallback. */
-export function Avatar({ name, uri, blurhash, size = 40, decorative = false, style, testID }: AvatarProps) {
+export function Avatar({ name, uri, blurhash, size = 40, decorative = false, icon, style, testID }: AvatarProps) {
   const styles = useStyles();
   const motion = useMotionPreference();
   const eager = useEagerImages();
@@ -99,6 +105,8 @@ export function Avatar({ name, uri, blurhash, size = 40, decorative = false, sty
           source={{ uri }}
           loading={eager ? 'eager' : undefined}
           {...placeholder}
+          // CR2-2: never dragged out as an image on the web (index.html sc-press covers every other img).
+          draggable={false}
           contentFit="cover"
           transition={motion.reduced ? null : motionDuration('effect.default')}
           recyclingKey={uri}
@@ -108,6 +116,8 @@ export function Avatar({ name, uri, blurhash, size = 40, decorative = false, sty
           style={[styles.image, box]}
           testID={testID ? `${testID}.image` : undefined}
         />
+      ) : icon ? (
+        <Icon name={icon} size={20} color="text.secondary" testID={testID ? `${testID}.icon` : undefined} />
       ) : initials === '' ? null : (
         // DQ-415: no name, no initials node (an empty one would carry the fixed-glyph exemption on a 0×0 box).
         <Text

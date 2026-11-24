@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Icon, Text } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 
 const useStyles = createStyles((t) => ({
   reminder: { alignItems: 'flex-start', backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, flexDirection: 'row', gap: t.space[12], padding: t.space[16] },

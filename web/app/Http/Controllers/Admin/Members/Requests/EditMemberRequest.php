@@ -22,7 +22,7 @@ class EditMemberRequest extends ReasonRequest
             'display_name' => ['sometimes', 'nullable', 'string', 'max:60'],
             'city' => ['sometimes', 'nullable', 'string', 'max:100'],
             'bio' => ['sometimes', 'nullable', 'string', 'max:500'],
-            'username' => ['sometimes', 'string', 'max:255', new ValidUsername],
+            'username' => ['sometimes', 'string', 'max:255', new ValidUsername(staff: true)],
         ];
     }
 }

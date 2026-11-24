@@ -15,7 +15,15 @@ import { metaLineText } from '@/ui/textBreaks';
 import { deviceMetaText, deviceNameText, platformLabel } from '../deviceLines';
 import { formatLegalDate } from '../legalDate';
 import { createStyles, size, useBreakpoint, useTheme } from '@/theme';
-import { Button, Dialog, EmptyState, ErrorState, Hairline, Icon, Skeleton, SkeletonBlock, SkeletonText, Text, toast, type IconName } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { RowGroup } from '@/ui/RowGroup';
 import { isReauthCancelled } from '@/api/queries/recentAuth';

@@ -7,7 +7,10 @@ use App\Enums\MediaStatus;
 use App\Jobs\Ai\TriageMedia;
 use App\Jobs\Ai\TriageModerationCase;
 use App\Models\AiCall;
+use App\Models\AiSpecSuggestion;
+use App\Models\AiTextNormalisation;
 use App\Models\AiTranslation;
+use App\Models\ForumThreadSummary;
 use App\Models\Media;
 use App\Models\ModerationCase;
 use App\Models\Report;
@@ -29,7 +32,14 @@ class AiServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Internal rows, never in a morph relation; named anyway so the enforced map stays complete (SchemaTest).
-        Relation::morphMap(['ai_call' => AiCall::class, 'ai_translation' => AiTranslation::class]);
+        Relation::morphMap([
+            'ai_call' => AiCall::class,
+            'ai_translation' => AiTranslation::class,
+            // M5.9 AI helpers.
+            'ai_spec_suggestion' => AiSpecSuggestion::class,
+            'ai_text_normalisation' => AiTextNormalisation::class,
+            'forum_thread_summary' => ForumThreadSummary::class,
+        ]);
 
         ModerationCase::creating(fn (ModerationCase $case) => Triage::markDetection($case));
 

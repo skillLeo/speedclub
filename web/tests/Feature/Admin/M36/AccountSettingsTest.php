@@ -72,18 +72,18 @@ describe('ADM-52 org settings', function () {
     });
 
     it('lets only an Owner save, with a reason and a recent password', function () {
-        adm32WriteMatrix('PATCH', '/admin/settings', ['owner'], ['values' => ['company_name' => 'SPEED CLUB GmbH'], 'reason' => 'Firmierung nach Eintragung.']);
+        adm32WriteMatrix('PATCH', '/admin/settings', ['owner'], ['values' => ['company_name' => 'Speedclub GmbH'], 'reason' => 'Firmierung nach Eintragung.']);
     });
 
     it('publishes the org config and fills the legal placeholders', function () {
         adm36As('owner');
 
         $this->patch('/admin/settings', ['values' => ['vat_id' => 'kaputt'], 'reason' => adm36Reason()])->assertSessionHasErrors();
-        $this->patch('/admin/settings', ['values' => ['company_name' => 'SPEED CLUB GmbH', 'support_email' => 'hilfe@speedclub.test', 'default_locale' => 'de'], 'reason' => adm36Reason()])
+        $this->patch('/admin/settings', ['values' => ['company_name' => 'Speedclub GmbH', 'support_email' => 'hilfe@speedclub.test', 'default_locale' => 'de'], 'reason' => adm36Reason()])
             ->assertSessionHas('success', 'settings.flash.saved');
 
-        expect(app(OrgIdentity::class)->get('company_name'))->toBe('SPEED CLUB GmbH')
-            ->and(app(OrgIdentity::class)->resolve('[[Firmenname]]'))->toBe('SPEED CLUB GmbH');
+        expect(app(OrgIdentity::class)->get('company_name'))->toBe('Speedclub GmbH')
+            ->and(app(OrgIdentity::class)->resolve('[[Firmenname]]'))->toBe('Speedclub GmbH');
 
         adm36StalePassword();
         $this->patch('/admin/settings', ['values' => ['company_name' => 'Andere GmbH'], 'reason' => adm36Reason()])->assertSessionHas('confirm_password', true);

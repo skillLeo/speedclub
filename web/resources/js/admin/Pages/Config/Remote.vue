@@ -8,11 +8,14 @@ import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
 import { Field, Input, Skeleton, Switch, Textarea } from '../../Components/ui';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { routeOr } from '../../lib/routes';
 import DraftBar from '../Content/Partials/DraftBar.vue';
 import { qaDialog } from '../../composables/qaDialog';
 import { useConfigDraft, type EditorProps } from '../Content/Partials/configDraft';
 import type { Localized } from '../Content/Partials/home';
+import WrappedReleases from './Partials/WrappedReleases.vue';
+import { normalizeReleases, withWrapped, type Releases } from './Partials/wrappedReleases';
 
 /**
  * ADM-37 Remote-Konfiguration (06 §3, m3.5 §2): the oldest version the app still runs (below it SYS-02 asks for an update) and the
@@ -25,15 +28,21 @@ interface RemoteConfig {
     latest_version: { ios: string; android: string };
     force_update_message: Localized | null;
     maintenance: { enabled: boolean; message: Localized | null };
+    /** M5.9e: always sent (withWrapped), or a save would drop the release dates (RemoteConfigSchema keeps them only when present). */
+    wrapped: { releases: Releases };
 }
+/** As the server sends it: no `wrapped` before the first release was saved; an empty map arrives as []. */
+type RemoteConfigIn = Omit<RemoteConfig, 'wrapped'> & { wrapped?: { releases?: unknown } | null };
 
-const props = defineProps<{ editor: EditorProps<RemoteConfig>; latestRelease: string | null; maintenanceAtom: boolean }>();
+const props = defineProps<{ editor: EditorProps<RemoteConfigIn>; latestRelease: string | null; maintenanceAtom: boolean; liveReleases?: Releases }>();
+const liveReleases = computed(() => props.liveReleases ?? {});
 const state = usePageState();
 const failedDialog = qaDialogFailed();
 const pageState = computed(() => (failedDialog ? 'ready' : state.value));
 
+const editorView = computed<EditorProps<RemoteConfig>>(() => ({ ...props.editor, payload: withWrapped(props.editor.payload) }));
 const draft = useConfigDraft(
-    () => props.editor,
+    () => editorView.value,
     {
         save: routeOr('admin.config.remote.draft.save', '/admin/config/remote/draft'),
         discard: routeOr('admin.config.remote.draft.discard', '/admin/config/remote/draft'),
@@ -60,14 +69,22 @@ const forceDe = localized('force', 'de');
 const forceEn = localized('force', 'en');
 const maintenanceDe = localized('maintenance', 'de');
 const maintenanceEn = localized('maintenance', 'en');
-const turningOn = computed(() => props.editor.needsApproval !== null || (form.value.maintenance.enabled && !props.editor.payload.maintenance.enabled));
+const fourEyesSwitch = useFourEyes();
+const turningOn = computed(() => fourEyesSwitch.value && (props.editor.needsApproval !== null || (form.value.maintenance.enabled && !props.editor.payload.maintenance.enabled)));
 // DQ-628: the publish dialog names the maintenance change; ?dialog=maintenance switches it on in the form (unsaved) for the capture.
-const publishChanges = computed(() =>
-    form.value.maintenance.enabled === props.editor.payload.maintenance.enabled && props.editor.needsApproval === null
+const publishChanges = computed(() => [
+    ...(form.value.maintenance.enabled === props.editor.payload.maintenance.enabled && props.editor.needsApproval === null
         ? []
-        : [trans('config.remote.change_maintenance', { from: trans(props.editor.payload.maintenance.enabled ? 'config.remote.on' : 'config.remote.off'), to: trans(form.value.maintenance.enabled ? 'config.remote.on' : 'config.remote.off') })],
-);
+        : [trans('config.remote.change_maintenance', { from: trans(props.editor.payload.maintenance.enabled ? 'config.remote.on' : 'config.remote.off'), to: trans(form.value.maintenance.enabled ? 'config.remote.on' : 'config.remote.off') })]),
+    // M5.9e: the draft's release dates differ from the live ones.
+    ...(props.editor.draft !== null && JSON.stringify(form.value.wrapped.releases) !== JSON.stringify(normalizeReleases(liveReleases.value)) ? [trans('config.remote.change_wrapped')] : []),
+]);
 if (qaDialog() === 'maintenance' && !draft.readOnly.value && props.maintenanceAtom) form.value.maintenance.enabled = true;
+// ?dialog=wrapped (outside production, the visual matrix): two release rows in the form (unsaved) when none is planned, one complete and
+// one still without its day, so the capture shows the rows, the zone line and the status.
+if (qaDialog() === 'wrapped' && !draft.readOnly.value && Object.keys(form.value.wrapped.releases).length === 0) {
+    form.value.wrapped.releases = { '2026-saison': '2026-11-01T10:00:00+01:00', '2027-saison': '' };
+}
 const liveMaintenance = computed(() => props.editor.payload.maintenance.enabled && props.editor.draft === null);
 </script>
 
@@ -80,7 +97,7 @@ const liveMaintenance = computed(() => props.editor.payload.maintenance.enabled 
         <template v-else-if="pageState === 'loading'">
             <Skeleton class="h-64 w-full rounded-sm" />
             <!-- DQ-622: the three sections at their own heights (versions, force-update text, maintenance). -->
-            <div v-for="height in ['h-237', 'h-219', 'h-313']" :key="height" :class="[height, 'flex flex-col gap-12 rounded-sm border border-line p-16']" aria-hidden="true">
+            <div v-for="height in ['h-237', 'h-219', 'h-313', 'h-219']" :key="height" :class="[height, 'flex flex-col gap-12 rounded-sm border border-line p-16']" aria-hidden="true">
                 <Skeleton shape="text" class="w-200" />
                 <Skeleton shape="text" class="w-480" />
                 <div class="flex gap-12"><Skeleton class="h-40 w-160 rounded-sm" /><Skeleton class="h-40 w-160 rounded-sm" /></div>
@@ -144,6 +161,8 @@ const liveMaintenance = computed(() => props.editor.payload.maintenance.enabled 
                 <p class="text-admin-base text-ink-3">{{ trans('config.remote.bypass') }}</p>
                 <ApprovalNotice v-if="turningOn" test-id="ADM-37.four-eyes" />
             </section>
+
+            <WrappedReleases v-model="form.wrapped.releases" :read-only="draft.readOnly.value" :error-at="draft.errorAt" />
         </template>
     </div>
 </template>

@@ -14,7 +14,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import SharedLayout, {
   unstable_settings,
-} from '@/app/(tabs)/(home,discover,garage,messages,profile)/_layout';
+} from '@/app/(tabs)/(home,discover,garage,shop,profile)/_layout';
 import TabsLayout from '@/app/(tabs)/_layout';
 import { TAB_DESTINATIONS } from '@/features/shell/destinations';
 import { LEGACY_REDIRECTS, LINK_MAP, rewriteLinkedPath, type LinkEntry } from '@/features/shell/linkMap';
@@ -76,12 +76,12 @@ beforeEach(() => {
 });
 
 describe('the tab config (09 §6.1)', () => {
-  it('lists the five tabs of the brief in order, each with its route group', () => {
+  it('lists the five tabs of Navigation 3.0 (10 §1, ADR-501) in order, each with its route group', () => {
     expect(TAB_DESTINATIONS.map((tab) => tab.name)).toEqual([
       'home',
       'discover',
       'garage',
-      'messages',
+      'shop',
       'profile',
     ]);
     for (const tab of TAB_DESTINATIONS) {
@@ -96,20 +96,28 @@ describe('the tab config (09 §6.1)', () => {
       'Start',
       'Entdecken',
       'Garage',
-      'Nachrichten',
+      'Shop',
       'Profil',
     ]);
     expect(TAB_DESTINATIONS.map((tab) => en.tabs[tab.name])).toEqual([
       'Home',
       'Discover',
       'Garage',
-      'Messages',
+      'Shop',
       'Profile',
     ]);
     for (const label of [...Object.values(de.tabs), ...Object.values(en.tabs)]) {
       expect(label.charAt(0)).toBe(label.charAt(0).toUpperCase());
       expect(label.slice(1)).toBe(label.slice(1).toLowerCase());
     }
+  });
+
+  it('gives Shop the bag of 10 §1 on every platform, and Garage keeps its glyph', () => {
+    const shop = TAB_DESTINATIONS.find((tab) => tab.name === 'shop');
+    expect(shop?.sf).toEqual({ default: 'bag', selected: 'bag.fill' });
+    expect(shop?.md).toEqual({ default: 'shopping_bag', selected: 'shopping_bag' });
+    expect(shop?.icon).toBe('bag');
+    expect(TAB_DESTINATIONS.find((tab) => tab.name === 'garage')?.icon).toBe('garage');
   });
 
   it('gives every tab an SF Symbol pair, a Material Symbol pair and the Android PNG pair at all five densities', () => {
@@ -161,11 +169,11 @@ const stand = (id: string) =>
 
 const tree = () => ({
   '(tabs)/_layout': { default: TabsLayout },
-  '(tabs)/(home,discover,garage,messages,profile)/_layout': { default: SharedLayout, unstable_settings },
+  '(tabs)/(home,discover,garage,shop,profile)/_layout': { default: SharedLayout, unstable_settings },
   '(tabs)/(home)/index': stand('home'),
   '(tabs)/(discover)/discover/index': stand('discover'),
   '(tabs)/(garage)/garage/index': stand('garage'),
-  '(tabs)/(messages)/messages/index': stand('messages'),
+  '(tabs)/(shop)/shop/index': stand('shop'),
   '(tabs)/(profile)/profile/index': stand('profile'),
 });
 
@@ -183,26 +191,24 @@ describe('native tabs in the route tree', () => {
       'Start',
       'Entdecken',
       'Garage',
-      'Nachrichten',
+      'Shop',
       'Profil',
     ]);
     expect(screen.queryByTestId('shell.tabbar')).toBeNull();
     expect(useNativeTabBarStore.getState().active).toBe(true);
   });
 
-  it('shows the unread count on Nachrichten and a dot on Start, and names them for screen readers', async () => {
+  it('shows the dot on Start and names it for screen readers; the unread messages count left the bar for the headers (10 §1)', async () => {
     mockBadges.mockReturnValue({ messages: 3, home: true, notifications: 2 });
     await open('/');
     await screen.findByTestId('screen.home');
-    const [home, , , messages] = nativeTabs();
-    expect(messages?.props.badgeValue).toBe('3');
-    expect(home?.props.badgeValue).toBe(' ');
+    const tabs = nativeTabs();
+    expect(tabs[0]?.props.badgeValue).toBe(' ');
+    for (const tab of tabs.slice(1)) expect(tab.props.badgeValue).toBeUndefined();
     const labels = screen.container.queryAll(
       (node) => typeof node.props.tabBarItemAccessibilityLabel === 'string',
     );
-    expect(labels.map((node) => node.props.tabBarItemAccessibilityLabel)).toEqual(
-      expect.arrayContaining(['Start, Neue Mitteilungen', 'Nachrichten, 3\u00A0ungelesen']),
-    );
+    expect(labels.map((node) => node.props.tabBarItemAccessibilityLabel)).toEqual(['Start, Neue Mitteilungen']);
   });
 
   it('hides the bar while an editor asks for it (§9)', async () => {
@@ -321,7 +327,9 @@ describe('the link map (09 §6.5)', () => {
   });
 
   it('leaves the routes of later modules alone until they exist', () => {
-    for (const entry of LINK_MAP.filter((link) => !link.ready)) expect(entry.module).toMatch(/^M4\.\d+$/);
+    for (const entry of LINK_MAP.filter((link) => !link.ready)) expect(entry.module).toMatch(/^M[45]\.\d+[a-z]?$/);
+    // M5.9d: /join/{code} has its route (INV-02); the App Link prefix waits for the lead, so the link map leaves it alone.
+    expect(rewriteLinkedPath('/join/P3WZ6TDK')).toBe('/join/P3WZ6TDK');
     // M4.16: the public event page (WEB-13) exists, so /e/ links open EVT-02.
     expect(rewriteLinkedPath('/e/treffen-hockenheim')).toBe('/events/treffen-hockenheim');
     // M4.6: AUTH-04 links go to AUTH-12; AUTH-05 stays for the password registration's mail.

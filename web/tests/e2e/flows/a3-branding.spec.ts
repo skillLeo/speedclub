@@ -4,9 +4,9 @@
 // admin session (read only). Marke & Theme → a bright photo (bmw-e92-01) is uploaded and refused by the draft with the contrast message
 // → a night photo (nissan-r35-01, passes the ADR-129/151 rule anywhere) with its focal point moved → saved → ADM-34: the frames (mobile
 // and desktop × Carbon, Schwarz, Hell) load the app with the preview token, and the app-config they read carries the draft hero → publish
-// with a reason behind the password dialog → the member web (/app Welcome, a guest context opened before the publish) shows the new hero
+// behind the password dialog (ADR-540: no reason) → the member web (/app Welcome, a guest context opened before the publish) shows the new hero
 // after a forced refetch (a reload sends If-None-Match and gets the new ETag) → ADM-35: the new version against the one before → rollback
-// on the earlier version in a fresh session (one click, a reason, the password) → the old hero is back → audit rows for both.
+// on the earlier version in a fresh session (one click, the password) → the old hero is back → audit rows for both.
 //
 // The live branding is one value for every client, so the two projects never run this at the same time (withFlowLock). Cleanup, inside
 // the lock and whatever the outcome: support/backend.php remove-branding-fixture deletes the versions the fixture made (the published one
@@ -240,13 +240,11 @@ test.describe('A3 branding publish and rollback', () => {
           });
           const newPaths = heroPaths(draftHero);
 
-          const publishReason = `A3 ${browserName}: neues Welcome-Foto zur Saisoneröffnung, R35 bei Nacht`;
-          await test.step('publish with a reason behind the password dialog', async () => {
+          await test.step('publish behind the password dialog', async () => {
             await open(page, '/admin/brand', { now: new Date().toISOString() });
             await id(page, 'ADM-28.publish').click();
             const dialog = id(page, 'ADM-28.publish-dialog');
             await expect(dialog).toBeVisible();
-            await id(page, 'ADM-28.publish-dialog.reason').fill(publishReason);
             await id(page, 'ADM-28.publish-dialog.confirm').click();
             await confirmPassword(page);
             await expect(toast(page, admin('config', 'flash.published'))).toBeVisible();
@@ -277,7 +275,6 @@ test.describe('A3 branding publish and rollback', () => {
             await expect(id(page, 'ADM-35.row')).toHaveCount(before.versions.length + 1);
             const detail = id(page, 'ADM-35.detail');
             await expect(detail).toContainText(admin('content', 'versions.compare', { version: String(draftVersion), previous: String(liveBefore) }));
-            await expect(detail).toContainText(publishReason);
             const diff = id(page, 'ADM-35.diff');
             // DQ-626/DQ-668: in ADM-28's words, never schema keys or asset ids, and only what changed (the welcome photo); the
             // unchanged fields wait behind "Alle Felder anzeigen".
@@ -291,9 +288,8 @@ test.describe('A3 branding publish and rollback', () => {
             await flowShot(page, testInfo, 'ADM-35-brandPublished', { phase: 3 });
           });
 
-          const rollbackReason = `A3 ${browserName}: Foto zurückgezogen, Rechte des Fotografen ungeklärt`;
           let rollbackVersion = 0;
-          await test.step('rollback to the earlier version in a fresh session: one click, a reason, the password', async () => {
+          await test.step('rollback to the earlier version in a fresh session: one click, the password', async () => {
             const second = await browserOf(browser, null, { pageErrors, blockedRequests, expected: [] }, DESKTOP);
             try {
               // A new sign-in has no recent password confirmation (ADR-215), so the rollback must ask for it.
@@ -304,7 +300,6 @@ test.describe('A3 branding publish and rollback', () => {
               await expect(rollback).toHaveText(admin('content', 'versions.rollback', { version: String(liveBefore) }));
               await rollback.click();
               await expect(id(second.page, 'ADM-35.rollback-dialog')).toBeVisible();
-              await id(second.page, 'ADM-35.rollback-dialog.reason').fill(rollbackReason);
               await id(second.page, 'ADM-35.rollback-dialog.confirm').click();
               await confirmPassword(second.page);
               await expect(toast(second.page, admin('config', 'flash.rolled_back'))).toBeVisible();
@@ -312,7 +307,7 @@ test.describe('A3 branding publish and rollback', () => {
               const props = await pageProps<{ versions: { version: number; status: string; reason: string | null }[] }>(second.context, '/admin/content/versions?key=branding');
               const newest = [...props.versions].sort((a, b) => b.version - a.version)[0];
               expect(newest?.status).toBe('published');
-              expect(newest?.reason).toBe(`Rollback auf v${liveBefore}: ${rollbackReason}`);
+              expect(newest?.reason, 'ADR-540: no reason, the rollback label alone').toBe(`Rollback auf v${liveBefore}`);
               rollbackVersion = newest?.version ?? 0;
               await flowShot(second.page, testInfo, 'ADM-35-brandRolledBack', { phase: 3 });
             } finally {
@@ -329,16 +324,18 @@ test.describe('A3 branding publish and rollback', () => {
             await expect.poll(() => photoSources(member.page), { message: 'Welcome shows the hero of before the test', timeout: 30_000 }).toEqual(sourcesBefore);
           });
 
-          await test.step('audit rows: config.published and config.rolled_back by the content editor, with their reasons', async () => {
+          await test.step('audit rows: config.published and config.rolled_back by the content editor (ADR-540: no reason)', async () => {
             const reader = await browser.newContext({ baseURL: BASE_URL });
             try {
               await applyAuth(reader, 'staff-admin');
               const { rows } = await pageProps<{ rows: { data: AuditRow[] } }>(reader, '/admin/audit?filter[action]=config.&per_page=50');
-              const published = rows.data.find((r) => r.action === 'config.published' && r.reason === publishReason);
-              expect(published, 'config.published with the publish reason').toBeDefined();
+              // Newest first: the editor's publish and rollback of this run.
+              const published = rows.data.find((r) => r.action === 'config.published' && r.actor.label === editor.name);
+              expect(published, 'config.published by the editor').toBeDefined();
+              expect(published?.reason ?? null).toBeNull();
               expect(published?.actor.label).toBe(editor.name);
-              const rolledBack = rows.data.find((r) => r.action === 'config.rolled_back' && (r.reason ?? '').includes(rollbackReason));
-              expect(rolledBack, 'config.rolled_back with the rollback reason').toBeDefined();
+              const rolledBack = rows.data.find((r) => r.action === 'config.rolled_back' && r.actor.label === editor.name);
+              expect(rolledBack, 'config.rolled_back by the editor').toBeDefined();
               expect(rolledBack?.actor.label).toBe(editor.name);
               expect(rollbackVersion).toBe(draftVersion + 1);
             } finally {

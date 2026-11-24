@@ -7,7 +7,7 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AI_FLAGS, useTranslateText, type TranslationSource } from '@/api/queries/ai';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 
 import { aiErrorMessage, hidesAiSurface, needsEmailVerification, recordAiFailure } from './availability';
 

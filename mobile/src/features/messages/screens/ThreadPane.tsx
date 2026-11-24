@@ -7,6 +7,7 @@ import { View, type TextInput } from 'react-native';
 
 import { useFlag } from '@/api/queries/appConfig';
 import { pickPhotos, preparePhoto } from '@/features/garage/photos';
+import { usePlateBlurReview } from '@/features/media/plateBlur/PlateBlurReview';
 import { BlockDialog } from '@/features/safety/BlockDialog';
 import { useRestrictionDecision } from '@/features/safety/components/DecisionLink';
 import { conversationTarget, messageTarget } from '@/features/safety/targets';
@@ -16,7 +17,16 @@ import { qa, useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, size, useBreakpoint } from '@/theme';
-import { Composer, Dialog, EmptyState, ErrorState, ImageViewer, KeyboardInsetView, OfflineBanner, Spinner, Text, toast, type ViewerImage } from '@/ui';
+import { Composer } from '@/ui/Composer';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { ImageViewer, type ViewerImage } from '@/ui/ImageViewer';
+import { KeyboardInsetView } from '@/ui/KeyboardInsetView';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { useSafeEdge, useSafeInset } from '@/ui/safeArea';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 import { AI_FLAGS } from '@/api/queries/ai';
@@ -261,6 +271,7 @@ function ThreadView({
   // M2.6: "Melden" on a message of the other member, and "Blockieren und melden" on a request; a block leaves the thread.
   const otherUsername = conversation.other?.username ?? null;
   const report = useReport(null, { routeId, onBlocked: () => onLeave() });
+  const plateBlur = usePlateBlurReview(routeId);
   const restrictionDecision = useRestrictionDecision('messaging');
   const reportMessage = onReport ?? (report.available ? (message: ThreadMessage) => {
     const target = messageTarget(message, otherUsername);
@@ -357,11 +368,13 @@ function ThreadView({
   };
   const sendPhoto = async () => {
     try {
-      const picked = await pickPhotos(1);
-      const photo = picked?.[0];
-      if (!photo || !outbox) return;
+      const chosen = await pickPhotos(1);
+      if (!chosen || chosen.length === 0 || !outbox) return;
+      // M5.9a: the plate blur step before the photo leaves the device.
+      const photo = (await plateBlur.review(chosen, { confirmLabel: t('attach.photoSend') }))?.[0];
+      if (!photo) return;
       const uri = await preparePhoto(photo);
-      outbox.enqueue(id, { kind: 'photo', photo: { uri, width: photo.width, height: photo.height }, mediaId: null });
+      outbox.enqueue(id, { kind: 'photo', photo: { uri, width: photo.width, height: photo.height, plateBlur: photo.plateBlur }, mediaId: null });
       scrollToNewest();
     } catch {
       toast(t('attach.photoFailed'), { haptic: 'warning', testID: `${routeId}.toast` });
@@ -430,7 +443,9 @@ function ThreadView({
   };
 
   let composer: ReactNode;
-  if (request) composer = null;
+  // QA-C06: the composer holds the bottom safe edge (Screen leaves it out). Request mode has no composer, so the end of the thread
+  // keeps that edge clear by itself, as the note in the composer's place does.
+  if (request) composer = <View style={bottom} />;
   else if (waiting || !conversation.canSend) {
     const note = waiting
       ? t('thread.requestPending', { name })
@@ -440,12 +455,14 @@ function ThreadView({
           ? t('thread.restricted')
           : t('thread.closed');
     composer = (
-      <ComposerNote
-        text={note}
-        gutter={gutter}
-        decisionId={!waiting && conversation.cannotSendReason === 'restricted' ? restrictionDecision : null}
-        testID={`${routeId}.${waiting ? 'requestPending' : 'closed'}`}
-      />
+      <View style={bottom}>
+        <ComposerNote
+          text={note}
+          gutter={gutter}
+          decisionId={!waiting && conversation.cannotSendReason === 'restricted' ? restrictionDecision : null}
+          testID={`${routeId}.${waiting ? 'requestPending' : 'closed'}`}
+        />
+      </View>
     );
   } else {
     composer = (
@@ -599,6 +616,7 @@ function ThreadView({
       {header}
       {body}
       {composer}
+      {plateBlur.element}
       <AttachSheet
         visible={attach}
         onClose={() => setAttach(false)}

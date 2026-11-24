@@ -1,4 +1,10 @@
-import { BuildUpdateRowSkeleton, EmptyState, ErrorState, OfflineBanner, Skeleton, SkeletonText, Spinner, VehicleCardSkeleton } from '@/ui';
+import { BuildUpdateRowSkeleton } from '@/ui/BuildUpdateRow';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { VehicleCardSkeleton } from '@/ui/VehicleCard';
 
 import { noop } from '../data';
 import { FullBleed, Group, Panel, SectionScreen, Specimen, Wrap } from '../parts';

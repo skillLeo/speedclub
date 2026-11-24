@@ -7,21 +7,22 @@ import { View } from 'react-native';
 import { useFlag } from '@/api/queries/appConfig';
 import { useCachedCard, useSetMainVehicle, useVehicle } from '@/api/queries/garage';
 import { MAINTENANCE_FLAG } from '@/api/queries/maintenance';
-import { NextHuChip } from '@/features/maintenance/components/NextHuChip';
+import { NextHuChip, useNextHu } from '@/features/maintenance/components/NextHuChip';
 import { myVehiclesKey } from '@/api/queries/profile';
 import { usePublicVehicle } from '@/api/queries/vehicles';
 import { MoreSheet, type MoreAction } from '@/features/vehicle/components/MoreSheet';
 import { StateScreen } from '@/features/vehicle/components/StateScreen';
 import { VehicleProfile } from '@/features/vehicle/components/VehicleProfile';
 import { VehicleProfileSkeleton } from '@/features/vehicle/components/VehicleProfileSkeleton';
-import { isProfileTab, withoutContent, type ProfileTab } from '@/features/vehicle/model';
+import { withoutContent } from '@/features/vehicle/model';
+import { anchorFromParams } from '@/features/vehicle/sections';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
 import { useVehicleShare } from '@/features/vehicle/share';
 import { RouteStateBody, routeStateOf } from '@/features/vehicle/states';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 
 import { GoneState, RestrictedNotice, SignInState, useGarageAccess } from '../components/frames';
 import { CompletenessHints, OwnerEditSheet, ownerCapsuleOf, VisibilityNote } from '../components/OwnerToolbar';
@@ -42,7 +43,7 @@ export function GarageVehicleScreen() {
   const styles = useStyles();
   const router = useRouter();
   const qaState = useQaState();
-  const params = useLocalSearchParams<{ id: string; tab?: string }>();
+  const params = useLocalSearchParams<{ id: string; section?: string; tab?: string }>();
   const id = paramOf(params.id) ?? '';
   const back = useBack('/garage');
   const access = useGarageAccess();
@@ -59,8 +60,10 @@ export function GarageVehicleScreen() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const maintenance = useFlag(MAINTENANCE_FLAG);
-  const tabParam = paramOf(params.tab);
-  const tab = isProfileTab(tabParam) ? tabParam : 'overview';
+  // DQ-M53R2-03: the HU chip only when there is an HU to name (the hook answers null with the flag off or without an HU/AU item).
+  const nextHu = useNextHu(id);
+  // M5.3 (ADR-505): one scroll; `?section=` (or a 2.0 link's `?tab=`) opens GAR-02 at that section.
+  const initialSection = anchorFromParams(paramOf(params.section), paramOf(params.tab));
   const client = useQueryClient();
   // The public page answers 404 for a vehicle deleted elsewhere, or after a delete whose answer was lost, while the owner's copy
   // may still be cached: that copy reads again, and its 404 shows the gone state instead of a connection error.
@@ -115,13 +118,15 @@ export function GarageVehicleScreen() {
   }
 
   const vehicle = qaState === 'empty' ? withoutContent(query.data) : query.data;
+  const visibilityNote = vehicle.status !== 'published' || vehicle.visibility !== 'public';
+  const incomplete = Boolean(vehicle.completeness && !vehicle.completeness.is_complete);
+  const ownerHasContent = Boolean(nextHu) || Boolean(access.restriction) || visibilityNote || incomplete;
   const capsule = ownerCapsuleOf(vehicle, ROUTE, {
     t,
     go: (path) => router.push(path as never),
     onEdit: () => setEditing(true),
     onShare: () => void share(vehicle),
   });
-  const changeTab = (next: ProfileTab) => router.setParams({ tab: next === 'overview' ? undefined : next });
   const moreActions: MoreAction[] = [
     // M4.13 MNT-01: the owner's maintenance of this car (09 §8.8), behind the `maintenance` flag.
     ...(maintenance
@@ -141,7 +146,7 @@ export function GarageVehicleScreen() {
           },
         ]
       : []),
-    ...(vehicle.qr ? [{ key: 'preview', icon: 'eye' as const, label: t('owner.viewPublic'), onPress: () => router.push(`/qr/${vehicle.id}/preview`) }] : []),
+    ...(vehicle.qr ? [{ key: 'preview', icon: 'eye' as const, label: t('owner.viewPublic'), onPress: () => router.push(`/stickers/${vehicle.id}/preview`) }] : []),
     ...(vehicle.status === 'published' && vehicle.visibility !== 'private'
       ? [{ key: 'share', icon: 'share-network' as const, label: t('owner.share'), onPress: () => void share(vehicle) }]
       : []),
@@ -155,19 +160,18 @@ export function GarageVehicleScreen() {
         vehicle={vehicle}
         routeId={ROUTE}
         onBack={back}
-        tab={tab}
-        onTabChange={changeTab}
+        initialSection={initialSection}
         // DQ-1062 (DQ-942): at most two floating controls on the hero, back and "Mehr"; the owner's actions are the capsule.
         headerActions={[{ icon: 'dots-three', label: t('owner.more'), onPress: () => setMoreOpen(true), testID: `${ROUTE}.moreActions` }]}
         capsule={capsule}
         ownerContent={
-          // Only when there is something to say: an empty block would still take the section gap above the description.
-          maintenance || access.restriction || vehicle.status !== 'published' || vehicle.visibility !== 'public' || (vehicle.completeness && !vehicle.completeness.is_complete) ? (
+          // Only when a part has something to say (DQ-M53R2-03): an element that renders nothing still takes the section's first block.
+          ownerHasContent ? (
             <View style={styles.owner}>
-              {maintenance ? <NextHuChip vehicleId={vehicle.id} routeId={ROUTE} /> : null}
+              {nextHu ? <NextHuChip vehicleId={vehicle.id} routeId={ROUTE} /> : null}
               {access.restriction ? <RestrictedNotice message={access.restriction} testID={`${ROUTE}.restricted`} /> : null}
-              <VisibilityNote vehicle={vehicle} routeId={ROUTE} />
-              <CompletenessHints vehicle={vehicle} routeId={ROUTE} />
+              {visibilityNote ? <VisibilityNote vehicle={vehicle} routeId={ROUTE} /> : null}
+              {incomplete ? <CompletenessHints vehicle={vehicle} routeId={ROUTE} /> : null}
             </View>
           ) : undefined
         }

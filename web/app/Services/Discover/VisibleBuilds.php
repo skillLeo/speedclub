@@ -11,6 +11,7 @@ use App\Http\Resources\V1\FeedVehicleResource;
 use App\Models\BuildUpdate;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Dex\GhostMode;
 use App\Services\Showcase\SampleContent;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Query\Builder;
@@ -27,7 +28,8 @@ use Illuminate\Support\Facades\DB;
  *   rebuild (M1.6 handover). A suspension whose end has passed but whose status is still "suspended" stays out of lists until
  *   the status changes: lists fail closed, the vehicle page decides by the date (UserPolicy);
  * - no block in either direction between the viewer and the owner (§3.5);
- * - no sample build or sample owner while editorial_samples is off (09 §8.19, SampleContent).
+ * - no sample build or sample owner while editorial_samples is off (09 §8.19, SampleContent);
+ * - no ghost car (M5.9b, GhostMode).
  *
  * Plain SQL that runs the same on MySQL 8, MariaDB 10.6+ and the local MariaDB 10.4: joins (STRAIGHT_JOIN), NOT EXISTS, LIKE, CASE,
  * COALESCE.
@@ -86,6 +88,9 @@ class VisibleBuilds
             ->whereNotNull('u.email_verified_at');
 
         $this->samples->constrain($query, 'v.is_sample', 'u.is_sample');
+        // M5.9b (m5.9b contract §5): no ghost car in any list, its owner's view of a list included (vehicle_search.is_public is false
+        // for it as well).
+        GhostMode::constrain($query, 'v.ghost_mode');
 
         return $this->withoutBlocks($query, $viewer, 'vs.owner_id');
     }

@@ -17,7 +17,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
 /**
- * WEB-09 /melden (Art. 16(2) DSA): the explanation, the exact location (a URL of a SPEED CLUB public page: /v/, /u/, /c/), the reason,
+ * WEB-09 /melden (Art. 16(2) DSA): the explanation, the exact location (a URL of a Speedclub public page: /v/, /u/, /c/), the reason,
  * optional name and e-mail, and the good-faith statement. Sessionless like the page (ADR-115), so no CSRF token: a cross-site POST is
  * refused by Sec-Fetch-Site or Origin instead, Turnstile checks the visitor when configured, and throttle:reports bounds an address.
  * Errors render the form again with what was typed (422).

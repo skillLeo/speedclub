@@ -17,6 +17,8 @@ use Symfony\Component\HttpFoundation\Response;
  *   data export, which carries the member's messages): 403 `view_as_no_messages`, whatever the method;
  * - any other method than GET, HEAD or OPTIONS: 403 `view_as_read_only`; the one exception is `DELETE api/v1/view-as`, which ends it;
  * - a read of the member's maintenance, service log, odometer or private cost totals (M4.13 ruling, ADR-441): 403 `view_as_private`;
+ * - a read of a live code (SEC-P5-11): the organiser's check-in code (reading it issues one) and the sticker preview and print files
+ *   (they carry the sticker code): 403 `view_as_private`;
  * - first of all, a token whose staff member is no longer active: 401 `unauthenticated` (SEC-P3-07).
  *
  * Writers that run on GETs skip a view-as request themselves (ViewAs::active(): activity counters, QR scans, reset codes).
@@ -40,6 +42,13 @@ class RestrictViewAs
         'api/v1/vehicles/*/maintenance-logs', 'api/v1/vehicles/*/maintenance-logs/*',
         'api/v1/vehicles/*/costs', 'api/v1/vehicles/*/odometer',
         'api/v1/maintenance-media/*',
+    ];
+
+    /** SEC-P5-11: reads that issue or carry a live code, which view-as never shows. */
+    public const CODE_PATHS = [
+        'api/v1/events/*/checkin-code',
+        'api/v1/sticker-designs/*/preview.svg',
+        'api/v1/sticker-designs/*/print.svg', 'api/v1/sticker-designs/*/print.pdf', 'api/v1/sticker-designs/*/print.png',
     ];
 
     /**
@@ -66,7 +75,7 @@ class RestrictViewAs
             throw new ApiException(ErrorCode::ViewAsReadOnly);
         }
 
-        if ($request->is(...self::PRIVATE_PATHS)) {
+        if ($request->is(...self::PRIVATE_PATHS, ...self::CODE_PATHS)) {
             throw new ApiException(ErrorCode::ViewAsPrivate);
         }
 

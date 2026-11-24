@@ -9,7 +9,11 @@ import type { FeedVehicle } from '@/api/queries/home';
 import { BuildWallSkeleton, wallCellWidth, wallRows, WallRow, WALL_GAP } from '@/features/discover/components/BuildWall';
 import { createStyles } from '@/theme';
 import { SampleWall } from '@/features/discover/components/SampleWall';
-import { Button, EmptyState, SectionHeader, Skeleton, SkeletonText, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import { useGarageEntry } from './useGarageEntry';
 

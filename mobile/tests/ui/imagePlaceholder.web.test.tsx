@@ -4,6 +4,7 @@
  */
 import { screen } from '@testing-library/react-native';
 
+import { StickerStage } from '@/features/qr/components/StickerStage';
 import { blurhashToDataUrl, clearBlurhashCache } from '@/lib/blurhash';
 import { hydrateThemePreference } from '@/theme';
 import { Avatar } from '@/ui/Avatar';
@@ -73,6 +74,19 @@ describe('image placeholder on web', () => {
     const image = screen.getByTestId('a.image', { includeHiddenElements: true });
     expect(JSON.stringify(image.props.placeholder)).toContain(url);
     expect(JSON.stringify(image.props.placeholder)).not.toContain('blurhash:/');
+    expect(image.props.placeholderContentFit).toBe('cover');
+  });
+
+  it('StickerStage hands expo-image the data URL for the car behind the sticker (E2E P5 rerun: F2 step 4 left STK-02 in WebKit)', async () => {
+    const url = warm(HASH);
+    await renderUi(
+      <StickerStage cover={{ source: 'https://x/cover.webp', blurhash: HASH }} testID="STK-02.stage">
+        {null}
+      </StickerStage>,
+    );
+    const image = screen.getByTestId('STK-02.stage.backdrop', { includeHiddenElements: true });
+    expect(JSON.stringify(image.props.placeholder)).toContain(url);
+    expect(JSON.stringify(image.props.placeholder)).not.toContain('blurhash');
     expect(image.props.placeholderContentFit).toBe('cover');
   });
 });

@@ -2,13 +2,13 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { useMe } from '@/api/queries/auth';
-import { Button } from '@/ui';
+import { Button } from '@/ui/Button';
 
 /**
  * The decision behind a restriction in force (`MeResource.restrictions.<kind>.decision_id`, a suspension's while suspended), so a
  * restricted screen can link to its statement of reasons. Null without one.
  */
-export function useRestrictionDecision(kind: 'messaging' | 'publishing'): string | null {
+export function useRestrictionDecision(kind: 'messaging' | 'publishing' | 'forum'): string | null {
   const restrictions = useMe().data?.restrictions;
   return restrictions?.[kind].decision_id ?? null;
 }

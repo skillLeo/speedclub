@@ -4,7 +4,7 @@
     "groups": {
         "app": "App",
         "legal": "Legal",
-        "about": "About SPEED CLUB",
+        "about": "About Speedclub",
         "privacy": "Privacy",
         "account": "Account",
         "security": "Account & security",
@@ -39,7 +39,8 @@
         "reminders": "Garage & reminders",
         "business": "For businesses",
         "membership": "Membership",
-        "whatsNew": "What's new"
+        "whatsNew": "What's new",
+        "invites": "Invite friends"
     },
     "version": "{{version}} (build {{build}})",
     "signOut": {
@@ -51,7 +52,7 @@
     },
     "appearance": {
         "title": "Appearance",
-        "intro": "Choose how SPEED CLUB looks. Your choice applies right away.",
+        "intro": "Choose how Speedclub looks. Your choice applies right away.",
         "groupLabel": "Appearance",
         "offline": "Offline – your choice still applies right away on this device.",
         "noteSynced": "Applies on this device and is saved to your account.",
@@ -235,7 +236,7 @@
         "downloadFailed": "The file couldn't be saved. Copy the codes instead.",
         "codesSaved": "I've saved them",
         "codesDone": "Done",
-        "codesFileHeading": "SPEED CLUB – recovery codes",
+        "codesFileHeading": "Speedclub – recovery codes",
         "codesFileUsage": "Each code works exactly once. Use it when signing in instead of the code from your app. Keep this file somewhere safe.",
         "newCodes": "New recovery codes",
         "newCodesTitle": "New recovery codes",
@@ -296,7 +297,7 @@
         "discoverableHelper": "Off: you don't appear in search, in “Active members” or in suggestions. Your profile stays reachable through a link.",
         "indexable": "Let search engines find me",
         "indexableHelper": "Off: search engines are asked not to list your profile and vehicle pages, and we remove them from our sitemap at once. Existing results disappear when the search engine visits the page again.",
-        "ownerOnQr": "Show owner on the QR page",
+        "ownerOnQr": "Show owner on the sticker page",
         "ownerOnQrHelper": "Off: your name isn't shown on your vehicle pages, in feeds or on new sticker PDFs. Only you see it.",
         "readReceipts": "Send read receipts",
         "readReceiptsHelper": "Off: others don't see when you've read their messages.",
@@ -306,7 +307,7 @@
         "offlineBanner": "Offline – you're seeing the settings as last loaded.",
         "aiGroup": "AI",
         "aiSuggestions": "AI suggestions",
-        "aiSuggestionsHelper": "Suggestions for search, mod details, photo categories and your vehicle description, each marked “AI suggestion”. You decide what to use. For this, the text or photo goes to our AI provider Anthropic as a processor (details in the privacy policy). You start each translation yourself.",
+        "aiSuggestionsHelper": "Suggestions for search, mod details, photo categories, typical factory specs, catalogue products and your vehicle description, each marked “AI suggestion”. You decide what to use. For this, the text or photo goes to our AI provider Anthropic as a processor (details in the privacy policy). You start each translation yourself.",
         "mentionsGroup": "Mentions",
         "mentionPrivacy": "Who can mention me",
         "mention": {
@@ -316,7 +317,10 @@
             "followersHelper": "Only members who follow you can mention you. For everyone else your name stays plain text.",
             "nobody": "Nobody",
             "nobodyHelper": "Nobody can mention you. Your name stays plain text and you get no notification."
-        }
+        },
+        "spotsGroup": "Spots",
+        "showMySpots": "Show my spots",
+        "showMySpotsHelper": "When you spot a car, its owner sees your name. With this off, owners only see “someone”."
     },
     "notifications": {
         "title": "Notifications",
@@ -350,7 +354,29 @@
             "hu_au_reminder": "Inspection, service & more",
             "hu_au_reminderHelper": "At the lead times of your maintenance items: inspection, service, tyre change, insurance.",
             "hu_au_reminderEmail": "Due dates by email",
-            "hu_au_reminderEmailHelper": "An extra email with every reminder."
+            "hu_au_reminderEmailHelper": "An extra email with every reminder.",
+            "spot_alert": "Your car was spotted",
+            "spot_alertHelper": "At most once a day, grouped: how often and, where allowed, in which city.",
+            "badge_unlocked": "New badges",
+            "badge_unlockedHelper": "You always see new badges in the app. This is only about push.",
+            "car_of_the_day": "Car of the Day",
+            "car_of_the_dayHelper": "The car of the day at 6 pm.",
+            "car_of_the_day_owner": "Your car is Car of the Day",
+            "car_of_the_day_ownerHelper": "When your car has been picked.",
+            "invite_accepted": "Redeemed invites",
+            "invite_acceptedHelper": "When someone signs up with your code.",
+            "event_nearby": "New meets near you",
+            "event_nearbyHelper": "Once a week on Thursday, only when new meets were added in your region.",
+            "event_nearbyEmail": "New meets near you by email",
+            "event_nearbyEmailHelper": "The week’s new meets as a short email.",
+            "event_nearbyNoRegion": "Set your region in Language & units so we know what’s near you.",
+            "event_nearbyRegion": "Set region",
+            "forum_reply": "Forum replies",
+            "forum_replyHelper": "To your topics, to your replies and in topics you subscribed to. At most one notification every 30 minutes.",
+            "forum_mention": "Forum mentions",
+            "forum_mentionHelper": "When someone mentions you in a post.",
+            "forum_solved": "Your reply is the solution",
+            "forum_solvedHelper": "When someone marks your reply as the solution."
         },
         "previewGroup": "Preview",
         "previews": "Message text in push notifications",
@@ -369,21 +395,28 @@
             "builds": "Builds & community",
             "messages": "Messages",
             "events": "Meets",
-            "garage": "Due dates"
+            "garage": "Due dates",
+            "spots": "Spots",
+            "badges": "Badges",
+            "carOfTheDay": "Car of the Day",
+            "invites": "Invites",
+            "forum": "Forum"
         },
         "webPush": {
             "group": "In this browser",
             "title": "Browser notifications",
-            "helperOff": "Notifications here in the browser too, while SPEED CLUB is closed.",
+            "helperOff": "Notifications here in the browser too, while Speedclub is closed.",
             "helperOn": "This browser gets notifications. Choose which ones below.",
-            "helperDenied": "You blocked notifications for SPEED CLUB in this browser. Allow them in the site settings (the icon left of the address), then come back here.",
-            "helperInstall": "On iPhone, notifications only reach the app on your home screen: in Safari, tap “Share”, choose “Add to Home Screen” and open SPEED CLUB from there.",
+            "helperDenied": "You blocked notifications for Speedclub in this browser. Allow them in the site settings (the icon left of the address), then come back here.",
+            "helperInstall": "On iPhone, notifications only reach the app on your home screen: in Safari, tap “Share”, choose “Add to Home Screen” and open Speedclub from there.",
             "helperUnsupported": "This browser cannot show notifications.",
             "helperUnavailable": "Browser notifications are coming soon. Until then, you'll find everything in the app.",
             "noWorker": "The browser is not ready yet. Reload the page and try again.",
             "typesNote": "These switches are for notifications in the browser. Set up the app on your phone in the app.",
             "phoneNote": "The switches below are for the app on your phone until you turn on browser notifications."
-        }
+        },
+        "socialLimit": "Of these push notifications you get at most one a day and none between 10 pm and 8 am; your own quiet hours apply on top. When your car is Car of the Day, we still tell you – but never between 10 pm and 8 am either. You'll find everything else in the app.",
+        "giftParent": "Spots, badges, Car of the Day and invites"
     },
     "language": {
         "title": "Language & units",
@@ -418,7 +451,7 @@
     },
     "export": {
         "title": "Export my data",
-        "intro": "You get a ZIP file with everything you've stored on SPEED CLUB. We put it together in the background, usually within a few minutes, and then email you a link. The link is valid for 7 days. You can request one export every 24 hours.",
+        "intro": "You get a ZIP file with everything you've stored on Speedclub. We put it together in the background, usually within a few minutes, and then email you a link. The link is valid for 7 days. You can request one export every 24 hours.",
         "contentsGroup": "What's included",
         "contents": {
             "profile": "Profile, settings and your consents",
@@ -467,7 +500,7 @@
         "consequencesTitle": "What happens",
         "consequences": {
             "hidden": "Right away: your profile and all your vehicles are no longer visible to anyone.",
-            "stickers": "Right away: your QR stickers no longer lead to your vehicles. Anyone who scans them sees that the code is no longer active.",
+            "stickers": "Right away: your stickers no longer lead to your vehicles. Anyone who scans them sees that the code is no longer active.",
             "signedOut": "Right away: you're signed out on every device and can't sign in again.",
             "social": "Right away: your follows and followers are removed.",
             "messages": "People you've messaged keep the conversation. Instead of your name, it then shows “Deleted member”.",
@@ -493,7 +526,7 @@
     "deleted": {
         "header": "Account deleted",
         "title": "Your account is deactivated",
-        "body": "You're signed out. Your profile and vehicles are no longer visible, and your QR codes no longer work. Within 30 days we permanently delete your data.",
+        "body": "You're signed out. Your profile and vehicles are no longer visible, and your stickers no longer work. Within 30 days we permanently delete your data.",
         "mail": "We've sent you a confirmation by email.",
         "home": "Go to Home",
         "export": "Did you request an export beforehand? The link in the email works for up to 7 days."
@@ -511,7 +544,10 @@
         "emptyBody": "Once the first help articles are published, you'll find them here.",
         "notFoundTitle": "This article doesn't exist",
         "notFoundBody": "The link may be outdated. The list has all articles.",
-        "toList": "Go to Help"
+        "toList": "Go to Help",
+        "introGroup": "Getting started",
+        "introRow": "View the introduction",
+        "introHint": "The four pages from your start again: Speedclub, garage, sticker and community."
     },
     "contact": {
         "title": "Contact support",
@@ -520,7 +556,7 @@
         "categories": {
             "account": "Account & sign-⁠in",
             "vehicle": "Vehicles & photos",
-            "qr": "QR stickers",
+            "qr": "Stickers",
             "messaging": "Messages",
             "safety": "Safety & reports",
             "other": "Something else"
@@ -549,7 +585,7 @@
         "accept": "Agree and continue",
         "decline": "Decline",
         "declineTitle": "Sign out without agreeing?",
-        "declineBody": "Without your agreement you can’t keep using SPEED CLUB, so we’ll sign you out. Your account and your builds stay, and you can agree the next time you sign in.",
+        "declineBody": "Without your agreement you can’t keep using Speedclub, so we’ll sign you out. Your account and your builds stay, and you can agree the next time you sign in.",
         "back": "Back",
         "signOut": "Sign out",
         "outdated": "A newer version has just come out. Please read it and agree again.",
@@ -593,9 +629,9 @@
             "rateLimited": "You have sent five messages to support in the last hour. Try again in {{wait}}.",
             "rateLimitedLater": "You have sent five messages to support in the last hour. Try again later."
         },
-        "sampleSubject": "My QR sticker will not scan",
+        "sampleSubject": "My sticker will not scan",
         "sampleReference": "SC-20WB940H",
-        "sampleTopic": "QR sticker",
+        "sampleTopic": "Sticker",
         "sampleDate": "28/10/2026"
     },
     "signIn": {
@@ -604,6 +640,7 @@
         "methods": "Sign-in methods",
         "emailCode": "Email code",
         "alwaysOn": "Always on",
+        "codeOff": "Off for now",
         "password": "Password",
         "passwordSet": "Set",
         "passwordNotSet": "Not set",
@@ -661,7 +698,7 @@
         "title": "Security activity",
         "intro": "What happened in your account over the last 12 months. If you don't recognise something, tap “This wasn't me”.",
         "thisDevice": "this device",
-        "byStaff": "by the SPEED CLUB team",
+        "byStaff": "by the Speedclub team",
         "when": "{{date}}, {{time}}",
         "approxCity": "near {{city}}",
         "notMe": "This wasn't me",
@@ -727,7 +764,7 @@
             "face": "Lock with face unlock",
             "passcode": "Lock with device passcode"
         },
-        "toggleHelper": "SPEED CLUB checks it's you when it opens. You can always sign out.",
+        "toggleHelper": "Speedclub checks it's you when it opens. You can always sign out.",
         "afterTitle": "Lock after",
         "after": {
             "0": "Immediately",
@@ -746,12 +783,12 @@
         },
         "errorTitle": "The app lock couldn't be checked",
         "confirmPrompt": "Turn on app lock",
-        "prompt": "Unlock SPEED CLUB",
+        "prompt": "Unlock Speedclub",
         "cancel": "Cancel",
         "enabled": "App lock is on.",
         "failed": "That didn't work. Try again.",
         "invalidated": "For security reasons, please sign in again.",
-        "lockedTitle": "SPEED CLUB is locked",
+        "lockedTitle": "Speedclub is locked",
         "lockedBody": {
             "faceId": "Unlock with Face ID.",
             "touchId": "Unlock with Touch ID.",
@@ -765,7 +802,7 @@
     "identity": {
         "caption": "Account, security & sign-in"
     },
-    "footer": "SPEED CLUB {{version}} (Build {{build}})",
+    "footer": "Speedclub {{version}} (Build {{build}})",
     "cache": {
         "row": "Clear cache",
         "hint": "Photos and stored pages. Drafts stay.",
@@ -833,7 +870,8 @@
             "contact": "support contact ticket request",
             "reports": "reports decisions appeal moderation",
             "legal": "legal notice imprint privacy terms licences",
-            "whatsNew": "news updates release notes new"
+            "whatsNew": "news updates release notes new",
+            "invites": "Invite invitation code friends crew"
         }
     },
     "appIcon": {
@@ -854,6 +892,16 @@
         "version": "Version {{version}}",
         "installed": "On this device: version {{version}} (build {{build}}).",
         "items": {
+            "plates": "Blur number plates",
+            "platesBody": "Mark number plates on your photos; only the blurred version is public.",
+            "dex": "STREET DEX",
+            "dexBody": "Scan the Speedclub sticker on a car and add it to your Dex, with the city rather than the exact place.",
+            "score": "Build Score",
+            "scoreBody": "Points for how complete, documented and well-kept your build is, never for horsepower or speed.",
+            "levels": "Levels, badges and Car of the Day",
+            "levelsBody": "XP by fixed rules, badges to collect and a community car on Home every day.",
+            "wrapped": "Season Wrapped",
+            "wrappedBody": "Your season as cards: spots, scans, Build Score and more, to tap through and share.",
             "look": "A new look",
             "lookBody": "Full-width photos, a typeface of its own for car names and numbers, calmer motion.",
             "signIn": "Sign in with an email code",
@@ -882,8 +930,8 @@
             "settingsV1Body": "Decide who may message you and which notifications you get.",
             "garageV1": "Your digital garage",
             "garageV1Body": "Add a vehicle, its photos, data and mods.",
-            "qr": "QR sticker",
-            "qrBody": "A QR code for your car that leads straight to its build page.",
+            "qr": "Sticker",
+            "qrBody": "A sticker with a QR code for your car that leads straight to its build page.",
             "publicPage": "Public build page",
             "publicPageBody": "Anyone who scans the sticker sees your build – no app needed."
         }
@@ -896,13 +944,13 @@
     },
     "membership": {
         "soon": "Coming soon",
-        "plan": "SPEED CLUB membership",
+        "plan": "Speedclub membership",
         "lead": "Extra features for your garage and your profile, as an optional add-on.",
         "perksTitle": "What it could include",
         "perks": {
             "garage": "More room in your garage",
             "garageBody": "More vehicles than a free account has.",
-            "stickers": "More QR sticker designs",
+            "stickers": "More sticker designs",
             "stickersBody": "Extra designs for the sticker on your car.",
             "costs": "Build cost overview",
             "costsBody": "What your build has cost so far, by area. Only you can see it.",

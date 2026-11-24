@@ -18,7 +18,10 @@ import { settleRecentAuth, useRecentAuthStore } from '@/api/queries/recentAuth';
 import { fetchReauthPasskeyOptions, startReauthCode, useReauthenticate } from '@/api/queries/security';
 import { haptics } from '@/lib/haptics';
 import { createStyles } from '@/theme';
-import { Button, Sheet, Text, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 import { slot, SlotText } from '@/ui/SlotText';
 import { identifierText } from '@/ui/textBreaks';
 
@@ -27,7 +30,7 @@ import { FormNotice } from './components/FormNotice';
 import { maskEmail, newAttemptId } from './emailAttempt';
 import { formatClock, formatWait, isCode, useCountdown } from './forms';
 import { getPasskey, isPasskeyCancelled, passkeysAvailable } from './providers/passkeys';
-import { CODE_LENGTH } from './schemas';
+import { CODE_LENGTH } from './limits';
 
 const ROUTE = 'REAUTH';
 

@@ -45,12 +45,16 @@
                     "url": "string"
                 }
             ],
-            "created_at": "string"
+            "created_at": "string",
+            "plate_blur": {
+                "state": "string"
+            }
         },
         "photo_count": "int",
         "mod_count": "int",
         "updates_count": "int",
         "is_sample": "bool",
+        "build_score": "null",
         "published_at": "string",
         "updated_at": "string",
         "wizard": "null",
@@ -79,6 +83,11 @@
         "description": "string",
         "cover_media_id": "null",
         "hu_au_due": "null",
+        "ghost_mode": "bool",
+        "spotting_paused": "bool",
+        "hide_spot_cities": "bool",
+        "build_goal": "null",
+        "dex_number": "null",
         "photos": [
             {
                 "id": "string",
@@ -99,7 +108,10 @@
                         "url": "string"
                     }
                 ],
-                "created_at": "string"
+                "created_at": "string",
+                "plate_blur": {
+                    "state": "string"
+                }
             }
         ],
         "share_card_url": "null",
@@ -117,7 +129,8 @@
             "torque_nm": "int",
             "torque_source": "string",
             "drivetrain": "string",
-            "gearbox": "string"
+            "gearbox": "string",
+            "ai_fields": []
         }
     }
 }

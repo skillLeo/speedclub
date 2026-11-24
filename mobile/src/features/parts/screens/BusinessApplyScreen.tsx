@@ -32,6 +32,8 @@ import { ChoiceChips, FieldNote, FieldPair, FormGroup, PickerField, SwitchRow } 
 import { OptionSheet } from '@/features/garage/components/OptionSheet';
 import { photoForm, pickPhotos, preparePhoto, releasePicked } from '@/features/garage/photos';
 import type { PickedPhoto } from '@/state/uploads';
+import { appendPlateBlur, type WithPlateBlur } from '@/features/media/plateBlur/model';
+import { usePlateBlurReview } from '@/features/media/plateBlur/PlateBlurReview';
 import { photoFields } from '@/features/profile/media';
 import { useHideTabBar } from '@/features/shell/tabBarLayout';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
@@ -41,22 +43,20 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import {
-  Button,
-  Checkbox,
-  Chip,
-  Dialog,
-  EmptyState,
-  Header,
-  OfflineBanner,
-  Photo,
-  Progress,
-  Screen,
-  StatusPill,
-  Text,
-  TextInput,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { Checkbox } from '@/ui/Checkbox';
+import { Chip } from '@/ui/Chip';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { Header } from '@/ui/Header';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Photo } from '@/ui/Photo';
+import { Progress } from '@/ui/Progress';
+import { Screen } from '@/ui/Screen';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 
 
 import { DAY_KEYS, dayLabel, type DayKey } from '../model';
@@ -280,7 +280,8 @@ function saveNotice(t: (key: string, options?: Record<string, unknown>) => strin
   return error.message || t('apply.failed');
 }
 
-type PickedMedia = { logo: PickedPhoto | null; cover: PickedPhoto | null };
+/** M5.9a: the cover carries its plate blur choice; the logo is sent without one (contract §1). */
+type PickedMedia = { logo: PickedPhoto | null; cover: WithPlateBlur<PickedPhoto> | null };
 
 function BusinessForm({ business, restricted, onDone }: { business: MyBusiness | null; restricted: boolean; onDone: (business: MyBusiness) => void }) {
   const { t } = useTranslation('parts');
@@ -299,6 +300,7 @@ function BusinessForm({ business, restricted, onDone }: { business: MyBusiness |
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [media, setMedia] = useState<PickedMedia>({ logo: null, cover: null });
+  const plateBlur = usePlateBlurReview(ROUTE);
   const createKey = useRef(newIdempotencyKey());
   const mediaKeys = useRef({ logo: newIdempotencyKey(), cover: newIdempotencyKey() });
   const save = useSaveBusiness();
@@ -335,7 +337,8 @@ function BusinessForm({ business, restricted, onDone }: { business: MyBusiness |
       if (!picked) continue;
       try {
         const prepared = await preparePhoto(picked);
-        await upload.mutateAsync({ kind, form: await photoForm(prepared), idempotencyKey: mediaKeys.current[kind] });
+        const choice = kind === 'cover' ? media.cover?.plateBlur : undefined;
+        await upload.mutateAsync({ kind, form: appendPlateBlur(await photoForm(prepared), choice), idempotencyKey: mediaKeys.current[kind] });
         releasePicked(picked);
         setMedia((current) => ({ ...current, [kind]: null }));
       } catch {
@@ -379,8 +382,14 @@ function BusinessForm({ business, restricted, onDone }: { business: MyBusiness |
   };
 
   const pick = async (kind: 'logo' | 'cover') => {
-    const picked = (await pickPhotos(1))?.[0];
-    if (!picked) return;
+    const chosen = (await pickPhotos(1))?.[0];
+    if (!chosen) return;
+    // A cover can show a car: the plate blur step first (M5.9a). A logo goes as it is.
+    const picked = kind === 'cover' ? (await plateBlur.review([chosen]))?.[0] : chosen;
+    if (!picked) {
+      releasePicked(chosen);
+      return;
+    }
     const before = media[kind];
     if (before) releasePicked(before);
     mediaKeys.current[kind] = newIdempotencyKey();
@@ -427,6 +436,7 @@ function BusinessForm({ business, restricted, onDone }: { business: MyBusiness |
       {step === 'finish' ? (
         <FinishStep control={form.control} creating={creating} business={business} media={media} onPick={(kind) => void pick(kind)} />
       ) : null}
+      {plateBlur.element}
     </EditorForm>
   );
 }

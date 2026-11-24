@@ -11,7 +11,7 @@ final class UsernameAvailability
     /**
      * Null means available. A member's own current name counts as available for them.
      */
-    public function reason(string $username, ?User $member = null): ?UsernameUnavailableReason
+    public function reason(string $username, ?User $member = null, bool $staff = false): ?UsernameUnavailableReason
     {
         $normalized = Username::normalize($username);
 
@@ -19,7 +19,7 @@ final class UsernameAvailability
             return null;
         }
 
-        $violations = Username::violations($normalized);
+        $violations = Username::violations($normalized, $staff);
 
         if ($violations !== []) {
             return UsernameUnavailableReason::from($violations[0]);

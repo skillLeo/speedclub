@@ -35,7 +35,7 @@ use Inertia\Response;
  */
 class MemberShowController extends Controller
 {
-    public const TABS = ['overview', 'vehicles', 'security', 'reports', 'messages', 'audit', 'privacy'];
+    public const TABS = ['overview', 'vehicles', 'wrapped', 'security', 'reports', 'messages', 'audit', 'privacy'];
 
     public function __invoke(Request $request, string $member, MemberRecord $record, VehiclePresenter $presenter): Response
     {
@@ -54,7 +54,11 @@ class MemberShowController extends Controller
                 'deleted' => $user->trashed(),
             ],
             'tab' => $tab,
+            // SEC-P5G-05: the earned badges on Übersicht, with "Entziehen" for moderation.decide.
+            'badges' => $panel('overview', fn (): array => MemberBadgesPanel::for($user, $staff)),
             'vehicles' => $panel('vehicles', fn (): array => self::vehicles($user, $presenter)),
+            // M5.9e: the member's Season Wrapped (support.view; the first view of a season a day is audited).
+            'wrapped' => $panel('wrapped', fn (): ?array => $staff->can(MemberWrappedPanel::VIEW_ATOM) ? MemberWrappedPanel::for($user, $staff, $request->query('season')) : null),
             'security' => $panel('security', fn (): array => [...$record->security($user), ...MemberSecurityPanel::for($user)]),
             'reports' => $panel('reports', fn (): array => $record->reports($user)),
             'messages' => $panel('messages', fn (): ?array => $staff->can('members.message_metadata') ? $record->messageMetadata($user, $staff) : null),
@@ -75,6 +79,7 @@ class MemberShowController extends Controller
         return match ($tab) {
             'messages' => $staff->can('members.message_metadata') ? $tab : 'overview',
             'audit' => $staff->can('audit.view') ? $tab : 'overview',
+            'wrapped' => $staff->can(MemberWrappedPanel::VIEW_ATOM) ? $tab : 'overview',
             default => $tab,
         };
     }

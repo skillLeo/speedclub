@@ -5,7 +5,8 @@ import { StyleSheet, View } from 'react-native';
 import { isWeb } from '@/lib/platform';
 import { dropBareReturnTo, keepReturnTo, useSessionStore } from '@/state/session';
 import { createStyles, size, useBreakpoint } from '@/theme';
-import { Icon, Text } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 import { RowBody, useStacksAtFontScale } from '@/ui/rowParts';
 import { useSafeEdge } from '@/ui/safeArea';
 

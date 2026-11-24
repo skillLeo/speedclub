@@ -9,7 +9,8 @@ import { TabBarOverlayContext, useTabBarPadding } from '@/features/shell/tabBarL
 import { isWeb } from '@/lib/platform';
 import { createStyles, layout, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import { Header, Screen, type HeaderAction } from '@/ui';
+import { Header, type HeaderAction } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
 import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 import { NO_BROWSER_OUTLINE, useFocusRing } from '@/ui/useFocusRing';
 

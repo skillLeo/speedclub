@@ -77,7 +77,7 @@ return new class extends Migration
         ],
     ];
 
-    public const REASON = 'Phase-4-Entwürfe (M4.18, OA-35): neue Funktionen in Datenschutz, AGB, Community-Richtlinien und Impressum. Entwurf, rechtliche Prüfung ausstehend; keine erneute Zustimmung.';
+    public const REASON = 'Neue Funktionen beschrieben: Anmeldung ohne Passwort, Kontosicherheit, Treffen, Karten, Betriebe und Teile, Web-App mit Push, Vorschaubilder und Fehlerberichte. Entwurf, rechtliche Prüfung ausstehend; keine erneute Zustimmung.';
 
     public function up(): void
     {

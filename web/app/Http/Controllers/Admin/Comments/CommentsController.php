@@ -21,9 +21,9 @@ use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 /**
- * ADM-60 Kommentare (09 §8.5, §10.3; M4.17): every comment under build updates, newest first, with where it stands (reply or not, the
- * build), its author, its open report case and its status. Filters q (text or @author), status (sichtbar, entfernt, gelöscht) and
- * reported (an open case). Read-only: a comment is taken down through its DSA case on ADM-21 (statement of reasons, notices, appeal), so
+ * ADM-60 Kommentare (09 §8.5, §10.3; M4.17): every comment under build updates and (R5-5) on cars themselves, newest first, with
+ * where it stands (reply or not, on the car or under an update, the build), its author, its open report case and its status. Filters q
+ * (text or @author), status (sichtbar, entfernt, gelöscht) and reported (an open case). Read-only: a comment is taken down through its DSA case on ADM-21 (statement of reasons, notices, appeal), so
  * a row links its open case. The `build_comments` flag is off at launch (09 §3.2); the page says whether members can comment now.
  * moderation.view; the text is shown as written (it is public content where the flag is on).
  */
@@ -85,15 +85,18 @@ class CommentsController extends Controller
         $cases = ModerationCase::query()->where('target_type', ReportTargetType::Comment->value)->whereIn('target_id', $ids)
             ->whereIn('status', array_map(fn (CaseStatus $status): string => $status->value, array_filter(CaseStatus::cases(), fn (CaseStatus $status): bool => $status->isOpen())))
             ->orderBy('created_at')->get(['id', 'target_id'])->groupBy('target_id');
+        // R5-5: a comment on the car itself names its car; one under an update, the update's.
         $vehicles = Comment::query()->withTrashed()->whereIn('comments.id', $ids)
-            ->join('build_updates', 'build_updates.id', '=', 'comments.build_update_id')
-            ->pluck('build_updates.vehicle_id', 'comments.id');
+            ->leftJoin('build_updates', 'build_updates.id', '=', 'comments.build_update_id')
+            ->selectRaw('comments.id, COALESCE(comments.vehicle_id, build_updates.vehicle_id) as thread_vehicle_id')
+            ->pluck('thread_vehicle_id', 'comments.id');
 
         return array_map(fn (Comment $comment): array => [
             'id' => $comment->id,
             'body' => Str::limit($comment->body, self::EXCERPT),
             'author' => ['id' => $comment->user_id, 'username' => $comment->user?->username],
             'reply' => $comment->parent_id !== null,
+            'on' => $comment->isOnVehicle() ? 'vehicle' : 'build_update',
             'vehicle_id' => $vehicles[$comment->id] ?? null,
             'status' => $comment->trashed() ? 'deleted' : $comment->status->value,
             'case_id' => $cases->get($comment->id)?->first()?->id,

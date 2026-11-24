@@ -101,7 +101,7 @@ test.describe('F3 modifications', () => {
     const guest = await browser.newContext();
     try {
       const stranger = await guest.newPage();
-      await stranger.goto(qaUrl(`/app/v/${vehicle.slug}?tab=history`));
+      await stranger.goto(qaUrl(`/app/v/${vehicle.slug}?section=history`));
       await expect(stranger.locator(`[data-testid="VEH-01.update.${update.id}"]:visible`)).toContainText('BBS LM');
       await stranger.goto(qaUrl(`/app/v/${vehicle.slug}/mods/${mods[0].id}`));
       await expect(stranger.locator('[data-testid="VEH-02.title"]:visible')).toHaveText('BBS LM');
@@ -122,7 +122,7 @@ test.describe('F3 modifications', () => {
     const guest = await browser.newContext();
     try {
       const stranger = await guest.newPage();
-      await stranger.goto(qaUrl(`/app/v/${vehicle.slug}?tab=history`));
+      await stranger.goto(qaUrl(`/app/v/${vehicle.slug}?section=history`));
       await expect(stranger.locator(`[data-testid="VEH-01.update.${update.id}"]:visible`)).toContainText('BBS LM');
 
       // The owner hides the entry in GAR-11: gone for the stranger, still listed for the owner.
@@ -140,7 +140,7 @@ test.describe('F3 modifications', () => {
       const another = await browser.newContext();
       try {
         const next = await another.newPage();
-        await next.goto(qaUrl(`/app/v/${vehicle.slug}?tab=history`));
+        await next.goto(qaUrl(`/app/v/${vehicle.slug}?section=history`));
         await expect(next.locator('[data-testid="VEH-01.historyEmpty"]:visible')).toBeVisible();
         await expect(next.locator(`[data-testid="VEH-01.update.${update.id}"]`)).toHaveCount(0);
       } finally {

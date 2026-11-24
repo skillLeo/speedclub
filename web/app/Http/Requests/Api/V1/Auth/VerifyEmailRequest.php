@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Auth;
 
+use App\Http\Requests\Api\V1\Auth\Concerns\CarriesInviteCode;
 use App\Http\Requests\Api\V1\Auth\Concerns\NormalizesEmail;
 use App\Http\Requests\Api\V1\Auth\Concerns\SignsIn;
 use App\Models\User;
@@ -10,7 +11,11 @@ use Illuminate\Validation\Rule;
 
 class VerifyEmailRequest extends FormRequest
 {
-    use NormalizesEmail, SignsIn;
+    use CarriesInviteCode, NormalizesEmail {
+        NormalizesEmail::prepareForValidation insteadof CarriesInviteCode;
+        NormalizesEmail::prepareForValidation as normalizeEmailInput;
+    }
+    use SignsIn;
 
     /**
      * @return array<string, mixed>
@@ -28,6 +33,7 @@ class VerifyEmailRequest extends FormRequest
                 // The language of a new account (de, en); the request's language otherwise.
                 'locale' => ['nullable', 'string', Rule::in(config()->array('speedclub.locales'))],
                 ...$this->deviceRules(),
+                ...$this->inviteCodeRules(),
             ];
         }
 
@@ -42,7 +48,14 @@ class VerifyEmailRequest extends FormRequest
                 'max:'.config()->integer('speedclub.passwords.max_length'),
             ],
             ...$this->deviceRules(),
+            ...$this->inviteCodeRules(),
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->normalizeEmailInput();
+        $this->dropUnusableInviteCode();
     }
 
     /**

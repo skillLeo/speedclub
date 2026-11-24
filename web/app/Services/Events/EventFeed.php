@@ -26,11 +26,13 @@ class EventFeed
     public function __construct(private readonly VisibleBuilds $builds) {}
 
     /**
+     * $now is the read's moment (the QA clock outside production, DQ-P5-201); null is the real now.
+     *
      * @return Builder<Event>
      */
-    public function listed(?User $viewer): Builder
+    public function listed(?User $viewer, ?CarbonImmutable $now = null): Builder
     {
-        return $this->visibleTo(Event::query()->where('events.ends_at', '>=', now()), $viewer);
+        return $this->visibleTo(Event::query()->where('events.ends_at', '>=', $now ?? now()), $viewer);
     }
 
     /**
@@ -45,6 +47,16 @@ class EventFeed
             ->when($past, fn (Builder $over) => $over->where('events.ends_at', '<', now()), fn (Builder $coming) => $coming->where('events.ends_at', '>=', now()));
 
         return $this->visibleTo($query, $viewer);
+    }
+
+    /**
+     * M5.6 public "War dabei": published events that are over (never one still running, 10 §16), by the rules of listed().
+     *
+     * @return Builder<Event>
+     */
+    public function ended(?User $viewer): Builder
+    {
+        return $this->visibleTo(Event::query()->whereNotNull('events.ends_at')->where('events.ends_at', '<', now()), $viewer);
     }
 
     /**
@@ -66,21 +78,25 @@ class EventFeed
     }
 
     /**
-     * The filters of EVT-01: when (today · weekend · month · upcoming), type, near (with radius) and bbox (the map's view).
+     * The filters of EVT-01: when (today · week · weekend · month · upcoming), type, near (with radius) and bbox (the map's view). The
+     * windows count from $now (the QA clock outside production, DQ-P5-201); null is the real now.
      *
      * @param  Builder<Event>  $query
      * @param  array{when?: string|null, type?: string|null, lat?: float|null, lng?: float|null, radius_km?: int|null, bbox?: array{0: float, 1: float, 2: float, 3: float}|null, q?: string|null}  $filters
      * @return Builder<Event>
      */
-    public function filter(Builder $query, array $filters): Builder
+    public function filter(Builder $query, array $filters, ?CarbonImmutable $now = null): Builder
     {
         $zone = config()->string('speedclub.notifications.timezone');
-        $local = CarbonImmutable::now($zone);
+        $local = $now === null ? CarbonImmutable::now($zone) : $now->setTimezone($zone);
 
         [$from, $to] = match ($filters['when'] ?? 'upcoming') {
             'today' => [$local->startOfDay(), $local->endOfDay()],
             // The coming weekend: Saturday and Sunday of this week (today when it is the weekend).
             'weekend' => [$local->isWeekend() ? $local->startOfDay() : $local->next(CarbonImmutable::SATURDAY)->startOfDay(), ($local->isSunday() ? $local : $local->next(CarbonImmutable::SUNDAY))->endOfDay()],
+            // M5.6 "Diese Woche" (m5.6-contract §1): the next seven Berlin days, today included; calendar days, so a DST change
+            // neither opens a gap nor overlaps.
+            'week' => [$local->startOfDay(), $local->startOfDay()->addDays(6)->endOfDay()],
             'month' => [$local->startOfDay(), $local->endOfMonth()],
             default => [null, null],
         };

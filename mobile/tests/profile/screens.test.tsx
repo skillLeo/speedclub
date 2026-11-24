@@ -57,9 +57,13 @@ jest.mock('@/api/client', () => {
 });
 
 const ME: Me = {
+  // Client round 4 (R4-1.4): this member has seen the first-login intro.
+  intro_seen_at: '2026-11-01T10:00:00Z',
   id: '01m6f7ztzfs0gd39t08rs9zmmp',
   email: 'lukas.sc@speedclub.test',
   email_verified: true,
+  level: { level: 1, title: 'Street Rookie' },
+  founding_number: null,
   is_sample: false,
   is_editorial: false,
   has_username: true,
@@ -80,7 +84,7 @@ const ME: Me = {
   power_display: 'ps_kw',
   member_since: '2023-03-12T10:00:00+00:00',
   stats: { vehicles: 2, followers: 5, following: 3 },
-  restrictions: { suspended: false, messaging: { restricted: false, until: null, decision_id: null }, publishing: { restricted: false, until: null, decision_id: null } },
+  restrictions: { suspended: false, messaging: { restricted: false, until: null, decision_id: null }, publishing: { restricted: false, until: null, decision_id: null }, forum: { restricted: false, until: null, decision_id: null } },
 };
 
 const CARD = {
@@ -111,6 +115,7 @@ const CARD = {
   wizard: null,
   completeness: null,
   qr: null,
+  build_score: null,
 } satisfies VehicleCardData;
 
 const NBSP = '\u00A0';
@@ -193,17 +198,18 @@ describe('PROF-01 My profile', () => {
     await fireEvent.press(screen.getByTestId('PROF-01.qrCodes'));
     // Header pattern (b): the gear floats in the bar over the cover.
     await fireEvent.press(screen.getByTestId('PROF-01.settings'));
-    expect(mockRouter.push.mock.calls).toEqual([['/profile/edit'], ['/profile/qr'], ['/settings']]);
+    expect(mockRouter.push.mock.calls).toEqual([['/profile/edit'], ['/stickers'], ['/settings']]);
   });
 
-  it('shares the public /u link', async () => {
+  it('shares the public /u link with ?via=share', async () => {
     const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
     signIn();
     api();
     await renderScreen(<ProfileScreen />);
     await waitFor(() => expect(screen.getByTestId('PROF-01.share')).toBeTruthy());
     await act(async () => fireEvent.press(screen.getByTestId('PROF-01.share')));
-    expect(share).toHaveBeenCalledWith({ message: 'Lukas Scholz auf SPEED CLUB', url: 'https://speedclub.test/u/lukas.sc' });
+    // M5.7 (m5.7-contract §2.4): `?via=share` on the shared profile address.
+    expect(share).toHaveBeenCalledWith({ message: 'Lukas Scholz auf Speedclub', url: 'https://speedclub.test/u/lukas.sc?via=share' });
     share.mockRestore();
   });
 
@@ -292,7 +298,7 @@ describe('PROF-01 My profile', () => {
     const paths = (fetchMock.mock.calls as [RequestInfo][]).map(([input]) => new URL(typeof input === 'string' ? input : input.url).pathname);
     expect(paths.filter((path) => path.includes('/me') || path.includes('/auth/'))).toEqual([]);
     // 09 §7.7 guest: the brand title, three real fragments badged "Beispiel", one filled action.
-    expect(screen.getByTestId('PROF-01.guest.title')).toHaveTextContent('Werde Teil des SPEED CLUB.');
+    expect(screen.getByTestId('PROF-01.guest.title')).toHaveTextContent('Werde Teil des Speedclub.');
     expect(screen.getByTestId('PROF-01.guest.card', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByTestId('PROF-01.guest.spec', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByTestId('PROF-01.guest.qr', { includeHiddenElements: true })).toBeTruthy();

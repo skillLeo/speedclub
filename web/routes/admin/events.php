@@ -14,9 +14,9 @@ $ulid = '[0-9A-Za-z]{26}';
 Route::middleware([...AdminRoutes::signedIn(), 'can:moderation.view'])->prefix('events')->name('events.')->group(function () use ($ulid): void {
     Route::get('/', EventQueueController::class)->name('queue');
     Route::get('{event}', [EventShowController::class, 'show'])->where('event', $ulid)->name('show');
-    Route::get('{event}/preview', [EventShowController::class, 'preview'])->where('event', $ulid)->middleware('throttle:120,1')->name('preview');
+    Route::get('{event}/preview', [EventShowController::class, 'preview'])->where('event', $ulid)->middleware('throttle:120,1,admin-events-1')->name('preview');
 
-    Route::middleware(['can:moderation.decide', 'staff.recent-password', 'throttle:60,1'])->group(function () use ($ulid): void {
+    Route::middleware(['can:moderation.decide', 'staff.recent-password', 'throttle:60,1,admin-events-2'])->group(function () use ($ulid): void {
         Route::post('{event}/approve', [EventActionsController::class, 'approve'])->where('event', $ulid)->name('approve');
         Route::post('{event}/reject', [EventActionsController::class, 'reject'])->where('event', $ulid)->name('reject');
         Route::post('{event}/cancel', [EventActionsController::class, 'cancel'])->where('event', $ulid)->name('cancel');

@@ -51,7 +51,12 @@
         "errors": {
             "code": "Enter the six digits.",
             "failed": "That did not work. Try again."
-        }
+        },
+        "optional_warning": "Without 2FA your admin account is easier to attack.",
+        "set_up": "Set up 2FA",
+        "disable": "Turn 2FA off",
+        "disable_title": "Turn two-factor sign-in off?",
+        "disable_body": "Your key and your recovery codes are deleted. You then sign in with your password only. You can set 2FA up again at any time."
     },
     "recovery": {
         "title": "Recovery codes",
@@ -63,7 +68,7 @@
         "list_hint": "Keep them somewhere safe, not on the same phone. They disappear when you leave the page.",
         "hide": "Hide",
         "download": "Save as a text file",
-        "file_title": "SPEED CLUB Admin: recovery codes",
+        "file_title": "Speedclub Admin: recovery codes",
         "copy": "Copy all",
         "new_done": "New codes created. The old ones no longer work."
     },
@@ -85,6 +90,7 @@
     },
     "flash": {
         "session_ended": "Session signed out.",
-        "sessions_ended": "Every other session signed out."
+        "sessions_ended": "Every other session signed out.",
+        "two_factor_disabled": "Two-factor sign-in is off."
     }
 }

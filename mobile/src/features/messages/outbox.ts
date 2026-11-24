@@ -19,9 +19,19 @@
  *
  * Pure apart from the transport it is given, so it is tested without React or the network.
  */
+import type { PlateBlurChoice } from '@/features/media/plateBlur/model';
+
 import type { ChatVehicle, DeliveryFailure, FailureReason, ReplyQuote, ThreadMessage } from './model';
 
-export type LocalPhoto = { uri: string; width: number; height: number; mimeType?: string | null; fileName?: string | null };
+export type LocalPhoto = {
+  uri: string;
+  width: number;
+  height: number;
+  mimeType?: string | null;
+  fileName?: string | null;
+  /** M5.9a: the plate blur choice, sent with the upload (and again with a retry from the stored outbox). */
+  plateBlur?: PlateBlurChoice;
+};
 
 export type OutboxDraft =
   | { kind: 'text'; body: string; replyTo?: ReplyQuote | null }

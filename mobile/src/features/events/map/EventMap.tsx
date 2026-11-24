@@ -29,6 +29,7 @@ export function EventMap(props: EventMapProps) {
     center,
     zoom,
     pins,
+    areas,
     selectedId,
     exact,
     picked,
@@ -53,11 +54,11 @@ export function EventMap(props: EventMapProps) {
   const state = useMemo(
     () =>
       mapState(
-        { mode, center, zoom, pins, selectedId, exact, picked, attribution },
+        { mode, center, zoom, pins, areas, selectedId, exact, picked, attribution },
         theme,
         motion.reduced || !motion.enabled,
       ),
-    [attribution, center, exact, mode, motion.enabled, motion.reduced, picked, pins, selectedId, theme, zoom],
+    [areas, attribution, center, exact, mode, motion.enabled, motion.reduced, picked, pins, selectedId, theme, zoom],
   );
   // The page itself only follows what needs a new map: mode, theme and the controller; it is built from the state at that moment
   // (derived during render, so the first frame of a new page is already "loading").

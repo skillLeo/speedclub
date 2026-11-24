@@ -27,7 +27,8 @@ class TwoFactorSetupController extends Controller
         $staff = $request->user('staff');
 
         if ($staff instanceof Staff && $staff->hasEnabledTwoFactorAuthentication()) {
-            return redirect()->route('admin.dashboard');
+            // A full page load: the admin's route list must be the signed-in one (StaffAuthChanged).
+            return $request->header('X-Inertia') ? Inertia::location(route('admin.dashboard')) : redirect()->route('admin.dashboard');
         }
 
         $response = Inertia::render('Auth/TwoFactorSetup', [
@@ -61,7 +62,7 @@ class TwoFactorSetupController extends Controller
         $svg = (new Writer(new ImageRenderer(
             new RendererStyle(160, 0, null, null, Fill::uniformColor(new Rgb(255, 255, 255), new Rgb(0, 0, 0))),
             new SvgImageBackEnd,
-        )))->writeString('otpauth://totp/SPEED%20CLUB%20Admin:beispiel%40speedclub.test?secret='.$key.'&issuer=SPEED%20CLUB%20Admin');
+        )))->writeString('otpauth://totp/Speedclub%20Admin:beispiel%40speedclub.test?secret='.$key.'&issuer=Speedclub%20Admin');
 
         return [
             'step' => $step,

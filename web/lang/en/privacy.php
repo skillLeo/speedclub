@@ -28,7 +28,7 @@ return [
         'identity' => [
             'subject' => 'Your privacy request :reference: we need more details',
             'heading' => 'Please confirm that the request comes from you',
-            'body' => 'So that we do not give data to the wrong person, we need proof. The easiest way is to write to us from the email address of your SPEED CLUB account. The deadline runs until :date.',
+            'body' => 'So that we do not give data to the wrong person, we need proof. The easiest way is to write to us from the email address of your Speedclub account. The deadline runs until :date.',
         ],
         'extension' => [
             'subject' => 'Your privacy request :reference: we need more time',

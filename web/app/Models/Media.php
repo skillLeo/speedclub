@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\MediaCategory;
 use App\Enums\MediaStatus;
 use App\Enums\ModerationStatus;
+use App\Enums\PlateBlurState;
 use Database\Factories\MediaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -23,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property string $owner_id
  * @property MediaStatus $status
  * @property ModerationStatus $moderation_status
+ * @property PlateBlurState $plate_blur M5.9a: the owner's plate decision, shown to the owner only (MediaResource)
  * @property Carbon|null $reviewed_at ADM-13 "Freigeben" (M3.2)
  * @property int|null $reviewed_by the staff member who reviewed it
  * @property string|null $ai_score M3.7 ai.moderation_triage: risk 0–1 (risk_score / 100), a "KI-Vorschlag" for ADM-13/20, never a decision
@@ -35,6 +37,13 @@ class Media extends Model
 {
     /** @use HasFactory<MediaFactory> */
     use HasFactory, HasUlids, SoftDeletes;
+
+    /**
+     * The column's default, also on a new instance before it is saved.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = ['plate_blur' => 'unchecked'];
 
     /**
      * @return array<string, string>
@@ -56,6 +65,7 @@ class Media extends Model
             'ai_tags' => 'array',
             'blur_regions' => 'array',
             'blurred_at' => 'datetime',
+            'plate_blur' => PlateBlurState::class,
             'reviewed_at' => 'datetime',
             'ai_scored_at' => 'datetime',
             'reviewed_by' => 'integer',

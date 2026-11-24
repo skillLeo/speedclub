@@ -6,7 +6,12 @@ import { DecisionLink } from '@/features/safety/components/DecisionLink';
 import { keepNameTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { createStyles, size } from '@/theme';
-import { Button, Hairline, Photo, PressableScale, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Hairline } from '@/ui/Hairline';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import type { ChatVehicle } from '../model';
 

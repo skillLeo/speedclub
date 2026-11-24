@@ -7,7 +7,9 @@ import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarPadding } from '@/features/shell/tabBarLayout';
 import { useDiscoverColumn } from '@/features/discover/layout';
 import { createStyles } from '@/theme';
-import { Header, Screen, useCollapsingHeader, type HeaderAction } from '@/ui';
+import { Header, type HeaderAction } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 const EDGES: readonly Edge[] = ['left', 'right'];
 

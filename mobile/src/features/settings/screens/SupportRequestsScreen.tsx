@@ -10,7 +10,16 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { Button, EmptyState, ErrorState, Hairline, Icon, RowGroup, SampleBadge, Skeleton, SkeletonText, StatusPill, Text } from '@/ui';
+import { SampleBadge } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { Icon } from '@/ui/icons/Icon';
+import { RowGroup } from '@/ui/RowGroup';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
 import { endsWord, joinLabel, RowBody, RowDivider } from '@/ui/rowParts';
 import { metaLineText } from '@/ui/textBreaks';
 

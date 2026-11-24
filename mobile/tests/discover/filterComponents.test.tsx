@@ -188,6 +188,9 @@ describe('the wheel-setup comparison', () => {
     expect(screen.getByTestId('DISC-04.wheels')).toHaveProp('role', 'table');
     expect(screen.getByTestId('DISC-04.wheels.v1')).toHaveProp('role', 'row');
     expect(screen.getByTestId('DISC-04.wheels.v1.et')).toHaveTextContent('ET35');
+    // R5-4: a table that fits is no ScrollView (on the web a disabled one is touch-action none and held the page still on a phone).
+    if (!screen.getByTestId('DISC-04.wheels.scroll').props.horizontal) expect(screen.getByTestId('DISC-04.wheels.scroll').props.scrollEnabled).toBeUndefined();
+    else expect(screen.getByTestId('DISC-04.wheels.scroll').props.scrollEnabled).not.toBe(false);
     expect(screen.getByText('Tieferlegung')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('DISC-04.wheels.v1.open'));
     expect(onOpen).toHaveBeenCalledWith(ROW);

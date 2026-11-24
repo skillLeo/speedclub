@@ -1,7 +1,7 @@
 import i18n from '@/i18n';
 import { modValuesFrom } from '@/features/garage/modForm';
 import { basicsValues, specsValues } from '@/features/garage/model';
-import { basicsSchema, currentMonth, fieldIssue, fieldMessage, issue, maxModelYear, modSchema, noteSchema, specsSchema } from '@/features/garage/schemas';
+import { basicsSchema, currentMonth, fieldIssue, fieldMessage, issue, maxModelYear, modHasDetail, modSchema, noteSchema, specsSchema } from '@/features/garage/schemas';
 
 import { WHEEL_FIELDS, wheelMod } from './fixtures';
 
@@ -171,5 +171,28 @@ describe('the German calendar decides (BH-07, BH-48)', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+});
+
+describe('a mod names the part (R4B-006)', () => {
+  const schema = modSchema(WHEEL_FIELDS, 'de', '2026-11');
+  const empty = modValuesFrom(undefined, WHEEL_FIELDS, 'de');
+
+  it('refuses a bare category on the title field', () => {
+    const errors = messages(schema.safeParse(empty));
+    expect(errors.title).toBe('validation.modEmpty');
+    expect(modHasDetail({ ...empty, title: '   ' })).toBe(false);
+  });
+
+  it('lets a plan name only its category and month', () => {
+    expect(messages(schema.safeParse({ ...empty, status: 'planned' })).title).toBeUndefined();
+  });
+
+  it('accepts a title, a part number, a catalogue product or any category value', () => {
+    expect(modHasDetail({ ...empty, title: 'Sommerräder' })).toBe(true);
+    expect(modHasDetail({ ...empty, partNumber: 'LM-123' })).toBe(true);
+    expect(modHasDetail({ ...empty, product: { id: '01product00000000000000000a', label: 'BBS LM' } })).toBe(true);
+    expect(modHasDetail({ ...empty, fields: { ...empty.fields, wheel_brand: 'BBS' } })).toBe(true);
+    expect(modHasDetail({ ...empty, fields: { ...empty.fields, staggered: true } })).toBe(true);
   });
 });

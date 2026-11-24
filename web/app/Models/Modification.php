@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\LegalStatus;
+use App\Enums\ModPriority;
 use App\Enums\ModStatus;
 use Database\Factories\ModificationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -15,7 +16,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Costs are private to the owner, always (09 §11, M4.9 ruling); cost_public is a dead column kept false.
+ * Costs are private to the owner, always (09 §11, M4.9 ruling); cost_public is a dead column kept false. M5.3 "Pläne": target_month,
+ * priority and plan_sort are set only while the mod is planned (plan_sort is server-managed); budget_cents is the owner's alone, like the cost.
  *
  * @property string $vehicle_id
  * @property Vehicle $vehicle
@@ -25,7 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 #[Fillable([
     'category_id', 'title', 'brand_id', 'brand_text', 'part_name', 'part_number', 'status', 'installed_on',
-    'cost_cents', 'cost_public', 'legal_status', 'notes', 'fields', 'sort',
+    'cost_cents', 'cost_public', 'legal_status', 'notes', 'fields', 'sort', 'target_month', 'priority', 'budget_cents',
 ])]
 class Modification extends Model
 {
@@ -45,6 +47,10 @@ class Modification extends Model
             'legal_status' => LegalStatus::class,
             'fields' => 'array',
             'sort' => 'integer',
+            'target_month' => 'date',
+            'priority' => ModPriority::class,
+            'budget_cents' => 'integer',
+            'plan_sort' => 'integer',
         ];
     }
 

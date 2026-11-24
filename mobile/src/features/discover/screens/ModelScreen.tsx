@@ -17,7 +17,17 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, layout, size, space, useBreakpoint, useTheme } from '@/theme';
-import { Button, Chip, CollapsingFlashList, DisplayTitle, EmptyState, Header, Screen, SegmentedControl, Skeleton, SkeletonBlock, SkeletonText, Spinner, Text, useCollapsingHeader } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Chip } from '@/ui/Chip';
+import { DisplayTitle } from '@/ui/DisplayTitle';
+import { EmptyState } from '@/ui/EmptyState';
+import { Header } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { CollapsingFlashList, useCollapsingHeader } from '@/ui/useCollapsingHeader';
 import { nameInText } from '@/ui/textBreaks';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
@@ -364,6 +374,7 @@ export function ModelScreen() {
             value={segment}
             onChange={(next) => router.setParams({ segment: next === 'wheels' ? 'wheels' : undefined })}
             label={t('model.segments')}
+            labelVariant="labelControl"
             style={styles.segments}
             testID={`${ROUTE}.segments`}
           />

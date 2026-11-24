@@ -1,6 +1,8 @@
 import { useState } from 'react';
 
-import { Button, SpecRow, SpecStrip } from '@/ui';
+import { Button } from '@/ui/Button';
+import { SpecRow } from '@/ui/SpecRow';
+import { SpecStrip } from '@/ui/SpecStrip';
 
 import { Group, Panel, SectionScreen } from '../parts';
 

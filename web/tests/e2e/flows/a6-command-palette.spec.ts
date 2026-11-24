@@ -1,11 +1,11 @@
 // A6 ⌘K (09 §10.2, §14.5 A6), Chromium at 1280. An admin (members.view_pii, members.suspend) opens the palette with the keyboard and
-// finds a test member by e-mail, a vehicle by its public id (vehicles have no plate field: SPEED CLUB never stores plates, so the public id
+// finds a test member by e-mail, a vehicle by its public id (vehicles have no plate field: Speedclub never stores plates, so the public id
 // in the slug is what staff type), and the vehicle's QR sticker by its code. Then the action "Mitglied sperren…": pick the member in the
 // palette's second step, the member's record opens with the Sperren sheet ready, and sending it creates the four-eyes request
 // (RequestMemberSuspension) — the member stays active. The palette itself never changes data. The analyst (no members.suspend) is not
 // offered the action, and the action's target list answers 403 for a kind the role lacks.
 import type { Page } from '@playwright/test';
-import { admin, choose, confirmPasswordDirectly, DESKTOP, realClock, staffContext } from '../support/admin-flow';
+import { admin, choose, confirmPasswordDirectly, DESKTOP, holdFourEyes, realClock, staffContext } from '../support/admin-flow';
 import { expect, test } from '../support/fixtures';
 import { browserOf, id, members, named } from '../support/flow';
 import { buildVehicle } from '../support/garage.mjs';
@@ -17,6 +17,16 @@ async function palette(page: Page): Promise<void> {
 }
 
 test.describe('A6 Befehlspalette', () => {
+  // ADR-540: four-eyes is off by default; this spec proves the engine with it switched on (support/admin-flow holdFourEyes).
+  let releaseFourEyes: (() => Promise<void>) | null = null;
+  test.beforeEach(async () => {
+    releaseFourEyes = await holdFourEyes(true);
+  });
+  test.afterEach(async () => {
+    await releaseFourEyes?.();
+    releaseFourEyes = null;
+  });
+
   test.skip(({ browserName }) => browserName !== 'chromium', 'One staff session per role; the admin is a desktop Chromium tool (ADR-212).');
 
   test('⌘K finds a member by e-mail, a vehicle by its id and a QR code; "Mitglied sperren…" asks for four eyes', async ({ page, context, browser, pageErrors, blockedRequests }) => {
@@ -66,7 +76,6 @@ test.describe('A6 Befehlspalette', () => {
     await expect(dialog.getByRole('radio', { name: new RegExp(`^${admin('decisions', 'measures.suspension')}`) })).toBeChecked();
     await expect(id(page, 'ADM-10.restrict.four-eyes')).toBeVisible();
     await choose(page, dialog, admin('decisions', 'template'), admin('decisions', 'templates.harassment.label'));
-    await id(page, 'ADM-10.restrict.reason').fill('A6: Beleidigungen in drei Gesprächen, Sperre über die Palette angefragt');
     await id(page, 'ADM-10.restrict.confirm').click();
     await expect(id(page, 'shell.approval')).toBeVisible();
     await expect(id(page, 'ADM-10.status')).toHaveText(admin('members', 'status.active'));

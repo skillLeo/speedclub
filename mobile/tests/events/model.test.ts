@@ -13,6 +13,7 @@ import {
   berlinToDate,
   cardCaption,
   countsLine,
+  endedCountsLine,
   dateBlock,
   cardCounts,
   dayGroupLabel,
@@ -244,6 +245,14 @@ describe('answers and states', () => {
     expect(countsLine({ going: 1, interested: 0 }, t, format)).toBe('1 Zusage');
     expect(countsLine({ going: 1200, interested: 0 }, t, format)).toBe('1.200 Zusagen');
     expect(countsLine(null, t, format)).toBeNull();
+  });
+
+  it('writes the answers of a past meet as history (DQ-P5-011)', () => {
+    const format = (n: number) => new Intl.NumberFormat('de-DE').format(n);
+    expect(endedCountsLine({ going: 8, interested: 3 }, t, format)).toBe('8 waren angemeldet');
+    expect(endedCountsLine({ going: 1, interested: 0 }, t, format)).toBe('1 Person war angemeldet');
+    expect(endedCountsLine({ going: 0, interested: 4 }, t, format)).toBe('Niemand hatte zugesagt');
+    expect(endedCountsLine(null, t, format)).toBeNull();
   });
 
   it('puts the distance into the caption when the list was asked near a point', () => {

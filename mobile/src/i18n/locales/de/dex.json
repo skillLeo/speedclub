@@ -1,0 +1,352 @@
+{
+  "entry": {
+    "scan": "Sticker scannen"
+  },
+  "scanner": {
+    "label": "Sticker-Scanner",
+    "hint": "Halte einen Speedclub Sticker in den Rahmen.",
+    "close": "Scanner schließen",
+    "torchOn": "Licht einschalten",
+    "torchOff": "Licht ausschalten",
+    "reading": "Sticker erkannt, einen Moment …",
+    "scanAgain": "Weiter scannen",
+    "done": "Fertig",
+    "queued": {
+      "title": "Gespeichert – wird gesendet, sobald du online bist",
+      "body": "Danach findest du den Spot in deinem Dex."
+    },
+    "waiting_one": "{{count}} Scan wartet auf eine Verbindung.",
+    "waiting_other": "{{count}} Scans warten auf eine Verbindung.",
+    "offline": "Du bist offline. Scans werden gespeichert und später gesendet.",
+    "foreign": {
+      "title": "Das ist kein Speedclub Sticker",
+      "body": "Dieser Code führt zu keinem Auto bei Speedclub. Halte die Kamera auf einen unserer Sticker."
+    },
+    "permission": {
+      "title": "Kamera für den Scanner",
+      "body": "Speedclub nutzt die Kamera nur, um Sticker zu scannen. Es werden keine Fotos oder Videos gespeichert.",
+      "allow": "Kamera erlauben",
+      "deniedTitle": "Kamerazugriff ist aus",
+      "deniedBody": "Erlaube Speedclub in den Einstellungen deines Handys den Zugriff auf die Kamera, dann kannst du Sticker scannen.",
+      "settings": "Einstellungen öffnen"
+    },
+    "cameraError": {
+      "title": "Die Kamera startet nicht",
+      "body": "Schließ andere Apps, die gerade die Kamera nutzen, und versuch es noch einmal."
+    },
+    "guest": {
+      "title": "Melde dich an, um Autos zu spotten",
+      "body": "Mit deinem Konto landet jedes gescannte Auto als Karte in deinem Dex.",
+      "signIn": "Anmelden"
+    },
+    "web": {
+      "title": "Spotten geht nur in der App",
+      "body": "Scanne den Sticker mit Speedclub auf deinem Handy. Im Browser zählt ein Scan nur als Aufruf der Seite.",
+      "preview": "So sieht ein Spot in der App aus:",
+      "home": "Zur Startseite"
+    }
+  },
+  "refusal": {
+    "not_found": {
+      "title": "Diesen Sticker kennen wir nicht",
+      "body": "Prüf, ob der ganze Code im Rahmen ist, und scanne noch einmal."
+    },
+    "own_car": {
+      "title": "Das ist dein eigenes Auto",
+      "body": "Eigene Autos kommen nicht in deinen Dex. Halt die Augen nach anderen Builds offen."
+    },
+    "paused": {
+      "title": "Spotten ist bei diesem Auto pausiert",
+      "body": "Der Besitzer hat das Spotten gerade ausgeschaltet."
+    },
+    "unavailable": {
+      "title": "Dieses Auto kannst du gerade nicht spotten",
+      "body": "Der Sticker ist nicht aktiv, oder das Auto wird gerade nicht gezeigt."
+    },
+    "rate_limited": {
+      "title": "Kurze Pause",
+      "body": "Du hast in der letzten Stunde viele Autos gespottet. In ein paar Minuten geht es weiter."
+    },
+    "restricted": {
+      "title": "Dein Konto ist eingeschränkt",
+      "body": "Solange die Einschränkung gilt, kannst du keine Autos spotten."
+    },
+    "unverified": {
+      "title": "Bestätige zuerst deine E-Mail-Adresse",
+      "body": "Sobald deine Adresse bestätigt ist, kannst du Autos spotten."
+    },
+    "failed": {
+      "title": "Das hat nicht geklappt",
+      "body": "Scanne den Sticker bitte noch einmal."
+    }
+  },
+  "location": {
+    "title": "Stadt zum Spot speichern?",
+    "body": "Beim Scannen wandelt dein Handy den Standort in eine Stadt um. Gesendet wird nur die Stadt, nie deine Position. Scannen geht auch ohne.",
+    "allow": "Standort erlauben",
+    "skip": "Ohne Standort"
+  },
+  "queue": {
+    "sent": "Spot gesendet: {{name}}",
+    "open": "Ansehen"
+  },
+  "reveal": {
+    "label": "Spot von {{name}}",
+    "close": "Schließen",
+    "share": "Karte teilen",
+    "shareFailed": "Die Karte ließ sich nicht teilen.",
+    "new": "NEU",
+    "newLine": "Neu in deinem Dex",
+    "duplicate": "Schon in deinem Dex",
+    "notCounted": "Dein Konto ist noch neu – Spots zählen ab morgen.",
+    "sampleCar": "Ein Beispielauto – dieser Spot zählt nicht für deinen Dex.",
+    "firstSpotter": "First Spotter",
+    "firstSpotterLine": "Du bist unter den ersten drei, die dieses Auto gespottet haben.",
+    "dexNumber": "Nr. {{number}}",
+    "dexNumberLabel": "Dex-Nummer {{number}}",
+    "byOwner": "@{{username}}",
+    "ownerLabel": "Besitzer: {{name}}",
+    "toDex": "Zum Dex",
+    "react": "Reaktion senden",
+    "setProgress": "{{name}}: {{progress}} von {{target}}",
+    "setDone": "{{name}}: komplett",
+    "cardBack": "Speedclub Sticker",
+    "notFound": {
+      "title": "Diesen Spot gibt es nicht mehr",
+      "body": "Er wurde entfernt oder gehört zu einem anderen Konto."
+    },
+    "errorTitle": "Der Spot lässt sich gerade nicht laden",
+    "offline": "Du bist offline. Die Karte zeigt den letzten Stand.",
+    "restricted": "Dein Konto ist eingeschränkt. Folgen und Reaktionen gehen erst wieder, wenn die Einschränkung endet."
+  },
+  "rarity": {
+    "label": "Rarität: {{tier}}",
+    "street": "Street",
+    "tuned": "Tuned",
+    "rare": "Rare",
+    "legend": "Legend",
+    "ghost": "Ghost"
+  },
+  "home": {
+    "title": "Mein Dex",
+    "progressLabel": "Dex",
+    "progress": "{{found}} / {{total}}",
+    "progressA11y": "{{found}} von {{total}} Autos in deinem Dex",
+    "barLabel": "Fortschritt deines Dex",
+    "scan": "Sticker scannen",
+    "rarityHelp": "So entsteht die Rarität",
+    "filters": {
+      "label": "Karten filtern",
+      "all": "Alle",
+      "rarity": "Rarität",
+      "make": "Marke",
+      "sets": "Sets",
+      "rarityTitle": "Nach Rarität",
+      "makeTitle": "Nach Marke",
+      "setsTitle": "Nach Set",
+      "noMakes": "Sobald du Autos gespottet hast, kannst du hier nach Marke filtern.",
+      "noSets": "Gerade läuft kein Set.",
+      "close": "Schließen"
+    },
+    "open": {
+      "title": "Noch offen in deinen Sets",
+      "allSets": "Alle Sets",
+      "allSetsLabel": "Alle Sets ansehen"
+    },
+    "loadMore": "Weitere Karten laden",
+    "empty": {
+      "title": "Dein Dex ist noch leer",
+      "webBody": "Scannen geht nur in der App auf deinem Handy. Deine Karten siehst du danach auch hier.",
+      "action": "Sticker scannen"
+    },
+    "filterEmpty": {
+      "title": "Keine Karte in diesem Filter",
+      "body": "Wähle einen anderen Filter oder halt die Augen nach solchen Autos offen.",
+      "action": "Alle Karten zeigen"
+    },
+    "errorTitle": "Dein Dex lässt sich gerade nicht laden",
+    "offline": "Du bist offline. Dein Dex zeigt den letzten Stand.",
+    "restricted": "Dein Konto ist eingeschränkt. Deinen Dex siehst du weiter, neue Spots zählen erst wieder nach der Einschränkung.",
+    "guest": {
+      "title": "Melde dich an für deinen Dex",
+      "body": "Jedes Auto, das du mit dem Scanner spottest, landet als Karte in deinem Dex.",
+      "signIn": "Anmelden"
+    }
+  },
+  "tile": {
+    "label": "{{name}}, {{tier}}",
+    "labelNumber": "{{name}}, Nr. {{number}}, {{tier}}",
+    "firstSpotter": "First Spotter",
+    "unknown": "???",
+    "silhouetteLabel": "Noch nicht gespottet: {{hint}}",
+    "silhouetteLabelPlain": "Noch nicht gespottet",
+    "open": "Offen",
+    "remainingCount": "+{{count}}",
+    "remaining": "offen",
+    "remainingLabel_one": "Noch {{count}} Auto offen",
+    "remainingLabel_other": "Noch {{count}} Autos offen"
+  },
+  "card": {
+    "title": "Karte",
+    "toVehicle": "Zur Fahrzeugseite",
+    "spottedOn": "Gespottet am {{date}}",
+    "notSpotted": "Noch nicht gespottet",
+    "notSpottedBody": "Scanne den Sticker an diesem Auto, dann kommt es mit Besitzer und Spots in deinen Dex.",
+    "notSpottedWeb": "Scannen geht mit der Speedclub App auf deinem Handy.",
+    "scan": "Sticker scannen",
+    "notFound": {
+      "title": "Diese Karte gibt es nicht",
+      "body": "Das Auto ist nicht mehr öffentlich oder wurde entfernt.",
+      "action": "Zum Dex"
+    },
+    "errorTitle": "Die Karte lässt sich gerade nicht laden",
+    "offline": "Du bist offline. Die Karte zeigt den letzten Stand."
+  },
+  "sets": {
+    "title": "Sets",
+    "progress": "{{progress}} von {{target}}",
+    "progressLabel": "{{name}}: {{progress}} von {{target}} Autos",
+    "complete": "Komplett",
+    "completedOn": "Komplett seit {{date}}",
+    "window": "{{from}} bis {{to}}",
+    "windowLater": "Läuft wieder ab {{from}}",
+    "kind": {
+      "jdm": "JDM",
+      "brand": "Marke",
+      "city": "Stadt",
+      "season": "Saison"
+    },
+    "empty": {
+      "title": "Gerade läuft kein Set",
+      "body": "Sets starten mit der Saison. Bis dahin zählt jeder Spot für deinen Dex.",
+      "action": "Zum Dex"
+    },
+    "errorTitle": "Die Sets lassen sich gerade nicht laden",
+    "offline": "Du bist offline. Die Sets zeigen den letzten Stand."
+  },
+  "rarityRules": {
+    "title": "So entsteht die Rarität",
+    "intro": "Die Rarität rechnen wir jede Nacht nach festen Regeln aus den Daten bei Speedclub aus. Passt mehr als eine, gilt die höchste.",
+    "street": "Jedes Auto startet hier.",
+    "tuned": "Build Score ab {{score}}.",
+    "rare": "Höchstens {{max}} öffentliche Autos derselben Generation bei Speedclub.",
+    "legend": "Das einzige öffentliche Auto seiner Generation oder Build Score ab {{score}}.",
+    "ghost": "Der Besitzer hat den Ghost-Modus an. Du findest das Auto nur, wenn du seinen Sticker vor Ort scannst.",
+    "errorTitle": "Die Regeln lassen sich gerade nicht laden",
+    "close": "Schließen"
+  },
+  "owner": {
+    "people_one": "{{formatted}} Person",
+    "people_other": "{{formatted}} Leuten",
+    "cities_one": "{{formatted}} Stadt",
+    "cities_other": "{{formatted}} Städten",
+    "line": "Gespottet von {{people}} in {{cities}}",
+    "linePeople": "Gespottet von {{people}}",
+    "lineLabel": "Spots ansehen. {{line}}",
+    "title": "Spots",
+    "kpi": {
+      "total": "Spots",
+      "people": "Leute",
+      "cities": "Städte"
+    },
+    "days": {
+      "title": "Letzte 30 Tage",
+      "chartLabel": "Spots pro Tag in den letzten 30 Tagen: heute {{today}}, an einem Tag höchstens {{max}}.",
+      "today": "Heute",
+      "start": "Vor 30 Tagen"
+    },
+    "cities": {
+      "title": "Städte",
+      "hidden": "Du hast die Städte dieses Autos verborgen.",
+      "none": "Noch keine Stadt zu sehen.",
+      "night": "Spots zwischen 22 und 6 Uhr zählen mit, zeigen aber nie eine Stadt."
+    },
+    "spotters": {
+      "title": "Zuletzt gespottet von",
+      "someone": "jemand",
+      "someoneHelper": "Name verborgen"
+    },
+    "famous": {
+      "title": "Street Famous {{tier}}",
+      "body": "Mindestens {{tier}} verschiedene Leute haben dein Auto gespottet.",
+      "next": "Nächste Stufe ab {{next}} Leuten."
+    },
+    "settings": "Spot-Einstellungen",
+    "empty": {
+      "title": "Noch hat niemand dein Auto gespottet",
+      "body": "Sobald jemand den Sticker an deinem Auto scannt, siehst du hier, wie oft und in welcher Stadt.",
+      "action": "Sticker ansehen"
+    },
+    "restricted": "Nur der Besitzer sieht die Spots eines Autos.",
+    "notFound": {
+      "title": "Dieses Auto gibt es nicht mehr",
+      "body": "Es wurde gelöscht oder gehört zu einem anderen Konto."
+    },
+    "errorTitle": "Die Spots lassen sich gerade nicht laden",
+    "offline": "Du bist offline. Die Spots zeigen den letzten Stand.",
+    "guest": {
+      "title": "Melde dich an",
+      "body": "Die Spots eines Autos sieht nur sein Besitzer.",
+      "signIn": "Anmelden"
+    }
+  },
+  "settings": {
+    "group": "Spots",
+    "instant": "Wird sofort gespeichert.",
+    "ghost": "Ghost-Modus",
+    "ghostHelper": "Dein Auto taucht nicht mehr in Suche, Entdecken und Listen auf. Nur wer es vor Ort scannt, findet es.",
+    "pause": "Spotten pausieren",
+    "pauseHelper": "Solange das an ist, kann niemand dein Auto spotten. Bisherige Spots bleiben.",
+    "hideCities": "Städte verbergen",
+    "hideCitiesHelper": "Zu deinem Auto wird keine Stadt mehr gezeigt, auch nicht in deinen Spot-Benachrichtigungen.",
+    "saved": "Gespeichert",
+    "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
+    "stats": "Spots ansehen",
+    "offline": "Offline lassen sich die Spot-Einstellungen nicht ändern."
+  },
+  "map": {
+    "layer": "Spots",
+    "layerLabel": "Spots als Städte auf der Karte zeigen",
+    "caption": "Städte, in denen mindestens 5 verschiedene Autos gespottet wurden. Spots erscheinen nach 24 Stunden.",
+    "unavailable": "Die Spots lassen sich gerade nicht laden."
+  },
+  "profile": {
+    "row": "Mein Dex",
+    "value": "{{found}} / {{total}}"
+  },
+  "explainer": {
+    "title": "Dein STREET DEX: Autos sammeln, die du in echt siehst",
+    "stepsLabel": "So kommt ein Auto in deinen Dex",
+    "steps": {
+      "scan": "Den Sticker an einem Auto scannen (das ist ein Spot)",
+      "collect": "Das Auto landet als Karte in deinem Dex",
+      "sets": "Sets vervollständigen und seltene Autos finden"
+    },
+    "how": "So funktioniert’s",
+    "hide": "Erklärung ausblenden",
+    "sheet": {
+      "title": "So funktioniert’s",
+      "close": "Verstanden",
+      "counts": {
+        "title": "Was zählt",
+        "body": "Ein Spot zählt, wenn du den Speedclub-Sticker an einem Auto mit der App scannst. Ein Scan mit der Kamera oder im Browser öffnet nur die Build-Seite. Dasselbe Auto kannst du einmal am Tag spotten."
+      },
+      "delay": {
+        "title": "Nichts passiert live",
+        "body": "Dein Spot landet sofort in deinem Dex. Der Besitzer sieht ihn frühestens nach 3 Stunden, zusammengefasst und nie mit deiner Position."
+      },
+      "samples": {
+        "title": "Beispielautos zählen nie",
+        "body": "Autos mit dem Hinweis „Beispiel“ zeigen nur, wie der Dex aussieht. Ein Scan an ihnen zählt weder für deinen Dex noch für Sets."
+      },
+      "privacy": {
+        "title": "Nur die Stadt",
+        "body": "Den Standort nutzt die App nur beim Scannen und nur, wenn du zustimmst. Dein Handy macht daraus eine Stadt: Gespeichert wird nur die Stadt, nie deine Position. Spots zwischen 22 und 6 Uhr zeigen keine Stadt."
+      },
+      "sets": {
+        "title": "Sets und Seltenheit",
+        "body": "Sets fassen Autos zusammen, etwa JDM-Legenden, eine Marke oder eine Stadt. Wie selten ein Auto ist, rechnen wir jede Nacht nach festen Regeln aus den Daten bei Speedclub aus."
+      }
+    }
+  }
+}

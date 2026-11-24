@@ -17,7 +17,14 @@ import { qaForcesFlag } from '@/lib/qa';
 import { useSessionStore } from '@/state/session';
 
 /** The suggestion flags SET-07's "KI-Vorschläge" switch governs. */
-export const SUGGESTION_FLAGS: readonly AiFlag[] = [AI_FLAGS.search, AI_FLAGS.mods, AI_FLAGS.photos, AI_FLAGS.description];
+export const SUGGESTION_FLAGS: readonly AiFlag[] = [
+  AI_FLAGS.search,
+  AI_FLAGS.mods,
+  AI_FLAGS.photos,
+  AI_FLAGS.description,
+  AI_FLAGS.specs,
+  AI_FLAGS.productMatch,
+];
 
 export function useAiAvailable(flag: AiFlag): boolean {
   const on = useFlag(flag);
@@ -36,7 +43,9 @@ export function useAnySuggestionFlag(): boolean {
   const mods = useFlag(AI_FLAGS.mods);
   const photos = useFlag(AI_FLAGS.photos);
   const description = useFlag(AI_FLAGS.description);
-  return search || mods || photos || description;
+  const specs = useFlag(AI_FLAGS.specs);
+  const productMatch = useFlag(AI_FLAGS.productMatch);
+  return search || mods || photos || description || specs || productMatch;
 }
 
 /** An answer after which the surface goes away: the flag went off on the server, or the opt-in is gone. */
@@ -144,6 +153,29 @@ export function aiErrorMessage(t: TFunction, error: unknown): string {
   if (error.kind === 'network') return t('ai.errors.network');
   if (error.kind === 'conflict') return t('ai.errors.processing');
   return t('ai.errors.failed');
+}
+
+/** What an M5.9 surface says after a failed request, and whether "Erneut versuchen" goes with it; null hides the surface. */
+export type QuietAiNote = AiNoteState & { retry: boolean };
+
+/**
+ * M5.9 (m5.9-contract, errors): 404 `feature_disabled` and 403 `ai_opt_in_required` hide the surface; 422 (`ai_unverifiable`, or a car
+ * the catalogue cannot name) "Kein Vorschlag gefunden"; 429 and 503 a quiet "Gerade nicht verfügbar" (the used-up day of
+ * `ai_daily_limit` / `ai_budget_exhausted` says so itself, through `useAiDayEnd`); anything else as the other AI features.
+ */
+export function quietAiNote(t: TFunction, error: unknown): QuietAiNote | null {
+  if (hidesAiSurface(error)) return null;
+  if (error instanceof ApiError) {
+    if (endsAiForToday(error)) return { ...aiNoteFor(t, error), retry: false };
+    if (error.code === 'ai_unverifiable' || error.code === 'ai_refused' || error.kind === 'validation') {
+      return { text: t('ai.errors.noSuggestion'), verify: false, retry: false };
+    }
+    if (error.kind === 'rate_limited' || error.code === 'ai_unavailable' || error.status === 503) {
+      return { text: t('ai.errors.notNow'), verify: false, retry: true };
+    }
+    if (needsEmailVerification(error)) return { ...aiNoteFor(t, error), retry: false };
+  }
+  return { ...aiNoteFor(t, error), retry: true };
 }
 
 /** `aiErrorMessage` with the common namespace bound. */

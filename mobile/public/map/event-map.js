@@ -1,5 +1,5 @@
 /*
- * SPEED CLUB event map (M4.12, 09 §8.7, ADR-411 WebView fallback). One controller for both ways the app shows a map:
+ * Speedclub event map (M4.12, 09 §8.7, ADR-411 WebView fallback). One controller for both ways the app shows a map:
  *   - native: a WebView page loads maplibre-gl and this file, then calls SpeedclubEventMap.mount(…) (features/events/components/EventMap.tsx);
  *   - member web: the page loads both into the app's own document and mounts into a View's node (EventMap.web.tsx).
  * Served from the app's own origin (/app/map/event-map.js), so the web needs no inline script. Every colour, size and duration comes
@@ -8,6 +8,8 @@
  * Modes: "pins" (EVT-01 Karte: clustered area points, a date label under each, the selected one in accent; SM19 pan to it), "snippet"
  * (EVT-02: the place or, for a private place, the area as a ring; not interactive), "picker" (EVT-03 Ort: a draggable pin).
  * Messages to the app: ready · error · select {id|null} · view {bbox} · pick {lat,lng}.
+ * M5.9b: in "pins" mode the optional `areas` (the "Spots" layer) are drawn under the event points as city circles with their name;
+ * they are not interactive and carry no id beyond the city (contract §6: city aggregates only, never a car).
  */
 (function (root) {
   'use strict';
@@ -21,6 +23,19 @@
           id: pin.id,
           properties: { id: pin.id, label: pin.label || '', title: pin.title || '' },
           geometry: { type: 'Point', coordinates: [pin.lng, pin.lat] },
+        };
+      }),
+    };
+  }
+
+  function areaCollection(areas) {
+    return {
+      type: 'FeatureCollection',
+      features: (areas || []).map(function (area) {
+        return {
+          type: 'Feature',
+          properties: { label: area.label || '', radius: area.radius || 0 },
+          geometry: { type: 'Point', coordinates: [area.lng, area.lat] },
         };
       }),
     };
@@ -83,7 +98,30 @@
       ];
     }
 
+    function addAreas() {
+      map.addSource('spot-areas', { type: 'geojson', data: areaCollection(state.areas) });
+      map.addLayer({
+        id: 'spot-areas',
+        type: 'circle',
+        source: 'spot-areas',
+        paint: {
+          'circle-color': state.colors.area,
+          'circle-radius': ['get', 'radius'],
+          'circle-stroke-color': state.colors.primary,
+          'circle-stroke-width': state.sizes.hairline,
+        },
+      });
+      map.addLayer({
+        id: 'spot-area-label',
+        type: 'symbol',
+        source: 'spot-areas',
+        layout: { 'text-field': ['get', 'label'], 'text-font': [state.fonts.regular], 'text-size': state.sizes.text, 'text-allow-overlap': false },
+        paint: { 'text-color': state.colors.primary, 'text-halo-color': state.colors.canvas, 'text-halo-width': state.sizes.stroke },
+      });
+    }
+
     function addPins() {
+      addAreas();
       map.addSource('events', {
         type: 'geojson',
         data: featureCollection(state.pins),
@@ -240,6 +278,8 @@
         if (state.mode === 'pins') {
           let source = map.getSource('events');
           if (source && previous.pins !== next.pins) source.setData(featureCollection(state.pins));
+          let areas = map.getSource('spot-areas');
+          if (areas && previous.areas !== next.areas) areas.setData(areaCollection(state.areas));
           if (map.getLayer('point')) map.setPaintProperty('point', 'circle-color', pointPaint());
           // SM19: the selected pin comes into view on calm motion (a jump under reduced motion).
           if (state.selectedId && state.selectedId !== previous.selectedId && state.focus) {

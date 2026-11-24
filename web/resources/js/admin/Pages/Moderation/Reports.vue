@@ -50,7 +50,7 @@ import {
  *
  * M4.17 SplitQueue (09 §10.2, composables/splitQueue.ts): from 1280 px a case opens in the right pane (`?case=`) with the target as
  * members see it, its reports and the decision. One-key decisions open the ADM-21 composer with every DSA step (statement of reasons,
- * reason, password, four-eyes for a suspension): a = Inhalt entfernen, r = Keine Maßnahme; j/k move, u undoes "Übernehmen" for 5 s. A
+ * password, four-eyes for a suspension): a = Inhalt entfernen, r = Keine Maßnahme; j/k move, u undoes "Übernehmen" for 5 s. A
  * decision itself has no undo: it reaches the member and the reporters at once and is corrected only by an appeal. After a decision
  * the next open case opens (auto-advance). Below 1280 a row opens ADM-21.
  */
@@ -229,7 +229,7 @@ const sourceModel = selectModel('source');
 const statusModel = selectModel('status');
 const roleModel = selectModel('role');
 const any = computed(() => ({ value: ANY, label: trans('moderation.reports.filters.any') }));
-const typeOptions = computed(() => [any.value, ...(['member', 'vehicle', 'photo', 'message', 'build_update', 'modification', 'comment', 'event', 'business'] as const).map((v) => ({ value: v, label: trans(`moderation.target_types.${v}`) }))]);
+const typeOptions = computed(() => [any.value, ...(['member', 'vehicle', 'photo', 'message', 'build_update', 'modification', 'comment', 'event', 'business', 'forum_post', 'crew'] as const).map((v) => ({ value: v, label: trans(`moderation.target_types.${v}`) }))]);
 const reasonOptions = computed(() => [any.value, ...(['illegal', 'harassment', 'nudity', 'impersonation', 'spam', 'other'] as const).map((v) => ({ value: v, label: trans(`moderation.reasons.${v}`) }))]);
 const assignedOptions = computed(() => [any.value, ...(['me', 'none', 'others'] as const).map((v) => ({ value: v, label: trans(`moderation.reports.filters.assigned_${v}`) }))]);
 const sourceOptions = computed(() => [any.value, ...(['automated', 'web_form', 'staff'] as const).map((v) => ({ value: v, label: trans(`moderation.reports.filters.source_${v}`) }))]);
@@ -266,8 +266,8 @@ function onBulk(_action: string, ids: string[]): void {
     bulkError.value = null;
     confirmOpen.value = true;
 }
-function confirmBulk(reason: string | null): void {
-    router.post(routeOr('admin.moderation.reports.bulk', '/admin/moderation/reports/bulk'), { action: 'no_action', ids: bulkIds.value, reason: reason ?? '' } as never, {
+function confirmBulk(): void {
+    router.post(routeOr('admin.moderation.reports.bulk', '/admin/moderation/reports/bulk'), { action: 'no_action', ids: bulkIds.value } as never, {
         preserveScroll: true,
         preserveState: true,
         onStart: () => {
@@ -609,7 +609,6 @@ const emptyKey = computed(() => props.tab);
             :body="trans('moderation.reports.bulk.body')"
             :confirm-label="trans('moderation.reports.bulk.no_action')"
             tone="neutral"
-            reason
             :four-eyes="bulkIds.length > 100"
             :processing="processing"
             :error="bulkError"

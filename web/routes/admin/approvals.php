@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(AdminRoutes::signedIn())->prefix('team/approvals')->name('team.')->group(function (): void {
     Route::get('/', ApprovalsController::class)->name('approvals');
 
-    Route::middleware('throttle:60,1')->whereUlid('approval')->group(function (): void {
+    Route::middleware('throttle:60,1,admin-approvals-1')->whereUlid('approval')->group(function (): void {
         Route::post('{approval}/approve', [ApprovalDecisionController::class, 'approve'])->middleware(['can:approvals.decide', 'staff.recent-password'])->name('approvals.approve');
         Route::post('{approval}/deny', [ApprovalDecisionController::class, 'deny'])->middleware(['can:approvals.decide', 'staff.recent-password'])->name('approvals.deny');
         Route::post('{approval}/cancel', [ApprovalDecisionController::class, 'cancel'])->name('approvals.cancel');
+        // ADR-507 Owner-Override: the requesting Owner, a reason, a recent password; the engine decides whether it is allowed.
+        Route::post('{approval}/override', [ApprovalDecisionController::class, 'override'])->middleware(['can:approvals.decide', 'staff.recent-password'])->name('approvals.override');
     });
 });

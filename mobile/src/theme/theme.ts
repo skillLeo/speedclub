@@ -38,6 +38,11 @@ export type AppTheme = {
   readonly opacity: typeof opacity;
   /** OS font scale on native; `qaFontScale` (or 1) on web, which has no OS scaling. */
   readonly fontScale: number;
+  /**
+   * DQ-P5G-04 / review SF-3: the cap of a `ThemeScope` (a fixed composition exported as a picture, the WRP-01 story cards). Every Text
+   * inside takes it as its `fontScaleCap`, so native text, which the OS would otherwise scale freely, stays at the capped scale too.
+   */
+  readonly fontScaleCap?: number;
 };
 
 type TokenPaths<T> = {

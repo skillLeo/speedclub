@@ -28,7 +28,7 @@ class ReleaseRequest extends FormRequest
             'apk_sha256' => ['nullable', 'string', 'max:64'],
             'notes' => ['nullable', 'string', 'max:5000'],
             'released_at' => ['nullable', 'date'],
-            'reason' => ['nullable', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

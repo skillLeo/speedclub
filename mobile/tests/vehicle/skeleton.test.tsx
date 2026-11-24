@@ -104,7 +104,7 @@ describe('the loading geometry of VEH-01 and GAR-02 (DQ-178)', () => {
     expect(blueprintLines(BLUEPRINT_SUBLINE, 'callout', 1, 350)).toHaveLength(1);
     expect(blueprintLines(BLUEPRINT_SUBLINE, 'callout', 1, 320)).toHaveLength(2);
     expect(blueprintLines(BLUEPRINT_SUBLINE, 'callout', 1.3, 390)).toHaveLength(2);
-    // At twice the size the line breaks before "(RB26DETT)" and again before "Blue" below 359.
+    // At twice the size the line breaks before "(RB26DETT)" and again before "Bayside Blue" (whole, DQ-P5-071) below 362.
     expect(blueprintLines(BLUEPRINT_SUBLINE, 'callout', 2, 350)).toHaveLength(3);
     expect(blueprintLines(BLUEPRINT_SUBLINE, 'callout', 2, 390)).toHaveLength(2);
   });
@@ -177,10 +177,10 @@ describe('skeleton text from what is already known', () => {
       <VehicleProfileSkeleton routeId="GAR-02" onBack={jest.fn()} owner known={{ title, subline_parts: ['2001', 'Bayside Blue'] }} />,
     );
     const lines = (testID: string) => screen.getByTestId(testID, { includeHiddenElements: true }).children;
-    // This environment runs above font scale 1.2, where the parts of the sub-line wrap at their own spaces.
+    // This environment runs above font scale 1.2, where a long part of the sub-line wraps at its own spaces; the short colour
+    // stays whole (DQ-P5-071), one word as the page sets it.
     await measureWord('2001 ·', 20);
-    await measureWord('Bayside', 30);
-    await measureWord('Blue', 20);
+    await measureWord('Bayside\u00A0Blue', 50);
     // NH-R3-1: the known title by DisplayTitle's own estimate (its size, its conditional code binding, its line count), so the
     // skeleton and the loaded title agree; FS-3's example would take fewer lines here.
     const { width, fontScale } = DEFAULT_WINDOW;

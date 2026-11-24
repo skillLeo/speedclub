@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { EMPTY_HERO } from '@/features/garage/sample';
 import { createStyles } from '@/theme';
-import { MediaCard } from '@/ui';
+import { MediaCard } from '@/ui/MediaCard';
 
 const useStyles = createStyles((t) => ({
   // A picture of the state, not content: no pointer, and the stage keeps its corner like inset hero media (radius 20).

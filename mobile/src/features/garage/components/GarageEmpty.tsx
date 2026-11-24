@@ -2,7 +2,12 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles, layout, useBreakpoint } from '@/theme';
-import { Button, Photo, PhotoStageScrim, SectionHeader, Text, VehicleCard } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Photo } from '@/ui/Photo';
+import { PhotoStageScrim } from '@/ui/PhotoStageScrim';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Text } from '@/ui/Text';
+import { VehicleCard } from '@/ui/VehicleCard';
 
 import { EMPTY_HERO, SAMPLE_CARD_PHOTO } from '../sample';
 

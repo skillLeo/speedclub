@@ -4,7 +4,7 @@
  */
 import { OTPInput, OTPInputSkeleton, type OTPInputProps } from '@/ui/OTPInput';
 
-import { CODE_LENGTH } from '../schemas';
+import { CODE_LENGTH } from '../limits';
 
 /** The six cells as skeleton blocks, for the loading state of the screens around it. */
 export function CodeInputSkeleton() {

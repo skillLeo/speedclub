@@ -391,7 +391,7 @@ const approval = { id: '01JZAPPROVAL', title: 'Audit-Export (CSV)', expires_at: 
             <div class="grid grid-cols-1 gap-16 wide:grid-cols-2">
                 <ThemeFrame v-for="frame in themes" :key="frame.theme" :theme="frame.theme" :label="frame.label()">
                     <DiffViewer :before="before" :after="after" />
-                    <DiffViewer mode="text" :before="'Willkommen bei SPEED CLUB.\nZeig deine Garage.'" :after="'Willkommen bei SPEED CLUB.\nZeig deine Garage und deine Builds.\nScanne den QR-Code am Auto.'" />
+                    <DiffViewer mode="text" :before="'Willkommen bei Speedclub.\nZeig deine Garage.'" :after="'Willkommen bei Speedclub.\nZeig deine Garage und deine Builds.\nScanne den QR-Code am Auto.'" />
                     <div class="grid grid-cols-1 gap-24 tablet:grid-cols-3 wide:grid-cols-1">
                         <ActivityTimeline :entries="timeline" />
                         <ActivityTimeline :entries="[]" state="loading" />

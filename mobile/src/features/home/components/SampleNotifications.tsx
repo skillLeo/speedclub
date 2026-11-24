@@ -4,7 +4,10 @@ import { View } from 'react-native';
 
 import { EMPTY_HERO, SAMPLE_CARD_PHOTO } from '@/features/garage/sample';
 import { createStyles, size } from '@/theme';
-import { Avatar, Photo, SampleBadge, Text, type PhotoFields } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { SampleBadge } from '@/ui/Badge';
+import { Photo, type PhotoFields } from '@/ui/Photo';
+import { Text } from '@/ui/Text';
 
 const useStyles = createStyles((t) => ({
   list: { gap: t.space[4], pointerEvents: 'none' },

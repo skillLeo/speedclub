@@ -22,7 +22,7 @@ use Illuminate\Validation\ValidationException;
  * ADM-58 "Ausblenden" (`content.edit`, recent password, reason): takes one sample item out of every member-facing and public read while
  * the editorial_samples flag stays on. It uses the item's own withdrawal, which every read path honours already: a build goes private
  * (ChangeVehicleVisibility: search, share image and sitemap follow), a meet or a business gets removed_at. Nobody is notified: the
- * item belongs to the SPEED CLUB Editorial account (09 §8.19), not to a member. Not on the four-eyes list (06 §2). Audited
+ * item belongs to the Speedclub Editorial account (09 §8.19), not to a member. Not on the four-eyes list (06 §2). Audited
  * `editorial.sample_hidden` with what was before.
  *
  * @throws AuthorizationException|DomainException|ValidationException
@@ -34,7 +34,7 @@ final class HideSampleItem
     public function handle(Staff $staff, SampleItemType $type, string $id, string $reason): string
     {
         StaffAtoms::ensure($staff, 'content.edit');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         return DB::transaction(function () use ($staff, $type, $id, $reason): string {
             $item = SampleItemLocator::lock($type, $id);

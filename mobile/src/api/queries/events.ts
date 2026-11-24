@@ -51,8 +51,17 @@ export const EVENTS_CREATE_FLAG = 'events.create';
 export const EVENT_TYPES: readonly EventType[] = ['meet', 'cruise', 'track_day', 'show'];
 /** The EVT-03 checklist (EventRule), legal_only first: it is required on every event. */
 export const EVENT_RULES: readonly EventRule[] = ['legal_only', 'no_racing', 'respect_residents', 'no_litter', 'permits_arranged'];
-export const EVENT_WHEN = ['upcoming', 'today', 'weekend', 'month'] as const;
+/**
+ * M5.6 (10 §4): `week` is EVT-01's default view "Diese Woche", the next seven Berlin days (m5.6-contract §1); `upcoming` is every
+ * coming event ("Alle kommenden Treffen").
+ */
+export const EVENT_WHEN = ['week', 'upcoming', 'today', 'weekend', 'month'] as const;
 export type EventWhen = (typeof EVENT_WHEN)[number];
+/** "Diese Woche": today and the six days after it (m5.6-contract §1). */
+export const WEEK_DAYS = 7;
+/** The flags of the gallery and the check-in (m5.6-contract §3), both off by default. */
+export const EVENTS_GALLERY_FLAG = 'events.gallery';
+export const EVENTS_CHECKIN_FLAG = 'events.checkin';
 export const MY_EVENT_TABS = ['going', 'interested', 'organised', 'past'] as const;
 export type MyEventsTab = (typeof MY_EVENT_TABS)[number];
 
@@ -77,8 +86,8 @@ export const EVENT_LIMITS = {
 } as const;
 
 export const LIST_PAGE_SIZE = 30;
-/** HOME-01 "Treffen in deiner Nähe": two cards (09 §7.3); the request asks one more so "Alle Treffen" knows there is more. */
-export const HOME_EVENTS = 3;
+/** HOME-01 "Nächste Treffen": two cards (10 §4); the request asks two more, so a cancelled one can drop out and two still remain. */
+export const HOME_EVENTS = 4;
 export const ATTENDEES_PAGE_SIZE = 40;
 
 export const EVENT_IN_REVIEW = 'event_in_review';
@@ -93,9 +102,39 @@ export type EventFilters = {
   when: EventWhen;
   type: EventType | null;
   near: { lat: number; lng: number; radiusKm: number } | null;
+  /** M5.2 (10 §1, EVT-01's own search): words in the title or city, `q` of `GET events` (≤ 80 characters). */
+  q?: string | null;
 };
 
-export const DEFAULT_FILTERS: EventFilters = { when: 'upcoming', type: null, near: null };
+/** `GET events` takes at most this many characters of `q` (EventListRequest). */
+export const EVENT_QUERY_MAX = 80;
+
+export const DEFAULT_FILTERS: EventFilters = { when: 'week', type: null, near: null };
+
+/** The end of "Diese Woche" seen from `now`: the first instant after the seventh Berlin day (exclusive). */
+export function weekWindowEnd(now: Date): Date {
+  const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  const [year, month, date] = day.split('-').map(Number) as [number, number, number];
+  // Midnight in Berlin of the eighth day: guess with the current offset, then correct once (a DST change inside the week).
+  const wall = Date.UTC(year, month - 1, date + WEEK_DAYS);
+  const offset = (instant: number) => {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Berlin', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hourCycle: 'h23',
+    }).formatToParts(new Date(instant));
+    const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((entry) => entry.type === type)?.value ?? 0);
+    return Date.UTC(part('year'), part('month') - 1, part('day'), part('hour'), part('minute')) - Math.floor(instant / 60000) * 60000;
+  };
+  let instant = wall - offset(wall);
+  instant = wall - offset(instant);
+  return new Date(instant);
+}
+
+/** Whether a card starts inside the week window (an event already running counts: it started before the end). */
+export function startsBefore(event: Pick<EventCard, 'starts_at'>, end: Date): boolean {
+  if (!event.starts_at) return false;
+  const start = Date.parse(event.starts_at);
+  return Number.isFinite(start) && start < end.getTime();
+}
 
 /** The map's view: minLng, minLat, maxLng, maxLat. */
 export type Bbox = readonly [number, number, number, number];
@@ -114,7 +153,7 @@ export const eventKeys = {
 
 function filterKey(filters: EventFilters): string {
   const near = filters.near ? `${filters.near.lat.toFixed(2)},${filters.near.lng.toFixed(2)},${filters.near.radiusKm}` : '-';
-  return `${filters.when}|${filters.type ?? '-'}|${near}`;
+  return `${filters.when}|${filters.type ?? '-'}|${near}|${filters.q ?? ''}`;
 }
 
 /** Five decimals at most: the map's view in metres, and a stable cache key. */
@@ -127,6 +166,7 @@ export function listQuery(filters: EventFilters, extra: { bbox?: Bbox | null; cu
   return {
     when: filters.when,
     ...(filters.type ? { type: filters.type } : {}),
+    ...(filters.q ? { q: filters.q.slice(0, EVENT_QUERY_MAX) } : {}),
     ...(filters.near ? { lat: filters.near.lat, lng: filters.near.lng, radius_km: filters.near.radiusKm } : {}),
     ...(extra.bbox ? { bbox: bboxParam(extra.bbox) } : {}),
     ...(extra.perPage ? { per_page: extra.perPage } : {}),
@@ -242,6 +282,28 @@ export function flattenEvents(pages: readonly Page<EventCard>[] | undefined): Ev
 
 function useEventsOn(): boolean {
   return useFlag(EVENTS_FLAG);
+}
+
+/**
+ * M5.6 "Diese Woche" (m5.6-contract §1): the week comes from the server (`when=week`); EVT-01 still says whether meets follow it ("Alle
+ * kommenden Treffen") and shows the first of them when the week is empty. Read from the first page of `upcoming` (sorted by start): the
+ * first card past the window, or more pages than one.
+ */
+export function afterWeek(upcoming: readonly EventCard[], hasMore: boolean, end: Date): { next: EventCard | null; exists: boolean } {
+  const next = upcoming.find((event) => !startsBefore(event, end)) ?? null;
+  return { next, exists: next !== null || hasMore };
+}
+
+/** The first page of `upcoming` with the week's other filters, for `afterWeek`. */
+export function useUpcomingAfterWeek(filters: EventFilters, enabled: boolean) {
+  const on = useEventsOn();
+  const upcoming: EventFilters = { ...filters, when: 'upcoming' };
+  return useQuery({
+    queryKey: [...eventKeys.list(upcoming), 'first'] as const,
+    queryFn: ({ signal }) => eventsApi.list(upcoming, null, LIST_PAGE_SIZE, signal),
+    enabled: on && enabled,
+    retry: retryUnlessAnswered,
+  });
 }
 
 /** EVT-01 Liste, DISC-01 Treffen scope. Guests too. */

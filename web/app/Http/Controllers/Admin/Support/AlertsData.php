@@ -8,6 +8,7 @@ use App\Enums\CaseStatus;
 use App\Models\ApprovalRequest;
 use App\Models\ModerationCase;
 use App\Models\Staff;
+use App\Services\Governance\Governance;
 use App\Services\Support\PiiReveals;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
@@ -23,9 +24,10 @@ class AlertsData
         private readonly DashboardData $dashboard,
     ) {}
 
+    /** ADR-540: while four-eyes is off nothing waits for a decision, so no badge counts one (a request left from before stays in ADM-43). */
     public function approvalCount(Staff $staff): int
     {
-        return $staff->can('approvals.decide') ? $this->approvals->pendingCount($staff) : 0;
+        return $staff->can('approvals.decide') && Governance::fourEyes() ? $this->approvals->pendingCount($staff) : 0;
     }
 
     /**
@@ -33,7 +35,7 @@ class AlertsData
      */
     public function approvals(Staff $staff): array
     {
-        return $staff->can('approvals.decide') ? $this->approvals->pendingFor($staff) : [];
+        return $staff->can('approvals.decide') && Governance::fourEyes() ? $this->approvals->pendingFor($staff) : [];
     }
 
     /**

@@ -13,7 +13,16 @@ import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { createStyles, layout, useBreakpoint } from '@/theme';
-import { EmptyState, ErrorState, Hairline, Header, Icon, Photo, PressableScale, Screen, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { Header } from '@/ui/Header';
+import { Icon } from '@/ui/icons/Icon';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { vehicleNameText } from '@/ui/textBreaks';
 import { keepShortNamesTogether } from '@/lib/format';
 

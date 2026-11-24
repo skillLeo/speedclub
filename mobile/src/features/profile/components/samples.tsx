@@ -8,7 +8,9 @@ import { View } from 'react-native';
 import { PHOTOS } from '@/features/gallery/data';
 import { EMPTY_HERO, SAMPLE_CARD_PHOTO } from '@/features/garage/sample';
 import { createStyles, size, space } from '@/theme';
-import { BuildUpdateRow, SampleBadge, VehicleCard } from '@/ui';
+import { SampleBadge } from '@/ui/Badge';
+import { BuildUpdateRow } from '@/ui/BuildUpdateRow';
+import { VehicleCard } from '@/ui/VehicleCard';
 
 import { EventDateRow } from './EventDateRow';
 

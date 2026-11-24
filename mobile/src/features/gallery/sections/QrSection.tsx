@@ -1,5 +1,5 @@
 import { radius, space } from '@/theme';
-import { QRDisplay } from '@/ui';
+import { QRDisplay } from '@/ui/QRDisplay';
 
 import { Group, SectionScreen } from '../parts';
 import { QR_SAMPLE_SVG } from '../qrSample';

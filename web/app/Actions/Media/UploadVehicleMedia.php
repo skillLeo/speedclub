@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Garage\BuildUpdates;
 use App\Services\Media\MediaService;
+use App\Services\Media\PlateBlurChoice;
 use App\Services\PublicPages\OgImages;
 use App\Services\Rules\ContentScreen;
 use App\Services\Search\VehicleSearchProjector;
@@ -36,13 +37,13 @@ class UploadVehicleMedia
      *
      * @param  array{alt?: string|null, focal_x?: float|null, focal_y?: float|null, category?: MediaCategory|string|null}  $attributes
      */
-    public function handle(User $user, Vehicle $vehicle, UploadedFile $file, array $attributes): Media
+    public function handle(User $user, Vehicle $vehicle, UploadedFile $file, array $attributes, ?PlateBlurChoice $plateBlur = null): Media
     {
         $bytes = $this->media->inspectUpload($file);
         // SEC-P3-15: the caption, before anything is stored.
         $flags = $this->screen->screen(UpdateMedia::screened($attributes));
 
-        $reserved = DB::transaction(function () use ($user, $vehicle, $attributes, $bytes): Media {
+        $reserved = DB::transaction(function () use ($user, $vehicle, $attributes, $bytes, $plateBlur): Media {
             User::query()->whereKey($user->id)->lockForUpdate()->value('id');
             $locked = Vehicle::query()->whereKey($vehicle->id)->lockForUpdate()->firstOrFail();
             $photos = $locked->media()->where('status', '!=', MediaStatus::Failed);
@@ -59,7 +60,7 @@ class UploadVehicleMedia
             return $this->media->reserve($user, $locked, [
                 ...$attributes,
                 'sort' => is_numeric($sort) ? (int) $sort + 1 : 0,
-            ], strlen($bytes));
+            ], strlen($bytes), plateBlur: $plateBlur);
         });
 
         $media = $this->media->processOrQueue($reserved, $bytes);

@@ -13,6 +13,7 @@ import PageHeader from '../../Components/shell/PageHeader.vue';
 import { Badge, Button, ConfirmDialog, Field, Input, Select, Skeleton, StatusPill, Tabs, type TabItem, type Tone } from '../../Components/ui';
 import { focusRing } from '../../Components/ui/styles';
 import { usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
@@ -23,8 +24,8 @@ import type { Paginated, SavedView, TableQuery } from '../../types/table';
  * ADM-58 Editorial & Beispiele (09 §8.19, §10.3): whether sample content shows in each environment (the flag `editorial_samples`; only
  * this environment's value takes effect, production stays off until the client supplies real, consented builds), what sample content
  * exists, and the sample builds, meets and businesses with how members see them now. "Ausblenden" takes one item out of every member
- * read (a build goes private, a meet or business is removed) while the flag stays on; "Wieder zeigen" restores it. Both ⚿ with a
- * reason, audited; the flag change goes through ADM-36's rules (a critical flag in production is four-eyes).
+ * read (a build goes private, a meet or business is removed) while the flag stays on; "Wieder zeigen" restores it. Both ⚿,
+ * audited; the flag change goes through ADM-36's rules (a critical flag in production is four-eyes).
  */
 type Tab = 'vehicle' | 'event' | 'business';
 type ItemState = 'shown' | 'hidden' | 'withdrawn';
@@ -37,7 +38,7 @@ interface SampleRow {
     cover: string | null;
     cover_placeholder: string | null;
     state: ItemState;
-    hidden: { at: string; by: string | null; reason: string } | null;
+    hidden: { at: string; by: string | null; reason: string | null } | null;
     created_at: string | null;
 }
 interface FlagState {
@@ -76,9 +77,10 @@ const ENVIRONMENTS = ['local', 'staging', 'production'] as const;
 const flagAction = useAdminAction();
 const flagOpen = ref(qaDialog() === 'flag');
 const nextEnabled = computed(() => !(props.flag?.enabled ?? false));
-const fourEyes = computed(() => props.environment === 'production' && (props.flag?.critical ?? false));
-function changeFlag(reason: string | null): void {
-    flagAction.run('post', routeOr('admin.editorial.flag', '/admin/editorial/flag'), { enabled: nextEnabled.value, reason: reason ?? '' }, { sensitive: true, onSuccess: () => (flagOpen.value = false) });
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && props.environment === 'production' && (props.flag?.critical ?? false));
+function changeFlag(): void {
+    flagAction.run('post', routeOr('admin.editorial.flag', '/admin/editorial/flag'), { enabled: nextEnabled.value }, { sensitive: true, onSuccess: () => (flagOpen.value = false) });
 }
 
 // ---- summary ------------------------------------------------------------------------------------------------------------------
@@ -145,11 +147,11 @@ watch(
     { immediate: true },
 );
 const hiding = computed(() => target.value?.state !== 'hidden');
-function confirmItem(reason: string | null): void {
+function confirmItem(): void {
     const row = target.value;
     if (!row) return;
     const verb = hiding.value ? 'hide' : 'show';
-    itemAction.run('post', routeOr(`admin.editorial.items.${verb}`, `/admin/editorial/items/${row.id}/${verb}`, { item: row.id }), { type: row.type, reason: reason ?? '' }, { sensitive: true, onSuccess: () => (itemOpen.value = false) });
+    itemAction.run('post', routeOr(`admin.editorial.items.${verb}`, `/admin/editorial/items/${row.id}/${verb}`, { item: row.id }), { type: row.type }, { sensitive: true, onSuccess: () => (itemOpen.value = false) });
 }
 // The server names refusals by key (editorial.errors.*); validation messages come in words.
 const itemError = computed(() => {
@@ -289,7 +291,7 @@ const flagState = computed(() => (state.value === 'loading' ? 'loading' : state.
                                 <p class="text-admin-base-strong text-ink">{{ row.title }}</p>
                                 <p class="text-caption text-ink-2">{{ trans(`editorial.state_hint.${row.state}`) }}</p>
                                 <p v-if="row.hidden" class="text-caption text-ink-3 tabular-nums">{{ trans('editorial.hidden_by', { name: row.hidden.by ?? '–', date: formatDateTime(row.hidden.at) }) }}</p>
-                                <p v-if="row.hidden" class="line-clamp-3 text-caption text-ink-2">{{ row.hidden.reason }}</p>
+                                <p v-if="row.hidden?.reason" class="line-clamp-3 text-caption text-ink-2">{{ row.hidden.reason }}</p>
                             </div>
                         </template>
                     </NameCell>
@@ -331,8 +333,6 @@ const flagState = computed(() => (state.value === 'loading' ? 'loading' : state.
             :body="trans(nextEnabled ? 'editorial.flag_dialog.on_body' : 'editorial.flag_dialog.off_body')"
             :confirm-label="trans(nextEnabled ? 'editorial.flag.turn_on' : 'editorial.flag.turn_off')"
             tone="neutral"
-            reason
-            reason-first
             :four-eyes="fourEyes"
             :processing="flagAction.processing.value"
             :error="flagAction.error.value"
@@ -346,8 +346,6 @@ const flagState = computed(() => (state.value === 'loading' ? 'loading' : state.
             :body="trans(hiding ? `editorial.item_dialog.hide_body_${target.type}` : 'editorial.item_dialog.show_body')"
             :confirm-label="trans(hiding ? 'editorial.actions.hide' : 'editorial.actions.show')"
             :tone="hiding ? 'danger' : 'neutral'"
-            reason
-            reason-first
             :processing="itemAction.processing.value"
             :error="itemError"
             test-id="ADM-58.item-dialog"

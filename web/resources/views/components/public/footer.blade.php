@@ -5,18 +5,18 @@
 --}}
 @php
     $themes = ['carbon', 'black', 'light', 'system'];
-    $links = ['imprint' => '/impressum', 'privacy' => '/datenschutz', 'terms' => '/agb', 'community' => '/community-richtlinien', 'report' => '/melden', 'contact' => '/kontakt', 'delete_account' => '/konto-loeschen', 'get_app' => '/app-laden'];
+    $links = (app(\App\Services\AppConfig\FeatureFlags::class)->enabled('shop') ? ['shop' => '/app/shop'] : []) + ['imprint' => '/impressum', 'privacy' => '/datenschutz', 'terms' => '/agb', 'community' => '/community-richtlinien', 'report' => '/melden', 'contact' => '/kontakt', 'delete_account' => '/konto-loeschen', 'get_app' => '/app-laden'];
 @endphp
 <footer class="sc-footer" data-testid="WEB.footer" data-qa-exempt="safe-area">
     <div class="sc-footer-grid">
         <div>
-            <img src="{{ asset('brand/logo-wide-white-320.webp') }}" alt="SPEED CLUB" width="107" height="32" loading="lazy" class="sc-logo-on-dark sc-wordmark">
-            <img src="{{ asset('brand/logo-wide-black-320.webp') }}" alt="SPEED CLUB" width="107" height="32" loading="lazy" class="sc-logo-on-light sc-wordmark">
+            <img src="{{ \App\Support\BrandFiles::asset('brand/logo-wide-white-320.webp') }}" srcset="{{ \App\Support\BrandFiles::asset('brand/logo-wide-white-242.webp') }} 242w, {{ \App\Support\BrandFiles::asset('brand/logo-wide-white-320.webp') }} 320w" sizes="121px" alt="Speedclub" width="121" height="32" loading="lazy" class="sc-logo-on-dark sc-wordmark">
+            <img src="{{ \App\Support\BrandFiles::asset('brand/logo-wide-black-320.webp') }}" srcset="{{ \App\Support\BrandFiles::asset('brand/logo-wide-black-242.webp') }} 242w, {{ \App\Support\BrandFiles::asset('brand/logo-wide-black-320.webp') }} 320w" sizes="121px" alt="Speedclub" width="121" height="32" loading="lazy" class="sc-logo-on-light sc-wordmark">
             <p class="mt-8 text-caption text-ink-3">Cars. People. Culture.</p>
         </div>
         <nav aria-label="{{ __('public.footer.label') }}" class="sc-footer-links">
             @foreach ($links as $key => $path)
-                <a href="{{ \App\Support\PublicUrl::to($path) }}" class="sc-focus inline-flex min-h-44 min-w-44 items-center justify-center rounded-xs text-callout text-ink-2 hover:text-ink" data-testid="WEB.footer.{{ $key }}">{{ __('public.footer.'.$key) }}</a>
+                <a href="{{ str_starts_with($path, '/app/') ? url($path) : \App\Support\PublicUrl::to($path) }}" class="sc-focus inline-flex min-h-44 min-w-44 items-center justify-center rounded-xs text-callout text-ink-2 hover:text-ink" data-testid="WEB.footer.{{ $key }}">{{ __('public.footer.'.$key) }}</a>
             @endforeach
         </nav>
         <div class="sc-footer-prefs">

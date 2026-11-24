@@ -1,11 +1,11 @@
 // F16 Public web 2.0 (M4.16, docs/09_PREMIUM_2_0.md §9): the server-rendered pages a stranger reaches from a shared link or a
-// scanned sticker. WEB-03 tells the QR story and links into the real builds and meets; WEB-13 /e/{slug} shows a meet as a guest
+// scanned sticker. WEB-03 (short since client round 4) says what Speedclub is and leads to the app; WEB-13 /e/{slug} shows a meet as a guest
 // sees it (the exact place of an after_rsvp meet never), opens the app to answer and offers the calendar file; maps and routes
 // leave for openstreetmap.org only on a tap, so no page makes a third-party request (the base fixture fails on one); WEB-02 lists
 // the garage as VehicleCards 2.0, whose photos, the first card's included, follow the cover (DQ-1237, M4.18 LCP). Every page reads
 // without JavaScript and holds at 360 px and at 200 % text.
 //
-// Data: the seeded sample meets of the SPEED CLUB Editorial account (stable slugs, ShowcaseEvents), lukas.sc's and jann.ptrs's garages
+// Data: the seeded sample meets of the Speedclub Editorial account (stable slugs, ShowcaseEvents), lukas.sc's and jann.ptrs's garages
 // (DemoSeeder). Only reads; nothing here changes data.
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from '../support/fixtures';
@@ -23,27 +23,55 @@ async function expectNoSidewaysScroll(page: Page): Promise<void> {
 }
 
 test.describe('F16 public web 2.0', () => {
-  test('WEB-03 tells the QR story from the hero link and leads into a real build and a real meet', async ({ page }) => {
+  // Client round 4 (11 R4-1.5): WEB-03 is short now: what Speedclub is, what you do with it, the sticker, and the way to the app.
+  test('WEB-03 says what Speedclub is, leads to the app, and its sticker code opens a real build', async ({ page }) => {
     await page.goto('/');
     await expect(id(page, 'WEB-03.claim')).toHaveText('Dein Auto. Dein Build. Dein Club.');
-    await expect(id(page, 'WEB-03.openWebApp')).toHaveAttribute('href', `${BASE_URL}/app`);
-
-    await id(page, 'WEB-03.howQr').click();
-    await expect(page).toHaveURL(/#qr$/);
-    await expect(id(page, 'WEB-03.steps')).toBeInViewport();
-    await expect(id(page, 'WEB-03.qr')).toBeVisible();
-
-    await id(page, 'WEB-03.featuredLink').click();
+    await expect(id(page, 'WEB-03.lead')).toBeVisible();
+    // R4DQ-23, one honest filled CTA: once store links are set the stores lead and the browser link stays quiet; without them the web
+    // app leads ("Im Browser öffnen") and "So kommst du zur App" (/app-laden) follows as the secondary.
+    await expect(id(page, 'WEB-03.getApp').or(id(page, 'WEB-03.heroStore')).first()).toBeVisible();
+    const actions = page.locator('[data-testid="WEB-03.heroActions"] > a');
+    if (await id(page, 'WEB-03.getApp').count()) {
+      await expect(id(page, 'WEB-03.getApp')).toHaveAttribute('href', /\/app-laden$/);
+      await expect(id(page, 'WEB-03.getApp')).toHaveText('So kommst du zur App');
+      await expect(actions.first()).toHaveAttribute('data-testid', 'WEB-03.openBrowser');
+    } else {
+      await expect(actions.first()).toHaveAttribute('data-testid', 'WEB-03.heroStore');
+    }
+    await expect(id(page, 'WEB-03.openBrowser')).toHaveAttribute('href', `${BASE_URL}/app`);
+    // "Was du mit Speedclub machst": four things.
+    await expect(page.locator('[data-testid^="WEB-03.do."]:visible')).toHaveCount(4);
+    // The sticker in one block, with the way to the shop; its code leads to a real build page.
+    await expect(id(page, 'WEB-03.sticker')).toBeVisible();
+    await expect(id(page, 'WEB-03.stickerShop')).toBeVisible();
+    await id(page, 'WEB-03.qr').locator('a').first().click();
     await expect(id(page, 'WEB-01.root')).toBeVisible();
     expect(pathOf(page)).toMatch(/^\/v\//);
-
+    // The old sections are gone from the landing page.
     await page.goto('/');
-    const meet = id(page, 'WEB-03.event').first();
-    await expect(meet).toBeVisible();
-    await meet.click();
-    await expect(id(page, 'WEB-13.root')).toBeVisible();
-    expect(pathOf(page)).toMatch(/^\/e\//);
+    for (const gone of ['WEB-03.steps', 'WEB-03.featured', 'WEB-03.events', 'WEB-03.business']) await expect(page.locator(`[data-testid="${gone}"]`)).toHaveCount(0);
   });
+
+  // R4DQ-06: claim, lead and the first action in the first viewport on phones (a short one too, R4DQ-43) and a laptop; below 430 the top
+  // bar keeps the logo and "Anmelden", on one line in both languages; the hero shows no second logo at any width (R4DQ-43/58/61).
+  for (const [label, viewport] of [['390 × 844', { width: 390, height: 844 }], ['360 × 640', { width: 360, height: 640 }], ['768 × 1024', { width: 768, height: 1024 }], ['1024 × 768', { width: 1024, height: 768 }], ['1280 × 800', { width: 1280, height: 800 }], ['1440 × 900', { width: 1440, height: 900 }]] as const) {
+    test(`WEB-03 shows claim, lead and the way in within the first viewport at ${label}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      for (const locale of ['de', 'en'] as const) {
+        await page.goto(qaUrl('/', { locale }));
+        for (const part of ['WEB-03.claim', 'WEB-03.lead']) await expect(id(page, part)).toBeInViewport({ ratio: 1 });
+        await expect(page.locator('[data-testid="WEB-03.heroActions"] > a').first()).toBeInViewport({ ratio: 1 });
+        if (viewport.width < 430) {
+          await expect(id(page, 'WEB.topBar.app')).toHaveCount(0);
+          await expect(id(page, 'WEB.topBar.shop')).toHaveCount(0);
+        }
+        await expect(page.locator('[data-testid="WEB-03.logo"]')).toHaveCount(0);
+        const signIn = await id(page, 'WEB.topBar.signIn').boundingBox();
+        expect(signIn?.height ?? 0, `"${locale === 'de' ? 'Anmelden' : 'Sign in'}" on one line`).toBeLessThanOrEqual(32);
+      }
+    });
+  }
 
   test('WEB-13 shows a public meet, opens the app to answer and serves the calendar file', async ({ page }) => {
     await page.goto(`/e/${HAFEN}`);

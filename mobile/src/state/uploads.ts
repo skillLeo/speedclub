@@ -17,6 +17,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
 import type { UploadedMedia, UploadTarget } from '@/api/queries/media';
+import type { PlateBlurChoice, WithPlateBlur } from '@/features/media/plateBlur/model';
 import { isNative } from '@/lib/platform';
 import { useSessionStore } from '@/state/session';
 
@@ -41,6 +42,11 @@ export type UploadItem = {
   target: UploadTarget;
   /** The picked file, also the preview while it is prepared. */
   source: PickedPhoto;
+  /**
+   * M5.9a: the member's plate blur choice, sent as `plate_blur` + `blur_regions` with the file. Kept with the item, so a retry
+   * or an upload after a restart sends the same choice. Missing on items an older build stored: nothing is sent then.
+   */
+  plateBlur?: PlateBlurChoice;
   /** The JPEG that is sent, once prepared. Dropped once it arrived, or once a retry cannot help: on web it is the whole file. */
   preparedUri: string | null;
   status: UploadStatus;
@@ -77,6 +83,7 @@ export type UploadDriver = {
     idempotencyKey: string,
     onProgress: (fraction: number) => void,
     signal: AbortSignal,
+    plateBlur?: PlateBlurChoice,
   ) => Promise<UploadedMedia>;
   /** After a photo arrived: the screens read the vehicle or mod again. */
   onUploaded: (target: UploadTarget, media: UploadedMedia) => void;
@@ -102,7 +109,8 @@ const MIN_WAIT_MS = 1000;
 
 type QueueState = {
   items: UploadItem[];
-  enqueue: (target: UploadTarget, photos: readonly PickedPhoto[]) => string[];
+  /** Photos with their plate blur choice (M5.9a), in the order they were picked. */
+  enqueue: (target: UploadTarget, photos: readonly WithPlateBlur<PickedPhoto>[]) => string[];
   retry: (id: string) => void;
   /** Cancels a running upload, or removes a waiting or failed one. */
   cancel: (id: string) => void;
@@ -129,6 +137,7 @@ export function sameTarget(a: UploadTarget, b: UploadTarget): boolean {
   if (a.kind !== b.kind || a.vehicleId !== b.vehicleId) return false;
   if (a.kind === 'mod') return b.kind === 'mod' && a.modId === b.modId;
   if (a.kind === 'update') return b.kind === 'update' && a.updateId === b.updateId;
+  if (a.kind === 'forum') return b.kind === 'forum' && a.threadId === b.threadId;
   return true;
 }
 
@@ -207,7 +216,14 @@ export function createUploadQueue(driver: UploadDriver, options: UploadQueueOpti
       patch(id, { status: 'uploading', progress: 0, error: null });
       item = find(id);
       if (!item) return;
-      const media = await driver.upload(item.target, preparedUri, item.idempotencyKey, (progress) => patch(id, { progress }), controller.signal);
+      const media = await driver.upload(
+        item.target,
+        preparedUri,
+        item.idempotencyKey,
+        (progress) => patch(id, { progress }),
+        controller.signal,
+        item.plateBlur,
+      );
       // Signed out meanwhile: nothing of this run reaches the next session.
       if (round !== generation) return;
       // The media id is all a finished tile needs; the prepared file can go (on web a data URI of the whole photo).
@@ -307,10 +323,11 @@ export function createUploadQueue(driver: UploadDriver, options: UploadQueueOpti
     items: [],
     enqueue: (target, photos) => {
       const created = photos.map(
-        (source): UploadItem => ({
+        ({ plateBlur, ...source }): UploadItem => ({
           id: driver.newId(),
           target,
           source,
+          ...(plateBlur ? { plateBlur } : {}),
           preparedUri: null,
           status: 'queued',
           progress: 0,

@@ -27,10 +27,16 @@ export type ShareCard = {
   /** False for a card held on the device: it is shared as it is, without another download. */
   remote: boolean;
   fileName: string;
+  /**
+   * Web, a card drawn just now: its bytes. The page's CSP (`connect-src`) refuses a fetch of its own object URL, so "Teilen" and
+   * "Speichern" hand on these bytes instead of reading the URL again.
+   */
+  blob?: Blob;
 };
 
 export const signatureKeys = {
-  shareCard: (vehicleId: string, format: ShareCardFormat, viewer: string) => ['share-card', vehicleId, format, viewer] as const,
+  /** `search`: '' for the default card, else the CF-6 / R5-2e options' query (shareCardSearch). */
+  shareCard: (vehicleId: string, format: ShareCardFormat, viewer: string, search: string = '') => ['share-card', vehicleId, format, viewer, search] as const,
   compare: (a: string, b: string, viewer: string) => ['compare', publicIdOf(a), publicIdOf(b), viewer] as const,
 };
 
@@ -50,19 +56,35 @@ export function storedShareCardUrl(client: QueryClient, vehicleId: string, forma
   return null;
 }
 
-export function shareCardFileName(vehicleId: string, format: ShareCardFormat): string {
-  return `speedclub-${vehicleId}-${format}.png`;
+/** A short, stable tag of a CF-6 choice, so each custom card is its own file in the cache. */
+function searchTag(search: string): string {
+  let hash = 5381;
+  for (let index = 0; index < search.length; index += 1) hash = (hash * 33) ^ search.charCodeAt(index);
+  return (hash >>> 0).toString(36);
 }
 
-/** Draws the card at once (`GET vehicles/{id}/share-card.png`) and keeps it on the device. */
-async function drawShareCard(vehicleId: string, format: ShareCardFormat, signal: AbortSignal): Promise<ShareCard> {
-  const fileName = shareCardFileName(vehicleId, format);
+export function shareCardFileName(vehicleId: string, format: ShareCardFormat, search: string | null = null): string {
+  return search === null ? `speedclub-${vehicleId}-${format}.png` : `speedclub-${vehicleId}-${format}-${searchTag(search)}.png`;
+}
+
+/**
+ * Draws the card at once (`GET vehicles/{id}/share-card.png`, authenticated) and keeps it on the device. `search` is the CF-6 options'
+ * query (format included); null draws the default card.
+ */
+async function drawShareCard(vehicleId: string, format: ShareCardFormat, signal: AbortSignal, search: string | null = null): Promise<ShareCard> {
+  const fileName = shareCardFileName(vehicleId, format, search);
+  const query = search ?? new URLSearchParams({ format }).toString();
   if (isWeb) {
-    const result = await api.GET('/vehicles/{id}/share-card.png', { params: { path: { id: vehicleId }, query: { format } }, parseAs: 'blob', signal });
+    const result = await api.GET('/vehicles/{id}/share-card.png', {
+      params: { path: { id: vehicleId }, query: { format } },
+      // CF-6: `show` goes comma-separated so that an empty choice is `show=` (ShareCardRequest), which the bracketed form cannot say.
+      querySerializer: () => query,
+      parseAs: 'blob',
+      signal,
+    });
     if (!result.response.ok || !(result.data instanceof Blob)) throw toApiError(result.response, result.error);
-    return { url: URL.createObjectURL(result.data), remote: false, fileName };
+    return { url: URL.createObjectURL(result.data), remote: false, fileName, blob: result.data };
   }
-  const query = new URLSearchParams({ format }).toString();
   const url = `${apiOrigin()}/api/v1/vehicles/${encodeURIComponent(vehicleId)}/share-card.png?${query}`;
   try {
     const target = new CacheFile(Paths.cache, fileName);
@@ -70,20 +92,41 @@ async function drawShareCard(vehicleId: string, format: ShareCardFormat, signal:
     return { url: downloaded.uri, remote: false, fileName };
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') throw error;
-    throw nativeDownloadError(error);
+    const answered = nativeDownloadError(error);
+    // R5-2e: a download keeps no body, and a 422 names its field (`text`, `photo`) in it: read the answer once more for the field.
+    if (answered.status === 422) throw await validationError(vehicleId, format, query, signal, answered);
+    throw answered;
+  }
+}
+
+/** The body of a refused card (422) through the API client, for its field errors; the first answer when that fails too. */
+async function validationError(vehicleId: string, format: ShareCardFormat, query: string, signal: AbortSignal, fallback: ApiError): Promise<ApiError> {
+  try {
+    const result = await api.GET('/vehicles/{id}/share-card.png', {
+      params: { path: { id: vehicleId }, query: { format } },
+      querySerializer: () => query,
+      parseAs: 'blob',
+      signal,
+    });
+    return result.response.ok ? fallback : toApiError(result.response, result.error);
+  } catch {
+    return fallback;
   }
 }
 
 /**
  * The card of one format. The stored PNG when the build's page carries one; otherwise (being drawn, a cold link, no usable
- * photo yet) the route draws it now. 404 `vehicle_unavailable`: not visible, or no photo to draw from.
+ * photo yet) the route draws it now. 404 `vehicle_unavailable`: not visible, or no photo to draw from. CF-6: with `search` (the
+ * member's choice of template, photo, crop, elements, theme and own line) there is no stored file: the route draws that card for this
+ * viewer; 422 on `photo` for a photo that is no longer public, 422 on `text` for an own line the card cannot carry.
  */
-export function useShareCard(vehicleId: string, format: ShareCardFormat, enabled: boolean) {
+export function useShareCard(vehicleId: string, format: ShareCardFormat, enabled: boolean, search: string | null = null) {
   const client = useQueryClient();
   const viewer = usePublicViewer();
   return useQuery({
-    queryKey: signatureKeys.shareCard(vehicleId, format, viewer),
+    queryKey: signatureKeys.shareCard(vehicleId, format, viewer, search ?? ''),
     queryFn: async ({ signal }): Promise<ShareCard> => {
+      if (search !== null) return drawShareCard(vehicleId, format, signal, search);
       const stored = storedShareCardUrl(client, vehicleId, format);
       if (stored) return { url: stored, remote: true, fileName: shareCardFileName(vehicleId, format) };
       return drawShareCard(vehicleId, format, signal);

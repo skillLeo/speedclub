@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, type ReactNode } from 'react';
+import { useCallback, useMemo, type ComponentRef, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
@@ -17,22 +17,18 @@ import { bindTrailingCode } from '@/ui/textBreaks';
 import { useQaState, type QaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, space } from '@/theme';
-import {
-  BuildUpdateRow,
-  BuildUpdateRowSkeleton,
-  Button,
-  ContentTabs,
-  EmptyState,
-  ErrorState,
-  SectionHeader,
-  Skeleton,
-  Text,
-  VehicleCard,
-  VehicleCardSkeleton,
-  type ContentTab,
-} from '@/ui';
+import { BuildUpdateRow, BuildUpdateRowSkeleton } from '@/ui/BuildUpdateRow';
+import { Button } from '@/ui/Button';
+import { ContentTabs, type ContentTab } from '@/ui/ContentTabs';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Skeleton } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { VehicleCard, VehicleCardSkeleton } from '@/ui/VehicleCard';
 
 import { photoFields } from '../media';
+import { CheckinsSection } from '@/features/events/components/CheckinsSection';
 import { EventCardView } from '@/features/events/components/EventCardView';
 
 import { SampleEvent, SampleGarageCard, SampleUpdates } from './samples';
@@ -79,17 +75,23 @@ export type ProfileTabBarProps = {
   tabs: readonly ProfileTab[];
   value: ProfileTab;
   onChange: (next: ProfileTab) => void;
+  /** The bar's box, measured at a tab switch for the page's scroll position (CR2-3). */
+  barRef?: RefObject<ComponentRef<typeof View> | null>;
 };
 
 /**
  * 09 §7.7 Garage · Updates · Treffen · Gespeichert. Four tabs exceed the segmented control (three at most, §5), so the profile
  * uses the content tabs of VEH-01: same row height, roving arrow keys on the web, selection haptic.
  */
-export function ProfileTabBar({ routeId, tabs, value, onChange }: ProfileTabBarProps) {
+export function ProfileTabBar({ routeId, tabs, value, onChange, barRef }: ProfileTabBarProps) {
   const { t } = useTranslation('profile');
   const styles = useStyles();
   const entries: ContentTab<ProfileTab>[] = tabs.map((tab) => ({ value: tab, label: t(`tabs.${tab}`), testID: `${routeId}.tabs.${tab}` }));
-  return <ContentTabs tabs={entries} value={value} onChange={onChange} label={t('tabs.label')} style={styles.tabs} testID={`${routeId}.tabs`} />;
+  return (
+    <View ref={barRef} style={styles.tabs}>
+      <ContentTabs tabs={entries} value={value} onChange={onChange} label={t('tabs.label')} testID={`${routeId}.tabs`} />
+    </View>
+  );
 }
 
 type QueryState = {
@@ -423,6 +425,8 @@ export function EventsPanel({ routeId }: { routeId: string }) {
           label={tEvents('mine.title')}
           variant="tertiary"
           size="m"
+          // DQ-P5-015: the label on the cards' edge, not 16 inside it.
+          flush="start"
           onPress={() => router.push('/profile/events')}
           style={styles.more}
           testID={`${routeId}.events.all`}
@@ -433,6 +437,8 @@ export function EventsPanel({ routeId }: { routeId: string }) {
   return (
     <View style={styles.panel} testID={`${routeId}.events`}>
       {body}
+      {/* M5.6 (10 §4): "War dabei", the meets the member checked in at; nothing while `events.checkin` is off or there is none. */}
+      {qaState === 'default' ? <CheckinsSection routeId={routeId} /> : null}
     </View>
   );
 }

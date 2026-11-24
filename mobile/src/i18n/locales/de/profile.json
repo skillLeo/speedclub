@@ -17,10 +17,10 @@
         "edit": "Profil bearbeiten",
         "view": "Profil ansehen",
         "share": "Profil teilen",
-        "qr": "Meine QR-⁠Codes"
+        "qr": "Meine Sticker"
     },
     "share": {
-        "title": "{{name}} auf SPEED CLUB",
+        "title": "{{name}} auf Speedclub",
         "copied": "Link zu deinem Profil kopiert",
         "failed": "Teilen hat nicht geklappt. Dein Profil: {{url}}"
     },
@@ -28,25 +28,25 @@
         "title": "Garage",
         "all": "Alle anzeigen",
         "emptyTitle": "Füge dein erstes Auto hinzu",
-        "emptyBody": "Dokumentiere Technik und Mods und erhalte deinen persönlichen QR-⁠Code.",
+        "emptyBody": "Dokumentiere Technik und Mods und erhalte deinen persönlichen Sticker.",
         "add": "Fahrzeug hinzufügen",
         "errorTitle": "Deine Fahrzeuge konnten nicht geladen werden",
         "errorBody": "Prüfe deine Verbindung und versuche es noch einmal."
     },
     "rows": {
-        "qrCodes": "Meine QR-⁠Codes",
+        "qrCodes": "Meine Sticker",
         "settings": "Einstellungen",
         "addVehicle": "Fahrzeug hinzufügen",
         "saved": "Gespeichert"
     },
     "guest": {
-        "title": "Werde Teil des SPEED CLUB.",
-        "body": "Deine Garage, dein Build-Sheet mit allen Mods und ein QR-⁠Code, der an deinem Auto zu deiner Seite führt.",
+        "title": "Werde Teil des Speedclub.",
+        "body": "Deine Garage, dein Build-Sheet mit allen Mods und ein Sticker mit QR-⁠Code, der an deinem Auto zu deiner Seite führt.",
         "signIn": "Anmelden",
         "signUp": "Konto erstellen",
         "offline": "Offline – zum Anmelden brauchst du eine Verbindung.",
         "promptTitle": "Melde dich an",
-        "promptBody": "Mit deinem Konto hast du Garage, Mods und QR-⁠Codes an einem Ort.",
+        "promptBody": "Mit deinem Konto hast du Garage, Mods und Sticker an einem Ort.",
         "sample": {
             "power": "Leistung",
             "torque": "Drehmoment",
@@ -266,6 +266,365 @@
             "vehicle": "Build",
             "modification": "Mod",
             "build_update": "Update"
+        }
+    },
+    "gift": {
+        "level": {
+            "line": "Lvl {{level}} · {{title}}",
+            "lineLabel": "Level {{level}}, {{title}}",
+            "openLabel": "{{line}}. Zeigt, was als Nächstes kommt und wie du XP sammelst",
+            "sheetTitle": "Dein Level",
+            "ringLabel": "Level {{level}}, {{percent}} Prozent auf dem Weg zu Level {{next}}",
+            "ringLabelTop": "Level {{level}}, das höchste Level",
+            "xp": "{{xp}} / {{next}} XP",
+            "xpTop": "{{xp}} XP",
+            "toNext": "Noch {{left}} XP bis Lvl {{next}}",
+            "top": "Das höchste Level. Deine XP zählen weiter.",
+            "today": "Heute: {{earned}} von {{cap}} XP",
+            "todayHint": "Mehr als {{cap}} XP am Tag gibt es nicht.",
+            "rulesTitle": "Wie du XP sammelst",
+            "rules": {
+                "first_vehicle": "Dein erstes Auto veröffentlichen",
+                "documented_mod": "Einen Mod mit Marke, Foto und Datum dokumentieren",
+                "build_update": "Ein Build-Update posten",
+                "new_spot": "Ein Auto zum ersten Mal spotten",
+                "set_completed": "Ein Dex-Set vollständig machen",
+                "event_checkin": "Auf einem Treffen einchecken",
+                "forum_solution": "Deine Antwort im Forum wird als Lösung markiert",
+                "helpful_received": "Jemand findet deine Antwort im Forum hilfreich"
+            },
+            "points": "+{{points}} XP",
+            "perDay": "höchstens {{max}} XP am Tag",
+            "never": "Für Likes, Reaktionen, viele Beiträge oder das Anmelden gibt es keine XP.",
+            "close": "Schließen",
+            "errorTitle": "Dein Level konnte nicht geladen werden",
+            "memberOpenLabel": "{{line}}. Zeigt, was die Level bedeuten",
+            "memberSheetTitle": "Level von {{name}}",
+            "memberIntro": "Level steigen nur mit echten Beiträgen: dokumentierte Mods, Build-Updates, Treffen. Die XP sieht nur das Mitglied selbst.",
+            "memberRulesTitle": "So gibt es XP",
+            "toNextNamed": "Noch {{left}} XP bis Lvl {{next}} · {{title}}",
+            "ladderTitle": "Alle Level",
+            "ladderFrom": "ab {{xp}} XP",
+            "ladderHere": "Du bist hier",
+            "ladderMember": "Hier steht {{name}}",
+            "ladderLeft": "Noch {{left}} XP",
+            "ladderNote": "Jedes Level bringt einen neuen Titel. Alle Funktionen hast du vom ersten Tag an.",
+            "badgesTitle": "Abzeichen, die du dir holen kannst",
+            "badgesAll": "Alle Abzeichen ansehen"
+        },
+        "badges": {
+            "title": "Abzeichen",
+            "count": "{{earned}} von {{total}}",
+            "all": "Alle",
+            "allLabel": "Alle Abzeichen ansehen",
+            "hiddenName": "???",
+            "hiddenLabel": "Verstecktes Abzeichen",
+            "earnedLabel": "{{name}}, erhalten",
+            "lockedLabel": "{{name}}, noch nicht erhalten",
+            "tier": {
+                "1": "Bronze",
+                "2": "Silber",
+                "3": "Gold"
+            },
+            "category": {
+                "garage": "Garage",
+                "mods": "Mods",
+                "spotting": "Spots",
+                "sets": "Sets",
+                "treffen": "Treffen",
+                "forum": "Forum",
+                "sticker": "Sticker",
+                "founding": "Gründung",
+                "community": "Community",
+                "other": "Weitere"
+            },
+            "earnedOn": "Erhalten am {{date}}",
+            "notYet": "Noch nicht erhalten",
+            "hint": "Hinweis: {{hint}}",
+            "hiddenBody": "Ein verstecktes Abzeichen. Wie du es bekommst, verrät nur der Hinweis.",
+            "rules": "Abzeichen gibt es nach festen Regeln, nie per Zufall. Für Likes oder das Anmelden gibt es keine.",
+            "close": "Schließen",
+            "emptyOwnTitle": "Noch keine Abzeichen",
+            "emptyOwnBody": "Abzeichen gibt es für echte Dinge: Autos, dokumentierte Mods, Spots, Treffen.",
+            "emptyOther": "{{name}} hat noch keine Abzeichen.",
+            "errorTitle": "Abzeichen konnten nicht geladen werden",
+            "offline": "Offline – du siehst die zuletzt geladenen Abzeichen.",
+            "unlockOne": "Neues Abzeichen: {{name}}",
+            "unlockMany": "{{count}} neue Abzeichen",
+            "unlockAction": "Ansehen",
+            "restricted": "Dieses Profil ist nicht verfügbar.",
+            "emptyOwnAction": "Auto hinzufügen",
+            "guestTitle": "Melde dich an, um deine Abzeichen zu sehen",
+            "signIn": "Anmelden"
+        },
+        "founding": "Founding Member #{{number}}",
+        "foundingLabel": "Founding Member Nummer {{number}}",
+        "invites": {
+            "title": "Freunde einladen",
+            "intro": "Fünf Codes für Leute aus deiner Szene. Jeder Code gilt für ein neues Konto.",
+            "reward": "Ihr bekommt beide das Abzeichen „Crew Starter“.",
+            "summary": "{{used}} von {{total}} eingelöst",
+            "open": "Offen",
+            "redeemed": "Eingelöst",
+            "redeemedBy": "Eingelöst von @{{username}}",
+            "codeLabel": "Einladungscode {{code}}, {{status}}",
+            "share": "Teilen",
+            "shareLabel": "Einladung mit Code {{code}} teilen",
+            "copy": "Link kopieren",
+            "copyLabel": "Link mit Code {{code}} kopieren",
+            "copied": "Link kopiert",
+            "copyFailed": "Kopieren hat nicht geklappt. Der Code: {{code}}",
+            "shareMessage": "Komm zu Speedclub. Mit meinem Code bekommen wir beide das Abzeichen „Crew Starter“.",
+            "shareFailed": "Teilen hat nicht geklappt. Der Link: {{url}}",
+            "noSite": "Ohne Link geht es auch: Der Code {{code}} wird bei der Registrierung eingegeben.",
+            "allUsed": "Alle fünf Codes sind eingelöst. Danke, dass du die Szene größer machst.",
+            "errorTitle": "Deine Codes konnten nicht geladen werden",
+            "offline": "Offline – du siehst die zuletzt geladenen Codes.",
+            "offlineTitle": "Keine Verbindung",
+            "offlineBody": "Deine Codes laden, sobald du wieder online bist.",
+            "restricted": "Einladen geht gerade nicht, weil dein Konto eingeschränkt ist.",
+            "guestTitle": "Melde dich an, um Freunde einzuladen",
+            "sample": "Beispiel",
+            "emptyTitle": "Deine Codes sind gleich da",
+            "emptyBody": "Die fünf Codes entstehen beim ersten Laden. So sehen sie dann aus.",
+            "retry": "Erneut laden"
+        }
+    },
+    "wrapped": {
+        "season": {
+            "saison": "Saison {{year}}",
+            "jahr": "Jahr {{year}}"
+        },
+        "list": "{{items}} und {{last}}",
+        "entry": {
+            "title": {
+                "saison": "Dein Wrapped {{year}}",
+                "jahr": "Dein Jahres-Wrapped {{year}}"
+            },
+            "titleFallback": "Dein Wrapped",
+            "row": "Mein Wrapped",
+            "new": "Neu"
+        },
+        "countdown": {
+            "today": "{{title}} kommt heute",
+            "days_one": "{{title}} kommt morgen",
+            "days_other": "{{title}} kommt in {{count}} Tagen",
+            "body": "Ab {{date}}, {{time}} Uhr: deine Saison in Karten, zum Durchtippen und Teilen.",
+            "dismiss": "Hinweis ausblenden"
+        },
+        "player": {
+            "label": "Season Wrapped, {{season}}",
+            "position": "Karte {{n}} von {{total}}",
+            "close": "Schließen",
+            "previous": "Vorherige Karte",
+            "next": "Nächste Karte",
+            "pause": "Anhalten",
+            "play": "Weiter abspielen",
+            "share": "Teilen",
+            "download": "Bild speichern",
+            "shareTitle": "Mein Speedclub Wrapped",
+            "saved": "Bild gespeichert.",
+            "shareFailed": "Das Bild ließ sich gerade nicht erstellen. Versuch es gleich noch mal.",
+            "downloadFailed": "Das Bild ist gerade nicht abrufbar. Versuch es gleich noch mal.",
+            "restricted": "Dein Konto ist eingeschränkt. Ansehen geht, Teilen erst wieder, wenn die Einschränkung endet.",
+            "offline": "Du bist offline. Du siehst den zuletzt geladenen Stand.",
+            "loading": "Dein Wrapped wird geladen"
+        },
+        "notReleased": {
+            "title": "Dein Wrapped für {{season}} ist noch nicht da",
+            "body": "Es erscheint am {{date}} um {{time}} Uhr.",
+            "bodyNoDate": "Es erscheint nach dem Saisonende."
+        },
+        "empty": {
+            "title": "Für diese Saison gibt es kein Wrapped",
+            "body": "Ein Wrapped entsteht aus deinen Spots, Treffen und dokumentierten Mods. Mit dem nächsten Spot oder Mod bist du nächste Saison dabei.",
+            "action": "Zur Garage"
+        },
+        "error": {
+            "title": "Dein Wrapped ließ sich nicht laden"
+        },
+        "guest": {
+            "title": "Melde dich an, um dein Wrapped zu sehen",
+            "body": "Ein Wrapped zeigt nur deine eigene Saison: deine Spots, Treffen und Mods.",
+            "action": "Anmelden"
+        },
+        "cards": {
+            "intro": {
+                "window": "{{from}} bis {{to}}",
+                "member": "Die Saison von {{name}}"
+            },
+            "photoLabel": "Foto deines Autos",
+            "spots": {
+                "eyebrow": "Gespottet",
+                "unit_one": "Spot",
+                "unit_other": "Spots",
+                "cars_one": "{{value}} Auto, immer wieder",
+                "cars_other": "{{value}} verschiedene Autos",
+                "cities": "Unterwegs in {{cities}}.",
+                "rarest": "Dein seltenster Fund",
+                "dexNumber": "Nr. {{number}}",
+                "rarestA11y": "Dein seltenster Fund: {{name}}, Nr. {{number}}, Rarität {{tier}}"
+            },
+            "scans": {
+                "eyebrow": "Dein Sticker",
+                "unit_one": "Scan",
+                "unit_other": "Scans",
+                "line_one": "Einmal wurde der Sticker an deinem Auto gescannt.",
+                "line_other": "So oft wurde der Sticker an deinem Auto gescannt.",
+                "views_one": "Aufruf deines Profils und deiner Autos",
+                "views_other": "Aufrufe deines Profils und deiner Autos",
+                "topCity": "Die meisten Scans kamen aus {{city}}."
+            },
+            "score": {
+                "eyebrow": "Build Score",
+                "range": "Von {{from}} auf {{to}} Punkte in dieser Saison.",
+                "stageUp": "Aufgestiegen von Stufe {{from}} auf Stufe {{to}}"
+            },
+            "topMod": {
+                "eyebrow": "Dein Top-Mod",
+                "on": "An deinem {{vehicle}}"
+            },
+            "treffen": {
+                "eyebrow": "Treffen",
+                "unit_one": "Treffen",
+                "unit_other": "Treffen",
+                "line_one": "Ein Treffen mit Check-in in dieser Saison.",
+                "line_other": "Treffen mit Check-in in dieser Saison."
+            },
+            "spirit": {
+                "eyebrow": "Dein Build Spirit",
+                "rule": "Ermittelt nach festen Regeln aus deinen dokumentierten Mods."
+            },
+            "percentile": {
+                "eyebrow": "Build Score in {{bundesland}}",
+                "line": "Mit deinem Build Score gehörst du zu den {{percentile}} in {{bundesland}}.",
+                "rule": "Verglichen mit allen Mitgliedern in {{bundesland}}, deren Auto einen Build Score hat."
+            },
+            "share": {
+                "score": "Build Score {{value}}",
+                "qrLabel": "QR-Code zur Seite von {{vehicle}}"
+            }
+        }
+    },
+    "insights": {
+        "title": "Statistiken",
+        "accountSubtitle": "Dein Profil und alle Builds",
+        "thisWeek": "Aufrufe diese Woche",
+        "lastWeek": "Letzte Woche",
+        "days30": "Aufrufe 30 Tage",
+        "delta": {
+            "none": "Diese Woche noch keine Aufrufe",
+            "new": "Die ersten Aufrufe – letzte Woche noch keine",
+            "up": "{{percent}} % mehr als letzte Woche",
+            "same": "So viele wie letzte Woche",
+            "lastWeek": "Letzte Woche: {{value}}"
+        },
+        "chart": {
+            "title": "Letzte 30 Tage",
+            "label_one": "Aufrufe der letzten 30 Tage: ein Aufruf.",
+            "label_other": "Aufrufe der letzten 30 Tage: {{total}}, an einem Tag höchstens {{busiest}}.",
+            "scansLabel_one": "Dazu ein Sticker-Scan.",
+            "scansLabel_other": "Dazu {{total}} Sticker-Scans.",
+            "none": "In den letzten 30 Tagen keine Aufrufe.",
+            "views": "Aufrufe",
+            "scans": "Sticker-Scans"
+        },
+        "countingSince": "Gezählt wird seit dem {{date}}",
+        "sources": {
+            "title": "Woher die Aufrufe kommen",
+            "caption": "Letzte 30 Tage",
+            "value": "{{views}} · {{percent}} %"
+        },
+        "week": {
+            "title": "Diese Woche",
+            "caption": "Die letzten 7 Tage, daneben die 7 Tage davor",
+            "lastWeek": "Letzte Woche: {{value}}",
+            "scans": "Sticker-Scans",
+            "spots": "Spots im STREET DEX",
+            "followers": "Neue Follower",
+            "vehicleFollowers": "Neue Follower am Build",
+            "saves": "Gemerkt",
+            "reactions": "Reaktionen"
+        },
+        "breakdown": {
+            "title": "Nach Seite",
+            "caption": "Aufrufe diese Woche",
+            "profile": "Dein Profil",
+            "value_one": "{{value}} Aufruf",
+            "value_other": "{{value}} Aufrufe"
+        },
+        "privacy": "Nur du siehst diese Zahlen. Gezählt wird ein Aufruf pro Person und Tag – wer deine Seiten angesehen hat, speichern und zeigen wir nicht.",
+        "quietTitle": "Diese Woche noch keine Aufrufe.",
+        "quietBodyVehicle": "Sobald jemand deinen Build ansieht, steht es hier: woher der Aufruf kam, Sticker-Scans und neue Follower. Teil deinen Build, damit ihn mehr Leute sehen.",
+        "quietBodyAccount": "Sobald jemand dein Profil oder einen deiner Builds ansieht, steht es hier: woher der Aufruf kam, Sticker-Scans und neue Follower. Teil dein Profil, damit es mehr Leute sehen.",
+        "sample": {
+            "label": "Beispiel: So zeigt die Kurve deine Aufrufe der letzten 30 Tage, sobald welche da sind."
+        },
+        "shareVehicle": "Build teilen",
+        "shareProfile": "Profil teilen",
+        "shareProfileTitle": "Mein Profil auf Speedclub",
+        "copied": "Link kopiert",
+        "shareFailed": "Teilen hat nicht geklappt. Der Link: {{url}}",
+        "guest": {
+            "title": "Statistiken zu deinen Builds",
+            "body": "Melde dich an, um zu sehen, wie oft dein Profil und deine Builds angesehen werden.",
+            "signIn": "Anmelden"
+        },
+        "restricted": {
+            "title": "Nur für den Besitzer",
+            "body": "Diese Statistiken sieht nur, wem der Build gehört. In der Supportansicht bleiben sie zu."
+        },
+        "disabled": {
+            "title": "Statistiken gerade aus",
+            "body": "Im Moment zählen wir keine Aufrufe. Schau später wieder rein."
+        },
+        "unavailable": {
+            "title": "Statistik nicht verfügbar",
+            "body": "Dieses Fahrzeug gibt es nicht mehr, oder es steht nicht in deiner Garage.",
+            "garage": "Zur Garage"
+        },
+        "errorTitle": "Statistiken nicht geladen",
+        "offlineTitle": "Du bist offline",
+        "offlineBody": "Die Statistiken laden, sobald du wieder online bist.",
+        "offlineBanner": "Offline. Du siehst die Zahlen vom letzten Laden.",
+        "entry": {
+            "row": "Statistiken",
+            "profileSubtitle": "Aufrufe, Scans und neue Follower",
+            "value_one": "{{value}} Aufruf diese Woche",
+            "value_other": "{{value}} Aufrufe diese Woche"
+        },
+        "goal": {
+            "label": "Ziel: Saison {{season}}",
+            "season": "Saison {{season}}",
+            "row": "Build-Ziel",
+            "rowLabel": "Build-Ziel ändern",
+            "notSet": "Nicht gesetzt",
+            "newGoal": "Neues Ziel setzen",
+            "passedRow": "Saison {{season}} ist vorbei",
+            "passedHelper": "Vorbei",
+            "none": "Kein Ziel",
+            "sheetTitle": "Build-Ziel",
+            "intro": "Bis wann soll der Build stehen? Das Ziel steht unter dem Build-Fortschritt, für alle, die den Build ansehen. Keine Erinnerung, kein Countdown.",
+            "save": "Speichern",
+            "saved": "Ziel gespeichert: Saison {{season}}",
+            "cleared": "Ziel entfernt",
+            "failed": "Das Ziel wurde nicht gespeichert. Versuch es noch einmal.",
+            "offline": "Du bist offline. Speichern geht, sobald du wieder online bist.",
+            "range": "Wähl eine Saison bis in zehn Jahren."
+        },
+        "notifications": {
+            "plan_due": {
+                "group": "Build-Erinnerungen",
+                "push": "Zielmonat einer Mod",
+                "helper": "Wenn der Zielmonat einer geplanten Mod da ist, fragen wir, ob sie schon verbaut ist. Höchstens einmal pro Woche."
+            },
+            "weekly_recap": {
+                "group": "Rückblick",
+                "push": "Wochenrückblick",
+                "helper": "Sonntags um 18 Uhr: Aufrufe, Scans, neue Follower. Kommt nicht, wenn nichts los war.",
+                "email": "Wochenrückblick per E-Mail",
+                "emailHelper": "Nur wenn kein Push ankommt, damit du ihn nicht doppelt bekommst."
+            }
         }
     }
 }

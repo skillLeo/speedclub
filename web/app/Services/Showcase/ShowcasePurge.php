@@ -11,6 +11,7 @@ use App\Models\BuildUpdate;
 use App\Models\CatalogRequest;
 use App\Models\Conversation;
 use App\Models\ConversationParticipant;
+use App\Models\Crew;
 use App\Models\Event;
 use App\Models\EventRsvp;
 use App\Models\Follow;
@@ -30,10 +31,12 @@ use App\Services\Audit\Audit;
 use App\Services\Auth\MemberSessions;
 use App\Services\Auth\StaffCredentials;
 use App\Services\Config\ConfigVersions;
+use App\Services\Crews\CrewAccountDeletion;
 use App\Services\Events\EventHousekeeping;
 use App\Services\Media\MediaService;
 use App\Services\PublicPages\OgImages;
 use App\Services\Team\StaffSessions;
+use App\Services\Wrapped\WrappedCardImages;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +46,7 @@ use Throwable;
 /**
  * Counts and removes the showcase (`speedclub:demo --purge`): every is_sample member and build with what hangs off them (photos and
  * their files on both disks, parts, Verlauf, QR codes and scans, follows, saves, notifications, chats between sample members, their
- * reports and cases, tickets, catalogue requests), the approvals about them or by the showcase staff, the showcase's featured entry and Home collection
+ * reports and cases, tickets, catalogue requests; M5.10's sticker designs, plans, view history, check-ins and gallery photos), the approvals about them or by the showcase staff, the showcase's featured entry and Home collection
  * on Home, and the showcase staff account. Real members and their data are never touched: everything is selected through is_sample.
  *
  * The audit log is append-only (database triggers), so its showcase entries stay; the staff account is anonymised like ADM-40's
@@ -91,6 +94,17 @@ class ShowcasePurge
             // M4.12: sample events (and every event of a sample organiser) with the answers to them or by sample members.
             'events' => $this->sampleEvents()->count(),
             'event_rsvps' => EventRsvp::query()->where(fn (Builder $query) => $query->whereIn('event_id', $this->sampleEvents()->select('id'))->orWhereIn('user_id', $users))->count(),
+            // M5.9f gift demo (GiftDemoSeeder): all of it cascades with the sample members and builds.
+            'spots' => DB::table('spots')->where(fn (QueryBuilder $query) => $query->whereIn('vehicle_id', $vehicles)->orWhereIn('spotter_id', $users))->count(),
+            'xp_events' => DB::table('xp_events')->whereIn('user_id', $users)->count(),
+            'user_badges' => DB::table('user_badges')->whereIn('user_id', $users)->count(),
+            'invite_codes' => DB::table('invite_codes')->whereIn('inviter_id', $users)->count(),
+            'car_of_the_day' => DB::table('car_of_the_day')->whereIn('vehicle_id', $vehicles)->count(),
+            'build_score_ranks' => DB::table('build_score_ranks')->whereIn('vehicle_id', $vehicles)->count(),
+            'wrapped' => DB::table('wrapped')->whereIn('user_id', $users)->count(),
+            // M5.10 (ShowcasePhase5): sticker designs (also on the classic demo's builds), plans, view history, check-ins at the past
+            // demo meets and the sample gallery photos.
+            ...app(ShowcasePhase5::class)->counts(),
         ];
     }
 
@@ -120,6 +134,8 @@ class ShowcasePurge
         CatalogRequest::query()->whereIn('user_id', $this->sampleUsers())->delete();
         Conversation::query()->whereIn('id', $this->sampleConversations()->pluck('conversation_id')->all())->delete();
         EventRsvp::query()->whereIn('user_id', $this->sampleUsers())->delete();
+        // M5.10: what does not cascade with the sample members and builds (classic demo designs, check-ins, gallery photos and files).
+        app(ShowcasePhase5::class)->purge();
 
         foreach ($this->sampleEvents()->get() as $event) {
             app(EventHousekeeping::class)->delete($event);
@@ -127,6 +143,9 @@ class ShowcasePurge
 
         // M4.14: the sample business with its photos (before its owner, the Editorial account).
         app(ShowcaseBusinesses::class)->purge();
+
+        // R4-2.3 (R4DQ-21): the sample crews go with their members (their logo and cover first), so none stays behind without one.
+        $this->removeSampleCrews();
 
         foreach (User::withTrashed()->where('is_sample', true)->get() as $user) {
             $this->removeMember($user);
@@ -167,8 +186,22 @@ class ShowcasePurge
         });
     }
 
+    private function removeSampleCrews(): void
+    {
+        foreach (Crew::withTrashed()->where('is_sample', true)->get() as $crew) {
+            foreach (Media::withTrashed()->whereIn('id', array_values(array_filter([$crew->logo_media_id, $crew->cover_media_id])))->get() as $photo) {
+                $this->media->purge($photo);
+            }
+
+            DB::transaction(fn () => $crew->forceDelete());
+        }
+    }
+
     private function removeMember(User $user): void
     {
+        // A real crew a sample member joined or founded is handed over or ended and recounted, as for any closed account (C8).
+        DB::transaction(fn () => app(CrewAccountDeletion::class)->accountClosed($user));
+
         foreach (Media::withTrashed()->where('owner_id', $user->id)->orderBy('id')->get() as $photo) {
             $this->media->purge($photo);
         }
@@ -179,6 +212,11 @@ class ShowcasePurge
 
         $this->quietly(fn () => $this->og->purge($user));
         $this->quietly(fn () => $this->memberSessions->revokeAll($user));
+
+        // M5.9f: the drawn Wrapped cards on the private disk (the rows cascade with the member).
+        foreach (DB::table('wrapped')->where('user_id', $user->id)->pluck('season_key') as $season) {
+            $this->quietly(fn () => app(WrappedCardImages::class)->forget($user->id, (string) $season));
+        }
 
         DB::table('personal_access_tokens')->where('tokenable_type', $user->getMorphClass())->where('tokenable_id', $user->id)->delete();
         DB::table('sessions')->where('user_id', $user->id)->delete();

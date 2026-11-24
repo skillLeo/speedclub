@@ -28,13 +28,42 @@ return [
     'remote' => [
         'min_above_latest' => 'The minimum version must not be above the latest version.',
         'maintenance_message' => 'Maintenance mode needs a message.',
+        'wrapped_release' => 'Each release needs a season key (for example 2027-saison or 2027-jahr) and a date with time and time zone.',
+        'wrapped_release_soon' => 'A new release must be at least one day ahead (:date at the earliest), so every Wrapped is ready in time.',
+        'wrapped_release_season' => 'The release must come after the end of the season (after :date), or its last weeks are missing.',
     ],
     'rate_limits' => [
         'unknown' => 'Unknown limits: :names.',
     ],
+    'governance' => [
+        'field' => 'This setting does not exist.',
+    ],
     'org' => [
         'field' => 'This value is not allowed.',
         'size' => 'The details are too long.',
+        // Client round 6: the save dialog names the field of a refused value (OrgSchema), and a refused save says so.
+        'owner_only' => 'Only an Owner can save the company data. Nothing was saved.',
+        'vat_id' => 'VAT ID: it starts with two letters and contains figures, e.g. DE 123 456 789.',
+        'phone' => 'Phone: only figures, spaces, +, /, - and brackets, e.g. +49 (0) 30 1234567.',
+        'fields' => [
+            'company_name' => 'Company name',
+            'legal_form' => 'Legal form',
+            'street' => 'Street and number',
+            'postal_city' => 'Postcode and city',
+            'representative' => 'Authorised representative',
+            'responsible_person' => 'Person responsible',
+            'contact_email' => 'Contact e-mail',
+            'phone' => 'Phone',
+            'support_email' => 'Support e-mail',
+            'privacy_email' => 'Privacy e-mail',
+            'dsa_email' => 'DSA contact e-mail',
+            'report_email' => 'Report e-mail',
+            'register_court' => 'Register court',
+            'register_number' => 'Register number',
+            'vat_id' => 'VAT ID',
+            'supervisory_authority' => 'Supervisory authority',
+            'default_locale' => 'Default language',
+        ],
     ],
     'flags' => [
         'empty' => 'There is no change.',

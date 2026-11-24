@@ -134,6 +134,22 @@ describe('DELETE {type}/{id}/reactions', function () {
     });
 });
 
+describe('"Gefällt mir" (client round 4, 11 R4-2.2)', function () {
+    it('is a reaction like the others: one tap sets it, the member sees only their own, the owner sees the count', function () {
+        Sanctum::actingAs($this->fan);
+        $this->putJson(s2ReactUrl('build-updates', $this->update->id), ['reaction' => 'like'])->assertOk()->assertJsonPath('data.my_reaction', 'like');
+
+        Sanctum::actingAs($this->owner);
+        $this->getJson(s2ReactUrl('build-updates', $this->update->id))->assertOk()
+            ->assertJsonPath('meta.summary.like', 1)
+            ->assertJsonPath('meta.summary.total', 1);
+
+        $stranger = User::factory()->create();
+        Sanctum::actingAs($stranger);
+        $this->getJson(s2ReactUrl('build-updates', $this->update->id))->assertForbidden();
+    });
+});
+
 describe('GET {type}/{id}/reactions (owner only)', function () {
     it('lists who reacted with the summary, without members the owner may not see', function () {
         foreach (['strong', 'clean', 'clean'] as $type) {
@@ -146,7 +162,7 @@ describe('GET {type}/{id}/reactions (owner only)', function () {
 
         $this->getJson(s2ReactUrl('build-updates', $this->update->id))->assertOk()
             ->assertJsonCount(3, 'data')
-            ->assertJsonPath('meta.summary', ['strong' => 1, 'clean' => 2, 'low' => 0, 'loud' => 1, 'total' => 4])
+            ->assertJsonPath('meta.summary', ['like' => 0, 'strong' => 1, 'clean' => 2, 'low' => 0, 'loud' => 1, 'total' => 4])
             ->assertJsonStructure(['data' => [['member' => ['username'], 'reaction', 'reacted_at']]]);
     });
 

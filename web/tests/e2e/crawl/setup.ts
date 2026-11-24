@@ -4,17 +4,25 @@
 // environment, creates the one local staff fixture `owner` (support/staff.mjs, support/backend.php ensure-staff: a new password and a
 // new TOTP secret in memory, handed to the workers through the environment like the e2e global setup does). Staging never gets there:
 // it needs CRAWL_STAFF_PASSWORD and CRAWL_STAFF_TOTP_SECRET and has no database access.
-// Teardown: removes that fixture again and merges the parts of all tests into docs/reports/phase-4/showcase-crawl-<target>.{json,md}.
+// It also signs up the run's new, empty member (persona `fresh`, signUpFreshMember) on a local target.
+// Teardown: removes that fixture and that member again and merges the parts of all tests into
+// <CRAWL_REPORT_DIR, default docs/reports/phase-4>/showcase-crawl-<target>.{json,md}.
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomBytes } from 'node:crypto';
 import { request } from '@playwright/test';
+import { QA_USER_AGENT } from '../support/qa.mjs';
 import { ADMIN_NOT_PAGES, adminRoutes, cell, EXCLUDED, FINDING_TYPES, TARGET, type Part } from './lib';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..', '..', '..', '..');
 export const PARTS_DIR = join(HERE, '..', 'test-results', 'crawl-parts', TARGET.name);
-const REPORT_DIR = join(REPO, 'docs', 'reports', 'phase-4');
+// CRAWL_REPORT_DIR (relative to the repo root) puts the merged report elsewhere, e.g. docs/reports/qa-full/crawl.
+const REPORT_REL = process.env.CRAWL_REPORT_DIR ?? join('docs', 'reports', 'phase-4');
+const REPORT_DIR = join(REPO, REPORT_REL);
+/** Every new member of a crawl run is an e2e test account (support/backend.php deletes only E2E_DOMAIN accounts) with this prefix. */
+const FRESH_PREFIX = 'crawl-neu-';
 
 export default async function globalSetup(): Promise<() => Promise<void>> {
   const api = await request.newContext({ baseURL: TARGET.baseUrl });
@@ -44,7 +52,18 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
     console.log(`[crawl] local staff fixture ${owner.email} (password and TOTP secret in memory only)`);
   }
 
+  let freshMade = false;
+  if (!process.env.CRAWL_FRESH_EMAIL && TARGET.local && process.env.CRAWL_FRESH !== 'off') {
+    await signUpFreshMember();
+    freshMade = true;
+  }
+
   return async () => {
+    if (freshMade) {
+      const { deleteTestAccounts } = await import('../support/backend.mjs');
+      const removed = (await deleteTestAccounts(FRESH_PREFIX)) as { deleted?: number };
+      console.log(`[crawl] removed ${removed.deleted ?? '?'} new member account(s)`);
+    }
     if (localFixture) {
       const { deleteStaffFixtures } = await import('../support/backend.mjs');
       const removed = await deleteStaffFixtures();
@@ -52,6 +71,54 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
     }
     writeReport();
   };
+}
+
+/**
+ * Persona `fresh`: a new member signed up the way the app does it, over the API (AUTH-04 auth/register, the code from the dev mailbox,
+ * AUTH-05 auth/email/verify, AUTH-08 me/username, AUTH-09 skipped with an empty me/profile), then signed out. The address and a new
+ * password go to the workers through the environment, never to a log. Local only: the code needs the dev mailbox.
+ */
+async function signUpFreshMember(): Promise<void> {
+  const { E2E_DOMAIN, resetAuthLimits, waitForMail } = await import('../support/backend.mjs');
+  const stamp = Date.now().toString(36);
+  const email = `${FRESH_PREFIX}${stamp}@${E2E_DOMAIN}`;
+  const password = `Sc-${randomBytes(18).toString('base64url')}-9`;
+  await resetAuthLimits([email]);
+  const api = await request.newContext({
+    baseURL: TARGET.baseUrl,
+    userAgent: QA_USER_AGENT,
+    extraHTTPHeaders: { Accept: 'application/json', Origin: TARGET.origin, Referer: `${TARGET.baseUrl}/app/` },
+  });
+  const xsrf = async () => decodeURIComponent((await api.storageState()).cookies.find((c) => c.name === 'XSRF-TOKEN')?.value ?? '');
+  const step = async (what: string, call: Promise<import('@playwright/test').APIResponse>, ok: number[]) => {
+    const response = await call;
+    if (!ok.includes(response.status())) throw new Error(`New member sign-up: ${what} answered HTTP ${response.status()}`);
+    return response;
+  };
+  try {
+    await step('GET /sanctum/csrf-cookie', api.get('/sanctum/csrf-cookie'), [204, 200]);
+    await step(
+      'POST auth/register',
+      api.post('/api/v1/auth/register', {
+        data: { email, password, accepted_age_16: true, accepted_terms: true, accepted_privacy: true, marketing_consent: false, locale: 'de' },
+        headers: { 'X-XSRF-TOKEN': await xsrf() },
+      }),
+      [202],
+    );
+    const mail = (await waitForMail(email, (m: { code: string | null }) => m.code !== null, { timeoutMs: 30_000 })) as { code: string };
+    await step('POST auth/email/verify', api.post('/api/v1/auth/email/verify', { data: { email, code: mail.code, password }, headers: { 'X-XSRF-TOKEN': await xsrf() } }), [200]);
+    await step('PUT me/username', api.put('/api/v1/me/username', { data: { username: `neu_${stamp}` }, headers: { 'X-XSRF-TOKEN': await xsrf() } }), [200]);
+    await step('PATCH me/profile', api.patch('/api/v1/me/profile', { data: {}, headers: { 'X-XSRF-TOKEN': await xsrf() } }), [200]);
+    const me = await step('GET auth/me', api.get('/api/v1/auth/me'), [200]);
+    const next = ((await me.json()) as { data?: { next_step?: string | null } }).data?.next_step ?? null;
+    if (next !== null) throw new Error(`New member sign-up: onboarding still open at ${next}`);
+    await step('POST auth/logout', api.post('/api/v1/auth/logout', { headers: { 'X-XSRF-TOKEN': await xsrf() } }), [204]);
+  } finally {
+    await api.dispose();
+  }
+  process.env.CRAWL_FRESH_EMAIL = email;
+  process.env.CRAWL_FRESH_PASSWORD = password;
+  console.log(`[crawl] new member ${email} signed up through the API (password in memory only)`);
 }
 
 function readParts(): Part[] {
@@ -64,7 +131,7 @@ function readParts(): Part[] {
   return files.map((f) => JSON.parse(readFileSync(join(PARTS_DIR, f), 'utf8')) as Part).sort((a, b) => `${a.role}${a.device}`.localeCompare(`${b.role}${b.device}`));
 }
 
-const ROLE_ORDER = { guest: 0, member: 1, admin: 2 } as const;
+const ROLE_ORDER = { guest: 0, member: 1, fresh: 2, admin: 3 } as const;
 
 export function writeReport(): void {
   const parts = readParts().sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role] || a.device.localeCompare(b.device));
@@ -87,8 +154,8 @@ export function writeReport(): void {
   const md: string[] = [];
   const first = parts[0]!;
   md.push(`# Showcase crawl: ${TARGET.name}`, '');
-  md.push(`Base URL ${TARGET.baseUrl} · finished ${json.finishedAt} · member ${first.memberEmail ?? '-'} · staff ${parts.find((p) => p.staffEmail)?.staffEmail ?? '-'}`, '');
-  md.push(`Spec: \`web/tests/e2e/crawl/showcase.spec.ts\` (run commands in its header). JSON: \`docs/reports/phase-4/showcase-crawl-${TARGET.name}.json\`.`, '');
+  md.push(`Base URL ${TARGET.baseUrl} · finished ${json.finishedAt} · member ${parts.find((p) => p.role === 'member')?.memberEmail ?? first.memberEmail ?? '-'} · new member ${parts.find((p) => p.role === 'fresh')?.memberEmail ?? '-'} · staff ${parts.find((p) => p.staffEmail)?.staffEmail ?? '-'}`, '');
+  md.push(`Spec: \`web/tests/e2e/crawl/showcase.spec.ts\` (run commands in its header). JSON: \`${REPORT_REL}/showcase-crawl-${TARGET.name}.json\`.`, '');
   md.push(`**Result: ${total === 0 ? 'PASS' : 'FAIL'}** · ${total} finding(s) in ${parts.length} run(s).`, '');
 
   md.push('## Pages per role and device', '');
@@ -187,5 +254,5 @@ export function writeReport(): void {
   }
   md.push('');
   writeFileSync(join(REPORT_DIR, `showcase-crawl-${TARGET.name}.md`), `${md.join('\n')}\n`);
-  console.log(`[crawl] report: docs/reports/phase-4/showcase-crawl-${TARGET.name}.md (${total} finding(s))`);
+  console.log(`[crawl] report: ${REPORT_REL}/showcase-crawl-${TARGET.name}.md (${total} finding(s))`);
 }

@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Without JavaScript both links open the screen without a code, where the six digits of the mail can be typed.
  *
  * "In der App öffnen" never hands the code to the custom scheme (SEC-P2-03): any Android app may claim speedclub://, and on a phone
- * without SPEED CLUB, the case this page serves, such an app would get the reset code and the address. Where App Links are verified
+ * without Speedclub, the case this page serves, such an app would get the reset code and the address. Where App Links are verified
  * (staging and production on https), the button is the https link /app/reset-password or /app/verify-email with the fragment, an exact
  * path of assetlinks and apple-app-site-association that only the installed app can take and that otherwise opens the member web.
  * Elsewhere it is the bare scheme link, and the member types the code in the app.

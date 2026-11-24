@@ -2,7 +2,7 @@
 import { PhInfo, PhPlus, PhTrash } from '@phosphor-icons/vue';
 import { getActiveLanguage, trans, transChoice } from 'laravel-vue-i18n';
 import { computed, reactive, watch } from 'vue';
-import { Button, Drawer, Field, IconButton, Input, Select, Switch, Textarea, type SelectOption } from '../../../Components/ui';
+import { Button, Drawer, Field, IconButton, Input, Select, Switch, type SelectOption } from '../../../Components/ui';
 import { qaDialogFailed } from '../../../composables/pageState';
 import { formatNumber } from '../../../lib/format';
 import { routeOr } from '../../../lib/routes';
@@ -11,7 +11,7 @@ import { useCatalogWrite } from '../shared';
 import { fieldLabel, type SchemaField } from './schema';
 
 /**
- * ADM-15 field editor (m3.3 §1, catalog.manage; every save is one schema version with its reason): key, labels DE/EN, type (the five of
+ * ADM-15 field editor (m3.3 §1, catalog.manage; every save is one schema version): key, labels DE/EN, type (the five of
  * 02 §3.3: number, text, select, boolean, brand), unit, min/max/step (number), options with DE/EN labels (select), pattern and example
  * (text), required and sort. Once the field has data its key and type are fixed and narrowing is refused with the count of affected
  * modifications. `facet` and `searchable` are shown read-only (ADR-235: the Discover facet set is fixed in V1).
@@ -38,7 +38,6 @@ const form = reactive({
     example: '',
     required: false,
     sort: '',
-    reason: '',
 });
 const write = useCatalogWrite();
 const failed = qaDialogFailed();
@@ -71,7 +70,6 @@ watch(
             example: text.example ?? '',
             required: f?.required ?? false,
             sort: f ? String(f.sort) : '',
-            reason: '',
         });
     },
     { immediate: true },
@@ -95,7 +93,6 @@ function payload(): Record<string, unknown> {
         type: form.type,
         unit: form.unit.trim() || null,
         required: archived.value ? false : form.required,
-        reason: form.reason.trim(),
     };
     if (form.sort.trim() !== '') data.sort = Number.parseInt(form.sort, 10);
     if (form.type === 'number') Object.assign(data, { min: decimal(form.min), max: decimal(form.max), step: decimal(form.step) });
@@ -207,10 +204,6 @@ const formId = `${props.testId}-form`;
                 </dl>
                 <p class="text-admin-base text-ink-3">{{ trans('catalog.field.discover_body') }}</p>
             </section>
-
-            <Field :label="trans('catalog.fields.reason')" :hint="trans('catalog.field.reason_hint')" :error="err('reason')" required>
-                <Textarea v-model="form.reason" :rows="2" :maxlength="1000" show-count :data-testid="`${testId}.reason`" />
-            </Field>
         </form>
         <template #footer>
             <Button variant="ghost" :disabled="write.processing.value" @click="open = false">{{ trans('ui.actions.cancel') }}</Button>

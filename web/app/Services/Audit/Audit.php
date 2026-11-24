@@ -53,7 +53,8 @@ final class Audit
             'target_id' => $target === null ? null : self::stringOrNull($target->getKey()),
             'before' => self::clean($before),
             'after' => self::clean($after),
-            'reason' => $reason === null ? null : Str::limit($reason, 1000, ''),
+            // ADR-540: staff give no internal reason any more; an empty one is recorded as null, never as ''.
+            'reason' => $reason === null || trim($reason) === '' ? null : Str::limit($reason, 1000, ''),
             'request_id' => self::requestId(),
         ];
 

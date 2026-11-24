@@ -6,7 +6,7 @@
 import { size, space, typeScale, typography, type SizedTypeVariant } from '@/theme';
 import { displayTitleFontSize, displayTitleSize, drawnScale, estimateDisplayTitle, type DisplayTitlePlacement } from '@/ui/displayTitleLayout';
 import { estimateLines } from '@/ui/Skeleton';
-import { estimatedSpecStripColumns, provenanceRowsOf, specStripHeight, specStripRows, type SpecStripEntry } from '@/ui/specStripLayout';
+import { estimatedSpecStripColumns, provenanceRowsOf, specStripHeight, specStripRows, type SpecStripEntry, type StripSize } from '@/ui/specStripLayout';
 
 /**
  * A text as word widths in em of its type variant and the width of its spaces. M4.1 re-measured them for the 2.0 faces from
@@ -17,9 +17,12 @@ export type WordWidths = { words: readonly number[]; space: number };
 /** FS-3's title "Skyline GT-R R34" in `display.title` (Archivo SemiExpanded 600, its −1 % tracking included). */
 export const BLUEPRINT_TITLE: WordWidths = { words: [3.73, 2.66, 2.115], space: 0.25 };
 
-/** FS-3's sub-line "2002 · 2,6 l R6 Biturbo (RB26DETT) · Bayside Blue" in `callout` (Inter 500). */
+/**
+ * FS-3's sub-line "2002 · 2,6 l R6 Biturbo (RB26DETT) · Bayside Blue" in `callout` (Inter 500), as the page sets it above font scale
+ * 1.2: the long engine part wraps at its spaces, the short colour stays whole (DQ-P5-071, keptSubline), one word as in the PARTS.
+ */
 export const BLUEPRINT_SUBLINE: WordWidths = {
-  words: [2.523, 0.303, 1.524, 0.252, 1.278, 3.476, 5.918, 0.303, 3.782, 2.098],
+  words: [2.523, 0.303, 1.524, 0.252, 1.278, 3.476, 5.918, 0.303, 6.146],
   space: 0.267,
 };
 
@@ -41,7 +44,7 @@ export const BLUEPRINT_SPEC_STRIP: readonly SpecStripEntry[] = [
  * DQ-801: the strip's skeleton height at this width, with the rule SpecStrip uses (specStripLayout.ts) applied to FS-3's
  * example values: one row of four where they fit, else the 2×2 grid. `hairline` is the divider width of the platform.
  */
-export function blueprintStripHeight(width: number, fontScale: number, desktop: boolean, hairline: number): number {
+export function blueprintStripHeight(width: number, fontScale: number, desktop: StripSize, hairline: number): number {
   const columns = estimatedSpecStripColumns(BLUEPRINT_SPEC_STRIP, width, fontScale, desktop, hairline);
   const rows = specStripRows(BLUEPRINT_SPEC_STRIP.length, columns);
   return specStripHeight(rows, fontScale, desktop, hairline, provenanceRowsOf(BLUEPRINT_SPEC_STRIP, columns));

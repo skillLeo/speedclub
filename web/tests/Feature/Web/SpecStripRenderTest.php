@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Blade;
 require_once dirname(__DIR__).'/Garage/GarageTestHelpers.php';
 
 /**
- * DQ-801 on WEB-01 and WEB-03: the strip carries the class of its breakpoints, and their container queries reach the page once,
+ * DQ-801 on WEB-01 (WEB-03 has no strip since R4-1.5): the strip carries the class of its breakpoints, and their container queries reach the page once,
  * inside the nonced style block (no style attributes under the CSP).
  */
 beforeEach(function () {
@@ -54,27 +54,27 @@ it('gives the R34 on WEB-01 its breakpoints once, inside the nonced style block'
         ->and($blocks[0]['css'])->toContain($css)
         // The thresholds of FS-3's R34 (ADR-431 b): hero.numeral on the page, 587 and 293 of 15 px body text; hero.numeral.s in
         // the desktop card, where "Herstellerangabe" leads, 519 and 259 of 16 px from 1280; 469 and 469 at scale 2.
-        ->and($css)->toContain('@media (max-width: 1279.98px){@container sc-strip (width < 39.1334em)')
+        ->and($css)->toContain('@media (min-width: 768px) and (max-width: 1279.98px){@container sc-strip (width < 39.1334em)')
         ->and($css)->toContain('@container sc-strip (width < 19.5334em)')
         ->and($css)->toContain('@media (min-width: 1280px){@container sc-strip (width < 32.4375em)')
         ->and($css)->toContain('@container sc-strip (width < 16.1875em)')
         ->and($css)->toContain('@container sc-strip (width < 15.6334em){:root[data-qa-font-scale="2"]')
         ->and($css)->toContain('@container sc-strip (width < 14.6563em){:root[data-qa-font-scale="2"]')
         // The 2.0 cell: data label, numeral with unit, provenance, in the app's order.
-        ->and($html)->toMatch('~<li class="sc-strip-cell" data-spec="power">\s*<span class="t-label-caps text-ink-2">Leistung</span>\s*<span class="sc-strip-value">\s*<span class="sc-strip-numeral text-ink">500</span>\s*<span class="t-label-unit text-ink-2">PS</span>\s*</span>\s*<span class="t-caption text-ink-3">Herstellerangabe</span>~')
+        ->and($html)->toMatch('~<li class="sc-strip-cell" data-spec="power">\s*<span class="t-label-caps text-ink-2">Leistung</span>\s*<span class="sc-strip-value">\s*<span class="sc-strip-numeral text-ink">500</span>\s*<span class="t-label-unit text-ink-2">PS</span>\s*</span>\s*<span class="sc-strip-caption t-caption text-ink-3">Herstellerangabe</span>~')
         ->and($html)->toMatch('~<li class="sc-strip-cell" data-spec="model_year">\s*<span class="t-label-caps text-ink-2">Baujahr</span>\s*<span class="sc-strip-value">\s*<span class="sc-strip-numeral text-ink">2002</span>\s*</span>\s*</li>~')
         // Unescaped, so the browser reads "<" and the quotes.
         ->and($blocks[0]['css'])->not->toContain('&lt;')
         ->and($blocks[0]['css'])->not->toContain('&quot;');
 });
 
-it('gives the featured strip of WEB-03 the same rule', function () {
+it('prints no strip on WEB-03 since it features no builds (R4-1.5), so none of its CSS reaches the page', function () {
     $html = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
     $class = SpecStripLayout::className($this->items);
 
-    expect($html)->toContain('data-testid="WEB-03.featuredStrip"')
-        ->and($html)->toMatch('~<div class="sc-strip-box text-body '.$class.'">\s*<ul class="sc-strip" data-testid="WEB-03.featuredStrip">~')
-        ->and(substr_count($html, SpecStripLayout::css($this->items, $class)))->toBe(1);
+    expect($html)->not->toContain('data-testid="WEB-03.featuredStrip"')
+        ->and($html)->not->toContain('class="sc-strip"')
+        ->and(substr_count($html, SpecStripLayout::css($this->items, $class)))->toBe(0);
 });
 
 it('pushes the CSS once for two strips with the same breakpoints, and once more for different ones', function () {

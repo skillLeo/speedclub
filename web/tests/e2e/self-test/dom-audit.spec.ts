@@ -3,7 +3,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../support/fixtures';
 import { assertNoHighViolations, isAdminUrl, runDomAudit } from '../support/dom-audit.mjs';
-import { DESKTOP_MIN_WIDTH, auditConfig, tokens } from '../support/tokens.mjs';
+import { DESKTOP_MIN_WIDTH, auditConfig, tokens, typePairs } from '../support/tokens.mjs';
 
 /** Where the web applies the desktop type sizes (layout.breakpoints.desktop). */
 const DESKTOP: number = DESKTOP_MIN_WIDTH;
@@ -527,6 +527,61 @@ test.describe('DOM audit self-test: exemptions for one kind of element', () => {
       expect(of(report, 'unknown-exemption')).toHaveLength(1);
       expect(of(report, 'non-scale-font')).toHaveLength(1);
       expect(report.exemptions['fixed-glyph']).toBeUndefined();
+    }
+  });
+
+  // ADR-518: a story card (a 9:16 picture shared as an image) keeps its type at min(scale, 1.3).
+  const storyCard = (id: string, width: number, height: number, font: string, text = 'Stufe 4') =>
+    page_(`<div data-testid="${id}" data-qa-exempt="story-card" style="width:${width}px;height:${height}px;background:${color('scrim.photoEnd')}">
+      <div style="font:${font};color:${color('onPhoto.primary')}">${text}</div></div>`);
+  const capped = (role: string, scale: number) => {
+    const t = tokens.typography[role] as { size: number; lineHeight: number };
+    return `500 ${t.size * scale}px/${t.lineHeight * scale}px Inter`;
+  };
+  /**
+   * A role whose pair at the story card cap is on no other line of the 200 % scale, so only the exemption can make it legal.
+   * Since ADR-523 the capped chrome roles (label.control 14/20, caption.chrome 12/16, web.sidebar 15/22, … at most × 1.3) put
+   * callout, caption, body and headline at × 1.3 on the 200 % scale anyway; a fixture in one of those would prove nothing.
+   */
+  const FREE_ROLE = 'title.2';
+  const expectOnlyTheCapFreesIt = (role: string, width: number) => {
+    const t = tokens.typography[role] as { size: number; lineHeight: number };
+    const cap = tokens.fontScaleCap.pill as number;
+    const same = typePairs(2, width).filter((p) => Math.abs(p.size - t.size * cap) < 0.01 && Math.abs(p.lineHeight - t.lineHeight * cap) < 0.01);
+    expect(same, `${role} × ${cap} is on the 200 % scale without the exemption`).toEqual([]);
+  };
+
+  test('story-card keeps a WRP-01 card\'s text at the 1.3 cap at 200 %, and is counted', async ({ page }) => {
+    const cap = tokens.fontScaleCap.pill as number;
+    expectOnlyTheCapFreesIt(FREE_ROLE, 360);
+    const report = await audit(page, storyCard('WRP-01.card.score', 360, 640, capped(FREE_ROLE, cap)), { fontScale: 2 });
+    expect(of(report, 'non-scale-font')).toEqual([]);
+    expect(of(report, 'unknown-exemption')).toEqual([]);
+    expect(report.exemptions['story-card']).toBe(1);
+    const journey = await audit(page, storyCard('VEH-01.score.journeySheet.card', 216, 384, capped(FREE_ROLE, cap)), { fontScale: 2 });
+    expect(of(journey, 'non-scale-font')).toEqual([]);
+    expect(journey.exemptions['story-card']).toBe(1);
+  });
+
+  test('story-card still needs a type pair at the cap: the full 200 % pair and an off-scale pair are findings', async ({ page }) => {
+    const full = await audit(page, storyCard('WRP-01.card.score', 360, 640, capped('callout', 2)), { fontScale: 2 });
+    expect(of(full, 'non-scale-font').map((v) => v.message)).toEqual([expect.stringContaining('story-card')]);
+    const off = await audit(page, storyCard('WRP-01.card.score', 360, 640, '500 17px/23px Inter'), { fontScale: 2 });
+    expect(of(off, 'non-scale-font')).toHaveLength(1);
+  });
+
+  test('story-card on anything but a 9:16 story card root is an unknown exemption and frees nothing', async ({ page }) => {
+    const cap = tokens.fontScaleCap.pill as number;
+    expectOnlyTheCapFreesIt(FREE_ROLE, 360);
+    for (const html of [
+      storyCard('WRP-01.card.score', 360, 500, capped(FREE_ROLE, cap)), // not 9:16
+      storyCard('VEH-01.score.gauge', 360, 640, capped(FREE_ROLE, cap)), // not a story card
+      storyCard('DEX-03.card', 360, 640, capped(FREE_ROLE, cap)), // a reading screen keeps the full scale
+    ]) {
+      const report = await audit(page, html, { fontScale: 2 });
+      expect(of(report, 'unknown-exemption')).toHaveLength(1);
+      expect(of(report, 'non-scale-font')).toHaveLength(1);
+      expect(report.exemptions['story-card']).toBeUndefined();
     }
   });
 

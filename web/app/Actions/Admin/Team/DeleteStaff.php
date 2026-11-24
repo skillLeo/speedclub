@@ -43,7 +43,7 @@ class DeleteStaff
     public function handle(Staff $by, Staff $target, string $reason): TeamOutcome
     {
         StaffAtoms::ensure($by, 'staff.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
         self::ensureMay($by, $target);
 
         if ($target->isOwner()) {

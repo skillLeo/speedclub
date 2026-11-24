@@ -4,7 +4,9 @@ import { View } from 'react-native';
 
 import { closeAuthPromptKeepingIntent, dismissAuthPrompt, isInternalPath, useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { Button, Sheet, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
 
 const useStyles = createStyles((t) => ({
   body: { gap: t.space[12], paddingBottom: t.space[24] },

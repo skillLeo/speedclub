@@ -8,10 +8,12 @@ import { useVerifyEmailCode } from '@/api/queries/passwordless';
 import { isWeb } from '@/lib/platform';
 import { useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { Button, Skeleton, SkeletonText } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
 
 import { AuthScreen, AuthSkeletonLink } from '../components/AuthScreen';
 import { FormNotice } from '../components/FormNotice';
+import { useLeaveCodeSignInWhenOff } from '../authFlags';
 import { dropFragment } from '../emailHandoff';
 import { storedEmailAttempt } from '../emailAttempt';
 import { firstParam } from '../forms';
@@ -51,6 +53,8 @@ export function MagicLinkScreen() {
   const passkeysOn = useFlag('auth.passkeys');
   const verify = useVerifyEmailCode();
   const route = useAnswerRouting();
+  // ADR-520: a link from a mail sent before the code was switched off signs in nowhere; AUTH-03 takes over.
+  const leaving = useLeaveCodeSignInWhenOff();
   const [phase, setPhase] = useState<Phase>('checking');
   const [message, setMessage] = useState<string | null>(null);
   const started = useRef(false);
@@ -66,7 +70,7 @@ export function MagicLinkScreen() {
 
   useEffect(() => {
     // A member already signed in has nothing to do here; the session routing takes them on.
-    if (started.current || status === 'loading' || status === 'member') return;
+    if (leaving || started.current || status === 'loading' || status === 'member') return;
     started.current = true;
     void (async () => {
       const attempt = await storedEmailAttempt();

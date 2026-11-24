@@ -57,9 +57,10 @@ it('needs catalog.manage and a reason', function (string $role, bool $allowed) {
     $allowed ? expect($run()->isArchived())->toBeTrue() : expect($run)->toThrow(AuthorizationException::class);
 })->with(m33cMatrix());
 
-it('refuses a schema change without reason', function () {
-    expect(fn () => app(ArchiveModField::class)->handle($this->staff, $this->type, true, ''))->toThrow(ValidationException::class);
-    expect(ModCategorySchemaVersion::query()->count())->toBe(0);
+it('accepts a schema change without reason (ADR-540) and records it as a version', function () {
+    $before = ModCategorySchemaVersion::query()->count();
+    app(ArchiveModField::class)->handle($this->staff, $this->type, true, '');
+    expect(ModCategorySchemaVersion::query()->count())->toBeGreaterThan($before); // the first change also records the baseline version
 });
 
 it('refuses a type change on a field with data, with the count', function () {

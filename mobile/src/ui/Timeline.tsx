@@ -5,6 +5,7 @@ import { isWeb } from '@/lib/platform';
 import { createStyles, useTheme } from '@/theme';
 
 import { Icon } from './icons/Icon';
+import { BeforeAfterPair } from './BeforeAfterPair';
 import { BeforeAfter } from './motion/BeforeAfter';
 import { Photo, type PhotoFields } from './Photo';
 import { joinLabel, RowBody, useStacksAtFontScale } from './rowParts';
@@ -40,11 +41,15 @@ export type TimelineEntry = {
   photos?: readonly (PhotoFields & { alt?: string })[];
   /** "48.200 km", tabular. */
   mileage?: string;
-  /** A paired update: the SM17 slider instead of the grid. */
+  /** A paired update: the SM17 slider instead of the grid, or (M5.9c, `layout: 'pair'`) both photos side by side. */
   beforeAfter?: {
     before: PhotoFields & { label: string };
     after: PhotoFields & { label: string };
     label: string;
+    /** M5.9c Build Journey: `pair` sets the two photos side by side (Verlauf, the owner's history); the slider by default. */
+    layout?: 'slider' | 'pair';
+    /** "Vorher/Nachher: KW V3" under a side-by-side pair. */
+    caption?: string;
   };
   /** A tertiary caption under the text: "Mod · vor 2 Tagen" on the owner's GAR-11. */
   meta?: string;
@@ -276,7 +281,17 @@ function TimelineItem({ entry, testID }: { entry: TimelineEntry; testID?: string
       ) : (
         body
       )}
-      {entry.beforeAfter ? (
+      {entry.beforeAfter?.layout === 'pair' ? (
+        <View style={styles.media}>
+          <BeforeAfterPair
+            before={entry.beforeAfter.before}
+            after={entry.beforeAfter.after}
+            caption={entry.beforeAfter.caption}
+            label={entry.beforeAfter.label}
+            testID={testID ? `${testID}.beforeAfter` : 'timeline.beforeAfter'}
+          />
+        </View>
+      ) : entry.beforeAfter ? (
         // DQ-968: inset media are radius 8, as the 3-up photos beside it.
         <View style={[styles.media, styles.beforeAfterFrame]}>
           <BeforeAfter

@@ -5,7 +5,7 @@ import type { FeedVehicle } from '@/api/queries/home';
 import { photoFields } from '@/features/profile/media';
 import { keepNameTogether } from '@/lib/format';
 import { createStyles, space } from '@/theme';
-import { MediaCard, MediaCardSkeleton } from '@/ui';
+import { MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
 
 /** 09 §5 result wall: 2 px between the photos, 0 radius, edge to edge. */
 export const WALL_GAP = space[2];

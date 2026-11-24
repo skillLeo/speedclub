@@ -12,14 +12,14 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(AdminRoutes::signedIn())->prefix('system')->name('system.')->group(function (): void {
     Route::middleware('can:system.view')->group(function (): void {
         Route::get('health', [HealthController::class, 'show'])->name('health');
-        Route::post('health/run', [HealthController::class, 'run'])->middleware('throttle:6,1')->name('health.run');
+        Route::post('health/run', [HealthController::class, 'run'])->middleware('throttle:6,1,admin-system-1')->name('health.run');
         Route::get('jobs', [JobsController::class, 'index'])->name('jobs');
-        Route::post('jobs/retry', [JobsController::class, 'retry'])->middleware(['can:system.jobs', 'staff.recent-password', 'throttle:20,1'])->name('jobs.retry');
-        Route::post('jobs/forget', [JobsController::class, 'forget'])->middleware(['can:system.jobs', 'staff.recent-password', 'throttle:20,1'])->name('jobs.forget');
+        Route::post('jobs/retry', [JobsController::class, 'retry'])->middleware(['can:system.jobs', 'staff.recent-password', 'throttle:20,1,admin-system-2'])->name('jobs.retry');
+        Route::post('jobs/forget', [JobsController::class, 'forget'])->middleware(['can:system.jobs', 'staff.recent-password', 'throttle:20,1,admin-system-3'])->name('jobs.forget');
     });
 
     Route::middleware('can:integrations.view')->group(function (): void {
         Route::get('integrations', [IntegrationsController::class, 'index'])->name('integrations');
-        Route::post('integrations/{integration}/test', [IntegrationsController::class, 'test'])->whereIn('integration', ['mail', 'pusher', 'push', 'ai'])->middleware('throttle:6,1')->name('integrations.test');
+        Route::post('integrations/{integration}/test', [IntegrationsController::class, 'test'])->whereIn('integration', ['mail', 'pusher', 'push', 'ai'])->middleware('throttle:6,1,admin-system-4')->name('integrations.test');
     });
 });

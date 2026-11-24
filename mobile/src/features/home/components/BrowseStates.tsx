@@ -11,7 +11,7 @@ import { FormNotice } from '@/features/auth/components/FormNotice';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useSessionStore } from '@/state/session';
-import { ErrorState } from '@/ui';
+import { ErrorState } from '@/ui/ErrorState';
 
 /** The two lines of a restriction notice, as keys of `home`: what still works differs per screen (DQ-300). */
 export type RestrictionCopy = { body: string; until: string };

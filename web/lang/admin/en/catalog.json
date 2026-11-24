@@ -143,6 +143,17 @@
         "empty_body": "Without generations members only pick the model. Add generations with build years where they differ.",
         "error": "The generations could not be loaded."
     },
+    "ai_specs": {
+        "title": "AI manufacturer figures",
+        "intro": "Typical factory figures members can take over when they add a car. If a value is wrong, delete the suggestion: the next request creates a new one.",
+        "caption": "Generations with stored AI manufacturer figures",
+        "present": "Suggestion from :date",
+        "delete": "Delete AI manufacturer figures",
+        "delete_short": "Delete",
+        "delete_for": "Delete AI factory figures of :name",
+        "dialog_title": "Delete AI manufacturer figures of :name?",
+        "dialog_body": "The stored suggestion is deleted. What members already took over stays on their cars."
+    },
     "merged_notice": {
         "body": "This entry was merged. Its slug redirects and its vehicles now belong to"
     },
@@ -181,9 +192,7 @@
         "year_from": "Year from",
         "year_to": "Year to",
         "category_hint": "Category",
-        "category_hint_hint": "Where the brand is suggested first.",
-        "reason": "Reason",
-        "reason_optional_hint": "Optional, goes into the audit log."
+        "category_hint_hint": "Where the brand is suggested first."
     },
     "errors": {
         "name": "Enter a name.",
@@ -460,7 +469,6 @@
         "discover_body": "Read-only: the Discover filters are fixed in this version. These flags change nothing in search.",
         "yes": "Yes",
         "no": "No",
-        "reason_hint": "Required: every change becomes a new schema version.",
         "save": "Save",
         "archived": "Archived",
         "live": "Active",
@@ -691,7 +699,9 @@
         "field_restored": "Field restored.",
         "field_deleted": "Field deleted.",
         "import_analysed": "Checked. Look at the result before you apply it.",
-        "import_queued": "Import started."
+        "import_queued": "Import started.",
+        "ai_specs_deleted": "AI manufacturer figures deleted. The next request creates a new suggestion.",
+        "ai_specs_none": "There were no AI manufacturer figures left."
     },
     "error_body": "Check the connection and try again.",
     "products": {

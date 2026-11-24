@@ -39,7 +39,7 @@ class ApplyCatalogImport
     public function handle(Staff $staff, CatalogImport $import, string $reason): CatalogImport|ApprovalRequest
     {
         StaffAtoms::ensure($staff, 'catalog.import', 'catalog.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
         self::ensureApplicable($import->refresh());
 
         $ask = function () use ($staff, $import, $reason): ApprovalRequest {

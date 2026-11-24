@@ -44,12 +44,16 @@
                 "url": "string"
             }
         ],
-        "created_at": "string"
+        "created_at": "string",
+        "plate_blur": {
+            "state": "string"
+        }
     },
     "photo_count": "int",
     "mod_count": "int",
     "updates_count": "int",
     "is_sample": "bool",
+    "build_score": "null",
     "published_at": "string",
     "updated_at": "string",
     "wizard": "null",

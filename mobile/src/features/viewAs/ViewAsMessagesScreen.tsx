@@ -19,7 +19,7 @@ export function ViewAsMessagesScreen() {
   const styles = useStyles();
   const { gutter } = useBreakpoint();
   return (
-    <TabRootScreen routeId="MSG-01" title={t('tabs.messages')}>
+    <TabRootScreen routeId="MSG-01" title={t('places.messages')}>
       <View style={[styles.body, { paddingHorizontal: gutter }]}>
         <ViewAsUnavailable kind="messages" testID="VIEWAS.messages" />
       </View>

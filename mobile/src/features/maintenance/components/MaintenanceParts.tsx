@@ -12,25 +12,20 @@ import { formatLongDate, formatMonthYear } from '@/lib/format';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space } from '@/theme';
-import {
-  Badge,
-  Button,
-  DisplayTitle,
-  ListRow,
-  MaintenanceCard,
-  Photo,
-  PhotoScrim,
-  SectionHeader,
-  Sheet,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Text,
-  TextInput,
-  Timeline,
-  toast,
-  type TimelineEntry,
-} from '@/ui';
+import { Badge } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { DisplayTitle } from '@/ui/DisplayTitle';
+import { ListRow } from '@/ui/ListRow';
+import { MaintenanceCard } from '@/ui/MaintenanceCard';
+import { Photo } from '@/ui/Photo';
+import { PhotoScrim } from '@/ui/PhotoScrim';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { Timeline, type TimelineEntry } from '@/ui/Timeline';
+import { toast } from '@/ui/toast';
 import { RowGroup } from '@/ui/RowGroup';
 
 import {

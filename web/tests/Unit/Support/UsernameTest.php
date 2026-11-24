@@ -7,22 +7,22 @@ use Illuminate\Support\Facades\Validator;
 it('accepts valid usernames', function (string $username) {
     expect(Username::violations($username))->toBe([])
         ->and(Username::isValid($username))->toBeTrue();
-})->with(['abc', 'max.mustermann', 'max_mustermann', 'r34.gtr_99', '1er.fahrer', 'trailing_', str_repeat('a', 24)]);
+})->with(['abcde', 'max.mustermann', 'max_mustermann', 'r34.gtr_99', '1er.fahrer', 'trailing_', str_repeat('a', 24)]);
 
 it('reports every broken rule', function (string $username, array $violations) {
     expect(Username::violations($username))->toBe($violations);
 })->with([
-    'too short' => ['ab', [Username::VIOLATION_LENGTH]],
+    'too short' => ['abcd', [Username::VIOLATION_LENGTH]],
     'too long' => [str_repeat('a', 25), [Username::VIOLATION_LENGTH]],
     'empty' => ['', [Username::VIOLATION_LENGTH]],
     'umlaut' => ['müller', [Username::VIOLATION_CHARACTERS]],
     'space' => ['max muster', [Username::VIOLATION_CHARACTERS]],
     'dash' => ['max-muster', [Username::VIOLATION_CHARACTERS]],
-    'starts with a dot' => ['.max', [Username::VIOLATION_START]],
-    'starts with an underscore' => ['_max', [Username::VIOLATION_START]],
-    'trailing dot' => ['max.', [Username::VIOLATION_TRAILING_DOT]],
+    'starts with a dot' => ['.maxim', [Username::VIOLATION_START]],
+    'starts with an underscore' => ['_maxim', [Username::VIOLATION_START]],
+    'trailing dot' => ['maxim.', [Username::VIOLATION_TRAILING_DOT]],
     'double dot' => ['max..m', [Username::VIOLATION_CONSECUTIVE_DOTS]],
-    'several at once' => ['.a..', [Username::VIOLATION_START, Username::VIOLATION_TRAILING_DOT, Username::VIOLATION_CONSECUTIVE_DOTS]],
+    'several at once' => ['.abc..', [Username::VIOLATION_START, Username::VIOLATION_TRAILING_DOT, Username::VIOLATION_CONSECUTIVE_DOTS]],
 ]);
 
 it('treats usernames case-insensitively', function () {
@@ -54,8 +54,8 @@ it('fails validation with translated messages', function (string $locale, string
 })->with([
     ['de', 'admin', 'Dieser Benutzername ist nicht verfügbar.'],
     ['en', 'admin', 'This username is not available.'],
-    ['de', 'ab', 'Dein Benutzername muss 3 bis 24 Zeichen lang sein.'],
-    ['en', 'ab', 'Your username must be 3 to 24 characters long.'],
+    ['de', 'ab', 'Dein Benutzername muss 5 bis 24 Zeichen lang sein.'],
+    ['en', 'ab', 'Your username must be 5 to 24 characters long.'],
 ]);
 
 it('passes validation for a valid username', function () {

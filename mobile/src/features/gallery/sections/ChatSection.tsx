@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { bubble, createStyles, size } from '@/theme';
-import { ChatBubble, Composer } from '@/ui';
+import { ChatBubble } from '@/ui/ChatBubble';
+import { Composer } from '@/ui/Composer';
 
 import { noop } from '../data';
 import { FullBleed, Group, SectionScreen, Specimen } from '../parts';

@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import {
@@ -36,6 +36,8 @@ import {
   shouldDismiss,
   zoomAround,
 } from './imageViewerMath';
+import { VIEWER_TOUCH_SLOP, clampIndex } from './imageViewerPaging';
+import { useBrowserBackClose } from './browserBack';
 import { OverlayModal, usePresence } from './overlay';
 import { useSafeEdge } from './safeArea';
 import { Text } from './Text';
@@ -67,6 +69,11 @@ export type ImageViewerProps = {
   notice?: ReactNode;
   /** Sub-testIDs: `.counter`, `.close`, `.previous`, `.next`, `.stage`. */
   testID?: string;
+  /**
+   * BL-25: on web the browser's back closes the viewer first (`useBrowserBackClose`). Default on; off only where the viewer is a
+   * route of its own (`(modals)/viewer`), whose history entry and close already are the navigation.
+   */
+  closeOnBrowserBack?: boolean;
 };
 
 const MODE_NONE = 0;
@@ -118,7 +125,16 @@ const useStyles = createStyles((t) => ({
 export function ImageViewer(props: ImageViewerProps) {
   const motion = useMotionPreference();
   const mounted = usePresence(props.visible, motion.enabled ? motionDuration('effect.fast') : 0);
-  return mounted && props.images.length > 0 ? <ViewerStage {...props} /> : null;
+  // R5-2d: opened again during its exit animation (the stage is still mounted), the viewer is a new one: it starts on the photo it
+  // is opened on now, not where it was closed, with no zoom and no drag left over.
+  const [shown, setShown] = useState(props.visible);
+  const [session, setSession] = useState(0);
+  if (props.visible !== shown) {
+    setShown(props.visible);
+    if (props.visible) setSession((value) => value + 1);
+  }
+  useBrowserBackClose(props.visible && props.images.length > 0, props.onClose, props.closeOnBrowserBack ?? true);
+  return mounted && props.images.length > 0 ? <ViewerStage key={session} {...props} /> : null;
 }
 
 function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose, actions, notice, testID }: ImageViewerProps) {
@@ -133,7 +149,9 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
 
   const count = images.length;
   const [stage, setStage] = useState({ width: dimensions.width, height: dimensions.height });
-  const [index, setIndex] = useState(() => Math.min(count - 1, Math.max(0, initialIndex)));
+  const [settled, setIndex] = useState(() => clampIndex(initialIndex, count));
+  // A list that shrank under the viewer (a refetch) keeps the page within the photos.
+  const index = clampIndex(settled, count);
   const [aspects, setAspects] = useState<Record<string, number>>({});
   const current = images[index];
   const aspect = current?.aspectRatio ?? (current ? aspects[current.uri] : undefined) ?? 0;
@@ -141,6 +159,9 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
 
   const presence = useSharedValue(0);
   const pageFade = useSharedValue(1);
+  // R5-2d: the page on the UI thread, which the gestures page from. `index` follows it through a render; a swipe that started
+  // before that render paged from the photo before (a jump back, and the swipe lost).
+  const page = useSharedValue(index);
   const pageX = useSharedValue(-index * stage.width);
   const dismissY = useSharedValue(0);
   const scale = useSharedValue(1);
@@ -166,13 +187,9 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
   }, [fittedW, fittedH, fittedWidth, fittedHeight]);
 
   // A resized window keeps the current photo in place. A page change animates by itself and must not jump here.
-  const indexRef = useRef(index);
   useEffect(() => {
-    indexRef.current = index;
-  }, [index]);
-  useEffect(() => {
-    pageX.set(-indexRef.current * stageWidth);
-  }, [stageWidth, pageX]);
+    pageX.set(-page.get() * stageWidth);
+  }, [stageWidth, page, pageX]);
 
   const settlePage = useCallback(
     (next: number) => {
@@ -188,11 +205,21 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
     translateY.set(0);
   }, [scale, translateX, translateY]);
 
+  // The gestures' page follows a shrunk list too, without animation; zoom resets only because the photo changed.
+  useEffect(() => {
+    if (page.get() <= count - 1) return;
+    const last = clampIndex(page.get(), count);
+    page.set(last);
+    pageX.set(-last * stageWidth);
+    resetZoom();
+  }, [count, page, pageX, resetZoom, stageWidth]);
+
   /** Arrow keys and buttons. Reduced motion swaps the photo with a crossfade instead of a slide. */
   const goTo = useCallback(
     (next: number) => {
-      if (next < 0 || next >= count || next === index) return;
+      if (next < 0 || next >= count || next === page.get()) return;
       resetZoom();
+      page.set(next);
       if (reduced) {
         pageX.set(-next * stageWidth);
         pageFade.set(0);
@@ -202,18 +229,18 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
       }
       settlePage(next);
     },
-    [count, index, effectTo, pageFade, pageX, reduced, resetZoom, settlePage, springTo, stageWidth],
+    [count, effectTo, page, pageFade, pageX, reduced, resetZoom, settlePage, springTo, stageWidth],
   );
 
   useEffect(() => {
     if (!isWeb || !visible) return undefined;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowRight') goTo(index + 1);
-      if (event.key === 'ArrowLeft') goTo(index - 1);
+      if (event.key === 'ArrowRight') goTo(page.get() + 1);
+      if (event.key === 'ArrowLeft') goTo(page.get() - 1);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [goTo, index, visible]);
+  }, [goTo, page, visible]);
 
   // Stays mounted for the exit animation: nothing in it may close it a second time. Declared before the gestures, whose
   // worklets capture it when they are created.
@@ -259,7 +286,7 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
   });
 
   const pan = usePanGesture({
-    minDistance: 8,
+    minDistance: VIEWER_TOUCH_SLOP,
     maxPointers: 1,
     testID: testID ? `${testID}.pan` : undefined,
     onActivate: (event) => {
@@ -278,9 +305,9 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
       } else if (active === MODE_DISMISS) {
         dismissY.set(event.translationY);
       } else if (active === MODE_PAGE) {
-        const atEdge =
-          (index === 0 && event.translationX > 0) || (index === count - 1 && event.translationX < 0);
-        pageX.set(-index * stageWidth + event.translationX * (atEdge ? EDGE_RESISTANCE : 1));
+        const from = page.get();
+        const atEdge = (from === 0 && event.translationX > 0) || (from === count - 1 && event.translationX < 0);
+        pageX.set(-from * stageWidth + event.translationX * (atEdge ? EDGE_RESISTANCE : 1));
       }
     },
     onDeactivate: (event) => {
@@ -293,15 +320,20 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
         if (shouldDismiss(event.translationY, event.velocityY)) scheduleOnRN(close);
         else dismissY.set(glide(0));
       } else if (active === MODE_PAGE) {
-        const next = nextPage(index, count, event.translationX, event.velocityX, stageWidth);
+        const from = page.get();
+        const next = nextPage(from, count, event.translationX, event.velocityX, stageWidth);
+        page.set(next);
         pageX.set(glide(-next * stageWidth));
-        if (next !== index) scheduleOnRN(settlePage, next);
+        if (next !== from) scheduleOnRN(settlePage, next);
       }
     },
   });
 
   const doubleTap = useTapGesture({
     numberOfTaps: 2,
+    // R5-2d: a finger that travels is a swipe, never one of the two taps (RNGH's tap has no distance limit by default).
+    maxDistance: VIEWER_TOUCH_SLOP,
+    testID: testID ? `${testID}.doubleTap` : undefined,
     onActivate: (event) => {
       'worklet';
       if (scale.get() > VIEWER_MIN_SCALE) {
@@ -403,8 +435,8 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
                   'aria-valuetext': counterLabel,
                   accessibilityActions: [{ name: 'increment' }, { name: 'decrement' }],
                   onAccessibilityAction: (event: { nativeEvent: { actionName: string } }) => {
-                    if (event.nativeEvent.actionName === 'increment') goTo(index + 1);
-                    if (event.nativeEvent.actionName === 'decrement') goTo(index - 1);
+                    if (event.nativeEvent.actionName === 'increment') goTo(page.get() + 1);
+                    if (event.nativeEvent.actionName === 'decrement') goTo(page.get() - 1);
                   },
                 })}
             style={styles.counter}
@@ -423,7 +455,7 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
               icon="caret-left"
               label={t('actions.previous')}
               variant="onPhoto"
-              onPress={() => goTo(index - 1)}
+              onPress={() => goTo(page.get() - 1)}
               testID={testID ? `${testID}.previous` : undefined}
             />
           </View>
@@ -434,7 +466,7 @@ function ViewerStage({ visible, images, initialIndex = 0, onIndexChange, onClose
               icon="caret-right"
               label={t('actions.next')}
               variant="onPhoto"
-              onPress={() => goTo(index + 1)}
+              onPress={() => goTo(page.get() + 1)}
               testID={testID ? `${testID}.next` : undefined}
             />
           </View>

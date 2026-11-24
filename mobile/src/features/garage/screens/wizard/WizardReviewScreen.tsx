@@ -10,9 +10,12 @@ import { specChips } from '@/features/profile/media';
 import { RowCard } from '@/features/vehicle/components/RowCard';
 import { keepNameTogether, keepValuesTogether } from '@/lib/format';
 import { hapticFor } from '@/lib/haptics';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
 import { createStyles, space, useBreakpoint } from '@/theme';
-import { ListRow, Text, toast } from '@/ui';
+import { ListRow } from '@/ui/ListRow';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 
 import { FormGroup } from '../../components/fields';
@@ -25,6 +28,7 @@ import { WizardVehiclePreview } from '../../components/WizardVehiclePreview';
 import { mayStillLand, saveErrorMessage } from '../../errors';
 import { isVisibility, missingForPublish, stepFor, type WizardStep } from '../../model';
 import { useCloseModal, useReplaceWizardWithPublished, wizardPath } from '../../navigation';
+import { markWizardPublished, whenWizardGuardsReleased } from '../../wizardGuards';
 import { useMountedRef, usePreview, useWizardDraft } from '../../wizard';
 import { WizardStateBody } from './WizardStateBody';
 
@@ -46,7 +50,10 @@ export function WizardReviewScreen() {
   // during the publish is unmounted and stays closed (BH-14).
   const publishedId = wizard.state === 'ready' && wizard.draft?.status === 'published' ? wizard.draft.id : null;
   useEffect(() => {
-    if (publishedId) toPublished(publishedId);
+    if (!publishedId) return undefined;
+    // R4B-005: the earlier steps under this one release their discard guards first, or GAR-04's replace is blocked.
+    markWizardPublished(publishedId);
+    return whenWizardGuardsReleased(publishedId, () => toPublished(publishedId));
   }, [publishedId, toPublished]);
   if (wizard.state !== 'ready' || !wizard.draft || publishedId) {
     const state = wizard.state === 'ready' ? (publishedId ? 'loading' : 'gone') : wizard.state;
@@ -150,7 +157,8 @@ function ReviewStep({ draft, reached, restriction }: { draft: GarageVehicle; rea
     void saveChoice(next);
   };
 
-  const submit = () => {
+  // QA-H05: once at a time; a double tap could send a second publish while the first ran.
+  const submit = useSingleFlight(async () => {
     setNotice(null);
     setServerMissing([]);
     if (missing.length > 0) {
@@ -158,30 +166,27 @@ function ReviewStep({ draft, reached, restriction }: { draft: GarageVehicle; rea
       return;
     }
     if (publishAttempt.current?.visibility !== visibility) publishAttempt.current = { key: newIdempotencyKey(), visibility };
-    publish.mutate(
-      { visibility, idempotencyKey: publishAttempt.current.key },
-      {
-        // The answer is the published vehicle in the cache, and the screen above goes to GAR-04; here only the success haptic
-        // of the publish (09 §4.8), before GAR-04's QR reveal gives its own.
-        onSuccess: () => hapticFor('vehiclePublished'),
-        onError: (error) => {
-          // Only an answer that refuses this publish makes the next attempt a new intent. No answer, a 429, a 5xx or a 401 says
-          // nothing about whether the first one landed, so the retry keeps its key (as createOnce).
-          if (!mayStillLand(error)) publishAttempt.current = null;
-          if (error instanceof ApiError && error.code === 'email_not_verified') {
-            router.push('/verify-email');
-            return;
-          }
-          if (error instanceof ApiError && error.code === 'vehicle_incomplete') {
-            setServerMissing(Object.values(error.fieldErrors).flatMap((messages) => [...messages]));
-            setNotice(error.message);
-            return;
-          }
-          setNotice(saveErrorMessage(t, error, { creating: true }));
-        },
-      },
-    );
-  };
+    try {
+      await publish.mutateAsync({ visibility, idempotencyKey: publishAttempt.current.key });
+      // The answer is the published vehicle in the cache, and the screen above goes to GAR-04; here only the success haptic
+      // of the publish (09 §4.8), before GAR-04's QR reveal gives its own.
+      hapticFor('vehiclePublished');
+    } catch (error) {
+      // Only an answer that refuses this publish makes the next attempt a new intent. No answer, a 429, a 5xx or a 401 says
+      // nothing about whether the first one landed, so the retry keeps its key (as createOnce).
+      if (!mayStillLand(error)) publishAttempt.current = null;
+      if (error instanceof ApiError && error.code === 'email_not_verified') {
+        router.push('/verify-email');
+        return;
+      }
+      if (error instanceof ApiError && error.code === 'vehicle_incomplete') {
+        setServerMissing(Object.values(error.fieldErrors).flatMap((messages) => [...messages]));
+        setNotice(error.message);
+        return;
+      }
+      setNotice(saveErrorMessage(t, error, { creating: true }));
+    }
+  });
 
   const subline = [draft.model_year ? String(draft.model_year) : null, draft.generation].filter(Boolean).join(' · ');
   const photoLine = counts.pending ? t('review.photosUploading') : t('review.photoCount', { count: counts.ready });
@@ -199,7 +204,7 @@ function ReviewStep({ draft, reached, restriction }: { draft: GarageVehicle; rea
       cta={{
         label: t('review.publish'),
         variant: 'brand',
-        onPress: submit,
+        onPress: () => void submit(),
         loading: publish.isPending || saving,
         disabled: locked || !online || missing.length > 0,
       }}

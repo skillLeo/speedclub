@@ -3,7 +3,9 @@ import { View } from 'react-native';
 
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, space, typography } from '@/theme';
-import { Icon, PressableScale, Text, type IconName } from '@/ui';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text } from '@/ui/Text';
 
 import { REACTION_KEYS, type MessageReaction, type ReactionKey } from '../model';
 

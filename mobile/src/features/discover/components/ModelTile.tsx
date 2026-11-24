@@ -8,8 +8,11 @@ import { keepNameTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { useFormat } from '@/lib/useFormat';
 import { aspect, createStyles, fontScaleCap, typeScale } from '@/theme';
-import { Photo, PressableScale, SampleBadges, SkeletonBlock, SkeletonText, Text } from '@/ui';
-import { ratioOf } from '@/ui/Photo';
+import { SampleBadges } from '@/ui/Badge';
+import { Photo, ratioOf } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { joinLabel } from '@/ui/rowParts';
 
 const useStyles = createStyles((t) => ({

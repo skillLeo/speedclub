@@ -5,7 +5,7 @@
  * the M4.10 report (`npx expo install expo-alternate-app-icons` + its plugin in app.config.ts with the three icon files); once it
  * is in, this file calls its `setAlternateAppIcon` / `getAppIconName` and `supported` turns true.
  */
-import type { AppIconKey } from '@/ui';
+import type { AppIconKey } from '@/ui/AppIconPicker';
 
 type AppIconModule = {
   supported: boolean;

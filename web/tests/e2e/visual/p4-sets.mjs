@@ -19,7 +19,12 @@ export const FLAGSHIP = [
   'GAR-01',
   'GAR-03',
   'GAR-04',
-  'QR-02',
+  'STK-02',
+  // Phase 5 ★: 10 §11 (STK-05 designer, SHOP-01, FOR-03; VEH-01 is above) and 10 §16 (the Dex reveal; the score gauge is on VEH-01)
+  'STK-05',
+  'SHOP-01',
+  'FOR-03',
+  'DEX-03',
   'PROF-01',
   'MSG-02',
   'EVT-02',
@@ -48,10 +53,10 @@ export const FORMS_EXPLICIT = ['AUTH-11', 'WEB-05', 'WEB-09', 'WEB-10'];
  * 12 representative existing routes in English (09 §14.1), at iphone15pro and desktop1440, Carbon: auth, home, discover (2),
  * vehicle, garage (2: the list and the wizard), QR, messages, profile, settings and one public page. Exact ids, no variants.
  */
-export const EN12 = ['AUTH-03', 'HOME-01', 'DISC-01', 'DISC-02', 'VEH-01', 'GAR-01', 'GAR-03', 'QR-02', 'MSG-02', 'PROF-01', 'SET-01', 'WEB-01'];
+export const EN12 = ['AUTH-03', 'HOME-01', 'DISC-01', 'DISC-02', 'VEH-01', 'GAR-01', 'GAR-03', 'STK-02', 'MSG-02', 'PROF-01', 'SET-01', 'WEB-01'];
 
 /** Key routes at the tablet (820×1180, the rail layout): the tab roots, the flagship detail screens and the wizard. Exact ids. */
-export const TABLET = ['HOME-01', 'DISC-01', 'VEH-01', 'GAR-01', 'GAR-03', 'QR-02', 'MSG-01', 'MSG-02', 'PROF-01', 'SET-01'];
+export const TABLET = ['HOME-01', 'DISC-01', 'VEH-01', 'GAR-01', 'GAR-03', 'STK-05', 'MSG-01', 'MSG-02', 'PROF-01', 'SET-01'];
 
 /**
  * Gallery specimens that prove the 2.0 foundation where product routes cannot show it (DQ-909): the capped type roles at 200 % and the

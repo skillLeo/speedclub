@@ -1,11 +1,4 @@
 {
-  "tabs": {
-    "label": "Abschnitte",
-    "overview": "Übersicht",
-    "specs": "Technik",
-    "mods": "Mods",
-    "history": "Verlauf"
-  },
   "hero": {
     "galleryLabel": "Fotos: {{title}}",
     "open": "Foto {{current}} von {{total}} öffnen: {{alt}}",
@@ -33,14 +26,14 @@
     "edit": "Bearbeiten",
     "photos": "Fotos",
     "mods": "Mods",
-    "qr": "QR-⁠Code",
+    "qr": "Sticker",
     "ownerLabel": "Aktionen für deinen Build",
     "savedShort": "Gespeichert"
   },
   "more": {
     "copyLink": "Link kopieren",
     "openGarage": "In der Garage bearbeiten",
-    "qr": "QR-⁠Code anzeigen",
+    "qr": "Sticker anzeigen",
     "compare": "Vergleichen",
     "shareCard": "Als Karte teilen"
   },
@@ -56,10 +49,16 @@
     "allPhotos": "Alle Fotos ({{count}})",
     "empty": "Zu diesem Fahrzeug gibt es noch keine Beschreibung.",
     "closingGuest": "Melde dich an, um {{name}} zu schreiben.",
-    "closingSignIn": "Anmelden"
+    "closingSignIn": "Anmelden",
+    "write": "Beschreibung schreiben",
+    "descriptionTitle": "Beschreibung"
   },
   "specs": {
-    "empty": "Noch keine technischen Daten eingetragen."
+    "empty": "Noch keine technischen Daten eingetragen.",
+    "add": "Daten eintragen",
+    "showAll": "Alle Daten anzeigen",
+    "showLess": "Weniger Daten anzeigen",
+    "keyLabel": "Wichtigste Daten"
   },
   "mods": {
     "empty": "Noch keine Mods eingetragen.",
@@ -72,7 +71,14 @@
       "productLabel": "Produkt {{product}} im Katalog ansehen",
       "installedBy": "Eingebaut von {{business}}",
       "installedByLabel": "Eingebaut von {{business}}, {{city}}: Betriebsprofil ansehen"
-    }
+    },
+    "add": "Mod eintragen",
+    "more_one": "+ {{count}} weitere",
+    "more_other": "+ {{count}} weitere",
+    "moreLabel_one": "{{count}} weitere Mod in {{group}} anzeigen",
+    "moreLabel_other": "{{count}} weitere Mods in {{group}} anzeigen",
+    "less": "Weniger anzeigen",
+    "lessLabel": "Weniger Mods in {{group}} anzeigen"
   },
   "history": {
     "empty": "Noch keine Einträge im Verlauf.",
@@ -86,7 +92,10 @@
       "replaced": "{{name}} statt {{before}}",
       "changed": "{{name}} geändert",
       "removed": "{{name}} entfernt"
-    }
+    },
+    "count_one": "{{count}} Eintrag",
+    "count_other": "{{count}} Einträge",
+    "showAll": "Ganzen Verlauf anzeigen ({{count}})"
   },
   "unavailable": {
     "title": "Fahrzeug nicht verfügbar",
@@ -126,7 +135,8 @@
       "other": "Sonstiges"
     },
     "emptyTitle": "Noch keine Fotos",
-    "emptyBody": "Für dieses Fahrzeug gibt es noch keine Bilder."
+    "emptyBody": "Für dieses Fahrzeug gibt es noch keine Bilder.",
+    "showAll": "Alle Fotos"
   },
   "update": {
     "screenTitle": "Build-Update",
@@ -207,7 +217,8 @@
       "story": "Story 9:16",
       "square": "Quadrat 1:1"
     },
-    "hint": "Für Storys auf Instagram und WhatsApp: Foto, Technik und der QR-⁠Code des Builds.",
+    "hint": "Für Storys auf Instagram und WhatsApp: Foto, Daten und der QR-⁠Code des Builds.",
+    "hintSquare": "Für Posts und Status-Bilder: Foto, Daten und der QR-⁠Code des Builds.",
     "previewLabel": "Vorschau der Karte für {{vehicle}}, {{format}}",
     "share": "Teilen",
     "save": "Speichern",
@@ -216,7 +227,64 @@
     "noShare": "Teilen ist auf diesem Gerät gerade nicht möglich.",
     "errorTitle": "Die Karte konnte nicht geladen werden",
     "unavailableTitle": "Karte nicht verfügbar",
-    "unavailableBody": "Dieses Fahrzeug ist nicht öffentlich sichtbar."
+    "unavailableBody": "Dieses Fahrzeug ist nicht öffentlich sichtbar.",
+    "contents": "Auf der Karte: {{items}}",
+    "contentScore": "Build Score {{score}}, Stufe {{stage}}",
+    "contentDex": "Dex Nr. {{number}}",
+    "contentQr": "QR-⁠Code",
+    "photo": "Foto",
+    "photoCover": "Titelfoto",
+    "photoNumber": "Foto {{index}} von {{count}}",
+    "shows": "Auf der Karte",
+    "elements": {
+      "score": "Build Score",
+      "dex": "Dex-⁠Nr.",
+      "specs": "Daten",
+      "mods": "Mods",
+      "username": "@Name",
+      "qr": "QR-⁠Code"
+    },
+    "theme": "Farbe der Karte",
+    "themes": {
+      "dark": "Dunkel",
+      "light": "Hell"
+    },
+    "reset": "Standard wiederherstellen",
+    "template": "Vorlage",
+    "templates": {
+      "band": "Band",
+      "poster": "Poster",
+      "frame": "Rahmen"
+    },
+    "templateHints": {
+      "band": "Foto oben, Daten im Band darunter",
+      "poster": "Foto randlos, Name oben, Daten unten",
+      "frame": "Foto im Rahmen, Text darunter"
+    },
+    "crop": "Ausschnitt",
+    "cropHint": "Zum Verschieben ziehen, zum Zoomen mit zwei Fingern aufziehen oder − und + nutzen.",
+    "cropHintKeys": "Zum Verschieben ziehen oder die Pfeiltasten nutzen, zum Zoomen − und +.",
+    "cropKeys": "Pfeiltasten verschieben den Ausschnitt, − und + zoomen.",
+    "cropActions": "Wisch nach oben oder unten für Verschieben und Zoomen.",
+    "cropPosition": "Zoom {{zoom}}-fach, Mitte bei {{x}} % von links und {{y}} % von oben",
+    "cropReset": "Zurücksetzen",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "zoomValue": "{{zoom}}×",
+    "moveLeft": "Nach links",
+    "moveRight": "Nach rechts",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "ownText": "Eigener Text",
+    "textPlaceholder": "z. B. Saisonstart am Nürburgring",
+    "textCount": "{{count}} / {{max}} Zeichen",
+    "textChars": "Nur Buchstaben, Ziffern und Satzzeichen, keine Emojis.",
+    "textLong": "Höchstens {{max}} Zeichen.",
+    "drawing": "Die Karte wird neu gezeichnet …",
+    "savedToPhotos": "In deinen Fotos gespeichert.",
+    "saveDenied": "Ohne Zugriff auf deine Fotos kann die Karte nicht gespeichert werden.",
+    "openSettings": "Einstellungen",
+    "saveFailed": "Speichern hat nicht geklappt. Tipp auf „Teilen“ und dann auf „Bild speichern“."
   },
   "strip": {
     "power": "Leistung",
@@ -254,7 +322,9 @@
     "listTitle": "Reaktionen auf dein Update",
     "removedMember": "Gelöschtes Konto",
     "loadError": "Die Liste konnte nicht geladen werden.",
-    "react": "Reagieren"
+    "react": "Reagieren",
+    "like": "Gefällt mir",
+    "holdHint": "Gedrückt halten für Stark, Sauber, Tief oder Laut."
   },
   "highlights": {
     "title": "Highlights",
@@ -319,7 +389,19 @@
     "suggestions": "Vorschläge",
     "noSuggestions": "Niemand gefunden, den du erwähnen kannst.",
     "close": "Schließen",
-    "saved": "Update gespeichert"
+    "saved": "Update gespeichert",
+    "kind": "Art",
+    "kindPost": "Update",
+    "kindBeforeAfter": "Vorher/Nachher",
+    "beforeAfterHint": "Zwei Fotos vom selben Blickwinkel: wie es war und wie es jetzt ist.",
+    "pickBefore": "Vorher-Foto wählen",
+    "pickAfter": "Nachher-Foto wählen",
+    "replaceBefore": "Vorher-Foto ersetzen",
+    "replaceAfter": "Nachher-Foto ersetzen",
+    "beforeMissing": "Wähle ein Vorher-Foto.",
+    "afterMissing": "Wähle ein Nachher-Foto.",
+    "pairMod": "Zu welchem Mod?",
+    "pairModNone": "Kein Mod"
   },
   "owner": {
     "open": "Profil von {{name}} öffnen"
@@ -327,5 +409,231 @@
   "offline": {
     "read": "Offline – zuletzt aktualisiert {{time}}.",
     "readNoTime": "Offline – du siehst den zuletzt geladenen Stand."
+  },
+  "score": {
+    "title": "Build Score",
+    "a11y": "Build Score {{value}} von {{max}}, Stufe {{stage}}",
+    "scale": "von {{max}}",
+    "stage": "Stufe {{stage}}",
+    "delta": "+{{points}}",
+    "deltaA11y": "{{points}} Punkte mehr seit der letzten Berechnung",
+    "pendingOwner": "Dein Build Score wird berechnet …",
+    "pending": "Der Build Score wird berechnet …",
+    "pendingBody": "Nach einer Änderung dauert das meist unter einer Minute.",
+    "errorTitle": "Build Score nicht geladen",
+    "errorBody": "Prüf deine Verbindung und versuch es noch einmal.",
+    "offline": "Der Build Score lädt, sobald du wieder online bist.",
+    "ranks": "Platzierung",
+    "rankGeneration": "#{{rank}} von {{size}} {{label}} in {{region}}",
+    "rankGenerationAll": "#{{rank}} von {{size}} {{label}}",
+    "rankBundesland": "#{{rank}} in {{label}}",
+    "rankBundeslandA11y": "Platz {{rank}} von {{size}} in {{label}}",
+    "rankGenerationA11y": "Platz {{rank}} von {{size}} {{label}} in {{region}}",
+    "rankGenerationAllA11y": "Platz {{rank}} von {{size}} {{label}}",
+    "how": "So entsteht dein Build Score",
+    "howVisitor": "So entsteht der Build Score",
+    "never": "Nie Punkte für PS, Tempo, Sound oder Geld.",
+    "parts": {
+      "completeness": "Vollständigkeit",
+      "documentation": "Dokumentation",
+      "community": "Community",
+      "journey": "Journey"
+    },
+    "partValue": "{{points}} von {{max}}",
+    "formula": {
+      "intro": "Der Build Score zeigt, wie vollständig ein Auto gezeigt und dokumentiert ist, von 0 bis {{max}}. Er zählt, was du zeigst und erzählst – nie, was das Auto kann.",
+      "partMax": "bis {{max}}",
+      "itemMax": "bis {{max}}",
+      "items": {
+        "photos": "{{points}} pro Foto, für bis zu {{limit}} Fotos",
+        "key_specs": "{{points}} pro ausgefülltem Eckdatum, für bis zu {{limit}} – es zählt, dass es da ist, nie der Wert",
+        "description": "{{points}} für eine Beschreibung ab {{chars}} Zeichen",
+        "cover_focal": "{{points}} für ein Titelbild mit Fokuspunkt",
+        "documented_mods": "{{points}} pro Mod mit Marke, Foto und Datum, für bis zu {{limit}} Mods",
+        "registered_mods": "{{points}} pro Mod, den du als TÜV-eingetragen angibst, für bis zu {{limit}}",
+        "reactors": "{{points}} pro Person, die auf dein Auto reagiert",
+        "spotters": "{{points}} pro Person, die dein Auto spottet",
+        "followers": "{{points}} pro Follower des Autos",
+        "timeline": "{{points}} pro Eintrag im Verlauf",
+        "before_after": "{{points}} pro Vorher/Nachher-Paar",
+        "history_span": "{{points}} pro Monat, über den dein Verlauf reicht"
+      },
+      "once": "Jede Person zählt pro Auto nur einmal. Beispiele, ausgeblendete Inhalte und Reaktionen blockierter Mitglieder zählen nicht.",
+      "stages": "Stufen",
+      "stageRange": "{{from}}–{{to}}",
+      "stageFrom": "ab {{from}}",
+      "errorTitle": "Die Regeln konnten nicht geladen werden.",
+      "close": "Schließen"
+    },
+    "next": {
+      "title": "Nächstes Upgrade",
+      "hint": "Alles freiwillig – so wächst dein Build Score.",
+      "points": "+{{points}}",
+      "a11y": "{{label}}, {{points}} Punkte",
+      "items": {
+        "photos_one": "{{count}} Foto mehr",
+        "photos_other": "{{count}} Fotos mehr",
+        "cover_focal": "Fokuspunkt fürs Titelbild setzen",
+        "key_specs_one": "{{count}} Eckdatum ergänzen",
+        "key_specs_other": "{{count}} Eckdaten ergänzen",
+        "description": "Beschreibung ab {{chars}} Zeichen",
+        "documented_mods_one": "{{count}} Mod mit Marke, Foto und Datum",
+        "documented_mods_other": "{{count}} Mods mit Marke, Foto und Datum",
+        "registered_mods": "TÜV-Eintragungen angeben",
+        "planned_mods": "Geplante Mods dokumentieren",
+        "timeline": "Update posten",
+        "before_after": "Vorher/Nachher posten"
+      },
+      "done": "Gerade gibt es nichts zu ergänzen.",
+      "more": "Alle Tipps ({{count}})",
+      "less": "Weniger Tipps"
+    },
+    "journey": {
+      "share": "Journey teilen",
+      "title": "Journey-Karte",
+      "hint": "Die Karte zeigt deinen Build Score, die Stufe und dein neuestes Vorher/Nachher – oder dein Titelbild.",
+      "hintVisitor": "Die Karte zeigt den Build Score, die Stufe und das neueste Vorher/Nachher.",
+      "shareAction": "Teilen",
+      "story": "Story herunterladen",
+      "square": "Quadrat herunterladen",
+      "storyShort": "Story",
+      "squareShort": "Quadrat",
+      "saved": "{{file}} gespeichert",
+      "failed": "Die Karte konnte nicht geteilt werden.",
+      "previewLabel": "Journey-Karte von {{vehicle}}",
+      "since": "Dokumentiert seit {{date}}",
+      "updates_one": "{{count}} Eintrag im Verlauf",
+      "updates_other": "{{count}} Einträge im Verlauf"
+    },
+    "registered": "TÜV-eingetragen",
+    "registeredA11y": "TÜV-eingetragen, Angabe des Besitzers",
+    "registeredDetail": "Angabe des Besitzers",
+    "pairCaption": "Vorher/Nachher: {{mod}}",
+    "compact": "Build Score {{value}}, Stufe {{stage}}",
+    "compactPending": "Build Score wird berechnet",
+    "retry": "Erneut versuchen"
+  },
+  "sections": {
+    "label": "Abschnitte",
+    "overview": "Überblick",
+    "specs": "Daten",
+    "mods": "Mods",
+    "plans": "Pläne",
+    "history": "Verlauf",
+    "gallery": "Galerie"
+  },
+  "plans": {
+    "count_one": "{{count}} Plan",
+    "count_other": "{{count}} Pläne",
+    "target": "Ziel {{month}}",
+    "due": "Fällig seit {{month}}",
+    "priority": "Priorität: {{label}}",
+    "install": "Als verbaut markieren",
+    "installLabel": "{{name}} als verbaut markieren",
+    "installTitle": "{{name}} verbaut?",
+    "installBody": "Sie wandert mit Einbaudatum {{month}} zu deinen Mods. Datum und Kosten kannst du danach ändern.",
+    "installConfirm": "Als verbaut markieren",
+    "cancel": "Abbrechen",
+    "installed": "{{name}} ist jetzt bei deinen Mods.",
+    "installFailed": "Das hat nicht geklappt. Versuch es noch einmal.",
+    "offline": "Offline kannst du keinen Plan als verbaut markieren.",
+    "sort": "Sortieren",
+    "sortDone": "Fertig",
+    "sortHint": "Halte einen Plan gedrückt oder zieh am Griff, um die Reihenfolge zu ändern.",
+    "sortHintWeb": "Zieh einen Plan am Griff an seinen Platz, oder wähle den Griff und nutze die Pfeiltasten.",
+    "sortSaved": "Reihenfolge gespeichert",
+    "sortFailed": "Die Reihenfolge konnte nicht gespeichert werden.",
+    "empty": "Plane dein nächstes Upgrade – mit Zielmonat, Priorität und einem Budget, das nur du siehst.",
+    "add": "Plan anlegen",
+    "budgetPrivate": "Budgets siehst nur du.",
+    "sample": {
+      "month": "März 2027",
+      "priority": "Hoch"
+    },
+    "installedStatus": "Verbaut",
+    "samples": {
+      "suspension": {
+        "name": "KW V3 Gewindefahrwerk",
+        "brand": "KW"
+      },
+      "exhaust": {
+        "name": "Remus Klappenanlage",
+        "brand": "Remus"
+      },
+      "wheels_tires": {
+        "name": "BBS FI-R 20 Zoll",
+        "brand": "BBS"
+      },
+      "brakes": {
+        "name": "Bremsbeläge DS2500",
+        "brand": "Ferodo"
+      }
+    }
+  },
+  "progress": {
+    "title": "Build-Fortschritt",
+    "line": "{{built}} von {{total}} Mods verbaut · {{planned}} geplant",
+    "percentLabel": "{{percent}} Prozent verbaut",
+    "showPlans": "Pläne ansehen",
+    "empty": "Plane dein nächstes Upgrade. Dann siehst du hier, wie weit dein Build ist."
+  },
+  "fullHistory": {
+    "title": "Verlauf",
+    "subtitle": "{{name}}",
+    "count_one": "{{count}} Eintrag",
+    "count_other": "{{count}} Einträge",
+    "empty": "Noch keine Einträge im Verlauf.",
+    "emptyOwner": "Dein erstes Update erscheint hier – zum Beispiel ein neues Fahrwerk oder ein Termin auf dem Prüfstand.",
+    "post": "Update posten",
+    "loadError": "Ältere Einträge konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "end": "Das ist der erste Eintrag dieses Builds.",
+    "sample": {
+      "month": "März 2026",
+      "title": "KW V3 verbaut",
+      "line": "Fahrwerk · −35 mm"
+    },
+    "toVehicle": "Zum Fahrzeug"
+  },
+  "card": {
+    "sticker": "Dein Sticker",
+    "stickerOpen": "Sticker {{code}} ansehen",
+    "stickerArt": "Dein Sticker {{code}}",
+    "stickerCaption": "Dein Sticker · {{code}}"
+  },
+  "carComments": {
+    "title": "Kommentare",
+    "visitor": "Frag nach oder sag, was dir an dem Build gefällt.",
+    "owner": "Was andere zu deinem Build schreiben.",
+    "ownerOff": "Ausgeschaltet. Was schon geschrieben wurde, bleibt lesbar.",
+    "allow": "Kommentare erlauben",
+    "toggleFailed": "Die Einstellung konnte nicht gespeichert werden."
+  },
+  "comments": {
+    "empty": "Noch keine Kommentare. Schreib den ersten.",
+    "emptyClosed": "Noch keine Kommentare.",
+    "placeholder": "Kommentar schreiben …",
+    "replyPlaceholder": "Antwort an @{{username}}",
+    "replyingTo": "Antwort an @{{username}}",
+    "cancelReply": "Antwort abbrechen",
+    "send": "Senden",
+    "sending": "Wird gesendet …",
+    "failed": "Dein Kommentar kam nicht an. Versuch es noch einmal.",
+    "guest": "Melde dich an, um mitzureden.",
+    "signIn": "Anmelden",
+    "offline": "Offline – kommentieren kannst du, sobald du wieder online bist.",
+    "restricted": "Dein Konto ist gerade eingeschränkt. Lesen geht, kommentieren nicht.",
+    "closed": "Für dieses Auto hat der Besitzer Kommentare ausgeschaltet.",
+    "more": "Weitere Kommentare laden",
+    "loadError": "Die Kommentare konnten nicht geladen werden.",
+    "deleteTitle": "Kommentar löschen?",
+    "deleteBody": "Die Antworten darauf verschwinden mit.",
+    "deleted": "Kommentar gelöscht",
+    "deleteFailed": "Der Kommentar konnte nicht gelöscht werden.",
+    "discardTitle": "Kommentar verwerfen?",
+    "discardBody": "Was du geschrieben hast, geht verloren.",
+    "discardKeep": "Weiterschreiben",
+    "mentions": "Erwähnen",
+    "placeholderShort": "Kommentieren …"
   }
 }

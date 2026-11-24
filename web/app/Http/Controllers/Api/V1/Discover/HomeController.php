@@ -9,11 +9,13 @@ use App\Http\Resources\V1\FeaturedBuildResource;
 use App\Http\Resources\V1\FeedVehicleResource;
 use App\Http\Resources\V1\HomeModulesResource;
 use App\Models\VehicleSearch;
+use App\Services\CarOfTheDay\CarOfTheDays;
 use App\Services\Discover\CatalogHighlights;
 use App\Services\Discover\HomeFeed;
 use App\Services\Events\NearbyEvents;
 use App\Services\Home\BuildOfWeek;
 use App\Services\Home\HomeModules;
+use App\Support\QaClock;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -69,14 +71,19 @@ class HomeController extends Controller
      *
      * @unauthenticated
      */
-    public function modules(HomeModulesRequest $request, BuildOfWeek $buildOfWeek, CatalogHighlights $highlights, NearbyEvents $nearby): HomeModulesResource
+    public function modules(HomeModulesRequest $request, BuildOfWeek $buildOfWeek, CatalogHighlights $highlights, NearbyEvents $nearby, CarOfTheDays $carOfTheDay): HomeModulesResource
     {
         $viewer = Viewer::from($request);
         Gate::forUser($viewer)->authorize('viewAny', VehicleSearch::class);
         $hero = $this->feed->featured($viewer)[0] ?? null;
+        // M5.9d (ADR-510): the Car of the Day leads Home from 18:00 to 18:00; Build der Woche stays further down unless it is the same car.
+        // Which day's pick: the QA clock outside production (DQ-P5-201), else the real now.
+        $pick = $carOfTheDay->shownTo($viewer, QaClock::frozen($request));
+        $week = $buildOfWeek->for($viewer, $hero === null ? [] : [(string) $hero->vehicle->id]);
 
         return new HomeModulesResource([
-            'build_of_week' => $buildOfWeek->for($viewer, $hero === null ? [] : [(string) $hero->vehicle->id]),
+            'car_of_the_day' => $pick,
+            'build_of_week' => $week !== null && $pick !== null && $week['vehicle']->id === $pick['vehicle']->id ? null : $week,
             // The device location of this request, else the region the member chose in SET-11 (09 §8.7).
             'nearby_events' => $nearby->near($viewer, $request->point() ?? $viewer?->homeRegionPoint()),
             'brands_in_focus' => $highlights->brandsInFocus($viewer),

@@ -25,10 +25,13 @@ describe('web shortcuts (sig.web_shortcuts)', () => {
 
   it('jumps to a tab with g and a letter', () => {
     const { press } = setup();
-    for (const [letter, tab] of [['h', 'home'], ['d', 'discover'], ['g', 'garage'], ['m', 'messages'], ['p', 'profile']] as const) {
+    for (const [letter, tab] of [['h', 'home'], ['d', 'discover'], ['g', 'garage'], ['s', 'shop'], ['p', 'profile']] as const) {
       expect(press('g')).toBeNull();
       expect(press(letter)).toEqual({ kind: 'tab', tab });
     }
+    // M5.2 (10 §1): Nachrichten is no tab any more; `g m` still opens it.
+    expect(press('g')).toBeNull();
+    expect(press('m')).toEqual({ kind: 'messages' });
   });
 
   it('forgets g after the timeout and after any other key', () => {

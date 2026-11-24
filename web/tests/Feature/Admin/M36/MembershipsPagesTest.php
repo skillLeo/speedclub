@@ -61,12 +61,12 @@ describe('with premium.enabled on', function () {
         'grant' => ['POST', '/admin/memberships/entitlements', ['member' => 'niemand', 'plan_id' => 1, 'reason' => 'Gewinner der Build-Challenge.']],
     ]);
 
-    it('lists plans with holders and grants and revokes with a reason', function () {
+    it('lists plans with holders and grants and revokes (ADR-540: an optional reason)', function () {
         $plan = adm36Plan();
         $member = User::factory()->create(['username' => 'lukas.f2']);
         adm36As('admin');
 
-        $this->post('/admin/memberships/entitlements', ['member' => '@lukas.f2', 'plan_id' => $plan->id])->assertSessionHasErrors('reason');
+        $this->post('/admin/memberships/entitlements', ['member' => '@lukas.f2', 'plan_id' => $plan->id, 'reason' => str_repeat('x', 1001)])->assertSessionHasErrors('reason');
         $this->post('/admin/memberships/entitlements', ['member' => '@lukas.f2', 'plan_id' => $plan->id, 'reason' => 'Gewinner der Build-Challenge.'])->assertSessionHas('success', 'memberships.flash.granted');
 
         $this->get('/admin/memberships/plans')->assertInertia(fn (AssertableInertia $p) => $p->where('plans.0.holders', 1));

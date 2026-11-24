@@ -18,9 +18,10 @@ abstract class CatalogFormRequest extends FormRequest
         return 'catalog.manage';
     }
 
+    /** ADR-540: no internal reason is required any more (the member-facing rejection text has its own RejectRequest). */
     protected function reasonRequired(): bool
     {
-        return true;
+        return false;
     }
 
     public function authorize(): bool

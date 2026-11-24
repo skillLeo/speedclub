@@ -14,7 +14,6 @@ import {
   changeLine,
   changeLines,
   groupByMonth,
-  isProfileTab,
   keptSubline,
   mergeUpdates,
   modValues,
@@ -27,6 +26,7 @@ import {
   sublineOf,
   withoutContent,
 } from '@/features/vehicle/model';
+import { anchorFromParams } from '@/features/vehicle/sections';
 import { routeStateOf } from '@/features/vehicle/states';
 
 import { R34 } from './fixtures';
@@ -61,8 +61,12 @@ describe('what FS-3 shows', () => {
 
   it('keeps each part of the sub-line whole and no line starts with its separator (DQ-167)', () => {
     expect(keptSubline(R34)).toBe('2002\u00A0· 2,6\u00A0l\u00A0R6\u00A0Biturbo\u00A0(RB26DETT)\u00A0· Bayside\u00A0Blue');
-    // At a large font a part no longer fits one line and wraps at its own spaces, the separator stays with the part before it.
-    expect(keptSubline(R34, false)).toBe('2002\u00A0· 2,6 l R6 Biturbo (RB26DETT)\u00A0· Bayside Blue');
+    // At a large font a long part no longer fits one line and wraps at its own spaces, the separator stays with the part before
+    // it; a short part, such as the colour, still stays whole (DQ-P5-071: never "Athlete / Silver").
+    expect(keptSubline(R34, false)).toBe('2002\u00A0· 2,6 l R6 Biturbo (RB26DETT)\u00A0· Bayside\u00A0Blue');
+    expect(keptSubline({ subline_parts: ['2001', '2,6 l R6 Biturbo (RB26DETT)', 'Athlete Silver'] }, false)).toBe(
+      '2001\u00A0· 2,6 l R6 Biturbo (RB26DETT)\u00A0· Athlete\u00A0Silver',
+    );
     // A long engine text from a member would otherwise break inside a word.
     const long = 'Selbst aufgebauter Reihensechszylinder mit Einzeldrosselklappen';
     expect(keptSubline({ subline_parts: ['2002', long, ' '] })).toBe(`2002\u00A0· ${long}`);
@@ -104,10 +108,13 @@ describe('what FS-3 shows', () => {
     expect(previewPhotos(many).map((photo) => photo.sort)).toEqual([2, 3, 4]);
   });
 
-  it('accepts only the four content tabs', () => {
-    expect(isProfileTab('history')).toBe(true);
-    expect(isProfileTab('compare')).toBe(false);
-    expect(isProfileTab(undefined)).toBe(false);
+  it('maps a 2.0 link\'s tab and a 2.1 section to the section it opens (ADR-505)', () => {
+    expect(anchorFromParams(undefined, 'history')).toBe('history');
+    expect(anchorFromParams('plans', 'history')).toBe('plans');
+    expect(anchorFromParams('similar', undefined)).toBe('similar');
+    expect(anchorFromParams(undefined, 'similar')).toBeUndefined();
+    expect(anchorFromParams('compare', 'compare')).toBeUndefined();
+    expect(anchorFromParams(undefined, undefined)).toBeUndefined();
   });
 
   it('strips photos, description, mods and Verlauf for qaState=empty', () => {

@@ -5,6 +5,7 @@
  */
 import type { ModCategoryField } from '@/api/queries/catalog';
 import type { ModFieldValues, ModPayload, ModStatus, OwnerMod } from '@/api/queries/mods';
+import type { ModPriority } from '@/api/queries/plans';
 import { formatNumber, parseNumber, roundInt, type FormatLocale } from '@/lib/format';
 
 import { legalStatusOf, type LegalStatus } from './legalStatus';
@@ -36,7 +37,29 @@ export type ModFormValues = {
   fields: Record<string, FieldValue>;
   /** M4.14 [`parts_catalogue`]: the linked catalogue product ("KW Variante 3"), or none (free text stays possible). */
   product: { id: string; label: string } | null;
+  /** M5.3 Pläne (10 §5.9): the target month "2027-03", or empty; only while planned. */
+  targetMonth: string;
+  /** M5.3: none, or low / normal / high; only while planned. */
+  priority: ModPriority | '';
+  /** M5.3: the private planned budget as typed ("1.200"), the owner's alone; it stays when the plan is built. */
+  budget: string;
 };
+
+/** The server's range for a target month (contract §4.1): January 2000 up to ten years after this month. */
+export const TARGET_MONTH_MIN = '2000-01';
+export const TARGET_MONTHS_AHEAD = 120;
+
+/** "2026-11" plus `months` → "2036-11". */
+export function addMonths(month: string, months: number): string {
+  const [year = 0, number = 1] = month.split('-').map(Number);
+  const index = year * 12 + (number - 1) + months;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, '0')}`;
+}
+
+/** The latest target month the server takes, from this month. */
+export function latestTargetMonth(current: string): string {
+  return addMonths(current, TARGET_MONTHS_AHEAD);
+}
 
 export type LayoutRow =
   | { kind: 'single'; field: ModCategoryField }
@@ -176,7 +199,16 @@ export function costText(cents: number | null | undefined, locale: FormatLocale)
   return formatNumber(cents / 100, locale, { minFractionDigits: fraction, maxFractionDigits: fraction });
 }
 
-export function modValuesFrom(mod: OwnerMod | undefined, fields: readonly ModCategoryField[], locale: FormatLocale): ModFormValues {
+/**
+ * The form's values from the stored mod. A new mod starts as built, or as a plan when GAR-10 opens with `?status=planned` (VEH-01's
+ * "Plan anlegen", M5.3).
+ */
+export function modValuesFrom(
+  mod: OwnerMod | undefined,
+  fields: readonly ModCategoryField[],
+  locale: FormatLocale,
+  preset: { status?: ModStatus } = {},
+): ModFormValues {
   const stored = mod?.fields ?? {};
   const values: Record<string, FieldValue> = {};
   for (const field of fields) {
@@ -184,7 +216,7 @@ export function modValuesFrom(mod: OwnerMod | undefined, fields: readonly ModCat
     values[field.key] = value ?? (field.type === 'boolean' ? false : '');
   }
   return {
-    status: mod?.status ?? 'installed',
+    status: mod?.status ?? preset.status ?? 'installed',
     // A title the member wrote stays; the automatic one is brand + model and shows as the placeholder.
     title: mod && mod.title !== automaticTitle(values) ? mod.title : '',
     partNumber: mod?.part_number ?? '',
@@ -194,6 +226,9 @@ export function modValuesFrom(mod: OwnerMod | undefined, fields: readonly ModCat
     notes: mod?.notes ?? '',
     fields: values,
     product: mod?.product ? { id: mod.product.id, label: mod.product.full_name } : null,
+    targetMonth: mod?.target_month ?? '',
+    priority: mod?.priority ?? '',
+    budget: costText(mod?.budget?.cents, locale),
   };
 }
 
@@ -257,6 +292,14 @@ export function modPayload(
   if (options.legalStatus) payload.legal_status = values.legalStatus || null;
   // M4.14: only a changed link is sent, and only while parts_catalogue is on (the server ignores it otherwise); null unlinks it.
   if (options.product) payload.product_id = values.product?.id ?? null;
+  // M5.3 (contract §1, §4.1): the target month and the priority belong to a plan; the server clears them once it is built or removed,
+  // so they go only with a planned status. The budget is the owner's private figure and stays in every status.
+  if (values.status === 'planned') {
+    payload.target_month = values.targetMonth || null;
+    payload.priority = values.priority || null;
+  }
+  const budget = values.budget.trim() ? parseCost(values.budget, locale) : null;
+  payload.budget_cents = budget === null || Number.isNaN(budget) ? null : budget;
   return payload;
 }
 

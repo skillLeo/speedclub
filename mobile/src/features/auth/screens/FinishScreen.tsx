@@ -9,8 +9,9 @@ import { useAppConfig } from '@/api/queries/appConfig';
 import { useSignOut } from '@/api/queries/auth';
 import { useAcceptOnboarding } from '@/api/queries/passwordless';
 import { haptics } from '@/lib/haptics';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { createStyles } from '@/theme';
-import { Button } from '@/ui';
+import { Button } from '@/ui/Button';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { ConsentCheck } from '../components/ConsentCheck';
@@ -52,7 +53,7 @@ export function FinishScreen() {
     defaultValues: { ageConfirmed: false, termsAccepted: false },
   });
 
-  const onSubmit = handleSubmit(
+  const onSubmit = useSingleFlight(handleSubmit(
     async () => {
       if (!termsVersion || !privacyVersion) {
         setNotice(t('finish.versionsMissing'));
@@ -75,7 +76,7 @@ export function FinishScreen() {
       }
     },
     () => haptics.warning(),
-  );
+  ));
 
   return (
     <AuthScreen

@@ -193,7 +193,6 @@ test.describe('A2 report handling', () => {
     await expect(id(page, 'ADM-21.composer.ground')).toHaveValue(filled(template.ground, props.composer.placeholders));
     editedFacts = `${filled(template.facts, props.composer.placeholders)} Auf dem Bild steht eine Telefonnummer für den Verkauf von Felgen.`;
     await facts.fill(editedFacts);
-    await id(page, 'ADM-21.composer.reason').fill(`A2 ${browserName}: Werbeschild mit Telefonnummer auf dem Foto, Meldung bestätigt`);
     await expect(id(page, 'ADM-21.composer.preview.de')).toContainText(editedFacts);
     await flowShot(page, testInfo, 'ADM-21-composerRemoveContent', { phase: 3 });
     // The decision takes the photo (the build's cover) off the public disk: another worker's Start may still be loading it.
@@ -322,7 +321,6 @@ test.describe('A2 report handling', () => {
       await expect(id(second.page, 'ADM-21.appeal-dialog.text')).toHaveText(appealText);
       await dialog.getByRole('radio', { name: new RegExp(`^${admin('moderation', 'appeal.reversed')}`) }).check();
       await id(second.page, 'ADM-21.appeal-dialog.explanation').fill(explanation);
-      await id(second.page, 'ADM-21.appeal-dialog.reason').fill(`A2 ${browserName}: Einspruch begründet, Veranstaltungsschild statt Werbung`);
       await flowShot(second.page, testInfo, 'ADM-21-appealDialogReversed', { phase: 3 });
       await id(second.page, 'ADM-21.appeal-dialog.submit').click();
       await confirmPassword(second.page);
@@ -451,7 +449,6 @@ test.describe('A2 report handling', () => {
     await choose(page, composer, admin('moderation', 'composer.template'), template.label);
     const facts = `${filled(template.facts, props.selected.composer.placeholders)} Die Nachricht fiel nach einem abgelehnten Preisvorschlag.`;
     await id(page, 'ADM-22.composer.facts').fill(facts);
-    await id(page, 'ADM-22.composer.reason').fill(`A2 ${browserName}: Beleidigung nach Absage im Chat, Meldung bestätigt`);
     // What the member will read, before deciding (DE/EN preview of SAFE-01 and the mail).
     await expect(id(page, 'ADM-22.composer.preview.de')).toContainText(facts);
     await id(page, 'ADM-22.composer.submit').click();

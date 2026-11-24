@@ -7,7 +7,8 @@ import { ApiError } from '@/api/client';
 import { useTwoFactorChallenge } from '@/api/queries/auth';
 import { useQaState } from '@/lib/qa';
 import { createStyles } from '@/theme';
-import { Button, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { TextInput } from '@/ui/TextInput';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { CodeInput, CodeInputSkeleton } from '../components/CodeInput';

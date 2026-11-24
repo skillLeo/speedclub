@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { isWeb } from '@/lib/platform';
 import { useSessionStore } from '@/state/session';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 
 import { InstallHintSheet } from './InstallHintSheet';
 import {

@@ -4,9 +4,11 @@ import { View, type LayoutChangeEvent } from 'react-native';
 
 import { isWeb } from '@/lib/platform';
 import { createStyles, useTheme } from '@/theme';
-import { Icon, PressableScale, Text, UnreadBadge, unreadCountText, type IconName } from '@/ui';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text, typeStyle } from '@/ui/Text';
+import { UnreadBadge, unreadCountText } from '@/ui/UnreadBadge';
 import type { PressableVisualState } from '@/ui/PressableScale';
-import { typeStyle } from '@/ui/Text';
 
 export type TabButtonVariant = 'bar' | 'rail' | 'sidebar';
 

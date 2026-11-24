@@ -4,7 +4,10 @@ import { View } from 'react-native';
 import { keepNameTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { createStyles } from '@/theme';
-import { Hairline, Icon, PressableScale, Text } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { Icon } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text } from '@/ui/Text';
 import { joinLabel } from '@/ui/rowParts';
 
 export type OptionRowProps = {

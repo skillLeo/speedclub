@@ -18,9 +18,9 @@ class PlatformFilesController extends Controller
      * /u joined with PROF-02 (M2.1). The two e-mail screens are exact paths (SEC-P2-03): WEB-07's app button points at them with the code
      * in the fragment, which is no part of the path, so only the verified app or the member web gets it. The app claims the same paths
      * in its intent filters (mobile/app.config.ts APP_LINK_PATH_PREFIXES and APP_LINK_PATHS). M4.15 (ADR-453 e): SET-21 of the security
-     * mail, in both spellings.
+     * mail, in both spellings. M5.9d: /join (INV-02, the invite link).
      */
-    public const APP_PATHS = ['/v/*', '/u/*', '/c/*', '/C/*', '/app/reset-password', '/app/verify-email', '/auth/magic', '/auth/secure', '/app/auth/magic', '/app/auth/secure', '/settings/security/activity', '/app/settings/security/activity'];
+    public const APP_PATHS = ['/v/*', '/u/*', '/c/*', '/C/*', '/join/*', '/app/reset-password', '/app/verify-email', '/auth/magic', '/auth/secure', '/app/auth/magic', '/app/auth/secure', '/settings/security/activity', '/app/settings/security/activity'];
 
     /**
      * M4.14 pages the app opens only while their flag is on: /b (BIZ-01, `businesses`) and /brands (BRD-01, `parts_catalogue`). With
@@ -42,7 +42,7 @@ class PlatformFilesController extends Controller
      * What a shared link and its preview need: the landing page, the vehicle and member pages with their cards, the QR resolver that
      * redirects to a vehicle page (bots are not counted as scans, KnownBots), the brand files. M4.16: the event, business and brand pages.
      */
-    public const SHARED_PATHS = ['/$', '/v/', '/u/', '/e/', '/b/', '/brands/', '/c/', '/C/', '/og/', '/brand/', '/storage/og/', '/app/v/', '/app/u/', '/site.webmanifest', '/favicon', '/apple-touch-icon.png', '/icon-'];
+    public const SHARED_PATHS = ['/$', '/v/', '/u/', '/e/', '/b/', '/brands/', '/c/', '/C/', '/join/', '/og/', '/brand/', '/storage/og/', '/app/v/', '/app/u/', '/site.webmanifest', '/favicon', '/apple-touch-icon.png', '/icon-'];
 
     /** What search engines may crawl while indexing is on (M4.16: /e/, /b/, /brands/; each page says noindex where its subject asks). */
     public const INDEXED_PATHS = ['/v/', '/u/', '/e/', '/b/', '/brands/', '/og/'];
@@ -63,7 +63,7 @@ class PlatformFilesController extends Controller
             ? [
                 'User-agent: *',
                 ...array_map(fn (string $path): string => 'Allow: '.$path, self::INDEXED_PATHS),
-                ...array_map(fn (string $path): string => 'Disallow: '.$path, [...self::PRIVATE_PATHS, '/c/', '/C/']),
+                ...array_map(fn (string $path): string => 'Disallow: '.$path, [...self::PRIVATE_PATHS, '/c/', '/C/', '/join/']),
                 '',
                 ...$previews,
                 '',

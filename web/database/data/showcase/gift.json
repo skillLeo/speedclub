@@ -1,0 +1,36 @@
+{
+ "_comment": "M5.9f gift demo (GiftDemoSeeder, staging/local only): the twelve cities sample members spot in (de_cities names, by Bundesland), and the showcase builds that carry more of their story (documented mods with photos, before/after posts, extra notes) so the Build Score shows every stage from real content. stage = the stage the content is meant to reach; the score itself is always computed by the real calculator. spot_weight = how many sample members spot the car (out of about 40).",
+ "cities": [
+  {"name": "München", "bundesland": "BY"},
+  {"name": "Nürnberg", "bundesland": "BY"},
+  {"name": "Stuttgart", "bundesland": "BW"},
+  {"name": "Köln", "bundesland": "NW"},
+  {"name": "Düsseldorf", "bundesland": "NW"},
+  {"name": "Hamburg", "bundesland": "HH"},
+  {"name": "Berlin", "bundesland": "BE"},
+  {"name": "Frankfurt am Main", "bundesland": "HE"},
+  {"name": "Leipzig", "bundesland": "SN"},
+  {"name": "Hannover", "bundesland": "NI"},
+  {"name": "Bremen", "bundesland": "HB"},
+  {"name": "Mainz", "bundesland": "RP"}
+ ],
+ "showpieces": {
+  "dominik-r32": {"stage": 5, "documented": 10, "before_after": 3, "notes": 5, "spot_weight": 37, "reactors": 39, "followers": 39},
+  "jan-s15": {"stage": 4, "documented": 10, "before_after": 2, "notes": 4, "spot_weight": 28, "reactors": 30, "followers": 26},
+  "lea-gti7": {"stage": 4, "documented": 10, "before_after": 1, "notes": 3, "spot_weight": 24, "reactors": 27, "followers": 22},
+  "sebastian-fd": {"stage": 4, "documented": 6, "before_after": 3, "notes": 4, "spot_weight": 26, "reactors": 28, "followers": 25},
+  "sebastian-m4-g82": {"stage": 3, "documented": 6, "before_after": 0, "notes": 2, "spot_weight": 18, "reactors": 20, "followers": 16},
+  "sebastian-911-964": {"stage": 3, "documented": 4, "before_after": 1, "notes": 2, "spot_weight": 14, "reactors": 15, "followers": 12},
+  "jonas-e30": {"stage": 3, "documented": 5, "before_after": 1, "notes": 2, "spot_weight": 16, "reactors": 17, "followers": 14},
+  "mia-nd": {"stage": 3, "documented": 4, "before_after": 1, "notes": 2, "spot_weight": 14, "reactors": 14, "followers": 12},
+  "lars-r34": {"stage": 3, "documented": 6, "before_after": 0, "notes": 2, "spot_weight": 20, "reactors": 18, "followers": 15},
+  "emma-fk8": {"stage": 3, "documented": 6, "before_after": 0, "notes": 2, "spot_weight": 15, "reactors": 14, "followers": 12},
+  "david-a80": {"stage": 3, "documented": 6, "before_after": 0, "notes": 2, "spot_weight": 17, "reactors": 15, "followers": 13},
+  "maxi-g82": {"stage": 3, "documented": 5, "before_after": 0, "notes": 2, "spot_weight": 12, "reactors": 12, "followers": 10},
+  "moritz-fd": {"stage": 3, "documented": 5, "before_after": 0, "notes": 2, "spot_weight": 13, "reactors": 12, "followers": 10},
+  "luca-r35": {"stage": 3, "documented": 5, "before_after": 0, "notes": 2, "spot_weight": 14, "reactors": 13, "followers": 11}
+ },
+ "cotd_days_back": 14,
+ "cotd_days_ahead": 3,
+ "invites_accepted_by": ["selin.yaris", "nele.scirocco"]
+}

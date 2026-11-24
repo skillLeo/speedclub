@@ -16,13 +16,20 @@ import { useOnline } from '@/state/online';
 import { clearAuthIntent } from '@/state/session';
 import { createStyles, motion as motionTokens, space, ThemeScope, useBreakpoint, useTheme, type ThemeName } from '@/theme';
 import { kenBurnsLoop, motionDuration, useMotionPreference } from '@/ui/motion';
-import { Button, DisplayTitle, PressableScale, ProviderButtons, providerOrder, Screen, Text, wordmarkBox, type ProviderKey } from '@/ui';
+import { wordmarkBox } from '@/ui/BrandWordmark';
+import { Button } from '@/ui/Button';
+import { DisplayTitle } from '@/ui/DisplayTitle';
+import { PressableScale } from '@/ui/PressableScale';
+import { ProviderButtons, providerOrder, type ProviderKey } from '@/ui/ProviderButtons';
+import { Screen } from '@/ui/Screen';
+import { Text } from '@/ui/Text';
 import { useImagePlaceholder } from '@/ui/imagePlaceholder';
 import { PhotoStageScrim } from '@/ui/PhotoStageScrim';
 import { focalToPosition } from '@/ui/Photo';
 import { useSafeEdge } from '@/ui/safeArea';
 
 import { AppWordmark, useCustomWordmarks } from '../AppWordmark';
+import { useEmailSignInPath } from '../authFlags';
 import { FORM_MAX_WIDTH } from '../components/AuthScreen';
 import { welcomeHero } from '../brand';
 import { useProviderAvailability, useProviderSignIn } from '../providers/useProviderSignIn';
@@ -36,7 +43,7 @@ const BRAND_THEME: ThemeName = 'carbon';
 
 /** DQ-985 (09 §7.2): the brush logo wide and white, top-left, 28 high; its width follows the bundled file's ratio. */
 export const LOGO_HEIGHT = space[24] + space[4];
-const BUNDLED_LOGO_RATIO = 1200 / 359;
+const BUNDLED_LOGO_RATIO = 696 / 184;
 const LOGO_WIDTH = LOGO_HEIGHT * BUNDLED_LOGO_RATIO;
 /**
  * DQ-985: below 1024 the photo takes the top of the window, edge to edge, cropped from its focal point, and fades into the dark stage
@@ -204,6 +211,7 @@ function Welcome() {
   const { config } = useAppConfig();
   const online = useOnline();
   const available = useProviderAvailability();
+  const emailPath = useEmailSignInPath();
   const providers = providerOrder(available);
   const signIn = useProviderSignIn('AUTH-02');
   const split = width >= SPLIT_FROM;
@@ -211,7 +219,7 @@ function Welcome() {
   const kenBurns = useKenBurns(enabled && !reduced);
   const choose = (provider: ProviderKey) => {
     kenBurns.stop();
-    if (provider === 'email') router.push('/auth/email');
+    if (provider === 'email') router.push(emailPath);
     else void signIn.run(provider);
   };
   const go = (path: '/' | '/settings/legal/privacy' | '/settings/legal/terms') => {

@@ -30,7 +30,7 @@ class SetCatalogEntryActive
     public function handle(Staff $staff, Make|VehicleModel|Generation $entry, bool $active, string $reason): Make|VehicleModel|Generation
     {
         StaffAtoms::ensure($staff, 'catalog.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         return DB::transaction(function () use ($staff, $entry, $active, $reason): Make|VehicleModel|Generation {
             /** @var Make|VehicleModel|Generation $row */

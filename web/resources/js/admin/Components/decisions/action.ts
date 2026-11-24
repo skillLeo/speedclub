@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 import { confirmPasswordFirst, passwordRecentlyConfirmed } from '../../composables/recentPassword';
 import { firstError } from './statement';
 
@@ -16,6 +17,11 @@ export function useAdminAction() {
     const error = ref<string | null>(null);
 
     function run(method: Method, url: string, data: Record<string, unknown>, options: { sensitive?: boolean; onSuccess?: () => void } = {}): void {
+        // Client round 6: closing the password dialog without a password said nothing; now the dialog says that nothing was saved.
+        const cancelled = (): void => {
+            processing.value = false;
+            error.value = trans('ui.state.password_cancelled');
+        };
         const go = (): void => {
             router.visit(url, {
                 method,
@@ -28,13 +34,29 @@ export function useAdminAction() {
                 },
                 onFinish: () => (processing.value = false),
                 onSuccess: (next) => {
-                    if ((next.props.flash as { confirm_password?: true } | undefined)?.confirm_password === true) return;
+                    // The server found the confirmation stale (ADR-215): ask for the password and repeat this request, so its answer lands
+                    // here (the dialog closes on success) instead of leaving the dialog open with nothing in it.
+                    if ((next.props.flash as { confirm_password?: true } | undefined)?.confirm_password === true) {
+                        confirmPasswordFirst(go, cancelled);
+                        return;
+                    }
                     options.onSuccess?.();
                 },
                 onError: (errors) => (error.value = firstError(errors)),
+                // Client round 3 (staging): a request the host refused or dropped ended with no callback, so dialogs stayed as they were
+                // and "nothing happened". Every admin action now says so where the click was (as configDraft.ts does since 23f38a46).
+                onNetworkError: () => {
+                    error.value = trans('config.draft.connection_lost');
+                    return false;
+                },
+                onHttpException: (response) => {
+                    if (Object.keys(response.headers).some((name) => name.toLowerCase() === 'x-inertia')) return;
+                    error.value = trans('ui.state.server_error');
+                    return false;
+                },
             });
         };
-        if (options.sensitive === true && !passwordRecentlyConfirmed(page.props.staff?.password_confirmed_until)) confirmPasswordFirst(go);
+        if (options.sensitive === true && !passwordRecentlyConfirmed(page.props.staff?.password_confirmed_until)) confirmPasswordFirst(go, cancelled);
         else go();
     }
 

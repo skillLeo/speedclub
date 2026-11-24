@@ -11,13 +11,14 @@ use Inertia\Testing\AssertableInertia;
 require_once __DIR__.'/../Support/helpers.php';
 
 /**
- * ADM-03 "Später einrichten" (STAFF_2FA_REQUIRED=false). The skip marks one session, is audited and never stored on the account; a
- * skipped session reaches the admin, but no step that rests on a current code. With the flag on (the default) nothing changes:
- * StaffAccessHardeningTest pins that behaviour.
+ * ADR-540: "2FA für Admin-Konten" (governance, Pflicht/Optional; default Optional; STAFF_2FA_REQUIRED=true forces Pflicht). In Optional,
+ * ADM-03 "Später einrichten" marks one session (audited, never stored on the account), and an account without TOTP reaches the admin
+ * whether it skipped or not; only the steps that read or replace a code stay closed (CLOSED_WITHOUT_CODE). In Pflicht nothing changes:
+ * StaffAccessHardeningTest pins that behaviour. This directory starts with Pflicht published (tests/Pest.php).
  */
 function skipAllowed(bool $allowed = true): void
 {
-    config(['speedclub.staff.two_factor_required' => ! $allowed]);
+    publishGovernance(fourEyes: true, staffTwoFactor: $allowed ? 'optional' : 'required');
 }
 
 function skippedSession(): array
@@ -30,10 +31,15 @@ function skipRows(): int
     return AuditEvent::query()->where('action', StaffSecurityEvent::TwoFactorSkipped->value)->count();
 }
 
-describe('with STAFF_2FA_REQUIRED on (default)', function () {
-    it('defaults to required', function () {
-        expect(config('speedclub.staff.two_factor_required'))->toBeTrue()
-            ->and(EnsureStaffTwoFactor::skippable())->toBeFalse();
+describe('with 2FA für Admin-Konten Pflicht', function () {
+    it('is required by the switch, and by STAFF_2FA_REQUIRED=true whatever the switch says', function () {
+        expect(EnsureStaffTwoFactor::skippable())->toBeFalse();
+
+        skipAllowed();
+        expect(EnsureStaffTwoFactor::skippable())->toBeTrue();
+
+        config(['speedclub.staff.two_factor_required' => true]);
+        expect(EnsureStaffTwoFactor::skippable())->toBeFalse();
     });
 
     it('offers no skip on ADM-03', function () {
@@ -61,7 +67,7 @@ describe('with STAFF_2FA_REQUIRED on (default)', function () {
     });
 });
 
-describe('with STAFF_2FA_REQUIRED off', function () {
+describe('with 2FA für Admin-Konten Optional', function () {
     beforeEach(fn () => skipAllowed());
 
     it('offers the skip on ADM-03', function () {
@@ -71,10 +77,10 @@ describe('with STAFF_2FA_REQUIRED off', function () {
             ->assertInertia(fn (AssertableInertia $page) => $page->component('Auth/TwoFactorSetup')->where('skippable', true));
     });
 
-    it('still sends a session that did not skip to enrolment', function () {
+    it('lets a session that did not skip into the admin too (ADR-540)', function () {
         $this->actingAs(Staff::factory()->create(), 'staff')
             ->get('/admin')
-            ->assertRedirect('/admin/two-factor/setup');
+            ->assertOk();
     });
 
     it('marks this session, writes the audit row and goes to the dashboard', function () {
@@ -106,13 +112,13 @@ describe('with STAFF_2FA_REQUIRED off', function () {
         expect($html)->toContain('"admin.dashboard"')->toContain('"admin.members.index"');
     });
 
-    it('keeps the guest route list for a session that did not skip', function () {
+    it('lists every admin route for an account without TOTP that did not skip (ADR-540)', function () {
         $html = (string) $this->actingAs(Staff::factory()->create(), 'staff')
             ->get('/admin/two-factor/setup')
             ->assertOk()
             ->getContent();
 
-        expect($html)->toContain('Ziggy')->not->toContain('"admin.members.index"');
+        expect($html)->toContain('"admin.members.index"');
     });
 
     it('audits a repeated skip of the same session once', function () {
@@ -184,7 +190,7 @@ describe('with STAFF_2FA_REQUIRED off', function () {
             ->assertJsonPath('code', 'conflict');
     });
 
-    it('closes the steps that rest on a current code, with the reason', function (string $method, string $uri) {
+    it('closes the steps that read or replace a code the account has not got, with the reason', function (string $method, string $uri) {
         $staff = Staff::factory()->create();
         $before = $staff->password;
 
@@ -203,7 +209,6 @@ describe('with STAFF_2FA_REQUIRED off', function () {
 
         expect($staff->fresh()?->password)->toBe($before);
     })->with([
-        'password change' => ['PUT', '/admin/user/password'],
         'recovery codes (Fortify)' => ['GET', '/admin/user/two-factor-recovery-codes'],
         'new recovery codes (Fortify)' => ['POST', '/admin/user/two-factor-recovery-codes'],
         'disable two-factor' => ['DELETE', '/admin/user/two-factor-authentication'],
@@ -211,32 +216,35 @@ describe('with STAFF_2FA_REQUIRED off', function () {
         'ADM-51 rotation confirm' => ['POST', '/admin/account/two-factor/rotation/confirm'],
         'ADM-51 recovery codes' => ['POST', '/admin/account/recovery-codes'],
         'ADM-51 new recovery codes' => ['POST', '/admin/account/recovery-codes/regenerate'],
+        'ADM-51 switch 2FA off' => ['DELETE', '/admin/account/two-factor'],
     ]);
 
-    it('refuses four-eyes decisions to a skipped session, even for an owner', function (string $decision) {
+    it('lets an account without TOTP change its password (ADR-540: a skipped session could not before)', function () {
+        $staff = Staff::factory()->create();
+        $before = $staff->password;
+
+        $this->actingAs($staff, 'staff')
+            ->withSession([...skippedSession(), 'auth.password_confirmed_at' => time()])
+            ->putJson('/admin/user/password', ['current_password' => 'password-for-tests', 'password' => 'a-new-staff-password-1', 'password_confirmation' => 'a-new-staff-password-1'])
+            ->assertSuccessful();
+
+        expect($staff->fresh()?->password)->not->toBe($before);
+    });
+
+    it('lets an account without TOTP decide four-eyes requests (ADR-540: 2FA is optional for approvers too)', function () {
         seedStaffRoles();
         $owner = staffWithRole('owner', totp: false);
         $approval = ApprovalRequest::factory()->create();
 
-        $this->actingAs($owner, 'staff')
+        $response = $this->actingAs($owner, 'staff')
             ->withSession([...skippedSession(), 'auth.password_confirmed_at' => time()])
-            ->postJson("/admin/team/approvals/{$approval->getKey()}/{$decision}", ['reason' => 'Geprüft und in Ordnung'])
-            ->assertStatus(409)
-            ->assertJsonPath('code', 'two_factor_required');
+            ->postJson("/admin/team/approvals/{$approval->getKey()}/deny", ['comment' => 'Nicht nötig.']);
 
-        // An Inertia write stays on its page with the toast.
-        $this->from('/admin/team/approvals')
-            ->post("/admin/team/approvals/{$approval->getKey()}/{$decision}", ['reason' => 'Geprüft und in Ordnung'], ['X-Inertia' => 'true'])
-            ->assertStatus(303)
-            ->assertRedirect('/admin/team/approvals')
-            ->assertSessionHas('error', 'shell.two_factor.required_for_action');
-
-        expect($approval->fresh()?->status)->toBe($approval->status)
-            ->and($approval->fresh()?->decided_by)->toBeNull();
-    })->with(['approve', 'deny']);
+        expect($response->status())->not->toBe(409);
+    });
 
     it('names only existing routes as closed', function () {
-        expect(collect(EnsureStaffTwoFactor::CLOSED_UNTIL_CONFIRMED)->reject(fn (string $name): bool => Route::has($name))->all())->toBe([])
+        expect(collect(EnsureStaffTwoFactor::CLOSED_WITHOUT_CODE)->reject(fn (string $name): bool => Route::has($name))->all())->toBe([])
             ->and(Route::has(EnsureStaffTwoFactor::SKIP_ROUTE))->toBeTrue();
     });
 });

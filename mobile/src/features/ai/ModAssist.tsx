@@ -7,7 +7,10 @@ import type { ModCategoryField } from '@/api/queries/catalog';
 import { formatNumber, type FormatLocale } from '@/lib/format';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { Button, Hairline, Text, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Hairline } from '@/ui/Hairline';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 
 import { AiLabel } from './AiLabel';
 import { AiNote } from './AiNote';

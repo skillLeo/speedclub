@@ -16,7 +16,7 @@
     // without the screenshot matrix's forced state. Missing and private pages keep "Builds entdecken".
     $failure = in_array($state, ['server_error', 'maintenance', 'rate_limited'], true);
 @endphp
-<x-public.layout :title="$title.' · SPEED CLUB'" :description="$text" robots="noindex">
+<x-public.layout :title="$title.' · Speedclub'" :description="$text" robots="noindex">
     <x-public.top-bar />
     <main id="main" class="sc-state flex-1" data-testid="{{ $id }}.root" data-state="{{ $state }}">
         <div class="sc-state-photo" data-qa-exempt="photo">

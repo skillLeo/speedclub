@@ -16,7 +16,7 @@ return [
         'vehicle' => 'Vehicle',
     ],
     'digest' => [
-        'subject' => 'Unread messages on SPEED CLUB',
+        'subject' => 'Unread messages on Speedclub',
         'heading' => 'You have unread messages',
         'intro' => '{1} A message has been waiting for you in one conversation for more than 12 hours.|[2,*] Messages have been waiting for you in :count conversations for more than 12 hours.',
         'action' => 'Open messages',

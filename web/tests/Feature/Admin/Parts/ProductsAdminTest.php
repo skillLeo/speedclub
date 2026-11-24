@@ -76,7 +76,7 @@ it('creates, edits, archives, restores and merges with audit; the merge moves th
     $this->patchJson("/admin/catalog/products/{$v1->id}", ['line' => 'Gewindefahrwerke'])->assertOk();
     expect(AuditEvent::query()->where('action', 'product.updated')->value('after'))->toMatchArray(['line' => 'Gewindefahrwerke']);
 
-    $this->postJson("/admin/catalog/products/{$v1->id}/archive", ['reason' => 'kurz'])->assertUnprocessable();
+    $this->postJson("/admin/catalog/products/{$v1->id}/archive", ['reason' => str_repeat('x', 1001)])->assertUnprocessable(); // ADR-540: optional, at most 1000
     $this->postJson("/admin/catalog/products/{$v1->id}/archive", ['reason' => 'Nicht mehr im Programm des Herstellers.'])->assertOk()->assertJsonPath('status', 'archived');
     $this->postJson("/admin/catalog/products/{$v1->id}/restore", ['reason' => 'Doch wieder lieferbar laut Hersteller.'])->assertOk()->assertJsonPath('status', 'active');
 

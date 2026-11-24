@@ -66,6 +66,10 @@ export function BeforeAfter({ before, after, aspect, label, testID }: BeforeAfte
 
   const pan = usePanGesture({
     minDistance: 0,
+    // On the web RNGH re-applies the handler config on every re-render and drops the detector's `touchAction` (CR2-1, CarouselSnap):
+    // set here, the vertical page scroll keeps working with a finger on it.
+    // @ts-expect-error -- touchAction is an allowed native prop of the pan handler (RNGH propsWhiteList) but not in PanGestureConfig
+    touchAction: 'pan-y',
     testID: `${testID}.pan`,
     onBegin: () => {
       'worklet';

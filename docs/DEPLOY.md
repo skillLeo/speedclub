@@ -336,6 +336,14 @@ Without both keys the flags cannot be switched on, and the app shows no AI entri
    **Never `php artisan db:seed` without `--class` on an existing host** (7, ADR-234). On staging, put the `/docs` rule of checklist item 2 back into `public/.htaccess` (the update replaced the file).
 5. `php artisan up`, run the doctor (Storage link OK, no "search projection" warning; "Cron heartbeat Never seen" is expected for a minute after `optimize:clear`), repeat the smoke test.
 
+**First update to Phase 5 (2.1.0)** (from a 2.0.x package): in step 4, after the named seeders, also run the gift reference seeders. They only add rows (`DeCitySeeder` upserts the GeoNames cities by id, `DexSetSeeder` and `BadgeSeeder` use `firstOrCreate` and never change a set or badge staff edited); without them STREET DEX finds no city, DEX-05 has no sets and nobody earns a badge:
+```
+php artisan db:seed --class=DeCitySeeder --force   # 7,236 German places (GeoNames, CC BY 4.0), no coordinates
+php artisan db:seed --class=DexSetSeeder --force   # the Dex sets
+php artisan db:seed --class=BadgeSeeder --force    # the launch badges
+```
+The migrations number the cars that are already published (Dex numbers by `published_at`), derive `users.bundesland` from the public profile city (ADR-514) and publish the new legal drafts as the next version without re-consent. Then: **staging** (demo host) `php artisan db:seed --class=DemoShowcaseSeeder --force`, `php artisan speedclub:qr:rotate-samples` and `php artisan speedclub:demo-passwords` (every demo account signs in with DEMO_MEMBER_PASSWORD, ADR-537; then `DEMO_MEMBER_PASSWORD=… node scripts/staging-smoke.mjs` from the build machine, the password from the host's `.env` into the environment only, never printed); **production** `php artisan speedclub:founding:backfill --dry-run`, check the list, then without `--dry-run`. The new schedule entries (`build-score:nightly`, `dex:nightly`, `dex:spot-alerts`, `badges:nightly`, `car-of-the-day:run`, `speedclub:wrapped:generate due`, `speedclub:wrapped:prune-cards`) run from the existing cron line; nothing to add on the host.
+
 **First update to Phase 3** (from a 0.2.x package):
 - Before step 2: add the Phase 3 keys to `.env` (3: `ADMIN_IP_ALLOWLIST`, `STAFF_OWNER_EMAIL`, `BACKUP_ARCHIVE_PASSWORD`, `HEALTH_TO_ADDRESS`, optional `ADMIN_DOMAIN`, `AI_*`).
 - Step 4 applies the Phase 3 migrations (admin, approvals, catalogue merges, brand/content/config, team, privacy requests, AI) and the named seeders create the roles, atoms and, with `STAFF_OWNER_EMAIL` set, the Owner (7). Then follow "The first Owner".

@@ -17,6 +17,7 @@ import { OverlayModal, Scrim, usePresence } from './overlay';
 import { PressableScale } from './PressableScale';
 import { useSafeEdge, useSafeInset } from './safeArea';
 import { contentOffset, footerTranslate, moveFocusIntoSheet, panelTranslate, settleTarget, type SheetTarget } from './sheetMath';
+import { SkeletonSurfaceContext } from './Skeleton';
 import { Text } from './Text';
 import { reportOverlayPanel } from './toastPlacement';
 import { NO_BROWSER_OUTLINE } from './useFocusRing';
@@ -301,6 +302,8 @@ function SheetPanel({
 
   return (
     <OverlayModal label={accessibleName} onRequestClose={requestClose}>
+      {/* DQ-P5G-03: skeletons inside take the raised tone, so they show on the panel. */}
+      <SkeletonSurfaceContext value="raised">
       <View ref={setStage} style={styles.root} onLayout={heightFrom(setStageHeight)}>
         <Scrim progress={scrim} onPress={requestClose} testID={testID ? `${testID}.scrim` : undefined} />
         <View style={styles.anchor}>
@@ -382,6 +385,7 @@ function SheetPanel({
           </Animated.View>
         </View>
       </View>
+      </SkeletonSurfaceContext>
     </OverlayModal>
   );
 }

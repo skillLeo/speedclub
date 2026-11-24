@@ -51,6 +51,7 @@ export const SEARCH_INDEX: readonly SearchEntry[] = [
   page('reminders'),
   page('business'),
   page('membership'),
+  page('invites'),
   page('export'),
   page('delete'),
   page('help'),

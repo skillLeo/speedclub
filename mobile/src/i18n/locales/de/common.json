@@ -3,8 +3,14 @@
         "home": "Start",
         "discover": "Entdecken",
         "garage": "Garage",
-        "messages": "Nachrichten",
+        "shop": "Shop",
         "profile": "Profil"
+    },
+    "places": {
+        "messages": "Nachrichten",
+        "events": "Treffen",
+        "forum": "Forum",
+        "crews": "Crews"
     },
     "actions": {
         "back": "Zurück",
@@ -81,7 +87,7 @@
     "gate": {
         "checkAgain": "Erneut prüfen",
         "maintenanceTitle": "Wir sind gleich zurück",
-        "maintenanceBody": "SPEED CLUB wird gerade gewartet. Versuche es gleich noch einmal.",
+        "maintenanceBody": "Speedclub wird gerade gewartet. Versuche es gleich noch einmal.",
         "updateTitle": "Update erforderlich",
         "updateBody": "Diese Version ist veraltet. Bitte installiere das Update."
     },
@@ -93,6 +99,8 @@
             "title": "Diese Ansicht konnte nicht geladen werden",
             "bodyBack": "Versuch es noch einmal oder geh einen Schritt zurück.",
             "bodyClose": "Versuch es noch einmal oder schließ die Ansicht.",
+            "offlineTitle": "Du bist offline",
+            "offlineBody": "Diese Ansicht lädt, sobald du wieder online bist.",
             "bodyAlone": "Versuch es gleich noch einmal.",
             "reload": "Neu laden"
         }
@@ -110,10 +118,10 @@
         "vehicleGallery": "Fotos",
         "vehicleMod": "Modifikation",
         "vehicleUpdate": "Build-Update",
-        "qrDetail": "QR-⁠Code",
+        "qrDetail": "Sticker",
         "qrPlacement": "Sticker anbringen",
         "qrPreview": "Öffentliche Seite",
-        "qrList": "Meine QR-⁠Codes",
+        "qrList": "Meine Sticker",
         "qrResolve": "QR-⁠Code",
         "search": "Suche",
         "garageVehicle": "Dein Fahrzeug",
@@ -150,6 +158,7 @@
                 "home": "Zu Start",
                 "discover": "Zu Entdecken",
                 "garage": "Zur Garage",
+                "shop": "Zum Shop",
                 "messages": "Zu Nachrichten",
                 "profile": "Zum Profil",
                 "help": "Diese Übersicht"
@@ -195,7 +204,9 @@
             "processing": "Das Foto wird noch verarbeitet. Versuch es gleich noch einmal.",
             "failed": "Das hat gerade nicht geklappt. Versuch es gleich noch einmal.",
             "emailNotVerified": "Für KI-⁠Funktionen brauchst du eine bestätigte E-⁠Mail-Adresse.",
-            "dailyLimit": "Dein Tageskontingent für diese KI-⁠Funktion ist aufgebraucht. Morgen geht es wieder."
+            "dailyLimit": "Dein Tageskontingent für diese KI-⁠Funktion ist aufgebraucht. Morgen geht es wieder.",
+            "notNow": "Gerade nicht verfügbar.",
+            "noSuggestion": "Kein Vorschlag gefunden."
         },
         "verifyEmail": "E-⁠Mail-Adresse bestätigen"
     },
@@ -212,8 +223,8 @@
             "reload": "Neu laden"
         },
         "install": {
-            "title": "SPEED CLUB auf den Home-Bildschirm",
-            "lead": "Vom Home-Bildschirm startet SPEED CLUB wie eine App: im Vollbild, ohne Browserleiste.",
+            "title": "Speedclub auf den Home-Bildschirm",
+            "lead": "Vom Home-Bildschirm startet Speedclub wie eine App: im Vollbild, ohne Browserleiste.",
             "steps": {
                 "share": "Tippe in Safari auf „Teilen“.",
                 "add": "Wähle „Zum Home-Bildschirm“.",

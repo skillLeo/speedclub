@@ -9,6 +9,7 @@ use App\Enums\Visibility;
 use App\Models\Follow;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Dex\GhostMode;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Search\SearchTerms;
 use Illuminate\Contracts\Pagination\CursorPaginator;
@@ -247,6 +248,8 @@ class TextSearch
             ->whereIn('owner_id', array_map(fn (MemberHit $hit): string => $hit->member->id, $hits))
             ->where('status', VehicleStatus::Published)
             ->where('visibility', Visibility::Public)
+            // M5.9b: a ghost car is in no garage line of member search.
+            ->where(fn ($query) => GhostMode::constrain($query))
             ->with('make')
             ->orderByDesc('is_main')
             ->orderBy('sort')

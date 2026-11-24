@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { messagingKeys } from '@/api/queries/messaging';
 import { notificationKeys } from '@/api/queries/notifications';
 
+import { useNoteShownPath } from './coldLink';
 import { useMessaging } from './data';
 import { realtimeHub } from './realtime';
 import { useMessagingMember, useRealtimeSession } from './session';
@@ -14,6 +15,8 @@ import { useMessagingMember, useRealtimeSession } from './session';
  * and the badge keeps its 60 s poll (M2.2). Torn down with the session like the rest of messaging.
  */
 export function useLiveMessagingBadges(): void {
+  // The tab layouts' one always-mounted hook: it tells the cold-link rule (coldLink.tsx) when the landing page has been left.
+  useNoteShownPath();
   const adapter = useMessaging();
   const member = useMessagingMember();
   const client = useQueryClient();

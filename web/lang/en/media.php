@@ -12,4 +12,9 @@ return [
     'blur_not_ready' => 'This photo cannot be blurred right now. Wait until it has finished processing.',
     'blur_outside' => 'A marked area reaches beyond the edge of the photo.',
     'blur_too_many' => 'You can blur at most :max areas per photo.',
+    'blur_angle' => 'An area can be turned at most :max° to the left or right.',
+    'blur_regions_required' => 'Mark at least one area or switch off “Blur number plate”.',
+    'blur_regions_invalid' => 'The marked areas could not be read. Mark them again.',
+    'blur_too_small' => 'A marked area is too small. Drag it a little larger.',
+    'blur_final' => 'To change it, upload the photo again.',
 ];

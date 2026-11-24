@@ -1,5 +1,5 @@
 import { useOnline } from '@/state/online';
-import { OfflineBanner } from '@/ui';
+import { OfflineBanner } from '@/ui/OfflineBanner';
 
 /** Under the header of every screen in the shell. `label` replaces the generic line where a screen sends nothing. */
 export function ShellOfflineBanner({ label }: { label?: string }) {

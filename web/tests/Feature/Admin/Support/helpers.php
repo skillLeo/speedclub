@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Staff;
+use App\Services\Governance\Governance;
 use Database\Seeders\StaffSeeder;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
@@ -58,7 +59,8 @@ function assertAdminMatrix(string $method, string $uri, array $allowed, Closure 
     expect($guest->status())->toBeIn([302, 303]);
     expect((string) $guest->headers->get('Location'))->toEndWith('/admin/login');
 
-    // staff without TOTP
+    // staff without TOTP, while 2FA für Admin-Konten is Pflicht (ADR-540; Optional lets them in, GovernanceOptionalTest)
+    publishGovernance(fourEyes: Governance::fourEyes(), staffTwoFactor: 'required');
     actingAsStaff(staffWithRole('owner', totp: false));
     $enrol = $call();
     expect($enrol->status())->toBeIn([302, 303]);

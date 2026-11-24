@@ -6,7 +6,11 @@ import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, t
 import { keepNameTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Hairline, Photo, PressableScale, SkeletonBlock, SkeletonText, Text, type PhotoFields } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { Photo, type PhotoFields } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { joinLabel, LARGE_FONT_SCALE } from '@/ui/rowParts';
 import { handleText } from '@/ui/textBreaks';
 import { ValueText } from '@/ui/ValueText';
@@ -294,24 +298,26 @@ export function WheelSetupTable({ rows, caption, onOpen, testID }: WheelSetupTab
     scrollX.set(Math.max(0, event.contentOffset.x));
   });
   const onLayout = (event: LayoutChangeEvent) => setWidth(Math.floor(event.nativeEvent.layout.width - 2 * styles.table.borderWidth));
+  const body = (
+    <View role="rowgroup">
+      <HeaderRow layout={layout} scrollX={scrollX} />
+      <Hairline />
+      {rows.map((row, index) => (
+        <TableRow key={row.id} row={row} layout={layout} scrollX={scrollX} divider={index < rows.length - 1} onOpen={onOpen} testID={testID} />
+      ))}
+    </View>
+  );
   return (
     <View role="table" aria-label={caption} style={styles.table} onLayout={onLayout} testID={testID}>
-      <Animated.ScrollView
-        horizontal
-        scrollEnabled={layout.pinned}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        showsHorizontalScrollIndicator={layout.pinned}
-        testID={`${testID}.scroll`}
-      >
-        <View role="rowgroup">
-          <HeaderRow layout={layout} scrollX={scrollX} />
-          <Hairline />
-          {rows.map((row, index) => (
-            <TableRow key={row.id} row={row} layout={layout} scrollX={scrollX} divider={index < rows.length - 1} onOpen={onOpen} testID={testID} />
-          ))}
-        </View>
-      </Animated.ScrollView>
+      {/* R5-4: a table that fits scrolls nothing, so it is no ScrollView at all. On the web a disabled ScrollView is `touch-action: none`
+          (react-native-web), and a page scroll that started on the table did not move on a phone. */}
+      {layout.pinned ? (
+        <Animated.ScrollView horizontal onScroll={onScroll} scrollEventThrottle={16} showsHorizontalScrollIndicator testID={`${testID}.scroll`}>
+          {body}
+        </Animated.ScrollView>
+      ) : (
+        <View testID={`${testID}.scroll`}>{body}</View>
+      )}
     </View>
   );
 }

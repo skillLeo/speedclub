@@ -18,7 +18,8 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
     // AUTH-11 (M2.5): per IP here, plus 5 wrong codes a minute per challenge and account in the action.
     Route::post('two-factor/challenge', [TwoFactorChallengeController::class, 'store'])->middleware('throttle:two-factor-challenge')->name('two-factor.challenge');
 
-    // M4.6 Auth 2.0 (09 §8.1): the passwordless e-mail code. email/verify takes it too, with attempt_id.
+    // M4.6 Auth 2.0 (09 §8.1): the passwordless e-mail code. email/verify takes it too, with attempt_id. ADR-520: both refuse the
+    // passwordless form while `auth.email_code` is switched off (a host that cannot deliver mail yet; EmailVerificationController).
     Route::post('email/start', [EmailVerificationController::class, 'start'])->middleware('throttle:auth-email-start')->name('email.start');
     Route::post('email/verify', [EmailVerificationController::class, 'verify'])->middleware('throttle:member-verify')->name('email.verify');
     Route::post('email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:member-email')->name('email.resend');

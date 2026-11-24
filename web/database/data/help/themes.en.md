@@ -2,7 +2,7 @@
 title: Appearance: Carbon, Black or Light
 sort: 100
 ---
-SPEED CLUB comes in three appearances:
+Speedclub comes in three appearances:
 - **Carbon:** dark grey, the default.
 - **Black (OLED):** deep black, ideal for OLED screens and at night.
 - **Light:** easy to read in daylight.

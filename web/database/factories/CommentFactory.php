@@ -6,6 +6,7 @@ use App\Enums\CommentStatus;
 use App\Models\BuildUpdate;
 use App\Models\Comment;
 use App\Models\User;
+use App\Models\Vehicle;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -25,6 +26,14 @@ class CommentFactory extends Factory
             'body' => 'Sauber gemacht, welche Federn sind das?',
             'status' => CommentStatus::Visible,
         ];
+    }
+
+    /**
+     * R5-5: a comment on the car itself instead of an update.
+     */
+    public function onVehicle(?Vehicle $vehicle = null): static
+    {
+        return $this->state(fn (): array => ['build_update_id' => null, 'vehicle_id' => $vehicle->id ?? Vehicle::factory()->published()]);
     }
 
     public function removed(): static

@@ -11,7 +11,11 @@ import { profileVehicles } from '@/features/profile/media';
 import { useFormat } from '@/lib/useFormat';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, size, space, typography, useTheme } from '@/theme';
-import { Button, estimateLines, ListRow, SectionHeader, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { ListRow } from '@/ui/ListRow';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { estimateLines, Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 const ROUTE = 'HOME-01';
 /** 09 §7.3 web "Marken im Fokus": three BrandTiles, the makes with the most public builds (DQ-1034). */
@@ -31,7 +35,7 @@ export function railRowHeight(fontScale: number): number {
   return Math.max(fontScale >= STACKED_VALUE_FONT_SCALE ? size.row.withThumb : size.row.single, lines + 2 * space[8]);
 }
 
-/** Typical length of "Über SPEED CLUB" in German, for its skeleton. */
+/** Typical length of "Über Speedclub" in German, for its skeleton. */
 const ABOUT_CHARS = 150;
 
 const useStyles = createStyles((t) => ({
@@ -62,7 +66,7 @@ export type HomeRailProps = {
 
 /**
  * HOME-01 from 1280 (§5 "feed column 640 + right rail (Discover shortcuts, your garage)"): the makes with the most public
- * builds as shortcuts into the search, then "Deine Garage" for members and a short, true "Über SPEED CLUB" for guests.
+ * builds as shortcuts into the search, then "Deine Garage" for members and a short, true "Über Speedclub" for guests.
  * The featured build stays at the top of the column, as on every other width, so no build is shown twice (DQ-188). Only
  * real numbers, never stats.
  */

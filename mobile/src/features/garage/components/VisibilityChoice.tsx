@@ -3,7 +3,9 @@ import { View } from 'react-native';
 
 import type { Visibility } from '@/api/queries/garage';
 import { createStyles, size, space } from '@/theme';
-import { Hairline, Radio, Text } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { Radio } from '@/ui/Radio';
+import { Text } from '@/ui/Text';
 
 import { VISIBILITIES } from '../model';
 

@@ -76,7 +76,6 @@
         "roles_hint": "Du kannst nur Rollen vergeben, deren Rechte du selbst hast.",
         "owner_only": "Owner kann nur ein Owner einladen.",
         "elevating": "Admin, Owner und Rollen mit kritischen Rechten gelten erst nach einer Freigabe. Bis dahin hat das Konto nur die übrigen Rollen.",
-        "reason_hint": "Pflicht für die Freigabe. Steht im Audit-Log, 10 bis 1.000 Zeichen.",
         "submit": "Einladung senden",
         "locales": {
             "de": "Deutsch",
@@ -85,14 +84,13 @@
         "errors": {
             "name": "Gib einen Namen mit 2 bis 120 Zeichen ein.",
             "email": "Gib eine gültige E‑Mail-Adresse ein.",
-            "roles": "Wähle mindestens eine Rolle.",
-            "reason": "Für die Freigabe braucht es eine Begründung mit 10 bis 1.000 Zeichen."
+            "roles": "Wähle mindestens eine Rolle."
         },
         "accepted": "Dein Passwort ist gesetzt. Melde dich jetzt an und richte den Zwei‑Faktor-Schutz ein."
     },
     "accept": {
         "title": "Einladung annehmen",
-        "intro": "Lege dein Passwort für den SPEED CLUB Admin-Bereich fest. Danach meldest du dich an und richtest den Zwei‑Faktor-Schutz ein.",
+        "intro": "Lege dein Passwort für den Speedclub Admin-Bereich fest. Danach meldest du dich an und richtest den Zwei‑Faktor-Schutz ein.",
         "password": "Neues Passwort",
         "password_hint": "Mindestens :min Zeichen. Ein langer Satz ist sicherer als ein kurzes Wort.",
         "password_confirmation": "Passwort wiederholen",
@@ -154,7 +152,6 @@
             "owner": "Sie betrifft ein Owner-Konto; ein zweiter Owner gibt frei.",
             "demotes": "Sie nimmt die Rolle Admin weg."
         },
-        "reason_optional": "Optional, steht im Audit-Log.",
         "submit": "Rollen speichern",
         "submit_four_eyes": "Freigabe anfragen",
         "self": "Bei deinem eigenen Konto kannst du Rollen nur abgeben, nicht hinzufügen.",
@@ -223,12 +220,10 @@
         "atoms": "Rechte",
         "atoms_count": "{0} Kein Recht gewählt|{1} 1 Recht gewählt|[2,*] :count Rechte gewählt",
         "sensitive": "Kritische Rechte (mit Vier-Augen-Symbol) gelten erst nach einer Freigabe durch eine zweite Person.",
-        "reason_hint": "Pflicht, sobald ein kritisches Recht dazukommt. 10 bis 1.000 Zeichen.",
         "submit": "Speichern",
         "submit_four_eyes": "Speichern und Freigabe anfragen",
         "errors": {
-            "name": "Gib einen Namen mit 3 bis 60 Zeichen ein (Buchstaben, Ziffern, Leerzeichen, Punkt, Bindestrich).",
-            "reason": "Für die Freigabe braucht es eine Begründung mit 10 bis 1.000 Zeichen."
+            "name": "Gib einen Namen mit 3 bis 60 Zeichen ein (Buchstaben, Ziffern, Leerzeichen, Punkt, Bindestrich)."
         }
     },
     "role_delete": {
@@ -259,8 +254,7 @@
         "diff_total": "{0} Betrifft niemanden|{1} Betrifft 1 Person|[2,*] Betrifft :count Personen",
         "diff_failed": "Die Änderungen konnten nicht geprüft werden.",
         "save": "Speichern",
-        "save_four_eyes": "Freigabe anfragen",
-        "reason_optional": "Optional, steht im Audit-Log."
+        "save_four_eyes": "Freigabe anfragen"
     },
     "flash": {
         "invited": "Einladung gesendet.",
@@ -308,7 +302,7 @@
         "vehicles": "Fahrzeuge",
         "media": "Fotos",
         "catalog": "Katalog",
-        "qr": "QR",
+        "qr": "Sticker-Register",
         "moderation": "Moderation",
         "support": "Support",
         "content": "Inhalte",
@@ -328,7 +322,9 @@
         "integrations": "Integrationen",
         "analytics": "Statistiken",
         "memberships": "Mitgliedschaften",
-        "lists": "Listen"
+        "lists": "Listen",
+        "stickers": "Sticker",
+        "shop": "Shop"
     },
     "atoms": {
         "members": {
@@ -361,8 +357,8 @@
             "import": "Katalog importieren"
         },
         "qr": {
-            "view": "QR-Codes ansehen",
-            "revoke": "QR-Codes sperren"
+            "view": "Sticker-Register ansehen",
+            "revoke": "Sticker sperren"
         },
         "moderation": {
             "view": "Meldungen ansehen",
@@ -437,6 +433,12 @@
         },
         "lists": {
             "export": "Listen als CSV exportieren"
+        },
+        "stickers": {
+            "print": "Sticker-Druckdateien laden"
+        },
+        "shop": {
+            "manage": "Shop verwalten"
         }
     }
 }

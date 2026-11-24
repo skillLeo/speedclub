@@ -40,6 +40,7 @@ export function vehicle(overrides: Partial<VehicleCardData> = {}): VehicleCardDa
     visibility: 'public',
     is_main: true,
     is_sample: false,
+    build_score: null,
     eyebrow: 'NISSAN',
     make: 'Nissan',
     model: 'Skyline GT-R',

@@ -44,7 +44,7 @@
         "staff": "Team-Konto",
         "vehicle": "Fahrzeug",
         "media": "Medium",
-        "qr_code": "QR-Code",
+        "qr_code": "Sticker-Code",
         "moderation_case": "Fall",
         "decision": "Entscheidung",
         "appeal": "Einspruch",
@@ -54,7 +54,14 @@
         "config_version": "Konfigurationsversion",
         "feature_flag": "Feature-Flag",
         "legal_document": "Rechtstext",
-        "approval_request": "Freigabe"
+        "approval_request": "Freigabe",
+        "staff_alert": "Sicherheits-Mail",
+        "spot": "Spot",
+        "badge": "Abzeichen",
+        "car_of_the_day": "Car of the Day",
+        "shop_product": "Shop-Produkt",
+        "shop_banner": "Shop-Banner",
+        "shop_product_image": "Produktfoto"
     },
     "chain": {
         "intact": "Integrität geprüft: :time",
@@ -86,6 +93,22 @@
         "submit": "Freigabe anfragen"
     },
     "actions": {
+        "forum": {
+            "post_approved": "Forenbeitrag freigegeben",
+            "post_rejected": "Forenbeitrag abgelehnt",
+            "thread_pinned": "Forenthema angeheftet",
+            "thread_unpinned": "Forenthema nicht mehr angeheftet",
+            "thread_locked": "Forenthema geschlossen",
+            "thread_unlocked": "Forenthema wieder geöffnet",
+            "thread_moved": "Forenthema verschoben",
+            "thread_merged": "Forenthema zusammengeführt",
+            "solution_set": "Lösung eines Forenthemas geändert",
+            "category_created": "Forenkategorie angelegt",
+            "category_updated": "Forenkategorie geändert",
+            "category_deleted": "Forenkategorie gelöscht",
+            "categories_reordered": "Forenkategorien umsortiert",
+            "categories_synced": "Forenkategorien abgeglichen"
+        },
         "admin": {
             "saved_view": {
                 "deleted": "Gespeicherte Ansicht gelöscht",
@@ -99,7 +122,11 @@
             "expired": "Freigabeanfrage abgelaufen",
             "export_downloaded": "Export heruntergeladen",
             "failed": "Freigabe erteilt, Ausführung abgelehnt",
-            "requested": "Freigabe angefragt"
+            "requested": "Freigabe angefragt",
+            "owner_override": "Selbst freigegeben (Owner-Override)",
+            "owner_override_switched": "Owner-Override ein- oder ausgeschaltet",
+            "direct": "Direkt ausgeführt (Vier-Augen aus)",
+            "four_eyes_switched": "Vier-Augen-Prinzip ein- oder ausgeschaltet"
         },
         "audit": {
             "event_viewed": "Audit-Ereignis angesehen",
@@ -109,6 +136,7 @@
             "asset_uploaded": "Markenbild hochgeladen"
         },
         "catalog": {
+            "ai_specs_deleted": "KI-Herstellerangaben gelöscht",
             "activated": "Katalogeintrag aktiviert",
             "category_created": "Mod-Kategorie angelegt",
             "category_updated": "Mod-Kategorie geändert",
@@ -130,7 +158,8 @@
             "draft_saved": "Konfigurationsentwurf gespeichert",
             "preview_issued": "Vorschau-Link erstellt",
             "published": "Konfiguration veröffentlicht",
-            "rolled_back": "Konfiguration zurückgerollt"
+            "rolled_back": "Konfiguration zurückgerollt",
+            "draft_taken_over": "Konfigurationsentwurf übernommen"
         },
         "flag": {
             "changed": "Feature-Flag geändert"
@@ -144,7 +173,8 @@
         "legal": {
             "draft_discarded": "Entwurf eines Rechtstexts verworfen",
             "draft_saved": "Entwurf eines Rechtstexts gespeichert",
-            "published": "Rechtstext veröffentlicht"
+            "published": "Rechtstext veröffentlicht",
+            "reason_reworded": "Grund einer Rechtstext-Version umformuliert"
         },
         "media": {
             "original_viewed": "Original eines ausgeblendeten Fotos angezeigt",
@@ -183,7 +213,7 @@
             "provider_link_requested": "Verknüpfung angefragt",
             "provider_linked": "Anmeldemethode verbunden",
             "provider_unlinked": "Anmeldemethode entfernt",
-            "qr_reissued": "QR-Code neu ausgegeben",
+            "qr_reissued": "Sticker neu ausgegeben",
             "reauthenticated": "Identität bestätigt",
             "recovery_code_used": "Wiederherstellungscode benutzt",
             "recovery_codes_regenerated": "Neue Wiederherstellungscodes",
@@ -245,8 +275,9 @@
             "request_viewed": "Datenschutzanfrage angesehen"
         },
         "qr": {
-            "reissued_by_staff": "QR-Code durch das Team neu ausgegeben",
-            "revoked_by_staff": "QR-Code durch das Team gesperrt"
+            "reissued_by_staff": "Sticker durch das Team neu ausgegeben",
+            "revoked_by_staff": "Sticker durch das Team gesperrt",
+            "sample_rotated": "Beispiel-Sticker-Code erneuert"
         },
         "release": {
             "recorded": "Release eingetragen",
@@ -292,7 +323,11 @@
             "two_factor_rotated": "Neuer Authenticator bestätigt",
             "two_factor_rotation_cancelled": "Authenticator-Wechsel abgebrochen",
             "two_factor_rotation_started": "Authenticator-Wechsel begonnen",
-            "two_factor_skipped": "Zwei-Faktor-Einrichtung übersprungen"
+            "two_factor_skipped": "Zwei-Faktor-Einrichtung übersprungen",
+            "two_factor_policy_changed": "2FA für Admin-Konten geändert (Pflicht/Optional)"
+        },
+        "sticker": {
+            "print_downloaded": "Sticker-Druckdatei geladen"
         },
         "support": {
             "bulk_status": "Ticketstatus gesammelt geändert",
@@ -353,6 +388,75 @@
         "editorial": {
             "sample_hidden": "Beispiel ausgeblendet",
             "sample_shown": "Beispiel wieder gezeigt"
+        },
+        "staff_alert": {
+            "failed": "Sicherheits-Mail an Teammitglied nicht zugestellt",
+            "sent": "Sicherheits-Mail an Teammitglied gesendet"
+        },
+        "spot": {
+            "removed": "Spot entfernt",
+            "bulk_removed": "Mehrere Spots entfernt",
+            "viewed": "Spot angesehen"
+        },
+        "wrapped": {
+            "preview_generated": "Wrapped-Vorschau erzeugt",
+            "viewed": "Wrapped angesehen"
+        },
+        "badge": {
+            "created": "Abzeichen angelegt",
+            "updated": "Abzeichen geändert",
+            "activated": "Abzeichen aktiviert",
+            "deactivated": "Abzeichen deaktiviert",
+            "applied": "Abzeichen-Regel auf alle Mitglieder angewendet",
+            "revoked": "Abzeichen entzogen"
+        },
+        "car_of_the_day": {
+            "overridden": "Car of the Day festgelegt",
+            "skipped": "Car of the Day ausgesetzt",
+            "withdrawn": "Car of the Day zurückgezogen"
+        },
+        "dex": {
+            "set_revoked": "Dex-Set aberkannt"
+        },
+        "founding": {
+            "assigned": "Founding-Member-Nummer vergeben"
+        },
+        "shop": {
+            "product_created": "Shop-Produkt angelegt",
+            "product_updated": "Shop-Produkt bearbeitet",
+            "product_shown": "Shop-Produkt angezeigt",
+            "product_hidden": "Shop-Produkt ausgeblendet",
+            "products_reordered": "Shop-Reihenfolge geändert",
+            "product_deleted": "Shop-Produkt gelöscht",
+            "product_restored": "Shop-Produkt wiederhergestellt",
+            "image_added": "Produktfoto hinzugefügt",
+            "image_updated": "Produktfoto bearbeitet",
+            "images_reordered": "Produktfotos umsortiert",
+            "image_removed": "Produktfoto entfernt",
+            "banner_created": "Shop-Banner angelegt",
+            "banner_updated": "Shop-Banner bearbeitet",
+            "banner_activated": "Shop-Banner aktiviert",
+            "banner_deactivated": "Shop-Banner deaktiviert",
+            "banner_deleted": "Shop-Banner gelöscht"
+        },
+        "crew": {
+            "created": "Crew gegründet",
+            "updated": "Crew bearbeitet",
+            "deleted": "Crew gelöscht",
+            "founder_transferred": "Gründerrolle übergeben",
+            "role_changed": "Rolle in der Crew geändert",
+            "member_removed": "Mitglied aus der Crew entfernt",
+            "hidden": "Crew ausgeblendet",
+            "unhidden": "Crew wieder eingeblendet",
+            "removed": "Crew vom Team gelöscht",
+            "restored": "Crew wiederhergestellt"
+        },
+        "setup": {
+            "maintenance": "Wartungsmodus im Browser umgeschaltet",
+            "web_run": "Einrichtung im Browser ausgeführt"
+        },
+        "showcase": {
+            "demo_passwords_set": "Demo-Passwörter gesetzt"
         }
     }
 }

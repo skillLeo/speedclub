@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { createStyles, maxFontScale, typography, typographyDesktop, useTheme, type SizedTypeVariant, type TypeVariant } from '@/theme';
-import { SkeletonText, Text } from '@/ui';
-import { useDesktopType } from '@/ui/Text';
+import { SkeletonText } from '@/ui/Skeleton';
+import { Text, useDesktopType } from '@/ui/Text';
 
 import { estimatedTextWidth } from '../skeletonGeometry';
 

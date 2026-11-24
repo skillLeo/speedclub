@@ -12,11 +12,19 @@ import { useStacksAtFontScale } from './rowParts';
 import { Text } from './Text';
 import { useRovingKeys } from './useRovingKeys';
 
-export type Segment<T extends string> = { value: T; label: string; disabled?: boolean; testID?: string };
+export type Segment<T extends string> = {
+  value: T;
+  label: string;
+  /** The segment's accessible name when the visible label is a short form (STK-05 "1:1" = "Originalgröße", DQ-M54-02). */
+  accessibilityLabel?: string;
+  disabled?: boolean;
+  testID?: string;
+};
 
 export type SegmentedControlProps<T extends string> = {
   /** At most three segments (§8). */
-  options: readonly [Segment<T>] | readonly [Segment<T>, Segment<T>] | readonly [Segment<T>, Segment<T>, Segment<T>];
+  options:
+    readonly [Segment<T>] | readonly [Segment<T>, Segment<T>] | readonly [Segment<T>, Segment<T>, Segment<T>];
   value: T;
   onChange: (next: T) => void;
   /** Accessible name of the group. */
@@ -29,6 +37,11 @@ export type SegmentedControlProps<T extends string> = {
    * no pill. Without it the first segment stands in, as for a tablist.
    */
   allowNone?: boolean;
+  /**
+   * The segments' type role. `labelControl` (callout metrics capped at 1.3, ADR-523) for a switch whose three labels must stay
+   * readable at 200 % (STK-05's preview modes); the default `callout` grows with the font scale.
+   */
+  labelVariant?: 'callout' | 'labelControl';
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
@@ -81,6 +94,7 @@ export function SegmentedControl<T extends string>({
   role = 'tablist',
   disabled = false,
   allowNone = false,
+  labelVariant = 'callout',
   style,
   testID,
 }: SegmentedControlProps<T>) {
@@ -128,7 +142,9 @@ export function SegmentedControl<T extends string>({
 
   const segments = (
     <>
-      {targetWidth > 0 && !none ? <Animated.View style={[styles.pill, natural ? styles.pillInScroller : null, pill]} /> : null}
+      {targetWidth > 0 && !none ? (
+        <Animated.View style={[styles.pill, natural ? styles.pillInScroller : null, pill]} />
+      ) : null}
       {options.map((option, index) => {
         const selected = !none && index === selectedIndex;
         const off = disabled || option.disabled === true;
@@ -138,7 +154,7 @@ export function SegmentedControl<T extends string>({
             <PressableScale
               ref={roving.setRef(index)}
               role={isTab ? 'tab' : 'radio'}
-              aria-label={option.label}
+              aria-label={option.accessibilityLabel ?? option.label}
               {...(isTab ? { 'aria-selected': selected } : { 'aria-checked': selected })}
               disabled={off}
               tabIndex={selected || (none && index === 0) ? 0 : -1}
@@ -149,14 +165,22 @@ export function SegmentedControl<T extends string>({
                 const { x, width: boxWidth } = event.nativeEvent.layout;
                 setBoxes((current) => {
                   const old = current[option.value];
-                  return old?.x === x && old?.width === boxWidth ? current : { ...current, [option.value]: { x, width: boxWidth } };
+                  return old?.x === x && old?.width === boxWidth
+                    ? current
+                    : { ...current, [option.value]: { x, width: boxWidth } };
                 });
               }}
               testID={option.testID ?? (testID ? `${testID}.${option.value}` : undefined)}
               style={natural ? styles.segmentNatural : styles.segment}
               contentStyle={styles.visual}
             >
-              <Text variant="callout" color={color} selectable={false} hyphenate={false} style={styles.label}>
+              <Text
+                variant={labelVariant}
+                color={color}
+                selectable={false}
+                hyphenate={false}
+                style={styles.label}
+              >
                 {option.label}
               </Text>
             </PressableScale>
@@ -176,7 +200,11 @@ export function SegmentedControl<T extends string>({
       {...({ onKeyDown: roving.onKeyDown } as object)}
     >
       {natural ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
           {segments}
         </ScrollView>
       ) : (

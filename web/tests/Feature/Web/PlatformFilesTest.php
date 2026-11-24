@@ -288,7 +288,10 @@ describe('.well-known', function () {
         expect($response->headers->get('Content-Type'))->toBe('application/json')
             ->and($response->json('applinks.details.0.appIDs'))->toBe(['ABCDE12345.de.speedclub.app'])
             ->and($response->json('applinks.details.0.components'))->toBe([
-                ['/' => '/v/*'], ['/' => '/u/*'], ['/' => '/c/*'], ['/' => '/C/*'], ['/' => '/app/reset-password'], ['/' => '/app/verify-email'],
+                ['/' => '/v/*'], ['/' => '/u/*'], ['/' => '/c/*'], ['/' => '/C/*'],
+                // M5.9d: the invite link (INV-02).
+                ['/' => '/join/*'],
+                ['/' => '/app/reset-password'], ['/' => '/app/verify-email'],
                 // M4.6: the same-device magic link of the e-mail code (09 §6.5).
                 ['/' => '/auth/magic'],
                 // M4.7: "Das war ich nicht" of a login alert (09 §8.4).

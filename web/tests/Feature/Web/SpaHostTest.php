@@ -39,7 +39,7 @@ it('shows a friendly 404 when the SPA is not exported', function () {
 it('renders the holding page on the public layout', function () {
     $this->get('/')
         ->assertOk()
-        ->assertSee('SPEED CLUB')
+        ->assertSee('Speedclub')
         ->assertSee('data-theme="system"', false)
         ->assertSee('lang="de"', false);
 });

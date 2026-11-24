@@ -5,6 +5,7 @@ namespace App\Services\Events;
 use App\Models\Event;
 use App\Models\User;
 use App\Services\AppConfig\FeatureFlags;
+use Carbon\CarbonImmutable;
 
 /**
  * The event strips of HOME-01 and DISC-01 (M4.8, 09 §7.3, §7.5): "Treffen in deiner Nähe" around a point the device gave for this request
@@ -39,15 +40,17 @@ final class NearbyEvents
     }
 
     /**
+     * $now is the read's moment (the QA clock outside production, DQ-P5-201); null is the real now.
+     *
      * @return list<Event>
      */
-    public function weekend(?User $viewer): array
+    public function weekend(?User $viewer, ?CarbonImmutable $now = null): array
     {
         if (! $this->flags->enabled('events')) {
             return [];
         }
 
-        $query = $this->feed->filter($this->feed->listed($viewer), ['when' => 'weekend']);
+        $query = $this->feed->filter($this->feed->listed($viewer, $now), ['when' => 'weekend'], $now);
 
         return $this->prepared($query->orderBy('events.starts_at')->orderBy('events.id')->limit(self::WEEKEND)->get()->values()->all(), $viewer);
     }

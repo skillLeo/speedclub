@@ -67,6 +67,9 @@ return [
             'timezone' => '+00:00',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+                // Shared hosts that cap NEW MySQL connections per second (Hostinger: 20/s; the member web opens with 20+ API calls at
+                // once) refuse requests in bursts; a persistent connection is reused by the PHP worker instead. Off unless DB_PERSISTENT.
+                PDO::ATTR_PERSISTENT => (bool) env('DB_PERSISTENT', false),
             ]) : [],
             // spatie/laravel-backup (ADR-250): a consistent InnoDB dump without locking the tables of a live shared host.
             // DB_DUMP_GTID_PURGED=OFF on a MySQL with GTIDs on: without it the dump sets @@GLOBAL.GTID_PURGED and a restore into the

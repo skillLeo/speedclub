@@ -137,7 +137,7 @@ function assertSharePage(string $html, string $type): void
         metaOnce($html, $key);
     }
 
-    expect(metaOnce($html, 'og:site_name'))->toBe('SPEED CLUB')
+    expect(metaOnce($html, 'og:site_name'))->toBe('Speedclub')
         ->and(metaOnce($html, 'og:type'))->toBe($type)
         ->and(metaOnce($html, 'og:url'))->toStartWith(SOCIAL_SITE)
         ->and(metaOnce($html, 'twitter:card'))->toBe('summary_large_image')
@@ -210,7 +210,7 @@ describe('the vehicle page', function () {
         assertSharePage($html, 'article');
         privateFreeHead($html);
 
-        expect(metaOnce($html, 'og:title'))->toBe('Nissan Skyline GT-R R34 – Build von @lukas.sc | SPEED CLUB')
+        expect(metaOnce($html, 'og:title'))->toBe('Nissan Skyline GT-R R34 – Build von @lukas.sc | Speedclub')
             ->and(metaOnce($html, 'description'))->toBe("500\u{00A0}PS · 540\u{00A0}Nm · 2 Mods: KW V3, HKS Super Turbo Muffler. Sieh dir den kompletten Build an.")
             ->and(metaOnce($html, 'og:locale'))->toBe('de_DE')
             ->and(metaOnce($html, 'og:locale:alternate'))->toBe('en_GB')
@@ -232,7 +232,7 @@ describe('the vehicle page', function () {
 
         expect(metaOnce($html, 'og:locale'))->toBe('en_GB')
             ->and(metaOnce($html, 'og:locale:alternate'))->toBe('de_DE')
-            ->and(metaOnce($html, 'og:title'))->toBe('Nissan Skyline GT-R R34 – build by @lukas.sc | SPEED CLUB')
+            ->and(metaOnce($html, 'og:title'))->toBe('Nissan Skyline GT-R R34 – build by @lukas.sc | Speedclub')
             ->and(metaOnce($html, 'description'))->toEndWith('See the full build.');
     });
 
@@ -272,7 +272,7 @@ describe('the vehicle page', function () {
 
         $html = (string) $this->get(SOCIAL_SITE.'/v/'.$this->slug)->getContent();
 
-        expect(metaOnce($html, 'og:title'))->toBe('Nissan Skyline GT-R R34 | SPEED CLUB')
+        expect(metaOnce($html, 'og:title'))->toBe('Nissan Skyline GT-R R34 | Speedclub')
             ->and($html)->not->toContain('@lukas.sc');
     });
 });
@@ -361,7 +361,7 @@ describe('the member page', function () {
         assertSharePage($html, 'profile');
         privateFreeHead($html);
 
-        expect(metaOnce($html, 'og:title'))->toBe('Lukas Scholz (@lukas.sc) | SPEED CLUB')
+        expect(metaOnce($html, 'og:title'))->toBe('Lukas Scholz (@lukas.sc) | Speedclub')
             ->and(metaOnce($html, 'description'))->toBe('Lukas Scholz aus Stuttgart · 1 Build: Nissan Skyline GT-R R34. Sieh dir die Garage an.');
 
         $page = collect(jsonLd($html))->firstWhere('@type', 'ProfilePage');
@@ -440,7 +440,7 @@ describe('crawlers', function () {
 describe('/app links', function () {
     beforeEach(function () {
         $this->index = tempnam(sys_get_temp_dir(), 'spa');
-        file_put_contents($this->index, '<!doctype html><html><head><meta charset="utf-8" /><title>SPEED CLUB</title></head><body><div id="root"></div></body></html>');
+        file_put_contents($this->index, '<!doctype html><html><head><meta charset="utf-8" /><title>Speedclub</title></head><body><div id="root"></div></body></html>');
         config(['speedclub.spa.index' => $this->index]);
     });
 
@@ -478,7 +478,7 @@ describe('/app links', function () {
 it('has a web manifest in the token colours', function () {
     $manifest = json_decode((string) file_get_contents(public_path('site.webmanifest')), true, 8, JSON_THROW_ON_ERROR);
 
-    expect($manifest['name'])->toBe('SPEED CLUB')
+    expect($manifest['name'])->toBe('Speedclub')
         ->and($manifest['theme_color'])->toBe(DesignTokens::color('bg-canvas'))
         ->and($manifest['background_color'])->toBe(DesignTokens::color('bg-canvas'))
         ->and(collect($manifest['icons'])->pluck('src')->all())->each(fn ($src) => $src->toBeString());

@@ -1,6 +1,6 @@
 /**
  * The legal status of a mod [SIG `sig.mod_legal_status`] (FS-6, 08_LEGAL_COMPLIANCE §7): the owner's own statement, never
- * checked by SPEED CLUB, so wherever it shows, "Angaben des Besitzers, keine rechtliche Prüfung" shows with it. While the flag
+ * checked by Speedclub, so wherever it shows, "Angaben des Besitzers, keine rechtliche Prüfung" shows with it. While the flag
  * is off the API answers null and ignores the field (ADR-153), and the app neither shows nor sends it.
  */
 import type { components } from '@/api/schema';

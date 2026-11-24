@@ -39,14 +39,14 @@ final class Reactions
      * Counts per kind and in total, for the owner's eyes only. Reactions of members the owner may no longer see still count: the owner
      * reads their own feedback, and the list (ReactionController) leaves those members out.
      *
-     * @return array{strong: int, clean: int, low: int, loud: int, total: int}
+     * @return array{like: int, strong: int, clean: int, low: int, loud: int, total: int}
      */
     public function summary(Model $target): array
     {
         $counts = Reaction::query()->where('reactable_type', $target->getMorphClass())->where('reactable_id', (string) $target->getKey())
             ->selectRaw('type, COUNT(*) as aggregate')->groupBy('type')->pluck('aggregate', 'type');
 
-        $summary = ['strong' => 0, 'clean' => 0, 'low' => 0, 'loud' => 0, 'total' => 0];
+        $summary = ['like' => 0, 'strong' => 0, 'clean' => 0, 'low' => 0, 'loud' => 0, 'total' => 0];
 
         foreach (ReactionType::cases() as $type) {
             $summary[$type->value] = (int) ($counts[$type->value] ?? 0);

@@ -7,17 +7,38 @@ import { View } from 'react-native';
 import { useBusinessesOn, useBusinessPicker, useTagModBusiness, useUntagModBusiness } from '@/api/queries/businesses';
 import type { OwnerMod } from '@/api/queries/mods';
 import { usePartsOn, useProductSuggestions, type ProductRowData } from '@/api/queries/parts';
+import { ProductMatchAssist } from '@/features/ai/ProductMatchAssist';
 import { useDebouncedValue } from '@/features/auth/forms';
 import { PickerField } from '@/features/garage/components/fields';
 import { photoFields } from '@/features/profile/media';
 import { categoryIcon } from '@/features/vehicle/model';
+import { keepNameTogether } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
 import { createStyles, size, space } from '@/theme';
-import { BusinessCard, Button, ErrorState, ListRow, ProductRow, SearchBar, Sheet, Skeleton, SkeletonText, Text, toast } from '@/ui';
+import { BusinessCard } from '@/ui/BusinessCard';
+import { Button } from '@/ui/Button';
+import { ErrorState } from '@/ui/ErrorState';
+import { ListRow } from '@/ui/ListRow';
+import { ProductRow } from '@/ui/ProductRow';
+import { SearchBar } from '@/ui/SearchBar';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { WHOLE_PART_MAX } from '@/ui/textBreaks';
+import { toast } from '@/ui/toast';
 
 import { tagErrorText } from './business/tagErrors';
 import { TYPING_MS } from './EmbeddedParts';
 import { OwnerTagPanel } from './ModParts';
+
+/**
+ * DQ-P5-060 a: the typed words inside their quotes ("„kw v3“") never split: a short query stays whole on its line, a longer one wraps
+ * at its spaces only, never at a hyphen of its own.
+ */
+export function queryInText(query: string): string {
+  const kept = keepNameTogether(query);
+  return query.length <= WHOLE_PART_MAX ? kept.replace(/ /g, '\u00A0') : kept;
+}
 
 const useStyles = createStyles((t) => ({
   body: { gap: t.space[12], paddingBottom: t.space[8] },
@@ -90,9 +111,13 @@ export function ProductField({
           ) : suggestions.isError ? (
             <ErrorState title={t('editor.productError')} onRetry={() => void suggestions.refetch()} retrying={suggestions.isFetching} testID={`${routeId}.productSheet.error`} />
           ) : rows.length === 0 ? (
-            <Text variant="callout" color="text.secondary" testID={`${routeId}.productSheet.none`}>
-              {q ? t('editor.productNone', { query: q }) : t('editor.productNoneAtAll')}
-            </Text>
+            <>
+              <Text variant="callout" color="text.secondary" testID={`${routeId}.productSheet.none`}>
+                {q ? t('editor.productNone', { query: queryInText(q) }) : t('editor.productNoneAtAll')}
+              </Text>
+              {/* M5.9: what was typed, matched to the catalogue (words first, the AI only to normalise); keyed so new text asks anew. */}
+              {q ? <ProductMatchAssist key={q} text={q} category={category} onChoose={choose} disabled={disabled} testID={`${routeId}.productSheet.match`} /> : null}
+            </>
           ) : (
             <View style={styles.list} role="list">
               {rows.map((product, index) => (

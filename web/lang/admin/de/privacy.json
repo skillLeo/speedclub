@@ -328,9 +328,38 @@
                 "note": "Zur Rechtsverteidigung. Die Frist prüft noch die Rechtsberatung."
             },
             "qr_scans": {
-                "label": "QR-Scans",
+                "label": "Sticker-Scans",
                 "note": "Nur gezählte Aufrufe pro Tag, keine personenbezogenen Daten.",
                 "value": "nur Summen"
+            },
+            "view_events": {
+                "label": "Einzelne Aufrufe (Statistiken)",
+                "note": "Nur eine Prüfsumme mit Tagesschlüssel, ab dem Folgetag ohne Personenbezug. Die Tagessummen bleiben."
+            },
+            "weekly_recaps": {
+                "label": "Wochenrückblick-Protokoll",
+                "note": "Gesendet, übersprungen oder nicht zustellbar, mit den Wochenzahlen; 12 Wochen."
+            },
+            "engagement_push_claims": {
+                "label": "Zähler für Engagement-Pushes",
+                "note": "Höchstens drei pro Woche und Mitglied; danach gelöscht."
+            },
+            "engagement_daily": {
+                "label": "Tageszähler der Insights-Übersicht",
+                "note": "Nur Summen pro Tag (gedrosselte Pushes, Build-Erinnerungen), keine Personendaten."
+            },
+            "ai_spec_suggestions": {
+                "label": "KI-Herstellerangaben (pro Generation)",
+                "note": "Gemeinsamer Zwischenspeicher ohne Mitgliederdaten."
+            },
+            "ai_text_normalisations": {
+                "label": "KI-Zuordnung von Teile-Eingaben",
+                "note": "Nur der eingegebene Text, ohne Bezug zur Person."
+            },
+            "forum_thread_summaries": {
+                "label": "KI-Zusammenfassungen im Forum",
+                "note": "Mit dem Thema; sofort weg, wenn ein verwendeter Beitrag entfernt oder gelöscht wird.",
+                "value": "mit dem Thema"
             },
             "application_logs": {
                 "label": "Server-Protokolle",

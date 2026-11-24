@@ -36,7 +36,7 @@ class UpdateOrgSettings
             throw new AuthorizationException;
         }
 
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         return DB::transaction(function () use ($by, $values, $reason): ConfigVersion {
             $draft = $this->versions->draft(ConfigKey::Org);

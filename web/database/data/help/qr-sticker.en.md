@@ -1,11 +1,11 @@
 ---
-title: How your QR sticker works
+title: How your sticker works
 sort: 10
 ---
-Every published vehicle gets its own QR code. Anyone who scans it with their camera lands on the public page of your build, no app or account needed.
+Every published vehicle gets its own sticker with a QR code. Anyone who scans it with their camera lands on the public page of your build, no app or account needed.
 
-## Getting a sticker
-Open your vehicle in the garage and tap **QR code**. There you can download the code as a PDF to print or share it as a PNG. For good scans from about a metre: at least 30 × 30 mm, matte vinyl, black on white.
+## Designing and getting a sticker
+Open **My stickers** and tap **Design** on your car: you choose the template, colours, size and lines. Before saving, the scan test checks that the QR code can be read. Then you can download the sticker as a print-ready PDF or SVG, share it as a PNG or order it. The QR code on every sticker is at least 25 mm.
 
 ## Where can the sticker go?
 - Safest: outside on the body (e.g. boot lid, bumper) or small inside a corner of the rear window.
@@ -15,6 +15,6 @@ Open your vehicle in the garage and tap **QR code**. There you can download the 
 - Keep it small: well below 0.1 m² and never more than a quarter of a window. Not reflective, not luminous, never covering plates, lights or badges.
 
 ## A new code
-**Replace QR code** gives you a new code. Anyone who scans the old sticker then only sees "no longer valid".
+**Replace code** gives your sticker a new code. Anyone who scans the old sticker then only sees "no longer valid".
 
 Not legal advice. The StVZO (including §§ 35b and 40) and the authorities' interpretation apply. Violations can lead to a fine.

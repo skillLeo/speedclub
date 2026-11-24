@@ -5,6 +5,7 @@ namespace App\Actions\Social;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleFollow;
+use App\Services\BuildScore\BuildScores;
 use App\Services\Notifications\Notifier;
 use Throwable;
 
@@ -23,6 +24,10 @@ class FollowVehicle
             'vehicle_id' => $vehicle->id,
             'created_at' => now(),
         ]);
+
+        if ($inserted === 1) {
+            app(BuildScores::class)->touch($vehicle->id);
+        }
 
         if ($inserted === 1 && $vehicle->owner instanceof User) {
             try {

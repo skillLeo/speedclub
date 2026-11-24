@@ -346,7 +346,7 @@ describe('search projection', function () {
      * @return array<string, Closure>
      */
     dataset('garage changes', [
-        'a mod added' => [fn (Vehicle $vehicle) => test()->postJson("/api/v1/vehicles/{$vehicle->id}/mods", ['category' => 'exhaust', 'fields' => []])->assertCreated()],
+        'a mod added' => [fn (Vehicle $vehicle) => test()->postJson("/api/v1/vehicles/{$vehicle->id}/mods", ['category' => 'exhaust', 'title' => 'Klappenauspuff', 'fields' => []])->assertCreated()],
         // Something others read: notes alone move nothing (SEC-M18-03, DiscoverPrivateEditTest).
         'a mod changed' => [fn (Vehicle $vehicle) => test()->patchJson('/api/v1/mods/'.modIn($vehicle, 'brakes')->id, ['title' => 'Bremse neu'])->assertOk()],
         'a mod removed' => [fn (Vehicle $vehicle) => test()->deleteJson('/api/v1/mods/'.modIn($vehicle, 'aero_body')->id)->assertNoContent()],

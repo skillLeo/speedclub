@@ -4,7 +4,9 @@ import { View } from 'react-native';
 import { avatarUrlOf, useMe } from '@/api/queries/auth';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { Avatar, Icon, Text } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 import { joinLabel, RowBody } from '@/ui/rowParts';
 
 const useStyles = createStyles((t) => ({

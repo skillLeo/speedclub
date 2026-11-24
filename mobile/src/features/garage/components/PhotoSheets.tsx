@@ -4,7 +4,10 @@ import { View } from 'react-native';
 import type { GarageMedia } from '@/api/queries/garage';
 import type { UploadItem } from '@/state/uploads';
 import { createStyles, space } from '@/theme';
-import { Dialog, ListRow, Sheet, Text } from '@/ui';
+import { Dialog } from '@/ui/Dialog';
+import { ListRow } from '@/ui/ListRow';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
 
 const useStyles = createStyles((t) => ({
   message: { paddingBottom: t.space[12] },

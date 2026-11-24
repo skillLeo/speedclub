@@ -14,7 +14,7 @@ final class SearchInterpreterAgent extends SpeedClubAgent
     protected function task(): string
     {
         return <<<'TXT'
-        You turn a German or English search for modified cars on SPEED CLUB into search filters. Return one chip per filter the text names.
+        You turn a German or English search for modified cars on Speedclub into search filters. Return one chip per filter the text names.
         Facets:
         - make: the car make as written ("BMW"); model: the model ("M4"); generation: a generation code ("G82").
         - year_min, year_max: model years; power_min, power_max: power in PS; wheel_diameter: wheel size in inches. Only numbers that

@@ -1,5 +1,5 @@
 /** The glyphs of messaging in one place, all from the design-system icon map (`ui/icons/Icon.tsx`). */
-import type { IconName } from '@/ui';
+import type { IconName } from '@/ui/icons/Icon';
 
 export const MESSAGE_GLYPHS = {
   pinned: 'push-pin',

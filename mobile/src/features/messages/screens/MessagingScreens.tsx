@@ -4,10 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import type { Edge } from 'react-native-safe-area-context';
 
+import { useMessagesInHeader } from '@/features/shell/inboxActions';
 import { useHideTabBar } from '@/features/shell/tabBarLayout';
+import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
+import { ViewAsMessagesScreen } from '@/features/viewAs/ViewAsMessagesScreen';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
 import { createStyles, layout, useBreakpoint } from '@/theme';
-import { EmptyState, Screen } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { Screen } from '@/ui/Screen';
 
 import { useMessaging } from '../data';
 import type { ConversationSummary, Folder } from '../model';
@@ -85,6 +89,9 @@ function SelectConversation() {
 export function InboxScreen() {
   const router = useRouter();
   const split = useSplitView();
+  // M5.2 (10 §1): opened from the header (phones, native tabs) the inbox is a page of the tab's stack; back returns to Start.
+  const pushed = useMessagesInHeader();
+  const leave = useBack('/');
   const params = useLocalSearchParams<{ folder?: string }>();
   const folder = folderOf(paramOf(params.folder));
   const open = useCallback((conversation: ConversationSummary) => router.push(conversationHref(conversation)), [router]);
@@ -98,6 +105,7 @@ export function InboxScreen() {
           onFolder={(next) => router.setParams({ folder: next })}
           onOpen={open}
           onBack={folder === 'archived' ? () => router.back() : undefined}
+          onLeave={pushed ? leave : undefined}
         />
       )}
     </Screen>
@@ -131,12 +139,14 @@ function ThreadRoute({ request }: ThreadRouteProps) {
   );
 }
 
-/** MSG-02 `/messages/[conversationId]` (FS-7). */
+/** MSG-02 `/messages/[conversationId]` (FS-7). In a view-as tab the "nicht verfügbar" state, as the inbox (DQ-P5-208). */
 export function ConversationScreen() {
-  return <ThreadRoute request={false} />;
+  const readOnly = useViewAsReadOnly();
+  return readOnly ? <ViewAsMessagesScreen /> : <ThreadRoute request={false} />;
 }
 
-/** MSG-04 `/messages/requests/[conversationId]`: FS-7 request mode, never marked read. */
+/** MSG-04 `/messages/requests/[conversationId]`: FS-7 request mode, never marked read. View-as: as MSG-02. */
 export function RequestScreen() {
-  return <ThreadRoute request />;
+  const readOnly = useViewAsReadOnly();
+  return readOnly ? <ViewAsMessagesScreen /> : <ThreadRoute request />;
 }

@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { AI_FLAGS, useSuggestPhotoCategory, type PhotoCategorySuggestion } from '@/api/queries/ai';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { Button } from '@/ui';
+import { Button } from '@/ui/Button';
 
 import { AiLabel } from './AiLabel';
 import { AiNote } from './AiNote';

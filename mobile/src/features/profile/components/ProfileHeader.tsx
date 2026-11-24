@@ -5,8 +5,15 @@ import { View } from 'react-native';
 import { avatarUrlOf, type Me } from '@/api/queries/auth';
 import type { MediaData } from '@/api/queries/profile';
 import { useFormat } from '@/lib/useFormat';
-import { createStyles, layout, size, useBreakpoint, type BreakpointKind } from '@/theme';
-import { Avatar, Button, IconButton, Photo, PhotoTopScrim, SampleBadges, sampleBadgeKinds, StatusPill, Text, type PhotoAspect } from '@/ui';
+import { aspect, createStyles, layout, size, useBreakpoint, type BreakpointKind } from '@/theme';
+import { Avatar, type AvatarSize } from '@/ui/Avatar';
+import { SampleBadges, sampleBadgeKinds } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { IconButton } from '@/ui/IconButton';
+import { Photo, type PhotoAspect } from '@/ui/Photo';
+import { PhotoTopScrim } from '@/ui/PhotoStageScrim';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
 import { ratioOf } from '@/ui/Photo';
 import { STAGE_EMPTY_PHOTO } from '@/features/vehicle/stage';
 
@@ -17,23 +24,34 @@ import { ProfileStats } from './ProfileStats';
 export const PROFILE_COLUMN_MAX = layout.feedColumn + 2 * layout.gutter.desktop;
 /** Desktop Garage tab: the content width of 09 §4.3 (1200) for the cards side by side; identity and the other tabs keep the feed column. */
 export const PROFILE_WIDE_MAX = layout.contentMax + 2 * layout.gutter.desktop;
-/** 09 §5 Avatar 88, overlapping the cover by half its height (09 §7.7). */
-const AVATAR_OVERLAP = size.avatar.xl / 2;
+/**
+ * 09 §5 Avatar 88 on phones and tablets, overlapping the cover by half its height (09 §7.7). Client round 2 (CR2-5): on the desktop
+ * the 88 read too large beside the title; it takes the next step of the scale, 56, with the same half-height overlap.
+ */
+export function profileAvatarSize(kind: BreakpointKind): AvatarSize {
+  return kind === 'desktop' ? size.avatar.lg : size.avatar.xl;
+}
+
+/** Half the avatar: how far it reaches up into the cover. */
+export function profileAvatarOverlap(kind: BreakpointKind): number {
+  return profileAvatarSize(kind) / 2;
+}
 /** DOM audit: half the avatar's size is a derived margin, not a scale step (counted exemption, M4.18). */
 export const AVATAR_OVERLAP_EXEMPT = { qaExempt: 'avatar-overlap' } as const;
 
 /**
- * 09 §7.7, §4.6, ADR-451 (DQ-1091): the cover is 16:9 on every width, so one upload is never cropped two ways. Phones and tablets
- * show it edge to edge.
+ * 09 §7.7, §4.6, ADR-451 (DQ-1091): the cover is 16:9 on phones and tablets, edge to edge. R4-1.3 (client round 4, overrides
+ * ADR-451's "one aspect everywhere" for the desktop): from 1280 the 16:9 box filled the window (1200 × 675 at 1440), so the desktop
+ * cover is 3:1 (1200 × 400 at 1440), cropped from the photo's focal point.
  */
-export function profileCoverAspect(_kind?: BreakpointKind): PhotoAspect {
-  return '16:9';
+export function profileCoverAspect(kind?: BreakpointKind): PhotoAspect {
+  return kind === 'desktop' ? aspect.cover : aspect.editorial;
 }
 
 /**
  * The cover's width in a pane `width` wide. DQ-1159: from 1280 it spans the main area like the VEH-01 hero (0 radius, full bleed),
  * up to the wide column's box, so it shares both edges with the column the identity, the tabs and the garage grid stand in (their
- * text on its gutter, the avatar too): x 240–1280 at 1280 (1040 × 585), x 240–1440 at 1440 (1200 × 675), and never wider than the
+ * text on its gutter, the avatar too): x 240–1280 at 1280 (1040 × 347), x 240–1440 at 1440 (1200 × 400), and never wider than the
  * 1200 content plus its gutters, where the column stops.
  */
 export function profileCoverWidth(width: number, kind: BreakpointKind): number {
@@ -47,7 +65,7 @@ export function profileCoverHeight(width: number, kind: BreakpointKind): number 
 
 const useStyles = createStyles((t) => ({
   identity: { maxWidth: PROFILE_COLUMN_MAX, width: '100%' },
-  avatarOverlap: { alignSelf: 'flex-start', marginTop: -AVATAR_OVERLAP },
+  avatarOverlap: { alignSelf: 'flex-start' },
   // The canvas ring (09 §7.7) that separates the avatar from the photo it overlaps.
   ring: {
     backgroundColor: t.color.bg.canvas,
@@ -126,6 +144,12 @@ export type ProfileIdentityProps = {
   actions: ReactNode;
   /** Under the actions, for a helper such as why Nachricht is off. */
   footer?: ReactNode;
+  /** M5.9d: "Lvl 4 · Parts Hunter" beside the @username (LevelLine). */
+  level?: ReactNode;
+  /** M5.9d: "Founding Member" with its four-digit number under the meta line (FoundingLine). */
+  founding?: ReactNode;
+  /** M5.9d: the badge row under the counts (MyBadgeRow / MemberBadgeRow). */
+  badges?: ReactNode;
 };
 
 /**
@@ -146,6 +170,9 @@ export function ProfileIdentity({
   notice,
   actions,
   footer,
+  level,
+  founding,
+  badges,
 }: ProfileIdentityProps) {
   const { t } = useTranslation('profile');
   const styles = useStyles();
@@ -172,27 +199,29 @@ export function ProfileIdentity({
         </Photo>
       ) : null}
       <View style={[styles.identity, { paddingHorizontal: gutter }]}>
-        <View style={styles.avatarOverlap} dataSet={AVATAR_OVERLAP_EXEMPT}>
+        <View style={[styles.avatarOverlap, { marginTop: -profileAvatarOverlap(kind) }]} dataSet={AVATAR_OVERLAP_EXEMPT}>
           <View style={styles.ring} />
-          <Avatar name={name} uri={avatarUrlOf(profile.avatar)} blurhash={profile.avatar?.blurhash} size={88} decorative testID={`${routeId}.avatar`} />
+          <Avatar name={name} uri={avatarUrlOf(profile.avatar)} blurhash={profile.avatar?.blurhash} size={profileAvatarSize(kind)} decorative testID={`${routeId}.avatar`} />
         </View>
         <View style={styles.names}>
           <Text variant="title1" role="heading" aria-level={1} testID={`${routeId}.name`}>
             {name}
           </Text>
-          {showUsername || badge ? (
+          {showUsername || badge || level ? (
             <View style={styles.handle}>
               {showUsername ? (
                 <Text variant="callout" color="text.secondary" hyphenate={false} testID={`${routeId}.username`}>
                   {`@${profile.username}`}
                 </Text>
               ) : null}
+              {level}
               {badge ? <StatusPill label={badge} testID={`${routeId}.followsYou`} /> : null}
             </View>
           ) : null}
           <Text variant="caption" color="text.tertiary" testID={`${routeId}.meta`}>
             {meta}
           </Text>
+          {founding}
         </View>
         {profile.bio ? (
           <Text variant="body" numberOfLines={3} style={styles.bio} testID={`${routeId}.bio`}>
@@ -213,6 +242,7 @@ export function ProfileIdentity({
           style={styles.stats}
           testID={`${routeId}.stats`}
         />
+        {badges}
         {notice ? <View style={styles.notice}>{notice}</View> : null}
         <View style={styles.actions} testID={`${routeId}.actions`}>
           {actions}
@@ -238,10 +268,14 @@ export type ProfileHeaderProps = {
   notice?: ReactNode;
   /** The member cannot change the profile now: the edit screen only shows it (DQ-124). */
   readOnly?: boolean;
+  /** M5.9b: the "Mein Dex" row under the actions. */
+  dex?: ReactNode;
+  /** M5.9d: level line, founding line and badge row (features/gift ProfileGift). */
+  gift?: Pick<ProfileIdentityProps, 'level' | 'founding' | 'badges'>;
 };
 
 /** PROF-01: the identity with "Profil bearbeiten" (secondary), share and the QR codes (QR-01). */
-export function ProfileHeader({ me, width, cards, onEdit, onShare, onQrCodes, onFollowers, onFollowing, sharing = false, notice, readOnly = false }: ProfileHeaderProps) {
+export function ProfileHeader({ me, width, cards, onEdit, onShare, onQrCodes, onFollowers, onFollowing, sharing = false, notice, readOnly = false, dex, gift }: ProfileHeaderProps) {
   const { t } = useTranslation('profile');
   const styles = useStyles();
   return (
@@ -253,6 +287,8 @@ export function ProfileHeader({ me, width, cards, onEdit, onShare, onQrCodes, on
       onFollowers={onFollowers}
       onFollowing={onFollowing}
       notice={notice}
+      footer={dex}
+      {...gift}
       actions={
         <>
           <Button label={readOnly ? t('actions.view') : t('actions.edit')} variant="secondary" size="m" onPress={onEdit} testID="PROF-01.edit" />

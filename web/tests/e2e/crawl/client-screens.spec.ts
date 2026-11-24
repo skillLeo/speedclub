@@ -39,7 +39,7 @@ test('showcase screens for the client', async ({ browser }) => {
   await shoot(page, '1-home.png', '/app/');
   await shoot(page, '2-vehicle-page.png', `/v/${slug}`);
   await shoot(page, '3-garage.png', '/app/garage');
-  await shoot(page, '4-qr.png', `/app/qr/${vehicleId}`);
+  await shoot(page, '4-qr.png', `/app/stickers/${vehicleId}`);
   await shoot(page, '5-messages.png', '/app/messages');
   await context.close();
   expect(await endMemberSession(member)).toBeNull();

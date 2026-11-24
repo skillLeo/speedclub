@@ -20,6 +20,10 @@
 //                      step; accepted in the r2 re-check and the M4.14 design QA, ADR-457 context): only on a direct child of a stage listed in
 //                      SCRIM_OVERLAP_STAGES whose previous sibling is the stage's photo, and only while the overlap stays
 //                      inside that photo; it frees margin-top alone, every other spacing value stays on the scale
+//      story-card      the type pairs at font scale min(scale, fontScaleCap.pill = 1.3) for every text inside (ADR-518): only on the
+//                      root of a story card, a 9:16 picture that is shared as an image (a WRP-01 card `WRP-01.card.<kind>`, a Build
+//                      Journey card `<route>.score.journeySheet.card`) whose box is 9:16 within 1 %; it frees the type-scale check
+//                      inside to those pairs and nothing else (clip, mid-word, colour, spacing stay as they are)
 //      avatar-overlap  a negative margin-top of half an avatar size (09 §7.7: the profile avatar overlaps the cover by half its
 //                      height; −44 for avatar.xl 88, accepted in the M4.10 design QA): only on a box exactly one avatar size
 //                      square whose margin-top is minus half that size; it frees margin-top alone
@@ -200,6 +204,10 @@ const SCRIM_OVERLAP_STAGES = [
   'GAR-03.vehPreview.empty',
 ];
 const TAB_LABEL_CAP = 1.15;
+/** ADR-518: a story card's type stops at this token cap (fontScaleCap.pill). */
+const STORY_CARD_CAP = /** @type {number} */ (tokens.fontScaleCap.pill);
+/** ADR-518: the roots that may carry `story-card` (test ids as RegExp sources, passed into the page). */
+const STORY_CARD_IDS = ['^WRP-01\\.card\\.[a-z_]+$', '^[A-Z]+-\\d+[a-z-]*\\.score\\.journeySheet\\.card$'];
 
 /**
  * @typedef {object} BrowserConfig
@@ -212,6 +220,9 @@ const TAB_LABEL_CAP = 1.15;
  * @property {string[]} brandPositionIds
  * @property {string[]} scrimOverlapStages data-testids of the stages whose identity may carry `scrim-overlap`
  * @property {number} tabCellWidth width of the tab cell whose label may carry `tab-label`
+ * @property {{name:string,size:number,lineHeight:number}[]} storyCardTypePairs the type scale at min(font scale, STORY_CARD_CAP), for story-card
+ * @property {number} storyCardScale that scale
+ * @property {string[]} storyCardIds RegExp sources of the test ids of story-card roots
  * @property {{name:string,variant:string,size:number,lineHeight:number}[]} tabLabelTypePairs the `web.tab` pair at the capped font scale
  * @property {number} tabLabelTolerance
  * @property {{standalone:number,inRow:number,rowHeight:number}|null} adminTargets ADR-212 floors on /admin, else null (touchMin)
@@ -227,7 +238,7 @@ const TAB_LABEL_CAP = 1.15;
  */
 function auditInBrowser(cfg) {
   const { checks } = cfg;
-  const KNOWN_EXEMPTIONS = ['photo', 'qr', 'safe-area', 'hairline', 'brand-position', 'fixed-glyph', 'tab-label', 'scrim-overlap', 'avatar-overlap'];
+  const KNOWN_EXEMPTIONS = ['photo', 'qr', 'safe-area', 'hairline', 'brand-position', 'fixed-glyph', 'tab-label', 'scrim-overlap', 'avatar-overlap', 'story-card'];
   const INTERACTIVE_ROLES = [
     'button', 'link', 'tab', 'checkbox', 'radio', 'switch', 'menuitem', 'menuitemcheckbox', 'menuitemradio',
     'option', 'slider', 'combobox', 'textbox', 'searchbox', 'spinbutton', 'treeitem',
@@ -1362,8 +1373,24 @@ function auditInBrowser(cfg) {
     if (side === undefined) return false;
     return Math.abs(parseFloat(getComputedStyle(el).marginTop) + side / 2) < 0.5;
   };
+  // ADR-518: a story card's root, by its test id and its 9:16 box (±1 %).
+  const storyCardIds = cfg.storyCardIds.map((source) => new RegExp(source));
+  const isStoryCard = (/** @type {Element} */ el) => {
+    const id = el.getAttribute('data-testid') ?? '';
+    if (!storyCardIds.some((re) => re.test(id))) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && Math.abs(r.width / r.height / (9 / 16) - 1) <= 0.01;
+  };
+  /** Inside a valid story card (the token on an ancestor that is allowed to carry it). */
+  const insideStoryCard = (/** @type {Element} */ el) => {
+    for (let cur = /** @type {Element|null} */ (el); cur; cur = cur.parentElement) {
+      if (hasOwnExempt(cur, 'story-card') && isStoryCard(cur)) return true;
+    }
+    return false;
+  };
   /** @type {Record<string,{allowed:(el:Element)=>boolean,where:string}>} */
   const RESTRICTED_EXEMPTIONS = {
+    'story-card': { allowed: isStoryCard, where: 'the root of a 9:16 story card (WRP-01.card.<kind>, <route>.score.journeySheet.card)' },
     'brand-position': {
       allowed: (el) => cfg.brandPositionIds.includes(el.getAttribute('data-testid') ?? ''),
       where: `elements with data-testid ${cfg.brandPositionIds.join(' or ')}`,
@@ -1439,7 +1466,9 @@ function auditInBrowser(cfg) {
       const fixed = tokens.includes('fixed-glyph');
       // A capped tab label keeps the `web.tab` pair at the capped scale, and only that pair.
       const capped = tokens.includes('tab-label');
-      const pairs = fixed ? cfg.unscaledTypePairs : capped ? cfg.tabLabelTypePairs : cfg.typePairs;
+      // ADR-518: text inside a story card takes the type scale at the card's cap.
+      const story = !fixed && !capped && insideStoryCard(el);
+      const pairs = fixed ? cfg.unscaledTypePairs : capped ? cfg.tabLabelTypePairs : story ? cfg.storyCardTypePairs : cfg.typePairs;
       const tolerance = fixed ? 0.01 : capped ? cfg.tabLabelTolerance : cfg.typeTolerance;
       const ok =
         Number.isFinite(line) &&
@@ -1449,7 +1478,9 @@ function auditInBrowser(cfg) {
           ? 'font scale 1 (fixed-glyph)'
           : capped
             ? `the tab label cap (tab-label, web.tab token at ${cfg.tabLabelTypePairs[0]?.size ?? '?'}/${cfg.tabLabelTypePairs[0]?.lineHeight ?? '?'})`
-            : `font scale ${cfg.fontScale}`;
+            : story
+              ? `the story card cap (story-card, font scale ${cfg.storyCardScale})`
+              : `font scale ${cfg.fontScale}`;
         report(checks.nonScaleFont, el, `${cs.fontSize}/${cs.lineHeight} is not a type-scale pair at ${scale}`);
       }
       const family = (cs.fontFamily.split(',')[0] ?? '').trim().replace(/^['"]|['"]$/g, '');
@@ -1550,6 +1581,9 @@ export async function runDomAudit(page, opts = {}) {
     scrimOverlapStages: SCRIM_OVERLAP_STAGES,
     tabCellWidth: TAB_CELL_WIDTH,
     tabLabelTypePairs,
+    storyCardTypePairs: auditConfig({ ...opts, viewportWidth, fontScale: Math.min(cfg.fontScale, STORY_CARD_CAP) }).typePairs,
+    storyCardScale: Math.min(cfg.fontScale, STORY_CARD_CAP),
+    storyCardIds: STORY_CARD_IDS,
     tabLabelTolerance: cappedScale === 1 ? 0.01 : 0.5,
     adminTargets: admin ? { ...ADMIN_TARGETS } : null,
     frameColors: Object.fromEntries(THEMES.map((theme) => [theme, themeColors(theme)])),

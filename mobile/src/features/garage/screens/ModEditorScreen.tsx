@@ -11,14 +11,20 @@ import type { GarageVehicle } from '@/api/queries/garage';
 import { useCreateMod, useDeleteMod, useDeleteModPhoto, useOwnerMod, useUpdateMod, type ModPayload, type OwnerMod } from '@/api/queries/mods';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
+import type { WithPlateBlur } from '@/features/media/plateBlur/model';
 import { paramOf } from '@/features/vehicle/navigation';
 import { now } from '@/lib/clock';
 import { keepFiguresTogether } from '@/lib/format';
 import { useFormat } from '@/lib/useFormat';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
 import type { PickedPhoto, UploadItem } from '@/state/uploads';
 import { createStyles } from '@/theme';
-import { Button, Dialog, Text, TextInput, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 import { ValueText } from '@/ui/ValueText';
 import { ModAssist } from '@/features/ai/ModAssist';
@@ -26,7 +32,9 @@ import { InstalledByField, ProductField } from '@/features/parts/components/ModE
 import { PARTS_FLAG } from '@/api/queries/parts';
 
 import { FittingSegmented, FormGroup, PickerField, useCharCount } from '../components/fields';
+import { CategorySheet } from '../components/CategorySheet';
 import { OptionSheet } from '../components/OptionSheet';
+import { PlanFields } from '../components/PlanFields';
 import { CentredState, EditorForm, EditorLoading, EditorScreen, GoneState, LoadErrorState, RestrictedNotice, HEADER_TEXT_ACTION } from '../components/frames';
 import { ModFieldRow } from '../components/ModFieldInputs';
 import { PhotoGrid } from '../components/PhotoGrid';
@@ -52,13 +60,16 @@ const useStyles = createStyles((t) => ({
 /** GAR-10 /garage/[id]/mods/[modId] (new?category=): FS-6 for Räder & Reifen, the category's schema for every other. */
 export function ModEditorScreen() {
   const { t } = useTranslation('garage');
-  const params = useLocalSearchParams<{ id: string; modId: string; category?: string }>();
+  const params = useLocalSearchParams<{ id: string; modId: string; category?: string; status?: string }>();
+  const router = useRouter();
   const own = useOwnVehicle(ROUTE, { path: 'mods', skeleton: [1, 4, 3] });
   const modId = paramOf(params.modId) ?? NEW;
   const isNew = modId === NEW;
   const categories = useModCategories();
   const mod = useOwnerMod(isNew ? undefined : modId);
   const categoryKey = isNew ? paramOf(params.category) : mod.data?.category.key;
+  // M5.3: VEH-01's "Plan anlegen" opens a new mod as a plan (`?status=planned`), choosing its system first when none is named.
+  const preset = isNew && paramOf(params.status) === 'planned' ? ({ status: 'planned' } as const) : undefined;
   const category = categories.data?.find((entry) => entry.key === categoryKey);
   const fallback = own.id ? `/garage/${own.id}/mods` : '/garage';
 
@@ -91,7 +102,21 @@ export function ModEditorScreen() {
     );
   }
   if (!body && own.vehicle && category && (isNew || mod.data)) {
-    return <ModForm key={mod.data?.id ?? NEW} vehicle={own.vehicle} category={category} mod={mod.data} restriction={own.restriction} fallback={fallback} />;
+    return <ModForm key={mod.data?.id ?? NEW} vehicle={own.vehicle} category={category} mod={mod.data} restriction={own.restriction} fallback={fallback} preset={preset} />;
+  }
+  if (!body && own.vehicle && isNew && !categoryKey) {
+    // A new mod without its system (the plan from VEH-01): the system picker GAR-09 uses, over the editor; closing it goes back.
+    return (
+      <EditorScreen routeId={ROUTE} title={t(preset ? 'mods.planTitle' : 'mods.editorTitle')} fallback={fallback} offlineLabel={t('offline.editor')}>
+        <EditorLoading routeId={ROUTE} groups={[1, 4, 3]} />
+        <CategorySheet
+          visible
+          onClose={() => (router.canGoBack() ? router.back() : router.replace(fallback))}
+          onPick={(picked) => router.setParams({ category: picked.key })}
+          testID={`${ROUTE}.categories`}
+        />
+      </EditorScreen>
+    );
   }
   return (
     <EditorScreen routeId={ROUTE} title={category?.name ?? t('mods.editorTitle')} fallback={fallback} offlineLabel={t('offline.editor')}>
@@ -100,10 +125,18 @@ export function ModEditorScreen() {
   );
 }
 
-type ModFormProps = { vehicle: GarageVehicle; category: ModCategory; mod: OwnerMod | undefined; restriction: string | null; fallback: string };
+type ModFormProps = {
+  vehicle: GarageVehicle;
+  category: ModCategory;
+  mod: OwnerMod | undefined;
+  restriction: string | null;
+  fallback: string;
+  /** M5.3: a new mod opened as a plan. */
+  preset?: { status: 'planned' };
+};
 
 /** The form renders its own frame: FS-6's header "Speichern" belongs to it. */
-function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps) {
+function ModForm({ vehicle, category, mod, restriction, fallback, preset }: ModFormProps) {
   const { t } = useTranslation('garage');
   const styles = useStyles();
   const router = useRouter();
@@ -122,7 +155,7 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
   const [notice, setNotice] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [picks, setPicks] = useState<PickedPhoto[]>([]);
+  const [picks, setPicks] = useState<WithPlateBlur<PickedPhoto>[]>([]);
   const [upload, setUpload] = useState<UploadItem | null>(null);
   const [photoToDelete, setPhotoToDelete] = useState<OwnerMod['photos'][number] | null>(null);
   const [legalSheet, setLegalSheet] = useState(false);
@@ -132,8 +165,8 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
   const month = currentMonth(now());
   const schema = useMemo(() => modSchema(fields, format.locale, month), [fields, format.locale, month]);
   // Fresh data reaches the fields the member has not touched: PATCH sends `fields`, notes and cost whole (BH-10).
-  const fresh = useMemo(() => modValuesFrom(mod, fields, format.locale), [fields, format.locale, mod]);
-  const { control, handleSubmit, setError, setFocus, setValue, formState } = useForm<ModFormValues>({
+  const fresh = useMemo(() => modValuesFrom(mod, fields, format.locale, preset), [fields, format.locale, mod, preset]);
+  const { control, handleSubmit, setError, setFocus, setValue, getValues, formState } = useForm<ModFormValues>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: fresh,
@@ -162,7 +195,7 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
   // ADR-181 revisit: a mod photo that failed on the server shows like on GAR-07, with delete as its only action.
   const failedPhotos = mod?.failed_photos ?? [];
   const target = mod ? { kind: 'mod' as const, vehicleId: vehicle.id, modId: mod.id } : null;
-  const uploads = usePhotoUploads(target, photos, MOD_PHOTO_LIMIT);
+  const uploads = usePhotoUploads(target, photos, MOD_PHOTO_LIMIT, ROUTE);
   const localItems: UploadItem[] = picks.map((source, index) => ({
     id: `local.${index}.${source.uri}`,
     target: { kind: 'vehicle', vehicleId: vehicle.id },
@@ -198,7 +231,10 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
       title: 'title',
       part_number: 'partNumber',
       status: 'status',
-    }) as Record<string, 'installedOn' | 'cost' | 'legalStatus' | 'notes' | 'title' | 'partNumber' | 'status' | `fields.${string}`>,
+      target_month: 'targetMonth',
+      priority: 'priority',
+      budget_cents: 'budget',
+    }) as Record<string, 'installedOn' | 'cost' | 'legalStatus' | 'notes' | 'title' | 'partNumber' | 'status' | 'targetMonth' | 'priority' | 'budget' | `fields.${string}`>,
     [fields],
   );
 
@@ -244,7 +280,10 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
     }
     try {
       const picked = await pickPhotos(remaining);
-      if (picked) setPicks((current) => [...current, ...picked].slice(0, MOD_PHOTO_LIMIT));
+      if (!picked || picked.length === 0) return;
+      // M5.9a: the plate blur choice travels with the pick and is sent once the mod exists.
+      const reviewed = await uploads.review(picked);
+      if (reviewed) setPicks((current) => [...current, ...reviewed].slice(0, MOD_PHOTO_LIMIT));
     } catch {
       toast(t('upload.pickFailed'));
     }
@@ -271,7 +310,17 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
     }
   };
 
-  const submit = handleSubmit(
+  // DQ-M53-09: one money field at a time. While planned, the plan's Budget; once built, the Kosten, prefilled from that budget.
+  const [budgetMoved, setBudgetMoved] = useState(false);
+  const moveBudgetToCost = () => {
+    const budget = getValues('budget').trim();
+    if (!budget) return;
+    if (!getValues('cost').trim()) setValue('cost', budget, { shouldDirty: true });
+    setValue('budget', '', { shouldDirty: true });
+    setBudgetMoved(true);
+  };
+
+  const submit = useSingleFlight(handleSubmit(
     async (form) => {
       setNotice(null);
       const payload = modPayload(form, fields, format.locale, {
@@ -302,7 +351,7 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
       setNotice(revealHidden(errors));
       setTopNotice(false);
     },
-  );
+  ));
 
   const confirmDelete = () => {
     if (!mod) return;
@@ -370,12 +419,21 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
               { value: MOD_STATUSES[2], label: t('mods.statuses.removed') },
             ]}
             value={field.value}
-            onChange={field.onChange}
+            onChange={(next) => {
+              // DQ-M53-09: a plan that is built carries its money over: the budget becomes the cost (when none is entered yet).
+              if (field.value === 'planned' && next !== 'planned') moveBudgetToCost();
+              field.onChange(next);
+            }}
             disabled={fieldsLocked}
             testID={`${ROUTE}.status`}
           />
         )}
       />
+      {status === 'planned' ? (
+        <PlanFields control={control} month={month} disabled={fieldsLocked} routeId={ROUTE} />
+      ) : (
+        <PlanLeavingNote control={control} wasPlanned={mod?.status === 'planned'} budgetMoved={budgetMoved} />
+      )}
       {layout.map((group) => (
         <FormGroup key={group.key} title={t(`mods.groups.${group.key}`)} testID={`${ROUTE}.group.${group.key}`}>
           {group.rows.map((row) => (
@@ -431,29 +489,34 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
             )}
           />
         )}
-        <Controller
-          control={control}
-          name="cost"
-          render={({ field, fieldState }) => (
-            <TextInput
-              ref={field.ref}
-              label={t('mods.cost')}
-              value={field.value}
-              onChangeText={field.onChange}
-              onBlur={field.onBlur}
-              placeholder={t('mods.costPlaceholder')}
-              // DQ-1055 / 09 §7.6 GAR-10: costs are private, never public; there is no switch any more.
-              helper={t('mods.costPrivate')}
-              suffix="€"
-              error={fieldMessage(t, fieldState.error)}
-              disabled={fieldsLocked}
-              keyboardType="decimal-pad"
-              inputMode="decimal"
-              maxLength={12}
-              testID={`${ROUTE}.cost`}
-            />
-          )}
-        />
+        {/* DQ-M53-09: while planned the plan's Budget is its money; Kosten come once it is built. */}
+        {status === 'planned' ? null : (
+          <Controller
+            control={control}
+            name="cost"
+            render={({ field, fieldState }) => (
+              <TextInput
+                ref={field.ref}
+                label={t('mods.cost')}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                placeholder={t('mods.costPlaceholder')}
+                // DQ-1055 / 09 §7.6 GAR-10: costs are private, never public; there is no switch any more.
+                helper={t('mods.costPrivate')}
+                suffix="€"
+                error={fieldMessage(t, fieldState.error)}
+                disabled={fieldsLocked}
+                keyboardType="decimal-pad"
+                inputMode="decimal"
+                maxLength={12}
+                testID={`${ROUTE}.cost`}
+              />
+            )}
+          />
+        )}
+        {/* Review N7: a built mod that still has its plan's budget names it under Kosten, read only (DQ-M53-09: no second field). */}
+        {status !== 'planned' ? <KeptBudgetLine control={control} /> : null}
         {legalEnabled ? (
           <Controller
             control={control}
@@ -585,6 +648,7 @@ function ModForm({ vehicle, category, mod, restriction, fallback }: ModFormProps
         lastOfPublished={false}
         testID={`${ROUTE}.deletePhoto`}
       />
+      {uploads.reviewElement}
       <UploadSheet
         item={upload}
         onClose={() => setUpload(null)}
@@ -674,5 +738,33 @@ function TitleField({ control, disabled }: WatchProps & { disabled: boolean }) {
         />
       )}
     />
+  );
+}
+
+/**
+ * M5.3 (contract §1): a plan that becomes built or removed loses its target month and priority on the server; the budget stays. Said
+ * under the status while the form would do that (a stored plan, or plan fields filled in this form), so nothing goes unannounced.
+ */
+function PlanLeavingNote({ control, wasPlanned, budgetMoved }: WatchProps & { wasPlanned: boolean; budgetMoved: boolean }) {
+  const { t } = useTranslation('garage');
+  const targetMonth = useWatch({ control, name: 'targetMonth' });
+  const priority = useWatch({ control, name: 'priority' });
+  if (!wasPlanned && !targetMonth && !priority && !budgetMoved) return null;
+  return (
+    <Text variant="callout" color="text.secondary" role="status" testID={`${ROUTE}.planLeaving`}>
+      {budgetMoved ? t('mods.planLeavingBudget') : t('mods.planLeaving')}
+    </Text>
+  );
+}
+
+/** "Geplantes Budget: 1.200 €" under Kosten for a built mod that still has one (contract §1 keeps it), read only. */
+function KeptBudgetLine({ control }: WatchProps) {
+  const { t } = useTranslation('garage');
+  const budget = useWatch({ control, name: 'budget' });
+  if (!budget.trim()) return null;
+  return (
+    <Text variant="caption" color="text.secondary" testID={`${ROUTE}.keptBudget`}>
+      {t('mods.keptBudget', { amount: budget })}
+    </Text>
   );
 }

@@ -241,7 +241,7 @@ describe('WebAuthn JSON', () => {
     const request = requestOptionsFromJSON({ challenge: 'AQID', rpId: 'speedclub.test', allowCredentials: [{ id: 'BAUG', type: 'public-key' }] });
     expect(new Uint8Array(request.challenge as ArrayBuffer)).toEqual(new Uint8Array([1, 2, 3]));
     expect(new Uint8Array(request.allowCredentials?.[0]?.id as ArrayBuffer)).toEqual(new Uint8Array([4, 5, 6]));
-    const creation = creationOptionsFromJSON({ challenge: 'AQID', user: { id: 'BAUG', name: 'lukas', displayName: 'Lukas' }, rp: { name: 'SPEED CLUB' }, pubKeyCredParams: [] });
+    const creation = creationOptionsFromJSON({ challenge: 'AQID', user: { id: 'BAUG', name: 'lukas', displayName: 'Lukas' }, rp: { name: 'Speedclub' }, pubKeyCredParams: [] });
     expect(new Uint8Array(creation.user.id as ArrayBuffer)).toEqual(new Uint8Array([4, 5, 6]));
   });
 

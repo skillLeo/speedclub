@@ -3,15 +3,16 @@
 namespace App\Console\Commands;
 
 use App\Models\Notification;
+use App\Services\Notifications\SocialPushLimiter;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('notifications:prune')]
-#[Description('Delete notifications whose last event is older than the retention period')]
+#[Description('Delete notifications whose last event is older than the retention period, and old social push claims')]
 class PruneNotificationsCommand extends Command
 {
-    public function handle(): int
+    public function handle(SocialPushLimiter $social): int
     {
         $before = now()->subDays(max(1, config()->integer('speedclub.notifications.retention_days')));
         $deleted = 0;
@@ -22,7 +23,10 @@ class PruneNotificationsCommand extends Command
             $deleted += $batch;
         } while ($batch === 1000);
 
-        $this->info("Deleted $deleted notifications.");
+        // M5.9b: the social push claims of past days (SocialPushLimiter keeps a week).
+        $claims = $social->prune();
+
+        $this->info("Deleted $deleted notifications and $claims social push claims.");
 
         return self::SUCCESS;
     }

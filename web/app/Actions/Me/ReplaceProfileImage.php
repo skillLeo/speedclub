@@ -7,6 +7,7 @@ use App\Enums\ProfileImageSlot;
 use App\Models\Media;
 use App\Models\User;
 use App\Services\Media\MediaService;
+use App\Services\Media\PlateBlurChoice;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -24,9 +25,9 @@ class ReplaceProfileImage
      * a parallel upload sees the winner's image as the old one, so no image stays public without a pointer to it.
      * The public files of the old image go after the commit, through the normal delete path.
      */
-    public function handle(User $user, UploadedFile $file, ProfileImageSlot $slot): User
+    public function handle(User $user, UploadedFile $file, ProfileImageSlot $slot, ?PlateBlurChoice $plateBlur = null): User
     {
-        $new = $this->media->storeFromUpload($file, $user, $user);
+        $new = $this->media->storeFromUpload($file, $user, $user, plateBlur: $plateBlur);
 
         try {
             [$member, $old] = DB::transaction(function () use ($user, $new, $slot): array {

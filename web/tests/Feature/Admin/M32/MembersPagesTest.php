@@ -302,11 +302,11 @@ describe('ADM-10 record', function () {
         expect($member->fresh()?->isRestrictedFrom(RestrictionType::Messaging))->toBeFalse();
     });
 
-    it('validates the statement of reasons and the reason', function () {
+    it('validates the statement of reasons and the optional reason (ADR-540: at most 1000 characters)', function () {
         $member = adm32Member();
         adm32SignedIn('owner');
 
-        $this->from('/admin/members/'.$member->id)->post('/admin/members/'.$member->id.'/restrict', ['type' => 'messaging', 'reason' => 'kurz'])
+        $this->from('/admin/members/'.$member->id)->post('/admin/members/'.$member->id.'/restrict', ['type' => 'messaging', 'reason' => str_repeat('x', 1001)])
             ->assertSessionHasErrors(['reason', 'facts', 'ground', 'ground_document']);
     });
 

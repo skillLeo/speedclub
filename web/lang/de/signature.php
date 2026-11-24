@@ -5,6 +5,12 @@ return [
     'compare' => [
         'same_build' => 'Wähle zum Vergleichen einen anderen Build.',
     ],
+    'share_card' => [
+        'photo' => 'Wähle eins der Fotos dieses Builds.',
+        'text_characters' => 'Nur Buchstaben, Ziffern und Satzzeichen, keine Emojis.',
+        'text_length' => 'Höchstens :max Zeichen.',
+        'mods' => '{1} :count Mod|[2,*] :count Mods',
+    ],
     'placard' => [
         'title' => 'Build-Blatt',
         'specs' => 'Technik',

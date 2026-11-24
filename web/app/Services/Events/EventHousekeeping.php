@@ -2,12 +2,16 @@
 
 namespace App\Services\Events;
 
+use App\Actions\Media\DeleteMedia;
 use App\Enums\CollectionItemType;
 use App\Enums\EventLocationVisibility;
 use App\Enums\EventStatus;
+use App\Enums\GalleryPhotoStatus;
 use App\Enums\RsvpStatus;
 use App\Jobs\Events\NotifyEventCancellation;
 use App\Models\Event;
+use App\Models\EventCheckinCode;
+use App\Models\EventPhoto;
 use App\Models\EventRsvp;
 use App\Models\Media;
 use App\Models\User;
@@ -27,10 +31,11 @@ class EventHousekeeping
     public function __construct(
         private readonly MediaService $media,
         private readonly Rsvps $rsvps,
+        private readonly DeleteMedia $deleteMedia,
     ) {}
 
     /**
-     * @return array{deleted: int, promoted: int, places_cleared: int}
+     * @return array{deleted: int, promoted: int, places_cleared: int, rejected_purged: int, codes_pruned: int}
      */
     public function run(): array
     {
@@ -68,7 +73,31 @@ class EventHousekeeping
             $promoted += count($this->rsvps->locked($event, fn (Event $locked): array => $this->rsvps->fill($locked)));
         }
 
-        return ['deleted' => $deleted, 'promoted' => $promoted, 'places_cleared' => $cleared];
+        return ['deleted' => $deleted, 'promoted' => $promoted, 'places_cleared' => $cleared, ...$this->gallery()];
+    }
+
+    /**
+     * M5.6: the files of gallery photos the organiser turned down go after gallery_rejected_purge_days (the row stays for the uploader's
+     * "Abgelehnt" until media:prune hard-deletes the picture); check-in codes past their grace go.
+     *
+     * @return array{rejected_purged: int, codes_pruned: int}
+     */
+    private function gallery(): array
+    {
+        $purged = 0;
+        $rejected = EventPhoto::query()->where('status', GalleryPhotoStatus::Rejected->value)
+            ->where('reviewed_at', '<', now()->subDays(config()->integer('speedclub.events.gallery_rejected_purge_days')))
+            ->whereHas('media', fn ($media) => $media->whereNull('media.deleted_at'))
+            ->with('media')->limit(500)->get();
+
+        foreach ($rejected as $photo) {
+            $this->deleteMedia->handle($photo->media);
+            $purged++;
+        }
+
+        $codes = EventCheckinCode::query()->where('expires_at', '<', now()->subSeconds(config()->integer('speedclub.events.checkin_code_grace')))->delete();
+
+        return ['rejected_purged' => $purged, 'codes_pruned' => (int) $codes];
     }
 
     /**
@@ -101,7 +130,8 @@ class EventHousekeeping
 
     public function delete(Event $event): void
     {
-        $photos = Media::withTrashed()->where('mediable_type', $event->getMorphClass())->where('mediable_id', $event->id)->get();
+        $photos = Media::withTrashed()->where('mediable_type', $event->getMorphClass())->where('mediable_id', $event->id)->get()
+            ->merge(EventGallery::mediaOf($event));
         $event->delete();
         Collections::forgetItem(CollectionItemType::Event, $event->id);
 

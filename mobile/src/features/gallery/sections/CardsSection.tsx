@@ -2,8 +2,12 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { createStyles, useBreakpoint } from '@/theme';
-import { BUILD_REACTION_GLYPHS , SaveToggle } from '@/ui/motion/kit';
-import { GridTile, IconButton, MEDIA_WALL_GAP, MediaCard, MediaCardSkeleton, mediaWallTileWidth, VehicleCard } from '@/ui';
+import { BUILD_REACTION_GLYPHS, SaveToggle } from '@/ui/motion/kit';
+import { GridTile } from '@/ui/GridTile';
+import { IconButton } from '@/ui/IconButton';
+import { MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
+import { MEDIA_WALL_GAP, mediaWallTileWidth } from '@/ui/mediaCardLayout';
+import { VehicleCard } from '@/ui/VehicleCard';
 
 import { E46, LUKAS, PHOTOS, R34, noop, photoUri } from '../data';
 import { FORCED, FullBleed, Group, SectionScreen, Specimen } from '../parts';

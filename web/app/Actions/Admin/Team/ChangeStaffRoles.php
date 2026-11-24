@@ -2,12 +2,14 @@
 
 namespace App\Actions\Admin\Team;
 
+use App\Enums\ApproverChangeCause;
 use App\Enums\StaffStatus;
 use App\Enums\TeamEvent;
 use App\Models\ApprovalRequest;
 use App\Models\Staff;
 use App\Services\Admin\Members\StaffAtoms;
 use App\Services\Approvals\Approvals;
+use App\Services\Approvals\ApproverChanges;
 use App\Services\Approvals\FourEyes;
 use App\Services\Audit\Audit;
 use App\Services\Catalog\Reason;
@@ -155,7 +157,10 @@ class ChangeStaffRoles
 
         $atomsBefore = RoleSets::atomsOf($before);
         $atomsAfter = RoleSets::atomsOf($after);
+        // SEC-P5-01: an approver who loses atoms starts the Owner-Override cool-down.
+        $watched = ApproverChanges::watch([$target]);
         $target->syncRoles($after);
+        ApproverChanges::recordLosses($watched, ApproverChangeCause::RolesChanged, $approver ?? $requester);
 
         Audit::record(TeamEvent::RolesChanged->value, $target,
             before: ['roles' => $before],

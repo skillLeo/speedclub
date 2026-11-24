@@ -44,7 +44,7 @@
         "staff": "Staff account",
         "vehicle": "Vehicle",
         "media": "Media",
-        "qr_code": "QR code",
+        "qr_code": "Sticker code",
         "moderation_case": "Case",
         "decision": "Decision",
         "appeal": "Appeal",
@@ -54,7 +54,14 @@
         "config_version": "Config version",
         "feature_flag": "Feature flag",
         "legal_document": "Legal document",
-        "approval_request": "Approval"
+        "approval_request": "Approval",
+        "staff_alert": "Security email",
+        "spot": "Spot",
+        "badge": "Badge",
+        "car_of_the_day": "Car of the Day",
+        "shop_product": "Shop product",
+        "shop_banner": "Shop banner",
+        "shop_product_image": "Product photo"
     },
     "chain": {
         "intact": "Integrity checked: :time",
@@ -86,6 +93,22 @@
         "submit": "Request approval"
     },
     "actions": {
+        "forum": {
+            "post_approved": "Forum post approved",
+            "post_rejected": "Forum post rejected",
+            "thread_pinned": "Forum topic pinned",
+            "thread_unpinned": "Forum topic unpinned",
+            "thread_locked": "Forum topic locked",
+            "thread_unlocked": "Forum topic unlocked",
+            "thread_moved": "Forum topic moved",
+            "thread_merged": "Forum topic merged",
+            "solution_set": "Forum topic solution changed",
+            "category_created": "Forum category created",
+            "category_updated": "Forum category changed",
+            "category_deleted": "Forum category deleted",
+            "categories_reordered": "Forum categories reordered",
+            "categories_synced": "Forum categories synced"
+        },
         "admin": {
             "saved_view": {
                 "deleted": "Saved view deleted",
@@ -99,7 +122,11 @@
             "expired": "Approval request expired",
             "export_downloaded": "Export downloaded",
             "failed": "Approved, execution refused",
-            "requested": "Approval requested"
+            "requested": "Approval requested",
+            "owner_override": "Approved themselves (owner override)",
+            "owner_override_switched": "Owner override switched on or off",
+            "direct": "Run directly (four-eyes off)",
+            "four_eyes_switched": "Four-eyes rule switched on or off"
         },
         "audit": {
             "event_viewed": "Audit event viewed",
@@ -109,6 +136,7 @@
             "asset_uploaded": "Brand image uploaded"
         },
         "catalog": {
+            "ai_specs_deleted": "AI manufacturer figures deleted",
             "activated": "Catalogue entry activated",
             "category_created": "Mod category created",
             "category_updated": "Mod category changed",
@@ -130,7 +158,8 @@
             "draft_saved": "Configuration draft saved",
             "preview_issued": "Preview link issued",
             "published": "Configuration published",
-            "rolled_back": "Configuration rolled back"
+            "rolled_back": "Configuration rolled back",
+            "draft_taken_over": "Configuration draft taken over"
         },
         "flag": {
             "changed": "Feature flag changed"
@@ -144,7 +173,8 @@
         "legal": {
             "draft_discarded": "Legal text draft discarded",
             "draft_saved": "Legal text draft saved",
-            "published": "Legal text published"
+            "published": "Legal text published",
+            "reason_reworded": "Reason of a legal text version reworded"
         },
         "media": {
             "original_viewed": "Original of a hidden photo shown",
@@ -183,7 +213,7 @@
             "provider_link_requested": "Connection requested",
             "provider_linked": "Sign-in method connected",
             "provider_unlinked": "Sign-in method removed",
-            "qr_reissued": "QR code reissued",
+            "qr_reissued": "Sticker reissued",
             "reauthenticated": "Identity confirmed",
             "recovery_code_used": "Recovery code used",
             "recovery_codes_regenerated": "New recovery codes",
@@ -245,8 +275,9 @@
             "request_viewed": "Privacy request viewed"
         },
         "qr": {
-            "reissued_by_staff": "QR code reissued by staff",
-            "revoked_by_staff": "QR code revoked by staff"
+            "reissued_by_staff": "Sticker reissued by staff",
+            "revoked_by_staff": "Sticker revoked by staff",
+            "sample_rotated": "Sample sticker code rotated"
         },
         "release": {
             "recorded": "Release recorded",
@@ -292,7 +323,11 @@
             "two_factor_rotated": "New authenticator confirmed",
             "two_factor_rotation_cancelled": "Authenticator change cancelled",
             "two_factor_rotation_started": "Authenticator change started",
-            "two_factor_skipped": "Two-factor setup skipped"
+            "two_factor_skipped": "Two-factor setup skipped",
+            "two_factor_policy_changed": "Staff 2FA changed (required/optional)"
+        },
+        "sticker": {
+            "print_downloaded": "Sticker print file downloaded"
         },
         "support": {
             "bulk_status": "Ticket status changed in bulk",
@@ -353,6 +388,75 @@
         "editorial": {
             "sample_hidden": "Sample hidden",
             "sample_shown": "Sample shown again"
+        },
+        "staff_alert": {
+            "failed": "Security email to a team member not delivered",
+            "sent": "Security email sent to a team member"
+        },
+        "spot": {
+            "removed": "Spot removed",
+            "bulk_removed": "Spots removed in bulk",
+            "viewed": "Spot viewed"
+        },
+        "wrapped": {
+            "preview_generated": "Wrapped preview generated",
+            "viewed": "Wrapped viewed"
+        },
+        "badge": {
+            "created": "Badge created",
+            "updated": "Badge changed",
+            "activated": "Badge activated",
+            "deactivated": "Badge deactivated",
+            "applied": "Badge rule applied to all members",
+            "revoked": "Badge revoked"
+        },
+        "car_of_the_day": {
+            "overridden": "Car of the Day chosen",
+            "skipped": "Car of the Day skipped",
+            "withdrawn": "Car of the Day withdrawn"
+        },
+        "dex": {
+            "set_revoked": "Dex set taken back"
+        },
+        "founding": {
+            "assigned": "Founding Member number assigned"
+        },
+        "shop": {
+            "product_created": "Shop product created",
+            "product_updated": "Shop product edited",
+            "product_shown": "Shop product shown",
+            "product_hidden": "Shop product hidden",
+            "products_reordered": "Shop order changed",
+            "product_deleted": "Shop product deleted",
+            "product_restored": "Shop product restored",
+            "image_added": "Product photo added",
+            "image_updated": "Product photo edited",
+            "images_reordered": "Product photos reordered",
+            "image_removed": "Product photo removed",
+            "banner_created": "Shop banner created",
+            "banner_updated": "Shop banner edited",
+            "banner_activated": "Shop banner activated",
+            "banner_deactivated": "Shop banner deactivated",
+            "banner_deleted": "Shop banner deleted"
+        },
+        "crew": {
+            "created": "Crew founded",
+            "updated": "Crew edited",
+            "deleted": "Crew deleted",
+            "founder_transferred": "Founder role handed over",
+            "role_changed": "Crew role changed",
+            "member_removed": "Member removed from crew",
+            "hidden": "Crew hidden",
+            "unhidden": "Crew shown again",
+            "removed": "Crew deleted by staff",
+            "restored": "Crew restored"
+        },
+        "setup": {
+            "maintenance": "Maintenance mode switched in the browser",
+            "web_run": "Setup run in the browser"
+        },
+        "showcase": {
+            "demo_passwords_set": "Demo passwords set"
         }
     }
 }

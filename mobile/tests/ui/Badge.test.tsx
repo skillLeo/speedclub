@@ -70,8 +70,8 @@ describe('sample flags (09 §8.19)', () => {
     await renderUi(
       <>
         <GridTile title="Porsche 911 GT3 (992)" photo={PHOTO} sample={{ is_sample: true }} onPress={jest.fn()} testID="t.tile" />
-        <MemberRow name="SPEED CLUB Editorial" sample={{ is_sample: true, is_editorial: true }} onPress={jest.fn()} testID="t.member" />
-        <OwnerRow name="SPEED CLUB Editorial" sample={{ is_editorial: true }} testID="t.owner" />
+        <MemberRow name="Speedclub Editorial" sample={{ is_sample: true, is_editorial: true }} onPress={jest.fn()} testID="t.member" />
+        <OwnerRow name="Speedclub Editorial" sample={{ is_editorial: true }} testID="t.owner" />
       </>,
     );
     expect(screen.getByTestId('t.tile.sample.sample')).toBeTruthy();
@@ -110,6 +110,11 @@ describe('glyph set 2.0 (App. C)', () => {
   });
 
   it('gives the reactions a fill for the chosen state', () => {
-    for (const glyph of Object.values(BUILD_REACTION_GLYPHS)) expect(autoIconsWithFill).toContain(glyph);
+    // Client round 4 (ADR-528): "Gefällt mir" is Phosphor's heart, which has its own fill weight; the four car reactions are auto glyphs.
+    for (const glyph of Object.values(BUILD_REACTION_GLYPHS)) {
+      if (glyph === 'heart') continue;
+      expect(autoIconsWithFill).toContain(glyph);
+    }
+    expect(BUILD_REACTION_GLYPHS.gefaellt).toBe('heart');
   });
 });

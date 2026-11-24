@@ -29,25 +29,18 @@ import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { clearAuthIntent, useSessionStore } from '@/state/session';
 import { createStyles, layout, useBreakpoint } from '@/theme';
-import {
-  CollapsingFlashList,
-  ContextMenuArea,
-  ContextMenuButton,
-  EmptyState,
-  ErrorState,
-  Header,
-  HeaderLargeTitle,
-  Icon,
-  MediaCard,
-  PressableScale,
-  Screen,
-  Skeleton,
-  SkeletonBlock,
-  Text,
-  toast,
-  useCollapsingHeader,
-  type ContextMenuItem,
-} from '@/ui';
+import { ContextMenuArea, ContextMenuButton, type ContextMenuItem } from '@/ui/ContextMenu';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Header, HeaderLargeTitle } from '@/ui/Header';
+import { Icon } from '@/ui/icons/Icon';
+import { MediaCard } from '@/ui/MediaCard';
+import { PressableScale } from '@/ui/PressableScale';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { CollapsingFlashList, useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { useCollectionActions } from '../components/CollectionsGrid';
 import { removeWithUndo, useHiddenRemovals } from '../deferred';

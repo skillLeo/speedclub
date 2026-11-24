@@ -7,7 +7,7 @@ namespace App\Enums;
  * published with a reason, rolled back by publishing a copy. Atoms per 06_ADMIN_SPEC §2/§3: branding with `brand.manage`; Home curation
  * and announcements drafted with `content.edit`, published with `content.publish`; remote config with `remote_config.manage` (maintenance
  * on is four-eyes, `maintenance.toggle`); rate-limit overrides (M3.4, ADM-23) with `moderation.rules`; the org's legal identity (M3.6)
- * only by an Owner (06 §2: Admin is everything except it).
+ * only by an Owner (06 §2: Admin is everything except it); the governance rules of M5.1 (ADR-507) only by an Owner too.
  */
 enum ConfigKey: string
 {
@@ -19,6 +19,8 @@ enum ConfigKey: string
     case Org = 'org';
     /** M3.6 ADM-47: the editable retention periods of 06 §4, read by the prune commands (RetentionPolicy). */
     case Retention = 'retention';
+    /** M5.1 ADM-52 Governance (ADR-507): whether an Owner may override a four-eyes request nobody else can approve. Owner only. */
+    case Governance = 'governance';
 
     public function editAtom(): string
     {
@@ -29,6 +31,7 @@ enum ConfigKey: string
             self::RateLimits => 'moderation.rules',
             self::Org => 'staff.manage',
             self::Retention => 'retention.manage',
+            self::Governance => 'staff.manage',
         };
     }
 
@@ -43,7 +46,7 @@ enum ConfigKey: string
     /** Only an Owner drafts, publishes or rolls back this key. */
     public function ownerOnly(): bool
     {
-        return $this === self::Org;
+        return $this === self::Org || $this === self::Governance;
     }
 
     /** Whether the published payload reaches GET app-config (so a publish flushes it and a preview token may overlay it). */

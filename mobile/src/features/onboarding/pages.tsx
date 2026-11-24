@@ -4,7 +4,12 @@ import { View } from 'react-native';
 import { PHOTOS } from '@/features/gallery/data';
 import { QR_SAMPLE_SVG } from '@/features/gallery/qrSample';
 import { createStyles, space } from '@/theme';
-import { BuildSheet, DisplayTitle, MiniSpec, Photo, QRDisplay, SampleBadge, SampleBadges } from '@/ui';
+import { SampleBadge, SampleBadges } from '@/ui/Badge';
+import { BuildSheet } from '@/ui/BuildSheet';
+import { DisplayTitle } from '@/ui/DisplayTitle';
+import { MiniSpec } from '@/ui/MiniSpec';
+import { Photo } from '@/ui/Photo';
+import { QRDisplay } from '@/ui/QRDisplay';
 
 /** ONB-01…03 (09 §7.1): one licensed night photo per page (design/seed-photos/CREDITS.md) and the live component composited on it. */
 export type OnboardingPageKey = 'garage' | 'sheet' | 'qr';

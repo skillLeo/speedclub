@@ -70,6 +70,17 @@ class QrCodes
     }
 
     /**
+     * What every picture the server draws for sharing encodes (ADR-514, SEC-P5G-01): the car's public page /v/{slug} on the app host,
+     * never the sticker code. A sticker code stands for "I was next to this car" (STREET DEX), so it lives only on the printed sticker,
+     * the placard and the owner's own QR screens; OG images, VEH-07 share cards and Wrapped cards travel to strangers. Lowercase, as the
+     * route is: the library picks byte mode by itself, which still decodes at the 112 px of a landscape OG image.
+     */
+    public function pageUrl(Vehicle $vehicle): string
+    {
+        return rtrim(config()->string('app.url'), '/').'/v/'.$vehicle->canonicalSlug();
+    }
+
+    /**
      * "7H2K QXMB", as FS-9 and the sticker print it.
      */
     public function displayCode(string $code): string

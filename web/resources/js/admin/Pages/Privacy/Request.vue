@@ -11,6 +11,7 @@ import RecordLayout from '../../Components/record/RecordLayout.vue';
 import { Button, ConfirmDialog, Field, IconButton, RadioGroup, Select, Skeleton, Textarea } from '../../Components/ui';
 import { focusRing } from '../../Components/ui/styles';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { actorName } from '../../lib/audit';
 import { formatDate, formatDateTime } from '../../lib/format';
@@ -47,6 +48,7 @@ const props = defineProps<{
 const failedDialog = qaDialogFailed();
 const state = usePageState();
 const pageState = computed(() => (failedDialog ? 'ready' : state.value));
+const fourEyesOn = useFourEyes();
 const r = computed(() => props.request);
 const final = computed(() => FINAL.includes(r.value.status));
 const tab = ref(final.value ? 'complete' : 'request');
@@ -187,10 +189,10 @@ const exportState = computed(() => (r.value.export ? trans(`privacy.request.expo
                         <p v-if="r.extended_at" class="max-w-720 text-admin-base text-ink-2">{{ trans('privacy.request.extended_line', { date: formatDate(r.extended_at), reason: r.extension_reason ?? '–' }) }}</p>
                         <p v-else-if="can.extend" class="text-admin-base text-ink-3">{{ trans('privacy.request.extend_hint') }}</p>
                     </section>
-                    <section v-if="r.export || r.approval" class="flex flex-col gap-4" data-testid="ADM-46.linked">
+                    <section v-if="r.export || (fourEyesOn && r.approval)" class="flex flex-col gap-4" data-testid="ADM-46.linked">
                         <h2 class="text-headline text-ink">{{ trans('privacy.request.linked_title') }}</h2>
                         <p v-if="exportState" class="text-admin-base text-ink-2">{{ trans('privacy.request.export_status', { status: exportState }) }}</p>
-                        <p v-if="r.approval" class="text-admin-base text-ink-2">{{ trans('privacy.request.approval_status', { status: trans(`approvals.status.${r.approval.status}`) }) }}</p>
+                        <p v-if="fourEyesOn && r.approval" class="text-admin-base text-ink-2">{{ trans('privacy.request.approval_status', { status: trans(`approvals.status.${r.approval.status}`) }) }}</p>
                     </section>
                     <section v-if="can.process" class="flex flex-col gap-12" data-testid="ADM-46.handling">
                         <h2 class="text-headline text-ink">{{ trans('privacy.request.handling_title') }}</h2>
@@ -277,6 +279,6 @@ const exportState = computed(() => (r.value.export ? trans(`privacy.request.expo
 
         <ConfirmDialog v-model:open="extendOpen" :title="trans('privacy.extend.title')" :body="trans('privacy.extend.body', { date: newDue })" :confirm-label="trans('privacy.actions.extend')" tone="neutral" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-46.extend-dialog" @confirm="(reason: string | null) => action.run('post', url('extend'), { reason: reason ?? '' }, { sensitive: true, onSuccess: () => (extendOpen = false) })" />
         <ConfirmDialog v-model:open="exportOpen" :title="trans('privacy.export.title')" :body="trans('privacy.export.body')" :confirm-label="trans('privacy.export.submit')" tone="neutral" :processing="action.processing.value" :error="action.error.value" test-id="ADM-46.export-dialog" @confirm="() => action.run('post', url('export'), {}, { sensitive: true, onSuccess: () => (exportOpen = false) })" />
-        <ConfirmDialog v-model:open="erasureOpen" :title="trans('privacy.erasure.title')" :body="trans('privacy.erasure.body')" :confirm-label="trans('privacy.actions.erasure')" reason four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-46.erasure-dialog" @confirm="(reason: string | null) => action.run('post', url('erasure'), { reason: reason ?? '' }, { sensitive: true, onSuccess: () => (erasureOpen = false) })" />
+        <ConfirmDialog v-model:open="erasureOpen" :title="trans('privacy.erasure.title')" :body="trans('privacy.erasure.body')" :confirm-label="trans('privacy.actions.erasure')" four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-46.erasure-dialog" @confirm="action.run('post', url('erasure'), {}, { sensitive: true, onSuccess: () => (erasureOpen = false) })" />
     </div>
 </template>

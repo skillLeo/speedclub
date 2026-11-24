@@ -380,11 +380,44 @@ describe('settings sync (§11)', () => {
     setThemePreference('carbon');
   });
 
+  it('sends nothing on a new device before the account is reconciled, then nothing either (P5 live check)', async () => {
+    // A new browser: the default theme shows but nothing is stored (no theme, language or sync marker); the cached member makes the
+    // watcher run before auth/me answers.
+    setThemePreference('system');
+    await AsyncStorage.multiRemove(['sc.theme', 'sc.locale', 'sc.settingsSynced']);
+    setMember({ id: 'member-new-device', username: 'neu.hier', displayName: null, avatarUrl: null });
+    await renderHook(() => useSettingsSync());
+
+    await act(async () => {
+      await i18n.changeLanguage('en');
+      await flush();
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await reconcileSettings({ theme: 'carbon', locale: 'de' });
+      await flush();
+    });
+    await act(flush);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(getThemePreference()).toBe('carbon');
+    expect(JSON.parse((await AsyncStorage.getItem('sc.settingsSynced'))!)).toEqual({ theme: 'carbon', locale: 'de' });
+    await i18n.changeLanguage('de');
+    setThemePreference('carbon');
+  });
+
   it('still sends a choice the member makes while signed in', async () => {
     setThemePreference('carbon');
     await AsyncStorage.setItem('sc.settingsSynced', JSON.stringify({ theme: 'carbon', locale: 'de' }));
     setMember({ id: ME.id, username: 'lukas.sc', displayName: null, avatarUrl: null });
     await renderHook(() => useSettingsSync());
+    // The session is confirmed: auth/me answered and the account was reconciled (nothing to send).
+    await act(async () => {
+      await reconcileSettings({ theme: 'carbon', locale: 'de' });
+      await flush();
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
     fetchMock.mockResolvedValue(json(200, { data: { theme: 'black', locale: 'de', power_display: 'ps' } }));
 
     await act(async () => {

@@ -11,7 +11,8 @@ import { now } from '@/lib/clock';
 import { useFormat } from '@/lib/useFormat';
 import { useSessionStore } from '@/state/session';
 import { size } from '@/theme';
-import { EventCard, type PhotoFields } from '@/ui';
+import { EventCard } from '@/ui/EventCard';
+import { type PhotoFields } from '@/ui/Photo';
 
 import {
   cardCaption,

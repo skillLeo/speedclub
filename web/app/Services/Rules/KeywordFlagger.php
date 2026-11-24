@@ -8,7 +8,9 @@ use App\Enums\ReportReason;
 use App\Enums\ReportSource;
 use App\Models\BuildUpdate;
 use App\Models\Comment;
+use App\Models\Crew;
 use App\Models\Event;
+use App\Models\ForumPost;
 use App\Models\Message;
 use App\Models\ModerationCase;
 use App\Models\Report;
@@ -34,7 +36,7 @@ class KeywordFlagger
     /**
      * @param  list<array{field: KeywordField, rules: list<array{id: int, term: string, list: string}>}>  $flags
      */
-    public function flag(User|Vehicle|BuildUpdate|Message|Comment|Event $target, array $flags): void
+    public function flag(User|Vehicle|BuildUpdate|Message|Comment|Event|ForumPost|Crew $target, array $flags): void
     {
         try {
             $resolved = $this->targets->forStaff($target);

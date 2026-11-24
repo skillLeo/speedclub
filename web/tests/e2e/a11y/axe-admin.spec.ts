@@ -2,14 +2,19 @@
 // overlays opened by a key or a click. No serious or critical issue on the whole page (support/a11y.mjs). Chromium only
 // (playwright.config.ts ignores axe* on WebKit). New admin routes join by being registered in visual/routes.mjs. A route that needs a
 // stage fixture (ADM-F1/F2: premium.enabled; ADM-28/30 as the owner of the seeded draft: draft-owner) is checked in one test per fixture,
-// with the fixture in place only for that test.
+// with the fixture in place only for that test. A route that reaches its state by a `walk` (a record whose id changes with every seed,
+// a dialog opened by a click: ADM-66 record cells, ADM-68 pane cells, ADM-21-aiTemplate-applied) walks there as visual/run.mjs does,
+// after the page loaded and before its ready element.
+import type { Page } from '@playwright/test';
 import { withFlowLock } from '../support/admin-flow';
 import { applyAuth } from '../support/auth.mjs';
 import { assertNoSeriousAxeViolations } from '../support/a11y.mjs';
 import { expect, test } from '../support/fixtures';
 import { tokenValues } from '../support/path-tokens.mjs';
+import { BASE_URL } from '../support/qa.mjs';
 import { STAGE_FIXTURES } from '../support/stage-fixtures.mjs';
 import { ADMIN_THEMES, isAdminRoute, pathTokens, resolvePath, type RouteDef } from '../visual/matrix.mjs';
+import { stagerFor } from '../visual/route-steps.mjs';
 import { routes } from '../visual/routes.mjs';
 
 const registered = (routes as RouteDef[]).filter((r) => isAdminRoute(r) && r.status !== 'planned');
@@ -21,6 +26,13 @@ for (const r of registered) if (r.fixture !== undefined) staged.set(r.fixture, [
 const pathOf = async (route: RouteDef): Promise<string> => {
   const names = pathTokens(route.path);
   return names.length === 0 ? route.path : resolvePath(route.path, await tokenValues(names));
+};
+
+/** The route's own steps after the page loaded (routes.mjs `walk`), with the context visual/run.mjs gives them. */
+const walkTo = async (page: Page, route: RouteDef, theme: string, state: string): Promise<void> => {
+  if (!route.walk) return;
+  const cell = { routeId: route.id, name: `${route.id}__axe__${theme}__${state}`, viewport: { width: 1280, height: 800 }, theme, locale: 'de' as const, fontScale: 1, state };
+  await route.walk({ page, cell, stage: stagerFor(page, new WeakSet()), baseUrl: BASE_URL });
 };
 
 test.describe('axe: admin routes', () => {
@@ -35,6 +47,7 @@ test.describe('axe: admin routes', () => {
         expectFailedResponses(expected);
         await applyAuth(context, route.auth);
         await qaGoto(await pathOf(route), { theme });
+        await walkTo(page, route, theme, 'default');
         await expect(page.locator(`${route.ready}:visible`).first()).toBeVisible();
         await assertNoSeriousAxeViolations(page);
       });
@@ -44,6 +57,7 @@ test.describe('axe: admin routes', () => {
         expectFailedResponses(expected);
         await applyAuth(context, route.auth);
         await qaGoto(await pathOf(route), { theme: 'carbon', state });
+        await walkTo(page, route, 'carbon', state);
         await expect(page.locator(`${route.ready}:visible`).first()).toBeVisible();
         await assertNoSeriousAxeViolations(page);
       });
@@ -65,6 +79,7 @@ test.describe('axe: admin routes', () => {
             for (const [theme, state] of [...ADMIN_THEMES.map((t) => [t, 'default'] as const), ...route.states.filter((s) => s !== 'default').map((s) => ['carbon', s] as const)]) {
               await test.step(`${route.id} ${theme} ${state}`, async () => {
                 await qaGoto(await pathOf(route), { theme, state });
+                await walkTo(page, route, theme, state);
                 await expect(page.locator(`${route.ready}:visible`).first()).toBeVisible();
                 await assertNoSeriousAxeViolations(page);
               });

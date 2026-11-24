@@ -59,6 +59,16 @@ function upload(): void {
             onStart: () => (uploading.value = true),
             onFinish: () => (uploading.value = false),
             onError: (errors) => (error.value = errors.file ?? errors.kind ?? Object.values(errors)[0] ?? trans('ui.state.server_error')),
+            // No answer from the app (connection dropped, a host error page): said in the picker, not a silent stop (as configDraft).
+            onNetworkError: () => {
+                error.value = trans('ui.state.server_error');
+                return false;
+            },
+            onHttpException: (response) => {
+                if (Object.keys(response.headers).some((name) => name.toLowerCase() === 'x-inertia')) return;
+                error.value = trans('ui.state.server_error');
+                return false;
+            },
             onSuccess: (page) => {
                 const assets = (page.props as unknown as { assets: BrandAsset[] }).assets;
                 const fresh = assets.find((asset) => asset.kind === props.kind && !known.has(asset.id));

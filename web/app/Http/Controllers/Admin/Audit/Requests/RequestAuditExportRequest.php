@@ -21,7 +21,7 @@ class RequestAuditExportRequest extends FormRequest
     {
         return [
             'format' => ['required', 'string', 'in:csv,jsonl'],
-            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
             'filter' => ['sometimes', 'array:actor,action,target_type,target_id,from,to'],
             'filter.*' => ['nullable', 'string', 'max:200'],
             'filter.from' => ['nullable', 'date_format:Y-m-d'],

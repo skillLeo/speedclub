@@ -7,6 +7,7 @@ use App\Models\Media;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppConfig\FeatureFlags;
+use App\Services\Garage\BuildGoal;
 use App\Services\Signature\ShareCards;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
@@ -51,6 +52,23 @@ class VehicleResource extends VehicleCardResource
              * @var string|null
              */
             'hu_au_due' => $vehicle->isOwnedBy($viewer) && app(FeatureFlags::class)->enabled('sig.hu_au_reminder') ? $vehicle->getAttribute('hu_au_due')?->format('Y-m') : null,
+            /**
+             * M5.9b STREET DEX (GAR-12 "Spots"): the owner's switches, null for anybody else. ghost_mode: in no list, search or sitemap,
+             * still reachable by link and sticker; spotting_paused: new spots are refused; hide_spot_cities: the spot numbers name no city.
+             */
+            'ghost_mode' => $vehicle->isOwnedBy($viewer) ? $vehicle->ghost_mode === true : null,
+            'spotting_paused' => $vehicle->isOwnedBy($viewer) ? $vehicle->spotting_paused === true : null,
+            'hide_spot_cities' => $vehicle->isOwnedBy($viewer) ? $vehicle->hide_spot_cities === true : null,
+            /**
+             * M5.7: the optional milestone goal ("Ziel: Saison 2027"); the edit form starts from `season`. Null when not set.
+             *
+             * @var array{season: int, label: string, passed: bool}|null
+             */
+            'build_goal' => BuildGoal::present($vehicle),
+            /**
+             * M5.9b: the car's STREET DEX number ("Nr. 0087"), from its first publish; null for a draft.
+             */
+            'dex_number' => $vehicle->dex_number,
             /** @var array<int, MediaResource> */
             'photos' => MediaResource::collection($this->photosFor($viewer)),
             /**
@@ -72,7 +90,7 @@ class VehicleResource extends VehicleCardResource
             /**
              * The values as entered, for the form of GAR-06.
              *
-             * @var array{engine_code: string|null, engine_text: string|null, displacement_cc: int|null, fuel: string|null, aspiration: string|null, power_value: float|null, power_unit: string|null, power_source: string|null, power_ps: float|null, torque_nm: int|null, torque_source: string|null, drivetrain: string|null, gearbox: string|null}
+             * @var array{engine_code: string|null, engine_text: string|null, displacement_cc: int|null, fuel: string|null, aspiration: string|null, power_value: float|null, power_unit: string|null, power_source: string|null, power_ps: float|null, torque_nm: int|null, torque_source: string|null, drivetrain: string|null, gearbox: string|null, ai_fields: list<string>}
              */
             'specs' => [
                 'engine_code' => $specs?->getAttribute('engine_code'),
@@ -88,6 +106,8 @@ class VehicleResource extends VehicleCardResource
                 'torque_source' => $specs?->getAttribute('torque_source')?->value,
                 'drivetrain' => $specs?->getAttribute('drivetrain')?->value,
                 'gearbox' => $specs?->getAttribute('gearbox')?->value,
+                // M5.9: the fields that still stand as taken over from "Daten übernehmen?" (KI-Vorschlag); [] when none.
+                'ai_fields' => array_keys(is_array($specs?->getAttribute('ai_fields')) ? $specs->getAttribute('ai_fields') : []),
             ],
         ];
     }

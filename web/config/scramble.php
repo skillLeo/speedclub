@@ -56,7 +56,7 @@ return [
         /*
          * Description rendered on the home page of the API documentation (`/docs/api`).
          */
-        'description' => 'SPEED CLUB member API. Errors: {message, code, errors}. Locale: Accept-Language (de default).',
+        'description' => 'Speedclub member API. Errors: {message, code, errors}. Locale: Accept-Language (de default).',
     ],
 
     'ui' => [

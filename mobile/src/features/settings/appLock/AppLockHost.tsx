@@ -8,7 +8,9 @@ import { AppWordmark } from '@/features/auth/AppWordmark';
 import { isWeb } from '@/lib/platform';
 import { useSessionStore } from '@/state/session';
 import { createStyles, space, ThemeScope } from '@/theme';
-import { Button, Screen, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Screen } from '@/ui/Screen';
+import { Text } from '@/ui/Text';
 import { OverlayModal } from '@/ui/overlay';
 
 import { hydrateAppLock, locksAfter, releaseAppLock, unlockApp, useAppLockStore } from './appLock';
@@ -17,7 +19,7 @@ import { biometricSupport, unlockWithDevice, type UnlockKind } from './biometric
 const ROUTE = 'AUTH-15';
 /** 09 §7.2 AUTH-15: the small brush logo. */
 const LOGO_HEIGHT = space[24] + space[4];
-const LOGO_WIDTH = LOGO_HEIGHT * (1200 / 359);
+const LOGO_WIDTH = LOGO_HEIGHT * (696 / 184);
 
 const useStyles = createStyles((t) => ({
   // The cover and the lock are opaque canvas: nothing of the app shows through in the switcher (09 §8.3).
@@ -80,7 +82,7 @@ function NativeAppLock() {
 }
 
 /**
- * AUTH-15 (09 §7.2): canvas, the small brush logo, "SPEED CLUB ist gesperrt", the system prompt on appear, "Entsperren" and
+ * AUTH-15 (09 §7.2): canvas, the small brush logo, "Speedclub ist gesperrt", the system prompt on appear, "Entsperren" and
  * "Abmelden". It covers every route, so a deep link opens behind it.
  */
 export function LockScreen() {

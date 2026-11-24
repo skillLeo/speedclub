@@ -39,7 +39,7 @@ class TeamPrivacyDemoSeeder extends Seeder
             [
                 'id' => self::ACCESS_REQUEST, 'type' => PrivacyRequestType::Access, 'status' => PrivacyRequestStatus::InProgress, 'source' => PrivacyRequestSource::Email,
                 'user_id' => $lukas?->id, 'requester_name' => 'Lukas Schneider', 'requester_email' => null, 'locale' => 'de',
-                'details' => "Hallo SPEED CLUB,\nbitte schickt mir eine Kopie aller Daten, die ihr über mich gespeichert habt, auch die Fotos meiner Fahrzeuge und meine Nachrichten.\nDanke, Lukas",
+                'details' => "Hallo Speedclub,\nbitte schickt mir eine Kopie aller Daten, die ihr über mich gespeichert habt, auch die Fotos meiner Fahrzeuge und meine Nachrichten.\nDanke, Lukas",
                 'received_at' => $at('2026-10-04 09:12'), 'due_at' => $at('2026-11-04 09:12'), 'assigned_to' => $admin?->id,
             ],
             [

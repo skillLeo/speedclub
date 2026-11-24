@@ -45,7 +45,12 @@ class ETag
         $tag = substr(hash('sha256', $content), 0, 32);
 
         $response->setEtag($tag);
-        $response->headers->set('Cache-Control', $mode === 'no-store' ? 'private, no-store' : 'private, no-cache');
+        // `etag:max-age=60` (M5.7 INS-01): the client may reuse its private copy that long before it revalidates.
+        $response->headers->set('Cache-Control', match (true) {
+            $mode === 'no-store' => 'private, no-store',
+            is_string($mode) && preg_match('/\Amax-age=(\d{1,5})\z/', $mode, $age) === 1 => 'private, max-age='.$age[1],
+            default => 'private, no-cache',
+        });
         $response->setVary('Accept-Language', false);
 
         if ($this->matches($request, $tag)) {

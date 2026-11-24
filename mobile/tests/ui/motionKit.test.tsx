@@ -344,7 +344,7 @@ describe('SM1 brush reveal', () => {
     jest.useFakeTimers();
     try {
       const onDone = jest.fn();
-      await renderUi(<BrushReveal play logo={<Text>SPEED CLUB</Text>} onDone={onDone} />);
+      await renderUi(<BrushReveal play logo={<Text>Speedclub</Text>} onDone={onDone} />);
       await act(async () => {
         jest.advanceTimersByTime(brushRevealDuration(false) - 1);
       });

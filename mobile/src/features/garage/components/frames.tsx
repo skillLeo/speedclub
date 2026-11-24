@@ -18,19 +18,14 @@ import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, layout, size, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
 import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
-import {
-  DiscardGuardDialog,
-  EmptyState,
-  ErrorState,
-  Header,
-  OfflineBanner,
-  Screen,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  StickyCTABar,
-  type StickyCTASecondary,
-} from '@/ui';
+import { DiscardGuardDialog } from '@/ui/DiscardGuardDialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Header } from '@/ui/Header';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { StickyCTABar, type StickyCTASecondary } from '@/ui/StickyCTABar';
 
 const EDGES: readonly Edge[] = ['left', 'right'];
 /** The column of a form: FS-5's 560 on wide screens, the full width minus the gutters on phones. */

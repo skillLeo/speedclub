@@ -27,11 +27,15 @@ final class MaintenanceSchedule
     private const ROLL_AFTER_DAYS = 30;
 
     /**
-     * Today's date in Europe/Berlin, as midnight UTC: every date here is a calendar day at midnight UTC, as the date columns read.
+     * Today's date in Europe/Berlin, as midnight UTC: every date here is a calendar day at midnight UTC, as the date columns read. $now is
+     * a read's moment (the QA clock of the MNT-01/GAR-01 countdowns outside production, DQ-P5-201); null, as every write passes, is the
+     * real now.
      */
-    public static function today(): CarbonImmutable
+    public static function today(?CarbonImmutable $now = null): CarbonImmutable
     {
-        return self::day(CarbonImmutable::now(config()->string('speedclub.notifications.timezone'))->toDateString());
+        $zone = config()->string('speedclub.notifications.timezone');
+
+        return self::day(($now === null ? CarbonImmutable::now($zone) : $now->setTimezone($zone))->toDateString());
     }
 
     /** A calendar day ("2027-03-01") at midnight UTC. */

@@ -13,7 +13,10 @@
     "empty_value": "not set",
     "last": "Version :version, published :date by :name",
     "never": "Not published yet: the legal texts show the placeholders.",
-    "owner_only": "Only an Owner changes the organisation details. You can see them here.",
+    "owner_only_title": "Only an Owner can change the company details",
+    "owner_only": "You can see the details, but only an Owner can save them. Ask an Owner to fill them in or to make you an Owner under Governance › Team.",
+    "owners": "Owners on the team: :names",
+    "no_owners": "No Owner is active on the team right now.",
     "missing": "{1} 1 detail still missing|[2,*] :count details still missing",
     "save": "Save",
     "discard": "Discard",
@@ -25,7 +28,7 @@
     },
     "errors": {
         "email": "Enter a valid e‑mail address.",
-        "vat_id": "A VAT ID starts with two capital letters, e.g. DE123456789.",
+        "vat_id": "A VAT ID starts with two letters and contains figures, e.g. DE 123 456 789.",
         "phone": "Only digits, spaces, +, /, - and brackets."
     },
     "fields": {
@@ -81,7 +84,7 @@
         },
         "vat_id": {
             "label": "VAT ID",
-            "hint": "e.g. DE123456789"
+            "hint": "e.g. DE 123 456 789, spaces and dots are fine"
         },
         "supervisory_authority": {
             "label": "Supervisory authority",
@@ -93,7 +96,34 @@
         }
     },
     "flash": {
-        "saved": "Details saved and published."
+        "saved": "Details saved and published.",
+        "governance_saved": "Governance saved."
     },
-    "missing_field": "Still missing."
+    "missing_field": "Still missing.",
+    "governance": {
+        "title": "Governance",
+        "intro": "Decide how strictly the admin team works. Every change is in the audit log.",
+        "owner_override": "Allow the owner override when nobody else can approve",
+        "owner_override_hint": "An Owner can then approve their own request. It is in the audit log, and Owners and Admins get an e-mail. As soon as a second person can approve, the four-eyes rule always applies.",
+        "approvers": "{0} Nobody can approve requests right now.|{1} 1 person can approve requests right now:|[2,*] :count people can approve requests right now:",
+        "owner": "Owner",
+        "alone_on": "Without a second person who may approve, you can publish risky changes only through the owner override.",
+        "alone_off": "Without a second person who may approve, risky changes expire without going live. Switch the owner override on or invite someone.",
+        "confirm_title": "Save governance",
+        "confirm_on": "Owners can approve their own requests while nobody else can approve.",
+        "confirm_off": "Risky changes always wait for a second person, even if there is none.",
+        "four_eyes": "Four-eyes rule",
+        "four_eyes_on_hint": "On: risky actions (deleting, suspending, exports, roles, critical flags, legal texts) wait for a second person to approve.",
+        "four_eyes_off_hint": "Off: these actions run at once. Each is in the audit log with person, time and before/after.",
+        "two_factor": "2FA for admin accounts",
+        "two_factor_optional": "Optional",
+        "two_factor_optional_hint": "Each person decides in their own account whether to use two-factor sign-in.",
+        "two_factor_required": "Required",
+        "two_factor_required_hint": "Nobody gets into the admin without an authenticator app set up.",
+        "two_factor_forced": "On this server 2FA is required by configuration (STAFF_2FA_REQUIRED) and cannot be switched off here.",
+        "confirm_four_eyes_on": "From now on, risky actions wait for a second person.",
+        "confirm_four_eyes_off": "From now on, risky actions run at once, without approval.",
+        "confirm_two_factor_required": "From now on, every admin account needs two-factor sign-in.",
+        "confirm_two_factor_optional": "From now on, everyone may switch two-factor sign-in off for their own account."
+    }
 }

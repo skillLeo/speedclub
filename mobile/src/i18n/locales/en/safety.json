@@ -99,7 +99,9 @@
         "modification": "Modification",
         "comment": "Comment",
         "event": "Meet",
-        "business": "Business"
+        "business": "Business",
+        "forum_post": "Forum post",
+        "crew": "Crew"
     },
     "status": {
         "received": "Received",
@@ -160,7 +162,9 @@
             "restrict": "We restricted features of your account.",
             "reverse": "We lifted an earlier measure.",
             "reverseAccount": "We lifted the measure on your account. You can use it as before.",
-            "reverseContent": "We lifted the earlier decision. “{{label}}” is visible to everyone again."
+            "reverseContent": "We lifted the earlier decision. “{{label}}” is visible to everyone again.",
+            "restrictForum": "You can't post in the forum for now.",
+            "restrictForumUntil": "You can't post in the forum until {{until}}."
         },
         "reporterOutcome": {
             "no_action": "We reviewed “{{label}}” and found no breach of our rules or the law. The content stays visible.",
@@ -198,7 +202,7 @@
         "decisionAutomated": "The decision was taken by automated means.",
         "decisionHuman": "A person on our team made the decision, not an automated system.",
         "scope": {
-            "contentOpen": "Applies to this content across SPEED CLUB. It stays removed unless an appeal succeeds.",
+            "contentOpen": "Applies to this content across Speedclub. It stays removed unless an appeal succeeds.",
             "contentUntil": "Applies to this content until {{date}}.",
             "accountOpen": "Applies to your account and has no end date.",
             "accountUntil": "Applies to your account until {{date}}."
@@ -214,6 +218,7 @@
             "publishing": "One restriction still applies to your account: publishing is blocked. You can still view decisions and appeal.",
             "messaging": "One restriction still applies to your account: writing messages is blocked. You can still view decisions and appeal.",
             "both": "Restrictions still apply to your account: publishing and writing messages are blocked. You can still view decisions and appeal.",
+            "forum": "A restriction still applies to your account: posting in the forum is blocked. You can still view decisions and appeal.",
             "reversalPrefix": "This measure has been lifted."
         }
     },
@@ -250,6 +255,7 @@
         "modification": "Mod on {{label}}",
         "comment": "Comment by {{label}}",
         "event": "Meet “{{label}}”",
+        "forum_post": "Post in “{{label}}”",
         "gone": "No longer available"
     }
 }

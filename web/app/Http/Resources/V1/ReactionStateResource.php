@@ -29,7 +29,7 @@ class ReactionStateResource extends JsonResource
     }
 
     /**
-     * @return array{target_type: ReactableType, target_id: string, my_reaction: 'strong'|'clean'|'low'|'loud'|null}
+     * @return array{target_type: ReactableType, target_id: string, my_reaction: 'like'|'strong'|'clean'|'low'|'loud'|null}
      */
     public function toArray(Request $request): array
     {

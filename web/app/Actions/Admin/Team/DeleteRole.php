@@ -26,7 +26,7 @@ class DeleteRole
     public function handle(Staff $by, Role $role, string $reason): void
     {
         StaffAtoms::ensure($by, 'roles.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         if (PermissionMatrix::isSystemRole((string) $role->name)) {
             throw new TeamRefused('role_system', ['role' => (string) $role->name]);

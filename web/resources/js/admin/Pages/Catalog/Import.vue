@@ -10,6 +10,7 @@ import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
 import { Button, ConfirmDialog, EmptyQueue, Field, SegmentedControl, Skeleton, StatusPill, type Tone } from '../../Components/ui';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
@@ -127,6 +128,9 @@ watch(show, () => (limit.value = PAGE));
 const filtered = computed(() => (current.value?.lines ?? []).filter((l) => show.value === 'all' || l.status === show.value));
 const visible = computed(() => filtered.value.slice(0, limit.value));
 const changed = computed(() => (current.value ? current.value.counts.new + current.value.counts.changed : 0));
+const fourEyesSwitch = useFourEyes();
+/** Above the limit an apply waits for a second person, while the governance four-eyes switch is on (ADR-540). */
+const needsApproval = computed(() => fourEyesSwitch.value && changed.value > props.limits.four_eyes_above);
 const running = computed(() => current.value?.status === 'queued' || current.value?.status === 'applying');
 const progress = computed(() => (current.value && current.value.rows > 0 ? Math.min(100, Math.round((current.value.progress / current.value.rows) * 100)) : 0));
 const noLines = computed(() => current.value !== null && current.value.lines.length === 0 && current.value.rows > 0);
@@ -166,10 +170,10 @@ const createsText = (line: Line): string | null => (line.creates.length === 0 ? 
 // ---- apply --------------------------------------------------------------------------------------------------------------
 const applyOpen = ref(false);
 const apply = useCatalogWrite();
-function sendApply(reason: string | null): void {
+function sendApply(): void {
     const c = current.value;
     if (c === null) return;
-    apply.run('post', routeOr('admin.catalog.import.apply', `/admin/catalog/import/${c.id}/apply`, { import: c.id }), { reason }, { sensitive: true, onSuccess: () => (applyOpen.value = false) });
+    apply.run('post', routeOr('admin.catalog.import.apply', `/admin/catalog/import/${c.id}/apply`, { import: c.id }), {}, { sensitive: true, onSuccess: () => (applyOpen.value = false) });
 }
 
 // A running apply reports its progress: the page asks every 3 s while it runs.
@@ -252,11 +256,11 @@ const title = computed(() => trans('catalog.import.title'));
                         </p>
                     </div>
                     <Button v-if="current.can_apply && can('catalog.manage')" variant="primary" :icon="PhCheckCircle" :disabled="changed === 0" data-testid="ADM-17.apply" @click="applyOpen = true">
-                        {{ transChoice(changed > limits.four_eyes_above ? 'catalog.import.apply_request' : 'catalog.import.apply', changed, { count: formatNumber(changed) }) }}
+                        {{ transChoice(needsApproval ? 'catalog.import.apply_request' : 'catalog.import.apply', changed, { count: formatNumber(changed) }) }}
                     </Button>
                 </div>
 
-                <ApprovalNotice v-if="current.can_apply && changed > limits.four_eyes_above" test-id="ADM-17.four-eyes" />
+                <ApprovalNotice v-if="current.can_apply && needsApproval" test-id="ADM-17.four-eyes" />
                 <p v-if="waiting" class="rounded-sm border border-line bg-raised px-16 py-12 text-admin-base text-ink-2" role="status" data-testid="ADM-17.waiting">
                     {{ trans('catalog.import.waiting', { until: formatDateTime(current.approval?.expires_at) }) }}
                 </p>
@@ -387,10 +391,9 @@ const title = computed(() => trans('catalog.import.title'));
             v-model:open="applyOpen"
             :title="trans('catalog.import.apply_title', { file: current?.file ?? '' })"
             :body="trans('catalog.import.apply_body', { new: formatNumber(current?.counts.new ?? 0), changed: formatNumber(current?.counts.changed ?? 0), errors: formatNumber(current?.counts.error ?? 0) })"
-            :confirm-label="trans(changed > limits.four_eyes_above ? 'catalog.import.apply_request_short' : 'catalog.import.apply_short')"
+            :confirm-label="trans(needsApproval ? 'catalog.import.apply_request_short' : 'catalog.import.apply_short')"
             tone="neutral"
-            reason
-            :four-eyes="changed > limits.four_eyes_above"
+            :four-eyes="needsApproval"
             :processing="apply.processing.value"
             :error="failed ? trans('ui.state.server_error') : apply.error.value"
             test-id="ADM-17.apply-dialog"

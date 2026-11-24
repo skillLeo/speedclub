@@ -331,11 +331,8 @@ final class EnvironmentDoctor
             return DoctorResult::ok('Storage link');
         }
 
-        $detail = 'public/storage is missing, run php artisan storage:link.';
-
-        return app()->isProduction() && config('speedclub.media.disk') === 'public'
-            ? DoctorResult::blocker('Storage link', $detail)
-            : DoctorResult::warning('Storage link', $detail);
+        // ADR-539: without the link the /storage route serves the public disk through PHP, so photos still load, only slower.
+        return DoctorResult::warning('Storage link', 'public/storage is not a link: photos are served through PHP (slower). Run php artisan storage:link, or on a host without shell create the link if the host allows it (DEPLOY.md §6).');
     }
 
     /**

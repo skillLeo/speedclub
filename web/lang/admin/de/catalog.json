@@ -143,6 +143,17 @@
         "empty_body": "Ohne Generation wählen Mitglieder nur das Modell. Füge Generationen mit Baujahren hinzu, wenn sie sich unterscheiden.",
         "error": "Die Generationen konnten nicht geladen werden."
     },
+    "ai_specs": {
+        "title": "KI-Herstellerangaben",
+        "intro": "Typische Werksangaben, die Mitglieder beim Anlegen eines Fahrzeugs übernehmen können. Ist ein Wert falsch, lösch den Vorschlag: Der nächste Abruf erstellt einen neuen.",
+        "caption": "Generationen mit gespeicherten KI-Herstellerangaben",
+        "present": "Vorschlag vom :date",
+        "delete": "KI-Herstellerangaben löschen",
+        "delete_short": "Löschen",
+        "delete_for": "KI-Herstellerangaben von :name löschen",
+        "dialog_title": "KI-Herstellerangaben von :name löschen?",
+        "dialog_body": "Der gespeicherte Vorschlag wird gelöscht. Was Mitglieder schon übernommen haben, bleibt an ihren Fahrzeugen."
+    },
     "merged_notice": {
         "body": "Dieser Eintrag ist zusammengeführt. Sein Slug leitet weiter, seine Fahrzeuge stehen jetzt bei"
     },
@@ -181,9 +192,7 @@
         "year_from": "Baujahr von",
         "year_to": "Baujahr bis",
         "category_hint": "Kategorie",
-        "category_hint_hint": "Wo die Marke zuerst vorgeschlagen wird.",
-        "reason": "Begründung",
-        "reason_optional_hint": "Optional, steht im Audit-Log."
+        "category_hint_hint": "Wo die Marke zuerst vorgeschlagen wird."
     },
     "errors": {
         "name": "Gib einen Namen ein.",
@@ -460,7 +469,6 @@
         "discover_body": "Nur lesbar: Die Filter in Discover sind in dieser Version fest. Diese Angaben ändern an der Suche nichts.",
         "yes": "Ja",
         "no": "Nein",
-        "reason_hint": "Pflicht: Jede Änderung ergibt eine neue Schema-Version.",
         "save": "Speichern",
         "archived": "Archiviert",
         "live": "Aktiv",
@@ -691,7 +699,9 @@
         "field_restored": "Feld wiederhergestellt.",
         "field_deleted": "Feld gelöscht.",
         "import_analysed": "Geprüft. Sieh dir das Ergebnis an, bevor du übernimmst.",
-        "import_queued": "Import gestartet."
+        "import_queued": "Import gestartet.",
+        "ai_specs_deleted": "KI-Herstellerangaben gelöscht. Der nächste Abruf erstellt einen neuen Vorschlag.",
+        "ai_specs_none": "Es waren keine KI-Herstellerangaben mehr gespeichert."
     },
     "error_body": "Prüfe die Verbindung und versuche es erneut.",
     "products": {

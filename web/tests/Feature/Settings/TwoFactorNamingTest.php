@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 /**
  * M2.8 copy ruling (02_PRODUCT_SPEC §10): the feature is "Zwei-Faktor-Schutz" / "Two-factor protection" everywhere the server speaks:
- * mails, settings, errors, the public pages, the help and the privacy drafts. Brand compounds stay unhyphenated ("SPEED CLUB Konto").
+ * mails, settings, errors, the public pages, the help and the privacy drafts. Brand compounds stay unhyphenated ("Speedclub Konto").
  */
 function twoFactorCopyFiles(): array
 {
@@ -24,7 +24,7 @@ it('never names the feature "Zwei-Faktor-Anmeldung" or "two-factor sign-in/authe
 
     foreach (twoFactorCopyFiles() as $file) {
         foreach (preg_split('/\R/u', File::get($file)) ?: [] as $number => $line) {
-            if (preg_match('/Zwei-Faktor-(Anmeldung|Authentifizierung)|two-factor (sign-in|authentication)|SPEED CLUB-Konto/iu', $line) === 1) {
+            if (preg_match('/Zwei-Faktor-(Anmeldung|Authentifizierung)|two-factor (sign-in|authentication)|Speedclub-Konto/iu', $line) === 1) {
                 $offenders[] = basename(dirname($file)).'/'.basename($file).':'.($number + 1);
             }
         }

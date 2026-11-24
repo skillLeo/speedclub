@@ -33,6 +33,22 @@ it('answers the defaults of the matrix before anything was set', function () {
             // M4.12 (09 §8.17).
             'event_reminder' => ['push' => true, 'email' => false, 'web_push' => true],
             'event_update' => ['push' => true, 'web_push' => true],
+            // M5.9b STREET DEX: the grouped owner alert.
+            'spot_alert' => ['push' => true, 'web_push' => true],
+            // M5.9d: Abzeichen (push off), Car of the Day (opt-in off; the owner's own pick on), Einladungen (on).
+            'badge_unlocked' => ['push' => false, 'web_push' => false],
+            'car_of_the_day' => ['push' => false, 'web_push' => false],
+            'car_of_the_day_owner' => ['push' => true, 'web_push' => true],
+            'invite_accepted' => ['push' => true, 'web_push' => true],
+            // M5.8: SET-09 "Forum".
+            'forum_reply' => ['push' => true, 'web_push' => true],
+            'forum_mention' => ['push' => true, 'web_push' => true],
+            'forum_solved' => ['push' => true, 'web_push' => true],
+            // M5.6: the weekly nearby meets, opt-in on every channel.
+            'event_nearby' => ['push' => false, 'email' => false, 'web_push' => false],
+            // M5.7: the build prompt and the weekly recap, on by default (the recap's e-mail only when no push went out).
+            'plan_due' => ['push' => true, 'web_push' => true],
+            'weekly_recap' => ['push' => true, 'email' => true, 'web_push' => true],
         ],
         'quiet_hours' => ['enabled' => true, 'from' => '22:00', 'to' => '07:00'],
         'message_previews' => false,

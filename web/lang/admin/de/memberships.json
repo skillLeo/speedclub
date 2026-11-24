@@ -45,13 +45,13 @@
     },
     "entitlements": {
         "title": "Mitgliedschaften: Freischaltungen",
-        "intro": "Wer welchen Plan hat, von wem freigeschaltet, mit Grund, Beginn und Ende. Ein Widerruf bleibt als Verlauf stehen.",
+        "intro": "Wer welchen Plan hat, von wem freigeschaltet, mit Beginn und Ende. Ein Widerruf bleibt als Verlauf stehen.",
         "caption": "Freischaltungen",
         "grant": "Freischalten",
         "revoke": "Widerrufen",
         "error": "Die Freischaltungen konnten nicht geladen werden",
         "empty_title": "Noch keine Freischaltung",
-        "empty_body": "Freigeschaltete Mitglieder erscheinen hier mit Plan, Zeitraum und Grund.",
+        "empty_body": "Freigeschaltete Mitglieder erscheinen hier mit Plan und Zeitraum.",
         "columns": {
             "member": "Mitglied",
             "plan": "Plan",
@@ -75,7 +75,7 @@
     },
     "grant_form": {
         "title": "Mitglied freischalten",
-        "body": "Die Freischaltung steht mit Grund im Audit-Log.",
+        "body": "Die Freischaltung steht im Audit-Log.",
         "member": "Benutzername",
         "member_hint": "Mit oder ohne @, z. B. @lukas.sc",
         "plan": "Plan",

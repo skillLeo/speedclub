@@ -5,7 +5,7 @@ import { View } from 'react-native';
 
 import { useGenerations, useMakes, useModels } from '@/api/queries/catalog';
 import { createStyles } from '@/theme';
-import { TextInput } from '@/ui';
+import { TextInput } from '@/ui/TextInput';
 
 import type { BasicsValues, CatalogChoice } from '../model';
 import { COLOR_MAX_LENGTH, DESCRIPTION_MAX_LENGTH, fieldMessage, NICKNAME_MAX_LENGTH } from '../schemas';

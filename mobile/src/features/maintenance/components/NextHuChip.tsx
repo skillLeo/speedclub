@@ -7,7 +7,7 @@ import { MAINTENANCE_FLAG, useMaintenanceItems } from '@/api/queries/maintenance
 import { formatMonthYear } from '@/lib/format';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles } from '@/theme';
-import { Chip } from '@/ui';
+import { Chip } from '@/ui/Chip';
 
 import { monthDate } from '../model';
 

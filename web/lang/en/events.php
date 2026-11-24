@@ -13,4 +13,8 @@ return [
     'open_limit' => 'You already have :max open meets. Delete a draft or wait until a meet is over.',
     'cannot_answer_own' => 'At your own meet you are there as the organiser.',
     'organiser_left' => 'The organiser closed their account.',
+    // M5.6 gallery.
+    'photo_too_small' => 'This photo is too small. Its shorter side needs at least :min pixels.',
+    'gallery_limit_own' => 'You have already added :max photos to this meet. Delete one to add a new one.',
+    'gallery_limit_event' => 'The gallery of this meet is full with :max photos.',
 ];

@@ -12,6 +12,7 @@ use App\Services\Admin\Members\StaffAtoms;
 use App\Services\AppConfig\LegalDocuments;
 use App\Services\Audit\Audit;
 use App\Services\Config\ConfigRefused;
+use App\Services\Content\LegalDrafts;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -23,7 +24,8 @@ use Illuminate\Validation\ValidationException;
  * without published_at), created or updated. `version` is new for the document and locale (legal_version_taken); `requires_reconsent`
  * only exists for AGB and Datenschutz, and then needs the changes `summary` the app's re-consent sheet shows. Markdown is rendered by
  * App\Support\SafeMarkdown, the renderer of SET-17/18 and the Blade legal pages. Refused while a re-consent publish of the draft waits
- * for approval (legal_pending_approval, MF-3). Audited as `legal.draft_saved`.
+ * for approval (legal_pending_approval, MF-3). A new draft records the live version it starts from (`based_on_id`, DQ-P5-101), an
+ * update keeps it. Audited as `legal.draft_saved`.
  */
 final class SaveLegalDraft
 {
@@ -66,7 +68,8 @@ final class SaveLegalDraft
             }
 
             $before = $draft === null ? null : self::describe($draft);
-            $draft ??= new LegalDocument(['key' => $key, 'locale' => $locale, 'created_by' => $staff->getKey()]);
+            // DQ-P5-101: a new draft remembers the text it starts from, so a newer version going live in the meantime marks it stale.
+            $draft ??= new LegalDocument(['key' => $key, 'locale' => $locale, 'created_by' => $staff->getKey(), 'based_on_id' => LegalDrafts::live($key, $locale)?->id]);
             $draft->fill([
                 'version' => (string) $data['version'],
                 'body_md' => (string) $data['body_md'],

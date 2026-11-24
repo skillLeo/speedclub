@@ -41,7 +41,8 @@ export const MAX_EXPANDED_HEIGHT = 12000;
  * @property {boolean} [volatile] ADR-223: the picture is the platform's live activity (ADM-06, ADM-08, ADM-44): audited, never pixel-compared
  * @property {boolean} [liveChrome] ADR-257, only beside `volatile`: the forced states still show the live page around them (the list
  *   behind a dialog, the record header and activity, the run time of the last health run), so they are volatile too
- * @property {{en?: boolean, tablet?: boolean, black?: boolean}} [p4] tier p4 opt-ins: EN cells, the 820 tablet, Schwarz (p4.mjs, DQ-1183)
+ * @property {{en?: boolean, tablet?: boolean, black?: boolean, small?: boolean}} [p4] tier p4 opt-ins: EN cells, the 820 tablet, Schwarz,
+ *   the 375 iphonese (p4.mjs, DQ-1183, DQ-M52-09)
  * @property {boolean} [fs2] tier p4: a 200 % text cell (iphone15pro and desktop1440, Carbon DE) for a route outside the flagship and form
  *   sets whose text is known to crowd at large sizes (EVT-05's tab row, DQ-1115)
  * @property {string} [fixture] a stage fixture (support/stage-fixtures.mjs): in place only while this route's cells run, after all others

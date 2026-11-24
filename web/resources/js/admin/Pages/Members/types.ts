@@ -16,7 +16,7 @@ export interface MemberOverview {
     pending_deletion: boolean;
     deleted: boolean;
     avatar: string | null;
-    restrictions: { type: 'messaging' | 'publishing' | 'suspension'; until: string | null; decision_id: string | null; decided_at: string | null }[];
+    restrictions: { type: 'messaging' | 'publishing' | 'forum' | 'suspension'; until: string | null; decision_id: string | null; decided_at: string | null }[];
     counters: { vehicles: number; followers: number; following: number; reports_as_target: number; decisions: number };
     consents: Consents;
     signup_ref: string | null;
@@ -109,4 +109,48 @@ export interface MemberPrivacy {
     consents: Consents;
     exports: { id: string; status: string; for_staff: boolean; requested_by: string | null; requested_at: string | null; ready_at: string | null; expires_at: string | null; download: string | null }[];
     deletion: { requested_at: string | null; hard_delete_by: string | null };
+}
+
+/** M5.9e tab "Wrapped" (App\Http\Controllers\Admin\Members\MemberWrappedPanel). */
+export interface MemberWrappedSeason {
+    key: string;
+    generated_at: string;
+    viewed_at: string | null;
+    shared_count: number;
+    is_sample: boolean;
+    release_at: string | null;
+    released: boolean;
+}
+
+/** One presented card: its fields as the member reads them (photos only as present/absent), and its staff-only PNG. */
+export interface MemberWrappedCard {
+    n: number;
+    kind: string;
+    fields: Record<string, unknown>;
+    image: string;
+}
+
+export interface MemberWrappedPreview {
+    season_key: string;
+    window: { from: string; to: string };
+    generated_at: string;
+    viewed_at: string | null;
+    shared_count: number;
+    is_sample: boolean;
+    opens: boolean;
+    cards: MemberWrappedCard[];
+}
+
+export interface MemberWrapped {
+    seasons: MemberWrappedSeason[];
+    options: string[];
+    selected: string;
+    preview: MemberWrappedPreview | null;
+    can: { generate: boolean };
+}
+
+/** SEC-P5G-05 panel "Abzeichen" on Übersicht (App\Http\Controllers\Admin\Members\MemberBadgesPanel). */
+export interface MemberBadges {
+    earned: { key: string; name: string; tier: string | null; hidden: boolean; active: boolean; awarded_at: string; source: string | null }[];
+    can_revoke: boolean;
 }

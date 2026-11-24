@@ -117,6 +117,8 @@ describe('re-ranking while someone scrolls (review #8)', function () {
 });
 
 it('counts no saves of the owner for engagement (review #22)', function () {
+    // Both builds must share one "changed at" second, or the freshness decay alone tells them apart on a slow run.
+    $this->freezeSecond();
     $plain = homeBuild();
     $own = homeBuild();
     Save::factory()->create(['vehicle_id' => $own->id, 'user_id' => $own->owner_id]);

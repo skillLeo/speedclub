@@ -7,7 +7,8 @@ import type { Edge } from 'react-native-safe-area-context';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
 import { useTabBarPadding } from '@/features/shell/tabBarLayout';
 import { createStyles, layout, useBreakpoint } from '@/theme';
-import { Header, Screen, type HeaderAction } from '@/ui';
+import { Header, type HeaderAction } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
 
 const EDGES: readonly Edge[] = ['left', 'right'];
 

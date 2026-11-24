@@ -4,9 +4,18 @@
 // forced state; and the sheets a tap opens: the organise sheet of a row, the message actions and the attach sheet, each on a
 // conversation of two test members of its own. Nothing is pinned, muted or deleted (every sheet closes with Escape).
 import type { BrowserContext } from '@playwright/test';
-import { useSession } from '../support/auth.mjs';
+import { DEMO_KENJI, DEMO_MEMBER, useSession } from '../support/auth.mjs';
 import { axeOverlays, axeScreens, axeStates } from '../support/axe-cases';
+import { resetMemberReads } from '../support/backend.mjs';
+import { test } from '../support/fixtures';
 import { follow, members, named, sendText, startConversation } from '../support/flow';
+
+// Every screen here opens as lukas.sc (kenji.r34 for the context card), screen after screen on all workers, and each one reads Start's
+// modules and polls its thread (`throttle:browse`, 300 a minute per member): the shared demo members start each test with that read
+// limit of their own, as one person in one window would (support/backend.php reset-member-reads; E2E P5 full runs answered 429).
+test.beforeEach(async () => {
+  await resetMemberReads([DEMO_MEMBER, DEMO_KENJI]);
+});
 
 const JANN = '01m5wpk0c0e8jjewpe4ycappww';
 const KENJI = '01m5qvzg200gc60g288tcg08r4';

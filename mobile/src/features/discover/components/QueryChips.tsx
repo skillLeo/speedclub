@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Chip, SectionHeader } from '@/ui';
+import { Chip } from '@/ui/Chip';
+import { SectionHeader } from '@/ui/SectionHeader';
 
 const useStyles = createStyles((t) => ({
   header: { paddingBottom: t.space[12] },

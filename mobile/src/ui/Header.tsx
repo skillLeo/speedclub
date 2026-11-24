@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { useDocumentTitle } from '@/lib/documentTitle';
 import { keepShortNamesTogether } from '@/lib/format';
 import { isAndroid, isWeb } from '@/lib/platform';
 import { createStyles, layout, size, space, useBreakpoint, useTheme } from '@/theme';
@@ -21,7 +22,7 @@ import { Icon, type IconName } from './icons/Icon';
 import { PressableScale } from './PressableScale';
 import { useSafeEdge } from './safeArea';
 import { Text } from './Text';
-import { UnreadBadge } from './UnreadBadge';
+import { IconButtonBadge } from './UnreadBadge';
 import type { CollapsingHeader } from './useCollapsingHeader';
 
 export type HeaderAction = {
@@ -33,8 +34,13 @@ export type HeaderAction = {
   disabled?: boolean;
   /** IconButton's `locked`: why the action is unavailable now; it looks disabled and a press says why. */
   locked?: string | null;
-  /** Unread dot, or a count pill with `count`, on the icon. `label` joins the button's accessible name. */
-  unread?: { count?: number; label: string };
+  /**
+   * Unread dot, or a count pill with `count`, on the icon. `label` joins the button's accessible name; `max` caps the figure on the
+   * pill ("9+" for Nachrichten, 10 §1).
+   */
+  unread?: { count?: number; label: string; max?: number };
+  /** `link` when the action opens a page (Nachrichten in the Start and Entdecken headers, 10 §1). */
+  role?: 'button' | 'link';
   testID?: string;
 };
 
@@ -128,7 +134,6 @@ const useStyles = createStyles((t) => ({
   backGlyph: { alignItems: 'center', height: t.size.iconButton, justifyContent: 'center', width: t.size.iconButton },
   backText: { flexShrink: 1 },
   action: { pointerEvents: 'box-none' },
-  dot: { pointerEvents: 'none', position: 'absolute', right: t.space[8], top: t.space[8] },
   large: { justifyContent: 'flex-end', minHeight: t.size.headerLargeTitleBlock, paddingBottom: t.space[8] },
 }));
 
@@ -166,6 +171,8 @@ export function Header({
   testID,
 }: HeaderProps) {
   const { t } = useTranslation('common');
+  // R4B-002: the focused screen's header names the browser tab (lib/documentTitle).
+  useDocumentTitle(title);
   const styles = useStyles();
   const theme = useTheme();
   const { width, gutter } = useBreakpoint();
@@ -268,9 +275,12 @@ export function Header({
                 selected={action.selected}
                 disabled={action.disabled}
                 locked={action.locked}
+                role={action.role}
                 testID={action.testID}
               />
-              {action.unread ? <UnreadBadge count={action.unread.count} style={styles.dot} /> : null}
+              {action.unread ? (
+                <IconButtonBadge count={action.unread.count} max={action.unread.max} testID={action.testID ? `${action.testID}.badge` : undefined} />
+              ) : null}
             </View>
           ))}
           {trailing}

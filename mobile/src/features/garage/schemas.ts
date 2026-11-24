@@ -11,7 +11,7 @@ import { z } from 'zod';
 import type { ModCategoryField } from '@/api/queries/catalog';
 import { parseNumber, type FormatLocale } from '@/lib/format';
 
-import { BRAND_MAX_LENGTH, NOTES_MAX_LENGTH, parseCost, parseMonth, PART_NUMBER_MAX_LENGTH, TEXT_MAX_LENGTH, TITLE_MAX_LENGTH, type FieldValue, type ModFormValues } from './modForm';
+import { BRAND_MAX_LENGTH, latestTargetMonth, NOTES_MAX_LENGTH, parseCost, parseMonth, PART_NUMBER_MAX_LENGTH, TARGET_MONTH_MIN, TEXT_MAX_LENGTH, TITLE_MAX_LENGTH, type FieldValue, type ModFormValues } from './modForm';
 import { LEGAL_STATUSES } from './legalStatus';
 import type { BasicsValues, SpecsValues } from './model';
 
@@ -169,6 +169,12 @@ export function fieldIssue(field: ModCategoryField, value: FieldValue | undefine
   return null;
 }
 
+/** R4B-006: whether a mod form names the part at all (the server applies the same rule to a new mod). */
+export function modHasDetail(values: Pick<ModFormValues, 'title' | 'partNumber' | 'product' | 'fields'>): boolean {
+  if (values.title.trim() !== '' || values.partNumber.trim() !== '' || values.product !== null) return true;
+  return Object.values(values.fields).some((value) => (typeof value === 'string' ? value.trim() !== '' : value));
+}
+
 /** GAR-10: the category's fields plus the common ones. `month` is the current "YYYY-MM": an installation is never ahead. */
 export function modSchema(fields: readonly ModCategoryField[], locale: FormatLocale, month: string) {
   return z
@@ -182,8 +188,16 @@ export function modSchema(fields: readonly ModCategoryField[], locale: FormatLoc
       notes: z.string().max(NOTES_MAX_LENGTH, issue('validation.tooLong', { max: NOTES_MAX_LENGTH })),
       fields: z.record(z.string(), z.union([z.string(), z.boolean()])),
       product: z.object({ id: z.string(), label: z.string() }).nullable(),
+      targetMonth: z.string(),
+      priority: z.enum(['low', 'normal', 'high']).or(z.literal('')),
+      budget: z.string(),
     })
     .superRefine((values, context) => {
+      // R4B-006: an installed or removed mod says at least what it is. A title, a part number, a catalogue product or any category
+      // field (brand, model, sizes …) is enough; a bare category is not saved. A plan may name only its category and month.
+      if (values.status !== 'planned' && !modHasDetail(values)) {
+        context.addIssue({ code: 'custom', message: issue('validation.modEmpty'), path: ['title'] });
+      }
       for (const field of fields) {
         // The rear diameter exists only with Mischbereifung (modLayout, modPayload): hidden, it cannot hold a save back.
         if (field.key === 'diameter_rear' && values.fields.staggered !== true) continue;
@@ -197,6 +211,16 @@ export function modSchema(fields: readonly ModCategoryField[], locale: FormatLoc
       }
       if (values.cost.trim() !== '' && Number.isNaN(parseCost(values.cost, locale))) {
         context.addIssue({ code: 'custom', message: issue('validation.cost'), path: ['cost'] });
+      }
+      // M5.3 (contract §4.1): a target month from January 2000 to ten years ahead; past months stay valid (an overdue plan).
+      if (values.status === 'planned' && values.targetMonth !== '') {
+        const latest = latestTargetMonth(month);
+        if (!/^\d{4}-\d{2}$/.test(values.targetMonth) || values.targetMonth < TARGET_MONTH_MIN || values.targetMonth > latest) {
+          context.addIssue({ code: 'custom', message: issue('validation.targetMonth'), path: ['targetMonth'] });
+        }
+      }
+      if (values.budget.trim() !== '' && Number.isNaN(parseCost(values.budget, locale))) {
+        context.addIssue({ code: 'custom', message: issue('validation.cost'), path: ['budget'] });
       }
     }) satisfies z.ZodType<ModFormValues>;
 }

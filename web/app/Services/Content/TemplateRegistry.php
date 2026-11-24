@@ -42,7 +42,7 @@ final class TemplateRegistry
         'months' => '6',
         'support' => 'support@speedclub.de',
         'target' => 'Foto von BMW M4 Competition (G82)',
-        'category' => 'QR-Sticker',
+        'category' => 'Sticker',
         'facts' => 'Das Foto zeigt ein lesbares Kennzeichen.',
         'ground' => 'Community-Richtlinien § 4',
         'title' => 'BMW M4 Competition (G82)',

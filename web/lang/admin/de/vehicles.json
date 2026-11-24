@@ -3,7 +3,7 @@
         "title": "Fahrzeuge"
     },
     "title": "Fahrzeuge",
-    "intro": "Alle Fahrzeuge mit Sichtbarkeit, Moderation, Fotos, Mods und QR-Code.",
+    "intro": "Alle Fahrzeuge mit Sichtbarkeit, Moderation, Fotos, Mods und Sticker.",
     "caption": "Fahrzeuge, zuletzt geändert zuerst",
     "empty_title": "Noch keine Fahrzeuge",
     "empty_body": "Sobald ein Mitglied ein Fahrzeug anlegt, steht es hier.",
@@ -17,13 +17,13 @@
         "moderation": "Moderation",
         "photos": "Fotos",
         "mods": "Mods",
-        "qr": "QR",
+        "qr": "Sticker",
         "updated": "Geändert"
     },
     "presets": {
         "hidden": "Ausgeblendet",
         "reported": "Gemeldet",
-        "no_qr": "Ohne QR-Code"
+        "no_qr": "Ohne Sticker"
     },
     "filters": {
         "label": "Fahrzeuge filtern",
@@ -35,7 +35,7 @@
         "reported": "Gemeldet",
         "reported_yes": "Offener Fall",
         "reported_no": "Kein offener Fall",
-        "qr": "QR-Code",
+        "qr": "Sticker",
         "qr_yes": "Mit aktivem Code",
         "qr_no": "Ohne aktiven Code",
         "updated": "Geändert",
@@ -60,7 +60,7 @@
     },
     "qr": {
         "none": "Kein Code",
-        "empty": "Noch kein QR-Code",
+        "empty": "Noch kein Sticker",
         "empty_body": "Ein Code entsteht, wenn das Fahrzeug veröffentlicht wird.",
         "scans": ":count Scans in 30 Tagen"
     },
@@ -84,7 +84,7 @@
         "details": "Details",
         "photos": "Fotos",
         "mods": "Mods",
-        "qr": "QR",
+        "qr": "Sticker",
         "history": "Verlauf",
         "reports": "Meldungen"
     },
@@ -168,7 +168,7 @@
     },
     "delete": {
         "title": "Fahrzeug löschen",
-        "body": "Erst eine Entscheidung mit Begründung an den Besitzer, dann wird das Fahrzeug mit allen Fotos gelöscht und der QR-Code gesperrt. Nach 30 Tagen endgültig."
+        "body": "Erst eine Entscheidung mit Begründung an den Besitzer, dann wird das Fahrzeug mit allen Fotos gelöscht und der Sticker gesperrt. Nach 30 Tagen endgültig."
     },
     "edit": {
         "title": "Fahrzeug bearbeiten",

@@ -2,9 +2,10 @@
 // the global setup signed in one fixture per role over HTTP; the sign-in test signs in through the UI with an admin of its own per
 // browser project (`signin-<browser>`), whose fresh session also has no recent password, so the ADR-215 dialog must appear.
 import type { BrowserContext, Page } from '@playwright/test';
+import { holdFourEyes } from '../support/admin-flow';
 import { applyAuth } from '../support/auth.mjs';
 import { expect, test } from '../support/fixtures';
-import { QA_NOW, waitForStablePage } from '../support/qa.mjs';
+import { BASE_URL, QA_NOW, waitForStablePage } from '../support/qa.mjs';
 import { staffRun } from '../support/staff.mjs';
 import { totpCode } from '../support/totp.mjs';
 
@@ -14,11 +15,25 @@ const xsrfOf = async (context: BrowserContext): Promise<string> =>
   decodeURIComponent((await context.cookies()).find((c) => c.name === 'XSRF-TOKEN' && c.path === '/admin')?.value ?? '');
 
 test.describe('A0 admin shell', () => {
+  // ADR-540: four-eyes is off by default; this spec proves the engine with it switched on (support/admin-flow holdFourEyes).
+  let releaseFourEyes: (() => Promise<void>) | null = null;
+  test.beforeEach(async () => {
+    releaseFourEyes = await holdFourEyes(true);
+  });
+  test.afterEach(async () => {
+    await releaseFourEyes?.();
+    releaseFourEyes = null;
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(DESKTOP);
   });
 
-  test('sign-in with TOTP, dashboard queues and KPIs, then a four-eyes export behind the password dialog (ADR-215)', async ({ page, browser, browserName, qaGoto }) => {
+  test('sign-in with TOTP, dashboard queues and KPIs, then a four-eyes export behind the password dialog (ADR-215)', async ({ page, browser, browserName, qaGoto, expectFailedResponses }) => {
+    // The code step ends in a full page load (StaffAuthChanged, ba6cab08: the sidebar's route list comes with a full load): Inertia's
+    // 409 with X-Inertia-Location, which the browser logs as a failed resource. Expected here and asserted below.
+    const CHALLENGE = /\/admin\/two-factor-challenge$/;
+    expectFailedResponses([{ status: 409, url: CHALLENGE }]);
     const run = await staffRun();
     const label = `signin-${browserName}`;
     const account = run.accounts[label];
@@ -32,7 +47,11 @@ test.describe('A0 admin shell', () => {
     await id(page, 'ADM-01.submit').click();
     await expect(id(page, 'ADM-02.form')).toBeVisible();
     await id(page, 'ADM-02.code').fill(totpCode(secret));
+    const challenged = page.waitForResponse((r) => CHALLENGE.test(new URL(r.url()).pathname) && r.request().method() === 'POST');
     await id(page, 'ADM-02.submit').click();
+    const answer = await challenged;
+    expect(answer.status(), 'the code step answers a full page load (Inertia::location)').toBe(409);
+    expect(new URL(answer.headers()['x-inertia-location'] ?? '', BASE_URL).pathname).toBe('/admin');
     await expect(id(page, 'ADM-06')).toBeVisible();
     await expect(page).toHaveURL(/\/admin(\?|$)/);
 
@@ -52,7 +71,6 @@ test.describe('A0 admin shell', () => {
     await qaGoto('/admin/audit');
     await id(page, 'ADM-44.table.export').click();
     await expect(id(page, 'ADM-44.export-dialog')).toBeVisible();
-    await id(page, 'ADM-44.export-dialog.reason').fill('Quartalsprüfung der Staff-Anmeldungen für den Datenschutzbericht');
     await id(page, 'ADM-44.export-dialog.confirm').click();
     // Soft, so that the four-eyes half below is still checked when the dialog is missing; the test fails either way.
     await expect.soft(id(page, 'shell.password'), 'the export must ask for the password first (staff.recent-password, ADR-215)').toBeVisible();

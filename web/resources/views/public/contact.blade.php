@@ -12,7 +12,7 @@
     $turnstile = \App\Services\Support\Turnstile::enabled();
     $describedBy = fn (string $field, bool $hint = false): string => trim(($hint ? 'contact-'.$field.'-hint ' : '').($bag->has($field) ? 'contact-'.$field.'-error' : ''));
 @endphp
-<x-public.layout :title="$title.' · SPEED CLUB'" :description="__('public.contact.description')" :canonical="url('/kontakt')">
+<x-public.layout :title="$title.' · Speedclub'" :description="__('public.contact.description')" :canonical="url('/kontakt')">
     @if ($turnstile && $state === 'form')
         @push('sc-preload')
             <script src="{{ \App\Services\Support\Turnstile::SCRIPT_URL }}" async defer nonce="{{ Vite::cspNonce() }}"></script>

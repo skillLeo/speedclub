@@ -11,7 +11,7 @@ class DoctorCommand extends Command
 {
     protected $signature = 'speedclub:doctor';
 
-    protected $description = 'Check that this host can run SPEED CLUB (exit 1 only on blockers)';
+    protected $description = 'Check that this host can run Speedclub (exit 1 only on blockers)';
 
     public function handle(EnvironmentDoctor $doctor): int
     {

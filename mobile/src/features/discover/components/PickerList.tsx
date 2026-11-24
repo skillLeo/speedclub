@@ -4,7 +4,9 @@ import { View } from 'react-native';
 
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, space } from '@/theme';
-import { SearchBar, Skeleton, SkeletonBlock, Text } from '@/ui';
+import { SearchBar } from '@/ui/SearchBar';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import type { FacetOption } from '../filters';
 import { foldName } from '../fold';

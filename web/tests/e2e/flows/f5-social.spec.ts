@@ -190,6 +190,9 @@ test.describe('F5 social: PROF-02 Folgen', () => {
 
     // Folge ich undoes it, also after a reload.
     await open(page, `/app/u/${member.username}`);
+    // A full load paints PROF-02 from the stored cache first (offline-first) and then reads the relation again: undo what the page
+    // says, "Folge ich", not a relation stored before the follow (E2E P5 rerun, WebKit clicked "Folgen" and followed once more).
+    await expect(id(page, 'PROF-02.follow')).toHaveText(de('profile', 'follow.following'));
     const unfollowed = page.waitForResponse(isWrite('DELETE', `users/${member.username}/follow`));
     await id(page, 'PROF-02.follow').click();
     await expect(id(page, 'PROF-02.follow')).toHaveText(de('profile', 'follow.follow'));

@@ -160,7 +160,9 @@ function skip(): void {
 }
 
 function finish(): void {
-    router.visit(routeOr('admin.dashboard', '/admin'));
+    // A full page load, not an Inertia visit: the page's route list (@routes) must be the signed-in one, or the sidebar stays empty
+    // until a reload (StaffAuthChanged).
+    window.location.assign(routeOr('admin.dashboard', '/admin'));
 }
 
 onMounted(() => {

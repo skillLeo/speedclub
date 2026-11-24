@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use App\Services\Garage\PublicMembers;
 use App\Services\PublicPages\PublicPageData;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -26,8 +27,16 @@ class SpaController extends Controller
         'Cache-Control' => 'no-cache, no-store, must-revalidate',
     ];
 
-    public function __invoke(Request $request, PublicPageData $pages, PublicMembers $members, ?string $path = null): BinaryFileResponse|Response
+    public function __invoke(Request $request, PublicPageData $pages, PublicMembers $members, ?string $path = null): BinaryFileResponse|RedirectResponse|Response
     {
+        $moved = $path === null ? null : self::movedPath($path);
+
+        if ($moved !== null) {
+            $query = $request->getQueryString();
+
+            return redirect()->to('/app/'.$moved.($query === null ? '' : '?'.$query), 301);
+        }
+
         $index = config()->string('speedclub.spa.index');
 
         if (! is_file($index)) {
@@ -46,6 +55,27 @@ class SpaController extends Controller
             : (string) preg_replace('~<head[^>]*>~i', '$0'.str_replace(['\\', '$'], ['\\\\', '\\$'], $head), $html, 1);
 
         return new Response($html, 200, self::HEADERS);
+    }
+
+    /**
+     * M5.4 (10 §2.1, ADR-504): where an old member-web QR address moved with the app's /stickers screens: /app/profile/qr →
+     * /app/stickers, /app/qr/{id}[/placement|/preview] → /app/stickers/{id}[/…], answered by __invoke with a 301 that keeps the query
+     * (switched on with the app routes, M5.4 app part). The app's old route files redirect as well, for links opened inside the app.
+     * The scan address /c/{code} is not under /app and never moves.
+     */
+    public static function movedPath(string $path): ?string
+    {
+        $path = trim($path, '/');
+
+        if ($path === 'profile/qr') {
+            return 'stickers';
+        }
+
+        if (preg_match('~\Aqr/([0-9A-Za-z]{26})(/placement|/preview)?\z~', $path, $match) === 1) {
+            return 'stickers/'.$match[1].($match[2] ?? '');
+        }
+
+        return null;
     }
 
     /**

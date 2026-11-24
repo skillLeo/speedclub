@@ -5,7 +5,7 @@ namespace App\Actions\Social;
 use App\Models\Vehicle;
 
 /**
- * [build_comments] (09 §8.5): the owner turns comments on a vehicle's updates on or off. Off hides nothing already written; it only stops
+ * [build_comments] (09 §8.5): the owner turns comments on a vehicle's updates and (R5-5) on the car itself on or off. Off hides nothing already written; it only stops
  * new comments (403 comments_disabled).
  */
 class SetVehicleComments

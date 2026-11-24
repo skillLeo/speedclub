@@ -24,23 +24,21 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import {
-  Button,
-  Dialog,
-  EmptyState,
-  ErrorState,
-  Hairline,
-  ListRow,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Text,
-  TextInput,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { ListRow } from '@/ui/ListRow';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 
 import { useOrganiserRestriction } from '../access';
+import { CheckinCodeRow } from '../components/CheckinParts';
 import { EventCardView } from '../components/EventCardView';
+import { GalleryReview } from '../components/GalleryReview';
 import { EventPage } from '../components/EventPage';
 import { EventSection, RestrictionLine, ReviewBanner } from '../components/EventParts';
 import { editorPath, hasEnded, reviewNotice } from '../model';
@@ -255,6 +253,9 @@ export function ManageEventScreen() {
             testID={`${ROUTE}.attendees`}
           />
         </View>
+        {/* M5.6 (10 §4): the check-in code on the organiser's phone and the attendees' photos to approve, each behind its flag. */}
+        <CheckinCodeRow event={event} routeId={ROUTE} />
+        <GalleryReview event={event} routeId={ROUTE} />
         {event.can.post_update ? (
           <EventSection title={t('manage.updateTitle')} testID={`${ROUTE}.composer`}>
             <View style={styles.composer}>

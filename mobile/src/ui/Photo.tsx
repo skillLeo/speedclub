@@ -88,6 +88,8 @@ export function Photo({ source, blurhash, thumbhash, focal, aspect, label, corne
           {...(priority ? { priority } : {})}
           {...placeholder}
           placeholderContentFit="cover"
+          // CR2-2: a press and drag on a photo scrolls the page on the web, it never drags the image out.
+          draggable={false}
           contentFit="cover"
           contentPosition={position}
           transition={motion.reduced ? null : motionDuration('effect.default')}

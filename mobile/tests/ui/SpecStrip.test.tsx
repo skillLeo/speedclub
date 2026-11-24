@@ -77,13 +77,16 @@ describe('SpecStrip 2.0', () => {
     expect(cell.gap).toBe(space[4]);
   });
 
-  it('sets the data label in label.caps, the value in hero.numeral on the page with its label.unit unit, the provenance in caption', async () => {
+  it('sets the data label in label.caps, the value in hero.numeral.xs on a phone (CF-2, R5-2b) with its label.unit unit, the provenance in caption', async () => {
     await renderUi(<SpecStrip items={items} layoutWidth={600} testID="s" />);
     const label = flat(screen.getByTestId('s.1.label').props.style);
     expect(label.fontSize).toBe(typography.labelCaps.fontSize);
     expect(textOf(screen.getByTestId('s.1.label').props.style).textTransform).toBe('uppercase');
     expect(label.color).toBe(themes.carbon.color.text.secondary);
-    expect(flat(screen.getByTestId('s.1.value').props.style).fontSize).toBe(typography.heroNumeral.fontSize);
+    // Client feedback CF-2 and R5-2b (ADR-536): on a phone (Jest's window is 750 wide) the numeral is hero.numeral.xs (32); a tablet's
+    // page keeps hero.numeral.
+    expect(flat(screen.getByTestId('s.1.value').props.style).fontSize).toBe(typography.heroNumeralXs.fontSize);
+    expect(typography.heroNumeralXs.fontSize).toBeLessThan(typography.heroNumeralS.fontSize);
     const unit = flat(screen.getByTestId('s.1.unit').props.style);
     expect(unit.fontSize).toBe(typography.labelUnit.fontSize);
     // ADR-420: "Nm" keeps its case.
@@ -139,6 +142,19 @@ describe('SpecStrip 2.0', () => {
     // A font that draws wider than its table: DREHMOMENT at 130 cannot sit in a quarter of 600.
     await layOut(600, { Drehmoment: 130 });
     expect(rowsOf('s')).toHaveLength(2);
+  });
+
+  it('keeps the 2×2 grid when an AI-marked caption fits a half by its widest part, so it wraps there (ADR-422 e, DQ-P5-066)', async () => {
+    const caption = 'Herstellerangabe (KI-\u2060Vorschlag)';
+    const ai = items.map((item) => (item.provenance ? { ...item, provenance: caption } : item));
+    await renderUi(<SpecStrip items={ai} testID="s" />);
+    await layOut(353, { ...DRAWN, [caption]: 187, Herstellerangabe: 100, '(KI-\u2060Vorschlag)': 95 });
+    expect(rowsOf('s')).toHaveLength(2);
+    // The caption itself stays one text in the cell; only the hidden copies are split.
+    expect(screen.getAllByText(caption)).toHaveLength(2);
+    // A part that does not fit a half still takes the grid away.
+    await layOut(353, { '(KI-\u2060Vorschlag)': 160 });
+    expect(rowsOf('s')).toHaveLength(4);
   });
 
   it('measures one-line copies outside the strip, hidden from readers, so the strip reads each text once in reading order', async () => {

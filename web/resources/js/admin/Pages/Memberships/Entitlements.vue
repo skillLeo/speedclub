@@ -7,7 +7,7 @@ import { useAdminAction } from '../../Components/decisions/action';
 import ScrollRegion from '../../Components/patterns/ScrollRegion.vue';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
-import { Button, ConfirmDialog, DateRangeField, Drawer, EmptyQueue, Field, IconButton, Input, Select, Skeleton, StatusPill, Textarea, type Tone } from '../../Components/ui';
+import { Button, ConfirmDialog, DateRangeField, Drawer, EmptyQueue, Field, IconButton, Input, Select, Skeleton, StatusPill, type Tone } from '../../Components/ui';
 import { focusRing } from '../../Components/ui/styles';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
 import { qaDialog } from '../../composables/qaDialog';
@@ -15,16 +15,16 @@ import { formatDate, formatDateTime } from '../../lib/format';
 import { routeOr } from '../../lib/routes';
 
 /**
- * ADM-F2 entitlements (06 §3: "grant/revoke manually with reason and end date, audited"; premium.enabled, 404 while off): member, plan,
- * period, status (aktiv · geplant · abgelaufen · widerrufen), who granted, reason. Grant with reason and an optional period; revoke with
- * a reason; a revoked row stays as history.
+ * ADM-F2 entitlements (06 §3: "grant/revoke manually with end date, audited"; premium.enabled, 404 while off): member, plan,
+ * period, status (aktiv · geplant · abgelaufen · widerrufen), who granted, the reason of older grants. Grant with an optional period; revoke;
+ * a revoked row stays as history.
  */
 interface Row {
     id: string;
     member: { id: string; username: string | null };
     plan: { id: number; name: { de: string; en: string | null } };
     granted_by: string | null;
-    reason: string;
+    reason: string | null;
     starts_at: string;
     ends_at: string | null;
     revoked_at: string | null;
@@ -49,37 +49,35 @@ const plansHref = routeOr('admin.memberships.plans', '/admin/memberships/plans')
 // ---- grant ------------------------------------------------------------------------------------------------------------------
 const action = useAdminAction();
 const grantOpen = ref(false);
-const form = reactive({ member: '', plan: undefined as string | undefined, from: '', to: '', reason: '' });
-const errors = reactive<{ member: string | null; plan: string | null; reason: string | null }>({ member: null, plan: null, reason: null });
+const form = reactive({ member: '', plan: undefined as string | undefined, from: '', to: '' });
+const errors = reactive<{ member: string | null; plan: string | null }>({ member: null, plan: null });
 const planOptions = computed(() => props.plans.filter((p) => p.active).map((p) => ({ value: String(p.id), label: name(p.name) })));
 function openGrant(): void {
-    Object.assign(form, { member: '', plan: planOptions.value[0]?.value, from: '', to: '', reason: '' });
-    Object.assign(errors, { member: null, plan: null, reason: null });
+    Object.assign(form, { member: '', plan: planOptions.value[0]?.value, from: '', to: '' });
+    Object.assign(errors, { member: null, plan: null });
     action.reset();
     grantOpen.value = true;
 }
 function grant(): void {
     errors.member = form.member.replace(/^@/, '').trim() === '' ? trans('memberships.grant_form.errors.member') : null;
     errors.plan = form.plan === undefined ? trans('memberships.grant_form.errors.plan') : null;
-    const reason = form.reason.trim();
-    errors.reason = reason.length < 10 || reason.length > 1000 ? trans('ui.confirm.reason_length') : null;
-    if (errors.member || errors.plan || errors.reason) return;
-    action.run('post', routeOr('admin.memberships.entitlements.store', '/admin/memberships/entitlements'), { member: form.member.trim(), plan_id: Number(form.plan), starts_at: form.from || null, ends_at: form.to || null, reason }, { sensitive: true, onSuccess: () => (grantOpen.value = false) });
+    if (errors.member || errors.plan) return;
+    action.run('post', routeOr('admin.memberships.entitlements.store', '/admin/memberships/entitlements'), { member: form.member.trim(), plan_id: Number(form.plan), starts_at: form.from || null, ends_at: form.to || null }, { sensitive: true, onSuccess: () => (grantOpen.value = false) });
 }
 
 // ---- revoke -----------------------------------------------------------------------------------------------------------------
 const revoking = ref<Row | null>(null);
 const revokeOpen = computed({ get: () => revoking.value !== null, set: (v: boolean) => (v ? null : (revoking.value = null)) });
-function revoke(reason: string | null): void {
+function revoke(): void {
     const row = revoking.value;
     if (!row) return;
-    action.run('post', routeOr('admin.memberships.entitlements.revoke', `/admin/memberships/entitlements/${row.id}/revoke`, { entitlement: row.id }), { reason: reason ?? '' }, { sensitive: true, onSuccess: () => (revoking.value = null) });
+    action.run('post', routeOr('admin.memberships.entitlements.revoke', `/admin/memberships/entitlements/${row.id}/revoke`, { entitlement: row.id }), {}, { sensitive: true, onSuccess: () => (revoking.value = null) });
 }
 onMounted(async () => {
     const overlay = qaDialog();
     if (overlay === 'grant') {
         openGrant();
-        Object.assign(form, { member: '@lukas.sc', reason: 'Gewinner der Build-Challenge im Oktober.' });
+        Object.assign(form, { member: '@lukas.sc' });
     } else if (overlay === 'revoke') {
         const row = rows.value.find((r) => status(r) === 'active');
         if (!row) return;
@@ -127,7 +125,7 @@ onMounted(async () => {
                         <td class="whitespace-nowrap px-12 py-8 text-ink-2 tabular-nums">{{ period(row) }}</td>
                         <td class="px-12 py-8"><StatusPill :tone="tones[status(row)]" :label="trans(`memberships.entitlements.status.${status(row)}`)" /></td>
                         <td class="px-12 py-8">
-                            <span class="block max-w-480 text-ink-2">{{ row.reason }}</span>
+                            <span class="block max-w-480 text-ink-2">{{ row.reason ?? '–' }}</span>
                             <span class="block text-caption text-ink-3">{{ row.granted_by ?? '–' }}</span>
                             <span v-if="row.revoked_at" class="block max-w-480 text-caption text-ink-3 tabular-nums">{{ trans('memberships.entitlements.revoked_line', { date: formatDateTime(row.revoked_at), name: row.revoked_by ?? '–', reason: row.revoke_reason ?? '–' }) }}</span>
                         </td>
@@ -147,7 +145,6 @@ onMounted(async () => {
                 <Field :label="trans('memberships.grant_form.member')" :hint="trans('memberships.grant_form.member_hint')" :error="errors.member" required><Input v-model="form.member" maxlength="40" autocomplete="off" data-autofocus data-testid="ADM-F2.drawer.member" /></Field>
                 <Field :label="trans('memberships.grant_form.plan')" :error="errors.plan" required><Select v-model="form.plan" :options="planOptions" data-testid="ADM-F2.drawer.plan" /></Field>
                 <Field :label="trans('memberships.grant_form.period')" :hint="trans('memberships.grant_form.period_hint')" optional><DateRangeField v-model:from="form.from" v-model:to="form.to" test-id="ADM-F2.drawer.period" /></Field>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="errors.reason" required><Textarea v-model="form.reason" :rows="2" :maxlength="1000" show-count data-testid="ADM-F2.drawer.reason" /></Field>
             </form>
             <template #footer>
                 <Button variant="ghost" :disabled="action.processing.value" @click="grantOpen = false">{{ trans('ui.actions.cancel') }}</Button>
@@ -155,6 +152,6 @@ onMounted(async () => {
             </template>
         </Drawer>
 
-        <ConfirmDialog v-model:open="revokeOpen" :title="trans('memberships.revoke_dialog.title', { member: `@${revoking?.member.username ?? ''}` })" :body="trans('memberships.revoke_dialog.body', { plan: revoking ? name(revoking.plan.name) : '' })" :confirm-label="trans('memberships.entitlements.revoke')" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-F2.revoke-dialog" @confirm="(r: string | null) => revoke(r)" />
+        <ConfirmDialog v-model:open="revokeOpen" :title="trans('memberships.revoke_dialog.title', { member: `@${revoking?.member.username ?? ''}` })" :body="trans('memberships.revoke_dialog.body', { plan: revoking ? name(revoking.plan.name) : '' })" :confirm-label="trans('memberships.entitlements.revoke')" :processing="action.processing.value" :error="action.error.value" test-id="ADM-F2.revoke-dialog" @confirm="revoke()" />
     </div>
 </template>

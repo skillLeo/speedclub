@@ -1,7 +1,9 @@
 import { View } from 'react-native';
 
 import { concentric, createStyles, layout, motion, radius, space, type RadiusToken, type SpaceToken } from '@/theme';
-import { Photo, PhotoScrim, Text } from '@/ui';
+import { Photo } from '@/ui/Photo';
+import { PhotoScrim } from '@/ui/PhotoScrim';
+import { Text } from '@/ui/Text';
 import { ChromeSurface, FloatingControl } from '@/ui/chrome';
 
 import { PHOTOS, noop } from '../data';

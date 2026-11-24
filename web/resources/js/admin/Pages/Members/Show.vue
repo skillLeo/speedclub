@@ -11,6 +11,7 @@ import type { TimelineEntry } from '../../Components/record/ActivityTimeline.vue
 import { Button, Checkbox, ConfirmDialog, Dialog, Drawer, DropdownMenu, Field, Input, Skeleton, Textarea, type MenuEntry, type TabItem, type Tone } from '../../Components/ui';
 import { qaDialog } from '../../composables/qaDialog';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { actionLabel, actorName } from '../../lib/audit';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
 import { JsonError, requestJson } from '../../lib/http';
@@ -23,8 +24,10 @@ import OverviewTab from './Partials/OverviewTab.vue';
 import PrivacyTab from './Partials/PrivacyTab.vue';
 import ReportsTab from './Partials/ReportsTab.vue';
 import SecurityTab from './Partials/SecurityTab.vue';
+import BadgesPanel from './Partials/BadgesPanel.vue';
 import VehiclesTab from './Partials/VehiclesTab.vue';
-import type { FeedEntry, MemberOverview, MemberPrivacy, MemberReports, MemberSecurity, MemberVehicle, MessageMetadata } from './types';
+import WrappedTab from './Partials/WrappedTab.vue';
+import type { FeedEntry, MemberBadges, MemberOverview, MemberPrivacy, MemberReports, MemberSecurity, MemberVehicle, MemberWrapped, MessageMetadata } from './types';
 
 /**
  * ADM-10 member record (06 §3 Members, m3.2-contract §2/§3). Tabs read their data when opened (?tab=). Every row action of the
@@ -32,12 +35,14 @@ import type { FeedEntry, MemberOverview, MemberPrivacy, MemberReports, MemberSec
  * sessions, 2FA reset*, e-mail change, view-as (JSON, opens /app in a new tab; the token never enters a prop or the session), export*,
  * delete* with typed confirmation, and the audited PII reveal (the address is masked in every prop, SEC-P3-02).
  */
-type Tab = 'overview' | 'vehicles' | 'security' | 'reports' | 'messages' | 'audit' | 'privacy';
+type Tab = 'overview' | 'vehicles' | 'wrapped' | 'security' | 'reports' | 'messages' | 'audit' | 'privacy';
 
 const props = defineProps<{
     member: MemberOverview;
     tab: Tab;
     vehicles?: MemberVehicle[];
+    badges?: MemberBadges;
+    wrapped?: MemberWrapped | null;
     security?: MemberSecurity;
     reports?: MemberReports;
     messages?: MessageMetadata | null;
@@ -57,6 +62,8 @@ const state = usePageState();
 const tabs = computed<TabItem[]>(() => [
     { value: 'overview', label: trans('members.tabs.overview') },
     { value: 'vehicles', label: trans('members.tabs.vehicles'), count: props.member.counters.vehicles },
+    // M5.9e: the member's Season Wrapped (support.view on top of members.view).
+    ...(can('support.view') ? [{ value: 'wrapped', label: trans('members.tabs.wrapped') }] : []),
     { value: 'security', label: trans('members.tabs.security') },
     { value: 'reports', label: trans('members.tabs.reports'), count: props.member.counters.reports_as_target || null },
     ...(can('members.message_metadata') ? [{ value: 'messages', label: trans('members.tabs.messages') }] : []),
@@ -73,7 +80,7 @@ watch(
 function loadTab(tab: Tab): void {
     tabFailed.value = false;
     router.get(window.location.pathname, tab === 'overview' ? {} : { tab }, {
-        only: tab === 'overview' ? ['tab', 'member'] : ['tab', tab],
+        only: tab === 'overview' ? ['tab', 'member', 'badges'] : ['tab', tab],
         preserveState: true,
         preserveScroll: true,
         replace: true,
@@ -94,7 +101,7 @@ const tabModel = computed({
 });
 const panelReady = computed(() => {
     if (state.value === 'loading' || tabLoading.value) return false;
-    const data = { overview: true, vehicles: props.vehicles, security: props.security, reports: props.reports, messages: props.messages, audit: props.audit, privacy: props.privacy }[current.value];
+    const data = { overview: true, vehicles: props.vehicles, wrapped: props.wrapped, security: props.security, reports: props.reports, messages: props.messages, audit: props.audit, privacy: props.privacy }[current.value];
     return data !== undefined;
 });
 
@@ -169,12 +176,14 @@ const more = computed<MenuEntry[]>(() => {
     return entries.filter((item) => can(item.atom)).map((item) => item.entry);
 });
 
+const fourEyesOn = useFourEyes();
+
 // edit drawer
-const edit = reactive({ display_name: '', username: '', city: '', bio: '', reason: '' });
+const edit = reactive({ display_name: '', username: '', city: '', bio: '' });
 const editErrors = ref<Record<string, string>>({});
 watch(editOpen, (value) => {
     if (!value) return;
-    Object.assign(edit, { display_name: props.member.display_name ?? '', username: props.member.username ?? '', city: props.member.city ?? '', bio: props.member.bio ?? '', reason: '' });
+    Object.assign(edit, { display_name: props.member.display_name ?? '', username: props.member.username ?? '', city: props.member.city ?? '', bio: props.member.bio ?? '' });
     editErrors.value = {};
 });
 function submitEdit(): void {
@@ -186,11 +195,9 @@ function submitEdit(): void {
     if (edit.username.trim() !== '' && edit.username.trim() !== props.member.username) changes.username = edit.username.trim().toLowerCase();
     const errors: Record<string, string> = {};
     if (Object.keys(changes).length === 0) errors.form = trans('members.edit.nothing');
-    const reason = edit.reason.trim().length;
-    if (reason < 10 || reason > 1000) errors.reason = trans('ui.confirm.reason_length');
     editErrors.value = errors;
     if (Object.keys(errors).length > 0) return;
-    action.run('patch', memberUrl('update', ''), { ...changes, reason: edit.reason.trim() }, { sensitive: true, onSuccess: close });
+    action.run('patch', memberUrl('update', ''), { ...changes }, { sensitive: true, onSuccess: close });
 }
 
 // restrict / suspend
@@ -201,16 +208,16 @@ function submitRestrict(payload: { measure: string } & Record<string, string | n
 }
 
 // lift
-const liftType = ref<'messaging' | 'publishing' | 'suspension'>('messaging');
+const liftType = ref<'messaging' | 'publishing' | 'forum' | 'suspension'>('messaging');
 const liftFacts = ref('');
 const liftError = ref<string | null>(null);
-function openLift(type: 'messaging' | 'publishing' | 'suspension'): void {
+function openLift(type: 'messaging' | 'publishing' | 'forum' | 'suspension'): void {
     liftType.value = type;
     liftFacts.value = '';
     liftError.value = null;
     show('lift');
 }
-function submitLift(reason: string | null): void {
+function submitLift(): void {
     const facts = liftFacts.value.trim().length;
     if (facts < 10 || facts > 5000) {
         liftError.value = trans('decisions.errors.facts');
@@ -218,39 +225,37 @@ function submitLift(reason: string | null): void {
     }
     liftError.value = null;
     // A reverse decision is a sensitive write like unhiding a vehicle or photo (SF-4, ADR-215).
-    action.run('post', memberUrl('lift', '/lift'), { type: liftType.value, facts: liftFacts.value.trim(), reason: reason ?? '' }, { sensitive: true, onSuccess: close });
+    action.run('post', memberUrl('lift', '/lift'), { type: liftType.value, facts: liftFacts.value.trim() }, { sensitive: true, onSuccess: close });
 }
 const canLift = (type: string): boolean => can('members.restrict') && (type !== 'suspension' || can('members.suspend'));
 
 // simple confirmations
 function confirmed(name: 'reset-link' | 'force-password-change' | 'revoke-sessions' | 'reset-two-factor' | 'export-data', path: string, sensitive: boolean) {
-    return (reason: string | null): void => action.run('post', memberUrl(name, path), { reason: reason ?? '' }, { sensitive, onSuccess: close });
+    return (): void => action.run('post', memberUrl(name, path), {}, { sensitive, onSuccess: close });
 }
 const sendResetLink = confirmed('reset-link', '/reset-link', false);
 const forcePassword = confirmed('force-password-change', '/force-password-change', true);
 const revokeSessions = confirmed('revoke-sessions', '/revoke-sessions', true);
 const resetTwoFactor = confirmed('reset-two-factor', '/reset-two-factor', true);
 const requestExport = confirmed('export-data', '/export', false);
-function requestDelete(reason: string | null): void {
-    action.run('post', memberUrl('delete', '/delete'), { reason: reason ?? '', confirm: trans('ui.confirm.typed_word') }, { onSuccess: close });
+function requestDelete(): void {
+    action.run('post', memberUrl('delete', '/delete'), { confirm: trans('ui.confirm.typed_word') }, { onSuccess: close });
 }
 
 // e-mail change
-const email = reactive({ address: '', verified: false, reason: '' });
+const email = reactive({ address: '', verified: false });
 const emailErrors = ref<Record<string, string>>({});
 watch(emailOpen, (value) => {
-    if (value) Object.assign(email, { address: '', verified: false, reason: '' });
+    if (value) Object.assign(email, { address: '', verified: false });
     emailErrors.value = {};
 });
 function submitEmail(): void {
     const errors: Record<string, string> = {};
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.address.trim())) errors.email = trans('members.email.invalid');
     if (email.verified !== true) errors.identity = trans('members.email.identity_required');
-    const reason = email.reason.trim().length;
-    if (reason < 10 || reason > 1000) errors.reason = trans('ui.confirm.reason_length');
     emailErrors.value = errors;
     if (Object.keys(errors).length > 0) return;
-    action.run('post', memberUrl('email', '/email'), { email: email.address.trim(), identity_verified: true, reason: email.reason.trim() }, { sensitive: true, onSuccess: close });
+    action.run('post', memberUrl('email', '/email'), { email: email.address.trim(), identity_verified: true }, { sensitive: true, onSuccess: close });
 }
 
 // view-as (m3.2-contract §3, SF-8): JSON only, the URL is opened and forgotten
@@ -258,12 +263,12 @@ const supportOnly = computed(() => {
     const roles = page.props.staff?.roles ?? [];
     return roles.includes('support') && !roles.includes('owner') && !roles.includes('admin');
 });
-const viewAsForm = reactive({ reason: '', consent: false });
+const viewAsForm = reactive({ consent: false });
 const viewAsErrors = ref<Record<string, string>>({});
 const viewAsBusy = ref(false);
 const viewAsStarted = ref<string | null>(null);
 watch(viewAsOpen, (value) => {
-    if (value) Object.assign(viewAsForm, { reason: '', consent: false });
+    if (value) Object.assign(viewAsForm, { consent: false });
     viewAsErrors.value = {};
 });
 const viewAsNote = ref<string | null>(null);
@@ -284,8 +289,6 @@ function askPassword(): void {
  */
 function startViewAs(): void {
     const errors: Record<string, string> = {};
-    const reason = viewAsForm.reason.trim().length;
-    if (reason < 10 || reason > 1000) errors.reason = trans('ui.confirm.reason_length');
     if (supportOnly.value && viewAsForm.consent !== true) errors.consent = trans('members.view_as.consent_required');
     viewAsErrors.value = errors;
     viewAsNote.value = null;
@@ -304,7 +307,7 @@ function startViewAs(): void {
 async function requestViewAs(tab: Window): Promise<void> {
     viewAsBusy.value = true;
     try {
-        const answer = await requestJson<{ url?: string; expires_at?: string }>('post', memberUrl('view-as', '/view-as'), { reason: viewAsForm.reason.trim(), member_consented: viewAsForm.consent === true });
+        const answer = await requestJson<{ url?: string; expires_at?: string }>('post', memberUrl('view-as', '/view-as'), { member_consented: viewAsForm.consent === true });
         if (typeof answer.url !== 'string') throw new Error('no url');
         tab.opener = null;
         tab.location.replace(answer.url);
@@ -318,7 +321,7 @@ async function requestViewAs(tab: Window): Promise<void> {
             askPassword();
             return;
         }
-        viewAsErrors.value = { form: error instanceof JsonError && error.status === 422 ? (error.field('member_consented') ?? error.field('reason') ?? trans('members.view_as.not_possible')) : trans('members.view_as.failed') };
+        viewAsErrors.value = { form: error instanceof JsonError && error.status === 422 ? (error.field('member_consented') ?? trans('members.view_as.not_possible')) : trans('members.view_as.failed') };
     } finally {
         viewAsBusy.value = false;
     }
@@ -425,10 +428,10 @@ async function endViewAs(): Promise<void> {
                 </DropdownMenu>
             </template>
 
-            <template v-for="name in (['overview', 'vehicles', 'security', 'reports', 'messages', 'audit', 'privacy'] as const)" :key="name" #[name]>
+            <template v-for="name in (['overview', 'vehicles', 'wrapped', 'security', 'reports', 'messages', 'audit', 'privacy'] as const)" :key="name" #[name]>
                 <div class="flex flex-col gap-16">
                     <!-- four-eyes requests about this member -->
-                    <ul v-if="name === current && pendingApprovals.length > 0" class="flex flex-col gap-4 rounded-sm border border-line px-12 py-8" data-testid="ADM-10.pending">
+                    <ul v-if="fourEyesOn && name === current && pendingApprovals.length > 0" class="flex flex-col gap-4 rounded-sm border border-line px-12 py-8" data-testid="ADM-10.pending">
                         <li v-for="item in pendingApprovals" :key="item.id" class="text-admin-base text-ink-2 tabular-nums">
                             {{ trans('members.record.pending', { title: trans(item.title), until: formatDateTime(item.expires_at) }) }}
                         </li>
@@ -443,19 +446,26 @@ async function endViewAs(): Promise<void> {
                         <Skeleton v-for="n in 4" :key="n" class="h-40 w-full" />
                     </div>
                     <template v-else>
-                        <OverviewTab
-                            v-if="name === 'overview'"
-                            :member="member"
-                            :email="revealed ?? member.email"
-                            :revealed="revealed !== null"
-                            :can-reveal="member.can_reveal_pii"
-                            :revealing="revealing"
-                            :reveal-error="revealError"
-                            :can-lift="canLift"
-                            @reveal="reveal"
-                            @lift="openLift"
-                        />
+                        <template v-if="name === 'overview'">
+                            <OverviewTab
+                                :member="member"
+                                :email="revealed ?? member.email"
+                                :revealed="revealed !== null"
+                                :can-reveal="member.can_reveal_pii"
+                                :revealing="revealing"
+                                :reveal-error="revealError"
+                                :can-lift="canLift"
+                                @reveal="reveal"
+                                @lift="openLift"
+                            />
+                            <!-- SEC-P5G-05: the earned badges, "Entziehen" for moderation.decide. -->
+                            <BadgesPanel v-if="badges" :badges="badges" :member-id="member.id" />
+                        </template>
                         <VehiclesTab v-else-if="name === 'vehicles' && vehicles" :vehicles="vehicles" />
+                        <template v-else-if="name === 'wrapped'">
+                            <WrappedTab v-if="wrapped" :wrapped="wrapped" :member-id="member.id" />
+                            <StateBlock v-else kind="forbidden" :title="trans('members.wrapped.forbidden')" test-id="ADM-10.wrapped.forbidden" />
+                        </template>
                         <SecurityTab v-else-if="name === 'security' && security" :security="security" :can-revoke="can('members.revoke_sessions') && !member.deleted" @revoke="show('revoke_sessions')" />
                         <ReportsTab v-else-if="name === 'reports' && reports" :reports="reports" />
                         <template v-else-if="name === 'messages'">
@@ -476,7 +486,7 @@ async function endViewAs(): Promise<void> {
         <Drawer v-model:open="editOpen" :title="trans('members.edit.title')" :description="trans('members.edit.body')" test-id="ADM-10.edit">
             <form id="adm10-edit" class="flex flex-col gap-16" novalidate @submit.prevent="submitEdit">
                 <Field :label="trans('members.columns.username')" :hint="trans('members.edit.username_hint')" :error="editErrors.username">
-                    <Input v-model="edit.username" autocomplete="off" spellcheck="false" maxlength="24" data-testid="ADM-10.edit.username" />
+                    <Input v-model="edit.username" autocomplete="off" spellcheck="false" maxlength="40" data-testid="ADM-10.edit.username" />
                 </Field>
                 <Field :label="trans('members.columns.display_name')" optional>
                     <Input v-model="edit.display_name" maxlength="60" data-testid="ADM-10.edit.display-name" />
@@ -486,9 +496,6 @@ async function endViewAs(): Promise<void> {
                 </Field>
                 <Field :label="trans('members.record.bio')" optional>
                     <Textarea v-model="edit.bio" :rows="4" :maxlength="500" show-count data-testid="ADM-10.edit.bio" />
-                </Field>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="editErrors.reason" required>
-                    <Textarea v-model="edit.reason" :rows="3" :maxlength="1000" show-count data-testid="ADM-10.edit.reason" />
                 </Field>
                 <p class="text-admin-base text-ink-3">{{ trans('members.edit.never_password') }}</p>
             </form>
@@ -520,7 +527,6 @@ async function endViewAs(): Promise<void> {
             :body="trans('members.lift.body')"
             :confirm-label="trans('members.actions.lift')"
             tone="neutral"
-            reason
             :processing="action.processing.value"
             :error="liftError ?? action.error.value"
             test-id="ADM-10.lift"
@@ -531,12 +537,12 @@ async function endViewAs(): Promise<void> {
             </Field>
         </ConfirmDialog>
 
-        <ConfirmDialog v-model:open="resetLinkOpen" :title="trans('members.reset_link.title')" :body="trans('members.reset_link.body')" :confirm-label="trans('members.actions.reset_link')" tone="neutral" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.reset-link" @confirm="sendResetLink" />
-        <ConfirmDialog v-model:open="forceOpen" :title="trans('members.force_password.title')" :body="trans('members.force_password.body')" :confirm-label="trans('members.actions.force_password')" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.force-password" @confirm="forcePassword" />
-        <ConfirmDialog v-model:open="revokeOpen" :title="trans('members.revoke_sessions.title')" :body="trans('members.revoke_sessions.body')" :confirm-label="trans('members.actions.revoke_sessions')" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.revoke-sessions" @confirm="revokeSessions" />
-        <ConfirmDialog v-model:open="reset2faOpen" :title="trans('members.reset_2fa.title')" :body="trans('members.reset_2fa.body')" :confirm-label="trans('members.reset_2fa.submit')" reason four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.reset-2fa" @confirm="resetTwoFactor" />
-        <ConfirmDialog v-model:open="exportOpen" :title="trans('members.export.title')" :body="trans('members.export.body')" :confirm-label="trans('members.export.submit')" tone="neutral" reason four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.export" @confirm="requestExport" />
-        <ConfirmDialog v-model:open="deleteOpen" :title="trans('members.delete.title', { name: title })" :body="trans('members.delete.body')" :confirm-label="trans('members.delete.submit')" typed reason four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.delete" @confirm="requestDelete" />
+        <ConfirmDialog v-model:open="resetLinkOpen" :title="trans('members.reset_link.title')" :body="trans('members.reset_link.body')" :confirm-label="trans('members.actions.reset_link')" tone="neutral" :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.reset-link" @confirm="sendResetLink" />
+        <ConfirmDialog v-model:open="forceOpen" :title="trans('members.force_password.title')" :body="trans('members.force_password.body')" :confirm-label="trans('members.actions.force_password')" :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.force-password" @confirm="forcePassword" />
+        <ConfirmDialog v-model:open="revokeOpen" :title="trans('members.revoke_sessions.title')" :body="trans('members.revoke_sessions.body')" :confirm-label="trans('members.actions.revoke_sessions')" :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.revoke-sessions" @confirm="revokeSessions" />
+        <ConfirmDialog v-model:open="reset2faOpen" :title="trans('members.reset_2fa.title')" :body="trans('members.reset_2fa.body')" :confirm-label="trans('members.reset_2fa.submit')" four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.reset-2fa" @confirm="resetTwoFactor" />
+        <ConfirmDialog v-model:open="exportOpen" :title="trans('members.export.title')" :body="trans('members.export.body')" :confirm-label="trans('members.export.submit')" tone="neutral" four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.export" @confirm="requestExport" />
+        <ConfirmDialog v-model:open="deleteOpen" :title="trans('members.delete.title', { name: title })" :body="trans('members.delete.body')" :confirm-label="trans('members.delete.submit')" typed four-eyes :processing="action.processing.value" :error="action.error.value" test-id="ADM-10.delete" @confirm="requestDelete" />
 
         <!-- e-mail change -->
         <Dialog v-model:open="emailOpen" :title="trans('members.email.title')" :description="trans('members.email.body')" test-id="ADM-10.email-dialog">
@@ -548,9 +554,6 @@ async function endViewAs(): Promise<void> {
                     <Checkbox v-model="email.verified" :label="trans('members.email.identity')" :invalid="Boolean(emailErrors.identity)" data-testid="ADM-10.email.identity" />
                     <p v-if="emailErrors.identity" class="text-admin-base text-danger" role="alert">{{ emailErrors.identity }}</p>
                 </div>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="emailErrors.reason" required>
-                    <Textarea v-model="email.reason" :rows="3" :maxlength="1000" show-count data-testid="ADM-10.email.reason" />
-                </Field>
                 <p v-if="action.error.value" class="text-admin-base text-danger" role="alert">{{ action.error.value }}</p>
             </form>
             <template #footer>
@@ -562,9 +565,6 @@ async function endViewAs(): Promise<void> {
         <!-- view-as -->
         <Dialog v-model:open="viewAsOpen" :title="trans('members.view_as.title', { name: title })" :description="trans('members.view_as.body', { minutes: formatNumber(30) })" test-id="ADM-10.view-as">
             <form id="adm10-view-as" class="flex flex-col gap-16" novalidate @submit.prevent="startViewAs">
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('members.view_as.reason_hint')" :error="viewAsErrors.reason" required>
-                    <Textarea v-model="viewAsForm.reason" :rows="3" :maxlength="1000" show-count data-testid="ADM-10.view-as.reason" />
-                </Field>
                 <div class="flex flex-col gap-4">
                     <Checkbox v-model="viewAsForm.consent" :label="trans(supportOnly ? 'members.view_as.consent' : 'members.view_as.consent_optional')" :invalid="Boolean(viewAsErrors.consent)" data-testid="ADM-10.view-as.consent" />
                     <p v-if="viewAsErrors.consent" class="text-admin-base text-danger" role="alert">{{ viewAsErrors.consent }}</p>

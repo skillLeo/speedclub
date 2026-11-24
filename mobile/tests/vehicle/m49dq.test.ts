@@ -17,10 +17,20 @@ jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.reso
 jest.mock('@react-native-community/netinfo', () => ({ addEventListener: jest.fn(() => jest.fn()), fetch: jest.fn(() => Promise.resolve({ isConnected: true })) }));
 
 describe('DQ-1047/1048: the hero and its identity', () => {
-  it('is 4:5 edge to edge on a phone and 16:9 across the content from 768, at most fullBleedMax wide', () => {
+  it('is 4:5 edge to edge on a phone, 16:9 across the content from 768 and a 21:9 banner from 1280 (CF-1), at most fullBleedMax wide', () => {
     expect(heroBox('phone', 393)).toEqual({ width: 393, ratio: 4 / 5 });
     expect(heroBox('tablet', 748)).toEqual({ width: 748, ratio: 16 / 9 });
-    expect(heroBox('desktop', 1600)).toEqual({ width: layout.fullBleedMax, ratio: 16 / 9 });
+    // R4-1.3: from 1280 at most half the window and never above 480, cropped from the focal point; 21:9 when that is lower.
+    expect(heroBox('desktop', 1600, 1200)).toEqual({ width: layout.fullBleedMax, ratio: layout.fullBleedMax / 480 });
+    expect(heroBox('desktop', 1000, 1200)).toEqual({ width: 1000, ratio: 21 / 9 });
+    const heightOf = (box: { width: number; ratio: number }) => Math.round(box.width / box.ratio);
+    // At 1440 × 900 (content 1200): 450, half the window, instead of 514.
+    expect(heightOf(heroBox('desktop', 1200, 900))).toBe(450);
+    // A tall window: 480 at most.
+    expect(heightOf(heroBox('desktop', 1200, 1400))).toBe(480);
+    // Phones and tablets keep their boxes whatever the window's height.
+    expect(heroBox('phone', 393, 300)).toEqual({ width: 393, ratio: 4 / 5 });
+    expect(heroBox('tablet', 748, 300)).toEqual({ width: 748, ratio: 16 / 9 });
   });
 
   it('starts the identity at the strictest text-safe line of the three themes (ADR-421 b)', () => {

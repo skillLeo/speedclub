@@ -66,6 +66,10 @@
   --text-hero-numeral-s--line-height: var(--sc-type-hero-numeral-s-line);
   --text-hero-numeral-s--letter-spacing: var(--sc-type-hero-numeral-s-tracking);
   --text-hero-numeral-s--font-weight: 600;
+  --text-hero-numeral-xs: var(--sc-type-hero-numeral-xs-size);
+  --text-hero-numeral-xs--line-height: var(--sc-type-hero-numeral-xs-line);
+  --text-hero-numeral-xs--letter-spacing: var(--sc-type-hero-numeral-xs-tracking);
+  --text-hero-numeral-xs--font-weight: 600;
   --text-display-title: var(--sc-type-display-title-size);
   --text-display-title--line-height: var(--sc-type-display-title-line);
   --text-display-title--letter-spacing: var(--sc-type-display-title-tracking);
@@ -118,6 +122,14 @@
   --text-label-badge--line-height: var(--sc-type-label-badge-line);
   --text-label-badge--letter-spacing: var(--sc-type-label-badge-tracking);
   --text-label-badge--font-weight: 600;
+  --text-label-control: var(--sc-type-label-control-size);
+  --text-label-control--line-height: var(--sc-type-label-control-line);
+  --text-label-control--letter-spacing: var(--sc-type-label-control-tracking);
+  --text-label-control--font-weight: 500;
+  --text-caption-chrome: var(--sc-type-caption-chrome-size);
+  --text-caption-chrome--line-height: var(--sc-type-caption-chrome-line);
+  --text-caption-chrome--letter-spacing: var(--sc-type-caption-chrome-tracking);
+  --text-caption-chrome--font-weight: 500;
   --text-input: var(--sc-type-input-size);
   --text-input--line-height: var(--sc-type-input-line);
   --text-input--letter-spacing: var(--sc-type-input-tracking);

@@ -1,6 +1,6 @@
 {
     "title": "Suche",
-    "intro": "Mitglieder nach @username, Fahrzeuge nach Slug oder ID, QR-Codes nach Code, Fälle nach ID. E‑Mail‑Adressen nur exakt und nur mit PII-Berechtigung.",
+    "intro": "Mitglieder nach @username, Fahrzeuge nach Slug oder ID, Sticker nach Code, Fälle nach ID. E‑Mail‑Adressen nur exakt und nur mit PII-Berechtigung.",
     "label": "Suchbegriff",
     "placeholder": "z. B. @nightrunner, 7H2K QXMB, s14-kouki",
     "submit": "Suchen",
@@ -12,7 +12,7 @@
     "groups": {
         "members": "Mitglieder",
         "vehicles": "Fahrzeuge",
-        "qr": "QR-Codes",
+        "qr": "Sticker",
         "cases": "Fälle"
     },
     "searching": "Suche nach „:q“ läuft …"

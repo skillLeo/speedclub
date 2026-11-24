@@ -14,13 +14,19 @@ export type UploadTarget =
   | { kind: 'vehicle'; vehicleId: string }
   | { kind: 'mod'; vehicleId: string; modId: string }
   /** M4.11: a build update's own photos (ADR-436 d), sent after the post exists. */
-  | { kind: 'update'; vehicleId: string; updateId: string };
+  | { kind: 'update'; vehicleId: string; updateId: string }
+  /**
+   * M5.8: the opening post's photos of a forum thread (≤ 6, m5.8-contract D9), sent after the thread exists. `vehicleId` carries the
+   * thread id too: the queue groups items by it, and a thread belongs to no vehicle of the garage.
+   */
+  | { kind: 'forum'; vehicleId: string; threadId: string };
 
 type Answer = { status: number; body: unknown; retryAfter: string | null };
 
 export function uploadUrl(target: UploadTarget): string {
   const base = `${apiOrigin()}/api/v1`;
   if (target.kind === 'update') return `${base}/build-updates/${target.updateId}/media`;
+  if (target.kind === 'forum') return `${base}/forum/threads/${target.threadId}/photos`;
   return target.kind === 'vehicle' ? `${base}/vehicles/${target.vehicleId}/media` : `${base}/mods/${target.modId}/media`;
 }
 

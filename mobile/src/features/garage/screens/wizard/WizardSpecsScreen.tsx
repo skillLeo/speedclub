@@ -6,20 +6,23 @@ import { useTranslation } from 'react-i18next';
 
 import type { GarageVehicle } from '@/api/queries/garage';
 import { useSaveSpecs, useUpdateVehicle } from '@/api/queries/garage';
+import { SpecsAssist } from '@/features/ai/SpecsAssist';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
 import { useFormat } from '@/lib/useFormat';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 
 import { RestrictedNotice } from '../../components/frames';
 import { SpecsFields } from '../../components/SpecsFields';
 import { WizardFrame } from '../../components/WizardFrame';
 import { saveErrorMessage } from '../../errors';
-import { laterStep, specsRequest, specsValues, type SpecsValues } from '../../model';
-import { useCloseModal, wizardPath } from '../../navigation';
+import { hasEmptySpecs, laterStep, specsRequest, specsValues, type SpecsValues } from '../../model';
+import { useCloseModal, useLeavePublishedWizard, wizardPath } from '../../navigation';
 import { specsSchema } from '../../schemas';
 import { useSpecChips } from '../../specChips';
+import { useSpecsSuggestion } from '../../specsSuggestion';
 import { useMountedRef, usePreview, useWizardDraft } from '../../wizard';
 import { WizardStateBody } from './WizardStateBody';
 
@@ -42,8 +45,9 @@ export const SPECS_FIELDS = {
 export function WizardSpecsScreen() {
   const wizard = useWizardDraft();
   const preview = usePreview(wizard.draft);
-  if (wizard.state !== 'ready' || !wizard.draft) {
-    const state = wizard.state === 'ready' ? 'gone' : wizard.state;
+  const leaving = useLeavePublishedWizard(wizard.draftId, wizard.state === 'ready' && wizard.draft?.status === 'published');
+  if (leaving || wizard.state !== 'ready' || !wizard.draft) {
+    const state = leaving ? 'loading' : wizard.state === 'ready' ? 'gone' : wizard.state;
     return (
       <WizardFrame
         step="specs"
@@ -83,7 +87,7 @@ function SpecsStep({ draft, reached, restriction }: { draft: GarageVehicle; reac
   // Fresh data reaches the fields the member has not touched: the PUT replaces the whole set, so a value another device saved
   // must not go back out as it was when the step opened (as SpecsForm, BH-10).
   const fresh = useMemo(() => specsValues(draft.specs, format.locale), [draft.specs, format.locale]);
-  const { control, handleSubmit, setError, reset, formState } = useForm<SpecsValues>({
+  const { control, handleSubmit, setError, reset, formState, getValues, setValue } = useForm<SpecsValues>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: fresh,
@@ -97,6 +101,7 @@ function SpecsStep({ draft, reached, restriction }: { draft: GarageVehicle; reac
   const preview = usePreview(draft, { specs: chips });
   const pending = saveSpecs.isPending || update.isPending;
   const locked = restriction !== null;
+  const suggestion = useSpecsSuggestion({ specs: draft.specs, locale: format.locale, getValues, setValue, routeId: 'GAR-03' });
 
   useEffect(() => {
     if (leaving) close();
@@ -105,7 +110,7 @@ function SpecsStep({ draft, reached, restriction }: { draft: GarageVehicle; reac
   const persist = async (form: SpecsValues, advance: boolean): Promise<boolean> => {
     setNotice(null);
     try {
-      if (isDirty) await saveSpecs.mutateAsync(specsRequest(form, format.locale));
+      if (isDirty) await suggestion.send(saveSpecs.mutateAsync, specsRequest(form, format.locale));
       const step = laterStep(draft.wizard?.step, advance ? 'photos' : 'specs');
       if (step !== (draft.wizard?.step ?? 1)) await update.mutateAsync({ wizard_step: step });
       reset(form);
@@ -116,14 +121,14 @@ function SpecsStep({ draft, reached, restriction }: { draft: GarageVehicle; reac
     }
   };
 
-  const next = handleSubmit(async (form) => {
+  const next = useSingleFlight(handleSubmit(async (form) => {
     if ((await persist(form, true)) && mounted.current) router.push(wizardPath(draft.id, 'photos'));
-  });
-  const saveDraft = handleSubmit(async (form) => {
+  }));
+  const saveDraft = useSingleFlight(handleSubmit(async (form) => {
     if (!(await persist(form, false))) return;
     toast(t('wizard.draftSaved'), { testID: 'GAR-03.toast' });
     setLeaving(true);
-  });
+  }));
 
   return (
     <WizardFrame
@@ -137,7 +142,17 @@ function SpecsStep({ draft, reached, restriction }: { draft: GarageVehicle; reac
     >
       {locked && restriction ? <RestrictedNotice message={restriction} testID="GAR-03.restricted" /> : null}
       {notice ? <FormNotice message={notice} testID="GAR-03.notice" /> : null}
-      <SpecsFields control={control} disabled={locked} routeId="GAR-03" />
+      <SpecsAssist
+        vehicle={draft}
+        open={hasEmptySpecs(fresh)}
+        getValues={getValues}
+        onTake={suggestion.take}
+        locale={format.locale}
+        saveLabel={t('wizard.next')}
+        disabled={locked}
+        testID="GAR-03.specsSuggestion"
+      />
+      <SpecsFields control={control} disabled={locked} routeId="GAR-03" marks={suggestion.marks} />
     </WizardFrame>
   );
 }

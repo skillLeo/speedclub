@@ -163,8 +163,9 @@
     "vehicleTitle": "Fahrzeug teilen",
     "vehicleEmpty": "Du hast noch kein veröffentlichtes Fahrzeug. Veröffentliche eins in deiner Garage, dann kannst du es teilen.",
     "vehicleError": "Deine Fahrzeuge konnten nicht geladen werden. Versuch es noch einmal.",
-    "photoDenied": "Um ein Foto zu senden, erlaube SPEED CLUB in den Einstellungen deines Geräts den Zugriff auf deine Fotos.",
-    "photoFailed": "Das Foto konnte nicht geöffnet werden. Wähle ein anderes Foto."
+    "photoDenied": "Um ein Foto zu senden, erlaube Speedclub in den Einstellungen deines Geräts den Zugriff auf deine Fotos.",
+    "photoFailed": "Das Foto konnte nicht geöffnet werden. Wähle ein anderes Foto.",
+    "photoSend": "Senden"
   },
   "request": {
     "banner": "@{{username}} möchte dir schreiben",

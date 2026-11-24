@@ -13,6 +13,8 @@ return [
         'comment' => 'a comment you wrote',
         'event' => 'your meet “:label”',
         'business' => 'your business profile “:label”',
+        'forum_post' => 'your forum post in “:label”',
+        'crew' => 'your crew “:label”',
     ],
     'target_unnamed' => [
         'member' => 'your profile',
@@ -24,6 +26,8 @@ return [
         'comment' => 'a comment you wrote',
         'event' => 'one of your meets',
         'business' => 'your business profile',
+        'forum_post' => 'one of your forum posts',
+        'crew' => 'one of your crews',
     ],
 
     'outcome' => [
@@ -34,6 +38,8 @@ return [
         'restrict_messaging_until' => 'Decision: you cannot send messages until :date.',
         'restrict_publishing' => 'Decision: you cannot publish or edit anything for now.',
         'restrict_publishing_until' => 'Decision: you cannot publish or edit anything until :date.',
+        'restrict_forum' => 'Decision: you cannot post in the forum for now.',
+        'restrict_forum_until' => 'Decision: you cannot post in the forum until :date.',
         'suspend' => 'Decision: we suspended your account.',
         'suspend_until' => 'Decision: we suspended your account until :date.',
         // M3.2: a reverse decision.
@@ -48,7 +54,7 @@ return [
 
     // Art. 17(3)(a) DSA: what the decision applies to and for how long.
     'scope' => [
-        'content' => 'Scope and duration: we removed the content across SPEED CLUB, and nobody else can see it anywhere. This is permanent unless an appeal succeeds.',
+        'content' => 'Scope and duration: we removed the content across Speedclub, and nobody else can see it anywhere. This is permanent unless an appeal succeeds.',
         'account_until' => 'Scope and duration: the measure applies to your account until :date and then ends automatically.',
         'account' => 'Scope and duration: the measure applies to your account and has no end date. It ends if an appeal succeeds or we lift it.',
     ],
@@ -88,6 +94,7 @@ return [
             'lifted' => [
                 'restrict_messaging' => 'You can send messages again.',
                 'restrict_publishing' => 'You can publish and edit again.',
+                'restrict_forum' => 'You can post in the forum again.',
                 'suspend' => 'Your account is no longer suspended. You can sign in again.',
                 'remove_content' => 'The content is back, and others see it as before.',
                 'remove_profile' => 'Your display name, short bio and profile and cover pictures are back, unless you have set new ones since.',
@@ -110,7 +117,7 @@ return [
             'intro' => 'You reported content to us (report number :reference).',
             'redress_no_date' => "Disagree with the decision? Write to :support within :months months of this message and quote the report number. Another member of our team will then review the decision again. You can also turn to a certified out-of-court dispute settlement body under Art.\u{00A0}21 of the Digital Services Act (DSA) (list: :url) or have the decision reviewed by a court.",
             'redress' => "Disagree with the decision? Write to :support by :date and quote the report number. Another member of our team will then review the decision again. You can also turn to a certified out-of-court dispute settlement body under Art.\u{00A0}21 of the Digital Services Act (DSA) (list: :url) or have the decision reviewed by a court.",
-            'note' => 'Thanks for helping keep SPEED CLUB safe.',
+            'note' => 'Thanks for helping keep Speedclub safe.',
             'note_no_action' => 'Thanks for letting us know. Even though we did not remove anything this time, every report helps us.',
         ],
         // M3.4: the outcome of an internal complaint (Art. 20(4) DSA), to the person who appealed.

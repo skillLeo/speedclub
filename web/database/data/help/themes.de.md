@@ -2,7 +2,7 @@
 title: Erscheinungsbild: Carbon, Schwarz oder Hell
 sort: 100
 ---
-SPEED CLUB gibt es in drei Erscheinungsbildern:
+Speedclub gibt es in drei Erscheinungsbildern:
 - **Carbon:** dunkelgrau, die Grundeinstellung.
 - **Schwarz (OLED):** tiefschwarz, ideal für OLED-Displays und nachts.
 - **Hell:** gut lesbar bei Tageslicht.

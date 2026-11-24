@@ -5,7 +5,7 @@ import Field from '../ui/Field.vue';
 import Input from '../ui/Input.vue';
 import Select from '../ui/Select.vue';
 import Textarea from '../ui/Textarea.vue';
-import { applyTemplate, TEMPLATE_KEYS, type StatementForm } from './statement';
+import { applyTemplate, TEMPLATE_KEYS, type StatementForm, type StatementSubject } from './statement';
 
 /**
  * The statement-of-reasons fields of every staff decision (restrict, suspend, hide a vehicle or photo, delete a vehicle): a template
@@ -13,7 +13,7 @@ import { applyTemplate, TEMPLATE_KEYS, type StatementForm } from './statement';
  * mail. The hint says that no automated means were used and that the member is told how to appeal.
  */
 const form = defineModel<StatementForm>({ required: true });
-const props = withDefaults(defineProps<{ subject: 'member' | 'vehicle' | 'photo'; errors?: Partial<Record<string, string>>; testId: string }>(), { errors: () => ({}) });
+const props = withDefaults(defineProps<{ subject: StatementSubject; errors?: Partial<Record<string, string>>; testId: string }>(), { errors: () => ({}) });
 
 const templates = computed(() => TEMPLATE_KEYS.map((key) => ({ value: key, label: trans(`decisions.templates.${key}.label`) })));
 const documents = computed(() => (['community', 'terms', 'law'] as const).map((value) => ({ value, label: trans(`decisions.documents.${value}`) })));

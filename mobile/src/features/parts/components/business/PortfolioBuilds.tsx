@@ -12,7 +12,11 @@ import { useDistinctCover } from '@/features/vehicle/distinctCover';
 import { keepNameTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { aspect, createStyles, useTheme } from '@/theme';
-import { Photo, PressableScale, SampleBadges, SectionHeader, Text, type PhotoAspect } from '@/ui';
+import { SampleBadges } from '@/ui/Badge';
+import { Photo, type PhotoAspect } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Text } from '@/ui/Text';
 import { joinLabel } from '@/ui/rowParts';
 
 import { BuildsWall, type BuildsWallProps } from '../BuildsWall';

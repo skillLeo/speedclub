@@ -9,6 +9,7 @@ use App\Models\BuildUpdate;
 use App\Models\Comment;
 use App\Models\Reaction;
 use App\Models\VehicleHighlight;
+use App\Services\BuildScore\BuildScores;
 use App\Services\Social\Collections;
 use App\Services\Social\Mentions;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +43,8 @@ class DeleteBuildUpdate
             Collections::forgetItem(CollectionItemType::BuildUpdate, $id);
 
             $update->delete();
+            // M5.9c: the entry, its pair and its reactions stop counting for the Build Score.
+            app(BuildScores::class)->touch($update->vehicle_id);
         });
 
         foreach ($photos as $photo) {

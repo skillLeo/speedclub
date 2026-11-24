@@ -13,10 +13,10 @@ $ulid = '[0-9A-Za-z]{26}';
 Route::middleware([...AdminRoutes::signedIn(), 'can:content.view'])->prefix('editorial')->name('editorial.')->group(function () use ($ulid): void {
     Route::get('/', EditorialController::class)->name('index');
 
-    Route::middleware(['can:content.edit', 'staff.recent-password', 'throttle:30,1'])->group(function () use ($ulid): void {
+    Route::middleware(['can:content.edit', 'staff.recent-password', 'throttle:30,1,admin-editorial-1'])->group(function () use ($ulid): void {
         Route::post('items/{item}/hide', [EditorialActionsController::class, 'hide'])->where('item', $ulid)->name('items.hide');
         Route::post('items/{item}/show', [EditorialActionsController::class, 'show'])->where('item', $ulid)->name('items.show');
     });
 
-    Route::post('flag', [EditorialActionsController::class, 'flag'])->middleware(['can:flags.manage', 'staff.recent-password', 'throttle:30,1'])->name('flag');
+    Route::post('flag', [EditorialActionsController::class, 'flag'])->middleware(['can:flags.manage', 'staff.recent-password', 'throttle:30,1,admin-editorial-2'])->name('flag');
 });

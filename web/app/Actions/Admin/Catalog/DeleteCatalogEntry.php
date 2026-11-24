@@ -34,7 +34,7 @@ class DeleteCatalogEntry
     public function handle(Staff $staff, Make|VehicleModel|Generation|Brand $entry, string $reason): array
     {
         StaffAtoms::ensure($staff, 'catalog.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         return DB::transaction(function () use ($staff, $entry, $reason): array {
             /** @var Make|VehicleModel|Generation|Brand $row */

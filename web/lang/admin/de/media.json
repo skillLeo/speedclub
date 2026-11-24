@@ -40,7 +40,12 @@
         "modification": "Mod-Foto",
         "build_update": "Build-Update",
         "user": "Profilbild",
-        "profile": "Profilbild"
+        "profile": "Profilbild",
+        "event": "Treffen-Cover",
+        "business": "Betriebsbild",
+        "event_photo": "Treffen-Galerie",
+        "forum_post": "Forum-Foto",
+        "forum_thread": "Forum-Foto"
     },
     "categories": {
         "exterior": "Außen",
@@ -48,7 +53,8 @@
         "engine": "Motor",
         "wheels": "Räder",
         "detail": "Detail",
-        "other": "Sonstiges"
+        "other": "Sonstiges",
+        "event": "Treffen"
     },
     "status": {
         "approved": "Freigegeben",

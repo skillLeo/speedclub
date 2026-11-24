@@ -33,7 +33,7 @@ class MemberBulkRequest extends FormRequest
             'action' => ['required', 'string', Rule::in(BulkMemberAction::ACTIONS)],
             'ids' => ['required', 'array', 'min:1', 'max:'.BulkRunner::MAX_IDS],
             'ids.*' => ['required', 'string', 'ulid'],
-            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
             'type' => [$restrict ? 'required' : 'prohibited', Rule::enum(RestrictionType::class)],
             'until' => [$restrict ? 'nullable' : 'prohibited', 'date', 'after:now'],
             ...($restrict ? Statement::rules() : []),

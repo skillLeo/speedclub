@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Moderation\ModerationHolds;
 use App\Services\Showcase\SampleContent;
+use App\Support\ViewAs;
 use Illuminate\Auth\Access\Response;
 
 /**
@@ -63,6 +64,15 @@ class VehiclePolicy
     }
 
     /**
+     * M5.9b part 2: the STREET DEX switches that only hide the car more (Ghost mode, spotting paused, cities hidden) stay available
+     * under a publishing restriction, like going private (UpdateVehicle::onlyReducesExposure decides what a body may hold).
+     */
+    public function reduceExposure(User $user, Vehicle $vehicle): bool
+    {
+        return $vehicle->isOwnedBy($user) && ! $vehicle->trashed() && ! $user->isDeactivated();
+    }
+
+    /**
      * Stays available under a restriction: a member can always take their own content down.
      */
     public function delete(User $user, Vehicle $vehicle): bool
@@ -103,11 +113,33 @@ class VehiclePolicy
     }
 
     /**
+     * M5.7 INS-01 (10 §6.1, m5.7-contract §10): the car's statistics are the owner's alone; staff in view-as get 403 view_as_read_only
+     * (owner-only like the private budget, ADR-441). Open under a restriction.
+     */
+    public function viewInsights(User $user, Vehicle $vehicle): Response|bool
+    {
+        if (ViewAs::active()) {
+            return Response::deny(code: ErrorCode::ViewAsReadOnly->value);
+        }
+
+        return $vehicle->isOwnedBy($user) && ! $vehicle->trashed() && ! $user->isDeactivated();
+    }
+
+    /**
      * Reading and downloading the owner's own code. No restriction stops it; a suspended member's code simply leads nowhere.
      */
     public function manageQr(User $user, Vehicle $vehicle): bool
     {
         return $vehicle->isOwnedBy($user) && ! $vehicle->trashed() && ! $user->isDeactivated();
+    }
+
+    /**
+     * M5.4: changing the sticker design (autosave, restore, Scan-Test, order link). Reading and downloading is manageQr. Open under a
+     * publishing restriction like the code itself (a sticker is no publication on the platform); a suspended owner only reads.
+     */
+    public function designSticker(User $user, Vehicle $vehicle): bool
+    {
+        return $vehicle->isOwnedBy($user) && ! $vehicle->trashed() && $user->isActive();
     }
 
     /**
@@ -135,6 +167,24 @@ class VehiclePolicy
     public function maintain(User $user, Vehicle $vehicle): bool
     {
         return $vehicle->isOwnedBy($user) && ! $vehicle->trashed() && ! $user->isDeactivated();
+    }
+
+    /**
+     * M5.9b DEX-06 (m5.9b contract §4): the spot numbers of a car are its owner's alone. Private data, not publishing: no restriction
+     * stops reading them.
+     */
+    public function viewSpotStats(User $user, Vehicle $vehicle): bool
+    {
+        return $vehicle->isOwnedBy($user) && ! $vehicle->trashed() && ! $user->isDeactivated();
+    }
+
+    /**
+     * M5.9b DEX-04: the card of a car the member may see. Whether it shows their spot or the "noch nicht gespottet" preview is the
+     * controller's question (a preview needs a public car that is not in ghost mode, unless it is the member's own).
+     */
+    public function viewDexCard(User $user, Vehicle $vehicle): bool
+    {
+        return ! $user->isDeactivated() && $this->view($user, $vehicle);
     }
 
     private function canWriteContent(User $user): bool

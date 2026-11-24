@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Brand;
 use App\Models\ModCategory;
 use App\Models\Product;
+use App\Services\Dex\DexNumbers;
 use Database\Seeders\Concerns\SeedClock;
 use Illuminate\Database\Seeder;
 
@@ -33,11 +34,27 @@ class DatabaseSeeder extends Seeder
                 FeatureFlagSeeder::class,
                 ConfigSeeder::class,
                 StaffSeeder::class,
+                // M5.9b STREET DEX: the city list (reference geography, no coordinates) and the sets.
+                DeCitySeeder::class,
+                DexSetSeeder::class,
+                // M5.9d: the launch badges (never changes a badge staff edited).
+                BadgeSeeder::class,
+                // M5.8: the forum's categories (one per make after the catalogue, one per Bundesland); never undoes an admin's edit.
+                ForumCategorySeeder::class,
             ]);
 
             if (DemoSeeder::runsAutomatically()) {
                 $this->call(DemoSeeder::class);
+                // M5.5: badged shop samples (sticker drawings, a licensed hero photo), local and staging only.
+                $this->call(ShopSampleSeeder::class);
+                // M5.8: 25 badged forum sample threads by the showcase members, local and staging only.
+                $this->call(ForumSampleSeeder::class);
+                // R4-2.3: five badged sample crews of the showcase members, local and staging only.
+                $this->call(ShowcaseCrewsSeeder::class);
             }
+
+            // M5.9b: Dex numbers for published cars a seeder wrote without PublishVehicle, in the order of their first publish.
+            app(DexNumbers::class)->assignMissing();
 
             // After the demo, so a demo build can become a cover.
             $this->call(CollectionSeeder::class);

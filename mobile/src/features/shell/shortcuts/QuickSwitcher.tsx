@@ -3,7 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Icon, PressableScale, SearchBar, Sheet, Text, type IconName } from '@/ui';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { SearchBar } from '@/ui/SearchBar';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
 import { keyOf } from '@/ui/useRovingKeys';
 
 import { filterSwitcher, moveActive, SWITCHER_GROUPS, type SwitcherGroup, type SwitcherItem } from './switcher';

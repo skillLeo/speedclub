@@ -17,7 +17,7 @@
     $describedBy = fn (string $field, bool $hint = true): string => trim(($hint ? 'report-'.$field.'-hint ' : '').($bag->has($field) ? 'report-'.$field.'-error' : ''));
     $turnstile = \App\Services\Support\Turnstile::siteKey() !== null && \App\Services\Support\Turnstile::enabled();
 @endphp
-<x-public.layout :title="$title.' · SPEED CLUB'" :description="__('safety.form.description')" robots="noindex" :canonical="url('/melden')">
+<x-public.layout :title="$title.' · Speedclub'" :description="__('safety.form.description')" robots="noindex" :canonical="url('/melden')">
     @if ($turnstile && $state === 'form')
         @push('sc-preload')
             <script src="{{ \App\Services\Support\Turnstile::SCRIPT_URL }}" async defer nonce="{{ Vite::cspNonce() }}"></script>

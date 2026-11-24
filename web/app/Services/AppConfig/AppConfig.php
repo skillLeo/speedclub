@@ -13,6 +13,7 @@ use App\Models\FeatureFlag;
 use App\Services\Brand\BrandAssets;
 use App\Services\Config\PreviewContext;
 use App\Services\Config\PreviewTokens;
+use App\Services\System\Integrations;
 use Closure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -57,8 +58,8 @@ class AppConfig
         'wordmark_black' => '/brand/logo-wide-black-640.webp',
     ];
 
-    /** Both bundled wordmarks are 640 × 192. */
-    private const BUNDLED_WORDMARK_SIZE = ['width' => 640, 'height' => 192];
+    /** Both bundled wordmarks are 640 × 169 (client logo of round 3, 2026-11-19). */
+    private const BUNDLED_WORDMARK_SIZE = ['width' => 640, 'height' => 169];
 
     private ?PreviewContext $preview = null;
 
@@ -292,6 +293,7 @@ class AppConfig
     private function publicFlags(): array
     {
         $flags = [];
+        $aiConfigured = Integrations::aiConfigured();
 
         foreach (FeatureFlag::query()->orderBy('key')->get() as $flag) {
             /** @var array<string, mixed> $rules */
@@ -305,7 +307,9 @@ class AppConfig
 
             /** @var string $key */
             $key = $flag->getAttribute('key');
-            $flags[$key] = $flag->getAttribute('enabled') === true && is_numeric($percentage) && (float) $percentage >= 100;
+            // M5.9 (m5.9-contract §2.5, lead D-8): without an AI provider key every ai.* surface hides, whatever the table says.
+            $flags[$key] = $flag->getAttribute('enabled') === true && is_numeric($percentage) && (float) $percentage >= 100
+                && (! str_starts_with($key, 'ai.') || $aiConfigured);
         }
 
         return $flags;

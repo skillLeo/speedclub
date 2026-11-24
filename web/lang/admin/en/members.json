@@ -114,6 +114,7 @@
         "label": "Member sections",
         "overview": "Overview",
         "vehicles": "Vehicles",
+        "wrapped": "Wrapped",
         "security": "Security & sessions",
         "reports": "Reports",
         "messages": "Messages",
@@ -147,7 +148,7 @@
         "city": "City",
         "bio": "Bio",
         "signup_ref": "Signed up from",
-        "ref_qr": "QR scan",
+        "ref_qr": "Sticker scan",
         "ref_public_vehicle": "Public vehicle page",
         "ref_public_profile": "Public profile",
         "ref_none": "Direct",
@@ -181,7 +182,7 @@
         "visibility": "Visibility",
         "photos": "Photos",
         "mods": "Mods",
-        "qr": "QR",
+        "qr": "Sticker",
         "updated": "Updated",
         "empty_title": "No vehicle yet",
         "empty_body": "As soon as the member adds a vehicle, it shows here."
@@ -305,7 +306,7 @@
     "edit": {
         "title": "Edit profile",
         "body": "The member sees changes at once. A new username frees the old one.",
-        "username_hint": "3–24 characters: a–z, 0–9, dot and underscore.",
+        "username_hint": "1–40 characters: a–z, 0–9, dot and underscore. As staff with no minimum and no reserved names; members choose 5–24 themselves.",
         "never_password": "You never see or set passwords here. Use the reset code instead.",
         "nothing": "You changed nothing.",
         "save": "Save"
@@ -359,7 +360,6 @@
     "view_as": {
         "title": "View as :name",
         "body": "Opens the app in a new tab as the member sees it, read-only and without messages. Ends after :minutes minutes.",
-        "reason_hint": "Why you need the view, 10–1,000 characters. Logged.",
         "consent": "The member agreed",
         "consent_optional": "The member agreed (note)",
         "consent_required": "Support needs the member's consent.",
@@ -371,5 +371,137 @@
         "not_possible": "This account cannot be viewed.",
         "confirm_again": "Password confirmed. Now click “Open view”.",
         "popup_blocked": "Your browser blocked the new tab. Allow pop-ups for the admin and try again."
+    },
+    "wrapped": {
+        "seasons_title": "Generated seasons",
+        "seasons_caption": "The member's Wrapped per season, newest first",
+        "seasons_empty": "No Wrapped has been generated for this member yet.",
+        "season": "Season",
+        "seasons": {
+            "saison": "Season :year",
+            "jahr": "Year :year"
+        },
+        "columns": {
+            "season": "Season",
+            "generated": "Generated",
+            "viewed": "Viewed",
+            "shared": "Shared",
+            "release": "Release"
+        },
+        "never": "Never",
+        "no_release": "No date",
+        "released": "Released",
+        "planned": "From :date",
+        "open_season": "Show :season",
+        "generate": "Generate preview",
+        "generate_hint": "Builds this season's Wrapped now from the current data, exactly like the nightly run. The member only sees it from the release date.",
+        "generate_failed": "The preview could not be generated. Please try again.",
+        "view_only": "View only: generating a preview needs the right to answer support requests.",
+        "load_failed": "This season could not be loaded.",
+        "preview_title": "Preview: :season",
+        "empty_title": "No Wrapped for this season yet",
+        "empty_body": "“Generate preview” builds it from the season's data. Without activity in the period there is none.",
+        "empty_body_view_only": "As soon as the nightly run or support generates it, it shows up here.",
+        "window": "Period :from – :to",
+        "generated_at": "Generated on :date",
+        "cards_count": "Cards: :count",
+        "opens": "Visible to the member",
+        "opens_sample": "Visible outside production",
+        "closed": "Not visible to the member yet",
+        "sample": "Sample",
+        "cards_caption": "Cards in the order the member sees them",
+        "card_position": "Card :n",
+        "open_image": "Open card :n as an image (1080 × 1920)",
+        "image_failed": "Image not available",
+        "kinds": {
+            "intro": "Intro",
+            "spots": "Spots",
+            "scans": "Scans",
+            "score": "Build Score",
+            "top_mod": "Top mod",
+            "treffen": "Meets",
+            "build_spirit": "Build Spirit",
+            "percentile": "State ranking",
+            "share": "Share"
+        },
+        "fields": {
+            "title": "Title",
+            "subtitle": "Subtitle",
+            "count": "Spots",
+            "unique_cars": "Different cars",
+            "cities": "Cities",
+            "rarest": "Rarest find",
+            "sticker_scans": "Sticker scans",
+            "profile_or_vehicle_views": "Views",
+            "top_city": "Top city",
+            "from": "Score before",
+            "to": "Score now",
+            "stage_from": "Stage before",
+            "stage_to": "Stage now",
+            "vehicle_name": "Car",
+            "name": "Mod",
+            "brand": "Brand",
+            "before_media": "Before photo",
+            "after_media": "After photo",
+            "attended": "Attended",
+            "names": "Meets",
+            "key": "Rule",
+            "explanation": "Explanation",
+            "bundesland": "State",
+            "percentile": "Top share",
+            "dex_number": "Dex number",
+            "score": "Build Score",
+            "stage": "Stage",
+            "qr_url": "Link on the sticker",
+            "image": "Photo"
+        },
+        "photo_yes": "Present (blurred)",
+        "photo_no": "None",
+        "dex": "Dex #:number",
+        "rarity": {
+            "street": "Street",
+            "tuned": "Tuned",
+            "rare": "Rare",
+            "legend": "Legend",
+            "ghost": "Ghost"
+        },
+        "forbidden": "You do not have permission to see this member's Wrapped.",
+        "flash": {
+            "generated": "Preview generated.",
+            "nothing": "There is no activity in this season, so there is no Wrapped either.",
+            "removed": "No activity in this season any more: the previous Wrapped was removed.",
+            "closed": "Deleted accounts get no Wrapped."
+        }
+    },
+    "badges": {
+        "title": "Badges",
+        "caption": "The member's earned badges, newest first",
+        "empty": "No badges earned yet.",
+        "columns": {
+            "name": "Badge",
+            "tier": "Tier",
+            "awarded": "Earned on",
+            "source": "Through",
+            "actions": "Actions"
+        },
+        "tiers": {
+            "bronze": "Bronze",
+            "silver": "Silver",
+            "gold": "Gold"
+        },
+        "source": {
+            "event": "The member's action",
+            "nightly": "Nightly run",
+            "apply": "“Apply now”"
+        },
+        "hidden": "Hidden",
+        "inactive": "Inactive",
+        "revoke": "Revoke",
+        "revoke_label": "Revoke the badge “:name”",
+        "revoke_title": "Revoke the badge “:name”?",
+        "revoke_body": "The badge leaves the profile, and so does an unread notice about it. It is not blocked: if the rule still holds, the next nightly run awards it again. So remove the abuse first, for example the spots.",
+        "flash": {
+            "revoked": "Badge revoked."
+        }
     }
 }

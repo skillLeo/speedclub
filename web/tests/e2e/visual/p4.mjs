@@ -6,8 +6,9 @@
 //             + tablet for the TABLET list. Admin (ADR-212): desktop1280 and desktop1440 only.
 //   themes    Carbon and Hell on every cell, + Schwarz on flagship screens. Admin: Carbon and Hell (no black theme, ADR-212).
 //   locale    DE on every cell; EN (Carbon) only for EN12, at iphone15pro and desktop1440.
-//   opt-in    a route's `p4: { en, tablet, black }` adds it to EN12, TABLET or the Schwarz cells without being one of those lists'
-//             representative screens (DQ-1183: the public pages of M4.16).
+//   opt-in    a route's `p4: { en, tablet, black, small }` adds it to EN12, TABLET, the Schwarz cells or the iphonese (375) cells
+//             without being one of those lists' representative screens (DQ-1183: the public pages of M4.16; `small`: DQ-M52-09).
+//             The 360 width is not a p4 device: it is the module tier's Hell DE cell (matrix.mjs planRoute).
 //   200 %     `qaFontScale=2` (the harness's font-scale override) at iphone15pro and desktop1440, Carbon DE, for flagship screens and
 //             forms. Admin: the zoom cell of ADR-212 instead (the 1280×800 window at a 640×400 CSS viewport), Carbon DE, as the phase
 //             tier takes it today.
@@ -76,7 +77,7 @@ export function p4PrimaryDeviceOf(route) {
  */
 export function p4DevicesOf(route) {
   if (routeKind(route) === 'admin') return ['desktop1280', 'desktop1440'];
-  const small = isFlagship(route) || isForm(route);
+  const small = isFlagship(route) || isForm(route) || route.p4?.small === true;
   return P4_DEVICE_IDS.filter((id) => {
     if (id === 'iphonese') return small;
     if (id === 'tablet') return isTablet(route);

@@ -1,0 +1,140 @@
+{
+    "title": "Spots",
+    "nav": {
+        "title": "Spots"
+    },
+    "intro": "Jeder Spot aus STREET DEX, die neuesten oben. Auffälligkeiten werden beim Lesen berechnet; gezeigt wird nur die Stadt, nie ein Ort.",
+    "caption": "Spots mit Zeit, Spotter, Auto, Stadt, Zählung, Nacht, Quelle und Auffälligkeiten",
+    "columns": {
+        "spotted_at": "Gespottet",
+        "spotter": "Spotter",
+        "car": "Auto",
+        "city": "Stadt",
+        "counted": "Gezählt",
+        "night": "Nacht",
+        "source": "Quelle",
+        "signals": "Auffälligkeiten",
+        "actions": "Aktionen"
+    },
+    "filters": {
+        "label": "Spots filtern",
+        "period": "Zeitraum",
+        "city": "Stadt",
+        "city_placeholder": "z. B. Köln",
+        "car": "Auto",
+        "car_placeholder": "Dex-Nr. oder ID",
+        "spotter": "Spotter",
+        "spotter_placeholder": "@Benutzername",
+        "signal": "Auffälligkeiten",
+        "status": "Status",
+        "any": "Alle",
+        "signals_only": "Nur Auffälligkeiten",
+        "apply": "Anwenden"
+    },
+    "presets": {
+        "signals": "Nur Auffälligkeiten",
+        "bursts": "Serien",
+        "removed": "Entfernt"
+    },
+    "status": {
+        "active": "Aktiv",
+        "removed": "Entfernt",
+        "all": "Alle"
+    },
+    "signal": {
+        "burst": "Serie",
+        "device": "Gleiches Gerät",
+        "hop": "Städtesprung",
+        "burst_detail": ":count Spots in :minutes Min.",
+        "device_detail": "Gerät mit :count weiteren Konten",
+        "hop_detail": ":city, :km km in :minutes Min.",
+        "hop_detail_unknown": ":km km in :minutes Min.",
+        "burst_rule": "Mehr als :count Spots desselben Spotters in :minutes Minuten.",
+        "device_rule": "Mehrere Konten, die gespottet haben, auf einer App-Installation.",
+        "hop_rule": "Zwei Spots desselben Spotters in Städten mehr als :km km auseinander innerhalb von :minutes Minuten.",
+        "device_off": "Gleiches Gerät wird noch nicht erkannt: Installationen sind bisher nur pro Mitglied gespeichert.",
+        "none": "Keine"
+    },
+    "source": {
+        "scanner": "Scanner"
+    },
+    "yes": "Ja",
+    "no": "Nein",
+    "not_counted": "Nein, Konto zu neu",
+    "dex_number": "Dex #:number",
+    "no_dex_number": "Ohne Dex-Nr.",
+    "no_city": "Ohne Stadt",
+    "caption_night": "Nachts",
+    "caption_not_counted": "Nicht gezählt",
+    "removed_badge": "Entfernt",
+    "open_record": "Spot öffnen",
+    "empty_title": "Noch keine Spots",
+    "empty_body": "Sobald Mitglieder in der App Autos scannen, stehen die Spots hier, mit Stadt und Zeit.",
+    "empty_body_removed": "Alle bisherigen Spots sind entfernt. Unter „Entfernt“ stehen sie weiter.",
+    "view_only": "Nur ansehen: Spots entfernen kann, wer Moderationsentscheidungen treffen darf.",
+    "actions": {
+        "remove": "Spot entfernen",
+        "remove_selected": "Spots entfernen"
+    },
+    "remove": {
+        "title": "Spot entfernen?",
+        "title_many": ":count Spots entfernen?",
+        "body": "Der Spot verschwindet aus dem Dex des Spotters, seine XP werden abgezogen. Spot-Zahlen und Build Score des Autos und der Set-Fortschritt werden neu berechnet. Ein Set, das ohne diesen Spot nicht mehr komplett ist, verliert den Abschluss und die XP dafür. Abzeichen bleiben.",
+        "body_many": "Jeder Spot wird einzeln entfernt und protokolliert, seine XP werden abgezogen. Spot-Zahlen, Build Score und Set-Fortschritt werden danach einmal neu berechnet. Ein Set, das ohne diese Spots nicht mehr komplett ist, verliert den Abschluss und die XP dafür. Abzeichen bleiben. Höchstens :max auf einmal."
+    },
+    "bulk": {
+        "result": "Ergebnis: Spots entfernen",
+        "busy": "Du entfernst gerade schon mehrere Spots. Warte, bis das fertig ist.",
+        "window": "Mehr als 100 Spots in 24 Stunden darfst du nicht allein entfernen. Den Rest kannst du ab morgen entfernen.",
+        "codes": {
+            "not_found": "Diesen Spot gibt es nicht mehr.",
+            "already_removed": "War schon entfernt.",
+            "forbidden": "Keine Berechtigung.",
+            "failed": "Nicht entfernt, bitte noch einmal versuchen."
+        }
+    },
+    "flash": {
+        "removed": "Spot entfernt",
+        "already": "Der Spot war schon entfernt",
+        "bulk_done": "Spots entfernt",
+        "bulk_partial": "Nicht alle Spots wurden entfernt"
+    },
+    "record": {
+        "crumb": "Spots",
+        "title": "Spot vom :date",
+        "error": "Der Spot konnte nicht geladen werden.",
+        "tabs": {
+            "label": "Bereiche des Spots",
+            "overview": "Überblick",
+            "context": "Spotter-Verlauf",
+            "removals": "Entfernungen"
+        },
+        "facts": {
+            "spotted_at": "Gespottet",
+            "city": "Stadt",
+            "bundesland": "Bundesland",
+            "counted": "Gezählt",
+            "night": "Nachts (22–6 Uhr)",
+            "first_three": "First Spotter",
+            "source": "Quelle",
+            "spotter": "Spotter",
+            "joined": "Mitglied seit",
+            "spotter_spots": "Spots",
+            "car": "Auto",
+            "owner": "Besitzer",
+            "signals": "Auffälligkeiten",
+            "removal": "Entfernt"
+        },
+        "removed_by": "Am :date von :name",
+        "removed_by_unknown": "Am :date",
+        "spots_count": ":count aktiv",
+        "removed_count": ":count entfernt",
+        "context_intro": "Spots desselben Spotters eine Stunde vor und nach diesem.",
+        "context_empty": "Keine weiteren Spots in dieser Stunde.",
+        "this_spot": "Dieser Spot",
+        "removals_intro": "Entfernte Spots dieses Spotters, die neuesten zuerst.",
+        "removals_empty": "Von diesem Spotter wurde noch kein Spot entfernt.",
+        "open_member": "Mitglied öffnen",
+        "open_car": "Fahrzeug öffnen"
+    }
+}

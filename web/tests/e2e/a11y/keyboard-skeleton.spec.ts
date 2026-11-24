@@ -13,5 +13,6 @@ test('the tab bar is reachable with the keyboard, in visual order', async ({ pag
     const id = await page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? '');
     if (id.startsWith('tab.') && !seen.includes(id)) seen.push(id);
   }
-  expect(seen).toEqual(['tab.home', 'tab.discover', 'tab.garage', 'tab.messages', 'tab.profile']);
+  // M5.2 (10 §1): Shop replaced Nachrichten in the bar.
+  expect(seen).toEqual(['tab.home', 'tab.discover', 'tab.garage', 'tab.shop', 'tab.profile']);
 });

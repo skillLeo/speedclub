@@ -31,6 +31,7 @@
     },
     "503": {
         "title": "Maintenance",
-        "body": "SPEED CLUB is under maintenance. The admin will be back shortly."
-    }
+        "body": "Speedclub is under maintenance. The admin will be back shortly."
+    },
+    "419_write": "The page was open too long or your session has ended. Nothing was saved. Reload the page and try again."
 }

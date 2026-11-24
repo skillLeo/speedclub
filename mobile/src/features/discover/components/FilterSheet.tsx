@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Button, Sheet } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Sheet } from '@/ui/Sheet';
 
 import { setSingle, type FilterOptions, type SearchFilters } from '../filters';
 import { FilterPanel, type FilterPanelStatus } from './FilterPanel';

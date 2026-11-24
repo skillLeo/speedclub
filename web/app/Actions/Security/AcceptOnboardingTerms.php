@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\AppConfig\LegalDocuments;
 use App\Services\Audit\Audit;
 use App\Services\Content\Consents;
+use App\Services\Members\MemberActivation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -21,7 +22,10 @@ use Illuminate\Validation\ValidationException;
  */
 final class AcceptOnboardingTerms
 {
-    public function __construct(private readonly LegalDocuments $documents) {}
+    public function __construct(
+        private readonly LegalDocuments $documents,
+        private readonly MemberActivation $activation,
+    ) {}
 
     public function handle(User $member, string $termsVersion, string $privacyVersion): User
     {
@@ -49,7 +53,7 @@ final class AcceptOnboardingTerms
             throw ValidationException::withMessages($errors);
         }
 
-        return DB::transaction(function () use ($member, $accepted): User {
+        $member = DB::transaction(function () use ($member, $accepted): User {
             $locked = User::query()->whereKey($member->getKey())->lockForUpdate()->firstOrFail();
 
             if (! $locked->isPendingTerms()) {
@@ -67,5 +71,10 @@ final class AcceptOnboardingTerms
 
             return $locked;
         });
+
+        // M5.9d: a passwordless account activates here (its address is proved already): founding number, invite code.
+        $this->activation->activate($member);
+
+        return $member;
     }
 }

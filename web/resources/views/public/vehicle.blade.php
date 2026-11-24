@@ -6,12 +6,28 @@
     $photos = $vehicle['photos'];
     $count = count($photos);
     $owner = $vehicle['owner'];
-    $sections = ['overview' => 'section_overview', 'specs' => 'section_specs', 'mods' => 'section_mods', 'history' => 'section_history'];
-    // DQ-1078: the Übersicht photo preview is one 3-up row — the photos after the hero, or from the first with fewer than four.
+    // DQ-1078: the photo preview is one 3-up row — the photos after the hero, or from the first with fewer than four.
     $thumbs = $count >= 4 ? array_slice($photos, 1, 3) : array_slice($photos, 0, 3);
     $months = collect($vehicle['updates'])->groupBy('month_label');
-    // As VEH-01's ModsSection: groups with rows only, and the disclaimer of 08_LEGAL §7 closes every non-empty list (ADR-153).
-    $modGroups = array_values(array_filter($vehicle['mods']['groups'], fn (array $group): bool => $group['items'] !== []));
+    // DQ-P5-029, as VEH-01's ModsSection (builtGroupsOf): the built part of the build, without the plans (those are in Pläne); groups with
+    // rows only, and the disclaimer of 08_LEGAL §7 closes every non-empty list (ADR-153).
+    $modGroups = array_values(array_filter(array_map(function (array $group): array {
+        $items = array_values(array_filter($group['items'], fn (array $mod): bool => ($mod['status'] ?? null) !== 'planned'));
+
+        return [...$group, 'items' => $items, 'count' => count($items)];
+    }, $vehicle['mods']['groups']), fn (array $group): bool => $group['items'] !== []));
+    $builtCount = array_sum(array_column($modGroups, 'count'));
+    $plans = $vehicle['plans']['items'] ?? [];
+    // DQ-P5-029: the app's one scroll, its names and order (ADR-505/521): Überblick · Daten · Mods · Pläne · Verlauf · Galerie. Pläne and
+    // Galerie only when there is something to show (a visitor never sees the owner's empty plan sample).
+    $sections = array_filter([
+        'overview' => 'section_overview',
+        'specs' => 'section_specs',
+        'mods' => 'section_mods',
+        'plans' => $plans !== [] ? 'section_plans' : null,
+        'history' => 'section_history',
+        'gallery' => $thumbs !== [] ? 'section_gallery' : null,
+    ]);
     // DQ-1172: from 1280 the hero is the content frame (1200), below it the full width.
     $heroSizes = '(min-width: 1280px) 1200px, 100vw';
     // DQ-1168: without photos the hero is the empty stage of the brand layer (a photo no content uses), never a grey glyph tile.
@@ -88,7 +104,7 @@
                             @if (($links['save'] ?? null) !== null)
                                 <a href="{{ $links['save'] }}" class="sc-focus sc-share sc-save-row" aria-label="{{ __('public.vehicle.save') }}" data-testid="VEH-01.saveRow"><x-public.icon name="bookmark-simple" :size="24" /></a>
                             @endif
-                            <button type="button" class="sc-focus sc-share" data-share data-share-title="{{ $vehicle['full_title'] }}" data-share-url="{{ $seo['canonical'] }}" data-share-done="{{ __('public.vehicle.share_copied') }}" aria-label="{{ __('public.vehicle.share') }}" data-testid="VEH-01.share"><x-public.icon name="share-network" :size="24" /></button>
+                            <button type="button" class="sc-focus sc-share" data-share data-share-title="{{ $vehicle['full_title'] }}" data-share-url="{{ $seo['canonical'] }}?via=share" data-share-done="{{ __('public.vehicle.share_copied') }}" aria-label="{{ __('public.vehicle.share') }}" data-testid="VEH-01.share"><x-public.icon name="share-network" :size="24" /></button>
                         </span>
                     </div>
                 @else
@@ -96,7 +112,7 @@
                         @if (($links['save'] ?? null) !== null)
                             <a href="{{ $links['save'] }}" class="sc-focus sc-share sc-save-row" aria-label="{{ __('public.vehicle.save') }}" data-testid="VEH-01.saveRow"><x-public.icon name="bookmark-simple" :size="24" /></a>
                         @endif
-                        <button type="button" class="sc-focus sc-share" data-share data-share-title="{{ $vehicle['full_title'] }}" data-share-url="{{ $seo['canonical'] }}" data-share-done="{{ __('public.vehicle.share_copied') }}" aria-label="{{ __('public.vehicle.share') }}" data-testid="VEH-01.share"><x-public.icon name="share-network" :size="24" /></button>
+                        <button type="button" class="sc-focus sc-share" data-share data-share-title="{{ $vehicle['full_title'] }}" data-share-url="{{ $seo['canonical'] }}?via=share" data-share-done="{{ __('public.vehicle.share_copied') }}" aria-label="{{ __('public.vehicle.share') }}" data-testid="VEH-01.share"><x-public.icon name="share-network" :size="24" /></button>
                     </div>
                 @endif
 
@@ -121,13 +137,15 @@
 
                     @if ($vehicle['description'])
                         <div class="mt-12">
+                            {{-- Client feedback CF-3 (as VEH-01): the owner's own words are labelled "Beschreibung". --}}
+                            <h3 class="mb-8 text-headline text-ink" data-testid="WEB-01.descriptionTitle">{{ __('public.vehicle.description_title') }}</h3>
                             <p class="sc-clamp whitespace-pre-line text-body text-ink" data-clamp data-testid="VEH-01.description">{{ \App\Support\SafeMarkdown::joinShortCompounds($vehicle['description']) }}</p>
                             <button type="button" class="sc-focus sc-more text-callout text-ink-2 hover:text-ink" data-clamp-toggle hidden aria-expanded="false" data-testid="VEH-01.more">{{ __('public.vehicle.more') }}</button>
                         </div>
                     @endif
 
                     @if ($vehicle['highlights'] !== [])
-                        <x-public.section-header :title="__('public.vehicle.highlights')" href="#mods" :action="__('public.vehicle.all_mods', ['count' => $vehicle['mods']['count']])" class="mt-24" />
+                        <x-public.section-header :title="__('public.vehicle.highlights')" href="#mods" :action="__('public.vehicle.all_mods', ['count' => $builtCount])" class="mt-24" />
                         <ul class="sc-group mt-8" data-testid="VEH-01.highlights">
                             @foreach ($vehicle['highlights'] as $mod)
                                 <x-public.mod-row :mod="$mod" />
@@ -135,18 +153,7 @@
                         </ul>
                     @endif
 
-                    @if ($thumbs !== [])
-                        <div class="sc-veh-photos mt-24">
-                            <x-public.section-header :title="__('public.vehicle.photos')" :href="$links['web_app'].'/gallery'" :action="__('public.vehicle.all_photos', ['count' => $vehicle['photo_count']])" />
-                            <div class="sc-veh-preview mt-8" data-testid="WEB-01.photoPreview">
-                                @foreach ($thumbs as $photo)
-                                    <span class="sc-preview-tile" data-qa-exempt="photo"><x-public.photo :photo="$photo" sizes="(min-width: 768px) 256px, 34vw" :alt="$photo['alt'] ?: $vehicle['full_title']" class="h-full w-full object-cover" /></span>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    @if (! $vehicle['description'] && $vehicle['highlights'] === [] && $thumbs === [])
+                    @if (! $vehicle['description'] && $vehicle['highlights'] === [])
                         <p class="mt-12 text-body text-ink-2" data-testid="WEB-01.overviewEmpty">{{ __('public.vehicle.overview_empty') }}</p>
                     @endif
                 </section>
@@ -166,8 +173,8 @@
                 <section id="mods" class="sc-section" aria-labelledby="mods-title" data-testid="WEB-01.mods">
                     <h2 id="mods-title" class="flex items-center gap-8 t-title-2 text-ink">
                         {{ __('public.vehicle.section_mods') }}
-                        @if ($vehicle['mods']['count'] > 0)
-                            <span class="text-callout tabular-nums text-ink-3">{{ $vehicle['mods']['count'] }}</span>
+                        @if ($builtCount > 0)
+                            <span class="text-callout tabular-nums text-ink-3">{{ $builtCount }}</span>
                         @endif
                     </h2>
                     @forelse ($modGroups as $group)
@@ -184,6 +191,21 @@
                         <p class="mt-16 text-caption text-ink-3" data-testid="WEB-01.legalDisclaimer">{{ __('garage.legal_disclaimer') }}</p>
                     @endif
                 </section>
+
+                @if ($plans !== [])
+                    {{-- DQ-P5-029: VEH-01's Pläne for a visitor: the planned parts in the owner's order, never a budget. --}}
+                    <section id="plans" class="sc-section" aria-labelledby="plans-title" data-testid="WEB-01.plans">
+                        <h2 id="plans-title" class="flex items-center gap-8 t-title-2 text-ink">
+                            {{ __('public.vehicle.section_plans') }}
+                            <span class="text-callout tabular-nums text-ink-3">{{ count($plans) }}</span>
+                        </h2>
+                        <ul class="sc-group mt-16">
+                            @foreach ($plans as $mod)
+                                <x-public.mod-row :mod="$mod" />
+                            @endforeach
+                        </ul>
+                    </section>
+                @endif
 
                 <section id="history" class="sc-section" aria-labelledby="history-title" data-testid="WEB-01.history">
                     <h2 id="history-title" class="t-title-2 text-ink">{{ __('public.vehicle.section_history') }}</h2>
@@ -230,6 +252,23 @@
                         <p class="mt-16 text-callout text-ink-2">{{ __('public.vehicle.history_more', ['count' => $vehicle['updates_count'] - count($vehicle['updates'])]) }}</p>
                     @endif
                 </section>
+
+                @if ($thumbs !== [])
+                    {{-- DQ-P5-029: Galerie closes the one scroll, as in the app; "Alle Fotos" opens the gallery in the member web. --}}
+                    <section id="gallery" class="sc-section" aria-labelledby="gallery-title" data-testid="WEB-01.gallery">
+                        <div class="flex flex-wrap items-center justify-between gap-x-16">
+                            <h2 id="gallery-title" class="t-title-2 text-ink">{{ __('public.vehicle.section_gallery') }}</h2>
+                            <a href="{{ $links['web_app'].'/gallery' }}" class="sc-focus inline-flex min-h-44 items-center gap-4 rounded-xs text-callout text-ink-2 hover:text-ink" data-testid="WEB-01.allPhotos">{{ __('public.vehicle.all_photos', ['count' => $vehicle['photo_count']]) }}<x-public.icon name="caret-right" :size="16" /></a>
+                        </div>
+                        <div class="sc-veh-photos">
+                            <div class="sc-veh-preview mt-8" data-testid="WEB-01.photoPreview">
+                                @foreach ($thumbs as $photo)
+                                    <span class="sc-preview-tile" data-qa-exempt="photo"><x-public.photo :photo="$photo" sizes="(min-width: 768px) 256px, 34vw" :alt="$photo['alt'] ?: $vehicle['full_title']" class="h-full w-full object-cover" /></span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </section>
+                @endif
 
                 {{-- DQ-1057: no card and no second filled control (Folgen is the one): a guest's line under the sections and a text link to the
                      sign-in, which brings them back through next=. Lane B: `public.vehicle.closing_guest` ("Melde dich an, um :name zu

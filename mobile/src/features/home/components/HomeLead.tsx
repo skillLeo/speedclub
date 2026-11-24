@@ -5,7 +5,9 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 import type { FeedVehicle } from '@/api/queries/home';
 import { photoFields, variantUrl } from '@/features/profile/media';
 import { createStyles, size, useBreakpoint } from '@/theme';
-import { IconButton, MediaCard, SkeletonBlock } from '@/ui';
+import { IconButton } from '@/ui/IconButton';
+import { MediaCard } from '@/ui/MediaCard';
+import { SkeletonBlock } from '@/ui/Skeleton';
 import { leadAspect, mediaHeight } from '@/ui/mediaCardLayout';
 import { SaveToggle } from '@/ui/motion/kit';
 

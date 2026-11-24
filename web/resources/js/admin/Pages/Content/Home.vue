@@ -15,16 +15,17 @@ import DraftBar from './Partials/DraftBar.vue';
 import VehiclePicker from './Partials/VehiclePicker.vue';
 import { useConfigDraft, type EditorProps } from './Partials/configDraft';
 import { dayToInstant, instantToDay, peakLive, scheduleOf, type Schedule } from './Partials/dates';
-import { filterChips, filtersText, parseFilters, type Collection, type HomeCuration, type VehicleSummary } from './Partials/home';
+import { filterChips, filtersText, parseFilters, type Collection, type FilterLabels, type HomeCuration, type VehicleSummary } from './Partials/home';
 
 /**
  * ADM-29 Startseite kuratieren (06 §3, m3.5 §2): the featured builds of Start (FS-2) in order, each with an optional date range, at most
  * `limits.live` live at any moment; the Discover collections (a filter like Discover's address, or hand-picked builds) in order. As the
- * home_curation draft: save → preview → publish with a reason ⚿. Without a published version Start uses the configured list.
+ * home_curation draft: save → preview → publish ⚿. Without a published version Start uses the configured list.
  */
 const props = defineProps<{
     editor: EditorProps<HomeCuration>;
     vehicles: Record<string, VehicleSummary>;
+    filterLabels: FilterLabels;
     limits: { live: number; featured: number; collections: number; collection_vehicles: number };
     sorts: string[];
 }>();
@@ -79,7 +80,9 @@ const blank = (): Collection => ({ key: '', title: { de: '', en: null }, subtitl
 const editing = reactive<Collection>(blank());
 const editingIndex = ref<number | null>(null);
 const filterText = ref('');
-const chips = computed(() => filterChips(parseFilters(filterText.value), (key, params) => trans(key, params)));
+const chips = computed(() => filterChips(parseFilters(filterText.value), (key, params) => trans(key, params), props.filterLabels));
+// DQ-P5-102: a filter collection's row reads like the drawer's chips ("Marke: Nissan · Baujahr bis 2002"), never Discover's address.
+const filterSummary = (filters: Record<string, unknown>): string => filterChips(filters, (key, params) => trans(key, params), props.filterLabels).join(' · ');
 const subtitleDe = ref('');
 const subtitleEn = ref('');
 const titleEn = ref('');
@@ -210,7 +213,7 @@ const vehicleTitle = (id: string | null): string => (id === null ? '' : (known[i
                         <span class="w-24 text-right text-admin-base tabular-nums text-ink-3">{{ index + 1 }}</span>
                         <div class="flex min-w-240 flex-1 flex-col">
                             <span class="text-admin-base text-ink">{{ collection.title.de }}</span>
-                            <span class="break-all text-admin-base text-ink-3">{{ collection.mode === 'filter' ? filtersText(collection.filters) : transChoice('content.home.picked', collection.vehicle_ids.length, { count: formatNumber(collection.vehicle_ids.length) }) }}</span>
+                            <span class="text-admin-base text-ink-3">{{ collection.mode === 'filter' ? filterSummary(collection.filters) : transChoice('content.home.picked', collection.vehicle_ids.length, { count: formatNumber(collection.vehicle_ids.length) }) }}</span>
                             <span v-if="draft.errorAt(`collections.${index}`)" class="text-admin-base text-danger" role="alert">{{ draft.errorAt(`collections.${index}`) }}</span>
                         </div>
                         <Badge tone="neutral">{{ trans(`content.home.collection.mode_${collection.mode}`) }}</Badge>

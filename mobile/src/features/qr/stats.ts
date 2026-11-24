@@ -3,6 +3,9 @@
  * of 02_PRODUCT_SPEC §7 (10, 50, 100, 500, 1000 scans). No identities, only counts.
  */
 
+/** The scan statistics' flag: STK-02's "Scan-Statistik" row and STK-04 read the counts only while it is on. */
+export const SCAN_STATS_FLAG = 'sig.qr_stats';
+
 /** The milestones of the in-app `qr_milestone` notification, ascending. */
 export const QR_MILESTONES = [10, 50, 100, 500, 1000] as const;
 

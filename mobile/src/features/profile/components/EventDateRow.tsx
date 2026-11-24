@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
 import { createStyles, size, space } from '@/theme';
-import { Text } from '@/ui';
+import { Text } from '@/ui/Text';
 import { RowDivider } from '@/ui/rowParts';
 
 const useStyles = createStyles((t) => ({

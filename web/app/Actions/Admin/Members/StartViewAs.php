@@ -58,7 +58,7 @@ class StartViewAs
 
             /** @var PersonalAccessToken $token */
             $token = $new->accessToken;
-            $token->forceFill(['device_name' => 'SPEED CLUB Team', 'platform' => DevicePlatform::Web])->save();
+            $token->forceFill(['device_name' => 'Speedclub Team', 'platform' => DevicePlatform::Web])->save();
 
             Audit::record(AdminMemberEvent::ViewAsStarted->value, $member, after: [
                 'access_id' => $token->getKey(),

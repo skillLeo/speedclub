@@ -13,6 +13,7 @@ import Spinner from '../../Components/ui/Spinner.vue';
 import StatusPill from '../../Components/ui/StatusPill.vue';
 import { focusRing } from '../../Components/ui/styles';
 import { usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { formatDateTime, formatNumber, formatRelative } from '../../lib/format';
 import { flashText } from '../../lib/i18n';
 import { hasRoute, routeOr } from '../../lib/routes';
@@ -73,6 +74,7 @@ const empty = computed(() => state.value === 'empty');
 const visible = computed(() => Object.values(props.sections).some(Boolean) || props.downloads.length > 0 || (props.running ?? []).length > 0);
 const running = computed(() => (empty.value ? [] : (props.running ?? [])));
 const downloads = computed(() => (empty.value ? [] : props.downloads));
+const fourEyesOn = useFourEyes();
 const approvals = computed(() => (empty.value ? [] : props.approvals));
 const cases = computed(() => (empty.value ? [] : props.cases));
 const warnings = computed(() => (empty.value ? [] : props.warnings));
@@ -128,7 +130,7 @@ const warningHref = (warning: Warning): string | null => {
             </section>
 
             <!-- approvals -->
-            <section v-if="sections.approvals" aria-labelledby="alerts-approvals" class="flex flex-col gap-12" data-testid="ADM-08.approvals">
+            <section v-if="fourEyesOn && sections.approvals" aria-labelledby="alerts-approvals" class="flex flex-col gap-12" data-testid="ADM-08.approvals">
                 <div class="flex items-baseline justify-between gap-12">
                     <h2 id="alerts-approvals" class="flex items-baseline gap-8 text-headline text-ink">
                         {{ trans('alerts.approvals.title') }}<span v-if="approvals.length > 0" class="text-caption text-ink-3 tabular-nums">{{ formatNumber(approvals.length) }}</span>

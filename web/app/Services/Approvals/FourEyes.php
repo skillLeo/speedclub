@@ -8,6 +8,7 @@ use App\Models\ApprovalRequest;
 use App\Models\Staff;
 use App\Models\User;
 use App\Services\Admin\Members\StaffAtoms;
+use App\Services\Governance\Governance;
 use App\Services\Moderation\DecisionInput;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -20,6 +21,8 @@ use LogicException;
  *
  * - handler(): first line of every handler's execute(): the very request and approver approve() handed over;
  * - executor(): first line of every executor Action (ResetMemberTwoFactor, DeleteMemberAsStaff, ExportMemberData, the bulk execute());
+ *   two different people, or (ADR-507) the requesting Owner inside an Owner-Override of a publishing action, or (ADR-540) the
+ *   requester inside a direct run while four-eyes is off;
  * - member(): the member the executor acts on is the one the request names (or one of the ids of a member bulk request);
  * - suspension(): DecideCase for a staff suspension: inside the `moderation.suspend` approval, or the operator command (ADR-206 a).
  */
@@ -36,6 +39,11 @@ final class FourEyes
 
         if ($execution === null || $execution->request !== $request || $execution->approver !== $approver || $request->action !== $action) {
             throw new AuthorizationException('A four-eyes action runs only inside its approval.');
+        }
+
+        // N-3 of the M5.1 review: an Owner-Override reaches only the publishing handlers, also those that never call executor().
+        if ($execution->ownerOverride && ! in_array($action, OwnerOverride::ACTIONS, true)) {
+            throw new AuthorizationException('An Owner-Override covers only its own publishing request.');
         }
     }
 
@@ -58,6 +66,29 @@ final class FourEyes
             || $request->requested_by !== $requester->getKey()
             || $execution->approver->getKey() !== $approver->getKey()) {
             throw new AuthorizationException('A four-eyes action runs only inside its approval.');
+        }
+
+        // ADR-540: four-eyes is off and the requester runs their own request at once (Approvals::direct()); the switch is read again.
+        if ($execution->direct) {
+            if ($requester->getKey() !== $approver->getKey() || Governance::fourEyes()) {
+                throw new AuthorizationException('A direct run is its requester\'s own, and only while four-eyes is off.');
+            }
+
+            StaffAtoms::ensure($requester, ...$atoms);
+
+            return $request;
+        }
+
+        // ADR-507: the Owner-Override is the requester executing their own request; Approvals::overrideByOwner() checked inside the
+        // request's row lock that no second eligible approver exists and the governance switch is on. Only for the publishing actions.
+        if ($execution->ownerOverride) {
+            if (! in_array($request->action, OwnerOverride::ACTIONS, true) || $requester->getKey() !== $approver->getKey() || ! $requester->isOwner()) {
+                throw new AuthorizationException('An Owner-Override covers only its own publishing request.');
+            }
+
+            StaffAtoms::ensure($requester, ...$atoms);
+
+            return $request;
         }
 
         StaffAtoms::ensurePair($requester, $approver, ...$atoms);

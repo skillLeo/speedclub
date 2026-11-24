@@ -90,6 +90,11 @@ class MemberSettingsResource extends JsonResource
             'mention_privacy' => $this->resource->getAttribute('mention_privacy') ?? MentionPrivacy::Everyone,
             /** SET-07: shown in member search, Aktive Mitglieder and suggestions. */
             'discoverable' => $this->resource->getAttribute('discoverable') !== false,
+            /**
+             * SET-07 "Meine Spots zeigen" (M5.9b STREET DEX): owners whose car I spotted see my name in their spot numbers; off, they read
+             * "jemand". On by default.
+             */
+            'show_my_spots' => $this->resource->getAttribute('show_my_spots') !== false,
             /** SET-07: search engines may list the profile and the builds (robots meta on /u and /v, the sitemap). */
             'indexable' => $this->resource->getAttribute('indexable') !== false,
             /** SET-07 [SIG sig.msg_read_receipts]: send and see read receipts; both sides must have it on. */
@@ -102,10 +107,11 @@ class MemberSettingsResource extends JsonResource
             'ai_suggestions' => $this->resource->getAttribute('ai_suggestions') === true,
             /**
              * SET-09 (02_PRODUCT_SPEC §7, 09 §7.12): push and web_push (member web) switches per type, plus the e-mail digest of messages
-             * and the HU/AU and event e-mails; quiet hours in Europe/Berlin; push previews of messages (ADR-035); how often the message
+             * and the HU/AU and event e-mails (M5.6: `event_nearby`, the weekly "Neue Treffen in deiner Nähe", opt-in, every channel off by
+             * default, sent only with a SET-11 home region); quiet hours in Europe/Berlin; push previews of messages (ADR-035); how often the message
              * digest may go out (daily · weekly). Always complete: unset values are the defaults of the matrix.
              *
-             * @var array{types: array{new_follower: array{push: bool, web_push: bool}, followed_published: array{push: bool, web_push: bool}, build_saved: array{push: bool, web_push: bool}, new_message: array{push: bool, email_digest: bool, web_push: bool}, message_request: array{push: bool, web_push: bool}, hu_au_reminder: array{push: bool, email: bool, web_push: bool}, qr_milestone: array{push: bool, web_push: bool}, reaction: array{push: bool, web_push: bool}, mention: array{push: bool, web_push: bool}, comment: array{push: bool, web_push: bool}, vehicle_follower: array{push: bool, web_push: bool}, event_reminder: array{push: bool, email: bool, web_push: bool}, event_update: array{push: bool, web_push: bool}}, quiet_hours: array{enabled: bool, from: string, to: string}, message_previews: bool, digest_frequency: 'daily'|'weekly'}
+             * @var array{types: array{new_follower: array{push: bool, web_push: bool}, followed_published: array{push: bool, web_push: bool}, build_saved: array{push: bool, web_push: bool}, new_message: array{push: bool, email_digest: bool, web_push: bool}, message_request: array{push: bool, web_push: bool}, hu_au_reminder: array{push: bool, email: bool, web_push: bool}, qr_milestone: array{push: bool, web_push: bool}, reaction: array{push: bool, web_push: bool}, mention: array{push: bool, web_push: bool}, comment: array{push: bool, web_push: bool}, vehicle_follower: array{push: bool, web_push: bool}, event_reminder: array{push: bool, email: bool, web_push: bool}, event_update: array{push: bool, web_push: bool}, spot_alert: array{push: bool, web_push: bool}, badge_unlocked: array{push: bool, web_push: bool}, car_of_the_day: array{push: bool, web_push: bool}, car_of_the_day_owner: array{push: bool, web_push: bool}, invite_accepted: array{push: bool, web_push: bool}, forum_reply: array{push: bool, web_push: bool}, forum_mention: array{push: bool, web_push: bool}, forum_solved: array{push: bool, web_push: bool}, forum_reply: array{push: bool, web_push: bool}, forum_mention: array{push: bool, web_push: bool}, forum_solved: array{push: bool, web_push: bool}, event_nearby: array{push: bool, email: bool, web_push: bool}}, quiet_hours: array{enabled: bool, from: string, to: string}, message_previews: bool, digest_frequency: 'daily'|'weekly'}
              */
             'notification_prefs' => NotificationPrefs::for($this->resource),
         ];

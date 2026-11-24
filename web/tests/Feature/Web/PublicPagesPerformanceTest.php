@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\BrandFiles;
 use App\Support\PublicIcons;
 use Illuminate\Support\Facades\Vite;
 
@@ -36,11 +37,12 @@ it('inlines the built stylesheet in a nonced style block and links no stylesheet
         ->not->toContain('inter-latin-');
 })->with(['home', 'vehicle', 'member']);
 
-it('puts the landing hero photo first in the queue, as the only high-priority image (M4.16: the wordmark lives in the top bar)', function () {
+it('puts the landing hero photo first in the queue, as the only high-priority image, and draws no hero logo (R4DQ-61)', function () {
     $html = (string) $this->get('/')->assertOk()->getContent();
 
     expect($html)->toMatch('~<img[^>]+fetchpriority="high"[^>]+class="sc-photo sc-ph-landing-hero~')
         ->and(preg_match_all('~<img[^>]+fetchpriority="high"~', $html))->toBe(1)
+        ->and(substr_count($html, 'rel="preload" as="image"'))->toBe(1)
         ->and($html)->not->toContain('data-testid="WEB-03.logo"');
 });
 
@@ -124,4 +126,81 @@ it('prints no sprite markup for a page without icons, and only the symbols a pag
     PublicIcons::use('ph-wrench');
     expect((string) PublicIcons::sprite('components.icons.phosphor-sprite'))->toContain('<symbol id="ph-wrench"')
         ->not->toContain('<symbol id="ph-arrow-right"');
+});
+
+it('gives the wordmark a 2x file beside the 3x one, so a phone does not load 3x before the hero has painted (M5 gate LCP)', function (string $page) {
+    $path = $page === 'vehicle' ? '/v/'.$this->vehicle->canonicalSlug() : ($page === 'member' ? '/u/lukas.sc' : '/');
+    $html = (string) $this->get($path)->assertOk()->getContent();
+    preg_match_all('~<img\b[^>]*\bclass="sc-logo-on-(dark|light) sc-wordmark"[^>]*>~', $html, $marks, PREG_SET_ORDER);
+
+    // Top bar and footer, each in both tones; every one lazy, 121 CSS px wide (client logo of round 3), the 242 file first and the 320 file as src and 3x.
+    expect($marks)->toHaveCount(4);
+
+    foreach ($marks as [$img, $theme]) {
+        $tone = $theme === 'dark' ? 'white' : 'black';
+
+        expect($img)->toContain('src="'.BrandFiles::asset("brand/logo-wide-{$tone}-320.webp").'"')
+            ->toContain('srcset="'.BrandFiles::asset("brand/logo-wide-{$tone}-242.webp").' 242w, '.BrandFiles::asset("brand/logo-wide-{$tone}-320.webp").' 320w"')
+            ->toContain('sizes="121px"')
+            ->toContain('width="121" height="32"')
+            ->toContain('loading="lazy"')
+            ->not->toContain('fetchpriority');
+    }
+
+    foreach (['white', 'black'] as $tone) {
+        foreach ([242 => 64, 320 => 85] as $width => $height) {
+            $size = getimagesize(public_path("brand/logo-wide-{$tone}-{$width}.webp"));
+
+            expect($size)->not->toBeFalse()
+                ->and([$size[0], $size[1]])->toBe([$width, $height]);
+        }
+    }
+
+    expect(filesize(public_path('brand/logo-wide-white-242.webp')))->toBeLessThan((int) (filesize(public_path('brand/logo-wide-white-320.webp')) * 0.6));
+})->with(['home', 'vehicle', 'member']);
+
+it('inlines only the tokens the page reads, and every token it reads is there (scripts/vite-prune-tokens.mjs)', function (string $page) {
+    $path = $page === 'vehicle' ? '/v/'.$this->vehicle->canonicalSlug() : ($page === 'member' ? '/u/lukas.sc' : '/');
+    $html = (string) $this->get($path)->assertOk()->getContent();
+    preg_match_all('~<style nonce="[^"]+">(.*?)</style>~s', $html, $blocks);
+    $css = implode("\n", $blocks[1]);
+    preg_match_all('~[{;](--sc-[a-z0-9-]+)\s*:~', $css, $defined);
+    preg_match_all('~var\(\s*(--sc-[a-z0-9-]+)~', $css, $read);
+    $defined = array_unique($defined[1]);
+
+    // Nothing the page's stylesheet, its photo rules or its layout rules (spec strip, display titles) read is missing.
+    expect(array_values(array_diff(array_unique($read[1]), $defined)))->toBe([])
+        // The type roles and the theme colours of every theme are there.
+        ->and($defined)->toContain('--sc-type-display-title-size', '--sc-type-display-title-shrink-size', '--sc-color-bg-canvas', '--sc-gutter')
+        // The app's own tokens are not: springs, chat bubbles, z-indices, the tab bar.
+        ->and($defined)->not->toContain('--sc-spring-default-duration')
+        ->not->toContain('--sc-color-bubble-own-bg')
+        ->not->toContain('--sc-z-sheet')
+        ->not->toContain('--sc-tabbar');
+})->with(['home', 'vehicle', 'member']);
+
+it('serves the icons a browser fetches after every first load as indexed PNGs (build-brand.mjs, lossless)', function () {
+    $pngs = ['apple-touch-icon.png' => 180, 'favicon-32.png' => 32, 'icon-192.png' => 192, 'icon-512.png' => 512];
+
+    foreach ($pngs as $file => $size) {
+        $bytes = (string) file_get_contents(public_path($file));
+
+        // IHDR: width, height, bit depth 8, colour type 3 (indexed).
+        expect(substr($bytes, 0, 8))->toBe("\x89PNG\r\n\x1a\n")
+            ->and(unpack('Nwidth/Nheight/Cdepth/Ctype', substr($bytes, 16, 10)))->toBe(['width' => $size, 'height' => $size, 'depth' => 8, 'type' => 3]);
+    }
+
+    $ico = (string) file_get_contents(public_path('favicon.ico'));
+    $frames = unpack('v', substr($ico, 4, 2))[1];
+
+    expect($frames)->toBe(3);
+
+    for ($i = 0; $i < $frames; $i++) {
+        $entry = unpack('Csize/x/x/x/x2/x2/Vlength/Voffset', substr($ico, 6 + $i * 16, 16));
+        $frame = substr($ico, $entry['offset'], $entry['length']);
+
+        expect(substr($frame, 0, 8))->toBe("\x89PNG\r\n\x1a\n")
+            ->and(ord($frame[25]))->toBe(3)
+            ->and(unpack('N', substr($frame, 16, 4))[1])->toBe([16, 32, 48][$i]);
+    }
 });

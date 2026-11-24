@@ -9,7 +9,7 @@
 @php
     $body = __('public.email_action.'.$action.'.body', ['minutes' => config()->integer('speedclub.verification.expires_minutes')]);
 @endphp
-<x-public.layout :title="__('public.email_action.'.$action.'.title').' · SPEED CLUB'" :description="$body" robots="noindex">
+<x-public.layout :title="__('public.email_action.'.$action.'.title').' · Speedclub'" :description="$body" robots="noindex">
     <x-public.top-bar />
     <main id="main" class="sc-form-page flex-1" data-testid="WEB-07.root" data-action="{{ $action }}">
         <div class="sc-form-measure">

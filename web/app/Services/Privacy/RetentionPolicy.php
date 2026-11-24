@@ -48,6 +48,16 @@ final class RetentionPolicy
         'audit_archive' => ['value' => 36, 'unit' => 'months'],
         'moderation_cases' => ['value' => 36, 'unit' => 'months'],
         'qr_scans' => ['value' => null, 'unit' => null],
+        // M5.7 (10 §6.1): raw view events, deduplicated with a daily-salted hash (insights.raw_retention_days); the daily totals stay.
+        'view_events' => ['value' => 90, 'unit' => 'days'],
+        // M5.7: the weekly recap log (12 weeks = ViewRetention::RECAP_WEEKS), the weekly engagement push slots and the ADM-70 day counters.
+        'weekly_recaps' => ['value' => 84, 'unit' => 'days'],
+        'engagement_push_claims' => ['value' => 14, 'unit' => 'days'],
+        'engagement_daily' => ['value' => 400, 'unit' => 'days'],
+        // M5.9: shared AI caches without member data, and the forum summaries (with the thread; dropped when a post that went in goes).
+        'ai_spec_suggestions' => ['value' => 180, 'unit' => 'days'],
+        'ai_text_normalisations' => ['value' => 30, 'unit' => 'days'],
+        'forum_thread_summaries' => ['value' => null, 'unit' => null],
         'application_logs' => ['value' => 14, 'unit' => 'days'],
         'backups' => ['value' => 30, 'unit' => 'days'],
     ];

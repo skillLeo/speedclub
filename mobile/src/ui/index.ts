@@ -2,8 +2,12 @@ export { Badge, EditorialBadge, SampleBadge, SampleBadges, sampleBadgeKinds, use
 export type { BadgeKind, BadgeProps, SampleBadgesProps, SampleFlags } from './Badge';
 export { Avatar } from './Avatar';
 export type { AvatarProps, AvatarSize } from './Avatar';
+export { BeforeAfterPair } from './BeforeAfterPair';
+export type { BeforeAfterPairProps } from './BeforeAfterPair';
 export { BrandWordmark, wordmarkBox } from './BrandWordmark';
 export type { BrandWordmarkProps, CustomWordmark } from './BrandWordmark';
+export { BuildScoreGauge, BuildScoreGaugeTrack, BuildScoreMeter } from './BuildScoreGauge';
+export type { BuildScoreGaugeProps } from './BuildScoreGauge';
 export { BuildUpdateRow, BuildUpdateRowSkeleton } from './BuildUpdateRow';
 export type { BuildUpdateRowProps } from './BuildUpdateRow';
 export { Button } from './Button';

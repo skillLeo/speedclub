@@ -7,7 +7,7 @@ import { Icon } from './icons/Icon';
 import { Text } from './Text';
 
 /**
- * 09 §5 Badge kinds. `sample` is mandatory on all sample content (09 §8.19), `editorial` marks the SPEED CLUB Editorial
+ * 09 §5 Badge kinds. `sample` is mandatory on all sample content (09 §8.19), `editorial` marks the Speedclub Editorial
  * account that owns the sample builds. A badge is never red.
  */
 export type BadgeKind = 'sample' | 'editorial' | 'verified' | 'business' | 'founding' | 'dyno';
@@ -108,7 +108,7 @@ export function SampleBadge(props: Omit<BadgeProps, 'kind'>) {
   return <Badge kind="sample" {...props} />;
 }
 
-/** The "Editorial" badge of the SPEED CLUB Editorial account (09 §8.19). */
+/** The "Editorial" badge of the Speedclub Editorial account (09 §8.19). */
 export function EditorialBadge(props: Omit<BadgeProps, 'kind'>) {
   return <Badge kind="editorial" {...props} />;
 }

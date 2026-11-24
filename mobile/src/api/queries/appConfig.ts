@@ -9,7 +9,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { z } from 'zod';
+import { z } from 'zod/mini';
 
 import { api, onApiGateEvent } from '@/api/client';
 import { previewToken } from '@/api/preview';
@@ -21,33 +21,35 @@ export type AppConfig = components['schemas']['AppConfigResource'];
 export type Announcement = AppConfig['announcements'][number];
 export type BrandHero = NonNullable<NonNullable<AppConfig['branding']['heroes']>['welcome']>;
 
-const nullableString = z.string().nullable();
+// M5.12a (09 §12): zod's functional "mini" API. The config is read on every start, before the first screen; the method-chain API
+// put all of zod into the member web's first scripts, zod/mini only what this schema uses.
+const nullableString = z.nullable(z.string());
 const platformVersions = z.object({ ios: z.string(), android: z.string() });
+const unitInterval = z.number().check(z.minimum(0), z.maximum(1));
 /** A brand photo of ADM-28: WebP variants smallest first, blurhash and the focal point 0–1. Null keeps the bundled photo. */
-const brandHero = z
-  .object({
+const brandHero = z.nullable(
+  z.object({
     url: nullableString,
     variants: z.array(z.object({ width: z.number(), url: z.string() })),
     width: z.number(),
     height: z.number(),
     blurhash: nullableString,
-    focal_x: z.number().min(0).max(1),
-    focal_y: z.number().min(0).max(1),
-  })
-  .nullable();
+    focal_x: unitInterval,
+    focal_y: unitInterval,
+  }),
+);
 
 /** A logo's intrinsic size in px (M3.5 ADM-28). Anything but two positive numbers: null. */
-const logoSize = z
-  .object({ width: z.number(), height: z.number() })
-  .nullable()
-  .catch(null)
-  .transform((size) => (size && size.width > 0 && size.height > 0 && Number.isFinite(size.width / size.height) ? size : null));
+const logoSize = z.pipe(
+  z.catch(z.nullable(z.object({ width: z.number(), height: z.number() })), null),
+  z.transform((size) => (size && size.width > 0 && size.height > 0 && Number.isFinite(size.width / size.height) ? size : null)),
+);
 
-export const appConfigSchema: z.ZodType<AppConfig> = z.object({
+export const appConfigSchema: z.ZodMiniType<AppConfig> = z.object({
   min_version: platformVersions,
   latest_version: platformVersions,
   // M3.5 (ADM-37, ADM-31): a config cached by an older build has neither; the bundled force-update text and no re-consent apply.
-  force_update_message: nullableString.default(null),
+  force_update_message: z._default(nullableString, null),
   maintenance: z.object({ enabled: z.boolean(), message: nullableString }),
   flags: z.record(z.string(), z.boolean()),
   branding: z.object({
@@ -58,16 +60,14 @@ export const appConfigSchema: z.ZodType<AppConfig> = z.object({
     default_theme: z.string(),
     // M3.5 ADM-28: the logo set, the hero photos with focal point, the OG default. Absent from a config cached by an older build:
     // every brand surface keeps its bundled file then.
-    logos: z
-      .object({ wordmark_white: nullableString, wordmark_black: nullableString, square: nullableString, app_mark: nullableString })
-      .optional(),
+    logos: z.optional(
+      z.object({ wordmark_white: nullableString, wordmark_black: nullableString, square: nullableString, app_mark: nullableString }),
+    ),
     // Each logo's intrinsic size, so a custom wordmark keeps its aspect ratio. A slot without a logo, or a size that is no real size,
     // reads as null: that logo is then not drawn from the server.
-    logo_sizes: z
-      .object({ wordmark_white: logoSize, wordmark_black: logoSize, square: logoSize, app_mark: logoSize })
-      .optional(),
-    heroes: z.object({ welcome: brandHero, landing: brandHero, splash: brandHero }).optional(),
-    og_default: nullableString.optional(),
+    logo_sizes: z.optional(z.object({ wordmark_white: logoSize, wordmark_black: logoSize, square: logoSize, app_mark: logoSize })),
+    heroes: z.optional(z.object({ welcome: brandHero, landing: brandHero, splash: brandHero })),
+    og_default: z.optional(nullableString),
   }),
   announcements: z.array(
     z.object({
@@ -77,25 +77,26 @@ export const appConfigSchema: z.ZodType<AppConfig> = z.object({
       severity: z.string(),
       link: nullableString,
       // M3.5 ADM-30.
-      cta_label: nullableString.optional(),
-      audience: z.enum(['all', 'new', 'with_vehicles']).optional(),
-      dismissible: z.boolean().optional(),
-      starts_at: nullableString.optional(),
-      ends_at: nullableString.optional(),
+      cta_label: z.optional(nullableString),
+      audience: z.optional(z.enum(['all', 'new', 'with_vehicles'])),
+      dismissible: z.optional(z.boolean()),
+      starts_at: z.optional(nullableString),
+      ends_at: z.optional(nullableString),
     }),
   ),
   legal_versions: z.record(z.string(), nullableString),
-  legal_reconsent: z.object({ terms: nullableString, privacy: nullableString }).default({ terms: null, privacy: null }),
+  legal_reconsent: z._default(z.object({ terms: nullableString, privacy: nullableString }), { terms: null, privacy: null }),
   links: z.record(z.string(), nullableString),
   // M2.4: Pusher's public values. A config cached by an older build has none: realtime is then off and the app polls.
-  realtime: z.object({ enabled: z.boolean(), key: nullableString, cluster: nullableString }).default({ enabled: false, key: null, cluster: null }),
+  realtime: z._default(z.object({ enabled: z.boolean(), key: nullableString, cluster: nullableString }), { enabled: false, key: null, cluster: null }),
   // ADR-452 (M4.15): the public VAPID key of Web Push, null without keys. A config cached by an older build has none: no key then.
-  web_push: z
-    .object({ vapid_public_key: nullableString })
-    .nullable()
-    .optional()
-    .transform((value) => value ?? { vapid_public_key: null })
-    .catch({ vapid_public_key: null }),
+  web_push: z.catch(
+    z.pipe(
+      z.optional(z.nullable(z.object({ vapid_public_key: nullableString }))),
+      z.transform((value) => value ?? { vapid_public_key: null }),
+    ),
+    { vapid_public_key: null },
+  ),
 });
 
 /** Nothing blocked, no flag on. What a first launch without network runs on. */
@@ -133,7 +134,7 @@ export type AppConfigState = { config: AppConfig; confirmed: boolean; released?:
 
 type CachedConfig = { etag: string | null; config: AppConfig };
 
-const cacheSchema = z.object({ etag: z.string().nullable(), config: appConfigSchema });
+const cacheSchema = z.object({ etag: z.nullable(z.string()), config: appConfigSchema });
 
 export async function readCachedConfig(): Promise<CachedConfig | null> {
   try {

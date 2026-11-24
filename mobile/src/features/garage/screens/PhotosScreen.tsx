@@ -9,9 +9,13 @@ import { estimatedTextWidth } from '@/features/vehicle/skeletonGeometry';
 import { isWeb } from '@/lib/platform';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space, typography, useBreakpoint, useTheme } from '@/theme';
-import { Button, DiscardGuardDialog, Photo, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { DiscardGuardDialog } from '@/ui/DiscardGuardDialog';
+import { Photo } from '@/ui/Photo';
+import { Skeleton, SkeletonBlock, SkeletonText, estimateLines } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { useStacksAtFontScale } from '@/ui/rowParts';
-import { estimateLines } from '@/ui/Skeleton';
 
 import { EditorScreen, FORM_MAX_WIDTH, RestrictedNotice, HEADER_TEXT_ACTION } from '../components/frames';
 import { PHOTO_GRID_COLUMNS, PHOTO_GRID_GAP } from '../components/PhotoGrid';

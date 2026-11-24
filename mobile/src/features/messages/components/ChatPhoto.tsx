@@ -4,7 +4,8 @@ import { PixelRatio, StyleSheet, View } from 'react-native';
 
 import { createStyles } from '@/theme';
 import { motionDuration, useMotionPreference } from '@/ui/motion';
-import { Icon, type PhotoAspect } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { type PhotoAspect } from '@/ui/Photo';
 import { useImagePlaceholder } from '@/ui/imagePlaceholder';
 import { ratioOf } from '@/ui/Photo';
 

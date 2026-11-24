@@ -5,7 +5,8 @@ import type { FeedVehicle } from '@/api/queries/home';
 import { railSpec } from '@/features/home/components/NewInGarageRail';
 import { photoFields } from '@/features/profile/media';
 import { createStyles, layout as layoutTokens, useBreakpoint, useTheme } from '@/theme';
-import { MediaCard, SectionHeader } from '@/ui';
+import { MediaCard } from '@/ui/MediaCard';
+import { SectionHeader } from '@/ui/SectionHeader';
 
 import { railCardWidth, railGridWidth } from './DiscoverSections';
 

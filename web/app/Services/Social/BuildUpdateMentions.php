@@ -5,13 +5,16 @@ namespace App\Services\Social;
 use App\Models\BuildUpdate;
 use App\Models\Comment;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Policies\VehiclePolicy;
 use App\Services\Notifications\Notifier;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
  * Mentions of a build update or a comment, and their notification after the commit: only members mentioned for the first time, and only
- * those who can open the update (a followers-only update reaches followers only, BuildUpdate::reaches).
+ * those who can open the update (a followers-only update reaches followers only, BuildUpdate::reaches). R5-5: a comment on the car
+ * itself notifies those who can open the car (VehiclePolicy::view).
  */
 final class BuildUpdateMentions
 {
@@ -36,6 +39,27 @@ final class BuildUpdateMentions
                     }
                 } catch (Throwable $exception) {
                     // The post stands whatever happens to a notification (M2.2 review #10).
+                    report($exception);
+                }
+            }
+        });
+    }
+
+    public function afterVehicleComment(Vehicle $vehicle, User $author, string $text, Comment $comment): void
+    {
+        $new = $this->mentions->sync($comment, $author, $text);
+
+        if ($new === []) {
+            return;
+        }
+
+        DB::afterCommit(function () use ($new, $vehicle, $author, $comment): void {
+            foreach ($new as $member) {
+                try {
+                    if ((new VehiclePolicy)->view($member, $vehicle)) {
+                        $this->notifier->mention($member, $author, $vehicle, null, $comment);
+                    }
+                } catch (Throwable $exception) {
                     report($exception);
                 }
             }

@@ -2,7 +2,8 @@ import { PixelRatio } from 'react-native';
 
 import type { MediaData, VehicleCardData } from '@/api/queries/profile';
 import { keepNameTogether } from '@/lib/format';
-import type { PhotoFields, VehicleCardProps } from '@/ui';
+import type { PhotoFields } from '@/ui/Photo';
+import type { VehicleCardProps } from '@/ui/VehicleCard';
 
 /** The smallest variant that fills `width` points on this screen, or the largest there is. */
 export function variantUrl(media: MediaData | null | undefined, width: number, pixelRatio: number = PixelRatio.get()): string | null {

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin\Approvals\Requests;
 use App\Models\Staff;
 use Illuminate\Foundation\Http\FormRequest;
 
-/** ADM-43 approve / deny: `approvals.decide`; the comment is optional on approve and required (3–1000) on deny. */
+/** ADM-43 approve / deny: `approvals.decide`; the comment is optional on both (ADR-540: no required reason), 3–1000 characters. */
 class ApprovalCommentRequest extends FormRequest
 {
     public function authorize(): bool
@@ -20,9 +20,7 @@ class ApprovalCommentRequest extends FormRequest
      */
     public function rules(): array
     {
-        $deny = $this->routeIs('admin.team.approvals.deny');
-
-        return ['comment' => [$deny ? 'required' : 'nullable', 'string', 'min:3', 'max:1000']];
+        return ['comment' => ['nullable', 'string', 'min:3', 'max:1000']];
     }
 
     public function staff(): Staff

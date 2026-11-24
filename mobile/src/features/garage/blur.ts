@@ -4,7 +4,11 @@
  * which is what `PATCH media/{id}` takes (`blur_regions: [{x, y, w, h}]`, at most 10).
  */
 
-export type BlurRegion = { x: number; y: number; w: number; h: number };
+/**
+ * `angle` (client round, M5.9a): degrees clockwise about the rectangle's centre, −45 to 45, absent = 0. {x, y, w, h} stay the
+ * unturned rectangle, which is what must lie on the photo; the server pixelates the turned one.
+ */
+export type BlurRegion = { x: number; y: number; w: number; h: number; angle?: number };
 
 export type Point = { x: number; y: number };
 
@@ -22,6 +26,19 @@ export const NUDGE_FAST = 5;
 export const DEFAULT_REGION: BlurRegion = { x: 0.35, y: 0.45, w: 0.3, h: 0.1 };
 
 const PRECISION = 10_000;
+
+/** How far a rectangle turns either way, in degrees (the API's `angle` range). */
+export const MAX_ANGLE = 45;
+/** One step of the angle slider and of a drag of the turn handle. */
+export const ANGLE_STEP = 1;
+
+/** Whole degrees inside ±45; anything that is not a number is 0. */
+export function clampAngle(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) return 0;
+  const stepped = Math.round(value / ANGLE_STEP) * ANGLE_STEP;
+  // `|| 0` turns a −0 into 0.
+  return Math.min(MAX_ANGLE, Math.max(-MAX_ANGLE, stepped)) || 0;
+}
 
 function round(value: number): number {
   return Math.round(value * PRECISION) / PRECISION;
@@ -47,13 +64,18 @@ export function regionFromDrag(start: Point, end: Point, size: { width: number; 
   return normaliseRegion(region);
 }
 
-/** Inside the photo whatever came in: the size first, then the position, so a region never pokes out of an edge. */
+/**
+ * Inside the photo whatever came in: the size first, then the position, so a region never pokes out of an edge. The angle stays
+ * when it turns the rectangle (whole degrees, ±45), so an unturned region looks exactly as before.
+ */
 export function normaliseRegion(region: BlurRegion): BlurRegion {
   const w = Math.max(MIN_REGION_SIDE, clamp01(region.w));
   const h = Math.max(MIN_REGION_SIDE, clamp01(region.h));
   const x = Math.min(clamp01(region.x), 1 - w);
   const y = Math.min(clamp01(region.y), 1 - h);
-  return { x: round(x), y: round(y), w: round(w), h: round(h) };
+  const angle = clampAngle(region.angle);
+  const box = { x: round(x), y: round(y), w: round(w), h: round(h) };
+  return angle === 0 ? box : { ...box, angle };
 }
 
 export type NudgeKey = 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown';

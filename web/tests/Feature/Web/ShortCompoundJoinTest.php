@@ -25,14 +25,15 @@ describe('a short part of a compound on the public pages', function () {
             ->toContain("Behörden erreichen uns unter [[DSA-\u{2060}Kontakt-\u{2060}E-\u{2060}Mail]].")
             ->toContain("Kontakt per E-\u{2060}Mail</a>")
             ->toContain('<h2 id="s4-aero-seitenschweller">Aero-Seitenschweller</h2>')
-            ->and($head)->toContain('<title>Impressum für E-Autos · SPEED CLUB</title>')
+            ->and($head)->toContain('<title>Impressum für E-Autos · Speedclub</title>')
             ->not->toContain("\u{2060}");
     });
 
     it('joins it in the running copy of a form page', function () {
         $html = (string) $this->withHeader('Accept-Language', 'de')->get('/konto-loeschen')->assertOk()->getContent();
 
-        expect($html)->toContain("Deine QR-\u{2060}Sticker zeigen ab sofort")
+        // M5.4: the sentence says "Sticker" now (no compound left in it); the export sentence still carries two.
+        expect($html)->toContain('Deine Sticker zeigen ab sofort')
             ->toContain("über den Link aus der Export-\u{2060}E-\u{2060}Mail herunterladen.")
             ->toContain("E-\u{2060}Mail-Adresse</label>")
             ->and(substr($html, 0, (int) strpos($html, '</head>')))->not->toContain("\u{2060}");

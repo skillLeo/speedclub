@@ -14,7 +14,7 @@ Route::middleware([...AdminRoutes::signedIn(), EnsureMembershipsEnabled::class, 
     Route::get('plans', [PlansController::class, 'index'])->name('plans');
     Route::get('entitlements', [EntitlementsController::class, 'index'])->name('entitlements');
 
-    Route::middleware(['staff.recent-password', 'throttle:30,1'])->group(function () use ($ulid): void {
+    Route::middleware(['staff.recent-password', 'throttle:30,1,admin-memberships-1'])->group(function () use ($ulid): void {
         Route::post('plans', [PlansController::class, 'store'])->name('plans.store');
         Route::patch('plans/{plan}', [PlansController::class, 'update'])->where('plan', '[0-9]+')->name('plans.update');
         Route::post('entitlements', [EntitlementsController::class, 'store'])->name('entitlements.store');

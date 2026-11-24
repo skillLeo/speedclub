@@ -51,13 +51,16 @@
         "mod_count": "int",
         "updates_count": "int",
         "is_sample": "bool",
+        "build_score": "null",
         "published_at": "string",
         "updated_at": "string",
         "wizard": "null",
         "completeness": "null",
         "qr": "null",
         "canonical_url": "string",
+        "share_url": "string",
         "description": "string",
+        "dex_number": "null",
         "power": {
             "label": "string",
             "value": "int",
@@ -125,10 +128,18 @@
                 "status_label": "string",
                 "installed_on": "string",
                 "installed_label": "string",
+                "target_month": "null",
+                "target_label": "null",
+                "is_due": "bool",
+                "priority": "null",
+                "priority_label": "null",
+                "plan_sort": "null",
+                "budget": "null",
                 "cost_public": "bool",
                 "cost": "null",
                 "legal_status": "null",
                 "legal_status_label": "null",
+                "is_registered": "bool",
                 "thumb": {
                     "id": "string",
                     "status": "string",
@@ -180,10 +191,18 @@
                             "status_label": "string",
                             "installed_on": "string",
                             "installed_label": "string",
+                            "target_month": "null",
+                            "target_label": "null",
+                            "is_due": "bool",
+                            "priority": "null",
+                            "priority_label": "null",
+                            "plan_sort": "null",
+                            "budget": "null",
                             "cost_public": "bool",
                             "cost": "null",
                             "legal_status": "null",
                             "legal_status_label": "null",
+                            "is_registered": "bool",
                             "thumb": {
                                 "id": "string",
                                 "status": "string",
@@ -212,10 +231,22 @@
                 }
             ]
         },
+        "plans": {
+            "count": "int",
+            "items": []
+        },
+        "build_progress": {
+            "built": "int",
+            "planned": "int",
+            "total": "int",
+            "percent": "int"
+        },
+        "build_goal": "null",
         "updates": [
             {
                 "id": "string",
                 "type": "string",
+                "kind": "string",
                 "type_label": "string",
                 "note": "null",
                 "summary": "string",
@@ -249,6 +280,7 @@
         ],
         "owner": {
             "username": "string",
+            "share_url": "string",
             "display_name": "string",
             "city": "string",
             "bio": "null",
@@ -262,6 +294,11 @@
             },
             "is_sample": "bool",
             "is_editorial": "bool",
+            "level": {
+                "level": "int",
+                "title": "string"
+            },
+            "founding_number": "null",
             "is_self": "bool",
             "is_following": "bool",
             "follows_you": "bool",
@@ -274,6 +311,10 @@
             "my_reaction": "null",
             "is_following": "null",
             "comments_enabled": "bool"
+        },
+        "comment_thread": {
+            "enabled": "bool",
+            "can_write": "bool"
         }
     }
 }

@@ -8,7 +8,10 @@ import { keepFiguresTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, useTheme } from '@/theme';
-import { estimateLines, PressableScale, SkeletonText, Text, VehicleCard, VehicleCardSkeleton } from '@/ui';
+import { PressableScale } from '@/ui/PressableScale';
+import { estimateLines, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { VehicleCard, VehicleCardSkeleton } from '@/ui/VehicleCard';
 import { joinLabel, LARGE_FONT_SCALE, useStacksAtFontScale } from '@/ui/rowParts';
 import { ValueText } from '@/ui/ValueText';
 

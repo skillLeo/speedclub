@@ -12,4 +12,9 @@ return [
     'blur_not_ready' => 'Dieses Foto kann gerade nicht unkenntlich gemacht werden. Warte, bis es fertig verarbeitet ist.',
     'blur_outside' => 'Ein markierter Bereich ragt über den Rand des Fotos.',
     'blur_too_many' => 'Du kannst höchstens :max Bereiche pro Foto unkenntlich machen.',
+    'blur_angle' => 'Ein Bereich lässt sich höchstens um :max° nach links oder rechts drehen.',
+    'blur_regions_required' => 'Markiere mindestens einen Bereich oder schalte „Kennzeichen unkenntlich machen“ aus.',
+    'blur_regions_invalid' => 'Die markierten Bereiche konnten nicht gelesen werden. Markiere sie noch einmal.',
+    'blur_too_small' => 'Ein markierter Bereich ist zu klein. Zieh ihn etwas größer.',
+    'blur_final' => 'Zum Ändern lädst du das Foto neu hoch.',
 ];

@@ -1,4 +1,4 @@
-import { Timeline } from '@/ui';
+import { Timeline } from '@/ui/Timeline';
 
 import { PHOTOS, noop } from '../data';
 import { Group, SectionScreen, Specimen } from '../parts';

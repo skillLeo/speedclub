@@ -3,7 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Button, Checkbox, Sheet, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Checkbox } from '@/ui/Checkbox';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { SlotText } from '@/ui/SlotText';
 import { PRODUCT_NAMES } from '@/ui/textBreaks';
 

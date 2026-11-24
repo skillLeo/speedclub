@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles, space } from '@/theme';
-import { IconButton, Text } from '@/ui';
+import { IconButton } from '@/ui/IconButton';
+import { Text } from '@/ui/Text';
 
 import type { ReplyQuote } from '../model';
 

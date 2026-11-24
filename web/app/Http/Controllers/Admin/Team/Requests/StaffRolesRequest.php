@@ -23,7 +23,7 @@ class StaffRolesRequest extends FormRequest
         return [
             'roles' => ['present', 'array', 'max:20'],
             'roles.*' => ['string', 'max:60'],
-            'reason' => ['nullable', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

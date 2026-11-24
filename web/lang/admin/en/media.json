@@ -40,7 +40,12 @@
         "modification": "Mod photo",
         "build_update": "Build update",
         "user": "Profile picture",
-        "profile": "Profile picture"
+        "profile": "Profile picture",
+        "event": "Event cover",
+        "business": "Business image",
+        "event_photo": "Event gallery",
+        "forum_post": "Forum photo",
+        "forum_thread": "Forum photo"
     },
     "categories": {
         "exterior": "Exterior",
@@ -48,7 +53,8 @@
         "engine": "Engine",
         "wheels": "Wheels",
         "detail": "Detail",
-        "other": "Other"
+        "other": "Other",
+        "event": "Event"
     },
     "status": {
         "approved": "Approved",

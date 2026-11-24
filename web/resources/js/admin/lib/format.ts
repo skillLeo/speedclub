@@ -103,3 +103,13 @@ export function formatQrCode(code: string | null | undefined): string {
 export function dateSeparator(): '.' | '/' {
     return getActiveLanguage() === 'en' ? '/' : '.';
 }
+
+/**
+ * Joins a hyphen with a non-breaking one (U+2011) where a side has fewer than 3 letters or digits, so a model name never breaks as
+ * "Alltags- / M4" or "MX- / 5" (audit name-hyphen-break); longer compounds ("Carbon-Schalensitzen") keep their break point.
+ */
+export function keepShortHyphens(text: string): string {
+    return text.replace(/([\p{L}\p{N}]+)-(?=([\p{L}\p{N}]+))/gu, (match: string, left: string, right: string) =>
+        left.length < 3 || right.length < 3 ? `${left}‑` : match,
+    );
+}

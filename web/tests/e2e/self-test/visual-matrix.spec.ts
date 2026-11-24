@@ -19,7 +19,7 @@ import { handleBaseline } from '../visual/baseline.mjs';
 import { buildContactSheet } from '../visual/contact-sheet.mjs';
 import { cellName, compareCellNames, interleaveByRoute, isExpectedStatus, isVolatileCell, pathTokens, planRoute, resolvePath, stagesOf, validateRoutes, type RouteDef } from '../visual/matrix.mjs';
 import { PLAIN_LIMITER, RateBudget, buildLimits, uriToRegex } from '../visual/rate-budget.mjs';
-import { HOME_STREAM_ROW, routes } from '../visual/routes.mjs';
+import { DATE_DEPENDENT, HOME_STREAM_ROW, routes } from '../visual/routes.mjs';
 import { defaultCellOf, findUnrenderedStates } from '../visual/state-check.mjs';
 import { DEFAULT_P4_BASELINES, baselineDirOf, baselineOrigin, parseCell, planPromotion, promote } from '../visual/promote-baselines.mjs';
 import { filterP4Cells, p4ContextOptions, p4PrimaryDeviceOf, planLines, planP4Route, validateP4Filters } from '../visual/p4.mjs';
@@ -181,11 +181,17 @@ test.describe('matrix planning, 07_QA section 3', () => {
     expect(routes.filter((r) => (r as RouteDef).liveChrome === true).map((r) => r.id)).toEqual([
       'ADM-10-restrict', 'ADM-10-suspend', 'ADM-10-view-as', 'ADM-10-edit', 'ADM-10-email', 'ADM-09-export',
       'ADM-45-create', 'ADM-46-extend', 'ADM-48', 'ADM-49',
+      // M5.9e (routes-m59e-adm.mjs): the record's Wrapped tab, with the record's live activity column around it.
+      'ADM-10-wrapped', 'ADM-10-wrapped-none', 'ADM-10-wrapped-view-only',
     ]);
     // The registry marks the live-activity pages and nothing else: the dashboard, alerts and audit log (M3.1), and since M3.2 the member
     // record (its activity column and Audit tab list this run's own sensitive-view events) and the approvals queue (the runs' requests),
-    // and since M3.4 the case detail and messaging safety pages (ADR-241).
-    expect(routes.filter((r) => (r as RouteDef).volatile === true).map((r) => r.id)).toEqual([
+    // and since M3.4 the case detail and messaging safety pages (ADR-241). The date-dependent member pages (803caf53, ADR-223
+    // extended) are volatile by DATE_DEPENDENT, checked here too: every one of them, and no route besides them and this list.
+    const dated = routes.filter((r) => DATE_DEPENDENT.test(r.id));
+    expect(dated.length).toBeGreaterThan(30);
+    expect(dated.filter((r) => (r as RouteDef).volatile !== true).map((r) => r.id)).toEqual([]);
+    expect(routes.filter((r) => (r as RouteDef).volatile === true && !DATE_DEPENDENT.test(r.id)).map((r) => r.id)).toEqual([
       'ADM-06', 'ADM-06-moderator', 'ADM-08', 'ADM-44', 'ADM-44-event',
       // ADR-256: the member list (live "Zuletzt aktiv", accounts the runs create) with its two dialogs further down.
       'ADM-09', 'ADM-09-analyst',
@@ -207,8 +213,20 @@ test.describe('matrix planning, 07_QA section 3', () => {
       // M4.17 (routes-m417.mjs): the SplitQueues and ADM-60 list the live queues and runs; ADM-09-rail its live "Zuletzt aktiv".
       'ADM-53', 'ADM-53-pane', 'ADM-53-reject', 'ADM-53-analyst', 'ADM-54', 'ADM-54-reject', 'ADM-55-applied', 'ADM-55-applied-zero', 'ADM-60',
       'ADM-09-rail', 'ADM-20-pane', 'ADM-20-pane-decide', 'ADM-20-pane-analyst',
+      // Phase 5 admin: ADM-62 spots (fixture times follow the server clock), the ADM-63 badge record (earned counts follow the members)
+      // and ADM-64 Car of the Day (days around today), the M5.9e record Wrapped tab ("Erzeugt"/"Angesehen" follow the data, opening it
+      // audits a view) and ADM-65 sticker designs (rows that e2e members left behind).
+      'ADM-62', 'ADM-62-signals', 'ADM-62-record', 'ADM-62-remove', 'ADM-62-analyst',
+      'ADM-63-record', 'ADM-63-hidden', 'ADM-63-apply', 'ADM-64', 'ADM-64-override', 'ADM-64-skip',
+      'ADM-10-wrapped', 'ADM-10-wrapped-none', 'ADM-10-wrapped-view-only',
+      'ADM-65',
       // DQ-1213: ADM-61 lists whatever mails this host sent last (the e2e runs' included), and its open mail is the newest one.
       'ADM-61', 'ADM-61-open',
+      // M5.7 (routes-m57-adm.mjs): ADM-70 Insights shows the platform's live totals (view_days, qr_scan_daily, weekly_recaps,
+      // engagement_daily), whatever the local database and the e2e runs have counted, in each of its three windows.
+      'ADM-70', 'ADM-70-7', 'ADM-70-90',
+      // M5.9 (routes-m59-ai-adm.mjs): the AI decision template and triage chip on the ADM-21 case page, live like ADM-21 (ADR-241).
+      'ADM-21-aiTemplate', 'ADM-21-aiTemplate-applied', 'ADM-21-aiTemplate-case',
     ]);
   });
 
@@ -496,22 +514,35 @@ test.describe('tokens are the source of the audit', () => {
     expect(() => typePairs(1, Number.NaN)).toThrow(/two numbers/);
   });
 
-  test('display.title\'s shrink pair (09 §4.2 "max 2 lines, shrink to 24") is a pair at every width: 24/28, 48/56 at font scale 2', () => {
-    // Only display.title shrinks; a new minSize must come with its own check here.
+  test('the shrink pairs at every width: display.title (09 §4.2 "max 2 lines, shrink to 24") 24/28, 48/56 at font scale 2; display.wordmark (ADR-515) 14/18, capped at 1.3 like its role', () => {
+    // Only these two roles shrink; a new minSize must come with its own check here.
     const shrinking = Object.entries(tokens.typography).filter(([, t]) => (t as { minSize?: number }).minSize !== undefined).map(([name]) => name);
-    expect(shrinking).toEqual(['display.title']);
+    expect(shrinking).toEqual(['display.title', 'display.wordmark']);
+    // ADR-515: the Dex tile name takes 14/18 when it needs more than 2 lines; the role's 1.3 cap (DQ-1083) scales the pair as well.
+    const WORDMARK_CAP = 1.3;
+    expect((tokens.typography['display.wordmark'] as { maxFontScale?: number }).maxFontScale).toBe(WORDMARK_CAP);
+    const wordmark = (scale: number) => {
+      const w = Math.min(scale, WORDMARK_CAP);
+      return { name: 'display.wordmark', variant: 'shrink', size: 14 * w, lineHeight: 18 * w };
+    };
     for (const width of [390, 1440]) {
       expect(typePairs(1, width), `fs1 at ${width}`).toContainEqual({ name: 'display.title', variant: 'shrink', size: 24, lineHeight: 28 });
       expect(typePairs(2, width), `fs2 at ${width}`).toContainEqual({ name: 'display.title', variant: 'shrink', size: 48, lineHeight: 56 });
-      // It adds exactly that pair: every other pair is the role's base or desktop one, and no other size/leading appears.
+      expect(typePairs(1, width), `fs1 at ${width}`).toContainEqual({ name: 'display.wordmark', variant: 'shrink', size: 14, lineHeight: 18 });
+      expect(typePairs(2, width), `fs2 at ${width}`).toContainEqual(wordmark(2));
+      // They add exactly those pairs: every other pair is a role's base or desktop one, and no other size/leading appears.
       for (const scale of [1, 2]) {
         const pairs = typePairs(scale, width);
         expect(pairs.filter((p) => p.variant === 'shrink'), `shrink pairs fs${scale} at ${width}`).toEqual([
           { name: 'display.title', variant: 'shrink', size: 24 * scale, lineHeight: 28 * scale },
+          wordmark(scale),
         ]);
         const key = (p: { size: number; lineHeight: number }) => `${p.size}/${p.lineHeight}`;
         const without = new Set(pairs.filter((p) => p.variant !== 'shrink').map(key));
-        expect([...new Set(pairs.map(key))].filter((k) => !without.has(k)), `new pairs fs${scale} at ${width}`).toEqual([`${24 * scale}/${28 * scale}`]);
+        expect([...new Set(pairs.map(key))].filter((k) => !without.has(k)), `new pairs fs${scale} at ${width}`).toEqual([
+          `${24 * scale}/${28 * scale}`,
+          key(wordmark(scale)),
+        ]);
         // The neighbours of the shrink pair stay off the scale.
         for (const off of [[24, 34], [24, 32], [30, 28], [44, 28], [24, 24]] as const) {
           expect(pairs.map(key), `${off.join('/')} fs${scale} at ${width}`).not.toContain(`${off[0] * scale}/${off[1] * scale}`);
@@ -531,9 +562,10 @@ test.describe('tokens are the source of the audit', () => {
     for (const name of native) expect(name).toMatch(/^(?:Inter|InterDisplay|ArchivoCondensed|ArchivoSemiExpanded)-(?:Regular|Medium|SemiBold|Bold)$/);
   });
 
-  test('web.tab, hero.numeral, hero.numeral.s and label.badge are capped at their maxFontScale, on desktop too', () => {
+  test('web.tab, hero.numeral, hero.numeral.s, label.badge, label.control and caption.chrome are capped at their maxFontScale, on desktop too', () => {
     // ADR-465 added web.sidebar; display.wordmark (the rail tiles' Archivo name) carries the same 1.3 cap.
-    const capped = ['web.tab', 'web.sidebar', 'hero.numeral', 'hero.numeral.s', 'label.badge', 'display.wordmark'];
+    // ADR-523 added label.control (fixed-height view switches) and caption.chrome (the compact header's second line).
+    const capped = ['web.tab', 'web.sidebar', 'hero.numeral', 'hero.numeral.s', 'label.badge', 'display.wordmark', 'label.control', 'caption.chrome'];
     // Every capped role of tokens.json is in the list (ADR-421 a added label.badge), so a new cap cannot go unchecked.
     expect(Object.entries(tokens.typography).filter(([, t]) => (t as { maxFontScale?: number }).maxFontScale !== undefined).map(([name]) => name).sort()).toEqual([...capped].sort());
     for (const name of capped) {
@@ -1867,6 +1899,15 @@ test.describe('p4 tier', () => {
     ]);
   });
 
+  test('the small opt-in (DQ-M52-09) adds the iPhone SE in Carbon and Hell to a plain route, nothing else; without it no SE', () => {
+    const plain = names(route({}));
+    const small = names(route({ p4: { small: true } }));
+    expect(plain.some((n) => n.includes('__iphonese'))).toBe(false);
+    expect(small.filter((n) => !plain.includes(n))).toEqual(['GAR-09__375x667__carbon__de__iphonese', 'GAR-09__375x667__light__de__iphonese']);
+    // The admin is desktop-only (ADR-212): the opt-in adds no phone there.
+    expect(planP4Route({ ...admin, p4: { small: true } }).some((c) => c.device === 'iphonese')).toBe(false);
+  });
+
   test('a flagship screen and its variants: + iPhone SE, + Schwarz, + 200 % at 393 and 1440; EN and tablet only for their lists', () => {
     for (const id of ['GAR-01', 'GAR-01-empty']) {
       const cells = planP4Route(route({ id, path: '/app/garage' }));
@@ -2015,7 +2056,8 @@ test.describe('p4 tier', () => {
     expect(sets.flagship).toEqual(['HOME-01', 'VEH-01-member']);
     expect(sets.notBuiltYet).toContain('EVT-02');
     expect(sets.notBuiltYet).not.toContain('VEH-01');
-    expect(FLAGSHIP).toHaveLength(17);
+    // 09 §7/§9: 17; Phase 5 (10 §11, §16) adds STK-05, SHOP-01, FOR-03 and DEX-03 (QR-02 became STK-02).
+    expect(FLAGSHIP).toHaveLength(21);
     // 09 §9 marks the landing and the public vehicle page ★: the pages a scanned sticker opens.
     expect(FLAGSHIP).toEqual(expect.arrayContaining(['WEB-03', 'WEB-01']));
     expect(EN12).toHaveLength(12);

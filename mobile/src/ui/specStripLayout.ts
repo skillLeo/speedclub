@@ -4,7 +4,9 @@
  * touches a hairline: every line of a cell (2.0: the `label.caps` data label, the numeral with its `label.unit` unit, the
  * provenance caption) plus `space.12` on each side must fit its cell. All items in one row when they
  * fit, else two columns (the 09 §4.2 2×2 grid), else one. From the stacking font scale the strip is at most 2×2 (09 §4.2
- * "spec strip wraps into a 2×2 grid" at large text).
+ * "spec strip wraps into a 2×2 grid" at large text). ADR-422 e (DQ-P5-066): in the 2×2 grid the provenance caption may wrap at
+ * a regular space, so there it counts by its widest unbreakable segment ("Herstellerangabe (KI-Vorschlag)" takes two lines and
+ * keeps the grid); a row of three to five still needs it whole on one line.
  *
  * Pure, so Jest covers it: the component feeds it the widths its texts measure on screen (onLayout of an unconstrained copy),
  * and the VEH-01 skeleton feeds it estimates for FS-3's example values.
@@ -23,6 +25,11 @@ export const SPEC_CELL_GAP = space[4];
 export const SPEC_STRIP_MAX_ONE_ROW = 5;
 /** Above this font scale the strip is at most two columns, like every row that stacks (rowParts STACK_FONT_SCALE). */
 export const SPEC_STACK_FONT_SCALE = 1.2;
+/**
+ * ADR-422 e (DQ-P5-066): in a grid of at most this many columns (the 2×2 grid, or two items side by side) the provenance caption
+ * may wrap, so it counts by its widest unbreakable segment; a wider row needs every caption whole on one line.
+ */
+export const SPEC_WRAP_MAX_COLUMNS = 2;
 
 export type SpecStripFit = {
   /** The strip's inner width. */
@@ -31,6 +38,11 @@ export type SpecStripFit = {
   count: number;
   /** The one-line width of every value and every label, in any order. */
   contentWidths: readonly number[];
+  /**
+   * ADR-422 e: the same widths for a grid of at most SPEC_WRAP_MAX_COLUMNS columns, with each provenance caption counted by its
+   * widest unbreakable segment (provenanceSegments). Without it the grid counts `contentWidths` too.
+   */
+  gridContentWidths?: readonly number[];
   /** Width of the vertical hairline between two cells. */
   divider: number;
   /** The font scale; above SPEC_STACK_FONT_SCALE the strip has at most two columns. */
@@ -50,11 +62,25 @@ export function specCellWidth(width: number, columns: number, divider: number): 
   return (width - (columns - 1) * divider) / columns;
 }
 
-/** True when every content width plus the padding on both sides fits a cell of `columns` columns. */
+/**
+ * True when every content width plus the padding on both sides fits a cell of `columns` columns. ADR-422 e: up to
+ * SPEC_WRAP_MAX_COLUMNS columns the provenance counts by its widest unbreakable segment (`gridContentWidths`), so it may take a
+ * second line there; a wider row counts it whole.
+ */
 export function fitsColumns(fit: SpecStripFit, columns: number): boolean {
   const padding = fit.padding ?? SPEC_CELL_PADDING_X;
   const cell = specCellWidth(fit.width, columns, fit.divider);
-  return fit.contentWidths.every((contentWidth) => Math.ceil(contentWidth) + 2 * padding <= cell);
+  const widths = columns <= SPEC_WRAP_MAX_COLUMNS ? (fit.gridContentWidths ?? fit.contentWidths) : fit.contentWidths;
+  return widths.every((contentWidth) => Math.ceil(contentWidth) + 2 * padding <= cell);
+}
+
+/**
+ * ADR-422 e: the parts a provenance caption can break into. It breaks at a regular space (U+0020) only; U+00A0 and U+2060 glue
+ * their neighbours ("Herstellerangabe (KI-\u2060Vorschlag)" → "Herstellerangabe", "(KI-\u2060Vorschlag)"). A one-word caption is
+ * its own only segment, so its width is the same in both checks.
+ */
+export function provenanceSegments(provenance: string): string[] {
+  return provenance.split(' ').filter((segment) => segment.length > 0);
 }
 
 /** The most columns in which everything fits; one column when nothing else does. */
@@ -122,18 +148,26 @@ export type SpecStripEntry = {
 export const SPEC_UNIT_GAP = space[4];
 
 /**
- * ADR-431 b: the numeral role of the strip. On the page (phones and tablets, the public page below 1280) it is `hero.numeral`;
- * in the desktop's side card (VEH-01/GAR-02 and WEB-01 from 1280) the compact `hero.numeral.s`. The public page's
- * SpecStripLayout.php makes the same choice by width.
+ * The strip's size: `true` the web desktop's side card, `'phone'` a phone's page, `false` the page from 768 below the desktop.
+ * Callers that knew only the desktop keep passing a boolean.
  */
-export function specStripNumeralVariant(desktop: boolean): 'heroNumeral' | 'heroNumeralS' {
-  return desktop ? 'heroNumeralS' : 'heroNumeral';
+export type StripSize = boolean | 'phone';
+
+/**
+ * ADR-431 b: the numeral role of the strip. On a tablet's page (and the public page between 768 and 1280) it is `hero.numeral`; in
+ * the desktop's side card (VEH-01/GAR-02 and WEB-01 from 1280) the compact `hero.numeral.s`; on a phone `hero.numeral.xs` (client
+ * feedback CF-2, M5.3: one step smaller; R5-2b, ADR-536: once more). The public page's SpecStripLayout.php makes the same choice by
+ * width.
+ */
+export function specStripNumeralVariant(size: StripSize): 'heroNumeral' | 'heroNumeralS' | 'heroNumeralXs' {
+  return size === false ? 'heroNumeral' : size === 'phone' ? 'heroNumeralXs' : 'heroNumeralS';
 }
 
 /** The sizes the strip's roles render at: the numeral capped at 1.3× (09 §4.2), the Inter roles scaled freely. */
-export function specStripType(fontScale: number, desktop: boolean) {
-  const numeral = desktop ? { ...typography.heroNumeralS, ...typographyDesktop.heroNumeralS } : typography.heroNumeral;
-  const numeralScale = Math.min(fontScale, desktop ? maxFontScale.heroNumeralS : maxFontScale.heroNumeral);
+export function specStripType(fontScale: number, desktop: StripSize) {
+  const numeral =
+    desktop === true ? { ...typography.heroNumeralS, ...typographyDesktop.heroNumeralS } : desktop === 'phone' ? typography.heroNumeralXs : typography.heroNumeral;
+  const numeralScale = Math.min(fontScale, desktop === false ? maxFontScale.heroNumeral : desktop === 'phone' ? maxFontScale.heroNumeralXs : maxFontScale.heroNumeralS);
   return {
     valueSize: numeral.fontSize * numeralScale,
     valueLine: numeral.lineHeight * numeralScale,
@@ -167,13 +201,31 @@ export function estimatedProvenanceWidth(provenance: string | null | undefined, 
   return provenance ? estimatedInterWidth(provenance, type.provenanceSize, type.provenanceTracking, 'medium') : 0;
 }
 
+/** ADR-422 e: the provenance caption's widest unbreakable segment (provenanceSegments), or 0 without one. */
+export function estimatedProvenanceSegmentWidth(provenance: string | null | undefined, type: StripType): number {
+  return provenance ? Math.max(0, ...provenanceSegments(provenance).map((segment) => estimatedProvenanceWidth(segment, type))) : 0;
+}
+
 /** Every one-line width a cell must hold, item by item: value line, data label, provenance (when there is one). */
-export function estimatedSpecContentWidths(items: readonly SpecStripEntry[], fontScale: number, desktop: boolean): number[] {
+export function estimatedSpecContentWidths(items: readonly SpecStripEntry[], fontScale: number, desktop: StripSize): number[] {
   const type = specStripType(fontScale, desktop);
   return items.flatMap((item) => [
     estimatedValueLineWidth(item, type),
     estimatedSpecLabelWidth(item.label, type),
     ...(item.provenance ? [estimatedProvenanceWidth(item.provenance, type)] : []),
+  ]);
+}
+
+/**
+ * ADR-422 e: the widths a cell of the 2×2 grid must hold: as estimatedSpecContentWidths, but the provenance by its widest
+ * unbreakable segment, since it may wrap there.
+ */
+export function estimatedSpecGridWidths(items: readonly SpecStripEntry[], fontScale: number, desktop: StripSize): number[] {
+  const type = specStripType(fontScale, desktop);
+  return items.flatMap((item) => [
+    estimatedValueLineWidth(item, type),
+    estimatedSpecLabelWidth(item.label, type),
+    ...(item.provenance ? [estimatedProvenanceSegmentWidth(item.provenance, type)] : []),
   ]);
 }
 
@@ -189,25 +241,32 @@ export function estimatedSpecStripColumns(
   items: readonly SpecStripEntry[],
   width: number,
   fontScale: number,
-  desktop: boolean,
+  desktop: StripSize,
   divider: number,
 ): number {
   if (!Number.isFinite(width) || width <= 0) return 1;
-  return specStripColumns({ width, count: items.length, divider, fontScale, contentWidths: estimatedSpecContentWidths(items, fontScale, desktop) });
+  return specStripColumns({
+    width,
+    count: items.length,
+    divider,
+    fontScale,
+    contentWidths: estimatedSpecContentWidths(items, fontScale, desktop),
+    gridContentWidths: estimatedSpecGridWidths(items, fontScale, desktop),
+  });
 }
 
 /**
  * One row's height: padding, the data label, the gap, the value line and, when an item of the row has one, the gap and the
  * provenance line.
  */
-export function specStripRowHeight(fontScale: number, desktop: boolean, withProvenance: boolean): number {
+export function specStripRowHeight(fontScale: number, desktop: StripSize, withProvenance: boolean): number {
   const type = specStripType(fontScale, desktop);
   const base = 2 * SPEC_CELL_PADDING_Y + type.labelLine + SPEC_CELL_GAP + type.valueLine;
   return withProvenance ? base + SPEC_CELL_GAP + type.provenanceLine : base;
 }
 
 /** The strip's height: its rows (`provenance[row]` true for a row with a provenance line), a hairline between rows. */
-export function specStripHeight(rows: number, fontScale: number, desktop: boolean, hairline: number, provenance: readonly boolean[] = []): number {
+export function specStripHeight(rows: number, fontScale: number, desktop: StripSize, hairline: number, provenance: readonly boolean[] = []): number {
   let height = 0;
   for (let row = 0; row < rows; row += 1) height += specStripRowHeight(fontScale, desktop, provenance[row] ?? false);
   return height + Math.max(0, rows - 1) * hairline;

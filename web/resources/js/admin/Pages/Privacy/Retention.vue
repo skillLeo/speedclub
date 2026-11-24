@@ -16,7 +16,7 @@ import { routeOr } from '../../lib/routes';
 /**
  * ADM-47 retention (06 §4, m3.6 §1, ADR-239): every period with its legal note; the adjustable ones as a number within their bounds
  * (the legal or product minimum up to what the privacy policy promises) with the default; the fixed ones read-only. Saving needs
- * retention.manage, a reason and a recent password, and publishes a new version of the config key `retention`.
+ * retention.manage and a recent password, and publishes a new version of the config key `retention`.
  */
 interface Period {
     key: string;
@@ -54,9 +54,9 @@ const fixedValue = (p: Period) => (p.value === null ? trans(`privacy.retention.k
 
 const action = useAdminAction();
 const confirmOpen = ref(false);
-function save(reason: string | null): void {
+function save(): void {
     const periods = Object.fromEntries(editable.value.map((p) => [p.key, parsed(p)]));
-    action.run('patch', routeOr('admin.privacy.retention.update', '/admin/privacy/retention'), { periods, reason: reason ?? '' }, { sensitive: true, onSuccess: () => (confirmOpen.value = false) });
+    action.run('patch', routeOr('admin.privacy.retention.update', '/admin/privacy/retention'), { periods }, { sensitive: true, onSuccess: () => (confirmOpen.value = false) });
 }
 const confirmBody = computed(() => [trans('privacy.retention.confirm_body'), ...changed.value.map((p) => `${label(p.key)}: ${amount(p.unit, p.value)} → ${amount(p.unit, parsed(p))}.`)].join(' '));
 onMounted(async () => {
@@ -158,6 +158,6 @@ onMounted(async () => {
             </section>
         </template>
 
-        <ConfirmDialog v-model:open="confirmOpen" :title="trans('privacy.retention.confirm_title')" :body="confirmBody" :confirm-label="trans('privacy.retention.save')" tone="neutral" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-47.confirm" @confirm="(r: string | null) => save(r)" />
+        <ConfirmDialog v-model:open="confirmOpen" :title="trans('privacy.retention.confirm_title')" :body="confirmBody" :confirm-label="trans('privacy.retention.save')" tone="neutral" :processing="action.processing.value" :error="action.error.value" test-id="ADM-47.confirm" @confirm="save()" />
     </div>
 </template>

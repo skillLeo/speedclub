@@ -7,7 +7,11 @@ import { View } from 'react-native';
 import { social2Keys, useCreateCollection, useDeleteCollection, useRenameCollection, type MemberCollection } from '@/api/queries/social2';
 import { hapticFor, haptics } from '@/lib/haptics';
 import { createStyles, space, useTheme } from '@/theme';
-import { Icon, PressableScale, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { LARGE_FONT_SCALE } from '@/ui/rowParts';
 
 import { removeWithUndo, useHiddenRemovals } from '../deferred';

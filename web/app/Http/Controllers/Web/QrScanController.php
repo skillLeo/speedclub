@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Web;
 
 use App\Enums\QrScanState;
+use App\Enums\ViewSource;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\PublicPageContext;
 use App\Http\Middleware\RedirectMembersToApp;
+use App\Services\Insights\ViewRecorder;
 use App\Services\Qr\QrResolver;
 use App\Services\Qr\QrScans;
 use App\Support\PublicUrl;
@@ -25,7 +27,7 @@ class QrScanController extends Controller
         'not_found' => 404,
     ];
 
-    public function __invoke(Request $request, string $code, QrResolver $resolver, QrScans $scans): Response
+    public function __invoke(Request $request, string $code, QrResolver $resolver, QrScans $scans, ViewRecorder $views): Response
     {
         $member = SignedInBrowser::member($request);
         // While /v keeps signed-in browsers on Blade, it shows them what it shows a guest.
@@ -34,6 +36,12 @@ class QrScanController extends Controller
         // Screenshot runs are not scans. Production has no overrides, so there every visit counts.
         if (PublicPageContext::qa($request) === null) {
             $scans->record($resolution, $request, $member);
+
+            // M5.7 (m5.7-contract §2.3): a live sticker opens the car's page, which counts as a view from "Sticker-Scan". Written before
+            // the redirect, so the browser's /v hit that follows is the same viewer of the same day and adds nothing.
+            if ($resolution->state === QrScanState::Active && $resolution->vehicle !== null) {
+                $views->store($views->captureVehicle($resolution->vehicle, ViewSource::StickerScan, $member, $request, page: true));
+            }
         }
 
         $response = $resolution->state === QrScanState::Active

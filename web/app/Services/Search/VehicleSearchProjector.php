@@ -160,7 +160,8 @@ class VehicleSearchProjector
             // Each part as a phrase of its own, so no phrase limit cuts a long list of mods short (SEC-M18-02). Bounded, as every
             // search reads the keys of every public build (SEC-M18-01).
             'search_keys' => SearchTerms::keys($parts, config()->integer('speedclub.search.keys_max_bytes')),
-            'is_public' => $vehicle->visibility === Visibility::Public && $owner !== null && $owner->isPubliclyVisible(),
+            // M5.9b (contract §5): a ghost car is in no list and no search, whatever reads the projection.
+            'is_public' => $vehicle->visibility === Visibility::Public && $vehicle->ghost_mode !== true && $owner !== null && $owner->isPubliclyVisible(),
             'published_at' => $vehicle->getAttribute('published_at'),
         ];
     }

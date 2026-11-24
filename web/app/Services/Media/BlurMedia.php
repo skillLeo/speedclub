@@ -4,6 +4,7 @@ namespace App\Services\Media;
 
 use App\Enums\MediaStatus;
 use App\Models\Media;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\PublicPages\OgImages;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -40,8 +41,14 @@ class BlurMedia implements ShouldBeUnique, ShouldQueue
     {
         $media = Media::query()->find($this->mediaId);
 
-        // Ready with regions still set: a crash after the new files were written; blur() finishes the clean-up.
-        if ($media === null || $media->status === MediaStatus::Failed || ! is_array($media->getAttribute('blur_regions'))) {
+        if ($media === null || $media->status === MediaStatus::Failed) {
+            return;
+        }
+
+        // No regions waiting: done before, perhaps up to a crash before the clean-up of the old files, which tidy() finishes.
+        if (! is_array($media->getAttribute('blur_regions'))) {
+            $service->tidy($media);
+
             return;
         }
 
@@ -51,6 +58,10 @@ class BlurMedia implements ShouldBeUnique, ShouldQueue
 
         // The OG image and the share cards were purged with the request; they are drawn again from the pixelated photo.
         if ($parent instanceof Vehicle) {
+            app(OgImages::class)->queue($parent);
+        }
+
+        if ($parent instanceof User) {
             app(OgImages::class)->queue($parent);
         }
     }
@@ -65,7 +76,6 @@ class BlurMedia implements ShouldBeUnique, ShouldQueue
 
         if ($media !== null && $media->status === MediaStatus::Processing) {
             app(MediaService::class)->markFailed($media);
-            $media->forceFill(['blur_regions' => null])->save();
         }
     }
 }

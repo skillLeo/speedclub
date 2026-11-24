@@ -15,6 +15,7 @@ interface PendingWrite {
 export const passwordDialogOpen = ref(false);
 let lastWrite: PendingWrite | null = null;
 let afterConfirm: (() => void) | null = null;
+let onCancel: (() => void) | null = null;
 
 export function trackWrites(): () => void {
     return router.on('before', (event) => {
@@ -28,6 +29,7 @@ export function trackWrites(): () => void {
 
 /** Called by the shell when the flash says the password must be confirmed. */
 export function askToRepeatLastWrite(): void {
+    onCancel = null;
     afterConfirm = () => {
         if (lastWrite === null) return;
         const { url, method, data } = lastWrite;
@@ -36,9 +38,13 @@ export function askToRepeatLastWrite(): void {
     passwordDialogOpen.value = true;
 }
 
-/** Ask for the password, then run `action` (for a page that knows the confirmation is stale). */
-export function confirmPasswordFirst(action: () => void): void {
+/**
+ * Ask for the password, then run `action` (for a page that knows the confirmation is stale). `cancelled` runs when the dialog is closed
+ * without a password (client round 6: the page then says that nothing was saved instead of looking as if nothing happened).
+ */
+export function confirmPasswordFirst(action: () => void, cancelled?: () => void): void {
     afterConfirm = action;
+    onCancel = cancelled ?? null;
     passwordDialogOpen.value = true;
 }
 
@@ -46,11 +52,15 @@ export function passwordConfirmed(): void {
     passwordDialogOpen.value = false;
     const next = afterConfirm;
     afterConfirm = null;
+    onCancel = null;
     next?.();
 }
 
 export function passwordDialogCancelled(): void {
+    const cancelled = onCancel;
     afterConfirm = null;
+    onCancel = null;
+    cancelled?.();
 }
 
 /** Whether `staff.password_confirmed_until` is still in the future. */

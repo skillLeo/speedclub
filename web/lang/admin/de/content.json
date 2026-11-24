@@ -210,7 +210,7 @@
         "summary": "Was ändert sich?",
         "summary_hint": "Kurz und verständlich, steht im Zustimmungsfenster der App.",
         "text": "Text",
-        "text_hint": "Markdown. Platzhalter wie [[company_name]] füllt der Server aus den Organisationsdaten.",
+        "text_hint": "Markdown. Platzhalter wie [[Firmenname]] oder [[company_name]] füllt der Server aus Governance › Organisation.",
         "editor_only": "Veröffentlichen kann nur, wer Rechtstexte freigeben darf (Owner oder Admin).",
         "versions": "Versionen",
         "versions_empty": "Noch keine Version",
@@ -229,7 +229,13 @@
         "request_title": "Freigabe für neue Zustimmung anfragen?",
         "request_body": "Eine zweite Person prüft genau diesen Text. Bis zur Freigabe kann er nicht mehr geändert werden. Danach müssen alle Mitglieder zustimmen.",
         "discard_title": "Entwurf verwerfen?",
-        "discard_body": "Der Entwurf wird gelöscht. Veröffentlichte Versionen bleiben unverändert."
+        "discard_body": "Der Entwurf wird gelöscht. Veröffentlichte Versionen bleiben unverändert.",
+        "stale_title": "Dieser Entwurf basiert auf Version :base; live ist Version :live.",
+        "stale_title_first": "Dieser Entwurf ist älter als Version :live, die inzwischen live ist.",
+        "stale_body": "Beim Veröffentlichen würden die neueren Abschnitte fehlen, deshalb ist es gesperrt. Setz den Entwurf mit dem Live-Text neu auf und übertrag deine Änderungen.",
+        "rebase": "Neu aufsetzen",
+        "rebase_title": "Entwurf neu aufsetzen?",
+        "rebase_body": "Entwurf :draft wird verworfen. Danach öffnet sich ein neuer Entwurf mit dem Text von Version :live. Übertrag deine Änderungen dort hinein, bevor du speicherst."
     },
     "help": {
         "title": "Hilfe",
@@ -327,12 +333,12 @@
             "mail_account_closing": "Konto wird gelöscht",
             "mail_moderation_decision": "Moderationsentscheidung",
             "mail_decision_reversed": "Entscheidung aufgehoben",
-            "mail_qr_changed_by_staff": "QR-Code vom Team geändert",
+            "mail_qr_changed_by_staff": "Sticker vom Team geändert",
             "push_title": "Titel aller Push-Mitteilungen",
             "push_new_follower": "Neuer Follower",
             "push_followed_published": "Neues von Leuten, denen du folgst",
             "push_build_saved": "Build gemerkt",
-            "push_qr_milestone": "QR-Meilenstein",
+            "push_qr_milestone": "Sticker-Meilenstein",
             "push_hu_au_reminder": "HU/AU-Erinnerung",
             "push_moderation_decision": "Moderationsentscheidung"
         },
@@ -445,7 +451,8 @@
             "remote_config": "Remote-Konfiguration",
             "rate_limits": "Anfrage-Limits",
             "retention": "Aufbewahrung",
-            "org": "Organisation"
+            "org": "Organisation",
+            "governance": "Governance"
         },
         "list": "Versionen",
         "detail": "Änderungen der Version",

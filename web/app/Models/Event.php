@@ -142,6 +142,34 @@ class Event extends Model
     }
 
     /**
+     * M5.6 gallery photos (every status; readers filter).
+     *
+     * @return HasMany<EventPhoto, $this>
+     */
+    public function photos(): HasMany
+    {
+        return $this->hasMany(EventPhoto::class);
+    }
+
+    /**
+     * M5.6 "War dabei".
+     *
+     * @return HasMany<EventCheckin, $this>
+     */
+    public function checkins(): HasMany
+    {
+        return $this->hasMany(EventCheckin::class);
+    }
+
+    /**
+     * When the event counts as over for the M5.6 windows: its end, or the start plus speedclub.events.assumed_duration_hours.
+     */
+    public function effectiveEnd(): ?CarbonImmutable
+    {
+        return $this->ends_at ?? $this->starts_at?->addHours(config()->integer('speedclub.events.assumed_duration_hours'));
+    }
+
+    /**
      * @return BelongsTo<Staff, $this>
      */
     public function reviewer(): BelongsTo

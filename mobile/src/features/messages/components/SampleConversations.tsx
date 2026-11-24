@@ -3,7 +3,9 @@ import { View } from 'react-native';
 
 import { EMPTY_HERO, SAMPLE_CARD_PHOTO } from '@/features/garage/sample';
 import { createStyles } from '@/theme';
-import { SampleBadge, Text, type PhotoFields } from '@/ui';
+import { SampleBadge } from '@/ui/Badge';
+import { type PhotoFields } from '@/ui/Photo';
+import { Text } from '@/ui/Text';
 
 import { CarBadgeAvatar } from './CarBadgeAvatar';
 

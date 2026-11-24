@@ -20,4 +20,8 @@ enum ReportTargetType: string
     case Event = 'event';
     // M4.14 (09 §8.10, DSA): a business profile; its owner (the applicant) is the subject.
     case Business = 'business';
+    // M5.8 (m5.8-contract D2): a forum post; a thread is reported by its opening post. Its author is the subject.
+    case ForumPost = 'forum_post';
+    // R4-2.3: a crew (name, description, logo, cover); its founder is the subject.
+    case Crew = 'crew';
 }

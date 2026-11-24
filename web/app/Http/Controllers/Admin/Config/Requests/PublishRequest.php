@@ -18,7 +18,7 @@ class PublishRequest extends ConfigKeyRequest
     public function rules(): array
     {
         return [
-            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
             'revision' => ['required', 'integer', 'min:1'],
         ];
     }

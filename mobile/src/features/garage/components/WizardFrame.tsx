@@ -7,24 +7,22 @@ import type { Edge } from 'react-native-safe-area-context';
 
 import { useOnline } from '@/state/online';
 import { createStyles, layout, size, space, useBreakpoint } from '@/theme';
-import {
-  DiscardGuardDialog,
-  Hairline,
-  Header,
-  Icon,
-  OfflineBanner,
-  PressableScale,
-  Progress,
-  Screen,
-  StickyCTABar,
-  Text,
-  type StickyCTASecondary,
-  type VehicleCardProps,
-} from '@/ui';
+import { DiscardGuardDialog } from '@/ui/DiscardGuardDialog';
+import { Hairline } from '@/ui/Hairline';
+import { Header } from '@/ui/Header';
+import { Icon } from '@/ui/icons/Icon';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { PressableScale } from '@/ui/PressableScale';
+import { Progress } from '@/ui/Progress';
+import { Screen } from '@/ui/Screen';
+import { StickyCTABar, type StickyCTASecondary } from '@/ui/StickyCTABar';
+import { Text } from '@/ui/Text';
+import { type VehicleCardProps } from '@/ui/VehicleCard';
 import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
 
 import { stepNumber, WIZARD_STEPS, type WizardStep } from '../model';
 import { useCloseModal, wizardPath } from '../navigation';
+import { useReportWizardGuard, useWizardPublished } from '../wizardGuards';
 import { FORM_MAX_WIDTH } from './frames';
 import { WizardDraftPreview } from './WizardVehiclePreview';
 
@@ -111,6 +109,10 @@ export function WizardFrame({
   const { t } = useTranslation('garage');
   const styles = useStyles();
   const router = useRouter();
+  // R4B-005: a published draft guards no step any more; the review waits for every step to report that (wizardGuards).
+  const published = useWizardPublished(draftId);
+  const guarded = dirty && !published;
+  useReportWizardGuard(draftId, guarded);
   const online = useOnline();
   const close = useCloseModal();
   const { kind, gutter, width } = useBreakpoint();
@@ -227,7 +229,7 @@ export function WizardFrame({
           testID={`GAR-03.${step}.cta`}
         />
       ) : null}
-      <DiscardGuardDialog dirty={dirty} onDiscard={onDiscard} testID="GAR-03.discard" />
+      <DiscardGuardDialog dirty={guarded} onDiscard={onDiscard} testID="GAR-03.discard" />
     </Screen>
   );
 }

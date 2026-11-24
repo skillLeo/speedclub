@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\Auth;
 
 use App\Enums\SignupRef;
+use App\Http\Requests\Api\V1\Auth\Concerns\CarriesInviteCode;
 use App\Http\Requests\Api\V1\Auth\Concerns\NormalizesEmail;
 use App\Rules\DeliverableEmail;
 use App\Rules\MemberPassword;
@@ -11,7 +12,10 @@ use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
-    use NormalizesEmail;
+    use CarriesInviteCode, NormalizesEmail {
+        NormalizesEmail::prepareForValidation insteadof CarriesInviteCode;
+        NormalizesEmail::prepareForValidation as normalizeEmailInput;
+    }
 
     /**
      * @return array<string, mixed>
@@ -28,6 +32,13 @@ class RegisterRequest extends FormRequest
             'locale' => ['nullable', Rule::in(config()->array('speedclub.locales'))],
             // Where sign-up began, when it began on a QR scan or a public page (ADR-216): qr, public_vehicle, public_profile.
             'ref' => ['nullable', Rule::enum(SignupRef::class)],
+            ...$this->inviteCodeRules(),
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->normalizeEmailInput();
+        $this->dropUnusableInviteCode();
     }
 }

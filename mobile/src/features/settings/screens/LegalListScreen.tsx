@@ -8,7 +8,11 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space } from '@/theme';
-import { EmptyState, ErrorState, Hairline, ListRow, Skeleton, SkeletonText } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { ListRow } from '@/ui/ListRow';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
 
 import { RowGroup } from '@/ui/RowGroup';
 import { SettingsPage } from '../components/SettingsPage';

@@ -193,7 +193,7 @@ describe('ADM-47 retention', function () {
         adm36As('admin');
 
         $this->patch('/admin/privacy/retention', ['periods' => ['privacy_requests_months' => 12], 'reason' => adm36Reason()])->assertSessionHasErrors();
-        $this->patch('/admin/privacy/retention', ['periods' => ['support_tickets_months' => 12]])->assertSessionHasErrors('reason');
+        $this->patch('/admin/privacy/retention', ['periods' => ['support_tickets_months' => 12], 'reason' => str_repeat('x', 1001)])->assertSessionHasErrors('reason');
         $this->patch('/admin/privacy/retention', ['periods' => ['support_tickets_months' => 12], 'reason' => adm36Reason()])->assertSessionHas('success', 'privacy.flash.retention_saved');
 
         expect(app(RetentionPolicy::class)->value('support_tickets_months'))->toBe(12);

@@ -7,8 +7,15 @@ import { avatarUrlOf, type Me } from '@/api/queries/auth';
 import { useUploadProfileImage, type ProfileImageSlot } from '@/api/queries/profile';
 import type { PickedPhoto } from '@/features/auth/avatar';
 import { FormNotice } from '@/features/auth/components/FormNotice';
+import { appendPlateBlur, type PlateBlurChoice } from '@/features/media/plateBlur/model';
+import { usePlateBlurReview } from '@/features/media/plateBlur/PlateBlurReview';
 import { createStyles } from '@/theme';
-import { Avatar, Button, IconButton, Photo, Progress, Text } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { Button } from '@/ui/Button';
+import { IconButton } from '@/ui/IconButton';
+import { Photo } from '@/ui/Photo';
+import { Progress } from '@/ui/Progress';
+import { Text } from '@/ui/Text';
 
 import { photoFields } from '../media';
 import { pickProfilePhoto, profilePhotoForm } from '../photos';
@@ -42,7 +49,8 @@ const useStyles = createStyles((t) => ({
   failure: { alignItems: 'flex-start', gap: t.space[4] },
 }));
 
-type PhotoPick = { slot: ProfileImageSlot; photo: PickedPhoto; key: string };
+/** M5.9a: the cover carries the plate blur choice; the avatar has none (contract §1). */
+type PhotoPick = { slot: ProfileImageSlot; photo: PickedPhoto; key: string; plateBlur?: PlateBlurChoice };
 type Failure = PhotoPick & { message: string };
 
 function UploadBadge({ value, label, testID }: { value: number; label: string; testID: string }) {
@@ -74,6 +82,7 @@ export function ProfileImagesEditor({ me, width, disabled = false }: ProfileImag
   const avatar = useUploadProfileImage('avatar');
   const cover = useUploadProfileImage('cover');
   const [failure, setFailure] = useState<Failure | null>(null);
+  const plateBlur = usePlateBlurReview('PROF-03');
   const name = me.display_name || me.username || '';
   const percent = (value: number | null) => Math.round((value ?? 0) * 100);
 
@@ -81,7 +90,7 @@ export function ProfileImagesEditor({ me, width, disabled = false }: ProfileImag
     setFailure(null);
     const upload = pick.slot === 'avatar' ? avatar : cover;
     try {
-      const form = await profilePhotoForm(pick.photo, pick.slot);
+      const form = appendPlateBlur(await profilePhotoForm(pick.photo, pick.slot), pick.plateBlur);
       await upload.mutateAsync({ form, idempotencyKey: pick.key });
     } catch (error) {
       setFailure({ ...pick, message: error instanceof ApiError ? error.message : t('edit.photos.failed') });
@@ -96,7 +105,14 @@ export function ProfileImagesEditor({ me, width, disabled = false }: ProfileImag
       setFailure(null);
       return;
     }
-    if (photo) await send({ slot, photo, key: newIdempotencyKey() });
+    if (!photo) return;
+    if (slot === 'avatar') {
+      await send({ slot, photo, key: newIdempotencyKey() });
+      return;
+    }
+    // A cover can show a car: the plate blur step first.
+    const reviewed = (await plateBlur.review([photo]))?.[0];
+    if (reviewed) await send({ slot, photo, key: newIdempotencyKey(), plateBlur: reviewed.plateBlur });
   };
 
   return (
@@ -160,6 +176,7 @@ export function ProfileImagesEditor({ me, width, disabled = false }: ProfileImag
           />
         </View>
       ) : null}
+      {plateBlur.element}
     </View>
   );
 }

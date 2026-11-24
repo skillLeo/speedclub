@@ -42,7 +42,12 @@ export function stagerFor(page, staged) {
       const request = route.request();
       if (answer.method && request.method() !== answer.method.toUpperCase()) return route.fallback();
       if (answer.patch) {
-        const response = await route.fetch();
+        // A browser that kept the answer sends its ETag (If-None-Match) and would get a bodiless 304, which cannot be patched
+        // (WebKit on a page kept between cells; M5.5 f-shop). Fetch the full answer instead.
+        const headers = { ...request.headers() };
+        delete headers['if-none-match'];
+        delete headers['if-modified-since'];
+        const response = await route.fetch({ headers });
         const body = await response.json();
         const changed = answer.patch(body);
         return route.fulfill({ response, json: changed === undefined ? body : changed });

@@ -12,6 +12,7 @@ use App\Services\Audit\Audit;
 use App\Services\Auth\MemberSessions;
 use App\Services\Auth\PasswordProof;
 use App\Services\Auth\VerificationCodes;
+use App\Services\Members\MemberActivation;
 use App\Support\Auth\AuthResult;
 use App\Support\Auth\DeviceInfo;
 use App\Support\Auth\TwoFactorPending;
@@ -25,6 +26,7 @@ class VerifyMemberEmail
         private readonly PasswordProof $passwords,
         private readonly MemberSessions $sessions,
         private readonly SignInMember $signIn,
+        private readonly MemberActivation $activation,
     ) {}
 
     /**
@@ -36,7 +38,7 @@ class VerifyMemberEmail
      * Success marks the address verified, ends every earlier sign-in and signs in, which for a member flagged
      * force_password_change means the same 403 and reset code as at login.
      */
-    public function handle(string $email, string $code, ?string $password, ?User $signedIn, ?DeviceInfo $device, Request $request): AuthResult|TwoFactorPending
+    public function handle(string $email, string $code, ?string $password, ?User $signedIn, ?DeviceInfo $device, Request $request, ?string $inviteCode = null): AuthResult|TwoFactorPending
     {
         $user = User::query()->where('email', $email)->whereNull('email_verified_at')->first();
 
@@ -69,6 +71,10 @@ class VerifyMemberEmail
         }
 
         /** @var User $user */
+        // M5.9d: the address is proved and the terms were accepted at registration: the account activates (founding number, invite).
+        $this->activation->noteInvite($user, $inviteCode);
+        $this->activation->activate($user->refresh());
+
         return $this->signIn->begin($user, $device, $request, method: SignInMethod::EmailCode);
     }
 

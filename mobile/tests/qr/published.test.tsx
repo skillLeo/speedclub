@@ -111,7 +111,7 @@ describe('GAR-04 Veröffentlicht + QR (09 §7.6, SM13)', () => {
     await waitFor(() => expect(mockShare).toHaveBeenCalled());
     expect(mockShare.mock.calls[0]![0]).toMatchObject({ url: 'https://speedclub.de/v/nissan-skyline-gt-r-r34-5tf974vj' });
     await fireEvent.press(screen.getByTestId('GAR-04.viewQr'));
-    expect(mockRouter.push).toHaveBeenCalledWith(`/qr/${VEHICLE}`);
+    expect(mockRouter.push).toHaveBeenCalledWith(`/stickers/${VEHICLE}`);
     await fireEvent.press(screen.getByTestId('GAR-04.toGarage'));
     expect(mockRouter.push).toHaveBeenCalledWith('/garage');
   });

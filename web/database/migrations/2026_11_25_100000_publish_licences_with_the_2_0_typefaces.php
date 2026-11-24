@@ -32,7 +32,7 @@ return new class extends Migration
         ],
     ];
 
-    public const REASON = 'Schriften 2.0 (ADR-402): Inter Display und Archivo statt Barlow Semi Condensed. Nur Lizenzangaben, keine erneute Zustimmung.';
+    public const REASON = 'Neue Schriften: Inter Display und Archivo statt Barlow Semi Condensed. Nur Lizenzangaben, keine erneute Zustimmung.';
 
     public function up(): void
     {

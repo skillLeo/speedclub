@@ -1,11 +1,11 @@
 {
     "nav": {
-        "title": "QR codes"
+        "title": "Sticker register"
     },
-    "title": "QR codes",
+    "title": "Sticker register",
     "intro": "Every sticker code with vehicle, owner and scans. Only scans per day are counted, no people.",
-    "caption": "QR codes, newest first",
-    "empty_title": "No QR codes yet",
+    "caption": "Stickers, newest first",
+    "empty_title": "No stickers yet",
     "empty_body": "A code is created when a vehicle is published.",
     "no_vehicle": "No vehicle",
     "vehicle_deleted": "Vehicle deleted",
@@ -24,7 +24,7 @@
         "top": "Most scans"
     },
     "filters": {
-        "label": "Filter QR codes",
+        "label": "Filter stickers",
         "q": "Code",
         "q_placeholder": "e.g. 7H2K",
         "status": "Status",

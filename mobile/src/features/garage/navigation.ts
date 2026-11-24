@@ -1,7 +1,10 @@
 import { useNavigation, useRouter, type Href } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+
+import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import type { WizardStep } from './model';
+import { markWizardPublished, whenWizardGuardsReleased } from './wizardGuards';
 
 /** The wizard's routes: `/add-vehicle/new/vehicle` until the first save, then the draft's id. */
 export function wizardPath(draftId: string, step: WizardStep): Href {
@@ -53,6 +56,30 @@ export function useCloseModal(fallback: Href = '/garage') {
 export function useReplaceWizardWithPublished() {
   const router = useRouter();
   return useCallback((vehicleId: string) => router.replace({ pathname: '/published/[vehicleId]', params: { vehicleId } }), [router]);
+}
+
+/**
+ * R4B-L01: a step of a published draft never shows the wizard again; it leaves the wizard the way its close does (useCloseModal),
+ * to the screen it was opened from, or to the garage when nothing is below it. On the web GAR-04 replaces only the review's entry:
+ * the browser keeps one entry per step pushed before it, and its back restored the finished wizard there. A direct link to a step of
+ * a published car leaves the same way. Only the step on show leaves: while the review publishes, the steps under it are not focused,
+ * and GAR-04's replace is the one move (R4B-005). Each step's guard lets go first (wizardGuards). Returns whether the step leaves:
+ * it then shows its skeleton, never the form.
+ */
+export function useLeavePublishedWizard(draftId: string, published: boolean): boolean {
+  const focused = useScreenFocused();
+  const close = useCloseModal();
+  // Once per step: a later render (a new `close`) must not close the modal a second time.
+  const left = useRef(false);
+  useEffect(() => {
+    if (!published || !focused || left.current) return undefined;
+    markWizardPublished(draftId);
+    return whenWizardGuardsReleased(draftId, () => {
+      left.current = true;
+      close();
+    });
+  }, [close, draftId, focused, published]);
+  return published;
 }
 
 /**

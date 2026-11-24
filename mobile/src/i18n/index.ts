@@ -1,35 +1,8 @@
 import { getLocales } from 'expo-localization';
-import { createInstance } from 'i18next';
+import { createInstance, type Resource } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-import authDe from './locales/de/auth.json';
-import commonDe from './locales/de/common.json';
-import discoverDe from './locales/de/discover.json';
-import errorsDe from './locales/de/errors.json';
-import garageDe from './locales/de/garage.json';
-import homeDe from './locales/de/home.json';
-import eventsDe from './locales/de/events.json';
-import messagesDe from './locales/de/messages.json';
-import partsDe from './locales/de/parts.json';
-import profileDe from './locales/de/profile.json';
-import qrDe from './locales/de/qr.json';
-import safetyDe from './locales/de/safety.json';
-import settingsDe from './locales/de/settings.json';
-import vehicleDe from './locales/de/vehicle.json';
-import authEn from './locales/en/auth.json';
-import commonEn from './locales/en/common.json';
-import discoverEn from './locales/en/discover.json';
-import errorsEn from './locales/en/errors.json';
-import garageEn from './locales/en/garage.json';
-import homeEn from './locales/en/home.json';
-import eventsEn from './locales/en/events.json';
-import messagesEn from './locales/en/messages.json';
-import partsEn from './locales/en/parts.json';
-import profileEn from './locales/en/profile.json';
-import qrEn from './locales/en/qr.json';
-import safetyEn from './locales/en/safety.json';
-import settingsEn from './locales/en/settings.json';
-import vehicleEn from './locales/en/vehicle.json';
+import { bundledLanguages, loadLanguage } from './languages';
 
 export const namespaces = [
   'common',
@@ -39,51 +12,19 @@ export const namespaces = [
   'garage',
   'vehicle',
   'qr',
+  'dex',
   'messages',
   'events',
+  'forum',
   'parts',
   'profile',
   'settings',
+  'shop',
   'safety',
   'errors',
 ] as const;
 
-export const resources = {
-  de: {
-    common: commonDe,
-    auth: authDe,
-    home: homeDe,
-    discover: discoverDe,
-    garage: garageDe,
-    vehicle: vehicleDe,
-    qr: qrDe,
-    messages: messagesDe,
-    events: eventsDe,
-    parts: partsDe,
-    profile: profileDe,
-    settings: settingsDe,
-    safety: safetyDe,
-    errors: errorsDe,
-  },
-  en: {
-    common: commonEn,
-    auth: authEn,
-    home: homeEn,
-    discover: discoverEn,
-    garage: garageEn,
-    vehicle: vehicleEn,
-    qr: qrEn,
-    messages: messagesEn,
-    events: eventsEn,
-    parts: partsEn,
-    profile: profileEn,
-    settings: settingsEn,
-    safety: safetyEn,
-    errors: errorsEn,
-  },
-} as const;
-
-export type AppLocale = keyof typeof resources;
+export type AppLocale = 'de' | 'en';
 
 /** German is the default. English applies when the device language is English. */
 export function detectLocale(): AppLocale {
@@ -94,7 +35,8 @@ export function detectLocale(): AppLocale {
 const i18n = createInstance();
 
 void i18n.use(initReactI18next).init({
-  resources,
+  // Native: both languages, present at once. Web (M5.12a): none yet; `i18nReady` adds the active one before the first screen renders.
+  resources: bundledLanguages as Resource,
   lng: detectLocale(),
   fallbackLng: 'de',
   defaultNS: 'common',
@@ -102,5 +44,44 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
   returnNull: false,
 });
+
+const loaded = new Set<string>(Object.keys(bundledLanguages));
+const pending = new Map<AppLocale, Promise<void>>();
+
+/** Makes a language's strings available: at once on native, on the web after its chunk has loaded (once per language). */
+export function ensureLanguage(language: string): Promise<void> {
+  const locale: AppLocale = language === 'en' ? 'en' : 'de';
+  if (loaded.has(locale)) return Promise.resolve();
+  let load = pending.get(locale);
+  if (!load) {
+    load = loadLanguage(locale).then(
+      (bundle) => {
+        for (const [namespace, strings] of Object.entries(bundle)) i18n.addResourceBundle(locale, namespace, strings, true, true);
+        loaded.add(locale);
+        pending.delete(locale);
+      },
+      (error: unknown) => {
+        // A failed chunk (offline before the service worker had it) is tried again on the next call; the screens show keys meanwhile.
+        pending.delete(locale);
+        throw error;
+      },
+    );
+    pending.set(locale, load);
+  }
+  return load;
+}
+
+/** True once the active language's strings are present (always on native). */
+export function isLanguageLoaded(language: string = i18n.language): boolean {
+  return loaded.has(language === 'en' ? 'en' : 'de');
+}
+
+// Every language switch waits for the new language's strings, so no screen renders a key in between.
+const changeLanguage = i18n.changeLanguage.bind(i18n);
+i18n.changeLanguage = (language, callback) =>
+  (language ? ensureLanguage(language).catch(() => undefined) : Promise.resolve()).then(() => changeLanguage(language, callback));
+
+/** The active language's strings on the web; settles (also on a failed load) so the app never waits forever. */
+export const i18nReady: Promise<void> = ensureLanguage(i18n.language || detectLocale()).catch(() => undefined);
 
 export default i18n;

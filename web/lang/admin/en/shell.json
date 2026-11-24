@@ -1,5 +1,5 @@
 {
-    "brand": "SPEED CLUB",
+    "brand": "Speedclub",
     "brand_suffix": "Admin",
     "brand_short": "SC",
     "build": "Build :version",
@@ -39,7 +39,7 @@
     },
     "search": {
         "open": "Open search",
-        "placeholder": "Search member, vehicle, QR code or case"
+        "placeholder": "Search member, vehicle, sticker code or case"
     },
     "env": {
         "local": "LOCAL",
@@ -86,13 +86,16 @@
         "submit": "Confirm and continue",
         "required": "Enter your password.",
         "failed": "That password is not correct.",
-        "throttled": "Too many attempts. Wait a moment, then try again."
+        "throttled": "Too many attempts. Wait a moment, then try again.",
+        "session_expired": "Your session has ended. Sign in again and it will work. Nothing was saved.",
+        "forbidden": "You do not have permission for this.",
+        "sign_in": "Sign in again"
     },
     "palette": {
         "title": "Command palette",
         "description": "Open pages and find records",
         "input": "Search pages or records",
-        "placeholder": "Where to? Page, @username, ID, QR code …",
+        "placeholder": "Where to? Page, @username, ID, sticker code …",
         "results": "Results",
         "empty": "Nothing found.",
         "failed": "Search did not respond. Try again.",

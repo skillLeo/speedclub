@@ -95,7 +95,9 @@ const useStyles = createStyles((t) => ({
   counts: { flexGrow: 1, flexShrink: 1 },
   inert: { pointerEvents: 'none' },
   thumb: { width: t.size.thumb.row },
-  skeletonDay: { height: t.typography.heroNumeralS.lineHeight, width: BLOCK },
+  // DQ-P5-016: the date block's three lines (weekday, day, month), as EventDateBlock draws them.
+  skeletonDay: { height: t.typography.heroNumeralS.lineHeight + 2 * t.typography.labelCaps.lineHeight, width: BLOCK },
+  skeletonFooter: { flex: 1 },
 }));
 
 /** 09 §5 EventCard date block: the day as hero.numeral.s over the month as a data label, the weekday above when asked. */
@@ -257,7 +259,10 @@ export function EventCardSkeleton({ cover = false, testID }: { cover?: boolean; 
         <View style={styles.footerRow}>
           <View style={styles.spacer} />
           <View style={styles.footer}>
-            <SkeletonText variant="caption" width="40%" />
+            {/* A row shrink-wraps its children: the bar's 40 % needs a box that takes the footer's width (it drew 0 wide). */}
+            <View style={styles.skeletonFooter}>
+              <SkeletonText variant="caption" width="40%" />
+            </View>
           </View>
         </View>
       </View>

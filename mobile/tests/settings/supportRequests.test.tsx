@@ -68,7 +68,7 @@ describe('SET-15a requests', () => {
     expect(await screen.findByText('Sticker lässt sich nicht scannen')).toBeTruthy();
     // DQ-671: the status is the pill SET-15b shows, not a trailing value beside the subject; the meta line wraps at its "·" only.
     expect(screen.getByTestId('SET-15a.row.01tik.status')).toHaveTextContent('Antwort vom Team');
-    expect(screen.getByTestId('SET-15a.row.01tik.meta')).toHaveTextContent('SC-\u20607H2KQXMB\u00a0· QR-\u2060Sticker\u00a0· 03.11.2026', {
+    expect(screen.getByTestId('SET-15a.row.01tik.meta')).toHaveTextContent('SC-\u20607H2KQXMB\u00a0· Sticker\u00a0· 03.11.2026', {
       normalizer: (text: string) => text,
     });
     await fireEvent.press(screen.getByTestId('SET-15a.row.01tik'));

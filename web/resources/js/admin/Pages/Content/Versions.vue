@@ -15,10 +15,11 @@ import { qaDialog } from '../../composables/qaDialog';
 import { formatDateTime } from '../../lib/format';
 import { routeOr } from '../../lib/routes';
 import type { VersionInfo } from './Partials/configDraft';
+import { useFourEyes } from '../../composables/fourEyes';
 
 /**
  * ADM-35 Versionsverlauf (06 §1.5/§3): per config key every published version with who, when and why; the chosen version against the
- * one before it; "Zurückrollen" ⚿ publishes a copy of it as the newest version with a reason (history is never edited). A rollback
+ * one before it; "Zurückrollen" ⚿ publishes a copy of it as the newest version (history is never edited). A rollback
  * that switches maintenance on needs a second person.
  */
 interface Chosen extends VersionInfo {
@@ -54,12 +55,13 @@ const versionHref = (version: number) => `${base}?key=${props.configKey}&version
 
 const action = useAdminAction();
 const rollbackOpen = ref(false);
-function rollback(reason: string | null): void {
+function rollback(): void {
     if (!chosen.value) return;
-    action.run('post', routeOr('admin.content.versions.rollback', `/admin/content/versions/${props.configKey}/${chosen.value.version}/rollback`, { key: props.configKey, version: chosen.value.version }), { reason }, { sensitive: true, onSuccess: () => (rollbackOpen.value = false) });
+    action.run('post', routeOr('admin.content.versions.rollback', `/admin/content/versions/${props.configKey}/${chosen.value.version}/rollback`, { key: props.configKey, version: chosen.value.version }), {}, { sensitive: true, onSuccess: () => (rollbackOpen.value = false) });
 }
 const mayRollback = computed(() => props.canRollback && chosen.value !== null && chosen.value.status === 'superseded');
-const fourEyes = computed(() => chosen.value?.needs_approval != null);
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && chosen.value?.needs_approval != null);
 // QA overlay ?dialog=rollback: only where a rollback exists (a superseded version), never for the live one (DQ-626).
 if (qaDialog() === 'rollback' && mayRollback.value) rollbackOpen.value = true;
 const editHref = computed(() => routeOr(props.editRoute, '/admin'));
@@ -168,7 +170,6 @@ function readable(payload: Record<string, unknown> | null | undefined): Record<s
             :body="fourEyes ? trans('content.versions.rollback_four_eyes') : trans('content.versions.rollback_body', { key: trans(`content.versions.keys.${configKey}`) })"
             :confirm-label="fourEyes ? trans('config.draft.request') : trans('content.versions.rollback_confirm')"
             tone="neutral"
-            reason
             :four-eyes="fourEyes"
             :processing="action.processing.value"
             :error="failedDialog ? trans('ui.state.server_error') : action.error.value"

@@ -6,7 +6,9 @@ use App\Enums\ReportTargetType;
 use App\Models\BuildUpdate;
 use App\Models\Business;
 use App\Models\Comment;
+use App\Models\Crew;
 use App\Models\Event;
+use App\Models\ForumPost;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\ModerationCase;
@@ -19,7 +21,7 @@ use App\Models\Vehicle;
  */
 final class CaseTargets
 {
-    public static function model(ModerationCase $case): User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business|null
+    public static function model(ModerationCase $case): User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business|ForumPost|Crew|null
     {
         $id = $case->target_id;
 
@@ -33,6 +35,8 @@ final class CaseTargets
             ReportTargetType::Comment => Comment::query()->withoutGlobalScopes()->find($id),
             ReportTargetType::Event => Event::query()->find($id),
             ReportTargetType::Business => Business::query()->find($id),
+            ReportTargetType::ForumPost => ForumPost::query()->withoutGlobalScopes()->find($id),
+            ReportTargetType::Crew => Crew::withTrashed()->find($id),
         };
     }
 }

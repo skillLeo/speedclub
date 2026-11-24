@@ -12,8 +12,15 @@ import { useTabBarInset } from '@/features/shell/tabBarLayout';
 import { useQaState } from '@/lib/qa';
 import { createStyles, layout, space, useBreakpoint, type BreakpointKind } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import { Chip, CollapsingFlashList, EmptyState, Header, Photo, PressableScale, Screen, Skeleton, SkeletonBlock, Text } from '@/ui';
-import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
+import { Chip } from '@/ui/Chip';
+import { EmptyState } from '@/ui/EmptyState';
+import { Header } from '@/ui/Header';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { CollapsingFlashList, useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { PhotoViewer } from '../components/PhotoViewer';
 import { StateScreen } from '../components/StateScreen';

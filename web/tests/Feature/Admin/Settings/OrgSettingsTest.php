@@ -14,7 +14,7 @@ require_once __DIR__.'/../Team/TeamHelpers.php';
 function m36Org(array $values = []): array
 {
     return [
-        'company_name' => 'Speed Club GmbH', 'legal_form' => null, 'street' => 'Hafenstraße 12', 'postal_city' => '20457 Hamburg',
+        'company_name' => 'Speedclub GmbH', 'legal_form' => null, 'street' => 'Hafenstraße 12', 'postal_city' => '20457 Hamburg',
         'representative' => 'Lena Weber', 'contact_email' => 'kontakt@speedclub.de', 'support_email' => 'hilfe@speedclub.de',
         'vat_id' => 'DE123456789', 'register_court' => 'Amtsgericht Hamburg', 'register_number' => 'HRB 123456', 'default_locale' => 'de',
         ...$values,
@@ -35,9 +35,16 @@ it('validates the org fields', function (array $values) {
 })->with([
     'bad e-mail' => [['support_email' => 'keine-adresse']],
     'bad VAT ID' => [['vat_id' => '123']],
+    'VAT ID without a figure' => [['vat_id' => 'kaputt']],
     'unknown locale' => [['default_locale' => 'fr']],
     'unknown field' => [['ceo_shoe_size' => '44']],
 ]);
+
+it('saves a VAT ID typed with spaces or in lower case, normalised (client round 3)', function () {
+    $version = app(UpdateOrgSettings::class)->handle(m31Staff('owner'), m36Org(['vat_id' => 'de 123 456 789']), m36Reason());
+
+    expect($version->payload['vat_id'])->toBe('DE123456789');
+});
 
 it('resolves the legal placeholders from the published org, escaped, and leaves missing ones visible', function () {
     LegalDocument::factory()->create([

@@ -26,8 +26,9 @@ export function targetLabel(t: TFunction<'safety'>, target: SafetyTargetRef, lab
   switch (target.type) {
     case 'member':
     case 'vehicle':
-    // M4.14: a business profile is named by its own name, like a member or a vehicle.
+    // M4.14: a business profile is named by its own name, like a member or a vehicle; so is a crew (11 R4-2.3).
     case 'business':
+    case 'crew':
       return name;
     case 'photo':
     case 'message':
@@ -35,6 +36,8 @@ export function targetLabel(t: TFunction<'safety'>, target: SafetyTargetRef, lab
     case 'modification':
     case 'comment':
     case 'event':
+    // M5.8: the label is the thread's title (m5.8-contract §7).
+    case 'forum_post':
       return t(`targetLabels.${target.type}`, { label: name });
   }
 }

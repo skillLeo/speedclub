@@ -57,7 +57,11 @@ $AllowedPermissions = @(
   # M4.19 review: androidx.work:work-runtime 2.12.0 (a dependency of react-native-android-widget) declares it. Normal permission,
   # auto-granted, no prompt. WorkManager needs it for expedited work on API < 31 (the widget's JS task); the app declares no
   # foreground service of its own.
-  'android.permission.FOREGROUND_SERVICE'
+  'android.permission.FOREGROUND_SERVICE',
+  # M5.9b (ADR-508, security review in M5.9b): the DEX-02 sticker scanner (expo-camera, preview only, nothing stored) and the spot city
+  # (expo-location, foreground, approximate only; ACCESS_FINE_LOCATION, background and the location service are blocked in app.config.ts).
+  'android.permission.CAMERA',
+  'android.permission.ACCESS_COARSE_LOCATION'
 )
 
 # Parses `aapt dump permissions` / `aapt2 dump permissions` output. Returns the package, the requested and the declared names.

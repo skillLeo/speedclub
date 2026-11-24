@@ -5,7 +5,10 @@ import { View } from 'react-native';
 import { COLLECTION_NAME_MAX } from '@/api/queries/social2';
 import { hapticFor } from '@/lib/haptics';
 import { createStyles } from '@/theme';
-import { Button, Sheet, Text, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 
 const useStyles = createStyles((t) => ({
   body: { gap: t.space[16] },

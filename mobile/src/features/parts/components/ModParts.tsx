@@ -12,7 +12,11 @@ import { publicIdOf, type PublicMod } from '@/api/queries/vehicles';
 import { SimilarBuildsList } from '@/features/discover/components/SimilarBuildsList';
 import { haptics } from '@/lib/haptics';
 import { createStyles } from '@/theme';
-import { Button, ListRow, StatusPill, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { ListRow } from '@/ui/ListRow';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { tagErrorText } from './business/tagErrors';
 

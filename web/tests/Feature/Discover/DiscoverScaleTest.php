@@ -251,8 +251,10 @@ it('pages every sort over 2,000 builds in bounded time and reads, first and 51st
     // 11 queries a page since M4.2 (3bf1d0c6): the hits, the vehicles, eight card relations, and VisibleBuilds::constrain's one read
     // of the editorial_samples flag (SampleContent, 09 §8.19, ADR-412; a lookup on feature_flags.key, once per request whatever the
     // data or the page). Before, the flag was read on the first page only, as the pages shared the test's request.
-    expect($first['queries'])->toBe(11)
-        ->and($deep['queries'])->toBe(11)
+    // 12 since M5.9c (Build Score on the cards, 10 §16.3): one batched read of build_scores for the page's vehicles (whereIn, never
+    // per card), so the count stays constant per page whatever the page size or depth.
+    expect($first['queries'])->toBe(12)
+        ->and($deep['queries'])->toBe(12)
         ->and($first['ms'])->toBeLessThan(250.0)
         ->and($deep['ms'])->toBeLessThan(250.0);
 

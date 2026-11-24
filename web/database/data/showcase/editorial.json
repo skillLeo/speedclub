@@ -1,8 +1,8 @@
 {
- "_comment": "SPEED CLUB Editorial (09 §8.19, ADR-412): sample builds of the Editorial account, seeded by DemoShowcaseSeeder (local and staging only, flag editorial_samples). Each build names one shoot of design/seed-photos/manifest.json (`car`) that shows exactly its make, model and generation and that no showcase build uses. Specs are the manufacturer's figures for that model; `source` names where they come from; a figure the source does not give is null. Parts are real products of real brands (catalogue brands table), clearly labelled as samples; legal status stays unknown (no legality judgement on samples).",
+ "_comment": "Speedclub Editorial (09 §8.19, ADR-412): sample builds of the Editorial account, seeded by DemoShowcaseSeeder (local and staging only, flag editorial_samples). Each build names one shoot of design/seed-photos/manifest.json (`car`) that shows exactly its make, model and generation and that no showcase build uses. Specs are the manufacturer's figures for that model; `source` names where they come from; a figure the source does not give is null. Parts are real products of real brands (catalogue brands table), clearly labelled as samples; legal status stays unknown (no legality judgement on samples).",
  "member": {
   "username": "speedclub.editorial",
-  "display_name": "SPEED CLUB Editorial",
+  "display_name": "Speedclub Editorial",
   "city": null,
   "joined_days": 150,
   "avatar": false,

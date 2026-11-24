@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { StyleProp, ViewStyle } from 'react-native';
 
 import type { PublicMod } from '@/api/queries/vehicles';
-import { Button } from '@/ui';
+import { Button } from '@/ui/Button';
 
 import { similarSearchHref, similarSearchState } from '../similarSearch';
 

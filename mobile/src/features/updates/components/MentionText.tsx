@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 
-import { Text } from '@/ui';
+import { Text } from '@/ui/Text';
 
 import { mentionSegments } from '../model';
 

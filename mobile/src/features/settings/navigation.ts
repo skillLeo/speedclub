@@ -4,7 +4,7 @@
  * native-only rows on the web, flagged rows while their flag is off: never shown dead (09 §7.15).
  */
 import { isWeb } from '@/lib/platform';
-import type { IconName } from '@/ui';
+import type { IconName } from '@/ui/icons/Icon';
 
 export type SettingsKey =
   /** SET-02 Konto: the identity card at the top of the list. */
@@ -38,7 +38,9 @@ export type SettingsKey =
   | 'contact'
   | 'legal'
   /** SET-25 Was ist neu. */
-  | 'whatsNew';
+  | 'whatsNew'
+  /** INV-01 Freunde einladen (M5.9d). */
+  | 'invites';
 
 export type SettingsGroupKey =
   | 'account'
@@ -92,6 +94,7 @@ export const SETTINGS_PATHS: Readonly<Record<SettingsKey, string>> = {
   contact: '/settings/help/contact',
   legal: '/settings/legal',
   whatsNew: '/settings/about/whats-new',
+  invites: '/settings/invites',
 };
 
 /** The flags of the rows above, so the screens know which ones to ask app-config for. */
@@ -108,7 +111,7 @@ const row = (key: SettingsKey, icon: IconName, member: boolean, extra: Pick<Sett
 /**
  * 09 §7.9 in Apple order: the identity card (SET-02) · Konto & Sicherheit · Privatsphäre · Benachrichtigungen, Darstellung,
  * Sprache & Einheiten, Garage & Erinnerungen · Für Betriebe, Mitgliedschaft · Daten & Speicher · Hilfe & Support · Rechtliches ·
- * Über SPEED CLUB. "Cache leeren", the version line and "Abmelden" follow in the list itself (they are actions, not pages).
+ * Über Speedclub. "Cache leeren", the version line and "Abmelden" follow in the list itself (they are actions, not pages).
  */
 export const SETTINGS_GROUPS: readonly SettingsGroupDef[] = [
   { key: 'account', rows: [row('account', 'user', true)] },
@@ -136,7 +139,8 @@ export const SETTINGS_GROUPS: readonly SettingsGroupDef[] = [
   },
   {
     key: 'more',
-    rows: [row('business', 'workshop', true, { flag: 'businesses' }), row('membership', 'star', true, { flag: 'membership' })],
+    // M5.9d: "Freunde einladen" (INV-01), for every member.
+    rows: [row('business', 'workshop', true, { flag: 'businesses' }), row('membership', 'star', true, { flag: 'membership' }), row('invites', 'user-plus', true)],
   },
   { key: 'data', rows: [row('export', 'download-simple', true), row('delete', 'trash', true)] },
   { key: 'help', rows: [row('help', 'question', false), row('contact', 'chat-circle', true), row('reports', 'flag', true)] },

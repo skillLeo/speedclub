@@ -684,6 +684,13 @@ export type NewBuildUpdate = {
   modificationIds: readonly string[];
   /** One key per "Posten": a retry of the same post is answered with the first one (no double post). */
   idempotencyKey: string;
+  /**
+   * M5.9c (contract §2): `before_after` makes the post a before/after pair; its two photos follow through the upload queue and the
+   * pair through the PATCH (features/updates/pairing.ts). `post` (or nothing) is a plain update.
+   */
+  kind?: 'post' | 'before_after';
+  /** M5.9c: the mod a before/after shows ("Vorher/Nachher: KW V3"), or null. */
+  modificationId?: string | null;
 };
 
 function insertIntoPage(vehicle: PublicVehicle, update: BuildUpdate): PublicVehicle {
@@ -692,6 +699,34 @@ function insertIntoPage(vehicle: PublicVehicle, update: BuildUpdate): PublicVehi
 }
 
 /** "Posten": creates the post; the screen then queues its photos for `build-updates/{id}/media`. */
+type CreateBody = {
+  vehicle_id: string;
+  text: string | null;
+  mileage_km: number | null;
+  happened_on: string | null;
+  audience: BuildUpdateAudience;
+  modification_ids: string[];
+  kind?: components['schemas']['BuildUpdateKind'];
+  modification_id?: string | null;
+};
+
+/** The POST body; a before/after adds `kind` and `modification_id` (the shown mod, M5.9c handover "Before/after"). */
+function createBody(input: NewBuildUpdate): CreateBody {
+  const body: CreateBody = {
+    vehicle_id: input.vehicleId,
+    text: input.text,
+    mileage_km: input.mileageKm,
+    happened_on: input.happenedOn,
+    audience: input.audience,
+    modification_ids: [...input.modificationIds],
+  };
+  if (input.kind === 'before_after') {
+    body.kind = 'before_after';
+    body.modification_id = input.modificationId ?? null;
+  }
+  return body;
+}
+
 export function useCreateBuildUpdate() {
   const client = useQueryClient();
   return useMutation({
@@ -699,14 +734,7 @@ export function useCreateBuildUpdate() {
       (
         await apiData(
           api.POST('/build-updates', {
-            body: {
-              vehicle_id: input.vehicleId,
-              text: input.text,
-              mileage_km: input.mileageKm,
-              happened_on: input.happenedOn,
-              audience: input.audience,
-              modification_ids: [...input.modificationIds],
-            },
+            body: createBody(input),
             ...withIdempotency(input.idempotencyKey),
           }),
         )
@@ -801,23 +829,38 @@ export function isEditWindowClosed(error: unknown): boolean {
 export type BuildComment = components['schemas']['CommentResource'];
 export const COMMENT_MAX = 500;
 
-export const commentKeys = { of: (updateId: string) => ['build-update-comments', updateId] as const };
+/**
+ * R5-5: a thread is either a build update's (VEH-05, its feed card) or the car's own (VEH-01, the car's feed card). Both have the same
+ * rules, paging, idempotency and refusals; a comment is deleted through `comments/{comment}` in both.
+ */
+export type CommentTarget = { type: 'update' | 'vehicle'; id: string };
+
+export const commentKeys = {
+  of: (updateId: string) => ['build-update-comments', updateId] as const,
+  thread: (target: CommentTarget) =>
+    target.type === 'update' ? commentKeys.of(target.id) : (['vehicle-comments', target.id] as const),
+};
+
+/** The car's own thread as a feed card or the page has it (R5-5): `enabled` open to read, `can_write` this reader may write now. */
+export type CommentThreadState = components['schemas']['FeedVehicleResource']['comment_thread'];
+
+/** Whether the car's own thread is open (flag on, the owner allows comments, not a draft). Guests read it too. */
+export function vehicleCommentsEnabled(vehicle: { comment_thread?: CommentThreadState | null }): boolean {
+  return vehicle.comment_thread?.enabled === true;
+}
 
 /** Flat comments with one reply level, oldest first. Only asked for while the flag is on. */
-export function useComments(updateId: string | undefined, enabled: boolean) {
-  const value = updateId ?? '';
+export function useComments(target: CommentTarget | undefined, enabled: boolean) {
+  const value = target?.id ?? '';
+  const type = target?.type ?? 'update';
   return useInfiniteQuery({
-    queryKey: commentKeys.of(value),
-    queryFn: async ({ pageParam, signal }) =>
-      apiData(
-        api.GET('/build-updates/{update}/comments', {
-          params: {
-            path: { update: value },
-            query: { per_page: REACTIONS_PAGE_SIZE, ...(pageParam ? { cursor: pageParam } : {}) },
-          },
-          signal,
-        }),
-      ),
+    queryKey: commentKeys.thread({ type, id: value }),
+    queryFn: async ({ pageParam, signal }) => {
+      const query = { per_page: REACTIONS_PAGE_SIZE, ...(pageParam ? { cursor: pageParam } : {}) };
+      return type === 'vehicle'
+        ? apiData(api.GET('/vehicles/{vehicle}/comments', { params: { path: { vehicle: value }, query }, signal }))
+        : apiData(api.GET('/build-updates/{update}/comments', { params: { path: { update: value }, query }, signal }));
+    },
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.meta.next_cursor ?? undefined,
     enabled: enabled && value !== '',
@@ -826,31 +869,69 @@ export function useComments(updateId: string | undefined, enabled: boolean) {
   });
 }
 
-export function usePostComment(updateId: string) {
+/**
+ * Sends a comment with its Idempotency-Key. The thread (Comments.tsx) shows it at once while it is on its way and places the server's
+ * answer in the cache (`withSentComment`); a 422 comes back as the ApiError's field errors (`body`, `parent_id`).
+ */
+export function usePostComment(target: CommentTarget) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { body: string; parentId: string | null; idempotencyKey: string }) =>
-      (
-        await apiData(
-          api.POST('/build-updates/{update}/comments', {
-            params: { path: { update: updateId } },
-            body: { body: input.body, parent_id: input.parentId },
-            ...withIdempotency(input.idempotencyKey),
-          }),
-        )
-      ).data,
+    mutationFn: async (input: { body: string; parentId: string | null; idempotencyKey: string }) => {
+      const body = { body: input.body, parent_id: input.parentId };
+      const answer =
+        target.type === 'vehicle'
+          ? await apiData(
+              api.POST('/vehicles/{vehicle}/comments', { params: { path: { vehicle: target.id } }, body, ...withIdempotency(input.idempotencyKey) }),
+            )
+          : await apiData(
+              api.POST('/build-updates/{update}/comments', { params: { path: { update: target.id } }, body, ...withIdempotency(input.idempotencyKey) }),
+            );
+      return answer.data;
+    },
     onMutate: () => refuseInViewAs(),
-    onSettled: () => client.invalidateQueries({ queryKey: commentKeys.of(updateId) }),
+    onSettled: () => client.invalidateQueries({ queryKey: commentKeys.thread(target) }),
   });
 }
 
-export function useDeleteComment(updateId: string) {
+export function useDeleteComment(target: CommentTarget) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: async (commentId: string) => {
       await apiData(api.DELETE('/comments/{comment}', { params: { path: { comment: commentId } } }));
     },
     onMutate: () => refuseInViewAs(),
-    onSettled: () => client.invalidateQueries({ queryKey: commentKeys.of(updateId) }),
+    onSettled: () => client.invalidateQueries({ queryKey: commentKeys.thread(target) }),
+  });
+}
+
+/** A vehicle, wherever it is cached: the page (its `social` block) or a feed card (its `comment_thread`). */
+const isCommentableVehicle = (id: string) => (node: Record<string, unknown>) =>
+  node.id === id && (isPlainObject(node.social) || isPlainObject(node.comment_thread));
+
+/**
+ * The owner turns comments on the car on or off (`PATCH vehicles/{vehicle}/comments`). Optimistic in every cached copy; what was
+ * written stays readable either way.
+ */
+export function useSetVehicleComments(vehicleId: string) {
+  const client = useQueryClient();
+  const apply = (enabled: boolean) =>
+    editEverywhere(client, isCommentableVehicle(vehicleId), (node) => ({
+      ...node,
+      ...(isPlainObject(node.social) ? { social: { ...node.social, comments_enabled: enabled } } : {}),
+      // The owner's own thread follows the switch; whether the owner may write is the server's to say (unchanged).
+      ...(isPlainObject(node.comment_thread) ? { comment_thread: { ...node.comment_thread, enabled } } : {}),
+    }));
+  return useMutation({
+    scope: { id: `vehicle-comments:${vehicleId}` },
+    mutationFn: async (enabled: boolean) =>
+      (await apiData(api.PATCH('/vehicles/{vehicle}/comments', { params: { path: { vehicle: vehicleId } }, body: { enabled } }))).data,
+    onMutate: async (enabled) => {
+      refuseInViewAs();
+      return { snapshot: apply(enabled) };
+    },
+    onError: (_error, _enabled, context) => restore(client, context?.snapshot),
+    onSuccess: (social) => {
+      apply(social.comments_enabled);
+    },
   });
 }

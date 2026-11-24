@@ -15,9 +15,9 @@ $ulid = '[0-9A-Za-z]{26}';
 Route::middleware([...AdminRoutes::signedIn(), 'can:moderation.view'])->prefix('businesses')->name('businesses.')->group(function () use ($ulid): void {
     Route::get('/', BusinessQueueController::class)->name('queue');
     Route::get('{business}', [BusinessShowController::class, 'show'])->where('business', $ulid)->name('show');
-    Route::get('{business}/preview', [BusinessShowController::class, 'preview'])->where('business', $ulid)->middleware('throttle:120,1')->name('preview');
+    Route::get('{business}/preview', [BusinessShowController::class, 'preview'])->where('business', $ulid)->middleware('throttle:120,1,admin-businesses-1')->name('preview');
 
-    Route::middleware(['can:moderation.decide', 'staff.recent-password', 'throttle:60,1'])->group(function () use ($ulid): void {
+    Route::middleware(['can:moderation.decide', 'staff.recent-password', 'throttle:60,1,admin-businesses-2'])->group(function () use ($ulid): void {
         Route::post('{business}/verify', [BusinessActionsController::class, 'verify'])->where('business', $ulid)->name('verify');
         Route::post('{business}/reject', [BusinessActionsController::class, 'reject'])->where('business', $ulid)->name('reject');
         Route::post('{business}/suspend', [BusinessActionsController::class, 'suspend'])->where('business', $ulid)->name('suspend');

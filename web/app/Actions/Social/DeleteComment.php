@@ -7,7 +7,7 @@ use App\Services\Social\Mentions;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Deleted by its author or the update's owner (soft delete); a top-level comment takes its replies along. Reports keep their snapshot.
+ * Deleted by its author or the car's owner (soft delete); a top-level comment takes its replies along. Reports keep their snapshot.
  */
 class DeleteComment
 {

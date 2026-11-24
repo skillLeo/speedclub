@@ -3,7 +3,11 @@ import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { createStyles, useBreakpoint } from '@/theme';
-import { Header, HeaderLargeTitle, ListRow, Screen, Text, useCollapsingHeader } from '@/ui';
+import { Header, HeaderLargeTitle } from '@/ui/Header';
+import { ListRow } from '@/ui/ListRow';
+import { Screen } from '@/ui/Screen';
+import { Text } from '@/ui/Text';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { SECTIONS } from '../data';
 

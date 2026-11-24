@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useConfirmLink } from '@/api/queries/passwordless';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 import { slot } from '@/ui/SlotText';
 import { identifierText } from '@/ui/textBreaks';
 

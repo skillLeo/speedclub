@@ -14,9 +14,10 @@ import ApprovalNotice from '../../Components/patterns/ApprovalNotice.vue';
 import BulkResultPanel from '../../Components/patterns/BulkResultPanel.vue';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
-import { Button, Dialog, Drawer, Field, IconButton, Input, Select, StatusPill, Textarea } from '../../Components/ui';
+import { Button, Dialog, Drawer, Field, IconButton, Input, Select, StatusPill } from '../../Components/ui';
 import { usePageState } from '../../composables/pageState';
 import { qaDialog } from '../../composables/qaDialog';
+import { useFourEyes } from '../../composables/fourEyes';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
 import { routeOr } from '../../lib/routes';
@@ -118,25 +119,19 @@ function saveAssign(): void {
 // ---- bulk status ------------------------------------------------------------------------------------------------------------
 const bulkActions = computed<BulkAction[]>(() => [{ key: 'status', label: trans('support.tickets.bulk.status'), icon: PhArrowsClockwise, atom: 'support.reply' }]);
 const bulkIds = ref<string[]>([]);
+const fourEyesOn = useFourEyes();
 const bulkOpen = ref(false);
 const bulkStatus = ref<string | undefined>('closed');
-const bulkReason = ref('');
 const bulkError = ref<string | null>(null);
 const bulkProcessing = ref(false);
 const bulkStatusOptions = computed(() => (['open', 'pending', 'closed'] as const).map((v) => ({ value: v, label: trans(`support.status.${v}`) })));
 function onBulk(_action: string, ids: string[]): void {
     bulkIds.value = ids;
-    bulkReason.value = '';
     bulkError.value = null;
     bulkOpen.value = true;
 }
 function submitBulk(): void {
-    const length = bulkReason.value.trim().length;
-    if (length < 10 || length > 1000) {
-        bulkError.value = trans('ui.confirm.reason_length');
-        return;
-    }
-    router.post(routeOr('admin.support.tickets.bulk', '/admin/support/tickets/bulk'), { action: 'status', status: bulkStatus.value, ids: bulkIds.value, reason: bulkReason.value.trim() } as never, {
+    router.post(routeOr('admin.support.tickets.bulk', '/admin/support/tickets/bulk'), { action: 'status', status: bulkStatus.value, ids: bulkIds.value } as never, {
         preserveScroll: true,
         preserveState: true,
         onStart: () => (bulkProcessing.value = true),
@@ -230,9 +225,8 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
 
         <Dialog v-model:open="bulkOpen" :title="trans('support.tickets.bulk.title', { count: formatNumber(bulkIds.length) })" :description="trans('support.tickets.bulk.body')" :dismissible="!bulkProcessing" test-id="ADM-25.bulk-dialog">
             <div class="flex flex-col gap-16">
-                <ApprovalNotice v-if="bulkIds.length > 100" test-id="ADM-25.bulk.four-eyes" />
+                <ApprovalNotice v-if="fourEyesOn && bulkIds.length > 100" test-id="ADM-25.bulk.four-eyes" />
                 <Field :label="trans('support.tickets.bulk.to')"><Select v-model="bulkStatus" :options="bulkStatusOptions" data-testid="ADM-25.bulk.status" /></Field>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('decisions.reason_hint')" required><Textarea v-model="bulkReason" :rows="2" :maxlength="1000" show-count data-testid="ADM-25.bulk.reason" /></Field>
             </div>
             <template #footer>
                 <DialogError :message="bulkError" />

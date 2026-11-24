@@ -1,5 +1,8 @@
 import { layout, size } from '@/theme';
-import { Button, Header, HeaderLargeTitle, Photo, PhotoScrim } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Header, HeaderLargeTitle } from '@/ui/Header';
+import { Photo } from '@/ui/Photo';
+import { PhotoScrim } from '@/ui/PhotoScrim';
 
 import { PHOTOS, noop } from '../data';
 import { FullBleed, Group, SectionScreen, Specimen } from '../parts';

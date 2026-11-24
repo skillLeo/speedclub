@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\Catalog\AiSpecSuggestionsController;
 use App\Http\Controllers\Admin\Catalog\BrandsController;
 use App\Http\Controllers\Admin\Catalog\CatalogExportController;
 use App\Http\Controllers\Admin\Catalog\CatalogRequestsController;
@@ -37,18 +38,20 @@ Route::middleware([...AdminRoutes::signedIn(), 'can:catalog.view'])->prefix('cat
     // ADM-17 import, templates; CSV of the catalogue.
     Route::get('import', [ImportController::class, 'index'])->middleware('can:catalog.import')->name('import');
     Route::get('import/{import}', [ImportController::class, 'show'])->middleware('can:catalog.import')->where('import', $ulid)->name('import.show');
-    Route::get('import/template/{kind}.csv', [ImportController::class, 'template'])->middleware(['can:catalog.import', 'throttle:20,1'])->where('kind', '[a-z]{1,20}')->name('import.template');
-    Route::get('export/{kind}.csv', CatalogExportController::class)->middleware(['can:lists.export', 'throttle:10,1'])->where('kind', '[a-z]{1,20}')->name('export');
+    Route::get('import/template/{kind}.csv', [ImportController::class, 'template'])->middleware(['can:catalog.import', 'throttle:20,1,admin-catalog-1'])->where('kind', '[a-z]{1,20}')->name('import.template');
+    Route::get('export/{kind}.csv', CatalogExportController::class)->middleware(['can:lists.export', 'throttle:10,1,admin-catalog-2'])->where('kind', '[a-z]{1,20}')->name('export');
 
     // What a merge or delete would touch (JSON for the dialogs).
     Route::get('entries/{level}/{id}/impact', [EntriesController::class, 'impact'])->whereIn('level', explode('|', $levels))->whereNumber('id')->name('entries.impact');
 
-    Route::middleware(['can:catalog.manage', 'throttle:60,1'])->group(function () use ($levels, $ulid): void {
+    Route::middleware(['can:catalog.manage', 'throttle:60,1,admin-catalog-3'])->group(function () use ($levels, $ulid): void {
         Route::post('entries/{level}', [EntriesController::class, 'store'])->whereIn('level', explode('|', $levels))->name('entries.store');
         Route::patch('entries/{level}/{id}', [EntriesController::class, 'update'])->whereIn('level', explode('|', $levels))->whereNumber('id')->name('entries.update');
         Route::post('entries/{level}/{id}/active', [EntriesController::class, 'active'])->whereIn('level', ['make', 'model', 'generation'])->whereNumber('id')->name('entries.active');
         Route::post('entries/{level}/{id}/merge', [EntriesController::class, 'merge'])->middleware('staff.recent-password')->whereIn('level', explode('|', $levels))->whereNumber('id')->name('entries.merge');
         Route::delete('entries/{level}/{id}', [EntriesController::class, 'destroy'])->middleware('staff.recent-password')->whereIn('level', explode('|', $levels))->whereNumber('id')->name('entries.destroy');
+        // M5.9 D-5: drop a generation's cached AI spec suggestion (reason, ⚿ like every catalogue delete).
+        Route::delete('entries/generation/{generation}/ai-specs', [AiSpecSuggestionsController::class, 'destroy'])->middleware('staff.recent-password')->whereNumber('generation')->name('entries.ai-specs.destroy');
 
         Route::post('requests/{catalogRequest}/accept', [CatalogRequestsController::class, 'accept'])->where('catalogRequest', $ulid)->name('vehicles.requests.accept');
         Route::post('requests/{catalogRequest}/reject', [CatalogRequestsController::class, 'reject'])->where('catalogRequest', $ulid)->name('vehicles.requests.reject');
@@ -62,7 +65,7 @@ Route::middleware([...AdminRoutes::signedIn(), 'can:catalog.view'])->prefix('cat
         Route::delete('mod-fields/{field}', [ModFieldsController::class, 'destroy'])->middleware('staff.recent-password')->whereNumber('field')->name('fields.destroy');
     });
 
-    Route::middleware(['can:catalog.import', 'throttle:20,1'])->group(function () use ($ulid): void {
+    Route::middleware(['can:catalog.import', 'throttle:20,1,admin-catalog-4'])->group(function () use ($ulid): void {
         Route::post('import', [ImportController::class, 'store'])->name('import.store');
         Route::post('import/{import}/apply', [ImportController::class, 'apply'])->middleware(['can:catalog.manage', 'staff.recent-password'])->where('import', $ulid)->name('import.apply');
     });

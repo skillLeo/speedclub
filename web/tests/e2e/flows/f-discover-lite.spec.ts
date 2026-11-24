@@ -13,6 +13,7 @@ import type { Locator, Page, Response } from '@playwright/test';
 import { applyAuth } from '../support/auth.mjs';
 import { setDiscoverable } from '../support/backend.mjs';
 import { expect, test } from '../support/fixtures';
+import { withoutCarOfTheDay } from '../support/home.mjs';
 import { buildVehicle, createGarageMember, demoIds, R34 } from '../support/garage.mjs';
 import { qaUrl } from '../support/qa.mjs';
 
@@ -149,21 +150,38 @@ async function revealRow(page: Page, listId: string, testId: string): Promise<vo
   let at = await scrollListBy(list, 'top');
   await settle(list);
   let still = 0;
+  // A real wheel over the list, as a person scrolls: WebKit's FlashList does not draw further rows for a scrollTop set from script
+  // (gate run 2, WebKit alone: 3 of 11 rows drawn, the walk stopped; a wheel probe drew all of them). Chromium handles both.
+  const box = await list.boundingBox();
+  if (box) await page.mouse.move(box.x + box.width / 2, box.y + Math.min(box.height / 2, 300));
   for (let step = 0; step < 400 && (await row.count()) === 0; step++) {
     const before = at.top;
-    at = await scrollListBy(list, Math.round(at.client * 0.8));
+    await page.mouse.wheel(0, Math.round(at.client * 0.8));
     await settle(list);
+    at = await scrollListBy(list, 0);
     // At the end: let the next page arrive (the list asks for it on reaching its end) before looking again. Three times at the end
     // with nothing new in between: the row is not on this list.
+    let asked = false;
     if (at.top === before) {
+      // A page on its way shows the footer's spinner (`.loadingMore`): the end is not the end until it has arrived. During a full run
+      // other specs' members publish a hundred R34s, so the flagship sits on the seventh page (E2E P5 full runs: the walk counted three
+      // stops while page five was still loading and gave up).
+      const prefix = listId.split('.')[0];
+      const loading = page.locator(`[data-testid="${prefix}.loadingMore"]:visible`);
+      await expect(loading, 'the next page arrives').toHaveCount(0, { timeout: 20_000 });
       // The list did not ask by itself (a jump to the end can land before its new length is measured): "Mehr laden" is the designed
       // end of a list with more (BH-43), and a person taps it (E2E run 3, WebKit, 63 hits: the walk stopped after the second page).
-      const more = page.locator(`[data-testid="${listId.split('.')[0]}.more"]:visible`);
-      if ((await more.count()) > 0 && (await more.isEnabled())) await more.click();
-      await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => undefined);
+      const more = page.locator(`[data-testid="${prefix}.more"]:visible`);
+      // The list may ask for the page by itself between the count and the click and drop the button: a click on a button that is
+      // gone has nothing left to do, so it may not wait for the test's whole time (E2E P5 rerun, 22 hits). The walk looks again.
+      if ((await more.count()) > 0 && (await more.isEnabled())) {
+        asked = await more.click({ timeout: 5_000 }).then(() => true, () => false);
+        await expect(loading, 'the asked page arrives').toHaveCount(0, { timeout: 20_000 });
+      }
       await settle(list);
     }
-    still = at.top === before ? still + 1 : 0;
+    // A stop counts only when nothing was asked for: three stops in a row with no page to load is the end of the list.
+    still = at.top === before && !asked ? still + 1 : 0;
     if (still >= 3) break;
   }
   await expect(row.first(), `${testId} is on ${listId}`).toBeAttached();
@@ -221,6 +239,8 @@ test.describe('HOME-01 Start', () => {
   // comes from GET feed?tab=for_you. Builds that other specs publish meanwhile are the newest, so the latest change is taken from
   // the stream, which ranks the demo builds, and not from Neue Builds.
   test('lists the lead and Neu in der Garage from the API, and opens a build of the stream from its feed card', async ({ page }) => {
+    // The featured build leads when there is no Car of the Day (f-home.spec.ts covers the day with one).
+    await withoutCarOfTheDay(page);
     const featuredAnswer = answerOf(page, 'home/featured');
     const buildsAnswer = answerOf(page, 'home/new-builds');
     const streamAnswer = answerOf(page, 'feed');
@@ -288,6 +308,7 @@ test.describe('HOME-01 Start', () => {
   test('opens at the top when the featured build answers after Neue Builds', async ({ page }) => {
     // Regression: the late hero was inserted above the cards and FlashList kept them in place, so Start opened scrolled.
     await page.setViewportSize({ width: 360, height: 780 });
+    await withoutCarOfTheDay(page);
     const held = new Promise<void>((resolve) => setTimeout(resolve, 1500));
     await page.route(api('home/featured'), async (route) => {
       await held;
@@ -310,8 +331,9 @@ test.describe('HOME-01 Start', () => {
     await expect(id(page, 'HOME-01.featured.title')).toBeInViewport();
   });
 
-  test('at 1280: the featured build heads the column, the rail has the top makes with real counts and Über SPEED CLUB for guests', async ({ page }) => {
+  test('at 1280: the featured build heads the column, the rail has the top makes with real counts and Über Speedclub for guests', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
+    await withoutCarOfTheDay(page);
     const featuredAnswer = answerOf(page, 'home/featured');
     const makesAnswer = answerOf(page, 'discover');
     await open(page, '/app/');
@@ -332,7 +354,7 @@ test.describe('HOME-01 Start', () => {
       await expect(row).toContainText(`${make.vehicle_count} Build${make.vehicle_count === 1 ? '' : 's'}`);
     }
     expect(await countSlugs(page, 'HOME-01.rail.make.')).toBe(Math.min(3, makes.length));
-    await expect(id(page, 'HOME-01.rail.about')).toContainText('Über SPEED CLUB');
+    await expect(id(page, 'HOME-01.rail.about')).toContainText('Über Speedclub');
     await expectNoEngagementWords(page, 'HOME-01.root');
 
     const make = makes[0]!;
@@ -345,7 +367,7 @@ test.describe('HOME-01 Start', () => {
     await expect(id(page, 'DISC-02.tab.vehicles')).toContainText(`Fahrzeuge (${overview.vehicles.count})`);
   });
 
-  test('signed in, the rail has Deine Garage with the real count and no Über SPEED CLUB', async ({ page, context }) => {
+  test('signed in, the rail has Deine Garage with the real count and no Über Speedclub', async ({ page, context }) => {
     await applyAuth(context, 'member');
     await page.setViewportSize({ width: 1280, height: 800 });
     const garageAnswer = answerOf(page, 'me/vehicles');
@@ -364,11 +386,13 @@ test.describe('HOME-01 Start', () => {
 
   test('empty: no public builds yet', async ({ page }) => {
     // With no public build every source of FS-2 is empty: the hero, Neue Builds, the three modules and the stream (M2.2), and since
-    // Phase 4 the Treffen and Werkstätten modules of Start (09 §7.3). Other specs switch their flags and the editorial samples on
+    // Phase 4 the Treffen and Werkstätten modules of Start (09 §7.3), since M5.8 Gerade im Forum. Other specs switch their flags and the editorial samples on
     // while this runs, and their "Beispiel" meets then filled the page instead of the empty state (final Phase 4 gate, run 2).
     const emptyPage = (path: string) => ({ data: [], meta: { path: `/api/v1/${path}`, per_page: 20, next_cursor: null, prev_cursor: null } });
     await page.route(api('events'), (route) => route.fulfill({ json: emptyPage('events') }));
     await page.route(api('businesses'), (route) => route.fulfill({ json: emptyPage('businesses') }));
+    // M5.8 (10 §7.4): "Gerade im Forum" is a module of Start too; the seeded sample threads would fill the page instead of the empty state.
+    await page.route(api('forum/active'), (route) => route.fulfill({ json: { data: [] } }));
     await page.route(api('home/featured'), (route) => route.fulfill({ json: { data: [] } }));
     await page.route(api('home/new-builds'), (route) =>
       route.fulfill({ json: { data: [], meta: { path: '/api/v1/home/new-builds', per_page: 20, next_cursor: null, prev_cursor: null } } }),

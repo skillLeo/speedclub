@@ -90,6 +90,13 @@ export function resetCsrfLimit() {
 }
 
 /**
+ * The `browse` read limit of demo members the harness shares across its workers (per member, and the loopback address cap), so a spec
+ * that opens screen after screen as the same member is not refused for what three workers read together. Demo members only.
+ * @param {string[]} emails
+ */
+export const resetMemberReads = (emails) => backend('reset-member-reads', ...emails);
+
+/**
  * Makes the open codes of a test account expired and older than the resend cooldown.
  * @param {string} email
  * @param {'email_verification'|'password_reset'} purpose
@@ -401,8 +408,16 @@ export const disableM414Affiliate = () => backend('disable-m414-affiliate');
 /** parts_catalogue and businesses off again, only when the fixture switched them on. */
 export const disableM414Flags = () => backend('disable-m414-flags');
 
+/** M5.6 (DQ-P5-012): events.gallery on for the EVT-02 gallery cells (refused when a person switched it on). */
+export const enableM56Gallery = () => backend('enable-m56-gallery');
+
+/** events.gallery off again, only when the fixture switched it on. */
+export const disableM56Gallery = () => backend('disable-m56-gallery');
+
 /** M4.14 visual path tokens {kwProduct}, {productMod}, {productModVehicle}. @returns {Promise<Record<string, string|null>>} */
 export const m414Ids = () => backend('m414-ids');
+/** M5.9f DEX-04-live: a car sebastian.demo spotted (support/backend.php p5-showcase-ids). */
+export const p5ShowcaseIds = () => backend('p5-showcase-ids');
 
 /**
  * M4.14 F13: staff verify (or reject) a test applicant's business, as ADM-55 would.
@@ -433,3 +448,130 @@ export function backendSync(...commands) {
   const statuses = commands.map(([command, ...args]) => spawnSync(PHP, [HELPER, command, ...args], { windowsHide: true, timeout: 60_000 }).status);
   return statuses.every((status) => status === 0);
 }
+
+/**
+ * M5.9b F18: cities with no spot yet (large towns first), so the spot-map assertions count only the flow's own spots.
+ * @param {number} [count]
+ * @returns {Promise<{cities:{id:number,name:string,bundesland:string}[]}>}
+ */
+export const dexFreeCities = (count = 3) => backend('dex-free-cities', String(count));
+
+/**
+ * M5.9b F18: counted spots of a test owner's car by a test spotter, `hoursAgo` old, at day or at night, written directly.
+ * @param {string} spotterEmail
+ * @param {string} vehicleId
+ * @param {number} cityId
+ * @param {{count?:number, hoursAgo?:number, time?:'day'|'night'}} [options]
+ * @returns {Promise<{spots:string[]}>}
+ */
+export const dexSpotFixture = (spotterEmail, vehicleId, cityId, { count = 1, hoursAgo = 48, time = 'day' } = {}) =>
+  backend('dex-spot-fixture', spotterEmail, vehicleId, String(cityId), String(count), String(hoursAgo), time);
+
+/**
+ * M5.9b F18: the 3-hourly grouped owner alert (dex:spot-alerts) for one test owner's car.
+ * @param {string} vehicleId
+ * @returns {Promise<{told:number|null}>}
+ */
+export const dexRunAlerts = (vehicleId) => backend('dex-run-alerts', vehicleId);
+
+/** M5.9b F18: drops the hour-long cache of GET spot-map. */
+export const dexForgetSpotMap = () => backend('dex-forget-spot-map');
+
+/**
+ * M5.9c F19: a catalogue generation no rankable car uses yet, so the flow's rank lines count only its own cars.
+ * @returns {Promise<{make:string, model:string, generation:string, year:number}>}
+ */
+export const buildScoreFreeGeneration = () => backend('build-score-free-generation');
+
+/**
+ * M5.9c F19: cars of new test members in the generation of a test owner's car, with Build Scores near `totals` (built from content,
+ * no photos); answers the totals reached.
+ * @param {string} vehicleId
+ * @param {number[]} totals
+ * @returns {Promise<{peers:{email:string, vehicle_id:string, total:number|null}[]}>}
+ */
+export const buildScorePeers = (vehicleId, totals) => backend('build-score-peers', vehicleId, totals.map((total) => String(Math.round(total))).join(','));
+
+/**
+ * M5.9c F19: runs the debounced RecomputeBuildScore jobs of a test owner's car now (no worker runs locally).
+ * @param {string} vehicleId
+ * @returns {Promise<{ran:number, total:number|null, previous_total:number|null}>}
+ */
+export const buildScoreRun = (vehicleId) => backend('build-score-run', vehicleId);
+
+/**
+ * M5.9c F19: the nightly Build Score run (every score, then the ranks), from the start until it is done.
+ * @returns {Promise<{done:boolean, tasks:Record<string, number>}>}
+ */
+export const buildScoreNightly = () => backend('build-score-nightly');
+
+/**
+ * M5.9b ADM-62 (stage fixture `m59b-spots`): @nico.spotter (a burst of twelve in Köln and a hop to München) and @lea.dex (four ordinary
+ * spots) on demo cars; `record` is the fixed id of the first burst spot. removeSpotsFixture takes them away again.
+ * @returns {Promise<{email:string, record:string, spots:string[]}>}
+ */
+export const ensureSpotsFixture = () => backend('ensure-spots-fixture');
+
+/** Removes the m59b-spots spots (the cars' stats recomputed); the accounts go with deleteTestAccounts('spots.fixture'). */
+export const removeSpotsFixture = () => backend('remove-spots-fixture');
+
+/**
+ * M5.9d ADM-64 stage fixture `m59d-cotd`: Car of the Day rows around today on public demo cars (only on days without a row): two past
+ * auto picks, yesterday skipped, today picked, tomorrow a team choice. removeCotdFixture deletes exactly those rows.
+ * @returns {Promise<{rows:number[]}>}
+ */
+export const ensureCotdFixture = () => backend('ensure-cotd-fixture');
+
+/** Deletes the rows ensureCotdFixture made. */
+export const removeCotdFixture = () => backend('remove-cotd-fixture');
+
+/**
+ * M5.4 stage fixture `m54-stickers` (DQ-M54-07/-15): three sticker versions on lukas.sc's R34, each saved and passed through the real
+ * Scan-Test. removeStickerFixture deletes exactly those versions.
+ */
+export const ensureStickerFixture = () => backend('ensure-sticker-fixture');
+
+/** Deletes the versions ensureStickerFixture made. */
+export const removeStickerFixture = () => backend('remove-sticker-fixture');
+
+/**
+ * DQ-P5-206 stage fixture `m54-sticker-draft`: lukas.sc's R34 with an open Classic draft above whatever it has (the real autosave, no
+ * Scan-Test), for STK-05-line and STK-06-notReady. removeStickerDraftFixture deletes the version it opened, or puts back the draft it
+ * changed in place.
+ * @returns {Promise<{vehicle:string, design:string, version:number, in_place:boolean}>}
+ */
+export const ensureStickerDraftFixture = () => backend('ensure-sticker-draft-fixture');
+
+/** Undoes ensureStickerDraftFixture. */
+export const removeStickerDraftFixture = () => backend('remove-sticker-draft-fixture');
+
+/**
+ * M5.9 AI helpers, admin (stage fixture `m59-ai-admin`): two cached spec suggestions of BMW M3 (E30, E46) for ADM-14's
+ * "KI-Herstellerangaben", the triage's template key "street_racing" (with score and reason) on the ADM-21 web notice, and
+ * ai.moderation_triage on. removeM59AiAdminFixture deletes exactly those rows and puts the case's columns and the flag back.
+ * @returns {Promise<{flag:boolean, spec_rows:number, case_template:string|null, by_fixture:boolean}>}
+ */
+export const ensureM59AiAdminFixture = () => backend('ensure-m59-ai-admin-fixture');
+
+/** Undoes ensureM59AiAdminFixture. */
+export const removeM59AiAdminFixture = () => backend('remove-m59-ai-admin-fixture');
+
+/**
+ * M5.9 DQ-P5-057 (stage fixture `m59-ai-specs`): kenji.r34's R34 with its factory power and torque marked as taken over from
+ * "Daten übernehmen?" (vehicle_specs.ai_fields), so WEB-01 labels them "Herstellerangabe (KI-Vorschlag)". removeM59AiSpecsFixture puts
+ * ai_fields back.
+ * @returns {Promise<{vehicle:string, ai_fields:string|null, by_fixture:boolean}>}
+ */
+export const ensureM59AiSpecsFixture = () => backend('ensure-m59-ai-specs-fixture');
+
+/** Undoes ensureM59AiSpecsFixture. */
+export const removeM59AiSpecsFixture = () => backend('remove-m59-ai-specs-fixture');
+
+/**
+ * A5 badges/Car of the Day: deletes the team rows a flow wrote on days at least five days ahead.
+ * @param {string[]} days Y-m-d
+ */
+export const removeCotdDays = (days) => backend('remove-cotd-days', ...days);
+
+/** A5 badges/Car of the Day: deletes the badges a flow created (keys "e2e-…"). */
+export const removeTestBadges = () => backend('remove-test-badges');

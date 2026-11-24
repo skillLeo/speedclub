@@ -163,8 +163,9 @@
     "vehicleTitle": "Share vehicle",
     "vehicleEmpty": "You don't have a published vehicle yet. Publish one in your garage, then you can share it.",
     "vehicleError": "Your vehicles couldn't be loaded. Please try again.",
-    "photoDenied": "To send a photo, allow SPEED CLUB to access your photos in your device settings.",
-    "photoFailed": "The photo couldn't be opened. Choose a different photo."
+    "photoDenied": "To send a photo, allow Speedclub to access your photos in your device settings.",
+    "photoFailed": "The photo couldn't be opened. Choose a different photo.",
+    "photoSend": "Send"
   },
   "request": {
     "banner": "@{{username}} wants to message you",

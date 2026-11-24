@@ -34,6 +34,13 @@
       ]
     },
     {
+      "uri": "/admin/audit/verify-page",
+      "name": "admin.audit.verify-page",
+      "permissions": [
+        "audit.view"
+      ]
+    },
+    {
       "uri": "/admin/brand",
       "name": "admin.brand.index",
       "permissions": [
@@ -45,6 +52,27 @@
       "name": "admin.brand.assets.contrast",
       "permissions": [
         "brand.manage"
+      ]
+    },
+    {
+      "uri": "/admin/businesses",
+      "name": "admin.businesses.queue",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
+      "uri": "/admin/businesses/{business}",
+      "name": "admin.businesses.show",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
+      "uri": "/admin/businesses/{business}/preview",
+      "name": "admin.businesses.preview",
+      "permissions": [
+        "moderation.view"
       ]
     },
     {
@@ -129,6 +157,20 @@
       ]
     },
     {
+      "uri": "/admin/catalog/products",
+      "name": "admin.catalog.products.index",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
+      "uri": "/admin/catalog/products/{product}",
+      "name": "admin.catalog.products.show",
+      "permissions": [
+        "catalog.view"
+      ]
+    },
+    {
       "uri": "/admin/catalog/requests",
       "name": "admin.catalog.vehicles.requests",
       "permissions": [
@@ -141,6 +183,13 @@
       "permissions": [
         "catalog.view",
         "catalog.manage"
+      ]
+    },
+    {
+      "uri": "/admin/comments",
+      "name": "admin.comments.index",
+      "permissions": [
+        "moderation.view"
       ]
     },
     {
@@ -167,6 +216,42 @@
     {
       "uri": "/admin/content/announcements",
       "name": "admin.content.announcements",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/badges",
+      "name": "admin.badges.index",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/badges/{badge}",
+      "name": "admin.badges.show",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/badges/new",
+      "name": "admin.badges.create",
+      "permissions": [
+        "content.view",
+        "content.edit"
+      ]
+    },
+    {
+      "uri": "/admin/content/badges/preview",
+      "name": "admin.badges.preview",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/content/car-of-the-day",
+      "name": "admin.car-of-the-day.index",
       "permissions": [
         "content.view"
       ]
@@ -222,14 +307,78 @@
       ]
     },
     {
+      "uri": "/admin/crews",
+      "name": "admin.crews.index",
+      "permissions": [
+        "moderation.decide"
+      ]
+    },
+    {
+      "uri": "/admin/crews/{crew}",
+      "name": "admin.crews.show",
+      "permissions": [
+        "moderation.decide"
+      ]
+    },
+    {
       "uri": "/admin/dev/gallery",
       "name": "admin.dev.gallery",
       "permissions": []
     },
     {
+      "uri": "/admin/editorial",
+      "name": "admin.editorial.index",
+      "permissions": [
+        "content.view"
+      ]
+    },
+    {
+      "uri": "/admin/events",
+      "name": "admin.events.queue",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
+      "uri": "/admin/events/{event}",
+      "name": "admin.events.show",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
+      "uri": "/admin/events/{event}/preview",
+      "name": "admin.events.preview",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
       "uri": "/admin/forgot-password",
       "name": "password.request",
       "permissions": []
+    },
+    {
+      "uri": "/admin/forum",
+      "name": "admin.forum.queue",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
+      "uri": "/admin/forum/categories",
+      "name": "admin.forum.categories.index",
+      "permissions": [
+        "moderation.view",
+        "moderation.rules"
+      ]
+    },
+    {
+      "uri": "/admin/insights",
+      "name": "admin.insights.overview",
+      "permissions": [
+        "content.view"
+      ]
     },
     {
       "uri": "/admin/invite",
@@ -275,6 +424,14 @@
       "permissions": [
         "members.view",
         "members.export"
+      ]
+    },
+    {
+      "uri": "/admin/members/{member}/wrapped/{season}/cards/{n}.png",
+      "name": "admin.members.wrapped.card",
+      "permissions": [
+        "members.view",
+        "support.view"
       ]
     },
     {
@@ -330,11 +487,30 @@
       ]
     },
     {
+      "uri": "/admin/moderation/spots",
+      "name": "admin.spots.index",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
+      "uri": "/admin/moderation/spots/{spot}",
+      "name": "admin.spots.show",
+      "permissions": [
+        "moderation.view"
+      ]
+    },
+    {
       "uri": "/admin/moderation/templates",
       "name": "admin.moderation.templates",
       "permissions": [
         "moderation.view"
       ]
+    },
+    {
+      "uri": "/admin/palette/targets/{kind}",
+      "name": "admin.palette.targets",
+      "permissions": []
     },
     {
       "uri": "/admin/privacy/requests",
@@ -401,6 +577,55 @@
       ]
     },
     {
+      "uri": "/admin/shop/banners",
+      "name": "admin.shop.banners.index",
+      "permissions": [
+        "shop.manage"
+      ]
+    },
+    {
+      "uri": "/admin/shop/products",
+      "name": "admin.shop.products.index",
+      "permissions": [
+        "shop.manage"
+      ]
+    },
+    {
+      "uri": "/admin/shop/products/{product}",
+      "name": "admin.shop.products.edit",
+      "permissions": [
+        "shop.manage"
+      ]
+    },
+    {
+      "uri": "/admin/shop/products/new",
+      "name": "admin.shop.products.create",
+      "permissions": [
+        "shop.manage"
+      ]
+    },
+    {
+      "uri": "/admin/stickers/designs",
+      "name": "admin.stickers.designs.index",
+      "permissions": [
+        "stickers.print"
+      ]
+    },
+    {
+      "uri": "/admin/stickers/designs/{design}/print.pdf",
+      "name": "admin.stickers.designs.print-pdf",
+      "permissions": [
+        "stickers.print"
+      ]
+    },
+    {
+      "uri": "/admin/stickers/designs/{design}/print.svg",
+      "name": "admin.stickers.designs.print-svg",
+      "permissions": [
+        "stickers.print"
+      ]
+    },
+    {
       "uri": "/admin/support/macros",
       "name": "admin.support.macros",
       "permissions": [
@@ -440,6 +665,20 @@
       "name": "admin.system.jobs",
       "permissions": [
         "system.view"
+      ]
+    },
+    {
+      "uri": "/admin/system/mail-preview",
+      "name": "admin.system.mail-preview",
+      "permissions": [
+        "system.mail_preview"
+      ]
+    },
+    {
+      "uri": "/admin/system/mail-preview/{mail}/frame",
+      "name": "admin.system.mail-preview.frame",
+      "permissions": [
+        "system.mail_preview"
       ]
     },
     {

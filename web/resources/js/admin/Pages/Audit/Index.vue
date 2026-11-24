@@ -196,10 +196,10 @@ const exportFormat = ref<string | undefined>('csv');
 const exporting = ref(false);
 const exportError = ref<string | null>(null);
 
-function requestExport(reason: string | null): void {
+function requestExport(): void {
     router.post(
         routeOr('admin.audit.export', '/admin/audit/export'),
-        { format: exportFormat.value ?? 'csv', reason: reason ?? '', filter: props.query.filter },
+        { format: exportFormat.value ?? 'csv', filter: props.query.filter },
         {
             preserveScroll: true,
             preserveState: true,
@@ -210,7 +210,7 @@ function requestExport(reason: string | null): void {
             onFinish: () => (exporting.value = false),
             onSuccess: () => (exportOpen.value = false),
             onError: (errors) => {
-                exportError.value = errors.reason ?? errors.format ?? errors.filter ?? trans('ui.state.error_title');
+                exportError.value = errors.format ?? errors.filter ?? trans('ui.state.error_title');
             },
         },
     );
@@ -370,7 +370,6 @@ function requestExport(reason: string | null): void {
             :body="trans('audit.export.body', { count: formatNumber(rows.meta.total) })"
             :confirm-label="trans('audit.export.submit')"
             tone="neutral"
-            reason
             four-eyes
             :processing="exporting"
             :error="exportError"

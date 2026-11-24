@@ -15,7 +15,7 @@
     "sortHintWeb": "Drag a vehicle by its handle, or select the handle and use the arrow keys. Your main vehicle stays on top.",
     "sortSaved": "Order saved",
     "mainPinned": "Main vehicle · stays on top",
-    "qrFor": "QR code for {{vehicle}}",
+    "qrFor": "Sticker for {{vehicle}}",
     "drafts": "Drafts",
     "draftLine": "Draft · Step {{step}} of {{total}}",
     "resume": "Continue",
@@ -26,7 +26,7 @@
     "deleteDraftConfirm": "Delete draft",
     "draftDeleted": "Draft deleted",
     "emptyTitle": "Your garage is waiting.",
-    "emptyBody": "Add your car, log its specs and mods and get your QR sticker for the window.",
+    "emptyBody": "Add your car, log its specs and mods and get your sticker for the window.",
     "emptyAction": "Add vehicle",
     "sampleTitle": "What a build looks like",
     "sample": {
@@ -45,8 +45,8 @@
       "modsLabel": "Mods of {{vehicle}}",
       "photos": "Photos",
       "photosLabel": "Photos of {{vehicle}}",
-      "qr": "QR code",
-      "qrLabel": "QR code for {{vehicle}}"
+      "qr": "Sticker",
+      "qrLabel": "Sticker for {{vehicle}}"
     },
     "statsVehicles_one": "{{formatted}} vehicle",
     "statsVehicles_other": "{{formatted}} vehicles",
@@ -74,7 +74,7 @@
   },
   "guest": {
     "title": "Your garage is waiting",
-    "body": "Sign in to add vehicles, document mods and get your QR code.",
+    "body": "Sign in to add vehicles, document mods and get your sticker.",
     "signIn": "Sign in"
   },
   "restricted": {
@@ -155,7 +155,7 @@
     "freeTextHelper": "Not in the catalogue – we'll review the name.",
     "delete": "Delete vehicle",
     "deleteTitle": "Delete {{vehicle}}?",
-    "deleteBodyPublished": "The page and all mods disappear, and your QR code stops working. This can't be undone.",
+    "deleteBodyPublished": "The page and all mods disappear, and your sticker stops working. This can't be undone.",
     "deleteBodyDraft": "The draft and its photos will be deleted. This can't be undone.",
     "deleteConfirm": "Delete vehicle",
     "deleted": "{{vehicle}} was deleted"
@@ -291,11 +291,11 @@
     "options": {
       "public": {
         "title": "Public",
-        "body": "In search, in the feed, on your profile and through your QR code."
+        "body": "In search, in the feed, on your profile and through your sticker."
       },
       "unlisted": {
         "title": "Unlisted",
-        "body": "Only through the link and your QR code. Not in search or the feed."
+        "body": "Only through the link and your sticker. Not in search or the feed."
       },
       "private": {
         "title": "Private",
@@ -304,7 +304,7 @@
     },
     "saved": {
       "public": "Your vehicle is now public",
-      "unlisted": "Your vehicle is now visible through the link and QR code only",
+      "unlisted": "Your vehicle is now visible through the link and sticker only",
       "private": "Your vehicle is now private"
     },
     "draftNote": "Applies once you publish.",
@@ -316,7 +316,7 @@
     "checkPhotos": "Check photos",
     "ownerOnQr": {
       "group": "For all your vehicles",
-      "label": "Owner on the QR page",
+      "label": "Owner on the sticker page",
       "saved": "Setting saved",
       "helper": "When it is off, only you see your name on your vehicle pages, and new sticker PDFs leave it out.",
       "loadFailed": "This setting could not be loaded.",
@@ -329,7 +329,7 @@
     "edit": "Edit",
     "mods": "Mods",
     "photos": "Photos",
-    "qr": "QR code",
+    "qr": "Sticker",
     "visibility": "Visibility",
     "editTitle": "What do you want to edit?",
     "editBasics": "Basics",
@@ -352,11 +352,11 @@
       },
       "private": {
         "title": "Private",
-        "body": "Only you see this vehicle. A scan of your QR code shows that it's private."
+        "body": "Only you see this vehicle. A scan of your sticker shows that it's private."
       },
       "unlisted": {
         "title": "Unlisted",
-        "body": "Visible through the link and your QR code only, not in search or the feed."
+        "body": "Visible through the link and your sticker only, not in search or the feed."
       }
     }
   },
@@ -463,7 +463,8 @@
       "details": "Details",
       "install": "Installation",
       "photos": "Photos",
-      "more": "More details"
+      "more": "More details",
+      "plan": "Plan"
     },
     "rangePlaceholder": "{{min}} to {{max}}",
     "brandPlaceholder": "Type a brand",
@@ -476,7 +477,7 @@
     "installedOn": "Installed (month/year)",
     "installedOnPlaceholder": "MM/YYYY",
     "cost": "Cost",
-    "costPlaceholder": "e.g. 2,400",
+    "costPlaceholder": "e.g. 1,850",
     "costPrivate": "Only you see the cost.",
     "notes": "Notes",
     "notesPlaceholder": "Setup, experience, where you got it",
@@ -514,7 +515,28 @@
       "individual_approval": "Individual approval under § 21 StVZO",
       "not_required": "The part needs no documents",
       "unknown": "I don’t know, or no answer"
-    }
+    },
+    "planTitle": "Add a plan",
+    "targetMonth": "Target month",
+    "targetMonthPlaceholder": "Choose a month",
+    "targetYear": "Year",
+    "targetYearPlaceholder": "Choose a year",
+    "targetHelper": "Optional, up to ten years ahead.",
+    "targetChosen": "Target: {{month}}",
+    "targetClear": "No target month",
+    "priority": "Priority",
+    "priorities": {
+      "none": "None",
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    },
+    "budget": "Budget",
+    "budgetPlaceholder": "e.g. 1,200",
+    "budgetPrivate": "Only visible to you.",
+    "planLeaving": "No longer planned: the target month and priority go when you save.",
+    "planLeavingBudget": "No longer planned: the target month and priority go. Your budget is now the cost.",
+    "keptBudget": "Planned budget: €{{amount}}"
   },
   "history": {
     "title": "History",
@@ -544,12 +566,12 @@
   },
   "published": {
     "title": "Your build is live.",
-    "body": "{{vehicle}} now has its own QR code. Anyone who scans it lands right on your build page.",
-    "bodyFallback": "Your vehicle now has its own QR code. Anyone who scans it lands right on your build page.",
+    "body": "{{vehicle}} now has its own sticker with a QR code. Anyone who scans it lands right on your build page.",
+    "bodyFallback": "Your vehicle now has its own sticker with a QR code. Anyone who scans it lands right on your build page.",
     "qrLabel": "QR code for {{vehicle}}",
     "goneTitle": "This vehicle isn't published yet",
     "goneBody": "You can continue the draft in your garage.",
-    "viewQr": "View QR code",
+    "viewQr": "View sticker",
     "share": "Share",
     "toGarage": "Go to garage",
     "linkCopied": "Link copied",
@@ -578,12 +600,14 @@
     "option": "Choose an entry from the list.",
     "fieldRequired": "{{field}} is missing.",
     "month": "Enter month and year, for example 03/2023.",
+    "modEmpty": "Add at least one detail about the part, for example the brand, the model or a title.",
     "monthFuture": "The installation date can't be in the future. If it's still to come, choose “Planned”.",
     "cost": "Enter an amount in euros, for example 2,400 or 89.90. Use a point for cents.",
     "noteRequired": "Write your note first.",
     "huAuFormat": "Enter month and year, for example 03/2027.",
     "huAuTooEarly": "That is more than two years ago.",
-    "huAuTooLate": "The next HU/AU inspection is at most three years ahead."
+    "huAuTooLate": "The next HU/AU inspection is at most three years ahead.",
+    "targetMonth": "Choose a month between January 2000 and ten years from now."
   },
   "blur": {
     "group": "Plates & faces",
@@ -628,7 +652,20 @@
     "photoAccept": "Use category",
     "retry": "Try again",
     "describeReplaced": "Suggestion inserted. It replaced your previous text.",
-    "photoSuggest": "Suggest a category"
+    "photoSuggest": "Suggest a category",
+    "specs": {
+      "question": "Use factory data?",
+      "label": "AI suggestion",
+      "intro": "Typical factory specs for your model. You check them before you save.",
+      "for": "Typical factory specs for {{subject}}",
+      "variants": "Choose a version",
+      "hint": "Only fills empty fields. Nothing is saved until “{{save}}”.",
+      "yes": "Yes, show",
+      "no": "No thanks",
+      "allFilled": "Your fields are already filled in, nothing was changed.",
+      "taken": "Factory specs filled in. Check them before saving.",
+      "provenance": "Manufacturer figure (AI suggestion)"
+    }
   },
   "maintenance": {
     "title": "Maintenance",
@@ -868,5 +905,99 @@
     "dueLine": "{{title}} {{countdown}}",
     "a11yCar": "My car: {{name}}. {{due}} Opens your car in the garage.",
     "a11yEmpty": "My car: no car yet. Add a car."
+  },
+  "plateBlur": {
+    "switch": "Make number plates unreadable",
+    "switchOn": "The rectangles are pixelated on upload, in every size of the photo.",
+    "switchOff": "The photo is uploaded as it is.",
+    "stageLabel_one": "Photo with {{count}} rectangle",
+    "stageLabel_other": "Photo with {{count}} rectangles",
+    "regionLabel": "Rectangle {{number}}: {{x}} % from the left, {{y}} % from the top, {{w}} × {{h}} %",
+    "regionLabelTurned": "Rectangle {{number}}: {{x}} % from the left, {{y}} % from the top, {{w}} × {{h}} %, {{angle}}",
+    "angleLabel": "Angle of rectangle {{number}}",
+    "angleValue": "{{value}}°",
+    "angleStraight": "straight",
+    "angleRight_one": "turned {{count}} degree to the right",
+    "angleRight_other": "turned {{count}} degrees to the right",
+    "angleLeft_one": "turned {{count}} degree to the left",
+    "angleLeft_other": "turned {{count}} degrees to the left",
+    "regionActions": "Move it with the actions, make it larger or smaller, or turn it.",
+    "actions": {
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "grow": "Larger",
+      "shrink": "Smaller",
+      "turnLeft": "Turn left",
+      "turnRight": "Turn right"
+    },
+    "remove": "Remove rectangle {{number}}",
+    "removed": "Rectangle {{number}} removed.",
+    "offToast": "No rectangle left, so the photo is uploaded as it is.",
+    "full": "A photo can have at most {{max}} rectangles.",
+    "hint": "Move the rectangle",
+    "empty": "No rectangle marked. Add one to cover a number plate.",
+    "count_one": "{{count}} of {{max}} rectangles",
+    "count_other": "{{count}} of {{max}} rectangles",
+    "keys": "Arrow keys move it, with Alt larger or smaller, with Shift in big steps. Delete removes the rectangle.",
+    "gestures": "Drag the rectangle over the plate; the corner changes its size, the handle on top turns it.",
+    "add": "Add rectangle",
+    "note": "Changing this later needs a new upload.",
+    "noteExisting": "Pixelating replaces the photo. To change it, upload the photo again.",
+    "review": {
+      "title_one": "Check photo",
+      "title_other": "Check photos",
+      "page": "Photo {{index}} of {{total}}",
+      "previous": "Previous photo",
+      "nextPhoto": "Next photo",
+      "next": "Next",
+      "upload_one": "Upload",
+      "upload_other": "Upload {{count}} photos",
+      "uploadNow_one": "Upload now",
+      "uploadNow_other": "Upload all {{count}} photos now",
+      "applyAll": "Use for all",
+      "appliedAll_one": "Used for the photo.",
+      "appliedAll_other": "Used for all {{count}} photos.",
+      "discardTitle_one": "Don't upload the photo?",
+      "discardTitle_other": "Don't upload the photos?",
+      "discardBody_one": "The selected photo will not be uploaded.",
+      "discardBody_other": "The {{count}} selected photos will not be uploaded.",
+      "keep": "Keep checking",
+      "discard": "Don't upload"
+    }
+  },
+  "plateCheck": {
+    "title": "Check number plates",
+    "body_one": "We've added something new: making number plates on photos unreadable. You decide for your existing photo.",
+    "body_other": "We've added something new: making number plates on photos unreadable. You decide for your {{count}} existing photos, one by one.",
+    "open": "Look at photos",
+    "later": "Later",
+    "laterDone": "Got it. You can still make single photos unreadable any time when you edit the photo.",
+    "failed": "Your choice could not be saved. Try again.",
+    "intro": "You uploaded these photos before the new feature. If a number plate can be read, make it unreadable; otherwise the photo stays as it is.",
+    "kind": {
+      "vehicle": "Vehicle photo",
+      "modification": "Photo of a mod",
+      "build_update": "Photo from an update",
+      "cover": "Your profile cover"
+    },
+    "photoLabel": "Photo: {{name}}",
+    "blur": "Make unreadable",
+    "keep": "No plate visible",
+    "kept": "Noted: the photo stays as it is.",
+    "blurred": "Making it unreadable. The new images appear shortly.",
+    "more": "Load more photos",
+    "loadErrorTitle": "Your photos could not be loaded",
+    "loadErrorBody": "Check your connection and try again.",
+    "offline": "You're offline. You can carry on here once you're back online.",
+    "allDone": "All photos are checked. Thank you.",
+    "editTitle": "Make number plates unreadable",
+    "apply": "Make unreadable",
+    "back": "Back to the list",
+    "discardTitle": "Discard the rectangles?",
+    "discardBody": "The photo then stays as it is.",
+    "discardKeep": "Keep editing",
+    "discard": "Discard"
   }
 }

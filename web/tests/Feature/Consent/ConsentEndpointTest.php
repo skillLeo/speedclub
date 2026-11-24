@@ -2,6 +2,7 @@
 
 use App\Actions\Admin\Content\PublishLegalDocument;
 use App\Actions\Admin\Content\SaveLegalDraft;
+use App\Enums\ApprovalStatus;
 use App\Enums\LegalDocumentKey;
 use App\Enums\RestrictionType;
 use App\Models\AuditEvent;
@@ -31,7 +32,10 @@ function m35Reconsent(string $version = '2'): LegalDocument
         'requires_reconsent' => true,
         'summary' => 'Neue Regeln zu Fotos und Moderation.',
     ]);
-    m35Approve(app(PublishLegalDocument::class)->handle(m31Staff('admin'), $draft, m35Reason(), PublishLegalDocument::revision($draft))->approval);
+    $approval = app(PublishLegalDocument::class)->handle(m31Staff('admin'), $draft, m35Reason(), PublishLegalDocument::revision($draft))->approval;
+    // ADR-540: the Vier-Augen-Prinzip is off by default, so the re-consent publish runs at once (the approval path with a second
+    // person is proved in Feature/Admin with the strict governance).
+    expect($approval?->status)->toBe(ApprovalStatus::Executed);
 
     return $draft->fresh();
 }

@@ -13,7 +13,7 @@ final readonly class SignInMethodsSummary
 {
     /**
      * @param  Collection<int, SocialAccount>  $providers
-     * @param  array<string, bool>  $flags  auth.password_login, auth.passkeys, auth.apple, auth.google
+     * @param  array<string, bool>  $flags  auth.email_code, auth.password_login, auth.passkeys, auth.apple, auth.google
      */
     public function __construct(
         public User $user,

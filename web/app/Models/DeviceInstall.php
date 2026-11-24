@@ -13,10 +13,13 @@ use Illuminate\Support\Carbon;
 /**
  * One app install of one member (09 §8.4). The install id the app keeps in SecureStore is stored only as a keyed hash
  * (DeviceInstalls::key, keyed with the member too), so the table cannot be matched against another member's install. No IP address.
+ * Exception (ADR-511): install_key (DeviceInstalls::installKey, without the member) lets the Spots admin see several spotting accounts on
+ * one install; only App\Services\Admin\Spots\SharedDevices reads it, and it is in no API answer, export or admin page.
  *
  * @property string $id
  * @property string $user_id
  * @property string $install_id_hash
+ * @property string|null $install_key
  * @property DevicePlatform|null $platform
  * @property string|null $model
  * @property string|null $os_version
@@ -31,6 +34,11 @@ class DeviceInstall extends Model
     use HasFactory, HasUlids;
 
     public $timestamps = false;
+
+    /**
+     * @var list<string>
+     */
+    protected $hidden = ['install_key'];
 
     /**
      * @var list<string>

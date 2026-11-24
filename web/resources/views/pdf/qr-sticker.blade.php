@@ -17,7 +17,8 @@
         .username { font-family: 'Inter Display', sans-serif; font-weight: 600; font-size: 22pt; line-height: 26pt; margin: 3mm 0 0; }
         .short-code { font-weight: 700; font-size: 15pt; line-height: 19pt; letter-spacing: 1pt; margin: 1mm 0 0; }
         .url { font-size: 8pt; line-height: 11pt; margin: 1mm 0 0; }
-        /* Placement, print and disclaimer sentences of QR-03 (08_LEGAL §7) word for word as in the app; 8pt lines keep one page with about 3 mm to spare. */
+        /* Placement and disclaimer sentences of 08_LEGAL §7 word for word as in the app (STK-03); the print line is this sheet's own
+           (black on white, a 56 mm code; ADR-522), not the designer's film advice of STK-03. 8pt lines keep one page with about 3 mm to spare. */
         .hint { font-size: 6.5pt; line-height: 8pt; margin: 2mm 0 0; padding-top: 1.5mm; border-top: 0.5pt solid #000000; }
         .hint p { margin: 0 0 0.5mm; }
     </style>
@@ -27,7 +28,7 @@
         <table>
             <tr>
                 <td class="code-cell"><img src="{{ $qr_image }}" alt="{{ $code }}"></td>
-                <td class="logo-cell"><img src="{{ $logo }}" alt="SPEED CLUB"></td>
+                <td class="logo-cell"><img src="{{ $logo }}" alt="Speedclub"></td>
             </tr>
         </table>
         @if ($username !== null)

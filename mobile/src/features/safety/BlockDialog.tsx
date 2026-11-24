@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 import { useBlockMember } from '@/api/queries/social';
 import { forgetConversationsWith, useMessagingMember } from '@/features/messages/cachedInbox';
-import { Dialog, toast } from '@/ui';
+import { Dialog } from '@/ui/Dialog';
+import { toast } from '@/ui/toast';
 
 export type BlockDialogProps = {
   /** The member to block, without the @. Null closes the dialog. */

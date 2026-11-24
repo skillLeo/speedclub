@@ -34,7 +34,7 @@ describe('the Home header (09 §6.2 d)', () => {
       />,
     );
     expect(screen.getByTestId('HOME-01.header.logo')).toBeTruthy();
-    expect(screen.getByLabelText('SPEED CLUB')).toBeTruthy();
+    expect(screen.getByLabelText('Speedclub')).toBeTruthy();
     fireEvent.press(screen.getByLabelText('Benachrichtigungen, 2 ungelesen'));
     expect(onPress).toHaveBeenCalledTimes(1);
   });

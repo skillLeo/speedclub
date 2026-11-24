@@ -15,6 +15,7 @@ use App\Services\Discover\MakeTiles;
 use App\Services\Discover\SimilarMembers;
 use App\Services\Events\NearbyEvents;
 use App\Services\Home\HomeModules;
+use App\Support\QaClock;
 use App\Support\Viewer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -47,7 +48,8 @@ class DiscoverController extends Controller
             popularMods: $modules->popularMods($viewer),
             similarMembers: $flags->enabled('sig.similar_builds') ? $similar->for($viewer) : null,
             popularModels: $highlights->popularModels($viewer),
-            weekendEvents: $events->weekend($viewer),
+            // "Treffen am Wochenende" counts from the QA clock outside production (DQ-P5-201), else from the real now.
+            weekendEvents: $events->weekend($viewer, QaClock::frozen($request)),
             newest: array_values($feed->newBuilds($viewer, self::NEWEST)->items()),
         ));
     }

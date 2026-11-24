@@ -219,8 +219,8 @@ describe('app-config branding.logo_sizes', function () {
     it('names the intrinsic size of every logo, the bundled wordmarks included', function () {
         $sizes = $this->getJson('/api/v1/app-config')->assertOk()->json('data.branding.logo_sizes');
         expect($sizes)->toBe([
-            'wordmark_white' => ['width' => 640, 'height' => 192],
-            'wordmark_black' => ['width' => 640, 'height' => 192],
+            'wordmark_white' => ['width' => 640, 'height' => 169],
+            'wordmark_black' => ['width' => 640, 'height' => 169],
             'square' => null,
             'app_mark' => null,
         ]);

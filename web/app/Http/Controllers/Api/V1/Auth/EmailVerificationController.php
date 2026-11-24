@@ -6,6 +6,8 @@ use App\Actions\Auth\Passwordless\SignInWithEmailCode;
 use App\Actions\Auth\Passwordless\StartEmailSignIn;
 use App\Actions\Auth\ResendVerificationCode;
 use App\Actions\Auth\VerifyMemberEmail;
+use App\Enums\ErrorCode;
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\EmailOnlyRequest;
 use App\Http\Requests\Api\V1\Auth\StartEmailCodeRequest;
@@ -15,6 +17,7 @@ use App\Http\Resources\V1\EmailCodeStartedResource;
 use App\Http\Resources\V1\NextStepResource;
 use App\Http\Resources\V1\PasswordlessSessionResource;
 use App\Http\Resources\V1\TwoFactorChallengeResource;
+use App\Services\AppConfig\FeatureFlags;
 use App\Support\Auth\AuthResult;
 use App\Support\Auth\PasswordlessResult;
 
@@ -27,11 +30,16 @@ class EmailVerificationController extends Controller
      * made by the app (a UUID) and kept on the device; send it again with the code to POST auth/email/verify. The mail holds the 6-digit
      * code (10 minutes, single use) and an "Anmelden" button that works only on this device. Nothing is sent during the cooldown
      * (`resend_after`: 30 s, 60 s, then 120 s), above 5 codes an hour for the address, or while it is locked after 10 wrong codes.
+     * While `auth.email_code` is switched off (ADR-520: a host that cannot deliver mail yet): 404 `feature_disabled`, nothing is sent.
      *
      * @unauthenticated
      */
-    public function start(StartEmailCodeRequest $request, StartEmailSignIn $action): EmailCodeStartedResource
+    public function start(StartEmailCodeRequest $request, StartEmailSignIn $action, FeatureFlags $flags): EmailCodeStartedResource
     {
+        if ($flags->switchedOff('auth.email_code')) {
+            throw new ApiException(ErrorCode::FeatureDisabled);
+        }
+
         /** @status 202 */
         return new EmailCodeStartedResource($action->handle(
             $request->email(),
@@ -60,11 +68,21 @@ class EmailVerificationController extends Controller
      * who must change the password is verified but not signed in: 403 `password_change_required`, and a reset code is on
      * its way. An account with two-factor answers `{two_factor_required: true, challenge, expires_in}` as at sign-in.
      *
+     * While `auth.email_code` is switched off (ADR-520: a host that cannot deliver mail yet) the passwordless form answers 404
+     * `feature_disabled`, as POST auth/email/start does; the registration form is not affected.
+     *
+     * `invite_code` (M5.9d, optional, both forms): the code of a /join/{code} link, redeemed when the account activates (verified address and
+     * accepted terms); ignored for an account that is active already and for an unknown, used or malformed code, never refused.
+     *
      * @unauthenticated
      */
-    public function verify(VerifyEmailRequest $request, VerifyMemberEmail $action, SignInWithEmailCode $passwordless): AuthSessionResource|PasswordlessSessionResource|TwoFactorChallengeResource
+    public function verify(VerifyEmailRequest $request, VerifyMemberEmail $action, SignInWithEmailCode $passwordless, FeatureFlags $flags): AuthSessionResource|PasswordlessSessionResource|TwoFactorChallengeResource
     {
         if ($request->isPasswordless()) {
+            if ($flags->switchedOff('auth.email_code')) {
+                throw new ApiException(ErrorCode::FeatureDisabled);
+            }
+
             $signedIn = $passwordless->handle(
                 $request->email(),
                 $request->string('attempt_id')->toString(),
@@ -73,6 +91,7 @@ class EmailVerificationController extends Controller
                 $request->optionalString('locale'),
                 $request->device(),
                 $request,
+                $request->inviteCode(),
             );
 
             return $signedIn instanceof PasswordlessResult ? new PasswordlessSessionResource($signedIn) : new TwoFactorChallengeResource($signedIn);
@@ -85,6 +104,7 @@ class EmailVerificationController extends Controller
             $request->signedInMember(),
             $request->device(),
             $request,
+            $request->inviteCode(),
         );
 
         return $result instanceof AuthResult ? new AuthSessionResource($result) : new TwoFactorChallengeResource($result);

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\ViewSource;
 use App\Http\Controllers\Controller;
 use App\Services\Garage\PublicMembers;
+use App\Services\Insights\ViewRecorder;
 use App\Services\PublicPages\PublicPageData;
 use App\Support\SignedInBrowser;
 use App\Support\Viewer;
@@ -16,7 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class PublicMemberController extends Controller
 {
-    public function __invoke(Request $request, string $username, PublicMembers $members, PublicPageData $pages): Response
+    public function __invoke(Request $request, string $username, PublicMembers $members, PublicPageData $pages, ViewRecorder $views): Response
     {
         $member = $members->visibleTo(Viewer::from($request), $username);
 
@@ -31,6 +33,9 @@ class PublicMemberController extends Controller
 
             return redirect('/u/'.$member->username.($query === null ? '' : '?'.$query), $status);
         }
+
+        // M5.7 (m5.7-contract §2.3): a person's view of the profile, counted after the answer; ?via=share marks a shared link.
+        $views->storeLater($views->captureProfile($member, ViewSource::fromShareParameter($request), SignedInBrowser::member($request) ?? Viewer::from($request), $request, page: true));
 
         return response()->view('public.member', $pages->member($member, $request));
     }

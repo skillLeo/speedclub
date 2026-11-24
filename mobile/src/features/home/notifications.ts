@@ -6,6 +6,7 @@ import type { Href } from 'expo-router';
 import type { TFunction } from 'i18next';
 
 import type { AppNotification } from '@/api/queries/notifications';
+import { ownerSpotsRoute } from '@/features/dex/navigation';
 import '@/features/events/i18n';
 import '@/features/parts/i18n';
 import { formatDueMonth } from '@/features/garage/huAu';
@@ -13,7 +14,8 @@ import { deviceNameText } from '@/features/settings/deviceLines';
 import { passkeyOwnName } from '@/features/settings/passkeyName';
 import i18n from '@/i18n';
 import { formatNumber, keepNameTogether, type FormatLocale } from '@/lib/format';
-import type { IconName } from '@/ui';
+import type { IconName } from '@/ui/icons/Icon';
+import { machineNameText } from '@/ui/textBreaks';
 
 const ZONE = 'Europe/Berlin';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -87,7 +89,10 @@ export const NOTIFICATION_FILTERS = ['all', 'builds', 'social', 'events', 'syste
 export type NotificationFilter = (typeof NOTIFICATION_FILTERS)[number];
 
 const BUILD_TYPES = new Set<string>(['followed_published', 'build_saved', 'qr_milestone', 'hu_au_reminder', 'catalog_request', 'business_tag']);
-const SOCIAL_TYPES = new Set<string>(['new_follower', 'reaction', 'mention', 'comment', 'vehicle_follower']);
+// M5.9b: the grouped spot alert is filed under "Sozial" (its server category `social`).
+// M5.8 (m5.8-contract D10): the forum's replies, mentions and solutions are filed under "Sozial" too.
+// R4-2.3 (contract-crews §5): the crew rows are filed under "Sozial" too.
+const SOCIAL_TYPES = new Set<string>(['new_follower', 'reaction', 'mention', 'comment', 'vehicle_follower', 'spot_alert', 'forum_reply', 'forum_mention', 'forum_solved', 'crew']);
 
 /** The chip a row belongs to: builds, people, meets, or the system (security, moderation, support and anything unknown). */
 export function notificationCategory(notification: Pick<AppNotification, 'type'>): Exclude<NotificationFilter, 'all'> {
@@ -177,6 +182,8 @@ function keepLastWordWithNext(name: string): string {
 
 /** A member as the text names them: "@lukas.sc". */
 const handle = (actor: { username: string }) => `@${actor.username}`;
+/** A thread or post id as the forum's ULIDs come (26 characters), before it goes into a path. */
+const FORUM_ID = /^[0-9A-HJKMNP-TV-Z]{26}$/i;
 
 /** `details`: what else the type needs, language-free (followed_published, build_saved, security). */
 function dataOf(notification: Pick<AppNotification, 'details'>): Record<string, unknown> {
@@ -256,6 +263,7 @@ export function notificationHyphenates(notification: Pick<AppNotification, 'type
  * - support_reply: "Das Team hat auf deine Anfrage SC-7H2KQXMB geantwortet".
  * - qr_milestone [SIG]: "Dein QR-Code für Nissan Skyline GT-R R34 wurde 100-mal gescannt"; hu_au_reminder [SIG]: "HU/AU für … ist im
  *   März 2027 fällig".
+ * - spot_alert (M5.9b): "Dein Nissan Skyline GT-R R34 wurde heute 4-mal in Düsseldorf gespottet" (never who spotted it).
  * A row whose actor is gone (blocked, deleted) names "Ein Mitglied".
  */
 export function notificationText(notification: AppNotification, t: TFunction): string {
@@ -292,7 +300,7 @@ export function notificationText(notification: AppNotification, t: TFunction): s
     case 'security': {
       const event = stringIn(data, 'event');
       const device = stringIn(data, 'device_name');
-      if (event === 'new_device' && device) return t('notifications.text.security.new_device_named', { device: deviceNameText(device) });
+      if (event === 'new_device' && device) return t('notifications.text.security.new_device_named', { device: machineNameText(deviceNameText(device)) });
       // DQ-999: a passkey with only the generic fallback name ("Passkey") gets the sentence without a name, never „Passkey“ quoted.
       const label = event?.startsWith('passkey_') ? passkeyOwnName(device) : device;
       if (event && LABELLED_EVENTS.has(event) && label) {
@@ -341,6 +349,8 @@ export function notificationText(notification: AppNotification, t: TFunction): s
         ? t('notifications.text.supportReply', { reference })
         : t('notifications.text.supportReplyAny');
     }
+    case 'spot_alert':
+      return spotAlertText(notification, data, t);
     case 'event_review':
     case 'event_promoted':
     case 'event_reminder':
@@ -351,9 +361,31 @@ export function notificationText(notification: AppNotification, t: TFunction): s
     case 'business_tag':
     case 'business_invite':
       return businessText(notification, data, t);
+    case 'forum_reply':
+    case 'forum_mention':
+    case 'forum_solved':
+      return forumText(notification, data, t);
+    case 'crew':
+      return crewText(data, t);
     default:
       return t('notifications.text.other');
   }
+}
+
+/**
+ * M5.9b spot_alert: one row per car and Berlin day with that day's totals, `details` {day, count, cities_count, city}. The city is
+ * named when the day's day spots were all in one; "heute" only while `day` is today in Berlin (a row stays in the list for days).
+ */
+function spotAlertText(notification: AppNotification, data: Record<string, unknown>, t: TFunction, now: Date = new Date()): string {
+  const count = Math.max(1, numberIn(data, 'count') ?? 1);
+  const citiesCount = numberIn(data, 'cities_count') ?? 0;
+  const city = citiesCount === 1 ? stringIn(data, 'city') : null;
+  const title = notification.vehicle?.full_title?.trim();
+  const vehicle = title ? keepLastWordWithNext(title) : t('notifications.text.spotAlert.yourCar');
+  const when = stringIn(data, 'day') === berlinDayKey(now) ? 'today' : 'day';
+  if (city) return t(`notifications.text.spotAlert.${when}.city`, { count, vehicle, city: keepNameTogether(city) });
+  if (citiesCount > 1) return t(`notifications.text.spotAlert.${when}.cities`, { count, vehicle, cities: citiesCount });
+  return t(`notifications.text.spotAlert.${when}.plain`, { count, vehicle });
 }
 
 /** business_review outcomes with their own sentence; anything else reads as the rejection (the reason is on BIZ-03). */
@@ -413,6 +445,53 @@ function eventText(notification: AppNotification, data: Record<string, unknown>,
   }
 }
 
+/**
+ * M5.8 (m5.8-contract §5): forum_reply ("@lukas.sc hat auf „{Titel}“ geantwortet.", the day's repliers joined, or an answer to the
+ * reader's own reply), forum_mention and forum_solved. The title is the thread's public title from `forum_thread`; never a post's text.
+ */
+function forumText(notification: AppNotification, data: Record<string, unknown>, t: TFunction): string {
+  const tx = (key: string, values: Record<string, string | number>) =>
+    (t as unknown as (name: string, options: Record<string, string | number>) => string)(`forum:notifications.${key}`, values);
+  const title = keepNameTogether(notification.forum_thread?.title?.trim() || tx('aThread', {}));
+  const [first, second] = notification.actors;
+  const actor = first ? handle(first) : t('notifications.someone');
+  if (notification.type === 'forum_solved') return tx('solved', { title });
+  if (notification.type === 'forum_mention') return tx('mention', { actor, title });
+  const total = Math.max(notification.actor_count, notification.actors.length, 1);
+  if (total === 2 && second) return tx('replyTwo', { actor, other: handle(second), title });
+  if (total > 2) return tx('replyMany', { actor, count: total - 1, title });
+  return stringIn(data, 'reply_to') === 'post' ? tx('replyToPost', { actor, title }) : tx('reply', { actor, title });
+}
+
+/** R4-2.3 (contract-crews §5): the three states of a `crew` row. Never "left", never "declined", no counts. */
+const CREW_STATES: ReadonlySet<string> = new Set(['request_received', 'request_approved', 'invited']);
+/** A crew slug as the API allows it (`[a-z0-9-]{1,64}`), before it goes into a path. */
+const CREW_SLUG = /^[a-z0-9-]{1,64}$/;
+
+/**
+ * R4-2.3 crew rows: "@lukas.sc möchte „Nordlicht Crew“ beitreten." (to founder and admins), "Du bist jetzt Mitglied von „Nordlicht
+ * Crew“." and "@lukas.sc hat dich zu „Nordlicht Crew“ eingeladen." The crew's name comes from `details.crew_name`.
+ */
+function crewText(data: Record<string, unknown>, t: TFunction): string {
+  const state = stringIn(data, 'state');
+  const crew = keepNameTogether(stringIn(data, 'crew_name')?.trim() || t('crews.notifications.aCrew'));
+  const username = stringIn(data, 'username');
+  const actor = username && USERNAME.test(username) ? `@${username}` : t('notifications.someone');
+  if (state === 'request_received') return t('crews.notifications.requestReceived', { actor, crew });
+  if (state === 'request_approved') return t('crews.notifications.requestApproved', { crew });
+  if (state === 'invited') return t('crews.notifications.invited', { actor, crew });
+  return t('crews.notifications.other', { crew });
+}
+
+/** R4-2.3 tap paths (contract-crews §5): request_received → CREW-03 Anfragen, request_approved → CREW-01, invited → CREW-05. */
+function crewTarget(data: Record<string, unknown>): Href | null {
+  const state = stringIn(data, 'state');
+  const slug = stringIn(data, 'crew_slug');
+  if (state === 'invited') return '/crews/invites' as Href;
+  if (!slug || !CREW_SLUG.test(slug) || !state || !CREW_STATES.has(state)) return null;
+  return (state === 'request_received' ? `/crews/${slug}/requests` : `/crews/${slug}`) as Href;
+}
+
 /** Figures and months in the language of the text ("1.000", "März 2027"): a fixed `t` carries its own, else the app's. */
 function localeOf(t: TFunction): FormatLocale {
   const language = (t as unknown as { lng?: string }).lng ?? i18n.language ?? 'de';
@@ -436,6 +515,8 @@ export function notificationIcon(notification: Pick<AppNotification, 'type'>): I
       return 'flag';
     case 'qr_milestone':
       return 'qr-code';
+    case 'spot_alert':
+      return 'qr-sticker';
     case 'hu_au_reminder':
       return 'clock';
     case 'catalog_request':
@@ -452,6 +533,12 @@ export function notificationIcon(notification: Pick<AppNotification, 'type'>): I
     case 'business_tag':
     case 'business_invite':
       return 'workshop';
+    case 'forum_reply':
+    case 'forum_mention':
+    case 'forum_solved':
+      return 'chats';
+    case 'crew':
+      return 'users';
     default:
       return 'bell';
   }
@@ -481,6 +568,16 @@ export function notificationTarget(notification: AppNotification, own: string | 
     }
     case 'build_saved':
       return notification.vehicle ? `/garage/${notification.vehicle.id}` : '/garage';
+    // R5-5: a comment or mention in the car's own thread (`target: vehicle`) opens VEH-01 with the car's comments sheet open
+    // (`?comments=1`, read once, as the push path); one on an update opens VEH-05, where its thread is; else the build.
+    case 'comment':
+    case 'mention': {
+      const vehicle = notification.vehicle;
+      if (!vehicle) return null;
+      if (stringIn(data, 'target') === 'vehicle') return { pathname: '/v/[slug]', params: { slug: vehicle.slug, comments: '1' } };
+      const updateId = stringIn(data, 'update_id');
+      return updateId ? `/v/${vehicle.slug}/updates/${updateId}` : `/v/${vehicle.slug}`;
+    }
     case 'security': {
       // M4.7: a row of the SET-21 log opens it there, highlighted, with "Das war ich nicht" (lead ruling on the HOME-02 copy).
       const eventId = stringIn(data, 'security_event_id');
@@ -497,9 +594,12 @@ export function notificationTarget(notification: AppNotification, own: string | 
     }
     // [SIG] QR-02 with its scans; GAR-06 with the HU/AU month. Without the vehicle: the QR list and the garage.
     case 'qr_milestone':
-      return notification.vehicle ? `/qr/${notification.vehicle.id}` : '/profile/qr';
+      return notification.vehicle ? `/stickers/${notification.vehicle.id}` : '/stickers';
     case 'hu_au_reminder':
       return notification.vehicle ? `/garage/${notification.vehicle.id}/specs` : '/garage';
+    // M5.9b: DEX-06, the owner's spot numbers of the car; the garage when the car is gone.
+    case 'spot_alert':
+      return notification.vehicle ? ownerSpotsRoute(notification.vehicle.id) : '/garage';
     // M3.3: the member's own vehicle the request was for (GAR-02), else the garage.
     case 'catalog_request':
       return notification.vehicle ? `/garage/${notification.vehicle.id}` : '/garage';
@@ -535,6 +635,21 @@ export function notificationTarget(notification: AppNotification, own: string | 
         ? { pathname: '/v/[slug]/mods/[modId]', params: { slug: notification.vehicle.slug, modId } }
         : `/v/${notification.vehicle.slug}`;
     }
+    // M5.8: FOR-03 at the reply (`?post=`); nothing when the reader may no longer see the thread (`forum_thread` null).
+    case 'forum_reply':
+    case 'forum_mention':
+    case 'forum_solved': {
+      const thread = notification.forum_thread;
+      if (!thread) return null;
+      const threadId = thread.id || stringIn(data, 'thread_id');
+      if (!threadId || !FORUM_ID.test(threadId)) return null;
+      const postId = stringIn(data, 'post_id');
+      return postId && FORUM_ID.test(postId)
+        ? { pathname: '/forum/[id]', params: { id: threadId, post: postId } }
+        : (`/forum/${threadId}` as Href);
+    }
+    case 'crew':
+      return crewTarget(data);
     default:
       return null;
   }

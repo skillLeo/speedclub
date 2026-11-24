@@ -30,7 +30,7 @@ final class MemberListQuery
 
     public const FILTERS = ['q', 'status', 'verified', 'restricted', 'reported', 'has_vehicles', 'registered_from', 'registered_to', 'active_from', 'active_to'];
 
-    private const RESTRICTIONS = ['messaging', 'publishing'];
+    private const RESTRICTIONS = ['messaging', 'publishing', 'forum'];
 
     /**
      * @return QueryBuilder<User>
@@ -154,7 +154,7 @@ final class MemberListQuery
     }
 
     /**
-     * any · messaging · publishing · suspended. A restriction counts while its end has not passed (User::isInForce).
+     * any · messaging · publishing · forum (M5.8) · suspended. A restriction counts while its end has not passed (User::isInForce).
      *
      * @param  Builder<Model>  $query
      */
@@ -167,12 +167,13 @@ final class MemberListQuery
                 ->orWhereRaw('JSON_UNQUOTE(JSON_EXTRACT(users.restrictions, ?)) > ?', ['$.'.$type.'.until', $now]));
 
         match ($value) {
-            'messaging', 'publishing' => $inForce($query, $value),
+            'messaging', 'publishing', 'forum' => $inForce($query, $value),
             'suspended' => $query->where('users.status', UserStatus::Suspended->value),
             'any' => $query->where(fn (Builder $any) => $any
                 ->where('users.status', UserStatus::Suspended->value)
                 ->orWhere(fn (Builder $q) => $inForce($q, 'messaging'))
-                ->orWhere(fn (Builder $q) => $inForce($q, 'publishing'))),
+                ->orWhere(fn (Builder $q) => $inForce($q, 'publishing'))
+                ->orWhere(fn (Builder $q) => $inForce($q, 'forum'))),
             default => $query->whereRaw('1 = 0'),
         };
     }

@@ -30,6 +30,8 @@
  *   php tests/e2e/support/backend.php disable-premium-fixture
  *   php tests/e2e/support/backend.php enable-m414-flags
  *   php tests/e2e/support/backend.php disable-m414-flags
+ *   php tests/e2e/support/backend.php enable-m56-gallery
+ *   php tests/e2e/support/backend.php disable-m56-gallery
  *   php tests/e2e/support/backend.php enable-m414-affiliate
  *   php tests/e2e/support/backend.php disable-m414-affiliate
  *   php tests/e2e/support/backend.php review-test-business <slug of a test owner's business> verify|reject
@@ -51,6 +53,19 @@
  *   php tests/e2e/support/backend.php legal-documents-state
  *   php tests/e2e/support/backend.php ensure-support-fixture
  *   php tests/e2e/support/backend.php ensure-m417-fixture
+ *   php tests/e2e/support/backend.php dex-free-cities <count ≤ 10>
+ *   php tests/e2e/support/backend.php dex-spot-fixture <test spotter email> <vehicle id of a test owner> <city id> <count ≤ 10> <hours ago ≤ 2000> <day|night>
+ *   php tests/e2e/support/backend.php dex-run-alerts <vehicle id of a test owner>
+ *   php tests/e2e/support/backend.php dex-forget-spot-map
+ *   php tests/e2e/support/backend.php ensure-spots-fixture | remove-spots-fixture
+ *   php tests/e2e/support/backend.php ensure-sticker-fixture | remove-sticker-fixture
+ *   php tests/e2e/support/backend.php ensure-sticker-draft-fixture | remove-sticker-draft-fixture
+ *   php tests/e2e/support/backend.php ensure-m59-ai-admin-fixture | remove-m59-ai-admin-fixture
+ *   php tests/e2e/support/backend.php ensure-m59-ai-specs-fixture | remove-m59-ai-specs-fixture
+ *   php tests/e2e/support/backend.php build-score-free-generation
+ *   php tests/e2e/support/backend.php build-score-peers <vehicle id of a test owner> <total,total…>
+ *   php tests/e2e/support/backend.php build-score-run <vehicle id of a test owner>
+ *   php tests/e2e/support/backend.php build-score-nightly
  *
  * Prints one JSON object. Refuses to run outside the local and testing environments.
  */
@@ -89,8 +104,11 @@ use App\Models\CatalogRequest;
 use App\Models\ConfigVersion;
 use App\Models\DataExport;
 use App\Models\Decision;
+use App\Models\ForumPost;
+use App\Models\ForumThread;
 use App\Models\LegalDocument;
 use App\Models\Media;
+use App\Models\Mention;
 use App\Models\ModerationCase;
 use App\Models\PersonalAccessToken;
 use App\Models\QrCode;
@@ -109,6 +127,7 @@ use App\Services\Auth\TwoFactor;
 use App\Services\Config\ConfigSchemas;
 use App\Services\Config\ConfigVersions;
 use App\Services\DataExport\BuildDataExport;
+use App\Services\Forum\ForumCounters;
 use App\Services\Home\HomeCuration;
 use App\Services\Media\BlurMedia;
 use App\Services\Moderation\DecisionInput;
@@ -264,8 +283,8 @@ const ANNOUNCEMENT_FIXTURES = [
         'id' => '01m5c57xk06gk22nnr2wrv5vjt',
         'title' => ['de' => 'Wartung am Sonntag, 15. November', 'en' => 'Maintenance on Sunday, 15 November'],
         'body' => [
-            'de' => 'Von 2:00 bis 4:00 Uhr ist SPEED CLUB wegen Wartungsarbeiten nicht erreichbar.',
-            'en' => 'From 2:00 to 4:00 am, SPEED CLUB is unavailable for maintenance.',
+            'de' => 'Von 2:00 bis 4:00 Uhr ist Speedclub wegen Wartungsarbeiten nicht erreichbar.',
+            'en' => 'From 2:00 to 4:00 am, Speedclub is unavailable for maintenance.',
         ],
         'cta' => null,
         'audience' => 'all',
@@ -650,6 +669,181 @@ function premiumFixture(bool $on): array
     return ['enabled' => (bool) DB::table('feature_flags')->where('id', $flag->id)->value('enabled'), 'by_fixture' => $on || $marked];
 }
 
+/** M5.9 AI helpers, admin (stage fixture `m59-ai-admin`): the cache key holding what the fixture changed, so the teardown undoes only that. */
+const M59_AI_ADMIN_FIXTURE_MARK = 'e2e.m59-ai-admin-fixture';
+/** Fixed ids of the fixture's spec suggestion rows: the prefix makes sure the removal only ever deletes these rows. */
+const M59_AI_SPEC_IDS = ['01m59a1sp00000000000000001', '01m59a1sp00000000000000002'];
+/** The web notice of the visual matrix (ADM-21): paul.roadster's MX-5, reported for glorifying illegal racing. */
+const M59_AI_CASE_ID = '01m66awqg0mg086app44e8jg60';
+
+/**
+ * M5.9 (m5.9-contract §8 D-5 and §2.4): ADM-14's "KI-Herstellerangaben" and ADM-21's "KI-Vorschlag: <Vorlage>" need rows no seed has
+ * (no provider runs locally, OA-18). Up: two cached spec suggestions of BMW M3 (E30 and E46, typical factory figures, as
+ * SuggestVehicleSpecs stores them, with its own cache key), the triage's score, reason and template key "street_racing" on the ADM-21
+ * web notice, and ai.moderation_triage on (the case page shows the triage only with it; only the `enabled` column, refused when a
+ * person switched it on). Down: exactly those rows deleted, the case's three ai columns back to what they were, the flag off again
+ * when this fixture switched it on. App-config flushed both ways (it reports ai.* off anyway without a provider, D-8).
+ */
+function m59AiAdminFixture(bool $on): array
+{
+    $cache = app(CacheRepository::class);
+    /** @var array{flag?: bool, case?: array<string, mixed>}|null $mark */
+    $mark = $cache->get(M59_AI_ADMIN_FIXTURE_MARK);
+    $flag = DB::table('feature_flags')->where('key', 'ai.moderation_triage')->first(['id', 'enabled'])
+        ?? refuse('refusing: ai.moderation_triage is missing; run the migrations');
+    $case = ModerationCase::query()->find(M59_AI_CASE_ID) ?? refuse('refusing: the ADM-21 web notice is missing; seed the demo (ModerationDemoSeeder)');
+    if ($on) {
+        if ($mark === null) {
+            if ((bool) $flag->enabled) {
+                refuse('refusing: ai.moderation_triage is on, and not by this fixture; it never changes a real setting');
+            }
+            $mark = ['flag' => true, 'case' => (array) DB::table('moderation_cases')->where('id', M59_AI_CASE_ID)->first(['ai_score', 'ai_summary', 'ai_template_key', 'ai_scored_at'])];
+            $cache->forever(M59_AI_ADMIN_FIXTURE_MARK, $mark);
+        }
+        DB::table('feature_flags')->where('id', $flag->id)->update(['enabled' => true]);
+        // Through the query builder: the case's updated_at stays as seeded (the queues sort and show it).
+        DB::table('moderation_cases')->where('id', M59_AI_CASE_ID)->update([
+            'ai_score' => 0.74,
+            'ai_summary' => 'Ein Foto zeigt wohl ein Rennen auf einer Landstraße mit Zuschauern am Rand; die Beschreibung selbst nennt kein Rennen.',
+            'ai_template_key' => 'street_racing',
+            'ai_scored_at' => $case->getAttribute('created_at')?->copy()->addMinutes(2)->toDateTimeString(),
+        ]);
+        $generations = [17 => 'E30', 19 => 'E46'];
+        foreach (array_keys($generations) as $generation) {
+            if (DB::table('generations')->where('id', $generation)->where('model_id', 6)->doesntExist()) {
+                refuse("refusing: generation {$generation} is not a BMW M3 generation; run the catalogue seeder");
+            }
+        }
+        $e30 = [
+            ['key' => 'm3', 'label' => 'M3 (S14B23, mit Kat)', 'fields' => ['engine_code' => 'S14B23', 'displacement_cc' => 2302, 'fuel' => 'petrol', 'aspiration' => 'naturally_aspirated', 'power_value' => 195, 'power_unit' => 'ps', 'torque_nm' => 230, 'drivetrain' => 'rear', 'gearbox' => 'manual']],
+            ['key' => 'm3_evo2', 'label' => 'M3 Evolution II (S14B23)', 'fields' => ['engine_code' => 'S14B23', 'displacement_cc' => 2302, 'fuel' => 'petrol', 'aspiration' => 'naturally_aspirated', 'power_value' => 220, 'power_unit' => 'ps', 'torque_nm' => 245, 'drivetrain' => 'rear', 'gearbox' => 'manual']],
+            ['key' => 'm3_sport_evo', 'label' => 'M3 Sport Evolution (S14B25)', 'fields' => ['engine_code' => 'S14B25', 'displacement_cc' => 2467, 'fuel' => 'petrol', 'aspiration' => 'naturally_aspirated', 'power_value' => 238, 'power_unit' => 'ps', 'torque_nm' => 240, 'drivetrain' => 'rear', 'gearbox' => 'manual']],
+        ];
+        $e46 = [
+            ['key' => 'm3', 'label' => 'M3 (S54B32)', 'fields' => ['engine_code' => 'S54B32', 'displacement_cc' => 3246, 'fuel' => 'petrol', 'aspiration' => 'naturally_aspirated', 'power_value' => 343, 'power_unit' => 'ps', 'torque_nm' => 365, 'drivetrain' => 'rear', 'gearbox' => 'manual']],
+            ['key' => 'm3_csl', 'label' => 'M3 CSL (S54B32)', 'fields' => ['engine_code' => 'S54B32', 'displacement_cc' => 3246, 'fuel' => 'petrol', 'aspiration' => 'naturally_aspirated', 'power_value' => 360, 'power_unit' => 'ps', 'torque_nm' => 370, 'drivetrain' => 'rear', 'gearbox' => 'sequential']],
+        ];
+        // Fixed dates (the matrix clock is QA_NOW, mid-November 2026), so the "seit …" dates stay put between runs.
+        foreach ([[M59_AI_SPEC_IDS[0], 17, $e30, '2026-11-03 18:20:00'], [M59_AI_SPEC_IDS[1], 19, $e46, '2026-11-12 09:05:00']] as [$id, $generation, $variants, $at]) {
+            $key = hash('sha256', 'g:'.$generation);
+            if (DB::table('ai_spec_suggestions')->where('cache_key', $key)->where('id', '!=', $id)->exists()) {
+                refuse("refusing: generation {$generation} has a cached spec suggestion that is not this fixture's");
+            }
+            DB::table('ai_spec_suggestions')->updateOrInsert(['id' => $id], [
+                'generation_id' => $generation,
+                'model_id' => null,
+                'model_year' => null,
+                'cache_key' => $key,
+                'payload' => json_encode($variants, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+                'ai_call_id' => null,
+                'created_at' => $at,
+                'expires_at' => \Carbon\CarbonImmutable::parse($at)->addDays(180)->toDateTimeString(),
+            ]);
+        }
+    } elseif ($mark !== null) {
+        DB::table('ai_spec_suggestions')->whereIn('id', M59_AI_SPEC_IDS)->delete();
+        DB::table('moderation_cases')->where('id', M59_AI_CASE_ID)->update($mark['case'] ?? ['ai_score' => null, 'ai_summary' => null, 'ai_template_key' => null, 'ai_scored_at' => null]);
+        if (($mark['flag'] ?? false) === true) {
+            DB::table('feature_flags')->where('id', $flag->id)->update(['enabled' => false]);
+        }
+        $cache->forget(M59_AI_ADMIN_FIXTURE_MARK);
+    }
+    app(AppConfig::class)->flush();
+
+    return [
+        'flag' => (bool) DB::table('feature_flags')->where('id', $flag->id)->value('enabled'),
+        'spec_rows' => DB::table('ai_spec_suggestions')->whereIn('id', M59_AI_SPEC_IDS)->count(),
+        'case_template' => ModerationCase::query()->whereKey(M59_AI_CASE_ID)->value('ai_template_key'),
+        'by_fixture' => $on || $mark !== null,
+    ];
+}
+
+/** M5.9 DQ-P5-057 (stage fixture `m59-ai-specs`): the cache key holding the ai_fields the fixture replaced, so the teardown puts exactly them back. */
+const M59_AI_SPECS_FIXTURE_MARK = 'e2e.m59-ai-specs-fixture';
+/** kenji.r34's R34 (DemoSeeder): power 280 PS and torque 392 Nm entered as "Herstellerangabe", the figures of the R34 suggestion. */
+const M59_AI_SPECS_SLUG = 'nissan-skyline-gt-r-r34-xmeypf41';
+
+/**
+ * M5.9 DQ-P5-057: WEB-01-aiSpecs needs a public build whose power and torque stand as taken over from "Daten übernehmen?", so
+ * VehiclePresenter labels them "Herstellerangabe (KI-Vorschlag)" under the SpecStrip numerals. Up: vehicle_specs.ai_fields of kenji.r34's
+ * R34 set to its own current power and torque (field => value, the shape SpecProvenance::fields() keeps after a PUT with
+ * `ai_suggestion`); refused unless both sources are "factory" (the server never marks anything else) and unless ai_fields is empty or
+ * the fixture's own. Down: ai_fields back to what it was. Through the query builder, so updated_at stays as seeded.
+ */
+function m59AiSpecsFixture(bool $on): array
+{
+    $cache = app(CacheRepository::class);
+    /** @var array{ai_fields: string|null}|null $mark */
+    $mark = $cache->get(M59_AI_SPECS_FIXTURE_MARK);
+    $vehicle = Vehicle::query()->where('slug', M59_AI_SPECS_SLUG)->first(['id'])
+        ?? refuse('refusing: kenji.r34\'s R34 ('.M59_AI_SPECS_SLUG.') is missing; seed the demo');
+    $row = DB::table('vehicle_specs')->where('vehicle_id', $vehicle->id)->first(['power_value', 'power_unit', 'power_source', 'torque_nm', 'torque_source', 'ai_fields'])
+        ?? refuse('refusing: the R34 has no vehicle_specs row; seed the demo');
+    if ($on) {
+        if ($row->power_source !== 'factory' || $row->torque_source !== 'factory' || $row->power_value === null || $row->torque_nm === null) {
+            refuse('refusing: the R34\'s power and torque are not both entered as factory figures; the server marks nothing else');
+        }
+        if ($mark === null) {
+            if ($row->ai_fields !== null) {
+                refuse('refusing: the R34 already has ai_fields, and not by this fixture');
+            }
+            $mark = ['ai_fields' => $row->ai_fields];
+            $cache->forever(M59_AI_SPECS_FIXTURE_MARK, $mark);
+        }
+        $power = (float) $row->power_value;
+        DB::table('vehicle_specs')->where('vehicle_id', $vehicle->id)->update(['ai_fields' => json_encode([
+            'power_value' => floor($power) === $power ? (int) $power : $power,
+            'power_unit' => $row->power_unit,
+            'torque_nm' => (int) $row->torque_nm,
+        ], JSON_THROW_ON_ERROR)]);
+    } elseif ($mark !== null) {
+        DB::table('vehicle_specs')->where('vehicle_id', $vehicle->id)->update(['ai_fields' => $mark['ai_fields'] ?? null]);
+        $cache->forget(M59_AI_SPECS_FIXTURE_MARK);
+    }
+
+    return [
+        'vehicle' => $vehicle->id,
+        'ai_fields' => DB::table('vehicle_specs')->where('vehicle_id', $vehicle->id)->value('ai_fields'),
+        'by_fixture' => $on || $mark !== null,
+    ];
+}
+
+/** M5.6 (stage fixture `m56-gallery`, DQ-P5-012): the cache key that says the fixture, not a person, switched events.gallery on. */
+const M56_GALLERY_FIXTURE_MARK = 'e2e.m56-gallery-fixture';
+/** The post-event gallery's flag (off by default, m5.6-contract §4), on only while the EVT-02 gallery cells are captured. */
+const M56_GALLERY_FLAGS = ['events.gallery'];
+
+/**
+ * Switches events.gallery on for the EVT-02 gallery cells, so they read the seeded gallery of "Saugmotor-Abend" (ShowcaseEvents
+ * member_events[].gallery) through the server's own endpoint, or off again; as m414FlagsFixture: only the `enabled` column, only a flag
+ * this fixture switched on (one a person switched on is refused and never switched off), app-config flushed both ways.
+ */
+function m56GalleryFixture(bool $on): array
+{
+    $flags = DB::table('feature_flags')->whereIn('key', M56_GALLERY_FLAGS)->get(['id', 'key', 'enabled']);
+    if ($flags->count() !== count(M56_GALLERY_FLAGS)) {
+        refuse('refusing: events.gallery is missing; run the migrations (2026_12_28_100100_add_event_gallery_checkin_flags)');
+    }
+    $cache = app(CacheRepository::class);
+    $marked = $cache->get(M56_GALLERY_FIXTURE_MARK) === true;
+    if ($on) {
+        if (! $marked && $flags->contains(fn (object $flag): bool => (bool) $flag->enabled)) {
+            refuse('refusing: events.gallery is on, and not by this fixture; it never changes a real setting');
+        }
+        DB::table('feature_flags')->whereIn('key', M56_GALLERY_FLAGS)->update(['enabled' => true]);
+        $cache->forever(M56_GALLERY_FIXTURE_MARK, true);
+    } elseif ($marked) {
+        DB::table('feature_flags')->whereIn('key', M56_GALLERY_FLAGS)->update(['enabled' => false]);
+        $cache->forget(M56_GALLERY_FIXTURE_MARK);
+    }
+    app(AppConfig::class)->flush();
+
+    return [
+        'flags' => DB::table('feature_flags')->whereIn('key', M56_GALLERY_FLAGS)->pluck('enabled', 'key')->map(fn (mixed $enabled): bool => (bool) $enabled)->all(),
+        'by_fixture' => $on || $marked,
+    ];
+}
+
 /** M4.14 (stage fixture `m414-flags`, F13): the cache key that says the fixture, not a person, switched the two flags on. */
 const M414_FIXTURE_MARK = 'e2e.m414-flags-fixture';
 /** The flags of M4.14, off everywhere until its design QA passed (ADR-455), on only while the matrix captures or F13 runs. */
@@ -930,6 +1124,36 @@ function clearCsrfCookieLimit(): int
 function isTestAccount(string $email): bool
 {
     return str_ends_with(mb_strtolower($email), E2E_DOMAIN);
+}
+
+/**
+ * Deletes the forum threads these test accounts started, with every post in them (forum_posts.thread_id cascades, so do their votes
+ * and subscriptions), and the mentions of those posts; then recounts the categories. Replies of a test account in a seeded thread are
+ * not touched here: they go with the account's own delete, which recounts that thread (ForumAccountDeletion).
+ *
+ * @param  list<string>  $userIds
+ */
+function deleteTestForumThreads(array $userIds): int
+{
+    if ($userIds === []) {
+        return 0;
+    }
+    $threads = ForumThread::withTrashed()->whereIn('user_id', $userIds)->get(['id', 'category_id']);
+    if ($threads->isEmpty()) {
+        return 0;
+    }
+    $threadIds = $threads->modelKeys();
+    $postIds = ForumPost::withTrashed()->whereIn('thread_id', $threadIds)->pluck('id')->all();
+    if ($postIds !== []) {
+        Mention::query()->where('mentionable_type', (new ForumPost)->getMorphClass())->whereIn('mentionable_id', $postIds)->delete();
+    }
+    // A thread of another member merged into one of these, and the threads' own pointers to their posts, would block the delete.
+    ForumThread::withTrashed()->whereIn('merged_into_id', $threadIds)->update(['merged_into_id' => null]);
+    ForumThread::withTrashed()->whereKey($threadIds)->update(['solved_post_id' => null, 'last_post_id' => null, 'merged_into_id' => null]);
+    ForumThread::withTrashed()->whereKey($threadIds)->forceDelete();
+    app(ForumCounters::class)->category(...array_values(array_unique(array_map(intval(...), $threads->pluck('category_id')->all()))));
+
+    return count($threadIds);
 }
 
 /**
@@ -1258,6 +1482,27 @@ switch ($command) {
         // Called by the harness once when a CSRF cookie request answered 429 (support/auth.mjs, support/fixtures.ts), never in a loop.
         finish(['cleared' => clearCsrfCookieLimit()]);
 
+    case 'reset-member-reads':
+        // The `browse` limit (RateLimits PER_VIEWER_OR_IP: per member, plus the per-address cap) of demo members that the harness shares
+        // across its workers: an a11y spec opens one screen after the other as the same member, each Start or open thread reading a dozen
+        // times, which a person never does from three windows at once. Only these members and the loopback addresses; the limit stays the
+        // server's (Pest covers it). Called before each such test, never in a loop.
+        $cleared = 0;
+        foreach ($args as $email) {
+            $id = User::query()->where('email', $email)->value('id');
+            if (! is_string($id) || ! str_ends_with((string) $email, '@speedclub.test')) {
+                refuse("reset-member-reads: {$email} is not a demo member");
+            }
+            RateLimiter::clear(md5('browse'.'browse|user:'.$id));
+            $cleared++;
+        }
+        foreach (LOOPBACK as $ip) {
+            $key = ClientAddress::key(Request::create('/', 'GET', server: ['REMOTE_ADDR' => $ip]));
+            RateLimiter::clear(md5('browse'.'browse|address|ip:'.$key));
+            $cleared++;
+        }
+        finish(['cleared' => $cleared]);
+
     case 'age-codes':
         // The open codes of a test account as if they were older than their expiry and the resend cooldown.
         [$email, $purpose] = $args + [null, null];
@@ -1327,10 +1572,13 @@ switch ($command) {
         $prefix = $args[0] ?? '';
         $action = app(DeleteUnverifiedAccount::class);
         $deleted = 0;
-        foreach (User::withTrashed()->where('email', 'like', '%'.E2E_DOMAIN)->get() as $user) {
-            if (! isTestAccount($user->email) || ($prefix !== '' && ! str_starts_with($user->email, $prefix))) {
-                continue;
-            }
+        $accounts = User::withTrashed()->where('email', 'like', '%'.E2E_DOMAIN)->get()
+            ->filter(fn (User $user) => isTestAccount($user->email) && ($prefix === '' || str_starts_with($user->email, $prefix)));
+        // DQ-P5-025: a forum thread a test account started goes with the test, whoever wrote in it. The account's own delete keeps a
+        // thread another member answered (m5.8-contract D8: title kept, "Gelöschtes Mitglied"), and F17/A5 delete the author before
+        // the member who answered, so every run left its threads (title only) on top of FOR-01, FOR-02 and ADM-68.
+        deleteTestForumThreads($accounts->modelKeys());
+        foreach ($accounts as $user) {
             // What a garage test made goes with it: the catalogue requests of "Nicht gefunden?", which would wait in the
             // admin queue, and the QR codes, which a hard delete keeps on purpose for real vehicles (ADR-148).
             $vehicles = Vehicle::withTrashed()->where('owner_id', $user->getKey())->pluck('id');
@@ -1573,7 +1821,11 @@ switch ($command) {
             deleteStaffFixture($stale);
         }
         $fixtureOwners = count(array_filter($fixtures, fn (array $spec): bool => $spec['role'] === 'owner'));
+        // ADR-540: the showcase staff (admin.demo, the client's account on staging) is an Owner since client round 6. It is a sample
+        // account of the local demo data, not one of the Owners the fixtures share the maximum with, so it is left out of this count
+        // (A4 checks the maximum on the Team page, where it is counted, with "at least the maximum").
         $otherOwners = Staff::query()->role('owner', 'staff')->where('email', 'not like', '%'.STAFF_DOMAIN)
+            ->where('email', '!=', App\Services\Showcase\Showcase::STAFF_EMAIL)
             ->where('status', '!=', StaffStatus::Deactivated->value)->whereNull('anonymised_at')->count();
         $maxOwners = OwnerRules::maxOwners();
         if ($otherOwners + $fixtureOwners > $maxOwners) {
@@ -1684,8 +1936,35 @@ switch ($command) {
         $sampleBusiness = DB::table('businesses')->where('slug', 'beispiel-werkstatt-nord')->value('id');
         finish(['kwProduct' => $product, 'productMod' => $mod?->mod, 'productModVehicle' => $mod?->vehicle, 'sampleBusiness' => $sampleBusiness]);
 
+    case 'p5-showcase-ids':
+        // M5.9f DEX-04-live (design QA DQ-P5G-13): a public car of another showcase member that sebastian.demo really spotted
+        // (GiftDemoSeeder), the one he saw in the most cities, so DEX-04 shows a real card with its page link. Ids change with every seed.
+        $spotter = DB::table('users')->where('email', 'sebastian.demo@speedclub.test')->value('id') ?? refuse('no sebastian.demo; run DemoShowcaseSeeder');
+        $vehicle = DB::table('spots as s')->join('vehicles as v', 'v.id', '=', 's.vehicle_id')
+            ->where('s.spotter_id', $spotter)->whereNull('s.deleted_at')->where('s.counted', true)
+            ->where('v.owner_id', '!=', $spotter)->where('v.status', 'published')->where('v.visibility', 'public')
+            ->where('v.ghost_mode', false)->whereNull('v.deleted_at')
+            ->groupBy('v.id')->orderByRaw('COUNT(DISTINCT s.city_id) DESC')->orderBy('v.id')->value('v.id');
+        finish(['showcaseSpotVehicle' => $vehicle]);
+
     case 'enable-m414-flags':
         finish(m414FlagsFixture(true));
+
+    case 'ensure-m59-ai-admin-fixture':
+        finish(m59AiAdminFixture(true));
+
+    case 'remove-m59-ai-admin-fixture':
+        finish(m59AiAdminFixture(false));
+    case 'ensure-m59-ai-specs-fixture':
+        finish(m59AiSpecsFixture(true));
+    case 'remove-m59-ai-specs-fixture':
+        finish(m59AiSpecsFixture(false));
+
+    case 'enable-m56-gallery':
+        finish(m56GalleryFixture(true));
+
+    case 'disable-m56-gallery':
+        finish(m56GalleryFixture(false));
 
     case 'disable-m414-flags':
         finish(m414FlagsFixture(false));
@@ -2160,6 +2439,413 @@ switch ($command) {
         });
         finish(['email' => $user->email, ...$made]);
 
+    case 'dex-free-cities':
+        // M5.9b F18: cities nobody has spotted a car in yet, so the spot-map assertions count only the flow's own spots. Large towns
+        // first (the app's sheet names them), never coordinates.
+        $count = (string) ($args[0] ?? '3');
+        if (! ctype_digit($count) || (int) $count < 1 || (int) $count > 10) {
+            refuse('usage: backend.php dex-free-cities <count ≤ 10>');
+        }
+        $cities = DB::table('de_cities as c')
+            ->whereNotExists(fn ($spots) => $spots->select(DB::raw(1))->from('spots as s')->whereColumn('s.city_id', 'c.id'))
+            ->where('c.population', '>=', 20000)
+            ->orderByDesc('c.population')->orderBy('c.id')
+            ->limit((int) $count)
+            ->get(['c.id', 'c.name', 'c.bundesland']);
+        finish(['cities' => $cities->map(fn ($city) => ['id' => (int) $city->id, 'name' => (string) $city->name, 'bundesland' => (string) $city->bundesland])->all()]);
+
+    case 'dex-spot-fixture':
+        // M5.9b F18: counted spots of a test owner's car by a test spotter, back-dated (the spot map counts spots older than 24 h) or
+        // at night (their city is never shown for a single car). Written directly, past RecordSpot's 24 h duplicate rule, which a map
+        // of five spots in one city would otherwise need five spotters and five days for. They go with the accounts (foreign keys).
+        [$email, $vehicleId, $cityId, $count, $hours, $time] = $args + [null, null, null, '1', '48', 'day'];
+        $vehicle = Vehicle::query()->with('owner')->find((string) $vehicleId);
+        $spotter = is_string($email) && isTestAccount($email) ? User::query()->where('email', $email)->first() : null;
+        $city = ctype_digit((string) $cityId) ? \App\Models\DeCity::query()->find((int) $cityId) : null;
+        if ($vehicle === null || ! isTestAccount((string) $vehicle->owner?->email) || $spotter === null || $city === null
+            || ! ctype_digit((string) $count) || (int) $count < 1 || (int) $count > 10 || ! ctype_digit((string) $hours) || (int) $hours > 2000
+            || ! in_array($time, ['day', 'night'], true)) {
+            refuse('usage: backend.php dex-spot-fixture <test spotter email> <vehicle id of a test owner> <city id> <count ≤ 10> <hours ago ≤ 2000> <day|night>');
+        }
+        $made = [];
+        for ($i = 0; $i < (int) $count; $i++) {
+            $spot = new \App\Models\Spot;
+            $spot->forceFill([
+                'vehicle_id' => $vehicle->getKey(),
+                'spotter_id' => $spotter->getKey(),
+                'city_id' => $city->id,
+                'bundesland' => $city->bundesland,
+                'is_first_three' => false,
+                'counted' => true,
+                'is_night' => $time === 'night',
+                'source' => \App\Enums\SpotSource::Scanner,
+                'created_at' => now()->subHours((int) $hours)->subMinutes($i),
+            ])->save();
+            $made[] = $spot->getKey();
+        }
+        app(\App\Services\Dex\SpotStats::class)->recompute((string) $vehicle->getKey());
+        finish(['spots' => $made]);
+
+    case 'dex-run-alerts':
+        // M5.9b F18: the 3-hourly grouped owner alert (dex:spot-alerts) for one test owner's car only, so demo owners hear nothing.
+        $vehicle = Vehicle::query()->with('owner')->find((string) ($args[0] ?? '')) ?? refuse('no such vehicle');
+        if (! isTestAccount((string) $vehicle->owner?->email)) {
+            refuse('refusing: dex-run-alerts takes a vehicle of a test account under '.E2E_DOMAIN);
+        }
+        $told = app(\App\Services\Dex\SpotAlerts::class)->run(null, [(string) $vehicle->getKey()]);
+        finish(['told' => $told]);
+
+    case 'ensure-spots-fixture':
+        // M5.9b ADM-62 (stage fixture `m59b-spots`): two test spotters on demo cars so the Spots list shows its signals. @nico.spotter:
+        // twelve spots in Köln inside eight minutes 30 h ago (a burst) and one in München 35 minutes later (a city hop); @lea.dex: four
+        // ordinary spots over the last days, one at night. The record cells open the first burst spot by its fixed id. Written
+        // directly (RecordSpot's 24 h rule would refuse the burst); the cars' stats are recomputed here and in remove-spots-fixture.
+        $cars = Vehicle::query()->where('status', 'published')->where('visibility', 'public')->whereNotNull('dex_number')
+            ->whereHas('owner', fn ($owner) => $owner->where('email', 'like', '%@'.DemoSeeder::EMAIL_DOMAIN)->where('is_sample', false))
+            ->orderBy('dex_number')->limit(6)->pluck('id')->map(strval(...))->all();
+        $koeln = \App\Models\DeCity::query()->find(2886242);
+        $muenchen = \App\Models\DeCity::query()->find(2867714);
+        $hamburg = \App\Models\DeCity::query()->find(2911298);
+        $berlin = \App\Models\DeCity::query()->find(2950159);
+        if (count($cars) < 4 || $koeln === null || $muenchen === null || $hamburg === null || $berlin === null) {
+            refuse('spots fixture: needs four published demo cars and the city table; seed the demo first');
+        }
+        $nico = fixtureMember('spots.fixture'.E2E_DOMAIN, 'nico.spotter', 'Nico Brandt', 'Köln');
+        $lea = fixtureMember('spots.fixture-lea'.E2E_DOMAIN, 'lea.dex', 'Lea Hoffmann', 'Hamburg');
+        foreach ([$nico, $lea] as $member) {
+            $member->forceFill(['created_at' => now()->subDays(40)])->save();
+        }
+        $made = DB::transaction(function () use ($cars, $nico, $lea, $koeln, $muenchen, $hamburg, $berlin): array {
+            $touched = \App\Models\Spot::withTrashed()->whereIn('spotter_id', [$nico->getKey(), $lea->getKey()])->pluck('vehicle_id')->map(strval(...))->all();
+            \App\Models\Spot::withTrashed()->whereIn('spotter_id', [$nico->getKey(), $lea->getKey()])->forceDelete();
+            $start = now()->subHours(30)->startOfMinute();
+            $rows = [];
+            for ($i = 0; $i < 12; $i++) {
+                $rows[] = [$i === 0 ? '01m59b5p0t0000000000000001' : null, $nico, $cars[$i % count($cars)], $koeln, $start->copy()->addSeconds($i * 40), false];
+            }
+            $rows[] = [null, $nico, $cars[1], $muenchen, $start->copy()->addMinutes(35), false];
+            $rows[] = [null, $lea, $cars[0], $hamburg, now()->subDays(3)->setTime(17, 20), false];
+            $rows[] = [null, $lea, $cars[2], $hamburg, now()->subDays(2)->setTime(12, 5), false];
+            $rows[] = [null, $lea, $cars[3], $berlin, now()->subDays(1)->setTime(15, 45), false];
+            $rows[] = [null, $lea, $cars[1], $berlin, now()->subDays(1)->setTime(22, 30), true];
+            $ids = [];
+            foreach ($rows as [$id, $spotter, $car, $city, $at, $night]) {
+                $spot = new \App\Models\Spot;
+                $spot->forceFill([
+                    ...($id === null ? [] : ['id' => $id]),
+                    'vehicle_id' => $car,
+                    'spotter_id' => $spotter->getKey(),
+                    'city_id' => $city->id,
+                    'bundesland' => $city->bundesland,
+                    'is_first_three' => false,
+                    'counted' => true,
+                    'is_night' => $night,
+                    'source' => \App\Enums\SpotSource::Scanner,
+                    'created_at' => $at,
+                ])->save();
+                $ids[] = (string) $spot->getKey();
+            }
+            app(\App\Services\Dex\SpotStats::class)->recomputeMany(array_values(array_unique([...$touched, ...$cars])));
+
+            return ['spots' => $ids];
+        });
+        finish(['email' => $nico->email, 'record' => '01m59b5p0t0000000000000001', ...$made]);
+
+    case 'remove-spots-fixture':
+        // The m59b-spots teardown: the fixture spots go first (their cars' stats recomputed), then the two accounts (delete-accounts).
+        $spotters = User::withTrashed()->whereIn('email', ['spots.fixture'.E2E_DOMAIN, 'spots.fixture-lea'.E2E_DOMAIN])->pluck('id')->map(strval(...))->all();
+        $touched = \App\Models\Spot::withTrashed()->whereIn('spotter_id', $spotters)->pluck('vehicle_id')->map(strval(...))->unique()->values()->all();
+        \App\Models\Spot::withTrashed()->whereIn('spotter_id', $spotters)->forceDelete();
+        app(\App\Services\Dex\SpotStats::class)->recomputeMany($touched);
+        finish(['removed' => count($spotters), 'cars' => count($touched)]);
+
+    case 'ensure-cotd-fixture':
+        // M5.9d ADM-64 (stage fixture `m59d-cotd`): Car of the Day rows around today on public demo cars, only on days without a row:
+        // three days ago and the day before yesterday auto picks that ran (one with a story line), yesterday skipped with a reason,
+        // today picked and not yet live, tomorrow a team choice; the day after stays open. remove-cotd-fixture deletes exactly these rows.
+        $cars = Vehicle::query()->where('status', 'published')->where('visibility', 'public')
+            ->whereHas('owner', fn ($owner) => $owner->where('email', 'like', '%@'.DemoSeeder::EMAIL_DOMAIN)->where('is_sample', false))
+            ->with('owner:id,bundesland')->orderBy('published_at')->orderBy('id')->limit(4)->get();
+        if ($cars->count() < 4) {
+            refuse('cotd fixture: needs four published public demo cars; seed the demo first');
+        }
+        $today = \Carbon\CarbonImmutable::now('Europe/Berlin')->startOfDay();
+        $plan = [
+            [-3, $cars[0], true, 'Seit 2019 im Aufbau, jeder Mod mit Beleg.', null],
+            [-2, $cars[1], true, null, null],
+            [-1, null, false, null, 'Wartung am Server, kein Car of the Day an diesem Abend.'],
+            [0, $cars[2], false, null, null],
+            [1, $cars[3], false, 'Zum Treffen am Wochenende ausgewählt.', null],
+        ];
+        $made = [];
+        foreach ($plan as [$offset, $car, $published, $story, $skipped]) {
+            $day = $today->addDays($offset)->toDateString();
+            if (\App\Models\CarOfTheDay::query()->where('day', $day)->exists()) {
+                continue;
+            }
+            $row = new \App\Models\CarOfTheDay;
+            $row->forceFill([
+                'day' => $day,
+                'vehicle_id' => $car?->getKey(),
+                'story_line' => $story,
+                'bundesland' => $car?->owner?->getAttribute('bundesland'),
+                'source' => $offset === 1 || $skipped !== null ? 'staff' : 'auto',
+                'is_sample' => false,
+                'skipped' => $skipped !== null,
+                'skipped_reason' => $skipped,
+                'picked_at' => $today->addDays($offset)->setTime(17, 55)->utc(),
+                'published_at' => $published ? $today->addDays($offset)->setTime(18, 0)->utc() : null,
+                'notified_at' => $published ? $today->addDays($offset)->setTime(18, 5)->utc() : null,
+            ])->save();
+            $made[] = (int) $row->getKey();
+        }
+        \Illuminate\Support\Facades\Cache::forever('e2e:cotd-fixture', array_values(array_unique([...(array) \Illuminate\Support\Facades\Cache::get('e2e:cotd-fixture', []), ...$made])));
+        finish(['rows' => $made]);
+
+    case 'remove-cotd-fixture':
+        // The m59d-cotd teardown: the rows ensure-cotd-fixture made, nothing else.
+        $ids = (array) \Illuminate\Support\Facades\Cache::pull('e2e:cotd-fixture', []);
+        $removed = \App\Models\CarOfTheDay::query()->whereKey($ids)->delete();
+        finish(['removed' => $removed]);
+
+    case 'ensure-sticker-fixture':
+        // M5.4 (stage fixture `m54-stickers`, design QA DQ-M54-07/-15): lukas.sc's R34 gets three sticker versions, each through the real
+        // autosave and Scan-Test (the server renders and decodes the print raster), so STK-05 shows a passed Scan-Test, STK-06 the order
+        // page and STK-07 a history. remove-sticker-fixture deletes exactly these versions; whatever the car had before stays.
+        $car = Vehicle::query()->where('slug', 'nissan-skyline-gt-r-r34-5tf974vj')
+            ->whereHas('owner', fn ($owner) => $owner->where('username', 'lukas.sc'))->first();
+        if ($car === null) {
+            refuse('sticker fixture: lukas.sc\'s R34 is missing; seed the demo first');
+        }
+        $plan = [
+            [\App\Enums\StickerTemplate::Round, ['size' => 'm', 'colourway' => 'black', 'material' => 'transparent', 'qr' => true, 'username' => true]],
+            [\App\Enums\StickerTemplate::Banner, ['size' => 'm', 'colourway' => 'white', 'material' => 'transparent', 'qr' => true, 'username' => true, 'car_name' => true]],
+            [\App\Enums\StickerTemplate::Classic, ['size' => 'm', 'colourway' => 'white_red', 'material' => 'transparent', 'qr' => true, 'username' => true, 'car_name' => false, 'custom_line' => 'Built not bought', 'mirrored' => false]],
+        ];
+        $made = [];
+        foreach ($plan as [$template, $options]) {
+            $current = $car->stickerDesigns()->orderByDesc('version')->first();
+            $saved = app(\App\Actions\Stickers\SaveStickerDesign::class)->handle(
+                $car,
+                $current === null ? 0 : (int) $current->version,
+                $current === null ? 0 : (int) $current->revision,
+                $template,
+                $options,
+            );
+            $made[] = (string) $saved->getKey();
+            $tested = app(\App\Actions\Stickers\ValidateStickerDesign::class)->handle($car, (int) $saved->version, null);
+            $made[] = (string) $tested->getKey();
+        }
+        $made = array_values(array_unique($made));
+        // DQ-M54R2-11 a: the versions were checked before the matrix's qaNow (2 November 2026), never "in the future" of the capture.
+        $checked = ['2026-10-12 18:00:00', '2026-10-22 18:00:00', '2026-10-30 18:00:00'];
+        foreach (\App\Models\StickerDesign::query()->whereKey($made)->orderBy('version')->get() as $index => $design) {
+            $stamp = \Carbon\CarbonImmutable::parse($checked[min($index, 2)], 'Europe/Berlin')->utc();
+            $design->forceFill(['validated_at' => $stamp, 'created_at' => $stamp, 'updated_at' => $stamp])->save();
+        }
+        // DQ-M54R2-06: STK-04 with data: scan counts on the car's active code for the last 30 days, only on days without a row, so
+        // the teardown removes exactly these rows and real counts stay as they were.
+        $code = $car->activeQrCode()->first();
+        $scans = [];
+        if ($code !== null) {
+            $pattern = [1, 0, 2, 0, 1, 9, 4, 0, 1, 0, 2, 1, 12, 5, 1, 0, 0, 1, 0, 7, 3, 2, 1, 0, 3, 1, 14, 6, 2, 3];
+            $today = \Carbon\CarbonImmutable::now('Europe/Berlin')->startOfDay();
+            foreach ($pattern as $offset => $count) {
+                $day = $today->subDays(29 - $offset)->toDateString();
+                if ($count === 0 || \Illuminate\Support\Facades\DB::table('qr_scan_daily')->where('qr_code_id', $code->getKey())->where('day', $day)->exists()) {
+                    continue;
+                }
+                $scans[] = \Illuminate\Support\Facades\DB::table('qr_scan_daily')->insertGetId(['qr_code_id' => $code->getKey(), 'day' => $day, 'count' => $count]);
+            }
+        }
+        \Illuminate\Support\Facades\Cache::forever('e2e:sticker-fixture-scans', array_values(array_unique([...(array) \Illuminate\Support\Facades\Cache::get('e2e:sticker-fixture-scans', []), ...$scans])));
+        \Illuminate\Support\Facades\Cache::forever('e2e:sticker-fixture', array_values(array_unique([...(array) \Illuminate\Support\Facades\Cache::get('e2e:sticker-fixture', []), ...$made])));
+        finish(['vehicle' => (string) $car->getKey(), 'designs' => $made, 'scan_days' => count($scans)]);
+
+    case 'remove-sticker-fixture':
+        // The m54-stickers teardown: the versions ensure-sticker-fixture made, nothing else.
+        $ids = (array) \Illuminate\Support\Facades\Cache::pull('e2e:sticker-fixture', []);
+        $removed = \App\Models\StickerDesign::query()->whereKey($ids)->delete();
+        $scanRows = (array) \Illuminate\Support\Facades\Cache::pull('e2e:sticker-fixture-scans', []);
+        $scansRemoved = \Illuminate\Support\Facades\DB::table('qr_scan_daily')->whereIn('id', $scanRows)->delete();
+        finish(['removed' => $removed, 'scan_days' => $scansRemoved]);
+
+    case 'ensure-sticker-draft-fixture':
+        // DQ-P5-206 (stage fixture `m54-sticker-draft`): lukas.sc's R34 with an open Classic draft above whatever it has, through the
+        // real autosave (SaveStickerDesign) and never through the Scan-Test, so STK-06 shows "Erst der Scan-Test" and STK-05's dock the
+        // custom-line field (Classic prints it), whatever the seed gave the car (since M5.10 a passed Vertical JDM, which prints no
+        // line). A validated current version stays frozen and the draft opens the next version, which the teardown deletes; a draft
+        // that was there already is changed in place, so its columns are kept here and put back by the teardown.
+        $car = Vehicle::query()->where('slug', 'nissan-skyline-gt-r-r34-5tf974vj')
+            ->whereHas('owner', fn ($owner) => $owner->where('username', 'lukas.sc'))->first();
+        if ($car === null) {
+            refuse('sticker draft fixture: lukas.sc\'s R34 is missing; seed the demo first');
+        }
+        if (\Illuminate\Support\Facades\Cache::has('e2e:sticker-draft-fixture')) {
+            refuse('sticker draft fixture: a fixture is in place already; run remove-sticker-draft-fixture first');
+        }
+        /** @var \App\Models\StickerDesign|null $current */
+        $current = $car->stickerDesigns()->orderByDesc('version')->first();
+        $kept = $current !== null && ! $current->isValidated()
+            ? ['id' => (string) $current->getKey(), 'columns' => \Illuminate\Support\Facades\DB::table('sticker_designs')->where('id', $current->getKey())->first()]
+            : null;
+        $draft = app(\App\Actions\Stickers\SaveStickerDesign::class)->handle(
+            $car,
+            $current === null ? 0 : (int) $current->version,
+            $current === null ? 0 : (int) $current->revision,
+            \App\Enums\StickerTemplate::Classic,
+            ['size' => 'm', 'colourway' => 'white', 'material' => 'transparent', 'qr' => true, 'username' => true, 'car_name' => true, 'custom_line' => null, 'mirrored' => false],
+        );
+        if ($draft->isValidated()) {
+            refuse('sticker draft fixture: the R34\'s current version is already this Classic and validated; nothing to stage');
+        }
+        // Saved before the matrix's qaNow (2 November 2026), never "in the future" of the capture (as DQ-M54R2-11 a).
+        $stamp = \Carbon\CarbonImmutable::parse('2026-11-01 18:00:00', 'Europe/Berlin')->utc();
+        $draft->forceFill(['updated_at' => $stamp] + ($kept === null ? ['created_at' => $stamp] : []))->save();
+        \Illuminate\Support\Facades\Cache::forever('e2e:sticker-draft-fixture', ['made' => $kept === null ? (string) $draft->getKey() : null, 'kept' => $kept === null ? null : ['id' => $kept['id'], 'columns' => (array) $kept['columns']]]);
+        finish(['vehicle' => (string) $car->getKey(), 'design' => (string) $draft->getKey(), 'version' => (int) $draft->version, 'in_place' => $kept !== null]);
+
+    case 'remove-sticker-draft-fixture':
+        // The m54-sticker-draft teardown: the version ensure-sticker-draft-fixture opened, or the draft it changed put back column for column.
+        $fixture = (array) \Illuminate\Support\Facades\Cache::pull('e2e:sticker-draft-fixture', []);
+        $removed = 0;
+        $restored = false;
+        if (is_string($fixture['made'] ?? null)) {
+            $removed = \App\Models\StickerDesign::query()->whereKey($fixture['made'])->whereNull('validated_at')->delete();
+        }
+        if (is_array($fixture['kept'] ?? null)) {
+            $columns = (array) $fixture['kept']['columns'];
+            unset($columns['id']);
+            $restored = \Illuminate\Support\Facades\DB::table('sticker_designs')->where('id', $fixture['kept']['id'])->update($columns) >= 0;
+        }
+        finish(['removed' => $removed, 'restored' => $restored]);
+
+    case 'remove-cotd-days':
+        // A5 badges/Car of the Day flow cleanup: the team rows it wrote on days at least five days ahead (never a real pick).
+        $days = array_values(array_filter($args, fn (string $day): bool => preg_match('/\A\d{4}-\d{2}-\d{2}\z/', $day) === 1));
+        $earliest = \Carbon\CarbonImmutable::now('Europe/Berlin')->addDays(5)->toDateString();
+        if ($days === [] || min($days) < $earliest) {
+            refuse('usage: backend.php remove-cotd-days <Y-m-d ≥ today + 5> …');
+        }
+        $removed = \App\Models\CarOfTheDay::query()->whereIn('day', $days)->where('source', 'staff')->delete();
+        finish(['removed' => $removed]);
+
+    case 'remove-test-badges':
+        // A5 badges/Car of the Day flow cleanup: the badges a flow created, keys starting with "e2e-" (their earned rows cascade).
+        $removed = \App\Models\Badge::query()->where('key', 'like', 'e2e-%')->delete();
+        finish(['removed' => $removed]);
+
+    case 'dex-forget-spot-map':
+        // M5.9b F18: GET spot-map is cached for an hour; the flow reads the numbers it just wrote.
+        \App\Services\Dex\SpotMap::forget();
+        finish(['forgotten' => true]);
+
+    case 'build-score-free-generation':
+        // M5.9c F19: a catalogue generation no rankable car uses yet (published, public, not ghost, of a real member), so the rank
+        // lines of the flow count only its own three cars. Well-known generations first; names as the catalogue API lists them.
+        $taken = DB::table('vehicles')->whereNull('deleted_at')->where('status', 'published')->where('visibility', 'public')
+            ->where('is_sample', false)->whereNotNull('generation_id')->distinct()->pluck('generation_id')->all();
+        $generation = \App\Models\Generation::query()
+            ->with('vehicleModel.make')
+            ->where('active', true)->whereNull('merged_into_id')
+            ->whereNotIn('id', $taken)
+            ->whereHas('vehicleModel', fn ($models) => $models->where('active', true)->whereHas('make', fn ($makes) => $makes->where('active', true)))
+            ->orderBy('id')
+            ->first() ?? refuse('no free generation in the catalogue');
+        finish([
+            'make' => (string) $generation->vehicleModel->make->name,
+            'model' => (string) $generation->vehicleModel->name,
+            'generation' => (string) $generation->name,
+            'year' => (int) ($generation->getAttribute('year_from') ?? 2000),
+        ]);
+
+    case 'build-score-peers':
+        // M5.9c F19: cars of new test members in the generation of a test owner's car, with Build Scores near the given totals, built
+        // from what the score counts without photos (filled key specs, a description, posts, dated posts for the span, mods stated
+        // as entered in the papers), so the nightly run computes the same totals from their content. Prints the totals reached.
+        [$vehicleId, $targets] = $args + [null, ''];
+        $car = Vehicle::query()->with('owner')->find((string) $vehicleId);
+        $totals = array_values(array_filter(array_map('trim', explode(',', (string) $targets)), 'ctype_digit'));
+        if ($car === null || ! isTestAccount((string) $car->owner?->email) || $totals === [] || count($totals) > 5 || $car->getAttribute('generation_id') === null) {
+            refuse('usage: backend.php build-score-peers <vehicle id of a test owner with a generation> <total,total… (≤ 5)>');
+        }
+        $category = \App\Models\ModCategory::query()->orderBy('id')->firstOrFail();
+        $peers = [];
+        foreach ($totals as $index => $target) {
+            $tag = strtolower(Str::random(6));
+            $peer = new User(['email' => "f19peer.{$tag}".E2E_DOMAIN, 'password' => Str::random(40), 'username' => "f19p{$tag}{$index}", 'locale' => 'de', 'consented_at' => now()]);
+            $peer->forceFill(['email_verified_at' => now(), 'profile_setup_at' => now(), 'bundesland' => $car->owner?->getAttribute('bundesland')])->save();
+            $publicId = \App\Support\Codes::generate();
+            $vehicle = new Vehicle(['make_id' => $car->getAttribute('make_id'), 'model_id' => $car->getAttribute('model_id'), 'generation_id' => $car->getAttribute('generation_id'), 'model_year' => $car->model_year]);
+            $vehicle->forceFill(['owner_id' => $peer->getKey(), 'public_id' => $publicId, 'slug' => $publicId, 'status' => 'published', 'visibility' => 'public', 'published_at' => now(), 'is_main' => true])->save();
+            $vehicle->forceFill(['slug' => $vehicle->canonicalSlug()])->save();
+            // The generation is a filled key spec already (10).
+            $left = max(0, (int) $target - 10);
+            $specs = min(9, intdiv($left, 10));
+            $left -= $specs * 10;
+            $description = $left >= 50 ? 1 : 0;
+            $left -= $description * 50;
+            $posts = min(8, intdiv($left, 10));
+            $left -= $posts * 10;
+            $registered = min(10, intdiv($left, 5));
+            $left -= $registered * 5;
+            $months = $posts >= 2 ? min(25, $left) : 0;
+            $values = ['engine_code' => 'F19', 'displacement_cc' => 1998, 'fuel' => 'petrol', 'aspiration' => 'naturally_aspirated', 'torque_nm' => 200, 'drivetrain' => 'rear', 'gearbox' => 'manual'];
+            $spec = new \App\Models\VehicleSpec(['vehicle_id' => $vehicle->getKey(), ...array_slice($values, 0, min(7, $specs), true)]);
+            if ($specs >= 8) {
+                $spec->setPower(200, \App\Enums\PowerUnit::Ps, \App\Enums\PowerSource::Factory);
+            }
+            $spec->save();
+            $vehicle->forceFill(['color' => $specs >= 9 ? 'Weiß' : null, 'description' => $description === 1 ? str_repeat('Testfahrzeug der F19-Flow-Prüfung. ', 7) : null])->save();
+            for ($i = 0; $i < $posts; $i++) {
+                $update = new BuildUpdate(['type' => 'post', 'note' => 'F19 Testeintrag '.($i + 1), 'audience' => 'vehicle', 'happened_on' => now()->subMonths($i === 0 ? $months : 0)->toDateString()]);
+                $update->forceFill(['vehicle_id' => $vehicle->getKey(), 'created_at' => now()])->save();
+            }
+            for ($i = 0; $i < $registered; $i++) {
+                $mod = new \App\Models\Modification;
+                $mod->forceFill(['vehicle_id' => $vehicle->getKey(), 'category_id' => $category->getKey(), 'title' => 'F19 Teil '.($i + 1), 'status' => 'installed', 'legal_status' => 'registered', 'fields' => [], 'sort' => $i + 1])->save();
+            }
+            $score = app(\App\Services\BuildScore\BuildScores::class)->recompute((string) $vehicle->getKey());
+            $peers[] = ['email' => $peer->email, 'vehicle_id' => (string) $vehicle->getKey(), 'total' => $score?->total];
+        }
+        finish(['peers' => $peers]);
+
+    case 'build-score-run':
+        // M5.9c F19: the debounced RecomputeBuildScore jobs of one test owner's car, now (the queue worker does not run locally), then
+        // the stored score. Other queued jobs stay untouched.
+        $car = Vehicle::query()->with('owner')->find((string) ($args[0] ?? '')) ?? refuse('no such vehicle');
+        if (! isTestAccount((string) $car->owner?->email)) {
+            refuse('refusing: build-score-run takes a vehicle of a test account under '.E2E_DOMAIN);
+        }
+        $ran = 0;
+        foreach (DB::table('jobs')->orderBy('id')->get(['id', 'payload']) as $row) {
+            $payload = json_decode((string) $row->payload, true);
+            $command = is_array($payload) ? ($payload['data']['command'] ?? null) : null;
+            if (! is_string($command) || ! str_contains($command, 'RecomputeBuildScore')) {
+                continue;
+            }
+            $job = unserialize($command);
+            if (! $job instanceof \App\Jobs\BuildScore\RecomputeBuildScore || $job->vehicleId !== strtolower((string) $car->getKey())) {
+                continue;
+            }
+            DB::table('jobs')->where('id', $row->id)->delete();
+            (new UniqueLock(app(CacheRepository::class)))->release($job);
+            app(Dispatcher::class)->dispatchNow($job);
+            $ran++;
+        }
+        $score = \App\Models\BuildScore::query()->find($car->getKey());
+        finish(['ran' => $ran, 'total' => $score?->total, 'previous_total' => $score?->previous_total]);
+
+    case 'build-score-nightly':
+        // M5.9c F19: the night's Build Score run (every score again, then the ranks), started over and run until it is done.
+        $nightly = app(\App\Services\BuildScore\BuildScoreNightly::class);
+        $nightly->restart();
+        $result = null;
+        for ($run = 0; $run < 30 && ($result['done'] ?? false) !== true; $run++) {
+            $result = $nightly->run() ?? refuse('another build-score:nightly run holds the lock');
+        }
+        finish(['done' => $result['done'] ?? false, 'tasks' => $result['tasks'] ?? []]);
+
     default:
-        refuse('usage: backend.php reset-limits|age-codes|ensure-onboarding|create-member|delete-accounts|close-updates|qr-scans|set-discoverable|set-who-can-message|run-test-jobs|decide-test-case|ensure-sessions-fixture|ensure-staff|delete-staff|reset-staff-limits|seeded-audit-event|start-view-as|ensure-decisions-fixture|ensure-two-factor-fixture|ensure-approvals-fixture|publish-announcement-fixture|remove-announcement-fixture|announcement-fixture-plan|announcements-state|ensure-reconsent-fixture|remove-reconsent-fixture|reconsent-fixture-plan|legal-documents-state|ensure-support-fixture|ensure-m417-fixture|remove-branding-fixture|branding-state|enable-premium-fixture|disable-premium-fixture|run-health-fixture|remove-health-fixture|remove-maintenance-fixture');
+        refuse('usage: backend.php build-score-free-generation|build-score-peers|build-score-run|build-score-nightly|dex-free-cities|dex-spot-fixture|dex-run-alerts|dex-forget-spot-map|ensure-spots-fixture|remove-spots-fixture|reset-limits|age-codes|ensure-onboarding|create-member|delete-accounts|close-updates|qr-scans|set-discoverable|set-who-can-message|run-test-jobs|decide-test-case|ensure-sessions-fixture|ensure-staff|delete-staff|reset-staff-limits|seeded-audit-event|start-view-as|ensure-decisions-fixture|ensure-two-factor-fixture|ensure-approvals-fixture|publish-announcement-fixture|remove-announcement-fixture|announcement-fixture-plan|announcements-state|ensure-reconsent-fixture|remove-reconsent-fixture|reconsent-fixture-plan|legal-documents-state|ensure-support-fixture|ensure-m417-fixture|remove-branding-fixture|branding-state|enable-premium-fixture|disable-premium-fixture|run-health-fixture|remove-health-fixture|remove-maintenance-fixture');
 }

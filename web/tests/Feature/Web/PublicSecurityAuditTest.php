@@ -174,7 +174,15 @@ describe('output encoding of member text', function () {
         $texts = array_map(fn (DOMNode $node): string => $node->textContent, iterator_to_array($xpath->query('//body//*[not(self::script) and not(self::style)]/text()')));
 
         expect(implode("\n", $texts))->toContain('<script>alert(1)</script>');
-    })->with(['vehicle', 'member', 'landing with the build configured']);
+    })->with(['vehicle', 'member']);
+
+    it('prints none of it on the landing page with the build configured, which is inert as well (R4-1.5: no featured builds)', function () {
+        $response = $this->get('/')->assertOk();
+        $xpath = sec17AssertInert($response, '/');
+        $texts = array_map(fn (DOMNode $node): string => $node->textContent, iterator_to_array($xpath->query('//body//*[not(self::script) and not(self::style)]/text()')));
+
+        expect(implode("\n", $texts))->not->toContain('<script>alert(1)</script>');
+    });
 
     it('prints it into Open Graph, Twitter and the description as one attribute each', function (string $path) {
         $path = $path === 'vehicle' ? $this->url : $path;
@@ -368,7 +376,7 @@ describe('a revoked, private or unknown code reveals nothing', function () {
             $seen[$copy] = $api[0]['data']['title'];
         }
 
-        expect($seen)->toBe(['revoked' => "Dieser QR-\u{2060}Code ist nicht mehr gültig", 'unavailable' => 'Dieses Fahrzeug ist nicht mehr verfügbar']);
+        expect($seen)->toBe(['revoked' => 'Dieser Sticker ist nicht mehr gültig', 'unavailable' => 'Dieses Fahrzeug ist nicht mehr verfügbar']);
     });
 
     it('answers the same private page whatever hides the vehicle, so a suspension or a block cannot be told apart', function () {
@@ -783,6 +791,16 @@ describe('well-known and machine files', function () {
                 expect(str_contains($body, $secret))->toBeFalse($path.' holds the value of a secret config key');
             }
         }
+    });
+});
+
+describe('the web root under the ALL-INKL deny-all', function () {
+    it('grants access in public/.htaccess itself, at column 0, because Apache applies the deny-all of the folder above', function () {
+        $htaccess = (string) file_get_contents(public_path('.htaccess'));
+
+        // Go-live 2026-11-24: /speedclub/.htaccess "Require all denied" (deploy-allinkl.sh) made every URL answer 403.
+        expect(preg_match('~^<IfModule mod_authz_core\.c>\R[ \t]+Require all granted\R</IfModule>\r?$~m', $htaccess))->toBe(1)
+            ->and(preg_match('~^<IfModule !mod_authz_core\.c>\R[ \t]+Order allow,deny\R[ \t]+Allow from all\R</IfModule>\r?$~m', $htaccess))->toBe(1);
     });
 });
 

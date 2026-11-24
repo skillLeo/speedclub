@@ -582,10 +582,19 @@ async function clearStoredState(page) {
  */
 async function expandToInnerScroller(page, viewport, maxHeight) {
   const extra = await page.evaluate(() => {
+    // DQ-P5-203: an inactive tab of the web shell stays laid out at its size (WebTabPane: visibility hidden, inert), so its lists
+    // still overflow. checkVisibility() without options does not read `visibility`, and growing to such a hidden list made the MSG
+    // cells 3,000+ px tall with the shown screen's content at the top. Only scrollers of the shown screen count.
+    const inHiddenTab = (/** @type {Element} */ el) => {
+      for (let pane = el.closest('[data-testid^="shell.tab."]'); pane; pane = pane.parentElement?.closest('[data-testid^="shell.tab."]') ?? null) {
+        if (/** @type {HTMLElement} */ (pane).inert || getComputedStyle(pane).visibility === 'hidden') return true;
+      }
+      return false;
+    };
     let max = 0;
     for (const el of document.querySelectorAll('body *')) {
       const cs = getComputedStyle(el);
-      if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll') && el.checkVisibility()) {
+      if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll') && el.checkVisibility() && !inHiddenTab(el)) {
         max = Math.max(max, el.scrollHeight - el.clientHeight);
       }
     }
@@ -607,11 +616,18 @@ const BAND_KEEP = 24;
  */
 async function trimEmptyBand(page, viewport) {
   const band = await page.evaluate((keep) => {
+    // DQ-P5-203: never a list of an inactive tab of the web shell (see expandToInnerScroller).
+    const inHiddenTab = (/** @type {Element} */ el) => {
+      for (let pane = el.closest('[data-testid^="shell.tab."]'); pane; pane = pane.parentElement?.closest('[data-testid^="shell.tab."]') ?? null) {
+        if (/** @type {HTMLElement} */ (pane).inert || getComputedStyle(pane).visibility === 'hidden') return true;
+      }
+      return false;
+    };
     /** @type {HTMLElement|null} */
     let main = null;
     for (const el of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('body *'))) {
       const cs = getComputedStyle(el);
-      if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll') && el.checkVisibility() && (!main || el.clientHeight > main.clientHeight)) main = el;
+      if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll') && el.checkVisibility() && !inHiddenTab(el) && (!main || el.clientHeight > main.clientHeight)) main = el;
     }
     if (!main || main.scrollHeight > main.clientHeight + 1) return 0;
     const box = main.getBoundingClientRect();

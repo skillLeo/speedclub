@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { Dimensions } from 'react-native';
 
 import { hydrateThemePreference, maxFontScale, radius, size, themes, typography } from '@/theme';
-import { Chip } from '@/ui/Chip';
+import { Chip, CHIP_WRAP_LINES } from '@/ui/Chip';
 
 import { flat, renderUi, toneLayerOf, toneLayersIn, visualOf } from './helpers';
 
@@ -19,6 +19,27 @@ const badgeScale = () => Math.min(Dimensions.get('window').fontScale, maxFontSca
 const carbon = themes.carbon.color;
 
 describe('Chip', () => {
+  it('stays on one line by default', async () => {
+    await renderUi(<Chip label="JDM Ruhrpott · Gründer" onPress={jest.fn()} testID="one" />);
+    expect(screen.getByText('JDM Ruhrpott · Gründer').props.numberOfLines).toBe(1);
+    expect(visualOf('one').paddingVertical).toBeUndefined();
+  });
+
+  it('wrap: up to two lines between words, the pill growing and the target kept', async () => {
+    await renderUi(<Chip label="JDM Ruhrpott · Gründer" onPress={jest.fn()} wrap testID="two" />);
+    const label = screen.getByText('JDM Ruhrpott · Gründer');
+    expect(label.props.numberOfLines).toBe(CHIP_WRAP_LINES);
+    expect(CHIP_WRAP_LINES).toBe(2);
+    // Lines break between words: never a hyphen inside a name.
+    expect(label.props.hyphenate ?? false).toBe(false);
+    const visual = visualOf('two');
+    // No fixed height: the pill grows with the second line; one line still fits the 32 (min height) with the 4 of air.
+    expect(visual.height).toBeUndefined();
+    expect(visual.minHeight).toBe(size.chip);
+    expect(visual.paddingVertical).toBe(4);
+    expect(screen.getByTestId('two').props.hitSlop.top).toBe(6);
+  });
+
   it('removable: the border is inside the 36, and the hit area still reaches 44', async () => {
     await renderUi(<Chip label="BMW" onPress={jest.fn()} onRemove={jest.fn()} testID="c" />);
     const shell = flat(screen.getByTestId('c').props.style);
@@ -56,6 +77,15 @@ describe('Chip', () => {
     await fireEvent.press(chip);
     expect(onPress).toHaveBeenCalledTimes(1);
     expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('a chip that opens a sheet is a button with its active value in the name, never a checkbox, and keeps the selected look', async () => {
+    const onPress = jest.fn();
+    await renderUi(<Chip label="Treffen" selected opensSheet accessibilityLabel="Art: Treffen" onPress={onPress} testID="c" />);
+    expect(screen.queryByRole('checkbox')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Art: Treffen' }));
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(visualOf('c').backgroundColor).toBe(carbon.bg.inverse);
   });
 
   it('removable: separate remove target with its own name', async () => {

@@ -908,7 +908,11 @@ describe('GET auth/me', function () {
                 'username', 'username_change_available_at', 'display_name', 'city', 'bio', 'avatar', 'cover', 'locale', 'theme',
                 'power_display', 'member_since',
                 'stats' => ['vehicles', 'followers', 'following'],
+                // R4-1.4: when the introduction was seen.
+                'intro_seen_at',
                 'is_sample', 'is_editorial',
+                // M5.9d: the quiet level and the founding number.
+                'level' => ['level', 'title'], 'founding_number',
                 'two_factor_enabled',
                 // M4.6: false for a passwordless account.
                 'password_set',
@@ -916,6 +920,8 @@ describe('GET auth/me', function () {
                     'suspended',
                     'messaging' => ['restricted', 'until', 'decision_id'],
                     'publishing' => ['restricted', 'until', 'decision_id'],
+                    // M5.8: the forum ban.
+                    'forum' => ['restricted', 'until', 'decision_id'],
                 ],
             ]])
             ->assertJsonPath('data.username', 'lukas.sc')

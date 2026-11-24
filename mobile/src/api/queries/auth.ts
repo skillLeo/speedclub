@@ -38,6 +38,7 @@ import {
   type SessionMember,
 } from '@/state/session';
 import { forgetConsentClearance } from '@/state/consent';
+import { forgetInviteCode, inviteFields } from '@/features/auth/inviteCode';
 import { clearUploads } from '@/state/uploads';
 import { fixedThemePreference, getThemePreference, setThemePreference, useThemePreference } from '@/theme';
 
@@ -155,7 +156,7 @@ export async function deviceFields() {
   if (!isNative) return {};
   const id = await deviceId();
   return {
-    device_name: Device.modelName ?? 'SPEED CLUB App',
+    device_name: Device.modelName ?? 'Speedclub App',
     platform: (Device.osName === 'iOS' || Device.osName === 'iPadOS' ? 'ios' : 'android') as 'ios' | 'android',
     ...deviceVersions(),
     ...(id ? { device_id: id } : {}),
@@ -637,6 +638,16 @@ async function patchSettings(patch: SettingsPatch): Promise<boolean> {
 /** One at a time: the sign-in's reconciliation changes the very values the change watcher reacts to. */
 let settingsQueue: Promise<unknown> = Promise.resolve();
 
+/**
+ * The member this app run has reconciled with (reconcileSettings, after auth/me or a sign-in). Until then the change watcher sends
+ * nothing: on a new browser it fired before the reconciliation and sent the device's default theme over the account's choice
+ * (P5 live check: `PATCH {theme: "system"}`, then `{theme: "carbon"}` on the first load). A choice made before the reconciliation is
+ * not lost: the reconciliation sends a device value that is newer than the last sync.
+ */
+let reconciledMember: string | null = null;
+
+const currentMemberId = (): string | null => useSessionStore.getState().member?.id ?? null;
+
 function enqueueSettings(task: () => Promise<void>): Promise<void> {
   const next = settingsQueue.then(task, task);
   settingsQueue = next.catch((error: unknown) => console.warn('Could not sync the settings', error));
@@ -670,7 +681,9 @@ export function reconcileSettings(me: Pick<Me, 'theme' | 'locale'>): Promise<voi
         patch.theme = device;
       } else {
         next.theme = accountTheme;
-        if (getThemePreference() !== accountTheme) setThemePreference(accountTheme);
+        // Always through the setter, also when it already shows: the account's theme is then this device's choice, and a brand
+        // default from app-config (setDefaultThemePreference) can no longer replace it and be sent back to the account.
+        setThemePreference(accountTheme);
       }
     }
     if (!qa.locale) {
@@ -692,16 +705,20 @@ export function reconcileSettings(me: Pick<Me, 'theme' | 'locale'>): Promise<voi
     }
     if (await patchSettings(patch)) Object.assign(next, patch);
     await setStored('sc.settingsSynced', JSON.stringify(next));
+    reconciledMember = currentMemberId();
   });
 }
 
 /**
  * While signed in, a change of theme or language goes to the account. The values are read inside the queued task (BH-35): after
- * a sign-in's reconciliation, which the change watcher sees halfway, they equal what was agreed, and nothing is sent.
+ * a sign-in's reconciliation, which the change watcher sees halfway, they equal what was agreed, and nothing is sent. Before this
+ * member's first reconciliation of the app run nothing is sent at all (`reconciledMember`).
  */
 export function pushChangedSettings(): Promise<void> {
   if (isViewAsTab()) return Promise.resolve();
   return enqueueSettings(async () => {
+    const member = currentMemberId();
+    if (member === null || member !== reconciledMember) return;
     const synced = await readSynced();
     const patch: SettingsPatch = {};
     const theme = getThemePreference();
@@ -870,6 +887,8 @@ export function useRegister() {
             marketing_consent: marketingConsent,
             ...(locale ? { locale } : {}),
             ...(ref ? { ref } : {}),
+            // M5.9d: the code of `/join/{code}` (features/auth/inviteCode.ts); redeemed when the account activates.
+            ...inviteFields(),
           },
         }),
       );
@@ -886,8 +905,10 @@ export function useVerifyEmail() {
       const device = await deviceFields();
       await revokePendingLogoutBeforeSignIn();
       const { data } = await withFreshCsrf(() =>
-        apiData(api.POST('/auth/email/verify', { body: { email, code, ...(password ? { password } : {}), ...device } })),
+        apiData(api.POST('/auth/email/verify', { body: { email, code, ...(password ? { password } : {}), ...device, ...inviteFields() } })),
       );
+      // The account is active now: the code has done its work (or was refused with it).
+      forgetInviteCode();
       return readSignIn(data);
     },
     onSuccess: adoptAnswer,

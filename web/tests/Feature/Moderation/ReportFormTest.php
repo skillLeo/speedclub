@@ -15,7 +15,7 @@ use Illuminate\Testing\TestResponse;
 require_once __DIR__.'/ModerationTestHelpers.php';
 
 /**
- * WEB-09 /melden (m2.6-contract §3): sessionless, a SPEED CLUB public URL only, the good-faith checkbox, Turnstile when configured, a
+ * WEB-09 /melden (m2.6-contract §3): sessionless, a Speedclub public URL only, the good-faith checkbox, Turnstile when configured, a
  * per-IP limit, the confirmation page and mail, refused cross-site posts, the footer link.
  */
 beforeEach(function () {
@@ -92,15 +92,15 @@ it('takes a QR address, the app address and the address without a scheme', funct
     'without scheme' => [fn ($vehicle) => parse_url(config('app.url'), PHP_URL_HOST).'/v/'.$vehicle->slug.'?ref=share'],
 ]);
 
-it('refuses an address that is not a public SPEED CLUB page, with help', function (Closure $url, string $message) {
+it('refuses an address that is not a public Speedclub page, with help', function (Closure $url, string $message) {
     webPost($url($this->vehicle, $this->owner))->assertStatus(422)->assertSee($message);
 
     expect(Report::query()->count())->toBe(0);
 })->with([
-    'another site' => [fn ($vehicle) => 'https://evil.example/v/'.$vehicle->slug, 'Gib die Adresse einer Seite von SPEED CLUB an'],
-    'another path' => [fn () => config('app.url').'/impressum', 'Gib die Adresse einer Seite von SPEED CLUB an'],
-    'a lookalike host' => [fn ($vehicle) => 'https://'.parse_url(config('app.url'), PHP_URL_HOST).'.evil.example/v/'.$vehicle->slug, 'Gib die Adresse einer Seite von SPEED CLUB an'],
-    'credentials in the address' => [fn ($vehicle) => 'https://user:pass@'.parse_url(config('app.url'), PHP_URL_HOST).'/v/'.$vehicle->slug, 'Gib die Adresse einer Seite von SPEED CLUB an'],
+    'another site' => [fn ($vehicle) => 'https://evil.example/v/'.$vehicle->slug, 'Gib die Adresse einer Seite von Speedclub an'],
+    'another path' => [fn () => config('app.url').'/impressum', 'Gib die Adresse einer Seite von Speedclub an'],
+    'a lookalike host' => [fn ($vehicle) => 'https://'.parse_url(config('app.url'), PHP_URL_HOST).'.evil.example/v/'.$vehicle->slug, 'Gib die Adresse einer Seite von Speedclub an'],
+    'credentials in the address' => [fn ($vehicle) => 'https://user:pass@'.parse_url(config('app.url'), PHP_URL_HOST).'/v/'.$vehicle->slug, 'Gib die Adresse einer Seite von Speedclub an'],
     'unknown build' => [fn () => config('app.url').'/v/bmw-m3-zzzzzzzz', 'Diese Seite gibt es nicht'],
     'private build' => [fn ($vehicle, $owner) => config('app.url').'/v/'.Vehicle::factory()->private()->create(['owner_id' => $owner->id])->slug, 'Diese Seite gibt es nicht'],
     'suspended member' => [fn () => config('app.url').'/u/'.User::factory()->suspended()->create()->username, 'Diese Seite gibt es nicht'],

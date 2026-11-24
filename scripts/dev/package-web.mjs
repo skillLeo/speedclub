@@ -258,6 +258,8 @@ function excluded(rel, isDir) {
   if (parts.length === 1 && ['.mcp.json', 'AGENTS.md', 'boost.json', 'phpstan.neon', 'pint.json', 'eslint.config.js'].includes(base)) return true; // dev tooling
   if (/^(phpunit|pest)/i.test(base) || /^playwright\.config\./.test(base)) return true;
   if (parts[0] === '.lighthouseci' || rel.startsWith('public/.lighthouseci')) return true;
+  // Editor tooling of the repository: never on a host.
+  if (parts[0] === '.github' || parts[0] === '.vscode') return true;
   if (rel === 'public/storage' || rel === 'public/hot') return true;
   if (/^storage\/logs\//.test(rel)) return true;
   if (/^storage\/framework\/(cache|sessions|views)\//.test(rel)) return true;

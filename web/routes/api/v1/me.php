@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Me\AccountDeletionController;
 use App\Http\Controllers\Api\V1\Me\AccountSecurityController;
 use App\Http\Controllers\Api\V1\Me\DataExportController;
 use App\Http\Controllers\Api\V1\Me\DeviceSessionController;
+use App\Http\Controllers\Api\V1\Me\IntroController;
 use App\Http\Controllers\Api\V1\Me\ProfileController;
 use App\Http\Controllers\Api\V1\Me\ProfileImageController;
 use App\Http\Controllers\Api\V1\Me\PushSubscriptionController;
@@ -23,7 +24,11 @@ use Illuminate\Support\Facades\Route;
 $recentOrPassword = RequireRecentAuthentication::class.':10,or-password';
 
 Route::prefix('me')->name('me.')->middleware('member')->group(function () use ($recentOrPassword): void {
+    // R4-1.4: GET me is the same MeResource as auth/me and me/profile (it carries intro_seen_at).
+    Route::get('/', [ProfileController::class, 'show'])->name('show');
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+    // R4-1.4 (INTRO-01…04): the introduction after the first sign-in was seen or skipped; once per account, idempotent.
+    Route::post('intro/seen', [IntroController::class, 'seen'])->middleware('throttle:account-edits')->name('intro.seen');
     // throttle:account-edits (SEC-P1-04) is shared with PATCH settings.
     Route::patch('profile', [ProfileController::class, 'update'])->middleware(['not-restricted:publishing', 'throttle:account-edits'])->name('profile.update');
     Route::put('username', [ProfileController::class, 'username'])->middleware(['not-restricted:publishing', 'throttle:username-check'])->name('username');

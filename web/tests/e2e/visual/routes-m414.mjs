@@ -114,7 +114,7 @@ export const routesM414 = [
     ready: loadedOr('[data-testid="BIZ-03.views"]', 'BIZ-03.root'),
     capture: 'expanded',
     fixture: FIXTURE,
-    notes: `${FLAG_NOTE} Betriebs-Dashboard of lukas.sc: "Werkstatt am Kanal", Verifiziert pill, the private 30-day profile views as a hero.numeral.s (tnum) with "Nur für euer Team sichtbar", Profil ansehen · Profil bearbeiten · Anfragen "1 offen"; the portfolio wall with "Build vorschlagen"; Team with the owner and kenji.r34 (Entfernen) and "Mitglied hinzufügen". empty = a member without a business: the badged sample BusinessCard, "Zeig deinen Betrieb in SPEED CLUB" and "Betrieb anmelden".`,
+    notes: `${FLAG_NOTE} Betriebs-Dashboard of lukas.sc: "Werkstatt am Kanal", Verifiziert pill, the private 30-day profile views as a hero.numeral.s (tnum) with "Nur für euer Team sichtbar", Profil ansehen · Profil bearbeiten · Anfragen "1 offen"; the portfolio wall with "Build vorschlagen"; Team with the owner and kenji.r34 (Entfernen) and "Mitglied hinzufügen". empty = a member without a business: the badged sample BusinessCard, "Zeig deinen Betrieb in Speedclub" and "Betrieb anmelden".`,
   },
   {
     id: 'BIZ-04',

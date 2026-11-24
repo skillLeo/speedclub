@@ -11,6 +11,7 @@ class StorageLinkCheck extends Check
     {
         return file_exists(public_path('storage'))
             ? Result::make('Linked')->ok()
-            : Result::make()->failed('public/storage is missing, run php artisan storage:link.');
+            // ADR-539: the /storage route serves the public disk through PHP meanwhile; slower, not broken.
+            : Result::make('Served through PHP')->warning('public/storage is not a link: photos are served through PHP (slower). Run php artisan storage:link where the host allows it.');
     }
 }

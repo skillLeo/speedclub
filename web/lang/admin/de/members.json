@@ -114,6 +114,7 @@
         "label": "Bereiche des Mitglieds",
         "overview": "Übersicht",
         "vehicles": "Fahrzeuge",
+        "wrapped": "Wrapped",
         "security": "Sicherheit & Sitzungen",
         "reports": "Meldungen",
         "messages": "Nachrichten",
@@ -147,7 +148,7 @@
         "city": "Ort",
         "bio": "Über mich",
         "signup_ref": "Registriert über",
-        "ref_qr": "QR-Scan",
+        "ref_qr": "Sticker-Scan",
         "ref_public_vehicle": "Öffentliche Fahrzeugseite",
         "ref_public_profile": "Öffentliches Profil",
         "ref_none": "Direkt",
@@ -181,7 +182,7 @@
         "visibility": "Sichtbarkeit",
         "photos": "Fotos",
         "mods": "Mods",
-        "qr": "QR",
+        "qr": "Sticker",
         "updated": "Geändert",
         "empty_title": "Noch kein Fahrzeug",
         "empty_body": "Sobald das Mitglied ein Fahrzeug anlegt, steht es hier."
@@ -305,7 +306,7 @@
     "edit": {
         "title": "Profil bearbeiten",
         "body": "Änderungen sieht das Mitglied sofort. Ein neuer Benutzername gibt den alten frei.",
-        "username_hint": "3–24 Zeichen: a–z, 0–9, Punkt und Unterstrich.",
+        "username_hint": "1–40 Zeichen: a–z, 0–9, Punkt und Unterstrich. Als Team ohne Mindestlänge und ohne gesperrte Namen; Mitglieder selbst wählen 5–24.",
         "never_password": "Passwörter siehst und setzt du hier nie. Dafür gibt es den Code zum Zurücksetzen.",
         "nothing": "Du hast nichts geändert.",
         "save": "Speichern"
@@ -359,7 +360,6 @@
     "view_as": {
         "title": "Ansicht als :name",
         "body": "Öffnet die App in einem neuen Tab, so wie das Mitglied sie sieht, nur lesend und ohne Nachrichten. Endet nach :minutes Minuten.",
-        "reason_hint": "Warum du die Ansicht brauchst, 10–1.000 Zeichen. Wird protokolliert.",
         "consent": "Das Mitglied hat zugestimmt",
         "consent_optional": "Das Mitglied hat zugestimmt (Notiz)",
         "consent_required": "Für den Support braucht es die Zustimmung des Mitglieds.",
@@ -371,5 +371,137 @@
         "not_possible": "Bei diesem Konto geht keine Ansicht.",
         "confirm_again": "Passwort bestätigt. Klicke jetzt auf „Ansicht öffnen“.",
         "popup_blocked": "Dein Browser hat den neuen Tab blockiert. Erlaube Pop-ups für den Admin-Bereich und versuche es erneut."
+    },
+    "wrapped": {
+        "seasons_title": "Erzeugte Saisons",
+        "seasons_caption": "Wrapped des Mitglieds je Saison, neueste zuerst",
+        "seasons_empty": "Für dieses Mitglied wurde noch kein Wrapped erzeugt.",
+        "season": "Saison",
+        "seasons": {
+            "saison": "Saison :year",
+            "jahr": "Jahr :year"
+        },
+        "columns": {
+            "season": "Saison",
+            "generated": "Erzeugt",
+            "viewed": "Angesehen",
+            "shared": "Geteilt",
+            "release": "Freigabe"
+        },
+        "never": "Nie",
+        "no_release": "Kein Termin",
+        "released": "Freigegeben",
+        "planned": "Ab :date",
+        "open_season": "Saison :season anzeigen",
+        "generate": "Vorschau erzeugen",
+        "generate_hint": "Erzeugt das Wrapped der gewählten Saison jetzt aus den aktuellen Daten, genau wie der nächtliche Lauf. Das Mitglied sieht es erst ab der Freigabe.",
+        "generate_failed": "Die Vorschau ließ sich nicht erzeugen. Versuch es noch einmal.",
+        "view_only": "Nur ansehen: Eine Vorschau erzeugen darf, wer Support-Anfragen beantwortet.",
+        "load_failed": "Diese Saison ließ sich nicht laden.",
+        "preview_title": "Vorschau: :season",
+        "empty_title": "Noch kein Wrapped für diese Saison",
+        "empty_body": "„Vorschau erzeugen“ baut es aus den Daten der Saison. Ohne Aktivität im Zeitraum entsteht keins.",
+        "empty_body_view_only": "Sobald der nächtliche Lauf oder der Support es erzeugt, steht es hier.",
+        "window": "Zeitraum :from – :to",
+        "generated_at": "Erzeugt am :date",
+        "cards_count": "Karten: :count",
+        "opens": "Für das Mitglied sichtbar",
+        "opens_sample": "Außerhalb der Produktion sichtbar",
+        "closed": "Für das Mitglied noch nicht sichtbar",
+        "sample": "Beispiel",
+        "cards_caption": "Karten in der Reihenfolge, in der das Mitglied sie sieht",
+        "card_position": "Karte :n",
+        "open_image": "Karte :n als Bild öffnen (1080 × 1920)",
+        "image_failed": "Bild nicht verfügbar",
+        "kinds": {
+            "intro": "Einstieg",
+            "spots": "Spots",
+            "scans": "Scans",
+            "score": "Build Score",
+            "top_mod": "Top-Mod",
+            "treffen": "Treffen",
+            "build_spirit": "Build Spirit",
+            "percentile": "Bundesland-Vergleich",
+            "share": "Teilen"
+        },
+        "fields": {
+            "title": "Titel",
+            "subtitle": "Untertitel",
+            "count": "Spots",
+            "unique_cars": "Verschiedene Autos",
+            "cities": "Städte",
+            "rarest": "Seltenster Fund",
+            "sticker_scans": "Sticker-Scans",
+            "profile_or_vehicle_views": "Aufrufe",
+            "top_city": "Top-Stadt",
+            "from": "Score vorher",
+            "to": "Score jetzt",
+            "stage_from": "Stufe vorher",
+            "stage_to": "Stufe jetzt",
+            "vehicle_name": "Auto",
+            "name": "Mod",
+            "brand": "Marke",
+            "before_media": "Vorher-Foto",
+            "after_media": "Nachher-Foto",
+            "attended": "Besucht",
+            "names": "Treffen",
+            "key": "Regel",
+            "explanation": "Erklärung",
+            "bundesland": "Bundesland",
+            "percentile": "Top-Anteil",
+            "dex_number": "Dex-Nummer",
+            "score": "Build Score",
+            "stage": "Stufe",
+            "qr_url": "Link im Sticker",
+            "image": "Foto"
+        },
+        "photo_yes": "Vorhanden (verpixelt)",
+        "photo_no": "Keins",
+        "dex": "Dex #:number",
+        "rarity": {
+            "street": "Street",
+            "tuned": "Tuned",
+            "rare": "Rare",
+            "legend": "Legend",
+            "ghost": "Ghost"
+        },
+        "forbidden": "Dir fehlt die Berechtigung, das Wrapped dieses Mitglieds zu sehen.",
+        "flash": {
+            "generated": "Vorschau erzeugt.",
+            "nothing": "In dieser Saison gibt es keine Aktivität, also auch kein Wrapped.",
+            "removed": "Keine Aktivität mehr in dieser Saison: Das bisherige Wrapped wurde entfernt.",
+            "closed": "Gelöschte Konten bekommen kein Wrapped."
+        }
+    },
+    "badges": {
+        "title": "Abzeichen",
+        "caption": "Verdiente Abzeichen des Mitglieds, neueste zuerst",
+        "empty": "Noch keine Abzeichen verdient.",
+        "columns": {
+            "name": "Abzeichen",
+            "tier": "Stufe",
+            "awarded": "Verdient am",
+            "source": "Durch",
+            "actions": "Aktionen"
+        },
+        "tiers": {
+            "bronze": "Bronze",
+            "silver": "Silber",
+            "gold": "Gold"
+        },
+        "source": {
+            "event": "Aktion des Mitglieds",
+            "nightly": "Nächtlicher Lauf",
+            "apply": "„Jetzt anwenden“"
+        },
+        "hidden": "Versteckt",
+        "inactive": "Inaktiv",
+        "revoke": "Entziehen",
+        "revoke_label": "Abzeichen „:name“ entziehen",
+        "revoke_title": "Abzeichen „:name“ entziehen?",
+        "revoke_body": "Das Abzeichen verschwindet aus dem Profil und eine ungelesene Mitteilung dazu ebenso. Gesperrt wird es nicht: Gilt die Regel weiter, verleiht der nächste nächtliche Lauf es wieder. Entferne deshalb zuerst den Missbrauch, zum Beispiel die Spots.",
+        "flash": {
+            "revoked": "Abzeichen entzogen."
+        }
     }
 }

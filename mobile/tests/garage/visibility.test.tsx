@@ -136,7 +136,7 @@ describe('GAR-12 on a draft (BH-17)', () => {
   });
 });
 
-describe('GAR-12 Besitzer auf der QR-Seite zeigen', () => {
+describe('GAR-12 Besitzer auf der Sticker-Seite zeigen', () => {
   it('says it applies to every vehicle of the account, what "off" does, and shows the stored value', async () => {
     stubFetch({ '/api/v1/auth/me': ME, [`GET /api/v1/vehicles/${VEHICLE_ID}`]: { body: { data: vehicle() } }, 'GET /api/v1/me/settings': settings(true) });
     await show();
@@ -145,9 +145,10 @@ describe('GAR-12 Besitzer auf der QR-Seite zeigen', () => {
     expect(screen.getByTestId('GAR-12.ownerOnQr')).toHaveTextContent(
       /Ist der Schalter aus, siehst nur du deinen Namen auf deinen Fahrzeugseiten, und neue Sticker-PDFs kommen ohne ihn\./,
     );
-    expect(screen.getByRole('switch', { name: 'Besitzer auf der QR-⁠Seite' })).toBeChecked();
+    // 10 §2.1: "Sticker" names the product; "QR-Code" only as a part of a sticker.
+    expect(screen.getByRole('switch', { name: 'Besitzer auf der Sticker-Seite' })).toBeChecked();
     // DQ-208: a row on its own surface card, like every other group of the page.
-    expect(screen.getByTestId('GAR-12.ownerOnQr.row')).toHaveTextContent(/Besitzer auf der QR/);
+    expect(screen.getByTestId('GAR-12.ownerOnQr.row')).toHaveTextContent(/Besitzer auf der Sticker-Seite/);
     expect(screen.getByTestId(SWITCH)).not.toBeDisabled();
   });
 

@@ -1,17 +1,14 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import type { TextInput as RNTextInput } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, View } from 'react-native';
+import { View, type ScrollView, type TextInput as RNTextInput } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import type { Edge } from 'react-native-safe-area-context';
 
 import { useDiscover, type MakeTile } from '@/api/queries/discover';
-import { EVENTS_FLAG } from '@/api/queries/events';
 import { useFlag } from '@/api/queries/appConfig';
 import { flattenBuilds, useNewBuilds, type FeedVehicle } from '@/api/queries/home';
 import { normalizeQuery, SEARCH_MAX_LENGTH } from '@/api/queries/search';
-import { EmbeddedEvents } from '@/features/events/components/EmbeddedEvents';
 import { EventsModule } from '@/features/events/components/EventsModule';
 import { EmbeddedBusinesses } from '@/features/parts/components/EmbeddedBusinesses';
 import { EmbeddedParts } from '@/features/parts/components/EmbeddedParts';
@@ -19,6 +16,7 @@ import { BUSINESSES_FLAG } from '@/api/queries/businesses';
 import { PARTS_FLAG } from '@/api/queries/parts';
 import { BrowseErrorState, RestrictionNotice, useBrowseRestriction } from '@/features/home/components/BrowseStates';
 import { vehiclePath } from '@/features/home/navigation';
+import { useInboxActions } from '@/features/shell/inboxActions';
 import { useTabScrollToTop } from '@/features/shell/retap';
 import { registerSearchFocus } from '@/features/shell/shortcuts/searchFocus';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
@@ -30,9 +28,19 @@ import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, layout, space, useBreakpoint, useTheme } from '@/theme';
 import { motionDuration, useMotionPreference } from '@/ui/motion';
-import { Chip, EmptyState, Hairline, Header, HeaderLargeTitle, ListRow, Screen, SearchBar, SectionHeader, Skeleton, SkeletonText, useCollapsingHeader } from '@/ui';
+import { Chip } from '@/ui/Chip';
+import { EmptyState } from '@/ui/EmptyState';
+import { Hairline } from '@/ui/Hairline';
+import { Header, HeaderLargeTitle } from '@/ui/Header';
+import { ListRow } from '@/ui/ListRow';
+import { Screen } from '@/ui/Screen';
+import { SearchBar } from '@/ui/SearchBar';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { Collections, CollectionsSkeleton, PopularMods, SimilarMembers } from '../components/DiscoverSections';
+import { DiscoverSegmentBar, SegmentRailScrollView, SegmentSwipe } from '../components/DiscoverSegments';
 import { BuildWall, BuildWallSkeleton } from '../components/BuildWall';
 import { columnsFor, MakeTiles, MakeTilesSample, MakeTilesSkeleton, TOP_MAKES, TOP_MAKES_PHONE, widestWordmarkWord, wordmarkScale } from '../components/MakeTiles';
 import { estimatedPane, WALL_COLUMNS_BY_KIND, wholeRows, wideWallWidth } from '../layout';
@@ -51,15 +59,15 @@ const HAIRLINE_FADE = space[8];
 const WALL_ROWS = { phone: 4, tablet: 3, desktop: 2 } as const;
 const NEWEST_PATH = { pathname: '/discover/search', params: { sort: 'newest' } } as const;
 /**
- * M4.12: "Treffen" is a scope of DISC-01 that embeds EVT-01 (09 §7.5); searches from it look in every scope. M4.14: "Betriebe" lists
- * BusinessCards and "Teile" the part brands and ProductRows; there the search field narrows the embedded list instead.
+ * M4.14: "Betriebe" lists BusinessCards and "Teile" the part brands and ProductRows; there the search field narrows the embedded list
+ * instead. M5.2 (10 §1): Treffen left the scopes for a segment of its own (`/events`, the segmented control above the search).
  */
-type DiscoverScope = SearchScope | 'events' | 'businesses' | 'parts';
+type DiscoverScope = SearchScope | 'businesses' | 'parts';
 /** The scopes whose list the search field narrows in place (no DISC-02 for them). */
 const IN_PLACE_SCOPES: ReadonlySet<DiscoverScope> = new Set(['businesses', 'parts']);
 /** "Treffen am Wochenende" (09 §7.5): at most three cards before "Alle Treffen". */
 const WEEKEND_CARDS = 3;
-const DISCOVER_SCOPES: readonly DiscoverScope[] = ['all', 'vehicles', 'members', 'events', 'businesses', 'parts'];
+const DISCOVER_SCOPES: readonly DiscoverScope[] = ['all', 'vehicles', 'members', 'businesses', 'parts'];
 
 /** A scope named in the URL, or null. */
 function discoverScopeOf(value: string | string[] | undefined): DiscoverScope | null {
@@ -81,6 +89,7 @@ const useStyles = createStyles((t) => ({
   // DQ-202: from 1280 a tab root starts on the pane's start edge, as Start does, so the large title stays put between the tabs.
   columnStart: { alignSelf: 'flex-start' },
   searchBand: { backgroundColor: t.color.bg.canvas, paddingBottom: t.space[16] },
+  segments: { marginBottom: t.space[12] },
   bandHairline: { bottom: 0, left: 0, pointerEvents: 'none', position: 'absolute', right: 0 },
   body: { gap: t.space[32], paddingBottom: t.space[32] },
   // DQ-1038: from 768 the wall runs in the pane up to the content width, not in the 640 column.
@@ -120,16 +129,15 @@ export function DiscoverScreen() {
   const scopeParam = useLocalSearchParams<{ scope?: string }>().scope;
   const [scope, setScopeState] = useState<DiscoverScope>(() => discoverScopeOf(scopeParam) ?? lastScope);
   const tEvents = useTranslation('events').t;
-  const eventsOn = useFlag(EVENTS_FLAG);
-  const eventsScope = scope === 'events' && eventsOn;
+  const inbox = useInboxActions(ROUTE);
   const tParts = useTranslation('parts').t;
   const businessesOn = useFlag(BUSINESSES_FLAG);
   const partsOn = useFlag(PARTS_FLAG);
   const businessesScope = scope === 'businesses' && businessesOn;
   const partsScope = scope === 'parts' && partsOn;
   const inPlace = businessesScope || partsScope;
-  const embedded = eventsScope || inPlace;
-  const searchScope: SearchScope = scope === 'events' || scope === 'businesses' || scope === 'parts' ? 'all' : scope;
+  const embedded = inPlace;
+  const searchScope: SearchScope = scope === 'businesses' || scope === 'parts' ? 'all' : scope;
   const [allMakes, setAllMakes] = useState(false);
   const newBuilds = useNewBuilds();
   const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
@@ -144,6 +152,10 @@ export function DiscoverScreen() {
   const scopeViewport = useRef(0);
   const column = useMemo(() => [styles.column, kind === 'desktop' ? styles.columnStart : null], [kind, styles.column, styles.columnStart]);
   const typed = normalizeQuery(text);
+  // DQ-M52-04: the scope chips say what the typed search looks for, so they show once there is text (and while Betriebe or Teile list
+  // their results in place), not as a second row of choices under the segments.
+  const showScopes = Boolean(typed) || inPlace;
+  const headerColumn = kind === 'desktop' ? layout.feedColumn + 2 * layout.gutter.desktop : undefined;
   // DQ-196: the header and the sticky band are both fixed chrome, so the line belongs under the band, where content scrolls
   // under it. The band sticks once the large title has scrolled away.
   const bandHairline = useAnimatedStyle(() => {
@@ -272,15 +284,17 @@ export function DiscoverScreen() {
 
   const scopes: { value: DiscoverScope; label: string }[] = [
     ...SEARCH_SCOPES.map((value) => ({ value, label: t(`scopes.${value}`) })),
-    ...(eventsOn ? [{ value: 'events' as const, label: tEvents('discover.scope') }] : []),
     ...(businessesOn ? [{ value: 'businesses' as const, label: tParts('scope.businesses') }] : []),
     ...(partsOn ? [{ value: 'parts' as const, label: tParts('scope.parts') }] : []),
   ];
 
   return (
     <Screen edges={EDGES} testID={`${ROUTE}.root`}>
-      <Header variant="large" title={tabs('tabs.discover')} scroll={header} hairline={false} testID={`${ROUTE}.header`} />
+      {/* DQ-M52-14: from 1280 the actions end where the column ends, not at the far edge of the pane. */}
+      <Header variant="large" title={tabs('tabs.discover')} scroll={header} actions={inbox} hairline={false} contentMaxWidth={headerColumn} testID={`${ROUTE}.header`} />
       <ShellOfflineBanner label={t('offline')} />
+      {/* 10 §1: Entdecken's pages swipe; a horizontal drag on Builds opens Treffen. */}
+      <SegmentSwipe current="builds" enabled testID={`${ROUTE}.swipe`}>
       <Animated.ScrollView
         ref={scrollRef}
         {...header.scrollProps}
@@ -293,6 +307,8 @@ export function DiscoverScreen() {
         <HeaderLargeTitle title={tabs('tabs.discover')} scroll={header} style={column} testID={`${ROUTE}.title`} />
         <View style={styles.searchBand}>
           <View style={[column, gutterStyle]}>
+            {/* 10 §1: Builds · Treffen · Forum, each page with its own search under it. */}
+            <DiscoverSegmentBar current="builds" style={styles.segments} testID={`${ROUTE}.segments`} />
             <SearchBar
               value={text}
               onChangeText={setText}
@@ -310,10 +326,10 @@ export function DiscoverScreen() {
           </Animated.View>
         </View>
         <View style={[wideScope ? [styles.wide, kind === 'desktop' ? styles.columnStart : styles.centred] : column, gutterStyle, styles.body]}>
-          {/* 09 §7.5 scope chips: what the next search looks for. Treffen, Betriebe and Teile join with their modules. */}
-          <ScrollView
+          {/* 09 §7.5 scope chips: what the next search looks for. Betriebe and Teile join with their modules. A rail inside the page swipe. */}
+          {showScopes ? (
+          <SegmentRailScrollView
             ref={scopeScroller}
-            horizontal
             showsHorizontalScrollIndicator={false}
             style={{ marginHorizontal: -gutter }}
             contentContainerStyle={gutterStyle}
@@ -345,7 +361,8 @@ export function DiscoverScreen() {
                 </View>
               ))}
             </View>
-          </ScrollView>
+          </SegmentRailScrollView>
+          ) : null}
           {restriction ? <RestrictionNotice message={restriction} testID={`${ROUTE}.restricted`} /> : null}
           {inPlace ? null : typed ? (
             <View style={styles.submit}>
@@ -367,9 +384,7 @@ export function DiscoverScreen() {
               testID={`${ROUTE}.recent`}
             />
           )}
-          {eventsScope ? (
-            <EmbeddedEvents width={columnWidth} bleed={phone ? gutter : 0} routeId={ROUTE} />
-          ) : businessesScope ? (
+          {businessesScope ? (
             <EmbeddedBusinesses query={text} width={scopeWidth} bleed={gutter} routeId={ROUTE} />
           ) : partsScope ? (
             <EmbeddedParts query={text} width={scopeWidth} phone={phone} bleed={phone ? gutter : 0} routeId={ROUTE} />
@@ -426,6 +441,7 @@ export function DiscoverScreen() {
           </View>
         ) : null}
       </Animated.ScrollView>
+      </SegmentSwipe>
     </Screen>
   );
 }

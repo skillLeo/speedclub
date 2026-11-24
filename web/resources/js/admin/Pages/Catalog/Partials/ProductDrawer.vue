@@ -3,7 +3,7 @@ import { router } from '@inertiajs/vue3';
 import { PhPlus, PhX } from '@phosphor-icons/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, reactive, ref, watch } from 'vue';
-import { Button, Combobox, Drawer, Field, IconButton, Input, SegmentedControl, Select, Textarea, type SelectOption } from '../../../Components/ui';
+import { Button, Combobox, Drawer, Field, IconButton, Input, SegmentedControl, Select, type SelectOption } from '../../../Components/ui';
 import { qaDialogFailed } from '../../../composables/pageState';
 import { useCatalogWrite } from '../shared';
 import AliasChips from './AliasChips.vue';
@@ -13,7 +13,7 @@ import { attributePairs, productWriteUrl, type CategoryOption, type Pair, type P
 /**
  * ADM-57 "Neues Teil" and "Bearbeiten" (09 §8.9; catalog.manage): brand, category, name, product line, maker link, affiliate link
  * (members see it marked "Anzeige", UWG), other spellings, and the facts the maker states, per language (at most 12 each; 09 §8.9: no
- * invented specs). Reason optional (audit). The brand list loads when the drawer opens (`brandChoices`, every brand not merged).
+ * invented specs). The brand list loads when the drawer opens (`brandChoices`, every brand not merged).
  */
 const open = defineModel<boolean>('open', { default: false });
 const props = defineProps<{ product: ProductDetail | null; categories: CategoryOption[]; brandChoices?: { value: number; label: string }[]; testId: string }>();
@@ -28,9 +28,8 @@ interface Form {
     affiliate_url: string;
     aliases: string[];
     facts: Record<'de' | 'en', Pair[]>;
-    reason: string;
 }
-const blank = (): Form => ({ brand_id: undefined, category_id: undefined, name: '', line: '', url: '', affiliate_url: '', aliases: [], facts: { de: [], en: [] }, reason: '' });
+const blank = (): Form => ({ brand_id: undefined, category_id: undefined, name: '', line: '', url: '', affiliate_url: '', aliases: [], facts: { de: [], en: [] } });
 const form = reactive<Form>(blank());
 const write = useCatalogWrite();
 const failed = qaDialogFailed();
@@ -99,7 +98,6 @@ function payload(): Record<string, unknown> {
         affiliate_url: form.affiliate_url.trim() || null,
         aliases: form.aliases,
         attributes: { de: table(form.facts.de), en: table(form.facts.en) },
-        reason: form.reason.trim() || null,
     };
 }
 
@@ -117,7 +115,7 @@ function save(): void {
 
 const errorOf = (key: string): string | null => write.errors.value[key] ?? null;
 const factsError = computed(() => Object.entries(write.errors.value).find(([key]) => key.startsWith('attributes'))?.[1] ?? null);
-const formError = computed(() => (failed ? trans('ui.state.server_error') : (write.errors.value.refused ?? write.errors.value.reason ?? null)));
+const formError = computed(() => (failed ? trans('ui.state.server_error') : (write.errors.value.refused ?? null)));
 const formId = computed(() => `${props.testId}-form`);
 </script>
 
@@ -171,10 +169,6 @@ const formId = computed(() => `${props.testId}-form`);
                 </ul>
                 <Button v-if="facts.length < MAX_FACTS" type="button" size="sm" variant="secondary" :icon="PhPlus" class="self-start" :data-testid="`${testId}.facts-add`" @click="addFact">{{ trans('catalog.products.facts.add') }}</Button>
             </fieldset>
-
-            <Field :label="trans('catalog.fields.reason')" :hint="trans('catalog.fields.reason_optional_hint')" :error="errorOf('reason')" optional>
-                <Textarea v-model="form.reason" :rows="2" :maxlength="1000" :data-testid="`${testId}.reason`" />
-            </Field>
         </form>
         <template #footer>
             <Button variant="ghost" :disabled="write.processing.value" @click="open = false">{{ trans('ui.actions.cancel') }}</Button>

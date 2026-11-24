@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { Sheet } from '@/ui';
+import { Sheet } from '@/ui/Sheet';
 
 import type { SearchSort } from '../filters';
 import { OptionRow } from './OptionRow';

@@ -7,7 +7,7 @@
 // WEB-16, the magic-link hand-off: /auth/magic is a 302 into the member web (routes/web.php), so its cells capture where it lands,
 // /app/auth/magic (the app screen's test IDs are WEB-16.* since ADR-459).
 //
-// Data: the seeded sample events of the SPEED CLUB Editorial account (ShowcaseEvents, stable slugs, badged "Beispiel", no counts)
+// Data: the seeded sample events of the Speedclub Editorial account (ShowcaseEvents, stable slugs, badged "Beispiel", no counts)
 // and the answerable demo meet of jann.ptrs ({memberEvent}, real counts). The business and brand pages are behind the flags
 // businesses and parts_catalogue, off everywhere (ADR-455): their cells run inside the stage fixture m414-flags (both flags on for
 // the capture, plus the verified stage business "Werkstatt am Kanal" of lukas.sc). Public Blade pages have no loading or offline

@@ -12,7 +12,7 @@ describe('BrandWordmark', () => {
     await renderUi(<BrandWordmark width={240} testID="w" />);
     const box = flat(screen.getByTestId('w').props.style);
     expect(box.width).toBe(240);
-    expect(box.aspectRatio).toBeCloseTo(1200 / 359);
+    expect(box.aspectRatio).toBeCloseTo(696 / 184);
     expect(screen.getByTestId('w.image').props.contentFit).toBe('contain');
   });
 
@@ -28,7 +28,7 @@ describe('BrandWordmark', () => {
 
   it('has its own ratio when stacked', async () => {
     await renderUi(<BrandWordmark width={200} shape="square" testID="w" />);
-    expect(flat(screen.getByTestId('w').props.style).aspectRatio).toBeCloseTo(900 / 591);
+    expect(flat(screen.getByTestId('w').props.style).aspectRatio).toBeCloseTo(900 / 463);
   });
 
   describe('a wordmark published in the admin (ADM-28)', () => {
@@ -48,7 +48,7 @@ describe('BrandWordmark', () => {
       await renderUi(<BrandWordmark width={240} tone="white" custom={{ white: { uri: custom.white.uri, ratio: 2 }, black: null }} testID="w" />);
       const box = flat(screen.getByTestId('w').props.style);
       expect(box.aspectRatio).toBe(2);
-      expect((box.width as number) / 2).toBeCloseTo(240 / (1200 / 359));
+      expect((box.width as number) / 2).toBeCloseTo(240 / (696 / 184));
     });
 
     it('fits inside a fixed box at its own ratio', async () => {
@@ -66,13 +66,13 @@ describe('BrandWordmark', () => {
       expect(drawsCustom('f')).toBe(true);
       await fireEvent(screen.getByTestId('f.image'), 'error', { nativeEvent: { error: 'gone' } });
       expect(drawsCustom('f')).toBe(false);
-      expect(flat(screen.getByTestId('f').props.style).aspectRatio).toBeCloseTo(1200 / 359);
+      expect(flat(screen.getByTestId('f').props.style).aspectRatio).toBeCloseTo(696 / 184);
     });
   });
 
-  it('is named SPEED CLUB, unless decorative', async () => {
+  it('is named Speedclub, unless decorative', async () => {
     await renderUi(<BrandWordmark width={200} testID="a" />);
-    expect(screen.getByTestId('a').props['aria-label']).toBe('SPEED CLUB');
+    expect(screen.getByTestId('a').props['aria-label']).toBe('Speedclub');
     await renderUi(<BrandWordmark width={200} decorative testID="d" />);
     expect(screen.getByTestId('d', { includeHiddenElements: true }).props['aria-label']).toBeUndefined();
   });

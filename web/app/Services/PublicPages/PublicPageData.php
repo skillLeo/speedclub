@@ -13,6 +13,7 @@ use App\Models\Media;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppConfig\FeatureFlags;
+use App\Services\Dex\GhostMode;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Showcase\SampleContent;
 use Illuminate\Http\Request;
@@ -39,7 +40,9 @@ class PublicPageData
         $owner = $vehicle->owner;
         $showOwner = $owner?->getAttribute('show_owner_on_qr') !== false;
         // Sample content is never indexed (09 §8.19): it is not a real member's build.
-        $indexable = $vehicle->visibility === Visibility::Public && $owner?->getAttribute('indexable') !== false && ! SampleContent::isSample($vehicle);
+        // M5.9b: a ghost car is reachable by its link and sticker, never indexed.
+        $indexable = $vehicle->visibility === Visibility::Public && $owner?->getAttribute('indexable') !== false && ! SampleContent::isSample($vehicle)
+            && $vehicle->ghost_mode !== true;
         $title = is_string($data['full_title'] ?? null) ? $data['full_title'] : '';
         $images = $this->og->cards($vehicle);
         $handle = $showOwner && is_string($owner?->username) ? $owner->username : null;
@@ -91,6 +94,8 @@ class PublicPageData
         $vehicles = $member->vehicles()
             ->where('status', VehicleStatus::Published)
             ->where('visibility', Visibility::Public)
+            // M5.9b: the public page shows what a guest sees, so never a ghost car.
+            ->where(fn ($query) => GhostMode::constrain($query))
             ->with(VehicleCardResource::RELATIONS)
             ->withCount('modifications')
             ->orderByDesc('is_main')

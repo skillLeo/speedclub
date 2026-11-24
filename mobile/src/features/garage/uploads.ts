@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from 'zustand';
 
 import type { GarageMedia } from '@/api/queries/garage';
+import { usePlateBlurReview } from '@/features/media/plateBlur/PlateBlurReview';
 import { appUploadQueue, sameTarget, type UploadItem, type UploadQueue, type UploadTarget } from '@/state/uploads';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 
 import { pickPhotos } from './photos';
 import { createGarageUploadDriver } from './uploadDriver';
@@ -29,9 +30,14 @@ export function visibleUploads(items: readonly UploadItem[], target: UploadTarge
   );
 }
 
-export function usePhotoUploads(target: UploadTarget | null, photos: readonly Pick<GarageMedia, 'id'>[], limit: number) {
+/**
+ * M5.9a: every pick goes through the plate blur editor before it is queued (`reviewElement` renders it; `routeId` names its
+ * test IDs). Closing the editor without "Hochladen" queues nothing.
+ */
+export function usePhotoUploads(target: UploadTarget | null, photos: readonly Pick<GarageMedia, 'id'>[], limit: number, routeId = 'GAR-07') {
   const { t } = useTranslation('garage');
   const [picking, setPicking] = useState(false);
+  const plateBlur = usePlateBlurReview(routeId);
   const all = useUploads((state) => state.items);
   const uploads = useMemo(() => (target ? visibleUploads(all, target, photos) : []), [all, photos, target]);
   const remaining = Math.max(0, limit - photos.length - uploads.length);
@@ -50,7 +56,9 @@ export function usePhotoUploads(target: UploadTarget | null, photos: readonly Pi
     setPicking(true);
     try {
       const picked = await pickPhotos(remaining);
-      if (picked && picked.length > 0) uploadQueue().store.getState().enqueue(target, picked);
+      if (!picked || picked.length === 0) return;
+      const reviewed = await plateBlur.review(picked);
+      if (reviewed && reviewed.length > 0) uploadQueue().store.getState().enqueue(target, reviewed);
     } catch {
       toast(t('upload.pickFailed'));
     } finally {
@@ -63,6 +71,9 @@ export function usePhotoUploads(target: UploadTarget | null, photos: readonly Pi
     remaining,
     picking,
     add,
+    /** The plate blur step for picks the screen queues itself (a mod not saved yet). */
+    review: plateBlur.review,
+    reviewElement: plateBlur.element,
     retry: (id: string) => uploadQueue().store.getState().retry(id),
     cancel: (id: string) => uploadQueue().store.getState().cancel(id),
     /** Photos still on their way: the review step waits for them before it counts them. */

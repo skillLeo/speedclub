@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
+import type { ReactNode } from 'react';
 import { Share } from 'react-native';
 
 import { appConfigKey, BUNDLED_APP_CONFIG } from '@/api/queries/appConfig';
@@ -38,6 +39,38 @@ jest.mock('expo-router', () => ({
   },
   Link: ({ children }: { children: unknown }) => children,
 }));
+// Rows render in place: virtualisation needs a layout Jest does not have. The handle answers every row 1000 high, so a section's
+// top is its row index × 1000 (stage 0, summary 1, index 2, Überblick 3, Daten 4, Mods 5, …).
+type MockListProps = {
+  data: readonly unknown[];
+  renderItem: (info: { item: unknown; index: number }) => ReactNode;
+  keyExtractor?: (item: unknown) => string;
+  horizontal?: boolean;
+  ListFooterComponent?: ReactNode;
+  onLayout?: (event: { nativeEvent: { layout: { height: number } } }) => void;
+  onContentSizeChange?: (width: number, height: number) => void;
+};
+const mockList: { props: MockListProps | null; scrollToOffset: jest.Mock; scrollToIndex: jest.Mock } = {
+  props: null,
+  scrollToOffset: jest.fn(),
+  scrollToIndex: jest.fn(() => Promise.resolve()),
+};
+jest.mock('@shopify/flash-list', () => {
+  const { forwardRef, Fragment, createElement, useImperativeHandle } = jest.requireActual<typeof import('react')>('react');
+  const FlashList = forwardRef<unknown, MockListProps>(function FlashList(props, ref) {
+    useImperativeHandle(ref, () => ({
+      scrollToOffset: mockList.scrollToOffset,
+      scrollToIndex: mockList.scrollToIndex,
+      getLayout: (index: number) => ({ x: 0, y: index * 1000, width: 390, height: 1000 }),
+      getFirstItemOffset: () => 0,
+      getScrollableNode: () => null,
+    }));
+    if (!props.horizontal) mockList.props = props;
+    const items = props.data.map((item, index) => createElement(Fragment, { key: props.keyExtractor ? props.keyExtractor(item) : index }, props.renderItem({ item, index })));
+    return createElement(Fragment, null, items, props.ListFooterComponent);
+  });
+  return { FlashList };
+});
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(() => Promise.resolve(true)) }));
 jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.resolve(null)) }));
 jest.mock('expo-crypto', () => ({ randomUUID: () => 'uuid-1' }));
@@ -85,16 +118,16 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(ids).toEqual(['VEH-01.hero', 'VEH-01.title', 'VEH-01.ownerRow', 'VEH-01.specStrip']);
     // The identity sits on the hero's stage (DQ-1047), the strip under it.
     expect(within(text('VEH-01.stage')).getByTestId('VEH-01.title')).toBeTruthy();
-    // The tab row's name is WEB-01's nav label (public.vehicle.nav_label), word for word.
-    expect(text('VEH-01.tabs.list').props['aria-label']).toBe('Abschnitte');
+    // The section index's name is WEB-01's nav label (public.vehicle.nav_label), word for word.
+    expect(text('VEH-01.sections').props['aria-label']).toBe('Abschnitte');
   });
 
-  it('opens Übersicht with the description, three highlights, the photo preview and the guest line (DQ-1057)', async () => {
+  it('opens Überblick with the description, Galerie with the 3-up wall, and ends with the guest line (DQ-1057)', async () => {
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />);
+    expect(text('VEH-01.section.overview.title')).toHaveTextContent('Überblick');
     expect(text('VEH-01.description')).toHaveTextContent(/^Skyline GT-\u2060R V-\u2060Spec II aus Japan/);
-    expect(within(text('VEH-01.highlights')).getByText('Rays Volk Racing TE37 Saga')).toBeTruthy();
-    expect(text('VEH-01.highlights.header.action')).toHaveTextContent('Alle Mods (14)');
-    expect(text('VEH-01.photoPreview.header.action')).toHaveTextContent('Alle Fotos (3)');
+    expect(text('VEH-01.photoPreview.header.action')).toHaveTextContent('Alle Fotos');
+    expect(screen.getByLabelText('Alle Fotos (3)')).toBeTruthy();
     expect(screen.getByTestId('VEH-01.photoPreview.tile.0')).toBeTruthy();
     expect(text('VEH-01.closingOwner')).toHaveTextContent(/^Melde dich an, um Lukas Scholz zu schreiben\./);
   });
@@ -152,20 +185,32 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(screen.getByTestId('VEH-01.addPhotos')).toBeTruthy();
   });
 
-  it('shows Technik as spec tables with provenance under measured values', async () => {
+  it('shows Daten as six key specs and opens every spec table in place (10 §5.7)', async () => {
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />);
-    await fireEvent.press(text('VEH-01.tabs.specs'));
-    expect(text('VEH-01.panel.specs')).toBeTruthy();
+    const keys = screen.getAllByTestId(/^VEH-01\.keySpec\.[a-z_]+$/).map((node) => node.props.testID as string);
+    expect(keys).toEqual(['engine_text', 'engine_code', 'displacement_cc', 'aspiration', 'gearbox', 'drivetrain'].map((key) => `VEH-01.keySpec.${key}`));
+    expect(text('VEH-01.keySpec.engine_code.value')).toHaveTextContent('RB26DETT');
+    expect(screen.queryByTestId('VEH-01.spec.power.value')).toBeNull();
+    expect(text('VEH-01.specs.toggle')).toHaveTextContent('Alle Daten anzeigen');
+    expect(text('VEH-01.specs.toggle').props.accessibilityState.expanded).toBe(false);
+    await fireEvent.press(text('VEH-01.specs.toggle'));
+    expect(text('VEH-01.specs.all')).toBeTruthy();
     expect(text('VEH-01.spec.power.value')).toHaveTextContent('500 PS (368 kW)');
     expect(text('VEH-01.spec.power.provenance')).toHaveTextContent('Prüfstand');
     expect(screen.queryByTestId('VEH-01.spec.make.provenance')).toBeNull();
-    expect(text('VEH-01.tabs.specs').props.accessibilityState.selected).toBe(true);
+    expect(text('VEH-01.specs.toggle')).toHaveTextContent('Weniger Daten anzeigen');
+    expect(text('VEH-01.specs.toggle').props.accessibilityState.expanded).toBe(true);
+    await fireEvent.press(text('VEH-01.specs.toggle'));
+    expect(screen.queryByTestId('VEH-01.specs.all')).toBeNull();
   });
 
   it('groups Mods by category with glyph and count, opens VEH-02 and ends with the owner disclaimer', async () => {
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />);
-    await fireEvent.press(text('VEH-01.tabs.mods'));
-    expect(text('VEH-01.mods.exhaust')).toHaveTextContent(/^Abgasanlage\s3/);
+    // The planned Tomei Expreme Ti is in Pläne now (contract §3): Abgasanlage counts the two that are or were built.
+    expect(text('VEH-01.mods.exhaust')).toHaveTextContent(/^Abgasanlage\s2/);
+    expect(text('VEH-01.section.mods.title')).toHaveTextContent('Mods\u00A013');
+    expect(within(text('VEH-01.buildSheet')).queryByText('Tomei Expreme Ti')).toBeNull();
+    expect(within(text('VEH-01.plans')).getByText('Tomei Expreme Ti')).toBeTruthy();
     expect(text('VEH-01.legalDisclaimer')).toHaveTextContent('Angaben des Besitzers, keine rechtliche Prüfung');
     // ADR-153: no legal status in Phase 1, even where an answer still carries a label.
     for (const label of ['Teilegutachten', 'Eintragungsfrei', 'Einzelabnahme', 'Unbekannt']) expect(screen.queryByText(label)).toBeNull();
@@ -181,50 +226,42 @@ describe('VEH-01 composition (FS-3)', () => {
       confirmed: true,
     });
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />, client);
-    // Übersicht: the highlight with a Teilegutachten carries the pill, and the highlights end with the owner disclaimer.
-    const highlight = R34.highlights.findIndex((mod) => mod.legal_status === 'parts_certificate');
-    expect(text(`VEH-01.highlight.${highlight}.legalStatus`)).toHaveTextContent('Teilegutachten');
-    expect(text('VEH-01.highlights.legalDisclaimer')).toHaveTextContent('Angaben des Besitzers, keine rechtliche Prüfung');
-    // The value line no longer carries the label.
+    // The mod with a Teilegutachten carries the pill; the value line no longer carries the label.
+    const certified = R34.mods.groups.flatMap((group) => group.items).find((mod) => mod.legal_status === 'parts_certificate');
+    if (certified) expect(text(`VEH-01.mod.${certified.id}.legalStatus`)).toHaveTextContent('Teilegutachten');
     expect(screen.queryByText(/· Teilegutachten/)).toBeNull();
-    await fireEvent.press(text('VEH-01.tabs.mods'));
     const stated = R34.mods.groups.flatMap((group) => group.items).filter((mod) => mod.legal_status === 'individual_approval');
-    for (const mod of stated) expect(text(`VEH-01.mod.${mod.id}.legalStatus`)).toHaveTextContent('Einzelabnahme');
+    // M5.9c (contract §1): a status meaning "in the papers" (registered, individual approval) reads as the quiet "TÜV-eingetragen".
+    for (const mod of stated) expect(text(`VEH-01.mod.${mod.id}.legalStatus`)).toHaveTextContent('TÜV-eingetragen');
     expect(screen.queryByText('Unbekannt')).toBeNull();
     expect(text('VEH-01.legalDisclaimer')).toBeTruthy();
   });
 
   it('leaves the disclaimer out of an empty mod list, as WEB-01 does (ADR-153)', async () => {
     await renderWithProviders(<VehicleProfile vehicle={{ ...R34, mods: { ...R34.mods, count: 0, groups: [] } }} onBack={jest.fn()} />);
-    await fireEvent.press(text('VEH-01.tabs.mods'));
     expect(text('VEH-01.modsEmpty')).toHaveTextContent('Noch keine Mods eingetragen.');
     expect(screen.queryByTestId('VEH-01.legalDisclaimer')).toBeNull();
   });
 
-  it('shows Verlauf by month and opens VEH-05', async () => {
+  it('shows the latest three entries of Verlauf, opens VEH-05 and leads to VEH-08 for the rest (10 §5.10)', async () => {
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />);
-    await fireEvent.press(text('VEH-01.tabs.history'));
     expect(text('VEH-01.month.0')).toHaveTextContent(/^Mai 2026Notiz/);
-    expect(text('VEH-01.month.3')).toHaveTextContent(/^März 2023/);
+    expect(screen.queryByTestId('VEH-01.month.3')).toBeNull();
+    const shown = R34.updates.slice(0, 3).map((update) => update.id);
+    for (const id of shown) expect(text(`VEH-01.update.${id}`)).toBeTruthy();
+    expect(screen.queryByTestId(`VEH-01.update.${R34.updates[3]!.id}`)).toBeNull();
     const brakes = R34.updates[1]!;
     expect(text(`VEH-01.update.${brakes.id}`)).toHaveTextContent(/Bremsen/);
     await fireEvent.press(text(`VEH-01.update.${brakes.id}`));
     expect(mockRouter.push).toHaveBeenCalledWith(`/v/${SLUG}/updates/${brakes.id}`);
-    expect(screen.queryByTestId('VEH-01.history.loadOlder')).toBeNull();
+    expect(text('VEH-01.history.showAll')).toHaveTextContent('Ganzen Verlauf anzeigen (7)');
+    await fireEvent.press(text('VEH-01.history.showAll'));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/v/[slug]/history', params: { slug: SLUG } });
   });
 
-  it('loads older entries from the list route on request', async () => {
-    const { calls } = stubFetch({
-      '/updates': { body: { data: [{ ...R34.updates[0]!, id: 'older', month_label: 'Januar 2022' }], links: {}, meta: { next_cursor: null, per_page: 30, path: null, prev_cursor: null } } },
-    });
-    await renderWithProviders(<VehicleProfile vehicle={{ ...R34, updates_count: 8 }} onBack={jest.fn()} />);
-    await fireEvent.press(text('VEH-01.tabs.history'));
-    expect(text('VEH-01.history.loadOlder')).toHaveTextContent('1 älteren Eintrag laden');
-    await fireEvent.press(text('VEH-01.history.loadOlder'));
-    await waitFor(() => expect(text('VEH-01.update.older')).toBeTruthy());
-    const list = calls.find((call) => new URL(call.url).pathname.endsWith('/updates'));
-    expect(new URL(list!.url).search).toBe('?per_page=30');
-    expect(screen.queryByTestId('VEH-01.history.loadOlder')).toBeNull();
+  it('leaves "Ganzen Verlauf anzeigen" out while the three are all there is', async () => {
+    await renderWithProviders(<VehicleProfile vehicle={{ ...R34, updates: R34.updates.slice(0, 2), updates_count: 2 }} onBack={jest.fn()} />);
+    expect(screen.queryByTestId('VEH-01.history.showAll')).toBeNull();
   });
 
   it('opens the viewer on the hero photo and on a preview tile', async () => {
@@ -238,15 +275,16 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(await screen.findByTestId('VEH-04.viewer.counter')).toHaveTextContent('2/3');
   });
 
-  it('shares the canonical page and copies it from the more sheet', async () => {
+  it('shares the share_url (?via=share) and copies it from the more sheet', async () => {
     const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
     await renderWithProviders(<VehicleProfile vehicle={R34} onBack={jest.fn()} />);
     await fireEvent.press(text('VEH-01.share'));
-    await waitFor(() => expect(share).toHaveBeenCalledWith(expect.objectContaining({ url: R34.canonical_url })));
+    // M5.7 (m5.7-contract §2.4): the share sheet and the copied link use `share_url` (`?via=share`).
+    await waitFor(() => expect(share).toHaveBeenCalledWith(expect.objectContaining({ url: 'http://localhost:8080/v/nissan-skyline-gt-r-r34-5tf974vj?via=share' })));
     await fireEvent.press(text('VEH-01.moreActions'));
     expect(screen.queryByTestId('VEH-01.moreSheet.garage')).toBeNull();
     await fireEvent.press(await screen.findByTestId('VEH-01.moreSheet.copyLink'));
-    await waitFor(() => expect(Clipboard.setStringAsync).toHaveBeenCalledWith(R34.canonical_url));
+    await waitFor(() => expect(Clipboard.setStringAsync).toHaveBeenCalledWith('http://localhost:8080/v/nissan-skyline-gt-r-r34-5tf974vj?via=share'));
   });
 
   it('gives the owner the way to the garage and the QR code instead of follow and message', async () => {
@@ -256,7 +294,7 @@ describe('VEH-01 composition (FS-3)', () => {
     expect(screen.queryByTestId('VEH-01.ownerRow.follow')).toBeNull();
     await fireEvent.press(text('VEH-01.moreActions'));
     await fireEvent.press(await screen.findByTestId('VEH-01.moreSheet.qr'));
-    expect(mockRouter.push).toHaveBeenCalledWith(`/qr/${R34.id}`);
+    expect(mockRouter.push).toHaveBeenCalledWith(`/stickers/${R34.id}`);
   });
 
   it('renders the slots GAR-02 fills (DQ-1062: its capsule instead of a toolbar)', async () => {
@@ -275,7 +313,7 @@ describe('VEH-01 composition (FS-3)', () => {
     await fireEvent.press(text('GAR-02.tool.edit'));
     expect(edit).toHaveBeenCalled();
     expect(text('GAR-02.ownerCapsule.primary')).toHaveTextContent('Update posten');
-    expect(text('GAR-02.panel.overview')).toHaveTextContent(/^Noch 3 Angaben/);
+    expect(text('GAR-02.section.overview')).toHaveTextContent(/^ÜberblickNoch 3 Angaben/);
     expect(text('GAR-02.title')).toHaveTextContent(R34_TITLE);
   });
 });
@@ -319,12 +357,17 @@ describe('VEH-01 route states', () => {
     await waitFor(() => expect(mockRouter.setParams).toHaveBeenCalledWith({ slug: SLUG }));
   });
 
-  it('opens the tab named in the URL and writes the chosen one back', async () => {
+  it('opens a 2.0 link\'s tab as the section it names and never writes the section in view to the URL (ADR-505)', async () => {
     stubFetch({ [`/public/vehicles/${SLUG}`]: { body: { data: R34 } } });
     mockParams.tab = 'history';
     await renderWithProviders(<VehicleScreen />);
-    expect(await screen.findByTestId('VEH-01.panel.history')).toBeTruthy();
-    await fireEvent.press(text('VEH-01.tabs.overview'));
-    expect(mockRouter.setParams).toHaveBeenCalledWith({ tab: undefined });
+    expect(await screen.findByTestId('VEH-01.section.history')).toBeTruthy();
+    // Once the list has laid out, it jumps to Verlauf without motion (row 7: stage, summary, index, Überblick, Daten, Mods, Pläne).
+    await act(() => {
+      mockList.props?.onLayout?.({ nativeEvent: { layout: { height: 800 } } });
+      mockList.props?.onContentSizeChange?.(390, 20000);
+    });
+    await waitFor(() => expect(mockList.scrollToIndex).toHaveBeenCalledWith(expect.objectContaining({ index: 7, animated: false })));
+    expect(mockRouter.setParams).not.toHaveBeenCalledWith(expect.objectContaining({ tab: expect.anything() }));
   });
 });

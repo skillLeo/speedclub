@@ -12,11 +12,13 @@ use App\Http\Controllers\Admin\Content\Requests\ContentEditRequest;
 use App\Http\Controllers\Admin\Content\Requests\LegalDraftRequest;
 use App\Http\Controllers\Admin\Content\Requests\LegalPublishRequest;
 use App\Http\Controllers\Admin\Content\Requests\MarkdownPreviewRequest;
+use App\Http\Controllers\Admin\Support\ApprovalsGateway;
 use App\Http\Controllers\Controller;
 use App\Models\ApprovalRequest;
 use App\Models\LegalDocument;
 use App\Models\Staff;
 use App\Services\AppConfig\LegalDocuments;
+use App\Services\Content\LegalDrafts;
 use App\Services\Privacy\OrgIdentity;
 use App\Support\SafeMarkdown;
 use Illuminate\Http\JsonResponse;
@@ -29,7 +31,7 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  * ADM-31 Rechtstexte (06 §3, 08_LEGAL_COMPLIANCE, m3.5 §2): every document × language with its versions; the one draft per document and
  * language in a Markdown editor with the preview of SET-17/18 and the Blade pages (SafeMarkdown); "erfordert erneute Zustimmung" for AGB
  * and Datenschutz with the changes summary the app shows. Drafts with `content.edit`, publishing with `legal.publish` ⚿; a re-consent
- * publish is four-eyes (`legal.publish_reconsent`).
+ * publish is four-eyes (`legal.publish_reconsent`). A draft based on an older text than the live one is marked `stale` (DQ-P5-101).
  */
 class LegalController extends Controller
 {
@@ -65,6 +67,8 @@ class LegalController extends Controller
         $selected = $rows->filter(fn (LegalDocument $row): bool => $row->key === $key && $row->locale === $locale)->values();
         $draft = $selected->first(fn (LegalDocument $row): bool => $row->published_at === null);
         $current = $selected->first(fn (LegalDocument $row): bool => $row->published_at !== null && $row->published_at <= now());
+        // DQ-P5-101: a draft started from an older text than the live one cannot be published; the editor names both versions.
+        $stale = $draft === null ? null : LegalDrafts::staleness($draft, $current);
         $pending = $draft === null ? null : ApprovalRequest::query()->where('subject_type', $draft->getMorphClass())
             ->where('subject_id', (string) $draft->id)->where('status', ApprovalStatus::Pending)->latest()->first();
 
@@ -89,9 +93,10 @@ class LegalController extends Controller
                 'requires_reconsent' => $draft->requires_reconsent,
                 'summary' => $draft->summary,
                 'revision' => PublishLegalDocument::revision($draft),
+                'stale' => $stale,
                 'author' => $names[$draft->created_by] ?? null,
                 'updated_at' => $draft->updated_at?->toIso8601String(),
-                'approval' => $pending === null ? null : ['id' => $pending->id, 'expires_at' => $pending->expires_at->toIso8601String()],
+                'approval' => $pending === null ? null : ['id' => $pending->id, 'expires_at' => $pending->expires_at->toIso8601String(), ...ApprovalsGateway::waiting($pending, $staff)],
             ],
             'current' => $current === null ? null : ['version' => $current->version, 'body_md' => $current->body_md],
             'can' => ['edit' => $staff->can('content.edit'), 'publish' => $staff->can('legal.publish')],

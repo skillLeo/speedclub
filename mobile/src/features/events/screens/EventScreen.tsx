@@ -39,32 +39,27 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
-import { concentric, createStyles, layout, size, space, useBreakpoint } from '@/theme';
-import {
-  Avatar,
-  Badge,
-  Button,
-  EmptyState,
-  ErrorState,
-  EventDateBlock,
-  Header,
-  Hairline,
-  Photo,
-  PhotoStageScrim,
-  PhotoTopScrim,
-  PressableScale,
-  SampleBadges,
-  Screen,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  StatusPill,
-  Text,
-  toast,
-  useCollapsingHeader,
-  type HeaderAction,
-} from '@/ui';
+import { aspect, concentric, createStyles, layout, size, space, useBreakpoint, type BreakpointKind } from '@/theme';
+import { Avatar } from '@/ui/Avatar';
+import { Badge, SampleBadges } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { EventDateBlock } from '@/ui/EventCard';
+import { Hairline } from '@/ui/Hairline';
+import { Header, type HeaderAction } from '@/ui/Header';
+import { Photo, ratioOf } from '@/ui/Photo';
+import { PhotoStageScrim, PhotoTopScrim } from '@/ui/PhotoStageScrim';
+import { PressableScale } from '@/ui/PressableScale';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
+import { CheckinBlock } from '../components/CheckinParts';
+import { EventGallery } from '../components/EventGallery';
 import { EventSection, ReviewBanner, RulesList } from '../components/EventParts';
 import { RsvpBar } from '../components/RsvpBar';
 import { EventMap } from '../map/EventMap';
@@ -74,6 +69,7 @@ import {
   dateBlock,
   editorPath,
   eventHero,
+  endedCountsLine,
   hasEnded,
   mapPoint,
   parseInstant,
@@ -89,7 +85,13 @@ import {
 const ROUTE = 'EVT-02';
 const SNIPPET_HEIGHT = size.avatar.xl * 2;
 const ATTENDEE_FACES = 5;
-const HERO_RATIO = 16 / 9;
+/**
+ * The cover's aspect per layout (DQ-P5-006, client feedback CF-1, ADR-521): 16:9 on phones and tablets, the 21:9 banner from 1280 as
+ * VEH-01 and WEB-01, so the date, the title and the start of the story stand in the first screen.
+ */
+function heroAspectOf(kind: BreakpointKind): (typeof aspect)['heroWeb' | 'heroDesktop'] {
+  return kind === 'desktop' ? aspect.heroDesktop : aspect.heroWeb;
+}
 
 const useStyles = createStyles((t) => ({
   column: {
@@ -244,6 +246,7 @@ function EventDetailSkeleton({ onBack }: { onBack: () => void }) {
   const { gutter, kind } = useBreakpoint();
   const phone = kind === 'phone';
   const scroll = useCollapsingHeader();
+  const heroAspect = heroAspectOf(kind);
   return (
     <Screen edges={['left', 'right']} testID={`${ROUTE}.root`}>
       {phone ? null : (
@@ -255,7 +258,7 @@ function EventDetailSkeleton({ onBack }: { onBack: () => void }) {
       )}
       <Skeleton testID={`${ROUTE}.skeleton`}>
         <View aria-label={t('detail.loadingLabel')} style={styles.hero}>
-          <SkeletonBlock aspectRatio={HERO_RATIO} corner="none" />
+          <SkeletonBlock aspectRatio={ratioOf(heroAspect)} corner="none" />
         </View>
         <View style={[styles.column, { paddingHorizontal: gutter }]}>
           {/* DQ-1129: the real anatomy. The date column (weekday, day, month) beside the time and the kind, then the title. */}
@@ -333,17 +336,22 @@ function EventDetailView({ event, onBack }: { event: EventDetail; onBack: () => 
   );
   const description = textOf(event.description);
   const organiserRules = textOf(event.organiser_rules);
-  const counts = countsLine(event.counts, t, (n) => format.number(n));
+  // DQ-P5-011: after the meet the answers are history ("8 waren angemeldet"), with no "interessiert" and no free places.
+  const counts = ended
+    ? endedCountsLine(event.counts, t, (n) => format.number(n))
+    : countsLine(event.counts, t, (n) => format.number(n));
   const left = spotsLeft(event);
   const phone = kind === 'phone';
   const desktop = kind === 'desktop';
-  // DQ-1114: 16:9 edge to edge at every width (at most fullBleedMax), never inset or rounded.
+  // DQ-1114: edge to edge at every width (at most fullBleedMax), never inset or rounded; DQ-P5-006: 21:9 from 1280.
+  const heroAspect = heroAspectOf(kind);
+  const heroRatio = ratioOf(heroAspect);
   const heroWidth = phone ? contentWidth : Math.min(contentWidth, layout.fullBleedMax);
-  const heroHeight = heroWidth / HERO_RATIO;
+  const heroHeight = heroWidth / heroRatio;
   // DQ-1111: never photo-free. The event's cover, else the organiser's car, else the fallback, each with its credit line.
   const hero = eventHero(event, heroWidth);
   const overHero = phone;
-  const overlap = desktop ? heroIdentityOverlap(heroWidth, HERO_RATIO) : 0;
+  const overlap = desktop ? heroIdentityOverlap(heroWidth, heroRatio) : 0;
   const editable = event.status === 'draft' || event.status === 'rejected';
 
   const attendees = useEventAttendees(event.slug, null, event.can.view_attendees && !event.is_sample);
@@ -432,7 +440,7 @@ function EventDetailView({ event, onBack }: { event: EventDetail; onBack: () => 
   const photo = (
     <Photo
       {...hero.photo}
-      aspect="16:9"
+      aspect={heroAspect}
       label={hero.source === 'fallback' ? t('detail.coverFallbackLabel') : (hero.alt ?? undefined)}
       style={{ width: heroWidth }}
       testID={`${ROUTE}.cover`}
@@ -527,7 +535,7 @@ function EventDetailView({ event, onBack }: { event: EventDetail; onBack: () => 
         <Text variant="caption" color="text.secondary">
           {t('detail.organiser')}
         </Text>
-        {/* DQ-1117: the name wraps to a second line at large text instead of "SPEED CLUB Edi…". */}
+        {/* DQ-1117: the name wraps to a second line at large text instead of "Speedclub Edi…". */}
         <Text variant="headline" numberOfLines={2}>
           {organiserName}
         </Text>
@@ -588,6 +596,11 @@ function EventDetailView({ event, onBack }: { event: EventDetail; onBack: () => 
     />
   ) : null;
 
+  // M5.6 (10 §4), DQ-P5-011: after the meet its photos lead the story right under the identity (a reason to come back), before the
+  // place; before the meet they follow the attendees.
+  const gallery = <EventGallery event={event} routeId={ROUTE} />;
+  const checkin = <CheckinBlock event={event} organiser={organiser} routeId={ROUTE} />;
+
   const sections = (
     <>
       {description ? (
@@ -643,11 +656,11 @@ function EventDetailView({ event, onBack }: { event: EventDetail; onBack: () => 
             ? t('detail.sampleCounts')
             : !open
               ? t('detail.notOpenYet')
-              : event.counts && event.counts.going + event.counts.interested === 0
+              : !ended && event.counts && event.counts.going + event.counts.interested === 0
                 ? t('detail.noAttendees')
                 : counts}
         </Text>
-        {event.capacity !== null && open ? (
+        {event.capacity !== null && open && !ended ? (
           <Text variant="callout" numeric color="text.secondary" testID={`${ROUTE}.capacity`}>
             {left === 0
               ? t('counts.full')
@@ -657,6 +670,8 @@ function EventDetailView({ event, onBack }: { event: EventDetail; onBack: () => 
           </Text>
         ) : null}
       </EventSection>
+
+      {ended ? null : gallery}
 
       {event.can.view_updates ? (
         <EventSection title={t('detail.updates')} testID={`${ROUTE}.updates`}>
@@ -716,6 +731,8 @@ function EventDetailView({ event, onBack }: { event: EventDetail; onBack: () => 
               {coverNote}
             </View>
             {review}
+            {ended ? gallery : null}
+            {checkin}
             {sections}
           </View>
           <View style={styles.desktopAside}>
@@ -747,6 +764,8 @@ function EventDetailView({ event, onBack }: { event: EventDetail; onBack: () => 
             {coverNote}
           </View>
           {review}
+          {ended ? gallery : null}
+          {checkin}
           <View style={styles.place} testID={`${ROUTE}.place`}>
             {map}
             <View style={styles.placeBody}>{placeLines}</View>

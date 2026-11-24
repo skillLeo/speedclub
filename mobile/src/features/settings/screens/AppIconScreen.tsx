@@ -7,7 +7,11 @@ import { haptics } from '@/lib/haptics';
 import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
 import { createStyles, size } from '@/theme';
-import { AppIconPicker, EmptyState, Skeleton, SkeletonBlock, Text, toast, type AppIconKey } from '@/ui';
+import { AppIconPicker, type AppIconKey } from '@/ui/AppIconPicker';
+import { EmptyState } from '@/ui/EmptyState';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { useAppIcon } from '../appIcon';
 import { SettingsPage } from '../components/SettingsPage';

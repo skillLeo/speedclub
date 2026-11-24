@@ -12,6 +12,8 @@ enum StaffSecurityEvent: string
     case TwoFactorEnabled = 'staff.two_factor_enabled';
     case TwoFactorConfirmed = 'staff.two_factor_confirmed';
     case TwoFactorDisabled = 'staff.two_factor_disabled';
+    /** ADR-540: "2FA für Admin-Konten" of ADM-52 Governance changed between Pflicht and Optional. */
+    case TwoFactorPolicyChanged = 'staff.two_factor_policy_changed';
     case RecoveryCodesRegenerated = 'staff.recovery_codes_regenerated';
     case RecoveryCodeUsed = 'staff.recovery_code_used';
 

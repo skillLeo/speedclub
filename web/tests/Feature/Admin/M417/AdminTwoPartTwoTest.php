@@ -157,7 +157,7 @@ describe('ADM-58 Editorial & Beispiele', function () {
         $sample = m417bSampleVehicle();
 
         m417bAs('content_editor');
-        $this->post("/admin/editorial/items/{$sample->id}/hide", ['type' => 'vehicle', 'reason' => 'kurz'])->assertSessionHasErrors('reason');
+        $this->post("/admin/editorial/items/{$sample->id}/hide", ['type' => 'vehicle', 'reason' => str_repeat('x', 1001)])->assertSessionHasErrors('reason'); // ADR-540: optional, at most 1000
         $this->post("/admin/editorial/items/{$sample->id}/hide", ['type' => 'boat', 'reason' => m417bReason()])->assertSessionHasErrors('type');
 
         foreach (['moderator', 'support', 'analyst'] as $role) {

@@ -32,7 +32,7 @@ class DecisionSummaryResource extends JsonResource
             'target' => SafetyTargetResource::of($decision->targetType(), DecisionResource::labelOf($decision)),
             /** @var DecisionAction */
             'action' => $decision->action,
-            /** @var array{type: 'messaging'|'publishing'|'suspension', until: string|null}|null For restrict and suspend. */
+            /** @var array{type: 'messaging'|'publishing'|'forum'|'suspension', until: string|null}|null For restrict and suspend. */
             'restriction' => $restriction === null ? null : ['type' => $restriction->value, 'until' => $decision->restrictionUntil()?->toIso8601String()],
             /** ISO 8601. */
             'decided_at' => $decision->decided_at->toIso8601String(),

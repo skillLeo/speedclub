@@ -13,17 +13,13 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import {
-  Button,
-  CollapsingFlashList,
-  EmptyState,
-  ErrorState,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Text,
-  type IconName,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { type IconName } from '@/ui/icons/Icon';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { CollapsingFlashList } from '@/ui/useCollapsingHeader';
 
 import { EmptyGroupRow, GroupCard, ReportRow } from '../components/ReportRow';
 import { SafetySignIn, useAccountRestricted } from '../components/states';
@@ -45,6 +41,10 @@ export const TARGET_GLYPHS: Readonly<Record<ReportTargetType, IconName>> = {
   comment: 'chat-circle',
   event: 'calendar-blank',
   business: 'workshop',
+  // M5.8: a forum thread's opening post or a reply.
+  forum_post: 'chats',
+  // 11 R4-2.3: a crew.
+  crew: 'users',
 };
 
 const useStyles = createStyles((t) => ({

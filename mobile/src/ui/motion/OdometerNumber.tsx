@@ -29,6 +29,8 @@ export type OdometerNumberProps = {
   rollFrom?: string;
   variant?: TypeVariant;
   color?: ColorToken;
+  /** False keeps the mobile size on the web desktop (a numeral inside a card or a drawing of fixed size, see Text). */
+  desktopSize?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
@@ -37,7 +39,7 @@ export type OdometerNumberProps = {
  * SM6 odometer numerals (09 §4.7): each digit rolls vertically in its own column on spring.default; tabular figures keep the
  * width still. Reduced motion: the number jumps to its value. Screen readers read the value once (the columns are hidden).
  */
-export function OdometerNumber({ value, rollFrom, variant = 'heroNumeral', color = 'text.primary', style, testID }: OdometerNumberProps) {
+export function OdometerNumber({ value, rollFrom, variant = 'heroNumeral', color = 'text.primary', desktopSize = true, style, testID }: OdometerNumberProps) {
   // The previous value is where a column that appears later starts; the first render starts at `rollFrom`.
   const [previous, setPrevious] = useState(rollFrom ?? value);
   const [shown, setShown] = useState(value);
@@ -50,9 +52,9 @@ export function OdometerNumber({ value, rollFrom, variant = 'heroNumeral', color
     <View accessible role="img" aria-label={value} style={[styles.row, style]} testID={testID}>
       {cells.map((cell) =>
         cell.kind === 'digit' ? (
-          <DigitColumn key={cell.key} from={cell.from} to={cell.to} variant={variant} color={color} />
+          <DigitColumn key={cell.key} from={cell.from} to={cell.to} variant={variant} color={color} desktopSize={desktopSize} />
         ) : (
-          <Text key={cell.key} aria-hidden variant={variant} color={color} numeric hyphenate={false}>
+          <Text key={cell.key} aria-hidden variant={variant} color={color} numeric hyphenate={false} desktopSize={desktopSize}>
             {cell.char}
           </Text>
         ),
@@ -61,7 +63,7 @@ export function OdometerNumber({ value, rollFrom, variant = 'heroNumeral', color
   );
 }
 
-function DigitColumn({ from, to, variant, color }: { from: number; to: number; variant: TypeVariant; color: ColorToken }) {
+function DigitColumn({ from, to, variant, color, desktopSize }: { from: number; to: number; variant: TypeVariant; color: ColorToken; desktopSize: boolean }) {
   const motion = useMotionPreference();
   const [line, setLine] = useState(0);
   const position = useSharedValue(motion.reduced ? to : from);
@@ -89,16 +91,19 @@ function DigitColumn({ from, to, variant, color }: { from: number; to: number; v
   const onLayout = (event: LayoutChangeEvent) => setLine(event.nativeEvent.layout.height);
   const measured = line > 0;
 
+  // DQ-P5G-61: the cell is a clipping window only while its column rolls. At rest it shows one digit and no neighbour can stray
+  // into it, so it does not clip: a numeral's glyph box is about 1.03 em, 2 px past a 64 line (3 past 83 at the 1.3 cap), which a
+  // window of the line's height cut on every scale (the DOM audit's clipped-text on the Journey card's gauge).
   return (
-    <View aria-hidden style={styles.cell}>
+    <View aria-hidden style={measured && rolling ? styles.cell : null}>
       {/* The sizer gives the cell one line of the role; it shows the digit at rest and until the column knows the line height. */}
-      <Text variant={variant} color={color} numeric hyphenate={false} onLayout={onLayout} style={measured && rolling ? styles.hidden : null}>
+      <Text variant={variant} color={color} numeric hyphenate={false} desktopSize={desktopSize} onLayout={onLayout} style={measured && rolling ? styles.hidden : null}>
         {DIGITS[to]}
       </Text>
       {measured && rolling ? (
         <Animated.View style={[styles.column, columnStyle]}>
           {DIGITS.map((digit) => (
-            <Text key={digit} variant={variant} color={color} numeric hyphenate={false}>
+            <Text key={digit} variant={variant} color={color} numeric hyphenate={false} desktopSize={desktopSize}>
               {digit}
             </Text>
           ))}

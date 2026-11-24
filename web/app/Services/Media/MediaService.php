@@ -6,10 +6,12 @@ use App\Enums\ErrorCode;
 use App\Enums\MediaCategory;
 use App\Enums\MediaStatus;
 use App\Enums\ModerationStatus;
+use App\Enums\PlateBlurState;
 use App\Exceptions\ApiException;
 use App\Models\Media;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\BuildScore\BuildScores;
 use finfo;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model;
@@ -45,25 +47,26 @@ class MediaService
      *
      * @throws ApiException 413 too large, 415 anything that is not a decodable JPEG, PNG or WebP
      */
-    public function storeFromUpload(UploadedFile $file, User $owner, ?Model $mediable = null, array $attributes = []): Media
+    public function storeFromUpload(UploadedFile $file, User $owner, ?Model $mediable = null, array $attributes = [], ?PlateBlurChoice $plateBlur = null): Media
     {
         $bytes = $this->inspectUpload($file);
 
-        return $this->processOrQueue($this->reserve($owner, $mediable, $attributes, strlen($bytes)), $bytes);
+        return $this->processOrQueue($this->reserve($owner, $mediable, $attributes, strlen($bytes), plateBlur: $plateBlur), $bytes);
     }
 
     /**
-     * For seeders and imports: same checks and same pipeline as an upload.
+     * For seeders and imports: same checks and same pipeline as an upload, with the plate decision an upload would carry (M5.9f: the
+     * showcase passes ShowcasePlates' decision; null = `unchecked`).
      *
      * @param  MediaAttributes  $attributes
      *
      * @throws ApiException 413 too large, 415 anything that is not a decodable JPEG, PNG or WebP
      */
-    public function storeFromPath(string $path, User $owner, ?Model $mediable = null, array $attributes = []): Media
+    public function storeFromPath(string $path, User $owner, ?Model $mediable = null, array $attributes = [], ?PlateBlurChoice $plateBlur = null): Media
     {
         $bytes = $this->inspectPath($path);
 
-        return $this->processOrQueue($this->reserve($owner, $mediable, $attributes, strlen($bytes)), $bytes);
+        return $this->processOrQueue($this->reserve($owner, $mediable, $attributes, strlen($bytes), plateBlur: $plateBlur), $bytes);
     }
 
     /**
@@ -98,11 +101,15 @@ class MediaService
      *
      * @param  MediaAttributes  $attributes
      * @param  int  $bytes  size of the upload, which holds its place against the member's allowance until the work is done
+     * @param  PlateBlurChoice|null  $plateBlur  M5.9a: the member's switch and rectangles (ValidatesPlateBlur); null = not sent, `unchecked`.
+     *                                           Blurred: the regions wait in blur_regions until process() pixelates them into the master.
      *
      * @throws ApiException 422 above the member's storage allowance
      */
-    public function reserve(User $owner, ?Model $mediable = null, array $attributes = [], int $bytes = 0, ?string $disk = null): Media
+    public function reserve(User $owner, ?Model $mediable = null, array $attributes = [], int $bytes = 0, ?string $disk = null, ?PlateBlurChoice $plateBlur = null): Media
     {
+        $plateBlur ??= PlateBlurChoice::unchecked();
+
         $this->assertWithinQuota($owner, $bytes);
 
         $media = new Media;
@@ -119,6 +126,8 @@ class MediaService
             'sort' => $attributes['sort'] ?? 0,
             'original_bytes' => $bytes,
             'variant_bytes' => 0,
+            'plate_blur' => $plateBlur->state,
+            'blur_regions' => $plateBlur->state === PlateBlurState::Blurred && $plateBlur->regions !== [] ? $plateBlur->regions : null,
         ]);
         $media->save();
 
@@ -153,12 +162,14 @@ class MediaService
 
     /**
      * In-request processing. A file GD cannot decode is the client's error: the row goes and the answer is 415.
-     * Everything else (a full disk, a storage hiccup) is ours: the bytes wait privately for a queued retry.
+     * Everything else (a full disk, a storage hiccup) is ours: the bytes wait privately for a queued retry. M5.9a: once the picture is
+     * rendered, what waits is the rendered master, with any plate already pixelated, never the upload; only a failure before that (GD
+     * itself) leaves the upload's bytes in the private pending file, which the retry or the job's failed() deletes.
      */
     public function processOrQueue(Media $media, string $bytes): Media
     {
         try {
-            return $this->process($media, $bytes);
+            $image = $this->render($media, $bytes);
         } catch (ImageException) {
             $this->purge($media);
 
@@ -166,23 +177,56 @@ class MediaService
         } catch (Throwable $exception) {
             report($exception);
 
-            $this->privateDisk()->put($this->directory($media).'/'.self::PENDING_FILE, $bytes);
-            ProcessMedia::dispatch((string) $media->getKey());
+            return $this->queue($media, $bytes);
+        }
 
-            return $media;
+        try {
+            return $this->store($media, $image);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            // The regions are in the master now: the retry must not count on them again, and the photo stays marked as pixelated.
+            $media->forceFill([
+                'blur_regions' => null,
+                'blurred_at' => is_array($media->getAttribute('blur_regions')) ? now() : $media->getAttribute('blurred_at'),
+            ])->save();
+
+            return $this->queue($media, $image->jpeg);
         }
     }
 
     /**
-     * Idempotent: the same bytes end up under the same names, so a retry overwrites an earlier partial attempt.
+     * Idempotent: the same bytes end up under the same names, so a retry overwrites an earlier partial attempt. Pixelates the regions
+     * waiting in blur_regions (an upload with plate_blur=1, or GAR-08) into the decoded picture before anything is written.
      */
     public function process(Media $media, string $bytes): Media
     {
-        $image = $this->processor->process($bytes);
+        return $this->store($media, $this->render($media, $bytes));
+    }
+
+    /**
+     * Decode, orient, pixelate the waiting regions, encode the master and draw every variant and the blurhash from it. In memory only:
+     * nothing is written here.
+     *
+     * @throws ImageException when the bytes do not decode as an image
+     */
+    private function render(Media $media, string $bytes): ProcessedImage
+    {
+        return $this->processor->process($bytes, $this->waitingRegions($media));
+    }
+
+    /**
+     * Writes the master first and deletes the pending upload in the same step, then the variants, then points the row at them (the regions
+     * done) and removes every other file of the photo: a stale original or variant from before a GAR-08 pixelation or a failed attempt.
+     */
+    private function store(Media $media, ProcessedImage $image): Media
+    {
         $directory = $this->directory($media);
         $originalPath = $directory.'/'.$this->hash($image->jpeg).'.jpg';
 
         $this->assertWritten($this->privateDisk()->put($originalPath, $image->jpeg), $originalPath);
+        // The pending upload's bytes are never needed again: the master replaces them (m5.9a-contract §2).
+        $this->deletePending($media);
 
         $variants = [];
 
@@ -191,6 +235,8 @@ class MediaService
             $this->assertWritten($this->publicDisk($media)->put($path, $webp, ['visibility' => 'public']), $path);
             $variants[(string) $width] = $path;
         }
+
+        $pixelated = $this->waitingRegions($media) !== [];
 
         $media->forceFill([
             'original_path' => $originalPath,
@@ -201,7 +247,11 @@ class MediaService
             'status' => MediaStatus::Ready,
             'original_bytes' => strlen($image->jpeg),
             'variant_bytes' => array_sum(array_map(strlen(...), $image->variants)),
+            'blur_regions' => null,
+            'blurred_at' => $pixelated ? now() : $media->getAttribute('blurred_at'),
         ])->save();
+
+        $this->keepOnlyCurrentFiles($media);
 
         // The member deleted the photo while this ran (soft, or already purged): nothing may stay public behind their back.
         if (! Media::query()->whereKey($media->getKey())->exists()) {
@@ -211,36 +261,78 @@ class MediaService
         }
 
         $this->adoptAsCover($media);
+        // M5.9c: a finished photo counts for the Build Score of its car (gallery, mod or build update).
+        app(BuildScores::class)->touchFor($media->getAttribute('mediable_type'), $media->getAttribute('mediable_id'));
 
         return $media;
     }
 
     /**
-     * Queue path of process(): reads the waiting bytes and removes them on success.
+     * Queue path of process(): reads the waiting bytes; store() removes them with the first write.
      */
     public function retry(Media $media): void
     {
-        $path = $this->directory($media).'/'.self::PENDING_FILE;
-        $bytes = $this->privateDisk()->get($path);
+        $bytes = $this->privateDisk()->get($this->pendingPath($media));
 
         if ($bytes === null) {
             throw new RuntimeException("The pending upload of media [{$media->getKey()}] is gone.");
         }
 
         $this->process($media, $bytes);
-        $this->privateDisk()->delete($path);
     }
 
     /**
-     * [SIG sig.plate_blur] Pixelates the waiting blur_regions into the private original and draws every variant and the blurhash again from
-     * it, under new content-hash names, so old variant URLs stop working (immutable caching, ADR-123). Then every other file of the photo
-     * goes from both disks: the pre-blur original is discarded (02_PRODUCT_SPEC §5) and nothing unblurred survives. A retry after a crash
-     * between the steps pixelates the new original once more, which changes nothing a viewer can tell, and removes what is left.
+     * After a crash between the new files and the clean-up: removes what does not belong to the photo's current state.
+     */
+    public function tidy(Media $media): void
+    {
+        if ($media->status === MediaStatus::Ready && is_string($media->getAttribute('original_path'))) {
+            $this->keepOnlyCurrentFiles($media);
+        }
+    }
+
+    private function queue(Media $media, string $bytes): Media
+    {
+        $this->privateDisk()->put($this->pendingPath($media), $bytes);
+        ProcessMedia::dispatch((string) $media->getKey());
+
+        return $media;
+    }
+
+    private function pendingPath(Media $media): string
+    {
+        return $this->directory($media).'/'.self::PENDING_FILE;
+    }
+
+    private function deletePending(Media $media): void
+    {
+        $path = $this->pendingPath($media);
+
+        if ($this->privateDisk()->exists($path) && ! $this->privateDisk()->delete($path)) {
+            throw new RuntimeException("Could not remove [$path].");
+        }
+    }
+
+    /**
+     * @return list<array{x: float|int, y: float|int, w: float|int, h: float|int, angle?: float|int}>
+     */
+    private function waitingRegions(Media $media): array
+    {
+        $regions = $media->getAttribute('blur_regions');
+
+        /** @var list<array{x: float|int, y: float|int, w: float|int, h: float|int, angle?: float|int}> */
+        return is_array($regions) ? array_values($regions) : [];
+    }
+
+    /**
+     * [SIG sig.plate_blur] GAR-08: pixelates the waiting blur_regions into the private original and draws every variant and the blurhash
+     * again from it, under new content-hash names, so old variant URLs stop working (immutable caching, ADR-123). store() then removes
+     * every other file of the photo from both disks: the pre-blur original is discarded (02_PRODUCT_SPEC §5) and nothing unblurred
+     * survives. Same block rule as an upload (Pixelator, ADR-509). A retry after a crash in between finds the regions done and BlurMedia
+     * tidies what is left.
      */
     public function blur(Media $media): Media
     {
-        /** @var list<array{x: float|int, y: float|int, w: float|int, h: float|int}> $regions */
-        $regions = $media->getAttribute('blur_regions') ?? [];
         $original = $media->getAttribute('original_path');
         $bytes = is_string($original) ? $this->privateDisk()->get($original) : null;
 
@@ -248,32 +340,25 @@ class MediaService
             throw new RuntimeException("The original of media [{$media->getKey()}] is gone, so it cannot be pixelated.");
         }
 
-        $this->process($media, app(Pixelator::class)->apply($bytes, $regions));
-        $this->keepOnlyCurrentFiles($media);
-        $media->forceFill(['blur_regions' => null, 'blurred_at' => now()])->save();
-
-        return $media;
+        return $this->process($media, $bytes);
     }
 
     /**
-     * Deletes every file of the photo's directory, on both disks, that is not its current original or one of its current variants.
+     * Deletes every file of the photo's directory, on both disks, that is not its current original or one of its current variants. A chat
+     * photo keeps both on the private disk, so the files to keep are one list for every disk.
      */
     private function keepOnlyCurrentFiles(Media $media): void
     {
         $directory = $this->directory($media);
-        $original = $media->getAttribute('original_path');
         /** @var array<int|string, string> $variants */
         $variants = $media->getAttribute('variants') ?? [];
+        $keep = [$media->getAttribute('original_path'), ...array_values($variants)];
 
-        foreach ($this->privateDisk()->allFiles($directory) as $file) {
-            if ($file !== $original && ! $this->privateDisk()->delete($file)) {
-                throw new RuntimeException("Could not remove [$file].");
-            }
-        }
-
-        foreach ($this->publicDisk($media)->allFiles($directory) as $file) {
-            if (! in_array($file, $variants, true) && ! $this->publicDisk($media)->delete($file)) {
-                throw new RuntimeException("Could not remove [$file].");
+        foreach (array_unique([config()->string('speedclub.media.private_disk'), $this->diskName($media)]) as $disk) {
+            foreach (Storage::disk($disk)->allFiles($directory) as $file) {
+                if (! in_array($file, $keep, true) && ! Storage::disk($disk)->delete($file)) {
+                    throw new RuntimeException("Could not remove [$file].");
+                }
             }
         }
     }
@@ -284,7 +369,8 @@ class MediaService
     public function markFailed(Media $media): void
     {
         $this->removeFiles($media);
-        $media->forceFill(['status' => MediaStatus::Failed, 'variants' => null, 'original_path' => null, 'original_bytes' => 0, 'variant_bytes' => 0])->save();
+        $media->forceFill(['status' => MediaStatus::Failed, 'variants' => null, 'original_path' => null, 'original_bytes' => 0, 'variant_bytes' => 0, 'blur_regions' => null])->save();
+        app(BuildScores::class)->touchFor($media->getAttribute('mediable_type'), $media->getAttribute('mediable_id'));
     }
 
     /**
@@ -332,12 +418,8 @@ class MediaService
             return false;
         }
 
+        // Re-encoding the original gives it a new content-hash name: store() removes the previous file.
         $this->process($media, $bytes);
-
-        // Re-encoding the original gives it a new content-hash name: the previous file goes.
-        if ($media->getAttribute('original_path') !== $original) {
-            $this->privateDisk()->delete($original);
-        }
 
         return true;
     }

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Laravel AI SDK (laravel/ai, ADR-030). Only the text providers SPEED CLUB may use; the provider in force is
+ * Laravel AI SDK (laravel/ai, ADR-030). Only the text providers Speedclub may use; the provider in force is
  * speedclub.services.ai_provider (AI_PROVIDER), the model speedclub.ai.model, both read by App\Services\Ai\AiGateway. No key is set
  * until the owner chooses a provider (OA-18); tests and dev use the SDK's fakes.
  */

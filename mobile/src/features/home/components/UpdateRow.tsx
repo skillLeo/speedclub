@@ -5,7 +5,7 @@ import { photoFields } from '@/features/profile/media';
 import { keepNameTogether } from '@/lib/format';
 import { useFormat } from '@/lib/useFormat';
 import { size } from '@/theme';
-import { BuildUpdateRow } from '@/ui';
+import { BuildUpdateRow } from '@/ui/BuildUpdateRow';
 import type { RowInset } from '@/ui/rowParts';
 
 import { updateMeta } from '../model';

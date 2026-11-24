@@ -6,6 +6,7 @@ use App\Enums\ErrorCode;
 use App\Enums\StaffSecurityEvent;
 use App\Models\Staff;
 use App\Services\Audit\Audit;
+use App\Services\Governance\Governance;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,12 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * TOTP is mandatory for staff (06_ADMIN_SPEC §1, ADM-03, SEC-P1-01). A signed-in staff account whose TOTP is not confirmed
+ * ADR-540 (client decision 2026-11-23): whether staff need TOTP is the governance switch "2FA für Admin-Konten" (Governance::
+ * staffTwoFactorRequired(): Pflicht, or forced by STAFF_2FA_REQUIRED=true). In Optional (the default) an account without confirmed TOTP
+ * reaches the admin like any other; only the steps of CLOSED_WITHOUT_CODE, which read or replace a code it does not have, answer "set
+ * up TOTP first". Enrolment stays open to it. An account that has TOTP keeps every rule below in both modes.
+ *
+ * In Pflicht mode TOTP is mandatory for staff (06_ADMIN_SPEC §1, ADM-03, SEC-P1-01). A signed-in staff account whose TOTP is not confirmed
  * reaches only the steps of ENROLMENT_ROUTES; every other request goes to enrolment: a redirect for the browser and Inertia,
  * 409 two_factor_required for a JSON client. A confirmed account gets 403 on the steps of CLOSED_ONCE_CONFIRMED.
  *
@@ -21,9 +27,9 @@ use Symfony\Component\HttpFoundation\Response;
  * (FortifyServiceProvider) is ended as soon as the account has confirmed TOTP, and has to come back through the challenge
  * (SEC-P1-32). The audit row is the only trace that such a session was open when the owner enrolled.
  *
- * With speedclub.staff.two_factor_required off (STAFF_2FA_REQUIRED=false) an account without confirmed TOTP may skip enrolment for
- * one session (SKIP_ROUTE, SKIPPED): that session reaches the admin, but not the steps of CLOSED_UNTIL_CONFIRMED, which rest on a
- * current code. Turned back on, the mark counts for nothing. The rules for a pending secret and for SIGNED_IN_WITHOUT_CODE stay.
+ * In Optional, ADM-03 still offers "Später einrichten" (SKIP_ROUTE, SKIPPED marks the session for the reminder banner). Switched to
+ * Pflicht, the mark counts for nothing. The rules for a pending secret and for SIGNED_IN_WITHOUT_CODE stay. Password change and
+ * approval decisions are open to an account without TOTP in Optional (before ADR-540 a skipped session could take neither).
  *
  * Without a staff session it does nothing, so it may run ahead of auth:staff: guests are left to that middleware. It sits on
  * every Fortify route (config/fortify.php) and on every signed-in route in routes/admin (StaffAccessHardeningTest checks the
@@ -53,27 +59,24 @@ final class EnsureStaffTwoFactor
     /** This session signed in without showing a code and has not shown one since. */
     public const SIGNED_IN_WITHOUT_CODE = 'staff.signed_in_without_code';
 
-    /** ADM-03 "Später einrichten" (route admin.two-factor.skip), only while speedclub.staff.two_factor_required is off. */
+    /** ADM-03 "Später einrichten" (route admin.two-factor.skip), only while 2FA für Admin-Konten is Optional (ADR-540). */
     public const SKIP_ROUTE = 'admin.two-factor.skip';
 
     /** Set by SkipStaffTwoFactor: this session skipped enrolment. Lives in the session only, never on the account. */
     public const SKIPPED = 'staff.two_factor_skipped';
 
     /**
-     * Steps a skipped session still may not take: they replace, read or remove a second factor, change the password, or decide a
-     * four-eyes request, and each of them rests on a current code (ADM-51, ADM-43). A skipped session hears "set up TOTP first".
+     * ADR-540 Optional: the steps an account without TOTP still cannot take, since each reads, rotates or removes a code it has not got.
      */
-    public const CLOSED_UNTIL_CONFIRMED = [
+    public const CLOSED_WITHOUT_CODE = [
         'two-factor.disable',
         'two-factor.recovery-codes',
         'two-factor.regenerate-recovery-codes',
-        'user-password.update',
         'admin.account.rotation.start',
         'admin.account.rotation.confirm',
         'admin.account.recovery-codes.show',
         'admin.account.recovery-codes.regenerate',
-        'admin.team.approvals.approve',
-        'admin.team.approvals.deny',
+        'admin.account.two-factor.disable',
     ];
 
     /**
@@ -147,14 +150,9 @@ final class EnsureStaffTwoFactor
             return $next($request);
         }
 
-        if (self::skippable()) {
-            if ($route === self::SKIP_ROUTE) {
-                return $next($request);
-            }
-
-            if ($request->session()->get(self::SKIPPED) === true) {
-                return in_array($route, self::CLOSED_UNTIL_CONFIRMED, true) ? $this->setUpFirst($request) : $next($request);
-            }
+        // ADR-540 Optional: no TOTP is fine; only the steps that need a code it has not got are closed.
+        if (! Governance::staffTwoFactorRequired()) {
+            return in_array($route, self::CLOSED_WITHOUT_CODE, true) ? $this->setUpFirst($request) : $next($request);
         }
 
         $enrolment = url(self::ENROLMENT_PATH);
@@ -166,10 +164,16 @@ final class EnsureStaffTwoFactor
         return $this->redirectTo($request, $enrolment);
     }
 
-    /** Whether this deployment lets staff skip enrolment for a session (STAFF_2FA_REQUIRED=false). */
+    /** Whether staff may go on without TOTP ("Später einrichten" on ADM-03): 2FA für Admin-Konten is Optional (ADR-540). */
     public static function skippable(): bool
     {
-        return config('speedclub.staff.two_factor_required', true) === false;
+        return ! Governance::staffTwoFactorRequired();
+    }
+
+    /** ADR-540: an account without confirmed TOTP that may use the admin anyway, because 2FA für Admin-Konten is Optional. */
+    public static function admitsWithoutCode(Staff $staff): bool
+    {
+        return ! $staff->hasEnabledTwoFactorAuthentication() && ! Governance::staffTwoFactorRequired();
     }
 
     /**
@@ -184,7 +188,7 @@ final class EnsureStaffTwoFactor
     }
 
     /**
-     * The answer of CLOSED_UNTIL_CONFIRMED to a skipped session: 409 two_factor_required with the reason to a JSON client, the error
+     * The answer of CLOSED_WITHOUT_CODE to an account without TOTP (ADR-540 Optional): 409 two_factor_required with the reason to a JSON client, the error
      * toast on the page it came from to an Inertia write, ADM-03 to a browser visit.
      */
     private function setUpFirst(Request $request): Response

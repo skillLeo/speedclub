@@ -1,20 +1,21 @@
-// ADR-101 on the real screens: a shared route (VEH-01 /v/[slug] in all five tabs, QR-02 /qr/[vehicleId] in Garage and Profile, ADR-164) keeps the tab that opened it,
+// ADR-101 on the real screens: a shared route (VEH-01 /v/[slug] in all five tabs, STK-02 /stickers/[vehicleId] in Garage and Profile, ADR-164; M5.4 renamed QR-02 /qr/[vehicleId]) keeps the tab that opened it,
 // each tab keeps its own stack, a cold deep link lands in the first alphabetical group (Discover), back goes to the
 // anchor, re-tap pops to root. The group is read from the selected tab and the URL, the screen from its root test ID.
-// lukas.sc opens his R34 from Profile (PROF-01 garage strip → VEH-01) and its QR from Garage (GAR-01 card → QR-02) and
-// from Profile (QR-01 row → QR-02). Native counterpart: mobile/e2e/maestro/nav-shared-routes.yaml.
+// lukas.sc opens his R34 from Profile (PROF-01 garage strip → VEH-01) and its sticker from Garage (GAR-01 card → STK-02) and
+// from Profile (STK-01 card → STK-02). Native counterpart: mobile/e2e/maestro/nav-shared-routes.yaml.
 import type { Locator, Page } from '@playwright/test';
 import { applyAuth } from '../support/auth.mjs';
 import { expect, test } from '../support/fixtures';
 import { demoIds, R34 } from '../support/garage.mjs';
 
-const TABS = ['home', 'discover', 'garage', 'messages', 'profile'] as const;
+// M5.2 (10 §1, ADR-501): Shop replaced Nachrichten as a tab; /messages is a shared route now, opened inside the tab that pushed it.
+const TABS = ['home', 'discover', 'garage', 'shop', 'profile'] as const;
 type Tab = (typeof TABS)[number];
 const ROOTS: Record<Tab, string> = {
   home: 'HOME-01.root',
   discover: 'DISC-01.root',
   garage: 'GAR-01.root',
-  messages: 'MSG-01.root',
+  shop: 'SHOP-01.root',
   profile: 'PROF-01.root',
 };
 const VEHICLE_PATH = `/app/v/${R34.slug}`;
@@ -48,7 +49,7 @@ test.describe('shared routes across tabs (ADR-101)', () => {
     for (const [name, url] of [
       ['discover', '/app/discover'],
       ['garage', '/app/garage'],
-      ['messages', '/app/messages'],
+      ['shop', '/app/shop'],
       ['profile', '/app/profile'],
     ] as const) {
       await tab(page, name).click();
@@ -71,43 +72,43 @@ test.describe('shared routes across tabs (ADR-101)', () => {
       await expectActiveTab(page, 'profile');
     });
 
-    test('the same QR page opened from Garage stays in Garage, and from Profile in Profile', async ({ page, byTestId }) => {
+    test('the same sticker page opened from Garage stays in Garage, and from Profile in Profile', async ({ page, byTestId }) => {
       const { r34 } = await demoIds();
       await page.goto('/app/garage');
       await byTestId(`GAR-01.card.${r34}.qr`).click();
-      await expect(byTestId('QR-02.root')).toBeVisible();
-      await expect(byTestId('QR-02.card.shortCode')).toHaveText(R34.shortCode);
-      await expect.poll(() => pathOf(page)).toBe(`/app/qr/${r34}`);
+      await expect(byTestId('STK-02.root')).toBeVisible();
+      await expect(byTestId('STK-02.download')).toContainText(R34.shortCode);
+      await expect.poll(() => pathOf(page)).toBe(`/app/stickers/${r34}`);
       await expectActiveTab(page, 'garage');
 
       await tab(page, 'profile').click();
       await byTestId('PROF-01.qrCodes').click();
-      await byTestId(`QR-01.row.${r34}.body`).click();
-      await expect(byTestId('QR-02.card.shortCode')).toHaveText(R34.shortCode);
-      await expect.poll(() => pathOf(page)).toBe(`/app/qr/${r34}`);
+      await byTestId(`STK-01.card.${r34}.open`).click();
+      await expect(byTestId('STK-02.download')).toContainText(R34.shortCode);
+      await expect.poll(() => pathOf(page)).toBe(`/app/stickers/${r34}`);
       await expectActiveTab(page, 'profile');
     });
 
     // DQ-171, ADR-164: an owner screen belongs to an owner tab, not to the first alphabetical group.
     for (const [suffix, root] of [
-      ['', 'QR-02.root'],
-      ['/placement', 'QR-03.root'],
-      ['/preview', 'QR-04.root'],
+      ['', 'STK-02.root'],
+      ['/placement', 'STK-03.root'],
+      ['/preview', 'STK-02-preview.root'],
     ] as const) {
-      test(`a cold link to /qr/{id}${suffix} highlights Garage and keeps its address`, async ({ page, byTestId }) => {
+      test(`a cold link to /stickers/{id}${suffix} highlights Garage and keeps its address`, async ({ page, byTestId }) => {
         const { r34 } = await demoIds();
-        await page.goto(`/app/qr/${r34}${suffix}`);
+        await page.goto(`/app/stickers/${r34}${suffix}`);
         await expect(byTestId(root)).toBeVisible();
-        await expect.poll(() => pathOf(page)).toBe(`/app/qr/${r34}${suffix}`);
+        await expect.poll(() => pathOf(page)).toBe(`/app/stickers/${r34}${suffix}`);
         await expectActiveTab(page, 'garage');
       });
     }
 
-    test('back from a cold link to a QR page reaches the root of Garage', async ({ page, byTestId }) => {
+    test('back from a cold link to a sticker page reaches the root of Garage', async ({ page, byTestId }) => {
       const { r34 } = await demoIds();
-      await page.goto(`/app/qr/${r34}`);
-      await expect(byTestId('QR-02.root')).toBeVisible();
-      await byTestId('QR-02.header.back').click();
+      await page.goto(`/app/stickers/${r34}`);
+      await expect(byTestId('STK-02.root')).toBeVisible();
+      await byTestId('STK-02.header.back').click();
       await expect(byTestId(ROOTS.garage)).toBeVisible();
       await expect.poll(() => pathOf(page)).toBe('/app/garage');
       await expectActiveTab(page, 'garage');
@@ -118,7 +119,7 @@ test.describe('shared routes across tabs (ADR-101)', () => {
     for (const width of [1280, 1440]) {
       test(`the large title of every tab root starts at the same place at ${width}`, async ({ page, byTestId }) => {
         await page.setViewportSize({ width, height: 800 });
-        const titles = { home: 'HOME-01.header.title', discover: 'DISC-01.title', garage: 'GAR-01.title', messages: 'MSG-01.title', profile: 'PROF-01.name' };
+        const titles = { home: 'HOME-01.header.title', discover: 'DISC-01.title', garage: 'GAR-01.title', shop: 'SHOP-01.title', profile: 'PROF-01.name' };
         await page.goto('/app/');
         for (const name of TABS) {
           await tab(page, name).click();
@@ -143,7 +144,7 @@ test.describe('shared routes across tabs (ADR-101)', () => {
       await tab(page, 'garage').click();
       await expect(byTestId(ROOTS.garage)).toBeVisible();
       await byTestId(`GAR-01.card.${r34}.qr`).click();
-      await expect(byTestId('QR-02.root')).toBeVisible();
+      await expect(byTestId('STK-02.root')).toBeVisible();
       await expectActiveTab(page, 'garage');
 
       await tab(page, 'profile').click();
@@ -155,8 +156,8 @@ test.describe('shared routes across tabs (ADR-101)', () => {
       await expect.poll(() => pathOf(page)).toBe('/app/profile');
 
       await tab(page, 'garage').click();
-      await expect(byTestId('QR-02.root'), 'Garage is unaffected by back in Profile').toBeVisible();
-      await expect.poll(() => pathOf(page)).toBe(`/app/qr/${r34}`);
+      await expect(byTestId('STK-02.root'), 'Garage is unaffected by back in Profile').toBeVisible();
+      await expect.poll(() => pathOf(page)).toBe(`/app/stickers/${r34}`);
       await expectActiveTab(page, 'garage');
     });
 
@@ -183,6 +184,22 @@ test.describe('shared routes across tabs (ADR-101)', () => {
       await expect.poll(() => pathOf(page)).toBe('/app/profile');
       await expectActiveTab(page, 'profile');
     });
+  });
+
+  test('a cold link to the inbox opens it in Start, where Nachrichten lives, and back goes to Start (DQ-M52-02)', async ({ page, byTestId }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/app/messages');
+    await expect(byTestId('MSG-01.root')).toBeVisible();
+    await expect.poll(() => pathOf(page)).toBe('/app/messages');
+    // A shared route resolves a cold link to the first alphabetical group, Entdecken; the message routes move it into Start.
+    await expectActiveTab(page, 'home');
+    await byTestId('MSG-01.header.back').click();
+    await expect(byTestId(ROOTS.home)).toBeVisible();
+    await expect.poll(() => pathOf(page)).toBe('/app/');
+    // Entdecken kept nothing of the link: its tab opens on Builds.
+    await byTestId('tab.discover').click();
+    await expect(byTestId(ROOTS.discover)).toBeVisible();
+    await expect.poll(() => pathOf(page)).toBe('/app/discover');
   });
 
   test('a cold deep link lands in Discover and back goes to the anchor', async ({ page, byTestId }) => {

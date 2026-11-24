@@ -1,0 +1,92 @@
+{
+    "offline": "Du bist offline. Produkte lädt der Shop, sobald du wieder online bist.",
+    "closed": {
+        "title": "Der Speedclub Shop zieht hier ein",
+        "body": "Sticker, Kleidung und Accessoires. Bezahlt wird im Online-Shop, nie in der App.",
+        "action": "Zu deinen Stickern",
+        "photo": "Oranger Toyota GT86 mit Scheibensticker nachts frontal in einer dunklen Gasse"
+    },
+    "price": {
+        "vat": "inkl. MwSt.",
+        "vatShipping": "inkl. MwSt., zzgl. Versand"
+    },
+    "catalogue": {
+        "categoriesLabel": "Kategorien",
+        "errorTitle": "Der Shop lädt gerade nicht",
+        "filteredEmptyTitle": "In dieser Kategorie gibt es gerade nichts",
+        "filteredEmptyBody": "Schau in die anderen Kategorien oder komm später wieder."
+    },
+    "empty": {
+        "title": "Noch keine Produkte im Shop",
+        "body": "Die ersten Sticker kommen bald. Deinen Sticker gestaltest du schon jetzt in der App.",
+        "sampleName": "Car-Sticker – dein Design"
+    },
+    "promo": {
+        "title": "Dein Sticker",
+        "lead": "Ein QR-⁠Sticker für dein Auto, der es mit seiner Build-⁠Seite verbindet.",
+        "points": {
+            "page": "Der QR-⁠Code an deinem Auto öffnet seine Build-⁠Seite.",
+            "meets": "Beim Treffen scannen die Leute, statt zu fragen.",
+            "control": "Du entscheidest, was die Seite zeigt. Ein Kennzeichen steht nie darauf.",
+            "insights": "Wie oft dein Sticker gescannt wird, siehst nur du in deinen Insights.",
+            "design": "Ein Sticker pro Auto: Das Design gestaltest du in der App, bestellt wird im Online-Shop."
+        },
+        "order": "Sticker bestellen"
+    },
+    "product": {
+        "screenTitle": "Produkt",
+        "loading": "Produkt wird geladen",
+        "errorTitle": "Das Produkt lädt gerade nicht",
+        "notFoundTitle": "Dieses Produkt gibt es nicht mehr",
+        "notFoundBody": "Vielleicht wurde es aus dem Shop genommen. Im Shop findest du alles, was es gerade gibt.",
+        "toShop": "Zum Shop",
+        "zoom": "Foto {{current}} von {{total}} vergrößern: {{title}}",
+        "buyExternal": "Im Shop kaufen",
+        "buyExternalLabel": "Im Shop kaufen, öffnet den Online-Shop {{host}}",
+        "buyExternalLabelNoHost": "Im Shop kaufen, öffnet den Online-Shop",
+        "externalNote": "Du wechselst zum Online-Shop {{host}}. Bezahlt wird dort, nie in der App.",
+        "externalNoteNoHost": "Du wechselst zum Online-Shop. Bezahlt wird dort, nie in der App.",
+        "buyDesigner": "Sticker gestalten",
+        "designerNote": "Du gestaltest den Sticker für dein Auto in der App. Bestellt wird danach im Online-Shop.",
+        "soon": "Bald im Shop erhältlich",
+        "shipping": "Versand",
+        "shippingLabel": "Versand, öffnet die Versandseite des Online-Shops",
+        "description": "Beschreibung",
+        "openFailed": "Der Online-Shop ließ sich nicht öffnen. Versuch es noch einmal."
+    },
+    "categories": {
+        "sticker": "Sticker",
+        "apparel": "Kleidung",
+        "accessories": "Accessoires",
+        "soonLabel": "{{label}}, bald verfügbar, noch nicht auswählbar",
+        "soonBadge": "Bald verfügbar",
+        "body": {
+            "sticker": "QR-⁠Sticker für dein Auto, gestaltet in der App.",
+            "apparel": "Für Treffen, Ausfahrten und die Garage.",
+            "accessories": "Kleinigkeiten für dich und dein Auto."
+        }
+    },
+    "hero": {
+        "sticker": {
+            "title": "Dein Build. Dein Sticker.",
+            "subtitle": "Gestalte ihn in der App, bestell ihn im Shop."
+        },
+        "other": {
+            "title": "Neu im Speedclub Shop",
+            "subtitle": "Alle Details findest du hier."
+        }
+    },
+    "category": {
+        "screenTitle": "Kategorie",
+        "loading": "Kategorie wird geladen",
+        "errorTitle": "Diese Kategorie lädt gerade nicht",
+        "notFoundTitle": "Diese Kategorie gibt es nicht",
+        "notFoundBody": "Im Shop findest du alle Kategorien, die es gibt.",
+        "soon": {
+            "sticker": "Sticker kommen bald",
+            "apparel": "Kleidung kommt bald",
+            "accessories": "Accessoires kommen bald"
+        },
+        "soonBody": "Noch gibt es hier nichts zu kaufen. Sobald es losgeht, findest du alles an dieser Stelle."
+    }
+}

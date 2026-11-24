@@ -10,8 +10,9 @@ use DomainException;
  *
  * Reasons: draft_taken (another staff member's draft, 409), stale_revision (the draft changed since it was loaded, 409), no_draft,
  * already_live, version_missing, approval_required (the change is four-eyes: ask Approvals), unchanged (the draft equals the
- * live version), ai_provider_missing, legal_not_draft, legal_version_taken, legal_pending_approval (a re-consent publish of
- * the draft waits for approval), legal_changed (the draft is no longer what the approval pinned), template_fixed, template_unknown, release_taken.
+ * live version), draft_pending_approval (M5.1: a draft waiting for its approval is not taken over), ai_provider_missing, legal_not_draft, legal_version_taken, legal_pending_approval (a re-consent publish of
+ * the draft waits for approval), legal_changed (the draft is no longer what the approval pinned),
+ * legal_draft_stale / legal_draft_stale_first (the draft starts from an older text than the live one, DQ-P5-101), template_fixed, template_unknown, release_taken.
  */
 final class ConfigRefused extends DomainException
 {

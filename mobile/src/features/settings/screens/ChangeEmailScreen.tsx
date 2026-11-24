@@ -13,7 +13,11 @@ import { EMAIL_INPUT, FormField } from '@/features/auth/components/FormField';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors, isCode } from '@/features/auth/forms';
 import { createStyles, size } from '@/theme';
-import { Button, Skeleton, SkeletonBlock, SkeletonText, Text, TextInput, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 import { SlotText, slot } from '@/ui/SlotText';
 import { identifierText } from '@/ui/textBreaks';
 

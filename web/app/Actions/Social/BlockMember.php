@@ -6,6 +6,7 @@ use App\Actions\Messaging\CloseConversationsOfPair;
 use App\Models\Block;
 use App\Models\Follow;
 use App\Models\User;
+use App\Services\BuildScore\BuildScores;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -41,6 +42,9 @@ class BlockMember
 
             // M2.4: the pair's conversation closes for both (m2.4-contract §1).
             $this->conversations->handle($blocker, $member);
+
+            // M5.9c: reactions, spots and follows between the two stop counting for each other's cars.
+            app(BuildScores::class)->touchOwnersOf($blocker->id, $member->id);
         });
     }
 }

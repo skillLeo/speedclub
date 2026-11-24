@@ -4,6 +4,7 @@ import { View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 're
 import { createStyles, size, space, typography, useTheme } from '@/theme';
 
 import { Avatar } from './Avatar';
+import type { IconName } from './icons/Icon';
 import { SampleBadges, useSampleBadgeLabels, type SampleFlags } from './Badge';
 import { WithoutForcedState } from './qaVisualState';
 import { joinLabel, RowBody, RowDivider, useRowInset, useStacksAtFontScale, type RowInset } from './rowParts';
@@ -16,6 +17,8 @@ export type MemberRowProps = {
   meta?: string;
   avatarUri?: string | null;
   avatarBlurhash?: string | null;
+  /** A glyph in the avatar slot in place of initials, for a person who is not named (Avatar `icon`). */
+  avatarIcon?: IconName;
   /** API flags (09 §8.19): "Editorial" / "Beispiel" under the name of the Editorial account or a sample member. */
   sample?: SampleFlags;
   onPress?: () => void;
@@ -89,7 +92,7 @@ export function handleFitsLine(handle: string, width: number, fontScale: number)
 const isHandle = (name: string) => name.startsWith('@');
 
 /** §8 member row: avatar 40, `body.strong` name, `supporting` meta, trailing Follow button. */
-export function MemberRow({ name, meta, avatarUri, avatarBlurhash, sample, onPress, trailing, divider = false, inset, style, testID }: MemberRowProps) {
+export function MemberRow({ name, meta, avatarUri, avatarBlurhash, avatarIcon, sample, onPress, trailing, divider = false, inset, style, testID }: MemberRowProps) {
   const styles = useStyles();
   const side = useRowInset(inset);
   const largeFont = useStacksAtFontScale();
@@ -113,7 +116,7 @@ export function MemberRow({ name, meta, avatarUri, avatarBlurhash, sample, onPre
         style={[styles.body, { paddingLeft: side, paddingRight: side }]}
         testID={testID ? `${testID}.body` : undefined}
       >
-        <Avatar decorative name={name} uri={avatarUri} blurhash={avatarBlurhash} size={size.avatar.md} />
+        <Avatar decorative name={name} uri={avatarUri} blurhash={avatarBlurhash} icon={avatarIcon} size={size.avatar.md} />
         <View style={styles.text} onLayout={onTextLayout} testID={testID ? `${testID}.text` : undefined}>
           {isHandle(name) ? (
             <Text variant="bodyStrong" hyphenate={false} numberOfLines={1} testID={testID ? `${testID}.name` : undefined}>

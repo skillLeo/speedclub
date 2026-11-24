@@ -11,7 +11,7 @@ import { BrushReveal } from '@/ui/motion/kit';
 
 /** The native splash image (app.config.ts `expo-splash-screen`: `image`, `imageWidth`), so the overlay starts where the splash ends. */
 const LOGO = require('../../../assets/images/splash-icon.png') as number;
-const LOGO_RATIO = 1000 / 657;
+const LOGO_RATIO = 1000 / 515;
 /** app.config.ts `expo-splash-screen` `imageWidth`: the overlay draws the logo at the native splash's size and place. */
 export const SPLASH_LOGO_WIDTH = 200;
 /**

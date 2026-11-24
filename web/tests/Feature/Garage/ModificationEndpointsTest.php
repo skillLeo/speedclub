@@ -228,7 +228,7 @@ describe('POST vehicles/{id}/mods', function () {
         modIn($this->vehicle, 'exhaust');
         Sanctum::actingAs($this->owner);
 
-        $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'fields' => []])
+        $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'title' => 'Klappenauspuff', 'fields' => []])
             ->assertUnprocessable()->assertJsonValidationErrorFor('modification');
     });
 
@@ -248,8 +248,8 @@ describe('POST vehicles/{id}/mods', function () {
         RateLimits::register();
         Sanctum::actingAs($this->owner);
 
-        $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'fields' => []])->assertCreated();
-        $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'fields' => []])->assertTooManyRequests();
+        $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'title' => 'Klappenauspuff', 'fields' => []])->assertCreated();
+        $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'title' => 'Klappenauspuff', 'fields' => []])->assertTooManyRequests();
     });
 
     it('applies the authorisation matrix', function (Closure $who, int $status) {
@@ -259,7 +259,7 @@ describe('POST vehicles/{id}/mods', function () {
             Sanctum::actingAs($member);
         }
 
-        $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'fields' => []])->assertStatus($status);
+        $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'title' => 'Klappenauspuff', 'fields' => []])->assertStatus($status);
     })->with(ownerOnlyMatrix(201));
 
     it('refuses a publishing restriction and a suspension', function (Closure $state) {
@@ -267,7 +267,7 @@ describe('POST vehicles/{id}/mods', function () {
         $vehicle = Vehicle::factory()->create(['owner_id' => $member->id]);
         Sanctum::actingAs($member);
 
-        $this->postJson("/api/v1/vehicles/{$vehicle->id}/mods", ['category' => 'exhaust', 'fields' => []])->assertForbidden()->assertJsonPath('code', 'account_restricted');
+        $this->postJson("/api/v1/vehicles/{$vehicle->id}/mods", ['category' => 'exhaust', 'title' => 'Klappenauspuff', 'fields' => []])->assertForbidden()->assertJsonPath('code', 'account_restricted');
     })->with([
         'restricted' => [fn () => User::factory()->restrictedFrom(RestrictionType::Publishing)->create()],
         'suspended' => [fn () => User::factory()->suspended()->create()],
@@ -432,7 +432,7 @@ it('queues the search rebuild after a change of a published vehicle', function (
     Sanctum::actingAs($this->owner);
     Queue::fake();
 
-    $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'fields' => []])->assertCreated();
+    $this->postJson("/api/v1/vehicles/{$this->vehicle->id}/mods", ['category' => 'exhaust', 'title' => 'Klappenauspuff', 'fields' => []])->assertCreated();
 
     Queue::assertPushed(RebuildVehicleSearch::class, 1);
 });

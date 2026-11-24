@@ -12,6 +12,9 @@ use Illuminate\Translation\PotentiallyTranslatedString;
  */
 class ValidUsername implements ValidationRule
 {
+    /** @param  bool  $staff  ADM-10: any length up to staff_max_length, reserved words allowed (client round 2). */
+    public function __construct(private readonly bool $staff = false) {}
+
     /**
      * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
      */
@@ -23,10 +26,10 @@ class ValidUsername implements ValidationRule
             return;
         }
 
-        foreach (Username::violations($value) as $violation) {
+        foreach (Username::violations($value, $this->staff) as $violation) {
             $fail("username.$violation")->translate([
-                'min' => config()->integer('speedclub.usernames.min_length'),
-                'max' => config()->integer('speedclub.usernames.max_length'),
+                'min' => $this->staff ? 1 : config()->integer('speedclub.usernames.min_length'),
+                'max' => config()->integer($this->staff ? 'speedclub.usernames.staff_max_length' : 'speedclub.usernames.max_length'),
             ]);
         }
     }

@@ -21,7 +21,7 @@ function homeMods(): array
 
 it('answers guests the exact shape, empty lists included', function () {
     $this->getJson('/api/v1/home/modules')->assertOk()
-        ->assertExactJson(['data' => ['build_of_week' => null, 'nearby_events' => [], 'brands_in_focus' => [], 'build_updates' => [], 'active_members' => [], 'popular_mods' => []]])
+        ->assertExactJson(['data' => ['car_of_the_day' => null, 'build_of_week' => null, 'nearby_events' => [], 'brands_in_focus' => [], 'build_updates' => [], 'active_members' => [], 'popular_mods' => []]])
         ->assertHeader('ETag');
 });
 

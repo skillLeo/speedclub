@@ -4,12 +4,14 @@ import { PhPencilSimple, PhSealCheck, PhToggleRight, PhWarning } from '@phosphor
 import { trans } from 'laravel-vue-i18n';
 import { computed, reactive, ref } from 'vue';
 import { useAdminAction } from '../../Components/decisions/action';
+import ApprovalNotice from '../../Components/patterns/ApprovalNotice.vue';
 import DialogError from '../../Components/patterns/DialogError.vue';
 import ScrollRegion from '../../Components/patterns/ScrollRegion.vue';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
 import { Badge, Button, Drawer, EmptyQueue, Field, IconButton, Input, Skeleton, StatusPill, Switch, Textarea } from '../../Components/ui';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
 import { routeOr } from '../../lib/routes';
@@ -17,8 +19,9 @@ import { routeOr } from '../../lib/routes';
 /**
  * ADM-36 Feature-Flags (06 §3, m3.5 §2): every flag with its state per environment (only this environment's switch takes effect here;
  * the others document the intended state), team-only rollout, percentage rollout for member flags (a stable hash of the member) and the
- * critical marker. Every change ⚿ needs a reason and is audited with before/after; a critical flag in production needs a second
- * person; an AI flag stays off without a configured provider.
+ * critical marker. Every change ⚿ is audited with before/after; a critical flag in production needs a second
+ * person; an AI flag stays off without a configured provider. M5.1: the staff member's own waiting requests show who can approve them
+ * (and the Owner-Override when nobody can, ADR-507); a change only to another environment's column says that nothing changes here.
  */
 type Environment = 'local' | 'staging' | 'production';
 interface Flag {
@@ -32,6 +35,8 @@ interface Flag {
     description: string | null;
     ai: boolean;
     pending: boolean;
+    /** M5.1: the waiting request (critical flag in production), who can approve it, and whether the viewer may override it (ADR-507). */
+    approval: { id: string; title: string | null; expires_at: string; mine: boolean; approvers?: string[]; approvers_total?: number; override?: boolean } | null;
     updated_at: string | null;
 }
 
@@ -45,17 +50,17 @@ const ENVIRONMENTS: Environment[] = ['local', 'staging', 'production'];
 const action = useAdminAction();
 const editing = ref<Flag | null>(null);
 const drawerOpen = ref(false);
-const form = reactive({ description: '', environments: { local: false, staging: false, production: false }, staff_only: false, percentage: '100', critical: false, reason: '' });
+const form = reactive({ description: '', environments: { local: false, staging: false, production: false }, staff_only: false, percentage: '100', critical: false });
 const errors = ref<Record<string, string>>({});
 function open(flag: Flag): void {
     editing.value = flag;
-    Object.assign(form, { description: flag.description ?? '', environments: { ...flag.environments }, staff_only: flag.staff_only, percentage: String(flag.percentage), critical: flag.critical, reason: '' });
+    Object.assign(form, { description: flag.description ?? '', environments: { ...flag.environments }, staff_only: flag.staff_only, percentage: String(flag.percentage), critical: flag.critical });
     errors.value = {};
     action.reset();
     drawerOpen.value = true;
 }
 const qaFlag = props.flags.find((flag) => flag.ai) ?? props.flags[0];
-// ⌘K "Flag umschalten…" (09 §10.2) lands here with ?flag=<key>: that flag's drawer opens; changing it still needs the reason (⚿, four-eyes
+// ⌘K "Flag umschalten…" (09 §10.2) lands here with ?flag=<key>: that flag's drawer opens; changing it still needs ⚿ (four-eyes
 // for a critical flag in production).
 const askedFlag = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('flag');
 const paletteFlag = askedFlag === null ? undefined : props.flags.find((flag) => flag.key === askedFlag && !flag.pending);
@@ -73,19 +78,26 @@ const changes = computed<Record<string, unknown>>(() => {
     if (form.critical !== flag.critical) out.critical = form.critical;
     return out;
 });
-const fourEyes = computed(() => props.production && editing.value !== null && (editing.value.critical || form.critical));
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && props.production && editing.value !== null && (editing.value.critical || form.critical));
 const aiBlocked = computed(() => editing.value?.ai === true && !props.aiAvailable);
+// M5.1: each environment has its own database, so only this environment's switch acts here; the others record the intended state.
+const onlyElsewhere = computed(() => {
+    const keys = Object.keys(changes.value);
+    return editing.value !== null && keys.length === 1 && keys[0] === 'environments' && form.environments[props.environment] === editing.value.environments[props.environment];
+});
+const waiting = computed(() =>
+    list.value.flatMap((flag) => (flag.approval?.mine === true ? [{ key: flag.key, approval: { ...flag.approval, title: flag.approval.title ?? '', existing: true } }] : [])),
+);
 
 function save(): void {
     const next: Record<string, string> = {};
     const percentage = Number(form.percentage);
     if (!/^\d{1,3}$/.test(form.percentage) || percentage > 100) next.percentage = trans('config.flags.percentage_hint');
     if (Object.keys(changes.value).length === 0) next.changes = trans('config.flags.no_changes');
-    const reason = form.reason.trim().length;
-    if (reason < 10 || reason > 1000) next.reason = trans('ui.confirm.reason_length');
     errors.value = next;
     if (Object.keys(next).length > 0 || !editing.value) return;
-    action.run('patch', routeOr('admin.config.flags.update', `/admin/config/flags/${editing.value.id}`, { flag: editing.value.id }), { changes: changes.value, reason: form.reason.trim() }, { sensitive: true, onSuccess: () => (drawerOpen.value = false) });
+    action.run('patch', routeOr('admin.config.flags.update', `/admin/config/flags/${editing.value.id}`, { flag: editing.value.id }), { changes: changes.value }, { sensitive: true, onSuccess: () => (drawerOpen.value = false) });
 }
 const serverError = computed(() => (failedDialog ? trans('ui.state.server_error') : action.error.value));
 const envLabel = (env: Environment) => trans(`config.flags.environments.${env}`);
@@ -106,6 +118,13 @@ function rollout(flag: Flag): string {
             <PhWarning :size="20" class="mt-2 shrink-0 text-warning" aria-hidden="true" />
             <p class="text-admin-base text-ink-2">{{ trans('config.flags.ai_note') }}</p>
         </div>
+
+        <ApprovalNotice
+            v-for="item in pageState === 'ready' && fourEyesSwitch ? waiting : []"
+            :key="item.key"
+            :approval="item.approval"
+            :test-id="`ADM-36.approval.${item.key}`"
+        />
 
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('config.flags.error')" :body="trans('ui.state.error_body')" test-id="ADM-36.error" @retry="router.reload()" />
         <EmptyQueue v-else-if="pageState !== 'loading' && list.length === 0" variant="first" :icon="PhToggleRight" :title="trans('config.flags.empty_title')" :body="trans('config.flags.empty_body')" data-testid="ADM-36.empty" />
@@ -182,6 +201,9 @@ function rollout(flag: Flag): string {
                         <Switch v-model="form.environments[env]" :aria-label="trans('config.flags.switch_for', { environment: envLabel(env) })" :disabled="aiBlocked && !editing?.environments[env]" :data-testid="`ADM-36.form.${env}`" />
                     </div>
                     <p v-if="aiBlocked" class="text-admin-base text-warning" role="note">{{ trans('config.refused.ai_provider_missing') }}</p>
+                    <p v-if="onlyElsewhere" class="rounded-sm border border-line px-12 py-8 text-admin-base text-ink-2" role="note" data-testid="ADM-36.elsewhere">
+                        {{ trans('config.flags.elsewhere_note', { environment: envLabel(environment) }) }}
+                    </p>
                 </fieldset>
                 <Switch v-model="form.staff_only" :label="trans('config.flags.fields.staff_only')" />
                 <p class="-mt-8 text-admin-base text-ink-3">{{ trans('config.flags.staff_only_hint') }}</p>
@@ -195,9 +217,7 @@ function rollout(flag: Flag): string {
                 <Switch v-model="form.critical" :label="trans('config.flags.fields.critical')" />
                 <p class="-mt-8 text-admin-base text-ink-3">{{ trans('config.flags.critical_hint') }}</p>
                 <p v-if="fourEyes" class="rounded-sm border border-line px-12 py-8 text-admin-base text-ink-2" data-testid="ADM-36.four-eyes">{{ trans('config.flags.four_eyes') }}</p>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="errors.reason ?? errors.changes" required>
-                    <Textarea v-model="form.reason" :rows="3" :maxlength="1000" show-count data-testid="ADM-36.form.reason" />
-                </Field>
+                <p v-if="errors.changes" class="text-admin-base text-danger" role="alert" data-testid="ADM-36.form.changes-error">{{ errors.changes }}</p>
             </form>
             <template #footer>
                 <DialogError :message="serverError" />

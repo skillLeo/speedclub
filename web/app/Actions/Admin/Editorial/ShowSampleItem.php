@@ -36,7 +36,7 @@ final class ShowSampleItem
     public function handle(Staff $staff, SampleItemType $type, string $id, string $reason): bool
     {
         StaffAtoms::ensure($staff, 'content.edit');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         return DB::transaction(function () use ($staff, $type, $id, $reason): bool {
             $item = SampleItemLocator::lock($type, $id);

@@ -12,7 +12,9 @@ import { useAddNote, useHideUpdate, useOwnerUpdates, useVehicle, type OwnerUpdat
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
 import { useTabScrollToTop } from '@/features/shell/retap';
+import { journeyPair } from '@/features/score/journey';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
+import { updatePairs } from '@/features/updates/model';
 import { useTabBarInset } from '@/features/shell/tabBarLayout';
 import { HISTORY_CHANGES_SHOWN } from '@/features/vehicle/components/ProfileSections';
 import { changeLines, historyMetaLine, historyTitle } from '@/features/vehicle/model';
@@ -21,27 +23,22 @@ import { keepFiguresTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
-import { createStyles, useBreakpoint } from '@/theme';
-import {
-  Button,
-  Dialog,
-  EmptyState,
-  Header,
-  IconButton,
-  Screen,
-  Sheet,
-  Skeleton,
-  SkeletonText,
-  StatusPill,
-  Text,
-  TextInput,
-  TimelineMonth,
-  TimelineRow,
-  toast,
-  type HeaderAction,
-  type TimelineEntry,
-} from '@/ui';
+import { createStyles, layout, useBreakpoint } from '@/theme';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { Header, type HeaderAction } from '@/ui/Header';
+import { IconButton } from '@/ui/IconButton';
+import { Screen } from '@/ui/Screen';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { TimelineMonth, TimelineRow, type TimelineEntry } from '@/ui/Timeline';
+import { toast } from '@/ui/toast';
 import { WEB_HAIRLINE } from '@/ui/specStripLayout';
 
 import { useCharCount } from '../components/fields';
@@ -123,6 +120,8 @@ const Entry = memo(function Entry({ update, first, last, onToggle, onOpen, disab
   const toggleName = onlyChange ?? [head, created].filter(Boolean).join(', ');
   const summary = lines.length > 0 || named || note ? null : keepFiguresTogether(update.summary, true);
   const added = note ? null : update.note?.trim();
+  // Older answers of the owner's list carry no photos (the list predates M4.11's photos on entries).
+  const pair = Array.isArray(update.photos) && Array.isArray(update.photo_pairs) ? updatePairs(update)[0] : undefined;
   const entry: TimelineEntry = {
     key: update.id,
     date: update.month_label ?? '',
@@ -145,6 +144,8 @@ const Entry = memo(function Entry({ update, first, last, onToggle, onOpen, disab
         testID={`${ROUTE}.entry.${update.id}.toggle`}
       />
     ),
+    // M5.9c Build Journey: a before/after pair side by side, as in VEH-01's Verlauf.
+    ...(pair ? { beforeAfter: journeyPair(update, pair, vehicleT, layout.feedColumn / 2) } : {}),
     onPress: update.hidden ? undefined : () => onOpen(update),
     testID: `${ROUTE}.entry.${update.id}`,
   };
@@ -358,7 +359,7 @@ function NoteForm({ onDone, onDirty, vehicle }: { onDone: () => void; onDirty: (
   useEffect(() => {
     onDirty(dirty);
   }, [dirty, onDirty]);
-  const submit = handleSubmit(async (values) => {
+  const submit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     try {
       await add.mutateAsync({ note: values.note.trim(), idempotencyKey: key });
@@ -374,7 +375,7 @@ function NoteForm({ onDone, onDirty, vehicle }: { onDone: () => void; onDirty: (
       }
       setNotice(applyServerErrors(error, setError, { note: 'note' }) === null ? null : saveErrorMessage(t, error, { creating: true }));
     }
-  });
+  }));
   return (
     <View style={styles.sheetBody}>
       {notice ? <FormNotice message={notice} testID={`${ROUTE}.noteSheet.notice`} /> : null}

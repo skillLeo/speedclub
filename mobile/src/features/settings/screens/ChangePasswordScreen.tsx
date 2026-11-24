@@ -11,8 +11,11 @@ import { FormNotice } from '@/features/auth/components/FormNotice';
 import { RuleList } from '@/features/auth/components/RuleList';
 import { applyServerErrors, isCode } from '@/features/auth/forms';
 import { passwordChecks } from '@/features/auth/schemas';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { createStyles, size } from '@/theme';
-import { Skeleton, SkeletonBlock, SkeletonText, TextInput, toast } from '@/ui';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 
 import { useMemberGate } from '../components/MemberGate';
 import { RestrictionNotice } from '../components/RestrictionNotice';
@@ -132,7 +135,7 @@ function ChangePasswordForm({ me }: { me: Me }) {
     else router.replace('/settings');
   }, [done, router]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     const secondFactor = (values.code ?? '').replace(/\s/g, '');
     try {
@@ -162,7 +165,7 @@ function ChangePasswordForm({ me }: { me: Me }) {
           : failure(error),
       );
     }
-  });
+  }));
 
   return (
     <SettingsPage

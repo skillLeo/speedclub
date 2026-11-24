@@ -63,6 +63,7 @@ import type {
 import type { LocalPhoto, SendRequest } from '@/features/messages/outbox';
 import type { ChannelAuth, RealtimeConfig } from '@/features/messages/realtime';
 import { photoForm } from '@/features/garage/photos';
+import { appendPlateBlur } from '@/features/media/plateBlur/model';
 import i18n from '@/i18n';
 import { isWeb } from '@/lib/platform';
 import { sessionSignal, useSessionStore } from '@/state/session';
@@ -1057,7 +1058,7 @@ function useActions(): MessagingActions {
 
 /** One photo to `POST conversations/{id}/media` (multipart), with the session's credentials and its abort (SEC-S-01). */
 async function uploadPhoto(conversationId: string, photo: LocalPhoto, signal: AbortSignal): Promise<string> {
-  const form = await photoForm(photo.uri);
+  const form = appendPlateBlur(await photoForm(photo.uri), photo.plateBlur);
   const headers = await uploadHeaders();
   const bound = typeof AbortSignal.any === 'function' ? AbortSignal.any([signal, sessionSignal()]) : signal;
   let response: Response;

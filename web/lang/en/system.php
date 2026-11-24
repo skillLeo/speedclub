@@ -4,7 +4,7 @@
 return [
     'mail' => [
         'test' => [
-            'subject' => 'Test email from the SPEED CLUB admin',
+            'subject' => 'Test email from the Speedclub admin',
             'heading' => 'Sending email works',
             'body' => 'This test email was sent on :date through the “:mailer” mailer.',
         ],

@@ -13,7 +13,14 @@ import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
 import { ViewAsUnavailable } from '@/features/viewAs/ViewAsUnavailable';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { Button, ErrorState, Hairline, Icon, Skeleton, SkeletonBlock, SkeletonText, StatusPill, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { Icon } from '@/ui/icons/Icon';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { ReauthSheet } from '../components/ReauthSheet';
 import { RestrictionNotice } from '../components/RestrictionNotice';

@@ -18,7 +18,11 @@ import {
   type RevealOrigin,
   type ThemePreference,
 } from '@/theme';
-import { ListRow, RowGroup, Skeleton, SkeletonBlock, SkeletonText, Text, ThemePreviewCard } from '@/ui';
+import { ListRow } from '@/ui/ListRow';
+import { RowGroup } from '@/ui/RowGroup';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { ThemePreviewCard } from '@/ui/ThemePreviewCard';
 import { setReduceMotionChoice, useHapticsSetting, useMotionPreference, useReduceMotionChoice, type ReduceMotionChoice } from '@/ui/motion';
 import { keyOf, useRovingKeys } from '@/ui/useRovingKeys';
 

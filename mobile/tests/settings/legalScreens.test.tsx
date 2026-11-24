@@ -39,7 +39,7 @@ const LICENSES = {
   body: {
     data: {
       ...summary('licenses', 'Lizenzen'),
-      body_md: '# Lizenzen\n\nSPEED CLUB baut auf Open-Source-Software auf.\n\n| Software | Lizenz |\n|---|---|\n| Laravel | MIT |\n\nFragen an [[Kontakt-E-Mail]].',
+      body_md: '# Lizenzen\n\nSpeedclub baut auf Open-Source-Software auf.\n\n| Software | Lizenz |\n|---|---|\n| Laravel | MIT |\n\nFragen an [[Kontakt-E-Mail]].',
     },
   },
 };

@@ -7,7 +7,9 @@ import { View } from 'react-native';
 import { ApiError, newIdempotencyKey } from '@/api/client';
 import { avatarUrlOf, useMe, useUpdateProfile, useUploadAvatar } from '@/api/queries/auth';
 import { createStyles } from '@/theme';
-import { Avatar, Button, Spinner } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { Button } from '@/ui/Button';
+import { Spinner } from '@/ui/Spinner';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { FormField } from '../components/FormField';

@@ -10,7 +10,9 @@ use Illuminate\Support\HtmlString;
  * All items (at most five) share one row only when every line of every cell (SpecStrip 2.0, ADR-422 d: the label.caps data
  * label, the numeral with its label.unit unit, the provenance caption), one line each, plus space.12 on both sides fits a cell;
  * else two columns (the 09 §4.2 2×2 grid, a short last row keeps its column width); else one. Above font scale 1.2 the strip
- * is at most two columns. The server cannot measure, so it takes the app's estimates (the Archivo Condensed advances of
+ * is at most two columns. ADR-422 e (DQ-P5-066): in a grid of at most two columns the provenance caption may wrap at a regular
+ * space, so there it counts by its widest unbreakable segment (U+00A0 and U+2060 do not split it); a row of three to five needs
+ * it whole on one line. The server cannot measure, so it takes the app's estimates (the Archivo Condensed advances of
  * GLYPH_EM plus its positive pair kerning KERNING; the Inter advances of LABEL_SEMIBOLD_EM and LABEL_MEDIUM_EM plus their
  * positive kerning bound and the roles' tracking), which decide on the app too (its measurements only take columns away).
  *
@@ -44,14 +46,26 @@ final class SpecStripLayout
     /** Above this font scale the strip is at most two columns. */
     public const STACK_FONT_SCALE = 1.2;
 
+    /** ADR-422 e: up to this many columns the provenance caption may wrap (the app's SPEC_WRAP_MAX_COLUMNS). */
+    public const WRAP_MAX_COLUMNS = 2;
+
     /** layout.breakpoints.desktop: the web desktop type sizes. */
     public const DESKTOP_WIDTH = 1280;
 
+    /** layout.breakpoints.tablet: below it a phone's page (client feedback CF-2, M5.3). */
+    public const TABLET_WIDTH = 768;
+
+    /** The strip on a phone's page, below TABLET_WIDTH (the app's StripSize 'phone'). */
+    public const PHONE = 'phone';
+
     /**
-     * ADR-431 b: the numeral is hero.numeral (64/64) on the page below 1280, and hero.numeral.s (48/48 on the web desktop) in the
-     * side card from 1280, as the app's specStripNumeralVariant; both capped at 1.3× the font scale.
+     * ADR-431 b, client feedback CF-2 (M5.3) and R5-2b (ADR-536), as the app's specStripNumeralVariant: hero.numeral (64/64) on the
+     * page from 768 to 1279, hero.numeral.xs (32/32) on a phone's page below 768, and hero.numeral.s (48/48 on the web desktop) in the
+     * side card from 1280; all capped at 1.3× the font scale, tabular figures everywhere.
      */
     public const NUMERAL_SIZE = 64;
+
+    public const NUMERAL_SIZE_PHONE = 32;
 
     public const NUMERAL_SIZE_DESKTOP = 48;
 
@@ -171,7 +185,8 @@ final class SpecStripLayout
     }
 
     /**
-     * True when every content width plus the padding on both sides fits a cell of `$columns` columns.
+     * True when every content width plus the padding on both sides fits a cell of `$columns` columns. The caller picks the
+     * widths: `columns()` hands a grid of at most WRAP_MAX_COLUMNS the grid widths (ADR-422 e).
      *
      * @param  list<float|int>  $contentWidths
      */
@@ -189,16 +204,21 @@ final class SpecStripLayout
     }
 
     /**
-     * The most columns in which everything fits; one column when nothing else does.
+     * The most columns in which everything fits; one column when nothing else does. ADR-422 e: a grid of at most
+     * WRAP_MAX_COLUMNS columns checks `$gridContentWidths` (the provenance by its widest unbreakable segment) when given, a
+     * wider row `$contentWidths` (every line whole), as the app's fitsColumns.
      *
      * @param  list<float|int>  $contentWidths
+     * @param  list<float|int>|null  $gridContentWidths
      */
-    public static function columns(float $width, int $count, array $contentWidths, float $divider, float $fontScale = 1.0): int
+    public static function columns(float $width, int $count, array $contentWidths, float $divider, float $fontScale = 1.0, ?array $gridContentWidths = null): int
     {
         $options = self::candidates($count, $fontScale);
 
         foreach ($options as $columns) {
-            if (self::fits($width, $contentWidths, $columns, $divider)) {
+            $widths = $columns <= self::WRAP_MAX_COLUMNS ? ($gridContentWidths ?? $contentWidths) : $contentWidths;
+
+            if (self::fits($width, $widths, $columns, $divider)) {
                 return $columns;
             }
         }
@@ -272,11 +292,16 @@ final class SpecStripLayout
     /**
      * The sizes the strip's roles render at: the numeral capped at 1.3×, the Inter roles scaled freely.
      *
+     * @param  bool|'phone'  $desktop  true the desktop's side card, 'phone' a phone's page, false the page from 768 to 1279 (the app's StripSize)
      * @return array{valueSize: float, valueLine: float, labelSize: float, labelLine: float, labelTracking: float, unitSize: float, unitTracking: float, provenanceSize: float, provenanceLine: float, provenanceTracking: float}
      */
-    public static function type(float $fontScale, bool $desktop): array
+    public static function type(float $fontScale, bool|string $desktop): array
     {
-        $numeral = $desktop ? self::NUMERAL_SIZE_DESKTOP : self::NUMERAL_SIZE;
+        $numeral = match ($desktop) {
+            true => self::NUMERAL_SIZE_DESKTOP,
+            self::PHONE => self::NUMERAL_SIZE_PHONE,
+            default => self::NUMERAL_SIZE,
+        };
         $numeralScale = min($fontScale, self::NUMERAL_MAX_SCALE);
 
         return [
@@ -297,9 +322,10 @@ final class SpecStripLayout
      * The one-line estimates of every line of every cell: value line, data label, provenance (when there is one).
      *
      * @param  list<array{value: string, unit?: string|null, label: string, provenance?: string|null}>  $items
+     * @param  bool|'phone'  $desktop
      * @return list<float>
      */
-    public static function estimatedContentWidths(array $items, float $fontScale, bool $desktop): array
+    public static function estimatedContentWidths(array $items, float $fontScale, bool|string $desktop): array
     {
         $type = self::type($fontScale, $desktop);
         $widths = [];
@@ -317,22 +343,73 @@ final class SpecStripLayout
     }
 
     /**
+     * ADR-422 e: the parts a provenance caption can break into, at a regular space (U+0020) only; U+00A0 and U+2060 glue their
+     * neighbours. The app's provenanceSegments.
+     *
+     * @return list<string>
+     */
+    public static function segments(string $provenance): array
+    {
+        return array_values(array_filter(explode(' ', $provenance), fn (string $segment): bool => $segment !== ''));
+    }
+
+    /**
+     * ADR-422 e: the widths a cell of the 2×2 grid must hold: as estimatedContentWidths(), but the provenance by its widest
+     * unbreakable segment, since it may wrap there. The app's estimatedSpecGridWidths.
+     *
+     * @param  list<array{value: string, unit?: string|null, label: string, provenance?: string|null}>  $items
+     * @param  bool|'phone'  $desktop
+     * @return list<float>
+     */
+    public static function estimatedGridContentWidths(array $items, float $fontScale, bool|string $desktop): array
+    {
+        $type = self::type($fontScale, $desktop);
+        $widths = [];
+
+        foreach ($items as $item) {
+            $widths[] = self::estimatedValueLineWidth($item['value'], $item['unit'] ?? null, $type['valueSize'], $type['unitSize'], $type['unitTracking']);
+            $widths[] = self::estimatedLabelWidth($item['label'], $type['labelSize'], $type['labelTracking']);
+
+            if (($item['provenance'] ?? null) !== null && $item['provenance'] !== '') {
+                $segment = 0.0;
+
+                foreach (self::segments($item['provenance']) as $part) {
+                    $segment = max($segment, self::estimatedInterWidth($part, $type['provenanceSize'], $type['provenanceTracking'], false));
+                }
+
+                $widths[] = $segment;
+            }
+        }
+
+        return $widths;
+    }
+
+    /**
      * Columns from the estimates, as the app decides before it measures.
      *
      * @param  list<array{value: string, unit?: string|null, label: string, provenance?: string|null}>  $items
+     * @param  bool|'phone'  $desktop
      */
-    public static function estimatedColumns(array $items, float $width, float $fontScale, bool $desktop, float $divider = self::DIVIDER): int
+    public static function estimatedColumns(array $items, float $width, float $fontScale, bool|string $desktop, float $divider = self::DIVIDER): int
     {
-        return self::columns($width, count($items), self::estimatedContentWidths($items, $fontScale, $desktop), $divider, $fontScale);
+        return self::columns(
+            $width,
+            count($items),
+            self::estimatedContentWidths($items, $fontScale, $desktop),
+            $divider,
+            $fontScale,
+            self::estimatedGridContentWidths($items, $fontScale, $desktop),
+        );
     }
 
     /**
      * The strip's height: per row padding, data label, gap and value line, plus gap and provenance line for a row in which
      * an item has one (`$provenance[$row]`); a hairline between rows.
      *
+     * @param  bool|'phone'  $desktop
      * @param  list<bool>  $provenance
      */
-    public static function height(int $rows, float $fontScale, bool $desktop, float $hairline, array $provenance = []): float
+    public static function height(int $rows, float $fontScale, bool|string $desktop, float $hairline, array $provenance = []): float
     {
         $type = self::type($fontScale, $desktop);
         $row = 2 * self::CELL_PADDING_Y + $type['labelLine'] + self::CELL_GAP + $type['valueLine'];
@@ -354,27 +431,39 @@ final class SpecStripLayout
     /**
      * The rule as widths: each candidate with the narrowest strip width at which it is chosen, widest first. A strip
      * narrower than every threshold takes the last candidate, which has none (null). `columns()` gives `columns` exactly
-     * from `minWidth` up to the previous candidate's `minWidth`.
+     * from `minWidth` up to the previous candidate's `minWidth`. ADR-422 e: a candidate of at most WRAP_MAX_COLUMNS columns takes
+     * the widest grid width (the provenance by its widest unbreakable segment), a wider one the widest whole line; the grid width is
+     * never the larger, so the thresholds still fall with the columns. A one-word caption gives both the same.
      *
      * @param  list<array{value: string, unit?: string|null, label: string, provenance?: string|null}>  $items
+     * @param  bool|'phone'  $desktop
      * @return list<array{columns: int, minWidth: float|null}>
      */
-    public static function thresholds(array $items, float $fontScale, bool $desktop, float $divider = self::DIVIDER): array
+    public static function thresholds(array $items, float $fontScale, bool|string $desktop, float $divider = self::DIVIDER): array
     {
-        $widest = 0.0;
+        $widestLine = 0.0;
+        $widestGrid = 0.0;
 
         foreach (self::estimatedContentWidths($items, $fontScale, $desktop) as $width) {
-            $widest = max($widest, ceil($width));
+            $widestLine = max($widestLine, ceil($width));
+        }
+
+        foreach (self::estimatedGridContentWidths($items, $fontScale, $desktop) as $width) {
+            $widestGrid = max($widestGrid, ceil($width));
         }
 
         $options = self::candidates(count($items), $fontScale);
         $last = array_key_last($options);
 
-        return array_map(fn (int $columns, int $index): array => [
-            'columns' => $columns,
-            // cellWidth >= widest + 2 × padding  ⇔  width >= columns × (widest + 2 × padding) + (columns − 1) × divider
-            'minWidth' => $index === $last ? null : $columns * ($widest + 2 * self::CELL_PADDING_X) + ($columns - 1) * $divider,
-        ], $options, array_keys($options));
+        return array_map(function (int $columns, int $index) use ($last, $widestLine, $widestGrid, $divider): array {
+            $widest = $columns <= self::WRAP_MAX_COLUMNS ? $widestGrid : $widestLine;
+
+            return [
+                'columns' => $columns,
+                // cellWidth >= widest + 2 × padding  ⇔  width >= columns × (widest + 2 × padding) + (columns − 1) × divider
+                'minWidth' => $index === $last ? null : $columns * ($widest + 2 * self::CELL_PADDING_X) + ($columns - 1) * $divider,
+            ];
+        }, $options, array_keys($options));
     }
 
     /**
@@ -443,8 +532,8 @@ final class SpecStripLayout
     }
 
     /**
-     * The breakpoints of one strip, in em of the strip box: per regime (scale 1 and the QA scale 2, phone/tablet and
-     * desktop) the candidates and where each stops. Identical items, or items with the same breakpoints, share them.
+     * The breakpoints of one strip, in em of the strip box: per regime (scale 1 and the QA scale 2; phone below 768, `narrow` the
+     * page from 768 to 1279, desktop) the candidates and where each stops. Identical items, or items with the same breakpoints, share them.
      *
      * @param  list<array{value: string, unit?: string|null, label: string, provenance?: string|null}>  $items
      * @return array{count: int, regimes: array<string, list<array{columns: int, belowEm: float|null}>>}
@@ -454,8 +543,8 @@ final class SpecStripLayout
         $regimes = [];
 
         foreach (['1' => 1.0, '2' => (float) self::QA_FONT_SCALE] as $scaleKey => $scale) {
-            foreach (['narrow' => false, 'desktop' => true] as $mediaKey => $desktop) {
-                $em = ($desktop ? self::BODY_SIZE_DESKTOP : self::BODY_SIZE) * $scale;
+            foreach (['phone' => self::PHONE, 'narrow' => false, 'desktop' => true] as $mediaKey => $desktop) {
+                $em = ($desktop === true ? self::BODY_SIZE_DESKTOP : self::BODY_SIZE) * $scale;
                 $regimes[$scaleKey.'-'.$mediaKey] = array_map(fn (array $threshold): array => [
                     'columns' => $threshold['columns'],
                     'belowEm' => $threshold['minWidth'] === null ? null : self::em($threshold['minWidth'] / $em),
@@ -488,14 +577,21 @@ final class SpecStripLayout
         $css = '';
 
         foreach (['1' => '.'.$class, '2' => ':root[data-qa-font-scale="'.self::QA_FONT_SCALE.'"] .'.$class] as $scaleKey => $scope) {
+            $phone = $breakpoints['regimes'][$scaleKey.'-phone'];
             $narrow = $breakpoints['regimes'][$scaleKey.'-narrow'];
             $desktop = $breakpoints['regimes'][$scaleKey.'-desktop'];
             // The widest candidate does not depend on the width: the same on every screen.
             $css .= self::layout($scope, $narrow[0]['columns'], $count);
 
-            // N-2: min-/max-width, since Safari 16.0–16.3 run container queries but not media range syntax. 1279.98 leaves no
-            // gap at a fractional width (zoom) and never overlaps min-width: 1280px, which tokens.generated.css also uses.
-            foreach (['(max-width: '.self::number(self::DESKTOP_WIDTH - 0.02).'px)' => $narrow, '(min-width: '.self::DESKTOP_WIDTH.'px)' => $desktop] as $media => $options) {
+            // N-2: min-/max-width, since Safari 16.0–16.3 run container queries but not media range syntax. 767.98 and 1279.98 leave
+            // no gap at a fractional width (zoom) and never overlap min-width: 768px / 1280px, which tokens.generated.css also uses.
+            $regimes = [
+                '(max-width: '.self::number(self::TABLET_WIDTH - 0.02).'px)' => $phone,
+                '(min-width: '.self::TABLET_WIDTH.'px) and (max-width: '.self::number(self::DESKTOP_WIDTH - 0.02).'px)' => $narrow,
+                '(min-width: '.self::DESKTOP_WIDTH.'px)' => $desktop,
+            ];
+
+            foreach ($regimes as $media => $options) {
                 $queries = '';
 
                 for ($index = 1; $index < count($options); $index++) {

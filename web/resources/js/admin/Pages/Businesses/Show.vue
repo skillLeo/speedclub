@@ -10,6 +10,7 @@ import { Button, ConfirmDialog, EmptyQueue, Skeleton, StatusPill, type TabItem }
 import { focusRing } from '../../Components/ui/styles';
 import { usePageState } from '../../composables/pageState';
 import { qaDialog } from '../../composables/qaDialog';
+import { useFourEyes } from '../../composables/fourEyes';
 import { actionLabel, actorName } from '../../lib/audit';
 import { formatDateTime } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
@@ -50,13 +51,16 @@ const dialogOpen = computed({ get: () => dialog.value !== null, set: (open: bool
 function run(action: BusinessAction, reason: string | null = null): void {
     writes.post(b.value, action, reason === null ? {} : { reason }, () => (dialog.value = null));
 }
+// ADR-540: only the reasons the applicant or owner reads stay (reject, suspend); reinstate and reopen are plain confirmations.
+const withReason = computed(() => dialog.value === 'reject' || dialog.value === 'suspend' || dialog.value === null);
+const fourEyesOn = useFourEyes();
 const dialogCopy = computed(() => {
     const name = dialog.value ?? 'reject';
     return {
         title: trans(`businesses.${name}_dialog.title`, { name: b.value.name }),
         body: trans(`businesses.${name}_dialog.body`),
-        reason: name === 'reopen' ? undefined : trans(`businesses.${name}_dialog.reason`),
-        confirm: trans(name === 'suspend' ? 'businesses.actions.request_suspend' : `businesses.actions.${name}`),
+        reason: withReason.value ? trans(`businesses.${name}_dialog.reason`) : undefined,
+        confirm: trans(name === 'suspend' && fourEyesOn.value ? 'businesses.actions.request_suspend' : `businesses.actions.${name}`),
     };
 });
 const busy = computed(() => writes.processing.value !== null || writes.conflict.value);
@@ -147,9 +151,9 @@ const anyAction = computed(() => mayDecide.value && Object.values(b.value.can).s
             :title="dialogCopy.title"
             :body="dialogCopy.body"
             :confirm-label="dialogCopy.confirm"
-            :reason="dialog !== 'reopen'"
+            :reason="withReason"
             :reason-label="dialogCopy.reason"
-            :reason-first="dialog !== 'reopen'"
+            :reason-first="withReason"
             :four-eyes="dialog === 'suspend'"
             :tone="dialog === 'reopen' || dialog === 'reinstate' ? 'neutral' : 'danger'"
             :processing="writes.processing.value !== null"

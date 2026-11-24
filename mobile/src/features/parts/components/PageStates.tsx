@@ -6,7 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/api/client';
 import { errorMessageOf } from '@/features/home/components/BrowseStates';
 import type { QaState } from '@/lib/qa';
-import { EmptyState, ErrorState, type IconName } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { type IconName } from '@/ui/icons/Icon';
 
 export type PageState = 'off' | 'loading' | 'notFound' | 'error' | 'offline' | 'ready';
 

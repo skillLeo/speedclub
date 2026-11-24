@@ -4,6 +4,7 @@ namespace App\Actions\Social;
 
 use App\Models\Block;
 use App\Models\User;
+use App\Services\BuildScore\BuildScores;
 
 /**
  * Only the blocker's own row goes: a block the other member set stays, and nothing tells the blocker about it. Follows that the
@@ -16,10 +17,14 @@ class UnblockMember
 {
     public function handle(User $blocker, ?User $member, string $asSent): void
     {
-        Block::query()
+        $removed = Block::query()
             ->where('blocker_id', $blocker->id)
             ->where(fn ($query) => $query->where('blocked_username', mb_strtolower(trim($asSent)))
                 ->when($member !== null, fn ($query) => $query->orWhere('blocked_id', $member?->id)))
             ->delete();
+
+        if ($removed > 0) {
+            app(BuildScores::class)->touchOwnersOf(...array_values(array_filter([$blocker->id, $member?->id])));
+        }
     }
 }

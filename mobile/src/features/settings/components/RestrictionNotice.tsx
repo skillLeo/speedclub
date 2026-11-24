@@ -7,7 +7,7 @@ import { FormNotice } from '@/features/auth/components/FormNotice';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles } from '@/theme';
-import { Button } from '@/ui';
+import { Button } from '@/ui/Button';
 
 const useStyles = createStyles((t) => ({
   block: { gap: t.space[4] },

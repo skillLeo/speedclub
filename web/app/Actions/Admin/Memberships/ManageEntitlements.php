@@ -33,7 +33,7 @@ class ManageEntitlements
     {
         $this->memberships->ensureEnabled();
         StaffAtoms::ensure($by, 'memberships.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         if (! $plan->active) {
             throw new TeamRefused('plan_inactive');
@@ -75,7 +75,7 @@ class ManageEntitlements
     {
         $this->memberships->ensureEnabled();
         StaffAtoms::ensure($by, 'memberships.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         DB::transaction(function () use ($by, $entitlement, $reason): void {
             $locked = Entitlement::query()->whereKey($entitlement->getKey())->lockForUpdate()->firstOrFail();

@@ -65,7 +65,7 @@ it('grants with reason and end date and revokes once, audited', function () {
     $member = User::factory()->create();
     $admin = m31Staff('admin');
 
-    expect(fn () => app(ManageEntitlements::class)->grant($admin, $member, $plan, 'kurz'))->toThrow(ValidationException::class)
+    expect(fn () => app(ManageEntitlements::class)->grant($admin, $member, $plan, str_repeat('x', 1001)))->toThrow(ValidationException::class)
         ->and(fn () => app(ManageEntitlements::class)->grant($admin, $member, $plan, m36Reason(), now()->addDay(), now()))->toThrow(TeamRefused::class);
 
     $entitlement = app(ManageEntitlements::class)->grant($admin, $member, $plan, m36Reason(), null, now()->addMonth());

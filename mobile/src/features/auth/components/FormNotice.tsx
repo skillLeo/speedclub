@@ -1,7 +1,8 @@
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Icon, Text } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 
 import { useFirstLineBox } from './lineBox';
 

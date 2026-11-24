@@ -28,7 +28,7 @@ final class RollbackConfigVersion
     public function handle(Staff $staff, ConfigKey $key, int $version, string $reason): ConfigOutcome
     {
         StaffAtoms::ensure($staff, $key->publishAtom());
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
         $target = ConfigVersion::query()->where('key', $key->value)->where('version', $version)->where('status', ConfigVersionStatus::Superseded)->first();
         $action = $target === null ? null : $this->versions->approvalFor($key, $target->payload);
 

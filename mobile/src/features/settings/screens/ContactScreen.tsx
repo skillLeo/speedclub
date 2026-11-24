@@ -9,8 +9,12 @@ import { ApiError } from '@/api/client';
 import type { Me } from '@/api/queries/auth';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { createStyles, size } from '@/theme';
-import { Skeleton, SkeletonBlock, SkeletonText, Text, TextInput, toast } from '@/ui';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 import { SlotText, slot } from '@/ui/SlotText';
 import { identifierText } from '@/ui/textBreaks';
 
@@ -86,7 +90,7 @@ function ContactForm({ me }: { me: Me }) {
     else router.replace('/settings/help');
   }, [router, sent]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = useSingleFlight(handleSubmit(async (values) => {
     if (!isSupportCategory(values.category)) return;
     setNotice(null);
     try {
@@ -100,7 +104,7 @@ function ContactForm({ me }: { me: Me }) {
           : failure(error),
       );
     }
-  });
+  }));
 
   return (
     <SettingsPage

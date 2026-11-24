@@ -9,7 +9,10 @@ use App\Models\BuildUpdate;
 use App\Models\Business;
 use App\Models\Comment;
 use App\Models\ConversationParticipant;
+use App\Models\Crew;
 use App\Models\Event;
+use App\Models\EventPhoto;
+use App\Models\ForumPost;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\Modification;
@@ -53,12 +56,16 @@ class ReportTargets
             ReportTargetType::BuildUpdate => $this->ulid($id) ? BuildUpdate::query()->with('vehicle.owner')->find(strtolower($id)) : null,
             ReportTargetType::Modification => $this->ulid($id) ? Modification::query()->with('vehicle.owner')->find(strtolower($id)) : null,
             ReportTargetType::Message => $this->ulid($id) ? Message::query()->with('sender')->find(strtolower($id)) : null,
-            // M4.11 [build_comments]: a comment the reporter can see (CommentPolicy::view).
-            ReportTargetType::Comment => $this->ulid($id) ? Comment::query()->with('buildUpdate.vehicle.owner')->find(strtolower($id)) : null,
+            // M4.11 [build_comments]: a comment the reporter can see (CommentPolicy::view), under an update or (R5-5) on the car itself.
+            ReportTargetType::Comment => $this->ulid($id) ? Comment::query()->with(['buildUpdate.vehicle.owner', 'vehicle.owner'])->find(strtolower($id)) : null,
             // M4.12: an event the reporter can see (EventPolicy::view).
             ReportTargetType::Event => $this->ulid($id) ? Event::query()->with('organiser')->find(strtolower($id)) : null,
             // M4.14 (09 §8.10, DSA): a business profile the reporter can see (BusinessPolicy::view).
             ReportTargetType::Business => $this->ulid($id) ? Business::query()->with('owner')->find(strtolower($id)) : null,
+            // M5.8: a forum post the reporter can see (ForumPostPolicy::view); a thread is reported by its opening post.
+            ReportTargetType::ForumPost => $this->ulid($id) ? ForumPost::query()->with('thread')->find(strtolower($id)) : null,
+            // R4-2.3: a crew the reporter can see (CrewPolicy::view); its founder is the subject.
+            ReportTargetType::Crew => $this->ulid($id) ? Crew::query()->with('founderMembership')->find(strtolower($id)) : null,
         };
 
         if ($target === null) {
@@ -83,7 +90,7 @@ class ReportTargets
     }
 
     /**
-     * WEB-09: a URL of a SPEED CLUB public page, with or without the member web app's /app prefix. Null when it names no page a guest can
+     * WEB-09: a URL of a Speedclub public page, with or without the member web app's /app prefix. Null when it names no page a guest can
      * see now; the form answers that with its help text.
      */
     public function forPublicUrl(string $url): ?ResolvedTarget
@@ -181,7 +188,7 @@ class ReportTargets
     /**
      * Photos of builds, mods and profiles. A message photo is reported with its message, so the context comes along.
      */
-    private function isReportablePhoto(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): bool
+    private function isReportablePhoto(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business|ForumPost|Crew $target): bool
     {
         if (! $target instanceof Media) {
             return true;
@@ -189,7 +196,9 @@ class ReportTargets
 
         $parent = $target->mediable;
 
-        return $parent instanceof Vehicle || $parent instanceof Modification || $parent instanceof User || $parent instanceof BuildUpdate;
+        // M5.6: a photo of an event's gallery (m5.6-contract §4.5): reported by its media id; the uploader is the subject.
+        return $parent instanceof Vehicle || $parent instanceof Modification || $parent instanceof User || $parent instanceof BuildUpdate || $parent instanceof ForumPost
+            || $parent instanceof EventPhoto;
     }
 
     /**
@@ -201,7 +210,7 @@ class ReportTargets
             && ConversationParticipant::query()->where('conversation_id', $message->conversation_id)->where('user_id', $reporter->id)->exists();
     }
 
-    private function subjectOf(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): ?string
+    private function subjectOf(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business|ForumPost|Crew $target): ?string
     {
         return match (true) {
             $target instanceof User => $target->id,
@@ -213,13 +222,15 @@ class ReportTargets
             $target instanceof Comment => $target->user_id,
             $target instanceof Event => $target->organiser_id,
             $target instanceof Business => $target->owner_id,
+            $target instanceof ForumPost => $target->user_id,
+            $target instanceof Crew => $target->founderMembership?->user_id,
         };
     }
 
     /**
      * A target staff act on without a report (own-initiative case, M3.2): its type, member and label, as a report would have them.
      */
-    public function forStaff(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): ResolvedTarget
+    public function forStaff(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business|ForumPost|Crew $target): ResolvedTarget
     {
         $type = match (true) {
             $target instanceof User => ReportTargetType::Member,
@@ -231,12 +242,14 @@ class ReportTargets
             $target instanceof Comment => ReportTargetType::Comment,
             $target instanceof Event => ReportTargetType::Event,
             $target instanceof Business => ReportTargetType::Business,
+            $target instanceof ForumPost => ReportTargetType::ForumPost,
+            $target instanceof Crew => ReportTargetType::Crew,
         };
 
         return $this->resolved($type, $target, $this->subjectOf($target));
     }
 
-    private function resolved(ReportTargetType $type, User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target, ?string $subjectId): ResolvedTarget
+    private function resolved(ReportTargetType $type, User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business|ForumPost|Crew $target, ?string $subjectId): ResolvedTarget
     {
         return new ResolvedTarget($type, $target, $subjectId, $this->label($target), $this->snapshot($target));
     }
@@ -244,7 +257,7 @@ class ReportTargets
     /**
      * Language-free: the member's @name, or the build's title for the build and everything on it; the client adds "Foto von …".
      */
-    private function label(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): string
+    private function label(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business|ForumPost|Crew $target): string
     {
         $label = match (true) {
             $target instanceof User => '@'.$target->username,
@@ -255,6 +268,9 @@ class ReportTargets
             $target instanceof Comment => $target->user?->username === null ? '' : '@'.$target->user->username,
             $target instanceof Event => $target->title,
             $target instanceof Business => $target->name,
+            // M5.8: the thread's title ("deinem Forenbeitrag in „…“").
+            $target instanceof ForumPost => $target->thread->title,
+            $target instanceof Crew => $target->name,
         };
 
         return mb_substr($label, 0, 200);
@@ -269,6 +285,9 @@ class ReportTargets
             $parent instanceof Modification => $this->presenter->fullTitle($parent->vehicle),
             $parent instanceof User => '@'.$parent->username,
             $parent instanceof BuildUpdate => $this->presenter->fullTitle($parent->vehicle),
+            $parent instanceof ForumPost => $parent->thread->title,
+            // M5.6: the event's title.
+            $parent instanceof EventPhoto => $parent->event->title,
             default => '',
         };
     }
@@ -278,7 +297,7 @@ class ReportTargets
      *
      * @return array<string, mixed>
      */
-    private function snapshot(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business $target): array
+    private function snapshot(User|Vehicle|Media|BuildUpdate|Modification|Message|Comment|Event|Business|ForumPost|Crew $target): array
     {
         return match (true) {
             $target instanceof User => [
@@ -316,6 +335,7 @@ class ReportTargets
             $target instanceof Message => ['conversation_id' => $target->conversation_id],
             $target instanceof Comment => [
                 'build_update_id' => $target->build_update_id,
+                'vehicle_id' => $target->vehicle_id,
                 'parent_id' => $target->parent_id,
                 'body' => $target->body,
             ],
@@ -339,6 +359,25 @@ class ReportTargets
                 'about' => $target->about,
                 'services' => $target->services,
                 'website' => $target->website,
+            ],
+            // M5.8: what the post said when reported, with the thread it stood in (the title is part of an opening post).
+            $target instanceof ForumPost => [
+                'thread_id' => $target->thread_id,
+                'thread_title' => $target->thread->title,
+                'is_opening' => $target->is_opening,
+                'parent_id' => $target->parent_id,
+                'body' => $target->body,
+                'tags' => $target->is_opening ? $target->thread->tags : null,
+            ],
+            // R4-2.3: what the crew page showed when reported.
+            $target instanceof Crew => [
+                'slug' => $target->slug,
+                'name' => $target->name,
+                'description' => $target->description,
+                'bundesland' => $target->bundesland?->value,
+                'join_mode' => $target->join_mode->value,
+                'logo_media_id' => $target->logo_media_id,
+                'cover_media_id' => $target->cover_media_id,
             ],
         };
     }

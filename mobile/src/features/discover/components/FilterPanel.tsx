@@ -5,7 +5,13 @@ import { View } from 'react-native';
 import { keepNameTogether } from '@/lib/format';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, space } from '@/theme';
-import { Button, Chip, ListRow, RangeSlider, Skeleton, SkeletonBlock, Text, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Chip } from '@/ui/Chip';
+import { ListRow } from '@/ui/ListRow';
+import { RangeSlider } from '@/ui/RangeSlider';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 
 import { chipLabel } from '../chipLabels';
 import {

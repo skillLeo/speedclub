@@ -13,6 +13,7 @@ import { Button } from './Button';
 import { Hairline } from './Hairline';
 import { OverlayModal, Scrim, usePresence } from './overlay';
 import { useSafeInset } from './safeArea';
+import { SkeletonSurfaceContext } from './Skeleton';
 import { Text } from './Text';
 import { NO_BROWSER_OUTLINE, useFocusRing } from './useFocusRing';
 
@@ -141,6 +142,8 @@ function DialogPanel({ visible, onClose, title, body, children, actions, testID 
 
   return (
     <OverlayModal label={title} describedBy={body ? bodyId : undefined} onRequestClose={close}>
+      {/* DQ-P5G-03: skeletons inside take the raised tone, so they show on the panel. */}
+      <SkeletonSurfaceContext value="raised">
       <Scrim progress={progress} onPress={close} testID={testID ? `${testID}.scrim` : undefined} />
       <View style={[styles.center, { paddingHorizontal: gutter }]}>
         <Animated.View
@@ -212,6 +215,7 @@ function DialogPanel({ visible, onClose, title, body, children, actions, testID 
           </View>
         </Animated.View>
       </View>
+      </SkeletonSurfaceContext>
     </OverlayModal>
   );
 }

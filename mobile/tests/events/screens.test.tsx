@@ -9,6 +9,7 @@ import { EventEditorScreen } from '@/features/events/screens/EventEditorScreen';
 import { EventScreen } from '@/features/events/screens/EventScreen';
 import { EventsScreen } from '@/features/events/screens/EventsScreen';
 import { ManageEventScreen } from '@/features/events/screens/ManageEventScreen';
+import { CheckinScreen } from '@/features/events/screens/CheckinScreen';
 import { MyEventsScreen } from '@/features/events/screens/MyEventsScreen';
 import { useSessionStore } from '@/state/session';
 import { hydrateThemePreference } from '@/theme';
@@ -30,7 +31,10 @@ jest.mock('expo-router', () => ({
   router: mockRouter,
   useLocalSearchParams: () => mockParams,
   usePathname: () => '/events',
+  // M5.2: EVT-01 asks whether it is Entdecken's segment page; here it is pushed in Start's stack (no discover/index), so it is not.
+  useRoute: () => ({ key: 'events-1', name: 'events/index' }),
   useNavigation: () => ({
+    getState: () => ({ routeNames: ['index', 'events/index'], routes: [{ key: 'home-1', name: 'index' }, { key: 'events-1', name: 'events/index' }] }),
     getParent: () => undefined,
     canGoBack: () => true,
     goBack: jest.fn(),
@@ -96,7 +100,9 @@ const ORGANISER = {
   is_sample: false,
   is_editorial: false,
 };
-const FUTURE_START = new Date(Date.now() + 10 * 24 * 3600 * 1000);
+// M5.6: inside "Diese Woche" (the default view, the next seven Berlin days), so the list shows it without a filter.
+const FUTURE_START = new Date(Date.now() + 2 * 24 * 3600 * 1000);
+const LATER_START = new Date(Date.now() + 12 * 24 * 3600 * 1000);
 const FUTURE_END = new Date(FUTURE_START.getTime() + 3 * 3600 * 1000);
 
 const HIDDEN_PLACE = {
@@ -252,12 +258,50 @@ describe('EVT-01 Treffen', () => {
     await renderScreen(<EventsScreen />);
     await waitFor(() => expect(screen.getByTestId('EVT-01.event.e1')).toBeTruthy());
     await act(async () => fireEvent.press(screen.getByTestId('EVT-01.filter.weekend')));
-    await act(async () => fireEvent.press(screen.getByTestId('EVT-01.filter.type.track_day')));
+    // DQ-M52-04: the kinds sit behind one "Art" chip.
+    expect(screen.queryByTestId('EVT-01.filter.type.meet')).toBeNull();
+    await act(async () => fireEvent.press(screen.getByTestId('EVT-01.filter.type')));
+    await act(async () => fireEvent.press(await screen.findByTestId('EVT-01.filter.type.track_day')));
+    expect(screen.getByTestId('EVT-01.filter.type')).toHaveTextContent('Trackday');
     await waitFor(() =>
       expect(
         calls.some((call) => call.url.includes('when=weekend') && call.url.includes('type=track_day')),
       ).toBe(true),
     );
+  });
+
+  it('M5.2: searches title and city with its own field (q), once typing pauses', async () => {
+    flags();
+    const { calls } = stubFetch({ '/events': { body: page([card()]) } });
+    await renderScreen(<EventsScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-01.event.e1')).toBeTruthy());
+    await act(async () => fireEvent.changeText(screen.getByTestId('EVT-01.search'), '  Hocken   heim '));
+    await waitFor(() => expect(calls.some((call) => call.url.includes('q=Hocken+heim') || call.url.includes('q=Hocken%20heim'))).toBe(true));
+  });
+
+  it('M5.2: pushed outside Entdecken it is the page "Treffen" with back and no segments', async () => {
+    flags();
+    stubFetch({ '/events': { body: page([card()]) } });
+    await renderScreen(<EventsScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-01.event.e1')).toBeTruthy());
+    expect(screen.getByTestId('EVT-01.header.back')).toBeTruthy();
+    expect(screen.queryByTestId('EVT-01.segments')).toBeNull();
+    expect(screen.queryByTestId('EVT-01.messages')).toBeNull();
+  });
+
+  it('DQ-M52-05/06: Liste · Karte is one toggle at the end of the search row, and the title stays in the map view', async () => {
+    flags();
+    stubFetch({ '/events': { body: page([card()]) } });
+    await renderScreen(<EventsScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-01.event.e1')).toBeTruthy());
+    expect(screen.queryByTestId('EVT-01.view')).toBeNull();
+    const toMap = screen.getByTestId('EVT-01.view.map');
+    expect(toMap).toHaveAccessibleName('Karte');
+    await act(async () => fireEvent.press(toMap));
+    const toList = await screen.findByTestId('EVT-01.view.list');
+    expect(toList).toHaveAccessibleName('Liste');
+    expect(screen.getByTestId('EVT-01.title')).toHaveTextContent('Treffen');
+    expect(screen.getByTestId('EVT-01.search')).toBeTruthy();
   });
 
   it('invites with the badged sample event when there is nothing near', async () => {
@@ -547,5 +591,345 @@ describe('EVT-06 Organisator-Tools', () => {
     stubFetch({ '/events/nachttreffen-hafen-x1': { body: { data: detail() } } });
     await renderScreen(<ManageEventScreen />);
     await waitFor(() => expect(screen.getByTestId('EVT-06.notOrganiser')).toBeTruthy());
+  });
+});
+
+const later = (extra: Record<string, unknown> = {}) =>
+  card({
+    id: 'e9',
+    slug: 'herbstausfahrt-x9',
+    title: 'Herbstausfahrt Harz',
+    starts_at: LATER_START.toISOString(),
+    ends_at: new Date(LATER_START.getTime() + 3 * 3600 * 1000).toISOString(),
+    ...extra,
+  });
+
+/** `GET events` answered by its `when`, as the server does: `week` only this week's meets, everything else every coming meet. */
+function stubWeek(week: unknown[], upcoming: unknown[]) {
+  const calls: Request[] = [];
+  globalThis.fetch = jest.fn(async (input: Request | string) => {
+    const request = typeof input === 'string' ? new Request(input) : input;
+    calls.push(request);
+    const url = new URL(request.url);
+    const body = url.pathname.endsWith('/events') ? page(url.searchParams.get('when') === 'week' ? week : upcoming) : { message: 'Nicht gefunden', code: 'not_found' };
+    return new Response(JSON.stringify(body), { status: url.pathname.endsWith('/events') ? 200 : 404, headers: { 'Content-Type': 'application/json' } });
+  }) as unknown as typeof fetch;
+  return { calls };
+}
+
+describe('M5.6 EVT-01 "Diese Woche"', () => {
+  it('opens on this week, one header per day, and offers every coming meet after it', async () => {
+    flags();
+    const { calls } = stubWeek([card()], [card(), later()]);
+    await renderScreen(<EventsScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-01.event.e1')).toBeTruthy());
+    // The server knows `week` (m5.6-contract §1); the first page of `upcoming` says whether meets follow.
+    expect(calls.some((call) => call.url.includes('when=week'))).toBe(true);
+    await waitFor(() => expect(screen.getByTestId('EVT-01.allUpcoming')).toBeTruthy());
+    expect(screen.getByTestId('EVT-01.filter.week')).toBeChecked();
+    expect(screen.queryByTestId('EVT-01.event.e9')).toBeNull();
+    expect(screen.getAllByTestId(/^EVT-01\.day\.\d{4}-\d{2}-\d{2}$/)).toHaveLength(1);
+    await act(async () => fireEvent.press(screen.getByTestId('EVT-01.allUpcoming')));
+    await waitFor(() => expect(screen.getByTestId('EVT-01.event.e9')).toBeTruthy());
+    expect(screen.getByTestId('EVT-01.filter.week')).not.toBeChecked();
+    expect(screen.queryByTestId('EVT-01.allUpcoming')).toBeNull();
+  });
+
+  it('says the week is empty and leads to the later meets instead of the sample', async () => {
+    flags();
+    stubWeek([], [later()]);
+    await renderScreen(<EventsScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-01.weekEmpty')).toBeTruthy());
+    expect(screen.getByText('Diese Woche steht noch kein Treffen an.')).toBeTruthy();
+    expect(screen.queryByTestId('EVT-01.empty.event.sample', { includeHiddenElements: true })).toBeNull();
+    await act(async () => fireEvent.press(screen.getByText('Alle kommenden Treffen')));
+    await waitFor(() => expect(screen.getByTestId('EVT-01.event.e9')).toBeTruthy());
+  });
+
+  it('keeps one chip row: Diese Woche · Heute · Wochenende · Monat · Entfernung · Art', async () => {
+    flags();
+    stubFetch({ '/events': { body: page([card()]) } });
+    await renderScreen(<EventsScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-01.event.e1')).toBeTruthy());
+    const labels = ['week', 'today', 'weekend', 'month', 'near', 'type'].map((key) => screen.getByTestId(`EVT-01.filter.${key}`));
+    expect(labels.map((chip) => chip.props['aria-label'] ?? chip.props.accessibilityLabel)).toEqual([
+      'Diese Woche, die nächsten sieben Tage',
+      'Heute',
+      'Wochenende',
+      'Diesen Monat',
+      'Entfernung',
+      'Art',
+    ]);
+  });
+
+  it('opens a deep link with `when=upcoming` on every coming meet', async () => {
+    flags();
+    mockParams = { when: 'upcoming' };
+    stubFetch({ '/events': { body: page([card(), later()]) } });
+    await renderScreen(<EventsScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-01.event.e9')).toBeTruthy());
+  });
+});
+
+const photo = (id: string, extra: Record<string, unknown> = {}) => ({
+  id,
+  media: {
+    id: `m-${id}`,
+    status: 'ready',
+    category: 'other',
+    width: 1080,
+    height: 1080,
+    blurhash: null,
+    thumbhash: null,
+    focal_x: null,
+    focal_y: null,
+    alt: null,
+    sort: 0,
+    variants: [{ width: 640, height: 640, url: `https://speedclub.test/media/${id}-640.webp` }],
+    created_at: null,
+  },
+  source: 'attendee',
+  status: 'approved',
+  uploader: { username: 'nina.r34', display_name: null, city: null, avatar: null, is_sample: false, is_editorial: false },
+  reject_reason: null,
+  created_at: null,
+  reviewed_at: null,
+  is_sample: false,
+  can: { delete: false, report: true, moderate: false },
+  ...extra,
+});
+
+const PAST_START = new Date(Date.now() - 2 * 24 * 3600 * 1000);
+const pastDetail = (extra: Record<string, unknown> = {}, can: Record<string, unknown> = {}) =>
+  detail({
+    starts_at: PAST_START.toISOString(),
+    ends_at: new Date(PAST_START.getTime() + 3 * 3600 * 1000).toISOString(),
+    gallery: {
+      open: true,
+      opens_at: PAST_START.toISOString(),
+      closes_at: new Date(PAST_START.getTime() + 16 * 24 * 3600 * 1000).toISOString(),
+      count: 2,
+      pending: null,
+      mine_pending: 1,
+      preview: [photo('p1'), photo('p2')],
+    },
+    can: { ...detail().can, add_photos: true, ...can },
+    ...extra,
+  });
+
+const nowCheckin = (mine: Record<string, unknown> | null = null) => ({
+  checkin: {
+    opens_at: new Date(Date.now() - 3600 * 1000).toISOString(),
+    closes_at: new Date(Date.now() + 3 * 3600 * 1000).toISOString(),
+    open: true,
+    mine,
+    count: null,
+  },
+});
+
+describe('M5.6 EVT-02 gallery and check-in behind their flags', () => {
+  beforeEach(() => {
+    mockParams = { slug: 'nachttreffen-hafen-x1' };
+  });
+
+  it('shows neither while `events.gallery` and `events.checkin` are off, even when the server sends the fields', async () => {
+    flags();
+    signIn();
+    stubFetch({
+      '/events/nachttreffen-hafen-x1': { body: { data: pastDetail(nowCheckin(), { checkin: true }) } },
+      '/attendees': { body: page([]) },
+    });
+    await renderScreen(<EventScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-02.title')).toBeTruthy());
+    expect(screen.queryByTestId('EVT-02.gallery')).toBeNull();
+    expect(screen.queryByTestId('EVT-02.checkin')).toBeNull();
+    expect(screen.queryByTestId('EVT-02.checkin.done')).toBeNull();
+  });
+
+  it('shows the approved photos, the own pending ones and "Fotos hinzufügen" after the meet', async () => {
+    flags({ events: true, 'events.gallery': true });
+    signIn();
+    stubFetch({
+      '/events/nachttreffen-hafen-x1': { body: { data: pastDetail({ capacity: 40, spots_left: 32 }) } },
+      '/attendees': { body: page([]) },
+    });
+    await renderScreen(<EventScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-02.gallery')).toBeTruthy());
+    expect(screen.getByTestId('EVT-02.gallery.count')).toHaveTextContent('2 Fotos');
+    expect(screen.getByTestId('EVT-02.gallery.minePending')).toHaveTextContent('1 Foto von dir wartet auf Freigabe.');
+    expect(screen.getByTestId('EVT-02.gallery.add')).toBeTruthy();
+    expect(screen.getByTestId('EVT-02.gallery.hint')).toHaveTextContent('sobald der Organisator sie freigibt', { exact: false });
+    // DQ-P5-011: after the meet the answers are history, no free places, and the photos lead before the place card.
+    expect(screen.getByTestId('EVT-02.counts')).toHaveTextContent('38 waren angemeldet');
+    expect(screen.queryByTestId('EVT-02.capacity')).toBeNull();
+    const order = screen.getAllByTestId(/^EVT-02\.(gallery|place)$/).map((node) => node.props.testID as string);
+    expect(order).toEqual(['EVT-02.gallery', 'EVT-02.place']);
+  });
+
+  it('hides the section of a closed gallery without photos', async () => {
+    flags({ events: true, 'events.gallery': true });
+    signIn();
+    stubFetch({
+      '/events/nachttreffen-hafen-x1': {
+        body: { data: pastDetail({ gallery: { open: false, opens_at: null, closes_at: null, count: 0, pending: null, mine_pending: 0, preview: [] } }, { add_photos: false }) },
+      },
+      '/attendees': { body: page([]) },
+    });
+    await renderScreen(<EventScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-02.title')).toBeTruthy());
+    expect(screen.queryByTestId('EVT-02.gallery')).toBeNull();
+  });
+
+  it('checks in with the typed code, and a wrong code lands on the field', async () => {
+    flags({ events: true, 'events.checkin': true });
+    signIn();
+    let tries = 0;
+    const { calls } = stubFetch({
+      '/events/nachttreffen-hafen-x1/checkin': () =>
+        tries++ === 0
+          ? { status: 422, body: { message: 'Der Code stimmt nicht.', code: 'checkin_code_invalid', errors: { code: ['Der Code stimmt nicht.'] } } }
+          : { status: 201, body: { data: { checked_in_at: new Date().toISOString(), profile_visible: true, event: { id: 'e1', slug: 'nachttreffen-hafen-x1', title: 'Nachttreffen am Hafen' } } } },
+      '/events/nachttreffen-hafen-x1': { body: { data: detail({ ...nowCheckin(), my_rsvp: 'going', can: { ...detail().can, checkin: true } }) } },
+      '/attendees': { body: page([]) },
+    });
+    await renderScreen(<EventScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-02.checkin.open')).toBeTruthy());
+    await act(async () => fireEvent.press(screen.getByTestId('EVT-02.checkin.open')));
+    await act(async () => fireEvent.press(await screen.findByTestId('EVT-02.checkin.submit')));
+    expect(await screen.findByText('Gib den Code ein, den der Organisator zeigt.')).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('EVT-02.checkin.code'), 'k7m 2qq');
+    await act(async () => fireEvent.press(screen.getByTestId('EVT-02.checkin.submit')));
+    expect(await screen.findByText('Der Code stimmt nicht oder ist abgelaufen. Frag nach dem aktuellen Code.')).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('EVT-02.checkin.code'), 'K7M2QP');
+    await act(async () => fireEvent.press(screen.getByTestId('EVT-02.checkin.submit')));
+    await waitFor(() => expect(callsTo(calls, 'POST', '/checkin')).toHaveLength(2));
+    expect(await callsTo(calls, 'POST', '/checkin')[1]?.clone().json()).toEqual({ code: 'K7M2QP', profile_visible: true });
+    expect(callsTo(calls, 'POST', '/checkin')[1]?.headers.get('Idempotency-Key')).toBeTruthy();
+  });
+
+  it('says "War dabei" once checked in and lets the member hide it from the profile', async () => {
+    flags({ events: true, 'events.checkin': true });
+    signIn();
+    const { calls } = stubFetch({
+      '/events/nachttreffen-hafen-x1/checkin': { body: { data: { checked_in_at: new Date().toISOString(), profile_visible: false, event: { id: 'e1' } } } },
+      '/events/nachttreffen-hafen-x1': {
+        body: { data: detail({ ...nowCheckin({ checked_in_at: new Date().toISOString(), profile_visible: true }), my_rsvp: 'going' }) },
+      },
+      '/attendees': { body: page([]) },
+    });
+    await renderScreen(<EventScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-02.checkin.wasThere')).toHaveTextContent('War dabei'));
+    expect(screen.queryByTestId('EVT-02.checkin.open')).toBeNull();
+    await act(async () => fireEvent(screen.getByTestId('EVT-02.checkin.visible.switch'), 'valueChange', false));
+    await waitFor(() => expect(callsTo(calls, 'PATCH', '/checkin')).toHaveLength(1));
+    expect(await callsTo(calls, 'PATCH', '/checkin')[0]?.clone().json()).toEqual({ profile_visible: false });
+  });
+});
+
+describe('M5.6 EVT-06 check-in code and photo approval', () => {
+  beforeEach(() => {
+    mockParams = { slug: 'nachttreffen-hafen-x1' };
+  });
+
+  const organiserCan = { rsvp: false, edit: true, cancel: true, post_update: true, view_updates: true, view_attendees: true, report: false };
+
+  it('shows the rotating code as a QR with the real number of check-ins', async () => {
+    flags({ events: true, 'events.checkin': true });
+    signIn('lukas.sc');
+    stubFetch({
+      '/events/nachttreffen-hafen-x1/checkin-code': {
+        body: {
+          data: {
+            code: 'K7M2QP',
+            url: 'https://speedclub.test/app/events/nachttreffen-hafen-x1/checkin?code=K7M2QP',
+            svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1"/></svg>',
+            expires_at: new Date(Date.now() + 300_000).toISOString(),
+            refresh_at: new Date(Date.now() + 270_000).toISOString(),
+            checked_in: 12,
+          },
+        },
+      },
+      '/events/nachttreffen-hafen-x1/updates': { body: { data: [] } },
+      '/events/nachttreffen-hafen-x1': {
+        body: { data: detail({ ...nowCheckin(), location: EXACT_PLACE, can: { ...organiserCan, show_checkin_code: true } }) },
+      },
+    });
+    await renderScreen(<ManageEventScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-06.checkinCode.row')).toBeTruthy());
+    // DQ-P5-013: the helper runs full width under the row, not squeezed beside its value.
+    expect(screen.getByTestId('EVT-06.checkinCode.helper')).toBeTruthy();
+    expect(screen.getByTestId('EVT-06.checkinCode.row')).not.toHaveTextContent(/Treffpunkt/);
+    await act(async () => fireEvent.press(screen.getByTestId('EVT-06.checkinCode.row')));
+    await waitFor(() => expect(screen.getByTestId('EVT-06.checkinCode.count')).toHaveTextContent('12 eingecheckt'));
+    expect(screen.getByText('K7M 2QP')).toBeTruthy();
+  });
+
+  it('approves an attendee’s photo and takes it out of the queue', async () => {
+    flags({ events: true, 'events.gallery': true });
+    signIn('lukas.sc');
+    const { calls } = stubFetch({
+      '/gallery/p1/approve': { body: { data: photo('p1') } },
+      '/events/nachttreffen-hafen-x1/gallery': { body: page([photo('p1', { status: 'pending' })]) },
+      '/events/nachttreffen-hafen-x1/updates': { body: { data: [] } },
+      '/events/nachttreffen-hafen-x1': {
+        body: {
+          data: pastDetail(
+            { gallery: { open: true, opens_at: null, closes_at: null, count: 0, pending: 1, mine_pending: 0, preview: [] }, location: EXACT_PLACE },
+            { ...organiserCan, moderate_photos: true },
+          ),
+        },
+      },
+    });
+    await renderScreen(<ManageEventScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-06.galleryReview.photo.p1')).toBeTruthy());
+    expect(calls.some((call) => call.url.includes('/gallery?') && call.url.includes('status=pending'))).toBe(true);
+    await act(async () => fireEvent.press(screen.getByTestId('EVT-06.galleryReview.approve.p1')));
+    await waitFor(() => expect(callsTo(calls, 'POST', '/gallery/p1/approve')).toHaveLength(1));
+  });
+
+  it('offers neither while the flags are off', async () => {
+    flags();
+    signIn('lukas.sc');
+    stubFetch({
+      '/events/nachttreffen-hafen-x1/updates': { body: { data: [] } },
+      '/events/nachttreffen-hafen-x1': {
+        body: { data: pastDetail({ ...nowCheckin(), location: EXACT_PLACE }, { ...organiserCan, moderate_photos: true, show_checkin_code: true }) },
+      },
+    });
+    await renderScreen(<ManageEventScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-06.attendees')).toBeTruthy());
+    expect(screen.queryByTestId('EVT-06.checkinCode.row')).toBeNull();
+    expect(screen.queryByTestId('EVT-06.galleryReview')).toBeNull();
+  });
+});
+
+describe('M5.6 EVT-07 Check-in from the QR link', () => {
+  it('takes the code from the link, asks before it checks in, then says "Du bist eingecheckt"', async () => {
+    flags({ events: true, 'events.checkin': true });
+    signIn();
+    mockParams = { slug: 'nachttreffen-hafen-x1', code: 'k7m2qp' };
+    const { calls } = stubFetch({
+      '/events/nachttreffen-hafen-x1/checkin': {
+        status: 201,
+        body: { data: { checked_in_at: new Date().toISOString(), profile_visible: true, event: { id: 'e1' } } },
+      },
+      '/events/nachttreffen-hafen-x1': { body: { data: detail(nowCheckin()) } },
+    });
+    await renderScreen(<CheckinScreen />);
+    await waitFor(() => expect(screen.getByTestId('EVT-07.title')).toHaveTextContent('Bei Nachttreffen am Hafen einchecken?'));
+    expect(screen.getByTestId('EVT-07.checkin.code')).toHaveDisplayValue('K7M 2QP');
+    expect(callsTo(calls, 'POST', '/checkin')).toHaveLength(0);
+    await act(async () => fireEvent.press(screen.getByTestId('EVT-07.cta.primary')));
+    await waitFor(() => expect(screen.getByTestId('EVT-07.success.title')).toHaveTextContent('Du bist eingecheckt'));
+    expect(await callsTo(calls, 'POST', '/checkin')[0]?.clone().json()).toEqual({ code: 'K7M2QP', profile_visible: true });
+  });
+
+  it('is not there while `events.checkin` is off', async () => {
+    flags();
+    signIn();
+    mockParams = { slug: 'nachttreffen-hafen-x1', code: 'K7M2QP' };
+    stubFetch({ '/events/nachttreffen-hafen-x1': { body: { data: detail() } } });
+    await renderScreen(<CheckinScreen />);
+    expect(screen.getByTestId('EVT-07.unavailable')).toBeTruthy();
   });
 });

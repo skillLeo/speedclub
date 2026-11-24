@@ -45,7 +45,7 @@ it('lets only an Owner ask, never for the own account, only with a reason and a 
         ->and(fn () => app(ResetStaffTwoFactor::class)->handle($owner, $owner, m36Reason()))->toThrow(TeamRefused::class, __('team.refused.self'))
         ->and(fn () => app(ResetStaffTwoFactor::class)->handle($owner, m31Staff('support', confirmed: false), m36Reason()))->toThrow(TeamRefused::class, __('team.refused.no_two_factor'))
         ->and(fn () => app(ResetStaffTwoFactor::class)->handle($owner, m31Staff('support', attributes: ['status' => StaffStatus::Deactivated]), m36Reason()))->toThrow(TeamRefused::class)
-        ->and(fn () => app(ResetStaffTwoFactor::class)->handle($owner, m31Staff('support'), 'kurz'))->toThrow(ValidationException::class);
+        ->and(fn () => app(ResetStaffTwoFactor::class)->handle($owner, m31Staff('support'), str_repeat('x', 1001)))->toThrow(ValidationException::class);
 });
 
 it('needs a second Owner to approve: not an Admin, not the requester', function () {

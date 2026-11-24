@@ -62,13 +62,18 @@ export function filtersText(filters: Record<string, unknown>): string {
         .join('&');
 }
 
+/** Per filter key, value → name (HomeController `filterLabels`: catalogue names, enum and option labels). */
+export type FilterLabels = Record<string, Record<string, string>>;
+
 /**
- * DQ-641: the stored filters as readable chips ("Marke: bmw", "ab 340 PS", "Baujahr bis 2005"), so a pasted Discover link reads back
- * as what it matches. Values stay as Discover writes them (slugs), the key names are translated.
+ * DQ-641 / DQ-P5-102: the stored filters as readable chips ("Marke: Nissan", "ab 340 PS", "Baujahr bis 2005"), so a pasted Discover
+ * link reads back as what it matches. Key names are translated; values take their catalogue or option name from `labels` and keep
+ * the slug Discover writes only when the server knows no name for it (a value typed after the page loaded).
  */
-export function filterChips(filters: Record<string, unknown>, t: (key: string, params?: Record<string, string>) => string): string[] {
+export function filterChips(filters: Record<string, unknown>, t: (key: string, params?: Record<string, string>) => string, labels: FilterLabels = {}): string[] {
     return Object.entries(filters).map(([key, value]) => {
-        const text = Array.isArray(value) ? value.map(String).join(', ') : String(value);
+        const name = (item: unknown): string => labels[key]?.[String(item)] ?? String(item);
+        const text = Array.isArray(value) ? value.map(name).join(', ') : name(value);
         if (key === 'power_min' || key === 'power_max' || key === 'year_min' || key === 'year_max') return t(`content.home.filter_keys.${key}`, { value: text });
         const label = t(`content.home.filter_keys.${key}`);
         return label === `content.home.filter_keys.${key}` ? `${key}: ${text}` : `${label}: ${text}`;

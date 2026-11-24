@@ -18,6 +18,12 @@ export type ChipProps = {
   /** Set for a toggle or choice: role checkbox (or `radio`) with `aria-checked`. Omit for a plain action. */
   selected?: boolean;
   selectionRole?: 'checkbox' | 'radio';
+  /**
+   * The chip opens a sheet or dialog instead of toggling (EVT-01 "Art", "Entfernung"): role button whatever `selected` says, so a
+   * screen reader does not announce a checkbox that never checks; `selected` keeps only the look, and the accessible name carries the
+   * active value ("Art: Treffen").
+   */
+  opensSheet?: boolean;
   /** Adds the 16 × with a 44 hit area. */
   onRemove?: () => void;
   /** Name of the × for screen readers; defaults to "{label}: Entfernen" with the word from namespace common. */
@@ -29,10 +35,18 @@ export type ChipProps = {
    */
   accessibilityLabel?: string;
   icon?: IconName;
+  /**
+   * Opt-in for key data that must stay whole at a large font (PROF-02 "JDM Ruhrpott · Gründer"): the label may take a second line,
+   * broken between words (no hyphen), and the pill grows with it. Off (default): one line with an ellipsis (DQ-187).
+   */
+  wrap?: boolean;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
+
+/** The lines a `wrap` chip's label may take before it ends in an ellipsis. */
+export const CHIP_WRAP_LINES = 2;
 
 const REMOVE_VISUAL_WIDTH = size.icon.s + size.buttonPaddingX.s;
 /** Inside the shell's border, so the removable chip stays 36 like the plain one. */
@@ -54,6 +68,8 @@ const useStyles = createStyles((t) => ({
     minWidth: t.size.touchMin,
     paddingHorizontal: t.space[12],
   },
+  // `wrap`: air above and below a second line; one line still sits inside the 32 (callout 20 + 2 × 4).
+  wrapped: { paddingVertical: t.space[4] },
   selected: { backgroundColor: t.color.bg.inverse, borderColor: t.color.bg.inverse },
   disabled: { borderColor: t.color.border.subtle },
   hover: { backgroundColor: t.color.state.hover },
@@ -89,11 +105,13 @@ export function Chip({
   onPress,
   selected,
   selectionRole = 'checkbox',
+  opensSheet = false,
   onRemove,
   removeLabel,
   count,
   accessibilityLabel,
   icon,
+  wrap = false,
   disabled = false,
   style,
   testID,
@@ -102,7 +120,7 @@ export function Chip({
   const styles = useStyles();
   const isSelected = selected === true;
   const color: ColorToken = disabled ? 'text.disabled' : isSelected ? 'text.inverse' : 'text.primary';
-  const toggle = selected !== undefined;
+  const toggle = selected !== undefined && !opensSheet;
   const a11y = toggle
     ? ({ role: selectionRole, 'aria-checked': isSelected } as const)
     : ({ role: 'button' } as const);
@@ -121,7 +139,7 @@ export function Chip({
   const content = (
     <>
       {icon ? <Icon name={icon} size={16} color={color} /> : null}
-      <Text variant="callout" color={color} selectable={false} hyphenate={false} numberOfLines={1} style={styles.label}>
+      <Text variant="callout" color={color} selectable={false} hyphenate={false} numberOfLines={wrap ? CHIP_WRAP_LINES : 1} style={styles.label}>
         {/* "Filter" and its count are separate boxes: their visible text must read "Filter 3", not "Filter3" (WCAG 2.5.3). */}
         {endsWord(label, count !== undefined)}
       </Text>
@@ -148,6 +166,7 @@ export function Chip({
         style={[styles.hug, style]}
         contentStyle={(state) => [
           styles.chip,
+          wrap ? styles.wrapped : null,
           isSelected ? styles.selected : null,
           disabled ? styles.disabled : null,
           visualState(state),

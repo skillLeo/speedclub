@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Models\BuildScore;
 use App\Models\Media;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -22,7 +23,7 @@ use Illuminate\Support\Collection;
 class VehicleCardResource extends JsonResource
 {
     /** What toArray reads; load it for a list. */
-    public const RELATIONS = ['make', 'vehicleModel', 'generation', 'specs', 'cover', 'media', 'activeQrCode'];
+    public const RELATIONS = ['make', 'vehicleModel', 'generation', 'specs', 'cover', 'media', 'activeQrCode', 'buildScore'];
 
     /**
      * @return array<string, mixed>
@@ -97,6 +98,13 @@ class VehicleCardResource extends JsonResource
             'updates_count' => $this->ownerUpdatesCount($vehicle, $viewer),
             /** Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             'is_sample' => $vehicle->getAttribute('is_sample') === true,
+            /**
+             * M5.9c: the Build Score (0–1000) and its stage (1–5), for GAR-01 and the cards; null until it was first computed. Ranks and
+             * parts are on GET vehicles/{id}/build-score.
+             *
+             * @var array{total: int, stage: int}|null
+             */
+            'build_score' => $this->buildScore(),
             /** @var string|null */
             'published_at' => $vehicle->getAttribute('published_at')?->toIso8601String(),
             'updated_at' => $vehicle->updated_at?->toIso8601String(),
@@ -122,6 +130,16 @@ class VehicleCardResource extends JsonResource
              */
             'qr' => $qr === null ? null : ['code' => $qr->code, 'url' => app(QrCodes::class)->url($qr)],
         ];
+    }
+
+    /**
+     * @return array{total: int, stage: int}|null
+     */
+    protected function buildScore(): ?array
+    {
+        $score = $this->resource->buildScore;
+
+        return $score instanceof BuildScore ? ['total' => $score->total, 'stage' => $score->stage] : null;
     }
 
     /**

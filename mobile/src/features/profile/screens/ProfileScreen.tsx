@@ -6,13 +6,23 @@ import { useWindowDimensions, View } from 'react-native';
 import { useMe, type Me } from '@/api/queries/auth';
 import { useMyVehicles } from '@/api/queries/profile';
 import { FormNotice } from '@/features/auth/components/FormNotice';
+import { DexProfileEntry } from '@/features/dex/components/DexProfileEntry';
+import { CrewsProfileEntry } from '@/features/crews/components/CrewsProfileEntry';
+import { useBadgeUnlockToast } from '@/features/gift/components/BadgeUnlock';
+import { InsightsProfileEntry, useInsightsEntry } from '@/features/insights/components/InsightsProfileEntry';
+import { useOwnProfileGift } from '@/features/gift/components/ProfileGift';
+import { useWrappedEntrySeason, WrappedProfileEntry } from '@/features/wrapped/components/WrappedProfileEntry';
 import { useAddVehicle } from '@/features/shell/useAddVehicle';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size, useBreakpoint } from '@/theme';
-import { ErrorState, toast, useCollapsingHeader, type HeaderAction } from '@/ui';
+import { ErrorState } from '@/ui/ErrorState';
+import { type HeaderAction } from '@/ui/Header';
+import { toast } from '@/ui/toast';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
+import { RowGroup } from '@/ui/RowGroup';
 
 import { GuestInvitation, guestHeroHeight } from '../components/GuestInvitation';
 import { PROFILE_COLUMN_MAX, PROFILE_WIDE_MAX, ProfileHeader, profileCover, profileCoverHeight, profileCoverWidth } from '../components/ProfileHeader';
@@ -20,7 +30,8 @@ import { ProfileFrame } from '../components/ProfileFrame';
 import { ProfileSkeleton } from '../components/ProfileSkeleton';
 import { EventsPanel, GaragePanel, initialProfileTab, ProfileTabBar, profileTabs, SavedPanel, UpdatesPanel, useProfileTabFlags, type ProfileTab } from '../components/ProfileTabs';
 import { profileVehicles } from '../media';
-import { publicProfileUrl, shareLink } from '../share';
+import { profileShareUrl, shareLink } from '../share';
+import { useProfileTabScroll } from '../tabScroll';
 
 const ROUTE = 'PROF-01';
 const PROFILE_PATH = '/profile';
@@ -29,7 +40,28 @@ const useStyles = createStyles((t) => ({
   column: { maxWidth: PROFILE_COLUMN_MAX, width: '100%' },
   wideColumn: { maxWidth: PROFILE_WIDE_MAX },
   centred: { flexGrow: 1, justifyContent: 'center', paddingTop: t.space[24] },
+  shortcuts: { marginTop: t.space[16] },
 }));
+
+/**
+ * DQ-P5G-66: "Mein Dex" and, once a season is released, "Mein Wrapped" as one inset group of two rows (one possessive), not two
+ * boxes 16 apart.
+ */
+function ProfileShortcuts() {
+  const styles = useStyles();
+  const season = useWrappedEntrySeason();
+  // M5.7 (10 §6.1): "Statistiken" (INS-01) leads the group while the `insights` flag is on.
+  const insights = useInsightsEntry();
+  return (
+    <RowGroup style={styles.shortcuts} testID={`${ROUTE}.shortcuts`}>
+      {insights ? <InsightsProfileEntry routeId={ROUTE} divider /> : null}
+      {/* R4-2.3: "Meine Crews" (CREW-04) while the `crews` flag is on; the row draws nothing otherwise. */}
+      <CrewsProfileEntry routeId={ROUTE} divider />
+      <DexProfileEntry routeId={ROUTE} divider={season !== null} />
+      <WrappedProfileEntry routeId={ROUTE} />
+    </RowGroup>
+  );
+}
 
 /** A restriction that keeps the member from changing the profile (PATCH me/profile is `not-restricted:publishing`). */
 export function useProfileRestriction(me: Me | undefined): string | null {
@@ -65,9 +97,14 @@ export function ProfileScreen() {
   const [width, setWidth] = useState(windowWidth);
   const [sharing, setSharing] = useState(false);
   const params = useLocalSearchParams<{ tab?: string }>();
-  const [tab, setTab] = useState<ProfileTab>(() => initialProfileTab(params.tab));
+  // CR2-3: a tap switches at once and the page keeps a sane place per tab (tabScroll.ts).
+  const tabState = useProfileTabScroll<ProfileTab>(initialProfileTab(params.tab), header.scrollY);
+  const tab = tabState.tab;
   const restriction = useProfileRestriction(me.data);
   const loaded = status === 'member' ? me.data : undefined;
+  // M5.9d: level, founding line and badge row; the one unlock toast of this app start (also mounted on Start).
+  const gift = useOwnProfileGift(loaded, loaded?.username ?? null, ROUTE);
+  useBadgeUnlockToast(ROUTE);
   // The empty state has no vehicles, so its count says 0 (DQ-123).
   const member = loaded && qaState === 'empty' ? { ...loaded, stats: { ...loaded.stats, vehicles: 0 } } : loaded;
   const vehicles = qaState === 'empty' ? [] : profileVehicles(vehiclesQuery.data);
@@ -83,7 +120,8 @@ export function ProfileScreen() {
 
   const share = async () => {
     if (!member?.username) return;
-    const url = publicProfileUrl(member.username);
+    // M5.7: the shared address carries `?via=share` (contract §2.4).
+    const url = profileShareUrl(member.username);
     if (!url) return;
     setSharing(true);
     try {
@@ -166,16 +204,20 @@ export function ProfileScreen() {
           sharing={sharing}
           onEdit={() => router.push('/profile/edit')}
           onShare={() => void share()}
-          onQrCodes={() => router.push('/profile/qr')}
+          onQrCodes={() => router.push('/stickers')}
           onFollowers={() => router.push({ pathname: '/profile/connections', params: { tab: 'followers' } })}
           onFollowing={() => router.push({ pathname: '/profile/connections', params: { tab: 'following' } })}
           notice={restriction ? <FormNotice message={restriction} tone="info" testID={`${ROUTE}.restricted`} /> : null}
           readOnly={restriction !== null}
+          dex={<ProfileShortcuts />}
+          gift={gift}
         />
         <View style={[styles.column, kind === 'desktop' ? styles.wideColumn : null, { paddingHorizontal: gutter }]}>
-          <ProfileTabBar routeId={ROUTE} tabs={tabs} value={current} onChange={setTab} />
+          <ProfileTabBar routeId={ROUTE} tabs={tabs} value={current} onChange={tabState.select} barRef={tabState.barRef} />
           {/* The other tabs keep the feed column inside the wide one: rows and lists do not stretch to 1200. */}
-          {current === 'garage' ? panel : <View style={{ maxWidth: inner }}>{panel}</View>}
+          <View style={tabState.panelStyle} testID={`${ROUTE}.panel`}>
+            {current === 'garage' ? panel : <View style={{ maxWidth: inner }}>{panel}</View>}
+          </View>
         </View>
       </>
     );
@@ -188,6 +230,7 @@ export function ProfileScreen() {
       title={member ? member.display_name || `@${member.username ?? ''}` : t('title')}
       actions={[settings]}
       header={header}
+      scrollRef={tabState.scrollRef}
       collapseAt={collapseAt}
       // DQ-1159: the bar spans the cover (the guest's invitation runs across the pane).
       photoWidth={guest ? undefined : profileCoverWidth(width, kind)}

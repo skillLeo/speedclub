@@ -36,6 +36,8 @@ describe('App Links and universal links (M1.7, M2.1)', () => {
           { scheme: 'https', host: 'speedclub.de', pathPrefix: '/b/' },
           { scheme: 'https', host: 'speedclub.de', pathPrefix: '/brands/' },
           { scheme: 'https', host: 'speedclub.de', pathPrefix: '/e/' },
+          // M5.9d: the invite link (INV-02).
+          { scheme: 'https', host: 'speedclub.de', pathPrefix: '/join/' },
           { scheme: 'https', host: 'speedclub.de', path: '/app/reset-password' },
           { scheme: 'https', host: 'speedclub.de', path: '/app/verify-email' },
           { scheme: 'https', host: 'speedclub.de', path: '/auth/magic' },
@@ -65,6 +67,7 @@ describe('App Links and universal links (M1.7, M2.1)', () => {
       { scheme: 'https', host: 'staging.speedclub.de', port: '8443', pathPrefix: '/b/' },
       { scheme: 'https', host: 'staging.speedclub.de', port: '8443', pathPrefix: '/brands/' },
       { scheme: 'https', host: 'staging.speedclub.de', port: '8443', pathPrefix: '/e/' },
+      { scheme: 'https', host: 'staging.speedclub.de', port: '8443', pathPrefix: '/join/' },
       { scheme: 'https', host: 'staging.speedclub.de', port: '8443', path: '/app/reset-password' },
       { scheme: 'https', host: 'staging.speedclub.de', port: '8443', path: '/app/verify-email' },
       { scheme: 'https', host: 'staging.speedclub.de', port: '8443', path: '/auth/magic' },

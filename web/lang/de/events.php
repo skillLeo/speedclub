@@ -13,4 +13,8 @@ return [
     'open_limit' => 'Du hast schon :max offene Treffen. Lösch einen Entwurf oder warte, bis ein Treffen vorbei ist.',
     'cannot_answer_own' => 'Bei deinem eigenen Treffen bist du als Organisator dabei.',
     'organiser_left' => 'Der Organisator hat sein Konto geschlossen.',
+    // M5.6 Galerie.
+    'photo_too_small' => 'Dieses Foto ist zu klein. Die kürzere Seite braucht mindestens :min Pixel.',
+    'gallery_limit_own' => 'Du hast schon :max Fotos zu diesem Treffen hinzugefügt. Lösch eins, um ein neues hinzuzufügen.',
+    'gallery_limit_event' => 'Die Galerie dieses Treffens ist mit :max Fotos voll.',
 ];

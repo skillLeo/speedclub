@@ -141,9 +141,13 @@ describe('Approvals::request', function () {
         expect(fn () => m31Ask(m31Staff('admin', attributes: ['status' => StaffStatus::Suspended])))->toThrow(AuthorizationException::class);
     });
 
-    it('needs a reason of 10 to 1000 characters', function (string $reason) {
-        expect(fn () => m31Approvals()->request('test.record', ['value' => 'x'], $reason, m31Staff('admin')))->toThrow(ValidationException::class);
-    })->with(['short' => 'zu kurz', 'blank' => '          ', 'long' => str_repeat('a', 1001)]);
+    it('takes an optional reason of at most 1000 characters (ADR-540: no reason required)', function () {
+        expect(fn () => m31Approvals()->request('test.record', ['value' => 'x'], str_repeat('a', 1001), m31Staff('admin')))->toThrow(ValidationException::class);
+
+        $request = m31Approvals()->request('test.record', ['value' => 'x'], '', m31Staff('admin'));
+        expect($request->status)->toBe(ApprovalStatus::Pending)
+            ->and(AuditEvent::query()->where('action', ApprovalEvent::Requested->value)->sole()->reason)->toBeNull();
+    });
 
     it('validates the payload before asking', function () {
         expect(fn () => m31Ask(m31Staff('admin'), []))->toThrow(ValidationException::class);
@@ -277,10 +281,11 @@ describe('Approvals::approve', function () {
 });
 
 describe('Approvals::deny, cancel, pendingFor and expire', function () {
-    it('denies with a comment, by someone who may approve', function () {
+    it('denies with an optional comment, by someone who may approve', function () {
         $request = m31Ask(m31Staff('admin'));
 
-        expect(fn () => m31Approvals()->deny($request, m31Staff('owner'), ''))->toThrow(ValidationException::class);
+        // ADR-540: the comment is optional; a too short one is still refused.
+        expect(fn () => m31Approvals()->deny($request, m31Staff('owner'), 'ab'))->toThrow(ValidationException::class);
         expect(fn () => m31Approvals()->deny($request, m31Staff('analyst'), 'Nicht zuständig.'))->toThrow(AuthorizationException::class);
 
         $done = m31Approvals()->deny($request, m31Staff('owner'), 'Nicht nötig.');

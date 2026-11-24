@@ -328,9 +328,38 @@
                 "note": "For legal defence. The period is still with legal counsel."
             },
             "qr_scans": {
-                "label": "QR scans",
+                "label": "Sticker scans",
                 "note": "Only counted views per day, no personal data.",
                 "value": "totals only"
+            },
+            "view_events": {
+                "label": "Single views (stats)",
+                "note": "Only a check value keyed per day, without any personal link from the next day. Daily totals stay."
+            },
+            "weekly_recaps": {
+                "label": "Weekly recap log",
+                "note": "Sent, skipped or unreachable, with the week's numbers; 12 weeks."
+            },
+            "engagement_push_claims": {
+                "label": "Engagement push counters",
+                "note": "At most three per week and member; deleted afterwards."
+            },
+            "engagement_daily": {
+                "label": "Insights overview day counters",
+                "note": "Totals per day only (dropped pushes, build reminders), no personal data."
+            },
+            "ai_spec_suggestions": {
+                "label": "AI manufacturer figures (per generation)",
+                "note": "Shared cache without member data."
+            },
+            "ai_text_normalisations": {
+                "label": "AI matching of typed parts",
+                "note": "The typed text only, without any link to the person."
+            },
+            "forum_thread_summaries": {
+                "label": "AI summaries in the forum",
+                "note": "With the thread; gone at once when a post that went in is removed or deleted.",
+                "value": "with the thread"
             },
             "application_logs": {
                 "label": "Server logs",

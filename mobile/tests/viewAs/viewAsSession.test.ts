@@ -26,6 +26,27 @@ jest.mock('@/api/client', () => {
   return jest.requireActual('@/api/client');
 });
 
+// Node 22 (the Jest runtime on the build machine) has no Web Storage global, Node 25+ has one: without it the spies on
+// Storage.prototype below threw before any check. A stand-in Storage class and localStorage keep the check as strict: any
+// write to localStorage goes through Storage.prototype.setItem and fails the test.
+const storageGlobals = globalThis as unknown as { Storage?: unknown; localStorage?: unknown };
+if (typeof storageGlobals.Storage === 'undefined') {
+  class StandInStorage {
+    private readonly items = new Map<string, string>();
+    getItem(key: string): string | null {
+      return this.items.get(key) ?? null;
+    }
+    setItem(key: string, value: string): void {
+      this.items.set(key, String(value));
+    }
+    removeItem(key: string): void {
+      this.items.delete(key);
+    }
+  }
+  storageGlobals.Storage = StandInStorage;
+  storageGlobals.localStorage ??= new StandInStorage();
+}
+
 const TOKEN = '41|Zb8kQ2rVt6YpLm3NcXw9HsAe1JdFgUo5RiTqKy7B';
 
 function fakeWindow(hash: string, stored: string | null = null) {

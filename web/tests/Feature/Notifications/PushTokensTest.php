@@ -161,7 +161,7 @@ describe('ExpoPush', function () {
         Http::fake();
         $tokens = PushToken::factory()->count(2)->create(['user_id' => $this->member->id]);
 
-        expect(app(ExpoPush::class)->send($tokens, 'SPEED CLUB', 'Text', []))->toBe(0)
+        expect(app(ExpoPush::class)->send($tokens, 'Speedclub', 'Text', []))->toBe(0)
             ->and(app(ExpoPush::class)->checkReceipts())->toBe(['checked' => 0, 'removed_tokens' => 0]);
         Http::assertNothingSent();
     });
@@ -180,7 +180,7 @@ describe('ExpoPush', function () {
             )]);
         }]);
 
-        $tickets = app(ExpoPush::class)->send($tokens, 'SPEED CLUB', '@lukas.sc folgt dir jetzt.', ['type' => 'new_follower']);
+        $tickets = app(ExpoPush::class)->send($tokens, 'Speedclub', '@lukas.sc folgt dir jetzt.', ['type' => 'new_follower']);
 
         expect($tickets)->toBe(149)
             ->and(DB::table('push_tickets')->count())->toBe(149)
@@ -194,7 +194,7 @@ describe('ExpoPush', function () {
         Http::fake(['exp.host/*' => Http::response('down', 503)]);
         $tokens = PushToken::factory()->count(2)->create(['user_id' => $this->member->id]);
 
-        expect(app(ExpoPush::class)->send($tokens, 'SPEED CLUB', 'Text', []))->toBe(0);
+        expect(app(ExpoPush::class)->send($tokens, 'Speedclub', 'Text', []))->toBe(0);
     });
 
     it('reads receipts, removes DeviceNotRegistered tokens and forgets checked and stale tickets', function () {

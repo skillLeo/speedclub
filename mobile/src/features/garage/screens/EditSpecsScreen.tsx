@@ -7,20 +7,24 @@ import { z } from 'zod';
 
 import { useFlag } from '@/api/queries/appConfig';
 import { useSaveSpecs, useUpdateVehicle, type GarageVehicle } from '@/api/queries/garage';
+import { SpecsAssist } from '@/features/ai/SpecsAssist';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
 import { now } from '@/lib/clock';
 import { useFormat } from '@/lib/useFormat';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
-import { TextInput, toast } from '@/ui';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 
 import { FormGroup } from '../components/fields';
 import { EditorForm, EditorScreen, RestrictedNotice } from '../components/frames';
 import { SpecsFields } from '../components/SpecsFields';
 import { saveErrorMessage } from '../errors';
 import { checkHuAu, formatCalendarDay, formatDueMonth, huAuState, huAuText, maskHuAu, reminderDay } from '../huAu';
-import { specsRequest, specsValues, type SpecsValues } from '../model';
+import { hasEmptySpecs, specsRequest, specsValues, type SpecsValues } from '../model';
 import { fieldMessage, issue, specsSchema } from '../schemas';
+import { useSpecsSuggestion } from '../specsSuggestion';
 import { useOwnVehicle, useSessionHeld } from '../useOwnVehicle';
 import { SPECS_FIELDS } from './wizard/WizardSpecsScreen';
 
@@ -72,7 +76,7 @@ function SpecsForm({ vehicle, restriction }: { vehicle: GarageVehicle; restricti
     () => ({ ...specsValues(vehicle.specs, format.locale), huAu: huAuText(vehicle.hu_au_due) }),
     [format.locale, vehicle.hu_au_due, vehicle.specs],
   );
-  const { control, handleSubmit, setError, formState } = useForm<FormValues>({
+  const { control, handleSubmit, setError, formState, getValues, setValue } = useForm<FormValues>({
     resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: fresh,
@@ -86,6 +90,7 @@ function SpecsForm({ vehicle, restriction }: { vehicle: GarageVehicle; restricti
   const held = useSessionHeld();
   const fieldsLocked = locked && !held;
   const pending = save.isPending || saveHuAu.isPending;
+  const suggestion = useSpecsSuggestion({ specs: vehicle.specs, locale: format.locale, getValues, setValue, routeId: ROUTE });
 
   useEffect(() => {
     if (!saved) return;
@@ -93,14 +98,14 @@ function SpecsForm({ vehicle, restriction }: { vehicle: GarageVehicle; restricti
     else router.replace(`/garage/${vehicle.id}?tab=specs`);
   }, [router, saved, vehicle.id]);
 
-  const submit = handleSubmit(async (values) => {
+  const submit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     const { huAu, ...specs } = values;
     const specsDirty = Object.keys(dirtyFields).some((key) => key !== 'huAu');
     const huAuDirty = huAuEnabled && Boolean(dirtyFields.huAu);
     try {
       let history = false;
-      if (specsDirty || !huAuDirty) history = (await save.mutateAsync(specsRequest(specs, format.locale))).history_recorded;
+      if (specsDirty || !huAuDirty) history = (await suggestion.send(save.mutateAsync, specsRequest(specs, format.locale))).history_recorded;
       if (huAuDirty) {
         const check = checkHuAu(huAu, today);
         // Through PATCH vehicles/{id}, which takes `hu_au_due` today (VehicleAttributesRequest).
@@ -111,7 +116,7 @@ function SpecsForm({ vehicle, restriction }: { vehicle: GarageVehicle; restricti
     } catch (error) {
       setNotice(applyServerErrors(error, setError, { ...SPECS_FIELDS, hu_au_due: 'huAu' }) === null ? null : saveErrorMessage(t, error));
     }
-  });
+  }));
 
   return (
     <EditorForm
@@ -123,7 +128,17 @@ function SpecsForm({ vehicle, restriction }: { vehicle: GarageVehicle; restricti
       {locked && restriction ? <RestrictedNotice message={restriction} testID={`${ROUTE}.restricted`} /> : null}
       {notice ? <FormNotice message={notice} testID={`${ROUTE}.notice`} /> : null}
       {/* SpecsFields reads only the spec keys, which this form holds unchanged; the extra HU/AU key is invisible to it. */}
-      <SpecsFields control={control as unknown as Control<SpecsValues>} disabled={fieldsLocked} routeId={ROUTE} />
+      <SpecsAssist
+        vehicle={vehicle}
+        open={hasEmptySpecs(fresh)}
+        getValues={getValues}
+        onTake={suggestion.take}
+        locale={format.locale}
+        saveLabel={t('editor.save')}
+        disabled={fieldsLocked}
+        testID={`${ROUTE}.specsSuggestion`}
+      />
+      <SpecsFields control={control as unknown as Control<SpecsValues>} disabled={fieldsLocked} routeId={ROUTE} marks={suggestion.marks} />
       {huAuEnabled ? <HuAuField control={control} disabled={fieldsLocked} today={today} /> : null}
     </EditorForm>
   );

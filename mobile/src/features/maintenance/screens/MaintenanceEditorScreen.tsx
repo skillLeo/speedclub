@@ -42,7 +42,17 @@ import { newUlid } from '@/lib/ulid';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { Button, Chip, Dialog, Header, IconButton, OfflineBanner, Photo, Screen, Text, TextInput, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Chip } from '@/ui/Chip';
+import { Dialog } from '@/ui/Dialog';
+import { Header } from '@/ui/Header';
+import { IconButton } from '@/ui/IconButton';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Photo } from '@/ui/Photo';
+import { Screen } from '@/ui/Screen';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 
 import {
   centsText,

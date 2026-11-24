@@ -63,7 +63,11 @@ class DecisionReversedMail extends AuthMail
     {
         return match ($original->action) {
             DecisionAction::RemoveContent => $this->targetType === ReportTargetType::Member ? 'remove_profile' : 'remove_content',
-            DecisionAction::Restrict => $original->restrictionType() === DecisionRestriction::Publishing ? 'restrict_publishing' : 'restrict_messaging',
+            DecisionAction::Restrict => match ($original->restrictionType()) {
+                DecisionRestriction::Publishing => 'restrict_publishing',
+                DecisionRestriction::Forum => 'restrict_forum',
+                default => 'restrict_messaging',
+            },
             default => 'suspend',
         };
     }

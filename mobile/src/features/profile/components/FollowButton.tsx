@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { readMemberProfileNow, useFollow } from '@/api/queries/social';
 import { hapticFor } from '@/lib/haptics';
 import { useRequireAuth, useSessionStore } from '@/state/session';
-import { Button, toast, type ButtonSize } from '@/ui';
+import { Button, type ButtonSize } from '@/ui/Button';
+import { toast } from '@/ui/toast';
 import { useViewAsLock } from '@/features/viewAs/useViewAs';
 
 export type FollowButtonProps = {

@@ -14,33 +14,30 @@ import { FormNotice } from '@/features/auth/components/FormNotice';
 import { useViewAsLock } from '@/features/viewAs/useViewAs';
 import { useHeldForm } from '@/features/auth/heldForm';
 import { applyServerErrors, isCode, useDebouncedValue } from '@/features/auth/forms';
+import { USERNAME_LENGTH_VALUES } from '@/features/auth/limits';
 import { normalizeUsername, USERNAME_MAX_LENGTH, usernameViolations } from '@/features/auth/schemas';
 import { useHideTabBar } from '@/features/shell/tabBarLayout';
 import { now } from '@/lib/clock';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, layout, size, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import {
-  Button,
-  DiscardGuardDialog,
-  ErrorState,
-  Header,
-  Icon,
-  OfflineBanner,
-  Screen,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  StickyCTABar,
-  Text,
-  TextInput,
-  toast,
-  useCollapsingHeader,
-  type CollapsingHeader,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { DiscardGuardDialog } from '@/ui/DiscardGuardDialog';
+import { ErrorState } from '@/ui/ErrorState';
+import { Header } from '@/ui/Header';
+import { Icon } from '@/ui/icons/Icon';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { StickyCTABar } from '@/ui/StickyCTABar';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
+import { useCollapsingHeader, type CollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { GuestPrompt } from '../components/GuestPrompt';
 import { ProfileImagesEditor } from '../components/ProfileImagesEditor';
@@ -103,7 +100,7 @@ function useFieldMessage() {
   const { t } = useTranslation(['profile', 'auth']);
   return (error: FieldError | undefined) => {
     if (!error?.message) return undefined;
-    return error.type === 'server' ? error.message : t(error.message);
+    return error.type === 'server' ? error.message : t(error.message, USERNAME_LENGTH_VALUES);
   };
 }
 
@@ -226,7 +223,7 @@ function EditProfileForm({ me, header, held }: { me: Me; header: CollapsingHeade
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saved]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     const nextUsername = normalizeUsername(values.username);
     const patch = profilePatch(values, dirtyFields);
@@ -260,7 +257,7 @@ function EditProfileForm({ me, header, held }: { me: Me; header: CollapsingHeade
     }
     toast(t('edit.saved'), { haptic: 'success', testID: 'PROF-03.saved' });
     setSaved(true);
-  });
+  }));
 
   const usernameHelper = cooldownUntil
     ? t('edit.fields.usernameCooldown', { date: format.dateTime(cooldownUntil) })
@@ -315,7 +312,7 @@ function EditProfileForm({ me, header, held }: { me: Me; header: CollapsingHeade
                     onBlur={field.onBlur}
                     label={t('edit.fields.username')}
                     helper={usernameHelper}
-                    error={fieldMessage(fieldState.error) ?? (reason ? authT(`username.reason.${reason}`) : undefined)}
+                    error={fieldMessage(fieldState.error) ?? (reason ? authT(`username.reason.${reason}`, USERNAME_LENGTH_VALUES) : undefined)}
                     loading={check.isFetching}
                     disabled={locked || cooldownUntil !== null}
                     autoCapitalize="none"

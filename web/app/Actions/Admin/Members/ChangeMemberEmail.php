@@ -14,6 +14,7 @@ use App\Services\Audit\Audit;
 use App\Services\Auth\AuthMailer;
 use App\Services\Auth\CredentialEpoch;
 use App\Services\Auth\VerificationCodes;
+use App\Services\Members\MemberActivation;
 use App\Services\Notifications\Notifier;
 use App\Support\EmailAddress;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -91,6 +92,8 @@ class ChangeMemberEmail
         $this->notifier->security($member, SecurityNotice::EmailChanged, to: $previous, variant: 'staff');
         $locale = $member->getAttribute('locale');
         $this->mailer->sendLater($member->email, is_string($locale) ? $locale : app()->getLocale(), new SecurityNoticeMail(SecurityNotice::EmailChanged, variant: 'staff'));
+        // M5.9d: staff confirmed the identity and the address; an account that never activated does now (founding number, invite).
+        app(MemberActivation::class)->activate($member);
 
         return $member;
     }

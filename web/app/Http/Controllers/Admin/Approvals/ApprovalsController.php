@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Approvals;
 
 use App\Enums\ApprovalStatus;
 use App\Enums\DataExportStatus;
+use App\Http\Controllers\Admin\Support\ApprovalsGateway;
 use App\Http\Controllers\Controller;
 use App\Models\ApprovalRequest;
 use App\Models\DataExport;
@@ -115,6 +116,8 @@ class ApprovalsController extends Controller
                 'decided_by' => $r->decider->name ?? null,
                 'decided_at' => $r->decided_at?->toIso8601String(),
                 'decision_comment' => $r->decision_comment,
+                // SF-1 / SEC-P5-04: executed by its own requester as an Owner-Override (ADR-507), never shown as a four-eyes approval.
+                'owner_override' => ($result['owner_override'] ?? false) === true,
                 'result' => [
                     'done' => is_int($result['done'] ?? null) ? $result['done'] : null,
                     'failed' => is_int($result['failed'] ?? null) ? $result['failed'] : null,
@@ -123,6 +126,8 @@ class ApprovalsController extends Controller
                 ],
                 'can_decide' => $pending && $approvals->mayDecide($r, $staff),
                 'can_cancel' => $pending && $r->requested_by === $staff->getKey(),
+                // M5.1 (ADR-507): for the requester's own pending request, who can approve it and whether they may override it.
+                'waiting' => $pending && $r->requested_by === $staff->getKey() ? ApprovalsGateway::waiting($r, $staff) : null,
                 'download' => $r->requested_by === $staff->getKey() ? self::download($r, $approvals, $staff) : null,
             ];
         }, $requests);

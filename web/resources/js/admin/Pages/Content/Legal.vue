@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { PhFilePlus, PhFloppyDisk, PhRocketLaunch, PhScales, PhTrash } from '@phosphor-icons/vue';
+import { PhArrowCounterClockwise, PhFilePlus, PhFloppyDisk, PhRocketLaunch, PhScales, PhTrash, PhWarning } from '@phosphor-icons/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, reactive, ref, watch } from 'vue';
 import ApprovalNotice from '../../Components/patterns/ApprovalNotice.vue';
@@ -10,9 +10,10 @@ import PageHeader from '../../Components/shell/PageHeader.vue';
 import { Badge, Button, Checkbox, ConfirmDialog, EmptyQueue, Field, Input, Skeleton, StatusPill, Textarea } from '../../Components/ui';
 import { focusRing } from '../../Components/ui/styles';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { confirmPasswordFirst, passwordRecentlyConfirmed } from '../../composables/recentPassword';
-import { formatDateTime } from '../../lib/format';
+import { formatDateTime, keepShortHyphens } from '../../lib/format';
 import { routeOr } from '../../lib/routes';
 import MarkdownEditor from './Partials/MarkdownEditor.vue';
 import { useLeaveGuard } from './Partials/configDraft';
@@ -21,7 +22,9 @@ import { useLeaveGuard } from './Partials/configDraft';
  * ADM-31 Rechtstexte (06 §3, 08_LEGAL_COMPLIANCE): every document per language with its published versions; one draft per document and
  * language in Markdown with the members' preview; "erfordert erneute Zustimmung" for AGB and Datenschutz with the summary the app's
  * re-consent sheet shows. Content editors draft; publishing needs legal.publish ⚿, and a re-consent publish a second person (four-eyes).
- * While that approval waits, the draft is locked (MF-3: the approver approves exactly this text).
+ * While that approval waits, the draft is locked (MF-3: the approver approves exactly this text). A draft started from an older text than
+ * the live one (DQ-P5-101) shows both versions, cannot be published (the server refuses it too) and offers "Neu aufsetzen": the draft is
+ * discarded and a new one opens on the live text.
  */
 interface DocumentRow {
     key: string;
@@ -48,9 +51,11 @@ interface Draft {
     requires_reconsent: boolean;
     summary: string | null;
     revision: string;
+    /** DQ-P5-101: the version the draft was started from (null: before any was live) and the live one, when they differ. */
+    stale: { base: string | null; live: string } | null;
     author: string | null;
     updated_at: string | null;
-    approval: { id: string; expires_at: string } | null;
+    approval: { id: string; expires_at: string; approvers?: string[]; approvers_total?: number; override?: boolean } | null;
 }
 
 const props = defineProps<{
@@ -67,7 +72,7 @@ const state = usePageState();
 const failedDialog = qaDialogFailed();
 const pageState = computed(() => (failedDialog ? 'ready' : state.value));
 // The editor's own server error (a refusal, or ?dialog=write&qaState=error), next to the buttons that caused it.
-const saveError = computed(() => (failedDialog && qaDialog() === 'write' ? trans('ui.state.server_error') : publishOpen.value || discardOpen.value ? null : (errors.value.refused ?? null)));
+const saveError = computed(() => (failedDialog && qaDialog() === 'write' ? trans('ui.state.server_error') : publishOpen.value || discardOpen.value || rebaseOpen.value ? null : (errors.value.refused ?? null)));
 const versions = computed(() => (pageState.value === 'empty' ? [] : props.versions));
 const draft = computed(() => (pageState.value === 'empty' ? null : props.draft));
 
@@ -130,10 +135,11 @@ function save(): void {
 }
 const publishOpen = ref(qaDialog() === 'publish');
 const discardOpen = ref(qaDialog() === 'discard');
-const fourEyes = computed(() => props.selected.reconsentable && (draft.value?.requires_reconsent ?? form.requires_reconsent));
-function publish(reason: string | null): void {
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && props.selected.reconsentable && (draft.value?.requires_reconsent ?? form.requires_reconsent));
+function publish(): void {
     if (!draft.value) return;
-    visit('publish', 'post', routeOr('admin.content.legal.publish', `/admin/content/legal/drafts/${draft.value.id}/publish`, { draft: draft.value.id }), { reason, revision: draft.value.revision }, true, () => (publishOpen.value = false));
+    visit('publish', 'post', routeOr('admin.content.legal.publish', `/admin/content/legal/drafts/${draft.value.id}/publish`, { draft: draft.value.id }), { revision: draft.value.revision }, true, () => (publishOpen.value = false));
 }
 function discard(): void {
     if (!draft.value) {
@@ -146,7 +152,21 @@ function discard(): void {
         editing.value = false;
     });
 }
-const dialogError = computed(() => (failedDialog ? trans('ui.state.server_error') : (errors.value.refused ?? errors.value.reason ?? null)));
+// "Neu aufsetzen" (DQ-P5-101): discard the stale draft; the editor then opens a new draft on the live text (load(), next version).
+const rebaseOpen = ref(false);
+const staleTitle = computed(() => {
+    const stale = draft.value?.stale;
+    if (!stale) return '';
+    return stale.base === null ? trans('content.legal.stale_title_first', { live: stale.live }) : trans('content.legal.stale_title', { base: stale.base, live: stale.live });
+});
+function rebase(): void {
+    if (!draft.value) return;
+    visit('discard', 'delete', routeOr('admin.content.legal.draft.discard', `/admin/content/legal/drafts/${draft.value.id}`, { draft: draft.value.id }), {}, false, () => {
+        rebaseOpen.value = false;
+        editing.value = true;
+    });
+}
+const dialogError = computed(() => (failedDialog ? trans('ui.state.server_error') : (errors.value.refused ?? null)));
 
 const docHref = (row: { key: string; locale: string }) => `${routeOr('admin.content.legal', '/admin/content/legal')}?document=${row.key}&locale=${row.locale}`;
 const isSelected = (row: DocumentRow) => row.key === props.selected.key && row.locale === props.selected.locale;
@@ -199,13 +219,21 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
                         <Button v-if="can.edit && !editing" size="sm" variant="primary" :icon="PhFilePlus" data-testid="ADM-31.start" @click="editing = true">{{ trans('content.legal.start_draft') }}</Button>
                     </div>
 
-                    <ApprovalNotice v-if="draft?.approval" :approval="{ id: draft.approval.id, title: 'approvals.legal_publish_reconsent.title', expires_at: draft.approval.expires_at, existing: true }" test-id="ADM-31.approval" />
+                    <ApprovalNotice v-if="fourEyesSwitch && draft?.approval" :approval="{ ...draft.approval, title: 'approvals.legal_publish_reconsent.title', existing: true }" test-id="ADM-31.approval" />
 
                     <section v-if="editing" class="flex flex-col gap-16 rounded-sm border border-line bg-surface p-16" :aria-label="trans('content.legal.draft_title')" data-testid="ADM-31.editor">
                         <div class="flex flex-wrap items-center gap-8">
                             <StatusPill tone="warning" :label="draft ? trans('content.legal.draft_version', { version: draft.version }) : trans('content.legal.new_draft')" />
                             <Badge v-if="dirty" tone="info">{{ trans('config.draft.unsaved') }}</Badge>
                             <span v-if="draft" class="text-admin-base text-ink-3">{{ trans('content.legal.draft_by', { name: draft.author ?? trans('config.draft.someone'), date: formatDateTime(draft.updated_at) }) }}</span>
+                        </div>
+                        <div v-if="draft?.stale" class="flex items-start gap-12 rounded-sm border border-warning px-16 py-12" role="status" data-testid="ADM-31.stale">
+                            <PhWarning :size="20" class="mt-2 shrink-0 text-warning" aria-hidden="true" />
+                            <div class="flex min-w-0 flex-1 flex-col items-start gap-8">
+                                <p class="text-admin-base-strong text-ink">{{ staleTitle }}</p>
+                                <p class="text-admin-base text-ink-2">{{ trans('content.legal.stale_body') }}</p>
+                                <Button v-if="can.edit && !draft.approval" size="sm" variant="secondary" :icon="PhArrowCounterClockwise" data-testid="ADM-31.rebase" @click="rebaseOpen = true">{{ trans('content.legal.rebase') }}</Button>
+                            </div>
                         </div>
                         <StateBlock v-if="saveError" kind="error" :title="saveError" :retryable="false" test-id="ADM-31.refused" />
                         <div class="w-200">
@@ -224,7 +252,7 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
                         <div class="flex flex-wrap items-center justify-end gap-8 border-t border-line-subtle pt-16">
                             <Button v-if="can.edit && !locked" size="sm" variant="destructive" :icon="PhTrash" data-testid="ADM-31.discard" @click="draft ? (discardOpen = true) : discard()">{{ draft ? trans('config.draft.discard') : trans('ui.actions.cancel') }}</Button>
                             <Button v-if="can.edit && !locked" size="sm" :variant="dirty || !draft ? 'primary' : 'secondary'" :icon="PhFloppyDisk" :disabled="!dirty && draft !== null" :loading="processing === 'save'" data-testid="ADM-31.save" @click="save">{{ trans('config.draft.save') }}</Button>
-                            <Button v-if="can.publish && draft && !dirty && !draft.approval" size="sm" variant="primary" :icon="PhRocketLaunch" data-testid="ADM-31.publish" @click="publishOpen = true">{{ fourEyes ? trans('config.draft.request') : trans('config.draft.publish') }}</Button>
+                            <Button v-if="can.publish && draft && !dirty && !draft.approval && !draft.stale" size="sm" variant="primary" :icon="PhRocketLaunch" data-testid="ADM-31.publish" @click="publishOpen = true">{{ fourEyes ? trans('config.draft.request') : trans('config.draft.publish') }}</Button>
                         </div>
                         <p v-if="!can.publish && draft" class="text-admin-base text-ink-3">{{ trans('content.legal.editor_only') }}</p>
                     </section>
@@ -252,7 +280,7 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
                                         </td>
                                         <td class="whitespace-nowrap px-12 tabular-nums text-ink-2">{{ formatDateTime(row.published_at) }}</td>
                                         <td class="px-12 text-ink-2">{{ row.published_by ?? trans('content.legal.seeded') }}</td>
-                                        <td class="px-12 py-8 text-ink-2">{{ row.reason ?? '–' }}</td>
+                                        <td class="px-12 py-8 text-ink-2">{{ row.reason ? keepShortHyphens(row.reason) : '–' }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -268,7 +296,6 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
             :body="fourEyes ? trans('content.legal.request_body') : trans('content.legal.publish_body', { document: docLabel(selected) })"
             :confirm-label="fourEyes ? trans('config.draft.request') : trans('config.draft.publish')"
             tone="neutral"
-            reason
             :four-eyes="fourEyes"
             :processing="processing === 'publish'"
             :error="dialogError"
@@ -284,6 +311,16 @@ const docLabel = (row: { key: string; locale: string }) => `${trans(`content.leg
             :error="dialogError"
             test-id="ADM-31.discard-dialog"
             @confirm="discard"
+        />
+        <ConfirmDialog
+            v-model:open="rebaseOpen"
+            :title="trans('content.legal.rebase_title')"
+            :body="trans('content.legal.rebase_body', { draft: draft?.version ?? '', live: draft?.stale?.live ?? '' })"
+            :confirm-label="trans('content.legal.rebase')"
+            :processing="processing === 'discard'"
+            :error="dialogError"
+            test-id="ADM-31.rebase-dialog"
+            @confirm="rebase"
         />
         <ConfirmDialog v-model:open="guardOpen" :title="trans('config.draft.leave_title')" :body="trans('config.draft.leave_body')" :confirm-label="trans('config.draft.leave')" test-id="ADM-31.leave-dialog" @confirm="leave" />
     </div>

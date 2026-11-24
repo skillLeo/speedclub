@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Support;
 
+use App\Http\Middleware\EnsureStaffTwoFactor;
 use App\Models\Staff;
 
 /**
@@ -15,7 +16,8 @@ final class StaffCounts
      */
     public static function for(?Staff $staff): array
     {
-        if ($staff === null || ! $staff->hasEnabledTwoFactorAuthentication()) {
+        // ADR-540: an account without TOTP gets its badges too while 2FA für Admin-Konten is Optional.
+        if ($staff === null || (! $staff->hasEnabledTwoFactorAuthentication() && ! EnsureStaffTwoFactor::admitsWithoutCode($staff))) {
             return ['approvals_for_me' => 0, 'alerts' => 0];
         }
 

@@ -21,6 +21,15 @@ enum KeywordField: string
     case Comment = 'comment';
     // M4.12: an event's title, description and organiser rules; public, so blocked like a build note.
     case EventText = 'event_text';
+    // M5.4: the custom line of a sticker design; printed on a car in public, so blocked like a build note.
+    case StickerLine = 'sticker_line';
+    // M5.8: a forum thread's title, tags and the text of a forum post; public, so blocked like a build note.
+    case ForumText = 'forum_text';
+    // R4-2.3: a crew's name and description; public, so blocked like a build note.
+    case CrewText = 'crew_text';
+    // R5-2e VEH-07 2.0: the own line of a share card; shared as a picture, so blocked like a build note (never stored publicly, so no flag
+    // report: only the block hits count).
+    case ShareCardText = 'share_card_text';
 
     public function mayBlock(): bool
     {

@@ -16,7 +16,6 @@ use App\Services\Search\VehicleSearchProjector;
 use App\Services\Showcase\SampleContent;
 use App\Services\Social\MessagingEligibility;
 use Database\Seeders\FeatureFlagSeeder;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
@@ -404,7 +403,7 @@ describe('more reads (review of 3bf1d0c)', function () {
             ->toBe($on ? null : CannotMessageReason::RecipientClosed);
     })->with('sample flag');
 
-    it('landing page: samples never crowd real builds out of the featured candidates while the flag is off', function () {
+    it('landing page: samples never crowd real builds out of the lead candidates while the flag is off', function () {
         $real = User::factory()->create(['indexable' => true]);
         $sample = User::factory()->create(['indexable' => true, 'is_sample' => true]);
         $realBuild = homeBuild($real, 1);
@@ -413,9 +412,10 @@ describe('more reads (review of 3bf1d0c)', function () {
         }
         smpFlag(false);
 
-        $featured = app(LandingPage::class)->data(Request::create('/'))['featured'];
+        // R4-1.5: the lead is what the sticker block's code leads to.
+        $lead = app(LandingPage::class)->lead();
 
-        expect($featured === null || str_contains(json_encode($featured, JSON_THROW_ON_ERROR), (string) $realBuild->slug))->toBeTrue()
-            ->and($featured === null ? '' : json_encode($featured, JSON_THROW_ON_ERROR))->not->toContain('"is_sample":true');
+        expect($lead === null || $lead->is($realBuild))->toBeTrue()
+            ->and($lead?->getAttribute('is_sample'))->not->toBeTrue();
     });
 });

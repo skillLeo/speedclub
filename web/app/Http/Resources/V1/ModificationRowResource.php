@@ -3,6 +3,7 @@
 namespace App\Http\Resources\V1;
 
 use App\Enums\BusinessStatus;
+use App\Enums\ModPriority;
 use App\Enums\ModStatus;
 use App\Enums\ProductStatus;
 use App\Models\Business;
@@ -10,6 +11,7 @@ use App\Models\Media;
 use App\Models\Modification;
 use App\Models\Product;
 use App\Services\AppConfig\FeatureFlags;
+use App\Services\BuildScore\BuildScoreInputs;
 use App\Services\Garage\ModPresenter;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Showcase\SampleContent;
@@ -20,12 +22,13 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 /**
  * One row of FS-3 Highlights and the Mods tab, and of GAR-09. The cost is the owner's alone (09 §11, M4.9 ruling: costs are never public): for anybody else
- * the field is null, and the amount never leaves the server.
+ * the field is null, and the amount never leaves the server. M5.3: the same holds for a plan's budget.
  *
  * @property Modification $resource
  */
@@ -77,6 +80,7 @@ class ModificationRowResource extends JsonResource
              * @var string|null
              */
             'installed_label' => $installed instanceof CarbonInterface ? $installed->copy()->locale($locale)->translatedFormat('F Y') : null,
+            ...$this->plan($request, $locale),
             /**
              * Always false since M4.9 (09 §11, ADR ruling): costs are never public. Kept for older apps.
              *
@@ -97,6 +101,11 @@ class ModificationRowResource extends JsonResource
             'legal_status' => $legal?->value,
             /** @var string|null */
             'legal_status_label' => $legal?->label($locale),
+            /**
+             * M5.9c "TÜV-eingetragen": the owner states the mod is entered in the vehicle papers (legal_status registered or
+             * individual_approval). The owner's statement, never our judgement; false while sig.mod_legal_status is off.
+             */
+            'is_registered' => $legal !== null && in_array($legal, BuildScoreInputs::REGISTERED, true),
             /** @var MediaResource|null */
             'thumb' => $thumb === null ? null : new MediaResource($thumb),
             /**
@@ -205,18 +214,84 @@ class ModificationRowResource extends JsonResource
     }
 
     /**
+     * M5.3 "Pläne" (m5.3-contract §2): the plan fields, null on a mod that is not planned; the budget is the owner's alone, like the cost.
+     *
+     * @return array{target_month: string|null, target_label: string|null, is_due: bool, priority: ModPriority|null, priority_label: string|null, plan_sort: int|null, budget: array{cents: int, label: string}|null}
+     */
+    private function plan(Request $request, string $locale): array
+    {
+        $mod = $this->resource;
+        $planned = $mod->getAttribute('status') === ModStatus::Planned;
+        $target = $planned ? $mod->getAttribute('target_month') : null;
+        $target = $target instanceof CarbonInterface ? $target : null;
+        $priority = $planned ? $mod->getAttribute('priority') : null;
+        $priority = $priority instanceof ModPriority ? $priority : null;
+        $sort = $planned ? $mod->getAttribute('plan_sort') : null;
+        $now = Carbon::now(config()->string('speedclub.display_timezone'))->format('Y-m');
+
+        return [
+            /**
+             * M5.3: the target month of a plan as YYYY-MM; null for a mod that is not planned or a plan without one.
+             *
+             * @var string|null
+             */
+            'target_month' => $target?->format('Y-m'),
+            /**
+             * "März 2027"
+             *
+             * @var string|null
+             */
+            'target_label' => $target?->copy()->locale($locale)->translatedFormat('F Y'),
+            /** M5.3: a plan whose target month has come (Europe/Berlin); false for anything else. */
+            'is_due' => $target !== null && $target->format('Y-m') <= $now,
+            /**
+             * M5.3: optional priority of a plan.
+             *
+             * @var ModPriority|null
+             */
+            'priority' => $priority,
+            /**
+             * "Hoch"
+             *
+             * @var string|null
+             */
+            'priority_label' => $priority?->label($locale),
+            /**
+             * M5.3: the owner's order of the plans (PUT vehicles/{id}/plans/order); null for a mod that is not planned.
+             *
+             * @var int|null
+             */
+            'plan_sort' => is_int($sort) ? $sort : null,
+            /**
+             * M5.3: the planned budget, the owner's alone like `cost` (never another member, a guest, a public page or staff in view-as).
+             *
+             * @var array{cents: int, label: string}|null
+             */
+            'budget' => $this->privateAmount($request, 'budget_cents', 'garage.budget', $locale),
+        ];
+    }
+
+    /**
      * @return array{cents: int, label: string}|null
      */
     private function cost(Request $request, string $locale): ?array
     {
-        $mod = $this->resource;
-        $cents = $mod->getAttribute('cost_cents');
+        return $this->privateAmount($request, 'cost_cents', 'garage.cost', $locale);
+    }
 
-        // ADR-441: a private cost is the owner's alone, never staff's in view-as.
+    /**
+     * @return array{cents: int, label: string}|null
+     */
+    private function privateAmount(Request $request, string $column, string $label, string $locale): ?array
+    {
+        $mod = $this->resource;
+        $cents = $mod->getAttribute($column);
+
+        // ADR-441: a private cost or budget is the owner's alone, never staff's in view-as.
         if (! is_int($cents) || ! $mod->vehicle->isOwnedBy(Viewer::from($request)) || ViewAs::active()) {
             return null;
         }
 
-        return ['cents' => $cents, 'label' => (string) __('garage.cost', ['amount' => Units::formatMoney($cents, $locale)], $locale)];
+        return ['cents' => $cents, 'label' => (string) __($label, ['amount' => Units::formatMoney($cents, $locale)], $locale)];
     }
 }

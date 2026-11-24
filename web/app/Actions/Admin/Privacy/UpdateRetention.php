@@ -30,7 +30,7 @@ class UpdateRetention
     public function handle(Staff $by, array $periods, string $reason): ConfigVersion
     {
         StaffAtoms::ensure($by, 'retention.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         return DB::transaction(function () use ($by, $periods, $reason): ConfigVersion {
             $draft = $this->versions->draft(ConfigKey::Retention);

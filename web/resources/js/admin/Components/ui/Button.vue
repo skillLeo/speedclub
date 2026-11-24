@@ -10,7 +10,7 @@ defineOptions({ name: 'UiButton' });
  * `destructive` = the outlined secondary button with accent.fg text and icon: destructive and high-risk actions in page headers, cards
  * and bulk bars (DQ-530). `danger` (the red fill) is only for the confirm button inside a confirm dialog.
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive' | 'destructive-ghost';
 export type ButtonSize = 'sm' | 'md';
 
 const props = withDefaults(
@@ -36,6 +36,8 @@ const variants: Record<ButtonVariant, string> = {
     ghost: 'text-ink-2 hover:bg-hover hover:text-ink active:bg-pressed',
     danger: 'bg-accent-fill text-on-accent hover:bg-accent-fill-pressed active:bg-accent-fill-pressed',
     destructive: 'border border-line-control text-accent hover:bg-hover active:bg-pressed',
+    // A row-level delete next to other rows (DQ-P5-064): red text only, so a list of them does not stack red outlines.
+    'destructive-ghost': 'text-accent hover:bg-hover active:bg-pressed',
 };
 
 const sizes: Record<ButtonSize, string> = {

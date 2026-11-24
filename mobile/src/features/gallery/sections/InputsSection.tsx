@@ -1,7 +1,10 @@
 import { useState } from 'react';
 
 import { radius, size } from '@/theme';
-import { RangeSlider, SearchBar, Stepper, TextInput, type RangeValue } from '@/ui';
+import { RangeSlider, type RangeValue } from '@/ui/RangeSlider';
+import { SearchBar } from '@/ui/SearchBar';
+import { Stepper } from '@/ui/Stepper';
+import { TextInput } from '@/ui/TextInput';
 
 import { noop } from '../data';
 import { FORCED, Group, SectionScreen, Specimen, Wrap } from '../parts';

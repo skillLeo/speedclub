@@ -1,0 +1,268 @@
+{
+    "badges": {
+        "nav": {
+            "title": "Abzeichen"
+        },
+        "title": "Abzeichen",
+        "intro": "Abzeichen gibt es nur nach festen Regeln aus den eigenen Daten der Mitglieder. Eine geänderte Regel gilt ab dem nächsten nächtlichen Lauf oder sofort mit „Jetzt anwenden“. Verdiente Abzeichen bleiben, auch wenn sich eine Regel ändert. Entziehen kann ein Abzeichen nur das Team, einem Mitglied einzeln (Mitglied › Abzeichen).",
+        "caption": "Abzeichen in der Reihenfolge der App",
+        "empty_title": "Noch keine Abzeichen",
+        "empty_body": "Lege das erste Abzeichen an. Die Standard-Abzeichen kommen mit dem Seeder.",
+        "view_only": "Nur ansehen: Abzeichen ändern dürfen Owner, Admin und die Redaktion.",
+        "new": "Neues Abzeichen",
+        "columns": {
+            "name": "Abzeichen",
+            "category": "Kategorie",
+            "tier": "Stufe",
+            "hidden": "Versteckt",
+            "active": "Status",
+            "earned": "Verdient",
+            "sort": "Reihenfolge",
+            "rule": "Regel"
+        },
+        "filters": {
+            "label": "Filter",
+            "q": "Suche",
+            "q_placeholder": "Name oder Schlüssel",
+            "category": "Kategorie",
+            "tier": "Stufe",
+            "hidden": "Versteckt",
+            "active": "Status",
+            "any": "Alle",
+            "yes": "Ja",
+            "no": "Nein",
+            "apply": "Anwenden"
+        },
+        "presets": {
+            "inactive": "Inaktiv",
+            "hidden": "Versteckt"
+        },
+        "status": {
+            "active": "Aktiv",
+            "inactive": "Inaktiv"
+        },
+        "hidden_yes": "Versteckt",
+        "hidden_no": "Sichtbar",
+        "tiers": {
+            "bronze": "Bronze",
+            "silver": "Silber",
+            "gold": "Gold"
+        },
+        "categories": {
+            "garage": "Garage",
+            "mods": "Mods",
+            "spotting": "Spots",
+            "sets": "Sets",
+            "treffen": "Treffen",
+            "forum": "Forum",
+            "sticker": "Sticker",
+            "founding": "Gründung",
+            "community": "Community"
+        },
+        "metrics": {
+            "published_vehicles": "Veröffentlichte Autos",
+            "documented_mods": "Dokumentierte Mods (Marke, Datum, Foto)",
+            "mod_categories": "Mod-Bereiche",
+            "build_score": "Bester Build Score",
+            "maintenance_logs": "Eingetragene Wartungen",
+            "cars_spotted": "Gespottete Autos",
+            "cities_spotted": "Städte mit Spots (tagsüber)",
+            "night_spots": "Spots bei Nacht (nicht mehr verfügbar)",
+            "first_spotter_foils": "Unter den ersten drei Spottern",
+            "unique_spotters_of_my_cars": "Verschiedene Spotter eines eigenen Autos",
+            "sets_completed": "Komplette Dex-Sets",
+            "set_completed": "Ein bestimmtes Dex-Set komplett",
+            "events_attended": "Besuchte Treffen (Check-in)",
+            "forum_solutions": "Als Lösung markierte Forum-Antworten",
+            "sticker_active": "Aktiver Sticker am Auto",
+            "sticker_scans": "Sticker-Scans",
+            "founding_member": "Founding Member",
+            "invites_accepted": "Angenommene Einladungen",
+            "member_days": "Tage seit der Aktivierung",
+            "level": "Level",
+            "views_received": "Aufrufe von Profil und Autos",
+            "helpful_received": "Als hilfreich markierte Forum-Beiträge"
+        },
+        "rule": {
+            "title": "Regel",
+            "intro": "Feste Regel aus einer freigegebenen Kennzahl. Kein Zufall, nichts für Likes, Beiträge oder Anmeldungen.",
+            "metric": "Kennzahl",
+            "operator": "Bedingung",
+            "gte": "mindestens",
+            "eq": "ist erfüllt",
+            "value": "Wert",
+            "set": "Dex-Set",
+            "set_placeholder": "Set wählen",
+            "summary_gte": ":metric: mindestens :value",
+            "summary_eq": ":metric",
+            "summary_set": "Dex-Set „:set“ komplett",
+            "preview": "Würde heute :count Mitglieder erhalten",
+            "preview_one": "Würde heute 1 Mitglied erhalten",
+            "preview_loading": "Zählt …",
+            "preview_failed": "Die Vorschau ließ sich nicht laden.",
+            "preview_hint": "Echte, aktive Mitglieder, für die die Regel heute gilt, ob sie das Abzeichen schon haben oder nicht. Beispielkonten zählen nie."
+        },
+        "form": {
+            "create_title": "Neues Abzeichen",
+            "texts": "Texte",
+            "texts_intro": "So steht es in der App. Kein Wort über Tempo, Rennen oder Rekorde auf der Straße.",
+            "key": "Schlüssel",
+            "key_hint": "3 bis 64 Zeichen: a–z, 0–9 und Bindestrich. Lässt sich später nicht ändern.",
+            "name_de": "Name (Deutsch)",
+            "name_en": "Name (Englisch)",
+            "description_de": "Beschreibung (Deutsch)",
+            "description_en": "Beschreibung (Englisch)",
+            "hint_de": "Tipp (Deutsch)",
+            "hint_en": "Tipp (Englisch)",
+            "hint_hint": "Bei versteckten Abzeichen Pflicht: Die App zeigt „???“ und diesen Tipp, bis das Abzeichen verdient ist.",
+            "settings": "Einordnung",
+            "category": "Kategorie",
+            "tier": "Stufe",
+            "sort": "Reihenfolge",
+            "sort_hint": "Kleinere Zahlen stehen in der App weiter vorn.",
+            "hidden": "Versteckt",
+            "hidden_on": "Versteckt bis verdient",
+            "hidden_off": "Für alle sichtbar",
+            "active": "Aktiv",
+            "active_on": "Aktiv: wird verliehen",
+            "active_off": "Inaktiv: wird nicht verliehen",
+            "save": "Speichern",
+            "create": "Anlegen",
+            "discard_title": "Änderungen verwerfen?",
+            "discard_body": "Deine Änderungen an diesem Abzeichen sind noch nicht gespeichert.",
+            "discard": "Verwerfen",
+            "error": "Das Abzeichen ließ sich nicht speichern. Prüf die markierten Felder.",
+            "load_error": "Das Abzeichen konnte nicht geladen werden.",
+            "earned": "Verdient von :count Mitgliedern",
+            "earned_one": "Verdient von 1 Mitglied",
+            "earned_none": "Noch von niemandem verdient"
+        },
+        "actions": {
+            "edit": "Bearbeiten",
+            "activate": "Aktivieren",
+            "deactivate": "Deaktivieren",
+            "apply": "Jetzt anwenden",
+            "activate_title": "Abzeichen aktivieren?",
+            "activate_body": "Es wird ab dem nächsten Lauf verliehen und erscheint in der App.",
+            "deactivate_title": "Abzeichen deaktivieren?",
+            "deactivate_body": "Es wird nicht mehr verliehen und verschwindet aus der App. Wer es verdient hat, behält es und sieht es wieder, sobald es aktiv ist.",
+            "reason_optional": "Begründung (optional)",
+            "apply_title": "Abzeichen jetzt anwenden?",
+            "apply_body": "Prüft jetzt alle Mitglieder in Etappen und verleiht das Abzeichen allen, die die Regel erfüllen. Es geht keine Push-Nachricht raus.",
+            "apply_count": "Laut Vorschau erfüllen heute :count Mitglieder die Regel.",
+            "apply_inactive": "Nur aktive Abzeichen lassen sich anwenden."
+        },
+        "flash": {
+            "created": "Abzeichen angelegt.",
+            "saved": "Abzeichen gespeichert. Die Regel gilt ab dem nächsten nächtlichen Lauf.",
+            "activated": "Abzeichen aktiviert.",
+            "deactivated": "Abzeichen deaktiviert.",
+            "applied": "Wird jetzt angewendet. Das läuft in Etappen im Hintergrund."
+        }
+    },
+    "cotd": {
+        "nav": {
+            "title": "Car of the Day"
+        },
+        "title": "Car of the Day",
+        "intro": "Jeden Tag um :pick wählt Speedclub ein Auto nach festen Regeln, ab :publish steht es auf Start. Du kannst für heute oder einen späteren Tag ein anderes Auto festlegen oder den Tag aussetzen.",
+        "upcoming": "Heute und die nächsten 14 Tage",
+        "past": "Die letzten 14 Tage",
+        "votes": {
+            "title": "Abstimmungen",
+            "intro": "Die drei Vorschläge des Pickers je Tag mit ihren Stimmen. Nur das Team sieht die Zahlen, Mitglieder nie. Eine Team-Auswahl oder ein ausgesetzter Tag gilt immer vor den Stimmen.",
+            "caption": "Abstimmungsrunden, neueste zuerst, mit Stimmen je Vorschlag",
+            "off": "Die Abstimmung ist aus (Schalter cotd_voting). Der Picker wählt wie bisher allein.",
+            "off_with_rounds": "Die Abstimmung ist gerade aus: Neue Runden starten nicht, die Stimmen unten stammen aus früheren Runden.",
+            "empty_title": "Noch keine Abstimmungsrunde",
+            "empty_body": "Ab 18 Uhr legt der Picker die Vorschläge für morgen fest; dann erscheinen sie hier.",
+            "columns": {
+                "position": "Platz",
+                "car": "Vorschlag",
+                "owner": "Besitzer",
+                "votes": "Stimmen",
+                "counted": "Gezählt"
+            },
+            "counted_hint": "Gezählt werden nur Stimmen aktiver Konten; gelöschte und gesperrte fallen heraus.",
+            "total": "Stimmen gesamt: :count",
+            "winner": "Car of the Day",
+            "gone": "Fahrzeug gelöscht",
+            "status": {
+                "open": "Läuft bis :time Uhr",
+                "counting": "Beendet, Auswahl um :time Uhr",
+                "by_vote": "Per Abstimmung gewählt",
+                "picker": "Keine gezählte Stimme: Picker gewählt",
+                "staff": "Team-Entscheidung gilt"
+            },
+            "unavailable": {
+                "too_few_candidates": {
+                    "title": "Für den :day zu wenige Kandidaten",
+                    "body": "Weniger als zwei Autos erfüllen die Regeln für eine Abstimmung. Der Picker wählt den Tag wie bisher allein."
+                },
+                "staff_decided": {
+                    "title": "Für den :day gilt die Team-Entscheidung",
+                    "body": "Eine Team-Auswahl oder ein ausgesetzter Tag gilt vor den Stimmen, deshalb läuft keine Abstimmung."
+                },
+                "not_ready": {
+                    "title": "Die Runde für den :day startet gerade",
+                    "body": "Die Vorschläge werden gerade festgelegt. Lade die Seite gleich noch einmal."
+                }
+            }
+        },
+        "caption_upcoming": "Car of the Day ab heute",
+        "caption_past": "Car of the Day der letzten 14 Tage",
+        "view_only": "Nur ansehen: Festlegen und Aussetzen dürfen Owner, Admin und die Redaktion.",
+        "columns": {
+            "day": "Tag",
+            "status": "Status",
+            "car": "Auto",
+            "owner": "Besitzer",
+            "bundesland": "Bundesland",
+            "source": "Auswahl",
+            "story": "Story-Zeile",
+            "actions": "Aktionen"
+        },
+        "today": "Heute",
+        "status": {
+            "published": "Auf Start",
+            "picked": "Gewählt, ab :time live",
+            "open": "Offen, Auswahl um :time",
+            "skipped": "Ausgesetzt",
+            "missed": "Kein Auto"
+        },
+        "source": {
+            "auto": "Automatisch",
+            "staff": "Team",
+            "staff_by": "Team · :name",
+            "vote": "Abstimmung"
+        },
+        "sample": "Beispiel",
+        "no_story": "Keine Story-Zeile",
+        "skipped_reason": "Grund: :reason",
+        "actions": {
+            "override": "Anderes Auto festlegen",
+            "skip": "Tag aussetzen",
+            "menu": "Aktionen für :day"
+        },
+        "override": {
+            "title": "Anderes Auto für :day",
+            "body": "Das Auto muss öffentlich sein und darf nicht im Geistmodus stehen. Build Score und Fotozahl der automatischen Auswahl gelten hier nicht. Ist der Tag schon live, erscheint das neue Auto sofort und der Besitzer wird benachrichtigt.",
+            "car": "Auto",
+            "choose": "Auto wählen",
+            "change": "Anderes wählen",
+            "picker_title": "Auto für Car of the Day wählen",
+            "none": "Noch kein Auto gewählt",
+            "confirm": "Festlegen"
+        },
+        "skip": {
+            "title": "Car of the Day am :day aussetzen?",
+            "body": "An diesem Tag gibt es kein Car of the Day. Die automatische Auswahl lässt den Tag aus, Start zeigt bis zum nächsten Auto keins.",
+            "confirm": "Aussetzen"
+        },
+        "error": "Car of the Day konnte nicht geladen werden.",
+        "flash": {
+            "overridden": "Auto festgelegt.",
+            "skipped": "Tag ausgesetzt."
+        }
+    }
+}

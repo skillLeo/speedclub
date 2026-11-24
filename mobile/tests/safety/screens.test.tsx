@@ -374,7 +374,7 @@ describe('SAFE-01', () => {
     expect(screen.getByTestId('SAFE-01.automatedText')).toHaveTextContent(
       'Der Inhalt wurde ohne automatisierte Mittel erkannt, zum Beispiel durch eine Meldung. Eine Person aus unserem Team hat entschieden, kein automatisiertes System.',
     );
-    expect(screen.getByTestId('SAFE-01.scope')).toHaveTextContent('Gilt für diesen Inhalt auf ganz SPEED CLUB. Er bleibt entfernt, es sei denn, ein Einspruch hat Erfolg.');
+    expect(screen.getByTestId('SAFE-01.scope')).toHaveTextContent('Gilt für diesen Inhalt auf ganz Speedclub. Er bleibt entfernt, es sei denn, ein Einspruch hat Erfolg.');
     expect(screen.getByTestId('SAFE-01.disputeLink')).toBeTruthy();
     expect(screen.getByTestId('SAFE-01.appeal.open')).toBeTruthy();
     expect(screen.getByTestId('SAFE-01.appealButton')).not.toBeDisabled();

@@ -50,6 +50,11 @@ class BuildUpdateResource extends JsonResource
             /** @var string */
             'id' => $update->getKey(),
             'type' => $update->type,
+            /**
+             * M5.9c Build Journey: `before_after` sets its one pair of `photo_pairs` side by side (before, after), with the mod of
+             * `modifications` as its caption; `post` for everything else.
+             */
+            'kind' => $update->kind,
             /** "Fahrwerk geändert", "Räder hinzugefügt", "Technik aktualisiert", "Fotos hinzugefügt", "Notiz" (DQ-290) */
             'type_label' => $presenter->typeLabel($update, $locale),
             /**
@@ -159,13 +164,13 @@ class BuildUpdateResource extends JsonResource
             /**
              * The viewer's own reaction [build_reactions]; null for guests, the owner, none yet, or the flag off. Never anybody else's.
              *
-             * @var 'strong'|'clean'|'low'|'loud'|null
+             * @var 'like'|'strong'|'clean'|'low'|'loud'|null
              */
             'my_reaction' => $isOwner ? null : $reactions->mine($viewer, $update)?->value,
             /**
              * Owner only: reactions by kind and in total [build_reactions]. Missing for everybody else (09 §8.5).
              *
-             * @var array{strong: int, clean: int, low: int, loud: int, total: int}
+             * @var array{like: int, strong: int, clean: int, low: int, loud: int, total: int}
              */
             'reaction_summary' => $this->when($isOwner && $reactions->enabled(), fn (): array => $reactions->summary($update)),
         ];

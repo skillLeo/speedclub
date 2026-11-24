@@ -1,11 +1,11 @@
-# SPEED CLUB — Releases
+# Speedclub — Releases
 
 Entries are appended by `scripts/build-apk.ps1` and completed by the release engineer (changes, known issues, test status — only what actually ran).
 
 ## 0.1.0 (Build 1) - lan - 2026-11-02 08:54
 - APK: releases/android/speedclub-0.1.0-b1-lan-20261102-0816.apk (51.2 MB)
 - SHA-256: 8739A8E1BC83555E2852FD48FC9D8F805EB329238B4BCF2F13558E9A5383AC84
-- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 ae6e9844fccec00e4f25641aca1a2f1e9ffec4d05023bc34727598291876749f)
+- Signed by: CN=Speedclub, OU=Mobile, O=Speedclub, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 ae6e9844fccec00e4f25641aca1a2f1e9ffec4d05023bc34727598291876749f)
 - API: http://192.168.110.92:8080
 - Changes: M1.0 toolchain spike build, not a release. Built on the Windows PC; by timestamp the tree was `c6c8e4b` (with the in-place native build of ADR-108) plus uncommitted work; the Android build chain (prebuild, Gradle, release signing, apksigner) was proven end to end. The APK file is on the Windows PC only, not on this Mac.
 - Known issues (Low): none recorded for this build. Cleartext HTTP to the LAN address is allowed in `lan` builds by design.
@@ -14,7 +14,7 @@ Entries are appended by `scripts/build-apk.ps1` and completed by the release eng
 ## 0.1.0 (Build 1) - lan - 2026-11-02 14:48
 - APK: releases/android/speedclub-0.1.0-b1-lan-20261102-1430.apk (35.7 MB)
 - SHA-256: 1CC5492A8DB095989675B9049551E03D3C7AF6D0D282DD6D552CE61235D80E27
-- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 ae6e9844fccec00e4f25641aca1a2f1e9ffec4d05023bc34727598291876749f)
+- Signed by: CN=Speedclub, OU=Mobile, O=Speedclub, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 ae6e9844fccec00e4f25641aca1a2f1e9ffec4d05023bc34727598291876749f)
 - API: http://192.168.110.92:8080
 - Changes: M1.0 toolchain spike build, not a release. Built on the Windows PC at the end of M1.0 and M1.1 (by timestamp the tree around `949f4e1`, theme runtime, fonts, icons and app skeleton, plus the shared-routes spike of ADR-101). Commits since the first spike build: `54e96a1` (Laravel skeleton), `09a9444` (QA harness), `99cf601` (seed photography), `949f4e1` (mobile skeleton). The APK file is on the Windows PC only, not on this Mac.
 - Known issues (Low): BUG-1 (Android hardware back left the app on Android 13-15) was open when this was built; the fix is ADR-117 and was not yet verified on a device (see HANDOFF). No other issues were recorded for this build.
@@ -23,7 +23,7 @@ Entries are appended by `scripts/build-apk.ps1` and completed by the release eng
 ## 0.1.0 (Build 2) - lan - 2026-11-08 01:38
 - APK: releases/android/speedclub-0.1.0-b2-lan-20261108-0114.apk (54.6 MB)
 - SHA-256: 592311CA3D88091E167939DEFF8BA3661216E988BF84F65D9B26356185C29AFC
-- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- Signed by: CN=Speedclub, OU=Mobile, O=Speedclub, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
 - API: http://192.168.110.51:8080
 - Built from: `2e545e9`. Only `81cb418` followed (visual module-tier baselines and the client preview, ADR-188); it changes no app code.
 - Web package (same release, built 2026-11-08 from `81cb418`, `mobile/` clean): `releases/web/speedclub-web-0.1.0-20261108-0144.zip` (30.2 MB, 19 152 entries), SHA-256 `5b69e5cecfda760449253094d041bf103fc7bbb06783b9aa2ddbbd5f6b8c57a2`. Dry run under local Apache + PHP-FPM with a scratch database passed (`docs/DEPLOY.md`, dry run notes 2026-11-08). Its legal texts still hold `[[…]]` placeholders: not for a public host.
@@ -47,14 +47,14 @@ Entries are appended by `scripts/build-apk.ps1` and completed by the release eng
 ## 0.2.0 — Phase 2 (2026-11-09)
 Tester-facing summary of the release. **The release build is `0.2.0 (Build 4)`** (below), built from the commit that passed `verify.ps1 -Phase 2` (ed7557c). Build 3 is superseded: it predates the last QA fixes.
 
-- **Release APK (Build 4):** `releases/android/speedclub-0.2.0-b4-lan-20261109-0543.apk` (55.8 MB), versionName 0.2.0, versionCode 4, SHA-256 `932AE22E788049E1FB6094763CAF76DEAC86F3BA428C0DFFAB390EE0087D346D`, signer `CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE` (certificate `95ef800d…f079`)
+- **Release APK (Build 4):** `releases/android/speedclub-0.2.0-b4-lan-20261109-0543.apk` (55.8 MB), versionName 0.2.0, versionCode 4, SHA-256 `932AE22E788049E1FB6094763CAF76DEAC86F3BA428C0DFFAB390EE0087D346D`, signer `CN=Speedclub, OU=Mobile, O=Speedclub, L=Berlin, ST=Berlin, C=DE` (certificate `95ef800d…f079`)
 - **Release web package:** `releases/web/speedclub-web-0.2.0-20261109-0548.zip` (31.0 MB, 19 675 entries), SHA-256 `5b3fdc798bd41f063cdad49a78bef33625c7c283404ca6e97939cc7b35ef7de8`, built with `scripts/package-web.ps1` from `b9125b0` (log `docs/reports/logs/m29-package-web-0.2.0-final.log`). `web/` server code is unchanged since the dry-run package below (only tests and the bundled member web app differ), so the dry-run results apply.
 
 Superseded Build 3 facts, kept for the record:
 
 - APK: `releases/android/speedclub-0.2.0-b3-lan-20261108-1850.apk` (55.8 MB), versionName 0.2.0, versionCode 3, `minSdk` 24, `targetSdk` 36
 - SHA-256: `D0042D262E4CD02F6909B7D7272F9675D95C2851570838114ABA0139AE1F2A5B`
-- Signed by: `CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE`, certificate SHA-256 `95ef800d…f079` (the same key as 0.1.0 Build 2)
+- Signed by: `CN=Speedclub, OU=Mobile, O=Speedclub, L=Berlin, ST=Berlin, C=DE`, certificate SHA-256 `95ef800d…f079` (the same key as 0.1.0 Build 2)
 - Permissions: the 8 permissions of the SEC-P1-06 allow-list (in the build entry)
 - Web package: `releases/web/speedclub-web-0.2.0-20261108-1855.zip` (31.0 MB, 19 675 entries), SHA-256 `5550765fa564f6342d7a6c284fcbd865c5bf97cc4c5849047605382b3bd69506`. Built with `scripts/package-web.ps1` from `b4994a1` (`web/` from that commit, `mobile/` clean; `b4994a1` differs from the APK tree by test files only). Dry run passed (`docs/DEPLOY.md`, dry run notes M2.9; log `docs/reports/logs/m29-dryrun-0.2.0.log`): a fresh install, the smoke test, a re-deploy update, and the first update from the 0.1.0 package to Phase 2, on a private Apache + PHP-FPM with scratch databases. The legal texts still hold `[[…]]` placeholders (10 files, 78 lines): not for a public host (OA-10)
 - Built from: `6c6582f` plus the version bump to 0.2.0 / 3, which `5e4db50` commits (`mobile/version.json`, this file)
@@ -80,14 +80,14 @@ Superseded Build 3 facts, kept for the record:
 - **Important:** this build is signed with the new key, like 0.1.0 Build 2. If you have Build 2, install 0.2.0 over it. Uninstall any older test build (from before 8 November) once first.
 
 ### Installieren (DE)
-1. Dein Android-Handy (ab Android 7) muss im **selben WLAN** sein wie der Rechner, auf dem der SPEED CLUB Server läuft (`http://192.168.110.51:8080`). Diese `lan`-Version funktioniert nur dort. Ändert sich die IP-Adresse des Rechners, braucht es eine neue Version.
+1. Dein Android-Handy (ab Android 7) muss im **selben WLAN** sein wie der Rechner, auf dem der Speedclub Server läuft (`http://192.168.110.51:8080`). Diese `lan`-Version funktioniert nur dort. Ändert sich die IP-Adresse des Rechners, braucht es eine neue Version.
 2. Lade die APK herunter und prüfe die Prüfsumme: Sie muss `D0042D262E4CD02F6909B7D7272F9675D95C2851570838114ABA0139AE1F2A5B` sein (macOS/Linux: `shasum -a 256 <Datei>`, Windows: `certutil -hashfile <Datei> SHA256`).
 3. Öffne die Datei auf dem Handy und erlaube der App, mit der du sie öffnest (Dateien oder Browser), einmal „Unbekannte Apps installieren“.
 4. Hast du 0.1.0 Build 2, wird sie aktualisiert und du bleibst angemeldet. Meldet Android „App nicht installiert“, ist noch eine ältere Testversion mit dem alten Schlüssel drauf: deinstallieren, dann neu installieren.
 5. Push-Benachrichtigungen kommen in dieser Version noch nicht an. In der App und per E-Mail siehst du alles. Neue Nachrichten erscheinen nach ein paar Sekunden von selbst.
 
 ### Install notes (EN)
-1. The Android phone (Android 7 or newer) must be on the **same Wi-Fi** as the machine that runs the SPEED CLUB server (`http://192.168.110.51:8080`). This `lan` build works there only. If that machine's IP address changes, a new build is needed.
+1. The Android phone (Android 7 or newer) must be on the **same Wi-Fi** as the machine that runs the Speedclub server (`http://192.168.110.51:8080`). This `lan` build works there only. If that machine's IP address changes, a new build is needed.
 2. Download the APK and check its SHA-256: `D0042D262E4CD02F6909B7D7272F9675D95C2851570838114ABA0139AE1F2A5B` (macOS/Linux `shasum -a 256 <file>`, Windows `certutil -hashfile <file> SHA256`).
 3. Open the file on the phone and allow the app you open it with (Files or the browser) to "install unknown apps", once.
 4. Over 0.1.0 Build 2 it installs as an update and you stay signed in. If Android says "App not installed", an older test build signed with the retired key is still on the phone: uninstall it, then install again.
@@ -108,7 +108,7 @@ Superseded Build 3 facts, kept for the record:
 2. Version: 0.2.0 / versionCode 3, committed in `5e4db50`. Done.
 3. `build-apk.ps1 -Target lan -VersionName 0.2.0 -Clean`. Done (`docs/reports/logs/m29-apk-0.2.0.log`).
 4. SEC-P1-06: the script's `aapt dump permissions` check passed, and the release engineer read the logged list. It holds exactly the 8 allowed permissions. Done.
-5. Signer: `apksigner verify --print-certs`, re-run by the release engineer, shows `CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE` with certificate SHA-256 `95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079`. `shasum -a 256` of the APK equals its `.sha256` file. Done.
+5. Signer: `apksigner verify --print-certs`, re-run by the release engineer, shows `CN=Speedclub, OU=Mobile, O=Speedclub, L=Berlin, ST=Berlin, C=DE` with certificate SHA-256 `95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079`. `shasum -a 256` of the APK equals its `.sha256` file. Done.
 6. Emulator: none was running and `adb devices` listed no device, so `adb install`, the launch, `nav-hardware-back.yaml` and the Maestro smoke were **not run** (OA-9).
 7. Web package after the APK (clean `mobile/`), then the DEPLOY dry run including the Phase 2 steps. Done, passed (see the web package line above).
 8. Build entry completed below.
@@ -116,7 +116,7 @@ Superseded Build 3 facts, kept for the record:
 ## 0.2.0 (Build 3) - lan - 2026-11-08 18:54
 - APK: releases/android/speedclub-0.2.0-b3-lan-20261108-1850.apk (55.8 MB)
 - SHA-256: D0042D262E4CD02F6909B7D7272F9675D95C2851570838114ABA0139AE1F2A5B
-- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- Signed by: CN=Speedclub, OU=Mobile, O=Speedclub, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
 - API: http://192.168.110.51:8080
 - Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
 - Built from: `6c6582f` plus the version bump to 0.2.0 / 3 (committed afterwards in `5e4db50`, together with this entry). `b4994a1` came after the APK and changes test harness files only (`web/tests/e2e/visual`).
@@ -145,13 +145,13 @@ Superseded Build 3 facts, kept for the record:
   - Full e2e on `a186f55` (Chromium and WebKit): 1 721 passed, **19 failed** (`docs/reports/logs/m28-te-e2e-full-a186f55.log`). Later targeted runs: axe and shell on `2ec06c2`, 895 passed (`m28-te-2ec06c2-axe.log`). The test engineer's runs on `6c6582f` were still in progress when this entry was written. No green full e2e exists for the release commit yet.
   - Visual phase-2 tier on `a186f55`: 3 699 cells, reviewed in design round 4 (verdict FAIL, see Known issues).
   - Security round 2: PASS (0 Critical/High/Medium/Low among the Phase 2 findings).
-  - APK: the script's checks (signer pin, permission allow-list) passed. Re-checked by the release engineer: `shasum -a 256` equals the `.sha256` file; `apksigner verify --print-certs` shows the SPEED CLUB certificate `95ef800d…f079`; `aapt dump badging` shows `de.speedclub.app`, versionCode 3, versionName 0.2.0.
+  - APK: the script's checks (signer pin, permission allow-list) passed. Re-checked by the release engineer: `shasum -a 256` equals the `.sha256` file; `apksigner verify --print-certs` shows the Speedclub certificate `95ef800d…f079`; `aapt dump badging` shows `de.speedclub.app`, versionCode 3, versionName 0.2.0.
   - Not run: install and launch on a device or emulator (`adb devices` listed none), Maestro, Lighthouse CI on the release commit.
 
 ## 0.2.0 (Build 4) - lan - 2026-11-09 05:48
 - APK: releases/android/speedclub-0.2.0-b4-lan-20261109-0543.apk (55.8 MB)
 - SHA-256: 932AE22E788049E1FB6094763CAF76DEAC86F3BA428C0DFFAB390EE0087D346D
-- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- Signed by: CN=Speedclub, OU=Mobile, O=Speedclub, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
 - API: http://192.168.110.51:8080
 - Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
 - Built from: ed7557c (the verified commit) plus the version bump to 0.2.0 / 4 (b9125b0)

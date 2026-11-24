@@ -25,19 +25,15 @@ import { useOnline } from '@/state/online';
 import { clearAuthIntent, useSessionStore } from '@/state/session';
 import { createStyles, layout, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import {
-  CollapsingFlashList,
-  ContentTabs,
-  EmptyState,
-  ErrorState,
-  EventCardSkeleton,
-  Header,
-  HeaderLargeTitle,
-  Screen,
-  Skeleton,
-  Spinner,
-  useCollapsingHeader,
-} from '@/ui';
+import { ContentTabs } from '@/ui/ContentTabs';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { EventCardSkeleton } from '@/ui/EventCard';
+import { Header, HeaderLargeTitle } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
+import { Skeleton } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { CollapsingFlashList, useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { EventCardView } from '../components/EventCardView';
 import { editorPath, sampleEvent } from '../model';

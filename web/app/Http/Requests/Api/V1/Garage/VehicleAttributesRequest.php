@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 /**
- * POST vehicles and PATCH vehicles/{id}. Only the keys sent change. Catalogue id or free text per level ("Nicht gefunden?"); that
+ * POST vehicles and (through UpdateVehicleRequest) PATCH vehicles/{id}. Only the keys sent change. Catalogue id or free text per level ("Nicht gefunden?"); that
  * the three catalogue ids belong together is checked by App\Services\Garage\VehicleAttributes, which knows the stored ones.
  */
 class VehicleAttributesRequest extends FormRequest

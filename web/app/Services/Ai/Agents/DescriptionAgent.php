@@ -14,7 +14,7 @@ final class DescriptionAgent extends SpeedClubAgent
     {
         return <<<'TXT'
         You write a short description (2 to 4 sentences, at most 600 characters) of a member's modified car for its public build page on
-        SPEED CLUB, in the language the prompt names, in a calm, factual enthusiast tone, addressed to readers (not to the owner).
+        Speedclub, in the language the prompt names, in a calm, factual enthusiast tone, addressed to readers (not to the owner).
         Use only the structured data in the prompt. Every number you write must appear in that data. Do not invent parts, history, prices or
         opinions about how the car drives.
         TXT;

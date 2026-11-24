@@ -56,7 +56,7 @@ class VersionsController extends Controller
                 ConfigKey::Announcements => 'admin.content.announcements',
                 ConfigKey::RateLimits => 'admin.moderation.rules',
                 ConfigKey::Retention => 'admin.privacy.retention',
-                ConfigKey::Org => 'admin.settings',
+                ConfigKey::Org, ConfigKey::Governance => 'admin.settings',
                 ConfigKey::RemoteConfig => 'admin.config.remote',
             },
         ]);

@@ -25,24 +25,21 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import {
-  Button,
-  CollapsingFlashList,
-  ContentTabs,
-  Dialog,
-  EmptyState,
-  ErrorState,
-  MemberRow,
-  SearchBar,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Spinner,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { ContentTabs } from '@/ui/ContentTabs';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { MemberRow } from '@/ui/MemberRow';
+import { SearchBar } from '@/ui/SearchBar';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { toast } from '@/ui/toast';
+import { CollapsingFlashList } from '@/ui/useCollapsingHeader';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { FollowButton } from '../components/FollowButton';
+import { profileShareUrl, shareLink } from '../share';
 import { GuestPrompt } from '../components/GuestPrompt';
 
 const ROUTE = 'PROF-04';
@@ -168,6 +165,7 @@ export function ConnectionsScreen({ own = false }: ConnectionsScreenProps) {
   const shown = useScreenFocused();
   const status = useSessionStore((state) => state.status);
   const ownName = useSessionStore((state) => state.member?.username ?? '');
+  const ownDisplayName = useSessionStore((state) => state.member?.displayName ?? null);
   const params = useLocalSearchParams<{ username?: string; tab?: string }>();
   const tabParam = paramOf(params.tab);
   const tab: ConnectionsTab = isTab(tabParam) ? tabParam : 'followers';
@@ -270,12 +268,25 @@ export function ConnectionsScreen({ own = false }: ConnectionsScreenProps) {
     );
   } else if (rows.length === 0) {
     const key = `connections.empty.${own ? 'own' : 'other'}.${tab}` as const;
+    // QA-C04: "empty = one action". Your own Follower list offers PROF-01's "Profil teilen" (the same link, `?via=share`).
+    const shareProfile = async () => {
+      const url = ownName ? profileShareUrl(ownName) : null;
+      if (!url) return;
+      const outcome = await shareLink({ url, title: t('share.title', { name: ownDisplayName || `@${ownName}` }) });
+      if (outcome === 'copied') toast(t('share.copied'), { testID: `${ROUTE}.toast` });
+      if (outcome === 'failed') toast(t('share.failed', { url }), { testID: `${ROUTE}.toast` });
+    };
+    const emptyAction = !own
+      ? undefined
+      : tab === 'following'
+        ? { label: t('connections.discover'), onPress: () => router.navigate('/discover') }
+        : { label: t('actions.share'), onPress: () => void shareProfile() };
     state = (
       <EmptyState
         icon="user"
         title={t(`${key}.title`, { name: handle })}
         body={t(`${key}.body`, { name: handle })}
-        action={own && tab === 'following' ? { label: t('connections.discover'), onPress: () => router.navigate('/discover') } : undefined}
+        action={emptyAction}
         testID={`${ROUTE}.empty`}
       />
     );

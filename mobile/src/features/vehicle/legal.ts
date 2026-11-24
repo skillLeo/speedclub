@@ -9,8 +9,10 @@ import { useTranslation } from 'react-i18next';
 import { useFlag } from '@/api/queries/appConfig';
 import type { PublicModRow } from '@/api/queries/vehicles';
 import { LEGAL_STATUS_FLAG, legalStatusOf, showsLegalPill } from '@/features/garage/legalStatus';
+import { isRegistered } from '@/features/score/model';
 
-type LegalFields = Pick<PublicModRow, 'legal_status' | 'legal_status_label'>;
+/** M5.9c: `is_registered` is derived by the API (contract §1); older answers leave it out. */
+type LegalFields = Pick<PublicModRow, 'legal_status' | 'legal_status_label'> & { is_registered?: boolean | null };
 
 /** The label to show, or null: the flag is off, nothing was stated, or "Unbekannt". The server's label comes first. */
 export function legalLabel(mod: LegalFields, enabled: boolean, fallback: (status: string) => string): string | null {
@@ -31,12 +33,17 @@ export function useLegalLabel() {
 /** The props of `ModRow`'s second pill: the stated status, and its name for screen readers ("Rechtlicher Status: ABE"). */
 export type LegalPillProps = { legalStatus?: string; legalStatusLabel?: string };
 
-/** `ModRow`'s legal pill for a mod while the flag is on; nothing for a mod without a stated status. */
+/**
+ * `ModRow`'s legal pill for a mod while the flag is on; nothing for a mod without a stated status. M5.9c: a mod the owner states as
+ * entered in the papers (`is_registered`) gets the quiet "TÜV-eingetragen" instead, read as "TÜV-eingetragen, Angabe des Besitzers"
+ * (contract §1: the owner's statement, never our judgement).
+ */
 export function useLegalPill() {
   const label = useLegalLabel();
   const { t } = useTranslation('vehicle');
   return useCallback(
     (mod: LegalFields): LegalPillProps => {
+      if (isRegistered(mod)) return { legalStatus: t('score.registered'), legalStatusLabel: t('score.registeredA11y') };
       const legal = label(mod);
       return legal ? { legalStatus: legal, legalStatusLabel: `${t('mod.legalStatus')}: ${legal}` } : {};
     },

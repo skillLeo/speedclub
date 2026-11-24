@@ -13,6 +13,7 @@ import { qaDialog } from '../../composables/qaDialog';
 import { formatNumber } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
 import { routeOr } from '../../lib/routes';
+import AiSpecsSection from './Partials/AiSpecsSection.vue';
 import EntryDialogs from './Partials/EntryDialogs.vue';
 import EntryMenu from './Partials/EntryMenu.vue';
 import MergedNotice from './Partials/MergedNotice.vue';
@@ -22,7 +23,8 @@ import { entryPill, makeHref, modelHref, useEntryDialogs, yearsText, type Catalo
 
 /**
  * ADM-14 drill-down, a model (m3.3-contract §2): its generations with build years, slug, vehicles and state. catalog.manage: edit,
- * deactivate, merge and delete the model; add, edit, deactivate, merge and delete its generations.
+ * deactivate, merge and delete the model; add, edit, deactivate, merge and delete its generations. M5.9 (D-5): below the table the
+ * generations with cached "KI-Herstellerangaben", each deletable with a reason (catalog.manage).
  */
 interface ModelRecord extends CatalogEntry {
     make_id: number;
@@ -35,6 +37,8 @@ interface GenerationRow extends CatalogEntry {
     year_to: number | null;
     active: boolean;
     vehicles: number;
+    /** M5.9 D-5: a cached AI spec suggestion and since when. */
+    ai_specs: { exists: boolean; created_at: string | null };
 }
 
 const props = defineProps<{ make: { id: number; name: string } | null; model: ModelRecord; generations: GenerationRow[] }>();
@@ -113,6 +117,14 @@ const meta = computed(() => [props.model.slug, transChoice('catalog.make.vehicle
                 </table>
             </ScrollRegion>
         </section>
+
+        <AiSpecsSection
+            v-if="state !== 'loading' && state !== 'error'"
+            :generations="list"
+            :can-manage="can('catalog.manage')"
+            :open-first="dialog === 'ai-specs'"
+            test-id="ADM-14-model.ai-specs"
+        />
 
         <EntryDialogs :dialogs="modelDialogs" level="model" from-record test-id="ADM-14-model" />
         <EntryDialogs :dialogs="generationDialogs" level="generation" :parent="{ model_id: model.id }" :parent-name="title" test-id="ADM-14-model.generations" />

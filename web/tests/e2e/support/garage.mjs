@@ -21,13 +21,13 @@ export const R34 = {
 };
 /**
  * The resolver's demo states (DemoSeeder::seedQrCodes, ADR-148): a reissued code, a private vehicle, an unknown code.
- * The titles of WEB-06 and QR-RESOLVE as copy. Both render a word joiner (U+2060) after "QR-" that keeps "QR-Code" on one
- * line (DQ-162); compare them with support/text.mjs expectText, which ignores the joiner and nothing else.
+ * The titles of WEB-06 and QR-RESOLVE as copy, named "Sticker" since M5.4 (10 §2.1, ADR-504). Compare them with
+ * support/text.mjs expectText, which ignores a word joiner (U+2060, DQ-162) and nothing else.
  */
 export const QR_STATES = {
-  revoked: { code: 'APPY9FZ9', status: 410, title: 'Dieser QR-Code ist nicht mehr gültig' },
+  revoked: { code: 'APPY9FZ9', status: 410, title: 'Dieser Sticker ist nicht mehr gültig' },
   private: { code: '5A7XE8ET', status: 404, title: 'Dieses Fahrzeug ist privat' },
-  notFound: { code: 'ZZZZZZZZ', status: 404, title: 'Diesen QR-Code kennen wir nicht' },
+  notFound: { code: 'ZZZZZZZZ', status: 404, title: 'Diesen Sticker kennen wir nicht' },
 };
 /** A private demo vehicle: "Fahrzeug nicht verfügbar" for anybody but its owner. */
 export const PRIVATE_SLUG = 'toyota-gr86-zn8-6g12gv4h';

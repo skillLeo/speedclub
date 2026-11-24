@@ -1,4 +1,4 @@
-import type { IconName } from '@/ui';
+import type { IconName } from '@/ui/icons/Icon';
 
 /** The flag of saved builds (02_PRODUCT_SPEC §5). */
 export const SAVED_BUILDS_FLAG = 'sig.saved_builds';

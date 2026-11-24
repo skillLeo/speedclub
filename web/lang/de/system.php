@@ -4,7 +4,7 @@
 return [
     'mail' => [
         'test' => [
-            'subject' => 'Test-E-Mail aus dem SPEED CLUB Admin',
+            'subject' => 'Test-E-Mail aus dem Speedclub Admin',
             'heading' => 'Der E-Mail-Versand funktioniert',
             'body' => 'Diese Test-E-Mail wurde am :date über den Versand „:mailer“ verschickt.',
         ],

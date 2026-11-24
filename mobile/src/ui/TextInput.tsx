@@ -29,6 +29,11 @@ export type TextInputProps = Omit<RNTextInputProps, 'style' | 'editable' | 'secu
   label: string;
   /** Hint below the field; an error replaces it. */
   helper?: string;
+  /**
+   * False for a helper that is a label and must stay whole, never hyphenated ("Herstellerangabe (KI-Vorschlag)", DQ-P5-053).
+   * An error keeps the default.
+   */
+  hyphenateHelper?: boolean;
   /** Error text: border, icon and text together, never colour alone. */
   error?: string;
   /** Unit after the value, for example "cm³". */
@@ -42,6 +47,11 @@ export type TextInputProps = Omit<RNTextInputProps, 'style' | 'editable' | 'secu
    * (the OS font scale applied, see `useDrawnLine`), for a cap that is a share of the window at any font scale (DQ-133).
    */
   maxRows?: number | ((drawnLine: number) => number);
+  /**
+   * Whole lines a multiline field shows even when empty (a body text, not a one-line answer: DQ-P5-027, FOR-04). From the same drawn
+   * line as `maxRows`, so it scales with the font; the mirror on the web keeps the same floor.
+   */
+  minRows?: number;
   disabled?: boolean;
   /** A spinner at the end of the field, for example while a value is checked. */
   loading?: boolean;
@@ -203,11 +213,13 @@ export function errorFocusWidth(pixelRatio: number, web: boolean = isWeb): numbe
 export function TextInput({
   label,
   helper,
+  hyphenateHelper = true,
   error,
   suffix,
   secure = false,
   multiline = false,
   maxRows = DEFAULT_MAX_ROWS,
+  minRows,
   disabled = false,
   loading = false,
   showLabel,
@@ -248,6 +260,7 @@ export function TextInput({
   const { drawnLine, onMeasure } = useDrawnLine(theme.fontScale);
   // The text's own box in whole drawn lines: the field's vertical padding sits outside it (inputBoxMultiline).
   const maxHeight = multilineMaxHeight(drawnLine, resolveRows(maxRows, drawnLine));
+  const minHeight = multiline && minRows ? Math.min(maxHeight, multilineMaxHeight(drawnLine, Math.max(1, Math.floor(minRows)))) : undefined;
   const measured = multiline && !isWeb;
   // A single-line iOS field misplaces its text when it has a line height.
   const textStyle = isIOS && !multiline ? { ...body, lineHeight: undefined } : body;
@@ -298,7 +311,7 @@ export function TextInput({
         { color: resolveColor(theme, color) },
         styles.input,
         multiline ? styles.inputMultiline : styles.inputSingleLine,
-        multiline ? { maxHeight } : null,
+        multiline ? { maxHeight, minHeight } : null,
         mirrored ? styles.inputOverMirror : null,
       ]}
     />
@@ -323,7 +336,7 @@ export function TextInput({
           {mirrored ? (
             // The textarea covers the copy's box exactly: the copy sizes it, and both end at the content box.
             <View style={styles.mirrorBox}>
-              <View aria-hidden style={[styles.mirror, { maxHeight }]}>
+              <View aria-hidden style={[styles.mirror, { maxHeight, minHeight }]}>
                 {/* The field's role, hyphenation (none) and tracking at the field's size (no desktop step). */}
                 <Text variant={TEXT_INPUT_ROLE} hyphenate={false} desktopSize={false} dataSet={MEASURE_MIRROR}>{`${mirrorText}​`}</Text>
               </View>
@@ -382,6 +395,7 @@ export function TextInput({
             variant="caption"
             color={error ? 'accent.fg' : 'text.secondary'}
             role={error ? 'alert' : undefined}
+            hyphenate={error ? true : hyphenateHelper}
             testID={testID ? `${testID}.${error ? 'error' : 'helper'}` : undefined}
             style={styles.noteText}
           >

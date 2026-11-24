@@ -6,7 +6,9 @@ use App\Actions\Media\DeleteMedia;
 use App\Models\Media;
 use App\Models\Modification;
 use App\Models\Vehicle;
+use App\Services\BuildScore\BuildScores;
 use App\Services\Garage\BuildUpdates;
+use App\Services\Notifications\Notifier;
 use App\Services\Search\VehicleSearchProjector;
 use Illuminate\Support\Facades\DB;
 
@@ -35,9 +37,12 @@ class DeleteModification
             }
 
             $mod->delete();
+            // M5.7: a deleted plan is not asked about any more.
+            app(Notifier::class)->forgetPlanDue($mod->id);
 
             $this->updates->modRemoved($mod);
             $this->search->changed($vehicle);
+            app(BuildScores::class)->touch($vehicle->id);
         });
 
         $mod->media->each(fn (Media $photo) => $this->media->handle($photo));

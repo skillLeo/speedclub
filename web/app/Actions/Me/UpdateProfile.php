@@ -4,6 +4,7 @@ namespace App\Actions\Me;
 
 use App\Enums\KeywordField;
 use App\Models\User;
+use App\Services\Dex\CityMatcher;
 use App\Services\Rules\ContentScreen;
 
 class UpdateProfile
@@ -28,6 +29,11 @@ class UpdateProfile
 
         $user->fill($attributes);
         $user->forceFill(['profile_setup_at' => $user->getAttribute('profile_setup_at') ?? now()]);
+
+        // CR-P5G-08: the member's Bundesland follows the public profile city only (never the private SET-11 region).
+        if ($user->isDirty('city')) {
+            $user->forceFill(['bundesland' => app(CityMatcher::class)->bundeslandFor($user)]);
+        }
         $user->save();
         $this->screen->flagAfterCommit($flags, $user);
 

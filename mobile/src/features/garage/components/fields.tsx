@@ -3,7 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Chip, Icon, PressableScale, Radio, SegmentedControl, Switch, Text, type SegmentedControlProps } from '@/ui';
+import { Chip } from '@/ui/Chip';
+import { Icon } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Radio } from '@/ui/Radio';
+import { SegmentedControl, type SegmentedControlProps } from '@/ui/SegmentedControl';
+import { Switch } from '@/ui/Switch';
+import { Text } from '@/ui/Text';
 import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 
@@ -92,10 +98,16 @@ export function FieldPair({ children, testID }: { children: readonly [ReactNode,
   );
 }
 
-export type FieldNoteProps = { helper?: string; error?: string; testID?: string };
+export type FieldNoteProps = {
+  helper?: string;
+  /** False for a helper that is a label and must stay whole ("Herstellerangabe (KI-Vorschlag)", DQ-P5-053). */
+  hyphenateHelper?: boolean;
+  error?: string;
+  testID?: string;
+};
 
 /** Helper or error under a field: icon and text, never colour alone (§8). */
-export function FieldNote({ helper, error, testID }: FieldNoteProps) {
+export function FieldNote({ helper, hyphenateHelper = true, error, testID }: FieldNoteProps) {
   const styles = useStyles();
   const note = error ?? helper;
   if (!note) return null;
@@ -110,6 +122,7 @@ export function FieldNote({ helper, error, testID }: FieldNoteProps) {
         variant="caption"
         color={error ? 'accent.fg' : 'text.secondary'}
         role={error ? 'alert' : undefined}
+        hyphenate={error ? true : hyphenateHelper}
         style={styles.noteText}
         testID={testID ? `${testID}.${error ? 'error' : 'helper'}` : undefined}
       >
@@ -126,6 +139,8 @@ export type PickerFieldProps = {
   placeholder: string;
   onPress: () => void;
   helper?: string;
+  /** See FieldNote. */
+  hyphenateHelper?: boolean;
   error?: string;
   disabled?: boolean;
   testID?: string;
@@ -135,7 +150,7 @@ export type PickerFieldProps = {
  * A field that opens a picker sheet (§9 "pickers — bottom sheets"): the text input's box, label above and helper below,
  * with a caret instead of a caret cursor. Its name carries the value: "Kraftstoff: Benzin".
  */
-export function PickerField({ label, value, placeholder, onPress, helper, error, disabled = false, testID }: PickerFieldProps) {
+export function PickerField({ label, value, placeholder, onPress, helper, hyphenateHelper, error, disabled = false, testID }: PickerFieldProps) {
   const styles = useStyles();
   const shown = value && value.trim() !== '' ? value : null;
   return (
@@ -180,7 +195,7 @@ export function PickerField({ label, value, placeholder, onPress, helper, error,
           </>
         )}
       </PressableScale>
-      <FieldNote helper={helper} error={error} testID={testID} />
+      <FieldNote helper={helper} hyphenateHelper={hyphenateHelper} error={error} testID={testID} />
     </View>
   );
 }

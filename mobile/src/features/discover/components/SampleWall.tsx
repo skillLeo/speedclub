@@ -2,7 +2,10 @@ import { View } from 'react-native';
 
 import { EMPTY_HERO, SAMPLE_CARD_PHOTO } from '@/features/garage/sample';
 import { aspect, createStyles } from '@/theme';
-import { Photo, PhotoStageScrim, SampleBadges, Text, type PhotoFields } from '@/ui';
+import { SampleBadges } from '@/ui/Badge';
+import { Photo, type PhotoFields } from '@/ui/Photo';
+import { PhotoStageScrim } from '@/ui/PhotoStageScrim';
+import { Text } from '@/ui/Text';
 
 import { WALL_GAP } from './BuildWall';
 

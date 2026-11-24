@@ -10,6 +10,7 @@ import { OdometerNumber, useOdometerOnce, zeroed } from './motion/OdometerNumber
 import { joinLabel } from './rowParts';
 import {
   estimatedSpecStripColumns,
+  provenanceSegments,
   SPEC_CELL_GAP,
   SPEC_CELL_PADDING_X,
   SPEC_CELL_PADDING_Y,
@@ -18,6 +19,7 @@ import {
   specStripNumeralVariant,
   WEB_HAIRLINE,
   type SpecStripEntry,
+  type StripSize,
 } from './specStripLayout';
 import { Text, useDesktopType } from './Text';
 
@@ -73,29 +75,48 @@ function rowsOf<T>(items: readonly T[], columns: number): T[][] {
   return rows;
 }
 
-/** Keys of the measured copies: `v` value, `u` unit, `l` data label, `p` provenance. */
-function measureKeys(item: SpecStripItem, index: number): { value: string; unit?: string; label: string; provenance?: string } {
+type MeasureKeys = { value: string; unit?: string; label: string; provenance?: string; segments?: { key: string; text: string }[] };
+
+/**
+ * Keys of the measured copies: `v` value, `u` unit, `l` data label, `p` provenance, and `s` each unbreakable segment of a
+ * provenance that has more than one (ADR-422 e; a one-word caption is its own segment).
+ */
+function measureKeys(item: SpecStripItem, index: number): MeasureKeys {
+  const segments = item.provenance ? provenanceSegments(item.provenance) : [];
   return {
     value: `v${index}|${item.value}`,
     ...(item.unit ? { unit: `u${index}|${item.unit}` } : {}),
     label: `l${index}|${item.label}`,
     ...(item.provenance ? { provenance: `p${index}|${item.provenance}` } : {}),
+    ...(segments.length > 1 ? { segments: segments.map((text, part) => ({ key: `s${index}.${part}|${text}`, text })) } : {}),
   };
 }
 
-/** The measured one-line widths of every line of every cell, or null while one is missing. */
-export function measuredContentWidths(items: readonly SpecStripItem[], measured: Readonly<Record<string, number>>): number[] | null {
-  const widths: number[] = [];
+/**
+ * The measured widths of every line of every cell, or null while one is missing: `contentWidths` one line each (the one-row
+ * check), `gridContentWidths` with the provenance by its widest unbreakable segment (the 2×2 check, ADR-422 e).
+ */
+export function measuredContentWidths(
+  items: readonly SpecStripItem[],
+  measured: Readonly<Record<string, number>>,
+): { contentWidths: number[]; gridContentWidths: number[] } | null {
+  const contentWidths: number[] = [];
+  const gridContentWidths: number[] = [];
   for (const [index, item] of items.entries()) {
     const keys = measureKeys(item, index);
     const value = measured[keys.value];
     const unit = keys.unit === undefined ? 0 : measured[keys.unit];
     const label = measured[keys.label];
     const provenance = keys.provenance === undefined ? undefined : measured[keys.provenance];
+    const segments = keys.segments?.map((segment) => measured[segment.key]);
     if (value === undefined || unit === undefined || label === undefined || (keys.provenance !== undefined && provenance === undefined)) return null;
-    widths.push(unit > 0 ? value + SPEC_UNIT_GAP + unit : value, label, ...(provenance === undefined ? [] : [provenance]));
+    if (segments?.some((width) => width === undefined)) return null;
+    const valueLine = unit > 0 ? value + SPEC_UNIT_GAP + unit : value;
+    contentWidths.push(valueLine, label, ...(provenance === undefined ? [] : [provenance]));
+    const segment = segments ? Math.max(0, ...segments.map((width) => width ?? 0)) : provenance;
+    gridContentWidths.push(valueLine, label, ...(segment === undefined ? [] : [segment]));
   }
-  return widths;
+  return { contentWidths, gridContentWidths };
 }
 
 /**
@@ -106,7 +127,8 @@ export function measuredContentWidths(items: readonly SpecStripItem[], measured:
  * Geschätzt, ADR-431 c); start-aligned, as the page's text.
  *
  * Columns by fit (DQ-801, ADR-422): all items in one row only when every line of every cell fits with space.12 on each side,
- * else the 2×2 grid, else one column; never a horizontal scroll. ADR-422 d: the estimate (specStripLayout.ts, the same numbers
+ * else the 2×2 grid, else one column; never a horizontal scroll. ADR-422 e: in the 2×2 grid the provenance caption may wrap at
+ * its spaces, so there it only needs its widest unbreakable segment to fit ("Herstellerangabe (KI-Vorschlag)" on two lines). ADR-422 d: the estimate (specStripLayout.ts, the same numbers
  * as the public page's SpecStripLayout.php) decides; the measured widths only take columns away, so a font that draws wider
  * than its table never breaks a numeral, and the app and the public page always choose the same columns.
  *
@@ -116,9 +138,11 @@ export function measuredContentWidths(items: readonly SpecStripItem[], measured:
 export function SpecStrip({ items, layoutWidth, rollKey, style, testID }: SpecStripProps) {
   const styles = useStyles();
   const { fontScale } = useTheme();
-  const desktop = useDesktopType();
+  const desktopType = useDesktopType();
   const motion = useMotionPreference();
-  const { width: windowWidth, gutter } = useBreakpoint();
+  const { width: windowWidth, gutter, kind } = useBreakpoint();
+  // CF-2: a phone's strip one numeral role smaller; the desktop card compact as before; a tablet's page keeps hero.numeral.
+  const desktop: StripSize = desktopType ? true : kind === 'phone' ? 'phone' : false;
   const [width, setWidth] = useState(0);
   const [measured, setMeasured] = useState<Readonly<Record<string, number>>>({});
   const firstShowing = useOdometerOnce(rollKey ?? NO_ROLL);
@@ -130,9 +154,9 @@ export function SpecStrip({ items, layoutWidth, rollKey, style, testID }: SpecSt
   const pending = known <= 0;
   const fitWidth = pending ? Math.max(0, windowWidth - 2 * gutter) : known;
   const estimated = estimatedSpecStripColumns(items, fitWidth, fontScale, desktop, DIVIDER);
-  const contentWidths = pending ? null : measuredContentWidths(items, measured);
-  const columns = contentWidths
-    ? Math.min(estimated, specStripColumns({ width: fitWidth, count: items.length, contentWidths, divider: DIVIDER, fontScale }))
+  const measuredWidths = pending ? null : measuredContentWidths(items, measured);
+  const columns = measuredWidths
+    ? Math.min(estimated, specStripColumns({ width: fitWidth, count: items.length, ...measuredWidths, divider: DIVIDER, fontScale }))
     : estimated;
   const rows = rowsOf(items, columns);
   const numeral = specStripNumeralVariant(desktop);
@@ -221,6 +245,11 @@ export function SpecStrip({ items, layoutWidth, rollKey, style, testID }: SpecSt
                 {item.provenance}
               </Text>
             ) : null,
+            ...(keys.segments ?? []).map((segment) => (
+              <Text key={segment.key} hyphenate={false} variant="caption" selectable={false} onLayout={measuredAs(segment.key)}>
+                {segment.text}
+              </Text>
+            )),
           ];
         })}
       </View>

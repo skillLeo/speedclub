@@ -120,7 +120,7 @@ describe('username rules (mirror of App\\Support\\Username)', () => {
   });
 
   it('the form shows the first broken rule as a reason key', () => {
-    expect(messagesOf(usernameSchema.safeParse({ username: 'lu..' }))).toEqual({ username: 'username.reason.trailing_dot' });
+    expect(messagesOf(usernameSchema.safeParse({ username: 'lukas..' }))).toEqual({ username: 'username.reason.trailing_dot' });
   });
 
   it('previews the profile address without inventing a domain', () => {

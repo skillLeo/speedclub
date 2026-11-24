@@ -2,6 +2,7 @@
 import { PhEyes } from '@phosphor-icons/vue';
 import { trans } from 'laravel-vue-i18n';
 import { Checkbox } from '../../../Components/ui';
+import { useFourEyes } from '../../../composables/fourEyes';
 import { roleDescription, roleLabel, type RoleOption } from '../shared';
 
 /**
@@ -9,6 +10,7 @@ import { roleDescription, roleLabel, type RoleOption } from '../shared';
  * that carry Admin/Owner or a sensitive atom. `disabled` names roles the viewer cannot give (Owner for a non-Owner).
  */
 const model = defineModel<string[]>({ default: () => [] });
+const fourEyesOn = useFourEyes();
 const props = withDefaults(defineProps<{ options: RoleOption[]; disabled?: string[]; legend: string; hint?: string; testId: string }>(), { disabled: () => [], hint: undefined });
 
 function toggle(name: string, on: boolean | 'indeterminate'): void {
@@ -31,7 +33,7 @@ const isDisabled = (name: string) => props.disabled.includes(name);
                         :data-testid="`${testId}.${option.name}`"
                         @update:model-value="(on: boolean | 'indeterminate') => toggle(option.name, on)"
                     />
-                    <span v-if="option.sensitive" class="inline-flex shrink-0 items-center gap-4 text-caption text-ink-3">
+                    <span v-if="fourEyesOn && option.sensitive" class="inline-flex shrink-0 items-center gap-4 text-caption text-ink-3">
                         <PhEyes :size="16" aria-hidden="true" />{{ trans('team.four_eyes') }}
                     </span>
                 </div>

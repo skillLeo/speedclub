@@ -92,12 +92,20 @@ export async function withFlowLock<T>(name: string, timeoutMs: number, work: () 
 /** The fixed part of a mail line before its first `:placeholder`. */
 export const lead = (line: string): string => line.split(/:[a-z_]+/)[0]?.trim() ?? line;
 
-/** A staff fixture of this browser project, signed in once per worker in a session of its own. */
+/**
+ * A staff fixture of this browser project, signed in once per worker in a session of its own. `fresh`: a new session for this test
+ * alone, for a spec whose ⚿ step must prove the password prompt: the shared session may hold a confirmation of an earlier spec, which
+ * ADR-215 rightly honours for 5 minutes (client round 6: with four-eyes off the specs got fast enough to land inside that window).
+ */
 const signedIn = new Map<string, Promise<Parameters<BrowserContext['addCookies']>[0]>>();
-export async function staffContext(context: BrowserContext, label: string): Promise<{ name: string }> {
+export async function staffContext(context: BrowserContext, label: string, { fresh = false }: { fresh?: boolean } = {}): Promise<{ name: string }> {
   const run = await staffRun();
   const account = run.accounts[label];
   if (!account) throw new Error(`No staff fixture ${label}`);
+  if (fresh) {
+    await context.addCookies(await staffSignIn(run, label));
+    return { name: account.name };
+  }
   let cookies = signedIn.get(label);
   if (!cookies) {
     cookies = staffSignIn(run, label);
@@ -162,4 +170,42 @@ export async function confirmPasswordDirectly(context: BrowserContext): Promise<
     maxRedirects: 0,
   });
   expect([200, 201, 204], `POST /admin/user/confirm-password answered ${answer.status()}`).toContain(answer.status());
+}
+
+/**
+ * ADR-540: "Vier-Augen-Prinzip" is a governance switch, off by default. The specs about the four-eyes engine (A0 export, A1, A4, A5
+ * business suspension, A6, A7) hold it ON for each test, as an Owner would switch it back on, so they keep proving the engine; the
+ * default (off: the action runs at once) is proved by Pest (GovernanceOptionalTest) and by every other spec. A lock across workers and
+ * both projects keeps the switch steady while a test runs; afterwards the live version before it is restored. Local server only.
+ * Use in beforeEach, call the returned function in afterEach.
+ */
+export async function holdFourEyes(on: boolean): Promise<() => Promise<void>> {
+  if (!['localhost', '127.0.0.1'].includes(new URL(BASE_URL).hostname)) throw new Error('The governance switch is changed only on a local server');
+  let release: () => void = () => undefined;
+  let acquired: () => void = () => undefined;
+  const got = new Promise<void>((resolve) => (acquired = resolve));
+  const held = withFlowLock('governance', 1_200_000, async () => {
+    acquired();
+    await new Promise<void>((resolve) => (release = resolve));
+  });
+  await Promise.race([got, held]);
+  const php = process.env.SPEEDCLUB_PHP ?? 'php';
+  const artisan = fileURLToPath(new URL('../../../artisan', import.meta.url));
+  const set = `$live = App\\Models\\ConfigVersion::query()->where('key', 'governance')->where('status', 'published')->orderByDesc('version')->first();`
+    + ` $payload = is_array($live?->payload) ? $live->payload : ['owner_override' => true];`
+    + ` $version = (int) App\\Models\\ConfigVersion::query()->where('key', 'governance')->max('version') + 1;`
+    + ` App\\Models\\ConfigVersion::query()->where('key', 'governance')->where('status', 'published')->update(['status' => 'superseded']);`
+    + ` $id = DB::table('config_versions')->insertGetId(['key' => 'governance', 'version' => $version, 'status' => 'published', 'payload' => json_encode([...$payload, 'four_eyes' => ${on ? 'true' : 'false'}, 'staff_two_factor' => $payload['staff_two_factor'] ?? 'optional']), 'published_at' => now(), 'created_at' => now(), 'updated_at' => now()]);`
+    + ` echo json_encode([(int) ($live?->id ?? 0), $id]);`;
+  const out = execFileSync(php, [artisan, 'tinker', `--execute=${set}`], { encoding: 'utf8', timeout: 60_000 }).trim().split('\n').pop() ?? '[0,0]';
+  const [before, inserted] = JSON.parse(out) as [number, number];
+  return async () => {
+    try {
+      const restore = `DB::table('config_versions')->where('id', ${inserted})->delete();` + (before > 0 ? ` DB::table('config_versions')->where('id', ${before})->update(['status' => 'published']);` : '');
+      execFileSync(php, [artisan, 'tinker', `--execute=${restore}`], { encoding: 'utf8', timeout: 60_000 });
+    } finally {
+      release();
+      await held;
+    }
+  };
 }

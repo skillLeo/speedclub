@@ -12,7 +12,7 @@ class CategoryRequest extends CatalogFormRequest
 
     protected function reasonRequired(): bool
     {
-        return $this->isMethod('PATCH');
+        return false; // ADR-540
     }
 
     /**

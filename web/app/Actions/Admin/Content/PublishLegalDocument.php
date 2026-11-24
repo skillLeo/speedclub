@@ -13,6 +13,7 @@ use App\Services\Approvals\FourEyes;
 use App\Services\Audit\Audit;
 use App\Services\Catalog\Reason;
 use App\Services\Config\ConfigRefused;
+use App\Services\Content\LegalDrafts;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -22,7 +23,8 @@ use Illuminate\Validation\ValidationException;
  * pages and app-config's legal_versions follow at once (AppConfig flushed). A terms or privacy draft that requires re-consent is
  * four-eyes (`legal.publish_reconsent`, 06 §2): the approval is requested, its handler calls execute(). Once it is live, app-config's
  * legal_reconsent names its version and GET me/consents asks every member who accepted an older one (ConsentController).
- * Audited as `legal.published` (previous and new version, requester and approver).
+ * Audited as `legal.published` (previous and new version, requester and approver). A draft based on an older text than the live one is
+ * refused on every path (DQ-P5-101, ensureCurrentBase()).
  */
 final class PublishLegalDocument
 {
@@ -34,7 +36,7 @@ final class PublishLegalDocument
     public function handle(Staff $staff, LegalDocument $draft, string $reason, string $revision): LegalOutcome
     {
         StaffAtoms::ensure($staff, 'legal.publish');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         if ($draft->published_at !== null) {
             throw new ConfigRefused('legal_not_draft');
@@ -54,6 +56,8 @@ final class PublishLegalDocument
                 if (! hash_equals(self::revision($locked), $revision)) {
                     throw new ConfigRefused('stale_revision');
                 }
+
+                self::ensureCurrentBase($locked);
 
                 return new LegalOutcome(approval: $this->approvals->request('legal.publish_reconsent', [
                     'document_id' => $locked->id,
@@ -121,6 +125,22 @@ final class PublishLegalDocument
     }
 
     /**
+     * DQ-P5-101: a draft started from an older text than the live one would drop every section the newer versions added. Refused with
+     * both versions (legal_draft_stale, or legal_draft_stale_first for a draft begun before any version was live); the editor offers to
+     * start again from the live text.
+     *
+     * @throws ConfigRefused
+     */
+    public static function ensureCurrentBase(LegalDocument $draft): void
+    {
+        $stale = LegalDrafts::staleness($draft);
+
+        if ($stale !== null) {
+            throw new ConfigRefused(LegalDrafts::refusal($stale), $stale);
+        }
+    }
+
+    /**
      * @param  array<string, mixed>|null  $pinned  the approval payload, for a four-eyes publish
      * @param  string|null  $revision  the requester's revision, mandatory on the direct path (SF-4); the four-eyes path checks the pins
      */
@@ -132,6 +152,9 @@ final class PublishLegalDocument
             if ($locked === null || $locked->published_at !== null) {
                 throw new ConfigRefused('legal_not_draft');
             }
+
+            // DQ-P5-101: on every path (direct, request, approved execution), under the lock, before anything is written.
+            self::ensureCurrentBase($locked);
 
             if ($pinned !== null && (! $locked->requires_reconsent || ! self::matchesPins($locked, $pinned))) {
                 throw new ConfigRefused('legal_changed');

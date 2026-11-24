@@ -70,7 +70,7 @@
                 <div class="mt-16 flex flex-wrap items-center gap-8" data-testid="WEB-02.actions">
                     <x-public.button :href="$links['sign_in']" variant="primary" data-testid="WEB-02.follow">{{ __('public.vehicle.follow') }}</x-public.button>
                     <x-public.button :href="$links['sign_in']" variant="secondary" data-testid="WEB-02.message">{{ __('public.vehicle.message') }}</x-public.button>
-                    <button type="button" class="sc-focus sc-share" data-share data-share-title="{{ $name }}" data-share-url="{{ $seo['canonical'] }}" data-share-done="{{ __('public.vehicle.share_copied') }}" aria-label="{{ __('public.vehicle.share') }}" data-testid="WEB-02.share"><x-public.icon name="share-network" :size="24" /></button>
+                    <button type="button" class="sc-focus sc-share" data-share data-share-title="{{ $name }}" data-share-url="{{ $seo['canonical'] }}?via=share" data-share-done="{{ __('public.vehicle.share_copied') }}" aria-label="{{ __('public.vehicle.share') }}" data-testid="WEB-02.share"><x-public.icon name="share-network" :size="24" /></button>
                 </div>
                 <span class="sc-live text-caption" role="status" data-share-status></span>
             </div>

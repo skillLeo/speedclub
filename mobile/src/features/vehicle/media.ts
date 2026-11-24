@@ -5,7 +5,8 @@
 import { PixelRatio } from 'react-native';
 
 import type { MediaCategory, VehicleMedia } from '@/api/queries/vehicles';
-import type { PhotoFields, ViewerImage } from '@/ui';
+import type { ViewerImage } from '@/ui/ImageViewer';
+import type { PhotoFields } from '@/ui/Photo';
 
 /** The categories of the gallery (VEH-03), in the order of the media resource. */
 export const MEDIA_CATEGORIES: readonly MediaCategory[] = ['exterior', 'interior', 'engine', 'wheels', 'detail', 'other'];

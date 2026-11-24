@@ -5,7 +5,9 @@ import { View } from 'react-native';
 import type { Me } from '@/api/queries/auth';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size } from '@/theme';
-import { ListRow, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { ListRow } from '@/ui/ListRow';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { identifierText } from '@/ui/textBreaks';
 
 import { twoFactorEnabledOf } from '../account';

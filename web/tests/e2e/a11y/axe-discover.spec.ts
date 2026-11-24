@@ -27,7 +27,7 @@ const SCREENS: Screen[] = [
   { name: 'DISC-03 BMW', path: '/app/discover/make/bmw', auth: 'guest', ready: '[data-testid^="DISC-03.model."]' },
   { name: 'DISC-04 M3 builds', path: '/app/discover/model/bmw--m3', auth: 'guest', ready: '[data-testid^="DISC-04.vehicle."]' },
   { name: 'DISC-04 R34 wheels', path: '/app/discover/model/nissan--skyline-gt-r?segment=wheels&generation=r34', auth: 'guest', ready: '[data-testid^="DISC-04.wheels."][data-testid$=".size"]' },
-  { name: 'VEH-01 Ähnliche Builds', path: `/app/v/${R34.slug}`, auth: 'guest', ready: '[data-testid="VEH-01.similar.header"]' },
+  { name: 'VEH-01 Ähnliche Builds', path: `/app/v/${R34.slug}?section=similar`, auth: 'guest', ready: '[data-testid="VEH-01.similar.header"]' },
   { name: 'VEH-02 Ähnliche suchen', path: (ids) => `/app/v/${R34.slug}/mods/${ids.r34Mod}`, auth: 'guest', ready: '[data-testid="VEH-02.searchSimilar"]' },
 ];
 

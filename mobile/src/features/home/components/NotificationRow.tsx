@@ -8,7 +8,12 @@ import { photoFields, variantUrl } from '@/features/profile/media';
 import { isWeb } from '@/lib/platform';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size, space } from '@/theme';
-import { Avatar, Icon, Photo, SkeletonBlock, SkeletonText, Text, UnreadBadge } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { Icon } from '@/ui/icons/Icon';
+import { Photo } from '@/ui/Photo';
+import { SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { UnreadBadge } from '@/ui/UnreadBadge';
 import { SwipeRow } from '@/ui/motion/kit';
 import { RowBody, RowDivider, type RowInset, useRowInset } from '@/ui/rowParts';
 

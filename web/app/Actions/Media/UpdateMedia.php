@@ -6,6 +6,7 @@ use App\Enums\KeywordField;
 use App\Models\Media;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\BuildScore\BuildScores;
 use App\Services\PublicPages\OgImages;
 use App\Services\Rules\ContentScreen;
 
@@ -32,6 +33,11 @@ class UpdateMedia
 
         if ($media->wasChanged(['focal_x', 'focal_y']) && ($parent instanceof Vehicle || $parent instanceof User)) {
             $this->og->queue($parent);
+        }
+
+        // M5.9c: the cover's focal point counts for the Build Score.
+        if ($media->wasChanged(['focal_x', 'focal_y']) && $parent instanceof Vehicle) {
+            app(BuildScores::class)->touch($parent->id);
         }
 
         return $media;

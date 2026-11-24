@@ -20,6 +20,8 @@
         "messaging_hint": "Cannot send messages or requests.",
         "publishing": "Publishing",
         "publishing_hint": "Cannot publish anything or make it public.",
+        "forum": "Forum",
+        "forum_hint": "Cannot write threads or replies in the forum and cannot vote.",
         "suspension": "Suspension",
         "suspension_hint": "Account suspended. Needs a second team member's approval."
     },
@@ -33,9 +35,9 @@
         "none": "No end"
     },
     "max_days_hint": "Moderators suspend for at most :days days.",
-    "reason_hint": "For the audit log, 10–1,000 characters. The member does not see it.",
     "submit_restrict": "Restrict",
     "submit_suspend": "Request suspension",
+    "submit_suspend_direct": "Suspend",
     "errors": {
         "facts": "The facts need 10 to 5,000 characters.",
         "ground": "The ground needs 3 to 2,000 characters.",
@@ -50,6 +52,8 @@
             "facts_member": "You repeatedly sent the same advertising messages to members who do not know you.",
             "facts_vehicle": "The vehicle is used to advertise a sale or a business instead of showing a build.",
             "facts_photo": "The photo shows advertising or contact details for a sale.",
+            "facts_post": "Your forum post advertises a sale or a business, or repeats the same advertising.",
+            "facts_crew": "The crew advertises a sale or a business instead of being a group of enthusiasts.",
             "ground": "No advertising and no spam"
         },
         "harassment": {
@@ -57,6 +61,8 @@
             "facts_member": "You insulted other members in messages and kept writing after being turned down.",
             "facts_vehicle": "The vehicle's description or updates insult other members.",
             "facts_photo": "The photo shows insulting content aimed at others.",
+            "facts_post": "Your forum post insults other members or attacks them personally.",
+            "facts_crew": "The crew’s name, description or images insult or threaten other members.",
             "ground": "Respectful conduct"
         },
         "impersonation": {
@@ -64,6 +70,8 @@
             "facts_member": "The account poses as another person or company.",
             "facts_vehicle": "The vehicle is shown not to be yours; the photos come from others.",
             "facts_photo": "The photo comes from someone else and is passed off as your own.",
+            "facts_post": "In your forum post you pass yourself off as another person or company.",
+            "facts_crew": "The crew poses as an official club, a manufacturer or another group it is not.",
             "ground": "Real identity and own content"
         },
         "nudity": {
@@ -71,6 +79,8 @@
             "facts_member": "Your profile shows sexual content.",
             "facts_vehicle": "Photos of the vehicle show sexual content.",
             "facts_photo": "The photo shows nudity or sexual content.",
+            "facts_post": "Your forum post contains sexual content or links to it.",
+            "facts_crew": "The crew’s logo or cover shows nudity or sexual content.",
             "ground": "No sexual content"
         },
         "illegal": {
@@ -78,6 +88,8 @@
             "facts_member": "Content of your account breaks the law.",
             "facts_vehicle": "The vehicle shows or promotes illegal modifications or content.",
             "facts_photo": "The photo shows illegal content, such as a readable third-party plate tied to a person.",
+            "facts_post": "Your forum post contains illegal content or calls for illegal acts.",
+            "facts_crew": "The crew calls for illegal races or other offences.",
             "ground": "Applicable law (please name the provision)"
         },
         "other": {

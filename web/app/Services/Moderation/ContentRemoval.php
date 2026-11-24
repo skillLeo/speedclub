@@ -10,13 +10,19 @@ use App\Enums\Visibility;
 use App\Models\BuildUpdate;
 use App\Models\Business;
 use App\Models\Comment;
+use App\Models\Crew;
 use App\Models\Event;
+use App\Models\EventPhoto;
+use App\Models\ForumPost;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\ModerationCase;
 use App\Models\Modification;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Crews\CrewModeration;
+use App\Services\Events\EventGalleryModeration;
+use App\Services\Forum\ForumModeration;
 use App\Services\Media\MediaService;
 use App\Services\PublicPages\OgImages;
 use App\Services\PublicPages\SitemapWriter;
@@ -64,6 +70,10 @@ class ContentRemoval
             ReportTargetType::Comment => ($comment = Comment::query()->find($id)) instanceof Comment ? $this->comment($comment) : [],
             ReportTargetType::Event => ($event = Event::query()->find($id)) instanceof Event ? $this->event($event) : [],
             ReportTargetType::Business => ($business = Business::query()->find($id)) instanceof Business ? $this->business($business) : [],
+            // M5.8: the post (an opening post takes its thread along), ForumModeration.
+            ReportTargetType::ForumPost => ($post = ForumPost::query()->find($id)) instanceof ForumPost ? app(ForumModeration::class)->remove($post) : [],
+            // R4-2.3: the crew is hidden from everybody but its members (CrewModeration).
+            ReportTargetType::Crew => ($crew = Crew::withTrashed()->find($id)) instanceof Crew ? app(CrewModeration::class)->remove($crew) : [],
         };
     }
 
@@ -74,6 +84,11 @@ class ContentRemoval
     {
         $photo->forceFill(['moderation_status' => ModerationStatus::Rejected])->save();
         $parent = $photo->mediable;
+
+        // M5.6: a gallery photo leaves every list and count at once; who decided is on the decision (DecideCase audits it).
+        if ($parent instanceof EventPhoto) {
+            app(EventGalleryModeration::class)->removed($parent);
+        }
 
         if ($parent instanceof Vehicle && $parent->getAttribute('cover_media_id') === $photo->id) {
             $parent->forceFill(['cover_media_id' => $parent->media()->usablePhoto()->orderBy('sort')->orderBy('id')->value('id')])->saveQuietly();

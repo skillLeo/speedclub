@@ -10,6 +10,7 @@ import { uploadPhoto, type UploadTarget } from '@/api/queries/media';
 import { modKeys } from '@/api/queries/mods';
 import { myVehiclesKey } from '@/api/queries/profile';
 import { queryClient } from '@/api/queryClient';
+import { appendPlateBlur } from '@/features/media/plateBlur/model';
 import i18n from '@/i18n';
 import { AUTOMATIC_WAIT_MAX_S, type UploadDriver, type UploadFailure } from '@/state/uploads';
 
@@ -55,6 +56,12 @@ export function describeUploadError(error: unknown): UploadFailure {
 }
 
 function refreshTarget(target: UploadTarget) {
+  // M5.8: a forum thread's photo shows on FOR-03 (and its row's "Mit Fotos"); nothing of the garage changed.
+  if (target.kind === 'forum') {
+    void queryClient.invalidateQueries({ queryKey: ['forum', 'thread', target.threadId] });
+    void queryClient.invalidateQueries({ queryKey: ['forum', 'list'] });
+    return;
+  }
   void queryClient.invalidateQueries({ queryKey: garageKeys.vehicle(target.vehicleId) });
   void queryClient.invalidateQueries({ queryKey: myVehiclesKey });
   // The public page and Verlauf are keyed by slug; their screens read again on focus, as after any edit.
@@ -74,8 +81,8 @@ function refreshTarget(target: UploadTarget) {
 export function createGarageUploadDriver(): UploadDriver {
   return {
     prepare: preparePhoto,
-    upload: async (target, preparedUri, idempotencyKey, onProgress, signal) =>
-      uploadPhoto(target, await photoForm(preparedUri), idempotencyKey, onProgress, signal),
+    upload: async (target, preparedUri, idempotencyKey, onProgress, signal, plateBlur) =>
+      uploadPhoto(target, appendPlateBlur(await photoForm(preparedUri), plateBlur), idempotencyKey, onProgress, signal),
     onUploaded: (target) => refreshTarget(target),
     describe: describeUploadError,
     release: (item) => releasePicked(item.source),

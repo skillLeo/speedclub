@@ -215,6 +215,6 @@ class MyBusinessController extends Controller
         $attributes = array_intersect_key($request->validated(), array_flip(['alt', 'focal_x', 'focal_y']));
 
         /** @status 201 */
-        return new MediaResource($action->handle($user, $business, $slot, $file, $attributes));
+        return new MediaResource($action->handle($user, $business, $slot, $file, $attributes, $request->plateBlur()));
     }
 }

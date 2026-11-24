@@ -18,7 +18,9 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { RowGroup } from '@/ui/RowGroup';
 import { RadioRows } from '../components/SettingRows';

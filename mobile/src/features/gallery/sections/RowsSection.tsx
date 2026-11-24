@@ -1,7 +1,14 @@
 import { useState } from 'react';
 
 import { createStyles } from '@/theme';
-import { BuildUpdateRow, Button, ListRow, MemberRow, ModRow, OwnerRow, SectionHeader, Switch } from '@/ui';
+import { BuildUpdateRow } from '@/ui/BuildUpdateRow';
+import { Button } from '@/ui/Button';
+import { ListRow } from '@/ui/ListRow';
+import { MemberRow } from '@/ui/MemberRow';
+import { ModRow } from '@/ui/ModRow';
+import { OwnerRow } from '@/ui/OwnerRow';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Switch } from '@/ui/Switch';
 
 import { LUKAS, PHOTOS, noop, photoUri } from '../data';
 import { FORCED, Group, Panel, SectionScreen, Specimen } from '../parts';

@@ -2,12 +2,14 @@
 
 namespace App\Actions\Admin\Team;
 
+use App\Enums\ApproverChangeCause;
 use App\Enums\TeamEvent;
 use App\Mail\StaffTwoFactorResetMail;
 use App\Models\ApprovalRequest;
 use App\Models\Staff;
 use App\Services\Admin\Members\StaffAtoms;
 use App\Services\Approvals\Approvals;
+use App\Services\Approvals\ApproverChanges;
 use App\Services\Approvals\FourEyes;
 use App\Services\Audit\Audit;
 use App\Services\Auth\AuthMailer;
@@ -45,7 +47,7 @@ class ResetStaffTwoFactor
     public function handle(Staff $by, Staff $target, string $reason): TeamOutcome
     {
         StaffAtoms::ensure($by, 'staff.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
         self::ensureMay($by, $target);
 
         return TeamOutcome::approval($this->approvals->request('staff.reset_two_factor', ['staff_id' => $target->getKey()], $reason, $by, $target));
@@ -66,6 +68,8 @@ class ResetStaffTwoFactor
 
         $target = Staff::query()->whereKey((int) $request->payload['staff_id'])->lockForUpdate()->firstOrFail();
         self::ensureMay($requester, $target);
+        // SEC-P5-01: the reset takes the account out of the approver list until its new password is set (Owner-Override cool-down).
+        ApproverChanges::record(ApproverChanges::deciders([$target]), ApproverChangeCause::TwoFactorReset, $approver);
 
         $target->forceFill([
             'two_factor_secret' => null,

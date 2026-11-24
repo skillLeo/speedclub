@@ -1,6 +1,7 @@
 {
     "data": {
         "username": "string",
+        "share_url": "string",
         "display_name": "string",
         "city": "string",
         "bio": "null",
@@ -14,6 +15,11 @@
         },
         "is_sample": "bool",
         "is_editorial": "bool",
+        "level": {
+            "level": "int",
+            "title": "string"
+        },
+        "founding_number": "null",
         "is_self": "bool",
         "is_following": "bool",
         "follows_you": "bool",

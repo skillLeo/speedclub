@@ -50,7 +50,7 @@ Herstellernamen verwenden wir nur beschreibend. Wir stehen in keiner Verbindung 
 
 ## Betriebe, Treffen und Anzeigen
 
-Betriebsprofile zeigen ein eigenes Impressum. Für das Profil und dessen Angaben ist der jeweilige Betrieb verantwortlich, nicht SPEED CLUB. Treffen veranstalten die jeweiligen Organisatoren. Links zu Shops, die wir als „Anzeige“ kennzeichnen, sind Werbung, für die wir eine Provision erhalten können.
+Betriebsprofile zeigen ein eigenes Impressum. Für das Profil und dessen Angaben ist der jeweilige Betrieb verantwortlich, nicht Speedclub. Treffen veranstalten die jeweiligen Organisatoren. Links zu Shops, die wir als „Anzeige“ kennzeichnen, sind Werbung, für die wir eine Provision erhalten können.
 
 ## Streitbeilegung
 

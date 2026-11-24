@@ -172,8 +172,7 @@
     },
     "reinstate_dialog": {
         "title": "Reinstate “:name”?",
-        "body": "The profile is public again at once. The owner is notified.",
-        "reason": "Reason (kept in the audit log)"
+        "body": "The profile is public again at once. The owner is notified."
     },
     "reopen_dialog": {
         "title": "Reopen the decision on “:name”?",

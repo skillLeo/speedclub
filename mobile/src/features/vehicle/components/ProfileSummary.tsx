@@ -5,7 +5,13 @@ import { View, type LayoutChangeEvent, type StyleProp, type ViewProps, type View
 import type { PublicVehicle } from '@/api/queries/vehicles';
 import { isWeb } from '@/lib/platform';
 import { createStyles, size, useTheme } from '@/theme';
-import { Avatar, Button, DisplayTitle, PressableScale, SampleBadges, SpecStrip, Text } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { SampleBadges } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { DisplayTitle } from '@/ui/DisplayTitle';
+import { PressableScale } from '@/ui/PressableScale';
+import { SpecStrip } from '@/ui/SpecStrip';
+import { Text } from '@/ui/Text';
 
 import { variantUrl } from '../media';
 import { keptSubline, ownerName, specStripItems, SUBLINE_WHOLE_FONT_SCALE, sublineOf } from '../model';
@@ -47,6 +53,8 @@ export type VehicleIdentityProps = {
   layoutWidth?: number;
   /** PROF-02 of the owner (or PROF-01 for your own build); without it the chip is not a link (GAR-02). */
   onOpenOwner?: () => void;
+  /** False where the owner chip is elsewhere (the desktop's right card, DQ-M53-02). */
+  showOwner?: boolean;
   /** The title's box, for the header that shows the title once it scrolls away. */
   onTitleLayout?: (event: LayoutChangeEvent) => void;
   /**
@@ -70,6 +78,7 @@ export function VehicleIdentity({
   tone,
   layoutWidth,
   onOpenOwner,
+  showOwner = true,
   onTitleLayout,
   headMinHeight,
   dataSet,
@@ -150,7 +159,7 @@ export function VehicleIdentity({
           </Text>
         ) : null}
       </View>
-      {owner && chipContent ? (
+      {showOwner && owner && chipContent ? (
         onOpenOwner ? (
           // The region keeps `.ownerRow` (parity, WEB-01); the link inside keeps `.ownerRow.identity` (f5-discover, keyboard-discover).
           <View style={styles.chip} testID={`${routeId}.ownerRow`}>

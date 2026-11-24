@@ -98,39 +98,61 @@ export function eventFixtureIds() {
  * follow a reseed whatever its slug; read only (no cell answers it).
  */
 const MEMBER_EVENT = { organiser: 'jann.ptrs', title: 'Feierabendtreffen am Elbdeich' };
+/**
+ * DQ-P5-012: the demo meet that is over, "Saugmotor-Abend" by max.e46 (ShowcaseEvents `member_events`, 21 days back at seeding), with
+ * the seeded approved gallery (member_events[].gallery). Found the same way; the EVT-02 gallery cells read it under `m56-gallery`.
+ */
+const PAST_MEMBER_EVENT = { organiser: 'max.e46', title: 'Saugmotor-Abend', when: 'past' };
 
-/** @type {Promise<Record<string, string>>|null} */
-let memberEvent = null;
+/** @type {Map<string, Promise<Record<string, string>>>} */
+const memberEvents = new Map();
 
-function memberEventIds() {
-  memberEvent ??= (async () => {
-    const api = await memberApi(await sessionOf(DEMO_MEMBER));
-    try {
-      const path = `public/users/${MEMBER_EVENT.organiser}/events`;
-      const events = expectStatus(await api.get(`${path}?per_page=50`), 200, `GET ${path}`).data;
-      const found = events.find((/** @type {{title:string}} */ entry) => entry.title === MEMBER_EVENT.title);
-      if (!found) throw new Error(`${MEMBER_EVENT.title} of @${MEMBER_EVENT.organiser} is not seeded (ShowcaseEvents member_events, DQ-1110)`);
-      return { memberEvent: found.slug };
-    } finally {
-      await api.dispose();
-    }
-  })();
-  memberEvent.catch(() => (memberEvent = null));
-  return memberEvent;
+/**
+ * The slug of a seeded demo meet under its token name, read once per process from its organiser's public event list.
+ * @param {string} token
+ * @param {{ organiser: string, title: string, when?: 'past' }} wanted (`when: 'past'`: the organiser list of meets that are over)
+ */
+function seededEventIds(token, wanted) {
+  let found = memberEvents.get(token);
+  if (!found) {
+    found = (async () => {
+      const api = await memberApi(await sessionOf(DEMO_MEMBER));
+      try {
+        const path = `public/users/${wanted.organiser}/events`;
+        const query = wanted.when ? `?when=${wanted.when}&per_page=50` : '?per_page=50';
+        const events = expectStatus(await api.get(`${path}${query}`), 200, `GET ${path}${query}`).data;
+        const event = events.find((/** @type {{title:string}} */ entry) => entry.title === wanted.title);
+        if (!event) throw new Error(`${wanted.title} of @${wanted.organiser} is not seeded (ShowcaseEvents member_events, DQ-1110)`);
+        return { [token]: event.slug };
+      } finally {
+        await api.dispose();
+      }
+    })();
+    found.catch(() => memberEvents.delete(token));
+    memberEvents.set(token, found);
+  }
+  return found;
 }
 
-/** Tokens of the M4.12 routes: each event's slug, and its id (`…Id`) for the admin routes; {memberEvent} for the answerable meet. */
-export const EVENT_FIXTURE_TOKENS = [...EVENTS.flatMap((event) => [event.key, `${event.key}Id`]), 'memberEvent'];
+const memberEventIds = () => seededEventIds('memberEvent', MEMBER_EVENT);
+const pastMemberEventIds = () => seededEventIds('pastMemberEvent', PAST_MEMBER_EVENT);
+
+/**
+ * Tokens of the M4.12 routes: each event's slug, and its id (`…Id`) for the admin routes; {memberEvent} for the answerable meet,
+ * {pastMemberEvent} for the meet that is over with its gallery.
+ */
+export const EVENT_FIXTURE_TOKENS = [...EVENTS.flatMap((event) => [event.key, `${event.key}Id`]), 'memberEvent', 'pastMemberEvent'];
 
 /**
  * The values of the event tokens asked for: lukas.sc's organiser events only when one of them is named (they are made on first use).
  * @param {string[]} names
  */
 export async function eventTokenValues(names) {
-  const organiser = names.some((name) => name !== 'memberEvent' && EVENT_FIXTURE_TOKENS.includes(name));
+  const organiser = names.some((name) => name !== 'memberEvent' && name !== 'pastMemberEvent' && EVENT_FIXTURE_TOKENS.includes(name));
   return {
     ...(organiser ? await eventFixtureIds() : {}),
     ...(names.includes('memberEvent') ? await optionalSeed('memberEvent', memberEventIds) : {}),
+    ...(names.includes('pastMemberEvent') ? await optionalSeed('pastMemberEvent', pastMemberEventIds) : {}),
   };
 }
 

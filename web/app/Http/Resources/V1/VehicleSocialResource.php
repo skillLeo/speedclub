@@ -34,7 +34,7 @@ class VehicleSocialResource extends JsonResource
             /**
              * The viewer's reaction [build_reactions]: strong, clean, low or loud. Null for guests, the owner, none yet, or the flag off.
              *
-             * @var 'strong'|'clean'|'low'|'loud'|null
+             * @var 'like'|'strong'|'clean'|'low'|'loud'|null
              */
             'my_reaction' => $isOwner ? null : $reactions->mine($viewer, $vehicle)?->value,
             /** The viewer follows this build [vehicle_follow]. Null for guests, the owner and while the flag is off. */
@@ -46,7 +46,7 @@ class VehicleSocialResource extends JsonResource
             /**
              * Owner only: reactions on the build by kind and in total [build_reactions].
              *
-             * @var array{strong: int, clean: int, low: int, loud: int, total: int}
+             * @var array{like: int, strong: int, clean: int, low: int, loud: int, total: int}
              */
             'reaction_summary' => $this->when($isOwner && $reactions->enabled(), fn (): array => $reactions->summary($vehicle)),
             /** Owner only: how many members follow this build [vehicle_follow]. Never public (09 §8.6). */

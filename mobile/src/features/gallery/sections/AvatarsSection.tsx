@@ -1,4 +1,4 @@
-import { Avatar, type AvatarSize } from '@/ui';
+import { Avatar, type AvatarSize } from '@/ui/Avatar';
 
 import { PHOTOS, LUKAS, photoUri } from '../data';
 import { Group, SectionScreen, Specimen, Wrap } from '../parts';

@@ -101,7 +101,7 @@ return [
 
             'from' => [
                 'address' => env('MAIL_FROM_ADDRESS', 'noreply@speedclub.de'),
-                'name' => env('MAIL_FROM_NAME', 'SPEED CLUB'),
+                'name' => env('MAIL_FROM_NAME', 'Speedclub'),
             ],
         ],
 

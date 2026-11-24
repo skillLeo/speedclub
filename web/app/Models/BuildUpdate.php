@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BuildUpdateAudience;
+use App\Enums\BuildUpdateKind;
 use App\Enums\BuildUpdateType;
 use Carbon\CarbonInterface;
 use Database\Factories\BuildUpdateFactory;
@@ -26,6 +27,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
  * @property string $vehicle_id
  * @property bool $hidden
  * @property BuildUpdateType $type
+ * @property BuildUpdateKind $kind M5.9c: `post`, or a before/after pair (its photos in photo_pairs)
  * @property BuildUpdateAudience $audience
  * @property array<string, mixed>|null $payload
  * @property list<array{0: string, 1: string}>|null $photo_pairs
@@ -44,12 +46,20 @@ class BuildUpdate extends Model
     public const UPDATED_AT = null;
 
     /**
+     * The column's default, so a new row reads `post` before it is refreshed.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = ['kind' => 'post'];
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
             'type' => BuildUpdateType::class,
+            'kind' => BuildUpdateKind::class,
             'payload' => 'array',
             'hidden' => 'boolean',
             'open_until' => 'datetime',

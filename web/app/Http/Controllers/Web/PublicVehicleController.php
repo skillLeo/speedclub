@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\ViewSource;
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
+use App\Services\Insights\ViewRecorder;
 use App\Services\PublicPages\PublicPageData;
 use App\Support\SignedInBrowser;
 use App\Support\Viewer;
@@ -18,7 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class PublicVehicleController extends Controller
 {
-    public function __invoke(Request $request, string $slug, PublicPageData $pages): Response
+    public function __invoke(Request $request, string $slug, PublicPageData $pages, ViewRecorder $views): Response
     {
         $vehicle = Vehicle::findBySlug($slug);
 
@@ -33,6 +35,10 @@ class PublicVehicleController extends Controller
 
             return redirect('/v/'.$canonical.($query === null ? '' : '?'.$query), 301, ['Cache-Control' => 'no-cache, private']);
         }
+
+        // M5.7 (m5.7-contract §2.3): a person's view of the page, counted after the answer; ?via=share marks a shared link. The browser's
+        // member (also behind ?view=public) decides "own page".
+        $views->storeLater($views->captureVehicle($vehicle, ViewSource::fromShareParameter($request), SignedInBrowser::member($request) ?? Viewer::from($request), $request, page: true));
 
         return response()->view('public.vehicle', $pages->vehicle($vehicle, $request));
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Catalog;
 use App\Enums\CatalogRequestStatus;
 use App\Http\Controllers\Admin\Support\TableProps;
 use App\Http\Controllers\Controller;
+use App\Models\AiSpecSuggestion;
 use App\Models\CatalogRequest;
 use App\Models\Generation;
 use App\Models\Make;
@@ -12,6 +13,7 @@ use App\Models\Staff;
 use App\Models\Vehicle;
 use App\Models\VehicleModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -79,6 +81,8 @@ class MakesController extends Controller
         $generations = Generation::query()->where('model_id', $row->getKey())
             ->select('generations.*')
             ->selectSub(Vehicle::withTrashed()->selectRaw('COUNT(*)')->whereColumn('vehicles.generation_id', 'generations.id'), 'vehicles_count')
+            // M5.9 D-5: since when a cached AI spec suggestion exists (null: none), in the same query.
+            ->selectSub(AiSpecSuggestion::query()->selectRaw('MIN(created_at)')->whereColumn('ai_spec_suggestions.generation_id', 'generations.id'), 'ai_specs_since')
             ->with('mergedInto:id,name')
             ->orderByRaw('merged_into_id IS NOT NULL')->orderByRaw('year_from IS NULL')->orderBy('year_from')->orderBy('name')->orderBy('id')
             ->get();
@@ -106,6 +110,7 @@ class MakesController extends Controller
                 'active' => (bool) $generation->getAttribute('active'),
                 'merged_into' => self::target($generation->getRelationValue('mergedInto')),
                 'vehicles' => (int) $generation->getAttribute('vehicles_count'),
+                'ai_specs' => self::aiSpecs($generation->getAttribute('ai_specs_since')),
             ])->all()),
         ]);
     }
@@ -121,6 +126,18 @@ class MakesController extends Controller
             'makes' => Make::query()->whereNull('merged_into_id')->count(),
             'requests' => CatalogRequest::query()->where('status', CatalogRequestStatus::Pending)->count(),
         ];
+    }
+
+    /**
+     * Whether the generation has a cached AI spec suggestion (M5.9 D-5) and since when (ISO 8601, UTC).
+     *
+     * @return array{exists: bool, created_at: string|null}
+     */
+    private static function aiSpecs(mixed $since): array
+    {
+        $at = is_string($since) && $since !== '' ? Carbon::parse($since, 'UTC')->toIso8601String() : null;
+
+        return ['exists' => $at !== null, 'created_at' => $at];
     }
 
     /**

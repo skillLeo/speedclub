@@ -15,7 +15,7 @@ import type { Paginated, PresetView, SavedView, TableQuery } from '../../types/t
 import { caseHref, memberHref } from '../Moderation/shared';
 
 /**
- * ADM-60 Kommentare (09 §8.5, §10.3; M4.17): every comment under build updates, newest first, with author, reply or not, the build, its
+ * ADM-60 Kommentare (09 §8.5, §10.3; M4.17): every comment under build updates and (R5-5) on cars themselves, newest first, with author, reply or not, the build, its
  * open report case and status. Read-only: a comment is taken down through its DSA case on ADM-21, so a reported row links its case.
  * The `build_comments` flag is off at launch: the line above the table says whether members can comment and, for flags.manage, opens
  * the flag. moderation.view.
@@ -26,6 +26,8 @@ interface CommentRow {
     body: string;
     author: { id: string; username: string | null };
     reply: boolean;
+    /** R5-5: the car's own thread, or an update's. */
+    on: 'vehicle' | 'build_update';
     vehicle_id: string | null;
     status: Status;
     case_id: string | null;
@@ -127,10 +129,13 @@ const vehicleHref = (id: string): string => routeOr('admin.vehicles.show', `/adm
                 <span v-else class="sc-key block truncate text-ink">{{ `@${row.author.username ?? '–'}` }}</span>
             </template>
             <template #cell-build="{ row }">
-                <Link v-if="row.vehicle_id && hasRoute('admin.vehicles.show')" :href="vehicleHref(row.vehicle_id)" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 rounded-xs text-ink hover:underline']">
-                    {{ trans('comments.open_build') }}<PhArrowSquareOut :size="16" aria-hidden="true" />
-                </Link>
-                <span v-else class="text-ink-3">–</span>
+                <span class="flex min-w-0 flex-col gap-2 py-4">
+                    <Link v-if="row.vehicle_id && hasRoute('admin.vehicles.show')" :href="vehicleHref(row.vehicle_id)" :class="[focusRing, 'inline-flex min-h-32 items-center gap-4 rounded-xs text-ink hover:underline']" data-testid="ADM-60.build">
+                        {{ trans('comments.open_build') }}<PhArrowSquareOut :size="16" aria-hidden="true" />
+                    </Link>
+                    <span v-else class="text-ink-3">–</span>
+                    <span class="text-caption text-ink-3" data-testid="ADM-60.on">{{ trans(`comments.on.${row.on}`) }}</span>
+                </span>
             </template>
             <template #cell-case="{ row }">
                 <Link v-if="row.case_id" :href="caseHref(row.case_id)" :class="[focusRing, 'inline-flex min-h-32 items-center rounded-xs text-ink hover:underline']" data-testid="ADM-60.case">

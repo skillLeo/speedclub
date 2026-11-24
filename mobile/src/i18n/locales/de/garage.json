@@ -15,7 +15,7 @@
     "sortHintWeb": "Zieh ein Fahrzeug am Griff an seinen Platz, oder wähle den Griff und nutze die Pfeiltasten. Dein Hauptfahrzeug bleibt oben.",
     "sortSaved": "Reihenfolge gespeichert",
     "mainPinned": "Hauptfahrzeug · bleibt oben",
-    "qrFor": "QR-⁠Code für {{vehicle}}",
+    "qrFor": "Sticker für {{vehicle}}",
     "drafts": "Entwürfe",
     "draftLine": "Entwurf · Schritt {{step}} von {{total}}",
     "resume": "Fortsetzen",
@@ -26,7 +26,7 @@
     "deleteDraftConfirm": "Entwurf löschen",
     "draftDeleted": "Entwurf gelöscht",
     "emptyTitle": "Deine Garage wartet.",
-    "emptyBody": "Leg dein Auto an, dokumentiere Technik und Mods und hol dir deinen QR-⁠Sticker für die Scheibe.",
+    "emptyBody": "Leg dein Auto an, dokumentiere Technik und Mods und hol dir deinen Sticker für die Scheibe.",
     "emptyAction": "Fahrzeug hinzufügen",
     "sampleTitle": "So sieht ein Build aus",
     "sample": {
@@ -45,8 +45,8 @@
       "modsLabel": "Mods von {{vehicle}}",
       "photos": "Fotos",
       "photosLabel": "Fotos von {{vehicle}}",
-      "qr": "QR-⁠Code",
-      "qrLabel": "QR-⁠Code für {{vehicle}}"
+      "qr": "Sticker",
+      "qrLabel": "Sticker für {{vehicle}}"
     },
     "statsVehicles_one": "{{formatted}} Fahrzeug",
     "statsVehicles_other": "{{formatted}} Fahrzeuge",
@@ -74,7 +74,7 @@
   },
   "guest": {
     "title": "Deine Garage wartet",
-    "body": "Melde dich an, um Fahrzeuge anzulegen, Mods zu dokumentieren und deinen QR-⁠Code zu bekommen.",
+    "body": "Melde dich an, um Fahrzeuge anzulegen, Mods zu dokumentieren und deinen Sticker zu bekommen.",
     "signIn": "Anmelden"
   },
   "restricted": {
@@ -155,7 +155,7 @@
     "freeTextHelper": "Nicht im Katalog – wir prüfen den Namen.",
     "delete": "Fahrzeug löschen",
     "deleteTitle": "{{vehicle}} löschen?",
-    "deleteBodyPublished": "Die Seite und alle Mods verschwinden, dein QR-⁠Code funktioniert danach nicht mehr. Das lässt sich nicht rückgängig machen.",
+    "deleteBodyPublished": "Die Seite und alle Mods verschwinden, dein Sticker funktioniert danach nicht mehr. Das lässt sich nicht rückgängig machen.",
     "deleteBodyDraft": "Der Entwurf und seine Fotos werden gelöscht. Das lässt sich nicht rückgängig machen.",
     "deleteConfirm": "Fahrzeug löschen",
     "deleted": "{{vehicle}} wurde gelöscht"
@@ -291,11 +291,11 @@
     "options": {
       "public": {
         "title": "Öffentlich",
-        "body": "In der Suche, im Feed, auf deinem Profil und über deinen QR-⁠Code."
+        "body": "In der Suche, im Feed, auf deinem Profil und über deinen Sticker."
       },
       "unlisted": {
         "title": "Nicht gelistet",
-        "body": "Nur über den Link und deinen QR-⁠Code. Nicht in Suche und Feed."
+        "body": "Nur über den Link und deinen Sticker. Nicht in Suche und Feed."
       },
       "private": {
         "title": "Privat",
@@ -304,7 +304,7 @@
     },
     "saved": {
       "public": "Dein Fahrzeug ist jetzt öffentlich",
-      "unlisted": "Dein Fahrzeug ist jetzt nur über Link und QR-⁠Code zu sehen",
+      "unlisted": "Dein Fahrzeug ist jetzt nur über Link und Sticker zu sehen",
       "private": "Dein Fahrzeug ist jetzt privat"
     },
     "draftNote": "Gilt ab dem Veröffentlichen.",
@@ -316,7 +316,7 @@
     "checkPhotos": "Fotos prüfen",
     "ownerOnQr": {
       "group": "Für alle deine Fahrzeuge",
-      "label": "Besitzer auf der QR-⁠Seite",
+      "label": "Besitzer auf der Sticker-Seite",
       "saved": "Einstellung gespeichert",
       "helper": "Ist der Schalter aus, siehst nur du deinen Namen auf deinen Fahrzeugseiten, und neue Sticker-PDFs kommen ohne ihn.",
       "loadFailed": "Diese Einstellung konnte nicht geladen werden.",
@@ -329,7 +329,7 @@
     "edit": "Bearbeiten",
     "mods": "Mods",
     "photos": "Fotos",
-    "qr": "QR-⁠Code",
+    "qr": "Sticker",
     "visibility": "Sichtbarkeit",
     "editTitle": "Was möchtest du bearbeiten?",
     "editBasics": "Grunddaten",
@@ -352,11 +352,11 @@
       },
       "private": {
         "title": "Privat",
-        "body": "Nur du siehst dieses Fahrzeug. Ein Scan deines QR-⁠Codes zeigt, dass es privat ist."
+        "body": "Nur du siehst dieses Fahrzeug. Ein Scan deines Stickers zeigt, dass es privat ist."
       },
       "unlisted": {
         "title": "Nicht gelistet",
-        "body": "Nur über den Link und deinen QR-⁠Code zu sehen, nicht in Suche und Feed."
+        "body": "Nur über den Link und deinen Sticker zu sehen, nicht in Suche und Feed."
       }
     }
   },
@@ -463,7 +463,8 @@
       "details": "Angaben",
       "install": "Einbau",
       "photos": "Fotos",
-      "more": "Weitere Angaben"
+      "more": "Weitere Angaben",
+      "plan": "Plan"
     },
     "rangePlaceholder": "{{min}} bis {{max}}",
     "brandPlaceholder": "Marke eintippen",
@@ -476,7 +477,7 @@
     "installedOn": "Eingebaut (Monat/Jahr)",
     "installedOnPlaceholder": "MM/JJJJ",
     "cost": "Kosten",
-    "costPlaceholder": "z. B. 2.400",
+    "costPlaceholder": "z. B. 1.850",
     "costPrivate": "Nur du siehst die Kosten.",
     "notes": "Notizen",
     "notesPlaceholder": "Abstimmung, Erfahrungen, Bezugsquelle",
@@ -514,7 +515,28 @@
       "individual_approval": "Abnahme nach § 21 StVZO",
       "not_required": "Für das Teil sind keine Papiere nötig",
       "unknown": "Weiß ich nicht oder keine Angabe"
-    }
+    },
+    "planTitle": "Plan anlegen",
+    "targetMonth": "Zielmonat",
+    "targetMonthPlaceholder": "Monat wählen",
+    "targetYear": "Jahr",
+    "targetYearPlaceholder": "Jahr wählen",
+    "targetHelper": "Optional, bis zu zehn Jahre im Voraus.",
+    "targetChosen": "Ziel: {{month}}",
+    "targetClear": "Kein Zielmonat",
+    "priority": "Priorität",
+    "priorities": {
+      "none": "Keine",
+      "low": "Niedrig",
+      "normal": "Normal",
+      "high": "Hoch"
+    },
+    "budget": "Budget",
+    "budgetPlaceholder": "z. B. 1.200",
+    "budgetPrivate": "Nur für dich sichtbar.",
+    "planLeaving": "Nicht mehr geplant: Zielmonat und Priorität entfallen beim Speichern.",
+    "planLeavingBudget": "Nicht mehr geplant: Zielmonat und Priorität entfallen. Dein Budget steht jetzt bei den Kosten.",
+    "keptBudget": "Geplantes Budget: {{amount}} €"
   },
   "history": {
     "title": "Verlauf",
@@ -544,12 +566,12 @@
   },
   "published": {
     "title": "Dein Build ist live.",
-    "body": "{{vehicle}} hat jetzt einen eigenen QR-⁠Code. Wer ihn scannt, landet direkt auf deiner Build-Seite.",
-    "bodyFallback": "Dein Fahrzeug hat jetzt einen eigenen QR-⁠Code. Wer ihn scannt, landet direkt auf deiner Build-Seite.",
+    "body": "{{vehicle}} hat jetzt einen eigenen Sticker mit QR-⁠Code. Wer ihn scannt, landet direkt auf deiner Build-Seite.",
+    "bodyFallback": "Dein Fahrzeug hat jetzt einen eigenen Sticker mit QR-⁠Code. Wer ihn scannt, landet direkt auf deiner Build-Seite.",
     "qrLabel": "QR-⁠Code für {{vehicle}}",
     "goneTitle": "Dieses Fahrzeug ist noch nicht veröffentlicht",
     "goneBody": "In deiner Garage kannst du den Entwurf fortsetzen.",
-    "viewQr": "QR-⁠Code ansehen",
+    "viewQr": "Sticker ansehen",
     "share": "Teilen",
     "toGarage": "Zur Garage",
     "linkCopied": "Link kopiert",
@@ -578,12 +600,14 @@
     "option": "Wähle einen Eintrag aus der Liste.",
     "fieldRequired": "{{field}} fehlt noch.",
     "month": "Gib Monat und Jahr ein, zum Beispiel 03/2023.",
+    "modEmpty": "Gib mindestens eine Angabe zum Teil ein, zum Beispiel Marke, Modell oder einen Titel.",
     "monthFuture": "Der Einbau kann nicht in der Zukunft liegen. Steht er noch bevor, wähle „Geplant“.",
     "cost": "Gib einen Betrag in Euro ein, zum Beispiel 2.400 oder 89,90. Nutze ein Komma für Cent.",
     "noteRequired": "Schreib zuerst deine Notiz.",
     "huAuFormat": "Gib Monat und Jahr ein, zum Beispiel 03/2027.",
     "huAuTooEarly": "Das liegt mehr als zwei Jahre zurück.",
-    "huAuTooLate": "Die nächste HU/AU liegt höchstens drei Jahre in der Zukunft."
+    "huAuTooLate": "Die nächste HU/AU liegt höchstens drei Jahre in der Zukunft.",
+    "targetMonth": "Wähl einen Monat zwischen Januar 2000 und zehn Jahren ab heute."
   },
   "blur": {
     "group": "Kennzeichen & Gesichter",
@@ -628,7 +652,20 @@
     "photoAccept": "Kategorie übernehmen",
     "retry": "Erneut versuchen",
     "describeReplaced": "Vorschlag eingesetzt. Dein bisheriger Text ist ersetzt.",
-    "photoSuggest": "Kategorie vorschlagen"
+    "photoSuggest": "Kategorie vorschlagen",
+    "specs": {
+      "question": "Daten übernehmen?",
+      "label": "KI-⁠Vorschlag",
+      "intro": "Typische Herstellerangaben zu deinem Modell. Du prüfst sie, bevor du speicherst.",
+      "for": "Typische Herstellerangaben für {{subject}}",
+      "variants": "Ausführung wählen",
+      "hint": "Füllt nur leere Felder. Gespeichert wird erst mit „{{save}}“.",
+      "yes": "Ja, zeigen",
+      "no": "Nein danke",
+      "allFilled": "Deine Felder sind schon ausgefüllt, es wurde nichts geändert.",
+      "taken": "Herstellerangaben eingesetzt. Prüf sie vor dem Speichern.",
+      "provenance": "Herstellerangabe (KI-⁠Vorschlag)"
+    }
   },
   "maintenance": {
     "title": "Wartung",
@@ -868,5 +905,99 @@
     "dueLine": "{{title}} {{countdown}}",
     "a11yCar": "Mein Auto: {{name}}. {{due}} Öffnet dein Auto in der Garage.",
     "a11yEmpty": "Mein Auto: noch kein Auto. Auto hinzufügen."
+  },
+  "plateBlur": {
+    "switch": "Kennzeichen unkenntlich machen",
+    "switchOn": "Die Rechtecke werden beim Hochladen verpixelt, in jeder Größe des Fotos.",
+    "switchOff": "Das Foto wird so hochgeladen, wie es ist.",
+    "stageLabel_one": "Foto mit {{count}} Rechteck",
+    "stageLabel_other": "Foto mit {{count}} Rechtecken",
+    "regionLabel": "Rechteck {{number}}: {{x}} % von links, {{y}} % von oben, {{w}} × {{h}} %",
+    "regionLabelTurned": "Rechteck {{number}}: {{x}} % von links, {{y}} % von oben, {{w}} × {{h}} %, {{angle}}",
+    "angleLabel": "Winkel von Rechteck {{number}}",
+    "angleValue": "{{value}}°",
+    "angleStraight": "gerade",
+    "angleRight_one": "{{count}} Grad nach rechts gedreht",
+    "angleRight_other": "{{count}} Grad nach rechts gedreht",
+    "angleLeft_one": "{{count}} Grad nach links gedreht",
+    "angleLeft_other": "{{count}} Grad nach links gedreht",
+    "regionActions": "Verschiebe es mit den Aktionen, mach es größer oder kleiner oder dreh es.",
+    "actions": {
+      "moveLeft": "Nach links",
+      "moveRight": "Nach rechts",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "grow": "Größer",
+      "shrink": "Kleiner",
+      "turnLeft": "Nach links drehen",
+      "turnRight": "Nach rechts drehen"
+    },
+    "remove": "Rechteck {{number}} entfernen",
+    "removed": "Rechteck {{number}} entfernt.",
+    "offToast": "Kein Rechteck mehr, das Foto wird so hochgeladen, wie es ist.",
+    "full": "Mehr als {{max}} Rechtecke gehen pro Foto nicht.",
+    "hint": "Rechteck verschieben",
+    "empty": "Kein Rechteck markiert. Füg eins hinzu, um ein Kennzeichen zu verdecken.",
+    "count_one": "{{count}} von {{max}} Rechtecken",
+    "count_other": "{{count}} von {{max}} Rechtecken",
+    "keys": "Pfeiltasten verschieben, mit Alt größer oder kleiner, mit Umschalt in großen Schritten. Entf entfernt das Rechteck.",
+    "gestures": "Zieh das Rechteck über das Kennzeichen, die Ecke ändert die Größe, der Griff oben dreht es.",
+    "add": "Rechteck hinzufügen",
+    "note": "Später ändern geht nur mit neuem Upload.",
+    "noteExisting": "Das Verpixeln ersetzt das Foto. Zum Ändern lädst du das Foto neu hoch.",
+    "review": {
+      "title_one": "Foto prüfen",
+      "title_other": "Fotos prüfen",
+      "page": "Foto {{index}} von {{total}}",
+      "previous": "Vorheriges Foto",
+      "nextPhoto": "Nächstes Foto",
+      "next": "Weiter",
+      "upload_one": "Hochladen",
+      "upload_other": "{{count}} Fotos hochladen",
+      "uploadNow_one": "Jetzt hochladen",
+      "uploadNow_other": "Alle {{count}} Fotos jetzt hochladen",
+      "applyAll": "Für alle übernehmen",
+      "appliedAll_one": "Für das Foto übernommen.",
+      "appliedAll_other": "Für alle {{count}} Fotos übernommen.",
+      "discardTitle_one": "Foto nicht hochladen?",
+      "discardTitle_other": "Fotos nicht hochladen?",
+      "discardBody_one": "Das ausgewählte Foto wird nicht hochgeladen.",
+      "discardBody_other": "Die {{count}} ausgewählten Fotos werden nicht hochgeladen.",
+      "keep": "Weiter prüfen",
+      "discard": "Nicht hochladen"
+    }
+  },
+  "plateCheck": {
+    "title": "Kennzeichen prüfen",
+    "body_one": "Wir haben eine neue Funktion: Kennzeichen auf Fotos unkenntlich machen. Für dein vorhandenes Foto entscheidest du selbst.",
+    "body_other": "Wir haben eine neue Funktion: Kennzeichen auf Fotos unkenntlich machen. Für deine {{count}} vorhandenen Fotos entscheidest du selbst, Foto für Foto.",
+    "open": "Fotos ansehen",
+    "later": "Später",
+    "laterDone": "Alles klar. Einzelne Fotos machst du jederzeit beim Bearbeiten des Fotos unkenntlich.",
+    "failed": "Deine Auswahl konnte nicht gespeichert werden. Versuch es noch einmal.",
+    "intro": "Diese Fotos hast du vor der neuen Funktion hochgeladen. Ist ein Kennzeichen zu lesen, mach es unkenntlich – sonst bleibt das Foto, wie es ist.",
+    "kind": {
+      "vehicle": "Fahrzeugfoto",
+      "modification": "Foto eines Mods",
+      "build_update": "Foto aus einem Update",
+      "cover": "Titelbild deines Profils"
+    },
+    "photoLabel": "Foto: {{name}}",
+    "blur": "Unkenntlich machen",
+    "keep": "Kein Kennzeichen sichtbar",
+    "kept": "Gemerkt: Das Foto bleibt, wie es ist.",
+    "blurred": "Wird unkenntlich gemacht. Die neuen Bilder erscheinen gleich.",
+    "more": "Weitere Fotos laden",
+    "loadErrorTitle": "Deine Fotos konnten nicht geladen werden",
+    "loadErrorBody": "Prüf deine Verbindung und versuch es noch einmal.",
+    "offline": "Du bist offline. Sobald du wieder online bist, geht es hier weiter.",
+    "allDone": "Alle Fotos sind geprüft. Danke dir.",
+    "editTitle": "Kennzeichen unkenntlich machen",
+    "apply": "Unkenntlich machen",
+    "back": "Zurück zur Liste",
+    "discardTitle": "Rechtecke verwerfen?",
+    "discardBody": "Das Foto bleibt dann, wie es ist.",
+    "discardKeep": "Weiter bearbeiten",
+    "discard": "Verwerfen"
   }
 }

@@ -19,6 +19,7 @@ use App\Http\Requests\Api\V1\Garage\GarageListRequest;
 use App\Http\Requests\Api\V1\Garage\PublishVehicleRequest;
 use App\Http\Requests\Api\V1\Garage\ReorderVehiclesRequest;
 use App\Http\Requests\Api\V1\Garage\UpdateSpecsRequest;
+use App\Http\Requests\Api\V1\Garage\UpdateVehicleRequest;
 use App\Http\Requests\Api\V1\Garage\VehicleAttributesRequest;
 use App\Http\Resources\V1\VehicleCardResource;
 use App\Http\Resources\V1\VehicleResource;
@@ -94,14 +95,24 @@ class VehicleController extends Controller
      * Update basics, or save a wizard step.
      *
      * Only the keys sent change. Choosing a catalogue entry clears the free text of that level and the other way round; a new
-     * make clears a model that no longer fits.
+     * make clears a model that no longer fits. Under a publishing restriction (403 `account_restricted`) only a body of nothing but
+     * `ghost_mode`, `spotting_paused` and `hide_spot_cities`, each `true` or unchanged, is accepted: it only hides the car more.
      */
-    public function update(VehicleAttributesRequest $request, Vehicle $vehicle, UpdateVehicle $action): VehicleResource
+    public function update(UpdateVehicleRequest $request, Vehicle $vehicle, UpdateVehicle $action): VehicleResource
     {
-        Gate::authorize('update', $vehicle);
-
         /** @var User $user */
         $user = $request->user();
+
+        // M5.9b part 2: under a publishing restriction only the STREET DEX switches that hide more stay open (UpdateVehicle).
+        if ($user->isRestrictedFrom(RestrictionType::Publishing)) {
+            if (! UpdateVehicle::onlyReducesExposure($vehicle, $request->validated())) {
+                throw ApiException::accountRestricted($user->restrictedUntil(RestrictionType::Publishing));
+            }
+
+            Gate::authorize('reduceExposure', $vehicle);
+        } else {
+            Gate::authorize('update', $vehicle);
+        }
 
         return new VehicleResource($this->loaded($action->handle($user, $vehicle, $request->validated())));
     }

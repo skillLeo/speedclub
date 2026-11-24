@@ -12,7 +12,14 @@ import {
 import type { BuildUpdate, PublicVehicle, VehicleMedia } from '@/api/queries/vehicles';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size } from '@/theme';
-import { Button, Checkbox, Photo, PressableScale, SectionHeader, Sheet, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Checkbox } from '@/ui/Checkbox';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Sheet } from '@/ui/Sheet';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { photoFields, visiblePhotos } from '../media';
 

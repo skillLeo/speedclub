@@ -60,6 +60,9 @@ export type ButtonProps = {
   pressed?: boolean;
   /** A second way in on the same control (VEH-01: long-press "Speichern" opens the collections). */
   onLongPress?: () => void;
+  /** A disclosure ("Alle Daten anzeigen", M5.3): `aria-expanded`, and `aria-controls` naming the `nativeID` of what it opens. */
+  expanded?: boolean;
+  controls?: string;
   style?: StyleProp<ViewStyle>;
   testID?: string;
   ref?: Ref<ComponentRef<typeof View>>;
@@ -167,6 +170,8 @@ export function Button({
   accessibilityLabel,
   pressed,
   onLongPress,
+  expanded,
+  controls,
   style,
   testID,
   ref,
@@ -218,6 +223,8 @@ export function Button({
       {...(href === undefined ? {} : { href })}
       aria-label={accessibilityLabel ?? label}
       {...(pressed === undefined ? {} : { 'aria-pressed': pressed })}
+      {...(expanded === undefined ? {} : { 'aria-expanded': expanded })}
+      {...(controls === undefined ? {} : { 'aria-controls': controls })}
       {...(onLongPress && !locked && !disabledProp ? { onLongPress } : {})}
       aria-busy={loading}
       aria-disabled={disabled || undefined}

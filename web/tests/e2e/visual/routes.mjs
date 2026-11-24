@@ -25,7 +25,7 @@
 //   status    'planned' = not built yet: not selected by default and listed in the output.
 //             Naming it in --routes runs it, and it fails honestly until it exists.
 //   expectStatus HTTP status the page answers by design, such as 410 for a revoked QR code. Without it, 400 and up fail.
-//   hostDependent true = the picture shows the server's host (a QR code of APP_URL: GAR-04, QR-02, QR-04, WEB-03, WEB-04,
+//   hostDependent true = the picture shows the server's host (a QR code of APP_URL: GAR-04, STK-02, STK-02-preview, WEB-03, WEB-04,
 //             VEH-07; the host in WEB-09's URL help). Its baseline is compared and written only when the run is on SPEEDCLUB_BASELINE_URL (default
 //             http://localhost:8080); a run elsewhere (the isolated :8081 copy) still audits it and reports baseline `host`.
 //   volatile  true = ADR-223: the picture is the platform's live activity (ADM-06, ADM-08, ADM-44): DOM audit, axe and design review as
@@ -378,7 +378,7 @@ export const routes = [
     ready: loadedOr('[data-testid^="HOME-01.newBuilds.item."]', 'HOME-01.root'),
     capture: 'expanded',
     maxHeight: 6000,
-    notes: 'FS-2 Für dich as a guest (M2.2): large title Start with the bell (asks to sign in), segmented Für dich · Folge ich, the featured build (16:9 hero edge to edge on phones, in the 640 column with radius 12 from 768), Neue Builds (2 cards, "Alle" → DISC-02 sorted by Neueste), Build-Updates (3 rows), Aktive Mitglieder (avatar 56, @username, car line), Beliebte Mods diese Woche (chips, at most 2 lines), then the ranked stream without the hero or the Neue Builds. From 1280 the rail: the top five makes with real counts, Über SPEED CLUB. empty = "Noch keine öffentlichen Builds". Expanded and bounded (DQ-283): the picture runs to 6000 px at most (`maxHeight`), which holds the hero, Neue Builds, Build-Updates, Aktive Mitglieder, Beliebte Mods and the first builds and update rows of the stream; the stream is endless, so its footer is not on the picture. The content is measured once before the viewport grows, so pages loaded afterwards change nothing on it.',
+    notes: 'FS-2 Für dich as a guest (M2.2): large title Start with the bell (asks to sign in), segmented Für dich · Folge ich, the featured build (16:9 hero edge to edge on phones, in the 640 column with radius 12 from 768), Neue Builds (2 cards, "Alle" → DISC-02 sorted by Neueste), Build-Updates (3 rows), Aktive Mitglieder (avatar 56, @username, car line), Beliebte Mods diese Woche (chips, at most 2 lines), then the ranked stream without the hero or the Neue Builds. From 1280 the rail: the top five makes with real counts, Über Speedclub. empty = "Noch keine öffentlichen Builds". Expanded and bounded (DQ-283): the picture runs to 6000 px at most (`maxHeight`), which holds the hero, Neue Builds, Build-Updates, Aktive Mitglieder, Beliebte Mods and the first builds and update rows of the stream; the stream is endless, so its footer is not on the picture. The content is measured once before the viewport grows, so pages loaded afterwards change nothing on it. M5.2 (10 §1): the header has the SCAN button, the bell and, below 768, Nachrichten (paper plane, unread pill "9+") on the trailing edge; the tab bar shows Start · Entdecken · Garage · Shop · Profil.',
   },
   {
     id: 'HOME-01-member',
@@ -389,7 +389,7 @@ export const routes = [
     ready: loadedOr('[data-testid^="HOME-01.newBuilds.item."]', 'HOME-01.root'),
     capture: 'expanded',
     maxHeight: 6000,
-    notes: 'FS-2 Für dich as lukas.sc (M2.2): as the guest view, plus the bell\'s unread dot and the dot on the Start tab (the demo history leaves unread rows, m2.2-api-handover.md §7), and from 1280 Deine Garage in the rail instead of Über SPEED CLUB. The forced states are the guest entry\'s. Expanded and bounded (DQ-283): the picture runs to 6000 px at most (`maxHeight`), which holds the hero, Neue Builds, Build-Updates, Aktive Mitglieder, Beliebte Mods and the first builds and update rows of the stream; the stream is endless, so its footer is not on the picture. The content is measured once before the viewport grows, so pages loaded afterwards change nothing on it.',
+    notes: 'FS-2 Für dich as lukas.sc (M2.2): as the guest view, plus the bell\'s unread dot and the dot on the Start tab (the demo history leaves unread rows, m2.2-api-handover.md §7), and from 1280 Deine Garage in the rail instead of Über Speedclub. The forced states are the guest entry\'s. Expanded and bounded (DQ-283): the picture runs to 6000 px at most (`maxHeight`), which holds the hero, Neue Builds, Build-Updates, Aktive Mitglieder, Beliebte Mods and the first builds and update rows of the stream; the stream is endless, so its footer is not on the picture. The content is measured once before the viewport grows, so pages loaded afterwards change nothing on it. M5.2 (10 §1): Nachrichten in the header with lukas.sc\'s unread pill below 768; from 768 the rail/sidebar lists Nachrichten instead. M5.2 fix round: the pill sits on the paper plane\'s top-right corner with a ring in the header ground and grows rightwards (DQ-M52-01); the bell shows the 8 dot, the count stays in its name (DQ-M52-15).',
   },
   {
     id: 'HOME-01-following',
@@ -449,7 +449,10 @@ export const routes = [
     // M4.8: the BrandTile grid is always there; Kollektionen hide while none is curated.
     ready: loadedOr('[data-testid="DISC-01.makes"]', 'DISC-01.root'),
     capture: 'expanded',
-    notes: 'FS-11 (M2.3): large title Entdecken, sticky 44 search bar, Zuletzt gesucht (device only, empty in a fresh context), text make tiles in 3 columns (2 below 104 px tile width or at 200 %) with real build counts, Kollektionen (7 seeded, 16:9 covers, real counts), Beliebte Mods (chips). A guest gets no "Mitglieder mit ähnlichen Autos". A tile opens DISC-03. empty = "Noch keine Marken" and no further sections.',
+    // DQ-M52-09: the M5.2 segment + search band at 200 % and in Schwarz (EN and the 820 tablet come from EN12 and TABLET).
+    fs2: true,
+    p4: { black: true, small: true },
+    notes: 'FS-11 (M2.3): large title Entdecken, sticky 44 search bar, Zuletzt gesucht (device only, empty in a fresh context), text make tiles in 3 columns (2 below 104 px tile width or at 200 %) with real build counts, Kollektionen (7 seeded, 16:9 covers, real counts), Beliebte Mods (chips). A guest gets no "Mitglieder mit ähnlichen Autos". A tile opens DISC-03. empty = "Noch keine Marken" and no further sections. M5.2 (10 §1): the bell and (below 768) Nachrichten in the header; the segmented control Builds · Treffen over the search in the sticky band (Forum joins with its flag, M5.8); the Treffen scope chip is gone (Treffen is its own segment). M5.2 fix round: the scope chips Alles · Fahrzeuge · Mitglieder appear only once a search is typed (DQ-M52-04), so the band is title, segments, search, then Marken; the header actions end at the column from 1280 (DQ-M52-14). Round 2 (DQ-M52-03): from 1280 the sidebar lists Entdecken and Treffen, so Builds shows no Builds · Treffen control there either: title Entdecken, then the search directly, the same band as Treffen\'s.',
   },
   {
     id: 'DISC-01-member',
@@ -459,7 +462,7 @@ export const routes = [
     states: ['default'],
     ready: '[data-testid="DISC-01.similarMembers.header"]',
     capture: 'expanded',
-    notes: 'DISC-01 as lukas.sc: as the guest view plus [SIG sig.similar_builds] "Mitglieder mit ähnlichen Autos" at the end (members whose public builds share a model, then a make, with lukas.sc\'s). The other states are DISC-01\'s.',
+    notes: 'DISC-01 as lukas.sc: as the guest view plus [SIG sig.similar_builds] "Mitglieder mit ähnlichen Autos" at the end (members whose public builds share a model, then a make, with lukas.sc\'s). The other states are DISC-01\'s. M5.2: the header carries the bell and (below 768) Nachrichten; from 1280 no Builds · Treffen control, as on DISC-01 (DQ-M52-03).',
   },
   {
     id: 'DISC-02',
@@ -640,7 +643,8 @@ export const routes = [
     phase: 1,
     auth: 'member',
     states: OWNER_LIST_STATES,
-    ready: loadedOr('[data-testid="GAR-02.title"]', 'GAR-02.root'),
+    // DQ-M53-04: `.body.settled` once every row of the one scroll is measured, so the full-page picture has its real height.
+    ready: loadedOr('[data-testid="GAR-02.body.settled"] [data-testid="GAR-02.title"]', 'GAR-02.root'),
     capture: 'expanded',
     notes: 'FS-3 layout for the owner: owner toolbar (Bearbeiten, Mods, Fotos, QR, Sichtbarkeit) under the owner row, completeness hints first in Übersicht. empty = the photo-less hero and empty sections.',
   },
@@ -795,7 +799,8 @@ export const routes = [
     phase: 1,
     auth: 'guest',
     states: [...ALL_STATES, 'restricted'],
-    ready: loadedOr('[data-testid="VEH-01.title"]', 'VEH-01.root'),
+    // DQ-M53-04: `.body.settled` once every row of the one scroll is measured, so the full-page picture has its real height.
+    ready: loadedOr('[data-testid="VEH-01.body.settled"] [data-testid="VEH-01.title"]', 'VEH-01.root'),
     capture: 'expanded',
     notes: 'FS-3 / 09 §7.6 (M4.9): 4:5 stretchy hero pager "1/3" with back and Mehr on the photo (DQ-942), eyebrow NISSAN, "Skyline GT-R R34", sub-line, spec strip, owner row (identity only), action row: Folgen (the one filled control) over Teilen · Nachricht (Speichern with the saved-builds flag), sticky tabs Übersicht · Daten · Mods · Verlauf, Highlights rail when pinned, latest update, similar builds as 3:4 rail cards, closing owner card with a tonal button. empty = the photo-less hero and empty sections.',
   },
@@ -805,7 +810,7 @@ export const routes = [
     phase: 2,
     auth: 'member',
     states: ['default'],
-    ready: '[data-testid="VEH-01.title"]',
+    ready: '[data-testid="VEH-01.body.settled"] [data-testid="VEH-01.title"]',
     capture: 'expanded',
     notes: 'M2.1: jann.ptrs\'s G82 seen by lukas.sc, who saved it: the [SIG] save action filled in the header, Folgen (secondary M) and, since M2.4, Nachricht (primary M, MSG-03 about this build) in the owner row, the owner row opens PROF-02. The other states are VEH-01\'s.',
   },
@@ -830,11 +835,12 @@ export const routes = [
   },
   {
     id: 'VEH-01-similar',
-    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj',
+    // M5.3: Ähnliche Builds is near the end of the virtualised page; the deep link scrolls there so the list draws it.
+    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?section=similar',
     phase: 2,
     auth: 'guest',
     states: ['default'],
-    ready: '[data-testid="VEH-01.similar.header"]',
+    ready: '[data-testid="VEH-01.body.settled"] [data-testid="VEH-01.similar.header"]',
     capture: 'expanded',
     notes: 'M2.3 [SIG sig.similar_builds]: the R34 of lukas.sc with "Ähnliche Builds" at the end of Übersicht, drawn only once loaded: same generation first (the R34 of kenji.r34), then model, then make with similar power; tiles in a strip with peek. The other states are VEH-01\'s (the strip is not drawn while loading, on error or when empty).',
   },
@@ -877,36 +883,37 @@ export const routes = [
     capture: 'expanded',
     notes: 'Build update detail: before → after of each change, the fields of a changed mod, the link to the mod.',
   },
-  // M4.9 + M4.11 (09 §7.6, §8.5–§8.6): the VEH-01 tabs, the owner's own build, the owner's update detail and UPD-01.
+  // M4.9 + M4.11 (09 §7.6, §8.5–§8.6): the VEH-01 tabs (since M5.3 sections of the one scroll, opened by `?section=`), the owner's own
+  // build, the owner's update detail and UPD-01.
   {
     id: 'VEH-01-specs',
-    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?tab=specs',
+    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?section=specs',
     phase: 3,
     auth: 'guest',
     states: ['default'],
-    ready: '[data-testid="VEH-01.panel.specs"]',
+    ready: '[data-testid="VEH-01.body.settled"] [data-testid="VEH-01.section.specs"]',
     capture: 'expanded',
-    notes: 'M4.9: Daten as grouped spec tables with provenance, tnum values right-aligned.',
+    notes: 'M4.9 → M5.3: Daten opened by `?section=specs`: the six key specs grid and "Alle Daten anzeigen" (the tables open in place, VEH-01-specs-expanded).',
   },
   {
     id: 'VEH-01-mods',
-    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?tab=mods',
+    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?section=mods',
     phase: 3,
     auth: 'guest',
     states: ['default'],
-    ready: '[data-testid="VEH-01.panel.mods"]',
+    ready: '[data-testid="VEH-01.body.settled"] [data-testid="VEH-01.section.mods"]',
     capture: 'expanded',
-    notes: 'M4.9: Mods as the BuildSheet by system.',
+    notes: 'M4.9 → M5.3: Mods opened by `?section=mods`: the BuildSheet by system, the first three per system and "+ N weitere", plans left out (Pläne).',
   },
   {
     id: 'VEH-01-history',
-    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?tab=history',
+    path: '/app/v/nissan-skyline-gt-r-r34-5tf974vj?section=history',
     phase: 3,
     auth: 'guest',
     states: ['default'],
-    ready: '[data-testid="VEH-01.panel.history"]',
+    ready: '[data-testid="VEH-01.body.settled"] [data-testid="VEH-01.section.history"]',
     capture: 'expanded',
-    notes: 'M4.9 (DQ-975): Verlauf Timeline; an update with its own photos shows them (3-up), a before/after pair the SM17 slider, mileage in tnum.',
+    notes: 'M4.9 (DQ-975) → M5.3: Verlauf opened by `?section=history`: the latest three entries on the Timeline (own photos 3-up, a before/after pair side by side, mileage in tnum) and "Ganzen Verlauf anzeigen (7)" to VEH-08.',
   },
   {
     id: 'VEH-01-owner',
@@ -915,7 +922,7 @@ export const routes = [
     auth: 'member',
     states: ['default'],
     // DQ-1073 (M4.15): the "Nächste HU" chip needs an HU/AU item; the seed has none, the maintenance fixture does (März 2027).
-    ready: '[data-testid="VEH-01.ownerCapsule"] [data-testid="VEH-01.nextHu"], [data-testid="VEH-01.nextHu"]',
+    ready: '[data-testid="VEH-01.body.settled"] [data-testid="VEH-01.nextHu"]',
     fixture: 'maintenance',
     capture: 'expanded',
     notes: 'M4.9: lukas.sc on his own R34: the OwnerCapsule (Update posten + QR, Bearbeiten, Mods, Fotos) instead of the visitor action row; the Highlights rail with "Bearbeiten" (or the pin invitation when empty).',
@@ -941,48 +948,7 @@ export const routes = [
     notes: 'M4.11 Update posten (modal): text with @-hint, Fotos (Hinzufügen, Vorher/Nachher pairing), Kilometerstand + Datum (today), audience (Wie das Fahrzeug · Nur Follower), Mods verknüpfen, sticky "Posten".',
   },
   // M1.7 app screens as lukas.sc. restricted = the suspended-account notice.
-  {
-    id: 'QR-01',
-    path: '/app/profile/qr',
-    phase: 1,
-    auth: 'member',
-    states: OWNER_LIST_STATES,
-    ready: loadedOr('[data-testid^="QR-01.row."]', 'QR-01.root'),
-    capture: 'expanded',
-    notes: 'My QR codes: one row per vehicle with cover, name, "8TR0 Q3MC" and status. empty leads to "Fahrzeug hinzufügen".',
-  },
-  {
-    id: 'QR-02',
-    path: '/app/qr/{r34}',
-    phase: 1,
-    hostDependent: true,
-    auth: 'member',
-    states: OWNER_LIST_STATES,
-    ready: loadedOr('[data-testid="QR-02.card"]', 'QR-02.root'),
-    capture: 'expanded',
-    notes: 'FS-9 / 09 §7.6 QR-02: "QR-Code" + vehicle, the white server-rendered card on the blurred cover stage (SM13), aligned with title and buttons (DQ-035), In Fotos sichern · Sticker-PDF, rows Weitere Formate · Teilen · Öffentliche Seite ansehen · Sticker-Platzierung (· Sticker bestellen behind sticker_shop), QR-Code ersetzen on its own. M2.7 [SIG sig.qr_stats]: the scans row (14 bars, "n in 14 Tagen · m gesamt", the next milestone); the download sheet with Placard A5/A4 [SIG sig.placard_pdf] is in f-signature.spec.ts.',
-  },
-  {
-    id: 'QR-03',
-    path: '/app/qr/{r34}/placement',
-    phase: 1,
-    auth: 'member',
-    states: ['default', 'offline'],
-    ready: '[data-testid="QR-03.root"]',
-    capture: 'expanded',
-    notes: 'Placement guide: the numbered top-down car, the five rules and the footer of 08_LEGAL §7 word for word, the print guidance.',
-  },
-  {
-    id: 'QR-04',
-    path: '/app/qr/{r34}/preview',
-    phase: 1,
-    hostDependent: true,
-    auth: 'member',
-    states: ALL_STATES,
-    ready: loadedOr('[data-testid="QR-04.card"]', 'QR-04.root'),
-    capture: 'expanded',
-    notes: 'Public page preview: cover, name and /v URL, what a scan shows, the link that opens the real page.',
-  },
+  // QR-01…04 became the sticker routes in M5.4 (10 §2.1): routes-m54.mjs.
   {
     id: 'WEB-06-app',
     path: '/app/c/APPY9FZ9',
@@ -1214,7 +1180,7 @@ export const routes = [
     auth: 'guest',
     states: ['default', 'error'],
     ready: '[data-testid="WEB-03.root"], [data-qa-state="error"] [data-testid="WEB-STATE.root"]',
-    notes: 'Landing, brand layer: night photo, the sticker story in three steps with a real code, the featured R34, the honest app section.',
+    notes: 'Landing (R4-1.5, round-4 fixes R4DQ-06/07/23): night photo with logo, claim, lead and the way in all in the first viewport (without store links "Im Browser öffnen" is the filled CTA, "So kommst du zur App" secondary); "Was du mit Speedclub machst" as an editorial list (2 × 2 from 768, heading beside it from 1280); the sticker block with a real code and the shop link; the honest app section. Below 430 the top bar shows logo and "Anmelden" only.',
   },
   {
     id: 'WEB-08',
@@ -1376,7 +1342,10 @@ export const routes = [
     states: [...ALL_STATES, 'restricted'],
     ready: loadedOr('[data-testid^="MSG-01.row."]', 'MSG-01.root'),
     capture: 'expanded',
-    notes: 'Inbox of lukas.sc (M2.4): large title Nachrichten with "+" (MSG-03), content tabs Chats · Anfragen (1), [SIG sig.msg_organize] search, the rows jann.ptrs (Gelesen), kenji.r34 (unread badge 1), sara.gti (stumm, no badge) with avatar, name, preview and time; "Archiviert" at the end. From 1280 the 360 list and "Wähle eine Unterhaltung" beside it. empty = "Noch keine Chats" with Mitglieder entdecken; restricted = the messaging restriction notice.',
+    // DQ-M52-09: Schwarz, EN and 200 % of the inbox that moved into the header (the 820 tablet comes from TABLET).
+    fs2: true,
+    p4: { en: true, black: true },
+    notes: 'Inbox of lukas.sc (M2.4): large title Nachrichten with "+" (MSG-03), content tabs Chats · Anfragen (1), [SIG sig.msg_organize] search, the rows jann.ptrs (Gelesen), kenji.r34 (unread badge 1), sara.gti (stumm, no badge) with avatar, name, preview and time; "Archiviert" at the end. From 1280 the 360 list and "Wähle eine Unterhaltung" beside it. empty = "Noch keine Chats" with Mitglieder entdecken; restricted = the messaging restriction notice. M5.2 (10 §1): no longer a tab root. Below 768 it is pushed from the Start/Entdecken header, so the large title has a back button; from 768 it is the rail/sidebar place Nachrichten (selected there) without back. M5.2 fix round (DQ-M52-02): the cell opens /app/messages cold, which now lands in Start (the Start tab selected, back to Start), never under Entdecken.',
   },
   {
     id: 'MSG-01-requests',
@@ -1408,7 +1377,7 @@ export const routes = [
     auth: 'guest',
     states: ['default', 'offline'],
     ready: '[data-testid="MSG-01.guest"]',
-    notes: 'A guest: one invitation to sign in that comes back to /messages; no tabs, no search, no "+".',
+    notes: 'A guest: one invitation to sign in that comes back to /messages; no tabs, no search, no "+". M5.2 fix round: a cold link lands in Start (Start tab selected, DQ-M52-02); the header plane asks a guest to sign in before it opens this page (DQ-M52-16).',
   },
   {
     id: 'MSG-02',
@@ -2611,6 +2580,17 @@ routes.push(
 routes.push(...routesM35, ...routesM36, ...routesM410Mnt, ...routesM410Prof, ...routesM410Set, ...routesM48R3, ...routesM412Evt, ...routesM414, ...routesM415, ...routesM417EvtAdmin);
 routes.push(...(await import('./routes-m416.mjs')).routesM416); // M4.16 Public web 2.0 (lane B)
 routes.push(...(await import('./routes-m417.mjs')).routesM417); // M4.17 Admin 2.0 (admin-builder)
+routes.push(...(await import('./routes-m59a.mjs')).routesM59a); // M5.9a plate blur, app part (lane A)
+routes.push(...(await import('./routes-m59b.mjs')).routesM59b); // M5.9b STREET DEX, app part 1 (lane A)
+routes.push(...(await import('./routes-m59b-adm.mjs')).routesM59bAdm); // M5.9b ADM-62 Spots (admin-builder)
+routes.push(...(await import('./routes-m59c.mjs')).routesM59c); // M5.9c Build Journey + Build Score, app part (lane A)
+routes.push(...(await import('./routes-m59d.mjs')).routesM59d); // M5.9d Supporting system, app part (lane A)
+routes.push(...(await import('./routes-m59d-adm.mjs')).routesM59dAdm); // M5.9d admin: ADM-63 Abzeichen, ADM-64 Car of the Day (admin-builder)
+routes.push(...(await import('./routes-m59e.mjs')).routesM59e); // M5.9e Season Wrapped, app part (lane A)
+routes.push(...(await import('./routes-m59e-adm.mjs')).routesM59eAdm);
+routes.push(...(await import('./routes-m54-adm.mjs')).routesM54Adm); // M5.4 admin: ADM-65 Sticker-Designs (admin-builder)
+routes.push(...(await import('./routes-m54.mjs')).routesM54); // M5.4 Sticker: STK-01…07 (replaces QR-01…04)
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m52.mjs')).routesM52); // M5.2 Navigation 3.0: SHOP-01, HOME-01-member-unread (route step: prepare); the other changed routes carry an M5.2 note
 /** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m418-gaps.mjs')).routesM418Gaps); // DQ-1213: auth, security, system gates, ADM-61 (route steps: prepare/walk)
 
 // M3.5 + M3.7 app surfaces of 8b9d874 (QA). The announcement on Start, the re-consent sheet and the member's support requests
@@ -2744,3 +2724,22 @@ const AI_QA = 'Forced through qaFlags (no provider key, OA-18); before the tap, 
     notes: `${AI_QA} Privatsphäre with the four suggestion flags on: the KI group with the "KI-Vorschläge" switch (off, lukas.sc never opted in) and its helper naming the provider as processor, above the blocked profiles.`,
   },
 );
+routes.push(...(await import('./routes-m53.mjs')).routesM53); // M5.3 Vehicle profile one scroll, app part: VEH-01 sections, Pläne, VEH-08
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m55.mjs')).routesM55); // M5.5 Shop, app part: SHOP-01-* catalogue (★ variants), SHOP-02 (SHOP-01 itself stays the flag-off shell, routes-m52.mjs)
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m56.mjs')).routesM56); // M5.6 Events page polish, app part: EVT-01 week/upcoming, EVT-02 gallery + check-in, EVT-06 code + approval, EVT-07, SET-09 nearby, PROF-01 War dabei
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m55-adm.mjs')).routesM55Adm); // M5.5 admin: ADM-66 Shop-Produkte (list, editor, photo dialog), ADM-67 Shop-Banner (admin-builder)
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m58.mjs')).routesM58); // M5.8 Forum, app part: FOR-01 (+ unanswered, sort sheet), FOR-02, FOR-03 ★ (staged; locked, pending), FOR-04 (+ similar, validation), FOR-05, SET-09 forum
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m58-adm.mjs')).routesM58Adm); // M5.8 admin: ADM-68 Forum-Moderation (SplitQueue, pane, hide/ban/merge dialogs, analyst view-only), ADM-69 Forum-Kategorien (tree, edit drawer, reorder) (admin-builder)
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m57.mjs')).routesM57); // M5.7 Engagement, app part: INS-01 (+ drop, zero, vehicle, view-as), PROF-01 Statistiken, VEH-01/GAR-02 build goal (+ sheet), SET-09 Build-Erinnerungen/Wochenrückblick
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m57-adm.mjs')).routesM57Adm); // M5.7 admin: ADM-70 Insights overview (admin-builder)
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m59-ai.mjs')).routesM59Ai); // M5.9 AI helpers + CF-6, app part: GAR-03/GAR-06 "Daten übernehmen?" (ask, variants, taken, loading, error), GAR-10 product match (+ none), FOR-03 KI-Zusammenfassung (+ open), VEH-07 share card options (story, square dark/light, custom)
+/** @type {import('./matrix.mjs').RouteDef[]} */ (/** @type {unknown} */ (routes)).push(...(await import('./routes-m59-ai-adm.mjs')).routesM59AiAdm); // M5.9 admin: ADM-14 model "KI-Herstellerangaben" (+ reason dialog), ADM-21 composer "KI-Vorschlag: <Vorlage>" (+ case page); stage fixture m59-ai-admin
+
+// Gate run 2 (ADR-223 extended): pages whose content is dated by the real calendar of the showcase (seeded relative to the day it ran,
+// for staging) — Car of the Day, "Diese Woche"/weekend meets, maintenance countdowns, view history, sticker scan windows — change every
+// day, and a fixed QA clock would empty them (the showcase is not on QA_NOW). They stay in every run (DOM audit, axe, design review)
+// but are never compared with a baseline outside their fixture states, like the other live-activity pages.
+export const DATE_DEPENDENT = /^(CONSENT|HOME-01|HOME-02|DISC-01|EVT-01|EVT-06-m56|EVT-06-code|MNT-01|GAR-01-due|INS-01|STK-04|VIEWAS-HOME)(-|$)/;
+for (const route of /** @type {Array<{ id: string, volatile?: boolean }>} */ (/** @type {unknown} */ (routes))) {
+  if (DATE_DEPENDENT.test(route.id)) route.volatile = true;
+}

@@ -11,7 +11,7 @@ const shareCard = async () => `/app/share-card/${(await demoIds()).r34}`;
 axeScreens([
   { name: 'VEH-06', path: COMPARE, auth: 'guest', ready: '[data-testid="VEH-06.cars"]' },
   { name: 'VEH-07', path: shareCard, auth: 'member', ready: '[data-testid="VEH-07.preview.image"]' },
-  { name: 'QR-02 with the scans row', path: async () => `/app/qr/${(await demoIds()).r34}`, auth: 'member', ready: '[data-testid="QR-02.scans"]' },
+  { name: 'STK-02 with the scan statistics row', path: async () => `/app/stickers/${(await demoIds()).r34}`, auth: 'member', ready: '[data-testid="STK-02.stats"]' },
   { name: 'WEB-04', path: '/app-laden', auth: 'guest', ready: '[data-testid="WEB-04.root"]' },
   { name: 'WEB-07 verify', path: '/email/verify', auth: 'guest', ready: '[data-testid="WEB-07.root"]' },
   { name: 'WEB-07 reset', path: '/email/reset', auth: 'guest', ready: '[data-testid="WEB-07.root"]' },
@@ -36,13 +36,13 @@ axeOverlays([
   },
   {
     name: 'QR-02 with the download sheet open',
-    path: async () => `/app/qr/${(await demoIds()).r34}`,
+    path: async () => `/app/stickers/${(await demoIds()).r34}`,
     auth: 'member',
-    ready: '[data-testid="QR-02.card"]',
+    ready: '[data-testid="STK-02.art"]',
     open: async (page, byTestId) => {
-      await page.locator('[data-testid="QR-02.download"]:visible').click();
-      await byTestId('QR-02.download.placardA5').waitFor();
-      return byTestId('QR-02.downloadSheet');
+      await page.locator('[data-testid="STK-02.download.body"]:visible:not([aria-disabled="true"])').click();
+      await byTestId('STK-02.download.placardA5').waitFor();
+      return byTestId('STK-02.downloadSheet');
     },
   },
   {

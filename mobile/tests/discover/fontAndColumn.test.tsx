@@ -20,6 +20,11 @@ jest.mock('expo-router', () => ({
   router: { dismissAll: jest.fn() },
   useLocalSearchParams: () => ({ q: 'r34' }),
   usePathname: () => '/discover',
+  // M5.2: the segment swipe asks the stack where the page sits (Entdecken's root here).
+  useNavigation: () => ({
+    getState: () => ({ routeNames: ['discover/index', 'events/index'], routes: [{ key: 'discover-1', name: 'discover/index' }] }),
+    addListener: jest.fn(() => jest.fn()),
+  }),
   useFocusEffect: (effect: () => void | (() => void)) => {
     const { useEffect } = jest.requireActual<typeof import('react')>('react');
     useEffect(effect, [effect]);
@@ -35,6 +40,7 @@ jest.mock('@/api/client', () => {
 });
 
 const NO_BREAK_SPACE = ' ';
+const ZWSP = '\u200B';
 
 beforeAll(hydrateThemePreference);
 beforeEach(() => {
@@ -109,12 +115,45 @@ describe('a member row (DQ-203)', () => {
 
   it('never starts a line with the separator: it stays behind the handle', async () => {
     await row(1);
-    expect(screen.getByTestId('row.meta').props.children).toBe(`@${KENJI.username}${NO_BREAK_SPACE}· ${KENJI.city}`);
+    expect(screen.getByTestId('row.meta').props.children).toBe(`@kenji.${ZWSP}r34${NO_BREAK_SPACE}· ${KENJI.city}`);
+  });
+
+  it('sets a name that is only the handle on one unhyphenated line (r5 gate: "@gmws2dbpi5hse1" split "hs / e" at 200 %)', async () => {
+    await row(2, { ...KENJI, display_name: null, username: 'gmws2dbpi5hse1' });
+    expect(screen.getByTestId('row.name')).toHaveTextContent('@gmws2dbpi5hse1');
+    expect(screen.getByTestId('row.name').props.numberOfLines).toBe(1);
+  });
+
+  it('lets a display name wrap as it needs', async () => {
+    await row(2);
+    expect(screen.getByTestId('row.name').props.numberOfLines).toBeUndefined();
+  });
+
+  it('breaks the handle only after its "." (DQ-282), as ui/MemberRow does (R4B-010)', async () => {
+    await row(2);
+    expect(screen.getByTestId('row.handle').props.children).toBe(`@kenji.${ZWSP}r34`);
+    expect(screen.getByTestId('row.handle').props.numberOfLines).toBeUndefined();
+  });
+
+  it('sets a handle wider than its column on a line of its own with an ellipsis (R4B-010: "editori / al" at 200 %)', async () => {
+    const editorial = { ...KENJI, username: 'speedclub.editorial', city: null };
+    await row(2, editorial);
+    // Before the first layout: one meta line, breakable after the ".".
+    expect(screen.getByTestId('row.meta').props.children).toBe(`@speedclub.${ZWSP}editorial`);
+    await fireEvent(screen.getByTestId('row.text'), 'layout', { nativeEvent: { layout: { width: 266, height: 40, x: 0, y: 0 } } });
+    const handle = screen.getByTestId('row.handle');
+    expect(handle.props.numberOfLines).toBe(1);
+    expect(handle.props.children).toBe('@speedclub.editorial');
+    expect(screen.queryByTestId('row.meta')).toBeNull();
+    // At 100 % the handle fits that column and stays in the meta line.
+    await row(1, editorial);
+    await fireEvent(screen.getAllByTestId('row.text').at(-1)!, 'layout', { nativeEvent: { layout: { width: 266, height: 40, x: 0, y: 0 } } });
+    expect(screen.getAllByTestId('row.meta').at(-1)!.props.children).toBe(`@speedclub.${ZWSP}editorial`);
   });
 
   it('at a large font gives handle and city a line each, with no separator left at a line end', async () => {
     await row(2);
-    expect(screen.getByTestId('row.handle')).toHaveTextContent(`@${KENJI.username}`);
+    expect(screen.getByTestId('row.handle')).toHaveTextContent(`@kenji.${ZWSP}r34`);
     expect(screen.getByTestId('row.city')).toHaveTextContent(String(KENJI.city));
     expect(screen.queryByTestId('row.meta')).toBeNull();
     expect(screen.getByTestId('row.handle')).not.toHaveTextContent('·');
@@ -134,7 +173,7 @@ describe('a member row (DQ-203)', () => {
 
   it('without a city there is one line at any size', async () => {
     await row(2, { ...KENJI, city: null });
-    expect(screen.getByTestId('row.meta')).toHaveTextContent(`@${KENJI.username}`);
+    expect(screen.getByTestId('row.meta')).toHaveTextContent(`@kenji.${ZWSP}r34`);
     expect(screen.queryByTestId('row.handle')).toBeNull();
   });
 });

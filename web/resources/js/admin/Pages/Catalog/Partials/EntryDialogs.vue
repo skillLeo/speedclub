@@ -10,7 +10,7 @@ import EntryDrawer from './EntryDrawer.vue';
 import MergeDialog from './MergeDialog.vue';
 
 /**
- * Every entry dialog of a catalogue page in one place: the create/edit drawer, deactivate/activate (reason), merge and delete. The page
+ * Every entry dialog of a catalogue page in one place: the create/edit drawer, deactivate/activate, merge and delete. The page
  * owns the controller (useEntryDialogs) and opens them from its header and row menus. Test ids: `<testId>.drawer`, `.active`, `.merge`,
  * `.delete`.
  */
@@ -41,11 +41,11 @@ const deactivating = computed(() => entry.value?.active !== false);
 const write = useCatalogWrite();
 const failed = qaDialogFailed();
 
-function toggle(reason: string | null): void {
+function toggle(): void {
     const e = entry.value;
     if (e === null) return;
     const url = routeOr('admin.catalog.entries.active', `/admin/catalog/entries/${props.level}/${e.id}/active`, { level: props.level, id: e.id });
-    write.run('post', url, { active: !deactivating.value, reason }, { onSuccess: () => props.dialogs.close() });
+    write.run('post', url, { active: !deactivating.value }, { onSuccess: () => props.dialogs.close() });
 }
 </script>
 
@@ -65,7 +65,6 @@ function toggle(reason: string | null): void {
         :body="trans(deactivating ? `catalog.active.deactivate_body.${level}` : 'catalog.active.activate_body')"
         :confirm-label="trans(deactivating ? 'catalog.actions.deactivate' : 'catalog.actions.activate')"
         tone="neutral"
-        reason
         :processing="write.processing.value"
         :error="failed ? trans('ui.state.server_error') : write.error.value"
         :test-id="`${testId}.active`"

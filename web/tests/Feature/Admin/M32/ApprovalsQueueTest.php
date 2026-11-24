@@ -88,12 +88,12 @@ describe('decisions', function () {
         expect($request->refresh()->status)->toBe(ApprovalStatus::Pending);
     });
 
-    it('needs a comment to deny, and a recent password', function () {
+    it('takes an optional comment to deny (ADR-540), at least 3 characters when given, and needs a recent password', function () {
         seedStaffRoles();
         $request = adm32Pending();
         adm32SignedIn('owner');
 
-        $this->from('/admin/team/approvals')->post('/admin/team/approvals/'.$request->id.'/deny', ['comment' => ''])->assertSessionHasErrors('comment');
+        $this->from('/admin/team/approvals')->post('/admin/team/approvals/'.$request->id.'/deny', ['comment' => 'ab'])->assertSessionHasErrors('comment');
 
         $this->withSession(['auth.password_confirmed_at' => time() - 301]);
         $this->from('/admin/team/approvals')->post('/admin/team/approvals/'.$request->id.'/deny', ['comment' => 'Kein Anlass erkennbar.'])->assertSessionHas('confirm_password', true);

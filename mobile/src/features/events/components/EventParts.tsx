@@ -7,7 +7,9 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { EVENT_RULES, type EventRule } from '@/api/queries/events';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { createStyles } from '@/theme';
-import { Button, Icon, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 
 import type { ReviewNotice } from '../model';
 

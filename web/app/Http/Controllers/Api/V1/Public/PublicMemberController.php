@@ -12,6 +12,7 @@ use App\Http\Resources\V1\BuildUpdateRowResource;
 use App\Http\Resources\V1\MemberProfileResource;
 use App\Http\Resources\V1\VehicleCardResource;
 use App\Models\User;
+use App\Services\Dex\GhostMode;
 use App\Services\Garage\PublicMembers;
 use App\Services\Social\MemberUpdates;
 use App\Support\Viewer;
@@ -41,16 +42,21 @@ class PublicMemberController extends Controller
     /**
      * List a member's public vehicles.
      *
-     * Public ones only: an unlisted vehicle is reachable by link and QR alone. Main vehicle first.
+     * Public ones only: an unlisted vehicle is reachable by link and QR alone, and so is a ghost car (M5.9b), except for its owner. Main
+     * vehicle first.
      *
      * @unauthenticated
      */
     public function vehicles(GarageListRequest $request, string $username): AnonymousResourceCollection
     {
+        $member = $this->visible($request, $username);
+
         return VehicleCardResource::collection(
-            $this->visible($request, $username)->vehicles()
+            $member->vehicles()
                 ->where('status', VehicleStatus::Published)
                 ->where('visibility', Visibility::Public)
+                // M5.9b: a ghost car is in no garage list of others; its owner still sees it.
+                ->when(! $member->is(Viewer::from($request)), fn ($query) => GhostMode::constrain($query))
                 ->with(VehicleCardResource::RELATIONS)
                 ->withCount('modifications')
                 ->orderByDesc('is_main')

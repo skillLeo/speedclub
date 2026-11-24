@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import { EmptyState } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
 
 export type ViewAsUnavailableProps = {
   /** What is held back: the messages (MSG-01 and everything under it) or the data export (SET-12). */

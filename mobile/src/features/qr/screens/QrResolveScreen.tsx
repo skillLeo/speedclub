@@ -9,9 +9,17 @@ import { useResolveQr } from '@/api/queries/qr';
 import { keepNameTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
+import { noteStickerScanOpen } from '@/features/insights/beacon';
 import { useOnline } from '@/state/online';
 import { createStyles, size, useBreakpoint } from '@/theme';
-import { Button, ErrorState, Header, Icon, OfflineBanner, Screen, Skeleton, SkeletonBlock, SkeletonText, Text, type IconName } from '@/ui';
+import { Button } from '@/ui/Button';
+import { ErrorState } from '@/ui/ErrorState';
+import { Header } from '@/ui/Header';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import { noteSignupOrigin } from '@/features/auth/signupRef';
 
@@ -133,6 +141,7 @@ export function QrResolveScreen() {
   const outcome: ResolverOutcome | null =
     forced ?? (code === null ? INVALID_CODE_OUTCOME : query.data ? resolverOutcome(query.data) : null);
   const slug = outcome?.kind === 'vehicle' ? outcome.slug : null;
+  const qaForced = forced !== null;
 
   // ADR-216: a sign-up after this scan, in this run of the app, counts as one from a QR sticker.
   useEffect(() => {
@@ -140,8 +149,11 @@ export function QrResolveScreen() {
   }, [code]);
 
   useEffect(() => {
-    if (slug) router.replace(vehicleRoute(slug));
-  }, [router, slug]);
+    if (!slug) return;
+    // M5.7 (contract §2.3): the VEH-01 this opens counts as a sticker scan in the owner's statistics. A QA render opens nothing real.
+    if (!qaForced) noteStickerScanOpen(slug);
+    router.replace(vehicleRoute(slug));
+  }, [qaForced, router, slug]);
 
   let body: ReactNode;
   if (qaState === 'loading') {

@@ -19,6 +19,7 @@ import { formatNumber } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
 import { qaState } from '../../lib/qa';
 import { qaDialog } from '../../composables/qaDialog';
+import { useFourEyes } from '../../composables/fourEyes';
 import { isTyping } from '../../composables/splitQueue';
 import type { Paginated, PresetView, SavedView, TableQuery } from '../../types/table';
 import SavedViews from './SavedViews.vue';
@@ -206,6 +207,7 @@ const table = useTable({
 const visibleColumns = computed(() => props.columns.filter((c) => columnVisibility.value[c.key] !== false));
 const hideableColumns = computed(() => props.columns.filter((c) => c.hideable !== false));
 const selectedIds = computed(() => Object.keys(rowSelection.value));
+const fourEyesOn = useFourEyes();
 const allSelected = computed<boolean | 'indeterminate'>(() => {
     const count = selectedIds.value.length;
     if (count === 0) return false;
@@ -382,7 +384,7 @@ function onRowClick(row: Row, event: MouseEvent): void {
             :data-testid="`${testId}.bulk`"
         >
             <p class="text-admin-base-strong text-ink tabular-nums">{{ trans('ui.table.bulk.selected', { count: formatNumber(selectedIds.length) }) }}</p>
-            <p v-if="selectedIds.length > 100" class="text-admin-base text-warning">{{ trans('ui.table.bulk.four_eyes') }}</p>
+            <p v-if="fourEyesOn && selectedIds.length > 100" class="text-admin-base text-warning">{{ trans('ui.table.bulk.four_eyes') }}</p>
             <div class="flex flex-1 flex-wrap items-center justify-end gap-8">
                 <Button
                     v-for="action in availableBulk"

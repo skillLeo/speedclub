@@ -9,7 +9,9 @@ import { useMemberSettings } from '@/api/queries/settings';
 import { usePowerDisplayPreference } from '@/lib/powerDisplay';
 import { useSessionStore } from '@/state/session';
 import { createStyles, useThemePreference } from '@/theme';
-import { Dialog, ListRow, Text } from '@/ui';
+import { Dialog } from '@/ui/Dialog';
+import { ListRow } from '@/ui/ListRow';
+import { Text } from '@/ui/Text';
 import { CentredRow, RowGroup } from '@/ui/RowGroup';
 
 import { twoFactorEnabledOf } from '../account';
@@ -65,6 +67,7 @@ const ROW_TEST_ID: Readonly<Record<SettingsKey, string>> = {
   contact: 'contact',
   legal: 'legal',
   whatsNew: 'whatsNew',
+  invites: 'invites',
 };
 
 /** The flags of the SET-01 rows, as one map. */
@@ -89,7 +92,7 @@ export type SettingsListProps = {
 
 /**
  * SET-01 (09 §7.9): the identity card, then grouped inset lists with monochrome glyphs and the current values inline
- * ("Carbon", "Deutsch · PS · km"), "Cache leeren" in Daten & Speicher, Was ist neu with the version in Über SPEED CLUB, a centred
+ * ("Carbon", "Deutsch · PS · km"), "Cache leeren" in Daten & Speicher, Was ist neu with the version in Über Speedclub, a centred
  * destructive "Abmelden" behind a dialog and the version caption. The same list fills the 280 side pane on desktop.
  */
 export function SettingsList({ prefix, selected = null, replace = false, compact = false }: SettingsListProps) {

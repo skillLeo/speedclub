@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -7,7 +7,11 @@ import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { EmptyState, ErrorState, Hairline, ListRow, Skeleton, SkeletonText } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { ListRow } from '@/ui/ListRow';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
 
 import { RowGroup } from '@/ui/RowGroup';
 import { SettingsPage } from '../components/SettingsPage';
@@ -90,6 +94,17 @@ export function HelpScreen() {
   return (
     <SettingsPage routeId={ROUTE} title={t('help.title')} fallback="/settings" offlineLabel={t('help.offlineBanner')} section="help">
       <View style={styles.groups}>
+        {/* R4-1.4: INTRO-01…04 again, without touching the account's mark (`?replay=1`). */}
+        <RowGroup title={t('help.introGroup')} testID={`${ROUTE}.introGroup`}>
+          <ListRow
+            icon="play"
+            title={t('help.introRow')}
+            subtitle={t('help.introHint')}
+            onPress={() => router.push({ pathname: '/intro', params: { replay: '1' } } as Href)}
+            inset={ROW_INSET}
+            testID={`${ROUTE}.intro`}
+          />
+        </RowGroup>
         {list}
         {member ? (
           <RowGroup title={t('help.contactGroup')} testID={`${ROUTE}.contactGroup`}>

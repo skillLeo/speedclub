@@ -6,10 +6,12 @@ use App\Actions\Admin\Config\DiscardConfigDraft;
 use App\Actions\Admin\Config\PublishConfigVersion;
 use App\Actions\Admin\Config\RollbackConfigVersion;
 use App\Actions\Admin\Config\SaveConfigDraft;
+use App\Actions\Admin\Config\TakeOverConfigDraft;
 use App\Http\Controllers\Admin\Config\Requests\DiscardDraftRequest;
 use App\Http\Controllers\Admin\Config\Requests\PublishRequest;
 use App\Http\Controllers\Admin\Config\Requests\RollbackRequest;
 use App\Http\Controllers\Admin\Config\Requests\SaveDraftRequest;
+use App\Http\Controllers\Admin\Config\Requests\TakeOverDraftRequest;
 use App\Http\Controllers\Admin\Config\Support\ConfigAnswers;
 use App\Http\Controllers\Controller;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +19,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * The draft → publish → rollback writes of the M3.5 config keys (06 §1.5, m3.5 §1): ADM-28 branding, ADM-29 home curation, ADM-30
  * announcements, ADM-37 remote config, and ADM-35 rollbacks of any of them. The route names the key; each write goes through its Action
- * (atoms, revision check, four-eyes for maintenance on). Refusals come back as the error `refused` in words (ConfigAnswers).
+ * (atoms, revision check, four-eyes for maintenance on). Refusals come back as the error `refused` in words (ConfigAnswers). M5.1: take
+ * over another staff member's draft (publish atom, reason).
  */
 class ConfigDraftController extends Controller
 {
@@ -36,6 +39,15 @@ class ConfigDraftController extends Controller
             $discard->handle($request->staff(), $request->key(), $request->optionalReason());
 
             return back(303)->with('success', 'config.flash.draft_discarded');
+        });
+    }
+
+    public function takeOver(TakeOverDraftRequest $request, TakeOverConfigDraft $takeOver): Response
+    {
+        return ConfigAnswers::run($request, function () use ($request, $takeOver) {
+            $takeOver->handle($request->staff(), $request->key(), $request->reason(), $request->integer('revision'));
+
+            return back(303)->with('success', 'config.flash.draft_taken_over');
         });
     }
 

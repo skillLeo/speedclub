@@ -430,7 +430,7 @@ describe('delivery', function () {
     it('counts other failures and drops the subscription after max_failures in a row; a success resets the count', function () {
         config(['speedclub.web_push.max_failures' => 2]);
         wpFake(new Response(500), new Response(201));
-        $send = fn () => app(WebPush::class)->send([$this->subscription->fresh()], 'SPEED CLUB', 'Text', '/notifications');
+        $send = fn () => app(WebPush::class)->send([$this->subscription->fresh()], 'Speedclub', 'Text', '/notifications');
 
         expect($send())->toBe(0)
             ->and($this->subscription->fresh()?->failures)->toBe(1)
@@ -451,7 +451,7 @@ describe('delivery', function () {
         });
         wpFake(new Response(500));
 
-        app(WebPush::class)->send([$this->subscription], 'SPEED CLUB', 'Geheimer Text', '/notifications');
+        app(WebPush::class)->send([$this->subscription], 'Speedclub', 'Geheimer Text', '/notifications');
 
         expect(implode("\n", $logged))->not->toContain('fcm.googleapis.com')->not->toContain('Geheimer Text');
     });
@@ -502,8 +502,8 @@ describe('delivery', function () {
 
 describe('payload', function () {
     it('is the service worker\'s shape with an /app route', function () {
-        expect(json_decode(WebPush::payload('SPEED CLUB', '@lukas.sc folgt dir jetzt.', '/u/lukas.sc', 'ntf-1', 'de'), true))->toBe([
-            'title' => 'SPEED CLUB',
+        expect(json_decode(WebPush::payload('Speedclub', '@lukas.sc folgt dir jetzt.', '/u/lukas.sc', 'ntf-1', 'de'), true))->toBe([
+            'title' => 'Speedclub',
             'body' => '@lukas.sc folgt dir jetzt.',
             'tag' => 'ntf-1',
             'lang' => 'de',

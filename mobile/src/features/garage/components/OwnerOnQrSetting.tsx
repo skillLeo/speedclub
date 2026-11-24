@@ -7,7 +7,12 @@ import { RowCard } from '@/features/vehicle/components/RowCard';
 import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
 import { useOnline } from '@/state/online';
 import { createStyles, size, typography, useTheme } from '@/theme';
-import { Button, Icon, Skeleton, SkeletonBlock, Switch, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Icon } from '@/ui/icons/Icon';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
+import { Switch } from '@/ui/Switch';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { saveErrorMessage } from '../errors';
 import { FormGroup } from './fields';

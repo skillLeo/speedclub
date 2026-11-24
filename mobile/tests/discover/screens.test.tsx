@@ -29,6 +29,11 @@ jest.mock('expo-router', () => ({
   router: mockRouter,
   useLocalSearchParams: () => mockParams,
   usePathname: () => '/discover',
+  // M5.2: the segment swipe asks the stack where the page sits (Entdecken's root here).
+  useNavigation: () => ({
+    getState: () => ({ routeNames: ['discover/index', 'events/index'], routes: [{ key: 'discover-1', name: 'discover/index' }] }),
+    addListener: jest.fn(() => jest.fn()),
+  }),
   useFocusEffect: (effect: () => void | (() => void)) => {
     const { useEffect } = jest.requireActual<typeof import('react')>('react');
     useEffect(effect, [effect]);

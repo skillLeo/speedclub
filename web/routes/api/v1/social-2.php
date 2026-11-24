@@ -21,6 +21,10 @@ Route::middleware('throttle:browse')->group(function (): void {
     Route::get('build-updates/{update}/comments', [CommentController::class, 'index'])
         ->middleware(EnsureFeatureEnabled::class.':build_comments')
         ->name('comments.index');
+    // R5-5: the car's own thread, read like an update's.
+    Route::get('vehicles/{vehicle}/comments', [CommentController::class, 'indexVehicle'])
+        ->middleware(EnsureFeatureEnabled::class.':build_comments')
+        ->name('vehicles.comments.index');
 });
 
 Route::middleware('member')->group(function (): void {
@@ -58,6 +62,8 @@ Route::middleware('member')->group(function (): void {
     Route::middleware(EnsureFeatureEnabled::class.':build_comments')->group(function (): void {
         Route::post('build-updates/{update}/comments', [CommentController::class, 'store'])
             ->middleware(['not-restricted:publishing', 'throttle:comments', 'idempotent'])->name('comments.store');
+        Route::post('vehicles/{vehicle}/comments', [CommentController::class, 'storeVehicle'])
+            ->middleware(['not-restricted:publishing', 'throttle:comments', 'idempotent'])->name('vehicles.comments.store');
         Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->middleware('throttle:garage-edits')->name('comments.destroy');
         Route::patch('vehicles/{vehicle}/comments', [CommentController::class, 'settings'])->middleware('throttle:garage-edits')->name('vehicles.comments');
     });

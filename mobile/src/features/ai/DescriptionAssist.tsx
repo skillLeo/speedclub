@@ -5,7 +5,9 @@ import { View } from 'react-native';
 import { AI_FLAGS, useSuggestDescription } from '@/api/queries/ai';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { Button, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { AiLabel } from './AiLabel';
 import { AiNote } from './AiNote';

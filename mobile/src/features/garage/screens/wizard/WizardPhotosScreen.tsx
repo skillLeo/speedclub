@@ -7,8 +7,10 @@ import { useTranslation } from 'react-i18next';
 import { useUpdateVehicle, type GarageVehicle } from '@/api/queries/garage';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
-import { TextInput, toast } from '@/ui';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 import { DescriptionAssist } from '@/features/ai/DescriptionAssist';
 
 import { useCharCount, FormGroup } from '../../components/fields';
@@ -17,7 +19,7 @@ import { usePhotoCounts, VehiclePhotos } from '../../components/VehiclePhotos';
 import { WizardFrame } from '../../components/WizardFrame';
 import { saveErrorMessage } from '../../errors';
 import { laterStep } from '../../model';
-import { useCloseModal, wizardPath } from '../../navigation';
+import { useCloseModal, useLeavePublishedWizard, wizardPath } from '../../navigation';
 import { DESCRIPTION_MAX_LENGTH, descriptionSchema, fieldMessage } from '../../schemas';
 import { useMountedRef, usePreview, useWizardDraft } from '../../wizard';
 import { WizardStateBody } from './WizardStateBody';
@@ -30,8 +32,9 @@ type Values = { description: string };
 export function WizardPhotosScreen() {
   const wizard = useWizardDraft();
   const preview = usePreview(wizard.draft);
-  if (wizard.state !== 'ready' || !wizard.draft) {
-    const state = wizard.state === 'ready' ? 'gone' : wizard.state;
+  const leaving = useLeavePublishedWizard(wizard.draftId, wizard.state === 'ready' && wizard.draft?.status === 'published');
+  if (leaving || wizard.state !== 'ready' || !wizard.draft) {
+    const state = leaving ? 'loading' : wizard.state === 'ready' ? 'gone' : wizard.state;
     return (
       <WizardFrame
         step="photos"
@@ -99,18 +102,18 @@ function PhotosStep({ draft, reached, restriction }: { draft: GarageVehicle; rea
     }
   };
 
-  const next = handleSubmit(async (values) => {
+  const next = useSingleFlight(handleSubmit(async (values) => {
     if (!hasPhoto) {
       setNotice(t('wizard.photoRequired'));
       return;
     }
     if ((await persist(values, true)) && mounted.current) router.push(wizardPath(draft.id, 'review'));
-  });
-  const saveDraft = handleSubmit(async (values) => {
+  }));
+  const saveDraft = useSingleFlight(handleSubmit(async (values) => {
     if (!(await persist(values, false))) return;
     toast(t('wizard.draftSaved'), { testID: 'GAR-03.toast' });
     setLeaving(true);
-  });
+  }));
 
   return (
     <WizardFrame

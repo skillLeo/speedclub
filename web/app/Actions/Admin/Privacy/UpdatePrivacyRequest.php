@@ -63,6 +63,7 @@ class UpdatePrivacyRequest
     public function extend(Staff $by, PrivacyRequest $request, string $reason): void
     {
         StaffAtoms::ensure($by, 'privacy.process');
+        // ADR-540 exception: Art. 12(3) GDPR, the member is told the reasons for the delay, so this reason stays required.
         $reason = Reason::required($reason);
         $this->ensureOpen($request);
 

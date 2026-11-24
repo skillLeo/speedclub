@@ -4,7 +4,7 @@
  */
 import type { TFunction } from 'i18next';
 
-import type { PhotoAspect } from '@/ui';
+import type { PhotoAspect } from '@/ui/Photo';
 
 import { memberName, type ConversationSummary, type MessagePreview } from './model';
 

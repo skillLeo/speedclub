@@ -42,7 +42,7 @@ final class UpdateFeatureFlag
     public function handle(Staff $staff, FeatureFlag $flag, array $changes, string $reason): FlagOutcome
     {
         StaffAtoms::ensure($staff, 'flags.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
         $next = $this->validated($flag, $changes);
 
         if (app()->environment('production') && ($this->state($flag)['critical'] || $next['critical'])) {

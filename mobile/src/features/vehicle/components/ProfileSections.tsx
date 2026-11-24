@@ -1,29 +1,32 @@
 import { useRouter } from 'expo-router';
-import { useState, type ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { useBusinessesOn } from '@/api/queries/businesses';
 import { usePartsOn } from '@/api/queries/parts';
-import { usePublicVehicleUpdates, type BuildUpdate, type PublicModRow, type PublicVehicle, type VehicleMedia } from '@/api/queries/vehicles';
+import type { BuildUpdate, PublicModRow, PublicVehicle, VehicleMedia } from '@/api/queries/vehicles';
 import { createStyles, layout as layoutTokens, size, space } from '@/theme';
-import { BuildSheet, BuildSheetRow, Button, Photo, PressableScale, SectionHeader, SpecRow, Text, Timeline, type BuildSheetLink, type BuildSheetSection, type TimelineEntry } from '@/ui';
+import { type BuildSheetLink, type BuildSheetMod } from '@/ui/BuildSheet';
+import { Button } from '@/ui/Button';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { SpecRow } from '@/ui/SpecRow';
+import { Text } from '@/ui/Text';
+import { type TimelineEntry } from '@/ui/Timeline';
 import { TranslatableText } from '@/features/ai/TranslatableText';
+import { journeyPair } from '@/features/score/journey';
 import { unpairedPhotos, updatePairs } from '@/features/updates/model';
-import { useFormat } from '@/lib/useFormat';
 
 import { useLegalPill } from '../legal';
-import { photoFields, visiblePhotos } from '../media';
+import { photoFields } from '../media';
 import {
   categoryIcon,
   changeLines,
   historyMetaLine,
   historyTitle,
-  mergeUpdates,
   modValues,
-  ownerName,
-  previewPhotos,
   provenanceOf,
   specGroupsOf,
 } from '../model';
@@ -45,184 +48,118 @@ const useStyles = createStyles((t) => ({
   previewRow: { flexDirection: 'row', gap: t.space[2] },
   previewTile: { flex: 1 },
   previewVisual: { borderRadius: t.radius.none },
-  closing: { alignItems: 'flex-start', gap: t.space[4], marginTop: t.space[32] },
-  closingAction: { marginLeft: -t.space[12] },
-  disclaimer: { marginTop: t.space[16] },
-  loadOlder: { alignSelf: 'flex-start', marginTop: t.space[16] },
-  loadError: { marginTop: t.space[16] },
+  emptyBlock: { alignItems: 'flex-start', gap: t.space[4] },
+  descriptionTitle: { marginBottom: t.space[8] },
+  closingAction: { marginLeft: -t.size.buttonPaddingX.s },
 }));
 
-type Navigation = {
-  onOpenMod: (mod: PublicModRow) => void;
-};
-
-export type OverviewSectionProps = Navigation & {
+export type OverviewSectionProps = {
   vehicle: PublicVehicle;
   routeId: string;
-  /** GAR-02: the owner's completeness hints and anything else only the owner sees, first in the tab. */
+  /** GAR-02: the owner's completeness hints and anything else only the owner sees, first in the section. */
   ownerContent?: ReactNode;
   /**
-   * DQ-1057: a guest's one line under the content, "Melde dich an, um Lukas zu schreiben." with its link; null leaves it out (a
-   * member writes from the action row's "Nachricht").
+   * M5.9c ★ the Build Score section (gauge, stage, ranks, "So entsteht …", the owner's "Nächstes Upgrade"), after the owner's lines
+   * and before the description. A render function told whether it is the first block, so it brings its own gap and leaves none when
+   * it has nothing to show (as `pins`, DQ-1056).
    */
-  closingAction?: { label: string; onPress: () => void } | null;
-  /** The photo preview (3-up, DQ-1078); on at every width since the desktop hero has no thumbnails (DQ-1048). */
-  showPhotoPreview?: boolean;
-  /** [SIG] FS-3 "Ähnliche Builds", after the photos and before the closing owner card (M2.3, features/discover). */
-  similar?: ReactNode;
+  score?: (first: boolean) => ReactNode;
   /**
-   * 09 §7.6 Übersicht: the owner-pinned Highlights rail, right after the description (M4.11). A render function told whether it is
+   * 09 §7.6 Überblick: the owner-pinned Highlights rail, right after the description (M4.11). A render function told whether it is
    * the first block, so the rail adds its own gap (above it, or below it when first) and an empty rail leaves none (DQ-1056).
    */
   pins?: (first: boolean) => ReactNode;
-  /** 09 §7.6 Übersicht: the latest update as a feed card, after the top mods. */
-  latest?: ReactNode;
-  onShowMods: () => void;
-  onOpenGallery: () => void;
-  /** The index in the vehicle's photos. */
-  onOpenPhoto: (index: number) => void;
+  /** 10 §5.6 / §6.2: the Build-Fortschritt card, last in Überblick; null when this reader gets none. */
+  progress?: ReactNode;
+  /** R5-5: the entry to the car's own comments, after the description and the Highlights; null when this reader gets none. */
+  comments?: ReactNode;
+  /** The owner's one action when Überblick has no description ("Beschreibung schreiben"). */
+  onWriteDescription?: () => void;
+  /** DQ-M53-05: `owner` reads description → Build-Fortschritt → Build Score → Highlights; `visitor` puts the score first. */
+  order?: 'owner' | 'visitor';
 };
 
-/** FS-3 Übersicht: description, three highlights with "Alle Mods (14)", the photo preview with "Alle Fotos (12)", owner card. */
-export function OverviewSection({
-  vehicle,
-  routeId,
-  ownerContent,
-  closingAction,
-  showPhotoPreview = true,
-  similar,
-  pins,
-  latest,
-  onShowMods,
-  onOpenGallery,
-  onOpenPhoto,
-  onOpenMod,
-}: OverviewSectionProps) {
+/**
+ * 10 §5.6 Überblick (one scroll, ADR-505): the owner's lines, the Build Score, the description, the Highlights rail and the
+ * Build-Fortschritt card. Mods, Verlauf and the photos are sections of their own now.
+ */
+export function OverviewSection({ vehicle, routeId, ownerContent, score, pins, progress, comments, onWriteDescription, order = 'visitor' }: OverviewSectionProps) {
   const { t } = useTranslation('vehicle');
-  const legalPill = useLegalPill();
   const styles = useStyles();
   const description = vehicle.description?.trim();
-  const preview = showPhotoPreview ? previewPhotos(vehicle) : [];
-  const blocks: ReactNode[] = [];
+  const own = vehicle.is_owner || Boolean(vehicle.owner?.is_self);
 
-  if (ownerContent) blocks.push(<View key="owner">{ownerContent}</View>);
-  if (description) {
+  const descriptionBody = description ? (
     // M3.7 ai.translate: another member's description gets "Übersetzen" under it; the owner reads their own words.
-    const own = vehicle.is_owner || Boolean(vehicle.owner?.is_self);
-    blocks.push(
-      own ? (
-        <Description key="description" text={description} testID={`${routeId}.description`} moreTestID={`${routeId}.more`} />
-      ) : (
-        <TranslatableText
-          key="description"
-          source="vehicle_description"
-          id={vehicle.id}
-          text={description}
-          render={(shown) => <Description key={shown} text={shown} testID={`${routeId}.description`} moreTestID={`${routeId}.more`} />}
-          testID={`${routeId}.description`}
-        />
-      ),
-    );
-  }
-  // DQ-1056: no wrapper gap; the rail brings its own when it shows.
-  const pinsNode = pins ? pins(blocks.length === 0) : null;
-  const pinsIndex = blocks.length;
-  if (vehicle.highlights.length > 0) {
-    blocks.push(
-      <View key="highlights" testID={`${routeId}.highlights`}>
-        <SectionHeader
-          title={t('overview.highlights')}
-          actionLabel={t('overview.allMods', { count: vehicle.mods.count })}
-          onAction={onShowMods}
-          wraps
-          style={styles.headerToContent}
-          testID={`${routeId}.highlights.header`}
-        />
-        {/* DQ-954: the same row as the Mods tab (BuildSheet's ModRow 2.0: glyph tile, brand, pills), without section headers. */}
-        <RowCard>
-          {vehicle.highlights.map((mod, index) => (
-            <BuildSheetRow
-              key={mod.id}
-              mod={{
-                key: mod.id,
-                icon: categoryIcon(mod.category.icon),
-                name: mod.title,
-                brand: mod.brand ?? null,
-                ...(modValues(mod) ? { values: modValues(mod) } : {}),
-                status: mod.status_label,
-                ...legalPill(mod),
-                onPress: () => onOpenMod(mod),
-                testID: `${routeId}.highlight.${index}`,
-              }}
-              divider={index < vehicle.highlights.length - 1}
-            />
-          ))}
-        </RowCard>
-        {/* 08_LEGAL §7: a stated legal status always shows with the disclaimer, here as under the Mods tab. */}
-        {vehicle.highlights.some((mod) => legalPill(mod).legalStatus) ? (
-          <Text variant="caption" color="text.tertiary" style={styles.disclaimer} testID={`${routeId}.highlights.legalDisclaimer`}>
-            {t('mods.disclaimer')}
-          </Text>
-        ) : null}
-      </View>,
-    );
-  }
-  if (latest) blocks.push(<View key="latest">{latest}</View>);
-  if (preview.length > 0) {
-    blocks.push(
-      <View key="photos" testID={`${routeId}.photoPreview`}>
-        <SectionHeader
-          title={t('overview.photos')}
-          actionLabel={t('overview.allPhotos', { count: vehicle.photo_count })}
-          onAction={onOpenGallery}
-          wraps
-          style={styles.headerToContent}
-          testID={`${routeId}.photoPreview.header`}
-        />
-        <PhotoPreview
-          photos={preview}
-          total={vehicle.photo_count}
-          fallbackAlt={vehicle.full_title}
-          onOpen={(position) => {
-            const photo = preview[position];
-            const index = photo ? visiblePhotos(vehicle.photos).findIndex((item) => item.id === photo.id) : -1;
-            onOpenPhoto(Math.max(0, index));
-          }}
-          testID={`${routeId}.photoPreview.tile`}
-        />
-      </View>,
-    );
-  }
-  if (!description && vehicle.highlights.length === 0 && preview.length === 0) {
-    blocks.push(
-      <Text key="empty" variant="body" color="text.secondary" testID={`${routeId}.overviewEmpty`}>
+    own ? (
+      <Description text={description} testID={`${routeId}.description`} moreTestID={`${routeId}.more`} />
+    ) : (
+      <TranslatableText
+        source="vehicle_description"
+        id={vehicle.id}
+        text={description}
+        render={(shown) => <Description key={shown} text={shown} testID={`${routeId}.description`} moreTestID={`${routeId}.more`} />}
+        testID={`${routeId}.description`}
+      />
+    )
+  ) : (
+    <View style={styles.emptyBlock}>
+      <Text variant="body" color="text.secondary" testID={`${routeId}.overviewEmpty`}>
         {t('overview.empty')}
-      </Text>,
-    );
-  }
-  if (similar) blocks.push(<View key="similar">{similar}</View>);
-
-  return (
-    <View>
-      {blocks.map((block, index) => (
-        <View key={index}>
-          {index === pinsIndex ? pinsNode : null}
-          <View style={index === 0 ? styles.first : styles.section}>{block}</View>
-        </View>
-      ))}
-      {pinsIndex === blocks.length ? pinsNode : null}
-      {vehicle.owner && closingAction ? (
-        // DQ-1057: one line and a text link for a guest, no card that repeats the action row's "Nachricht".
-        <View style={styles.closing} testID={`${routeId}.closingOwner`}>
-          <Text variant="callout" color="text.secondary">
-            {t('overview.closingGuest', { name: ownerName(vehicle.owner) })}
-          </Text>
-          <Button label={closingAction.label} variant="tertiary" size="s" onPress={closingAction.onPress} style={styles.closingAction} testID={`${routeId}.closingMessage`} />
-        </View>
+      </Text>
+      {onWriteDescription ? (
+        <Button label={t('overview.write')} variant="tertiary" size="s" onPress={onWriteDescription} style={styles.closingAction} testID={`${routeId}.overview.write`} />
       ) : null}
     </View>
   );
+  // Client feedback CF-3: the owner's own words are labelled "Beschreibung", for visitors and the owner alike.
+  const descriptionBlock = (
+    <View testID={`${routeId}.descriptionBlock`}>
+      <Text variant="headline" role="heading" {...({ 'aria-level': 3 } as object)} style={styles.descriptionTitle} testID={`${routeId}.descriptionTitle`}>
+        {t('overview.descriptionTitle')}
+      </Text>
+      {descriptionBody}
+    </View>
+  );
+
+  // DQ-M53-05 (10 §5.6, "simpler, not busier"): the owner reads the build first — description, Build-Fortschritt, then the Build Score
+  // and the Highlights; a visitor gets the score's verdict first. The owner's meta line (HU, spots) stays on top in both.
+  const sequence: readonly OverviewPart[] =
+    order === 'owner'
+      ? ['owner', 'description', 'progress', 'score', 'pins', 'comments']
+      : ['owner', 'score', 'description', 'pins', 'comments', 'progress'];
+  const blockOf: Record<'owner' | 'description' | 'progress' | 'comments', ReactNode> = {
+    owner: ownerContent ?? null,
+    description: descriptionBlock,
+    progress: progress ?? null,
+    comments: comments ?? null,
+  };
+
+  // One flat list keyed by what each part is, never by its position: the owner's lines load after the first frame (VehicleScreen's next
+  // HU and spot line), and a block keyed by index moved the score section into another parent, which remounted it and closed its open
+  // "So entsteht …" or "Journey teilen" sheet. A self-spacing part (score, rail) is told whether a block came before it (DQ-1056).
+  const parts: ReactNode[] = [];
+  let blocks = 0;
+  for (const part of sequence) {
+    if (part === 'score' || part === 'pins') {
+      const render = part === 'score' ? score : pins;
+      parts.push(<Fragment key={part}>{render ? render(blocks === 0) : null}</Fragment>);
+      continue;
+    }
+    const block = blockOf[part];
+    if (!block) continue;
+    parts.push(
+      <View key={`block-${part}`} style={blocks === 0 ? styles.first : styles.section}>
+        {block}
+      </View>,
+    );
+    blocks += 1;
+  }
+
+  return <View>{parts}</View>;
 }
+
+type OverviewPart = 'owner' | 'score' | 'description' | 'pins' | 'comments' | 'progress';
 
 type PhotoPreviewProps = {
   photos: readonly VehicleMedia[];
@@ -234,7 +171,7 @@ type PhotoPreviewProps = {
   testID: string;
 };
 
-function PhotoPreview({ photos, total, fallbackAlt, onOpen, testID }: PhotoPreviewProps) {
+export function PhotoPreview({ photos, total, fallbackAlt, onOpen, testID }: PhotoPreviewProps) {
   // The row starts after the hero's photo, or from the first one for a build with fewer than four (previewPhotos).
   const offset = total >= 4 ? 1 : 0;
   const { t } = useTranslation('vehicle');
@@ -304,15 +241,13 @@ export function SpecsSection({ vehicle, routeId }: { vehicle: PublicVehicle; rou
   );
 }
 
-/** FS-3 Mods: groups by category (glyph, `headline`, count) with mod rows, then the disclaimer of 08_LEGAL §7. */
-export function ModsSection({ vehicle, routeId, onOpenMod }: Navigation & { vehicle: PublicVehicle; routeId: string }) {
+/** The BuildSheet row of a mod (ModRow 2.0) with its catalogue, brand and "Eingebaut von" links, for Mods and Pläne. */
+export function useModSheetRows(routeId: string, onOpenMod: (mod: PublicModRow) => void) {
   const { t } = useTranslation('vehicle');
   const legalPill = useLegalPill();
-  const styles = useStyles();
   const router = useRouter();
   const partsOn = usePartsOn();
   const businessesOn = useBusinessesOn();
-  const groups = vehicle.mods.groups.filter((group) => group.items.length > 0);
   // M4.14: the catalogue product (BRD-02), its brand (BRD-01) and "Eingebaut von" (BIZ-01) under the row, while their flags are on.
   const modLinks = (mod: PublicModRow): BuildSheetLink[] => {
     const links: BuildSheetLink[] = [];
@@ -347,44 +282,21 @@ export function ModsSection({ vehicle, routeId, onOpenMod }: Navigation & { vehi
     }
     return links;
   };
-  if (groups.length === 0) {
-    return (
-      <Text variant="body" color="text.secondary" testID={`${routeId}.modsEmpty`}>
-        {t('mods.empty')}
-      </Text>
-    );
-  }
-  const sections: BuildSheetSection[] = groups.map((group) => ({
-    key: group.category.key,
-    title: group.category.name,
-    icon: categoryIcon(group.category.icon),
-    count: group.count,
-    countLabel: t('mods.count', { count: group.count }),
-    testID: `${routeId}.mods.${group.category.key}`,
-    mods: group.items.map((mod) => ({
-      key: mod.id,
-      icon: categoryIcon(mod.category.icon),
-      name: mod.title,
-      // DQ-952: the brand caption on every row that has a brand, as the DEV-01 anatomy ("BBS LM" by BBS).
-      brand: mod.brand ?? null,
-      ...(modValues(mod) ? { values: modValues(mod) } : {}),
-      status: mod.status_label,
-      ...legalPill(mod),
-      links: modLinks(mod),
-      // Behaviour kept: a row opens VEH-02 (with the chevron). The inline expand waits for the details the API does not list
-      // yet (photos, product link, "Eingebaut von"), which VEH-02 shows; costs stay private (09 §7.6 GAR-10).
-      onPress: () => onOpenMod(mod),
-      testID: `${routeId}.mod.${mod.id}`,
-    })),
-  }));
-  return (
-    <View>
-      <BuildSheet sections={sections} testID={`${routeId}.buildSheet`} />
-      <Text variant="caption" color="text.tertiary" style={styles.disclaimer} testID={`${routeId}.legalDisclaimer`}>
-        {t('mods.disclaimer')}
-      </Text>
-    </View>
-  );
+  const row = (mod: PublicModRow): BuildSheetMod => ({
+    key: mod.id,
+    icon: categoryIcon(mod.category.icon),
+    name: mod.title,
+    // DQ-952: the brand caption on every row that has a brand, as the DEV-01 anatomy ("BBS LM" by BBS).
+    brand: mod.brand ?? null,
+    ...(modValues(mod) ? { values: modValues(mod) } : {}),
+    status: mod.status_label,
+    ...legalPill(mod),
+    links: modLinks(mod),
+    // A row opens VEH-02 (with the chevron); costs stay private (09 §7.6 GAR-10).
+    onPress: () => onOpenMod(mod),
+    testID: `${routeId}.mod.${mod.id}`,
+  });
+  return { row, icon: categoryIcon };
 }
 
 /** Verlauf shows up to three photos per entry (Timeline's 3-up grid); a third of the column, a pair the whole column. */
@@ -392,69 +304,8 @@ const HISTORY_PHOTOS_SHOWN = 3;
 const HISTORY_PHOTO_WIDTH = size.railCard;
 const HISTORY_PAIR_WIDTH = layoutTokens.feedColumn;
 
-export type HistorySectionProps = {
-  vehicle: PublicVehicle;
-  routeId: string;
-  onOpenUpdate: (update: BuildUpdate) => void;
-};
-
-/** FS-3 Verlauf: entries by month on one hairline, each opening VEH-05. Older entries load on request, 30 at a time. */
-export function HistorySection({ vehicle, routeId, onOpenUpdate }: HistorySectionProps) {
-  const { t } = useTranslation('vehicle');
-  const styles = useStyles();
-  const format = useFormat();
-  const [wantsOlder, setWantsOlder] = useState(false);
-  const older = usePublicVehicleUpdates(vehicle.slug, wantsOlder);
-  const pages = older.data?.pages.flatMap((page) => page.data) ?? [];
-  const updates = mergeUpdates(vehicle.updates, pages);
-  const remaining = Math.max(0, vehicle.updates_count - updates.length);
-  // Once the list route has answered, its cursor decides; the count can lag behind a hidden entry.
-  const canLoadOlder = remaining > 0 && (!older.data || older.hasNextPage);
-  const loadOlder = () => {
-    if (!wantsOlder) setWantsOlder(true);
-    else if (older.data) void older.fetchNextPage();
-    else void older.refetch();
-  };
-
-  if (updates.length === 0) {
-    return (
-      <Text variant="body" color="text.secondary" testID={`${routeId}.historyEmpty`}>
-        {t('history.empty')}
-      </Text>
-    );
-  }
-
-  return (
-    <View>
-      <Timeline
-        entries={updates.map((update) =>
-          historyEntry(update, t, () => onOpenUpdate(update), `${routeId}.update.${update.id}`, (value) => format.number(value)),
-        )}
-        groupTestID={(index) => `${routeId}.month.${index}`}
-        testID={`${routeId}.timeline`}
-      />
-      {older.isError && !older.isFetching ? (
-        <Text variant="callout" color="text.secondary" role="alert" style={styles.loadError} testID={`${routeId}.history.loadError`}>
-          {t('history.loadError')}
-        </Text>
-      ) : null}
-      {canLoadOlder ? (
-        <Button
-          label={t('history.loadOlder', { count: remaining })}
-          variant="secondary"
-          size="m"
-          loading={older.isFetching}
-          onPress={loadOlder}
-          style={styles.loadOlder}
-          testID={`${routeId}.history.loadOlder`}
-        />
-      ) : null}
-    </View>
-  );
-}
-
 /** One entry of Verlauf as the Timeline shows it (09 §5): the type as title, its first changes, the note, the rest as a count. */
-function historyEntry(
+export function historyEntry(
   update: BuildUpdate,
   t: TFunction<'vehicle'>,
   onPress: () => void,
@@ -479,11 +330,8 @@ function historyEntry(
     ...(more > 0 ? { more: t('history.moreChanges', { count: more }) } : {}),
     ...(pair
       ? {
-          beforeAfter: {
-            before: { ...photoFields(pair.before, HISTORY_PAIR_WIDTH), label: t('update.before') },
-            after: { ...photoFields(pair.after, HISTORY_PAIR_WIDTH), label: t('update.after') },
-            label: t('update.beforeAfter'),
-          },
+          // M5.9c Build Journey (contract §2): Verlauf sets a pair side by side; VEH-05 keeps the slider for the close look.
+          beforeAfter: journeyPair(update, pair, t, HISTORY_PAIR_WIDTH / 2),
         }
       : photos.length > 0
         ? { photos }

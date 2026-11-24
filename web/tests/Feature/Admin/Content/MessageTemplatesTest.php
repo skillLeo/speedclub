@@ -39,10 +39,10 @@ it('applies a saved subject to the real mail and restores the default after a re
 });
 
 it('applies push texts too', function () {
-    app(SaveMessageTemplate::class)->handle($this->editor, 'push.title', 'en', ['text' => 'SPEED CLUB News']);
+    app(SaveMessageTemplate::class)->handle($this->editor, 'push.title', 'en', ['text' => 'Speedclub News']);
     app(MessageTemplates::class)->apply('en');
 
-    expect(__('notifications.title', [], 'en'))->toBe('SPEED CLUB News')->and(__('notifications.title', [], 'de'))->toBe('SPEED CLUB');
+    expect(__('notifications.title', [], 'en'))->toBe('Speedclub News')->and(__('notifications.title', [], 'de'))->toBe('Speedclub');
 });
 
 it('refuses fixed templates and fields, unknown placeholders and lost plural forms', function (string $key, array $fields, string $expected) {

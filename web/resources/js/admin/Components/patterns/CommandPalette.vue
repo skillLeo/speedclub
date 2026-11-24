@@ -11,6 +11,7 @@ import { toast } from '../ui/toast';
 import { isCancelled, requestJson } from '../../lib/http';
 import { usePermissions } from '../../lib/permissions';
 import { hasRoute, routeOr } from '../../lib/routes';
+import { useFourEyes } from '../../composables/fourEyes';
 import { paletteActions, paletteEntries, type PaletteAction } from '../../modules/registry';
 import type { SearchGroup, SearchItem } from '../../types/search';
 
@@ -18,7 +19,7 @@ import type { SearchGroup, SearchItem } from '../../types/search';
  * ⌘K / Ctrl K (06 §3 Overview, 09 §10.2): go to any page this staff member may open, find members, vehicles, QR codes and cases through
  * ADM-07, reopen recent records, and start actions ("Mitglied sperren…", "Treffen freigeben…", "Betrieb verifizieren…", "Flag
  * umschalten…") that respect the staff member's atoms. An action has two steps: pick it, then pick the record; the record's page opens
- * with the action ready, where its own checks (password, reason, four-eyes) apply. Nothing changes data from here.
+ * with the action ready, where its own checks (password, four-eyes when on) apply. Nothing changes data from here.
  * Keys: Enter opens, Shift+Enter copies a record link, Backspace in an empty field leaves an action.
  */
 const open = defineModel<boolean>('open', { default: false });
@@ -46,10 +47,11 @@ const action = ref<PaletteAction | null>(null);
 let controller: AbortController | null = null;
 let debounce: number | undefined;
 
+const fourEyes = useFourEyes();
 const allowed = (atom: string | string[] | undefined): boolean => (Array.isArray(atom) ? canAny(atom) : can(atom));
 const destinations = computed(() => {
     void page.url;
-    return paletteEntries(allowed, hasRoute);
+    return paletteEntries(allowed, hasRoute, fourEyes.value);
 });
 const actions = computed(() => {
     void page.url;

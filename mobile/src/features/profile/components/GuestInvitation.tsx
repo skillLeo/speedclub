@@ -8,7 +8,15 @@ import { QR_SAMPLE_SVG } from '@/features/gallery/qrSample';
 import { SAMPLE_CARD_PHOTO } from '@/features/garage/sample';
 import { clearAuthIntent } from '@/state/session';
 import { createStyles, layout, space, useBreakpoint, type BreakpointKind } from '@/theme';
-import { Button, DisplayTitle, Photo, PhotoStageScrim, PhotoTopScrim, QRDisplay, SampleBadge, SpecStrip, Text, VehicleCard, type PhotoAspect } from '@/ui';
+import { SampleBadge } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { DisplayTitle } from '@/ui/DisplayTitle';
+import { Photo, type PhotoAspect } from '@/ui/Photo';
+import { PhotoStageScrim, PhotoTopScrim } from '@/ui/PhotoStageScrim';
+import { QRDisplay } from '@/ui/QRDisplay';
+import { SpecStrip } from '@/ui/SpecStrip';
+import { Text } from '@/ui/Text';
+import { VehicleCard } from '@/ui/VehicleCard';
 import { ratioOf } from '@/ui/Photo';
 
 /** DQ-985: the brush logo wide and white, 28 high, as on AUTH-02; its width follows the bundled file's ratio. */
@@ -50,7 +58,7 @@ export type GuestInvitationProps = {
 
 /**
  * The guest's profile (09 §7.7): a brand moment, not a fake profile. A night photo edge to edge with the brush logo and
- * `display.title` "Werde Teil des SPEED CLUB." on its scrim, the promise with "Konto erstellen" (the one filled action) and
+ * `display.title` "Werde Teil des Speedclub." on its scrim, the promise with "Konto erstellen" (the one filled action) and
  * "Anmelden", then three real pieces of the product with sample data, badged "Beispiel": a VehicleCard, a SpecStrip and the QR card.
  */
 export function GuestInvitation({ routeId, returnTo, width }: GuestInvitationProps) {

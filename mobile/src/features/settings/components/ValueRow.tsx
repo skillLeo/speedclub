@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 
 import { createStyles, size, space, useTheme } from '@/theme';
-import { ListRow, Text, type ListRowProps } from '@/ui';
+import { ListRow, type ListRowProps } from '@/ui/ListRow';
+import { Text } from '@/ui/Text';
 
 /**
  * DQ-103: until the row has measured itself, from this font scale a trailing value takes its own line under the title.

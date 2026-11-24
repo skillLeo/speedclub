@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
+import { SpotSettings, SpotSettingsSkeleton } from '@/features/dex/components/SpotSettings';
 import { useChangeVisibility, type GarageVehicle, type Visibility } from '@/api/queries/garage';
 import { usePublicVehicle } from '@/api/queries/vehicles';
 import { FormNotice } from '@/features/auth/components/FormNotice';
@@ -10,9 +11,14 @@ import { KnownTextSkeleton } from '@/features/vehicle/components/KnownTextSkelet
 import { RowCard } from '@/features/vehicle/components/RowCard';
 import { useVehicleShare } from '@/features/vehicle/share';
 import { textSkeleton } from '@/features/vehicle/skeletonGeometry';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Hairline, ListRow, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { ListRow } from '@/ui/ListRow';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
 
 import { FormGroup } from '../components/fields';
@@ -83,23 +89,24 @@ function VisibilityForm({ vehicle, restriction }: { vehicle: GarageVehicle; rest
     else router.replace(`/garage/${vehicle.id}`);
   }, [router, saved, vehicle.id]);
 
-  const submit = () => {
+  // QA-H05: once at a time; a double tap sent the change twice.
+  const submit = useSingleFlight(async () => {
     setNotice(null);
-    change.mutate(value, {
-      onSuccess: (next) => {
-        const message = next.status === 'draft' ? t('visibility.savedDraft') : t(`visibility.saved.${isVisibility(next.visibility) ? next.visibility : 'public'}`);
-        toast(message, { haptic: 'success', testID: `${ROUTE}.saved` });
-        setSaved(true);
-      },
-      onError: (error) => setNotice(saveErrorMessage(t, error)),
-    });
-  };
+    try {
+      const next = await change.mutateAsync(value);
+      const message = next.status === 'draft' ? t('visibility.savedDraft') : t(`visibility.saved.${isVisibility(next.visibility) ? next.visibility : 'public'}`);
+      toast(message, { haptic: 'success', testID: `${ROUTE}.saved` });
+      setSaved(true);
+    } catch (error) {
+      setNotice(saveErrorMessage(t, error));
+    }
+  });
 
   return (
     <EditorForm
       routeId={ROUTE}
       dirty={dirty && !change.isPending && !saved}
-      cta={{ label: t('editor.save'), onPress: submit, loading: change.isPending, disabled: !online || !dirty }}
+      cta={{ label: t('editor.save'), onPress: () => void submit(), loading: change.isPending, disabled: !online || !dirty }}
     >
       {locked && restriction ? <RestrictedNotice message={t('visibility.restricted')} testID={`${ROUTE}.restricted`} /> : null}
       {notice ? <FormNotice message={notice} testID={`${ROUTE}.notice`} /> : null}
@@ -113,6 +120,8 @@ function VisibilityForm({ vehicle, restriction }: { vehicle: GarageVehicle; rest
         <VisibilityChoice value={value} onChange={setValue} disabled={change.isPending} onlyPrivate={locked} testID={`${ROUTE}.choice`} />
       </FormGroup>
       <OwnerOnQrSetting routeId={ROUTE} />
+      {/* M5.9b: Ghost-Modus, Spotten pausieren, Städte verbergen; saved at once like the owner switch above. */}
+      <SpotSettings vehicleId={vehicle.id} routeId={ROUTE} />
       {shareable && page.data ? (
         <FormGroup title={t('visibility.shareGroup')}>
           <RowCard testID={`${ROUTE}.share`}>
@@ -128,7 +137,7 @@ function VisibilityForm({ vehicle, restriction }: { vehicle: GarageVehicle; rest
               divider={Boolean(vehicle.qr)}
               testID={`${ROUTE}.shareLink`}
             />
-            {vehicle.qr ? <ListRow icon="qr-code" title={t('owner.qr')} onPress={() => router.push(`/qr/${vehicle.id}`)} inset={space[16]} testID={`${ROUTE}.qr`} /> : null}
+            {vehicle.qr ? <ListRow icon="qr-code" title={t('owner.qr')} onPress={() => router.push(`/stickers/${vehicle.id}`)} inset={space[16]} testID={`${ROUTE}.qr`} /> : null}
           </RowCard>
         </FormGroup>
       ) : null}
@@ -198,6 +207,7 @@ function VisibilitySkeleton({ known }: { known: KnownVehicle }) {
             <OwnerOnQrSkeletonRow />
           </View>
         </View>
+        <SpotSettingsSkeleton />
         {shareable ? (
           <View style={styles.skeletonGroup}>
             <SkeletonText variant={SECTION_HEADER_ROLE} width={eyebrow('visibility.shareGroup')} style={styles.skeletonEyebrow} testID={`${ROUTE}.skeleton.header.share`} />

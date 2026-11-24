@@ -69,7 +69,7 @@ class EditMemberProfile
                     $username = Username::normalize($changes['username']);
 
                     if ($username !== $locked->username) {
-                        if ($this->availability->reason($username, $locked) !== null) {
+                        if ($this->availability->reason($username, $locked, staff: true) !== null) {
                             throw ValidationException::withMessages(['username' => [(string) __('username.taken')]]);
                         }
 

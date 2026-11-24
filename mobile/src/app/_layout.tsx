@@ -1,7 +1,7 @@
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider as NavigationThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -18,7 +18,7 @@ import { RouteErrorBoundary, RouteErrorFallback } from '@/features/shell/RouteEr
 import { ShellToastHost } from '@/features/shell/ShellToastHost';
 import { useCanvasStackOptions } from '@/features/shell/useCanvasStackOptions';
 import { AppConfigGate } from '@/features/system/AppConfigGate';
-import i18n from '@/i18n';
+import i18n, { i18nReady, isLanguageLoaded } from '@/i18n';
 import { qa } from '@/lib/qa';
 import { registerFirstScreenGate, registerReadyGate, useAppReady, useFirstScreenMounted } from '@/lib/ready';
 import { ViewAsFrame } from '@/features/viewAs/ViewAsFrame';
@@ -50,6 +50,8 @@ reportQaSession();
 export const unstable_settings = { screenErrorBoundary: RouteErrorFallback };
 
 const MODAL_OPTIONS = { presentation: 'modal' } as const;
+/** M5.9b DEX-02 scanner, DEX-03 reveal and M5.9e WRP-01 Wrapped player: full screen over everything, faded in (the camera and the card own the screen). */
+const FULL_SCREEN_OPTIONS = { presentation: 'fullScreenModal', animation: 'fade' } as const;
 
 /** Navigation containers paint the theme canvas, so a screen change can never show their default grey. */
 function RootStack() {
@@ -66,6 +68,9 @@ function RootStack() {
       <RouteErrorBoundary>
         <Stack screenOptions={screenOptions}>
           <Stack.Screen name="(modals)" options={MODAL_OPTIONS} />
+          <Stack.Screen name="scan" options={FULL_SCREEN_OPTIONS} />
+          <Stack.Screen name="dex/spot/[spotId]" options={FULL_SCREEN_OPTIONS} />
+          <Stack.Screen name="wrapped/[season]" options={FULL_SCREEN_OPTIONS} />
         </Stack>
       </RouteErrorBoundary>
       <AppConfigGate />
@@ -79,8 +84,25 @@ function RootStack() {
   );
 }
 
+/** M5.12a: the member web loads the active language's strings as a chunk of their own; native has them from the start. */
+function useStringsReady(): boolean {
+  const [ready, setReady] = useState(isLanguageLoaded);
+  useEffect(() => {
+    if (ready) return;
+    let active = true;
+    void i18nReady.then(() => {
+      if (active) setReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [ready]);
+  return ready;
+}
+
 export default function RootLayout() {
   const fontsSettled = useAppFonts();
+  const stringsReady = useStringsReady();
   const appReady = useAppReady();
   const screenMounted = useFirstScreenMounted();
 
@@ -102,7 +124,7 @@ export default function RootLayout() {
         <KeyboardProvider>
           <ThemeProvider>
             <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
-              {fontsSettled ? (
+              {fontsSettled && stringsReady ? (
                 <ViewAsFrame>
                   <RootStack />
                 </ViewAsFrame>

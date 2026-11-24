@@ -187,24 +187,26 @@ describe('SET-01 design QA round 1 (M2.8)', () => {
     const row = 56;
     const tall = 72;
     // M4.10 (09 §7.9): the identity card (72), Konto & Sicherheit, Privatsphäre, the app cluster (titled "App" since DQ-1103), Daten & Speicher with
-    // "Cache leeren" (72), Hilfe & Support, Rechtliches, Über SPEED CLUB with Was ist neu and the version, Abmelden.
+    // "Cache leeren" (72), Hilfe & Support, Rechtliches, Über Speedclub with Was ist neu and the version, Abmelden. M5.9d: the
+    // untitled cluster after the app settings holds "Freunde einladen" (INV-01) for every member.
     expect(settingsSkeletonGroups(true, {}, false)).toEqual([
       { titled: false, height: tall },
       { titled: true, height: 6 * row },
       { titled: true, height: 2 * row },
       { titled: true, height: 3 * row },
+      { titled: false, height: row },
       { titled: true, height: 2 * row + tall },
       { titled: true, height: 3 * row },
       { titled: true, height: tall },
       { titled: true, height: 2 * row },
       { titled: false, height: row },
     ]);
-    // The flags add Garage & Erinnerungen to the cluster and the Für Betriebe · Mitgliedschaft pair.
+    // The flags add Garage & Erinnerungen to the cluster and Für Betriebe · Mitgliedschaft before "Freunde einladen".
     expect(settingsSkeletonGroups(true, { maintenance: true, businesses: true, membership: true }, false).slice(3, 5)).toEqual([
       { titled: true, height: 4 * row },
-      { titled: false, height: 2 * row },
+      { titled: false, height: 3 * row },
     ]);
-    // A guest: Darstellung and Sprache, Hilfe, Rechtliches, Über SPEED CLUB; no Abmelden.
+    // A guest: Darstellung and Sprache, Hilfe, Rechtliches, Über Speedclub; no Abmelden.
     expect(settingsSkeletonGroups(false, {}, false)).toEqual([
       { titled: true, height: 2 * row },
       { titled: true, height: row },
@@ -218,9 +220,10 @@ describe('SET-01 design QA round 1 (M2.8)', () => {
     mockWindow.current = { width: 390, height: 844, scale: 2, fontScale: 1 };
     await renderScreen(<SettingsScreen />);
     expect(screen.getByTestId('SET-01.skeleton')).toBeTruthy();
-    expect(screen.getAllByTestId(/^SET-01\.skeleton\.card\./)).toHaveLength(9);
+    expect(screen.getAllByTestId(/^SET-01\.skeleton\.card\./)).toHaveLength(10);
     expect(screen.getByTestId('SET-01.skeleton.card.1')).toHaveStyle({ height: 336 });
-    expect(screen.getByTestId('SET-01.skeleton.card.6')).toHaveStyle({ height: 72 });
+    expect(screen.getByTestId('SET-01.skeleton.card.4')).toHaveStyle({ height: 56 });
+    expect(screen.getByTestId('SET-01.skeleton.card.7')).toHaveStyle({ height: 72 });
     // Konto's group has no label, so its card is the group's only child.
     expect(screen.getByTestId('SET-01.skeleton.group.0').children).toHaveLength(1);
     expect(screen.getByTestId('SET-01.skeleton.group.1').children).toHaveLength(2);

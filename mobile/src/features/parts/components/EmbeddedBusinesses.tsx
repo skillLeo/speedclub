@@ -20,7 +20,11 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space, useBreakpoint, type BreakpointKind } from '@/theme';
-import { BusinessCard, BusinessCardSkeleton, Button, Chip, EmptyState, ErrorState } from '@/ui';
+import { BusinessCard, BusinessCardSkeleton } from '@/ui/BusinessCard';
+import { Button } from '@/ui/Button';
+import { Chip } from '@/ui/Chip';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
 
 import { businessCardCover, distanceLabel, FALLBACK_COVER, sampleBusiness } from '../model';
 import { TYPING_MS } from './EmbeddedParts';

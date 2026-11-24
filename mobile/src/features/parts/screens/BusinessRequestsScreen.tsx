@@ -27,22 +27,18 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, layout, size, useBreakpoint } from '@/theme';
-import {
-  Button,
-  EmptyState,
-  ErrorState,
-  GuardedFlashList,
-  Hairline,
-  Photo,
-  SampleBadge,
-  SegmentedControl,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Spinner,
-  Text,
-  toast,
-} from '@/ui';
+import { SampleBadge } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { GuardedFlashList } from '@/ui/flashListCell';
+import { Hairline } from '@/ui/Hairline';
+import { Photo } from '@/ui/Photo';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { joinLabel } from '@/ui/rowParts';
 
 import { shortDate } from '../components/business/dates';
@@ -201,6 +197,7 @@ export function BusinessRequestsScreen() {
         value={tab}
         onChange={(next) => setTab(TABS.includes(next) ? next : 'incoming')}
         label={t('requests.tabsLabel')}
+        labelVariant="labelControl"
         role="tablist"
         testID={`${ROUTE}.tabs`}
       />

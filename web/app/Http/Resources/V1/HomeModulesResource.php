@@ -3,6 +3,7 @@
 namespace App\Http\Resources\V1;
 
 use App\Models\BuildUpdate;
+use App\Models\CarOfTheDay;
 use App\Models\Event;
 use App\Models\Media;
 use App\Models\Vehicle;
@@ -15,7 +16,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * The FS-2 modules of HOME-01 between "Neue Builds" and the stream. An empty list hides its section.
  *
- * @property array{build_of_week: array{vehicle: Vehicle, quote: string|null, week: string}|null, nearby_events: list<Event>, brands_in_focus: list<array{slug: string, name: string, vehicle_count: int, cover: Media|null}>, build_updates: list<BuildUpdate>, active_members: list<ActiveMember>, popular_mods: list<PopularMod>} $resource
+ * @property array{car_of_the_day: array{pick: CarOfTheDay, vehicle: Vehicle}|null, build_of_week: array{vehicle: Vehicle, quote: string|null, week: string}|null, nearby_events: list<Event>, brands_in_focus: list<array{slug: string, name: string, vehicle_count: int, cover: Media|null}>, build_updates: list<BuildUpdate>, active_members: list<ActiveMember>, popular_mods: list<PopularMod>} $resource
  */
 class HomeModulesResource extends JsonResource
 {
@@ -29,7 +30,15 @@ class HomeModulesResource extends JsonResource
 
         return [
             /**
-             * M4.8 "Build der Woche": one build per ISO week (best ranked of the two weeks before), the hero left out; null when none.
+             * M5.9d "Car of the Day" (ADR-510): Home's lead module from 18:00 to the next day's 18:00; null before the first pick, on a
+             * skipped day and when the reader may not see the car.
+             *
+             * @var CarOfTheDayResource|null
+             */
+            'car_of_the_day' => $this->resource['car_of_the_day'] === null ? null : new CarOfTheDayResource($this->resource['car_of_the_day']),
+            /**
+             * M4.8 "Build der Woche": one build per ISO week (best ranked of the two weeks before), the hero left out; null when none
+             * and (M5.9d) while it is the Car of the Day.
              *
              * @var BuildOfWeekResource|null
              */

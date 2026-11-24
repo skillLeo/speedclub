@@ -7,7 +7,6 @@ use App\Models\ApprovalRequest;
 use App\Models\AuditEvent;
 use App\Services\Team\TeamRefused;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
 require_once __DIR__.'/TeamHelpers.php';
@@ -59,13 +58,11 @@ it('makes a change to Admin four-eyes: pending first, a second admin approves, t
         ->and($event->actor_id)->toBe((string) $approver->id);
 });
 
-it('makes granting roles.manage through a role four-eyes and needs a reason then', function () {
+it('makes granting roles.manage through a role four-eyes (ADR-540: without a reason)', function () {
     m31Roles();
     Role::findOrCreate('m36-rolemanager', 'staff')->syncPermissions(['roles.manage', 'staff.view']);
 
-    expect(fn () => m36Change(m31Staff('admin'), m31Staff('analyst'), ['m36-rolemanager']))->toThrow(ValidationException::class);
-
-    $outcome = m36Change(m31Staff('admin'), m31Staff('analyst'), ['m36-rolemanager'], m36Reason());
+    $outcome = m36Change(m31Staff('admin'), m31Staff('analyst'), ['m36-rolemanager']);
     expect($outcome->approval?->action)->toBe('staff.role_elevation');
 });
 

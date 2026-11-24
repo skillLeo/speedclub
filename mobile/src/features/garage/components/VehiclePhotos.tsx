@@ -1,17 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { useDeleteMedia, useUpdateVehicle, type GarageMedia, type GarageVehicle } from '@/api/queries/garage';
+import { variantUrl } from '@/features/vehicle/media';
+import { qa } from '@/lib/qa';
 import type { UploadItem } from '@/state/uploads';
 import { createStyles } from '@/theme';
-import { Icon, Text, toast } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { isGone, saveErrorMessage } from '../errors';
 import { VEHICLE_PHOTO_LIMIT } from '../photos';
 import { usePhotoUploads } from '../uploads';
 import { PhotoGrid } from './PhotoGrid';
 import { DeletePhotoDialog, PhotoActionsSheet, UploadSheet } from './PhotoSheets';
+
+/** The QA editor's photo width: as GAR-08's stage. */
+const VEHICLE_PHOTO_QA_WIDTH = 640;
 
 const useStyles = createStyles((t) => ({
   root: { gap: t.space[12] },
@@ -47,9 +54,21 @@ export function VehiclePhotos({ vehicle, disabled = false, locked = false, onEdi
   const [upload, setUpload] = useState<UploadItem | null>(null);
   const update = useUpdateVehicle(vehicle.id);
   const remove = useDeleteMedia(vehicle);
-  const uploads = usePhotoUploads({ kind: 'vehicle', vehicleId: vehicle.id }, vehicle.photos, VEHICLE_PHOTO_LIMIT);
+  const uploads = usePhotoUploads({ kind: 'vehicle', vehicleId: vehicle.id }, vehicle.photos, VEHICLE_PHOTO_LIMIT, routeId);
   const coverId = vehicle.cover_media_id ?? vehicle.cover?.id ?? null;
   const readyCount = vehicle.photos.filter((photo) => photo.status === 'ready').length;
+
+  // QA only (qaOpen=plateBlur on GAR-07, compiled out of production): the plate blur editor opens on the first photo, so the
+  // visual matrix, which cannot pick files, captures it. Its answer is dropped: nothing is uploaded.
+  const qaReview = useRef(qa.open === 'plateBlur' && routeId === 'GAR-07');
+  const review = uploads.review;
+  const first = vehicle.photos.find((photo) => photo.status === 'ready' && photo.variants.length > 0);
+  useEffect(() => {
+    if (!qaReview.current || !first) return;
+    qaReview.current = false;
+    const uri = variantUrl(first, VEHICLE_PHOTO_QA_WIDTH);
+    if (uri) void review([{ uri, width: first.width ?? 0, height: first.height ?? 0, blurhash: first.blurhash, thumbhash: first.thumbhash }]);
+  }, [first, review]);
 
   const makeCover = (photo: GarageMedia) => {
     update.mutate(
@@ -120,6 +139,7 @@ export function VehiclePhotos({ vehicle, disabled = false, locked = false, onEdi
         body={deleting?.status === 'failed' ? t('photos.failedBody') : undefined}
         testID={`${routeId}.deletePhoto`}
       />
+      {uploads.reviewElement}
       <UploadSheet item={upload} onClose={() => setUpload(null)} onRetry={uploads.retry} onCancel={uploads.cancel} testID={`${routeId}.uploadSheet`} />
     </View>
   );

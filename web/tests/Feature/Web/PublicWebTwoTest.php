@@ -14,7 +14,7 @@ require_once dirname(__DIR__).'/Events/EventTestHelpers.php';
 require_once dirname(__DIR__).'/Businesses/BusinessTestHelpers.php';
 
 /**
- * M4.16 Public web 2.0 (09 §9): the landing page's editorial grid and teasers, WEB-02 as PROF-02 with VehicleCards 2.0, one filled CTA
+ * M4.16 Public web 2.0 (09 §9): the landing page (since R4-1.5 without the editorial grid and teasers), WEB-02 as PROF-02 with VehicleCards 2.0, one filled CTA
  * per page, and the drawn OG cards of the business and brand pages.
  */
 beforeEach(function () {
@@ -31,48 +31,25 @@ function pw2Filled(string $html): int
 }
 
 describe('WEB-03', function () {
-    it('lays the featured builds out as one lead and up to two cards, one build per owner first', function () {
+    // R4-1.5 (client round 4): the editorial grid, the meets and the workshop teaser of M4.16 left the landing page; their components stay.
+    it('features no builds, meets or workshop teaser any more, whatever the flags', function () {
         $nina = User::factory()->create(['username' => 'nina.neu']);
-        $max = User::factory()->create(['username' => 'max.e46']);
         publishedVehicle($nina, ['make_id' => null, 'model_id' => null, 'generation_id' => null, 'make_text' => 'BMW', 'model_text' => 'M3']);
-        publishedVehicle($max, ['make_id' => null, 'model_id' => null, 'generation_id' => null, 'make_text' => 'Honda', 'model_text' => 'S2000']);
-        publishedVehicle($this->owner, ['make_id' => null, 'model_id' => null, 'generation_id' => null, 'make_text' => 'Nissan', 'model_text' => 'Silvia']);
-
-        $html = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
-
-        expect($html)->toContain('data-testid="WEB-03.featuredLink"')->toContain('Builds aus dem Club')
-            ->and(substr_count($html, 'data-testid="WEB-03.build"'))->toBe(2)
-            ->and($html)->toContain('BMW M3')->toContain('Honda S2000')->not->toContain('Nissan Silvia');
-    });
-
-    it('teases the next three public meets while events are on, with real dates, and none while off', function () {
         evFlags();
-        $organiser = evOrganiser();
-        foreach ([1, 2, 3, 4] as $day) {
-            evEvent($organiser, ['title' => 'Treffen Tag '.$day, 'starts_at' => now()->addDays($day)->setTime(18, 0), 'ends_at' => now()->addDays($day)->setTime(21, 0)]);
-        }
-        evEvent($organiser, ['title' => 'Nur für Follower', 'visibility' => 'followers', 'starts_at' => now()->addHours(5), 'ends_at' => now()->addHours(8)]);
+        bizFlags();
+        evEvent(evOrganiser(), ['title' => 'Treffen Tag 1', 'starts_at' => now()->addDay()->setTime(18, 0), 'ends_at' => now()->addDay()->setTime(21, 0)]);
 
         $html = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
-        expect($html)->toContain('Nächste Treffen')->toContain('Treffen Tag 1')->toContain('Treffen Tag 3')->not->toContain('Treffen Tag 4')
-            ->not->toContain('Nur für Follower')->and(substr_count($html, 'data-testid="WEB-03.event"'))->toBe(3);
 
-        evFlags(['events' => false]);
-        expect($this->get('/')->getContent())->not->toContain('data-testid="WEB-03.events"');
-    });
-
-    it('shows the workshop teaser only while businesses are on', function () {
-        bizFlags(['businesses' => false]);
-        expect($this->get('/')->getContent())->not->toContain('data-testid="WEB-03.business"');
-
-        bizFlags();
-        expect($this->withHeader('Accept-Language', 'de')->get('/')->getContent())->toContain('data-testid="WEB-03.business"')->toContain('Für Werkstätten');
+        expect($html)->not->toContain('data-testid="WEB-03.featuredLink"')->not->toContain('data-testid="WEB-03.build"')
+            ->not->toContain('BMW M3')->not->toContain('Treffen Tag 1')->not->toContain('data-testid="WEB-03.events"')
+            ->not->toContain('data-testid="WEB-03.business"')->not->toContain('Für Werkstätten');
     });
 
     it('starts the claim at the text-safe line and keeps one filled CTA in English too', function () {
         $html = $this->get('/?lang=en')->assertOk()->getContent();
 
-        expect($html)->toContain("Your\u{00A0}car. Your\u{00A0}build. Your\u{00A0}club.")->toContain('How the QR code works')->toContain('<div class="sc-land-hero-inner">')
+        expect($html)->toContain("Your\u{00A0}car. Your\u{00A0}build. Your\u{00A0}club.")->toContain('Get the app')->toContain('<div class="sc-land-hero-inner">')
             ->and(pw2Filled($html))->toBe(1);
     });
 });

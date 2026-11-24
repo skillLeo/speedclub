@@ -8,11 +8,14 @@ use App\Enums\ReportTargetType;
 use App\Models\BuildUpdate;
 use App\Models\Business;
 use App\Models\Comment;
+use App\Models\Crew;
 use App\Models\Event;
+use App\Models\ForumPost;
 use App\Models\Media;
 use App\Models\ModerationCase;
 use App\Models\Modification;
 use App\Models\Report;
+use App\Models\SorTemplate;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Ai\Agents\TriageAgent;
@@ -35,6 +38,9 @@ use Laravel\Ai\Files\StoredImage;
 final class Triage
 {
     public function __construct(private readonly AiGateway $gateway) {}
+
+    /** @var array<string, string>|null */
+    private ?array $templates = null;
 
     public function enabled(): bool
     {
@@ -68,7 +74,15 @@ final class Triage
             return false;
         }
 
-        ModerationCase::query()->whereKey($case->id)->toBase()->update(['ai_score' => $score / 100, 'ai_summary' => $reason, 'ai_scored_at' => now()]);
+        $template = trim((string) $answer->string('template_key'));
+
+        ModerationCase::query()->whereKey($case->id)->toBase()->update([
+            'ai_score' => $score / 100,
+            'ai_summary' => $reason,
+            // M5.9: only a key staff actually have; a human picks the template and decides.
+            'ai_template_key' => array_key_exists($template, $this->templates()) ? $template : null,
+            'ai_scored_at' => now(),
+        ]);
 
         return true;
     }
@@ -158,7 +172,29 @@ final class Triage
             $lines[] = 'The item is a private message; its content is not shared with you. Rate from the reasons only.';
         }
 
+        // M5.9 (10 §8.6): the statement-of-reasons templates staff choose from (keys and German titles only).
+        $templates = $this->templates();
+
+        if ($templates !== []) {
+            $lines[] = 'Statement-of-reasons templates (key: title):';
+
+            foreach ($templates as $key => $label) {
+                $lines[] = "- $key: $label";
+            }
+        }
+
         return implode("\n", $lines);
+    }
+
+    /**
+     * The German statement-of-reasons templates by key (ADM-24), at most 40.
+     *
+     * @return array<string, string>
+     */
+    private function templates(): array
+    {
+        return $this->templates ??= SorTemplate::query()->where('locale', 'de')->orderBy('sort')->orderBy('key')->limit(40)->pluck('label', 'key')
+            ->mapWithKeys(fn (mixed $label, mixed $key): array => [(string) $key => Str::limit((string) $label, 80, '')])->all();
     }
 
     private function publicText(ModerationCase $case): ?string
@@ -171,6 +207,8 @@ final class Triage
             ReportTargetType::Comment => Comment::withTrashed()->whereKey($case->target_id)->value('body'),
             ReportTargetType::Event => Event::query()->whereKey($case->target_id)->value('description'),
             ReportTargetType::Business => Business::query()->whereKey($case->target_id)->value('about'),
+            ReportTargetType::ForumPost => ForumPost::withTrashed()->whereKey($case->target_id)->value('body'),
+            ReportTargetType::Crew => Crew::withTrashed()->whereKey($case->target_id)->value('description'),
             default => null,
         };
 

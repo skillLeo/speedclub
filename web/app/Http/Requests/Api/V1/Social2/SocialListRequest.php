@@ -14,6 +14,7 @@ class SocialListRequest extends FormRequest
         'api.v1.reactions.vehicles.index' => ['reactions.updated_at', 'reactions.id'],
         'api.v1.reactions.build-updates.index' => ['reactions.updated_at', 'reactions.id'],
         'api.v1.comments.index' => ['comments.created_at', 'comments.id'],
+        'api.v1.vehicles.comments.index' => ['comments.created_at', 'comments.id'],
         'api.v1.me.collections.items.index' => ['member_collection_items.position', 'member_collection_items.id'],
     ];
 

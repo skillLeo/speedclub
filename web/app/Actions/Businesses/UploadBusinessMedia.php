@@ -6,6 +6,7 @@ use App\Models\Business;
 use App\Models\Media;
 use App\Models\User;
 use App\Services\Media\MediaService;
+use App\Services\Media\PlateBlurChoice;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
@@ -21,17 +22,17 @@ class UploadBusinessMedia
      * @param  'logo'|'cover'  $slot
      * @param  array{alt?: string|null, focal_x?: float|null, focal_y?: float|null}  $attributes
      */
-    public function handle(User $user, Business $business, string $slot, UploadedFile $file, array $attributes): Media
+    public function handle(User $user, Business $business, string $slot, UploadedFile $file, array $attributes, ?PlateBlurChoice $plateBlur = null): Media
     {
         $bytes = $this->media->inspectUpload($file);
         $column = $slot === 'logo' ? 'logo_media_id' : 'cover_media_id';
 
-        [$reserved, $previous] = DB::transaction(function () use ($user, $business, $attributes, $bytes, $column): array {
+        [$reserved, $previous] = DB::transaction(function () use ($user, $business, $attributes, $bytes, $column, $plateBlur): array {
             User::query()->whereKey($user->id)->lockForUpdate()->value('id');
             /** @var Business $locked */
             $locked = Business::query()->whereKey($business->id)->lockForUpdate()->firstOrFail();
             $previous = $locked->getAttribute($column);
-            $media = $this->media->reserve($user, $locked, $attributes, strlen($bytes));
+            $media = $this->media->reserve($user, $locked, $attributes, strlen($bytes), plateBlur: $plateBlur);
             $locked->forceFill([$column => $media->id])->save();
 
             return [$media, is_string($previous) ? $previous : null];

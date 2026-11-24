@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useRequireAuth } from '@/state/session';
-import { createStyles, typography, useTheme } from '@/theme';
-import { EmptyState, Icon, Text, type EmptyStateAction, type IconName } from '@/ui';
+import { createStyles, typography, useBreakpoint, useTheme } from '@/theme';
+import { EmptyState, type EmptyStateAction } from '@/ui/EmptyState';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 
 const useStyles = createStyles((t) => ({
   group: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
@@ -18,7 +20,42 @@ const useStyles = createStyles((t) => ({
     padding: t.space[12],
   },
   noticeText: { flex: 1 },
+  columns: { alignItems: 'flex-start', columnGap: t.space[32], flexDirection: 'row' },
+  column: { flexBasis: 0, minWidth: 0 },
 }));
+
+/**
+ * DQ-M54-14: from 1280 a sticker page uses the content width as the 12-column grid does: the main part and the side part next to each
+ * other (8/4 by default, 6/6 for the placement guide). Below 1280 they stack in that order.
+ */
+export function QrColumns({
+  main,
+  side,
+  ratio = [8, 4],
+  testID,
+}: {
+  main: ReactNode;
+  side: ReactNode;
+  ratio?: readonly [number, number];
+  testID?: string;
+}) {
+  const styles = useStyles();
+  const { kind } = useBreakpoint();
+  if (kind !== 'desktop') {
+    return (
+      <>
+        {main}
+        {side}
+      </>
+    );
+  }
+  return (
+    <View style={styles.columns} testID={testID}>
+      <View style={[styles.column, { flexGrow: ratio[0] }]}>{main}</View>
+      <View style={[styles.column, { flexGrow: ratio[1] }]}>{side}</View>
+    </View>
+  );
+}
 
 /** FS-12's grouped inset list: bg.surface, radius 12, rows inside pass `inset={space[16]}` and `divider` on all but the last. */
 export function QrRowGroup({ children, style, testID }: { children: ReactNode; style?: StyleProp<ViewStyle>; testID?: string }) {

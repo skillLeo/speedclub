@@ -42,7 +42,7 @@ const M32_SPEC_ROLES = [
         'members.view', 'members.view_pii', 'members.reset_password', 'members.revoke_sessions', 'members.view_as', 'support.view',
         'support.reply', 'support.macros', 'privacy.view', 'vehicles.view', 'qr.view', 'lists.export', // ADR-232
     ],
-    'content_editor' => ['content.view', 'content.edit', 'content.publish', 'brand.manage', 'catalog.view', 'catalog.manage', 'catalog.import', 'qr.view', 'lists.export'], // ADR-232
+    'content_editor' => ['content.view', 'content.edit', 'content.publish', 'brand.manage', 'catalog.view', 'catalog.manage', 'catalog.import', 'qr.view', 'lists.export', 'shop.manage'], // ADR-232, ADR-524
     'analyst' => ['analytics.view', 'members.view', 'vehicles.view', 'qr.view', 'moderation.view'],
 ];
 

@@ -45,7 +45,7 @@ return [
     'notification_reads' => 'Too many requests for your notifications. Try again in :time.',
     'push_tokens' => 'Too many attempts to set up notifications on this device. Try again in :time.',
     'qr_downloads' => 'Too many downloads. Try again in :time.',
-    'qr_reissues' => 'You replaced several QR codes just now. Try again in :time.',
+    'qr_reissues' => 'You replaced several stickers just now. Try again in :time.',
     'token_rotate' => 'Too many attempts. Try again in :time.',
     'staff_password_reset' => 'Too many attempts. Try again in :time.',
     'account_security' => 'Too many security changes in a short time. Try again in :time.',
@@ -67,4 +67,26 @@ return [
     ],
     'businesses' => 'You have changed your business very often. Try again in :time.',
     'business_tags' => 'You have requested or decided a lot of tags just now. Try again in :time.',
+    'crews' => 'You have changed your crews very often just now. Try again in :time.',
+    'crew_actions' => 'You have done a lot in crews just now. Try again in :time.',
+    // M5.9b STREET DEX: POST spots.
+    'spots' => 'You have spotted a lot of cars in the last hour. Try again in :time.',
+    'wrapped' => 'You have shared or loaded your Wrapped a lot just now. Try again in :time.',
+    // M5.9d: GET invites/{code} and /join/{code}, per IP.
+    'invite_lookup' => 'Many invite codes were looked up from here just now. Try again in :time.',
+    // M5.4 Sticker.
+    'sticker_designs' => 'You saved very often just now. Try again in :time.',
+    'sticker_previews' => 'Too many previews at once. Try again in :time.',
+    'sticker_validations' => 'You started the scan test often just now. Try again in :time.',
+    'sticker_orders' => 'Too many order attempts. Try again in :time.',
+    'forum_threads' => 'You have already started five topics today. You can start a new one in :time.',
+    'forum_replies' => 'You have written a lot of replies today. Try again in :time.',
+    'cotd_votes' => 'You have changed your vote very often just now. Try again in :time.',
+    'forum_votes' => 'You have marked a lot of posts as helpful today. Try again in :time.',
+    // M5.6 events: check-ins and wrong codes.
+    'checkins' => 'You checked in very often in the last hour. Try again in :time.',
+    'checkin_codes' => 'That was too many wrong codes for this meet. Try again in :time.',
+    // M5.7: view counting and stats.
+    'views' => 'Many pages were opened from here just now. Try again in :time.',
+    'insights' => 'You loaded your stats very often just now. Try again in :time.',
 ];

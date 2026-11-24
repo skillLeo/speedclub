@@ -19,6 +19,7 @@ function createFormatters(locale: Locale, powerDisplay: units.PowerDisplay, disp
     monthYear: (date: Date) => format.formatMonthYear(date, locale),
     date: (date: Date) => format.formatDate(date, locale),
     longDate: (date: Date) => format.formatLongDate(date, locale),
+    dayMonth: (date: Date) => format.formatDayMonth(date, locale),
     time: (date: Date) => format.formatTime(date, locale),
     dateTime: (date: Date) => format.formatDateTime(date, locale),
     relative: (date: Date, reference?: Date) => format.formatRelative(date, locale, reference),

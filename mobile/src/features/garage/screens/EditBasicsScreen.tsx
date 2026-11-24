@@ -9,9 +9,12 @@ import { useDeleteVehicle, useUpdateVehicle, type GarageVehicle } from '@/api/qu
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
 import { now } from '@/lib/clock';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { Button, Dialog, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { toast } from '@/ui/toast';
 import { nameInText } from '@/ui/textBreaks';
 
 import { FormGroup } from '../components/fields';
@@ -84,7 +87,7 @@ function BasicsForm({ vehicle, restriction }: { vehicle: GarageVehicle; restrict
     if (deleted) router.dismissTo('/garage');
   }, [deleted, router]);
 
-  const submit = handleSubmit(async (values) => {
+  const submit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     try {
       await update.mutateAsync(basicsPatch(values, dirtyFields));
@@ -93,7 +96,7 @@ function BasicsForm({ vehicle, restriction }: { vehicle: GarageVehicle; restrict
     } catch (error) {
       setNotice(applyServerErrors(error, setError, BASICS_FIELDS) === null ? null : saveErrorMessage(t, error));
     }
-  });
+  }));
 
   const confirmDelete = () => {
     const done = () => {

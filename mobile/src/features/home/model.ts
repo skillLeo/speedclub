@@ -1,7 +1,7 @@
 import type { FeedOwner, FeedVehicle } from '@/api/queries/home';
 import { variantUrl } from '@/features/profile/media';
 import { size } from '@/theme';
-import type { VehicleCardOwner } from '@/ui';
+import type { VehicleCardOwner } from '@/ui/VehicleCard';
 
 const SEPARATOR = ' · ';
 const NO_BREAK_SPACE = '\u00A0';
@@ -79,4 +79,23 @@ export function carLabel(member: { car_line: string | null } & object): string |
  */
 export function offlineLine(t: (key: string, options?: Record<string, string>) => string, updatedAt: number, relative: (date: Date) => string): string {
   return updatedAt > 0 ? t('offlineSince', { time: relative(new Date(updatedAt)) }) : t('offline');
+}
+
+/** M5.6 HOME-01 "Nächste Treffen" (10 §4, §11): two cards. */
+export const NEXT_EVENTS = 2;
+
+type NextEventFields = { status: string; starts_at: string | null; ends_at: string | null };
+
+/**
+ * The cards of "Nächste Treffen": the server's coming meets (soonest first) without cancelled or ended ones, at most `limit`. Empty →
+ * the module is not shown (never an empty module, no invented counts).
+ */
+export function nextEvents<T extends NextEventFields>(events: readonly T[], now: Date, limit: number = NEXT_EVENTS): T[] {
+  return events
+    .filter((event) => {
+      if (event.status !== 'published') return false;
+      const end = parseDate(event.ends_at) ?? parseDate(event.starts_at);
+      return end === null || end.getTime() > now.getTime();
+    })
+    .slice(0, limit);
 }

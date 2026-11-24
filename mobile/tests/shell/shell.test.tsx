@@ -13,7 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import NotFoundRoute from '@/app/+not-found';
 import AuthLayout from '@/app/(auth)/_layout';
-import SharedLayout, { unstable_settings } from '@/app/(tabs)/(home,discover,garage,messages,profile)/_layout';
+import SharedLayout, { unstable_settings } from '@/app/(tabs)/(home,discover,garage,shop,profile)/_layout';
 import TabsLayout from '@/app/(tabs)/_layout';
 import { AuthRequiredSheet } from '@/features/shell/AuthRequiredSheet';
 import { RoutePlaceholder } from '@/features/shell/RoutePlaceholder';
@@ -38,7 +38,7 @@ jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
   default: () => mockDimensions(),
 }));
 
-type TabName = 'home' | 'discover' | 'garage' | 'messages' | 'profile';
+type TabName = 'home' | 'discover' | 'garage' | 'shop' | 'profile';
 
 /**
  * A tab root of the test's own, since every real tab has its screen now: the shell's TabRootScreen (header, collapsing
@@ -68,14 +68,14 @@ const tabRoot = (name: TabName, id: string) =>
 
 const tree = () => ({
   '(tabs)/_layout': { default: TabsLayout },
-  '(tabs)/(home,discover,garage,messages,profile)/_layout': { default: SharedLayout, unstable_settings },
-  '(tabs)/(home,discover,garage,messages,profile)/v/[slug]/index': () => (
+  '(tabs)/(home,discover,garage,shop,profile)/_layout': { default: SharedLayout, unstable_settings },
+  '(tabs)/(home,discover,garage,shop,profile)/v/[slug]/index': () => (
     <RoutePlaceholder routeId="VEH-01" titleKey="routes.vehicle" headerTestID="vehicle" />
   ),
   '(tabs)/(home)/index': tabRoot('home', 'HOME-01'),
   '(tabs)/(discover)/discover/index': tabRoot('discover', 'DISC-01'),
   '(tabs)/(garage)/garage/index': tabRoot('garage', 'GAR-01'),
-  '(tabs)/(messages)/messages/index': tabRoot('messages', 'MSG-01'),
+  '(tabs)/(shop)/shop/index': tabRoot('shop', 'SHOP-01'),
   '(tabs)/(profile)/profile/index': tabRoot('profile', 'PROF-01'),
 });
 
@@ -92,7 +92,7 @@ const Providers = ({ children }: { children: ReactNode }) => (
 const open = (initialUrl: string = '/', routes: object = tree()) =>
   renderRouter(routes as never, { initialUrl, wrapper: Providers });
 
-const TABS: readonly TabName[] = ['home', 'discover', 'garage', 'messages', 'profile'];
+const TABS: readonly TabName[] = ['home', 'discover', 'garage', 'shop', 'profile'];
 
 const selected = () => TABS.filter((name) => screen.getByTestId(`tab.${name}`).props.accessibilityState?.selected === true);
 
@@ -116,7 +116,7 @@ describe('a direct load of a QR owner screen (DQ-171)', () => {
   /** The bundler lists the route files alphabetically, and of two equal routes a cold link takes the group listed first. */
   const asBundled = (routes: object) => Object.fromEntries(Object.entries(routes).sort(([a], [b]) => a.localeCompare(b)));
   /** The route as it was under ADR-101: shared by all five tabs, so a cold link took the first alphabetical group, Discover. */
-  const allTabs = () => asBundled({ ...tree(), '(tabs)/(home,discover,garage,messages,profile)/qr/[vehicleId]/index': qrRoute });
+  const allTabs = () => asBundled({ ...tree(), '(tabs)/(home,discover,garage,shop,profile)/qr/[vehicleId]/index': qrRoute });
   /** The route as it is since ADR-164. nav-shared-routes.spec.ts checks the real tree in the exported app. */
   const ownerTabs = () => asBundled({ ...tree(), '(tabs)/(garage,profile)/qr/[vehicleId]/index': qrRoute });
 
@@ -159,14 +159,14 @@ describe('a direct load of a QR owner screen (DQ-171)', () => {
 });
 
 describe('tab bar', () => {
-  it('has the five destinations in German, in order, in a tablist, with one selected', async () => {
+  it('has the five destinations of 10 §1 in German, in order, in a tablist, with one selected', async () => {
     await open();
     await screen.findByTestId('screen.home');
     expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityLabel)).toEqual([
       'Start',
       'Entdecken',
       'Garage',
-      'Nachrichten',
+      'Shop',
       'Profil',
     ]);
     expect(screen.getByTestId('shell.tabbar.list').props.role ?? screen.getByTestId('shell.tabbar.list').props.accessibilityRole).toBe('tablist');
@@ -185,7 +185,7 @@ describe('tab bar', () => {
     expect(indicator.height).toBe(space[2]);
     // Its bottom edge sits 6 above the icon, whose top is at 12.
     expect((indicator.top as number) + (indicator.height as number) + 6).toBe(space[12]);
-    const label = screen.getByText('Nachrichten');
+    const label = screen.getByText('Entdecken');
     expect(flat(label.props.style).fontSize).toBe(typography.webTab.fontSize);
     expect(label.props.maxFontSizeMultiplier).toBe(1.3);
   });
@@ -194,16 +194,16 @@ describe('tab bar', () => {
     windowOf(360, 780);
     await open();
     await screen.findByTestId('screen.home');
-    expect(screen.getByText('Nachrichten').props.maxFontSizeMultiplier).toBe(1.15);
+    expect(screen.getByText('Entdecken').props.maxFontSizeMultiplier).toBe(1.15);
   });
 
   it('at 320 the label stays on one line, is complete for readers, and is capped lower', async () => {
     windowOf(320, 568);
     await open();
     await screen.findByTestId('screen.home');
-    const label = screen.getByText('Nachrichten');
+    const label = screen.getByText('Entdecken');
     expect(label.props.numberOfLines).toBe(1);
-    expect(label.props['aria-label']).toBe('Nachrichten');
+    expect(label.props['aria-label']).toBe('Entdecken');
     expect(label.props.maxFontSizeMultiplier).toBe(1);
   });
 
@@ -266,7 +266,7 @@ describe('tab bar', () => {
     const router = await open();
     await screen.findByTestId('screen.home');
     let prevented = false;
-    await fireEvent(screen.getByTestId('tab.messages'), 'longPress', {
+    await fireEvent(screen.getByTestId('tab.garage'), 'longPress', {
       preventDefault: () => {
         prevented = true;
       },
@@ -274,7 +274,7 @@ describe('tab bar', () => {
     });
     expect(await screen.findByTestId('shell.tabbar.largeLabel', { includeHiddenElements: true })).toBeTruthy();
     expect(router.getPathname()).toBe('/');
-    await fireEvent(screen.getByTestId('tab.messages'), 'pressOut');
+    await fireEvent(screen.getByTestId('tab.garage'), 'pressOut');
     expect(screen.queryByTestId('shell.tabbar.largeLabel', { includeHiddenElements: true })).toBeNull();
   });
 

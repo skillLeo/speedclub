@@ -6,16 +6,18 @@ import { useFormat } from '@/lib/useFormat';
 import type { SpecsValues } from './model';
 
 const UNIT_LABEL = { ps: 'PS', kw: 'kW', hp: 'hp' } as const;
+/** A figure and its unit never split (skill §9, DQ-P5-054). */
+const NBSP = '\u00A0';
 
-/** The preview card's chips from the form as it is now: "280 PS", "392 Nm", "Allrad" (§8 spec chips). */
+/** The preview card's chips from the form as it is now: "280 PS", "392 Nm", "Allrad", each figure bound to its unit (§8 spec chips). */
 export function useSpecChips(values: Partial<SpecsValues>): string[] {
   const { t } = useTranslation('garage');
   const { locale } = useFormat();
   const chips: string[] = [];
   const power = parseNumber(values.powerValue ?? '', locale);
-  if (Number.isFinite(power) && power > 0) chips.push(`${formatNumber(roundInt(power), locale)} ${UNIT_LABEL[values.powerUnit ?? 'ps']}`);
+  if (Number.isFinite(power) && power > 0) chips.push(`${formatNumber(roundInt(power), locale)}${NBSP}${UNIT_LABEL[values.powerUnit ?? 'ps']}`);
   const torque = parseNumber(values.torque ?? '', locale);
-  if (Number.isFinite(torque) && torque > 0) chips.push(`${formatNumber(roundInt(torque), locale)} Nm`);
+  if (Number.isFinite(torque) && torque > 0) chips.push(`${formatNumber(roundInt(torque), locale)}${NBSP}Nm`);
   if (values.drivetrain) chips.push(t(`specs.drivetrains.${values.drivetrain}`));
   return chips;
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { PhArrowCounterClockwise, PhFloppyDisk } from '@phosphor-icons/vue';
+import { PhArrowCounterClockwise, PhFloppyDisk, PhLockSimple } from '@phosphor-icons/vue';
 import { trans, transChoice } from 'laravel-vue-i18n';
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useAdminAction } from '../../Components/decisions/action';
@@ -11,11 +11,13 @@ import { qaDialogFailed, usePageState } from '../../composables/pageState';
 import { qaDialog } from '../../composables/qaDialog';
 import { formatDateTime, formatNumber } from '../../lib/format';
 import { routeOr } from '../../lib/routes';
+import GovernanceSection from './Partials/GovernanceSection.vue';
 
 /**
  * ADM-52 org settings (06 §3 Settings, m3.6 §1, ADR-239): the 17 fields of the config key `org` in four groups, each with the `[[…]]`
- * placeholder of the legal texts it fills. Owner only (reason and recent password); an Admin reads them. Saving publishes a new version;
- * the Impressum, the legal texts and the mails use it at once. OA-10: the real values come from the owner.
+ * placeholder of the legal texts it fills. Owner only (recent password; ADR-540: no reason); an Admin reads them. Saving publishes a new version;
+ * the Impressum, the legal texts and the mails use it at once. OA-10: the real values come from the owner. M5.1: Governance section
+ * (GovernanceSection, ADR-507).
  */
 const props = defineProps<{
     values: Record<string, string | null>;
@@ -25,6 +27,10 @@ const props = defineProps<{
     locales: string[];
     lastPublished: { version: number; at: string | null; by: string | null } | null;
     canEdit: boolean;
+    /** The active Owners by name, for a reader's notice (empty for an Owner). */
+    owners: string[];
+    /** M5.1 (ADR-507) + ADR-540: the governance switches and who can approve four-eyes requests today. */
+    governance: { owner_override: boolean; four_eyes: boolean; staff_two_factor: 'required' | 'optional'; two_factor_forced: boolean; approvers: { id: number; name: string; owner: boolean }[] };
 }>();
 
 const failedDialog = qaDialogFailed();
@@ -46,12 +52,15 @@ const changed = computed(() => props.fields.filter((f) => (draft[f] ?? '').trim(
 const missing = computed(() => props.fields.filter((f) => (props.values[f] ?? '') === '').length);
 const localeOptions = computed(() => props.locales.map((l) => ({ value: l, label: trans(`settings.locales.${l}`) })));
 
+/** Client rounds 3 and 6: spaces, dots, dashes and lower case in a VAT ID are fine; it is saved as DE123456789 (as OrgSchema normalises it). */
+const vatOf = (value: string): string => value.replace(/[\s.-]+/g, '').toUpperCase();
+
 function fieldError(field: string): string | null {
     const value = (draft[field] ?? '').trim();
     if (value === '') return null;
     if (props.emailFields.includes(field) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return trans('settings.errors.email');
-    if (field === 'vat_id' && !/^[A-Z]{2}[0-9A-Z+*.]{2,12}$/.test(value)) return trans('settings.errors.vat_id');
-    if (field === 'phone' && !/^\+?[0-9 ()/-]{5,30}$/.test(value)) return trans('settings.errors.phone');
+    if (field === 'vat_id' && !/^[A-Z]{2}(?=[0-9A-Z+*]*[0-9])[0-9A-Z+*]{2,12}$/.test(vatOf(value))) return trans('settings.errors.vat_id');
+    if (field === 'phone' && !/^\+?[0-9 ().\/-]{5,30}$/.test(value)) return trans('settings.errors.phone');
     return null;
 }
 const invalid = computed(() => props.fields.some((f) => fieldError(f) !== null));
@@ -68,9 +77,9 @@ function hint(field: string): string {
 
 const action = useAdminAction();
 const confirmOpen = ref(false);
-function save(reason: string | null): void {
-    const values = Object.fromEntries(props.fields.map((f) => [f, (draft[f] ?? '').trim() === '' ? null : (draft[f] ?? '').trim()]));
-    action.run('patch', routeOr('admin.settings.update', '/admin/settings'), { values, reason: reason ?? '' }, { sensitive: true, onSuccess: () => (confirmOpen.value = false) });
+function save(): void {
+    const values = Object.fromEntries(props.fields.map((f) => [f, (draft[f] ?? '').trim() === '' ? null : f === 'vat_id' ? vatOf(draft[f] ?? '') : (draft[f] ?? '').trim()]));
+    action.run('patch', routeOr('admin.settings.update', '/admin/settings'), { values }, { sensitive: true, onSuccess: () => (confirmOpen.value = false) });
 }
 onMounted(async () => {
     if (qaDialog() !== 'save' || !props.canEdit) return;
@@ -96,7 +105,15 @@ onMounted(async () => {
                 <Button size="sm" variant="primary" :icon="PhFloppyDisk" :disabled="changed.length === 0 || invalid" data-testid="ADM-52.save" @click="(action.reset(), (confirmOpen = true))">{{ trans('settings.save') }}</Button>
             </template>
         </PageHeader>
-        <p v-if="!canEdit" class="text-admin-base text-ink-2" data-testid="ADM-52.view-only">{{ trans('settings.owner_only') }}</p>
+        <!-- Client report 2026-11-23: a reader saw disabled fields and one grey line; now it says who can save and how to get there. -->
+        <section v-if="!canEdit" class="flex items-start gap-12 rounded-sm border border-line bg-raised px-16 py-12" role="note" aria-labelledby="adm52-owner-only" data-testid="ADM-52.view-only">
+            <PhLockSimple :size="20" class="mt-2 shrink-0 text-ink-2" aria-hidden="true" />
+            <div class="flex min-w-0 flex-1 flex-col gap-4">
+                <h2 id="adm52-owner-only" class="text-admin-base-strong text-ink">{{ trans('settings.owner_only_title') }}</h2>
+                <p class="max-w-720 text-admin-base text-ink-2">{{ trans('settings.owner_only') }}</p>
+                <p class="text-admin-base text-ink-2" data-testid="ADM-52.owners">{{ owners.length > 0 ? trans('settings.owners', { names: owners.join(', ') }) : trans('settings.no_owners') }}</p>
+            </div>
+        </section>
 
         <StateBlock v-if="pageState === 'error'" kind="error" :title="trans('settings.error')" :body="trans('ui.state.error_body')" test-id="ADM-52.error" @retry="router.reload()" />
         <div v-else-if="pageState === 'loading'" class="flex flex-col gap-32" aria-busy="true" data-testid="ADM-52.loading">
@@ -118,7 +135,8 @@ onMounted(async () => {
                 </div>
             </section>
         </form>
+        <GovernanceSection v-if="pageState === 'ready'" :governance="governance" :can-edit="canEdit" />
 
-        <ConfirmDialog v-model:open="confirmOpen" :title="trans('settings.confirm_title')" :body="trans('settings.confirm_body')" :confirm-label="trans('settings.save')" tone="neutral" reason :processing="action.processing.value" :error="action.error.value" test-id="ADM-52.confirm" @confirm="(r: string | null) => save(r)" />
+        <ConfirmDialog v-model:open="confirmOpen" :title="trans('settings.confirm_title')" :body="trans('settings.confirm_body')" :confirm-label="trans('settings.save')" tone="neutral" :processing="action.processing.value" :error="action.error.value" test-id="ADM-52.confirm" @confirm="save()" />
     </div>
 </template>

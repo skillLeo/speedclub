@@ -13,6 +13,7 @@ export type ReleaseNote = {
 };
 
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
+  { version: '2.1.0', date: '2026-11-15', items: ['plates', 'dex', 'score', 'levels', 'wrapped'] },
   { version: '2.0.0', date: '2026-11-12', items: ['look', 'signIn', 'security', 'social', 'garage', 'settings'] },
   { version: '1.0.0', date: '2026-11-10', items: ['safety', 'ai', 'stability'] },
   { version: '0.2.0', date: '2026-11-09', items: ['home', 'discover', 'messages', 'settingsV1'] },

@@ -35,7 +35,8 @@ function recordedAuditActions(): array
 
         $where = str_replace(base_path().'/', '', $file->getPathname());
         preg_match_all("/Audit::record\(\s*'([a-z0-9_.]+)'/", $source, $literals);
-        preg_match_all("/const [A-Z_]*EVENT = '([a-z0-9_.]+)'/", $source, $constants);
+        // QA-G01: also the AUDIT_ACTION constants (WebSetup, the showcase password command), which were not scanned.
+        preg_match_all("/const [A-Z_]*(?:EVENT|ACTION) = '([a-z0-9_.]+)'/", $source, $constants);
 
         foreach ([...$literals[1], ...$constants[1]] as $action) {
             $actions[$action] = $where;
@@ -51,7 +52,7 @@ it('finds the audit actions the code records', function () {
     $actions = recordedAuditActions();
 
     // A smoke check of the scan itself: an enum case, a literal (on its own line) and a constant.
-    expect($actions)->toHaveKeys(['config.preview_issued', 'moderation.decided', 'privacy.request_viewed', 'staff.pii_reveal_limit_reached', 'support.bulk_status'])
+    expect($actions)->toHaveKeys(['config.preview_issued', 'moderation.decided', 'privacy.request_viewed', 'setup.maintenance', 'setup.web_run', 'staff.pii_reveal_limit_reached', 'support.bulk_status'])
         ->and(count($actions))->toBeGreaterThan(150);
 });
 

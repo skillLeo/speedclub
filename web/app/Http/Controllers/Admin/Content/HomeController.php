@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Content;
 use App\Enums\ConfigKey;
 use App\Enums\SearchSort;
 use App\Http\Controllers\Admin\Config\Support\ConfigEditor;
+use App\Http\Controllers\Admin\Content\Support\FilterLabels;
 use App\Http\Controllers\Admin\Content\Support\VehicleChoices;
 use App\Http\Controllers\Controller;
 use App\Models\Staff;
@@ -20,7 +21,7 @@ use Inertia\Response;
  */
 class HomeController extends Controller
 {
-    public function index(Request $request, ConfigEditor $editor, VehicleChoices $choices): Response
+    public function index(Request $request, ConfigEditor $editor, VehicleChoices $choices, FilterLabels $labels): Response
     {
         /** @var Staff $staff */
         $staff = $request->user('staff');
@@ -43,6 +44,8 @@ class HomeController extends Controller
         return Inertia::render('Content/Home', [
             'editor' => $props,
             'vehicles' => (object) $choices->summaries($ids),
+            // DQ-P5-102: catalogue and option names for the collections' filter values (rows and drawer chips read "Marke: Nissan").
+            'filterLabels' => (object) $labels->for(is_array($payload['collections'] ?? null) ? $payload['collections'] : []),
             'limits' => [
                 'live' => config()->integer('speedclub.content.featured_live_max'),
                 'featured' => config()->integer('speedclub.content.featured_max'),

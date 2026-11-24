@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Route;
 // Overview (ADM-06…08). Every staff member with TOTP reaches them; each section only shows what the staff member's atoms allow.
 Route::middleware(AdminRoutes::signedIn())->group(function (): void {
     Route::get('/', DashboardController::class)->name('dashboard');
-    Route::get('search', SearchController::class)->middleware('throttle:60,1')->name('search');
-    Route::get('search/suggest', SearchSuggestController::class)->middleware('throttle:120,1')->name('search.suggest');
+    Route::get('search', SearchController::class)->middleware('throttle:60,1,admin-overview-1')->name('search');
+    Route::get('search/suggest', SearchSuggestController::class)->middleware('throttle:120,1,admin-overview-2')->name('search.suggest');
     Route::get('alerts', AlertsController::class)->name('alerts');
 
     // Personal saved views of any DataTable (contract §2.3). Presets live in the page code.
-    Route::post('saved-views', [SavedViewController::class, 'store'])->middleware('throttle:30,1')->name('saved-views.store');
+    Route::post('saved-views', [SavedViewController::class, 'store'])->middleware('throttle:30,1,admin-overview-3')->name('saved-views.store');
     Route::delete('saved-views/{view}', [SavedViewController::class, 'destroy'])->name('saved-views.destroy');
 });

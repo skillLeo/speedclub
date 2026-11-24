@@ -76,7 +76,7 @@ class DecisionResource extends JsonResource
             'origin' => $case instanceof ModerationCase ? $case->origin : CaseOrigin::Report,
             /** @var string|null Affected member only: the decision this `reverse` decision lifted. */
             'reverses_decision_id' => $affected ? $decision->reverses_decision_id : null,
-            /** @var array{type: 'messaging'|'publishing'|'suspension', until: string|null}|null Affected member only; restrict and suspend. */
+            /** @var array{type: 'messaging'|'publishing'|'forum'|'suspension', until: string|null}|null Affected member only; restrict and suspend. */
             'restriction' => $affected && $restriction !== null
                 ? ['type' => $restriction->value, 'until' => $decision->restrictionUntil()?->toIso8601String()]
                 : null,

@@ -1,4 +1,4 @@
-import { emphasisRuns, groupByDay, groupBySection, matchesFilter, msUntilNextBerlinDay, notificationCategory, notificationHyphenates, notificationIcon, notificationTarget, notificationText, notificationThumb, sectionOf } from '@/features/home/notifications';
+import { berlinDayKey, emphasisRuns, groupByDay, groupBySection, matchesFilter, msUntilNextBerlinDay, notificationCategory, notificationHyphenates, notificationIcon, notificationTarget, notificationText, notificationThumb, sectionOf } from '@/features/home/notifications';
 import i18n from '@/i18n';
 
 import { notification } from './fixtures';
@@ -8,7 +8,7 @@ jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn(() => Promise.reso
 
 const de = i18n.getFixedT('de', 'home');
 /** The sentence as read: the no-break space and the word joiner that keep a car name's last words together (DQ-305) do not show. */
-const plain = (text: string) => text.replace(/\u00A0/g, ' ').replace(/\u2060/g, '');
+const plain = (text: string) => text.replace(/\u00A0/g, ' ').replace(/[\u2060\u200B]/g, '');
 const text = (...args: Parameters<typeof notificationText>) => plain(notificationText(...args));
 const en = i18n.getFixedT('en', 'home');
 const actor = (username: string) => ({ username, display_name: null, city: null, avatar: null, is_sample: false, is_editorial: false, main_vehicle_cover: null });
@@ -60,6 +60,8 @@ describe('HOME-02 text, made in the app from type, actors and actor_count', () =
     const emulator = security({ event: 'new_device', device_name: 'sdk_gphone64_arm64' });
     expect(notificationHyphenates(emulator)).toBe(false);
     expect(text(emulator, de)).toBe('Neue Anmeldung auf sdk_gphone64_arm64. Warst du das nicht? Dann sichere dein Konto mit „Das war ich nicht“.');
+    // R4B-010: wider than its line at 200 %, the name breaks after its "_" (a zero-width space), never inside a letter run ("ar / m").
+    expect(notificationText(emulator, de)).toContain('sdk_\u200Bgphone64_\u200Barm64.');
     // A short name keeps its spaces from breaking, a hyphenated one its hyphen.
     expect(notificationText(security({ event: 'new_device', device_name: 'iPhone 15 Pro' }), de)).toContain('iPhone\u00A015\u00A0Pro');
     expect(notificationText(security({ event: 'new_device', device_name: 'Galaxy S24-Ultra' }), en)).toContain('S24-\u2060Ultra');
@@ -152,10 +154,10 @@ describe('car names in a sentence (DQ-305)', () => {
 describe('HOME-02 signature rows (M2.7)', () => {
   it('names a QR milestone and an HU/AU reminder, with and without the vehicle', () => {
     expect(text(notification({ type: 'qr_milestone', actors: [], actor_count: 0, vehicle: R34, details: { milestone: 1000 } }), de)).toBe(
-      'Dein QR-Code für Nissan Skyline GT-R R34 wurde 1.000-mal gescannt',
+      'Dein Sticker für Nissan Skyline GT-R R34 wurde 1.000-mal gescannt',
     );
     expect(text(notification({ type: 'qr_milestone', actors: [], actor_count: 0, details: { milestone: 50 } }), en)).toBe(
-      'One of your QR codes has been scanned 50 times',
+      'One of your stickers has been scanned 50 times',
     );
     expect(text(notification({ type: 'hu_au_reminder', actors: [], actor_count: 0, vehicle: R34, details: { due: '2027-03' } }), de)).toBe(
       'HU/AU für Nissan Skyline GT-R R34 ist im März 2027 fällig',
@@ -167,11 +169,30 @@ describe('HOME-02 signature rows (M2.7)', () => {
   });
 
   it('opens QR-02 and GAR-06', () => {
-    expect(notificationTarget(notification({ type: 'qr_milestone', vehicle: R34, details: { milestone: 10 } }), 'lukas.sc')).toBe('/qr/01r34');
+    expect(notificationTarget(notification({ type: 'qr_milestone', vehicle: R34, details: { milestone: 10 } }), 'lukas.sc')).toBe('/stickers/01r34');
     expect(notificationTarget(notification({ type: 'hu_au_reminder', vehicle: R34, details: { due: '2027-03' } }), 'lukas.sc')).toBe('/garage/01r34/specs');
-    expect(notificationTarget(notification({ type: 'qr_milestone', vehicle: null }), 'lukas.sc')).toBe('/profile/qr');
+    expect(notificationTarget(notification({ type: 'qr_milestone', vehicle: null }), 'lukas.sc')).toBe('/stickers');
     expect(notificationIcon({ type: 'qr_milestone' })).toBe('qr-code');
     expect(notificationIcon({ type: 'hu_au_reminder' })).toBe('clock');
+  });
+
+  it('words the grouped spot alert (M5.9b) from its day totals, never who spotted, and opens DEX-06', () => {
+    const today = berlinDayKey(new Date());
+    const alert = (details: Record<string, unknown>, vehicle: typeof R34 | null = R34) =>
+      notification({ type: 'spot_alert', actors: [], actor_count: 0, vehicle, details: details as never });
+    expect(text(alert({ day: today, count: 4, cities_count: 1, city: 'Düsseldorf' }), de)).toBe('Dein Nissan Skyline GT-R R34 wurde heute 4-mal in Düsseldorf gespottet');
+    expect(text(alert({ day: today, count: 1, cities_count: 1, city: 'Köln' }), de)).toBe('Dein Nissan Skyline GT-R R34 wurde heute in Köln gespottet');
+    expect(text(alert({ day: today, count: 3, cities_count: 3, city: null }), de)).toBe('Dein Nissan Skyline GT-R R34 wurde heute 3-mal in 3 Städten gespottet');
+    // Night spots only, or the owner hides the cities: no city at all.
+    expect(text(alert({ day: today, count: 2, cities_count: 0, city: null }), de)).toBe('Dein Nissan Skyline GT-R R34 wurde heute 2-mal gespottet');
+    // "heute" only for today's row.
+    expect(text(alert({ day: '2026-11-01', count: 2, cities_count: 1, city: 'Köln' }), de)).toBe('Dein Nissan Skyline GT-R R34 wurde 2-mal in Köln gespottet');
+    expect(text(alert({ day: today, count: 4, cities_count: 1, city: 'Düsseldorf' }), en)).toBe('Your Nissan Skyline GT-R R34 was spotted 4 times in Düsseldorf today');
+    expect(text(alert({ day: today, count: 1, cities_count: 0, city: null }, null), de)).toBe('Dein Auto wurde heute gespottet');
+    expect(notificationCategory({ type: 'spot_alert' })).toBe('social');
+    expect(notificationIcon({ type: 'spot_alert' })).toBe('qr-sticker');
+    expect(notificationTarget(alert({ day: today, count: 1, cities_count: 0, city: null }), 'lukas.sc')).toEqual({ pathname: '/vehicles/[id]/spots', params: { id: '01r34' } });
+    expect(notificationTarget(alert({ day: today, count: 1, cities_count: 0, city: null }, null), 'lukas.sc')).toBe('/garage');
   });
 
   it('words a catalogue request answer (M3.3) and opens the vehicle', () => {

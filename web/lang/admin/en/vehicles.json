@@ -3,7 +3,7 @@
         "title": "Vehicles"
     },
     "title": "Vehicles",
-    "intro": "Every vehicle with visibility, moderation, photos, mods and QR code.",
+    "intro": "Every vehicle with visibility, moderation, photos, mods and sticker.",
     "caption": "Vehicles, last updated first",
     "empty_title": "No vehicles yet",
     "empty_body": "As soon as a member adds a vehicle, it shows here.",
@@ -17,13 +17,13 @@
         "moderation": "Moderation",
         "photos": "Photos",
         "mods": "Mods",
-        "qr": "QR",
+        "qr": "Sticker",
         "updated": "Updated"
     },
     "presets": {
         "hidden": "Hidden",
         "reported": "Reported",
-        "no_qr": "Without QR code"
+        "no_qr": "Without sticker"
     },
     "filters": {
         "label": "Filter vehicles",
@@ -35,7 +35,7 @@
         "reported": "Reported",
         "reported_yes": "Open case",
         "reported_no": "No open case",
-        "qr": "QR code",
+        "qr": "Sticker",
         "qr_yes": "With an active code",
         "qr_no": "Without an active code",
         "updated": "Updated",
@@ -60,7 +60,7 @@
     },
     "qr": {
         "none": "No code",
-        "empty": "No QR code yet",
+        "empty": "No sticker yet",
         "empty_body": "A code is created when the vehicle is published.",
         "scans": ":count scans in 30 days"
     },
@@ -84,7 +84,7 @@
         "details": "Details",
         "photos": "Photos",
         "mods": "Mods",
-        "qr": "QR",
+        "qr": "Sticker",
         "history": "History",
         "reports": "Reports"
     },
@@ -168,7 +168,7 @@
     },
     "delete": {
         "title": "Delete vehicle",
-        "body": "First a decision with a statement to the owner, then the vehicle is deleted with every photo and its QR code revoked. Final after 30 days."
+        "body": "First a decision with a statement to the owner, then the vehicle is deleted with every photo and its sticker revoked. Final after 30 days."
     },
     "edit": {
         "title": "Edit vehicle",

@@ -12,6 +12,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([...AdminRoutes::signedIn(), 'can:qr.view'])->prefix('qr')->name('qr.')->where(['qr' => RecordLookup::QR])->group(function (): void {
     Route::get('/', QrIndexController::class)->name('index');
     Route::get('{qr}', QrShowController::class)->name('show');
-    Route::post('{qr}/revoke', [QrActionsController::class, 'revoke'])->middleware(['can:qr.revoke', 'staff.recent-password', 'throttle:30,1'])->name('revoke');
-    Route::post('{qr}/reissue', [QrActionsController::class, 'reissue'])->middleware(['can:qr.revoke', 'staff.recent-password', 'throttle:30,1'])->name('reissue');
+    Route::post('{qr}/revoke', [QrActionsController::class, 'revoke'])->middleware(['can:qr.revoke', 'staff.recent-password', 'throttle:30,1,admin-qr-1'])->name('revoke');
+    Route::post('{qr}/reissue', [QrActionsController::class, 'reissue'])->middleware(['can:qr.revoke', 'staff.recent-password', 'throttle:30,1,admin-qr-2'])->name('reissue');
 });

@@ -33,6 +33,10 @@ const env = {
   ...process.env,
   EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV ?? 'local',
   EXPO_NO_TELEMETRY: '1',
+  // M5.12a (09 §12, ADR-473 "tree shaking"): Metro drops exports nothing imports (docs.expo.dev/guides/tree-shaking; production
+  // exports only, which every web export is). Both flags together, as Expo requires; `=0` in the environment turns them off.
+  EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH: process.env.EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH ?? '1',
+  EXPO_UNSTABLE_TREE_SHAKING: process.env.EXPO_UNSTABLE_TREE_SHAKING ?? '1',
 };
 
 rmSync(dist, { recursive: true, force: true });

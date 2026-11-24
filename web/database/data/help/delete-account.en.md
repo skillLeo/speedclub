@@ -5,7 +5,7 @@ sort: 80
 You can delete your account in the app under **Settings › Data › Delete account** or in a browser on the page “Delete account” (/konto-loeschen), linked at the bottom of every page of our website.
 
 What happens then:
-- Your account is deactivated immediately. Your profile and vehicles can no longer be seen, and your QR stickers show "no longer available".
+- Your account is deactivated immediately. Your profile and vehicles can no longer be seen, and your stickers show "no longer available".
 - All devices are signed out. Nobody follows you any more, and you no longer follow anyone.
 - In conversations, the other person still sees your messages, shown as from "Deleted member".
 - We delete the account and all photos for good within 30 days at the latest.

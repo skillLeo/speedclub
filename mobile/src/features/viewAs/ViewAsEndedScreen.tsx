@@ -2,7 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles, layout, useBreakpoint } from '@/theme';
-import { EmptyState, ErrorState, Screen, Text } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Screen } from '@/ui/Screen';
+import { Text } from '@/ui/Text';
 
 import type { ViewAsEndReason } from './viewAsSession';
 

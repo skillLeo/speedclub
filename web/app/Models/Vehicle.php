@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BuildUpdateAudience;
 use App\Enums\QrStatus;
+use App\Enums\Rarity;
 use App\Enums\VehicleStatus;
 use App\Enums\Visibility;
 use App\Support\Slug;
@@ -31,6 +32,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_main
  * @property int|null $wizard_step
  * @property int|null $model_year
+ * @property int|null $dex_number M5.9b: the STREET DEX number, assigned at the first publish (App\Services\Dex\DexNumbers)
+ * @property bool $ghost_mode M5.9b: hidden from every list, search and the sitemap; reachable by link, sticker and an in-person spot
+ * @property bool $spotting_paused M5.9b: spots of this car are refused (409 spotting_paused)
+ * @property bool $hide_spot_cities M5.9b: the owner's spot stats name no city of this car
+ * @property Rarity|null $rarity M5.9b: the computed tier (App\Services\Dex\RarityRules); ghost_mode overrides it when shown
  */
 #[Fillable([
     'visibility', 'sort', 'nickname', 'description', 'color', 'make_id', 'model_id', 'generation_id',
@@ -62,6 +68,12 @@ class Vehicle extends Model
             'odometer_at' => 'datetime',
             'published_at' => 'datetime',
             'archived_at' => 'datetime',
+            'dex_number' => 'integer',
+            'ghost_mode' => 'boolean',
+            'spotting_paused' => 'boolean',
+            'hide_spot_cities' => 'boolean',
+            'rarity' => Rarity::class,
+            'rarity_computed_at' => 'datetime',
         ];
     }
 
@@ -172,6 +184,26 @@ class Vehicle extends Model
     }
 
     /**
+     * M5.9c: the Build Score (App\Services\BuildScore\BuildScores); none until it was first computed.
+     *
+     * @return HasOne<BuildScore, $this>
+     */
+    public function buildScore(): HasOne
+    {
+        return $this->hasOne(BuildScore::class);
+    }
+
+    /**
+     * M5.9c: the nightly ranks, at most one per scope.
+     *
+     * @return HasMany<BuildScoreRank, $this>
+     */
+    public function buildScoreRanks(): HasMany
+    {
+        return $this->hasMany(BuildScoreRank::class);
+    }
+
+    /**
      * @return HasMany<Modification, $this>
      */
     public function modifications(): HasMany
@@ -228,6 +260,26 @@ class Vehicle extends Model
     }
 
     /**
+     * M5.9b: the spots of this car (staff-removed ones are soft-deleted).
+     *
+     * @return HasMany<Spot, $this>
+     */
+    public function spots(): HasMany
+    {
+        return $this->hasMany(Spot::class);
+    }
+
+    /**
+     * M5.9b: the owner's spot numbers (absent until the first counted spot).
+     *
+     * @return HasOne<VehicleSpotStat, $this>
+     */
+    public function spotStats(): HasOne
+    {
+        return $this->hasOne(VehicleSpotStat::class);
+    }
+
+    /**
      * @return HasMany<QrCode, $this>
      */
     public function qrCodes(): HasMany
@@ -241,6 +293,24 @@ class Vehicle extends Model
     public function activeQrCode(): HasOne
     {
         return $this->hasOne(QrCode::class)->where('status', QrStatus::Active);
+    }
+
+    /**
+     * M5.4: every version of the car's sticker design; the highest is the current one.
+     *
+     * @return HasMany<StickerDesign, $this>
+     */
+    public function stickerDesigns(): HasMany
+    {
+        return $this->hasMany(StickerDesign::class);
+    }
+
+    /**
+     * @return HasOne<StickerDesign, $this>
+     */
+    public function currentStickerDesign(): HasOne
+    {
+        return $this->hasOne(StickerDesign::class)->ofMany('version', 'max');
     }
 
     /**

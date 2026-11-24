@@ -8,19 +8,13 @@ import { usePublicViewer } from '@/api/queries/vehicles';
 import { photoFields } from '@/features/profile/media';
 import { isWeb } from '@/lib/platform';
 import { createStyles, space, useTheme } from '@/theme';
-import {
-  DisplayTitle,
-  displayTitleSkeleton,
-  Photo,
-  PhotoScrim,
-  PressableScale,
-  SampleBadges,
-  SkeletonBlock,
-  SkeletonText,
-  Text,
-  useSampleBadgeLabels,
-  type PhotoCorner,
-} from '@/ui';
+import { SampleBadges, useSampleBadgeLabels } from '@/ui/Badge';
+import { DisplayTitle, displayTitleSkeleton } from '@/ui/DisplayTitle';
+import { Photo, type PhotoCorner } from '@/ui/Photo';
+import { PhotoScrim } from '@/ui/PhotoScrim';
+import { PressableScale } from '@/ui/PressableScale';
+import { SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { certainlyOneLine, drawnScale, type DisplayTitlePlacement } from '@/ui/displayTitleLayout';
 import { joinLabel, useStacksAtFontScale } from '@/ui/rowParts';
 

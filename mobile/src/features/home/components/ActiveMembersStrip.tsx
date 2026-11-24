@@ -7,7 +7,10 @@ import type { ActiveMember } from '@/api/queries/home';
 import { variantUrl } from '@/features/profile/media';
 import { isWeb } from '@/lib/platform';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Avatar, PressableScale, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { PressableScale } from '@/ui/PressableScale';
+import { SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { joinLabel } from '@/ui/rowParts';
 import { handleText, vehicleNameText } from '@/ui/textBreaks';
 

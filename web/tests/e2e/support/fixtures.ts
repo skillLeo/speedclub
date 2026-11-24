@@ -1,7 +1,7 @@
 // Base test for every spec: deterministic context, no third-party network, and a test fails when
 // the page throws or logs an error. Specs import { test, expect } from here, not from Playwright.
 import { test as base, expect, type ConsoleMessage, type Locator, type Page } from '@playwright/test';
-import { makeContextDeterministic, qaUrl, waitForStablePage, type QaOptions } from './qa.mjs';
+import { BASE_URL, makeContextDeterministic, qaUrl, waitForStablePage, type QaOptions } from './qa.mjs';
 import { isDeletedMedia, MEDIA_PATH } from './deleted-media.mjs';
 import { withStartLock } from './start-lock.mjs';
 import { routeCsrfCookie } from './csrf-limit.mjs';
@@ -53,8 +53,36 @@ const isRecorderInScriptlessFrame = (m: ConsoleMessage): boolean =>
   SCRIPTLESS_FRAME_URL.test(m.location().url) &&
   /^Blocked script execution in '[^']+' because the document's frame is sandboxed and the 'allow-scripts' permission is not set\.$/.test(m.text());
 
+/**
+ * WebKit under Playwright's clock emulation (context.clock, as makeContextDeterministic installs it) together with the app's qa
+ * overrides reports a fetch that a navigation cancelled as a page error "Fetch API cannot load <url> due to access control checks."
+ * (E2E P5 rerun: VEH-01's late sections, DISC-01/02, on page.goto and page.reload). Probes of 2026-11-18 in WebKit, three reload rounds
+ * on VEH-01: 14 such errors with the fixed clock, 0 without it, 0 with each of the harness's routes alone; the requests read
+ * `requestfailed: cancelled` or never left, and the error can land seconds later, after the next document. A request to the app's own
+ * origin has no access control check at all, so for such a URL the message can only be that cancel, mislabelled. Let through only
+ * exactly that: WebKit, this message as the whole first line, a URL of the app's own origin. Every other page error, and this message
+ * for any other origin, still fails the test.
+ */
+const CANCELLED_FETCH = /^Fetch API cannot load (\S+) due to access control checks\.?$/;
+const APP_ORIGIN = new URL(BASE_URL).origin;
+
+/** The rule above as data: which browser, and the error's first stack line. */
+export function isCancelledSameOriginFetch(browserName: string | undefined, firstStackLine: string): boolean {
+  if (browserName !== 'webkit') return false;
+  const cancelled = CANCELLED_FETCH.exec(firstStackLine.trim());
+  if (!cancelled?.[1]) return false;
+  try {
+    return new URL(cancelled[1]).origin === APP_ORIGIN;
+  } catch {
+    return false;
+  }
+}
+
 export const watchPageErrors = (page: Page, sink: string[], expected: readonly ExpectedFailure[] = []): void => {
-  page.on('pageerror', (e) => sink.push(`pageerror: ${e.message}`));
+  page.on('pageerror', (e) => {
+    if (isCancelledSameOriginFetch(page.context().browser()?.browserType().name(), (e.stack ?? '').split('\n')[0] ?? '')) return;
+    sink.push(`pageerror: ${e.message}`);
+  });
   page.on('console', (m) => {
     // Aborting third-party requests logs a network error; they are asserted through blockedRequests.
     if (m.type() === 'error' && !m.text().includes('net::ERR_BLOCKED_BY_CLIENT') && !isExpected(m, expected) && !isRecorderInScriptlessFrame(m)) {

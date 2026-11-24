@@ -2,12 +2,20 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import { TAB_DESTINATIONS, type TabName } from '@/features/shell/destinations';
+import { itemKey, RAIL_ITEMS, SIDEBAR_ITEMS, TAB_BAR_ITEMS, type TabName } from '@/features/shell/destinations';
 import { useRailWidth } from '@/features/shell/Rail';
 import { tabLabelCap } from '@/features/shell/TabBar';
 import { TabButton, type TabButtonVariant } from '@/features/shell/TabButton';
 import { createStyles, radius, size, useBreakpoint } from '@/theme';
-import { Badge, GridTile, MemberRow, Photo, Progress, SampleBadges, SpecChip, StatusPill, UnreadBadge, VehicleCard, type BadgeKind } from '@/ui';
+import { Badge, SampleBadges, type BadgeKind } from '@/ui/Badge';
+import { GridTile } from '@/ui/GridTile';
+import { MemberRow } from '@/ui/MemberRow';
+import { Photo } from '@/ui/Photo';
+import { Progress } from '@/ui/Progress';
+import { SpecChip } from '@/ui/SpecChip';
+import { StatusPill } from '@/ui/StatusPill';
+import { UnreadBadge } from '@/ui/UnreadBadge';
+import { VehicleCard } from '@/ui/VehicleCard';
 import { ForcedVisualStateProvider, type ForcedVisualState } from '@/ui/qaVisualState';
 
 import { E46, LUKAS, noop, PHOTOS, R34 } from '../data';
@@ -30,7 +38,7 @@ function BarSpecimen(props: { count: number; focusedTab?: TabName }) {
   return kind === 'phone' ? <FullBleed>{bar}</FullBleed> : bar;
 }
 
-/** 3, 42 and 99+ on Nachrichten, with the dot on Start. */
+/** 3, 42 and 99+ on Nachrichten (rail and sidebar), with the dot on Start. */
 const BADGE_COUNTS = [3, 42, 128] as const;
 const NOT_FORCED: ForcedVisualState = {};
 const FOCUSED: ForcedVisualState = { focused: true };
@@ -42,6 +50,8 @@ function TabBadgeSpecimen({ variant, count, focusedTab }: { variant: TabButtonVa
   const railWidth = useRailWidth();
   const { kind } = useBreakpoint();
   const [barWidth, setBarWidth] = useState(0);
+  // M5.2 (10 §1): the bar has the five tabs, the rail adds Nachrichten, the sidebar Treffen, Forum and Nachrichten.
+  const items = variant === 'bar' ? TAB_BAR_ITEMS : variant === 'rail' ? RAIL_ITEMS : SIDEBAR_ITEMS;
   return (
     <View
       role="tablist"
@@ -51,20 +61,24 @@ function TabBadgeSpecimen({ variant, count, focusedTab }: { variant: TabButtonVa
       onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
       testID={`DEV-01.badges.${variant}.${count}`}
     >
-      {TAB_DESTINATIONS.map((destination) => (
-        <ForcedVisualStateProvider key={destination.name} value={destination.name === focusedTab ? FOCUSED : NOT_FORCED}>
-          <TabButton
-            variant={variant}
-            labelCap={variant === 'bar' ? tabLabelCap(barWidth / TAB_DESTINATIONS.length) : undefined}
-            icon={destination.icon}
-            label={t(destination.labelKey)}
-            isFocused={destination.name === 'home'}
-            count={destination.name === 'messages' ? count : undefined}
-            dotLabel={destination.name === 'home' ? t('a11y.unreadNotifications') : undefined}
-            testID={`DEV-01.badges.${variant}.${count}.${destination.name}`}
-          />
-        </ForcedVisualStateProvider>
-      ))}
+      {items.map((item) => {
+        const key = itemKey(item);
+        const entry = item.kind === 'tab' ? item.tab : item.place;
+        return (
+          <ForcedVisualStateProvider key={key} value={key === focusedTab ? FOCUSED : NOT_FORCED}>
+            <TabButton
+              variant={variant}
+              labelCap={variant === 'bar' ? tabLabelCap(barWidth / items.length) : undefined}
+              icon={entry.icon}
+              label={t(entry.labelKey)}
+              isFocused={key === 'home'}
+              count={key === 'messages' ? count : undefined}
+              dotLabel={key === 'home' ? t('a11y.unreadNotifications') : undefined}
+              testID={`DEV-01.badges.${variant}.${count}.${key}`}
+            />
+          </ForcedVisualStateProvider>
+        );
+      })}
     </View>
   );
 }
@@ -102,7 +116,7 @@ function SampleSurfaces() {
       </Wrap>
       <Specimen label="Mitglied · Editorial-Konto" fill>
         <MemberRow
-          name="SPEED CLUB Editorial"
+          name="Speedclub Editorial"
           meta="@speedclub · Beispiel-Builds"
           sample={{ is_sample: true, is_editorial: true }}
           onPress={noop}

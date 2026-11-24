@@ -3,17 +3,11 @@
  * Blade page WEB-01 derives it (web/resources/views/public/vehicle.blade.php), so both read the same.
  */
 import type { BuildUpdate, PublicModRow, PublicVehicle, SpecGroup, VehicleOwner } from '@/api/queries/vehicles';
-import { keepNameTogether, keepValuesTogether } from '@/lib/format';
-import type { IconName, SpecStripItem } from '@/ui';
+import { keepNameTogether, keepValuesTogether, WHOLE_VALUE_MAX } from '@/lib/format';
+import type { IconName } from '@/ui/icons/Icon';
+import type { SpecStripItem } from '@/ui/SpecStrip';
 
 import { visiblePhotos } from './media';
-
-export const PROFILE_TABS = ['overview', 'specs', 'mods', 'history'] as const;
-export type ProfileTab = (typeof PROFILE_TABS)[number];
-
-export function isProfileTab(value: unknown): value is ProfileTab {
-  return typeof value === 'string' && (PROFILE_TABS as readonly string[]).includes(value);
-}
 
 /** The glyphs a category may name (§6 map). Anything else, and a missing icon, is Phosphor `wrench` (Sonstiges). */
 const CATEGORY_GLYPHS: ReadonlySet<string> = new Set([
@@ -95,13 +89,14 @@ export const SUBLINE_WHOLE_FONT_SCALE = 1.2;
 /**
  * The sub-line as the page sets it (§4 "never break key data", DQ-167): each part stays on one line ("Bayside Blue", never
  * "Bayside" / "Blue") and a line never starts with the separator. `wholeValues` false is for a font so large that a part no
- * longer fits one line.
+ * longer fits one line: a long part ("2,6 l R6 Biturbo (RB26DETT)") then wraps at its spaces, while a short one (a colour such as
+ * "Athlete Silver", DQ-P5-071) still stays whole, as a whole meta part does (WHOLE_VALUE_MAX = textBreaks WHOLE_PART_MAX).
  */
 export function keptSubline(vehicle: Pick<PublicVehicle, 'subline_parts'>, wholeValues: boolean = true): string {
   return vehicle.subline_parts
     .map((part) => part.trim())
     .filter((part) => part !== '')
-    .map((part) => keepValuesTogether(part, wholeValues && part.length <= SUBLINE_WHOLE_PART_CHARS))
+    .map((part) => keepValuesTogether(part, part.length <= (wholeValues ? SUBLINE_WHOLE_PART_CHARS : WHOLE_VALUE_MAX)))
     .join('\u00A0· ');
 }
 
@@ -309,6 +304,9 @@ export function withoutContent(vehicle: PublicVehicle): PublicVehicle {
     mod_count: 0,
     updates: [],
     updates_count: 0,
+    // M5.3: no plans and so no Build-Fortschritt either (contract §3).
+    plans: { count: 0, items: [] },
+    build_progress: null,
   };
 }
 

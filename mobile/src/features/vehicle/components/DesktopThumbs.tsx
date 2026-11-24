@@ -3,7 +3,9 @@ import { StyleSheet, View } from 'react-native';
 
 import type { VehicleMedia } from '@/api/queries/vehicles';
 import { createStyles } from '@/theme';
-import { Photo, PressableScale, Text } from '@/ui';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text } from '@/ui/Text';
 
 import { photoFields } from '../media';
 

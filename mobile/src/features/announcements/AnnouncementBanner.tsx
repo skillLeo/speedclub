@@ -10,7 +10,10 @@ import { useFirstLineBox } from '@/features/auth/components/lineBox';
 import { now } from '@/lib/clock';
 import { useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { Button, Icon, IconButton, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { IconButton } from '@/ui/IconButton';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 
 import { dismissAnnouncement, hydrateDismissals, useDismissalStore } from './dismissals';
 import { announcementLink, isWarning, visibleAnnouncements, type AnnouncementViewer } from './model';

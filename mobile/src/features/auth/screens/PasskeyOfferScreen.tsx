@@ -7,7 +7,8 @@ import { isReauthCancelled } from '@/api/queries/recentAuth';
 import { useAddPasskey } from '@/api/queries/security';
 import { hapticFor } from '@/lib/haptics';
 import { createStyles, ThemeScope } from '@/theme';
-import { ProviderStackPreview, providerOrder, toast } from '@/ui';
+import { ProviderStackPreview, providerOrder } from '@/ui/ProviderButtons';
+import { toast } from '@/ui/toast';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { FormNotice } from '../components/FormNotice';

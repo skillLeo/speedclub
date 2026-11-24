@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Media;
 use App\Models\User;
 use App\Services\Media\MediaService;
+use App\Services\Media\PlateBlurChoice;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
@@ -24,11 +25,11 @@ class UploadEventCover
     /**
      * @param  array{alt?: string|null, focal_x?: float|null, focal_y?: float|null}  $attributes
      */
-    public function handle(User $user, Event $event, UploadedFile $file, array $attributes): Media
+    public function handle(User $user, Event $event, UploadedFile $file, array $attributes, ?PlateBlurChoice $plateBlur = null): Media
     {
         $bytes = $this->media->inspectUpload($file);
 
-        [$reserved, $previous] = DB::transaction(function () use ($user, $event, $attributes, $bytes): array {
+        [$reserved, $previous] = DB::transaction(function () use ($user, $event, $attributes, $bytes, $plateBlur): array {
             User::query()->whereKey($user->id)->lockForUpdate()->value('id');
             /** @var Event $locked */
             $locked = Event::query()->whereKey($event->id)->lockForUpdate()->firstOrFail();
@@ -37,7 +38,7 @@ class UploadEventCover
             UpdateEvent::assertEditable($locked);
 
             $previous = $locked->getAttribute('cover_media_id');
-            $media = $this->media->reserve($user, $locked, $attributes, strlen($bytes));
+            $media = $this->media->reserve($user, $locked, $attributes, strlen($bytes), plateBlur: $plateBlur);
             $locked->forceFill(['cover_media_id' => $media->id]);
             $this->update->reviewAgainIfNeeded($locked, ['cover']);
             $locked->save();

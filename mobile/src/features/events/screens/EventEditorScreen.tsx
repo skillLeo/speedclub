@@ -41,6 +41,8 @@ import { applyServerErrors } from '@/features/auth/forms';
 import { CentredState, EditorForm, EditorLoading, LoadErrorState } from '@/features/garage/components/frames';
 import { ChoiceChips, FieldPair, FormGroup } from '@/features/garage/components/fields';
 import { photoForm, pickPhotos, preparePhoto, releasePicked } from '@/features/garage/photos';
+import { appendPlateBlur, type WithPlateBlur } from '@/features/media/plateBlur/model';
+import { usePlateBlurReview } from '@/features/media/plateBlur/PlateBlurReview';
 import { paramOf, useBack } from '@/features/vehicle/navigation';
 import { now } from '@/lib/clock';
 import { haptics } from '@/lib/haptics';
@@ -48,21 +50,19 @@ import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import {
-  Button,
-  Checkbox,
-  EmptyState,
-  Header,
-  ListRow,
-  OfflineBanner,
-  Photo,
-  Progress,
-  Screen,
-  SegmentedControl,
-  Text,
-  TextInput,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { Checkbox } from '@/ui/Checkbox';
+import { EmptyState } from '@/ui/EmptyState';
+import { Header } from '@/ui/Header';
+import { ListRow } from '@/ui/ListRow';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Photo } from '@/ui/Photo';
+import { Progress } from '@/ui/Progress';
+import { Screen } from '@/ui/Screen';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 
 import { useOrganiserRestriction } from '../access';
 import { EventCardView } from '../components/EventCardView';
@@ -235,7 +235,8 @@ export function EventEditorScreen() {
   );
 }
 
-type PickedCover = { uri: string; width: number; height: number };
+/** M5.9a: with the plate blur choice made before it was taken. */
+type PickedCover = WithPlateBlur<{ uri: string; width: number; height: number }>;
 
 /** The server's reason for a refused save, in our words where we have them. */
 function saveNotice(t: (key: string, options?: Record<string, unknown>) => string, error: unknown): string {
@@ -273,6 +274,7 @@ function EventForm({
   const [notice, setNotice] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [cover, setCover] = useState<PickedCover | null>(null);
+  const plateBlur = usePlateBlurReview(ROUTE);
   const [busy, setBusy] = useState(false);
   const slug = useRef<string | null>(event?.slug ?? null);
   const savedValues = useRef<EventFormValues>(defaults);
@@ -368,7 +370,7 @@ function EventForm({
           const prepared = await preparePhoto(cover);
           await upload.mutateAsync({
             slug: saved_.slug,
-            form: await photoForm(prepared),
+            form: appendPlateBlur(await photoForm(prepared), cover.plateBlur),
             idempotencyKey: coverKey.current,
           });
           releasePicked(cover);
@@ -401,8 +403,12 @@ function EventForm({
 
   const pickCover = async () => {
     const picked = await pickPhotos(1);
-    const first = picked?.[0];
-    if (!first) return;
+    if (!picked || picked.length === 0) return;
+    const first = (await plateBlur.review(picked))?.[0];
+    if (!first) {
+      for (const photo of picked) releasePicked(photo);
+      return;
+    }
     if (cover) releasePicked(cover);
     setCover(first);
     coverKey.current = newIdempotencyKey();
@@ -511,6 +517,7 @@ function EventForm({
           testID={`${ROUTE}.saveDraft`}
         />
       ) : null}
+      {plateBlur.element}
     </EditorForm>
   );
 }

@@ -27,6 +27,7 @@ class MediaController extends Controller
      *
      * Multipart. Accepts an Idempotency-Key header. Up to 15 MB, JPEG, PNG or WebP by content (413, 415);
      * HEIC is converted by the client first. Status is `processing` when the server retries in the background.
+     * M5.9a: `plate_blur` + `blur_regions` pixelate number plates before any file is written (ADR-509).
      */
     public function store(StoreVehicleMediaRequest $request, Vehicle $vehicle, UploadVehicleMedia $action): MediaResource
     {
@@ -35,13 +36,13 @@ class MediaController extends Controller
 
         /** @var User $user */
         $user = $request->user();
-        $attributes = $request->safe()->except('file');
+        $attributes = $request->safe()->except(['file', ...StoreVehicleMediaRequest::PLATE_BLUR_FIELDS]);
 
         /** @var UploadedFile $file */
         $file = $request->file('file');
 
         /** @status 201 */
-        return new MediaResource($action->handle($user, $vehicle, $file, $attributes));
+        return new MediaResource($action->handle($user, $vehicle, $file, $attributes, $request->plateBlur()));
     }
 
     /**
@@ -49,18 +50,20 @@ class MediaController extends Controller
      *
      * [SIG] `blur_regions` (404 `feature_disabled` while `sig.plate_blur` is off): up to 10 rectangles, normalised 0–1. The answer is the
      * photo in `processing`, without variants: the queue pixelates every variant and the original, which is replaced, and the photo comes
-     * back `ready` under new URLs. 422 for a photo that is not finished.
+     * back `ready` under new URLs. 422 for a photo that is not finished. M5.9a: also a build-update photo and the profile cover or avatar
+     * (the plate check uses this), and the photo's `plate_blur.state` becomes `blurred`. Pixelation is only ever added: `plate_blur: false`
+     * is a 422 ("Zum Ändern lädst du das Foto neu hoch.").
      */
     public function update(UpdateMediaRequest $request, Media $media, UpdateMedia $action, BlurPhoto $blur): MediaResource
     {
         Gate::authorize('update', $media);
 
         /** @var array<string, mixed> $attributes */
-        $attributes = $request->safe()->except('blur_regions');
+        $attributes = $request->safe()->except(['blur_regions', 'plate_blur']);
         $media = $attributes === [] ? $media : $action->handle($media, $attributes);
 
         if ($request->has('blur_regions')) {
-            /** @var list<array{x: float|int|string, y: float|int|string, w: float|int|string, h: float|int|string}> $regions */
+            /** @var list<array{x: float|int|string, y: float|int|string, w: float|int|string, h: float|int|string, angle?: float|int|string|null}> $regions */
             $regions = $request->validated('blur_regions');
             $media = $blur->handle($media, $regions);
         }

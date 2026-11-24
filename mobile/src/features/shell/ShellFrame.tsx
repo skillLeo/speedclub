@@ -5,6 +5,7 @@ import { VerifyEmailNotice } from '@/features/auth/VerifyEmailNotice';
 import { useShellStore } from '@/state/shell';
 import { createStyles, useBreakpoint } from '@/theme';
 
+import { useKeepScrollPlace } from './keepScrollPlace';
 import { Rail } from './Rail';
 import { Sidebar } from './Sidebar';
 import { renderTabSlot } from './tabSlotRender';
@@ -27,9 +28,11 @@ export function ShellFrame() {
   const { kind } = useBreakpoint();
   const hidden = useShellStore((state) => state.tabBarHidden);
   const overlay = kind === 'phone' && !hidden;
+  // R4B-013: the reader keeps their place when the window crosses a breakpoint, in WebKit too (keepScrollPlace).
+  const frame = useKeepScrollPlace(kind);
 
   return (
-    <View style={styles.frame} testID="shell.frame">
+    <View ref={frame} style={styles.frame} testID="shell.frame">
       {kind === 'desktop' ? <Sidebar /> : kind === 'tablet' ? <Rail /> : null}
       <View style={styles.main}>
         <View style={styles.slot}>

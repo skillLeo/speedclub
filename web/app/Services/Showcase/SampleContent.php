@@ -10,7 +10,7 @@ use App\Services\AppConfig\FeatureFlags;
 use Illuminate\Contracts\Database\Query\Builder;
 
 /**
- * Sample content (09 §8.19, ADR-412): the showcase and the SPEED CLUB Editorial account (users.is_sample, vehicles.is_sample) are seen
+ * Sample content (09 §8.19, ADR-412): the showcase and the Speedclub Editorial account (users.is_sample, vehicles.is_sample) are seen
  * only while the flag editorial_samples is on (local and staging by default, off in production). With the flag off, no member-facing or
  * public read shows them: lists drop them in their query (constrain), single pages answer like a missing item (hides, from the
  * policies), and their numbers stay out of real members' counts. The owner of a sample account still sees their own things.

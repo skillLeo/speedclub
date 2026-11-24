@@ -53,6 +53,8 @@ class VehicleSpec extends Model
             'torque_source' => PowerSource::class,
             'drivetrain' => Drivetrain::class,
             'gearbox' => Gearbox::class,
+            // M5.9: values taken over from "Daten übernehmen?" and unchanged since (field => value), SpecProvenance.
+            'ai_fields' => 'array',
         ];
     }
 

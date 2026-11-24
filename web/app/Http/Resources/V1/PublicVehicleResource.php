@@ -3,14 +3,17 @@
 namespace App\Http\Resources\V1;
 
 use App\Enums\ModStatus;
+use App\Enums\ViewSource;
 use App\Models\BuildUpdate;
 use App\Models\Modification;
 use App\Models\Save;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\AppConfig\FeatureFlags;
+use App\Services\Garage\BuildGoal;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Signature\ShareCards;
+use App\Services\Social\VehicleCommentThread;
 use App\Services\Social\VehicleHighlights;
 use App\Support\PublicUrl;
 use App\Support\Viewer;
@@ -50,13 +53,31 @@ class PublicVehicleResource extends VehicleCardResource
 
         /** @var Collection<int, Modification> $mods */
         $mods = $vehicle->modifications->sortBy([['sort', 'asc'], ['id', 'asc']])->values()->toBase();
+        $plans = $mods->filter(fn (Modification $mod): bool => $mod->getAttribute('status') === ModStatus::Planned)
+            ->sortBy([
+                fn (Modification $a, Modification $b): int => ($a->getAttribute('plan_sort') ?? PHP_INT_MAX) <=> ($b->getAttribute('plan_sort') ?? PHP_INT_MAX),
+                ['sort', 'asc'],
+                ['id', 'asc'],
+            ])
+            ->values();
 
         return [
             ...parent::toArray($request),
             /** The web page of this vehicle, for sharing: the canonical address (no redirect for a link preview), HTTPS where the site is. */
             'canonical_url' => PublicUrl::absolute('/v/'.$vehicle->canonicalSlug()),
+            /**
+             * M5.7: the address the share sheet uses: the canonical one with `?via=share`, so a view through it counts as "geteilter Link"
+             * in the owner's statistics (canonical, OG and JSON-LD stay on the plain address).
+             */
+            'share_url' => PublicUrl::absolute('/v/'.$vehicle->canonicalSlug().'?via='.ViewSource::SHARE_PARAMETER),
             /** @var string|null */
             'description' => $vehicle->getAttribute('description'),
+            /**
+             * M5.9b STREET DEX: the car's Dex number ("Nr. 0087"), public like on the share card and DEX-04; null for a draft.
+             *
+             * @var int|null
+             */
+            'dex_number' => $vehicle->dex_number,
             /**
              * "510 PS (375 kW)" in the viewer's setting, what was entered, and the provenance label.
              *
@@ -91,6 +112,30 @@ class PublicVehicleResource extends VehicleCardResource
                 'count' => $mods->count(),
                 'groups' => $this->groups($mods, $locale),
             ],
+            /**
+             * M5.3 "Pläne" (10 §5.9): the planned mods in the owner's order (PUT vehicles/{id}/plans/order). They stay in `mods` too, for
+             * apps before 2.1 and WEB-01; the 2.1 app leaves status `planned` out of its Mods section. The budget is the owner's alone.
+             *
+             * @var array{count: int, items: array<int, ModificationRowResource>}
+             */
+            'plans' => [
+                'count' => $plans->count(),
+                'items' => ModificationRowResource::collection($plans),
+            ],
+            /**
+             * M5.3 Build-Fortschritt (10 §6.2): built ÷ (built + planned), from the rows above alone (installed and planned; removed parts
+             * are not part of the build). Null without either. Same audience as the page: no money, no social counts.
+             *
+             * @var array{built: int, planned: int, total: int, percent: int}|null
+             */
+            'build_progress' => $this->buildProgress($mods),
+            /**
+             * M5.7 (10 §6.2): the owner's optional milestone goal, shown with the Build-Fortschritt ("Ziel: Saison 2027"); `passed` once its
+             * year is over (the app shows a passed goal to the owner only). Null when not set.
+             *
+             * @var array{season: int, label: string, passed: bool}|null
+             */
+            'build_goal' => BuildGoal::present($vehicle),
             'updates_count' => $this->updatesQuery($viewer)->count(),
             /**
              * The latest entries of Verlauf; the rest through public/vehicles/{slug}/updates.
@@ -129,6 +174,13 @@ class PublicVehicleResource extends VehicleCardResource
              * nobody else ever receives them. Each part is null while its flag is off.
              */
             'social' => new VehicleSocialResource($vehicle),
+            /**
+             * R5-5 [build_comments]: the car's own comment thread on VEH-01 (GET/POST vehicles/{id}/comments). enabled: the thread is
+             * open (flag on, the owner allows comments); can_write: this reader may write now (false for guests). Never a count.
+             *
+             * @var array{enabled: bool, can_write: bool}
+             */
+            'comment_thread' => app(VehicleCommentThread::class)->state($vehicle, $viewer),
         ];
     }
 
@@ -159,6 +211,23 @@ class PublicVehicleResource extends VehicleCardResource
         }
 
         return new Collection($highlights);
+    }
+
+    /**
+     * @param  Collection<int, Modification>  $mods
+     * @return array{built: int, planned: int, total: int, percent: int}|null
+     */
+    private function buildProgress(Collection $mods): ?array
+    {
+        $built = $mods->filter(fn (Modification $mod): bool => $mod->getAttribute('status') === ModStatus::Installed)->count();
+        $planned = $mods->filter(fn (Modification $mod): bool => $mod->getAttribute('status') === ModStatus::Planned)->count();
+        $total = $built + $planned;
+
+        if ($total === 0) {
+            return null;
+        }
+
+        return ['built' => $built, 'planned' => $planned, 'total' => $total, 'percent' => intdiv($built * 100, $total)];
     }
 
     /**

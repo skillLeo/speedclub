@@ -53,6 +53,8 @@ class UpdateSettingsRequest extends FormRequest
             'discoverable' => ['sometimes', 'required', 'boolean:strict'],
             'indexable' => ['sometimes', 'required', 'boolean:strict'],
             'read_receipts' => ['sometimes', 'required', 'boolean:strict'],
+            // M5.9b SET-07 "Meine Spots zeigen".
+            'show_my_spots' => ['sometimes', 'required', 'boolean:strict'],
             // M3.7 SET privacy "KI-Vorschläge": the opt-in of the [AI] suggestion features (02 §6), off by default.
             'ai_suggestions' => ['sometimes', 'required', 'boolean:strict'],
             ...$this->notificationRules(),

@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
+import pruneTokens from './scripts/vite-prune-tokens.mjs';
 
 export default defineConfig({
     plugins: [
@@ -16,6 +17,8 @@ export default defineConfig({
             refresh: true,
         }),
         tailwindcss(),
+        // The public stylesheet is inlined into every public page: only the tokens those pages read (scripts/vite-prune-tokens.mjs).
+        pruneTokens({ root: fileURLToPath(new URL('.', import.meta.url)), entry: 'resources/css/public.css' }),
         vue({
             template: {
                 transformAssetUrls: { base: null, includeAbsolute: false },

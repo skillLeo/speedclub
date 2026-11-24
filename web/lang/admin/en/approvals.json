@@ -22,7 +22,8 @@
         "failed": "Failed",
         "denied": "Denied",
         "expired": "Expired",
-        "cancelled": "Withdrawn"
+        "cancelled": "Withdrawn",
+        "owner_override": "Approved themselves (owner override)"
     },
     "empty": {
         "for_me_title": "Nothing is waiting for you",
@@ -60,9 +61,7 @@
     },
     "comment_label": "Comment",
     "comment_optional": "Optional, 3–1,000 characters.",
-    "comment_required": "Required to deny, 3–1,000 characters.",
     "errors": {
-        "comment_required": "Say briefly why you deny (at least 3 characters).",
         "comment_length": "The comment needs 3 to 1,000 characters."
     },
     "flash": {
@@ -71,7 +70,8 @@
         "cancelled": "Withdrawn.",
         "expired": "The request had already expired.",
         "failed": "Approved, but the action was no longer possible. Nothing changed.",
-        "conflict": "This request is no longer pending."
+        "conflict": "This request is no longer pending.",
+        "overridden": "Approved yourself and carried out. Owners, Admins and recent approvers get an email."
     },
     "values": {
         "on": "on",
@@ -229,5 +229,6 @@
     "business_suspend": {
         "title": "Suspend business",
         "status": "Status"
-    }
+    },
+    "overridden_by": "Owner override by :name, :time"
 }

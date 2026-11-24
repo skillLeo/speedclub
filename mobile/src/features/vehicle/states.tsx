@@ -9,7 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { isEntryNotFound, isVehicleUnavailable } from '@/api/queries/vehicles';
 import { useQaState, type QaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
-import { EmptyState, ErrorState } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
 
 export type RouteState = 'loading' | 'ready' | 'unavailable' | 'notFound' | 'error' | 'offline';
 

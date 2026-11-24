@@ -14,20 +14,16 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import {
-  Button,
-  CollapsingFlashList,
-  Dialog,
-  EmptyState,
-  ErrorState,
-  MemberRow,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Spinner,
-  Text,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { MemberRow } from '@/ui/MemberRow';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { CollapsingFlashList } from '@/ui/useCollapsingHeader';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { SettingsSplit, useSettingsSplit } from '../components/SettingsSplit';

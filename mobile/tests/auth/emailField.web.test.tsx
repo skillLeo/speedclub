@@ -12,7 +12,7 @@ jest.mock('@/lib/platform', () => ({ ...jest.requireActual('@/lib/platform'), is
 
 /** The DOM element the field hands to its ref on web. */
 const mockElement = { setAttribute: jest.fn(), focus: jest.fn() };
-jest.mock('@/ui', () => {
+jest.mock('@/ui/TextInput', () => {
   const { useLayoutEffect } = jest.requireActual<typeof import('react')>('react');
   return {
     TextInput: ({ ref }: { ref?: (node: unknown) => void }) => {

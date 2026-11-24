@@ -17,30 +17,24 @@ import { variantUrl } from '@/features/vehicle/media';
 import { useViewAsLock } from '@/features/viewAs/useViewAs';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import {
-  Button,
-  ErrorState,
-  Icon,
-  MemberRow,
-  Sheet,
-  Skeleton,
-  SkeletonText,
-  Text,
-  toast,
-  type IconName,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { ErrorState } from '@/ui/ErrorState';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { MemberRow } from '@/ui/MemberRow';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { BUILD_REACTION_GLYPHS, ReactionPicker, type Reaction } from '@/ui/motion/kit';
+
+import { isLikeReactionKey, LIKE, LIKE_REACTION_ORDER, reactionTriggerLabel } from '../reactions';
 
 const useStyles = createStyles((t) => ({
   owner: { gap: t.space[12] },
-  ownerHead: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: t.space[8],
-    justifyContent: 'space-between',
-  },
   kinds: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space[16] },
+  // The zero state: the five glyphs, quiet, as a preview of where the counts will stand, and the line that says none came yet.
+  none: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: t.space[12] },
+  noneGlyphs: { flexDirection: 'row', gap: t.space[8] },
   kind: { alignItems: 'center', flexDirection: 'row', gap: t.space[4] },
   count: { fontVariant: ['tabular-nums'] },
   list: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
@@ -48,37 +42,43 @@ const useStyles = createStyles((t) => ({
 }));
 
 const GLYPH: Record<ReactionKey, IconName> = {
+  like: BUILD_REACTION_GLYPHS.gefaellt,
   strong: BUILD_REACTION_GLYPHS.stark,
   clean: BUILD_REACTION_GLYPHS.sauber,
   low: BUILD_REACTION_GLYPHS.tief,
   loud: BUILD_REACTION_GLYPHS.laut,
 };
 
-const LAST_USED: { key: ReactionKey } = { key: 'strong' };
-
+/** The four car reactions (Stark · Sauber · Tief · Laut), as DEX-03 offers them. */
 export function useBuildReactions(): readonly Reaction[] {
   const { t } = useTranslation('vehicle');
   return REACTION_KEYS.map((key) => ({ key, label: t(`reactions.${key}`), icon: GLYPH[key] }));
 }
 
-const isReactionKey = (value: string | null): value is ReactionKey =>
-  value !== null && (REACTION_KEYS as readonly string[]).includes(value);
+/** R4-2.2: the heart "Gefällt mir" first, then the four car reactions (the picker's order and the owner's summary). */
+export function useLikeReactions(): readonly Reaction[] {
+  const { t } = useTranslation('vehicle');
+  return LIKE_REACTION_ORDER.map((key) => ({ key, label: t(`reactions.${key}`), icon: GLYPH[key] }));
+}
 
 export type ReactButtonProps = {
   target: ReactionTarget;
   id: string;
   /** The viewer's own reaction from the API (`my_reaction`); never anybody else's. */
   mine: ReactionKey | null;
+  /** Draws the trigger with its label beside the heart ("Gefällt mir", or the chosen reaction): VEH-05. */
+  labelled?: boolean;
   testID: string;
 };
 
 /**
- * 09 §8.5 private reactions for a non-owner: the SM9 picker (tap = last used, long-press = all four). Optimistic; a failure
- * puts the old choice back with a toast. A guest is asked to sign in. Nothing here shows a count.
+ * 09 §8.5 private reactions for a non-owner, R4-2.2: a tap is "Gefällt mir" (a second tap takes any reaction back), a long press
+ * (keyboard: Arrow up) opens the heart and the four car reactions. Optimistic; a failure puts the old choice back with a toast. A
+ * guest is asked to sign in. Nothing here shows a count.
  */
-export function ReactButton({ target, id, mine, testID }: ReactButtonProps) {
+export function ReactButton({ target, id, mine, labelled = false, testID }: ReactButtonProps) {
   const { t } = useTranslation('vehicle');
-  const reactions = useBuildReactions();
+  const reactions = useLikeReactions();
   const enabled = useFlag(SOCIAL_FLAGS.reactions);
   const status = useSessionStore((state) => state.status);
   const requireAuth = useRequireAuth();
@@ -95,8 +95,7 @@ export function ReactButton({ target, id, mine, testID }: ReactButtonProps) {
       toast(lock, { testID: `${testID}.toast` });
       return;
     }
-    const next = isReactionKey(key) ? key : null;
-    if (next) LAST_USED.key = next;
+    const next = isLikeReactionKey(key) ? key : null;
     react.mutate(next, {
       onError: () => toast(t('reactions.failed'), { haptic: 'warning', testID: `${testID}.toast` }),
     });
@@ -105,12 +104,24 @@ export function ReactButton({ target, id, mine, testID }: ReactButtonProps) {
     <ReactionPicker
       reactions={reactions}
       selected={mine}
-      lastUsed={LAST_USED.key}
+      lastUsed={LIKE}
       onSelect={select}
-      label={t('reactions.label')}
+      label={reactionTriggerLabel(mine, { like: t('reactions.like'), react: t('reactions.label') })}
+      buttonLabel={labelled ? (reactions.find((reaction) => reaction.key === mine)?.label ?? t('reactions.like')) : undefined}
       testID={testID}
     />
   );
+}
+
+/** A kind's count in the owner's summary; 0 for a kind an older server does not send yet ("like" before R4-2.2). */
+function countOf(summary: ReactionSummary, key: ReactionKey): number {
+  const value: unknown = (summary as Partial<Record<ReactionKey, number>>)[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+/** R4DQ-15: the kinds the owner's summary shows, in the picker's order: only those with a count, never a row of zeros. */
+export function summaryEntries(summary: ReactionSummary): { key: ReactionKey; count: number }[] {
+  return LIKE_REACTION_ORDER.map((key) => ({ key, count: countOf(summary, key) })).filter((entry) => entry.count > 0);
 }
 
 export type OwnerReactionsProps = {
@@ -125,48 +136,51 @@ export type OwnerReactionsProps = {
 export function OwnerReactions({ target, id, summary, testID }: OwnerReactionsProps) {
   const { t } = useTranslation('vehicle');
   const styles = useStyles();
-  const reactions = useBuildReactions();
+  const reactions = useLikeReactions();
   const [open, setOpen] = useState(false);
   const list = useReactionList(target, id, open);
   const rows = list.data?.pages.flatMap((page) => page.data) ?? [];
   const labelOf = (key: ReactionKey) => reactions.find((reaction) => reaction.key === key)?.label ?? key;
+  const entries = summaryEntries(summary);
 
   return (
     <View style={styles.owner} testID={testID}>
-      <View style={styles.ownerHead}>
-        <Text variant="callout" color="text.secondary" testID={`${testID}.hint`}>
-          {t('reactions.ownerHint')}
-        </Text>
-        {summary.total > 0 ? (
+      <Text variant="callout" color="text.secondary" testID={`${testID}.hint`}>
+        {t('reactions.ownerHint')}
+      </Text>
+      {entries.length === 0 ? (
+        <View style={styles.none} testID={`${testID}.none`}>
+          <View style={styles.noneGlyphs} aria-hidden>
+            {LIKE_REACTION_ORDER.map((key) => (
+              <Icon key={key} name={GLYPH[key]} size={20} color="text.tertiary" />
+            ))}
+          </View>
+          <Text variant="callout" color="text.secondary" testID={`${testID}.noneText`}>
+            {t('reactions.ownerNone')}
+          </Text>
+        </View>
+      ) : (
+        <>
+          <View style={styles.kinds} testID={`${testID}.summary`}>
+            {entries.map(({ key, count }) => (
+              <View key={key} style={styles.kind} aria-label={`${labelOf(key)} ${count}`} testID={`${testID}.${key}`}>
+                <Icon name={GLYPH[key]} size={20} color="text.primary" />
+                <Text variant="callout" style={styles.count}>
+                  {String(count)}
+                </Text>
+              </View>
+            ))}
+          </View>
+          {/* R4DQ-15: the link to the list comes after the data it opens. */}
           <Button
             label={t('reactions.showAll')}
             variant="tertiary"
             size="s"
+            flush="start"
             onPress={() => setOpen(true)}
             testID={`${testID}.showAll`}
           />
-        ) : null}
-      </View>
-      {summary.total === 0 ? (
-        <Text variant="body" color="text.secondary" testID={`${testID}.none`}>
-          {t('reactions.ownerNone')}
-        </Text>
-      ) : (
-        <View style={styles.kinds} testID={`${testID}.summary`}>
-          {REACTION_KEYS.map((key) => (
-            <View
-              key={key}
-              style={styles.kind}
-              aria-label={`${labelOf(key)} ${summary[key]}`}
-              testID={`${testID}.${key}`}
-            >
-              <Icon name={GLYPH[key]} size={20} color="text.primary" />
-              <Text variant="callout" style={styles.count}>
-                {String(summary[key])}
-              </Text>
-            </View>
-          ))}
-        </View>
+        </>
       )}
       <Sheet
         visible={open}

@@ -13,14 +13,20 @@ use App\Enums\Visibility;
 use App\Models\BuildUpdate;
 use App\Models\Business;
 use App\Models\Comment;
+use App\Models\Crew;
 use App\Models\Decision;
 use App\Models\Event;
+use App\Models\EventPhoto;
+use App\Models\ForumPost;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\ModerationCase;
 use App\Models\Modification;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Crews\CrewModeration;
+use App\Services\Events\EventGalleryModeration;
+use App\Services\Forum\ForumModeration;
 use App\Services\Media\MediaService;
 use App\Services\PublicPages\OgImages;
 use App\Services\PublicPages\SitemapWriter;
@@ -72,6 +78,8 @@ class ContentRestoration
             ReportTargetType::Comment => ($comment = Comment::withTrashed()->find($id)) instanceof Comment ? ['status' => $comment->status->value] : null,
             ReportTargetType::Event => ($event = Event::query()->find($id)) instanceof Event ? ['status' => $event->status->value, 'removed' => $event->getAttribute('removed_at') !== null] : null,
             ReportTargetType::Business => ($business = Business::query()->find($id)) instanceof Business ? ['removed' => $business->removed_at !== null] : null,
+            ReportTargetType::ForumPost => ($post = ForumPost::query()->find($id)) instanceof ForumPost ? app(ForumModeration::class)->snapshot($post) : null,
+            ReportTargetType::Crew => ($crew = Crew::withTrashed()->find($id)) instanceof Crew ? app(CrewModeration::class)->snapshot($crew) : null,
         };
     }
 
@@ -146,6 +154,8 @@ class ContentRestoration
             ReportTargetType::Comment => ($comment = Comment::withTrashed()->find($id)) instanceof Comment ? $this->comment($comment, $snapshot) : [],
             ReportTargetType::Event => ($event = Event::query()->find($id)) instanceof Event ? $this->event($event, $snapshot) : [],
             ReportTargetType::Business => ($business = Business::query()->find($id)) instanceof Business ? $this->business($business, $snapshot) : [],
+            ReportTargetType::ForumPost => ($post = ForumPost::query()->find($id)) instanceof ForumPost ? app(ForumModeration::class)->restore($post, $snapshot) : [],
+            ReportTargetType::Crew => ($crew = Crew::withTrashed()->find($id)) instanceof Crew ? app(CrewModeration::class)->restore($crew, $snapshot) : [],
         };
     }
 
@@ -161,6 +171,8 @@ class ContentRestoration
             'vehicle_cover' => $parent instanceof Vehicle && $parent->getAttribute('cover_media_id') === $photo->id ? $parent->id : null,
             'avatar_of' => User::query()->where('avatar_media_id', $photo->id)->pluck('id')->all(),
             'cover_of' => User::query()->where('cover_media_id', $photo->id)->pluck('id')->all(),
+            // M5.6: the gallery status before the removal.
+            'gallery_status' => $parent instanceof EventPhoto ? $parent->status->value : null,
         ];
     }
 
@@ -174,6 +186,11 @@ class ContentRestoration
         $photo->forceFill(['moderation_status' => $before === null || $before === ModerationStatus::Rejected ? ModerationStatus::Approved : $before])->save();
 
         $parent = $photo->mediable;
+
+        // M5.6: a gallery photo staff took down comes back with the status it had.
+        if ($parent instanceof EventPhoto) {
+            app(EventGalleryModeration::class)->restored($parent, is_string($snapshot['gallery_status'] ?? null) ? $snapshot['gallery_status'] : null);
+        }
         $coverOf = $snapshot['vehicle_cover'] ?? null;
 
         if ($parent instanceof Vehicle && $coverOf === $parent->id && $parent->getAttribute('cover_media_id') === null) {

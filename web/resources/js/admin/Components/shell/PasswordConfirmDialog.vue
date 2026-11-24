@@ -7,9 +7,10 @@ import Field from '../ui/Field.vue';
 import Input from '../ui/Input.vue';
 import { passwordConfirmed, passwordDialogCancelled, passwordDialogOpen } from '../../composables/recentPassword';
 import { JsonError, requestJson } from '../../lib/http';
-import { routeOr } from '../../lib/routes';
+import { loginUrl, routeOr } from '../../lib/routes';
 
-/** Password confirmation for sensitive actions (ADR-215): Fortify password.confirm.store, then the action runs again. */
+/** Password confirmation for sensitive actions (ADR-215): Fortify password.confirm.store, then the action runs again. An ended session
+ * offers the sign-in (M5.1). */
 const password = ref('');
 const error = ref<string | null>(null);
 const processing = ref(false);
@@ -18,10 +19,26 @@ watch(passwordDialogOpen, (open, was) => {
     if (open) {
         password.value = '';
         error.value = null;
+        sessionEnded.value = false;
     } else if (was && !processing.value) {
         passwordDialogCancelled();
     }
 });
+
+/**
+ * M5.1: only a refused password says "Das Passwort stimmt nicht". An ended session (401, 30 idle minutes or a sign-out elsewhere) or a
+ * stale form token (419) used to say the same, so the correct password was typed again and again and nothing ever went live.
+ */
+function failure(e: unknown): string {
+    if (!(e instanceof JsonError)) return trans('ui.state.server_error');
+    if (e.status === 401 || e.status === 419) return trans('shell.password.session_expired');
+    if (e.status === 429) return e.field('password') ?? trans('shell.password.throttled');
+    if (e.status === 422) return e.field('password') ?? trans('shell.password.failed');
+    if (e.status === 403) return trans('shell.password.forbidden');
+    return trans('ui.state.server_error');
+}
+/** N-4: set where the failure is known, not by comparing translated text. */
+const sessionEnded = ref(false);
 
 async function submit(): Promise<void> {
     if (password.value === '') {
@@ -30,12 +47,14 @@ async function submit(): Promise<void> {
     }
     processing.value = true;
     error.value = null;
+    sessionEnded.value = false;
     try {
         await requestJson('post', routeOr('password.confirm.store', '/admin/user/confirm-password'), { password: password.value });
         password.value = '';
         passwordConfirmed();
     } catch (e) {
-        error.value = e instanceof JsonError ? (e.field('password') ?? (e.status === 429 ? trans('shell.password.throttled') : trans('shell.password.failed'))) : trans('shell.password.failed');
+        error.value = failure(e);
+        sessionEnded.value = e instanceof JsonError && (e.status === 401 || e.status === 419);
     } finally {
         processing.value = false;
     }
@@ -50,6 +69,7 @@ async function submit(): Promise<void> {
             </Field>
         </form>
         <template #footer>
+            <Button v-if="sessionEnded" variant="secondary" :href="loginUrl()" data-testid="shell.password.login">{{ trans('shell.password.sign_in') }}</Button>
             <Button variant="ghost" :disabled="processing" @click="passwordDialogOpen = false">{{ trans('ui.actions.cancel') }}</Button>
             <Button type="submit" form="shell-password-form" variant="primary" :loading="processing" data-testid="shell.password.submit">{{ trans('shell.password.submit') }}</Button>
         </template>

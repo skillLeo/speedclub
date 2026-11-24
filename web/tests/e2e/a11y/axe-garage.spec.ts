@@ -1,5 +1,5 @@
 // Axe on the M1.6 and M1.7 screens, no serious or critical issue on the whole page: GAR-01…12 with the wizard steps, VEH-01…05,
-// QR-01…04, the in-app resolver and the three WEB-06 states, in the three themes on a phone and in carbon on desktop, plus
+// STK-01…03 and STK-02-preview (M5.4, the QR-01…04 screens renamed), the in-app resolver and the three WEB-06 states, in the three themes on a phone and in carbon on desktop, plus
 // the overlays a member opens there (draft sheet, category sheet, download sheet, reissue dialog, discard guard, viewer).
 // Owner screens as lukas.sc (read only), public ones as a guest. Chromium only (playwright.config.ts).
 import type { BrowserContext } from '@playwright/test';
@@ -37,10 +37,10 @@ const SCREENS: Screen[] = [
   { name: 'VEH-03 gallery', path: () => `${V}/gallery`, auth: 'guest', ready: 'VEH-03.count' },
   { name: 'VEH-04 viewer', path: () => `/app/viewer?slug=${R34.slug}&index=1`, auth: 'guest', ready: 'VEH-04.viewer.counter' },
   { name: 'VEH-05 update', path: (d) => `${V}/updates/${d.r34Update}`, auth: 'guest', ready: 'VEH-05.title' },
-  { name: 'QR-01 codes', path: () => '/app/profile/qr', auth: 'member', ready: 'QR-01.list' },
-  { name: 'QR-02 detail', path: (d) => `/app/qr/${d.r34}`, auth: 'member', ready: 'QR-02.card' },
-  { name: 'QR-03 placement', path: (d) => `/app/qr/${d.r34}/placement`, auth: 'member', ready: 'QR-03.diagram' },
-  { name: 'QR-04 preview', path: (d) => `/app/qr/${d.r34}/preview`, auth: 'member', ready: 'QR-04.card' },
+  { name: 'STK-01 stickers', path: () => '/app/stickers', auth: 'member', ready: 'STK-01.list' },
+  { name: 'STK-02 detail', path: (d) => `/app/stickers/${d.r34}`, auth: 'member', ready: 'STK-02.art' },
+  { name: 'STK-03 placement', path: (d) => `/app/stickers/${d.r34}/placement`, auth: 'member', ready: 'STK-03.diagram' },
+  { name: 'STK-02-preview', path: (d) => `/app/stickers/${d.r34}/preview`, auth: 'member', ready: 'STK-02-preview.card' },
   { name: 'QR-RESOLVE revoked', path: () => `/app/c/${QR_STATES.revoked.code}`, auth: 'guest', ready: 'QR-RESOLVE.state.revoked' },
   { name: 'WEB-06 revoked', path: () => `/C/${QR_STATES.revoked.code}`, auth: 'guest', ready: 'WEB-06.root', expected: { status: 410, url: /\/C\/APPY9FZ9/ } },
   { name: 'WEB-06 private', path: () => `/C/${QR_STATES.private.code}`, auth: 'guest', ready: 'WEB-06.root', expected: { status: 404, url: /\/C\/5A7XE8ET/ } },
@@ -117,19 +117,20 @@ test.describe('open overlays', () => {
     await expect(byTestId('GAR-02.root')).toBeVisible();
   });
 
-  test('QR-02 with the download sheet, then the reissue dialog', async ({ page, context, qaGoto, byTestId }) => {
+  test('STK-02 with the download sheet, then the reissue dialog', async ({ page, context, qaGoto, byTestId }) => {
     await applyAuth(context, 'member');
     const { r34 } = await demoIds();
-    await qaGoto(`/app/qr/${r34}`);
-    await byTestId('QR-02.download').click();
-    await expect(byTestId('QR-02.downloadSheet')).toBeVisible();
+    await qaGoto(`/app/stickers/${r34}`);
+    await expect(byTestId('STK-02.download.body')).toBeEnabled({ timeout: 30_000 });
+    await byTestId('STK-02.download.body').click();
+    await expect(byTestId('STK-02.downloadSheet')).toBeVisible();
     await assertNoSeriousAxeViolations(page);
     await page.keyboard.press('Escape');
-    await expect(page.locator('[data-testid="QR-02.downloadSheet"]:visible')).toHaveCount(0);
-    await byTestId('QR-02.reissue').click();
-    await expect(byTestId('QR-02.reissueDialog')).toBeVisible();
+    await expect(page.locator('[data-testid="STK-02.downloadSheet"]:visible')).toHaveCount(0);
+    await byTestId('STK-02.reissue').click();
+    await expect(byTestId('STK-02.reissueDialog')).toBeVisible();
     await assertNoSeriousAxeViolations(page);
-    await byTestId('QR-02.reissueCancel').click();
+    await byTestId('STK-02.reissueCancel').click();
   });
 
   test('VEH-01 with the viewer open over it', async ({ page, qaGoto, byTestId }) => {

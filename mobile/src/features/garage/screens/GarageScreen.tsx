@@ -9,6 +9,8 @@ import type { Edge } from 'react-native-safe-area-context';
 import { useDeleteVehicle, useReorderVehicles } from '@/api/queries/garage';
 import { useMyVehicles, type VehicleCardData } from '@/api/queries/profile';
 import { photoFields } from '@/features/profile/media';
+import { useScanAction } from '@/features/dex/entry';
+import { BuildScoreCompact, BuildScoreCompactSkeleton, showsBuildScore } from '@/features/score/components/BuildScoreCompact';
 import { UpcomingSection } from '@/features/maintenance/components/UpcomingSection';
 import { useTabScrollToTop } from '@/features/shell/retap';
 import { ShellOfflineBanner } from '@/features/shell/ShellOfflineBanner';
@@ -17,40 +19,32 @@ import { useAddVehicle } from '@/features/shell/useAddVehicle';
 import { keepNameTogether, keepValuesTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { useFormat } from '@/lib/useFormat';
-import { useQaState } from '@/lib/qa';
+import { qa, useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
-import { createStyles, layout, size, space, useBreakpoint, useTheme } from '@/theme';
+import { createStyles, layout, size, space, useBreakpoint } from '@/theme';
 import { motionDuration, useMotionPreference } from '@/ui/motion';
-import {
-  Button,
-  CollapsingFlashList,
-  Dialog,
-  Hairline,
-  Header,
-  HeaderLargeTitle,
-  Icon,
-  IconButton,
-  ListRow,
-  Photo,
-  Screen,
-  SectionHeader,
-  Sheet,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Text,
-  toast,
-  useCollapsingHeader,
-  VehicleCard,
-  VehicleCardSkeleton,
-  type HeaderAction,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { Dialog } from '@/ui/Dialog';
+import { Hairline } from '@/ui/Hairline';
+import { Header, HeaderLargeTitle, type HeaderAction } from '@/ui/Header';
+import { IconButton } from '@/ui/IconButton';
+import { Icon } from '@/ui/icons/Icon';
+import { ListRow } from '@/ui/ListRow';
+import { Photo } from '@/ui/Photo';
+import { Screen } from '@/ui/Screen';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { CollapsingFlashList, useCollapsingHeader } from '@/ui/useCollapsingHeader';
+import { VehicleCard, VehicleCardSkeleton } from '@/ui/VehicleCard';
 import { CarouselSnap, PageIndicator } from '@/ui/motion/kit';
 import { useStacksAtFontScale } from '@/ui/rowParts';
-import { estimateLines } from '@/ui/Skeleton';
 
 import { estimatedPaneWidth, LoadErrorState, RestrictedNotice, SignInState, useGarageAccess, HEADER_TEXT_ACTION } from '../components/frames';
 import { GarageEmpty } from '../components/GarageEmpty';
+import { PlateCheckCard, PlateCheckSheet, usePlateCheckCard } from '../components/PlateCheck';
 import { QuickActions, QuickActionsSkeleton, type QuickAction } from '../components/QuickActions';
 import { SortHandleSlot, Sortable } from '../components/Sortable';
 import { saveErrorMessage } from '../errors';
@@ -66,8 +60,6 @@ const EDGES: readonly Edge[] = ['left', 'right'];
  */
 const COLUMN_MAX = layout.feedColumn;
 const SORT_ROW = size.row.withThumb;
-/** "Build zu 70 % vollständig": the server's line, not known before the list arrives. */
-const TYPICAL_COMPLETENESS_CHARS = 25;
 /** SM16: how much of each neighbour shows beside the focused card, on top of the gap. */
 const CAROUSEL_PEEK = space[24];
 const CAROUSEL_GAP = space[12];
@@ -78,6 +70,8 @@ type Row =
   | { kind: 'carousel' }
   | { kind: 'grid'; cards: VehicleCardData[]; last: boolean }
   | { kind: 'stats' }
+  /** M5.9a "Kennzeichen prüfen": only while unchecked photos exist and the member has not chosen "Später". */
+  | { kind: 'plateCheck' }
   /** M4.13 "Nächste Fälligkeiten" (09 §8.8): renders nothing while nothing is due. */
   | { kind: 'due' }
   | { kind: 'draftsHeader' }
@@ -96,6 +90,7 @@ const useStyles = createStyles((t) => ({
   stats: { alignItems: 'center', flexDirection: 'row', gap: t.space[8], paddingBottom: t.space[24], paddingTop: t.space[16] },
   statsText: { flexShrink: 1 },
   sectionGap: { paddingBottom: t.space[12], paddingTop: t.space[8] },
+  plateCheck: { paddingBottom: t.space[8], paddingTop: t.space[16] },
   notice: { paddingBottom: t.space[16] },
   draft: { backgroundColor: t.color.bg.surface, overflow: 'hidden' },
   first: { borderTopLeftRadius: t.radius.md, borderTopRightRadius: t.radius.md },
@@ -113,22 +108,20 @@ const useStyles = createStyles((t) => ({
   skeletonCell: { flexBasis: 0, flexGrow: 1, minWidth: 0 },
   skeletonRow: { alignItems: 'center', flexDirection: 'row', gap: t.space[12], minHeight: t.size.row.withThumb, paddingHorizontal: t.space[16] },
   skeletonText: { flex: 1, gap: t.space[4] },
-  // VehicleCard's footer: 8 under the chips, then the completeness line with its bar.
-  skeletonFooter: { gap: t.space[8], marginTop: t.space[8] },
+
   skeletonStats: { paddingBottom: t.space[24], paddingTop: t.space[16] },
+  // M5.9c: the compact Build Score, 12 under the card (DQ-P5G-24: it is the card's progress, no completeness line above it).
+  score: { marginTop: t.space[12] },
 }));
 
-/** One card's skeleton: VehicleCard, its completeness line and bar (DQ-166), the quick actions. */
+/** One card's skeleton: VehicleCard, its compact Build Score (DQ-P5G-24), the quick actions. */
 function CardSkeleton({ pills = false, testID }: { pills?: boolean; testID?: string }) {
   const styles = useStyles();
-  const { fontScale } = useTheme();
-  const [width, setWidth] = useState(0);
   return (
     <View>
       <VehicleCardSkeleton variant="garage" />
-      <View style={styles.skeletonFooter} onLayout={(event) => setWidth(event.nativeEvent.layout.width)} testID={testID}>
-        <SkeletonText variant="callout" width="60%" lines={estimateLines(TYPICAL_COMPLETENESS_CHARS, 'callout', fontScale, width)} />
-        <SkeletonBlock height={size.progress.height} />
+      <View testID={testID}>
+        <BuildScoreCompactSkeleton style={styles.score} />
       </View>
       {/* DQ-1067 b: the carousel's page pills (8 high, space.12 above as in the content), then the action row at its height. */}
       {pills ? (
@@ -191,19 +184,22 @@ type CardProps = {
 };
 
 /**
- * FS-4 / 09 §7.6: the card with the neutral Hauptfahrzeug badge (ADR-431 f) and the completeness line and bar, then the quick
- * actions of this car. The actions sit below the pressable card, because controls must not nest.
+ * FS-4 / 09 §7.6: the card with the neutral Hauptfahrzeug badge (ADR-431 f) and its Build Score (the completeness line and bar
+ * only for an answer without a score), then the quick actions of this car. The actions sit below the pressable card, because controls must not nest.
  */
 const GarageCard = memo(function GarageCard({ card, width, onOpen, onAction, locked = false, primary = true }: CardProps) {
   const { t } = useTranslation('garage');
+  const styles = useStyles();
   return (
     <View>
       <VehicleCard
         {...garageCardProps(card, width, t)}
-        completeness={completenessBar(card)}
+        completeness={card.status !== 'draft' && showsBuildScore(card) ? undefined : completenessBar(card)}
         onPress={() => onOpen(card)}
         testID={`${ROUTE}.card.${card.id}`}
       />
+      {/* M5.9c: the car's Build Score and stage; nothing for an answer without the field. */}
+      <BuildScoreCompact card={card} style={styles.score} testID={`${ROUTE}.score.${card.id}`} />
       {onAction ? <QuickActions card={card} onAction={onAction} disabled={locked} primary={primary} testID={`${ROUTE}.card.${card.id}`} /> : null}
     </View>
   );
@@ -299,6 +295,7 @@ export function GarageScreen() {
   const access = useGarageAccess();
   const addVehicle = useAddVehicle();
   const header = useCollapsingHeader();
+  const scan = useScanAction(ROUTE);
   const padding = useTabBarPadding();
   const inset = useTabBarInset();
   const { gutter, kind, width } = useBreakpoint();
@@ -315,6 +312,14 @@ export function GarageScreen() {
   const [measured, setMeasured] = useState(0);
   const [focused, setFocused] = useState(0);
   const page = useSharedValue(0);
+  const plateCheck = usePlateCheckCard(access.status === 'member');
+  const [plateCheckOpen, setPlateCheckOpen] = useState(false);
+  // QA only (qaOpen=plateCheck, compiled out of production): the sheet opens by itself once the card shows, once.
+  const [qaPlateCheck, setQaPlateCheck] = useState(qa.open === 'plateCheck');
+  if (qaPlateCheck && plateCheck.visible) {
+    setQaPlateCheck(false);
+    setPlateCheckOpen(true);
+  }
 
   const wide = kind === 'desktop';
   const cards = useMemo(() => (qaState === 'empty' ? [] : query.data), [qaState, query.data]);
@@ -345,6 +350,7 @@ export function GarageScreen() {
         const grid = pairs(vehicles, DESKTOP_COLUMNS);
         grid.forEach((group, index) => list.push({ kind: 'grid', cards: group, last: index === grid.length - 1 }));
       } else list.push({ kind: 'carousel' });
+      if (plateCheck.visible) list.push({ kind: 'plateCheck' });
       list.push({ kind: 'stats' }, { kind: 'due' });
     }
     if (drafts.length > 0) {
@@ -352,7 +358,7 @@ export function GarageScreen() {
       drafts.forEach((card, index) => list.push({ kind: 'draft', card, first: index === 0, last: index === drafts.length - 1 }));
     }
     return list;
-  }, [drafts, vehicles, wide]);
+  }, [drafts, plateCheck.visible, vehicles, wide]);
 
   // As TabRootScreen: a tab hidden under a pushed screen is display:none on web, the browser keeps its offset, but the
   // scroll event on the way back can report 0, so on web the element is the truth.
@@ -381,7 +387,7 @@ export function GarageScreen() {
       if (action === 'update') router.push(postUpdateHref(card.id));
       else if (action === 'mods') router.push(`/garage/${card.id}/mods`);
       else if (action === 'photos') router.push(`/garage/${card.id}/photos`);
-      else router.push(`/qr/${card.id}`);
+      else router.push(`/stickers/${card.id}`);
     },
     [router],
   );
@@ -428,13 +434,15 @@ export function GarageScreen() {
 
   const qrAction: HeaderAction[] =
     access.status === 'member' && !sorting && qrTarget
-      ? [{ icon: 'qr-code', label: t('garage.qrFor', { vehicle: qrTarget.full_title }), onPress: () => router.push(`/qr/${qrTarget.id}`), testID: `${ROUTE}.qr` }]
+      ? [{ icon: 'qr-code', label: t('garage.qrFor', { vehicle: qrTarget.full_title }), onPress: () => router.push(`/stickers/${qrTarget.id}`), testID: `${ROUTE}.qr` }]
       : [];
+  // M5.9b: the SCAN button (STREET DEX), for a member and not while sorting.
+  const scanAction: HeaderAction[] = access.status === 'member' && !sorting ? [scan] : [];
   // DQ-084: from 1280 the sidebar holds "Fahrzeug hinzufügen", so the header does not repeat it.
   const actions: HeaderAction[] =
     wide || sorting || access.status !== 'member'
-      ? qrAction
-      : [{ icon: 'plus', label: t('garage.add'), onPress: addVehicle, disabled: locked, testID: `${ROUTE}.add` }, ...qrAction];
+      ? [...scanAction, ...qrAction]
+      : [{ icon: 'plus', label: t('garage.add'), onPress: addVehicle, disabled: locked, testID: `${ROUTE}.add` }, ...scanAction, ...qrAction];
   const trailing =
     access.status === 'member' && (sorting || canSort) ? (
       <Button
@@ -532,6 +540,10 @@ export function GarageScreen() {
               );
             })}
           </View>
+        ) : item.kind === 'plateCheck' ? (
+          <View style={styles.plateCheck}>
+            <PlateCheckCard count={plateCheck.count} items={plateCheck.items} onOpen={() => setPlateCheckOpen(true)} disabled={!online} />
+          </View>
         ) : item.kind === 'stats' ? (
           <GarageStats vehicles={vehicles} />
         ) : item.kind === 'due' ? (
@@ -596,7 +608,7 @@ export function GarageScreen() {
             }
             getItemType={(row: Row) => row.kind}
             // Widths and the lock come from the screen, not the rows: a rotation or a restriction redraws the cards.
-            extraData={`${carouselWidth}:${gridCardWidth}:${locked}:${online}:${focusedCard?.id ?? ''}`}
+            extraData={`${carouselWidth}:${gridCardWidth}:${locked}:${online}:${focusedCard?.id ?? ''}:${plateCheck.count}:${plateCheck.items.length}`}
             style={styles.list}
             contentContainerStyle={{ paddingBottom: inset }}
             ListHeaderComponent={titleBlock}
@@ -607,6 +619,12 @@ export function GarageScreen() {
           />
         </View>
       )}
+      <PlateCheckSheet
+        visible={plateCheckOpen}
+        onClose={() => setPlateCheckOpen(false)}
+        online={online}
+        restriction={access.restriction}
+      />
       <Sheet
         visible={draftActions !== null}
         onClose={() => setDraftActions(null)}

@@ -1,7 +1,8 @@
 import { View } from 'react-native';
 
 import { createStyles, size } from '@/theme';
-import { Avatar, Photo, type PhotoFields } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { Photo, type PhotoFields } from '@/ui/Photo';
 
 const useStyles = createStyles((t) => ({
   root: { flexShrink: 0 },

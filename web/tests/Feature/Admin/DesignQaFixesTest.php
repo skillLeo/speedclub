@@ -117,7 +117,7 @@ describe('ADM-03 an abandoned enrolment starts over', function () {
 });
 
 describe('the approval flash', function () {
-    it('carries the summary the ApprovalNotice reads (id, title key, expiry), never the request model', function () {
+    it('carries the summary the ApprovalNotice reads (id, title key, expiry, who can approve), never the request model', function () {
         seedStaffRoles();
         $this->withSession(['auth.password_confirmed_at' => time()]);
 
@@ -125,7 +125,14 @@ describe('the approval flash', function () {
         actingAsStaff($owner)->from('/admin/audit')
             ->post('/admin/audit/export', ['format' => 'csv', 'reason' => 'Anfrage der Datenschutzbehörde vom 03.11.'])
             ->assertStatus(303)
-            ->assertSessionHas('approval', fn (array $flash): bool => array_keys($flash) === ['id', 'title', 'expires_at', 'existing'] && $flash['title'] === 'approvals.audit_export.title' && $flash['existing'] === false);
+            // M5.1 (ADR-507): the waiting info as well, scalars and approver names only (no model, no address, no id of a person).
+            ->assertSessionHas('approval', fn (array $flash): bool => array_keys($flash) === ['id', 'title', 'expires_at', 'existing', 'approvers', 'approvers_total', 'override']
+                && $flash['title'] === 'approvals.audit_export.title' && $flash['existing'] === false
+                && is_string($flash['id']) && is_string($flash['expires_at'])
+                && array_is_list($flash['approvers']) && array_filter($flash['approvers'], fn (mixed $name): bool => ! is_string($name) || str_contains($name, '@')) === []
+                && is_int($flash['approvers_total']) && $flash['approvers_total'] >= count($flash['approvers'])
+                // audit.export is no publishing action: never an Owner-Override.
+                && $flash['override'] === false);
 
         // The same request of the same staff member again is the pending one (review N-1): the notice says it waits already.
         actingAsStaff($owner)->from('/admin/audit')

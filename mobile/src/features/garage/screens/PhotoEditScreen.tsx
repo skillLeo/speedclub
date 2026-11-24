@@ -7,7 +7,6 @@ import { AccessibilityInfo, View, type AccessibilityActionEvent, type LayoutChan
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { useFlag } from '@/api/queries/appConfig';
 import { useUpdateMedia, type GarageMedia, type GarageVehicle, type MediaPatch } from '@/api/queries/garage';
 import { KnownTextSkeleton } from '@/features/vehicle/components/KnownTextSkeleton';
 import type { MediaCategory } from '@/api/queries/vehicles';
@@ -16,16 +15,22 @@ import { applyServerErrors } from '@/features/auth/forms';
 import { MEDIA_CATEGORIES, photoFields } from '@/features/vehicle/media';
 import { paramOf } from '@/features/vehicle/navigation';
 import { isWeb } from '@/lib/platform';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { useOnline } from '@/state/online';
 import { buttonChrome, buttonHeight, estimatedLabelWidth } from '@/features/vehicle/skeletonGeometry';
 import { createStyles, layout, size, space, useBreakpoint, useTheme } from '@/theme';
-import { Button, Photo, PressableScale, Skeleton, SkeletonBlock, SkeletonText, Text, TextInput, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput, InputLineMeasure, multilineMaxHeight, TEXT_INPUT_ROLE, useDrawnLine } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
-import { InputLineMeasure, multilineMaxHeight, TEXT_INPUT_ROLE, useDrawnLine } from '@/ui/TextInput';
 import { keyOf } from '@/ui/useRovingKeys';
 import { PhotoCategoryAssist } from '@/features/ai/PhotoCategoryAssist';
 
-import { BlurTool, PLATE_BLUR_FLAG } from '../components/BlurTool';
+import { BlurTool } from '../components/BlurTool';
 import { ChoiceChips, FieldPair, FormGroup, useCharCount } from '../components/fields';
 import { CentredState, EditorForm, EditorScreen, FORM_MAX_WIDTH, GoneState, RestrictedNotice } from '../components/frames';
 import { saveErrorMessage } from '../errors';
@@ -55,7 +60,12 @@ const STAGE_MAX_HEIGHT = (layout.feedColumn * 3) / 4;
 /** The skeleton's stage before the photo is known: a portrait phone photo. */
 const SKELETON_STAGE_RATIO = 4 / 5;
 
-type Values = { alt: string; category: MediaCategory; x: number; y: number };
+/**
+ * The categories GAR-08 offers. The regenerated MediaCategory (M5.6) also has `event`, an event gallery's own photo, which is never a
+ * garage photo; a garage photo that came back with it is offered as "Sonstiges".
+ */
+type GarageCategory = Exclude<MediaCategory, 'event'>;
+type Values = { alt: string; category: GarageCategory; x: number; y: number };
 
 const useStyles = createStyles((t) => ({
   stage: { alignSelf: 'center', borderRadius: t.radius.md, overflow: 'hidden', width: '100%' },
@@ -129,12 +139,11 @@ function PhotoForm({ vehicle, photo, restriction }: { vehicle: GarageVehicle; ph
   const [notice, setNotice] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [stage, setStage] = useState({ width: 0, height: 0 });
-  const blurEnabled = useFlag(PLATE_BLUR_FLAG);
   const [blurDirty, setBlurDirty] = useState(false);
   const { control, handleSubmit, setValue, setError, formState } = useForm<Values>({
     resolver: zodResolver(photoDetailsSchema),
     mode: 'onTouched',
-    defaultValues: { alt: photo.alt ?? '', category: photo.category, x: photo.focal_x ?? CENTRE, y: photo.focal_y ?? CENTRE },
+    defaultValues: { alt: photo.alt ?? '', category: photo.category === 'event' ? 'other' : photo.category, x: photo.focal_x ?? CENTRE, y: photo.focal_y ?? CENTRE },
   });
   const { isDirty } = formState;
   const [x, y, alt] = [useWatch({ control, name: 'x' }), useWatch({ control, name: 'y' }), useWatch({ control, name: 'alt' })];
@@ -181,7 +190,7 @@ function PhotoForm({ vehicle, photo, restriction }: { vehicle: GarageVehicle; ph
     AccessibilityInfo.announceForAccessibility(t('photoEdit.position', { x: Math.round(nextX * 100), y: Math.round(nextY * 100) }));
   };
 
-  const submit = handleSubmit(async (values) => {
+  const submit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     const body: MediaPatch = { alt: values.alt.trim() || null, category: values.category, focal_x: values.x, focal_y: values.y };
     try {
@@ -191,7 +200,7 @@ function PhotoForm({ vehicle, photo, restriction }: { vehicle: GarageVehicle; ph
     } catch (error) {
       setNotice(applyServerErrors(error, setError, { alt: 'alt', category: 'category', focal_x: 'x', focal_y: 'y' }) === null ? null : saveErrorMessage(t, error));
     }
-  });
+  }));
 
   const position = t('photoEdit.position', { x: Math.round(x * 100), y: Math.round(y * 100) });
 
@@ -307,7 +316,8 @@ function PhotoForm({ vehicle, photo, restriction }: { vehicle: GarageVehicle; ph
           )}
         />
       </FormGroup>
-      {blurEnabled ? <BlurTool vehicle={vehicle} photo={photo} disabled={locked || !online} onDirtyChange={setBlurDirty} routeId={ROUTE} /> : null}
+      {/* ADR-509 (M5.9a): plate blur is a hard rule since Phase 5, no longer behind sig.plate_blur. */}
+      <BlurTool vehicle={vehicle} photo={photo} disabled={locked || !online} onDirtyChange={setBlurDirty} routeId={ROUTE} />
     </EditorForm>
   );
 }

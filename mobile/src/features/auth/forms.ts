@@ -6,12 +6,14 @@ import type { FieldError, FieldValues, Path, UseFormSetError } from 'react-hook-
 import { ApiError } from '@/api/client';
 import { isInternalPath, useSessionStore } from '@/state/session';
 
+import { USERNAME_LENGTH_VALUES } from './limits';
 import { noteSignupOrigin } from './signupRef';
 
 /** A message from Zod is a key of this namespace, a message from the server is already translated. */
 export function fieldMessage(t: TFunction<'auth'>, error: FieldError | undefined): string | undefined {
   if (!error?.message) return undefined;
-  return error.type === 'server' ? error.message : t(error.message as never);
+  // R4B-004: the username length message names the limits from limits.ts; other messages ignore the values.
+  return error.type === 'server' ? error.message : t(error.message as never, { ...USERNAME_LENGTH_VALUES });
 }
 
 /**

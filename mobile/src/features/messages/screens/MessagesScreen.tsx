@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { TabRootScreen } from '@/features/shell/TabRootScreen';
+import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
+import { ViewAsMessagesScreen } from '@/features/viewAs/ViewAsMessagesScreen';
 import { createStyles } from '@/theme';
-import { EmptyState } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
 
 import { useMessaging } from '../data';
 
@@ -26,7 +28,7 @@ function ComingSoon() {
   const styles = useStyles();
   const router = useRouter();
   return (
-    <TabRootScreen routeId={ROUTE} title={common('tabs.messages')} offlineLabel={t('offline')} bodyTestID="screen.messages">
+    <TabRootScreen routeId={ROUTE} title={common('places.messages')} offlineLabel={t('offline')} bodyTestID="screen.messages">
       <View style={styles.centre}>
         <EmptyState
           variant="brand"
@@ -43,9 +45,13 @@ function ComingSoon() {
 
 /**
  * MSG-01: the inbox once the messaging API is wired (`MessagingContext` holds a real adapter); until then the P1 placeholder,
- * so the tab never shows a half-working inbox.
+ * so the tab never shows a half-working inbox. DQ-P5-208: since M5.5 Nachrichten is a page of the tab stacks (from the header),
+ * not a tab of its own, so the tab slot no longer swaps it out in a view-as tab: the page shows the designed "nicht verfügbar"
+ * state itself (m3.2-contract §3), and nothing of messaging mounts.
  */
 export function MessagesScreen() {
+  const readOnly = useViewAsReadOnly();
   const adapter = useMessaging();
+  if (readOnly) return <ViewAsMessagesScreen />;
   return adapter.available ? <InboxScreen /> : <ComingSoon />;
 }

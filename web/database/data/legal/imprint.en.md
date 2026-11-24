@@ -50,7 +50,7 @@ We use manufacturer names descriptively only. We are not affiliated with the man
 
 ## Businesses, meets and advertising
 
-Business profiles show their own imprint. The business concerned, not SPEED CLUB, is responsible for its profile and its details. Meets are run by their organisers. Links to shops that we label "Ad" are advertising for which we may receive a commission.
+Business profiles show their own imprint. The business concerned, not Speedclub, is responsible for its profile and its details. Meets are run by their organisers. Links to shops that we label "Ad" are advertising for which we may receive a commission.
 
 ## Dispute resolution
 

@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureRecentStaffPassword;
 use App\Http\Middleware\EnsureStaffActive;
 use App\Http\Middleware\RestrictAdminAccess;
 use App\Models\ApprovalRequest;
+use App\Models\ApproverChange;
 use App\Models\BrandAsset;
 use App\Models\CatalogImport;
 use App\Models\Entitlement;
@@ -18,6 +19,7 @@ use App\Models\PersonalAccessToken;
 use App\Models\PrivacyRequest;
 use App\Models\Release;
 use App\Models\SorTemplate;
+use App\Models\StaffAlert;
 use App\Models\StaffInvitation;
 use App\Models\SupportMacro;
 use App\Models\User;
@@ -71,6 +73,10 @@ class AdminServiceProvider extends ServiceProvider
             // M3.6 admin-only rows (ADM-39, ADM-45, ADM-F1/F2).
             'staff_invitation' => StaffInvitation::class, 'privacy_request' => PrivacyRequest::class,
             'membership_plan' => MembershipPlan::class, 'entitlement' => Entitlement::class,
+            // M5.1 fix round (SF-5): the queued security mails to staff (audit target of staff_alert.sent/failed).
+            'staff_alert' => StaffAlert::class,
+            // M5.1 fix round (SEC-P5-01): the losses of approval rights that start the override cool-down.
+            'approver_change' => ApproverChange::class,
         ]);
 
         $router = $this->app->make(Router::class);

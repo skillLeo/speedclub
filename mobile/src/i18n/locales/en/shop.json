@@ -1,0 +1,92 @@
+{
+    "offline": "You're offline. The shop loads its products once you're back online.",
+    "closed": {
+        "title": "The Speedclub shop is moving in here",
+        "body": "Stickers, apparel and accessories. You pay in the online shop, never in the app.",
+        "action": "Go to your stickers",
+        "photo": "Orange Toyota GT86 with a windscreen sticker, head-on at night in a dark alley"
+    },
+    "price": {
+        "vat": "incl. VAT",
+        "vatShipping": "incl. VAT, plus shipping"
+    },
+    "catalogue": {
+        "categoriesLabel": "Categories",
+        "errorTitle": "The shop isn't loading right now",
+        "filteredEmptyTitle": "Nothing in this category right now",
+        "filteredEmptyBody": "Have a look at the other categories or come back later."
+    },
+    "empty": {
+        "title": "No products in the shop yet",
+        "body": "The first stickers are on their way. You can already design yours in the app.",
+        "sampleName": "Car sticker – your design"
+    },
+    "promo": {
+        "title": "Your sticker",
+        "lead": "A QR sticker for your car that links it to its build page.",
+        "points": {
+            "page": "The QR code on your car opens its build page.",
+            "meets": "At meets, people scan instead of asking.",
+            "control": "You decide what the page shows. A number plate is never on it.",
+            "insights": "How often your sticker is scanned is visible only to you, in your insights.",
+            "design": "One sticker per car: you design it in the app and order it in the online shop."
+        },
+        "order": "Order a sticker"
+    },
+    "product": {
+        "screenTitle": "Product",
+        "loading": "Loading product",
+        "errorTitle": "The product isn't loading right now",
+        "notFoundTitle": "This product is no longer available",
+        "notFoundBody": "It may have been taken out of the shop. The shop shows everything that's available right now.",
+        "toShop": "Go to the shop",
+        "zoom": "Enlarge photo {{current}} of {{total}}: {{title}}",
+        "buyExternal": "Buy in the shop",
+        "buyExternalLabel": "Buy in the shop, opens the online shop {{host}}",
+        "buyExternalLabelNoHost": "Buy in the shop, opens the online shop",
+        "externalNote": "You're switching to the online shop {{host}}. You pay there, never in the app.",
+        "externalNoteNoHost": "You're switching to the online shop. You pay there, never in the app.",
+        "buyDesigner": "Design your sticker",
+        "designerNote": "You design the sticker for your car in the app, then order it in the online shop.",
+        "soon": "Coming soon to the shop",
+        "shipping": "Shipping",
+        "shippingLabel": "Shipping, opens the online shop's shipping page",
+        "description": "Description",
+        "openFailed": "The online shop didn't open. Please try again."
+    },
+    "categories": {
+        "sticker": "Stickers",
+        "apparel": "Clothing",
+        "accessories": "Accessories",
+        "soonLabel": "{{label}}, coming soon, not available yet",
+        "soonBadge": "Coming soon",
+        "body": {
+            "sticker": "QR stickers for your car, designed in the app.",
+            "apparel": "For meets, drives and the garage.",
+            "accessories": "Small things for you and your car."
+        }
+    },
+    "hero": {
+        "sticker": {
+            "title": "Your build. Your sticker.",
+            "subtitle": "Design it in the app, order it in the shop."
+        },
+        "other": {
+            "title": "New in the Speedclub shop",
+            "subtitle": "All the details are here."
+        }
+    },
+    "category": {
+        "screenTitle": "Category",
+        "loading": "Loading category",
+        "errorTitle": "This category isn't loading right now",
+        "notFoundTitle": "This category doesn't exist",
+        "notFoundBody": "The shop shows every category there is.",
+        "soon": {
+            "sticker": "Stickers are coming soon",
+            "apparel": "Clothing is coming soon",
+            "accessories": "Accessories are coming soon"
+        },
+        "soonBody": "There's nothing to buy here yet. As soon as there is, you'll find it right here."
+    }
+}

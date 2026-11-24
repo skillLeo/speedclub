@@ -28,13 +28,42 @@ return [
     'remote' => [
         'min_above_latest' => 'Die Mindestversion darf nicht über der aktuellen Version liegen.',
         'maintenance_message' => 'Für den Wartungsmodus braucht es eine Nachricht.',
+        'wrapped_release' => 'Jede Freigabe braucht einen Saison-Schlüssel (z. B. 2027-saison oder 2027-jahr) und ein Datum mit Uhrzeit und Zeitzone.',
+        'wrapped_release_soon' => 'Eine neue Freigabe muss mindestens einen Tag in der Zukunft liegen (frühestens :date), damit alle Wrapped rechtzeitig fertig sind.',
+        'wrapped_release_season' => 'Die Freigabe muss nach dem Ende der Saison liegen (nach :date), sonst fehlen die letzten Wochen.',
     ],
     'rate_limits' => [
         'unknown' => 'Unbekannte Limits: :names.',
     ],
+    'governance' => [
+        'field' => 'Diese Einstellung gibt es nicht.',
+    ],
     'org' => [
         'field' => 'Dieser Wert ist nicht erlaubt.',
         'size' => 'Die Angaben sind zu umfangreich.',
+        // Client round 6: the save dialog names the field of a refused value (OrgSchema), and a refused save says so.
+        'owner_only' => 'Nur ein Owner kann die Firmendaten speichern. Nichts wurde gespeichert.',
+        'vat_id' => 'USt-IdNr.: Sie beginnt mit zwei Buchstaben und enthält Ziffern, z. B. DE 123 456 789.',
+        'phone' => 'Telefon: Nur Ziffern, Leerzeichen, +, /, - und Klammern, z. B. +49 (0) 30 1234567.',
+        'fields' => [
+            'company_name' => 'Firmenname',
+            'legal_form' => 'Rechtsform',
+            'street' => 'Straße und Hausnummer',
+            'postal_city' => 'PLZ und Ort',
+            'representative' => 'Vertretungsberechtigte Person',
+            'responsible_person' => 'Verantwortliche Person',
+            'contact_email' => 'Kontakt-E-Mail',
+            'phone' => 'Telefon',
+            'support_email' => 'Support-E-Mail',
+            'privacy_email' => 'Datenschutz-E-Mail',
+            'dsa_email' => 'DSA-Kontakt-E-Mail',
+            'report_email' => 'Melde-E-Mail',
+            'register_court' => 'Registergericht',
+            'register_number' => 'Registernummer',
+            'vat_id' => 'USt-IdNr.',
+            'supervisory_authority' => 'Zuständige Aufsichtsbehörde',
+            'default_locale' => 'Standardsprache',
+        ],
     ],
     'flags' => [
         'empty' => 'Es gibt keine Änderung.',

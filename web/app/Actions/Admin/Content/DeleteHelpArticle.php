@@ -23,7 +23,7 @@ final class DeleteHelpArticle
     public function handle(Staff $staff, HelpArticle $article, string $reason): void
     {
         StaffAtoms::ensure($staff, 'content.publish');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         DB::transaction(function () use ($staff, $article, $reason): void {
             $before = SaveHelpArticle::describe($article);

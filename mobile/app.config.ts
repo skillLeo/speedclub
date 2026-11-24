@@ -18,7 +18,7 @@ const allowCleartext = appEnv === 'local' || appEnv === 'lan';
 const APP_LINK_ENVS: ReadonlySet<string> = new Set(['staging', 'production']);
 // SEC-P2-03: the reset and verify mails' https links open the installed app as verified App Links, so their code never has to
 // travel over the custom scheme, which any app can claim.
-const APP_LINK_PATH_PREFIXES = ['/c/', '/C/', '/v/', '/u/', '/b/', '/brands/', '/e/'] as const;
+const APP_LINK_PATH_PREFIXES = ['/c/', '/C/', '/v/', '/u/', '/b/', '/brands/', '/e/', '/join/'] as const;
 /**
  * Exact paths, so no later /app/reset-password… route is taken along. M4.6 / M4.7: the magic link and "Das war ich nicht" of the
  * mails (/auth/…, redirected to /app/auth/… on the web) carry a token too.
@@ -64,6 +64,8 @@ const RELEASE_BLOCKED_PERMISSIONS = [
   'android.permission.SYSTEM_ALERT_WINDOW',
   'android.permission.READ_EXTERNAL_STORAGE',
   'android.permission.WRITE_EXTERNAL_STORAGE',
+  // expo-media-library adds it; VEH-07 only saves (R5-2e).
+  'android.permission.READ_MEDIA_VISUAL_USER_SELECTED',
   'android.permission.USE_BIOMETRIC',
   'android.permission.USE_FINGERPRINT',
   'android.permission.RECEIVE_BOOT_COMPLETED',
@@ -88,6 +90,11 @@ const RELEASE_BLOCKED_PERMISSIONS = [
   'com.oppo.launcher.permission.WRITE_SETTINGS',
   'me.everything.badger.permission.BADGE_COUNT_READ',
   'me.everything.badger.permission.BADGE_COUNT_WRITE',
+  // M5.9b (ADR-508): the sticker scanner never records sound; spots use approximate location in the foreground only.
+  'android.permission.RECORD_AUDIO',
+  'android.permission.ACCESS_FINE_LOCATION',
+  'android.permission.ACCESS_BACKGROUND_LOCATION',
+  'android.permission.FOREGROUND_SERVICE_LOCATION',
 ] as const;
 
 /** The scheme expo-dev-client adds (`exp+<slug>`): only a dev client answers it. */
@@ -135,8 +142,15 @@ const googleServicesFile = process.env.GOOGLE_SERVICES_JSON?.trim() || null;
  * - staging and production allow HTTPS only (App Transport Security), like Android's usesCleartextTraffic.
  */
 const PHOTOS_PURPOSE_DE =
-  'SPEED CLUB nutzt deine Fotos, damit du Bilder für dein Profil, deine Fahrzeuge und deine Nachrichten auswählen kannst.';
-const PHOTOS_PURPOSE_EN = 'SPEED CLUB uses your photos so you can choose pictures for your profile, your vehicles and your messages.';
+  'Speedclub nutzt deine Fotos, damit du Bilder für dein Profil, deine Fahrzeuge und deine Nachrichten auswählen kannst.';
+const PHOTOS_PURPOSE_EN = 'Speedclub uses your photos so you can choose pictures for your profile, your vehicles and your messages.';
+// M5.9b DEX-02 (ADR-508): the camera only scans car stickers; the location only becomes a city on the device.
+const CAMERA_PURPOSE_DE = 'Speedclub nutzt die Kamera nur, um Car-Sticker zu scannen. Es werden keine Fotos oder Videos gespeichert.';
+const CAMERA_PURPOSE_EN = 'Speedclub uses the camera only to scan car stickers. No photos or videos are stored.';
+const LOCATION_PURPOSE_DE =
+  'Optional: Beim Scannen wird dein Standort auf dem Gerät in eine Stadt umgewandelt. Nur die Stadt wird gesendet, nie deine Position.';
+const LOCATION_PURPOSE_EN =
+  'Optional: when you scan, your location is turned into a city on your device. Only the city is sent, never your position.';
 const iosHttpsOnly = !allowCleartext ? { NSAppTransportSecurity: { NSAllowsArbitraryLoads: false, NSAllowsLocalNetworking: false } } : {};
 
 const appLink = appLinkOrigin();
@@ -184,7 +198,7 @@ const ANDROID_WIDGETS: WithAndroidWidgetsParams = {
 };
 
 const config: ExpoConfig = {
-  name: 'SPEED CLUB',
+  name: 'Speedclub',
   slug: 'speedclub',
   scheme: 'speedclub',
   version: version.versionName,
@@ -200,13 +214,27 @@ const config: ExpoConfig = {
     infoPlist: {
       CFBundleAllowMixedLocalizations: true,
       CFBundleLocalizations: ['de', 'en'],
+      // M5.9b: ask for approximate location by default (iOS 14+); a spot only needs the city.
+      NSLocationDefaultAccuracyReduced: true,
       ...iosHttpsOnly,
     },
     ...appLinkIos,
   },
   locales: {
-    de: { ios: { NSPhotoLibraryUsageDescription: PHOTOS_PURPOSE_DE } },
-    en: { ios: { NSPhotoLibraryUsageDescription: PHOTOS_PURPOSE_EN } },
+    de: {
+      ios: {
+        NSPhotoLibraryUsageDescription: PHOTOS_PURPOSE_DE,
+        NSCameraUsageDescription: CAMERA_PURPOSE_DE,
+        NSLocationWhenInUseUsageDescription: LOCATION_PURPOSE_DE,
+      },
+    },
+    en: {
+      ios: {
+        NSPhotoLibraryUsageDescription: PHOTOS_PURPOSE_EN,
+        NSCameraUsageDescription: CAMERA_PURPOSE_EN,
+        NSLocationWhenInUseUsageDescription: LOCATION_PURPOSE_EN,
+      },
+    },
   },
   android: {
     package: 'de.speedclub.app',
@@ -231,7 +259,7 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     // M4.7 SET-20 app lock (09 §8.3): Face ID usage text; Android needs no extra permission text.
-    ['expo-local-authentication', { faceIDPermission: 'Damit du SPEED CLUB mit Face ID entsperren kannst.' }],
+    ['expo-local-authentication', { faceIDPermission: 'Damit du Speedclub mit Face ID entsperren kannst.' }],
     // SEC-P1-06: the dev-client scheme (exp+speedclub) only in builds that can open a dev server.
     ['expo-dev-client', { addGeneratedScheme: !releaseBuild }],
     [
@@ -252,6 +280,9 @@ const config: ExpoConfig = {
     ],
     'expo-image',
     'expo-secure-store',
+    // R5-2e VEH-07 "Speichern": the card goes into the photo library, nothing is read from it. iOS asks for "add photos" only; Android
+    // 10+ saves through MediaStore without a permission, so release builds block the read permissions the plugin adds (below).
+    ['expo-media-library', { photosPermission: false, savePhotosPermission: 'Damit du deine Share-Cards in deinen Fotos speichern kannst.', isAccessMediaLocationEnabled: false, granularPermissions: [] }],
     // ADR-402: the 2.0 faces are embedded, so native text never waits for a download or swaps fonts. Each file is named
     // after its PostScript name: iOS opens it by that name (UIAppFonts), Android looks it up as assets/fonts/<name>.ttf, one
     // family per weight. An explicit list keeps the web woff2 files in assets/fonts/web out of the iOS bundle.
@@ -279,12 +310,28 @@ const config: ExpoConfig = {
     'expo-localization',
     'expo-sharing',
     'expo-web-browser',
-    // Photos come from the system picker. The app never opens the camera or records sound, so both permissions are blocked.
+    // M5.9b DEX-02 sticker scanner (ADR-508): camera only, never the microphone.
+    ['expo-camera', { cameraPermission: CAMERA_PURPOSE_DE, microphonePermission: false, recordAudioAndroid: false }],
+    // M5.9b spot city (ADR-508): foreground, approximate, turned into a city on the device; no background location, no service.
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission: LOCATION_PURPOSE_DE,
+        locationAlwaysAndWhenInUsePermission: false,
+        isAndroidBackgroundLocationEnabled: false,
+        isAndroidForegroundServiceEnabled: false,
+        isIosBackgroundLocationEnabled: false,
+      },
+    ],
+    // Photos come from the system picker; only the sticker scanner (DEX-02) opens the camera, and nothing records sound. The picker's
+    // cameraPermission must NOT be false: false makes this plugin remove android.permission.CAMERA from the merged manifest (and
+    // blank NSCameraUsageDescription), which cancels expo-camera's permission and leaves the scanner without a camera (found in the
+    // 2.1.0 b21 release check). It carries the scanner's own purpose text instead; the picker itself never opens the camera.
     [
       'expo-image-picker',
       {
         photosPermission: PHOTOS_PURPOSE_DE,
-        cameraPermission: false,
+        cameraPermission: CAMERA_PURPOSE_DE,
         microphonePermission: false,
       },
     ],
@@ -314,6 +361,9 @@ const config: ExpoConfig = {
     typedRoutes: true,
     reactCompiler: true,
     baseUrl: '/app',
+    // M5.12a (09 §12, ADR-473): the member web's shared code split by the routes that need it, instead of one `__common` chunk that
+    // every first load parses whole (docs.expo.dev/router/web/async-routes "Granular splitting", SDK 58; production web exports only).
+    chunking: { mode: 'granular' },
   },
 };
 

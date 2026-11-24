@@ -1,0 +1,119 @@
+{
+    "nav": {
+        "title": "Crews"
+    },
+    "title": "Crews",
+    "intro": "Alle Crews mit Gründer, Region, Beitrittsart und Status, gelöschte eingeschlossen. Ausblenden ist eine DSA-Entscheidung, der Gründer bekommt die Begründung.",
+    "caption": "Crews, neueste zuerst",
+    "empty_title": "Noch keine Crews",
+    "empty_body": "Sobald Mitglieder eine Crew gründen, steht sie hier.",
+    "sample": "Beispiel",
+    "columns": {
+        "logo": "Logo",
+        "name": "Crew",
+        "founder": "Gründer",
+        "bundesland": "Bundesland",
+        "join_mode": "Beitritt",
+        "members": "Mitglieder",
+        "created": "Gegründet",
+        "state": "Status",
+        "member": "Mitglied",
+        "role": "Rolle",
+        "joined": "Dabei seit"
+    },
+    "filters": {
+        "label": "Crews filtern",
+        "q": "Suche",
+        "q_placeholder": "Name oder Slug",
+        "status": "Status",
+        "any": "Alle",
+        "apply": "Anwenden"
+    },
+    "presets": {
+        "hidden": "Ausgeblendete Crews",
+        "removed": "Vom Team gelöschte Crews"
+    },
+    "state": {
+        "active": "Aktiv",
+        "hidden": "Ausgeblendet",
+        "removed": "Vom Team gelöscht",
+        "deleted": "Vom Gründer gelöscht",
+        "ended": "Beendet: kein Mitglied mehr"
+    },
+    "join_modes": {
+        "open": "Offen",
+        "request": "Auf Anfrage",
+        "invite": "Nur mit Einladung"
+    },
+    "roles": {
+        "founder": "Gründer",
+        "admin": "Admin",
+        "member": "Mitglied"
+    },
+    "fields": {
+        "founder": "Gründer",
+        "members": "Mitglieder",
+        "open_requests": "Offene Beitrittsanfragen",
+        "open_invites": "Offene Einladungen",
+        "created": "Gegründet",
+        "updated": "Zuletzt geändert",
+        "previous_slug": "Früherer Link"
+    },
+    "record": {
+        "error": "Die Crew konnte nicht geladen werden",
+        "tabs": {
+            "label": "Bereiche der Crew",
+            "overview": "Überblick",
+            "members": "Mitglieder",
+            "reports": "Meldungen"
+        },
+        "hidden_since": "Ausgeblendet seit :date",
+        "removed_at": "Vom Team gelöscht am :date",
+        "deleted_at": "Vom Gründer gelöscht am :date",
+        "no_cover": "Kein Titelbild",
+        "no_description": "Keine Beschreibung",
+        "no_founder": "Kein Gründer mehr",
+        "no_members": "Keine Mitglieder",
+        "no_members_deleted": "Mit dem Löschen der Crew sind die Mitgliedschaften entfallen.",
+        "members_caption": "Mitglieder der Crew: Gründer, Admins, dann Mitglieder",
+        "members_more": ":shown von :total Mitgliedern angezeigt",
+        "member_gone": "Gelöschtes Konto",
+        "no_cases": "Keine Meldungen zu dieser Crew",
+        "case": "Fall vom :date · Meldungen: :count",
+        "case_staff": "Fall vom Team eröffnet am :date",
+        "ended_at": "Beendet am :date: kein Mitglied mehr",
+        "no_members_ended": "Niemand war mehr in der Crew, deshalb hat Speedclub sie beendet."
+    },
+    "actions": {
+        "public": "In der App öffnen",
+        "hide": "Ausblenden",
+        "unhide": "Einblenden",
+        "remove": "Löschen",
+        "restore": "Wiederherstellen"
+    },
+    "hide": {
+        "title": "„:name“ ausblenden",
+        "body": "Die Crew verschwindet aus Listen, Suche und ihrer Seite, nur ihre Mitglieder sehen sie noch. Der Gründer bekommt die Begründung und kann widersprechen."
+    },
+    "unhide": {
+        "title": "„:name“ wieder einblenden",
+        "body": "Die Entscheidung wird aufgehoben und die Crew ist wieder für alle sichtbar. Der Gründer erfährt, warum.",
+        "facts": "Warum die Maßnahme endet",
+        "facts_hint": "Das liest der Gründer, 10 bis 5000 Zeichen."
+    },
+    "remove": {
+        "title": "„:name“ löschen",
+        "body": "Die Crew ist danach auch für ihre Mitglieder weg. Mitgliedschaften und der Name bleiben erhalten, damit sie nach einem Widerspruch wiederhergestellt werden kann."
+    },
+    "restore": {
+        "title": "„:name“ wiederherstellen",
+        "body": "Die Crew kommt ausgeblendet zurück: Ihre Mitglieder sehen sie wieder, öffentlich wird sie erst mit „Einblenden“."
+    },
+    "flash": {
+        "hidden": "Crew ausgeblendet, der Gründer ist informiert",
+        "unhidden": "Crew wieder eingeblendet",
+        "removed": "Crew gelöscht",
+        "restored": "Crew wiederhergestellt, sie ist noch ausgeblendet",
+        "not_possible": "Das geht im aktuellen Zustand der Crew nicht mehr. Lade die Seite neu."
+    }
+}

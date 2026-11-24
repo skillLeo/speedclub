@@ -13,13 +13,20 @@ const pathOf = (page: Page): string => new URL(page.url()).pathname;
 const anyWithId = (page: Page, id: string): Locator => page.locator(`[data-testid="${id}"]`);
 const HOME_PATH = /^\/app\/?$/;
 
-const TABS = ['home', 'discover', 'garage', 'messages', 'profile'] as const;
+// M5.2 Navigation 3.0 (10 §1, ADR-501): five tabs; Nachrichten is a place of the rail and the sidebar and a link in the headers.
+const TABS = ['home', 'discover', 'garage', 'shop', 'profile'] as const;
 const ROOTS: Record<(typeof TABS)[number], string> = {
   home: 'HOME-01.root',
   discover: 'DISC-01.root',
   garage: 'GAR-01.root',
-  messages: 'MSG-01.root',
+  shop: 'SHOP-01.root',
   profile: 'PROF-01.root',
+};
+/** The items of each bar, by test ID, in order (the `events` flag is on locally and on staging; `forum` is on in every environment since M5.8, ADR-506). */
+const BAR_ITEMS: Record<'shell.tabbar' | 'shell.rail' | 'shell.sidebar', readonly string[]> = {
+  'shell.tabbar': TABS.map((name) => `tab.${name}`),
+  'shell.rail': ['tab.home', 'tab.discover', 'tab.garage', 'tab.shop', 'shell.place.messages', 'tab.profile'],
+  'shell.sidebar': ['tab.home', 'tab.discover', 'shell.place.events', 'shell.place.forum', 'shell.place.crews', 'tab.garage', 'tab.shop', 'shell.place.messages', 'tab.profile'],
 };
 const VEHICLE_PATH = `/app/v/${R34.slug}`;
 const BARS = ['shell.tabbar', 'shell.rail', 'shell.sidebar'] as const;
@@ -60,7 +67,7 @@ test.describe('which bar shows at which width', () => {
     { width: 1280, bar: 'shell.sidebar', side: tokens.layout.sidebar },
     { width: 1440, bar: 'shell.sidebar', side: tokens.layout.sidebar },
   ] as const) {
-    test(`${width}: ${bar}, with the five tabs in one named tablist`, async ({ page, qaGoto }) => {
+    test(`${width}: ${bar}, with its items of 10 §1 in one named tablist`, async ({ page, qaGoto }) => {
       const height = 800;
       await page.setViewportSize({ width, height });
       await qaGoto('/app/discover');
@@ -68,11 +75,12 @@ test.describe('which bar shows at which width', () => {
 
       const list = page.getByRole('tablist', { name: 'Hauptnavigation', exact: true });
       await expect(list).toHaveCount(1);
-      await expect(list.getByRole('tab')).toHaveCount(TABS.length);
+      await expect(list.getByRole('tab')).toHaveCount(BAR_ITEMS[bar].length);
       expect(await list.getByRole('tab').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-testid')))).toEqual(
-        TABS.map((name) => `tab.${name}`),
+        [...BAR_ITEMS[bar]],
       );
-      await expect(page.getByRole('tab', { selected: true })).toHaveCount(1);
+      // In the navigation, not on the page: Entdecken's segmented control is a tablist of its own (10 §1).
+      await expect(list.getByRole('tab', { selected: true })).toHaveCount(1);
       await expect(anyWithId(page, 'tab.discover')).toHaveAttribute('aria-selected', 'true');
 
       const box = await anyWithId(page, bar).boundingBox();
@@ -95,10 +103,10 @@ test.describe('which bar shows at which width', () => {
     test(`${width}: the bar navigates`, async ({ page, qaGoto, byTestId }) => {
       await page.setViewportSize({ width, height: 800 });
       await qaGoto('/app/');
-      await byTestId('tab.messages').click();
-      await expect(byTestId(ROOTS.messages)).toBeVisible();
-      await expect.poll(() => pathOf(page)).toBe('/app/messages');
-      await expect(anyWithId(page, 'tab.messages')).toHaveAttribute('aria-selected', 'true');
+      await byTestId('tab.shop').click();
+      await expect(byTestId(ROOTS.shop)).toBeVisible();
+      await expect.poll(() => pathOf(page)).toBe('/app/shop');
+      await expect(anyWithId(page, 'tab.shop')).toHaveAttribute('aria-selected', 'true');
       await expect(anyWithId(page, 'tab.home')).toHaveAttribute('aria-selected', 'false');
     });
   }
@@ -113,12 +121,29 @@ test.describe('crossing a breakpoint', () => {
   ] as const;
 
   test('the screen stays the same element and keeps its scroll position', async ({ page, qaGoto, byTestId }) => {
+    // What this proves: crossing a breakpoint never remounts the screen (the kept attribute and the same scroller), and the reader keeps
+    // their place. Since DQ-M52-03 the place is not a fixed scrollTop at every width: from 1280 the sidebar lists Entdecken and Treffen,
+    // so the band above the content drops the Builds · Treffen control, and the browser's scroll anchoring moves scrollTop by that
+    // height to keep the content in view. So the test reads the place the way the reader sees it: the section header at the top of the
+    // viewport stays at the same offset (±1 px); a remount would also bring scrollTop back to 0, which it never does; and at the widths
+    // whose layout equals an earlier one (768 again, 390 at the end) scrollTop is exactly what it was there.
     // Low enough that the content overflows by more than the offset at every width: a wider screen wraps less.
     await page.setViewportSize({ width: 390, height: 200 });
     await qaGoto('/app/discover');
     await byTestId(ROOTS.discover).evaluate((node) => node.setAttribute('data-qa-kept', 'discover'));
     const scroller = await scrollerOf(byTestId(ROOTS.discover));
-    await scroller.evaluate((node) => (node.scrollTop = 40));
+    // "Marken", the first section under the band: everything above it (the large title's fixed block, the band) only changes height
+    // with the segmented control, so it is the element the browser anchors to.
+    const reference = byTestId('DISC-01.makesHeader');
+    await expect(reference).toBeAttached();
+    const offsetOf = async () =>
+      reference.evaluate((node, box) => node.getBoundingClientRect().top - box.getBoundingClientRect().top, scroller);
+    // The header 4 px under the scroller's top edge, wholly in the scrolled area.
+    const start = await offsetOf();
+    await scroller.evaluate((node, by) => (node.scrollTop += by), start - 4);
+    const placed = await offsetOf();
+    expect(Math.abs(placed - 4), 'the header is at the top of the viewport').toBeLessThanOrEqual(1);
+    const scrollTops: Record<number, number> = { 390: await scroller.evaluate((node) => node.scrollTop) };
 
     for (const { width, bar } of STEPS) {
       await page.setViewportSize({ width, height: 200 });
@@ -126,7 +151,15 @@ test.describe('crossing a breakpoint', () => {
       // React would have dropped this attribute with the element.
       await expect(page.locator('[data-qa-kept="discover"]:visible'), `at ${width}`).toHaveCount(1);
       expect(await scroller.evaluate((node) => node.isConnected), `at ${width}`).toBe(true);
-      expect(await scroller.evaluate((node) => node.scrollTop), `at ${width}`).toBe(40);
+      // The place once the new width is laid out: react-native-web measures after the resize (onLayout, then a render), and WebKit read
+      // the header 48 px off in that frame and 4 px under the top once it settled (E2E P5 rerun; probe of 2026-11-18, both engines).
+      await expect
+        .poll(async () => Math.abs((await offsetOf()) - placed), { message: `at ${width}: the reader's place` })
+        .toBeLessThanOrEqual(1);
+      const scrollTop = await scroller.evaluate((node) => node.scrollTop);
+      expect(scrollTop, `at ${width}: a remount would start at 0`).toBeGreaterThan(0);
+      if (scrollTops[width] !== undefined) expect(scrollTop, `at ${width}: the same layout, the same offset`).toBe(scrollTops[width]);
+      else scrollTops[width] = scrollTop;
     }
   });
 
@@ -731,9 +764,10 @@ test.describe('offline banner', () => {
 
     await byTestId('tab.garage').click();
     await expect(byTestId('shell.routeError')).toBeVisible();
+    // R4B-001 (client round 4 hunt): offline it says so, and once the connection is back the view loads by itself.
+    await expect(byTestId('shell.routeError.title')).toHaveText('Du bist offline');
     await context.setOffline(false);
-    await byTestId('shell.routeError.action').click();
-    await expect(byTestId(ROOTS.garage)).toBeVisible();
+    await expect(byTestId(ROOTS.garage)).toBeVisible({ timeout: 30_000 });
     await expect.poll(() => pathOf(page)).toBe('/app/garage');
     dropStagedNetworkLogs(pageErrors);
   });

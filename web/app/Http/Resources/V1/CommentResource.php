@@ -11,7 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * A comment of VEH-05 [build_comments]: flat with one reply level. Top-level comments carry their visible replies, oldest first.
+ * A comment of VEH-05 or, since R5-5, of the car's own thread on VEH-01 [build_comments]: flat with one reply level. Top-level
+ * comments carry their visible replies, oldest first.
  *
  * @property Comment $resource
  */
@@ -30,7 +31,16 @@ class CommentResource extends JsonResource
 
         return [
             'id' => $comment->id,
+            /**
+             * The thread it stands in (R5-5): "build_update" (`build_update_id` set) or "vehicle", the car's own thread (`vehicle_id` set).
+             *
+             * @var 'build_update'|'vehicle'
+             */
+            'on' => $comment->isOnVehicle() ? 'vehicle' : 'build_update',
+            /** @var string|null */
             'build_update_id' => $comment->build_update_id,
+            /** @var string|null */
+            'vehicle_id' => $comment->vehicle_id,
             'parent_id' => $comment->parent_id,
             'body' => $comment->body,
             'author' => $author instanceof User ? new MemberSummaryResource($author) : null,
@@ -40,8 +50,8 @@ class CommentResource extends JsonResource
              * @var list<MemberSummaryResource>
              */
             'mentions' => array_map(fn (User $member): MemberSummaryResource => new MemberSummaryResource($member), app(Mentions::class)->forItems($comment->getMorphClass(), [$comment->id], $viewer)[$comment->id] ?? []),
-            /** The viewer may delete it: its author, or the owner of the update. */
-            'can_delete' => $viewer !== null && ($comment->user_id === $viewer->id || $comment->buildUpdate->vehicle->isOwnedBy($viewer)),
+            /** The viewer may delete it: its author, or the owner of the car. */
+            'can_delete' => $viewer !== null && ($comment->user_id === $viewer->id || ($comment->threadVehicle()?->isOwnedBy($viewer) ?? false)),
             /** @var string|null */
             'created_at' => $created instanceof CarbonInterface ? $created->toIso8601String() : null,
             /**

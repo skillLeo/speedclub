@@ -47,7 +47,7 @@ class QrSticker
 
         $pdf->loadView('pdf.qr-sticker', $this->viewData($qr));
         $pdf->setPaper('a6', 'portrait');
-        $pdf->addInfo(['Title' => 'SPEED CLUB QR-Sticker '.$this->codes->displayCode($qr->code), 'Creator' => 'SPEED CLUB', 'Producer' => 'SPEED CLUB']);
+        $pdf->addInfo(['Title' => 'Speedclub Sticker '.$this->codes->displayCode($qr->code), 'Creator' => 'Speedclub', 'Producer' => 'Speedclub']);
 
         return $pdf->output();
     }

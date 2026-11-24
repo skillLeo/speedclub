@@ -7,7 +7,9 @@ import { PixelRatio, StyleSheet, View, type TextStyle } from 'react-native';
 import { haptics } from '@/lib/haptics';
 import { isWeb } from '@/lib/platform';
 import { createStyles, size, typography, useTheme } from '@/theme';
-import { Checkbox, Icon, Text } from '@/ui';
+import { Checkbox } from '@/ui/Checkbox';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 import { useFocusRing } from '@/ui/useFocusRing';
 
 import { fieldMessage } from '../forms';

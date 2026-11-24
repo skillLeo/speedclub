@@ -5,7 +5,8 @@
  */
 import { Asset } from 'expo-asset';
 
-import type { PhotoFields, ViewerImage } from '@/ui';
+import type { ViewerImage } from '@/ui/ImageViewer';
+import type { PhotoFields } from '@/ui/Photo';
 
 export const PHOTOS = {
   r34: {

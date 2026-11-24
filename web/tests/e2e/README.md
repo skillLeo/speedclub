@@ -1,4 +1,4 @@
-# SPEED CLUB QA harness
+# Speedclub QA harness
 
 Spec: `docs/07_QA_AND_RELEASE.md`. Commands run from the repo root; the server must be running and `web/public/app` exported.
 
@@ -76,7 +76,7 @@ Add one entry to `visual/routes.mjs`. Fields are documented at the top of that f
 
 **Truncation.** `numberOfLines` needs the full text as `aria-label` on the same `Text`. The `Text` primitive should do this by itself.
 
-**Exemptions.** `dataSet={{ qaExempt: '…' }}` with `photo`, `qr`, `safe-area` or `hairline`; five more only where they belong: `brand-position` (AUTH-02's logo), `fixed-glyph` (an avatar's initials) `tab-label` (a tab-bar label in a 72 px cell, capped at 1.15 by ADR-145), `scrim-overlap` (M4.18: the identity right after the photo of a stage listed in `SCRIM_OVERLAP_STAGES`, today `BIZ-01.stage`, whose negative margin-top reaches up to the photo's large-text-safe line; margin-top only) and `avatar-overlap` (M4.18: a box one avatar size square pulled up by half that size, the PROF avatar over its cover; margin-top only). Meanings are at the top of `support/dom-audit.mjs`. Other values, or a restricted one elsewhere, are reported as violations; every use is counted in the report.
+**Exemptions.** `dataSet={{ qaExempt: '…' }}` with `photo`, `qr`, `safe-area` or `hairline`; six more only where they belong: `brand-position` (AUTH-02's logo), `fixed-glyph` (an avatar's initials) `tab-label` (a tab-bar label in a 72 px cell, capped at 1.15 by ADR-145), `scrim-overlap` (M4.18: the identity right after the photo of a stage listed in `SCRIM_OVERLAP_STAGES`, today `BIZ-01.stage`, whose negative margin-top reaches up to the photo's large-text-safe line; margin-top only) `avatar-overlap` (M4.18: a box one avatar size square pulled up by half that size, the PROF avatar over its cover; margin-top only) and `story-card` (ADR-518: the root of a 9:16 picture shared as an image, `WRP-01.card.<kind>` or `<route>.score.journeySheet.card`, on a 9:16 box; text inside takes the type pairs at min(scale, `fontScaleCap.pill`) and nothing else). Meanings are at the top of `support/dom-audit.mjs`. Other values, or a restricted one elsewhere, are reported as violations; every use is counted in the report.
 
 Seeded ids that change with every seed go into a path as tokens, `/app/garage/{r34}`; the runner reads them once per run (`support/garage.mjs` `demoIds`). A page that answers a 4xx by design names it in `expectStatus` (WEB-06: 410, 404); any other status of 400 and up fails the cell.
 

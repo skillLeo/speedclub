@@ -66,7 +66,7 @@ it('publishes a licences version with the 2.0 typefaces in every locale, the tex
             ->and($row->requires_reconsent)->toBeFalse()
             ->and($row->summary)->toBeNull()
             ->and($row->published_at)->not->toBeNull()
-            ->and($row->reason)->toContain('ADR-402')
+            ->and($row->reason)->toContain('Inter Display')->not->toContain('ADR-')
             ->and($v1[$locale]->fresh()?->body_md)->toBe($v1[$locale]->body_md)
             ->and(AuditEvent::query()->where('action', 'legal.published')->where('target_id', (string) $row->id)
                 ->where('actor_type', AuditActorType::System->value)->exists())->toBeTrue();

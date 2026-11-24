@@ -10,15 +10,21 @@ use App\Mail\EventReminderMail;
 use App\Mail\HuAuReminderMail;
 use App\Mail\MaintenanceDueMail;
 use App\Mail\SecurityNoticeMail;
+use App\Models\Badge;
 use App\Models\BuildUpdate;
 use App\Models\Business;
 use App\Models\CatalogRequest;
 use App\Models\Comment;
+use App\Models\Crew;
 use App\Models\Decision;
 use App\Models\Event;
+use App\Models\EventPhoto;
 use App\Models\EventUpdate;
+use App\Models\ForumPost;
+use App\Models\ForumThread;
 use App\Models\MaintenanceItem;
 use App\Models\ModBusinessTag;
+use App\Models\Modification;
 use App\Models\Notification;
 use App\Models\PushSubscription;
 use App\Models\PushToken;
@@ -56,6 +62,8 @@ class Notifier
         private readonly AuthMailer $mailer,
         private readonly ExpoPush $push,
         private readonly WebPush $webPush,
+        private readonly SocialPushLimiter $social,
+        private readonly EngagementPushLimiter $engagement,
     ) {}
 
     /**
@@ -113,34 +121,40 @@ class Notifier
 
     /**
      * M4.11: $author mentioned $recipient in a build update ($comment null) or a comment on one. One row per text: an edit that names
-     * the member again changes nothing (Mentions::sync only returns new mentions).
+     * the member again changes nothing (Mentions::sync only returns new mentions). R5-5: $update null for a comment on the car itself
+     * (`target` "vehicle").
      */
-    public function mention(User $recipient, User $author, Vehicle $vehicle, BuildUpdate $update, ?Comment $comment = null): ?Notification
+    public function mention(User $recipient, User $author, Vehicle $vehicle, ?BuildUpdate $update, ?Comment $comment = null): ?Notification
     {
-        $key = $comment === null ? 'u:'.$update->getKey() : 'c:'.$comment->getKey();
+        $key = $comment === null ? 'u:'.$update?->getKey() : 'c:'.$comment->getKey();
 
         return $this->grouped(NotificationType::Mention, $recipient, $author, 'mention:'.$key, $vehicle, fn (array $data): array => [
-            'update_id' => (string) $update->getKey(),
-            'update_ids' => [(string) $update->getKey()],
+            'target' => $update === null ? 'vehicle' : 'build_update',
+            'update_id' => $update === null ? null : (string) $update->getKey(),
+            'update_ids' => $update === null ? [] : [(string) $update->getKey()],
             'comment_id' => $comment === null ? null : (string) $comment->getKey(),
         ]);
     }
 
     /**
      * M4.11 [build_comments]: comments on the recipient's build update, or ($reply) replies to the recipient's comment. One row per
-     * update, kind and Berlin day, with every commenter of that day; never the text.
+     * update, kind and Berlin day, with every commenter of that day; never the text. R5-5: $update null for the car's own thread, one row
+     * per car, kind and day (`target` "vehicle").
      */
-    public function comment(User $recipient, User $actor, Vehicle $vehicle, BuildUpdate $update, Comment $comment, bool $reply): ?Notification
+    public function comment(User $recipient, User $actor, Vehicle $vehicle, ?BuildUpdate $update, Comment $comment, bool $reply): ?Notification
     {
+        $thread = $update === null ? 'v:'.$vehicle->id : (string) $update->getKey();
+
         return $this->grouped(
             NotificationType::Comment,
             $recipient,
             $actor,
-            'comment:'.$update->getKey().':'.($reply ? 'reply' : 'update').':'.$this->day(),
+            'comment:'.$thread.':'.($reply ? 'reply' : ($update === null ? 'vehicle' : 'update')).':'.$this->day(),
             $vehicle,
             fn (array $data): array => [
-                'update_id' => (string) $update->getKey(),
-                'update_ids' => [(string) $update->getKey()],
+                'target' => $update === null ? 'vehicle' : 'build_update',
+                'update_id' => $update === null ? null : (string) $update->getKey(),
+                'update_ids' => $update === null ? [] : [(string) $update->getKey()],
                 'comment_id' => (string) $comment->getKey(),
                 'reply' => $reply,
             ],
@@ -556,6 +570,246 @@ class Notifier
             ->where('group_key', 'business_invite:'.$inviteId.':invited')->delete();
     }
 
+    /**
+     * R4-2.3 Crews (contract-crews.md §5), in-app only: `request_received` (to the founder or an admin, $other the requester, $key the
+     * request id), `request_approved` (to the member, $other null, $key the crew id), `invited` (to the member, $other the inviter, $key
+     * the invitation id). Nothing across a block.
+     */
+    public function crew(User $recipient, Crew $crew, ?User $other, string $key, string $state): ?Notification
+    {
+        if ($other !== null && $recipient->hasBlockWith($other)) {
+            return null;
+        }
+
+        return $this->grouped(NotificationType::Crew, $recipient, null, 'crew:'.$key.':'.$state, null, fn (array $data): array => [
+            'crew_id' => $crew->id,
+            'crew_slug' => $crew->slug,
+            'crew_name' => $crew->name,
+            'state' => $state,
+            'username' => $state === 'request_approved' ? null : $other?->username,
+            'invite_id' => $state === 'invited' ? $key : null,
+            'request_id' => $state === 'request_received' ? $key : null,
+        ], push: false);
+    }
+
+    /**
+     * R4-2.3: a decided or withdrawn request or invitation takes its rows away ($key: the request or invitation id), for every recipient.
+     */
+    public function forgetCrew(string $key, string $state): void
+    {
+        Notification::query()->where('type', NotificationType::Crew->value)->where('group_key', 'crew:'.$key.':'.$state)->delete();
+    }
+
+    /**
+     * M5.9b STREET DEX (m5.9b contract §4): the owner's car was spotted $count times on the Europe/Berlin day $day (Y-m-d), in the
+     * cities $cityIds (day spots only, none while the owner hides them). One row per car and day: the 3-hourly job writes the day's
+     * totals, so a later run moves the row up and makes it unread again, and the same totals change nothing. Never who spotted it.
+     * $push false keeps it in the list (a day already past, a sample car to a real member); otherwise the push follows the type's
+     * switch, quiet hours and the shared social limit (SocialPushLimiter).
+     *
+     * @param  list<int>  $cityIds
+     */
+    public function spotAlert(User $owner, Vehicle $vehicle, string $day, int $count, array $cityIds, bool $push = true): ?Notification
+    {
+        if ($count < 1) {
+            return null;
+        }
+
+        sort($cityIds);
+
+        return $this->grouped(NotificationType::SpotAlert, $owner, null, 'spot_alert:'.$vehicle->id.':'.$day, $vehicle, fn (array $data): array => [
+            'day' => $day,
+            'count' => $count,
+            'city_ids' => array_values(array_unique($cityIds)),
+        ], push: $push);
+    }
+
+    /**
+     * M5.9d (m5.9d contract §2): the member earned $badge. One row per badge; $push false for awards of the nightly run or "Jetzt
+     * anwenden" (the app's toast shows them), otherwise the push follows the switch "Abzeichen" (off by default), quiet hours and the
+     * shared social limit.
+     */
+    public function badgeUnlocked(User $member, Badge $badge, bool $push = true): ?Notification
+    {
+        return $this->grouped(NotificationType::BadgeUnlocked, $member, null, 'badge_unlocked:'.$badge->key, null, fn (array $data): array => [
+            'badge_key' => $badge->key,
+            'tier' => $badge->tier->value,
+        ], push: $push);
+    }
+
+    /**
+     * M5.9d (contract §3): the owner's car is the Car of the Day $day (Y-m-d, Europe/Berlin). Always in-app; push unless the owner
+     * switched "Dein Auto ist Car of the Day" off. One row per day.
+     */
+    public function carOfTheDayOwner(User $owner, Vehicle $vehicle, string $day): ?Notification
+    {
+        return $this->grouped(NotificationType::CarOfTheDayOwner, $owner, null, 'car_of_the_day_owner:'.$day, $vehicle, fn (array $data): array => ['day' => $day]);
+    }
+
+    /**
+     * M5.9d (contract §3): today's Car of the Day for a member who opted in (CarOfTheDayPublisher reaches only them). One row per day;
+     * push by the switch, quiet hours and the shared social limit.
+     */
+    public function carOfTheDay(User $member, Vehicle $vehicle, string $day): ?Notification
+    {
+        return $this->grouped(NotificationType::CarOfTheDay, $member, null, 'car_of_the_day:'.$day, $vehicle, fn (array $data): array => ['day' => $day]);
+    }
+
+    /**
+     * CR-P5G-04 / SEC-P5G-02: a Car of the Day that staff replaced or skipped, or that the system withdrew, takes its rows out of every
+     * list (the owner's "Dein Auto ist Car of the Day" and the opt-in members' rows of that day), so nothing announces a car that is not
+     * the Car of the Day. Narrowed by the car (indexed), as the rows of a replacement point at another car. A push still waiting in the
+     * queue finds no row and is dropped.
+     */
+    public function forgetCarOfTheDay(string $day, string $vehicleId): void
+    {
+        Notification::query()
+            ->where('vehicle_id', $vehicleId)
+            ->whereIn('type', [NotificationType::CarOfTheDay->value, NotificationType::CarOfTheDayOwner->value])
+            ->whereIn('group_key', ['car_of_the_day:'.$day, 'car_of_the_day_owner:'.$day])
+            ->chunkById(500, fn ($rows) => Notification::query()->whereKey($rows->modelKeys())->delete());
+    }
+
+    /**
+     * M5.9d (contract §5): somebody activated an account with the member's invite $code. One row per code; never who in the push (the
+     * invites screen names them while they may be seen).
+     */
+    public function inviteAccepted(User $inviter, string $code): ?Notification
+    {
+        return $this->grouped(NotificationType::InviteAccepted, $inviter, null, 'invite_accepted:'.$code, null, fn (array $data): array => ['code' => $code]);
+    }
+
+    /**
+     * M5.8 (m5.8-contract §5): $actor replied in $thread. $replyTo "thread" for the author and subscribers, "post" for the author of the
+     * post a nested reply answers. One row per thread and Berlin day with every replier of the day; never the text.
+     */
+    public function forumReply(User $recipient, User $actor, ForumThread $thread, ForumPost $post, string $replyTo): ?Notification
+    {
+        return $this->grouped(NotificationType::ForumReply, $recipient, $actor, 'forum_reply:'.$thread->id.':'.$this->day(), null, fn (array $data): array => [
+            'thread_id' => $thread->id,
+            'post_id' => $post->id,
+            'reply_to' => $replyTo === 'post' ? 'post' : 'thread',
+        ]);
+    }
+
+    /**
+     * M5.8: $author mentioned $recipient in $post (Mentions::sync returns only new mentions, so an edit does not repeat it). One row per post.
+     */
+    public function forumMention(User $recipient, User $author, ForumThread $thread, ForumPost $post): ?Notification
+    {
+        return $this->grouped(NotificationType::ForumMention, $recipient, $author, 'forum_mention:'.$post->id, null, fn (array $data): array => [
+            'thread_id' => $thread->id,
+            'post_id' => $post->id,
+        ]);
+    }
+
+    /**
+     * M5.8: the thread's author marked $post (the recipient's reply) as the solution. One row per post; marking it again changes nothing.
+     */
+    public function forumSolved(User $recipient, ForumThread $thread, ForumPost $post): ?Notification
+    {
+        return $this->grouped(NotificationType::ForumSolved, $recipient, null, 'forum_solved:'.$post->id, null, fn (array $data): array => [
+            'thread_id' => $thread->id,
+            'post_id' => $post->id,
+        ]);
+    }
+
+    /**
+     * M5.6 (m5.6-contract §4.6): $pending attendee photos of $event wait for the organiser. One row per event and Berlin day, refreshed
+     * with the number waiting; only the day's first row may push (the event_update switch), so the organiser hears at most once a day per
+     * event ("3 neue Fotos warten auf deine Freigabe"). Never who uploaded.
+     */
+    public function eventGalleryPending(User $organiser, Event $event, int $pending): ?Notification
+    {
+        $key = 'event_gallery_pending:'.$event->id.':'.$this->day();
+        $existed = Notification::query()->where('notifiable_id', $organiser->id)->where('group_key', $key)->exists();
+
+        return $this->grouped(NotificationType::EventGalleryPending, $organiser, null, $key, null, fn (array $data): array => [
+            'event_id' => $event->id,
+            'count' => max(1, $pending),
+        ], push: ! $existed);
+    }
+
+    /**
+     * M5.6: the organiser approved or rejected $photo of the recipient. One row per photo; in-app only (no push switch). The reject reason
+     * is read on EVT-02 ("Meine Fotos"), never in the row.
+     */
+    public function eventPhotoDecided(User $uploader, Event $event, EventPhoto $photo): ?Notification
+    {
+        if ($this->blockedFromEvent($uploader, $event)) {
+            return null;
+        }
+
+        return $this->grouped(NotificationType::EventPhotoDecided, $uploader, null, 'event_photo_decided:'.$photo->id, null, fn (array $data): array => [
+            'event_id' => $event->id,
+            'photo_id' => $photo->id,
+            'outcome' => $photo->status->value,
+        ]);
+    }
+
+    /**
+     * M5.6 (m5.6-contract §6): the weekly "Neue Treffen in deiner Nähe" for ISO week $week, $eventIds the new meets (soonest first; the
+     * first one names the row). One row per week, so a rerun of the week changes nothing and pushes nothing (SendNearbyEventsDigest).
+     *
+     * @param  list<string>  $eventIds
+     */
+    public function eventNearby(User $member, string $week, array $eventIds): ?Notification
+    {
+        if ($eventIds === []) {
+            return null;
+        }
+
+        return $this->grouped(NotificationType::EventNearby, $member, null, 'event_nearby:'.$week, null, fn (array $data): array => [
+            'event_id' => $eventIds[0],
+            'event_ids' => array_slice($eventIds, 0, self::MAX_IDS),
+            'count' => count($eventIds),
+            'week' => $week,
+        ]);
+    }
+
+    /**
+     * M5.6: a row whose push waited (quiet hours, the social day used up) gets another chance; every rule of a first push applies again.
+     */
+    public function pushIfDue(Notification $row, User $recipient): void
+    {
+        if ($row->getAttribute('pushed_at') === null && $this->reaches($recipient)) {
+            $this->maybePush($row, $recipient);
+        }
+    }
+
+    /**
+     * M5.7 (m5.7-contract §4.2): the target month of the owner's planned $mod arrived ("Ist das KW V3 schon verbaut? Trag es ein."). One
+     * row per mod and target month; push by the switch "Build-Erinnerungen", quiet hours, the night window and the weekly engagement cap.
+     */
+    public function planDue(User $owner, Vehicle $vehicle, Modification $mod): ?Notification
+    {
+        $month = substr((string) $mod->getRawOriginal('target_month'), 0, 7);
+
+        return $this->grouped(NotificationType::PlanDue, $owner, null, 'plan_due:'.$mod->id.':'.$month, $vehicle, fn (array $data): array => [
+            'modification_id' => $mod->id,
+            'target_month' => $month,
+        ]);
+    }
+
+    /**
+     * M5.7: the plan was installed, deleted or moved to another month, so its question leaves the list.
+     */
+    public function forgetPlanDue(string $modificationId): void
+    {
+        Notification::query()->where('type', NotificationType::PlanDue->value)->where('group_key', 'like', 'plan_due:'.$modificationId.':%')->delete();
+    }
+
+    /**
+     * M5.7 (m5.7-contract §6.4): the member's recap of the ISO week starting $week (Y-m-d, Monday). One row per week; push by the switch
+     * "Wochenrückblick", quiet hours, the night window and the weekly engagement cap. $payload: counts only.
+     *
+     * @param  array<string, int>  $payload
+     */
+    public function weeklyRecap(User $member, string $week, array $payload): ?Notification
+    {
+        return $this->grouped(NotificationType::WeeklyRecap, $member, null, 'weekly_recap:'.$week, null, fn (array $data): array => ['week' => $week, ...$payload]);
+    }
+
     private function blockedFromEvent(User $member, Event $event): bool
     {
         $organiser = $event->organiser;
@@ -577,7 +831,7 @@ class Notifier
     /**
      * @param  Closure(array<string, mixed>): array<string, mixed>  $data
      */
-    private function grouped(NotificationType $type, User $recipient, ?User $actor, string $groupKey, ?Vehicle $vehicle, Closure $data, ?int $count = null, bool $reaches = false): ?Notification
+    private function grouped(NotificationType $type, User $recipient, ?User $actor, string $groupKey, ?Vehicle $vehicle, Closure $data, ?int $count = null, bool $reaches = false, bool $push = true): ?Notification
     {
         if (! ($reaches || $this->reaches($recipient)) || ($actor !== null && ! $this->mayShow($recipient, $actor))) {
             return null;
@@ -631,7 +885,7 @@ class Notifier
 
         [$row, $changed] = $result;
 
-        if ($changed) {
+        if ($changed && $push) {
             $this->maybePush($row, $recipient);
         }
 
@@ -678,6 +932,14 @@ class Notifier
             return;
         }
 
+        // M5.9b: the gift social types never push 22:00–08:00 and share one push per member and day (SocialPushLimiter); the owner's
+        // own Car of the Day is outside the daily limit but keeps the night quiet too.
+        $social = SocialPushLimiter::governs($row->type);
+
+        if (SocialPushLimiter::keepsNightQuiet($row->type) && $this->social->quiet()) {
+            return;
+        }
+
         // 09 §8.17: some types push at most once per period across all their rows (reactions: once an hour).
         $throttle = $row->type->pushThrottleMinutes();
 
@@ -691,6 +953,21 @@ class Notifier
             return;
         }
 
+        if ($social && ! $this->social->claim($recipient, $row)) {
+            return;
+        }
+
+        // M5.7 (10 §6): at most 3 engagement pushes per member and ISO week across the system's own prompts and summaries.
+        $slot = EngagementPushLimiter::governs($row->type) ? $this->engagement->claimSlot($recipient, $row) : null;
+
+        if (EngagementPushLimiter::governs($row->type) && $slot === null) {
+            if ($social) {
+                $this->social->release($recipient, $row);
+            }
+
+            return;
+        }
+
         $claimed = Notification::query()
             ->whereKey($row->id)
             ->where(fn ($query) => $query->whereNull('pushed_at')->orWhere('pushed_at', '<=', now()->subMinutes(config()->integer('speedclub.notifications.group_push_cooldown_minutes'))))
@@ -698,6 +975,15 @@ class Notifier
             ->update(['pushed_at' => now()]);
 
         if ($claimed !== 1) {
+            if ($social) {
+                $this->social->release($recipient, $row);
+            }
+
+            // SF-3: only the slot this attempt took; an earlier push of the same row keeps its own.
+            if ($slot !== null) {
+                $this->engagement->releaseSlot($recipient, $slot);
+            }
+
             return;
         }
 

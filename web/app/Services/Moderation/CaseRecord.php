@@ -12,8 +12,11 @@ use App\Models\Appeal;
 use App\Models\BuildUpdate;
 use App\Models\Business;
 use App\Models\Comment;
+use App\Models\Crew;
 use App\Models\Decision;
 use App\Models\Event;
+use App\Models\EventPhoto;
+use App\Models\ForumPost;
 use App\Models\Media;
 use App\Models\ModerationCase;
 use App\Models\Modification;
@@ -22,6 +25,7 @@ use App\Models\Staff;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Admin\Members\MemberRecord;
+use App\Services\Forum\ForumMarkdown;
 use App\Services\Garage\VehiclePresenter;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -134,6 +138,10 @@ class CaseRecord
                 'height' => $target->getAttribute('height'),
                 'moderation_status' => $target->moderation_status->value,
                 'vehicle_id' => $target->getAttribute('mediable_type') === 'vehicle' ? $target->getAttribute('mediable_id') : null,
+                // M5.6: a gallery photo names its event (title and the member page /events/{slug}).
+                'event' => ($gallery = $target->mediable) instanceof EventPhoto && ($event = Event::query()->find($gallery->event_id)) instanceof Event
+                    ? ['slug' => $event->slug, 'title' => $event->title, 'url' => url('/app/events/'.$event->slug), 'status' => $gallery->status->value]
+                    : null,
             ],
             $target instanceof BuildUpdate => [
                 'kind' => 'build_update',
@@ -146,8 +154,10 @@ class CaseRecord
             $target instanceof Comment => [
                 'kind' => 'comment',
                 'build_update_id' => $target->build_update_id,
-                // M4.17: where the comment stands (the build of the update) and whether it answers another comment.
-                'vehicle_id' => $target->buildUpdate()->withoutGlobalScopes()->value('vehicle_id'),
+                // M4.17: where the comment stands (the build of the update, R5-5: or the car's own thread) and whether it answers another
+                // comment.
+                'on' => $target->isOnVehicle() ? 'vehicle' : 'build_update',
+                'vehicle_id' => $target->threadVehicleId(),
                 'reply' => $target->getAttribute('parent_id') !== null,
                 'body' => $target->body,
                 'status' => $target->status->value,
@@ -178,6 +188,39 @@ class CaseRecord
                 'about' => $target->about,
                 'cover' => MediaUrls::at($target->cover, 640),
                 'removed' => $target->removed_at !== null,
+            ],
+            // M5.8: the post with its thread; an opening post shows the thread's title and tags, as they were reported with it.
+            $target instanceof ForumPost => [
+                'kind' => 'forum_post',
+                'id' => $target->id,
+                'thread_id' => $target->thread_id,
+                'thread_title' => $target->thread->title,
+                'is_opening' => $target->is_opening,
+                'reply' => $target->parent_id !== null,
+                'body' => $target->body,
+                'body_html' => app(ForumMarkdown::class)->html($target->body),
+                'status' => $target->status->value,
+                'thread_status' => $target->thread->status->value,
+                'deleted' => $target->trashed(),
+                'created_at' => $target->created_at?->toIso8601String(),
+            ],
+            // R4-2.3: the crew page as it is now.
+            $target instanceof Crew => [
+                'kind' => 'crew',
+                'id' => $target->id,
+                'slug' => $target->slug,
+                'name' => $target->name,
+                'description' => $target->description,
+                'join_mode' => $target->join_mode->value,
+                'status' => $target->status->value,
+                'logo' => MediaUrls::at($target->logo, 160),
+                'cover' => MediaUrls::at($target->cover, 640),
+                // SF-11: once hidden the pictures are off the public disk; staff reveal the originals by id (ADM-13 "Anzeigen", audited).
+                'logo_media_id' => $target->logo_media_id,
+                'cover_media_id' => $target->cover_media_id,
+                'logo_placeholder' => MediaUrls::placeholder($target->logo),
+                'cover_placeholder' => MediaUrls::placeholder($target->cover),
+                'deleted' => $target->trashed(),
             ],
             $target instanceof Modification => [
                 'kind' => 'modification',

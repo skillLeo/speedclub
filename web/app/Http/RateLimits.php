@@ -27,7 +27,9 @@ final class RateLimits
         // M4.6 Auth 2.0 (09 §8.1): passwordless sign-ins per IP; the per-address limits live in App\Services\Auth\EmailCodes.
         'auth_email_start', 'auth_email_verify', 'auth_social', 'auth_passkeys',
         // M4.7 (09 §8.4): "Das war ich nicht" links per IP.
-        'auth_secure_account'];
+        'auth_secure_account',
+        // M5.9d: GET invites/{code} and the /join/{code} page.
+        'invite_lookup'];
 
     private const PER_MEMBER_OR_IP = [
         'conversations', 'conversation_requests', 'messages', 'conversation_edits', 'typing', 'realtime_auth', 'follows', 'uploads', 'reports', 'catalog_requests', 'username_check', 'garage_writes', 'garage_reorders', 'garage_edits', 'unfollows', 'blocks', 'saves', 'account_edits', 'notification_reads', 'push_tokens', 'qr_downloads', 'qr_reissues', 'token_rotate', 'account_security', 'support_tickets', 'appeals',
@@ -41,6 +43,22 @@ final class RateLimits
         'events', 'rsvps', 'event_updates', 'geocode',
         // M4.14 businesses.
         'businesses', 'business_tags',
+        // R4-2.3 crews.
+        'crews', 'crew_actions',
+        // M5.9b STREET DEX: POST spots.
+        'spots',
+        // M5.9e Season Wrapped: POST me/wrapped/{season}/shared and the card images.
+        'wrapped',
+        // M5.4 sticker designer: autosave/restore, live preview, Scan-Test, order link.
+        'sticker_designs', 'sticker_previews', 'sticker_validations', 'sticker_orders',
+        // M5.8 Forum: new threads, replies, "Hilfreich" votes.
+        'forum_threads', 'forum_replies', 'forum_votes',
+        // M5.6: POST events/{slug}/checkin.
+        'checkins',
+        // M5.7: GET me/insights and vehicles/{id}/insights.
+        'insights',
+        // R4-2.1: POST car-of-the-day/vote (casting and changing the vote).
+        'cotd_votes',
     ];
 
     /**
@@ -49,7 +67,8 @@ final class RateLimits
      * and search also carry throttle:browse, the same per member or guest IP. Both have an ip_max that keeps one address bounded
      * across all accounts behind it; search's is far lower, as a search is the most expensive read.
      */
-    private const PER_VIEWER_OR_IP = ['search', 'browse'];
+    // M5.7: POST views (the view beacon) takes guests and members, bounded per IP too.
+    private const PER_VIEWER_OR_IP = ['search', 'browse', 'views'];
 
     /**
      * Every limiter this class defines (M3.4: the ones ADM-23 can override).

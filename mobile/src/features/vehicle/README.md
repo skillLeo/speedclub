@@ -1,15 +1,16 @@
 # Vehicle view (VEH-01 to VEH-05)
 
-The public build page and what hangs off it. Routes live in `src/app/(tabs)/(home,discover,garage,messages,profile)/v/[slug]/…`
+The public build page and what hangs off it. Routes live in `src/app/(tabs)/(home,discover,garage,shop,profile)/v/[slug]/…`
 (shared by all five tabs) and `src/app/(modals)/viewer.tsx`; each is one line that renders a screen from `screens/`.
 
 | Route | Screen | Data |
 |---|---|---|
-| VEH-01 `/v/[slug]` (`?tab=specs\|mods\|history`) | `VehicleScreen` → `VehicleProfile` | `usePublicVehicle(slug)` |
+| VEH-01 `/v/[slug]` (`?section=specs\|mods\|plans\|history\|gallery\|similar`; a 2.0 `?tab=` maps to its section) | `VehicleScreen` → `VehicleProfile` | `usePublicVehicle(slug)` |
 | VEH-02 `/v/[slug]/mods/[modId]` | `ModDetailScreen` | `usePublicMod(slug, modId)` |
 | VEH-03 `/v/[slug]/gallery` (`?category=`) | `GalleryScreen` | the page query |
 | VEH-04 `(modals)/viewer?slug=&index=&category=&mod=` | `ViewerScreen` | the page or the mod query |
 | VEH-05 `/v/[slug]/updates/[updateId]` | `UpdateDetailScreen` | `usePublicUpdate(slug, updateId)` |
+| VEH-08 `/v/[slug]/history` (M5.3) | `FullHistoryScreen` | the page query + `usePublicVehicleUpdates(slug)` (cursor pages) |
 
 Hooks are in `src/api/queries/vehicles.ts`. Keys are `['public-vehicle', publicId, viewer, …]`: the API renders per viewer
 (language, power setting, owner-only values), so a sign-in or a language change reads again. After an owner edit call
@@ -47,17 +48,25 @@ return (
 | Prop | Type | What it does |
 |---|---|---|
 | `vehicle` | `PublicVehicleResource` | Everything the page shows. |
-| `routeId` | `string`, default `VEH-01` | Prefix of every test ID: `.root`, `.header`, `.hero`, `.title`, `.specStrip`, `.ownerRow`, `.tabs.<tab>`, `.panel.<tab>`, `.ownerToolbar`. VEH-01 keeps the WEB-01 parity IDs. |
+| `routeId` | `string`, default `VEH-01` | Prefix of every test ID: `.root`, `.header`, `.hero`, `.title`, `.specStrip`, `.ownerRow`, `.sections.<section>` (index links), `.section.<section>` (the sections), `.ownerToolbar`. VEH-01 keeps the WEB-01 parity IDs. |
 | `onBack` | `() => void` | The header's back. |
 | `ownerToolbar` | `ReactNode` | Under the owner row (phone, tablet) and in the sticky card (desktop). With a toolbar the owner row shows no guest actions. |
-| `ownerContent` | `ReactNode` | First block of Übersicht, 32 above the description. |
+| `ownerContent` | `ReactNode` | First block of Überblick, 32 above the Build Score. |
 | `headerActions` | `HeaderAction[]` | Replaces share and more. Without it the more sheet offers "Link kopieren" and, for the owner, "In der Garage bearbeiten" and "QR-Code anzeigen". |
-| `tab`, `onTabChange` | `ProfileTab` | Controlled tab (`overview`, `specs`, `mods`, `history`); uncontrolled by default. |
+| `initialSection` | `ProfileAnchor` | A deep link's section: the page opens scrolled to it (no motion). The section in view is never written to the URL. |
 
-What the component owns: the photo header over the hero on phones (a bar above the content when there is no photo, on
-tablets and desktops), the sticky content tabs (CSS `position: sticky` on web, a UI-thread transform on native, see
-`layout.ts`), the in-place image viewer, the more sheet, share, re-tap to top, the offline banner and the tab bar padding.
-Layout per width: phone below 768, one centred column of 768 on a tablet, from 1280 gallery 7/12 beside a sticky card 5/12.
+What the component owns (M5.3, 10 §5, ADR-505): one virtualised scroll (`CollapsingFlashList`, one row per block: stage, summary,
+index slot, Überblick · Daten · Mods · Pläne · Verlauf · Galerie, the forum slot, Ähnliche Builds, footer; no nested vertical
+scroller). The section index is drawn by `Pinned` over the list (the list positions its rows itself, so CSS sticky cannot hold it):
+it follows the scroll on the UI thread and stays under the photo header (phone), under the bar (tablet, desktop to 1439) or, from
+1440, as a vertical list in the left 2 of 12 columns. `useSectionScroll` reads the rows' offsets from the list (`getLayout`) on every
+content-size change, scrolls to a section with spring.calm (effect.default under reduced motion; a drag, wheel, touch or key ends
+it) and runs the scroll-spy on the UI thread; only the index re-renders when the section in view changes. From 1280 the right card
+(strip, owner, actions) is pinned the same way and never reaches past the content. Inline expands (`InlineReveal`, spring.default):
+"Alle Daten anzeigen", "+ N weitere" per system. Pläne (`PlansSection`): the owner reorders (garage `Sortable`) and marks a plan
+"Als verbaut markieren" (contract §4.2, optimistic, success haptic). The forum slot (`BuildDiscussionsSlot`) renders nothing while
+`forum` is off (M5.8 fills it). Also: the photo header, the in-place image viewer, the more sheet, share, re-tap to top, the
+offline banner and the tab bar padding.
 
 ## Phase 2 seams (no UI until the feature exists)
 

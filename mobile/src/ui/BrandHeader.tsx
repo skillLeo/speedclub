@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
+import { useDocumentTitle } from '@/lib/documentTitle';
 import { createStyles, space, useBreakpoint } from '@/theme';
 
 import { BrandWordmark } from './BrandWordmark';
@@ -10,13 +11,15 @@ import { IconButton } from './IconButton';
 import { useMotionPreference } from './motion/preference';
 import { useSafeEdge } from './safeArea';
 import { Text } from './Text';
-import { UnreadBadge } from './UnreadBadge';
+import { IconButtonBadge } from './UnreadBadge';
 import type { CollapsingHeader } from './useCollapsingHeader';
 
 /** Height of the brush wordmark in the bar (09 §6.2 d). */
 export const BRAND_HEADER_LOGO_HEIGHT = space[20];
 /** The bundled wide logo's ratio (BrandWordmark FILES.wide). */
-const WIDE_RATIO = 1200 / 359;
+const WIDE_RATIO = 696 / 184;
+/** The phone header's logo box; Home passes the published logo at this size (client round 3). */
+export const BRAND_HEADER_LOGO_WIDTH = BRAND_HEADER_LOGO_HEIGHT * WIDE_RATIO;
 
 /**
  * How far the bar is pushed up, from the last offset and the scroll step (09 §6.2 d, "hides on scroll down, returns on scroll
@@ -68,7 +71,6 @@ const useStyles = createStyles((t) => ({
   logo: { justifyContent: 'center', minHeight: t.size.iconButton },
   actions: { alignItems: 'center', flexDirection: 'row' },
   action: { pointerEvents: 'box-none' },
-  dot: { pointerEvents: 'none', position: 'absolute', right: t.space[8], top: t.space[8] },
   content: { alignSelf: 'center', width: '100%' },
   // The status bar's band: it stays put while the row slides under it, so the wordmark never shows behind the clock.
   statusBand: { backgroundColor: t.color.bg.canvas, left: 0, position: 'absolute', right: 0, top: 0, zIndex: t.zIndex.sticky },
@@ -80,6 +82,8 @@ const useStyles = createStyles((t) => ({
  * reduced motion it fades instead of sliding (09 §4.7). The brand mark only here and at the other brand moments (SKILL §1).
  */
 export function BrandHeader({ scroll, actions, logo, title, accessory, contentWidth, onHeight, style, testID }: BrandHeaderProps) {
+  // R4B-002: a tab root under the brand header is "Speedclub" in the browser tab, or its title when it has one.
+  useDocumentTitle(title);
   const styles = useStyles();
   const { gutter } = useBreakpoint();
   const safe = useSafeEdge('top');
@@ -152,9 +156,12 @@ export function BrandHeader({ scroll, actions, logo, title, accessory, contentWi
                   selected={action.selected}
                   disabled={action.disabled}
                   locked={action.locked}
+                  role={action.role}
                   testID={action.testID}
                 />
-                {action.unread ? <UnreadBadge count={action.unread.count} style={styles.dot} /> : null}
+                {action.unread ? (
+                  <IconButtonBadge count={action.unread.count} max={action.unread.max} testID={action.testID ? `${action.testID}.badge` : undefined} />
+                ) : null}
               </View>
             ))}
           </View>

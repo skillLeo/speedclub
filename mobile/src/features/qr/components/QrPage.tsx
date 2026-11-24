@@ -10,7 +10,12 @@ import { isWeb } from '@/lib/platform';
 import { useOnline } from '@/state/online';
 import { createStyles, layout, size, space, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import { Header, OfflineBanner, Screen, SkeletonText, Text, useCollapsingHeader } from '@/ui';
+import { Header } from '@/ui/Header';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Screen } from '@/ui/Screen';
+import { SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 import { NO_BROWSER_OUTLINE, useFocusRing } from '@/ui/useFocusRing';
 
 const EDGES: readonly Edge[] = ['left', 'right'];
@@ -114,12 +119,14 @@ export function QrPage({
     header.collapseAt.set(CONTENT_TOP + y + height);
   };
 
-  const columnStyle = kind === 'phone' ? styles.columnPhone : wide ? styles.columnWide : styles.column;
-  const headerMax = wide ? layout.contentMax : QR_COLUMN;
+  // DQ-M54-14: from 1280 every sticker page takes the content width (its parts in columns), never a phone column on a desktop.
+  const broad = wide || kind === 'desktop';
+  const columnStyle = kind === 'phone' ? styles.columnPhone : broad ? styles.columnWide : styles.column;
+  const headerMax = broad ? layout.contentMax : QR_COLUMN;
   const contentContainerStyle = [styles.content, { paddingHorizontal: gutter }, above ? null : padding];
   const titleBlock = (
     <View style={[columnStyle, styles.titleBlock]}>
-      <Text variant="title1" role="heading" aria-level={1} onLayout={onTitleLayout} testID={`${routeId}.title`}>
+      <Text variant="title1" role="heading" aria-level={1} hyphenate={false} onLayout={onTitleLayout} testID={`${routeId}.title`}>
         {title}
       </Text>
       {subtitle ? (

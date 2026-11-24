@@ -1,7 +1,8 @@
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Icon, Text, type IconName } from '@/ui';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
 import { phosphorIcons } from '@/ui/icons/Icon';
 import { autoIconGroups, autoIconsWithFill, type AutoIconName } from '@/ui/icons/auto';
 

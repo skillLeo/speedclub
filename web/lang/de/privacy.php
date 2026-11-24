@@ -28,7 +28,7 @@ return [
         'identity' => [
             'subject' => 'Deine Datenschutzanfrage :reference: wir brauchen noch Angaben',
             'heading' => 'Bitte bestätige, dass die Anfrage von dir kommt',
-            'body' => 'Damit wir keine Daten an die falsche Person geben, brauchen wir noch einen Nachweis. Am einfachsten schreibst du uns von der E-Mail-Adresse, mit der du bei SPEED CLUB angemeldet bist. Die Frist läuft bis :date.',
+            'body' => 'Damit wir keine Daten an die falsche Person geben, brauchen wir noch einen Nachweis. Am einfachsten schreibst du uns von der E-Mail-Adresse, mit der du bei Speedclub angemeldet bist. Die Frist läuft bis :date.',
         ],
         'extension' => [
             'subject' => 'Deine Datenschutzanfrage :reference: wir brauchen mehr Zeit',

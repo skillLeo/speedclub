@@ -32,18 +32,73 @@ export function desktopInnerWidth(contentWidth: number): number {
   return Math.min(contentWidth, layoutTokens.contentMax + 2 * space[24]) - 2 * space[24];
 }
 
+/** 10 §5 (ADR-505): from 1440 the section index is a vertical list in the 2 left columns of the 12 (2 · 6 · 4). */
+export const SIDE_INDEX_COLS = 2;
+const GRID_COLS = layoutTokens.grid.desktop.columns;
+
+/**
+ * Whether the desktop sets the section index as a vertical list on the left: from 1440, the width at which the content beside the
+ * 240 sidebar reaches its 1200 (`contentMax + sidebar`), so the 2 columns it takes leave the content its room.
+ */
+export function hasSideIndex(layout: ProfileLayout, contentWidth: number): boolean {
+  return layout === 'desktop' && contentWidth >= layoutTokens.contentMax;
+}
+
+export type DesktopColumns = {
+  /** Where the row's padded box starts inside the content width (the row is centred at most `contentMax` + 48 wide). */
+  left: number;
+  /** The side index column (0 without it), the content column and the card, with 24 between each. */
+  index: number;
+  gallery: number;
+  card: number;
+  /** x of each column inside the content width. */
+  indexX: number;
+  galleryX: number;
+  cardX: number;
+};
+
+/** The desktop grid under the hero: content 8 + card 4, or index 2 + content 6 + card 4 from 1440 (`hasSideIndex`). */
+export function desktopColumns(contentWidth: number, sideIndex: boolean): DesktopColumns {
+  const row = Math.min(contentWidth, layoutTokens.contentMax + 2 * space[24]);
+  const left = Math.max(0, (contentWidth - row) / 2) + space[24];
+  const inner = desktopInnerWidth(contentWidth);
+  const gaps = sideIndex ? 2 : 1;
+  const unit = Math.max(0, inner - gaps * space[24]) / GRID_COLS;
+  const index = sideIndex ? unit * SIDE_INDEX_COLS : 0;
+  const card = unit * DESKTOP_CARD_FLEX;
+  const gallery = unit * (GRID_COLS - DESKTOP_CARD_FLEX) - index;
+  const indexX = left;
+  const galleryX = left + (sideIndex ? index + space[24] : 0);
+  return { left, index, gallery, card, indexX, galleryX, cardX: galleryX + gallery + space[24] };
+}
+
 function ratioOf(value: string): number {
   const [w, h] = value.split(':').map(Number);
   return w && h ? w / h : 1;
 }
 
+/** R4-1.3: the desktop hero's highest box (480: five 96 web-section steps). */
+export const DESKTOP_HERO_MAX = 5 * space[96];
+
 /**
  * DQ-1047/1048: the hero is the page's opener at every width. 4:5 edge to edge on a phone (09 §7.6), 16:9 across the content from
  * 768 (09 §4.6 web 16:9), at most `fullBleedMax` wide and never rounded. WEB-01 sets the same boxes in public.css.
  */
-export function heroBox(layout: ProfileLayout, contentWidth: number): { width: number; ratio: number } {
+export function heroBox(layout: ProfileLayout, contentWidth: number, windowHeight?: number): { width: number; ratio: number } {
   if (layout === 'phone') return { width: contentWidth, ratio: ratioOf(aspect.hero) };
-  return { width: Math.min(contentWidth, layoutTokens.fullBleedMax), ratio: ratioOf(aspect.heroWeb) };
+  // Client feedback CF-1 (M5.3): from 1280 a wider 21:9 banner (`aspect.heroDesktop`), ≈ 510 high at 1200 instead of 675; still the
+  // page's opener, and the content starts within the first screen.
+  const width = Math.min(contentWidth, layoutTokens.fullBleedMax);
+  if (layout !== 'desktop') return { width, ratio: ratioOf(aspect.heroWeb) };
+  // R4-1.3: and never higher than half the window or DESKTOP_HERO_MAX; a lower box is cropped from the photo's focal point.
+  const cap = windowHeight && windowHeight > 0 ? Math.min(DESKTOP_HERO_MAX, windowHeight / 2) : DESKTOP_HERO_MAX;
+  return { width, ratio: Math.max(ratioOf(aspect.heroDesktop), width / cap) };
+}
+
+/** The hero's aspect token per layout (ProfileHero's `aspect`), matching `heroBox`. */
+export function heroAspect(layout: ProfileLayout): (typeof aspect)['hero' | 'heroWeb' | 'heroDesktop'] {
+  if (layout === 'phone') return aspect.hero;
+  return layout === 'desktop' ? aspect.heroDesktop : aspect.heroWeb;
 }
 
 /**
@@ -84,7 +139,7 @@ export function heroIdentityWidth(layout: ProfileLayout, contentWidth: number, g
 
 function summaryWidth(layout: ProfileLayout, contentWidth: number, gutter: number): number {
   if (layout === 'desktop') {
-    const card = ((desktopInnerWidth(contentWidth) - space[24]) * DESKTOP_CARD_FLEX) / (DESKTOP_GALLERY_FLEX + DESKTOP_CARD_FLEX);
+    const { card } = desktopColumns(contentWidth, hasSideIndex(layout, contentWidth));
     return Math.max(0, card - 2 * space[24]);
   }
   if (layout === 'tablet') return Math.max(0, Math.min(contentWidth, TABLET_COLUMN) - 2 * gutter);

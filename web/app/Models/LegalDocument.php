@@ -21,8 +21,9 @@ use Illuminate\Support\Carbon;
  * @property int|null $created_by
  * @property int|null $published_by
  * @property string|null $reason
+ * @property int|null $based_on_id the published version a draft was started from (DQ-P5-101, App\Services\Content\LegalDrafts)
  */
-#[Fillable(['key', 'locale', 'version', 'body_md', 'requires_reconsent', 'summary', 'published_at', 'created_by', 'published_by', 'reason'])]
+#[Fillable(['key', 'locale', 'version', 'body_md', 'requires_reconsent', 'summary', 'published_at', 'created_by', 'published_by', 'reason', 'based_on_id'])]
 class LegalDocument extends Model
 {
     /** @use HasFactory<LegalDocumentFactory> */

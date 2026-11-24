@@ -31,7 +31,7 @@
                     @endif
                 </span>
                 @if ($entry['provenance'] !== null)
-                    <span class="t-caption text-ink-3">{{ $entry['provenance'] }}</span>
+                    <span class="sc-strip-caption t-caption text-ink-3">{{ $entry['provenance'] }}</span>
                 @endif
             </li>
         @endforeach

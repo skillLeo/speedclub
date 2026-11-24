@@ -68,7 +68,8 @@ export function isAuthRoute(pathname: string): boolean {
   return AUTH_ROUTES.has(pathname);
 }
 
-const isOpenRoute = (pathname: string) =>
+/** Never redirected nor interrupted (R4-1.4: the introduction waits too). */
+export const isOpenRoute = (pathname: string) =>
   OPEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
 /**
@@ -141,7 +142,7 @@ export function routeForSession(input: {
 }
 
 /** What a guest may keep looking at after a session ended. Everything else goes to Welcome. */
-const GUEST_EXACT = new Set(['/', '/garage', '/messages', '/profile', '/discover', '/events', SECURE_PATH]);
+const GUEST_EXACT = new Set(['/', '/garage', '/messages', '/profile', '/discover', '/events', '/shop', SECURE_PATH]);
 const GUEST_PREFIXES = ['/discover/', '/v/', '/u/', '/c/', '/events/', '/settings/legal'];
 
 export function isGuestPath(pathname: string): boolean {

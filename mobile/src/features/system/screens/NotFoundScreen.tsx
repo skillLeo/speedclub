@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Button, Header } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Header } from '@/ui/Header';
 
 import { BrandStage } from '../components/BrandStage';
 import { NOT_FOUND_PHOTO } from '../photos';

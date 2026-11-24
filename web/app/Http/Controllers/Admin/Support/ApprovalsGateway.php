@@ -6,10 +6,12 @@ use App\Enums\ApprovalStatus;
 use App\Models\ApprovalRequest;
 use App\Models\Staff;
 use App\Services\Approvals\Approvals;
+use App\Services\Approvals\OwnerOverride;
 
 /**
  * The admin UI's door to the four-eyes engine (ADR-214, contract §1.5). Controllers never execute a four-eyes action: they call
- * request() and answer with the pending request as the flash `approval`. Summary titles are admin i18n keys (approvals.*).
+ * request() and answer with the pending request as the flash `approval` (ADR-540: with four-eyes off, the request has already run
+ * as a direct action; the flash says so). Summary titles are admin i18n keys (approvals.*).
  */
 class ApprovalsGateway
 {
@@ -79,17 +81,52 @@ class ApprovalsGateway
 
     /**
      * The flash of a four-eyes request. `existing`: the same request was already pending (Approvals::request() returned it instead of a
-     * new one, review N-1), so the notice says it waits already.
+     * new one, review N-1), so the notice says it waits already. M5.1 (ADR-507): who can approve it (`approvers`, at most 5 names, and
+     * `approvers_total`) and whether the signed-in staff member who sees the flash may execute it as an Owner-Override (`override`, SF-3:
+     * computed for the viewer, never for the original requester of an `existing` request), so the notice never just waits.
      *
-     * @return array{id: string, title: string, expires_at: string, existing: bool}
+     * ADR-540: while four-eyes is off the request ran at once (`direct`): the shell shows a success toast (status executed) or the
+     * refusal (status failed, `error`) instead of the waiting notice.
+     *
+     * @return array{id: string, title: string, expires_at: string, existing: bool, approvers: list<string>, approvers_total: int, override: bool, direct?: true, status?: string, error?: string|null}
      */
     public static function flash(ApprovalRequest $request): array
     {
-        return [
+        $base = [
             'id' => $request->id,
             'title' => $request->summary['title'],
             'expires_at' => $request->expires_at->toIso8601String(),
             'existing' => ! $request->wasRecentlyCreated,
         ];
+
+        if (($request->result['direct'] ?? null) === true) {
+            $error = $request->result['error'] ?? null;
+
+            return [...$base, 'approvers' => [], 'approvers_total' => 0, 'override' => false, 'direct' => true, 'status' => $request->status->value, 'error' => is_string($error) ? $error : null];
+        }
+
+        return [...$base, ...self::waiting($request, self::viewer())];
+    }
+
+    private static function viewer(): ?Staff
+    {
+        $staff = auth('staff')->user();
+
+        return $staff instanceof Staff ? $staff : null;
+    }
+
+    /**
+     * Who can approve a pending request, and whether $viewer may override it (OwnerOverride::status()); nobody and no override for a
+     * viewer who is gone.
+     *
+     * @return array{approvers: list<string>, approvers_total: int, override: bool}
+     */
+    public static function waiting(ApprovalRequest $request, ?Staff $viewer): array
+    {
+        if ($viewer === null) {
+            return ['approvers' => [], 'approvers_total' => 0, 'override' => false];
+        }
+
+        return app(OwnerOverride::class)->status($request, $viewer);
     }
 }

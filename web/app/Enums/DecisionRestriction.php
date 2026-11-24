@@ -10,5 +10,7 @@ enum DecisionRestriction: string
 {
     case Messaging = 'messaging';
     case Publishing = 'publishing';
+    // M5.8: the forum ban (RestrictionType::Forum).
+    case Forum = 'forum';
     case Suspension = 'suspension';
 }

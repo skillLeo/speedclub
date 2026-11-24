@@ -40,7 +40,9 @@ class CaseShowController extends Controller
             'messageCase' => $row->target_type === ReportTargetType::Message,
             // M3.7 [AI] "KI-Vorschlag" (ai.moderation_triage): the triage's score and reason, a suggestion that never decides (ADR-243).
             'ai' => fn (): ?array => $flags->enabled('ai.moderation_triage') && $row->ai_score !== null
-                ? ['score' => round((float) $row->ai_score, 2), 'summary' => $row->ai_summary]
+                // M5.9 (10 §8.6): `template_key`, the statement-of-reasons template the triage suggests (null when none); DecisionComposer
+                // offers it as "KI-Vorschlag", a human applies it and decides.
+                ? ['score' => round((float) $row->ai_score, 2), 'summary' => $row->ai_summary, 'template_key' => $row->ai_template_key]
                 : null,
         ]);
     }

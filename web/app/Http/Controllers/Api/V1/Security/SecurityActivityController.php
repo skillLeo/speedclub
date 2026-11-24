@@ -75,7 +75,7 @@ class SecurityActivityController extends Controller
     /**
      * Sign-in methods (SET-19).
      *
-     * Every way into the account: the e-mail code (always), the password, two-factor, Apple and Google, the number of passkeys.
+     * Every way into the account: the e-mail code (unless switched off, ADR-520), the password, two-factor, Apple and Google, the number of passkeys.
      */
     public function methods(Request $request, SignInMethods $methods, FeatureFlags $flags): SignInMethodsResource
     {
@@ -90,7 +90,7 @@ class SecurityActivityController extends Controller
             $methods->mailboxReachable($user),
             $user->socialAccounts()->get(),
             $user->memberPasskeys()->count(),
-            array_combine($keys, array_map(fn (string $key): bool => $flags->enabled($key), $keys)),
+            [...array_combine($keys, array_map(fn (string $key): bool => $flags->enabled($key), $keys)), 'auth.email_code' => ! $flags->switchedOff('auth.email_code')],
         ));
     }
 

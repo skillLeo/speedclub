@@ -6,7 +6,7 @@
         <meta name="color-scheme" content="dark light">
         <meta name="robots" content="noindex, nofollow">
         <meta name="csp-nonce" content="{{ Vite::cspNonce() }}">
-        <title inertia>SPEED CLUB Admin</title>
+        <title inertia>Speedclub Admin</title>
         {{-- Admin has two themes (03 §14): Carbon and Hell. Set before the first paint, so there is no flash. --}}
         <script nonce="{{ Vite::cspNonce() }}">
             try { document.documentElement.dataset.theme = localStorage.getItem('sc-admin-theme') === 'light' ? 'light' : 'carbon'; }

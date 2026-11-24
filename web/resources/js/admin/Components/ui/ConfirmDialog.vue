@@ -8,13 +8,16 @@ import Input from './Input.vue';
 import Textarea from './Textarea.vue';
 import ApprovalNotice from '../patterns/ApprovalNotice.vue';
 import { formatNumber } from '../../lib/format';
+import { useFourEyes } from '../../composables/fourEyes';
 
 /**
  * Confirmation for destructive and high-risk actions (06 §5).
  * - `typed`: irreversible → the person types the confirm word ("LÖSCHEN" / "DELETE") first.
- * - `reason`: the spec says "with reason" → 10–1000 characters, emitted with `confirm`.
+ * - `reason`: a reason the MEMBER reads (a rejection or cancellation text) → 10–1000 characters, emitted with `confirm`. ADR-540: staff
+ *   give no internal reason any more, so only those member-facing texts use it.
  * - `fourEyes`: the action only creates an approval request: the ApprovalNotice says what happens next (one design everywhere, DQ-632)
  *   and the confirm button says "Freigabe anfragen" in the neutral primary style; the red label stays for the approver's execution.
+ *   ADR-540: only while the governance four-eyes switch is on; off, the action runs at once and the dialog is a plain confirmation.
  * - `reasonMax` / `reasonHint`: a reason with a shorter limit (e.g. one the member reads, DQ-607); `reasonFirst` keeps the confirm
  *   disabled until the reason has the right length.
  * Extra fields (e.g. a format choice) go in the default slot, above the reason.
@@ -42,6 +45,8 @@ const props = withDefaults(
 );
 const emit = defineEmits<{ confirm: [reason: string | null] }>();
 
+const fourEyesOn = useFourEyes();
+const asksApproval = computed(() => props.fourEyes && fourEyesOn.value);
 const word = computed(() => trans('ui.confirm.typed_word'));
 const typedValue = ref('');
 const reasonValue = ref('');
@@ -76,7 +81,7 @@ function submit(): void {
     <Dialog v-model:open="open" :title="title" :description="body" size="sm" role="alertdialog" :test-id="testId" :dismissible="!processing">
         <form :id="`${testId ?? 'confirm'}-form`" class="flex flex-col gap-16" novalidate @submit.prevent="submit">
             <slot />
-            <ApprovalNotice v-if="fourEyes" :test-id="testId ? `${testId}.four-eyes` : 'approval-notice'" />
+            <ApprovalNotice v-if="asksApproval" :test-id="testId ? `${testId}.four-eyes` : 'approval-notice'" />
             <Field v-if="reason" :label="reasonLabel ?? trans('ui.confirm.reason')" :hint="reasonHint ?? trans('ui.confirm.reason_hint')" :error="reasonError" required>
                 <Textarea v-model="reasonValue" :rows="3" :maxlength="reasonMax" show-count :data-testid="testId ? `${testId}.reason` : undefined" />
             </Field>
@@ -90,12 +95,12 @@ function submit(): void {
             <Button
                 type="submit"
                 :form="`${testId ?? 'confirm'}-form`"
-                :variant="tone === 'danger' && !fourEyes ? 'danger' : 'primary'"
+                :variant="tone === 'danger' && !asksApproval ? 'danger' : 'primary'"
                 :disabled="!typedOk || (reason && reasonFirst && !reasonOk)"
                 :loading="processing"
                 :data-testid="testId ? `${testId}.confirm` : undefined"
             >
-                {{ fourEyes ? trans('ui.confirm.request') : confirmLabel }}
+                {{ asksApproval ? trans('ui.confirm.request') : confirmLabel }}
             </Button>
         </template>
     </Dialog>

@@ -26,8 +26,8 @@ return [
     'security' => [
         'secure_link_invalid' => 'Dieser Link ist abgelaufen oder wurde schon benutzt. Melde dich an und prüfe unter Einstellungen › Sicherheitsaktivität, was passiert ist.',
         'ticket_subject' => 'Das war ich nicht: Konto gesichert',
-        'ticket_message' => 'Automatisch erstellt: Ich habe „:event“ am :time (:device) nicht selbst ausgelöst. SPEED CLUB hat alle Geräte abgemeldet. Bitte prüft mein Konto.',
-        'ticket_message_plain' => 'Automatisch erstellt: Ich habe eine Aktivität in meinem Konto nicht selbst ausgelöst. SPEED CLUB hat alle Geräte abgemeldet. Bitte prüft mein Konto.',
+        'ticket_message' => 'Automatisch erstellt: Ich habe „:event“ am :time (:device) nicht selbst ausgelöst. Speedclub hat alle Geräte abgemeldet. Bitte prüft mein Konto.',
+        'ticket_message_plain' => 'Automatisch erstellt: Ich habe eine Aktivität in meinem Konto nicht selbst ausgelöst. Speedclub hat alle Geräte abgemeldet. Bitte prüft mein Konto.',
         'ticket_removed' => 'Entfernt, weil es nach der gemeldeten Anmeldung hinzukam: :items.',
         'removed' => [
             'passkeys' => '{1} 1 Passkey|[2,*] :count Passkeys',
@@ -64,14 +64,14 @@ return [
     'export' => [
         'busy' => 'Gerade werden sehr viele Exporte erstellt. Versuch es in einer Stunde noch einmal.',
         'readme' => [
-            'title' => 'SPEED CLUB – dein Datenexport',
+            'title' => 'Speedclub – dein Datenexport',
             'created' => 'Erstellt am :date für @:username (:email).',
-            'intro' => 'Diese ZIP-Datei enthält die Daten, die SPEED CLUB zu deinem Konto speichert (Art. 15 und 20 DSGVO). Die Dateien sind JSON (UTF-8) und lassen sich mit jedem Texteditor öffnen.',
+            'intro' => 'Diese ZIP-Datei enthält die Daten, die Speedclub zu deinem Konto speichert (Art. 15 und 20 DSGVO). Die Dateien sind JSON (UTF-8) und lassen sich mit jedem Texteditor öffnen.',
             'files' => [
                 'profile.json' => 'Profil: E-Mail-Adresse, Benutzername, Name, Ort, Bio, Status, Mitglied seit.',
                 'settings.json' => 'Einstellungen: Sprache, Design, Leistungsanzeige, Privatsphäre, Mitteilungen, Zwei-Faktor-Schutz an oder aus.',
                 'consents.json' => 'Zustimmungen: Versionen von AGB und Datenschutz, Zeitpunkte, Marketing-Einwilligung.',
-                'vehicles.json' => 'Fahrzeuge mit technischen Daten, Modifikationen, Verlauf und QR-Codes, auch Entwürfe und gelöschte (innerhalb der 30 Tage).',
+                'vehicles.json' => 'Fahrzeuge mit technischen Daten, Modifikationen, Verlauf, Sticker (Codes und Designs), Dex-Nummer und Build Score (mit Teilwerten und Verlauf), auch Entwürfe und gelöschte (innerhalb der 30 Tage).',
                 'photos.json' => 'Alle Fotos, die du hochgeladen hast; die Originale liegen im Ordner photos/.',
                 'follows.json' => 'Wem du folgst und wer dir folgt (nur Benutzernamen).',
                 'blocks.json' => 'Konten, die du blockiert hast.',
@@ -91,11 +91,27 @@ return [
                 'browser_sessions.json' => 'Angemeldete Browser mit Browser, System und letzter Nutzung.',
                 'business.json' => 'Dein Betrieb: als Inhaber die Bewerbung mit Impressum, Nachweis-Notiz, Status und Begründung des Teams, dazu das Team; als Teammitglied Betrieb und Rolle; offene Team-Einladungen.',
                 'business_tags.json' => '„Eingebaut von“-Markierungen an deinen Modifikationen und die Markierungen, die du für deinen Betrieb entschieden hast (ohne andere Mitglieder).',
+                'social.json' => 'Deine Reaktionen auf Builds, Builds, denen du folgst, deine Sammlungen, Kommentare und Erwähnungen, die du geschrieben hast.',
+                'events.json' => 'Treffen, die du organisiert hast (mit Ort und deinen Updates), und deine Zusagen.',
+                'maintenance.json' => 'Deine Wartungspunkte und dein Wartungsbuch mit Kosten, Kilometerständen und gesendeten Erinnerungen.',
+                'spots.json' => 'Autos, die du gespottet hast (Fahrzeug, Dex-Nummer, Stadt und Bundesland, Zeitpunkt, gezählt oder entfernt), dein Dex-Fortschritt und deine First-Spotter-Folien. Keine Koordinaten.',
+                'spots_of_my_cars.json' => 'Was du über die Spots deiner Autos in der App siehst: Anzahlen, Städte (nur Tages-Spots), die letzten 30 Tage und Spotter nur, wenn sie ihre Spots zeigen; dazu Ghost-Modus, Pause und verborgene Städte.',
+                'progress.json' => 'Deine XP mit Art, Punkten und Datum, Level und Titel, deine Abzeichen und deine Founding-Member-Nummer.',
+                'invites.json' => 'Deine Einladungscodes mit Status und der Code, mit dem du dazugekommen bist. Andere Mitglieder nur mit Benutzernamen, sonst „ein Mitglied“.',
+                'car_of_the_day.json' => 'Tage, an denen eines deiner Autos Car of the Day war, mit Story-Zeile.',
+                'car_of_the_day_votes.json' => 'Deine Stimmen beim Car of the Day: Tag, gewähltes Auto, wann du abgestimmt und zuletzt geändert hast.',
+                'wrapped.json' => 'Dein Season Wrapped mit allen Karten, wie die App sie zeigt (ohne Fotolinks).',
+                // M5.8 Forum.
+                'forum.json' => 'Deine Forenthemen (Titel, Kategorie, Status, Daten), deine Beiträge mit deinem Text, wie du ihn geschrieben hast, deine „Hilfreich“-Markierungen und abonnierte Themen. Von Themen anderer Mitglieder nur der Titel.',
+                // M5.7 Statistiken.
+                'insights.json' => 'Wie oft dein Profil und deine Autos pro Tag angesehen wurden, nach Quelle (App, Web, Sticker-Scan, geteilter Link). Nur Summen, nie wer.',
             ],
             'not_included' => 'Nicht enthalten: dein Passwort und deine Zwei-Faktor-Schlüssel (nur als Prüfwert gespeichert), Fotos, die andere Mitglieder dir geschickt haben, und die Daten anderer Mitglieder. IP-Adressen speichern wir zu Mitgliedern nicht.',
-            'staff_copy' => 'Kopie für das SPEED-CLUB-Team (Vier-Augen-Freigabe): ohne Nachrichtentexte, Chat-Fotos und Reaktionen. Zu jeder Unterhaltung stehen nur Gesprächspartner, Ordner, Daten und Anzahlen darin.',
+            'staff_copy' => 'Kopie für das Speedclub-Team (Vier-Augen-Freigabe): ohne Nachrichtentexte, Chat-Fotos und Reaktionen. Zu jeder Unterhaltung stehen nur Gesprächspartner, Ordner, Daten und Anzahlen darin.',
             'questions' => 'Fragen? Schreib uns an :support.',
         ],
         'cooldown' => 'Du kannst einmal in 24 Stunden einen Export anfordern. Der nächste ist ab dem :date Uhr möglich.',
+        // M5.9d invites.json: the other side of an invite who is not public.
+        'a_member' => 'ein Mitglied',
     ],
 ];

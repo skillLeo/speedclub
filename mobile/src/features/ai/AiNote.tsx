@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { createStyles } from '@/theme';
-import { Button, Text, type TextProps } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Text, type TextProps } from '@/ui/Text';
 
 import type { AiNoteState } from './availability';
 

@@ -4,7 +4,8 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { joinShortCompounds } from '@/lib/format';
 import { createStyles } from '@/theme';
-import { PressableScale, Text } from '@/ui';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text } from '@/ui/Text';
 
 /** 09 §7.6 Übersicht (DQ-1056): four lines at every font scale, then "Mehr anzeigen". */
 export const DESCRIPTION_LINES = 4;

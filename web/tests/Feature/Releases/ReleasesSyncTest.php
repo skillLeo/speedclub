@@ -19,7 +19,7 @@ require_once __DIR__.'/../Admin/Config/ConfigHelpers.php';
 function m35Register(string $sha = '932AE22E788049E1FB6094763CAF76DEAC86F3BA428C0DFFAB390EE0087D346D'): string
 {
     return <<<MD
-    # SPEED CLUB — Releases
+    # Speedclub — Releases
 
     ## 0.1.0 (Build 1) - lan - 2026-11-02 08:54
     - APK: releases/android/speedclub-0.1.0-b1-lan.apk (51.2 MB)

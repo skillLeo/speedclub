@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Bundesland;
 use App\Enums\DistanceUnit;
 use App\Enums\MentionPrivacy;
 use App\Enums\OnboardingState;
@@ -29,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -45,14 +47,19 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $username null until the member chose one (AUTH-08)
  * @property UserStatus $status
  * @property array<string, array{until?: string|null, decision_id?: string|null}>|null $restrictions
+ * @property Carbon|null $plate_check_dismissed_at M5.9a: "Später" on the garage's "Kennzeichen prüfen" card
+ * @property int $xp M5.9d: the sum of the member's XP events
+ * @property int|null $founding_number M5.9d: Founding Member #0001–#1000 (production only)
+ * @property Carbon|null $activated_at M5.9d: first verified address with accepted terms
+ * @property string|null $pending_invite_code M5.9d: the invite code of the sign-up, redeemed at activation
  */
 #[Fillable([
     'email', 'password', 'username', 'display_name', 'city', 'bio', 'locale', 'theme', 'power_display',
     'who_can_message', 'discoverable', 'indexable', 'show_owner_on_qr', 'read_receipts', 'ai_suggestions', 'notification_prefs', 'mention_privacy',
-    'distance_unit', 'torque_unit', 'weight_unit', 'maintenance_prefs',
+    'distance_unit', 'torque_unit', 'weight_unit', 'maintenance_prefs', 'show_my_spots',
     'terms_version', 'privacy_version', 'consented_at', 'marketing_consent_at',
 ])]
-#[Hidden(['password', 'remember_token', 'credentials_epoch', 'two_factor_secret', 'two_factor_recovery_codes'])]
+#[Hidden(['password', 'remember_token', 'credentials_epoch', 'two_factor_secret', 'two_factor_recovery_codes', 'pending_invite_code'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -68,8 +75,12 @@ class User extends Authenticatable
             'password' => 'hashed',
             'username_changed_at' => 'datetime',
             'profile_setup_at' => 'datetime',
+            // M5.7 (review MF-1): the owner's last build prompt, for the 1-per-7-days limit.
+            'plan_prompted_at' => 'datetime',
             'is_sample' => 'boolean',
             'is_editorial' => 'boolean',
+            'show_my_spots' => 'boolean',
+            'bundesland' => Bundesland::class,
             'theme' => ThemePreference::class,
             'power_display' => PowerDisplay::class,
             'who_can_message' => WhoCanMessage::class,
@@ -101,6 +112,11 @@ class User extends Authenticatable
             'deletion_requested_at' => 'datetime',
             'onboarding_state' => OnboardingState::class,
             'age_confirmed_at' => 'datetime',
+            'plate_check_dismissed_at' => 'datetime',
+            // M5.9d supporting system.
+            'xp' => 'integer',
+            'founding_number' => 'integer',
+            'activated_at' => 'datetime',
         ];
     }
 

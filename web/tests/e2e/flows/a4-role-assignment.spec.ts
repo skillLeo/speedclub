@@ -6,7 +6,7 @@
 // ADM-39 → the subject → ADM-40 Rollen ändern → Admin → the atom diff (neue Rechte, four-eyes reasons) → Freigabe anfragen behind the
 // password dialog → the request is pending, the roles unchanged; the requester and the subject cannot approve it → the second admin
 // approves it on ADM-43 in another browser context → the subject's next request (the same session) has the new permissions → audit rows
-// (staff.roles_changed by the approver with the reason, approval.requested and approval.approved). Then the refusals:
+// (staff.roles_changed by the approver, approval.requested and approval.approved; ADR-540: no reason). Then the refusals:
 // - granting Owner needs an Owner approver: an admin who could approve anything else cannot (can_decide false, a direct POST 403); an
 //   Owner can, and the execution then fails on the Owner maximum (ADR-237: 3, with the seeded Owner, `owner` and `a4-owner`), so no
 //   fourth Owner ever exists;
@@ -15,7 +15,7 @@
 //   request has lost the permissions again.
 // The fixtures go with the run (delete-staff), their requests with them; their audit events stay (append-only).
 import type { BrowserContext, Locator, Page } from '@playwright/test';
-import { admin, confirmPassword, confirmPasswordDirectly, DESKTOP, pageProps, realClock, serverLang, staffContext, toast, xsrfOf } from '../support/admin-flow';
+import { admin, confirmPassword, confirmPasswordDirectly, DESKTOP, holdFourEyes, pageProps, realClock, serverLang, staffContext, toast, xsrfOf } from '../support/admin-flow';
 import { expect, test } from '../support/fixtures';
 import { browserOf, flowShot, id, open } from '../support/flow';
 import { staffRun } from '../support/staff.mjs';
@@ -74,12 +74,11 @@ async function chooseRoles(page: Page, staffId: number, roles: Record<string, bo
 /** The ADM-43 card of a role change about `name`, in a session's page. */
 const card = (page: Page, name: string) => page.locator('[data-testid="ADM-43.request"][data-action="staff.role_elevation"]:visible').filter({ hasText: name });
 
-async function approveOnAdm43(page: Page, name: string, requester: string, reason: string): Promise<void> {
+async function approveOnAdm43(page: Page, name: string, requester: string): Promise<void> {
   await open(page, '/admin/team/approvals', { now: new Date().toISOString() });
   const request = card(page, name);
   await expect(request).toHaveCount(1);
   await expect(request).toContainText(requester);
-  await expect(request).toContainText(reason);
   await request.locator('[data-testid="ADM-43.approve"]').click();
   await expect(id(page, 'ADM-43.decide')).toBeVisible();
   await id(page, 'ADM-43.comment').fill('Geprüft mit der Teamleitung, Vertretung im Dezember.');
@@ -91,6 +90,16 @@ async function approveOnAdm43(page: Page, name: string, requester: string, reaso
 test.describe.configure({ mode: 'serial' });
 
 test.describe('A4 role assignment', () => {
+  // ADR-540: four-eyes is off by default; this spec proves the engine with it switched on (support/admin-flow holdFourEyes).
+  let releaseFourEyes: (() => Promise<void>) | null = null;
+  test.beforeEach(async () => {
+    releaseFourEyes = await holdFourEyes(true);
+  });
+  test.afterEach(async () => {
+    await releaseFourEyes?.();
+    releaseFourEyes = null;
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(DESKTOP);
   });
@@ -136,8 +145,6 @@ test.describe('A4 role assignment', () => {
       await expect(id(page, 'ADM-40.roles-drawer.four-eyes')).toBeVisible();
       await expect(drawer).toContainText(admin('team', 'roles_drawer.why.elevates'));
       await expect(id(page, 'ADM-40.roles-drawer.submit')).toHaveText(admin('team', 'roles_drawer.submit_four_eyes'));
-      const reason = `A4 ${browserName}: übernimmt die Teamleitung Support während der Elternzeit`;
-      await id(page, 'ADM-40.roles-drawer.reason').fill(reason);
       await flowShot(page, testInfo, 'ADM-40-rolesDiff', { phase: 3 });
       await id(page, 'ADM-40.roles-drawer.submit').click();
       await confirmPassword(page);
@@ -162,7 +169,7 @@ test.describe('A4 role assignment', () => {
       // A second admin approves it on ADM-43 Für mich, in another browser context.
       const approver = await staffContext(approverTab.context, `a4-approver-${browserName}`);
       await realClock(approverTab.page);
-      await approveOnAdm43(approverTab.page, subject.name, requester.name, reason);
+      await approveOnAdm43(approverTab.page, subject.name, requester.name);
       await expect(toast(approverTab.page, admin('approvals', 'flash.approved'))).toBeVisible();
 
       // The role is active: the subject's next request in the same session may open the permission matrix.
@@ -177,11 +184,12 @@ test.describe('A4 role assignment', () => {
       await flowShot(page, testInfo, 'ADM-40-roleApproved', { phase: 3 });
       const show = await pageProps<StaffShow>(context, `/admin/team/${subject.id}`);
       expect([...show.member.roles].sort()).toEqual(['admin', 'support']);
-      expect(show.activity.find((e) => e.action === 'staff.roles_changed' && e.reason === reason)?.actor).toBe(approver.name);
+      // The newest staff.roles_changed first (ADR-540: no reason to find it by).
+      expect(show.activity.find((e) => e.action === 'staff.roles_changed')?.actor).toBe(approver.name);
 
-      // Audit: the change under the approver's name with the reason; the request and its approval.
+      // Audit: the change under the approver's name (the newest row); the request and its approval.
       const changed = (await pageProps<{ rows: { data: AuditRow[] } }>(context, `/admin/audit?filter[action]=staff.roles_changed&filter[target_id]=${subject.id}`)).rows.data;
-      expect(changed.find((r) => r.reason === reason)?.actor.label, 'staff.roles_changed by the approver').toBe(approver.name);
+      expect(changed[0]?.actor.label, 'staff.roles_changed by the approver').toBe(approver.name);
       const trail = (await pageProps<{ rows: { data: AuditRow[] } }>(context, `/admin/audit?filter[target_id]=${mine.id}`)).rows.data;
       expect(trail.find((r) => r.action === 'approval.requested')?.actor.label).toBe(requester.name);
       expect(trail.find((r) => r.action === 'approval.approved')?.actor.label).toBe(approver.name);
@@ -203,9 +211,11 @@ test.describe('A4 role assignment', () => {
 
     // ADR-237: three Owners already (the seeded one, `owner`, `a4-owner`), so an approved Owner grant must fail, never make a fourth.
     const team = await pageProps<{ owners: { active: number; max: number } }>(context, '/admin/team');
-    expect(team.owners, 'the Owner count A4 is written for').toEqual({ active: 3, max: 3 });
+    // ADR-540: locally the showcase staff (admin.demo) is an Owner too, outside the fixtures' share: the maximum is reached either way.
+    expect(team.owners.max, 'the Owner maximum A4 is written for').toBe(3);
+    expect(team.owners.active, 'the Owner count A4 is written for: at the maximum').toBeGreaterThanOrEqual(team.owners.max);
     await open(page, '/admin/team', { now });
-    await expect(id(page, 'ADM-39.owners')).toHaveText(admin('team', 'index.owners', { count: '3', max: '3' }));
+    await expect(id(page, 'ADM-39.owners')).toHaveText(admin('team', 'index.owners', { count: String(team.owners.active), max: '3' }));
 
     const tabs = await Promise.all([0, 1, 2, 3].map(() => browserOf(browser, null, { pageErrors, blockedRequests, expected: [] }, DESKTOP)));
     const [ownerTab, approverTab, subjectTab, secondOwnerTab] = tabs as [typeof tabs[0], typeof tabs[0], typeof tabs[0], typeof tabs[0]];
@@ -222,8 +232,6 @@ test.describe('A4 role assignment', () => {
       const drawer = id(ownerTab.page, 'ADM-40.roles-drawer');
       await expect(drawer).toContainText(admin('team', 'roles_drawer.why.elevates'));
       await expect(drawer).toContainText(admin('team', 'roles_drawer.why.owner'));
-      const ownerReason = `A4 ${browserName}: zweite Vertretung der Geschäftsführung für den Jahreswechsel`;
-      await id(ownerTab.page, 'ADM-40.roles-drawer.reason').fill(ownerReason);
       await id(ownerTab.page, 'ADM-40.roles-drawer.submit').click();
       await confirmPassword(ownerTab.page);
       await expect(id(ownerTab.page, 'shell.approval')).toBeVisible();
@@ -241,13 +249,14 @@ test.describe('A4 role assignment', () => {
       // A second Owner may decide it; executed, the Owner maximum refuses it and nothing changes.
       await realClock(secondOwnerTab.page);
       expect((await approvals(secondOwnerTab.context, 'all')).find((r) => r.id === grant.id)?.can_decide, 'an Owner may approve an Owner grant').toBe(true);
-      await approveOnAdm43(secondOwnerTab.page, subject.name, owner.name, ownerReason);
+      await approveOnAdm43(secondOwnerTab.page, subject.name, owner.name);
       await expect(secondOwnerTab.page.locator('[data-testid="toast.error"]:visible').filter({ hasText: admin('approvals', 'flash.failed') })).toBeVisible();
       const failed = (await approvals(secondOwnerTab.context, 'all')).find((r) => r.id === grant.id);
       expect(failed).toMatchObject({ status: 'failed', decided_by: secondOwner.name });
       expect(failed?.result.error).toBe(serverLang('team', 'refused.max_owners', { max: '3' }));
       expect((await pageProps<StaffShow>(context, `/admin/team/${subject.id}`)).member.roles).not.toContain('owner');
-      expect((await pageProps<{ owners: { active: number } }>(context, '/admin/team')).owners.active).toBe(3);
+      // No Owner was added: the count is the one before the grant.
+      expect((await pageProps<{ owners: { active: number } }>(context, '/admin/team')).owners.active).toBe(team.owners.active);
 
       // Back to Support (taking Admin away is four-eyes, SF-6). The subject, an Admin now, holds every atom the request needs and is not
       // its requester: only Approvals::isAbout refuses them.
@@ -256,8 +265,6 @@ test.describe('A4 role assignment', () => {
       const back = id(page, 'ADM-40.roles-drawer');
       await expect(id(page, 'ADM-40.roles-drawer.diff')).toContainText(`− ${admin('team', 'atoms.roles.manage')}`);
       await expect(back).toContainText(admin('team', 'roles_drawer.why.demotes'));
-      const backReason = `A4 ${browserName}: Vertretung beendet, zurück in den Support`;
-      await id(page, 'ADM-40.roles-drawer.reason').fill(backReason);
       await flowShot(page, testInfo, 'ADM-40-rolesDemote', { phase: 3 });
       await id(page, 'ADM-40.roles-drawer.submit').click();
       await confirmPasswordIfAsked(page, id(page, 'shell.approval'));
@@ -268,12 +275,12 @@ test.describe('A4 role assignment', () => {
       expect(await approveDirectly(subjectTab.context, demote.id), 'the subject cannot approve a request about themselves').toBe(403);
       expect((await approvals(approverTab.context, 'all')).find((r) => r.id === demote.id)?.can_decide).toBe(true);
 
-      await approveOnAdm43(approverTab.page, subject.name, requester.name, backReason);
+      await approveOnAdm43(approverTab.page, subject.name, requester.name);
       await expect(toast(approverTab.page, admin('approvals', 'flash.approved'))).toBeVisible();
       expect(await permissionsPage(subjectTab.context), 'the subject\'s next request has lost roles.manage').toBe(403);
       expect((await pageProps<StaffShow>(context, `/admin/team/${subject.id}`)).member.roles).toEqual(['support']);
       const changed = (await pageProps<{ rows: { data: AuditRow[] } }>(context, `/admin/audit?filter[action]=staff.roles_changed&filter[target_id]=${subject.id}`)).rows.data;
-      expect(changed.find((r) => r.reason === backReason)?.actor.label).toBe(approver.name);
+      expect(changed[0]?.actor.label).toBe(approver.name);
       const trail = (await pageProps<{ rows: { data: AuditRow[] } }>(context, `/admin/audit?filter[target_id]=${grant.id}`)).rows.data;
       expect(trail.find((r) => r.action === 'approval.failed')?.actor.label, 'the failed Owner grant is audited').toBe(secondOwner.name);
     } finally {

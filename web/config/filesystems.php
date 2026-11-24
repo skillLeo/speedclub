@@ -41,7 +41,9 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            // ADR-539: a host that forbids the public/storage link gets a real public/storage folder from the setup page (copy
+            // fallback); photos are then written there directly and the web server serves them without a link.
+            'root' => is_dir(public_path('storage')) && ! is_link(public_path('storage')) ? public_path('storage') : storage_path('app/public'),
             'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,

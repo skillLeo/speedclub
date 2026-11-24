@@ -18,28 +18,28 @@ $ulid = '[0-9A-Za-z]{26}';
 
 Route::middleware([...AdminRoutes::signedIn(), 'can:moderation.view'])->prefix('moderation')->name('moderation.')->group(function () use ($ulid): void {
     Route::get('reports', ReportsQueueController::class)->name('reports');
-    Route::post('reports/bulk', ReportsBulkController::class)->middleware(['can:moderation.decide', 'staff.recent-password', 'throttle:20,1'])->name('reports.bulk');
+    Route::post('reports/bulk', ReportsBulkController::class)->middleware(['can:moderation.decide', 'staff.recent-password', 'throttle:20,1,admin-moderation-1'])->name('reports.bulk');
 
     Route::get('cases/{case}', CaseShowController::class)->where('case', $ulid)->name('cases.show');
     Route::get('messages', MessageCasesController::class)->middleware('can:moderation.messages')->name('messages');
     // SEC-P3-25: a web notifier's address, audited and capped per day (PiiReveals); JSON only. Outside the 60-a-minute group, whose
     // limiter would share its key with this one and count each request twice.
-    Route::post('cases/{case}/reports/{report}/contact', [CaseJsonController::class, 'contact'])->middleware(['can:members.view_pii', 'throttle:30,1'])->where(['case' => $ulid, 'report' => $ulid])->name('cases.reports.contact');
+    Route::post('cases/{case}/reports/{report}/contact', [CaseJsonController::class, 'contact'])->middleware(['can:members.view_pii', 'throttle:30,1,admin-moderation-2'])->where(['case' => $ulid, 'report' => $ulid])->name('cases.reports.contact');
 
-    Route::middleware('throttle:60,1')->group(function () use ($ulid): void {
+    Route::middleware('throttle:60,1,admin-moderation-3')->group(function () use ($ulid): void {
         Route::post('cases/{case}/assign', [CaseActionsController::class, 'assign'])->middleware('can:moderation.decide')->where('case', $ulid)->name('cases.assign');
         // M4.17: the 5-s undo of "Übernehmen" in the SplitQueue (ReleaseCase), only with the record the take left in this session.
         Route::post('cases/{case}/release', [CaseActionsController::class, 'release'])->middleware('can:moderation.decide')->where('case', $ulid)->name('cases.release');
         Route::post('cases/{case}/decide', [CaseActionsController::class, 'decide'])->middleware(['can:moderation.decide', 'staff.recent-password'])->where('case', $ulid)->name('cases.decide');
         Route::post('cases/{case}/preview', [CaseJsonController::class, 'preview'])->middleware('can:moderation.decide')->where('case', $ulid)->name('cases.preview');
-        Route::post('cases/{case}/evidence', [CaseJsonController::class, 'evidence'])->middleware('throttle:30,1')->where('case', $ulid)->name('cases.evidence');
-        Route::post('cases/{case}/live-context', [CaseJsonController::class, 'live'])->middleware(['can:moderation.messages', 'throttle:20,1'])->where('case', $ulid)->name('cases.live');
+        Route::post('cases/{case}/evidence', [CaseJsonController::class, 'evidence'])->middleware('throttle:30,1,admin-moderation-4')->where('case', $ulid)->name('cases.evidence');
+        Route::post('cases/{case}/live-context', [CaseJsonController::class, 'live'])->middleware(['can:moderation.messages', 'throttle:20,1,admin-moderation-5'])->where('case', $ulid)->name('cases.live');
         Route::post('appeals/{appeal}/decide', [CaseActionsController::class, 'decideAppeal'])->middleware(['can:moderation.appeals', 'staff.recent-password'])->where('appeal', $ulid)->name('appeals.decide');
     });
 
     Route::middleware('can:moderation.rules')->group(function (): void {
         Route::get('rules', [RulesController::class, 'index'])->name('rules');
-        Route::middleware(['staff.recent-password', 'throttle:30,1'])->group(function (): void {
+        Route::middleware(['staff.recent-password', 'throttle:30,1,admin-moderation-6'])->group(function (): void {
             Route::post('rules', [RulesController::class, 'store'])->name('rules.store');
             Route::delete('rules/{rule}', [RulesController::class, 'destroy'])->whereNumber('rule')->name('rules.destroy');
             Route::post('rules/rate-limits', [RulesController::class, 'limits'])->name('rules.limits');
@@ -47,7 +47,7 @@ Route::middleware([...AdminRoutes::signedIn(), 'can:moderation.view'])->prefix('
     });
 
     Route::get('templates', [TemplatesController::class, 'index'])->name('templates');
-    Route::middleware(['can:moderation.templates', 'throttle:30,1'])->group(function () use ($ulid): void {
+    Route::middleware(['can:moderation.templates', 'throttle:30,1,admin-moderation-7'])->group(function () use ($ulid): void {
         Route::post('templates', [TemplatesController::class, 'store'])->name('templates.store');
         Route::patch('templates/{template}', [TemplatesController::class, 'update'])->where('template', $ulid)->name('templates.update');
         Route::delete('templates/{template}', [TemplatesController::class, 'destroy'])->where('template', $ulid)->name('templates.destroy');

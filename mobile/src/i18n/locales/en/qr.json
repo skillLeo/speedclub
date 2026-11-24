@@ -12,20 +12,13 @@
         "none": "No code"
     },
     "list": {
-        "title": "My QR codes",
-        "subtitle": "Every published vehicle has its own code.",
-        "emptyTitle": "No QR codes yet",
-        "emptyBody": "Publish a vehicle and you'll get its QR code.",
-        "addVehicle": "Add vehicle",
-        "errorTitle": "Your QR codes could not be loaded",
-        "offlineBody": "As soon as you're back online, we'll load your QR codes.",
-        "suspendedNotice": "Your account is suspended. Anyone scanning your codes currently sees “This vehicle is private”."
+        "addVehicle": "Add vehicle"
     },
     "detail": {
-        "title": "QR code",
-        "cardLabel": "QR code for {{vehicle}}",
+        "title": "Sticker",
+        "cardLabel": "Your sticker’s QR code for {{vehicle}}",
         "share": "Share",
-        "shareTitle": "{{vehicle}} on SPEED CLUB",
+        "shareTitle": "{{vehicle}} on Speedclub",
         "linkCopied": "Link copied",
         "shareFailed": "Sharing didn't work. Please try again.",
         "publicPage": "View public page",
@@ -34,40 +27,40 @@
         "reissueHint": "Old stickers will then only show “no longer valid”.",
         "privateNotice": "Your vehicle is private. Anyone scanning the code sees “This vehicle is private”.",
         "suspendedNotice": "Your account is suspended. While the suspension lasts, you can't replace the QR code.",
-        "errorTitle": "The QR code could not be loaded",
-        "cardErrorTitle": "The code could not be shown",
-        "savePhoto": "Save to Photos",
-        "saveImage": "Save as image",
+        "errorTitle": "Your sticker could not be loaded",
         "stickerPdf": "Sticker PDF",
-        "moreFormats": "More formats",
-        "orderSticker": "Order stickers",
-        "shopFailed": "The sticker shop couldn't be opened. Please try again.",
-        "downloadFailed": "The file couldn't be loaded. Please try again."
+        "orderSticker": "Order sticker",
+        "downloadFailed": "The file couldn't be loaded. Please try again.",
+        "design": "Design sticker",
+        "scanStats": "Scan statistics",
+        "qrCode": "QR code",
+        "scansThirty_one": "{{total}} scan in 30 days",
+        "scansThirty_other": "{{total}} scans in 30 days"
     },
     "reissue": {
         "title": "Replace QR code?",
-        "body": "You'll get a new code. Anyone scanning the old sticker will then only see “This QR code is no longer valid”. This can't be undone.",
+        "body": "You'll get a new code. Anyone scanning the old sticker will then only see “This sticker is no longer valid”. This can't be undone.",
         "cancel": "Cancel",
         "confirm": "Replace QR code",
         "done": "Your new QR code is active. Download it and replace the old sticker.",
         "failed": "Replacing didn't work. Please try again."
     },
     "blocked": {
-        "title": "This QR code is blocked",
-        "body": "Our team has blocked it. Anyone scanning it sees “This QR code is no longer valid”. Only our team can issue a new code."
+        "title": "This sticker is blocked",
+        "body": "Our team has blocked its QR code. Anyone scanning it sees “This sticker is no longer valid”. Only our team can issue a new code."
     },
     "inactive": {
         "title": "No active QR code right now",
         "body": "There's no active code for this vehicle at the moment. Please try again shortly."
     },
     "unavailable": {
-        "title": "QR code not available",
+        "title": "Sticker not available",
         "body": "The vehicle isn't published yet or isn't in your garage.",
         "garage": "Go to garage"
     },
     "guest": {
-        "title": "Sign in to see your QR codes",
-        "body": "Every vehicle you publish gets a QR code for your sticker.",
+        "title": "Sign in to see your stickers",
+        "body": "Every vehicle you publish gets its own sticker with a QR code.",
         "signIn": "Sign in"
     },
     "download": {
@@ -107,7 +100,7 @@
     },
     "placement": {
         "title": "Sticker placement",
-        "subtitle": "Where to put your QR sticker",
+        "subtitle": "Where your sticker belongs",
         "diagramLabel": "Car seen from above, front on the left: 1 boot lid and bumper, 2 rear window, 3 front side windows, 4 windscreen.",
         "front": "Front",
         "rear": "Rear",
@@ -123,7 +116,7 @@
             "windscreen": "Windscreen: preferably not at all. If you must, only right at the edge outside the field of view and never in the wiper area.",
             "size": "Keep it small: well under 0.1 m² and never more than a quarter of a window. Not reflective, not illuminated, never covering number plates, lights or inspection stickers."
         },
-        "print": "Printing: at least 30 × 30 mm for scans from about 1 m, larger for longer distances. Leave a white margin of 4 modules (squares) around the code. Matte vinyl, black on white.",
+        "print": "Printing: the designer keeps the QR code at 25 mm or more and leaves 4 modules clear around it. For scans from more than 1 m, choose size M or L. White print on dark glass, black print on light paint.",
         "disclaimer": "Not legal advice. The German StVZO (including §§ 35b, 40) and how the authorities apply it are decisive. Violations can result in a fine."
     },
     "preview": {
@@ -132,7 +125,7 @@
         "active": "This is how everyone who scans your sticker sees your vehicle – no app, no account.",
         "unlisted": "Unlisted: the page can only be reached through your sticker and the link, not through search or the feed.",
         "private": "Your vehicle is private. Anyone scanning the sticker sees “This vehicle is private”, not this page.",
-        "blocked": "Your QR code is blocked. Anyone scanning it sees “This QR code is no longer valid”.",
+        "blocked": "Your sticker is blocked. Anyone scanning its QR code sees “This sticker is no longer valid”.",
         "openFailed": "The page couldn't be opened. Please try again.",
         "errorTitle": "The page could not be loaded"
     },
@@ -140,7 +133,7 @@
         "checking": "Checking QR code",
         "states": {
             "revoked": {
-                "title": "This QR code is no longer valid",
+                "title": "This sticker is no longer valid",
                 "body": "This sticker no longer leads to a vehicle."
             },
             "private": {
@@ -148,7 +141,7 @@
                 "body": "The owner is not showing it publicly right now. Maybe later."
             },
             "not_found": {
-                "title": "We do not know this QR code",
+                "title": "We do not know this sticker",
                 "body": "Check the code on the sticker or scan it again."
             }
         },
@@ -160,17 +153,277 @@
         "offlineBody": "You need a connection to check the QR code."
     },
     "stats": {
-        "title": "Scans",
-        "summary": "{{recent}} in 14 days · {{total}} total",
-        "label": "Scans: {{recent}} in the last 14 days, {{total}} in total. {{milestone}}",
-        "milestoneNext": "Next milestone: {{next}} scans",
-        "milestoneReached": "Milestone reached: {{reached}} scans. The next one is at {{next}}.",
-        "milestoneLast": "Milestone reached: {{reached}} scans",
         "privacy": "We only count scans, never who scanned.",
-        "errorTitle": "The scans could not be loaded",
-        "summaryNone": "No scans yet",
-        "summaryNoneRecent": "{{total}} in total · none in the last 14 days",
-        "labelNone": "Scans: none yet. {{milestone}}",
         "milestoneFirst": "First milestone: {{next}} scans"
+    },
+    "hub": {
+        "title": "My stickers",
+        "subtitle": "Every published vehicle has its own sticker.",
+        "errorTitle": "Your stickers could not be loaded",
+        "offlineBody": "As soon as you’re back online, we’ll load your stickers.",
+        "emptyTitle": "Your first sticker is waiting",
+        "emptyBody": "Publish a vehicle, then design its window sticker here.",
+        "suspendedNotice": "Your account is suspended. You can view and download your stickers but not change them. Anyone scanning them currently sees “This vehicle is private”.",
+        "design": "Design",
+        "order": "Order",
+        "download": "Download",
+        "status": {
+            "active": "Active",
+            "revoked": "Blocked",
+            "none": "No code"
+        },
+        "notDesigned": "Not designed yet",
+        "draft": "Draft",
+        "scanPassed": "Scan test passed",
+        "noScanNeeded": "Without QR code",
+        "orderSoon": "Ordering available soon.",
+        "afterScanTest": "Downloading and ordering open up after the scan test.",
+        "openCard": "Open the sticker of {{vehicle}}",
+        "artLabel": "Sticker of {{vehicle}}: {{design}}",
+        "blockedStage": "Blocked – our team has blocked the code.",
+        "scansLabel_one": "One scan this week. Open scan statistics",
+        "scansLabel_other": "{{count}} scans this week. Open scan statistics",
+        "scansThisWeek_one": "scan this week",
+        "scansThisWeek_other": "scans this week",
+        "sampleLabel": "Example: a sticker with the Speedclub logo and your name",
+        "sampleName": "@your.name",
+        "noScansThisWeek": "No scans this week yet",
+        "scansLabelNone": "No scans this week yet. Open scan statistics",
+        "scanTest": "Scan test"
+    },
+    "designer": {
+        "title": "Design sticker",
+        "errorTitle": "The designer could not be loaded",
+        "offlineBanner": "Offline – your changes are saved as soon as you’re back online.",
+        "suspended": "Your account is suspended. You can view your sticker but not change it.",
+        "undo": "Undo",
+        "redo": "Redo",
+        "order": "Order sticker",
+        "history": "Earlier versions",
+        "status": {
+            "saved": "Saved",
+            "draft": "Not designed yet",
+            "pending": "Unsaved change",
+            "saving": "Saving …",
+            "offline": "Offline – will be saved later",
+            "conflict": "Changed on another device",
+            "invalid": "Not saved",
+            "forbidden": "View only",
+            "error": "Saving failed"
+        },
+        "dock": {
+            "label": "Settings",
+            "expand": "Show all settings",
+            "collapse": "Collapse settings"
+        },
+        "template": {
+            "group": "Template",
+            "names": {
+                "classic": "Classic",
+                "minimal": "Minimal",
+                "banner": "Banner",
+                "plate": "Plate",
+                "vertical_jdm": "Vertical JDM",
+                "round": "Round"
+            }
+        },
+        "content": {
+            "title": "Content",
+            "qr": "QR code",
+            "qrOn": "Leads to your build page",
+            "qrOffWarning": "Without a QR code, nobody can scan your build.",
+            "username": "Username",
+            "carName": "Vehicle name",
+            "customLine": "Your own line",
+            "customLineHelper": "{{count}} of {{max}} characters, one line",
+            "customLineErrors": {
+                "tooLong": "At most {{max}} characters.",
+                "lineBreak": "One line only, no line break.",
+                "characters": "Latin, Greek and Cyrillic letters, digits and punctuation only – no emoji."
+            },
+            "templateShows": "This template only prints: {{lines}}. Your other choices stay saved.",
+            "short": {
+                "username": "username",
+                "car_name": "vehicle name",
+                "custom_line": "your own line"
+            }
+        },
+        "print": {
+            "title": "Print",
+            "colourway": "Print colour",
+            "colourways": {
+                "white": {
+                    "name": "White print",
+                    "hint": "For dark glass"
+                },
+                "black": {
+                    "name": "Black print",
+                    "hint": "For light paint"
+                },
+                "white_red": {
+                    "name": "White with Signal Red",
+                    "hint": "For dark glass, with a Signal Red accent"
+                }
+            },
+            "material": "Film",
+            "materials": {
+                "transparent": "Transparent film",
+                "white_vinyl": "White film"
+            },
+            "mirrored": "Print mirrored",
+            "mirroredHelper": "For the inside of the window: it reads the right way round from outside."
+        },
+        "size": {
+            "title": "Size",
+            "s": "S",
+            "m": "M",
+            "l": "L",
+            "mm": "{{width}} × {{height}} mm",
+            "withQr": "{{size}}, QR code {{qr}} mm"
+        },
+        "rules": {
+            "mirroredOff": "Mirrored print only works on transparent film – we switched it off.",
+            "materialTransparent": "White print only works on transparent film – we chose it."
+        },
+        "preview": {
+            "modes": "Preview",
+            "flat": "Flat",
+            "car": "On the car",
+            "ruler": "Actual size",
+            "label": "Sticker {{template}}, {{width}} × {{height}} mm, {{colourway}}, {{qr}}, text: {{lines}}. {{mirrored}}",
+            "withQr": "with QR code",
+            "withoutQr": "without QR code",
+            "noLines": "logo only",
+            "mirrored": "Printed mirrored.",
+            "carLabel": "{{sticker}} On a photo: {{photo}}.",
+            "photoGroup": "Photo for the preview",
+            "photos": {
+                "day": "Day",
+                "evening": "Evening",
+                "lightPaint": "Light paint"
+            },
+            "rulerNote": "About actual size – exactly {{width}} × {{height}} mm. Every screen shows millimetres a little differently.",
+            "paused": "The preview waits until your own line fits.",
+            "errorTitle": "The preview could not be loaded",
+            "warnings": {
+                "username_too_long": "Your username is too long for this size and is left out.",
+                "car_name_too_long": "The vehicle name is too long for this size and is left out.",
+                "custom_line_too_long": "Your own line is too long for this size and is left out."
+            },
+            "rulerScroll": "It is larger than your screen. Swipe to see all of it.",
+            "rulerShort": "1:1",
+            "carCaption": "Example photo · real size",
+            "rulerUnit": "Centimetres"
+        },
+        "scan": {
+            "run": "Start scan test",
+            "passed": "Scan test passed",
+            "notApplicable": "Without a QR code, no scan test is needed.",
+            "failed": "Scan test failed. Change the size or print colour and test again.",
+            "failedBody": "The printed code could not be read reliably. Change the size or print colour and test again.",
+            "noActiveCode": "There is no active QR code for this vehicle right now. You can keep designing without a QR code.",
+            "needsSave": "Your changes are being saved, then you can start the scan test.",
+            "needsTest": "Before you order, we check that your sticker scans reliably.",
+            "rateLimited": "That was a lot of scan tests. Please try again in a few minutes.",
+            "offline": "The scan test needs a connection.",
+            "error": "The scan test didn’t work. Please try again.",
+            "changedDuringTest": "Your sticker changed during the test. Start the scan test again."
+        },
+        "conflict": {
+            "title": "Changed on another device",
+            "body": "Your sticker was saved on another device in the meantime. Do you want to load that newer version or keep yours?",
+            "load": "Load newer version",
+            "keep": "Keep my version",
+            "failed": "The newer version could not be loaded. Please try again.",
+            "resolve": "Resolve conflict",
+            "later": "Later"
+        },
+        "discard": {
+            "title": "Discard changes?",
+            "body": "Your latest changes are not saved yet.",
+            "offline": "You’re offline. Your latest changes are not saved yet and will be lost if you leave now."
+        },
+        "qaLine": "Built not bought"
+    },
+    "stickerFiles": {
+        "title": "Download",
+        "shareTitle": "Sticker for {{vehicle}}",
+        "stale": "This version is no longer current. The page loads the latest state.",
+        "formats": {
+            "pdf": {
+                "title": "Print PDF",
+                "detail": "Exact size, 3 mm bleed, crop marks and design ID – for the print shop"
+            },
+            "svg": {
+                "title": "SVG",
+                "detail": "Vector graphic with one layer per ink and the cut contour"
+            },
+            "share": {
+                "title": "Picture to share",
+                "detail": "PNG of your sticker; its code leads to your build page"
+            }
+        }
+    },
+    "stickerStats": {
+        "title": "Scan statistics",
+        "total": "Total scans",
+        "thisWeek": "This week",
+        "lastWeek": "Last week",
+        "days": "Last 30 days · {{total}} scans",
+        "chartLabel_one": "Scans over the last 30 days: one scan.",
+        "chartLabel_other": "Scans over the last 30 days: {{total}}, at most {{busiest}} on one day.",
+        "chartNone": "No scans in the last 30 days.",
+        "emptyBody": "As soon as it happens, you’ll see the day here.",
+        "sourceSticker": "Sticker scans (30 days)",
+        "sourceLink": "Shared links (30 days)",
+        "sourceLinkPending": "Visits through shared links will be counted soon.",
+        "notCounted": "Not counted yet",
+        "firstScan": "First scan",
+        "noScanYet": "None yet",
+        "milestones": "Milestones",
+        "disabledTitle": "Scan statistics are switched off right now",
+        "disabledBody": "We keep counting your scans. As soon as the statistics are back on, you’ll see them here.",
+        "errorTitle": "The scan statistics could not be loaded",
+        "zeroTitle": "Nobody has scanned your sticker yet."
+    },
+    "order": {
+        "title": "Order sticker",
+        "errorTitle": "Your sticker could not be loaded",
+        "notReadyTitle": "Scan test first",
+        "notReadyBody": "You can order a sticker once it has passed its scan test.",
+        "suspended": "Your account is suspended. While the suspension lasts, you can’t order stickers.",
+        "reference": "Design ID",
+        "template": "Template",
+        "size": "Size",
+        "print": "Print colour",
+        "material": "Film",
+        "mirrored": "mirrored",
+        "cta": "Order in the shop",
+        "hint": "You pay in the Speedclub shop on Shopify, not in the app. The design ID {{reference}} is attached to your order, so exactly this sticker gets printed.",
+        "soon": "Ordering available soon",
+        "openFailed": "The shop couldn’t be opened. Please try again.",
+        "stale": "This version can no longer be ordered because your sticker or its code changed. Run the scan test in the designer again.",
+        "forbidden": "Ordering isn’t possible for your account right now.",
+        "offline": "Ordering needs a connection.",
+        "failed": "The order link could not be created. Please try again.",
+        "toDesigner": "Go to the designer",
+        "artLabel": "Your sticker {{template}}, {{size}}",
+        "notReadyHint": "The test runs in the designer and takes a few seconds."
+    },
+    "history": {
+        "title": "Earlier versions",
+        "intro": "Every checked version stays here. Bring one back and it becomes your new draft.",
+        "validated": "Checked on {{date}}",
+        "draft": "Draft",
+        "version": "Version {{version}}",
+        "restore": "Bring back",
+        "restoreLabel": "Bring back version {{version}}",
+        "restored": "Version {{version}} is now your draft (version {{draft}}).",
+        "restoreFailed": "The version could not be brought back. Please try again.",
+        "errorTitle": "The versions could not be loaded",
+        "emptyTitle": "No versions yet",
+        "emptyBody": "Once your sticker has passed its scan test, every version is listed here.",
+        "restoreConflict": "Your sticker changed in the meantime. The list now shows the latest state – please try again.",
+        "currentPill": "Current"
     }
 }

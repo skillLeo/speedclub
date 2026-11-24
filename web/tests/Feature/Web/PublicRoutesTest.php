@@ -65,7 +65,7 @@ describe('/c/{code} and /C/{code}', function () {
 
         $response = $this->withHeader('Accept-Language', 'de')->get('/C/'.$this->qr->code)
             ->assertStatus(410)
-            ->assertSee("Dieser QR-\u{2060}Code ist nicht mehr gültig")
+            ->assertSee('Dieser Sticker ist nicht mehr gültig')
             ->assertSee('data-testid="WEB-06.root"', false)
             ->assertSee('data-state="revoked"', false)
             ->assertSee('<meta name="robots" content="noindex">', false);
@@ -93,7 +93,7 @@ describe('/c/{code} and /C/{code}', function () {
     it('shows WEB-06 not found for an unknown and for a malformed code', function (string $code) {
         $this->withHeader('Accept-Language', 'de')->get('/c/'.$code)
             ->assertNotFound()
-            ->assertSee("Diesen QR-\u{2060}Code kennen wir nicht")
+            ->assertSee('Diesen Sticker kennen wir nicht')
             ->assertSee('data-state="not_found"', false);
     })->with(['00000000', 'zu-lang-und-falsch']);
 
@@ -122,8 +122,8 @@ describe('/c/{code} and /C/{code}', function () {
     it('speaks English on request', function () {
         app(QrCodes::class)->revoke($this->vehicle, QrRevocationReason::Reissued);
 
-        $this->get('/c/'.$this->qr->code.'?lang=en')->assertSee('This QR code is no longer valid');
-        $this->withHeader('Accept-Language', 'en')->get('/c/'.$this->qr->code)->assertSee('This QR code is no longer valid');
+        $this->get('/c/'.$this->qr->code.'?lang=en')->assertSee('This sticker is no longer valid');
+        $this->withHeader('Accept-Language', 'en')->get('/c/'.$this->qr->code)->assertSee('This sticker is no longer valid');
     });
 
     it('gives a revoked code no reason, and says unavailable only when the vehicle or the account is gone', function (QrRevocationReason $reason, bool $deleteVehicle, string $locale, string $title, string $body) {
@@ -155,7 +155,7 @@ describe('/c/{code} and /C/{code}', function () {
         $this->withHeader('Accept-Language', 'de')->get('/C/'.$this->qr->code)
             ->assertStatus(410)
             ->assertSee('Dieses Fahrzeug ist nicht mehr verfügbar')
-            ->assertDontSee("Diesen QR-\u{2060}Code kennen wir nicht");
+            ->assertDontSee('Diesen Sticker kennen wir nicht');
     });
 
     it('sends a signed-in owner of a private vehicle to the page, and a blocked member to the private state, with the redirect on', function () {

@@ -51,7 +51,8 @@ describe('nameInText (DQ-926)', () => {
     const text = i18n.t('published.body', { ns: 'garage', lng: 'de', vehicle: slot('vehicle') });
     await renderUi(<SlotText variant="body" text={text} slots={{ vehicle: nameInText('Nissan Skyline GT-R R34') }} testID="body" />);
     const body = screen.getByTestId('body');
-    expect(body).toHaveTextContent(/^Nissan Skyline GT-.R.R34 hat jetzt einen eigenen QR-.Code\./);
+    // 10 §2.1: the product is the sticker; its QR code is a part of it.
+    expect(body).toHaveTextContent(/^Nissan Skyline GT-.R.R34 hat jetzt einen eigenen Sticker mit QR-.Code\./);
     const [name] = spans(body);
     expect(name?.children.join('')).toContain(`GT-${WJ}R`);
     expect(name && hyphensOf(name)).toBe('none');

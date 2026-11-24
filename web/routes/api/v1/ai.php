@@ -18,4 +18,10 @@ Route::middleware('member')->prefix('ai')->name('ai.')->group(function (): void 
         ->middleware([EnsureFeatureEnabled::class.':ai.translate', 'throttle:ai-translate'])->name('translate');
     Route::post('vehicles/{vehicle}/description', [AiController::class, 'description'])
         ->middleware([EnsureFeatureEnabled::class.':ai.description_assist', 'throttle:ai'])->name('vehicles.description');
+    // M5.9 (m5.9-contract §2.1, §2.2): typical factory specs in the wizard (shared cache per generation); a typed part matched to the
+    // catalogue (words first, AI only to normalise). Suggestions only: nothing is written, so no Idempotency-Key.
+    Route::post('specs/suggest', [AiController::class, 'suggestSpecs'])
+        ->middleware([EnsureFeatureEnabled::class.':ai.vehicle_specs', 'throttle:ai'])->name('specs.suggest');
+    Route::post('products/match', [AiController::class, 'matchProduct'])
+        ->middleware([EnsureFeatureEnabled::class.':ai.product_match', EnsureFeatureEnabled::class.':parts_catalogue', 'throttle:ai'])->name('products.match');
 });

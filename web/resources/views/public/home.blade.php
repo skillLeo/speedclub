@@ -1,31 +1,31 @@
 {{--
-    WEB-03 Landing ★ (09 §9, M4.16). Not a centred hero with a pill and two buttons: (1) a full-bleed night photo (88 svh on phones), the
-    claim left-aligned in display.title from the text-safe line down onto the dark stage, one line, "Zur Web-App" (the one filled CTA) and
-    the text link to the QR story; (2) the QR story in three real steps, each with a crop of the real UI (the lead build's spec strip, its
-    mod rows, its sticker code), no device mock-ups; (3) featured builds as an editorial grid (8 + 4 + 4), real or Beispiel-badged;
-    (4) the next three meets while `events` is on and there are any, the workshop teaser while `businesses` is on; (5) store links only
-    when they exist. Nothing invented: on an empty database the sections without content are simply not there.
+    WEB-03 Landing (R4-1.5, client round 4: "much simpler and cleaner"). Four parts, nothing else: (1) the full-bleed night photo with the
+    logo, the claim, one sentence and the way in, all in the first viewport (R4DQ-06); (2) "Was du mit Speedclub machst" in four items, an
+    editorial list (R4DQ-07); (3) the sticker in one block, with a real code to try and the link to the shop while it exists; (4) the
+    download section (#app, where the top bar's "App laden" leads). The footer is the layout's. The QR steps, featured builds, meets and
+    workshop teaser of M4.16 left the page; their components stay.
+    R4DQ-23, one honest filled CTA: with store links the stores lead (and "Im Browser öffnen" stays a quiet link); without them the web app
+    is the way in that works today, so "Im Browser öffnen" is the filled CTA and "So kommst du zur App" (WEB-04) the secondary.
 --}}
 @php
     $hero = \App\Services\PublicPages\PublicPhoto::brand('landing-hero');
-    $wheel = \App\Services\PublicPages\PublicPhoto::brand('landing-wheel');
     $taillight = \App\Services\PublicPages\PublicPhoto::brand('landing-taillight');
-    $station = \App\Services\PublicPages\PublicPhoto::brand('landing-station');
-    $vehicle = $featured['vehicle'] ?? null;
-    $featuredPhoto = $vehicle['photos'][0] ?? null;
-    $owner = $vehicle['owner'] ?? null;
-    $stepSizes = '(min-width: 1280px) 688px, (min-width: 768px) 58vw, 100vw';
-    $stores = array_filter(['App Store' => $store_ios, 'Google Play' => $store_android]);
     // DQ-1177: the claim breaks only between its sentences ("Dein Auto." / "Dein Build." / "Dein Club."), never inside one: the spaces
     // within a sentence become no-break spaces, which the title's size rule also treats as unbreakable (DisplayTitleLayout::words).
     $claim = (string) preg_replace('/(?<![.!?]) /u', "\u{00A0}", (string) __('public.home.claim'));
+    $items = [
+        'garage' => 'garage-bay',
+        'mods' => 'coilover',
+        'meets' => 'meet',
+        'discover' => 'compass',
+    ];
     $json = [[
         '@context' => 'https://schema.org',
         '@type' => 'Organization',
         '@id' => $canonical.'#organization',
         'name' => config('app.name'),
         'url' => $canonical,
-        'logo' => url('/brand/logo-wide-black-1280.png'),
+        'logo' => \App\Support\BrandFiles::url('brand/logo-wide-black-1280.png'),
         'slogan' => __('public.home.claim', [], 'de'),
     ], [
         '@context' => 'https://schema.org',
@@ -42,163 +42,86 @@
     <x-public.top-bar />
 
     <main id="main" class="flex-1" data-testid="WEB-03.root">
-        {{-- (1) The photo fades into its dark stage (scrim.photo); the claim starts at the text-safe line and every further line, at any
-             text size, flows onto the stage below the photo (ADR-421 b, DQ-917). The stage is dark in every theme. --}}
+        {{-- (1) The photo fades into its dark stage (scrim.photo); the claim starts at the large-text line, the lead below the text-safe
+             line, and the copy flows onto the stage below the photo at any text size (ADR-421 b, DQ-917). The stage is dark in every
+             theme, so the logo is the white one. --}}
         <section class="sc-land-hero" aria-labelledby="claim" data-testid="WEB-03.hero">
             <div class="sc-land-hero-media sc-grain" data-qa-exempt="photo">
                 <x-public.photo :photo="$hero" sizes="100vw" :priority="true" alt="" class="h-full w-full object-cover" />
                 <span class="sc-hero-scrim" aria-hidden="true"></span>
             </div>
             <div class="sc-land-hero-inner">
+                {{-- R4DQ-61: no second logo in the hero at any width (it stood on the car's headlight at 1440, R4DQ-43/58 below); the top bar carries the brand. --}}
                 {{-- The title box is the 640 measure itself, so the title's size rule counts the lines it really gets (ADR-426 a). --}}
                 <div class="sc-title-box">
                     <x-public.display-title :text="$claim" :name="false" id="claim" class="text-on-photo" data-testid="WEB-03.claim" />
                 </div>
                 <p class="mt-8 text-body text-on-photo" data-testid="WEB-03.lead">{{ __('public.home.lead') }}</p>
-                <div class="mt-24 flex flex-wrap items-center gap-x-16 gap-y-8">
-                    <x-public.button :href="url('/app')" variant="brand" size="l" data-testid="WEB-03.openWebApp">{{ __('public.home.web_app') }}</x-public.button>
-                    <a href="#qr" class="sc-focus inline-flex min-h-44 items-center gap-4 rounded-xs text-body-strong text-on-photo underline underline-offset-4" data-testid="WEB-03.howQr">{{ __('public.home.how_qr') }}</a>
+                <div class="mt-24 flex flex-wrap items-center gap-x-16 gap-y-8" data-testid="WEB-03.heroActions">
+                    @if ($stores !== [])
+                        @foreach ($stores as $store => $url)
+                            <x-public.button :href="$url" :variant="$loop->first ? 'brand' : 'on-photo'" size="l" rel="noopener" data-testid="WEB-03.heroStore"><x-public.icon name="device-mobile" :size="20" /><span class="whitespace-nowrap hyphens-none">{{ $store }}</span></x-public.button>
+                        @endforeach
+                        <a href="{{ url('/app') }}" class="sc-focus inline-flex min-h-44 items-center rounded-xs text-callout text-on-photo underline underline-offset-4" data-testid="WEB-03.openBrowser">{{ __('public.home.open_browser') }}</a>
+                    @else
+                        <x-public.button :href="url('/app')" variant="brand" size="l" data-testid="WEB-03.openBrowser">{{ __('public.home.open_browser') }}</x-public.button>
+                        <x-public.button :href="\App\Support\PublicUrl::to('/app-laden')" variant="on-photo" size="l" data-testid="WEB-03.getApp">{{ __('public.home.get_app_how') }}</x-public.button>
+                    @endif
                 </div>
             </div>
         </section>
 
-        {{-- (2) The QR story. Each step shows a piece of the real interface with real data, set like the app sets it. --}}
-        <section id="qr" class="sc-steps" aria-labelledby="steps-title" data-testid="WEB-03.steps">
-            <div class="sc-steps-head">
+        {{-- (2) Four things a member does: an editorial list, the glyph inline at the left, the headline and one sentence beside it,
+             a hairline over each item; 2 × 2 from 768, the heading beside the list from 1280 (R4DQ-07). No cards, no icon-on-top grid. --}}
+        <section class="sc-land-section sc-land-do-wrap" aria-labelledby="do-title" data-testid="WEB-03.do">
+            <h2 id="do-title" class="t-title-2 text-ink">{{ __('public.home.do_title') }}</h2>
+            <ul class="sc-land-do">
+                @foreach ($items as $key => $icon)
+                    <li class="sc-land-do-item" data-testid="WEB-03.do.{{ $key }}">
+                        <x-public.icon :name="$icon" :size="24" class="sc-land-do-glyph text-ink-2" />
+                        <div class="sc-land-do-copy">
+                            <h3 class="text-headline text-ink">{{ __('public.home.do_'.$key.'_title') }}</h3>
+                            <p class="mt-4 text-callout text-ink-2">{{ __('public.home.do_'.$key.'_body') }}</p>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+
+        {{-- (3) The sticker in one block: what it does, and the shop while it exists. The code beside it is real and leads to the lead
+             build's page (never its /C/ address, LandingPage::sample). --}}
+        <section id="sticker" class="sc-land-section sc-land-sticker" aria-labelledby="sticker-title" data-testid="WEB-03.sticker">
+            <div class="sc-land-sticker-copy">
                 <span class="sc-rule" aria-hidden="true"></span>
-                <h2 id="steps-title" class="mt-16 t-title-1 text-ink">{{ __('public.home.how_qr') }}</h2>
-                <p class="mt-12 text-body text-ink-2">{{ __('public.home.thought_body') }}</p>
-            </div>
-
-            <article class="sc-step sc-step-photo-left" data-testid="WEB-03.step1">
-                <div class="sc-step-media" data-qa-exempt="photo"><x-public.photo :photo="$wheel" :sizes="$stepSizes" class="h-full w-full object-cover" /></div>
-                <div class="sc-step-copy">
-                    <p class="t-hero-numeral-s text-ink-3" aria-hidden="true">1</p>
-                    <h3 class="mt-4 t-title-2 text-ink">{{ __('public.home.step1_title') }}</h3>
-                    <p class="mt-8 text-body text-ink-2">{{ __('public.home.step1_body') }}</p>
-                    @if ($vehicle && $vehicle['spec_strip'] !== [])
-                        <figure class="sc-crop mt-16" data-testid="WEB-03.crop1">
-                            <p class="text-headline text-ink">{{ \App\Support\KeepTogether::name($vehicle['full_title']) }}</p>
-                            <div class="mt-8"><x-public.spec-strip :items="$vehicle['spec_strip']" :groups="$vehicle['spec_groups'] ?? []" testid="WEB-03.cropStrip" /></div>
-                            <figcaption class="mt-8 flex flex-wrap items-center gap-8 text-caption text-ink-3">
-                                <span>{{ $owner ? __('public.home.crop_from', ['username' => $owner['username']]) : __('public.home.crop_build') }}</span>
-                                <x-public.sample-badges :sample="($vehicle['is_sample'] ?? false) === true" testid="WEB-03.crop1Sample" />
-                            </figcaption>
-                        </figure>
-                    @endif
-                </div>
-            </article>
-
-            <article class="sc-step sc-step-photo-right" data-testid="WEB-03.step2">
-                <div class="sc-step-media" data-qa-exempt="photo"><x-public.photo :photo="$station" :sizes="$stepSizes" class="h-full w-full object-cover" /></div>
-                <div class="sc-step-copy">
-                    <p class="t-hero-numeral-s text-ink-3" aria-hidden="true">2</p>
-                    <h3 class="mt-4 t-title-2 text-ink">{{ __('public.home.step2_title') }}</h3>
-                    <p class="mt-8 text-body text-ink-2">{{ __('public.home.step2_body') }}</p>
-                    @if ($vehicle && ($vehicle['highlights'] ?? []) !== [])
-                        <ul class="sc-group mt-16" aria-label="{{ __('public.home.step2_example') }}" data-testid="WEB-03.crop2">
-                            @foreach (array_slice($vehicle['highlights'], 0, 3) as $mod)
-                                <x-public.mod-row :mod="$mod" />
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
-            </article>
-
-            <article class="sc-step sc-step-qr" data-testid="WEB-03.step3">
-                <div class="sc-step-copy">
-                    <p class="t-hero-numeral-s text-ink-3" aria-hidden="true">3</p>
-                    <h3 class="mt-4 t-title-2 text-ink">{{ __('public.home.step3_title') }}</h3>
-                    <p class="mt-8 text-body text-ink-2">{{ __('public.home.step3_body') }}</p>
-                    @if ($qr)
-                        <p class="mt-12 text-callout text-ink-2">{{ __('public.home.step3_try') }}</p>
-                    @endif
-                </div>
-                <div class="sc-step-stage" data-qa-exempt="photo">
-                    <x-public.photo :photo="$taillight" :sizes="$stepSizes" class="sc-step-stage-img" />
-                    @if ($qr)
-                        <figure class="sc-qr" data-testid="WEB-03.qr" data-qa-exempt="qr">
-                            <a href="{{ $qr['url'] }}" class="sc-focus sc-qr-code block" aria-label="{{ __('public.home.qr_label', ['code' => $qr['code']]) }}">{{ $qr['svg'] }}</a>
-                            <figcaption class="mt-8 text-center">
-                                <span class="block text-headline uppercase tabular-nums text-qr-fg">{{ $qr['code'] }}</span>
-                            </figcaption>
-                        </figure>
-                    @endif
-                </div>
-            </article>
-        </section>
-
-        {{-- (3) Featured builds: one 8-column lead with its name on the scrim, two 4-column cards beside it (stacked under it on phones). --}}
-        @if ($vehicle && $featuredPhoto)
-            <section class="sc-builds" aria-labelledby="builds-title" data-testid="WEB-03.featured">
-                <h2 id="builds-title" class="sc-builds-title t-title-2 text-ink">{{ __('public.home.featured_title') }}</h2>
-                <div class="sc-builds-grid {{ $more === [] ? 'is-single' : '' }}">
-                    <div class="sc-builds-lead">
-                        <a href="{{ \App\Support\PublicUrl::to('/v/'.$vehicle['slug']) }}" class="sc-focus sc-lead-link" data-qa-exempt="photo" data-testid="WEB-03.featuredLink">
-                            <x-public.photo :photo="$featuredPhoto" sizes="(min-width: 1280px) 816px, 100vw" :alt="$featuredPhoto['alt'] ?: $vehicle['full_title']" class="absolute inset-0 h-full w-full object-cover" />
-                            <span class="sc-hero-scrim" aria-hidden="true"></span>
-                            <span class="sc-lead-text sc-title-box">
-                                @if ($vehicle['is_sample'] ?? false)
-                                    <x-public.sample-badges :sample="true" :editorial="($owner['is_editorial'] ?? false) === true" :on-photo="true" class="mb-8" testid="WEB-03.featuredSample" />
-                                @endif
-                                {{-- ADR-426 b: edge to edge on a phone (4:5, a hero) the page rule; in the rounded 16:9 lead of the grid from 768 the card rule. --}}
-                                <x-public.display-title as="span" :text="$vehicle['full_title']" :placement="['phone' => 'page', 'tablet' => 'card', 'desktop' => 'card']" class="block text-on-photo" data-testid="WEB-03.featuredTitle" />
-                                @if ($owner)
-                                    <span class="mt-4 block text-callout text-on-photo">{{ \App\Support\KeepTogether::identifier('@'.$owner['username']) }}{{ $owner['city'] ? ' · '.$owner['city'] : '' }}</span>
-                                @endif
-                            </span>
-                        </a>
-                        <div class="mt-16"><x-public.spec-strip :items="$vehicle['spec_strip']" :groups="$vehicle['spec_groups'] ?? []" testid="WEB-03.featuredStrip" /></div>
-                        <x-public.button :href="\App\Support\PublicUrl::to('/v/'.$vehicle['slug'])" variant="secondary" size="m" class="mt-16" data-testid="WEB-03.featuredCta">{{ __('public.home.featured_cta') }} <x-public.icon name="arrow-right" :size="20" /></x-public.button>
-                    </div>
-                    @foreach ($more as $card)
-                        <div class="sc-builds-side"><x-public.vehicle-card :card="$card" sizes="(min-width: 1280px) 400px, (min-width: 768px) 50vw, 100vw" testid="WEB-03.build" /></div>
-                    @endforeach
-                </div>
-            </section>
-        @endif
-
-        {{-- (4) Treffen teaser: the next three public meets, with their real dates. --}}
-        @if ($events !== [])
-            <section class="sc-land-section" aria-labelledby="events-title" data-testid="WEB-03.events">
-                <x-public.section-header id="events-title" level="h2" :title="__('public.home.events_title')" :href="url('/app/events')" :action="__('public.home.events_all')" />
-                <ul class="sc-rows mt-12">
-                    @foreach ($events as $item)
-                        @php
-                            $starts = \Carbon\CarbonImmutable::parse($item['starts_at'])->timezone($item['timezone'])->locale(app()->getLocale());
-                        @endphp
-                        <li>
-                            <a href="{{ \App\Support\PublicUrl::to('/e/'.$item['slug']) }}" class="sc-focus sc-row sc-event-row justify-start" data-testid="WEB-03.event">
-                                <time datetime="{{ $starts->toIso8601String() }}" class="sc-evt-date">
-                                    <span class="t-hero-numeral-s text-ink">{{ $starts->isoFormat('D') }}</span>
-                                    <span class="t-label-caps text-ink-2">{{ rtrim($starts->isoFormat('MMM'), '.') }}</span>
-                                </time>
-                                <span class="min-w-0 flex-1">
-                                    <span class="block text-headline text-ink">{{ \App\Support\KeepTogether::words($item['title']) }}</span>
-                                    <span class="block text-callout text-ink-2">{{ __('enums.event_type.'.$item['type']) }} · {{ $item['location']['city'] }} · <span class="tabular-nums">{{ __('public.event.time_from', ['from' => $starts->format('H:i')]) }}</span></span>
-                                    @if ($item['is_sample'])
-                                        <x-public.sample-badges :sample="true" class="mt-4" testid="WEB-03.eventSample" />
-                                    @endif
-                                </span>
-                                <x-public.icon name="caret-right" :size="20" class="text-ink-3" />
-                            </a>
-                        </li>
+                <h2 id="sticker-title" class="mt-16 flex items-center gap-8 t-title-2 text-ink"><x-public.icon name="qr-sticker" :size="24" class="text-ink-2" />{{ __('public.home.sticker_title') }}</h2>
+                <p class="mt-8 text-body text-ink-2">{{ __('public.home.sticker_body') }}</p>
+                <ul class="sc-land-points mt-16">
+                    @foreach (['page', 'insights', 'one'] as $point)
+                        <li class="text-callout text-ink-2" data-testid="WEB-03.sticker.{{ $point }}">{{ __('public.home.sticker_point_'.$point) }}</li>
                     @endforeach
                 </ul>
-            </section>
-        @endif
+                @if ($shop)
+                    <x-public.button :href="$shop" variant="secondary" size="l" class="mt-24" data-testid="WEB-03.stickerShop">{{ __('public.home.sticker_shop') }} <x-public.icon name="arrow-right" :size="20" /></x-public.button>
+                @endif
+            </div>
+            <div class="sc-land-sticker-stage" data-qa-exempt="photo">
+                <x-public.photo :photo="$taillight" sizes="(min-width: 1280px) 688px, (min-width: 768px) 58vw, 100vw" class="sc-land-sticker-img" />
+                @if ($qr)
+                    <figure class="sc-qr" data-testid="WEB-03.qr" data-qa-exempt="qr">
+                        {{-- ADR-514: no sticker code in words either. A code typed off this page would count as a STREET DEX spot. --}}
+                        <a href="{{ $qr['url'] }}" class="sc-focus sc-qr-code block" aria-label="{{ $qr['sample'] ? __('public.home.qr_label_sample') : __('public.home.qr_label') }}">{{ $qr['svg'] }}</a>
+                        <figcaption class="mt-8 text-center text-caption text-qr-caption">
+                            @if ($qr['sample'])
+                                <x-public.sample-badges :sample="true" :editorial="$qr['editorial']" class="mb-4 justify-center" testid="WEB-03.qrSample" />
+                            @endif
+                            {{ $qr['sample'] ? __('public.home.sticker_try_sample') : __('public.home.sticker_try') }}
+                        </figcaption>
+                    </figure>
+                @endif
+            </div>
+        </section>
 
-        @if ($businesses)
-            <section class="sc-land-section sc-land-business" aria-labelledby="business-title" data-testid="WEB-03.business">
-                <div>
-                    <h2 id="business-title" class="flex items-center gap-8 t-title-2 text-ink"><x-public.icon name="workshop" :size="24" class="text-ink-2" />{{ __('public.home.business_title') }}</h2>
-                    <p class="mt-8 text-body text-ink-2">{{ __('public.home.business_body') }}</p>
-                </div>
-                <x-public.button :href="url('/app/settings/business')" variant="secondary" size="l" data-testid="WEB-03.businessCta">{{ __('public.home.business_cta') }}</x-public.button>
-            </section>
-        @endif
-
-        {{-- (5) Honest: store links only once the listings exist; until then the web app, which is real today. --}}
+        {{-- (4) Honest: store links only once the listings exist; WEB-04 always has every way to the app, the web app is real today. --}}
         <section id="app" class="sc-land-section sc-land-app" aria-labelledby="app-title" data-testid="WEB-03.app">
             <div>
                 <h2 id="app-title" class="t-title-2 text-ink">{{ $stores === [] ? __('public.home.app_title') : __('public.home.app_title_stores') }}</h2>
@@ -206,9 +129,10 @@
             </div>
             <div class="flex flex-wrap gap-8" data-testid="WEB-03.stores">
                 @foreach ($stores as $store => $url)
-                    <x-public.button :href="$url" variant="secondary" size="l" data-testid="WEB-03.store"><x-public.icon name="device-mobile" :size="20" /><span class="whitespace-nowrap hyphens-none">{{ $store }}</span></x-public.button>
+                    <x-public.button :href="$url" variant="secondary" size="l" rel="noopener" data-testid="WEB-03.store"><x-public.icon name="device-mobile" :size="20" /><span class="whitespace-nowrap hyphens-none">{{ $store }}</span></x-public.button>
                 @endforeach
-                <x-public.button :href="url('/app')" variant="secondary" size="l" data-testid="WEB-03.browser">{{ __('public.home.open_app') }}</x-public.button>
+                <x-public.button :href="\App\Support\PublicUrl::to('/app-laden')" variant="secondary" size="l" data-testid="WEB-03.appPage">{{ __('public.home.app_more') }}</x-public.button>
+                <x-public.button :href="url('/app')" variant="tertiary" size="l" data-testid="WEB-03.browser">{{ __('public.home.open_browser') }}</x-public.button>
             </div>
         </section>
     </main>

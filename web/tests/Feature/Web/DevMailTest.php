@@ -113,8 +113,8 @@ describe('mail content', function () {
             ->and($mail['text'])->toContain($heading)
             ->and($mail['text'])->not->toContain('<');
     })->with([
-        ['de', 'ist dein SPEED CLUB Code', 'Bestätige deine E-Mail-Adresse'],
-        ['en', 'is your SPEED CLUB code', 'Confirm your e-mail address'],
+        ['de', 'ist dein Speedclub Code', 'Bestätige deine E-Mail-Adresse'],
+        ['en', 'is your Speedclub code', 'Confirm your e-mail address'],
     ]);
 
     it('takes colours from the light tokens', function () {

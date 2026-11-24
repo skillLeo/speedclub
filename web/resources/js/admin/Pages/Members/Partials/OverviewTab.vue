@@ -8,7 +8,7 @@ import type { MemberOverview } from '../types';
 
 /** ADM-10 "Übersicht": profile, status, restrictions with their end and decision, counters, consent dates. */
 defineProps<{ member: MemberOverview; email: string; revealed: boolean; canReveal: boolean; revealing: boolean; revealError: string | null; canLift: (type: string) => boolean }>();
-const emit = defineEmits<{ reveal: []; lift: [type: 'messaging' | 'publishing' | 'suspension'] }>();
+const emit = defineEmits<{ reveal: []; lift: [type: 'messaging' | 'publishing' | 'forum' | 'suspension'] }>();
 </script>
 
 <template>

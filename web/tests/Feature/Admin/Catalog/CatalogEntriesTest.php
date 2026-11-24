@@ -103,14 +103,12 @@ it('locks the slug of a make a Kollektion names', function () {
     expect(fn () => app(UpdateCatalogEntry::class)->handle($this->staff, $make, ['slug' => 'alpina-bmw']))->toThrow(CatalogRefused::class);
 });
 
-it('deactivates with a reason, hides from the pickers and keeps existing builds', function () {
+it('deactivates (ADR-540: with or without a reason), hides from the pickers and keeps existing builds', function () {
     $vehicle = m23Build('Lancia', 'Delta', 'HF Integrale');
     $generation = Generation::query()->where('slug', 'hf-integrale')->firstOrFail();
     $model = VehicleModel::query()->findOrFail($generation->model_id);
 
-    expect(fn () => app(SetCatalogEntryActive::class)->handle($this->staff, $generation, false, 'kurz'))->toThrow(ValidationException::class);
-
-    app(SetCatalogEntryActive::class)->handle($this->staff, $generation, false, m33cReason());
+    app(SetCatalogEntryActive::class)->handle($this->staff, $generation, false, '');
 
     $this->getJson("/api/v1/catalog/models/{$model->id}/generations")->assertOk()->assertJsonCount(0, 'data');
     expect($vehicle->refresh()->generation_id)->toBe($generation->id);

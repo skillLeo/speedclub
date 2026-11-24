@@ -1,0 +1,119 @@
+{
+    "nav": {
+        "title": "Crews"
+    },
+    "title": "Crews",
+    "intro": "Every crew with founder, region, join mode and status, deleted ones included. Hiding is a DSA decision; the founder gets the statement of reasons.",
+    "caption": "Crews, newest first",
+    "empty_title": "No crews yet",
+    "empty_body": "Once members found a crew, it shows up here.",
+    "sample": "Sample",
+    "columns": {
+        "logo": "Logo",
+        "name": "Crew",
+        "founder": "Founder",
+        "bundesland": "State",
+        "join_mode": "Joining",
+        "members": "Members",
+        "created": "Founded",
+        "state": "Status",
+        "member": "Member",
+        "role": "Role",
+        "joined": "Member since"
+    },
+    "filters": {
+        "label": "Filter crews",
+        "q": "Search",
+        "q_placeholder": "Name or slug",
+        "status": "Status",
+        "any": "All",
+        "apply": "Apply"
+    },
+    "presets": {
+        "hidden": "Hidden crews",
+        "removed": "Crews deleted by staff"
+    },
+    "state": {
+        "active": "Active",
+        "hidden": "Hidden",
+        "removed": "Deleted by staff",
+        "deleted": "Deleted by founder",
+        "ended": "Ended: no members left"
+    },
+    "join_modes": {
+        "open": "Open",
+        "request": "On request",
+        "invite": "Invite only"
+    },
+    "roles": {
+        "founder": "Founder",
+        "admin": "Admin",
+        "member": "Member"
+    },
+    "fields": {
+        "founder": "Founder",
+        "members": "Members",
+        "open_requests": "Open join requests",
+        "open_invites": "Open invitations",
+        "created": "Founded",
+        "updated": "Last changed",
+        "previous_slug": "Previous link"
+    },
+    "record": {
+        "error": "The crew could not be loaded",
+        "tabs": {
+            "label": "Crew sections",
+            "overview": "Overview",
+            "members": "Members",
+            "reports": "Reports"
+        },
+        "hidden_since": "Hidden since :date",
+        "removed_at": "Deleted by staff on :date",
+        "deleted_at": "Deleted by the founder on :date",
+        "no_cover": "No cover image",
+        "no_description": "No description",
+        "no_founder": "No founder any more",
+        "no_members": "No members",
+        "no_members_deleted": "The memberships ended when the crew was deleted.",
+        "members_caption": "Crew members: founder, admins, then members",
+        "members_more": "Showing :shown of :total members",
+        "member_gone": "Deleted account",
+        "no_cases": "No reports about this crew",
+        "case": "Case of :date · reports: :count",
+        "case_staff": "Case opened by staff on :date",
+        "ended_at": "Ended on :date: no members left",
+        "no_members_ended": "Nobody was left in the crew, so Speedclub ended it."
+    },
+    "actions": {
+        "public": "Open in the app",
+        "hide": "Hide",
+        "unhide": "Show again",
+        "remove": "Delete",
+        "restore": "Restore"
+    },
+    "hide": {
+        "title": "Hide “:name”",
+        "body": "The crew disappears from lists, search and its page; only its members still see it. The founder gets the statement of reasons and can appeal."
+    },
+    "unhide": {
+        "title": "Show “:name” again",
+        "body": "The decision is reversed and the crew is visible to everyone again. The founder is told why.",
+        "facts": "Why the measure ends",
+        "facts_hint": "The founder reads this, 10 to 5000 characters."
+    },
+    "remove": {
+        "title": "Delete “:name”",
+        "body": "The crew is then gone for its members too. Memberships and the name are kept so it can be restored after an appeal."
+    },
+    "restore": {
+        "title": "Restore “:name”",
+        "body": "The crew comes back hidden: its members see it again; it only becomes public with “Show again”."
+    },
+    "flash": {
+        "hidden": "Crew hidden, the founder has been told",
+        "unhidden": "Crew shown again",
+        "removed": "Crew deleted",
+        "restored": "Crew restored, it is still hidden",
+        "not_possible": "That is no longer possible in the crew's current state. Reload the page."
+    }
+}

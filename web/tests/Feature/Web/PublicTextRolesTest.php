@@ -109,11 +109,13 @@ describe('the status pill and the main badge in label.badge (DQ-923, ADR-421 a, 
         }
     });
 
-    it('keeps a store name whole on WEB-03, once the store links exist (09 §9 WEB-03 (5))', function () {
+    it('keeps a store name whole on WEB-03, in the hero and the download section, once the store links exist (09 §9 WEB-03 (5), R4-1.5)', function () {
         config(['speedclub.mobile.store_url_ios' => 'https://apps.apple.com/app/id1', 'speedclub.mobile.store_url_android' => 'https://play.google.com/store/apps/details?id=x']);
         $html = (string) $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
 
         expect(substr_count($html, 'data-testid="WEB-03.store"'))->toBe(2)
+            ->and(substr_count($html, 'data-testid="WEB-03.heroStore"'))->toBe(2)
+            ->and(substr_count($html, '<span class="whitespace-nowrap hyphens-none">Google Play</span>'))->toBe(2)
             ->and($html)->toContain('<span class="whitespace-nowrap hyphens-none">Google Play</span>')
             ->and($html)->toContain('<span class="whitespace-nowrap hyphens-none">App Store</span>')
             ->and($html)->not->toContain('Bald verfügbar');
@@ -143,7 +145,7 @@ describe('names and identifiers in running text (DQ-926, DQ-927)', function () {
         // The closing card joins the hyphen to the next part (word joiner), so "Anna-" never ends a line. The chip of DQ-1047 names the
         // member by the handle, with the name's initials in the avatar: no line of it can split the name.
         expect($html)->toContain("Fragen an Anna-\u{2060}Lena Brück?")
-            ->toMatch('~data-testid="VEH-01.ownerRow">.*?<span aria-hidden="true" class="text-callout text-ink-2">AL</span>.*?<span class="sc-ident">@lukas.sc</span>~s')
+            ->toMatch('~data-testid="VEH-01.ownerRow">.*?<span aria-hidden="true" class="text-label-control text-ink-2">AL</span>.*?<span class="sc-ident">@lukas.sc</span>~s')
             ->not->toContain("Anna-\u{00AD}")
             ->not->toContain('Anna-<wbr>');
     });
@@ -165,10 +167,10 @@ describe('names and identifiers in running text (DQ-926, DQ-927)', function () {
             ->and($member->username)->toBe('nina.neu');
     });
 
-    it('shows the handle of the featured build on WEB-03 as it is', function () {
+    it('names no member on WEB-03 since it features no builds (R4-1.5)', function () {
         $html = (string) $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
 
-        expect($html)->toContain('<span class="sc-ident">@lukas.<wbr>sc</span> · Stuttgart');
+        expect($html)->not->toContain('@lukas.')->not->toContain('lukas.<wbr>sc');
     });
 
     it('never hyphenates the example address on WEB-09', function () {

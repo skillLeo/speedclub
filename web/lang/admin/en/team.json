@@ -76,7 +76,6 @@
         "roles_hint": "You can only give roles whose permissions you hold yourself.",
         "owner_only": "Only an Owner can invite an Owner.",
         "elevating": "Admin, Owner and roles with sensitive permissions apply only after an approval. Until then the account has only the other roles.",
-        "reason_hint": "Required for the approval. Goes into the audit log, 10 to 1,000 characters.",
         "submit": "Send invitation",
         "locales": {
             "de": "German",
@@ -85,14 +84,13 @@
         "errors": {
             "name": "Enter a name of 2 to 120 characters.",
             "email": "Enter a valid e‑mail address.",
-            "roles": "Choose at least one role.",
-            "reason": "The approval needs a reason of 10 to 1,000 characters."
+            "roles": "Choose at least one role."
         },
         "accepted": "Your password is set. Sign in now and set up two-factor sign-in."
     },
     "accept": {
         "title": "Accept the invitation",
-        "intro": "Set your password for the SPEED CLUB admin. Then sign in and set up two-factor sign-in.",
+        "intro": "Set your password for the Speedclub admin. Then sign in and set up two-factor sign-in.",
         "password": "New password",
         "password_hint": "At least :min characters. A long sentence is safer than a short word.",
         "password_confirmation": "Repeat the password",
@@ -154,7 +152,6 @@
             "owner": "It concerns an Owner account; a second Owner approves.",
             "demotes": "It takes the Admin role away."
         },
-        "reason_optional": "Optional, goes into the audit log.",
         "submit": "Save roles",
         "submit_four_eyes": "Ask for approval",
         "self": "On your own account you can only give roles up, not add them.",
@@ -223,12 +220,10 @@
         "atoms": "Permissions",
         "atoms_count": "{0} No permission chosen|{1} 1 permission chosen|[2,*] :count permissions chosen",
         "sensitive": "Sensitive permissions (with the four-eyes symbol) apply only after an approval by a second person.",
-        "reason_hint": "Required as soon as a sensitive permission is added. 10 to 1,000 characters.",
         "submit": "Save",
         "submit_four_eyes": "Save and ask for approval",
         "errors": {
-            "name": "Enter a name of 3 to 60 characters (letters, digits, spaces, dot, hyphen).",
-            "reason": "The approval needs a reason of 10 to 1,000 characters."
+            "name": "Enter a name of 3 to 60 characters (letters, digits, spaces, dot, hyphen)."
         }
     },
     "role_delete": {
@@ -259,8 +254,7 @@
         "diff_total": "{0} Affects nobody|{1} Affects 1 person|[2,*] Affects :count people",
         "diff_failed": "The changes could not be checked.",
         "save": "Save",
-        "save_four_eyes": "Ask for approval",
-        "reason_optional": "Optional, goes into the audit log."
+        "save_four_eyes": "Ask for approval"
     },
     "flash": {
         "invited": "Invitation sent.",
@@ -308,7 +302,7 @@
         "vehicles": "Vehicles",
         "media": "Photos",
         "catalog": "Catalogue",
-        "qr": "QR",
+        "qr": "Sticker register",
         "moderation": "Moderation",
         "support": "Support",
         "content": "Content",
@@ -328,7 +322,9 @@
         "integrations": "Integrations",
         "analytics": "Analytics",
         "memberships": "Memberships",
-        "lists": "Lists"
+        "lists": "Lists",
+        "stickers": "Stickers",
+        "shop": "Shop"
     },
     "atoms": {
         "members": {
@@ -361,8 +357,8 @@
             "import": "Import catalogue"
         },
         "qr": {
-            "view": "View QR codes",
-            "revoke": "Revoke QR codes"
+            "view": "View the sticker register",
+            "revoke": "Revoke stickers"
         },
         "moderation": {
             "view": "View reports",
@@ -437,6 +433,12 @@
         },
         "lists": {
             "export": "Export lists as CSV"
+        },
+        "stickers": {
+            "print": "Download sticker print files"
+        },
+        "shop": {
+            "manage": "Manage the shop"
         }
     }
 }

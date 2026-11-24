@@ -17,9 +17,12 @@
         "legal_version_taken": "Die Version :version gibt es für dieses Dokument schon. Wähle eine neue.",
         "legal_pending_approval": "Version :version wartet auf Freigabe. Bis dahin bleibt der Text, wie er ist.",
         "legal_changed": "Der Entwurf wurde nach der Anfrage geändert. Die Freigabe gilt nicht für diesen Text.",
+        "legal_draft_stale": "Dieser Entwurf basiert auf Version :base, live ist inzwischen Version :live. Beim Veröffentlichen würden die neueren Abschnitte fehlen. Setz den Entwurf mit dem Live-Text neu auf.",
+        "legal_draft_stale_first": "Dieser Entwurf ist älter als Version :live, die inzwischen live ist. Beim Veröffentlichen würden ihre Abschnitte fehlen. Setz den Entwurf mit dem Live-Text neu auf.",
         "template_fixed": "Dieser Text ist fest vorgegeben und kann nicht geändert werden.",
         "template_unknown": "Diese Vorlage gibt es nicht.",
-        "release_taken": "Diesen Build gibt es im Register schon (gleiche Version, Build-Nummer, Kanal und Plattform)."
+        "release_taken": "Diesen Build gibt es im Register schon (gleiche Version, Build-Nummer, Kanal und Plattform).",
+        "draft_pending_approval": "Dieser Entwurf wartet auf eine Freigabe und kann so lange nicht übernommen werden."
     },
     "flash": {
         "draft_saved": "Entwurf gespeichert.",
@@ -31,7 +34,9 @@
         "release_updated": "Eintrag korrigiert.",
         "releases_synced": "Register aus RELEASES.md aktualisiert.",
         "releases_unchanged": "RELEASES.md gelesen: alles schon im Register.",
-        "releases_file_missing": "RELEASES.md liegt auf diesem Server nicht vor. Trag Builds hier von Hand ein."
+        "releases_file_missing": "RELEASES.md liegt auf diesem Server nicht vor. Trag Builds hier von Hand ein.",
+        "flag_planned": "Gespeichert als geplanter Stand für die andere Umgebung. Hier ändert sich nichts.",
+        "draft_taken_over": "Entwurf übernommen. Du kannst ihn jetzt bearbeiten und veröffentlichen."
     },
     "draft": {
         "region": "Entwurf und Veröffentlichung",
@@ -57,11 +62,17 @@
         "request_body": "Diese Änderung geht erst live, wenn eine zweite Person aus dem Team sie freigibt.",
         "discard_title": "Entwurf verwerfen?",
         "discard_body": "Alle gespeicherten Änderungen dieses Entwurfs gehen verloren. Live bleibt alles, wie es ist.",
-        "discard_foreign_body": "Der Entwurf von :name wird gelöscht. Nenne den Grund, er steht im Audit-Log.",
+        "discard_foreign_body": "Der Entwurf von :name wird gelöscht.",
         "leave_title": "Seite ohne Speichern verlassen?",
         "leave_body": "Deine Änderungen sind noch nicht gespeichert und gehen verloren.",
         "leave": "Verlassen",
-        "person": "Teammitglied"
+        "person": "Teammitglied",
+        "foreign_take_over": "Entwurf von :name, zuletzt gespeichert :date. Übernimm ihn, um ihn zu bearbeiten und zu veröffentlichen.",
+        "take_over": "Entwurf übernehmen",
+        "take_over_title": "Entwurf übernehmen?",
+        "take_over_body": "Der Entwurf von :name wird deiner. Danach kannst du ihn bearbeiten und veröffentlichen; :name kann ihn nicht mehr speichern.",
+        "payload_error": "So lässt sich der Entwurf nicht veröffentlichen: :message Prüfe das markierte Feld und speichere den Entwurf neu.",
+        "connection_lost": "Die Verbindung zum Server ist abgebrochen, bevor eine Antwort kam. Lade die Seite neu: Dann siehst du, ob die Änderung angekommen ist, und kannst es sonst erneut versuchen."
     },
     "flags": {
         "title": "Feature-Flags",
@@ -115,7 +126,8 @@
         "no_changes": "Du hast nichts geändert.",
         "save": "Änderung speichern",
         "environments_legend": "Lokal · Staging · Produktion",
-        "everyone": "Alle"
+        "everyone": "Alle",
+        "elsewhere_note": "Du änderst nur eine andere Umgebung. Hier in :environment bleibt das Flag, wie es ist: Jede Umgebung hat ihre eigene Datenbank, dort gilt dieser Schalter erst, wenn er dort gesetzt wird."
     },
     "remote": {
         "title": "Remote-Konfiguration",
@@ -144,7 +156,25 @@
         "maintenance_switch_off": "Wartungsmodus: Aus",
         "change_maintenance": "Wartungsmodus: :from → :to",
         "on": "An",
-        "off": "Aus"
+        "off": "Aus",
+        "wrapped_title": "Season Wrapped: Freigaben",
+        "wrapped_intro": "Ab diesem Zeitpunkt sehen Mitglieder ihr Wrapped der Saison. Ohne Termin bleibt es zu. Erzeugt wird es in den Nächten davor, unabhängig von hier.",
+        "wrapped_rule": "Mindestens einen Tag im Voraus und nach dem Saisonende (31. Oktober bzw. 31. Dezember).",
+        "wrapped_caption": "Freigabetermine je Saison",
+        "wrapped_season": "Saison",
+        "wrapped_day": "Tag",
+        "wrapped_time": "Uhrzeit",
+        "wrapped_zone_summer": "Sommerzeit (:offset)",
+        "wrapped_zone_winter": "Winterzeit (:offset)",
+        "wrapped_zone_hint": "Deutsche Zeit (Sommer-/Winterzeit wird berücksichtigt).",
+        "wrapped_add": "Freigabe hinzufügen",
+        "wrapped_remove": "Freigabe für :season entfernen",
+        "wrapped_empty": "Noch keine Freigabe geplant. Ohne Termin sieht kein Mitglied sein Wrapped.",
+        "wrapped_all_used": "Alle angebotenen Saisons haben schon einen Termin.",
+        "wrapped_released": "Freigegeben",
+        "wrapped_planned": "Geplant",
+        "wrapped_seasons": {"saison": "Saison :year (März bis Oktober)", "jahr": "Jahr :year"},
+        "change_wrapped": "Wrapped-Freigaben geändert"
     },
     "releases": {
         "title": "Release-Register",
@@ -203,13 +233,11 @@
             "channel": "Kanal",
             "sha": "SHA-256 der APK",
             "released": "Datum",
-            "notes": "Notizen",
-            "reason": "Grund der Korrektur"
+            "notes": "Notizen"
         },
         "version_hint": "Drei Zahlen wie 1.0.0, optional mit Zusatz (1.0.0-rc.1).",
         "code_hint": "Eine ganze Zahl, wie sie im Build steht.",
         "sha_hint": "64 Zeichen 0–9 und A–F, wie build-apk sie ausgibt.",
-        "reason_hint": "Optional, für das Audit-Log.",
         "save": "Speichern",
         "notes_title": "Notizen zu :version (Build :code)"
     }

@@ -233,11 +233,9 @@ describe('export is four-eyes', function () {
         actingAsStaff($second)->get('/admin/alerts')->assertInertia(fn (AssertableInertia $page) => $page->where('downloads', []));
     });
 
-    it('requires a reason of 10 to 1000 characters and a known format', function (array $data, string $field) {
+    it('takes an optional reason of at most 1000 characters (ADR-540) and needs a known format', function (array $data, string $field) {
         actingAsStaff($this->owner)->from('/admin/audit')->post('/admin/audit/export', $data)->assertSessionHasErrors($field);
     })->with([
-        'no reason' => [['format' => 'csv'], 'reason'],
-        'short reason' => [['format' => 'csv', 'reason' => 'kurz'], 'reason'],
         'long reason' => [['format' => 'csv', 'reason' => str_repeat('x', 1001)], 'reason'],
         'bad format' => [['format' => 'xlsx', 'reason' => 'Prüfung durch den Datenschutzbeauftragten'], 'format'],
         'unknown filter' => [['format' => 'csv', 'reason' => 'Prüfung durch den Datenschutzbeauftragten', 'filter' => ['hash' => 'x']], 'filter'],

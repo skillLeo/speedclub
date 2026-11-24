@@ -323,7 +323,7 @@ return [
         'sex' => 'Geschlecht',
         'shipment' => 'Sendung',
         'short_text' => 'Kurzer Text',
-        'show_owner_on_qr' => 'Besitzer auf der QR-Seite',
+        'show_owner_on_qr' => 'Besitzer auf der Sticker-Seite',
         'size' => 'Größe',
         'skills' => 'Fähigkeiten',
         'slug' => 'Webadresse',

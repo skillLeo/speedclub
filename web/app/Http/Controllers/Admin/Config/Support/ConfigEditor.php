@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Config\Support;
 
 use App\Enums\ApprovalStatus;
 use App\Enums\ConfigKey;
+use App\Http\Controllers\Admin\Support\ApprovalsGateway;
 use App\Models\ApprovalRequest;
 use App\Models\ConfigVersion;
 use App\Models\Staff;
@@ -30,7 +31,7 @@ final class ConfigEditor
         $live = $this->versions->live($key)?->loadMissing('publisher:id,name');
         $pending = $draft === null ? null : ApprovalRequest::query()
             ->where('subject_type', $draft->getMorphClass())->where('subject_id', (string) $draft->getKey())
-            ->where('status', ApprovalStatus::Pending)->latest()->first();
+            ->where('status', ApprovalStatus::Pending)->where('expires_at', '>', now())->latest()->first();
 
         return [
             'payload' => $this->versions->startingPayload($key),
@@ -43,10 +44,12 @@ final class ConfigEditor
                 'mine' => $draft->created_by === $staff->getKey(),
             ],
             'live' => $live === null ? null : self::version($live, $staff),
+            // M5.1: who can approve it and whether this staff member may override it (ADR-507).
             'approval' => $pending === null ? null : [
                 'id' => $pending->id,
                 'title' => $pending->summary['title'] ?? null,
                 'expires_at' => $pending->expires_at->toIso8601String(),
+                ...ApprovalsGateway::waiting($pending, $staff),
             ],
             'needsApproval' => $draft === null ? null : $this->versions->approvalFor($key),
             'can' => [

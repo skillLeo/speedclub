@@ -180,7 +180,7 @@ describe('the service worker (public/sw.js)', () => {
       expect.objectContaining({ body: 'Jann hat seinen R34 aktualisiert.', data: { route: '/app/v/r34' } }),
     );
     listeners.get('push')?.({ data: null, waitUntil: () => undefined });
-    expect(scope.registration.showNotification).toHaveBeenLastCalledWith('SPEED CLUB', expect.objectContaining({ data: { route: '/app/' } }));
+    expect(scope.registration.showNotification).toHaveBeenLastCalledWith('Speedclub', expect.objectContaining({ data: { route: '/app/' } }));
   });
 
   it('sends an open app to the route, and opens a window when none is open', async () => {

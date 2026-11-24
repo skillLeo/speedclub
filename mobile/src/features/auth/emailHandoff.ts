@@ -7,6 +7,10 @@
  * change of who is signed in drops it: on a shared computer the next person must not find the last address filled in.
  * Incoming links still work: native deep links and the account-exists mail carry the address as a parameter, which
  * `useHandedEmail` reads, and on web takes out of the address bar at once.
+ *
+ * R4B-003 (client round 4 hunt): on phones the browser reloads or discards the tab while the member opens the mail app, and AUTH-05
+ * then fell back to an empty AUTH-04. On web the slot is also kept in the tab's sessionStorage — never in the URL, so no access log
+ * or history entry holds it; it ends with the tab, after HANDOFF_TTL_MS, and on any change of who is signed in, as before.
  */
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -20,18 +24,73 @@ export type HandoffRoute = '/sign-in' | '/sign-up' | '/verify-email' | '/forgot-
 
 let slot: { route: HandoffRoute; email: string } | null = null;
 
+/** A code mail is answered within minutes; an older hand-off is not resumed after a reload. */
+export const HANDOFF_TTL_MS = 30 * 60 * 1000;
+const STORAGE_KEY = 'sc.emailHandoff';
+
+type HandoffStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+let storageOverride: HandoffStorage | null | undefined;
+
+function tabStorage(): HandoffStorage | null {
+  if (storageOverride !== undefined) return storageOverride;
+  if (!isWeb || typeof window === 'undefined') return null;
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+function persist(value: { route: HandoffRoute; email: string } | null): void {
+  const storage = tabStorage();
+  if (!storage) return;
+  try {
+    if (value) storage.setItem(STORAGE_KEY, JSON.stringify({ ...value, at: Date.now() }));
+    else storage.removeItem(STORAGE_KEY);
+  } catch {
+    // Blocked storage (private mode, a full quota): memory alone, as before R4B-003.
+  }
+}
+
+function restored(): { route: HandoffRoute; email: string } | null {
+  const storage = tabStorage();
+  if (!storage) return null;
+  try {
+    const raw = storage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { route?: unknown; email?: unknown; at?: unknown };
+    const fresh = typeof parsed.at === 'number' && Date.now() - parsed.at <= HANDOFF_TTL_MS;
+    if (!fresh || typeof parsed.email !== 'string' || typeof parsed.route !== 'string') {
+      storage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return { route: parsed.route as HandoffRoute, email: parsed.email };
+  } catch {
+    return null;
+  }
+}
+
 /** Hands `email` to the screen at `route`. Call it right before the navigation; an empty address clears the slot. */
 export function handEmailTo(route: HandoffRoute, email: string | null | undefined): void {
   const trimmed = email?.trim() ?? '';
   slot = trimmed ? { route, email: trimmed } : null;
+  persist(slot);
 }
 
 /** The address handed to `route`, if any. It stays until the next hand-off or a change of member, so a remount finds it. */
 export function handedEmailFor(route: HandoffRoute): string | undefined {
+  slot ??= restored();
   return slot?.route === route ? slot.email : undefined;
 }
 
 export function forgetHandedEmail(): void {
+  slot = null;
+  persist(null);
+}
+
+/** Tests only: a storage standing in for the tab's sessionStorage (null: none), undefined back to the platform's. */
+export function __setHandoffStorageForTests(storage: HandoffStorage | null | undefined): void {
+  storageOverride = storage;
   slot = null;
 }
 

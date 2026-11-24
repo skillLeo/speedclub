@@ -5,7 +5,8 @@ import { View } from 'react-native';
 import { AI_FLAGS, type TranslationSource } from '@/api/queries/ai';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { Button, Text, type TextProps } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Text, type TextProps } from '@/ui/Text';
 
 import { AiLabel } from './AiLabel';
 import { useAiAvailable, useAiDayEnd } from './availability';

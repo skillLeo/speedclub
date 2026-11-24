@@ -14,18 +14,14 @@ import { paramOf } from '@/features/vehicle/navigation';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space, typography, useBreakpoint, useTheme } from '@/theme';
-import {
-  Button,
-  Header,
-  OfflineBanner,
-  QRDisplay,
-  Screen,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Text,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { Header } from '@/ui/Header';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { QRDisplay } from '@/ui/QRDisplay';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { PrintWipe, QrReveal } from '@/ui/motion/kit';
 import { SlotText, slot } from '@/ui/SlotText';
 import { nameInText } from '@/ui/textBreaks';
@@ -286,7 +282,7 @@ export function PublishedScreen() {
               fullWidth
               icon="qr-code"
               disabled={!vehicle}
-              onPress={() => leaveTo(`/qr/${vehicleId}`)}
+              onPress={() => leaveTo(`/stickers/${vehicleId}`)}
               testID={`${ROUTE}.viewQr`}
             />
             <View style={short ? styles.pair : styles.actionsInner}>

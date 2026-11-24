@@ -26,6 +26,16 @@ export function handleText(handle: string): string {
   return handle.replace(/([._])(?=\S)/g, `$1${ZERO_WIDTH_SPACE}`);
 }
 
+/**
+ * R4B-010: a machine name with no spaces ("sdk_gphone64_arm64", "moto.g54.5g") breaks after its "_", and after a "." that a letter
+ * follows, as a handle does (DQ-282): a zero-width space goes there. Without it a name wider than its line at 200 % had no break
+ * opportunity, and the browser split it inside its letters ("sdk_gphone64_ar / m64"). A "." before a figure ("2.0") stays whole.
+ * Display only: screen readers skip the space, never into a field or a request.
+ */
+export function machineNameText(name: string): string {
+  return name.replace(/([\p{L}\p{N}])(_|\.(?=\p{L}))(?=[\p{L}\p{N}])/gu, `$1$2${ZERO_WIDTH_SPACE}`);
+}
+
 /** One or two capitals standing alone, then a space and a figure: the "C" of "C 63 AMG", the "A" of "A 45 S". */
 const MODEL_LETTER = /(^|\s)(\p{Lu}{1,2}) (?=\p{N})/gu;
 

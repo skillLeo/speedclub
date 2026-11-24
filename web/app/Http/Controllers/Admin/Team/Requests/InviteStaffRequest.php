@@ -27,7 +27,7 @@ class InviteStaffRequest extends FormRequest
             'roles' => ['required', 'array', 'min:1', 'max:20'],
             'roles.*' => ['string', 'max:60'],
             'locale' => ['required', Rule::in(config('speedclub.locales'))],
-            'reason' => ['nullable', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

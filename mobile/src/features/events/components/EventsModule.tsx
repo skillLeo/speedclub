@@ -6,7 +6,8 @@ import { View } from 'react-native';
 
 import type { EventCard } from '@/api/queries/events';
 import { createStyles } from '@/theme';
-import { Hairline, SectionHeader } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { SectionHeader } from '@/ui/SectionHeader';
 
 import { EventCardView } from './EventCardView';
 

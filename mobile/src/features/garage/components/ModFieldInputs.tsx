@@ -6,7 +6,8 @@ import { View } from 'react-native';
 import type { Brand, ModCategoryField } from '@/api/queries/catalog';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, space } from '@/theme';
-import { ListRow, TextInput } from '@/ui';
+import { ListRow } from '@/ui/ListRow';
+import { TextInput } from '@/ui/TextInput';
 
 import { BRAND_MAX_LENGTH, TEXT_MAX_LENGTH, unitOf, type LayoutRow, type ModFormValues } from '../modForm';
 import { fieldMessage } from '../schemas';

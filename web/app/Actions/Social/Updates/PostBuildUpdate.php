@@ -3,13 +3,16 @@
 namespace App\Actions\Social\Updates;
 
 use App\Enums\BuildUpdateAudience;
+use App\Enums\BuildUpdateKind;
 use App\Enums\BuildUpdateType;
 use App\Enums\KeywordField;
 use App\Enums\VehicleStatus;
 use App\Models\BuildUpdate;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\BuildScore\BuildScores;
 use App\Services\Notifications\PublicationFanout;
+use App\Services\Progress\XpHooks;
 use App\Services\Rules\ContentScreen;
 use App\Services\Showcase\SampleContent;
 use App\Services\Social\BuildUpdateMentions;
@@ -30,7 +33,7 @@ class PostBuildUpdate
     ) {}
 
     /**
-     * @param  array{text?: string|null, mileage_km?: int|null, happened_on?: string|null, audience?: string|null, modification_ids?: list<string>|null}  $data
+     * @param  array{text?: string|null, mileage_km?: int|null, happened_on?: string|null, audience?: string|null, modification_ids?: list<string>|null, kind?: string|null}  $data
      */
     public function handle(User $owner, Vehicle $vehicle, array $data): BuildUpdate
     {
@@ -49,6 +52,8 @@ class PostBuildUpdate
             ]);
             $update->forceFill([
                 'vehicle_id' => $vehicle->id,
+                // M5.9c: a before/after pair, or a plain post.
+                'kind' => BuildUpdateKind::tryFrom((string) ($data['kind'] ?? '')) ?? BuildUpdateKind::Post,
                 // 09 §8.19: an update of a sample build is a sample too.
                 'is_sample' => SampleContent::isSample($vehicle),
                 'created_at' => now(),
@@ -61,6 +66,9 @@ class PostBuildUpdate
         });
 
         $this->screen->flagAfterCommit($flags, $update);
+        app(BuildScores::class)->touch($vehicle->id);
+        // M5.9d: XP for a build update (one a day earns).
+        app(XpHooks::class)->buildUpdatePosted($update);
 
         if ($vehicle->status === VehicleStatus::Published) {
             $this->fanout->updateCreated($update);

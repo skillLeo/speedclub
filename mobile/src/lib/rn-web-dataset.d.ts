@@ -8,8 +8,9 @@ import 'react-native';
 type QaDataSet = {
   qaHitWrapper?: 'true';
   /**
-   * photo, qr, safe-area or hairline; space-separated. brand-position (AUTH-02's logo slot) and fixed-glyph (an avatar's
-   * initials) only where ADR-149 and ADR-150 put them. Meanings: web/tests/e2e/support/dom-audit.mjs.
+   * photo, qr, safe-area or hairline; space-separated. brand-position (AUTH-02's logo slot), fixed-glyph (an avatar's
+   * initials), tab-label (a 72 px tab-bar label), scrim-overlap, avatar-overlap and story-card (the root of a 9:16 picture
+   * shared as an image, ADR-518) only where their ADRs put them. Meanings: web/tests/e2e/support/dom-audit.mjs.
    */
   qaExempt?: string;
   /** The SM7 press tone layer: aria-hidden and without a test ID, so test-ID prefixes list controls only (PRESS_TONE_DATASET). */

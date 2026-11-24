@@ -19,9 +19,9 @@ export const ANDROID_TAB_ICONS: Record<TabName, IconPair<ImageSourcePropType>> =
     default: require('../../../assets/tabs/garage-regular.png'),
     selected: require('../../../assets/tabs/garage-fill.png'),
   },
-  messages: {
-    default: require('../../../assets/tabs/chats-regular.png'),
-    selected: require('../../../assets/tabs/chats-fill.png'),
+  shop: {
+    default: require('../../../assets/tabs/bag-regular.png'),
+    selected: require('../../../assets/tabs/bag-fill.png'),
   },
   profile: {
     default: require('../../../assets/tabs/user-regular.png'),

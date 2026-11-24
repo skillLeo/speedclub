@@ -19,7 +19,7 @@ Route::middleware([...AdminRoutes::signedIn(), 'can:staff.view'])->prefix('team'
     Route::get('permissions', [PermissionsController::class, 'index'])->name('permissions');
     Route::get('{staff}', StaffShowController::class)->name('staff.show');
 
-    Route::middleware('throttle:30,1')->group(function (): void {
+    Route::middleware('throttle:30,1,admin-team-1')->group(function (): void {
         Route::post('invite', [StaffActionsController::class, 'invite'])->middleware(['can:staff.invite', 'staff.recent-password'])->name('invite');
         Route::post('{staff}/resend-invite', [StaffActionsController::class, 'resendInvite'])->middleware(['can:staff.invite', 'staff.recent-password'])->name('resend-invite');
 
@@ -45,4 +45,4 @@ Route::middleware([...AdminRoutes::signedIn(), 'can:staff.view'])->prefix('team'
 
 // The invite link (m3.6 §1, ADR-218/237): a guest page; the token stays in the fragment and the page posts it. Rate-limited per address.
 Route::get('invite', [InviteAcceptController::class, 'show'])->name('invite');
-Route::post('invite', [InviteAcceptController::class, 'store'])->middleware('throttle:10,1')->name('invite.store');
+Route::post('invite', [InviteAcceptController::class, 'store'])->middleware('throttle:10,1,admin-team-2')->name('invite.store');

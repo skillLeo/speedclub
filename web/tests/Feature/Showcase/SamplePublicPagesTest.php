@@ -2,20 +2,21 @@
 
 use App\Models\FeatureFlag;
 use App\Models\User;
+use App\Services\Qr\QrCodes;
 use App\Services\Showcase\SampleContent;
 
 require_once __DIR__.'/../Home/HomeTestHelpers.php';
 
 /**
  * M4.2, 09 §8.19: the public Blade pages (WEB-01, WEB-02, WEB-03) mark sample content with the "Beispiel" badge (EN "Sample"), the
- * SPEED CLUB Editorial account with "Editorial", keep sample pages out of search engines (noindex) and show no numbers for a sample
+ * Speedclub Editorial account with "Editorial", keep sample pages out of search engines (noindex) and show no numbers for a sample
  * account. A real page next to it shows none of that.
  */
 beforeEach(function () {
     FeatureFlag::query()->updateOrCreate(['key' => SampleContent::FLAG], ['enabled' => true]);
     config(['speedclub.public_pages.allow_indexing' => true]);
 
-    $this->editorial = User::factory()->create(['username' => 'speedclub.editorial', 'display_name' => 'SPEED CLUB Editorial', 'is_sample' => true, 'is_editorial' => true]);
+    $this->editorial = User::factory()->create(['username' => 'speedclub.editorial', 'display_name' => 'Speedclub Editorial', 'is_sample' => true, 'is_editorial' => true]);
     $this->sample = homeBuild($this->editorial, 1, ['is_sample' => true]);
     $this->realOwner = User::factory()->create(['username' => 'echt.fahrer']);
     $this->real = homeBuild($this->realOwner, 2);
@@ -60,11 +61,14 @@ it('shows nothing of it on a real member and a real build', function () {
         ->not->toContain('<meta name="robots" content="noindex">');
 });
 
-it('badges a sample build featured on the landing page', function () {
+it('badges the sample build the landing page\'s code leads to, and never calls it a real build (R4-1.5)', function () {
     config(['speedclub.public_pages.featured_slug' => $this->sample->slug]);
+    app(QrCodes::class)->ensureActive($this->sample);
 
     $html = $this->get('/?lang=de')->assertOk()->getContent();
 
-    expect($html)->toContain('data-testid="WEB-03.featuredSample.sample">Beispiel<')
-        ->toContain('data-testid="WEB-03.featuredSample.editorial">Redaktion<');
+    expect($html)->toContain('data-testid="WEB-03.qrSample.sample">Beispiel<')
+        ->toContain('data-testid="WEB-03.qrSample.editorial">Redaktion<')
+        ->toContain('Beispiel-Build')
+        ->not->toContain('echten Build');
 });

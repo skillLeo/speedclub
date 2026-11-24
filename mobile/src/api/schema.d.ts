@@ -197,6 +197,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ai/specs/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Typical factory specs for the wizard (ai.vehicle_specs)
+         * @description M5.9 "Daten übernehmen?": for a catalogue generation (or a model and year without generations), cached for every member who picks
+         *     it, so a cached answer costs no call and no daily share. Only valid spec values; the member confirms in the form and sends
+         *     `ai_suggestion` with PUT vehicles/{id}/specs. 422 when the generation is unknown or inactive.
+         */
+        post: operations["v1.ai.specs.suggest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/products/match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Match a typed part to the catalogue (ai.product_match)
+         * @description M5.9 mod editor: every word against the catalogue first (no AI); only when nothing matches, the AI turns the text into catalogue
+         *     words and the server searches again. Answers catalogue products only, at most 3; empty when nothing matches.
+         */
+        post: operations["v1.ai.products.match"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/app-config": {
         parameters: {
             query?: never;
@@ -270,6 +313,69 @@ export interface paths {
          * @description Members only. Going members by username; the organiser sees every answer newest first and filters by `status`.
          */
         get: operations["v1.events.attendees.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My badges
+         * @description M5.9d (m5.9d contract §2, §10.2): every active badge with `earned_at` (null while not earned), in the admin's order. A hidden badge
+         *     not earned yet reads `hidden: true` with its hint only ("???"). `?unseen=1`: only the badges earned since the unlock toast last
+         *     showed, newest first; POST me/badges/seen ends them. Fixed rules only, never random.
+         */
+        get: operations["v1.me.badges.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/badges/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The unlock toast showed these badges
+         * @description Body `{keys: string[]}` (1–100). Keys the member has not earned or saw before change nothing. 204.
+         */
+        post: operations["v1.me.badges.seen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{username}/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A member's badges
+         * @description M5.9d: the member's earned, active badges, newest first (a hidden badge only once earned). 404 `member_unavailable` where the
+         *     profile is (unknown, unverified, suspended, a block either way). Guests too.
+         */
+        get: operations["v1.users.badges"];
         put?: never;
         post?: never;
         delete?: never;
@@ -430,6 +536,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/build-score/formula": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How the Build Score is made
+         * @description The formula of "So entsteht dein Build Score": the parts, their items with points, limits and caps, and the stages. Guests too.
+         */
+        get: operations["v1.build-score.formula"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/build-score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A vehicle's Build Score
+         * @description Guests too, for every vehicle the viewer may see (else 404 `vehicle_unavailable`). Total 0–1000, stage 1–5, the four parts, the
+         *     nightly ranks (only groups of at least 3 public cars), and, for the owner only, `previous_total` for "+25" and `next_upgrades`.
+         *     Computed at once the first time; after an edit it follows within about 30 seconds. `{"data": null}` while it cannot be computed.
+         */
+        get: operations["v1.vehicles.build-score"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/vehicles/{vehicle}/updates": {
         parameters: {
             query?: never;
@@ -518,7 +666,9 @@ export interface paths {
          * Post a build update
          * @description Accepts an Idempotency-Key header. The photos follow with POST build-updates/{id}/media (up to 10). Followers of the owner and of the
          *     build hear about it once it has text, a photo or a linked mod; mentioned members at once (mentions flag). A draft vehicle: 403.
-         *     Unknown or foreign vehicle: 404 vehicle_unavailable.
+         *     Unknown or foreign vehicle: 404 vehicle_unavailable. M5.9c: `kind=before_after` (optional `modification_id`, the mod it shows)
+         *     takes exactly two photos, before then after; they are paired when the second arrives (or by PATCH photo_pairs), and the pair
+         *     counts for the Build Score once both photos are ready.
          */
         post: operations["v1.build-updates.store"];
         delete?: never;
@@ -728,6 +878,53 @@ export interface paths {
          *     business's own proposals, 409 when decided).
          */
         patch: operations["v1.me.business.tags.update"];
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/car-of-the-day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edit my Car of the Day story line
+         * @description M5.9d (m5.9d contract §3, §10.3): owner only, while the car is the Car of the Day on Home (18:00 to 18:00), else 409
+         *     `not_car_of_the_day`. `story_line` ≤ 140 characters, whitespace collapsed; null or empty removes it. Keyword rules as for the
+         *     description: a blocked term answers 422 `content_blocked` on `story_line`.
+         */
+        patch: operations["v1.vehicles.car-of-the-day"];
+        trace?: never;
+    };
+    "/car-of-the-day/vote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show the Car of the Day vote
+         * @description The current round (tomorrow's Car of the Day from 18:00, today's until then) with its candidates in the Picker's order, whether and
+         *     for which car the reader voted, and the last decided round. Never a vote count.
+         */
+        get: operations["v1.car-of-the-day.vote.show"];
+        put?: never;
+        /**
+         * Cast or change the Car of the Day vote
+         * @description One vote per account and round, changeable until the round closes (17:00 Europe/Berlin). Answers the same body as the GET.
+         */
+        post: operations["v1.car-of-the-day.vote.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/catalog/makes": {
@@ -1120,6 +1317,37 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vehicles/{vehicle}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the comments on a vehicle
+         * @description R5-5: the car's own thread, next to its updates' threads. Guests too, whoever may see the build (a private build, a draft or a
+         *     blocked owner: 404 not_found). Top-level comments oldest first, each with its replies; the same rules as an update's thread.
+         */
+        get: operations["v1.vehicles.comments.index"];
+        put?: never;
+        /**
+         * Comment on a vehicle
+         * @description R5-5: on the car itself, as on an update. Accepts an Idempotency-Key header. `parent_id` replies within the car's thread (a reply
+         *     to a reply joins its thread). Comments turned off for the vehicle: 403 comments_disabled. Unverified: 403 email_not_verified. A
+         *     draft: 403 forbidden. A blocked term: 422 content_blocked.
+         */
+        post: operations["v1.vehicles.comments.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Turn comments on a vehicle on or off
+         * @description Owner only. Off stops new comments; what was written stays. Answers the vehicle's social block.
+         */
+        patch: operations["v1.vehicles.comments"];
+        trace?: never;
+    };
     "/comments/{comment}": {
         parameters: {
             query?: never;
@@ -1132,32 +1360,12 @@ export interface paths {
         post?: never;
         /**
          * Delete a comment
-         * @description Its author, or the owner of the update; also under a restriction. Replies go with a top-level comment. Answers 204.
+         * @description Its author, or the owner of the car (of an update's thread or its own); also under a restriction. Replies go with a top-level comment. Answers 204.
          */
         delete: operations["v1.comments.destroy"];
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/vehicles/{vehicle}/comments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Turn comments on a vehicle on or off
-         * @description Owner only. Off stops new comments; what was written stays. Answers the vehicle's social block.
-         */
-        patch: operations["v1.vehicles.comments"];
         trace?: never;
     };
     "/compare": {
@@ -1385,6 +1593,468 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/crews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List crews
+         * @description CREW-00: active crews, `q` in the name, `bundesland`, `sort` name (A–Z, default) or newest; real crews before samples. Never by
+         *     size. Guests too.
+         */
+        get: operations["v1.crews.index"];
+        put?: never;
+        /**
+         * Found a crew
+         * @description Accepts an Idempotency-Key header. The member becomes its founder. At most 2 crews founded and 5 memberships (409 limit_reached).
+         *     Name 3–40 characters, unique regardless of case, no reserved word (422); keyword rules on name and description (422
+         *     content_blocked).
+         */
+        post: operations["v1.crews.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show a crew
+         * @description CREW-01. An old slug (before a rename) answers the crew with its current `slug`: the client redirects. A crew staff hid answers
+         *     only its own members (with `status`); anybody else, and a deleted crew: 404 crew_unavailable. Guests too.
+         */
+        get: operations["v1.crews.show"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a crew
+         * @description The founder, with `confirm_name` (the crew's name). Members, requests and invitations go; the name is free again. Answers 204.
+         */
+        delete: operations["v1.crews.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Change a crew
+         * @description Founder and admins; only the keys sent change. A new name gets a new slug and the old one keeps working. A hidden crew: 409.
+         */
+        patch: operations["v1.crews.update"];
+        trace?: never;
+    };
+    "/crews/{slug}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a crew's members
+         * @description Founder, admins, then members, each by when they joined, with up to three public builds each. Members the reader may not see (a
+         *     block either way, unverified, suspended, closing) are left out. Guests too.
+         */
+        get: operations["v1.crews.members.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload the crew logo
+         * @description Accepts an Idempotency-Key header. Founder and admins. Square; re-encoded without metadata, WebP variants; replaces the old one.
+         */
+        post: operations["v1.crews.logo.store"];
+        /**
+         * Remove the crew logo
+         * @description Founder and admins. Answers 204.
+         */
+        delete: operations["v1.crews.logo.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload the crew cover
+         * @description Accepts an Idempotency-Key header. Founder and admins. 16:9; re-encoded without metadata, WebP variants; replaces the old one.
+         */
+        post: operations["v1.crews.cover.store"];
+        /**
+         * Remove the crew cover
+         * @description Founder and admins. Answers 204.
+         */
+        delete: operations["v1.crews.cover.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/crew-invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my crew invitations
+         * @description Open invitations to the member, newest first; never one of a crew that is not active or whose inviter has a block with the member.
+         */
+        get: operations["v1.me.crew-invites.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/crew-invites/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept a crew invitation
+         * @description Accepts an Idempotency-Key header. The member joins as a member. 404 crew_unavailable when the crew is gone or hidden, or a block
+         *     came between; 409 limit_reached in 5 crews.
+         */
+        post: operations["v1.me.crew-invites.accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/crew-invites/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Decline a crew invitation
+         * @description The invitation goes; nobody is told. Answers 204.
+         */
+        delete: operations["v1.me.crew-invites.decline"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a crew's open invitations
+         * @description Founder and admins; newest first.
+         */
+        get: operations["v1.crews.invites.index"];
+        put?: never;
+        /**
+         * Invite a member
+         * @description Accepts an Idempotency-Key header. Founder and admins, in every join mode. The member hears about it in the app and accepts with
+         *     POST me/crew-invites/{invite}/accept. Unknown, not visible, blocked either way, already a member or invited: 422 on `username`;
+         *     at most 50 open invitations (409 limit_reached).
+         */
+        post: operations["v1.crews.invites.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/invites/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Withdraw an invitation
+         * @description Founder and admins. Answers 204.
+         */
+        delete: operations["v1.crews.invites.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/members/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a member
+         * @description The founder removes anyone but themselves; an admin only plain members (403). The member is not told. Answers 204.
+         */
+        delete: operations["v1.crews.members.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Change a member's role
+         * @description The founder makes a member admin, or an admin member again. The founder's own role changes only by a hand-over (422).
+         */
+        patch: operations["v1.crews.members.update"];
+        trace?: never;
+    };
+    "/crews/{slug}/founder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hand over the founder role
+         * @description The founder names a member of the crew (`username`), who becomes founder; the old founder stays as admin. 409 limit_reached when
+         *     that member already founds 2 crews.
+         */
+        post: operations["v1.crews.founder.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/users/{username}/crews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a member's crews
+         * @description PROF-01/02 crew chips: the active crews the member is in, A–Z, each with the member's `role`. A member the reader may not see:
+         *     404 member_unavailable. Guests too.
+         */
+        get: operations["v1.public.users.crews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/crews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my crews
+         * @description "Meine Crews": every crew the member is in (a crew staff hid shows `status` hidden), A–Z, with open request and invitation counts
+         *     for the crews they run.
+         */
+        get: operations["v1.me.crews.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/crew-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my join requests
+         * @description Open requests of the member, newest first.
+         */
+        get: operations["v1.me.crew-requests.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Join a crew
+         * @description Accepts an Idempotency-Key header. An open crew, or any crew with an open invitation for the member: they join (`viewer.state`
+         *     member). A request crew: a join request its founder and admins hear about (`viewer.state` requested). An invite-only crew: 403.
+         *     Asking twice changes nothing. 409 limit_reached in 5 crews or with 10 open requests; 409 conflict while staff hide the crew.
+         */
+        post: operations["v1.crews.join"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/join-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Withdraw my join request
+         * @description Answers 204, also when there was none.
+         */
+        delete: operations["v1.crews.join-request.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leave a crew
+         * @description Members and admins; the founder hands over or deletes the crew first (409 conflict). Answers 204.
+         */
+        post: operations["v1.crews.leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a crew's join requests
+         * @description Founder and admins; oldest first. Requests of members the reader has a block with are left out (they cannot decide them).
+         */
+        get: operations["v1.crews.requests.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve a join request
+         * @description Accepts an Idempotency-Key header. The member joins and hears about it. 409 limit_reached when they are in 5 crews meanwhile (the
+         *     request stays); 404 for a request of somebody the reader has a block with.
+         */
+        post: operations["v1.crews.requests.approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/crews/{slug}/requests/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decline a join request
+         * @description The request goes; the member is not told. Answers 204.
+         */
+        post: operations["v1.crews.requests.decline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/export": {
         parameters: {
             query?: never;
@@ -1538,6 +2208,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/dex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Dex
+         * @description One card per car I found (my first counted spot of it), newest find first; cursor pages. `filter`: all, rarity:{tier},
+         *     make:{slug} or set:{key}. `meta.found` / `meta.total` for "Dex 87 / 1.240": cars found (any filter aside) and every car there is
+         *     to find (public cars, real ones only, plus the ghost cars I found). A car leaves the list while I may not see it.
+         */
+        get: operations["v1.me.dex.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/dex/sets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My sets
+         * @description JDM, city and season sets always, a brand set once I found a car of its make. Each with its slots: a found slot carries the full
+         *     SpotCard; an unfound JDM slot names make and generation ("???"), other unfound slots are blank.
+         */
+        get: operations["v1.me.dex.sets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/dex-card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A car's Dex card
+         * @description The card of a car I spotted (`spotted` true), else the "noch nicht gespottet" preview of a public car that is not in ghost mode
+         *     (`spotted` false, no spot data). 404 otherwise, also for a car I may not see.
+         */
+        get: operations["v1.vehicles.dex-card"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/spot-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My car's spot numbers
+         * @description Owner only (403 for anybody else). Counted spots; cities of day spots only and none while `hide_spot_cities` is on; the last 30
+         *     days by day; recent spotters, `{anonymous: true}` for those who keep "Meine Spots zeigen" off; the Street Famous tier.
+         */
+        get: operations["v1.vehicles.spot-stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/discover": {
         parameters: {
             query?: never;
@@ -1574,6 +2329,7 @@ export interface paths {
          *     made by the app (a UUID) and kept on the device; send it again with the code to POST auth/email/verify. The mail holds the 6-digit
          *     code (10 minutes, single use) and an "Anmelden" button that works only on this device. Nothing is sent during the cooldown
          *     (`resend_after`: 30 s, 60 s, then 120 s), above 5 codes an hour for the address, or while it is locked after 10 wrong codes.
+         *     While `auth.email_code` is switched off (ADR-520: a host that cannot deliver mail yet): 404 `feature_disabled`, nothing is sent.
          */
         post: operations["v1.auth.email.start"];
         delete?: never;
@@ -1607,6 +2363,12 @@ export interface paths {
          *     password does not match uses forgot password. Success ends every earlier token and session of the account. A member
          *     who must change the password is verified but not signed in: 403 `password_change_required`, and a reset code is on
          *     its way. An account with two-factor answers `{two_factor_required: true, challenge, expires_in}` as at sign-in.
+         *
+         *     While `auth.email_code` is switched off (ADR-520: a host that cannot deliver mail yet) the passwordless form answers 404
+         *     `feature_disabled`, as POST auth/email/start does; the registration form is not affected.
+         *
+         *     `invite_code` (M5.9d, optional, both forms): the code of a /join/{code} link, redeemed when the account activates (verified address and
+         *     accepted terms); ignored for an account that is active already and for an unknown, used or malformed code, never refused.
          */
         post: operations["v1.auth.email.verify"];
         delete?: never;
@@ -1804,6 +2566,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/events/{slug}/checkin-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show the check-in code
+         * @description The organiser, while the window is open (60 min before the start to 120 min after the end; 409 checkin_closed otherwise). The
+         *     code rotates every 5 minutes (the one before is accepted 60 s longer); ask again at `refresh_at`. `svg` is the QR of `url`.
+         */
+        get: operations["v1.events.checkin.code"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/checkin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check in
+         * @description Accepts an Idempotency-Key header. `code` from the organiser's screen (case and spaces do not matter), `profile_visible` (default
+         *     true). 201 with the check-in; 200 with the same body when already checked in. The RSVP stays as it is. Wrong or expired code: 422
+         *     checkin_code_invalid (`errors.code`); after 5 wrong codes for this event in an hour 429 with Retry-After; outside the window 409
+         *     checkin_closed; the organiser's own event 403 checkin_own_event.
+         */
+        post: operations["v1.events.checkin.store"];
+        /**
+         * Remove the check-in
+         * @description "War dabei entfernen": the member who checked in, at any time. Answers 204.
+         */
+        delete: operations["v1.events.checkin.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Change the check-in
+         * @description "Auf meinem Profil zeigen": the member who checked in.
+         */
+        patch: operations["v1.events.checkin.update"];
+        trace?: never;
+    };
+    "/events/{slug}/gallery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the gallery
+         * @description Guests too for `status=approved` (default, approval order). `status=pending`: the organiser's queue (401 for guests, 403 forbidden
+         *     for everybody else). `status=mine`: the reader's own uploads in every status (401 for guests). Photos of members with a block
+         *     either way are left out.
+         */
+        get: operations["v1.events.gallery.index"];
+        put?: never;
+        /**
+         * Add a photo
+         * @description Accepts an Idempotency-Key header. Multipart `file` (JPEG, PNG or WebP, at most 15 MB, the shorter side at least 800 px),
+         *     `plate_blur` (required) with `blur_regions`, optional `alt`. The organiser's photo is approved at once, an attendee's (going or
+         *     checked in) is pending until the organiser decides. Outside the window (start … end + 14 days): 403 gallery_closed with
+         *     `meta.opens_at`/`meta.closes_at`; neither organiser nor going nor checked in: 403 gallery_not_attendee; 10 photos per attendee, 40
+         *     for the organiser, 200 per event: 409 limit_reached.
+         */
+        post: operations["v1.events.gallery.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/gallery/{photo}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve a photo
+         * @description The organiser, on a pending photo (409 photo_already_reviewed otherwise). It joins the gallery at the end of the approval order.
+         */
+        post: operations["v1.events.gallery.approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/gallery/{photo}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject a photo
+         * @description The organiser, on a pending photo (409 photo_already_reviewed otherwise). `reason` (optional, at most 200 characters) is shown to
+         *     the uploader only; the files go after 7 days.
+         */
+        post: operations["v1.events.gallery.reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/gallery/{photo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a photo
+         * @description The uploader (own, any status; also when they can no longer see the event) or the organiser (any). Open under a publishing
+         *     restriction. Answers 204.
+         */
+        delete: operations["v1.events.gallery.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events/{slug}/updates": {
         parameters: {
             query?: never;
@@ -1894,6 +2800,430 @@ export interface paths {
          *     who blocked whom. The follow goes whatever the follower's state. Counts against the 200 unfollows a day.
          */
         delete: operations["v1.me.followers.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the forum categories
+         * @description Guests too. The active top-level categories in their order, each with its active sub-categories ("Marken & Modelle" holds one per
+         *     make, "Treffen & Regionen" one per Bundesland). Names in the reader's language.
+         */
+        get: operations["v1.forum.categories.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/categories/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show a forum category
+         * @description Guests too. FOR-02's header: the category with its sub-categories; its threads come from `forum/threads?category={slug}`.
+         */
+        get: operations["v1.forum.categories.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/posts/{post}/vote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark a reply as helpful
+         * @description Idempotent. Not one's own (422 own_content), not the opening post; a reply the member may not see: 404.
+         */
+        put: operations["v1.forum.votes.update"];
+        post?: never;
+        /**
+         * Take a "Hilfreich" back
+         * @description Idempotent; also under a restriction.
+         */
+        delete: operations["v1.forum.votes.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/threads/{thread}/solution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark the solution
+         * @description The thread's author: one published reply of this thread is "Gelöst" (another one replaces it). Its author is told.
+         */
+        put: operations["v1.forum.solution.update"];
+        post?: never;
+        /**
+         * Clear the solution
+         * @description The thread's author.
+         */
+        delete: operations["v1.forum.solution.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/threads/{thread}/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Subscribe to a thread
+         * @description Idempotent: new replies notify (forum_reply, SET-09 "Forum").
+         */
+        put: operations["v1.forum.subscription.update"];
+        post?: never;
+        /**
+         * Unsubscribe from a thread
+         * @description Idempotent.
+         */
+        delete: operations["v1.forum.subscription.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/forum-threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Discussions about a build
+         * @description Guests too. A build the reader may not see answers 404.
+         */
+        get: operations["v1.vehicles.forum-threads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/mods/{modification}/forum-threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Discussions about a mod
+         * @description Guests too. A mod the reader may not see answers 404.
+         */
+        get: operations["v1.mods.forum-threads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/products/{product}/forum-threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Discussions about a product
+         * @description Guests too. An unknown or archived product answers 404.
+         */
+        get: operations["v1.products.forum-threads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/threads/{thread}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a photo to a thread
+         * @description The author only. Accepts an Idempotency-Key header. A seventh photo: 422 on `file`. Plate blur as for every upload.
+         */
+        post: operations["v1.forum.photos.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/threads/{thread}/photos/{media}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a photo from a thread
+         * @description The author only, also under a restriction. Answers 204.
+         */
+        delete: operations["v1.forum.photos.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/threads/{thread}/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the replies of a thread
+         * @description Guests too. Top-level replies (`sort` oldest by default, or helpful: the most "Hilfreich" first), each with up to 100 answers, oldest
+         *     first. Replies of members the reader blocked or who blocked the reader are left out; the reader's own pending replies are in, with
+         *     `status` pending.
+         */
+        get: operations["v1.forum.posts.index"];
+        put?: never;
+        /**
+         * Reply in a thread
+         * @description Accepts an Idempotency-Key header. 60 a day. `parent_id` answers a reply (an answer to an answer joins its thread). A locked thread,
+         *     or one not published yet: 409 forum_thread_closed. New or unverified accounts: `status` pending (pre-moderation). A blocked term:
+         *     422 content_blocked.
+         */
+        post: operations["v1.forum.posts.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/posts/{post}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a forum reply
+         * @description Its author only, also under a restriction. Answers to it stay. The opening post goes with its thread. Answers 204.
+         */
+        delete: operations["v1.forum.posts.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit a forum post
+         * @description Its author only (the opening post too: its text is the thread's). The edit is marked.
+         */
+        patch: operations["v1.forum.posts.update"];
+        trace?: never;
+    };
+    "/forum/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List forum threads
+         * @description Guests too. `sort` active (default: pinned first, then the newest activity), new, unanswered (no reply yet), solved. `category` is a
+         *     slug (a parent includes its sub-categories); an unknown or closed one answers 404. Threads of members the reader blocked, or who
+         *     blocked the reader, are left out.
+         */
+        get: operations["v1.forum.threads.index"];
+        put?: never;
+        /**
+         * Start a forum thread
+         * @description Accepts an Idempotency-Key header. 5 a day. New accounts (under 3 days) and accounts without a confirmed e-mail post into
+         *     pre-moderation: `status` pending, visible to the author only until the team approves it. A blocked term: 422 content_blocked.
+         *     A publishing or forum restriction: 403 account_restricted.
+         */
+        post: operations["v1.forum.threads.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * "Gerade im Forum"
+         * @description Guests too. Home's module: up to 3 threads with the newest activity of the last 14 days; empty when the forum is quiet.
+         */
+        get: operations["v1.forum.active"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/threads/{thread}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show a forum thread
+         * @description Guests too. A thread the reader may not see (pending or rejected of somebody else, removed, of a blocked member, a hidden sample)
+         *     answers 404; its author sees it in every state with `status`. A merged thread answers with `merged_into`.
+         */
+        get: operations["v1.forum.threads.show"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a forum thread
+         * @description The author only, also under a restriction, while no other member replied (else 409 forum_thread_has_replies). Answers 204.
+         */
+        delete: operations["v1.forum.threads.destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit a forum thread
+         * @description The author only: title, text, category, tags and attachments (each optional; null takes an attachment off). The edit is marked.
+         */
+        patch: operations["v1.forum.threads.update"];
+        trace?: never;
+    };
+    "/search/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search the forum
+         * @description Guests too. Every word of `q` must start a word of the title, the opening text, the tags, the category or the attached build;
+         *     the order is `sort` (default active).
+         */
+        get: operations["v1.search.threads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forum/similar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * "Ähnliche Themen"
+         * @description FOR-04 while typing the title: up to 5 threads whose titles share the most words with it (threads of the chosen category first).
+         */
+        get: operations["v1.forum.similar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/forum/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My forum threads
+         * @description FOR-05 "Meine Themen": every thread the member started, in every state but deleted (pending, rejected with its reason in the
+         *     detail, removed, merged), newest first.
+         */
+        get: operations["v1.me.forum.threads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/forum/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My forum subscriptions
+         * @description FOR-05 "Abonniert": subscribed threads the member may see, newest activity first.
+         */
+        get: operations["v1.me.forum.subscriptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2051,6 +3381,137 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Count a view (beacon)
+         * @description M5.7 (10 §6.1): the app sends this once per screen focus of a vehicle page (VEH-01) or a profile (PROF-02) that is not the
+         *     viewer's own; never from prefetches, lists or cards. One view per person, page and Europe/Berlin day; the person is stored only as
+         *     a hash with a key that is deleted when the day ends. Guests too. Always 204 for a well-formed body, whether the view counted or not
+         *     (own page, already counted today, unknown, hidden, blocked, staff view-as, flag `insights` off): the answer reveals nothing.
+         */
+        post: operations["v1.views.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My statistics (INS-01 from Profil)
+         * @description M5.7 (10 §6.1): views of the profile and every car of the member, this week against last week, 30 days, sources, sticker scans,
+         *     spots, new followers, saves and reactions. Sums only, never who viewed. Owner-only: staff in view-as get 403 view_as_read_only.
+         *     404 feature_disabled while the flag `insights` is off.
+         */
+        get: operations["v1.me.insights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A car's statistics (INS-01 from the owner's vehicle)
+         * @description M5.7 (10 §6.1): the same report for one car. Only its owner: 403 forbidden for anybody else, 403 view_as_read_only for staff in
+         *     view-as.
+         */
+        get: operations["v1.vehicles.insights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/intro/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark the introduction as seen
+         * @description R4-1.4 (INTRO-01…04): after the last page or "Überspringen". Once per account; repeating it is harmless (204 again). Open under
+         *     every restriction, as it is not public content.
+         */
+        post: operations["v1.me.intro.seen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My invite codes
+         * @description M5.9d (m5.9d contract §5, §10.4): five codes (8 characters Crockford), created on the first read, oldest first; each open or redeemed
+         *     (`accepted_at`, `accepted_by` while the member may be seen). Redeemed codes are not replaced. Both sides of a redeemed code get the
+         *     "Crew Starter" badge and nothing else. 403 for a member without a username (nobody could see who invites).
+         */
+        get: operations["v1.me.invites.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invites/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Look up an invite code
+         * @description M5.9d (contract §10.4): an open code and its inviter for the sign-up screens ("Du wurdest von @… eingeladen"). 404 `not_found` for
+         *     an unknown, used or no longer valid code (the inviter deleted, suspended or unverified). Lower-case and the look-alikes I, L, O are
+         *     read as their Crockford digits. Throttled per IP.
+         */
+        get: operations["v1.invites.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/legal": {
         parameters: {
             query?: never;
@@ -2085,6 +3546,28 @@ export interface paths {
          *     an older one. The body is Markdown.
          */
         get: operations["v1.legal.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/level": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My level
+         * @description M5.9d (m5.9d contract §1, §10.1): level 1–10 with its title, XP, the XP of the next level (null on the top level), progress 0–1,
+         *     today's XP against the daily cap (Europe/Berlin day) and the fixed XP rules. XP comes from real actions only: never for likes,
+         *     reactions, posting volume or signing in.
+         */
+        get: operations["v1.me.level"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2268,6 +3751,7 @@ export interface paths {
          * Upload a vehicle photo
          * @description Multipart. Accepts an Idempotency-Key header. Up to 15 MB, JPEG, PNG or WebP by content (413, 415);
          *     HEIC is converted by the client first. Status is `processing` when the server retries in the background.
+         *     M5.9a: `plate_blur` + `blur_regions` pixelate number plates before any file is written (ADR-509).
          */
         post: operations["v1.vehicles.media.store"];
         delete?: never;
@@ -2317,9 +3801,34 @@ export interface paths {
          * Update alt text, focal point or category, or pixelate plates and faces
          * @description [SIG] `blur_regions` (404 `feature_disabled` while `sig.plate_blur` is off): up to 10 rectangles, normalised 0–1. The answer is the
          *     photo in `processing`, without variants: the queue pixelates every variant and the original, which is replaced, and the photo comes
-         *     back `ready` under new URLs. 422 for a photo that is not finished.
+         *     back `ready` under new URLs. 422 for a photo that is not finished. M5.9a: also a build-update photo and the profile cover or avatar
+         *     (the plate check uses this), and the photo's `plate_blur.state` becomes `blurred`. Pixelation is only ever added: `plate_blur: false`
+         *     is a 422 ("Zum Ändern lädst du das Foto neu hoch.").
          */
         patch: operations["v1.media.update"];
+        trace?: never;
+    };
+    "/public/users/{username}/checkins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a member's check-ins
+         * @description PROF-01/02 "War dabei": the events the member checked in to and shows on their profile, only once the event has ended (never live,
+         *     10 §16), only events the reader may see in a list; newest check-in first, with the Berlin date of the check-in (`checked_in_on`),
+         *     never the time. A member who is not findable (SET privacy) shows nobody else their check-ins; a member the reader may not see
+         *     (blocks, unverified, suspended): 404 member_unavailable. Guests too.
+         */
+        get: operations["v1.public.users.checkins"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/public/users/{username}/events": {
@@ -2767,6 +4276,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/checkins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My check-ins
+         * @description PROF-01 "War dabei", the member's own: every event they checked in to (also hidden from the profile, also while it is running),
+         *     newest check-in first, as EventCards with `checked_in_at` and `profile_visible`. Events staff removed are left out.
+         */
+        get: operations["v1.me.checkins"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/events": {
         parameters: {
             query?: never;
@@ -3106,6 +4636,115 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/mods/{modification}/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark a planned modification as installed
+         * @description "Als verbaut markieren": status `installed`, `installed_on` this month unless sent (YYYY-MM, not in the future), the plan fields
+         *     cleared, the private budget kept. Verlauf records the change like any status change (`history_recorded`). Accepts an
+         *     Idempotency-Key header. 409 `mod_not_planned` when the mod is not planned (any more).
+         */
+        post: operations["v1.mods.install"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/plans/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reorder a vehicle's plans
+         * @description `ids` must hold every planned modification of the vehicle exactly once (422 under `ids` otherwise). Answers the plans in their
+         *     new order. The build sheet's order (PUT vehicles/{id}/mods/order) stays as it is.
+         */
+        put: operations["v1.vehicles.plans.order"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/plate-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my photos to check for number plates
+         * @description The member's own finished photos of vehicles, modifications and build updates, and the profile cover, that were uploaded without a
+         *     plate decision (`plate_blur.state` `unchecked`); newest first, cursor pages of 25. `meta.count` is the number of all of them,
+         *     `meta.dismissed` whether the member said "Später": the garage card shows while `count > 0` and not `dismissed`. Chat photos are
+         *     never listed.
+         */
+        get: operations["v1.me.plate-check.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/plate-check/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss the plate check
+         * @description "Später": the garage card does not come back (`meta.dismissed`). The photos keep their state; nothing changes on them. Accepts an
+         *     Idempotency-Key header.
+         */
+        post: operations["v1.me.plate-check.dismiss"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/plate-check/{media}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Keep a photo as it is
+         * @description "Kein Kennzeichen sichtbar": the photo stays unchanged and leaves the list (`plate_blur.state` `declined`). To pixelate instead,
+         *     send `blur_regions` to `PATCH media/{media}`. Idempotent: a photo decided already (kept, or pixelated) stays as it is and answers
+         *     204 too. Accepts an Idempotency-Key header. 404 for a photo the check does not cover (another member's, a chat photo, the avatar).
+         */
+        post: operations["v1.me.plate-check.decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/products": {
         parameters: {
             query?: never;
@@ -3165,6 +4804,23 @@ export interface paths {
          *     badged samples after them (ADR-457), each last changed first; cursor pages.
          */
         get: operations["v1.products.builds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My profile */
+        get: operations["v1.me.show"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3331,7 +4987,8 @@ export interface paths {
         };
         /**
          * List a member's public vehicles
-         * @description Public ones only: an unlisted vehicle is reachable by link and QR alone. Main vehicle first.
+         * @description Public ones only: an unlisted vehicle is reachable by link and QR alone, and so is a ghost car (M5.9b), except for its owner. Main
+         *     vehicle first.
          */
         get: operations["v1.public.users.vehicles"];
         put?: never;
@@ -3677,6 +5334,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/rarity-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Rarity rules
+         * @description The thresholds of the rarity tiers: Tuned (Build Score), Rare (public cars of the same generation), Legend (Build Score or the
+         *     only public car of its generation), Ghost (the owner's opt-in). Guests too.
+         */
+        get: operations["v1.rarity-rules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/vehicles/{id}/reactions": {
         parameters: {
             query?: never;
@@ -3815,7 +5493,8 @@ export interface paths {
          * @description The same 202 whether or not the address has an account, so nobody can probe addresses. A new address gets a
          *     verification code, a known one a notice with sign-in and reset links. Issues no auth; that happens at
          *     auth/email/verify. Password errors in 422 name the broken rule. `ref` names where sign-up began (a QR scan or a public page), for
-         *     the admin's sign-up counts; nothing else about the scan or the page is stored.
+         *     the admin's sign-up counts; nothing else about the scan or the page is stored. `invite_code` (M5.9d, optional): the code of a
+         *     /join/{code} link, redeemed when the account activates; an unknown, used or malformed code is ignored, never refused.
          */
         post: operations["v1.auth.register"];
         delete?: never;
@@ -4099,7 +5778,7 @@ export interface paths {
         };
         /**
          * Sign-in methods (SET-19)
-         * @description Every way into the account: the e-mail code (always), the password, two-factor, Apple and Google, the number of passkeys.
+         * @description Every way into the account: the e-mail code (unless switched off, ADR-520), the password, two-factor, Apple and Google, the number of passkeys.
          */
         get: operations["v1.me.sign-in-methods"];
         put?: never;
@@ -4262,7 +5941,7 @@ export interface paths {
         head?: never;
         /**
          * Update app, privacy and notification settings
-         * @description Any subset of: theme, locale, power_display, distance_unit, torque_unit, weight_unit, maintenance (SET-23), show_owner_on_qr, who_can_message, mention_privacy, discoverable, indexable, read_receipts,
+         * @description Any subset of: theme, locale, power_display, distance_unit, torque_unit, weight_unit, maintenance (SET-23), show_owner_on_qr, who_can_message, mention_privacy, discoverable, indexable, read_receipts, show_my_spots,
          *     ai_suggestions, notification_prefs. indexable false takes the profile and the builds out of the sitemap at once and marks the pages noindex.
          */
         patch: operations["v1.me.settings.update"];
@@ -4278,11 +5957,83 @@ export interface paths {
         /**
          * Download a share card
          * @description PNG, 1080 × 1920 (`format=story`, default) or 1080 × 1080 (`square`): the cover photo, make and model, three specs, @username when
-         *     the owner shows themselves, the QR code with the logo beside it. `{id}` is the vehicle id. 404 `vehicle_unavailable` for a vehicle
-         *     the viewer may not see, or one without a usable photo. The stored card of a public build is also at `share_card_url`, which can be
-         *     cached forever; this answer is `private`.
+         *     the owner shows themselves, the Build Score and the Dex number when the build has them, the QR code of the build's page (ADR-514)
+         *     with the logo beside it. The square card keeps the photo in its upper part and holds everything else in a band below it (CF-6).
+         *     CF-6 customisation: `photo`, `show` and `theme`; R5-2e (VEH-07 2.0): `template` (`band`, `poster`, `frame`), the crop (`zoom`, `x`,
+         *     `y`, in the template's photo box aspect), the `mods` element and an own `text` line (see the parameters). Without parameters (or with
+         *     the defaults) the card is the stored one at `share_card_url`; any other choice is drawn for this viewer, cached privately and never
+         *     given a URL. 422 on `text` for characters the card fonts do not draw, more than 60 characters or a blocked term (`content_blocked`).
+         *     `{id}` is the vehicle id. 404 `vehicle_unavailable` for a vehicle the viewer may not see, or one without a usable photo; 422 on
+         *     `photo` for an id that is not one of the build's public photos. The stored card of a public build is also at `share_card_url`,
+         *     which can be cached forever; this answer is `private`.
          */
         get: operations["v1.vehicles.share-card"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show the shop's head
+         * @description Guests too. SHOP-01: the hero (the admin's active banner, null when none can be shown), the chips "Alle", Sticker, Kleidung,
+         *     Accessoires with the real number of products each returns (to hide empty chips; not a visible number), and the store (host and
+         *     shipping policy link, null while no store is configured).
+         */
+        get: operations["v1.shop.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List shop products
+         * @description Guests too. The SHOP-01 grid in the admin's order, one category or all; cursor pages (default 20, at most 48). Samples (badge
+         *     "Beispiel") only where sample content is shown. R4-3.2: products of a coming_soon category are never listed; asking for that
+         *     category answers an empty page with meta.category_status coming_soon, never an error.
+         */
+        get: operations["v1.shop.products.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/products/{product}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show a shop product
+         * @description Guests too. SHOP-02 by ULID or slug: gallery, price incl. MwSt., variants (each with its own buy link), description, the buy link
+         *     and the store. 404 shop_product_unavailable when it is unknown, hidden, deleted, in a coming_soon category (R4-3.2), or a sample
+         *     where samples are not shown.
+         */
+        get: operations["v1.shop.products.show"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4398,6 +6149,373 @@ export interface paths {
          *     expired: 422 `code_expired`; locked: 429 `email_code_locked`. A provider ID already linked elsewhere: 409 `provider_already_linked`.
          */
         post: operations["v1.auth.link.confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/spots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Spot a car
+         * @description The in-app scanner only. Accepts an Idempotency-Key header; 30 per member and hour (429). Body: `code` and, when the device found
+         *     one, `city_id` (preferred; its Bundesland wins) or `city` + `bundesland`; any other field, coordinates above all, is refused (422).
+         *     201 with the card for a new spot; 200 with the existing card for the same car again within 24 h (`meta.duplicate`). An account
+         *     younger than 24 h gets 201 with `meta.counted` false and `meta.reason` "account_too_new"; a real member's scan of a sample car the
+         *     same with "sample_car" (samples never earn). 404 `qr_not_found` for an unknown code;
+         *     409 `spot_unavailable` (revoked code, a car one cannot see, a block either way), `spot_own_car`, `spotting_paused`.
+         */
+        post: operations["v1.spots.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/spots/{spot}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my spots
+         * @description The reveal (DEX-03) after a restart or from a link. The spotter only: anybody else, and a spot of a car the spotter may no longer
+         *     see, gets 404. `meta.new_in_dex` says whether this spot put the car into the Dex.
+         */
+        get: operations["v1.spots.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/spot-map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Spot map
+         * @description City aggregates of counted spots for the public heat map: only spots at least 24 hours and at most 90 days old, only cities whose
+         *     spots are of at least 5 different cars (one car spotted often never shows its town), never a vehicle, a member or a time. Ghost cars and cars whose owner hides their cities do not count.
+         *     Cached for an hour. Guests too.
+         */
+        get: operations["v1.spot-map"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stickers/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sticker templates
+         * @description The six templates with their sizes in mm (and the printed code size at each), the text options each one shows, the colourways
+         *     with the materials they allow, and the limits (custom line ≤ 24, code ≥ 25 mm, quiet zone 4 modules, error correction H, bleed).
+         */
+        get: operations["v1.stickers.templates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/stickers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My stickers
+         * @description One card per published vehicle, main vehicle first (as `me/qr-codes`): status of its code, scans since Monday, the current design
+         *     and what "Gestalten", "Bestellen" and "Herunterladen" may do.
+         */
+        get: operations["v1.me.stickers.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/sticker/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sticker scan statistics
+         * @description 30 daily counts, the total, this and last week, the first day with a scan and the sources, over every code the car had. Counts only:
+         *     nothing about who scanned is stored. 404 `feature_disabled` while `sig.qr_stats` is off.
+         */
+        get: operations["v1.vehicles.sticker.stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/sticker-design": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The current sticker design
+         * @description The highest version, or before the first save an unsaved default (`persisted: false`, `version: 0`) for the editor to start from.
+         */
+        get: operations["v1.vehicles.sticker-design.show"];
+        /**
+         * Autosave the sticker design
+         * @description `base_version` and `base_revision` are the version and revision the app last saw (0 and 0 before the first save); a save from
+         *     another device in between answers 409 `edit_conflict` with `current_version` and `current_revision`. A draft is updated in place
+         *     (the revision moves); after a passed Scan-Test the next edit opens a new version.
+         *     The custom line (≤ 24 characters, one line) goes through the keyword rules: 422 `content_blocked`.
+         */
+        put: operations["v1.vehicles.sticker-design.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/sticker-design/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview a sticker design
+         * @description Renders the posted, unsaved state as SVG (millimetre viewBox, on its surface) for the live preview; stores nothing.
+         */
+        post: operations["v1.vehicles.sticker-design.preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/sticker-design/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run the Scan-Test
+         * @description The server renders the current version with the car's active code exactly as the print files and decodes it back (error correction
+         *     H). Pass: the version is validated and frozen with that code. Fail: 422 `sticker_scan_failed`. QR off: validated without a test
+         *     (`not_applicable`). 409 `edit_conflict` when `version` is not the current one, 409 `sticker_no_active_code` when staff took the code
+         *     down. Accepts `Idempotency-Key`.
+         */
+        post: operations["v1.vehicles.sticker-design.validate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/sticker-design/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sticker design versions
+         * @description Every version, newest first: the validated ones and the open draft (STK-07).
+         */
+        get: operations["v1.vehicles.sticker-design.versions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{vehicle}/sticker-design/versions/{version}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore a version
+         * @description Its template and options become the current draft, by the autosave rules (a validated current version stays; the restore opens the
+         *     next one). `base_revision` is the revision the app last saw of the current version: another device's save in between answers 409
+         *     `edit_conflict` with `current_version` and `current_revision`. Accepts `Idempotency-Key`.
+         */
+        post: operations["v1.vehicles.sticker-design.restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sticker-designs/{design}/preview.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview of a version as SVG
+         * @description On its surface, logo linked: for thumbnails in the hub and the history. Any version.
+         */
+        get: operations["v1.sticker-designs.preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sticker-designs/{design}/share.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Picture to share
+         * @description 1600 px on the long edge, the sticker on its surface. Its code leads to the car's public page, never to the sticker code (ADR-514).
+         */
+        get: operations["v1.sticker-designs.share"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sticker-designs/{design}/print.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the print SVG
+         * @description Millimetre units, one group per ink, text as outlines, the logo embedded, the die line in `CutContour`. Validated versions only:
+         *     409 `sticker_not_validated`; 409 `sticker_code_replaced` once their code is no longer active.
+         */
+        get: operations["v1.sticker-designs.print-svg"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sticker-designs/{design}/print.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the print PDF
+         * @description Exact size (TrimBox) with 3 mm bleed (BleedBox), crop marks, the die line, the design id and production notes in the slug, fonts
+         *     embedded; page 2 is a proof on the surface, not for printing. Same conditions as the SVG.
+         */
+        get: operations["v1.sticker-designs.print-pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sticker-designs/{design}/print.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the print PNG
+         * @description 300 dpi, transparent, inks only, mirrored when the design is. Same conditions as the SVG.
+         */
+        get: operations["v1.sticker-designs.print-png"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sticker-designs/{design}/order-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Order link
+         * @description The Shopify cart link with the design attached (`attributes[sticker_design]`, `attributes[vehicle]`), or `available: false` with
+         *     "Bestellung bald verfügbar" while no store is configured. Needs a validated version whose code still works (409 as the print
+         *     files). Accepts `Idempotency-Key`.
+         */
+        post: operations["v1.sticker-designs.order-link"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4674,7 +6792,8 @@ export interface paths {
         /**
          * Update basics, or save a wizard step
          * @description Only the keys sent change. Choosing a catalogue entry clears the free text of that level and the other way round; a new
-         *     make clears a model that no longer fits.
+         *     make clears a model that no longer fits. Under a publishing restriction (403 `account_restricted`) only a body of nothing but
+         *     `ghost_mode`, `spotting_paused` and `hide_spot_cities`, each `true` or unchanged, is accepted: it only hides the car more.
          */
         patch: operations["v1.vehicles.update"];
         trace?: never;
@@ -4853,6 +6972,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/wrapped": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Wrapped seasons
+         * @description The seasons I have a Wrapped of, newest first, each with `released`. `meta.countdown` = `{season_key, release_at}` of the soonest of
+         *     them that opens within 7 days while the flag `wrapped.countdown` is on, else null.
+         */
+        get: operations["v1.me.wrapped.index"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/wrapped/{season_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One season's Wrapped
+         * @description The story payload (cards in order, words in my language). 403 `wrapped_not_released` before the season's release, 404 `not_found`
+         *     when I have none. The first read sets `viewed_at`.
+         */
+        get: operations["v1.me.wrapped.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/wrapped/{season_key}/shared": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Count a share
+         * @description After I opened the share sheet for a card: `shared_count + 1` ("Teilen geöffnet": the OS cannot tell a cancelled share apart). Send an `Idempotency-Key`; a retry with the same key answers the same and counts once.
+         *     403 `account_restricted` while I may not publish.
+         */
+        post: operations["v1.me.wrapped.shared"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/wrapped/{season_key}/cards/{n}.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A card as an image
+         * @description PNG, 1080 × 1920, of card `n` (1-based position in `cards`), drawn by the server for the member web's share and download. Mine only;
+         *     the same release gate as the payload; 404 for a position without a card. `ETag` = the card's content hash.
+         */
+        get: operations["v1.me.wrapped.card"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4900,7 +7103,7 @@ export interface components {
             avatar: components["schemas"]["MediaResource"] | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
-            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            /** @description The Speedclub Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
             is_editorial: boolean;
             /** @description "BMW M4 G82": the main build when it is listed, else the build changed last. */
             car_line: string | null;
@@ -5145,6 +7348,8 @@ export interface components {
             device_id?: string | null;
             /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
             os_version?: string | null;
+            /** @description The code of /join/{code} (8 characters Crockford; I/L read as 1, O as 0). Optional; an invalid code is ignored, never refused. */
+            invite_code?: string | null;
         };
         /**
          * Aspiration
@@ -5170,6 +7375,35 @@ export interface components {
             token_expires_at: string | null;
             member: components["schemas"]["MeResource"];
         };
+        /**
+         * BadgeCategory
+         * @description M5.9d badges (m5.9d contract §2): the groups of the badge row and the admin badge manager.
+         * @enum {string}
+         */
+        BadgeCategory: "garage" | "mods" | "spotting" | "sets" | "treffen" | "forum" | "sticker" | "founding" | "community";
+        /** BadgeResource */
+        BadgeResource: {
+            key: string;
+            /** @description A hidden badge not earned yet: show "???" and the hint. */
+            hidden: boolean;
+            /** @description Null while hidden. */
+            name: string | null;
+            /** @description Null while hidden. */
+            description: string | null;
+            /** @description The hint of a hidden badge (also once earned); null for the others. */
+            hint: string | null;
+            tier: components["schemas"]["BadgeTier"];
+            category: components["schemas"]["BadgeCategory"];
+            /** @description When the member earned it; null when not (yet). */
+            earned_at: string | null;
+            sort: number;
+        };
+        /**
+         * BadgeTier
+         * @description M5.9d badges (m5.9d contract §2, §10.2): the three tiers the app draws.
+         * @enum {string}
+         */
+        BadgeTier: "bronze" | "silver" | "gold";
         /** BlockStateResource */
         BlockStateResource: {
             username: string;
@@ -5263,16 +7497,115 @@ export interface components {
                 };
             } | null;
         };
+        /** BuildScoreFormulaResource */
+        BuildScoreFormulaResource: {
+            /** @description 1000. */
+            max: number;
+            /** @description Stage 1–5 and the score each starts at. */
+            stages: {
+                stage: number;
+                min: number;
+            }[];
+            /**
+             * @description completeness, documentation, community, journey. Each item gives `points` per unit for at most `limit` units (null: once),
+             *     capped at `max`; `description` needs `min_chars` characters.
+             */
+            parts: {
+                /** @enum {string} */
+                key: "completeness" | "documentation" | "community" | "journey";
+                max: number;
+                items: {
+                    key: string;
+                    points: number;
+                    limit: number | null;
+                    max: number;
+                    min_chars?: number;
+                }[];
+            }[];
+            formula_version: string;
+        };
+        /** BuildScoreResource */
+        BuildScoreResource: {
+            /** @description 0–1000. */
+            total: number;
+            /** @description 1 (0–199) to 5 (800+). */
+            stage: number;
+            /**
+             * @description Owner only: the four parts with their caps. A visitor never gets them (the community part is mostly 2 points per
+             *     reacting member, and reaction counts are private).
+             */
+            parts?: {
+                completeness: {
+                    points: number;
+                    max: number;
+                };
+                documentation: {
+                    points: number;
+                    max: number;
+                };
+                community: {
+                    points: number;
+                    max: number;
+                };
+                journey: {
+                    points: number;
+                    max: number;
+                };
+            };
+            /**
+             * @description Generation first ("#4 von 61 EK9 in Deutschland"), then the owner's Bundesland ("#2 in NRW"); only groups of at least 3
+             *     public cars, computed nightly. Empty for a private, ghost or sample car.
+             */
+            ranks: {
+                /** @enum {string} */
+                scope: "generation" | "bundesland";
+                label: string;
+                rank: number;
+                group_size: number;
+                region: string | null;
+            }[];
+            computed_at: string | null;
+            /**
+             * @description Owner only: the total before the last change, for "+25"; null before the first change. A visitor never gets it (one
+             *     step of 2 or 1 points is a single new reaction, spotter or follower).
+             */
+            previous_total?: number | null;
+            /**
+             * @description Owner only, most points first: what can still be added. Keys photos, key_specs, description, cover_focal, documented_mods,
+             *     planned_mods, registered_mods, timeline, before_after; progress need − have is what is missing (description: characters).
+             */
+            next_upgrades?: {
+                key: string;
+                label_key: string;
+                points: number;
+                progress: {
+                    have: number;
+                    need: number;
+                };
+            }[];
+            formula_version: string;
+        };
         /**
          * BuildUpdateAudience
          * @description Who sees a build update (09 §8.5): everybody who may see the vehicle, or only its followers (members following the owner or the vehicle) and the owner.
          * @enum {string}
          */
         BuildUpdateAudience: "vehicle" | "followers";
+        /**
+         * BuildUpdateKind
+         * @description M5.9c Build Journey (m5.9c contract §2): a plain post, or a before/after pair whose two photos (before, then after) follow through POST build-updates/{id}/media and are paired in `photo_pairs`. Automatic entries and notes are `post`.
+         * @enum {string}
+         */
+        BuildUpdateKind: "post" | "before_after";
         /** BuildUpdateResource */
         BuildUpdateResource: {
             id: string;
             type: components["schemas"]["BuildUpdateType"];
+            /**
+             * @description M5.9c Build Journey: `before_after` sets its one pair of `photo_pairs` side by side (before, after), with the mod of
+             *     `modifications` as its caption; `post` for everything else.
+             */
+            kind: components["schemas"]["BuildUpdateKind"];
             /** @description "Fahrwerk geändert", "Räder hinzugefügt", "Technik aktualisiert", "Fotos hinzugefügt", "Notiz" (DQ-290) */
             type_label: string;
             /** @description The owner's text: a note (up to 500 characters) or, since M4.11, a post (type `post`, up to 2,000, with @mentions). */
@@ -5337,9 +7670,10 @@ export interface components {
              * @description The viewer's own reaction [build_reactions]; null for guests, the owner, none yet, or the flag off. Never anybody else's.
              * @enum {string|null}
              */
-            my_reaction: "strong" | "clean" | "low" | "loud" | null;
+            my_reaction: "like" | "strong" | "clean" | "low" | "loud" | null;
             /** @description Owner only: reactions by kind and in total [build_reactions]. Missing for everybody else (09 §8.5). */
             reaction_summary?: {
+                like: number;
                 strong: number;
                 clean: number;
                 low: number;
@@ -5371,6 +7705,12 @@ export interface components {
          * @enum {string}
          */
         BuildUpdateType: "mod_added" | "mod_changed" | "mod_removed" | "specs_changed" | "photos_added" | "note" | "post";
+        /**
+         * Bundesland
+         * @description M5.9b (contract §1): the 16 German states by their usual two-letter code. Spots, de_cities and users.bundesland store the code.
+         * @enum {string}
+         */
+        Bundesland: "BW" | "BY" | "BE" | "BB" | "HB" | "HH" | "HE" | "MV" | "NI" | "NW" | "RP" | "SL" | "SN" | "ST" | "SH" | "TH";
         /** BusinessCardResource */
         BusinessCardResource: {
             id: string;
@@ -5434,6 +7774,25 @@ export interface components {
             alt?: string | null;
             focal_x?: number | null;
             focal_y?: number | null;
+            /**
+             * @description M5.9a "Kennzeichen unkenntlich machen": `1` pixelates `blur_regions` into the photo before any file is written (every
+             *     variant, OG image and share card comes from that master; the unblurred upload is deleted). `0`: the member switched it off.
+             *     Not sent: nothing is pixelated and the owner's plate check lists the photo. Shown to the owner only, as `plate_blur.state`.
+             */
+            plate_blur?: boolean;
+            /**
+             * @description With `plate_blur=1`: 1–8 rectangles, normalised 0–1 from the top left of the photo as displayed (after EXIF orientation);
+             *     w and h at least 0.02, x + w and y + h at most 1. Optional `angle`: degrees clockwise about the rectangle's centre,
+             *     −45 to 45 (default 0), for a plate shot at an angle; the turned rectangle is pixelated. A JSON string (multipart) or an array.
+             *     Ignored otherwise.
+             */
+            blur_regions?: {
+                x?: number;
+                y?: number;
+                w?: number;
+                h?: number;
+                angle?: number;
+            }[];
         };
         /** BusinessResource */
         BusinessResource: {
@@ -5546,12 +7905,70 @@ export interface components {
          * @enum {string}
          */
         CannotMessageReason: "recipient_closed" | "not_verified" | "restricted";
+        /** CarOfTheDayResource */
+        CarOfTheDayResource: {
+            /** @description The Europe/Berlin day of the pick, "2026-11-14" (published at 18:00). */
+            day: string;
+            /** @description The owner's line (≤ 140), at first the first sentence of their description; null without one. */
+            story_line: string | null;
+            vehicle: components["schemas"]["FeedVehicleResource"];
+            owner: components["schemas"]["MemberSummaryResource"] | null;
+            /** @description A sample build (staging and local only, never in production): the "Beispiel" badge. */
+            is_sample: boolean;
+        };
+        /** CarOfTheDayStoryRequest */
+        CarOfTheDayStoryRequest: {
+            /** @description The owner's line under the Car of the Day, at most 140 characters; null or empty removes it. */
+            story_line: string | null;
+        };
+        /** CarOfTheDayStoryResource */
+        CarOfTheDayStoryResource: {
+            story_line: string | null;
+        };
+        /** CarOfTheDayVoteStateResource */
+        CarOfTheDayVoteStateResource: {
+            round: {
+                /** @description The day the winner is Car of the Day (Y-m-d, Europe/Berlin). */
+                day: string;
+                status: string;
+                unavailable_reason: string;
+                opens_at: string;
+                closes_at: string;
+                can_vote: string;
+                cannot_vote_reason: string;
+                /** @description With account_too_new: when the account may vote. */
+                can_vote_from: string | null;
+                /** @description The reader's vote (a vehicle id). */
+                my_vote: string | null;
+                /** @description In the Picker's order (position 1…3), never by votes. */
+                candidates: unknown[];
+            };
+            last_result: {
+                day: string;
+                my_vote: string | null;
+                winner: components["schemas"]["FeedVehicleResource"] | null;
+                by_vote: boolean;
+            } | null;
+        };
         /**
          * CaseOrigin
          * @description How a moderation case began (m3.2-contract §1): with a report (M2.6), or on the staff's own initiative, which also covers the case a `reverse` decision is recorded on. An own-initiative case has no report rows; DecideCase is still its only decider.
          * @enum {string}
          */
         CaseOrigin: "report" | "staff";
+        /**
+         * CastCarOfTheDayVoteRequest
+         * @description R4-2.1 (contract-cotd-voting §2.2): the round's day and the chosen candidate.
+         */
+        CastCarOfTheDayVoteRequest: {
+            /**
+             * Format: date
+             * @description The round's day (round.day of GET car-of-the-day/vote), Y-m-d.
+             */
+            day: string;
+            /** @description A candidate's vehicle id (ULID). */
+            vehicle_id: string;
+        };
         /** CatalogRequestResource */
         CatalogRequestResource: {
             id: string;
@@ -5641,6 +8058,27 @@ export interface components {
             /** @description "Fahrzeug von @lukas.sc". Null when the owner asked not to be named on the vehicle page (ADR-148 a), unless it is the reader. */
             owner_username: string | null;
         };
+        /** CheckinCodeResource */
+        CheckinCodeResource: {
+            /** @description Six characters of ABCDEFGHJKMNPQRSTUVWXYZ23456789. */
+            code: string;
+            /** @description {APP_URL}/app/events/{slug}/checkin?code={code}: the camera app opens EVT-07. Never names the scanning member. */
+            url: string;
+            /** @description The QR of `url`. */
+            svg: string;
+            /** @description When this code stops being the current one (it is accepted 60 s longer). */
+            expires_at: string;
+            /** @description Ask again at this moment (30 s before expires_at). */
+            refresh_at: string;
+            /** @description How many checked in so far (the organiser's only live number). */
+            checked_in: number;
+        };
+        /** CheckinResource */
+        CheckinResource: {
+            checked_in_at: string;
+            profile_visible: boolean;
+            event: components["schemas"]["EventRefResource"];
+        };
         /**
          * ClientErrorRequest
          * @description One crash report of the app's error screen. Bounded strings only: the message and stacks come from the app's own code, never from
@@ -5671,6 +8109,11 @@ export interface components {
         CollectionBuildUpdateResource: {
             id: string;
             type: components["schemas"]["BuildUpdateType"];
+            /**
+             * @description M5.9c Build Journey: `before_after` sets its one pair of `photo_pairs` side by side (before, after), with the mod of
+             *     `modifications` as its caption; `post` for everything else.
+             */
+            kind: components["schemas"]["BuildUpdateKind"];
             /** @description "Fahrwerk geändert", "Räder hinzugefügt", "Technik aktualisiert", "Fotos hinzugefügt", "Notiz" (DQ-290) */
             type_label: string;
             /** @description The owner's text: a note (up to 500 characters) or, since M4.11, a post (type `post`, up to 2,000, with @mentions). */
@@ -5735,9 +8178,10 @@ export interface components {
              * @description The viewer's own reaction [build_reactions]; null for guests, the owner, none yet, or the flag off. Never anybody else's.
              * @enum {string|null}
              */
-            my_reaction: "strong" | "clean" | "low" | "loud" | null;
+            my_reaction: "like" | "strong" | "clean" | "low" | "loud" | null;
             /** @description Owner only: reactions by kind and in total [build_reactions]. Missing for everybody else (09 §8.5). */
             reaction_summary?: {
+                like: number;
                 strong: number;
                 clean: number;
                 low: number;
@@ -5804,13 +8248,19 @@ export interface components {
         /** CommentResource */
         CommentResource: {
             id: string;
-            build_update_id: string;
+            /**
+             * @description The thread it stands in (R5-5): "build_update" (`build_update_id` set) or "vehicle", the car's own thread (`vehicle_id` set).
+             * @enum {string}
+             */
+            on: "build_update" | "vehicle";
+            build_update_id: string | null;
+            vehicle_id: string | null;
             parent_id: string | null;
             body: string;
             author: components["schemas"]["MemberSummaryResource"] | null;
             /** @description Members the comment mentions whom the viewer may see. */
             mentions: components["schemas"]["MemberSummaryResource"][];
-            /** @description The viewer may delete it: its author, or the owner of the update. */
+            /** @description The viewer may delete it: its author, or the owner of the car. */
             can_delete: boolean;
             created_at: string | null;
             /** @description Replies, oldest first (top-level comments only; a reply's list is empty). */
@@ -5882,7 +8332,7 @@ export interface components {
             avatar: components["schemas"]["MediaResource"] | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
-            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            /** @description The Speedclub Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
             is_editorial: boolean;
             is_self: boolean;
             /** @description The viewer follows this member. False for guests. */
@@ -5961,7 +8411,7 @@ export interface components {
             avatar: components["schemas"]["MediaResource"] | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
-            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            /** @description The Speedclub Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
             is_editorial: boolean;
             main_vehicle_cover: components["schemas"]["MediaResource"] | null;
             /** @description The main build: `title` is make and model ("BMW M3") for "fährt BMW M3"; `full_title` adds the generation. */
@@ -6003,6 +8453,168 @@ export interface components {
         ConversationStartResource: {
             conversation: components["schemas"]["ConversationDetailResource"];
             message: components["schemas"]["MessageResource"];
+        };
+        /** CrewCardResource */
+        CrewCardResource: {
+            id: string;
+            /** @description Current slug; when a request named an older one, the client redirects to this. */
+            slug: string;
+            name: string;
+            description: string | null;
+            /** @description Two-letter code of the Bundesland, or null. */
+            bundesland: string | null;
+            /** @description "Bayern"; null without a Bundesland. */
+            bundesland_label: string | null;
+            join_mode: components["schemas"]["CrewJoinMode"];
+            /** @description How many members the crew has: shown, never sorted by. */
+            member_count: number;
+            logo: components["schemas"]["MediaResource"] | null;
+            cover: components["schemas"]["MediaResource"] | null;
+            /** @description Sample content (09 §8.19): the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description "/crews/nordlicht-crew" (the member web: /app/crews/…). */
+            share_path: string;
+            /** @description The reader's relation to the crew; null for guests. */
+            viewer: {
+                /** @enum {string|null} */
+                role: "founder" | "admin" | "member" | null;
+                /** @enum {string} */
+                state: "member" | "requested" | "invited" | "none";
+            } | null;
+        };
+        /** CrewInviteResource */
+        CrewInviteResource: {
+            id: string;
+            crew: components["schemas"]["CrewCardResource"];
+            member: components["schemas"]["MemberSummaryResource"];
+            invited_by: components["schemas"]["MemberSummaryResource"] | null;
+            created_at: string | null;
+        };
+        /**
+         * CrewJoinMode
+         * @description R4-2.3: how a member gets into a crew. `open`: join at once; `request`: ask, founder or admins approve; `invite`: only by invitation. An open invitation lets the member join in every mode.
+         * @enum {string}
+         */
+        CrewJoinMode: "open" | "request" | "invite";
+        /**
+         * CrewMediaRequest
+         * @description Logo (square) or cover (16:9) of a crew; re-encoded without metadata like every upload.
+         */
+        CrewMediaRequest: {
+            /**
+             * Format: binary
+             * @description Type, size and pixels are checked by MediaService::inspectUpload (as for every upload).
+             */
+            file: string;
+            alt?: string | null;
+            focal_x?: number | null;
+            focal_y?: number | null;
+            /**
+             * @description M5.9a "Kennzeichen unkenntlich machen": `1` pixelates `blur_regions` into the photo before any file is written (every
+             *     variant, OG image and share card comes from that master; the unblurred upload is deleted). `0`: the member switched it off.
+             *     Not sent: nothing is pixelated and the owner's plate check lists the photo. Shown to the owner only, as `plate_blur.state`.
+             */
+            plate_blur?: boolean;
+            /**
+             * @description With `plate_blur=1`: 1–8 rectangles, normalised 0–1 from the top left of the photo as displayed (after EXIF orientation);
+             *     w and h at least 0.02, x + w and y + h at most 1. Optional `angle`: degrees clockwise about the rectangle's centre,
+             *     −45 to 45 (default 0), for a plate shot at an angle; the turned rectangle is pixelated. A JSON string (multipart) or an array.
+             *     Ignored otherwise.
+             */
+            blur_regions?: {
+                x?: number;
+                y?: number;
+                w?: number;
+                h?: number;
+                angle?: number;
+            }[];
+        };
+        /** CrewMemberResource */
+        CrewMemberResource: {
+            member: components["schemas"]["MemberSummaryResource"];
+            role: components["schemas"]["CrewRole"];
+            joined_at: string;
+            is_self: boolean;
+            /** @description Public, published builds of the member, main first. */
+            vehicles: components["schemas"]["VehicleCardResource"][];
+        };
+        /** CrewRequestResource */
+        CrewRequestResource: {
+            id: string;
+            crew: components["schemas"]["CrewCardResource"];
+            member: components["schemas"]["MemberSummaryResource"];
+            created_at: string | null;
+        };
+        /** CrewResource */
+        CrewResource: {
+            id: string;
+            slug: string;
+            name: string;
+            description: string | null;
+            bundesland: string | null;
+            bundesland_label: string | null;
+            join_mode: components["schemas"]["CrewJoinMode"];
+            /** @description How many members the crew has: shown, never sorted by. */
+            member_count: number;
+            logo: components["schemas"]["MediaResource"] | null;
+            cover: components["schemas"]["MediaResource"] | null;
+            is_sample: boolean;
+            share_path: string;
+            /** @description `hidden` (staff hid it; only its members see the crew) or `removed`; `active` for everybody else. */
+            status: components["schemas"]["CrewStatus"];
+            created_at: string | null;
+            founder: components["schemas"]["MemberSummaryResource"] | null;
+            /** @description The reader's role, state, open invitation or request and what they may do; null for guests. */
+            viewer: {
+                /** @enum {string|null} */
+                role: "founder" | "admin" | "member" | null;
+                /** @enum {string} */
+                state: "member" | "requested" | "invited" | "none";
+                invite_id: string | null;
+                request_id: string | null;
+                can: {
+                    edit: boolean;
+                    invite: boolean;
+                    approve: boolean;
+                    manage_members: boolean;
+                    hand_over: boolean;
+                    delete: boolean;
+                    join: boolean;
+                    request: boolean;
+                    leave: boolean;
+                };
+            } | null;
+            /** @description Open join requests; founder and admins only, else null. */
+            pending_requests_count: number | null;
+            /** @description Open invitations; founder and admins only, else null. */
+            open_invites_count: number | null;
+        };
+        /**
+         * CrewRole
+         * @description R4-2.3: exactly one founder per crew (kept by the Actions), any number of admins and members. The rank is the member list's order.
+         * @enum {string}
+         */
+        CrewRole: "founder" | "admin" | "member";
+        /**
+         * CrewRoleRequest
+         * @description PATCH crews/{slug}/members/{username}: admin or member (the founder changes only by a hand-over).
+         */
+        CrewRoleRequest: {
+            /** @enum {string} */
+            role: "admin" | "member";
+        };
+        /**
+         * CrewStatus
+         * @description R4-2.3: set by staff only. `hidden`: a DSA remove_content decision (HideCrew, or a report decided that way) took the crew out of every list and page but its own members'; `removed`: staff deleted a hidden crew (RemoveCrew), kept soft-deleted for an appeal (RestoreCrew).
+         * @enum {string}
+         */
+        CrewStatus: "active" | "hidden" | "removed";
+        /**
+         * CrewUsernameRequest
+         * @description A member named by username: an invitation (POST crews/{slug}/invites) or the new founder (POST crews/{slug}/founder).
+         */
+        CrewUsernameRequest: {
+            username: string;
         };
         /** DataExportCollection */
         DataExportCollection: components["schemas"]["DataExportResource"][];
@@ -6079,7 +8691,7 @@ export interface components {
             /** @description Affected member only; restrict and suspend. */
             restriction: {
                 /** @enum {string} */
-                type: "messaging" | "publishing" | "suspension";
+                type: "messaging" | "publishing" | "forum" | "suspension";
                 until: string | null;
             } | null;
             /**
@@ -6124,7 +8736,7 @@ export interface components {
             /** @description For restrict and suspend. */
             restriction: {
                 /** @enum {string} */
-                type: "messaging" | "publishing" | "suspension";
+                type: "messaging" | "publishing" | "forum" | "suspension";
                 until: string | null;
             } | null;
             /** @description ISO 8601. */
@@ -6177,6 +8789,34 @@ export interface components {
             approx_city: string | null;
             /** @description ISO 8601. When this install first signed in; null for a browser. */
             signed_in_at: string | null;
+        };
+        /**
+         * DexSetKind
+         * @description M5.9b (contract §1): the kinds of STREET DEX sets. jdm: a fixed list of generations (one slot each); brand: 5 / 10 / 25 cars of one make; city: 10 different cars in one city; season: cars spotted inside a month-day window of the current year.
+         * @enum {string}
+         */
+        DexSetKind: "jdm" | "brand" | "city" | "season";
+        /** DexSetResource */
+        DexSetResource: {
+            key: string;
+            name: string;
+            kind: components["schemas"]["DexSetKind"];
+            progress: number;
+            target: number;
+            completed_at: string | null;
+            /** @description Season sets: the month-day window, every year again; null for the others. */
+            window: {
+                starts_on: string;
+                ends_on: string;
+            } | null;
+            slots: {
+                found: boolean;
+                vehicle: components["schemas"]["SpotCardResource"] | null;
+                silhouette: {
+                    make: string | null;
+                    generation: string | null;
+                } | null;
+            }[];
         };
         /**
          * DigestFrequency
@@ -6311,6 +8951,63 @@ export interface components {
             my_rsvp: components["schemas"]["RsvpStatus"] | null;
             is_sample: boolean;
         };
+        /** EventCheckinCardResource */
+        EventCheckinCardResource: {
+            id: string;
+            slug: string;
+            title: string;
+            type: components["schemas"]["EventType"];
+            /** @description Published or cancelled for everybody else; the organiser also sees draft, pending_review and rejected. */
+            status: components["schemas"]["EventStatus"];
+            visibility: components["schemas"]["EventVisibility"];
+            /** @description ISO 8601 (UTC); show in `timezone`. */
+            starts_at: string | null;
+            ends_at: string | null;
+            /** @description Always Europe/Berlin for now (09 §8.7). */
+            timezone: string;
+            /**
+             * @description The place as far as this reader may see it (EventLocation): `exact` false means venue, street, postcode, lat and lng are
+             *     null and the app shows "Ort wird nach deiner Zusage angezeigt" with the city and the area point.
+             */
+            location: {
+                /** @enum {string} */
+                visibility: "public" | "after_rsvp";
+                exact: boolean;
+                venue_name: string | null;
+                street: string | null;
+                postcode: string | null;
+                city: string | null;
+                country: string;
+                lat: number | null;
+                lng: number | null;
+                area: {
+                    lat: number | null;
+                    lng: number | null;
+                };
+            };
+            cover: components["schemas"]["MediaResource"] | null;
+            organiser: components["schemas"]["EventOrganiserResource"];
+            /** @description Real answers, members taken off the list left out; null on a sample event (09 §8.19: no invented counts). */
+            counts: {
+                going: number;
+                interested: number;
+            } | null;
+            /** @description Null without a limit. */
+            capacity: number | null;
+            /** @description Spots left while a capacity is set (0 = new answers join the waitlist); null without a limit and on samples. */
+            spots_left: number | null;
+            /** @description From the `near` point to the area point, whole km; only when the list was asked with `near`. */
+            distance_km: number | null;
+            /**
+             * @description Up to three going members for the avatar row (09 §5 EventCard), by EVT-04's privacy rules: members only (empty for guests),
+             *     findable members, no block, never on a sample event. Next to `counts.going` for "38 Zusagen".
+             */
+            attendee_preview: components["schemas"]["MemberSummaryResource"][];
+            my_rsvp: components["schemas"]["RsvpStatus"] | null;
+            is_sample: boolean;
+            checked_in_at: string;
+            profile_visible: boolean;
+        };
         /**
          * EventLocationVisibility
          * @description 09 §8.7: the exact place is public, or only for the organiser and members with a confirmed RSVP ("going"); everybody else sees the area (city and a coarse point), never the venue, address or exact coordinates.
@@ -6325,7 +9022,7 @@ export interface components {
             avatar: components["schemas"]["MediaResource"] | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
-            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            /** @description The Speedclub Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
             is_editorial: boolean;
             main_vehicle_cover: components["schemas"]["MediaResource"] | null;
             /**
@@ -6333,6 +9030,33 @@ export interface components {
              *     and their verification exist; a member account is never verified.
              */
             verified: boolean;
+        };
+        /** EventPhotoResource */
+        EventPhotoResource: {
+            id: string;
+            media: components["schemas"]["MediaResource"];
+            source: components["schemas"]["GalleryPhotoSource"];
+            /**
+             * @description pending · approved · rejected; everybody but the organiser and the uploader only ever reads approved.
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "rejected";
+            uploader: components["schemas"]["MemberSummaryResource"];
+            /** @description Why the organiser turned it down; the uploader only. */
+            reject_reason: string | null;
+            created_at: string | null;
+            reviewed_at: string | null;
+            /** @description Seeded staging sample ("Beispiel" badge). */
+            is_sample: boolean;
+            /**
+             * @description What the reader may do: delete (own photo, or any as the organiser), report (somebody else's approved photo, through the
+             *     `photo` report target with `media.id`), moderate (the organiser, on a pending photo).
+             */
+            can: {
+                delete: boolean;
+                report: boolean;
+                moderate: boolean;
+            };
         };
         /** EventPinResource */
         EventPinResource: {
@@ -6425,7 +9149,11 @@ export interface components {
             cancelled_by_staff: boolean;
             /** @description Place on the waitlist (1 = next), only while the reader is waiting. */
             waitlist_position: number | null;
-            /** @description What the reader may do now; the app shows only those actions. */
+            /**
+             * @description What the reader may do now; the app shows only those actions. M5.6, only while their flag is on (otherwise the keys are absent): `add_photos` (the organiser, going or checked-in members
+             *     while the gallery is open, not under a publishing restriction), `moderate_photos` (the organiser), `checkin` (a member who
+             *     may check in now and has not), `show_checkin_code` (the organiser while the check-in window is open).
+             */
             can: {
                 rsvp: boolean;
                 edit: boolean;
@@ -6434,6 +9162,38 @@ export interface components {
                 view_updates: boolean;
                 view_attendees: boolean;
                 report: boolean;
+                add_photos?: boolean;
+                moderate_photos?: boolean;
+                checkin?: boolean;
+                show_checkin_code?: boolean;
+            };
+            /**
+             * @description M5.6 post-event gallery (flag events.gallery; absent while it is off). `open`: uploads are accepted now; `closes_at` = end
+             *     (or start + 6 h) + 14 days; `count` approved photos; `pending` the organiser's queue (null for everybody else);
+             *     `mine_pending` the reader's own photos waiting (null for guests); `preview` up to six approved, newest approval first.
+             */
+            gallery?: {
+                open: boolean;
+                opens_at: string | null;
+                closes_at: string | null;
+                count: number;
+                pending: number | null;
+                mine_pending: number | null;
+                preview: components["schemas"]["EventPhotoResource"][];
+            };
+            /**
+             * @description M5.6 check-in (flag events.checkin; absent while it is off, and for unpublished and sample events). The window runs from
+             *     60 min before the start to 120 min after the end; `mine` is the reader's own check-in; `count` the organiser's only.
+             */
+            checkin?: {
+                opens_at: string | null;
+                closes_at: string | null;
+                open: boolean;
+                mine: {
+                    checked_in_at: string | null;
+                    profile_visible: boolean;
+                } | null;
+                count: number | null;
             };
             /**
              * @description The organiser's review state: submitted_at, reviewed_at and the reason of a rejection. `will_be_reviewed` (a draft or a
@@ -6652,6 +9412,14 @@ export interface components {
             updates_count: number | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
+            /**
+             * @description M5.9c: the Build Score (0–1000) and its stage (1–5), for GAR-01 and the cards; null until it was first computed. Ranks and
+             *     parts are on GET vehicles/{id}/build-score.
+             */
+            build_score: {
+                total: number;
+                stage: number;
+            } | null;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -6692,6 +9460,14 @@ export interface components {
                 saved: boolean;
                 reaction: string | null;
             } | null;
+            /**
+             * @description R5-5 [build_comments]: the car's own comment thread, so a card can open it in place. enabled: the thread is open (flag on,
+             *     the owner allows comments); can_write: this reader may write now (false for guests). Never a count.
+             */
+            comment_thread: {
+                enabled: boolean;
+                can_write: boolean;
+            };
         };
         /** FollowStateResource */
         FollowStateResource: {
@@ -6717,10 +9493,318 @@ export interface components {
             code: "forbidden";
         };
         /**
+         * ForumCategoryKind
+         * @description M5.8 (m5.8-contract §1): an admin-managed category, a sub-category generated per catalogue make ("Marken & Modelle") or one per Bundesland ("Treffen & Regionen").
+         * @enum {string}
+         */
+        ForumCategoryKind: "standard" | "make" | "region";
+        /** ForumCategoryResource */
+        ForumCategoryResource: {
+            id: number;
+            slug: string;
+            /** @description standard · make (one per catalogue make, under "Marken & Modelle") · region (one per Bundesland, under "Treffen & Regionen"). */
+            kind: components["schemas"]["ForumCategoryKind"];
+            name: string;
+            description: string | null;
+            /** @description Phosphor icon key for the chip, or null. */
+            icon: string | null;
+            parent_id: number | null;
+            /** @description Active sub-categories in their order (top-level categories of the tree only; empty for a sub-category). */
+            children: components["schemas"]["ForumCategoryResource"][];
+        };
+        /** ForumPostResource */
+        ForumPostResource: {
+            id: string;
+            thread_id: string;
+            parent_id: string | null;
+            /** @description published; the author also sees pending ("In Prüfung"), rejected and removed. */
+            status: components["schemas"]["ForumPostStatus"];
+            author: components["schemas"]["MemberSummaryResource"] | null;
+            /** @description The Markdown source, only for the author (to edit); null otherwise. */
+            body: string | null;
+            /**
+             * @description The text as a tree the app renders natively (Markdown subset, ForumMarkdown). A block is a `paragraph` with `children`, or a
+             *     `list` (`ordered`, `start` for an ordered list, else null) whose `items` are lists of blocks (paragraphs, nested lists). An
+             *     inline is `text` (`text`, `bold`, `italic`), `link` (`href`, http/https only, with `children`: text spans) or `break` (a line
+             *     break). Nothing else occurs; no HTML.
+             */
+            content: {
+                /** @enum {string} */
+                type: "paragraph" | "list";
+                children?: {
+                    /** @enum {string} */
+                    type: "text" | "link" | "break";
+                    text?: string;
+                    bold?: boolean;
+                    italic?: boolean;
+                    href?: string;
+                    children?: {
+                        /** @constant */
+                        type: "text";
+                        text: string;
+                        bold: boolean;
+                        italic: boolean;
+                    }[];
+                }[];
+                ordered?: boolean;
+                start?: number | null;
+                items?: {
+                    /** @enum {string} */
+                    type: "paragraph" | "list";
+                    children?: {
+                        /** @enum {string} */
+                        type: "text" | "link" | "break";
+                        text?: string;
+                        bold?: boolean;
+                        italic?: boolean;
+                        href?: string;
+                        children?: {
+                            /** @constant */
+                            type: "text";
+                            text: string;
+                            bold: boolean;
+                            italic: boolean;
+                        }[];
+                    }[];
+                    ordered?: boolean;
+                    start?: number | null;
+                    items?: {
+                        [key: string]: unknown;
+                    }[][];
+                }[][];
+            }[];
+            /** @description Why the team did not publish it: a rejected post of the reader's own; null otherwise. */
+            review_reason: string | null;
+            /** @description "Hilfreich" votes (shown in the forum only). */
+            helpful_count: number;
+            viewer_voted: boolean;
+            is_solution: boolean;
+            /** @description A deleted reply kept as the head of its answers: no author, no text. */
+            deleted: boolean;
+            /** @description Members the post mentions whom the reader may see. */
+            mentions: components["schemas"]["MemberSummaryResource"][];
+            edited_at: string | null;
+            created_at: string | null;
+            /** @description Answers to a top-level reply, oldest first (empty for an answer). */
+            replies: components["schemas"]["ForumPostResource"][];
+            viewer: {
+                is_author: boolean;
+                can_edit: boolean;
+                can_delete: boolean;
+                can_vote: boolean;
+                can_report: boolean;
+            };
+        };
+        /**
+         * ForumPostSort
+         * @description FOR-03 replies: in the order they were written, or the most "Hilfreich" first (10 §7.2: the count is visible to sort answers).
+         * @enum {string}
+         */
+        ForumPostSort: "oldest" | "helpful";
+        /**
+         * ForumPostStatus
+         * @description M5.8 (m5.8-contract §1): a post (a thread's opening post or a reply) waits for pre-moderation, is published, was rejected there, or was removed by a DSA decision (reversible on appeal). Deleting by its author is a soft delete.
+         * @enum {string}
+         */
+        ForumPostStatus: "pending" | "published" | "rejected" | "removed";
+        /** ForumSubscriptionResource */
+        ForumSubscriptionResource: {
+            thread_id: string;
+            subscribed: boolean;
+        };
+        /** ForumThreadRefResource */
+        ForumThreadRefResource: {
+            id: string;
+            title: string;
+            /** @description "/forum/{id}". */
+            path: string;
+            is_sample: boolean;
+        };
+        /** ForumThreadResource */
+        ForumThreadResource: {
+            id: string;
+            title: string;
+            slug: string;
+            /** @description published for everybody; the author also sees pending ("In Prüfung"), rejected, removed and merged threads on FOR-05. */
+            status: components["schemas"]["ForumThreadStatus"];
+            category: {
+                id: number;
+                slug: string;
+                name: string;
+                kind: string;
+            };
+            author: components["schemas"]["MemberSummaryResource"] | null;
+            vehicle: components["schemas"]["VehicleRefResource"] | null;
+            tags: string[];
+            is_pinned: boolean;
+            is_locked: boolean;
+            is_solved: boolean;
+            /** @description Published replies (shown in the forum only). */
+            replies_count: number;
+            last_activity_at: string | null;
+            last_poster: components["schemas"]["MemberSummaryResource"] | null;
+            has_photos: boolean;
+            is_sample: boolean;
+            /** @description "/forum/{id}" (FOR-03). */
+            path: string;
+            /** @description The opening post: report the thread with it. Null when its author's account is gone. */
+            opening_post_id: string | null;
+            /** @description The Markdown source of the opening post, only for the author (to edit). */
+            body: string | null;
+            /**
+             * @description The opening post as a tree the app renders natively (Markdown subset, ForumMarkdown). A block is a `paragraph` with `children`, or a
+             *     `list` (`ordered`, `start` for an ordered list, else null) whose `items` are lists of blocks (paragraphs, nested lists). An
+             *     inline is `text` (`text`, `bold`, `italic`), `link` (`href`, http/https only, with `children`: text spans) or `break` (a line
+             *     break). Nothing else occurs; no HTML.
+             */
+            content: {
+                /** @enum {string} */
+                type: "paragraph" | "list";
+                children?: {
+                    /** @enum {string} */
+                    type: "text" | "link" | "break";
+                    text?: string;
+                    bold?: boolean;
+                    italic?: boolean;
+                    href?: string;
+                    children?: {
+                        /** @constant */
+                        type: "text";
+                        text: string;
+                        bold: boolean;
+                        italic: boolean;
+                    }[];
+                }[];
+                ordered?: boolean;
+                start?: number | null;
+                items?: {
+                    /** @enum {string} */
+                    type: "paragraph" | "list";
+                    children?: {
+                        /** @enum {string} */
+                        type: "text" | "link" | "break";
+                        text?: string;
+                        bold?: boolean;
+                        italic?: boolean;
+                        href?: string;
+                        children?: {
+                            /** @constant */
+                            type: "text";
+                            text: string;
+                            bold: boolean;
+                            italic: boolean;
+                        }[];
+                    }[];
+                    ordered?: boolean;
+                    start?: number | null;
+                    items?: {
+                        [key: string]: unknown;
+                    }[][];
+                }[][];
+            }[];
+            /** @description The opening post's author deleted their account: the title stays, the text is gone (m5.8-contract D8). */
+            opening_deleted: boolean;
+            /** @description Up to 6 photos, in their order (finished ones; the author also sees those still processing). */
+            photos: components["schemas"]["MediaResource"][];
+            /** @description The attached mod while the reader may see it. */
+            modification: {
+                id: string;
+                title: string;
+                vehicle_id: string;
+            } | null;
+            /** @description The attached parts catalogue product. */
+            product: {
+                id: string;
+                name: string;
+                full_name: string;
+            } | null;
+            solution: components["schemas"]["ForumPostResource"] | null;
+            merged_into: components["schemas"]["ForumThreadRefResource"] | null;
+            /** @description Why staff did not publish it (rejected; the author only). */
+            review_reason: string | null;
+            published_at: string | null;
+            edited_at: string | null;
+            created_at: string | null;
+            /** @description Opens FOR-03 in the member web (share sheet). */
+            share_url: string;
+            /**
+             * @description M5.9 (ai.forum_summary): three short lines on a published thread with more than 20 replies, labelled "KI-Zusammenfassung";
+             *     null otherwise, without a provider key, and for a reader with a block on an author whose posts went into it.
+             */
+            ai_summary: {
+                label: string;
+                lines: string[];
+                based_on_replies: number;
+                generated_at: string;
+            } | null;
+            viewer: {
+                is_author: boolean;
+                subscribed: boolean;
+                can_reply: boolean;
+                can_edit: boolean;
+                can_delete: boolean;
+                can_mark_solution: boolean;
+                can_report: boolean;
+            };
+        };
+        /** ForumThreadRowResource */
+        ForumThreadRowResource: {
+            id: string;
+            title: string;
+            slug: string;
+            /** @description published for everybody; the author also sees pending ("In Prüfung"), rejected, removed and merged threads on FOR-05. */
+            status: components["schemas"]["ForumThreadStatus"];
+            category: {
+                id: number;
+                slug: string;
+                name: string;
+                kind: string;
+            };
+            author: components["schemas"]["MemberSummaryResource"] | null;
+            vehicle: components["schemas"]["VehicleRefResource"] | null;
+            tags: string[];
+            is_pinned: boolean;
+            is_locked: boolean;
+            is_solved: boolean;
+            /** @description Published replies (shown in the forum only). */
+            replies_count: number;
+            last_activity_at: string | null;
+            last_poster: components["schemas"]["MemberSummaryResource"] | null;
+            has_photos: boolean;
+            is_sample: boolean;
+            /** @description "/forum/{id}" (FOR-03). */
+            path: string;
+        };
+        /**
+         * ForumThreadSort
+         * @description FOR-01/02 sort chips (10 §7.2): Aktiv (pinned first, then the newest activity), Neu (newest publication), Unbeantwortet (no published reply yet, newest first), Gelöst (a marked solution, newest activity first).
+         * @enum {string}
+         */
+        ForumThreadSort: "active" | "new" | "unanswered" | "solved";
+        /**
+         * ForumThreadStatus
+         * @description M5.8 (m5.8-contract §1): a thread waits for pre-moderation (new or unverified accounts), is published, was rejected in pre-moderation (its author still sees it with the reason), removed by a DSA decision (reversible on appeal) or merged into another thread. Deleting by its author is a soft delete.
+         * @enum {string}
+         */
+        ForumThreadStatus: "pending" | "published" | "rejected" | "removed" | "merged";
+        /** ForumVoteResource */
+        ForumVoteResource: {
+            post_id: string;
+            /** @description Shown in the forum only (ADR-506). */
+            helpful_count: number;
+            voted: boolean;
+        };
+        /**
          * Fuel
          * @enum {string}
          */
         Fuel: "petrol" | "diesel" | "hybrid" | "plug_in_hybrid" | "electric" | "lpg" | "cng" | "ethanol" | "other";
+        /**
+         * GalleryPhotoSource
+         * @description M5.6 (m5.6-contract §4.1): who added a photo to an event's gallery. The organiser's photos publish at once, an attendee's wait for the organiser's approval.
+         * @enum {string}
+         */
+        GalleryPhotoSource: "organiser" | "attendee";
         /**
          * Gearbox
          * @enum {string}
@@ -6774,6 +9858,8 @@ export interface components {
             device_id?: string | null;
             /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
             os_version?: string | null;
+            /** @description The code of /join/{code} (8 characters Crockford; I/L read as 1, O as 0). Optional; an invalid code is ignored, never refused. */
+            invite_code?: string | null;
         };
         /**
          * GroundDocument
@@ -6812,6 +9898,7 @@ export interface components {
         };
         /** HomeModulesResource */
         HomeModulesResource: {
+            car_of_the_day: components["schemas"]["CarOfTheDayResource"] | null;
             build_of_week: components["schemas"]["BuildOfWeekResource"] | null;
             /**
              * @description M4.8 "Treffen in deiner Nähe": at most 2 upcoming events within 50 km of `lat`/`lng` (asked on demand, never stored); empty
@@ -6870,6 +9957,99 @@ export interface components {
          * @enum {string}
          */
         InboxFolder: "chats" | "requests" | "archived";
+        /** InsightsResource */
+        InsightsResource: {
+            /** @description `account` (GET me/insights: the profile and every car) or `vehicle` (GET vehicles/{id}/insights). */
+            scope: string;
+            vehicle: components["schemas"]["VehicleRefResource"] | null;
+            /** @description When the numbers were read (Europe/Berlin). */
+            as_of: string;
+            /**
+             * @description The first day with counting for this scope (Y-m-d); null before any view was counted. "Zählung seit …" when
+             *                      it falls inside the 30 days.
+             */
+            counting_since: string | null;
+            /** @description Plain-language sentence in the reader's language, e.g. "Dein E46 wurde diese Woche 128-mal angesehen – 31 % mehr als letzte Woche." */
+            headline: string;
+            /**
+             * @description Views of the last 7 Berlin days (incl. today) and the 7 before. `delta_percent` is null while the previous week had fewer than
+             *     5 views; `trend` up|down|same|new ("new": nothing the week before).
+             */
+            views: {
+                this_week: number;
+                last_week: number;
+                delta_percent: number | null;
+                trend: string;
+                total_30_days: number;
+            };
+            /** @description Exactly 30 days, oldest first, zeros included: unique viewers and raw sticker scans per day. */
+            days: {
+                date: string;
+                views: number;
+                scans: number;
+            }[];
+            /** @description All four sources over the 30 days, most views first; `percent` (floor) null without views. */
+            sources: {
+                source: string;
+                label: string;
+                views: number;
+                percent: number | null;
+            }[];
+            /** @description Raw scans of the scope's stickers (as STK-04); null when no car of the scope ever had a sticker. */
+            sticker_scans: {
+                this_week: number;
+                last_week: number;
+                total_30_days: number;
+                total: number;
+            } | null;
+            /** @description Counted STREET DEX spots of the scope's cars. */
+            spots: {
+                this_week: number;
+                last_week: number;
+            };
+            /** @description New followers that still follow: of the member (account scope only, else null) and of the cars. */
+            follows: {
+                profile: {
+                    this_week: number;
+                    last_week: number;
+                } | null;
+                vehicles: {
+                    this_week: number;
+                    last_week: number;
+                };
+            };
+            /** @description Saves of the scope's cars (still saved). */
+            saves: {
+                this_week: number;
+                last_week: number;
+            };
+            /** @description The private reactions on the scope's cars and their build updates; `by_type` this week, all four types, most first. */
+            reactions: {
+                this_week: number;
+                last_week: number;
+                by_type: {
+                    type: string;
+                    label: string;
+                    count: number;
+                }[];
+            };
+            /** @description Account scope only (else []): the profile and every published car with its views of the last 7 days. */
+            breakdown: {
+                subject: string;
+                vehicle: components["schemas"]["VehicleRefResource"] | null;
+                views_this_week: number;
+            }[];
+        };
+        /**
+         * InstallModificationRequest
+         * @description M5.3 "Als verbaut markieren" (m5.3-contract §4.2). Both keys are optional: the month defaults to the current one in Germany.
+         */
+        InstallModificationRequest: {
+            /** @description Month of installation as YYYY-MM, not in the future; the current month (Europe/Berlin) when left out. */
+            installed_on?: string | null;
+            /** @description What it cost in the end. Private, always: only the owner reads it (09 §11). Unchanged when left out. */
+            cost_cents?: number | null;
+        };
         /** InterpretSearchRequest */
         InterpretSearchRequest: {
             /** @description The search as typed, e.g. "schwarze M4 mit KW V3 und 19 Zoll". */
@@ -6914,6 +10094,26 @@ export interface components {
             /** @enum {string} */
             code: "invalid_credentials";
         };
+        /** InviteLookupResource */
+        InviteLookupResource: {
+            code: string;
+            inviter: {
+                username: string;
+                display_name: string | null;
+            } | null;
+        };
+        /** InviteResource */
+        InviteResource: {
+            /** @description 8 characters Crockford; the link is https://<host>/join/{code}. */
+            code: string;
+            created_at: string | null;
+            /** @description When somebody activated an account with it; null while open. */
+            accepted_at: string | null;
+            accepted_by: {
+                username: string;
+                display_name: string | null;
+            } | null;
+        };
         /**
          * LegalDocumentKey
          * @enum {string}
@@ -6941,6 +10141,13 @@ export interface components {
          * @enum {string}
          */
         LegalStatus: "abe" | "parts_certificate" | "registered" | "individual_approval" | "not_required" | "unknown";
+        /** LevelSummaryResource */
+        LevelSummaryResource: {
+            /** @description 1–10. */
+            level: number;
+            /** @description The level's title in the request's language. */
+            title: string;
+        };
         /**
          * LinkProviderRequest
          * @description POST me/providers: a fresh ID token of the provider and the raw nonce from POST auth/nonce it was made with (SEC-M46-05).
@@ -7214,10 +10421,25 @@ export interface components {
             /** @description Real public builds the viewer can find (samples never counted; 0 when the make has samples only), never rounded or padded. */
             vehicle_count: number;
         };
+        /** MarkBadgesSeenRequest */
+        MarkBadgesSeenRequest: {
+            /** @description The keys the unlock toast showed. */
+            keys: string[];
+        };
         /** MarkReadRequest */
         MarkReadRequest: {
             /** @description The newest message you have seen. */
             message_id: string;
+        };
+        /**
+         * MatchProductRequest
+         * @description POST ai/products/match (M5.9, m5.9-contract §2.2): what the member typed for a part, and the mod's category when chosen.
+         */
+        MatchProductRequest: {
+            /** @description The typed part, e.g. "kw v3". */
+            text: string;
+            /** @description The mod's category (GAR-10), narrows the products. */
+            category_key?: string | null;
         };
         /** MeResource */
         MeResource: {
@@ -7250,10 +10472,19 @@ export interface components {
                 followers: number | null;
                 following: number | null;
             };
+            /**
+             * @description R4-1.4 (INTRO-01…04): when this account saw or skipped the introduction; null shows it once. Sample and editorial
+             *     accounts never need it and answer their creation time.
+             */
+            intro_seen_at: string | null;
             /** @description A sample account of the showcase (09 §8.19). */
             is_sample: boolean;
-            /** @description The SPEED CLUB Editorial account. */
+            /** @description The Speedclub Editorial account. */
             is_editorial: boolean;
+            /** @description M5.9d: the quiet level next to the name (GET me/level has the details). */
+            level: components["schemas"]["LevelSummaryResource"];
+            /** @description M5.9d: "Founding Member #0042" (1–1000, production members only); null for everybody else. */
+            founding_number: number | null;
             /** @description M2.5 SET-05: two-factor is on, so sign-in, SET-13 and switching it off ask for a code. */
             two_factor_enabled: boolean;
             /** @description M4.6: false for a passwordless account (e-mail code, Apple, Google); SET-04 then sets one instead of changing it. */
@@ -7270,13 +10501,19 @@ export interface components {
                     until: string | null;
                     decision_id: string | null;
                 };
+                /** @description M5.8: the forum ban (FOR-03/04 show the restricted state). */
+                forum: {
+                    restricted: boolean;
+                    until: string | null;
+                    decision_id: string | null;
+                };
             };
         };
         /**
          * MediaCategory
          * @enum {string}
          */
-        MediaCategory: "exterior" | "interior" | "engine" | "wheels" | "detail" | "other";
+        MediaCategory: "exterior" | "interior" | "engine" | "wheels" | "detail" | "other" | "event";
         /** MediaResource */
         MediaResource: {
             id: string;
@@ -7300,6 +10537,13 @@ export interface components {
                 url: string;
             }[];
             created_at: string | null;
+            /**
+             * @description M5.9a: the owner's plate decision. Only on the requesting member's own photos in member API answers (garage, vehicle, mod,
+             *     update, profile); never for anyone else's photo and never on the public reads.
+             */
+            plate_blur?: {
+                state: components["schemas"]["PlateBlurState"];
+            };
         };
         /**
          * MediaStatus
@@ -7341,9 +10585,44 @@ export interface components {
             created_at: string | null;
             updated_at: string | null;
         };
+        /** MemberCrewResource */
+        MemberCrewResource: {
+            id: string;
+            /** @description Current slug; when a request named an older one, the client redirects to this. */
+            slug: string;
+            name: string;
+            description: string | null;
+            /** @description Two-letter code of the Bundesland, or null. */
+            bundesland: string | null;
+            /** @description "Bayern"; null without a Bundesland. */
+            bundesland_label: string | null;
+            join_mode: components["schemas"]["CrewJoinMode"];
+            /** @description How many members the crew has: shown, never sorted by. */
+            member_count: number;
+            logo: components["schemas"]["MediaResource"] | null;
+            cover: components["schemas"]["MediaResource"] | null;
+            /** @description Sample content (09 §8.19): the "Beispiel" badge. */
+            is_sample: boolean;
+            /** @description "/crews/nordlicht-crew" (the member web: /app/crews/…). */
+            share_path: string;
+            /** @description The reader's relation to the crew; null for guests. */
+            viewer: {
+                /** @enum {string|null} */
+                role: "founder" | "admin" | "member" | null;
+                /** @enum {string} */
+                state: "member" | "requested" | "invited" | "none";
+            } | null;
+            /** @description The profile member's role in the crew. */
+            role: components["schemas"]["CrewRole"];
+        };
         /** MemberProfileResource */
         MemberProfileResource: {
             username: string | null;
+            /**
+             * @description M5.7: the profile address for the share sheet, `/u/{username}?via=share` (a view through it counts as "geteilter Link" in the
+             *     member's statistics); null without a username.
+             */
+            share_url: string | null;
             display_name: string | null;
             city: string | null;
             bio: string | null;
@@ -7358,8 +10637,12 @@ export interface components {
             };
             /** @description Sample content (09 §8.19): the "Beispiel" badge. */
             is_sample: boolean;
-            /** @description The SPEED CLUB Editorial account: the "Editorial" badge. */
+            /** @description The Speedclub Editorial account: the "Editorial" badge. */
             is_editorial: boolean;
+            /** @description M5.9d: the quiet level next to the name ("Lvl 4 · Parts Hunter"). */
+            level: components["schemas"]["LevelSummaryResource"];
+            /** @description M5.9d: "Founding Member #0042" (1–1000); null for everybody else. */
+            founding_number: number | null;
             is_self: boolean;
             is_following: boolean;
             /** @description The member follows the viewer. False for guests and on your own profile. */
@@ -7378,7 +10661,7 @@ export interface components {
             avatar: components["schemas"]["MediaResource"] | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
-            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            /** @description The Speedclub Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
             is_editorial: boolean;
             /**
              * @description Public builds as the profile lists them, and their makes, main vehicle first, at most three. For a sample member the count is
@@ -7445,6 +10728,11 @@ export interface components {
             mention_privacy: components["schemas"]["MentionPrivacy"];
             /** @description SET-07: shown in member search, Aktive Mitglieder and suggestions. */
             discoverable: boolean;
+            /**
+             * @description SET-07 "Meine Spots zeigen" (M5.9b STREET DEX): owners whose car I spotted see my name in their spot numbers; off, they read
+             *     "jemand". On by default.
+             */
+            show_my_spots: boolean;
             /** @description SET-07: search engines may list the profile and the builds (robots meta on /u and /v, the sitemap). */
             indexable: boolean;
             /** @description SET-07 [SIG sig.msg_read_receipts]: send and see read receipts; both sides must have it on. */
@@ -7457,7 +10745,8 @@ export interface components {
             ai_suggestions: boolean;
             /**
              * @description SET-09 (02_PRODUCT_SPEC §7, 09 §7.12): push and web_push (member web) switches per type, plus the e-mail digest of messages
-             *     and the HU/AU and event e-mails; quiet hours in Europe/Berlin; push previews of messages (ADR-035); how often the message
+             *     and the HU/AU and event e-mails (M5.6: `event_nearby`, the weekly "Neue Treffen in deiner Nähe", opt-in, every channel off by
+             *     default, sent only with a SET-11 home region); quiet hours in Europe/Berlin; push previews of messages (ADR-035); how often the message
              *     digest may go out (daily · weekly). Always complete: unset values are the defaults of the matrix.
              */
             notification_prefs: {
@@ -7517,6 +10806,43 @@ export interface components {
                         push: boolean;
                         web_push: boolean;
                     };
+                    spot_alert: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    badge_unlocked: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    car_of_the_day: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    car_of_the_day_owner: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    invite_accepted: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    forum_reply: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    forum_mention: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    forum_solved: {
+                        push: boolean;
+                        web_push: boolean;
+                    };
+                    event_nearby: {
+                        push: boolean;
+                        email: boolean;
+                        web_push: boolean;
+                    };
                 };
                 quiet_hours: {
                     enabled: boolean;
@@ -7536,7 +10862,7 @@ export interface components {
             avatar: components["schemas"]["MediaResource"] | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
-            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            /** @description The Speedclub Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
             is_editorial: boolean;
         };
         /** MemberUnavailableError */
@@ -7649,6 +10975,12 @@ export interface components {
          * @enum {string}
          */
         ModFieldType: "text" | "number" | "boolean" | "select" | "brand";
+        /**
+         * ModPriority
+         * @description M5.3: the optional priority of a planned mod (10 §5.9).
+         * @enum {string}
+         */
+        ModPriority: "low" | "normal" | "high";
         /**
          * ModStatus
          * @enum {string}
@@ -7771,6 +11103,16 @@ export interface components {
             notes?: string | null;
             /** @description Key and value per the category's schema, unknown keys are refused. */
             fields?: string[];
+            /**
+             * @description M5.3 "Pläne": the target month of a planned mod as YYYY-MM, from 2000-01 to ten years ahead (a past month stays valid, so an
+             *     overdue plan saves unchanged). Dropped for a mod that is not planned.
+             */
+            target_month?: string | null;
+            priority?: components["schemas"]["ModPriority"] | null;
+            /** @description M5.3: the planned budget. Private, always: only the owner reads it, like the cost. */
+            budget_cents?: number | null;
+            /** @description Kept by the server: the order of the plans changes through PUT vehicles/{id}/plans/order. */
+            plan_sort?: string;
         };
         /** ModificationResource */
         ModificationResource: {
@@ -7792,6 +11134,22 @@ export interface components {
             installed_on: string | null;
             /** @description "März 2023" */
             installed_label: string | null;
+            /** @description M5.3: the target month of a plan as YYYY-MM; null for a mod that is not planned or a plan without one. */
+            target_month: string | null;
+            /** @description "März 2027" */
+            target_label: string | null;
+            /** @description M5.3: a plan whose target month has come (Europe/Berlin); false for anything else. */
+            is_due: boolean;
+            priority: components["schemas"]["ModPriority"] | null;
+            /** @description "Hoch" */
+            priority_label: string | null;
+            /** @description M5.3: the owner's order of the plans (PUT vehicles/{id}/plans/order); null for a mod that is not planned. */
+            plan_sort: number | null;
+            /** @description M5.3: the planned budget, the owner's alone like `cost` (never another member, a guest, a public page or staff in view-as). */
+            budget: {
+                cents: number;
+                label: string;
+            } | null;
             /** @description Always false since M4.9 (09 §11, ADR ruling): costs are never public. Kept for older apps. */
             cost_public: boolean;
             /** @description The owner's alone (never another member, a guest, a public page or staff in view-as). */
@@ -7802,6 +11160,11 @@ export interface components {
             /** @description Null while the flag sig.mod_legal_status is off. */
             legal_status: string | null;
             legal_status_label: string | null;
+            /**
+             * @description M5.9c "TÜV-eingetragen": the owner states the mod is entered in the vehicle papers (legal_status registered or
+             *     individual_approval). The owner's statement, never our judgement; false while sig.mod_legal_status is off.
+             */
+            is_registered: boolean;
             thumb: components["schemas"]["MediaResource"] | null;
             /**
              * @description M4.14 (09 §8.9): the linked catalogue product, so the Mods tab links BRD-02 and the brand links BRD-01; null without one and
@@ -7895,6 +11258,22 @@ export interface components {
             installed_on: string | null;
             /** @description "März 2023" */
             installed_label: string | null;
+            /** @description M5.3: the target month of a plan as YYYY-MM; null for a mod that is not planned or a plan without one. */
+            target_month: string | null;
+            /** @description "März 2027" */
+            target_label: string | null;
+            /** @description M5.3: a plan whose target month has come (Europe/Berlin); false for anything else. */
+            is_due: boolean;
+            priority: components["schemas"]["ModPriority"] | null;
+            /** @description "Hoch" */
+            priority_label: string | null;
+            /** @description M5.3: the owner's order of the plans (PUT vehicles/{id}/plans/order); null for a mod that is not planned. */
+            plan_sort: number | null;
+            /** @description M5.3: the planned budget, the owner's alone like `cost` (never another member, a guest, a public page or staff in view-as). */
+            budget: {
+                cents: number;
+                label: string;
+            } | null;
             /** @description Always false since M4.9 (09 §11, ADR ruling): costs are never public. Kept for older apps. */
             cost_public: boolean;
             /** @description The owner's alone (never another member, a guest, a public page or staff in view-as). */
@@ -7905,6 +11284,11 @@ export interface components {
             /** @description Null while the flag sig.mod_legal_status is off. */
             legal_status: string | null;
             legal_status_label: string | null;
+            /**
+             * @description M5.9c "TÜV-eingetragen": the owner states the mod is entered in the vehicle papers (legal_status registered or
+             *     individual_approval). The owner's statement, never our judgement; false while sig.mod_legal_status is off.
+             */
+            is_registered: boolean;
             thumb: components["schemas"]["MediaResource"] | null;
             /**
              * @description M4.14 (09 §8.9): the linked catalogue product, so the Mods tab links BRD-02 and the brand links BRD-01; null without one and
@@ -8037,11 +11421,50 @@ export interface components {
             /** @description Profile views of the last 30 days (Europe/Berlin), private to the team; the team's own views are not counted. */
             views_30d: string;
         };
+        /** MyLevelResource */
+        MyLevelResource: {
+            /** @description 1–10. */
+            level: number;
+            /** @description "Street Rookie" … "Kaido Legend", in the request's language. */
+            title: string;
+            xp: number;
+            /** @description The XP at which the next level starts; null on level 10. */
+            next_level_xp: number | null;
+            /** @description 0–1 on the way to the next level; 1 on the top level. */
+            progress: number;
+            /** @description XP of the Europe/Berlin day and the daily cap. */
+            today: {
+                earned: number;
+                cap: number;
+            };
+            /**
+             * @description The XP rules: type (first_vehicle, documented_mod, build_update, new_spot, set_completed, event_checkin, forum_solution,
+             *     helpful_received), points, and the most XP the type earns a day (null: only the daily cap).
+             */
+            rules: {
+                type: string;
+                points: number;
+                daily_max: number | null;
+            }[];
+            /**
+             * @description Every level 1–10 with its title (request language) and the XP where it starts, ascending: what comes next. Levels
+             *     unlock titles only, no features.
+             */
+            ladder: {
+                level: number;
+                title: string;
+                from_xp: number;
+            }[];
+        };
         /** NextStepResource */
         NextStepResource: {
             next: components["schemas"]["AuthNextStep"];
             email: string;
             resend_after_seconds: number | null;
+        };
+        /** NoBuildScoreResource */
+        NoBuildScoreResource: {
+            data: null;
         };
         /** NoBusinessResource */
         NoBusinessResource: {
@@ -8055,7 +11478,7 @@ export interface components {
             avatar: components["schemas"]["MediaResource"] | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
-            /** @description The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            /** @description The Speedclub Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
             is_editorial: boolean;
             main_vehicle_cover: components["schemas"]["MediaResource"] | null;
         };
@@ -8074,6 +11497,7 @@ export interface components {
             actor_count: number;
             vehicle: components["schemas"]["VehicleRefResource"] | null;
             event: components["schemas"]["EventRefResource"] | null;
+            forum_thread: components["schemas"]["ForumThreadRefResource"] | null;
             /**
              * @description By type, language-free. Named details, not data: Laravel (and the export) leave a single resource unwrapped when its
              *     body already has a key "data". followed_published: {kind: "vehicle"|"update", update_id, vehicles, updates} (kind of the latest
@@ -8082,13 +11506,15 @@ export interface components {
              *     new_follower: {}. moderation_decision (a decision about the reader's content or account): {decision_id, action:
              *     "remove_content"|"restrict"|"suspend"}. report_decided (the outcome of a case the reader reported): {decision_id, outcome:
              *     "no_action"|"remove_content"|"measures"}, never the measure. SAFE-01 opens the decision.
-             *     qr_milestone [SIG]: {milestone: 10|50|100|500|1000}, total scans of the vehicle's stickers; QR-02 opens. hu_au_reminder [SIG]:
+             *     qr_milestone [SIG]: {milestone: 10|50|100|500|1000}, total scans of the vehicle's stickers; STK-02 opens. hu_au_reminder [SIG]:
              *     {due: "2027-03"}, the month the HU/AU is due; GAR-06 opens. catalog_request (M3.3): {outcome: "accepted"|"rejected", requested:
              *     the make and model the member typed, reason: why it was declined (rejected only), else null}; the vehicle is the member's own.
              *     support_reply (Phase 3): {ticket_id, reference: "SC-7H2KQXMB"}, the team answered that support request; SET-15b opens the
              *     thread. Never the text of the answer. M4.11: reaction {target: "vehicle"|"build_update", update_id} (the owner's own item;
-             *     actors are who reacted, never how), mention {update_id, comment_id} (comment_id null for a mention in the update itself),
-             *     comment [build_comments] {update_id, comment_id (the newest), reply: a reply to the reader's comment}, vehicle_follower {}
+             *     actors are who reacted, never how), mention {target, update_id, comment_id} (comment_id null for a mention in the update itself),
+             *     comment [build_comments] {target, update_id, comment_id (the newest), reply: a reply to the reader's comment}, where R5-5's
+             *     target is "vehicle" for the car's own comment thread (update_id null; VEH-01 opens with its comments) and "build_update"
+             *     otherwise, vehicle_follower {}
              *     (vehicle is the reader's build). update_id is null once the reader may no longer see the update; the row then opens the build.
              *     M4.12 (the event is in `event`): event_review {outcome: "approved"|"rejected", reason (rejected only)}, event_promoted {} (the
              *     reader moved from the waitlist to going), event_reminder {kind: "24h"|"2h"}, event_update {kind: "update"|"changed" (time or
@@ -8100,7 +11526,21 @@ export interface components {
              *     build's owner; VEH-02 opens), tag_id, business_id, mod_id} (vehicle: the build of the mod). SEC-414-01 business_invite
              *     {state: "invited"|"removed" (side "member": a business invited the reader to its team, open it with GET me/business-invites;
              *     or removed them) | "accepted"|"declined"|"left" (side "business": the member answered or left; BIZ-03 opens), business_id,
-             *     invite_id (invited only; the id for POST me/business-invites/{invite}/accept), username (the other side)}.
+             *     invite_id (invited only; the id for POST me/business-invites/{invite}/accept), username (the other side)}. M5.9b spot_alert (vehicle: the
+             *     reader's own car; DEX-06 opens): {day: "YYYY-MM-DD" (Europe/Berlin), count (counted spots that day), cities_count (cities of the
+             *     day's day spots; 0 for night-only days and while the car hides its cities), city (the name when cities_count is 1, else null)};
+             *     "Dein EK9 wurde heute 4-mal in Düsseldorf gespottet." Never who spotted it. M5.8 (the thread is in `forum_thread`): forum_reply
+             *     {thread_id, post_id (the newest reply), reply_to: "thread" (in the reader's thread or subscription) | "post" (to the reader's
+             *     post)}, forum_mention {thread_id, post_id}, forum_solved {thread_id, post_id (the reader's reply marked as the solution)}.
+             *     M5.6 (the event is in `event`): event_gallery_pending {count (attendee photos waiting for the reader's approval today)};
+             *     event_photo_decided {outcome: "approved"|"rejected", photo_id} (in-app only; the reason is on EVT-02); event_nearby {count, week
+             *     ("2026-W47"), event_ids (soonest first; `event` is the first)}, "Neue Treffen in deiner Nähe"; EVT-01 opens.
+             *     M5.7 plan_due {modification_id, target_month: "2026-11"} (vehicle: the reader's own; VEH-01 Pläne opens), "Ist das KW V3 schon
+             *                  * verbaut?"; weekly_recap {week: "2026-11-16" (Monday), views, sticker_scans, new_followers, spots, events_nearby,
+             *     maintenance_due}, counts only; INS-01 opens. R4-2.3 crew (in-app only): {state: "request_received" (to founder/admins; the
+             *     crew's requests open) | "request_approved" (CREW-01 opens) | "invited" (GET me/crew-invites; invite_id for POST
+             *     me/crew-invites/{invite}/accept), crew_id, crew_slug, crew_name, username (requester or inviter; null for request_approved),
+             *     invite_id, request_id}.
              */
             details: {
                 /** @enum {string} */
@@ -8140,6 +11580,29 @@ export interface components {
                 mod_id?: string | null;
                 invite_id?: string | null;
                 username?: string | null;
+                day?: string | null;
+                cities_count?: number;
+                city?: string | null;
+                badge_key?: string | null;
+                tier?: string | null;
+                code?: string | null;
+                thread_id?: string | null;
+                post_id?: string | null;
+                reply_to?: string | null;
+                photo_id?: string | null;
+                event_ids?: string[];
+                modification_id?: string | null;
+                target_month?: string | null;
+                views?: number;
+                sticker_scans?: number;
+                new_followers?: number;
+                spots?: number;
+                events_nearby?: number;
+                maintenance_due?: number;
+                crew_id?: string | null;
+                crew_slug?: string | null;
+                crew_name?: string | null;
+                request_id?: string | null;
             };
             read_at: string | null;
             /** @description The row's latest event, ISO 8601. */
@@ -8150,7 +11613,7 @@ export interface components {
          * @description The rows of the notification list (02_PRODUCT_SPEC §7). Written by App\Services\Notifications\Notifier only; later modules add their types here (M2.4 messages and requests, M2.6 decisions, M2.7 QR milestones and HU/AU).
          * @enum {string}
          */
-        NotificationType: "new_follower" | "followed_published" | "build_saved" | "security" | "moderation_decision" | "report_decided" | "qr_milestone" | "hu_au_reminder" | "catalog_request" | "support_reply" | "reaction" | "mention" | "comment" | "vehicle_follower" | "event_review" | "event_promoted" | "event_reminder" | "event_update" | "event_cancelled" | "maintenance_due" | "business_review" | "business_tag" | "business_invite";
+        NotificationType: "new_follower" | "followed_published" | "build_saved" | "security" | "moderation_decision" | "report_decided" | "qr_milestone" | "hu_au_reminder" | "catalog_request" | "support_reply" | "reaction" | "mention" | "comment" | "vehicle_follower" | "event_review" | "event_promoted" | "event_reminder" | "event_update" | "event_cancelled" | "maintenance_due" | "business_review" | "business_tag" | "business_invite" | "spot_alert" | "badge_unlocked" | "car_of_the_day" | "car_of_the_day_owner" | "invite_accepted" | "forum_reply" | "forum_mention" | "forum_solved" | "event_gallery_pending" | "event_photo_decided" | "event_nearby" | "plan_due" | "weekly_recap" | "crew";
         /** OdometerRequest */
         OdometerRequest: {
             /** @description The mileage now, in km (the app converts mi). */
@@ -8284,6 +11747,43 @@ export interface components {
             /** @description "KI-Vorschlag". */
             label: string;
         };
+        /**
+         * PlateBlurState
+         * @description M5.9a (10 §16.1, ADR-509): what the member decided about number plates on a photo. Only the owner ever sees it (MediaResource).
+         *     | |
+         *     |---|
+         *     | `blurred` <br/> Pixelated into the master before any public file was made, at upload or later with GAR-08. |
+         *     | `declined` <br/> The member said there is nothing to hide: uploaded with the switch off, or "Kein Kennzeichen sichtbar" in the plate check. |
+         *     | `unchecked` <br/> Uploaded before M5.9a or by a client that does not send the switch: the one-time "Kennzeichen prüfen" lists it. |
+         * @enum {string}
+         */
+        PlateBlurState: "blurred" | "declined" | "unchecked";
+        /** PlateCheckDecisionRequest */
+        PlateCheckDecisionRequest: {
+            /**
+             * @description `keep`: "Kein Kennzeichen sichtbar". Pixelating goes through `PATCH media/{media}` with `blur_regions`.
+             * @enum {string}
+             */
+            decision: "keep";
+        };
+        /** PlateCheckItemResource */
+        PlateCheckItemResource: {
+            media_id: string;
+            /** @enum {string} */
+            kind: "vehicle" | "modification" | "build_update" | "cover";
+            vehicle: {
+                id: string;
+                slug: string;
+                name: string;
+            } | null;
+            image: {
+                url: string;
+                width: number;
+                height: number;
+                thumbhash: string | null;
+                blurhash: string | null;
+            };
+        };
         /** PopularModResource */
         PopularModResource: {
             /** @description "KW V3", "BBS" */
@@ -8316,6 +11816,32 @@ export interface components {
          * @enum {string}
          */
         PowerUnit: "ps" | "kw" | "hp";
+        /**
+         * PreviewStickerRequest
+         * @description POST vehicles/{vehicle}/sticker-design/preview: an unsaved state of the editor, rendered and never stored.
+         */
+        PreviewStickerRequest: {
+            template: components["schemas"]["StickerTemplate"];
+            options: {
+                size?: components["schemas"]["StickerSize"];
+                colourway?: components["schemas"]["StickerColourway"];
+                material?: components["schemas"]["StickerMaterial"];
+                qr?: boolean;
+                username?: boolean;
+                car_name?: boolean;
+                custom_line?: string | null;
+                mirrored?: boolean;
+            };
+        };
+        /** ProductMatchResource */
+        ProductMatchResource: {
+            /** @description "KI-Vorschlag" when the AI normalised the text; null when the catalogue matched the words directly. */
+            label: string | null;
+            /** @description The catalogue words the AI made of the text, e.g. "KW Variant 3"; null without the AI. */
+            normalized: string;
+            /** @description At most 3 active catalogue products; empty when nothing matches (the app offers "Nicht gefunden?"). */
+            products: components["schemas"]["ProductRowResource"][];
+        };
         /** ProductResource */
         ProductResource: {
             id: string;
@@ -8396,6 +11922,62 @@ export interface components {
         ProposeTagRequest: {
             mod_id: string;
         };
+        /** PublicCheckinCardResource */
+        PublicCheckinCardResource: {
+            id: string;
+            slug: string;
+            title: string;
+            type: components["schemas"]["EventType"];
+            /** @description Published or cancelled for everybody else; the organiser also sees draft, pending_review and rejected. */
+            status: components["schemas"]["EventStatus"];
+            visibility: components["schemas"]["EventVisibility"];
+            /** @description ISO 8601 (UTC); show in `timezone`. */
+            starts_at: string | null;
+            ends_at: string | null;
+            /** @description Always Europe/Berlin for now (09 §8.7). */
+            timezone: string;
+            /**
+             * @description The place as far as this reader may see it (EventLocation): `exact` false means venue, street, postcode, lat and lng are
+             *     null and the app shows "Ort wird nach deiner Zusage angezeigt" with the city and the area point.
+             */
+            location: {
+                /** @enum {string} */
+                visibility: "public" | "after_rsvp";
+                exact: boolean;
+                venue_name: string | null;
+                street: string | null;
+                postcode: string | null;
+                city: string | null;
+                country: string;
+                lat: number | null;
+                lng: number | null;
+                area: {
+                    lat: number | null;
+                    lng: number | null;
+                };
+            };
+            cover: components["schemas"]["MediaResource"] | null;
+            organiser: components["schemas"]["EventOrganiserResource"];
+            /** @description Real answers, members taken off the list left out; null on a sample event (09 §8.19: no invented counts). */
+            counts: {
+                going: number;
+                interested: number;
+            } | null;
+            /** @description Null without a limit. */
+            capacity: number | null;
+            /** @description Spots left while a capacity is set (0 = new answers join the waitlist); null without a limit and on samples. */
+            spots_left: number | null;
+            /** @description From the `near` point to the area point, whole km; only when the list was asked with `near`. */
+            distance_km: number | null;
+            /**
+             * @description Up to three going members for the avatar row (09 §5 EventCard), by EVT-04's privacy rules: members only (empty for guests),
+             *     findable members, no block, never on a sample event. Next to `counts.going` for "38 Zusagen".
+             */
+            attendee_preview: components["schemas"]["MemberSummaryResource"][];
+            is_sample: boolean;
+            /** @description YYYY-MM-DD in Europe/Berlin. */
+            checked_in_on: string;
+        };
         /** PublicVehicleResource */
         PublicVehicleResource: {
             id: string;
@@ -8433,6 +12015,14 @@ export interface components {
             updates_count: number;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
+            /**
+             * @description M5.9c: the Build Score (0–1000) and its stage (1–5), for GAR-01 and the cards; null until it was first computed. Ranks and
+             *     parts are on GET vehicles/{id}/build-score.
+             */
+            build_score: {
+                total: number;
+                stage: number;
+            } | null;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -8459,7 +12049,14 @@ export interface components {
             } | null;
             /** @description The web page of this vehicle, for sharing: the canonical address (no redirect for a link preview), HTTPS where the site is. */
             canonical_url: string;
+            /**
+             * @description M5.7: the address the share sheet uses: the canonical one with `?via=share`, so a view through it counts as "geteilter Link"
+             *     in the owner's statistics (canonical, OG and JSON-LD stay on the plain address).
+             */
+            share_url: string;
             description: string | null;
+            /** @description M5.9b STREET DEX: the car's Dex number ("Nr. 0087"), public like on the share card and DEX-04; null for a draft. */
+            dex_number: number | null;
             /** @description "510 PS (375 kW)" in the viewer's setting, what was entered, and the provenance label. */
             power: {
                 label: string;
@@ -8507,6 +12104,33 @@ export interface components {
                     items: components["schemas"]["ModificationRowResource"][];
                 }[];
             };
+            /**
+             * @description M5.3 "Pläne" (10 §5.9): the planned mods in the owner's order (PUT vehicles/{id}/plans/order). They stay in `mods` too, for
+             *     apps before 2.1 and WEB-01; the 2.1 app leaves status `planned` out of its Mods section. The budget is the owner's alone.
+             */
+            plans: {
+                count: number;
+                items: components["schemas"]["ModificationRowResource"][];
+            };
+            /**
+             * @description M5.3 Build-Fortschritt (10 §6.2): built ÷ (built + planned), from the rows above alone (installed and planned; removed parts
+             *     are not part of the build). Null without either. Same audience as the page: no money, no social counts.
+             */
+            build_progress: {
+                built: number;
+                planned: number;
+                total: number;
+                percent: number;
+            } | null;
+            /**
+             * @description M5.7 (10 §6.2): the owner's optional milestone goal, shown with the Build-Fortschritt ("Ziel: Saison 2027"); `passed` once its
+             *     year is over (the app shows a passed goal to the owner only). Null when not set.
+             */
+            build_goal: {
+                season: number;
+                label: string;
+                passed: boolean;
+            } | null;
             /** @description The latest entries of Verlauf; the rest through public/vehicles/{slug}/updates. */
             updates: components["schemas"]["BuildUpdateResource"][];
             owner: components["schemas"]["MemberProfileResource"] | null;
@@ -8527,6 +12151,14 @@ export interface components {
              *     nobody else ever receives them. Each part is null while its flag is off.
              */
             social: components["schemas"]["VehicleSocialResource"];
+            /**
+             * @description R5-5 [build_comments]: the car's own comment thread on VEH-01 (GET/POST vehicles/{id}/comments). enabled: the thread is
+             *     open (flag on, the owner allows comments); can_write: this reader may write now (false for guests). Never a count.
+             */
+            comment_thread: {
+                enabled: boolean;
+                can_write: boolean;
+            };
         };
         /** PublishVehicleRequest */
         PublishVehicleRequest: {
@@ -8612,6 +12244,32 @@ export interface components {
          * @enum {string}
          */
         QrStatus: "active" | "revoked";
+        /**
+         * Rarity
+         * @description M5.9b STREET DEX (10 §16.2, contract §1, §6): the rarity tier of a car. Highest applicable wins: ghost > legend > rare > tuned > street. Ghost is the owner's opt-in (vehicles.ghost_mode) and overrides whatever was computed; the thresholds live in config/speedclub.php `dex.rarity` (App\Services\Dex\RarityRules).
+         * @enum {string}
+         */
+        Rarity: "street" | "tuned" | "rare" | "legend" | "ghost";
+        /** RarityRulesResource */
+        RarityRulesResource: {
+            /** @description Tuned: Build Score at least. */
+            tuned: {
+                min_build_score: number;
+            };
+            /** @description Rare: at most this many public cars of the same generation. */
+            rare: {
+                max_same_generation: number;
+            };
+            /** @description Legend: Build Score at least, or the only public car of its generation. */
+            legend: {
+                min_build_score: number;
+                unique_generation: boolean;
+            };
+            /** @description Ghost: the owner's opt-in. */
+            ghost: {
+                opt_in: boolean;
+            };
+        };
         /** RateLimitedError */
         RateLimitedError: {
             /** @description Translated, safe to show. */
@@ -8639,14 +12297,14 @@ export interface components {
             target_type: string;
             target_id: string;
             /** @enum {string|null} */
-            my_reaction: "strong" | "clean" | "low" | "loud" | null;
+            my_reaction: "like" | "strong" | "clean" | "low" | "loud" | null;
         };
         /**
          * ReactionType
-         * @description Private reactions on builds and build updates (09 §8.5, ADR-413): Stark · Sauber · Tief · Laut, one per member and item. The app draws them with its own glyphs (strong, clean, low, loud). Counts reach the owner only, never anybody else.
+         * @description Private reactions on builds and build updates (09 §8.5, ADR-413): Gefällt mir · Stark · Sauber · Tief · Laut, one per member and item. "Gefällt mir" (client round 4, 11 R4-2.2) is the one-tap heart the app shows first; the others are the car reactions behind it. The app draws them with its own glyphs. Counts reach the owner only, never anybody else.
          * @enum {string}
          */
-        ReactionType: "strong" | "clean" | "low" | "loud";
+        ReactionType: "like" | "strong" | "clean" | "low" | "loud";
         /** ReasonRequest */
         ReasonRequest: {
             /** @description Shown to everybody with an answer on EVT-02. */
@@ -8676,6 +12334,20 @@ export interface components {
         ReauthResource: {
             reauthenticated_until: string;
         };
+        /**
+         * RecordViewRequest
+         * @description POST views (m5.7-contract §3.1): the app's view beacon, once per screen focus of VEH-01 or PROF-02 that is not the viewer's own.
+         */
+        RecordViewRequest: {
+            /** @description What was opened. */
+            subject: components["schemas"]["ViewSubject"];
+            /** @description The vehicle's id, for `subject: vehicle`. */
+            id: string;
+            /** @description The member's username, for `subject: profile`. */
+            username: string;
+            /** @description app (native), web (member web), sticker_scan (opened from the scanner or a /c link), shared_link (a link with ?via=share). */
+            source: components["schemas"]["ViewSource"];
+        };
         /** RecoveryCodesResource */
         RecoveryCodesResource: {
             /** @description Ten codes, "ABCDE-FGHJK". */
@@ -8702,6 +12374,13 @@ export interface components {
             /** @enum {string|null} */
             locale?: "de" | "en" | null;
             ref?: components["schemas"]["SignupRef"] | null;
+            /** @description The code of /join/{code} (8 characters Crockford; I/L read as 1, O as 0). Optional; an invalid code is ignored, never refused. */
+            invite_code?: string | null;
+        };
+        /** RejectEventPhotoRequest */
+        RejectEventPhotoRequest: {
+            /** @description Shown to the uploader only ("Abgelehnt: …"). */
+            reason?: string | null;
         };
         /** ReleaseNoteResource */
         ReleaseNoteResource: {
@@ -8770,7 +12449,7 @@ export interface components {
          * @description What can be reported (m2.6-contract §1). The id is the member's username for `member` (resolved to the account on receipt) and the ULID of the row otherwise.
          * @enum {string}
          */
-        ReportTargetType: "member" | "vehicle" | "photo" | "message" | "build_update" | "modification" | "comment" | "event" | "business";
+        ReportTargetType: "member" | "vehicle" | "photo" | "message" | "build_update" | "modification" | "comment" | "event" | "business" | "forum_post" | "crew";
         /** RequestPendingError */
         RequestPendingError: {
             /** @description Translated, safe to show. */
@@ -8788,6 +12467,14 @@ export interface components {
             email: string;
             code: string;
             password: string;
+        };
+        /**
+         * RestoreStickerDesignRequest
+         * @description POST vehicles/{vehicle}/sticker-design/versions/{version}/restore: STK-07 "Wiederherstellen".
+         */
+        RestoreStickerDesignRequest: {
+            /** @description The revision the app last saw of the current version (0 before the first save). Review MF-4. */
+            base_revision: number;
         };
         /** RotateTokenRequest */
         RotateTokenRequest: {
@@ -8821,6 +12508,27 @@ export interface components {
             vehicle_id: string;
             is_saved: boolean;
         };
+        /**
+         * SaveStickerDesignRequest
+         * @description PUT vehicles/{vehicle}/sticker-design: the autosave of STK-05.
+         */
+        SaveStickerDesignRequest: {
+            /** @description The version the app last saw; 0 before the first save. */
+            base_version: number;
+            /** @description The revision the app last saw (`revision` of the design; 0 before the first save). Review MF-4. */
+            base_revision: number;
+            template: components["schemas"]["StickerTemplate"];
+            options: {
+                size?: components["schemas"]["StickerSize"];
+                colourway?: components["schemas"]["StickerColourway"];
+                material?: components["schemas"]["StickerMaterial"];
+                qr?: boolean;
+                username?: boolean;
+                car_name?: boolean;
+                custom_line?: string | null;
+                mirrored?: boolean;
+            };
+        };
         /** SavedModificationResource */
         SavedModificationResource: {
             id: string;
@@ -8841,6 +12549,22 @@ export interface components {
             installed_on: string | null;
             /** @description "März 2023" */
             installed_label: string | null;
+            /** @description M5.3: the target month of a plan as YYYY-MM; null for a mod that is not planned or a plan without one. */
+            target_month: string | null;
+            /** @description "März 2027" */
+            target_label: string | null;
+            /** @description M5.3: a plan whose target month has come (Europe/Berlin); false for anything else. */
+            is_due: boolean;
+            priority: components["schemas"]["ModPriority"] | null;
+            /** @description "Hoch" */
+            priority_label: string | null;
+            /** @description M5.3: the owner's order of the plans (PUT vehicles/{id}/plans/order); null for a mod that is not planned. */
+            plan_sort: number | null;
+            /** @description M5.3: the planned budget, the owner's alone like `cost` (never another member, a guest, a public page or staff in view-as). */
+            budget: {
+                cents: number;
+                label: string;
+            } | null;
             /** @description Always false since M4.9 (09 §11, ADR ruling): costs are never public. Kept for older apps. */
             cost_public: boolean;
             /** @description The owner's alone (never another member, a guest, a public page or staff in view-as). */
@@ -8851,6 +12575,11 @@ export interface components {
             /** @description Null while the flag sig.mod_legal_status is off. */
             legal_status: string | null;
             legal_status_label: string | null;
+            /**
+             * @description M5.9c "TÜV-eingetragen": the owner states the mod is entered in the vehicle papers (legal_status registered or
+             *     individual_approval). The owner's statement, never our judgement; false while sig.mod_legal_status is off.
+             */
+            is_registered: boolean;
             thumb: components["schemas"]["MediaResource"] | null;
             /**
              * @description M4.14 (09 §8.9): the linked catalogue product, so the Mods tab links BRD-02 and the brand links BRD-01; null without one and
@@ -8964,6 +12693,14 @@ export interface components {
             updates_count: number | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
+            /**
+             * @description M5.9c: the Build Score (0–1000) and its stage (1–5), for GAR-01 and the cards; null until it was first computed. Ranks and
+             *     parts are on GET vehicles/{id}/build-score.
+             */
+            build_score: {
+                total: number;
+                stage: number;
+            } | null;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -9004,6 +12741,14 @@ export interface components {
                 saved: boolean;
                 reaction: string | null;
             } | null;
+            /**
+             * @description R5-5 [build_comments]: the car's own comment thread, so a card can open it in place. enabled: the thread is open (flag on,
+             *     the owner allows comments); can_write: this reader may write now (false for guests). Never a count.
+             */
+            comment_thread: {
+                enabled: boolean;
+                can_write: boolean;
+            };
             /** @description When the member saved the build, ISO 8601. */
             saved_at: string;
         };
@@ -9121,7 +12866,7 @@ export interface components {
             /** @description "München": approximate, only with a GeoLite2 database (OA-33). */
             approx_city: string | null;
             method: components["schemas"]["SignInMethod"] | null;
-            /** @description Done by the SPEED CLUB team (e.g. sessions ended by support). */
+            /** @description Done by the Speedclub team (e.g. sessions ended by support). */
             by_staff: boolean;
             /**
              * @description What else the row names: `provider` (apple, google), `passkey_provider` (iCloud-Schlüsselbund, …), `count` and `steps`
@@ -9179,6 +12924,13 @@ export interface components {
          */
         SessionKind: "app" | "web";
         /**
+         * SetForumSolutionRequest
+         * @description "Gelöst": the reply of this thread that solved it.
+         */
+        SetForumSolutionRequest: {
+            post_id: string;
+        };
+        /**
          * SetHighlightsRequest
          * @description The whole rail in order: up to 8 build updates (own posts and notes, not hidden) or finished photos of this vehicle and its updates.
          */
@@ -9193,6 +12945,159 @@ export interface components {
             enabled: boolean;
         };
         /**
+         * ShareCardElement
+         * @description CF-6 (VEH-07): what a share card can show besides the photo, the make and the model (ShareCardOptions::$show).
+         * @enum {string}
+         */
+        ShareCardElement: "score" | "dex" | "specs" | "mods" | "username" | "qr";
+        /**
+         * ShareCardTemplate
+         * @description R5-2e VEH-07 2.0 (12_CLIENT_ROUND_5 "share card contract"): the layout of a share card. `band` is the card as before (square: photo on top, band below; story: photo edge to edge, data at the bottom); `poster` the photo edge to edge on both formats under a dark scrim, always dark; `frame` the photo inset on a solid ground with a caption block, in the chosen theme.
+         * @enum {string}
+         */
+        ShareCardTemplate: "band" | "poster" | "frame";
+        /**
+         * ShareCardTheme
+         * @description CF-6 (VEH-07): the square share card's band, bg-canvas of the carbon or the light theme.
+         * @enum {string}
+         */
+        ShareCardTheme: "dark" | "light";
+        /** ShopBuyResource */
+        ShopBuyResource: {
+            available: boolean;
+            /** @enum {string|null} */
+            kind: "external" | "designer" | null;
+            url: string | null;
+            /** @enum {string|null} */
+            path: "/stickers" | null;
+            /** @enum {string|null} */
+            reason: "not_configured" | null;
+            message: string | null;
+        };
+        /**
+         * ShopCategory
+         * @description M5.5 SHOP-01 (10 §3, m5.5-contract §1): the three fixed categories of the chip row. "Alle" is the absence of a filter, never a case.
+         * @enum {string}
+         */
+        ShopCategory: "sticker" | "apparel" | "accessories";
+        /** ShopImageResource */
+        ShopImageResource: {
+            id: string;
+            width: number;
+            height: number;
+            /** @description "4:5" for product photos; the real ratio ("16:9", "3:2" …) for the hero. */
+            aspect: string;
+            blurhash: string;
+            thumbhash: string | null;
+            focal_x: number;
+            focal_y: number;
+            alt: string | null;
+            variants: {
+                width: number;
+                height: number;
+                url: string;
+            }[];
+        };
+        /** ShopOverviewResource */
+        ShopOverviewResource: {
+            hero: {
+                id: string;
+                title: string;
+                subtitle: string | null;
+                image: components["schemas"]["ShopImageResource"];
+                link: {
+                    /** @enum {string} */
+                    kind: "product" | "category";
+                    category: string | null;
+                    product: {
+                        id: string;
+                        slug: string;
+                    } | null;
+                };
+                is_sample: boolean;
+            } | null;
+            /** @description R4-3.2: status coming_soon is a visible "Bald verfügbar" chip that does not open (count 0); "all" is always available. */
+            categories: {
+                /** @enum {string} */
+                key: "all" | "sticker" | "apparel" | "accessories";
+                label: string;
+                count: number;
+                /** @enum {string} */
+                status: "available" | "coming_soon";
+            }[];
+            store: {
+                configured: boolean;
+                host: string | null;
+                shipping_url: string | null;
+            };
+        };
+        /** ShopProductCardResource */
+        ShopProductCardResource: {
+            id: string;
+            slug: string;
+            title: string;
+            category: {
+                /** @enum {string} */
+                key: "sticker" | "apparel" | "accessories";
+                label: string;
+            };
+            price: {
+                amount_cents: number;
+                /** @constant */
+                currency: "EUR";
+                /** @description "14,90 €" (de) or "€14.90" (en). */
+                formatted: string;
+                /** @description Always true: the price is gross, incl. MwSt. */
+                vat_included: boolean;
+            };
+            image: components["schemas"]["ShopImageResource"] | null;
+            /** @enum {string} */
+            purchase_mode: "shopify" | "sticker_designer";
+            is_sample: boolean;
+        };
+        /** ShopProductResource */
+        ShopProductResource: {
+            id: string;
+            slug: string;
+            title: string;
+            category: {
+                /** @enum {string} */
+                key: "sticker" | "apparel" | "accessories";
+                label: string;
+            };
+            price: {
+                amount_cents: number;
+                /** @constant */
+                currency: "EUR";
+                /** @description "14,90 €" (de) or "€14.90" (en). */
+                formatted: string;
+                /** @description Always true: the price is gross, incl. MwSt. */
+                vat_included: boolean;
+            };
+            image: components["schemas"]["ShopImageResource"] | null;
+            /** @enum {string} */
+            purchase_mode: "shopify" | "sticker_designer";
+            is_sample: boolean;
+            description: string | null;
+            images: components["schemas"]["ShopImageResource"][];
+            variant_kind: {
+                /** @enum {string} */
+                key: "size" | "colour" | "variant";
+                label: string;
+            };
+            variants: {
+                id: string;
+                label: string;
+                buy: components["schemas"]["ShopBuyResource"];
+            }[];
+            buy: components["schemas"]["ShopBuyResource"];
+            store: {
+                configured: boolean;
+                host: string | null;
+                shipping_url: string | null;
+            };
+        };
+        /**
          * SignInMethod
          * @description How a member proved who they are at sign-in (SET-21 "Anmeldung mit Passkey"). A sign-in with a second factor keeps its first proof.
          * @enum {string}
@@ -9200,7 +13105,10 @@ export interface components {
         SignInMethod: "password" | "email_code" | "passkey" | "apple" | "google";
         /** SignInMethodsResource */
         SignInMethodsResource: {
-            /** @description Always on (ADR-407). `reachable` is false for an Apple private relay address until OA-34: then it is no way in. */
+            /**
+             * @description On unless `auth.email_code` is off (ADR-520: a host that cannot deliver mail yet; ADR-407 keeps it on in production).
+             *     `reachable` is false for an Apple private relay address until OA-34: then it is no way in.
+             */
             email_code: {
                 available: boolean;
                 email: string;
@@ -9208,7 +13116,7 @@ export interface components {
             };
             password: {
                 set: boolean;
-                /** @description Password sign-in offered (`auth.password_login`). */
+                /** @description Password sign-in offered (`auth.password_login`, and always while the e-mail code is off, ADR-520). */
                 available: boolean;
             };
             two_factor: {
@@ -9256,6 +13164,171 @@ export interface components {
          * @enum {string}
          */
         SocialProvider: "apple" | "google";
+        /** SpecSuggestionResource */
+        SpecSuggestionResource: {
+            /** @description Send it back as `ai_suggestion.cache_id` with PUT vehicles/{id}/specs, so the taken values carry their AI provenance. */
+            cache_id: string;
+            /** @description "KI-Vorschlag" next to the row. */
+            label: string;
+            /** @description "Herstellerangabe (KI-Vorschlag)": the source of power and torque taken over, until the member changes them. */
+            provenance_label: string;
+            /** @description The catalogue's name of the car, e.g. "BMW 3er E46 (1998–2006)"; never the member's text. */
+            subject: string;
+            /** @description Up to 6 typical factory variants; each `fields` holds only valid PUT vehicles/{id}/specs values (power_value with power_unit). */
+            variants: {
+                key: string;
+                label: string;
+                fields: {
+                    [key: string]: string | number;
+                };
+            }[];
+            /** @description Whether the answer came from the shared cache (no provider call). */
+            cached: boolean;
+            generated_at: string | null;
+        };
+        /** SpotCardResource */
+        SpotCardResource: {
+            /** @description Null for the preview of a car the viewer has not spotted. */
+            spot_id: string | null;
+            spotted_at: string | null;
+            /** @description False for the "noch nicht gespottet" preview of DEX-04. */
+            spotted: boolean;
+            vehicle: {
+                id: string;
+                slug: string;
+                name: string;
+                make: string | null;
+                make_slug: string | null;
+                model: string | null;
+                generation: string | null;
+                generation_slug: string | null;
+                dex_number: number | null;
+                rarity: components["schemas"]["Rarity"];
+                ghost: boolean;
+                cover: {
+                    url: string;
+                    width: number;
+                    height: number;
+                    thumbhash: string | null;
+                    blurhash: string | null;
+                } | null;
+                top_mods: {
+                    name: string;
+                    brand: string | null;
+                }[];
+                owner: {
+                    username: string;
+                    display_name: string | null;
+                    avatar: {
+                        url: string;
+                        thumbhash: string | null;
+                    } | null;
+                } | null;
+            };
+            /** @description One of the car's first three spotters: the permanent foil. */
+            first_spotter: boolean;
+            /** @description "In 9 Städten gespottet": cities of day spots, null when there are none or the owner hides the cities. */
+            cities_count_label: string | null;
+        };
+        /** SpotMapResource */
+        SpotMapResource: {
+            /** @description When the numbers were counted (ISO 8601); the answer is cached for an hour. */
+            generated_at: string;
+            /**
+             * @description Cities with counted spots of at least 5 different cars between 24 hours and 90 days old, most spots first (`count` = spots). `city_id` is the id of the static
+             *     centroid file `/geo/de-cities.json`; `bundesland` a code BW…TH. Ghost cars and cars hiding their cities never count.
+             */
+            cities: {
+                city_id: number;
+                name: string;
+                bundesland: string;
+                count: number;
+            }[];
+        };
+        /** SpotResultResource */
+        SpotResultResource: {
+            /** @description Null for the preview of a car the viewer has not spotted. */
+            spot_id: string | null;
+            spotted_at: string | null;
+            /** @description False for the "noch nicht gespottet" preview of DEX-04. */
+            spotted: boolean;
+            vehicle: {
+                id: string;
+                slug: string;
+                name: string;
+                make: string | null;
+                make_slug: string | null;
+                model: string | null;
+                generation: string | null;
+                generation_slug: string | null;
+                dex_number: number | null;
+                rarity: components["schemas"]["Rarity"];
+                ghost: boolean;
+                cover: {
+                    url: string;
+                    width: number;
+                    height: number;
+                    thumbhash: string | null;
+                    blurhash: string | null;
+                } | null;
+                top_mods: {
+                    name: string;
+                    brand: string | null;
+                }[];
+                owner: {
+                    username: string;
+                    display_name: string | null;
+                    avatar: {
+                        url: string;
+                        thumbhash: string | null;
+                    } | null;
+                } | null;
+            };
+            /** @description One of the car's first three spotters: the permanent foil. */
+            first_spotter: boolean;
+            /** @description "In 9 Städten gespottet": cities of day spots, null when there are none or the owner hides the cities. */
+            cities_count_label: string | null;
+        };
+        /** SpotStatsResource */
+        SpotStatsResource: {
+            /** @description Counted spots. */
+            total: number;
+            unique_spotters: number;
+            /** @description Cities of day spots; 0 while the owner hides the cities. */
+            cities_count: number;
+            /** @description Day spots only, most spotted first, at most 20; empty while the owner hides the cities. */
+            cities: {
+                name: string;
+                count: number;
+            }[];
+            /**
+             * @description One entry per day (Europe/Berlin), oldest first, zeros included. Only spots older than the owner alert's 3 hours count here
+             *     (nothing live), so today's bucket and `total` can differ for a while.
+             */
+            last_30_days: {
+                day: string;
+                count: number;
+            }[];
+            /**
+             * @description Newest first, only spots older than the owner alert's 3 hours (nothing live). `{anonymous: true}` ("jemand") for a spotter
+             *     who keeps "Meine Spots zeigen" off.
+             */
+            recent_spotters: ({
+                username: string;
+                display_name: string | null;
+                avatar: {
+                    url: string;
+                    thumbhash: string | null;
+                } | null;
+            } | {
+                anonymous: boolean;
+            })[];
+            /** @description "Street Famous": 10, 50, 100 or 500 unique spotters reached, else null. */
+            street_famous: {
+                /** @enum {integer|null} */
+                tier: 10 | 50 | 100 | 500 | null;
+            };
+        };
         /**
          * StartConversationRequest
          * @description `POST conversations` (m2.4-contract §2): the recipient by username, an optional vehicle context (VEH-01 "Nachricht"), and the first
@@ -9289,6 +13362,236 @@ export interface components {
             locale?: "de" | "en" | null;
             platform?: components["schemas"]["DevicePlatform"] | null;
         };
+        /** StickerCardResource */
+        StickerCardResource: {
+            vehicle: {
+                id: string;
+                slug: string;
+                /** @description "Skyline GT-R R34" */
+                title: string;
+                /** @description "Nissan Skyline GT-R R34" */
+                full_title: string;
+                cover: components["schemas"]["MediaResource"] | null;
+                public_url: string;
+            };
+            sticker: {
+                /**
+                 * @description `active` ("aktiv"), `revoked` ("gesperrt"), or `none` before the car has a code.
+                 * @enum {string}
+                 */
+                status: "active" | "revoked" | "none";
+                scan_state: components["schemas"]["QrScanState"] | null;
+                display_code: string | null;
+                url: string | null;
+            };
+            /** @description Scans since Monday (German time), over all the car's codes. */
+            scans_this_week: number;
+            design: components["schemas"]["StickerDesignResource"] | null;
+            actions: {
+                /** @description "Gestalten": false for a suspended owner. */
+                design: boolean;
+                /** @description "Bestellen": available, or why not (`no_design`, `not_validated`, `code_replaced`, `not_configured` → "Bestellung bald verfügbar"). */
+                order: {
+                    available: boolean;
+                    /** @enum {string|null} */
+                    reason: "no_design" | "not_validated" | "code_replaced" | "not_configured" | null;
+                };
+                /** @description "Herunterladen": print files exist (a validated design whose code works). */
+                download: boolean;
+            };
+        };
+        /**
+         * StickerClientScanTest
+         * @description What the app reports from its own on-device decode (10 §2.3); informational, the server test decides.
+         * @enum {string}
+         */
+        StickerClientScanTest: "passed" | "failed" | "unavailable";
+        /**
+         * StickerColourway
+         * @description 10 §2.3: white print for dark glass, black print for light paint, white with a Signal-Red accent.
+         * @enum {string}
+         */
+        StickerColourway: "white" | "black" | "white_red";
+        /** StickerDesignResource */
+        StickerDesignResource: {
+            id: string | null;
+            persisted: string;
+            /** @description The design id of the slug area, Shopify and the print partner: "SD" + 8 characters. Null before the first save. */
+            reference: string | null;
+            /** @description 0 before the first save. */
+            version: number;
+            /**
+             * @description Moves on every write of the design (autosave, restore, new version); send it back as `base_revision`. 0 before the first
+             *     save.
+             */
+            revision: number;
+            template: components["schemas"]["StickerTemplate"];
+            /** @description The member's choices, every key present. */
+            options: {
+                /** @enum {string} */
+                size: "s" | "m" | "l";
+                /** @enum {string} */
+                colourway: "white" | "black" | "white_red";
+                /** @enum {string} */
+                material: "transparent" | "white_vinyl";
+                qr: boolean;
+                username: boolean;
+                car_name: boolean;
+                custom_line: string | null;
+                mirrored: boolean;
+            };
+            /** @description What this template prints of the text options (a template ignores what it does not show; the choice is kept). */
+            effective: {
+                username: boolean;
+                car_name: boolean;
+                custom_line: boolean;
+            };
+            size_mm: {
+                width: number;
+                height: number;
+            };
+            /** @description The printed code without its quiet zone, in mm (≥ 25); null without a code. */
+            qr_mm: number | null;
+            /** @enum {string} */
+            state: "draft" | "validated";
+            scan_test: components["schemas"]["StickerScanTest"] | null;
+            validated_at: string | null;
+            order_requested_at: string | null;
+            /** @description The code it was validated with, or for a draft the car's active code; null with QR off or without a code. */
+            code: {
+                display_code: string;
+                active: boolean;
+            } | null;
+            /** @description `qr_off`: "Ohne QR-Code kann niemand deinen Build scannen."; `no_active_code`: the car has no active code (staff took it down). */
+            warnings: ("qr_off" | "no_active_code")[];
+            /** @description Owner downloads; print files only for a validated version whose code still works. */
+            urls: {
+                preview_svg: string | null;
+                share_png: string | null;
+                print_svg: string | null;
+                print_pdf: string | null;
+                print_png: string | null;
+            };
+            created_at: string | null;
+            updated_at: string | null;
+        };
+        /**
+         * StickerMaterial
+         * @description 10 §2.3 material note for the printer.
+         * @enum {string}
+         */
+        StickerMaterial: "transparent" | "white_vinyl";
+        /** StickerOrderLinkResource */
+        StickerOrderLinkResource: {
+            available: boolean;
+            url: string | null;
+            /** @enum {string|null} */
+            reason: "not_configured" | null;
+            /** @description "Bestellung bald verfügbar" while not available. */
+            message: string | null;
+        };
+        /** StickerPreviewResource */
+        StickerPreviewResource: {
+            svg: string;
+            size_mm: {
+                width: number;
+                height: number;
+            };
+            qr_mm: number | null;
+            effective: {
+                username: boolean;
+                car_name: boolean;
+                custom_line: boolean;
+            };
+            /**
+             * @description `qr_off`, `no_active_code`, and `username_too_long` / `car_name_too_long` / `custom_line_too_long` for a line left out because
+             *     it would print smaller than 1.8 mm at this size.
+             */
+            warnings: ("qr_off" | "no_active_code" | "username_too_long" | "car_name_too_long" | "custom_line_too_long")[];
+        };
+        /**
+         * StickerScanTest
+         * @description The server's Scan-Test of a sticker design (m5.4-contract §4): the print raster decoded back to the code, or no code to test.
+         * @enum {string}
+         */
+        StickerScanTest: "passed" | "failed" | "not_applicable";
+        /**
+         * StickerSize
+         * @description 10 §2.3 sizes S/M/L; the millimetres per template come from StickerCatalogue.
+         * @enum {string}
+         */
+        StickerSize: "s" | "m" | "l";
+        /** StickerStatsResource */
+        StickerStatsResource: {
+            /** @description Exactly 30 entries, oldest first; `date` is YYYY-MM-DD in German time. */
+            days: {
+                date: string;
+                count: number;
+            }[];
+            /** @description Since the car's first code, over all its codes. */
+            total: string;
+            /** @description The sum of `days`. */
+            total_30_days: string;
+            /** @description Monday until now, German time. */
+            this_week: string;
+            /** @description The whole previous Monday–Sunday. */
+            last_week: string;
+            /** @description The first day with a scan, YYYY-MM-DD; null before the first. */
+            first_scan_on: string | null;
+            /** @description The last 30 days by source. `link` (visits through a shared link) is null until the views of M5.7 count it. */
+            sources: {
+                sticker_scan: number;
+                link: number | null;
+            };
+            /** @description The milestones the total has reached, of 10, 50, 100, 500, 1000. */
+            milestones_reached: number[];
+        };
+        /**
+         * StickerTemplate
+         * @description The six designer templates of 10 §2.3 (STK-05), all on the unchanged logo. Geometry and sizes in App\Services\Stickers\StickerCatalogue.
+         * @enum {string}
+         */
+        StickerTemplate: "classic" | "minimal" | "banner" | "plate" | "vertical_jdm" | "round";
+        /** StickerTemplatesResource */
+        StickerTemplatesResource: {
+            templates: {
+                key: components["schemas"]["StickerTemplate"];
+                name: string;
+                description: string;
+                /** @enum {string} */
+                shape: "rounded" | "rect" | "circle";
+                corner_radius_mm: number;
+                sizes: {
+                    key: components["schemas"]["StickerSize"];
+                    width_mm: number;
+                    height_mm: number;
+                    qr_mm: number;
+                }[];
+                options: ("username" | "car_name" | "custom_line")[];
+                defaults: {
+                    [key: string]: unknown;
+                };
+            }[];
+            colourways: {
+                key: components["schemas"]["StickerColourway"];
+                name: string;
+                hint: string;
+                materials: components["schemas"]["StickerMaterial"][];
+                mirrored_allowed: boolean;
+            }[];
+            materials: {
+                key: components["schemas"]["StickerMaterial"];
+                name: string;
+            }[];
+            limits: {
+                custom_line_max: number;
+                qr_min_mm: number;
+                quiet_zone_modules: number;
+                /** @constant */
+                error_correction: "H";
+                bleed_mm: number;
+            };
+        };
         /**
          * StoreAppealRequest
          * @description POST decisions/{id}/appeal: why the decision is wrong, in the member's words (at most 2000 characters).
@@ -9306,10 +13609,30 @@ export interface components {
             alt?: string | null;
             focal_x?: number | null;
             focal_y?: number | null;
+            /**
+             * @description M5.9a "Kennzeichen unkenntlich machen": `1` pixelates `blur_regions` into the photo before any file is written (every
+             *     variant, OG image and share card comes from that master; the unblurred upload is deleted). `0`: the member switched it off.
+             *     Not sent: nothing is pixelated and the owner's plate check lists the photo. Shown to the owner only, as `plate_blur.state`.
+             */
+            plate_blur?: boolean;
+            /**
+             * @description With `plate_blur=1`: 1–8 rectangles, normalised 0–1 from the top left of the photo as displayed (after EXIF orientation);
+             *     w and h at least 0.02, x + w and y + h at most 1. Optional `angle`: degrees clockwise about the rectangle's centre,
+             *     −45 to 45 (default 0), for a plate shot at an angle; the turned rectangle is pixelated. A JSON string (multipart) or an array.
+             *     Ignored otherwise.
+             */
+            blur_regions?: {
+                x?: number;
+                y?: number;
+                w?: number;
+                h?: number;
+                angle?: number;
+            }[];
         };
         /**
          * StoreBuildUpdatePostRequest
-         * @description UPD-01 (09 §8.5). Photos follow with POST build-updates/{id}/media.
+         * @description UPD-01 (09 §8.5). Photos follow with POST build-updates/{id}/media. M5.9c: `kind=before_after` makes it a before/after pair: exactly
+         *     two photos follow (before, then after) and are paired by PATCH photo_pairs, or automatically when the second one arrives.
          */
         StoreBuildUpdatePostRequest: {
             vehicle_id: string;
@@ -9319,6 +13642,8 @@ export interface components {
             happened_on?: string | null;
             audience?: components["schemas"]["BuildUpdateAudience"] | null;
             modification_ids?: string[] | null;
+            kind?: components["schemas"]["BuildUpdateKind"] | null;
+            modification_id?: string | null;
         };
         /** StoreBuildUpdateRequest */
         StoreBuildUpdateRequest: {
@@ -9380,10 +13705,28 @@ export interface components {
             generation_text?: string | null;
             vehicle_id?: string | null;
         };
+        /** StoreCheckinRequest */
+        StoreCheckinRequest: {
+            /** @description The six characters under the organiser's QR (or from the scanned link); case and spaces do not matter. */
+            code: string;
+            /** @description "War dabei" on the member's profile once the event has ended. Default true. */
+            profile_visible?: boolean;
+        };
         /** StoreCommentRequest */
         StoreCommentRequest: {
             body: string;
             parent_id?: string | null;
+        };
+        /**
+         * StoreCrewRequest
+         * @description POST crews. Name length, characters, reserved words and uniqueness are checked after the spaces are collapsed (CrewFields).
+         */
+        StoreCrewRequest: {
+            /** @description 3–40 characters: letters, digits, spaces and - _ . & ' ! ; unique regardless of case. */
+            name: string;
+            description?: string | null;
+            bundesland?: components["schemas"]["Bundesland"] | null;
+            join_mode: components["schemas"]["CrewJoinMode"];
         };
         /**
          * StoreEventCoverRequest
@@ -9395,6 +13738,56 @@ export interface components {
             alt?: string | null;
             focal_x?: number | null;
             focal_y?: number | null;
+            /**
+             * @description M5.9a "Kennzeichen unkenntlich machen": `1` pixelates `blur_regions` into the photo before any file is written (every
+             *     variant, OG image and share card comes from that master; the unblurred upload is deleted). `0`: the member switched it off.
+             *     Not sent: nothing is pixelated and the owner's plate check lists the photo. Shown to the owner only, as `plate_blur.state`.
+             */
+            plate_blur?: boolean;
+            /**
+             * @description With `plate_blur=1`: 1–8 rectangles, normalised 0–1 from the top left of the photo as displayed (after EXIF orientation);
+             *     w and h at least 0.02, x + w and y + h at most 1. Optional `angle`: degrees clockwise about the rectangle's centre,
+             *     −45 to 45 (default 0), for a plate shot at an angle; the turned rectangle is pixelated. A JSON string (multipart) or an array.
+             *     Ignored otherwise.
+             */
+            blur_regions?: {
+                x?: number;
+                y?: number;
+                w?: number;
+                h?: number;
+                angle?: number;
+            }[];
+        };
+        /**
+         * StoreEventPhotoRequest
+         * @description M5.6 POST events/{slug}/gallery: one photo, multipart. Size and real file type are checked on the bytes by MediaService (413, 415:
+         *     JPEG, PNG or WebP; the app converts HEIC before sending), the shorter side (at least speedclub.events.gallery_min_short_side) by the
+         *     action. The plate decision is required here: every gallery upload passes the plate blur step first (ADR-509).
+         */
+        StoreEventPhotoRequest: {
+            /** Format: binary */
+            file: string;
+            /** @description Describes the photo for screen readers. */
+            alt?: string | null;
+            /**
+             * @description M5.9a "Kennzeichen unkenntlich machen": `1` pixelates `blur_regions` into the photo before any file is written (every
+             *     variant, OG image and share card comes from that master; the unblurred upload is deleted). `0`: the member switched it off.
+             *     Not sent: nothing is pixelated and the owner's plate check lists the photo. Shown to the owner only, as `plate_blur.state`.
+             */
+            plate_blur: boolean;
+            /**
+             * @description With `plate_blur=1`: 1–8 rectangles, normalised 0–1 from the top left of the photo as displayed (after EXIF orientation);
+             *     w and h at least 0.02, x + w and y + h at most 1. Optional `angle`: degrees clockwise about the rectangle's centre,
+             *     −45 to 45 (default 0), for a plate shot at an angle; the turned rectangle is pixelated. A JSON string (multipart) or an array.
+             *     Ignored otherwise.
+             */
+            blur_regions?: {
+                x?: number;
+                y?: number;
+                w?: number;
+                h?: number;
+                angle?: number;
+            }[];
         };
         /** StoreEventRequest */
         StoreEventRequest: {
@@ -9428,6 +13821,57 @@ export interface components {
         /** StoreEventUpdateRequest */
         StoreEventUpdateRequest: {
             body: string;
+        };
+        /**
+         * StoreForumPhotoRequest
+         * @description A thread photo. Size and real file type are checked on the bytes by MediaService (413 and 415), as for every upload.
+         */
+        StoreForumPhotoRequest: {
+            /** Format: binary */
+            file: string;
+            alt?: string | null;
+            /**
+             * @description M5.9a "Kennzeichen unkenntlich machen": `1` pixelates `blur_regions` into the photo before any file is written (every
+             *     variant, OG image and share card comes from that master; the unblurred upload is deleted). `0`: the member switched it off.
+             *     Not sent: nothing is pixelated and the owner's plate check lists the photo. Shown to the owner only, as `plate_blur.state`.
+             */
+            plate_blur?: boolean;
+            /**
+             * @description With `plate_blur=1`: 1–8 rectangles, normalised 0–1 from the top left of the photo as displayed (after EXIF orientation);
+             *     w and h at least 0.02, x + w and y + h at most 1. Optional `angle`: degrees clockwise about the rectangle's centre,
+             *     −45 to 45 (default 0), for a plate shot at an angle; the turned rectangle is pixelated. A JSON string (multipart) or an array.
+             *     Ignored otherwise.
+             */
+            blur_regions?: {
+                x?: number;
+                y?: number;
+                w?: number;
+                h?: number;
+                angle?: number;
+            }[];
+        };
+        /**
+         * StoreForumPostRequest
+         * @description FOR-03 reply (Markdown subset, ≤ 5 000 characters); `parent_id` answers a reply (an answer to an answer joins its thread). The opening
+         *     post's text is edited through PATCH forum/threads/{thread} or here (≤ 10 000).
+         */
+        StoreForumPostRequest: {
+            body: string;
+            parent_id?: string | null;
+        };
+        /**
+         * StoreForumThreadRequest
+         * @description FOR-04: title (≤ 120), category (slug), text (Markdown subset, ≤ 10 000), up to 5 tags, an optional vehicle, mod or product.
+         *     Photos follow with POST forum/threads/{thread}/photos.
+         */
+        StoreForumThreadRequest: {
+            title: string;
+            category: string;
+            body: string;
+            tags?: string[];
+            vehicle_id?: string | null;
+            modification_id?: string | null;
+            product_id?: string | null;
         };
         /** StoreMaintenanceItemRequest */
         StoreMaintenanceItemRequest: {
@@ -9534,6 +13978,20 @@ export interface components {
             good_faith?: boolean;
             message_context?: boolean;
         };
+        /**
+         * StoreSpotRequest
+         * @description POST spots (m5.9b contract §0, §2). The code and, when the device found one, the city id (its Bundesland wins) or a city name with
+         *     the Bundesland. Any other field is refused with 422, coordinates above all: a spot never carries a position.
+         */
+        StoreSpotRequest: {
+            /** @description The sticker's 8-character code as scanned from /c/{code} (case and Crockford read-alikes do not matter). */
+            code: string;
+            /** @description A de_cities id (the GeoNames id of public/geo/de-cities.json), picked on the device. */
+            city_id?: number | null;
+            /** @description Fallback: a city name, matched to de_cities; no match stores no city. */
+            city?: string | null;
+            bundesland?: components["schemas"]["Bundesland"] | null;
+        };
         /** StoreSupportTicketRequest */
         StoreSupportTicketRequest: {
             category: components["schemas"]["SupportCategory"];
@@ -9554,7 +14012,27 @@ export interface components {
             alt?: string | null;
             focal_x?: number | null;
             focal_y?: number | null;
-            category?: components["schemas"]["MediaCategory"] | null;
+            /** @enum {string|null} */
+            category?: "exterior" | "interior" | "engine" | "wheels" | "detail" | "other" | null;
+            /**
+             * @description M5.9a "Kennzeichen unkenntlich machen": `1` pixelates `blur_regions` into the photo before any file is written (every
+             *     variant, OG image and share card comes from that master; the unblurred upload is deleted). `0`: the member switched it off.
+             *     Not sent: nothing is pixelated and the owner's plate check lists the photo. Shown to the owner only, as `plate_blur.state`.
+             */
+            plate_blur?: boolean;
+            /**
+             * @description With `plate_blur=1`: 1–8 rectangles, normalised 0–1 from the top left of the photo as displayed (after EXIF orientation);
+             *     w and h at least 0.02, x + w and y + h at most 1. Optional `angle`: degrees clockwise about the rectangle's centre,
+             *     −45 to 45 (default 0), for a plate shot at an angle; the turned rectangle is pixelated. A JSON string (multipart) or an array.
+             *     Ignored otherwise.
+             */
+            blur_regions?: {
+                x?: number;
+                y?: number;
+                w?: number;
+                h?: number;
+                angle?: number;
+            }[];
         };
         /** SuggestModRequest */
         SuggestModRequest: {
@@ -9562,6 +14040,17 @@ export interface components {
             category_key?: string | null;
             /** @description The pasted text, e.g. an invoice line. */
             text: string;
+        };
+        /**
+         * SuggestSpecsRequest
+         * @description POST ai/specs/suggest (M5.9, m5.9-contract §2.1): a catalogue generation, or a model and year when the model has no generations.
+         */
+        SuggestSpecsRequest: {
+            /** @description The catalogue generation the member chose in the wizard. */
+            generation_id?: number | null;
+            /** @description Only for a model without generations, with the model year. */
+            model_id?: number | null;
+            model_year?: number | null;
         };
         /**
          * SupportCategory
@@ -9776,6 +14265,21 @@ export interface components {
             /** @description BIZ-02 "Nachweise": what you can show us on request (Gewerbeanmeldung, Handelsregisterauszug); never public. */
             document_note?: string | null;
         };
+        /** UpdateCheckinRequest */
+        UpdateCheckinRequest: {
+            /** @description "Auf meinem Profil zeigen" (after the event has ended). */
+            profile_visible: boolean;
+        };
+        /**
+         * UpdateCrewRequest
+         * @description PATCH crews/{slug}: only the keys sent change; `description` and `bundesland` null clear them.
+         */
+        UpdateCrewRequest: {
+            name?: string;
+            description?: string | null;
+            bundesland?: components["schemas"]["Bundesland"] | null;
+            join_mode?: components["schemas"]["CrewJoinMode"];
+        };
         /** UpdateEventRequest */
         UpdateEventRequest: {
             title?: string;
@@ -9841,9 +14345,10 @@ export interface components {
             alt?: string | null;
             focal_x?: number | null;
             focal_y?: number | null;
-            category?: components["schemas"]["MediaCategory"];
+            /** @enum {string} */
+            category?: "exterior" | "interior" | "engine" | "wheels" | "detail" | "other";
             /**
-             * @description [SIG sig.plate_blur] Number plates or faces to pixelate, normalised 0–1 from the photo's top left, 1 to 10 rectangles. The server
+             * @description [SIG sig.plate_blur] Number plates or faces to pixelate, normalised 0–1 from the photo's top left, 1 to 10 rectangles; optional `angle` per rectangle, degrees clockwise about its centre, −45 to 45 (default 0). The server
              *     pixelates them in the queue in every variant and in the original, which is replaced: the photo answers `processing` until
              *     the new files are there, under new URLs. Only a finished photo of a vehicle or a modification.
              */
@@ -9852,7 +14357,14 @@ export interface components {
                 y?: number;
                 w?: number;
                 h?: number;
+                angle?: number;
             }[];
+            /**
+             * @description M5.9a: pixelation can only be added, never taken off: `false` is refused with "Zum Ändern lädst du das Foto neu hoch."
+             *     (re-upload). Sending `true` changes nothing by itself; `blur_regions` does the work.
+             * @enum {unknown}
+             */
+            plate_blur?: "yes" | "on" | "1" | 1 | "true" | true;
         };
         /** UpdateNotificationRequest */
         UpdateNotificationRequest: {
@@ -9906,6 +14418,8 @@ export interface components {
             discoverable?: boolean;
             indexable?: boolean;
             read_receipts?: boolean;
+            /** @description M5.9b SET-07 "Meine Spots zeigen". */
+            show_my_spots?: boolean;
             /** @description M3.7 SET privacy "KI-Vorschläge": the opt-in of the [AI] suggestion features (02 §6), off by default. */
             ai_suggestions?: boolean;
             notification_prefs?: {
@@ -9965,6 +14479,52 @@ export interface components {
                         push?: boolean;
                         web_push?: boolean;
                     };
+                    spot_alert?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    badge_unlocked?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    car_of_the_day?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    car_of_the_day_owner?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    invite_accepted?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    forum_reply?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    forum_mention?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    forum_solved?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    event_nearby?: {
+                        push?: boolean;
+                        email?: boolean;
+                        web_push?: boolean;
+                    };
+                    plan_due?: {
+                        push?: boolean;
+                        web_push?: boolean;
+                    };
+                    weekly_recap?: {
+                        push?: boolean;
+                        email?: boolean;
+                        web_push?: boolean;
+                    };
                 };
                 quiet_hours?: {
                     enabled?: boolean;
@@ -9993,10 +14553,52 @@ export interface components {
             torque_source?: components["schemas"]["PowerSource"] | null;
             drivetrain?: components["schemas"]["Drivetrain"] | null;
             gearbox?: components["schemas"]["Gearbox"] | null;
+            /**
+             * @description M5.9: the "Daten übernehmen?" suggestion the values were taken from (`cache_id` and the variant's `key` of POST
+             *     ai/specs/suggest). The fields still equal to it carry "Herstellerangabe (KI-Vorschlag)" until changed. Ignored while
+             *     ai.vehicle_specs is off; 422 `errors.ai_suggestion` when the suggestion is unknown or expired.
+             */
+            ai_suggestion?: {
+                cache_id?: string;
+                variant?: string;
+            };
         };
         /** UpdateUsernameRequest */
         UpdateUsernameRequest: {
             username: string;
+        };
+        /**
+         * UpdateVehicleRequest
+         * @description PATCH vehicles/{id}: the fields of POST vehicles plus the owner's STREET DEX switches (m5.9b contract §5). A class of its own, so the
+         *     OpenAPI export lists the switches for PATCH only (Scramble shares one schema per request class).
+         */
+        UpdateVehicleRequest: {
+            make_id?: number | null;
+            model_id?: number | null;
+            generation_id?: number | null;
+            make_text?: string | null;
+            model_text?: string | null;
+            model_year?: number | null;
+            nickname?: string | null;
+            description?: string | null;
+            color?: string | null;
+            /** @description Month of the next inspection, as YYYY-MM ([SIGNATURE] sig.hu_au_reminder). */
+            hu_au_due?: string | null;
+            /** @description Where the wizard resumes. Ignored once the vehicle is published. */
+            wizard_step?: number;
+            /** @description A finished photo of this vehicle; null falls back to the first one. */
+            cover_media_id?: string | null;
+            /** @description M5.9b: out of every list, search and the sitemap; still reachable by link and sticker. */
+            ghost_mode?: boolean;
+            /** @description M5.9b: new spots of this car are refused. */
+            spotting_paused?: boolean;
+            /** @description M5.9b: the owner's spot numbers name no city. */
+            hide_spot_cities?: boolean;
+            /**
+             * @description M5.7: the optional milestone goal "Ziel: Saison 2027" (a year from now to ten years ahead; the stored value may be sent
+             *     again unchanged after its year). Null clears it.
+             */
+            build_goal_season?: number | null;
         };
         /**
          * UploadMessagePhotoRequest
@@ -10005,6 +14607,25 @@ export interface components {
         UploadMessagePhotoRequest: {
             /** Format: binary */
             file: string;
+            /**
+             * @description M5.9a "Kennzeichen unkenntlich machen": `1` pixelates `blur_regions` into the photo before any file is written (every
+             *     variant, OG image and share card comes from that master; the unblurred upload is deleted). `0`: the member switched it off.
+             *     Not sent: nothing is pixelated and the owner's plate check lists the photo. Shown to the owner only, as `plate_blur.state`.
+             */
+            plate_blur?: boolean;
+            /**
+             * @description With `plate_blur=1`: 1–8 rectangles, normalised 0–1 from the top left of the photo as displayed (after EXIF orientation);
+             *     w and h at least 0.02, x + w and y + h at most 1. Optional `angle`: degrees clockwise about the rectangle's centre,
+             *     −45 to 45 (default 0), for a plate shot at an angle; the turned rectangle is pixelated. A JSON string (multipart) or an array.
+             *     Ignored otherwise.
+             */
+            blur_regions?: {
+                x?: number;
+                y?: number;
+                w?: number;
+                h?: number;
+                angle?: number;
+            }[];
         };
         /**
          * UploadProfileImageRequest
@@ -10013,6 +14634,25 @@ export interface components {
         UploadProfileImageRequest: {
             /** Format: binary */
             file: string;
+            /**
+             * @description M5.9a "Kennzeichen unkenntlich machen": `1` pixelates `blur_regions` into the photo before any file is written (every
+             *     variant, OG image and share card comes from that master; the unblurred upload is deleted). `0`: the member switched it off.
+             *     Not sent: nothing is pixelated and the owner's plate check lists the photo. Shown to the owner only, as `plate_blur.state`.
+             */
+            plate_blur?: boolean;
+            /**
+             * @description With `plate_blur=1`: 1–8 rectangles, normalised 0–1 from the top left of the photo as displayed (after EXIF orientation);
+             *     w and h at least 0.02, x + w and y + h at most 1. Optional `angle`: degrees clockwise about the rectangle's centre,
+             *     −45 to 45 (default 0), for a plate shot at an angle; the turned rectangle is pixelated. A JSON string (multipart) or an array.
+             *     Ignored otherwise.
+             */
+            blur_regions?: {
+                x?: number;
+                y?: number;
+                w?: number;
+                h?: number;
+                angle?: number;
+            }[];
         };
         /** UsernameAvailabilityResource */
         UsernameAvailabilityResource: {
@@ -10042,6 +14682,15 @@ export interface components {
          * @enum {string}
          */
         UsernameUnavailableReason: "length" | "characters" | "start" | "trailing_dot" | "consecutive_dots" | "reserved" | "taken";
+        /**
+         * ValidateStickerDesignRequest
+         * @description POST vehicles/{vehicle}/sticker-design/validate: the Scan-Test of the current version.
+         */
+        ValidateStickerDesignRequest: {
+            /** @description Must be the current version. */
+            version: number;
+            client_scan_test?: components["schemas"]["StickerClientScanTest"] | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** @description Translated, safe to show. */
@@ -10055,7 +14704,7 @@ export interface components {
         };
         /**
          * VehicleAttributesRequest
-         * @description POST vehicles and PATCH vehicles/{id}. Only the keys sent change. Catalogue id or free text per level ("Nicht gefunden?"); that
+         * @description POST vehicles and (through UpdateVehicleRequest) PATCH vehicles/{id}. Only the keys sent change. Catalogue id or free text per level ("Nicht gefunden?"); that
          *     the three catalogue ids belong together is checked by App\Services\Garage\VehicleAttributes, which knows the stored ones.
          */
         VehicleAttributesRequest: {
@@ -10113,6 +14762,14 @@ export interface components {
             updates_count: number | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
+            /**
+             * @description M5.9c: the Build Score (0–1000) and its stage (1–5), for GAR-01 and the cards; null until it was first computed. Ranks and
+             *     parts are on GET vehicles/{id}/build-score.
+             */
+            build_score: {
+                total: number;
+                stage: number;
+            } | null;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -10211,6 +14868,14 @@ export interface components {
             updates_count: number | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
+            /**
+             * @description M5.9c: the Build Score (0–1000) and its stage (1–5), for GAR-01 and the cards; null until it was first computed. Ranks and
+             *     parts are on GET vehicles/{id}/build-score.
+             */
+            build_score: {
+                total: number;
+                stage: number;
+            } | null;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -10244,6 +14909,21 @@ export interface components {
             cover_media_id: string | null;
             /** @description Owner only: YYYY-MM, null for anybody else and while sig.hu_au_reminder is off. */
             hu_au_due: string | null;
+            /**
+             * @description M5.9b STREET DEX (GAR-12 "Spots"): the owner's switches, null for anybody else. ghost_mode: in no list, search or sitemap,
+             *     still reachable by link and sticker; spotting_paused: new spots are refused; hide_spot_cities: the spot numbers name no city.
+             */
+            ghost_mode: boolean | null;
+            spotting_paused: boolean | null;
+            hide_spot_cities: boolean | null;
+            /** @description M5.7: the optional milestone goal ("Ziel: Saison 2027"); the edit form starts from `season`. Null when not set. */
+            build_goal: {
+                season: number;
+                label: string;
+                passed: boolean;
+            } | null;
+            /** @description M5.9b: the car's STREET DEX number ("Nr. 0087"), from its first publish; null for a draft. */
+            dex_number: number | null;
             photos: components["schemas"]["MediaResource"][];
             /**
              * @description [SIG sig.share_cards] The VEH-07 share cards, PNG, 1080 × 1920 (`story`) and 1080 × 1080 (`square`), immutable: the URL changes
@@ -10275,6 +14955,7 @@ export interface components {
                 torque_source: string | null;
                 drivetrain: string | null;
                 gearbox: string | null;
+                ai_fields: string[];
             };
         };
         /** VehicleSocialResource */
@@ -10283,13 +14964,14 @@ export interface components {
              * @description The viewer's reaction [build_reactions]: strong, clean, low or loud. Null for guests, the owner, none yet, or the flag off.
              * @enum {string|null}
              */
-            my_reaction: "strong" | "clean" | "low" | "loud" | null;
+            my_reaction: "like" | "strong" | "clean" | "low" | "loud" | null;
             /** @description The viewer follows this build [vehicle_follow]. Null for guests, the owner and while the flag is off. */
             is_following: boolean | null;
             /** @description [build_comments] whether the owner allows comments on this vehicle's updates. */
             comments_enabled: boolean;
             /** @description Owner only: reactions on the build by kind and in total [build_reactions]. */
             reaction_summary?: {
+                like: number;
                 strong: number;
                 clean: number;
                 low: number;
@@ -10337,6 +15019,14 @@ export interface components {
             updates_count: number | null;
             /** @description Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             is_sample: boolean;
+            /**
+             * @description M5.9c: the Build Score (0–1000) and its stage (1–5), for GAR-01 and the cards; null until it was first computed. Ranks and
+             *     parts are on GET vehicles/{id}/build-score.
+             */
+            build_score: {
+                total: number;
+                stage: number;
+            } | null;
             published_at: string | null;
             updated_at: string | null;
             /** @description Where a draft resumes: "Entwurf · Schritt 2 von 4". Null for anything but the owner's draft. */
@@ -10370,6 +15060,21 @@ export interface components {
             cover_media_id: string | null;
             /** @description Owner only: YYYY-MM, null for anybody else and while sig.hu_au_reminder is off. */
             hu_au_due: string | null;
+            /**
+             * @description M5.9b STREET DEX (GAR-12 "Spots"): the owner's switches, null for anybody else. ghost_mode: in no list, search or sitemap,
+             *     still reachable by link and sticker; spotting_paused: new spots are refused; hide_spot_cities: the spot numbers name no city.
+             */
+            ghost_mode: boolean | null;
+            spotting_paused: boolean | null;
+            hide_spot_cities: boolean | null;
+            /** @description M5.7: the optional milestone goal ("Ziel: Saison 2027"); the edit form starts from `season`. Null when not set. */
+            build_goal: {
+                season: number;
+                label: string;
+                passed: boolean;
+            } | null;
+            /** @description M5.9b: the car's STREET DEX number ("Nr. 0087"), from its first publish; null for a draft. */
+            dex_number: number | null;
             photos: components["schemas"]["MediaResource"][];
             /**
              * @description [SIG sig.share_cards] The VEH-07 share cards, PNG, 1080 × 1920 (`story`) and 1080 × 1080 (`square`), immutable: the URL changes
@@ -10401,6 +15106,7 @@ export interface components {
                 torque_source: string | null;
                 drivetrain: string | null;
                 gearbox: string | null;
+                ai_fields: string[];
             };
             /** @description Whether Verlauf now tells about this save. Decides between "Gespeichert" and "Im Verlauf erscheint ein Eintrag". */
             history_recorded: boolean;
@@ -10436,6 +15142,8 @@ export interface components {
             device_id?: string | null;
             /** @description M4.7 (09 §8.4): the system version, for SET-06 ("Android 16"). */
             os_version?: string | null;
+            /** @description The code of /join/{code} (8 characters Crockford; I/L read as 1, O as 0). Optional; an invalid code is ignored, never refused. */
+            invite_code?: string | null;
         };
         /** ViewAsNoMessagesError */
         ViewAsNoMessagesError: {
@@ -10459,6 +15167,18 @@ export interface components {
             /** @enum {string} */
             code: "view_as_read_only";
         };
+        /**
+         * ViewSource
+         * @description M5.7 (10 §6.1): where a counted view came from: App, Web, Sticker-Scan, geteilter Link. The first counted view of a viewer, subject and day decides; INS-01 shows the 30-day split ("Top-Quellen"). Never a referrer, a site or a person.
+         * @enum {string}
+         */
+        ViewSource: "app" | "web" | "sticker_scan" | "shared_link";
+        /**
+         * ViewSubject
+         * @description M5.7 (10 §6.1, m5.7-contract §1): what a counted view is about, a public member profile or a public vehicle page.
+         * @enum {string}
+         */
+        ViewSubject: "profile" | "vehicle";
         /**
          * Visibility
          * @enum {string}
@@ -10513,6 +15233,177 @@ export interface components {
          * @enum {string}
          */
         WhoCanMessage: "everyone" | "following" | "nobody";
+        /** WrappedResource */
+        WrappedResource: {
+            v: number;
+            season_key: string;
+            window: {
+                from: string;
+                to: string;
+            };
+            member: {
+                display_name: string | null;
+                username: string | null;
+                avatar: {
+                    url: string;
+                    thumbhash: string | null;
+                } | null;
+            };
+            /**
+             * @description The story cards in their stored order (`cards/{n}.png` = position n), told apart by `kind`; `image` on intro, score and
+             *     build_spirit is a photo of the member's own car (ADR-516 a), null without a usable one.
+             */
+            cards: ({
+                /** @constant */
+                kind: "intro";
+                title: string;
+                subtitle: string;
+                image: {
+                    url: string;
+                    variants: {
+                        width: number;
+                        url: string;
+                    }[];
+                    blurhash: string | null;
+                    thumbhash: string | null;
+                    focal_x: number | null;
+                    focal_y: number | null;
+                } | null;
+            } | {
+                /** @constant */
+                kind: "spots";
+                count: number;
+                unique_cars: number;
+                cities: string[];
+                rarest: {
+                    dex_number: number | null;
+                    rarity: string;
+                    vehicle_name: string;
+                    make: string | null;
+                    generation: string | null;
+                } | null;
+            } | {
+                /** @constant */
+                kind: "scans";
+                sticker_scans: number;
+                profile_or_vehicle_views: number | null;
+                top_city: string | null;
+            } | {
+                /** @constant */
+                kind: "score";
+                from: number;
+                to: number;
+                stage_from: number;
+                stage_to: number;
+                vehicle_name: string;
+                image: {
+                    url: string;
+                    variants: {
+                        width: number;
+                        url: string;
+                    }[];
+                    blurhash: string | null;
+                    thumbhash: string | null;
+                    focal_x: number | null;
+                    focal_y: number | null;
+                } | null;
+            } | {
+                /** @constant */
+                kind: "top_mod";
+                name: string;
+                brand: string | null;
+                before_media: {
+                    url: string;
+                    variants: {
+                        width: number;
+                        url: string;
+                    }[];
+                    blurhash: string | null;
+                    thumbhash: string | null;
+                    focal_x: number | null;
+                    focal_y: number | null;
+                } | null;
+                after_media: {
+                    url: string;
+                    variants: {
+                        width: number;
+                        url: string;
+                    }[];
+                    blurhash: string | null;
+                    thumbhash: string | null;
+                    focal_x: number | null;
+                    focal_y: number | null;
+                } | null;
+                vehicle_name: string;
+            } | {
+                /** @constant */
+                kind: "treffen";
+                attended: number;
+                names: string[];
+            } | {
+                /** @constant */
+                kind: "build_spirit";
+                key: string;
+                title: string;
+                explanation: string;
+                image: {
+                    url: string;
+                    variants: {
+                        width: number;
+                        url: string;
+                    }[];
+                    blurhash: string | null;
+                    thumbhash: string | null;
+                    focal_x: number | null;
+                    focal_y: number | null;
+                } | null;
+            } | {
+                /** @constant */
+                kind: "percentile";
+                bundesland: string;
+                percentile: string;
+                /** @constant */
+                metric: "build_score";
+            } | {
+                /** @constant */
+                kind: "share";
+                vehicle_name: string;
+                dex_number: number | null;
+                score: number | null;
+                stage: number | null;
+                qr_url: string | null;
+                qr_svg: string | null;
+                image: {
+                    url: string;
+                    variants: {
+                        width: number;
+                        url: string;
+                    }[];
+                    blurhash: string | null;
+                    thumbhash: string | null;
+                    focal_x: number | null;
+                    focal_y: number | null;
+                } | null;
+            })[];
+            /** @description Only for the staging demo of a sample member: every card shows "Beispiel". */
+            is_sample?: boolean;
+        };
+        /** WrappedSeasonResource */
+        WrappedSeasonResource: {
+            /** @description `2027-saison` (1 Mar–31 Oct) or `2027-jahr` (the calendar year). */
+            season_key: string;
+            /** @description Whether it opens now; false until its release date (remote config `wrapped.releases`). */
+            released: boolean;
+            generated_at: string;
+            /** @description The first time the member opened it; null before. */
+            viewed_at: string | null;
+        };
+        /** WrappedSharedResource */
+        WrappedSharedResource: {
+            season_key: string;
+            /** @description How often the member opened the share sheet for this Wrapped (a dismissed sheet counts too; owner-only, CR-P5G-18). */
+            shared_count: number;
+        };
     };
     responses: {
         /** @description Validation error */
@@ -11258,6 +16149,172 @@ export interface operations {
             };
         };
     };
+    "v1.ai.specs.suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SuggestSpecsRequest"];
+            };
+        };
+        responses: {
+            /** @description `SpecSuggestionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SpecSuggestionResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.ai.products.match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatchProductRequest"];
+            };
+        };
+        responses: {
+            /** @description `ProductMatchResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProductMatchResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.app-config": {
         parameters: {
             query?: never;
@@ -11555,6 +16612,190 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.badges.index": {
+        parameters: {
+            query?: {
+                /**
+                 * @description 1: only badges earned since the unlock toast last showed (POST me/badges/seen), newest first. `0`/`1` as the contract says
+                 *     (`?unseen=1`); a typed client would send a boolean as "true", which the boolean rule refuses.
+                 */
+                unseen?: "0" | "1" | null;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `BadgeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BadgeResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "v1.me.badges.seen": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkBadgesSeenRequest"];
+            };
+        };
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.users.badges": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `BadgeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BadgeResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -12120,6 +17361,98 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.build-score.formula": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `BuildScoreFormulaResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BuildScoreFormulaResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.build-score": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /**
+             * @description `NoBuildScoreResource`
+             *
+             *     `BuildScoreResource`
+             */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoBuildScoreResource"] | {
+                        data: components["schemas"]["BuildScoreResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -13498,6 +18831,249 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.car-of-the-day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CarOfTheDayStoryRequest"];
+            };
+        };
+        responses: {
+            /** @description `CarOfTheDayStoryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CarOfTheDayStoryResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["EmailNotVerifiedError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.car-of-the-day.vote.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CarOfTheDayVoteStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CarOfTheDayVoteStateResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.car-of-the-day.vote.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CastCarOfTheDayVoteRequest"];
+            };
+        };
+        responses: {
+            /** @description `CarOfTheDayVoteStateResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CarOfTheDayVoteStateResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
             /** @description payload_too_large: a JSON body over 512 KB. */
@@ -15182,24 +20758,100 @@ export interface operations {
             };
         };
     };
-    "v1.comments.destroy": {
+    "v1.vehicles.comments.index": {
         parameters: {
-            query?: never;
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
             header?: never;
             path: {
-                /** @description The comment ID */
-                comment: string;
+                /** @description The vehicle ID */
+                vehicle: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description No content */
-            204: {
+            /** @description Paginated set of `CommentResource` */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CommentResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.comments.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description `CommentResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CommentResource"];
+                    };
+                };
             };
             /** @description unauthenticated. */
             401: {
@@ -15216,7 +20868,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
                 };
             };
             /** @description feature_disabled: the feature flag of this route is off. */
@@ -15226,6 +20878,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
             /** @description payload_too_large: a JSON body over 512 KB. */
@@ -15246,6 +20907,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionExpiredError"];
                 };
             };
+            422: components["responses"]["ValidationException"];
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -15332,6 +20994,83 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.comments.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The comment ID */
+                comment: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -16356,6 +22095,2262 @@ export interface operations {
             };
         };
     };
+    "v1.crews.index": {
+        parameters: {
+            query?: {
+                q?: string | null;
+                bundesland?: components["schemas"]["Bundesland"] | null;
+                sort?: "name" | "newest";
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page of the same sort. Any other cursor is refused with 422. */
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `CrewCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewCardResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreCrewRequest"];
+            };
+        };
+        responses: {
+            /** @description `CrewResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CrewResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.destroy": {
+        parameters: {
+            query: {
+                confirm_name: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateCrewRequest"];
+            };
+        };
+        responses: {
+            /** @description `CrewResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.members.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `CrewMemberResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewMemberResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.logo.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["CrewMediaRequest"];
+            };
+        };
+        responses: {
+            /** @description `MediaResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.logo.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.cover.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["CrewMediaRequest"];
+            };
+        };
+        responses: {
+            /** @description `MediaResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.cover.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.crew-invites.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `CrewInviteResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewInviteResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.crew-invites.accept": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CrewResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.crew-invites.decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.invites.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `CrewInviteResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewInviteResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.invites.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrewUsernameRequest"];
+            };
+        };
+        responses: {
+            /** @description `CrewInviteResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewInviteResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.invites.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.members.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.members.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrewRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description `CrewMemberResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewMemberResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.founder.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrewUsernameRequest"];
+            };
+        };
+        responses: {
+            /** @description `CrewResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.public.users.crews": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `MemberCrewResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MemberCrewResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.crews.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `CrewResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.crew-requests.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `CrewRequestResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewRequestResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.join": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CrewResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.join-request.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.requests.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `CrewRequestResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewRequestResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.requests.approve": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                slug: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CrewMemberResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrewMemberResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.crews.requests.decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.me.exports.store": {
         parameters: {
             query?: never;
@@ -16803,6 +24798,237 @@ export interface operations {
             };
         };
     };
+    "v1.me.dex.index": {
+        parameters: {
+            query?: {
+                filter?: string | null;
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `SpotCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SpotCardResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                            found: number;
+                            total: number;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "v1.me.dex.sets": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `DexSetResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DexSetResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.dex-card": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `SpotCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SpotCardResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "v1.vehicles.spot-stats": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `SpotStatsResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SpotStatsResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
     "v1.discover": {
         parameters: {
             query?: never;
@@ -17036,8 +25262,11 @@ export interface operations {
     "v1.events.index": {
         parameters: {
             query?: {
-                /** @description today · weekend (Sat–Sun of this week) · month (until its end) · upcoming (default). Europe/Berlin. */
-                when?: "today" | "weekend" | "month" | "upcoming";
+                /**
+                 * @description today · week (the next seven days, today 00:00 to today + 6 days 23:59:59) · weekend (Sat–Sun of this week) · month (until its
+                 *     end) · upcoming (default). Europe/Berlin.
+                 */
+                when?: "today" | "week" | "weekend" | "month" | "upcoming";
                 type?: components["schemas"]["EventType"];
                 /** @description `home`: around the member's SET-11 region (ignored without one, and when lat/lng are given). */
                 near?: "home";
@@ -17217,8 +25446,11 @@ export interface operations {
     "v1.events.pins": {
         parameters: {
             query?: {
-                /** @description today · weekend (Sat–Sun of this week) · month (until its end) · upcoming (default). Europe/Berlin. */
-                when?: "today" | "weekend" | "month" | "upcoming";
+                /**
+                 * @description today · week (the next seven days, today 00:00 to today + 6 days 23:59:59) · weekend (Sat–Sun of this week) · month (until its
+                 *     end) · upcoming (default). Europe/Berlin.
+                 */
+                when?: "today" | "week" | "weekend" | "month" | "upcoming";
                 type?: components["schemas"]["EventType"];
                 /** @description `home`: around the member's SET-11 region (ignored without one, and when lat/lng are given). */
                 near?: "home";
@@ -17885,6 +26117,741 @@ export interface operations {
             };
         };
     };
+    "v1.events.checkin.code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `CheckinCodeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CheckinCodeResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.checkin.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreCheckinRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.checkin.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.checkin.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCheckinRequest"];
+            };
+        };
+        responses: {
+            /** @description `CheckinResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CheckinResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.gallery.index": {
+        parameters: {
+            query?: {
+                /** @description approved (default, everybody) · pending (the organiser's queue) · mine (the reader's own uploads, every status). */
+                status?: "approved" | "pending" | "mine";
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page of the same list. */
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `EventPhotoResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventPhotoResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.gallery.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["StoreEventPhotoRequest"];
+            };
+        };
+        responses: {
+            /** @description `EventPhotoResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventPhotoResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.gallery.approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                photo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `EventPhotoResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventPhotoResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.gallery.reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                photo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RejectEventPhotoRequest"];
+            };
+        };
+        responses: {
+            /** @description `EventPhotoResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventPhotoResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.events.gallery.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                photo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.events.updates.index": {
         parameters: {
             query?: never;
@@ -18339,6 +27306,2072 @@ export interface operations {
             };
         };
     };
+    "v1.forum.categories.index": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `ForumCategoryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumCategoryResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.categories.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ForumCategoryResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumCategoryResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.votes.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The post ID */
+                post: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ForumVoteResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumVoteResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.votes.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The post ID */
+                post: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ForumVoteResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumVoteResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.solution.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetForumSolutionRequest"];
+            };
+        };
+        responses: {
+            /** @description `ForumThreadResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.solution.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ForumThreadResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.subscription.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ForumSubscriptionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumSubscriptionResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.subscription.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ForumSubscriptionResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumSubscriptionResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.forum-threads": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ForumThreadRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.mods.forum-threads": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                modification: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ForumThreadRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.products.forum-threads": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                product: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ForumThreadRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.photos.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["StoreForumPhotoRequest"];
+            };
+        };
+        responses: {
+            /** @description `MediaResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.photos.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The thread ID */
+                thread: string;
+                media: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.posts.index": {
+        parameters: {
+            query?: {
+                sort?: components["schemas"]["ForumPostSort"] | null;
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ForumPostResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumPostResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.posts.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreForumPostRequest"];
+            };
+        };
+        responses: {
+            /** @description `ForumPostResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumPostResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.posts.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The post ID */
+                post: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.posts.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The post ID */
+                post: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreForumPostRequest"];
+            };
+        };
+        responses: {
+            /** @description `ForumPostResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumPostResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.threads.index": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+                category?: string | null;
+                tag?: string | null;
+                sort?: components["schemas"]["ForumThreadSort"] | null;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ForumThreadRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.threads.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreForumThreadRequest"];
+            };
+        };
+        responses: {
+            /** @description `ForumThreadResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.active": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `ForumThreadRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadRowResource"][];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.threads.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ForumThreadResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.threads.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.threads.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The thread ID */
+                thread: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreForumThreadRequest"];
+            };
+        };
+        responses: {
+            /** @description `ForumThreadResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.search.threads": {
+        parameters: {
+            query: {
+                per_page?: number | null;
+                cursor?: string | null;
+                category?: string | null;
+                tag?: string | null;
+                sort?: components["schemas"]["ForumThreadSort"] | null;
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ForumThreadRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.forum.similar": {
+        parameters: {
+            query: {
+                title: string;
+                category?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `ForumThreadRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadRowResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.forum.threads": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ForumThreadRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.forum.subscriptions": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `ForumThreadRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ForumThreadRowResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.geocode": {
         parameters: {
             query: {
@@ -18771,6 +29804,321 @@ export interface operations {
             };
         };
     };
+    "v1.views.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordViewRequest"];
+            };
+        };
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `InsightsResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InsightsResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `InsightsResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InsightsResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.intro.seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.invites.index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `InviteResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InviteResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["EmailNotVerifiedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+        };
+    };
+    "v1.invites.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `InviteLookupResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InviteLookupResource"];
+                    };
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.legal.index": {
         parameters: {
             query?: never;
@@ -18861,6 +30209,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.level": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MyLevelResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyLevelResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
                 };
             };
         };
@@ -20142,6 +31540,81 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.public.users.checkins": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. */
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `PublicCheckinCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PublicCheckinCardResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
                 };
             };
             422: components["responses"]["ValidationException"];
@@ -22400,6 +33873,87 @@ export interface operations {
             };
         };
     };
+    "v1.me.checkins": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `EventCheckinCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EventCheckinCardResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.me.events": {
         parameters: {
             query?: {
@@ -23640,6 +35194,398 @@ export interface operations {
             };
         };
     };
+    "v1.mods.install": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The modification ID */
+                modification: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["InstallModificationRequest"];
+            };
+        };
+        responses: {
+            /** @description `SavedModificationResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SavedModificationResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.plans.order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderModificationsRequest"];
+            };
+        };
+        responses: {
+            /** @description Array of `ModificationRowResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ModificationRowResource"][];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.plate-check.index": {
+        parameters: {
+            query?: {
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `PlateCheckItemResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlateCheckItemResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                            count: number;
+                            dismissed: boolean;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "v1.me.plate-check.dismiss": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.plate-check.decide": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                media: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlateCheckDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description No content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.products.index": {
         parameters: {
             query?: {
@@ -23844,6 +35790,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `MeResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MeResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
                 };
             };
         };
@@ -25609,6 +37595,49 @@ export interface operations {
             };
         };
     };
+    "v1.rarity-rules": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `RarityRulesResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RarityRulesResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
     "v1.reactions.vehicles.index": {
         parameters: {
             query?: {
@@ -25647,6 +37676,7 @@ export interface operations {
                             /** @description The "cursor" that points to the previous set of items. */
                             prev_cursor: string | null;
                             summary: {
+                                like: number;
                                 strong: number;
                                 clean: number;
                                 low: number;
@@ -25901,6 +37931,7 @@ export interface operations {
                             /** @description The "cursor" that points to the previous set of items. */
                             prev_cursor: string | null;
                             summary: {
+                                like: number;
                                 strong: number;
                                 clean: number;
                                 low: number;
@@ -27960,6 +39991,46 @@ export interface operations {
             query?: {
                 /** @description `story` 1080 × 1920 (default) or `square` 1080 × 1080. */
                 format?: "story" | "square";
+                /**
+                 * @description R5-2e: the layout. `band` (default) = the card as before (square: photo on top, band below; story: photo edge to edge, data
+                 *     at the bottom); `poster` = the photo edge to edge on both formats under a dark scrim, the name large at the top of the safe
+                 *     area, data and QR at the bottom, always dark; `frame` = the photo inset on a solid ground with a caption block, takes `theme`.
+                 */
+                template?: components["schemas"]["ShareCardTemplate"];
+                /**
+                 * @description CF-6: the media id of one of the build's photos that everybody may see (ready, not rejected); default the cover. Any other
+                 *     id answers 422 on `photo`, without saying whether it exists.
+                 */
+                photo?: string;
+                /**
+                 * @description R5-2e crop: 1.00 (default) to 3.00, at most two decimals. 1 = the largest window of the template's photo box aspect that
+                 *     fits the photo (photo boxes: band 1080 × 600 square / 1080 × 1920 story, poster 1080 × 1080 / 1080 × 1920, frame
+                 *     984 × 600 / 984 × 1080).
+                 */
+                zoom?: number;
+                /**
+                 * @description R5-2e crop: the horizontal centre of the window in the photo, 0 to 1; default the photo's focal point, else 0.5. The server
+                 *     clamps the window inside the photo (never letterboxes).
+                 */
+                x?: number;
+                /** @description R5-2e crop: the vertical centre of the window in the photo, 0 to 1; default the focal point, else 0.5. Clamped as `x`. */
+                y?: number;
+                /**
+                 * @description CF-6 / R5-2e: what the card shows besides the photo, the make and the model, a subset of `score`, `dex`, `specs`, `mods`,
+                 *     `username`, `qr` (default: `score,dex,specs,username,qr`, what the build has). Bracketed (`show[]=score&show[]=qr`) or
+                 *     comma-separated (`show=score,qr`); an empty `show=` shows none. `mods` (off by default) = "12 Mods" and up to two of the
+                 *     build's installed mods that fit on the line. Without `qr` the card carries no code. `username` still needs the owner to
+                 *     show themselves (ADR-148 a).
+                 */
+                "show[]"?: components["schemas"]["ShareCardElement"][];
+                /** @description CF-6 / R5-2e: `dark` (default) or `light`, for the square `band` and both `frame` formats; ignored elsewhere. */
+                theme?: components["schemas"]["ShareCardTheme"];
+                /**
+                 * @description R5-2e: the member's own line, at most 60 characters after trim, one line. Letters, digits, spaces and common punctuation
+                 *     (Latin, Latin-1, Latin Extended-A, `–—„“”‚‘’…·•`); anything else (emoji, control characters, line breaks) answers 422 on
+                 *     `text`. A term of the keyword block list answers 422 `content_blocked` on `text`.
+                 */
+                text?: string | null;
             };
             header?: never;
             path: {
@@ -27989,6 +40060,188 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.shop.index": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ShopOverviewResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ShopOverviewResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.shop.products.index": {
+        parameters: {
+            query?: {
+                /** @description One of the chips; leave it out for "Alle". */
+                category?: components["schemas"]["ShopCategory"] | null;
+                per_page?: number;
+                /** @description The `next_cursor` of the previous page. Any other cursor (of another list, or forged) is refused with 422. */
+                cursor?: string;
+            };
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `ShopProductCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ShopProductCardResource"][];
+                        links: {
+                            first: null;
+                            last: null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            path: string;
+                            per_page: number;
+                            next_cursor: string | null;
+                            prev_cursor: string | null;
+                            /**
+                             * @description R4-3.2: the requested category's status ("available" for "Alle"); a coming_soon category answers an empty page.
+                             * @enum {string}
+                             */
+                            category_status: "available" | "coming_soon";
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.shop.products.show": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                product: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `ShopProductResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ShopProductResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -28325,6 +40578,1187 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.spots.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreSpotRequest"];
+            };
+        };
+        responses: {
+            /** @description `SpotResultResource` */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SpotResultResource"];
+                        meta: {
+                            new_in_dex: boolean;
+                            duplicate: boolean;
+                            first_spotter: boolean;
+                            /** @description False for an account younger than 24 h and for a real member's scan of a sample car: the scan worked, nothing counts. */
+                            counted: boolean;
+                            /**
+                             * @description With `counted` false: "account_too_new", or "sample_car" (a "Beispiel" car never counts for a real member).
+                             * @enum {string|null}
+                             */
+                            reason: "account_too_new" | "sample_car" | null;
+                            set_progress: {
+                                key: string;
+                                name: string;
+                                progress: number;
+                                target: number;
+                                completed: boolean;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["EmailNotVerifiedError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.spots.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The spot ID */
+                spot: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `SpotResultResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SpotResultResource"];
+                        meta: {
+                            new_in_dex: boolean;
+                            duplicate: boolean;
+                            first_spotter: boolean;
+                            /** @description False for an account younger than 24 h and for a real member's scan of a sample car: the scan worked, nothing counts. */
+                            counted: boolean;
+                            /**
+                             * @description With `counted` false: "account_too_new", or "sample_car" (a "Beispiel" car never counts for a real member).
+                             * @enum {string|null}
+                             */
+                            reason: "account_too_new" | "sample_car" | null;
+                            set_progress: {
+                                key: string;
+                                name: string;
+                                progress: number;
+                                target: number;
+                                completed: boolean;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "v1.spot-map": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `SpotMapResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SpotMapResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.stickers.templates": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `StickerTemplatesResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerTemplatesResource"];
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.stickers.index": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `StickerCardResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerCardResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "v1.vehicles.sticker.stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `StickerStatsResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerStatsResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "v1.vehicles.sticker-design.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `StickerDesignResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerDesignResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+        };
+    };
+    "v1.vehicles.sticker-design.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveStickerDesignRequest"];
+            };
+        };
+        responses: {
+            /** @description `StickerDesignResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerDesignResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.sticker-design.preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewStickerRequest"];
+            };
+        };
+        responses: {
+            /** @description `StickerPreviewResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerPreviewResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.sticker-design.validate": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateStickerDesignRequest"];
+            };
+        };
+        responses: {
+            /** @description `StickerDesignResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerDesignResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.vehicles.sticker-design.versions": {
+        parameters: {
+            query?: {
+                per_page?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated set of `StickerDesignResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerDesignResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            /** @description Base path for paginator generated URLs. */
+                            path: string | null;
+                            /** @description Number of items shown per page. */
+                            per_page: number;
+                            /** @description The "cursor" that points to the next set of items. */
+                            next_cursor: string | null;
+                            /** @description The "cursor" that points to the previous set of items. */
+                            prev_cursor: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "v1.vehicles.sticker-design.restore": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The vehicle ID */
+                vehicle: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreStickerDesignRequest"];
+            };
+        };
+        responses: {
+            /** @description `StickerDesignResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerDesignResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.sticker-designs.preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The design ID */
+                design: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: "private, no-store";
+                    "X-Content-Type-Options"?: "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": string;
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.sticker-designs.share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The design ID */
+                design: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: "private, no-store";
+                    "X-Content-Type-Options"?: "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.sticker-designs.print-svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The design ID */
+                design: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: "private, no-store";
+                    "X-Content-Type-Options"?: "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": string;
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.sticker-designs.print-pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The design ID */
+                design: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: "private, no-store";
+                    "X-Content-Type-Options"?: "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.sticker-designs.print-png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The design ID */
+                design: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: "private, no-store";
+                    "X-Content-Type-Options"?: "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.sticker-designs.order-link": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                /** @description The design ID */
+                design: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `StickerOrderLinkResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StickerOrderLinkResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            404: components["responses"]["ModelNotFoundException"];
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {
@@ -29326,7 +42760,7 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["VehicleAttributesRequest"];
+                "application/json": components["schemas"]["UpdateVehicleRequest"];
             };
         };
         responses: {
@@ -29356,7 +42790,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
                 };
             };
             404: components["responses"]["ModelNotFoundException"];
@@ -30080,6 +43514,289 @@ export interface operations {
                     "application/json": components["schemas"]["SessionExpiredError"];
                 };
             };
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.wrapped.index": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description ETag of the copy the client holds. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of `WrappedSeasonResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WrappedSeasonResource"][];
+                        meta: {
+                            countdown: {
+                                season_key: string;
+                                release_at: string;
+                            } | null;
+                        };
+                    };
+                };
+            };
+            /** @description Not modified; the copy with this ETag is current. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+        };
+    };
+    "v1.me.wrapped.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                season_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `WrappedResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WrappedResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+        };
+    };
+    "v1.me.wrapped.shared": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Repeating the key replays the first response for 24 hours. */
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                season_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description `WrappedSharedResource` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WrappedSharedResource"];
+                    };
+                };
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["AccountRestrictedError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            /** @description The key is in use by a running request: `conflict` with Retry-After. It was used with another body: `idempotency_key_reused`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description payload_too_large: a JSON body over 512 KB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session_expired: a browser session without a valid CSRF token, or a sign-in without device_name and without a session. */
+            419: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionExpiredError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
+            /** @description Rate limited, or a login delay is running. */
+            429: {
+                headers: {
+                    /** @description Seconds until the next attempt. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimitedError"];
+                };
+            };
+        };
+    };
+    "v1.me.wrapped.card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                season_key: string;
+                n: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: "private, no-cache";
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string | null;
+                };
+            };
+            304: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Cache-Control"?: "private, no-cache";
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description unauthenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthenticatedError"];
+                };
+            };
+            /** @description Forbidden, or one of the states in the body. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordChangeRequiredError"] | components["schemas"]["ForbiddenError"];
+                };
+            };
+            /** @description feature_disabled: the feature flag of this route is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureDisabledError"];
+                };
+            };
+            422: components["responses"]["ValidationException"];
             /** @description Rate limited, or a login delay is running. */
             429: {
                 headers: {

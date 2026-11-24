@@ -6,7 +6,7 @@
 // The analyst sees the queue read-only and a direct POST answers 403. parts_catalogue and businesses are switched on for the run and off
 // after (support/backend.php m414FlagsFixture), as F13 does.
 import type { Page } from '@playwright/test';
-import { admin, confirmPasswordDirectly, DESKTOP, realClock, staffContext, toast, xsrfOf } from '../support/admin-flow';
+import { admin, confirmPasswordDirectly, DESKTOP, holdFourEyes, realClock, staffContext, toast, xsrfOf } from '../support/admin-flow';
 import { disableM414Flags, enableM414Flags } from '../support/backend.mjs';
 import { expect, test } from '../support/fixtures';
 import { browserOf, id, members, named, type Member } from '../support/flow';
@@ -47,6 +47,16 @@ async function openQueue(page: Page, prefix: string): Promise<void> {
 }
 
 test.describe('A5 Betriebs-Anträge', () => {
+  // ADR-540: four-eyes is off by default; this spec proves the engine with it switched on (support/admin-flow holdFourEyes).
+  let releaseFourEyes: (() => Promise<void>) | null = null;
+  test.beforeEach(async () => {
+    releaseFourEyes = await holdFourEyes(true);
+  });
+  test.afterEach(async () => {
+    await releaseFourEyes?.();
+    releaseFourEyes = null;
+  });
+
   test.skip(({ browserName }) => browserName !== 'chromium', 'One staff session per role; the admin is a desktop Chromium tool (ADR-212).');
   test.beforeAll(async () => {
     await enableM414Flags();

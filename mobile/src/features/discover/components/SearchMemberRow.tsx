@@ -1,6 +1,6 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { View, type LayoutChangeEvent } from 'react-native';
 
 import type { SearchMember } from '@/api/queries/search';
 import { useFollowState } from '@/features/home/navigation';
@@ -8,7 +8,11 @@ import { FollowButton } from '@/features/profile/components/FollowButton';
 import { variantUrl } from '@/features/profile/media';
 import { ownerMeta, ownerName } from '@/features/vehicle/model';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Avatar, SampleBadges, Text, useSampleBadgeLabels } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { SampleBadges, useSampleBadgeLabels } from '@/ui/Badge';
+import { handleFitsLine, memberMetaText } from '@/ui/MemberRow';
+import { Text } from '@/ui/Text';
+import { handleText } from '@/ui/textBreaks';
 import { joinLabel, LARGE_FONT_SCALE, RowBody, RowDivider, useStacksAtFontScale } from '@/ui/rowParts';
 
 /** The row's inset (`ui/MemberRow`'s `side`): none, the list's column already keeps to the gutter. */
@@ -34,8 +38,6 @@ const useStyles = createStyles((t) => ({
   trailingStacked: { paddingBottom: t.space[12], paddingLeft: ROW_SIDE },
 }));
 
-const NO_BREAK_SPACE = '\u00A0';
-
 export type SearchMemberRowProps = {
   member: SearchMember;
   onOpen: (member: SearchMember) => void;
@@ -56,9 +58,20 @@ export const SearchMemberRow = memo(function SearchMemberRow({ member, onOpen, d
   const garage = member.garage.line.trim();
   const self = member.is_self ? t('members.you') : null;
   const city = member.city?.trim();
+  const { fontScale } = useTheme();
+  // R4B-010: the handle rules of `ui/MemberRow` (DQ-282). The text column's width, 0 until the first layout; a handle that surely
+  // fits it breaks only after its "." or "_" (handleText), one that does not ("@speedclub.editorial" at 200 %) takes a line of its
+  // own, cut with an ellipsis, instead of the browser splitting it inside its letters ("editori / al").
+  const [textWidth, setTextWidth] = useState(0);
+  const onTextLayout = (event: LayoutChangeEvent) => {
+    const next = event.nativeEvent.layout.width;
+    setTextWidth((current) => (Math.abs(current - next) < 1 ? current : next));
+  };
+  const handle = `@${member.username}`;
+  const handleOwnLine = textWidth > 0 && !handleFitsLine(handle, textWidth, fontScale);
   // DQ-203: at a large font "@kenji.r34 · Düsseldorf" no longer fits one line of a phone, so handle and city take a line each, with no
   // separator left over at the end of the first. Below that the line wraps after the "·" and never before it (DQ-231).
-  const stacked = useTheme().fontScale >= LARGE_FONT_SCALE && Boolean(city);
+  const stacked = (fontScale >= LARGE_FONT_SCALE && Boolean(city)) || handleOwnLine;
   const followState = useFollowState();
   const showFollow = !member.is_self;
   const buttonStacked = useStacksAtFontScale() && showFollow;
@@ -80,25 +93,39 @@ export const SearchMemberRow = memo(function SearchMemberRow({ member, onOpen, d
             blurhash={member.avatar?.blurhash}
             size={size.avatar.md}
           />
-          <View style={styles.text}>
-            <Text variant="bodyStrong">{self ? `${name} · ${self}` : name}</Text>
+          <View style={styles.text} onLayout={onTextLayout} testID={`${testID}.text`}>
+            {/* A name that is only the username (no display name) is one word that must not be split: one line, cut with an ellipsis
+                where it is wider than the column, as MemberRow sets it (DQ-1017, R4B-010). The r5 gate met "@gmws2dbpi5hse1" split
+                "hs / e" at 200 %. */}
+            {name.startsWith('@') ? (
+              <Text variant="bodyStrong" hyphenate={false} numberOfLines={1} testID={`${testID}.name`}>
+                {self ? `${name} · ${self}` : name}
+              </Text>
+            ) : (
+              <Text variant="bodyStrong" testID={`${testID}.name`}>
+                {self ? `${name} · ${self}` : name}
+              </Text>
+            )}
             {stacked ? (
               <>
                 <Text
                   variant="callout"
                   color="text.secondary"
                   hyphenate={false}
+                  numberOfLines={handleOwnLine ? 1 : undefined}
                   testID={`${testID}.handle`}
                 >
-                  {ownerMeta({ username: member.username, city: null })}
+                  {handleOwnLine ? handle : handleText(handle)}
                 </Text>
-                <Text variant="callout" color="text.secondary" hyphenate={false} testID={`${testID}.city`}>
-                  {city}
-                </Text>
+                {city ? (
+                  <Text variant="callout" color="text.secondary" hyphenate={false} testID={`${testID}.city`}>
+                    {city}
+                  </Text>
+                ) : null}
               </>
             ) : (
               <Text variant="callout" color="text.secondary" hyphenate={false} testID={`${testID}.meta`}>
-                {meta.replace(/ (?=·)/, NO_BREAK_SPACE)}
+                {memberMetaText(meta)}
               </Text>
             )}
             {garage ? (

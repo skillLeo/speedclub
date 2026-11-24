@@ -5,6 +5,7 @@ import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-han
 import { hydrateThemePreference } from '@/theme';
 import { IconButton } from '@/ui/IconButton';
 import { ImageViewer } from '@/ui/ImageViewer';
+import { VIEWER_TOUCH_SLOP } from '@/ui/imageViewerPaging';
 import {
   VIEWER_MAX_SCALE,
   clampPan,
@@ -200,5 +201,65 @@ describe('ImageViewer gestures', () => {
     await renderUi(<ImageViewer visible images={images} onClose={onClose} testID="v" />);
     await pan({ translationY: 20, velocityY: 900 });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('two swipes in a row page twice (R5-2d)', async () => {
+    const onIndexChange = jest.fn();
+    await renderUi(<ImageViewer visible images={images} initialIndex={2} onClose={jest.fn()} onIndexChange={onIndexChange} testID="v" />);
+    await pan({ translationX: -300, velocityX: -900 });
+    await pan({ translationX: -300, velocityX: -900 });
+    expect(onIndexChange.mock.calls).toEqual([[3], [4]]);
+    expect(counter()).toBe(5);
+    await pan({ translationX: 300, velocityX: 900 });
+    expect(counter()).toBe(4);
+  });
+
+  it('a finger that travels is never one of the double tap\'s taps (R5-2d)', async () => {
+    await renderUi(<ImageViewer visible images={images} onClose={jest.fn()} testID="v" />);
+    // The hook hands `maxDistance` and `minDistance` to the handlers as `maxDist` and `minDist`, the names RNGH's handlers read (web, Android, iOS).
+    const doubleTap = getByGestureTestId('v.doubleTap') as unknown as { config: { numberOfTaps?: number; maxDist?: number } };
+    const pan = getByGestureTestId('v.pan') as unknown as { config: { minDist?: number } };
+    expect(doubleTap.config.numberOfTaps).toBe(2);
+    expect(doubleTap.config.maxDist).toBe(VIEWER_TOUCH_SLOP);
+    expect(pan.config.minDist).toBe(VIEWER_TOUCH_SLOP);
+  });
+});
+
+describe('ImageViewer index (R5-2d)', () => {
+  /** A host whose open photo and photos the test sets, as a screen would. */
+  let setHost: (next: { open: number | null; count: number }) => void = () => undefined;
+  function Host() {
+    const [host, set] = useState<{ open: number | null; count: number }>({ open: 2, count: 12 });
+    setHost = set;
+    return <ImageViewer visible={host.open !== null} images={images.slice(0, host.count)} initialIndex={host.open ?? 0} onClose={jest.fn()} testID="v" />;
+  }
+  const counterText = () => screen.getByTestId('v.counter');
+
+  it('opened again during its exit animation, starts on the photo it is opened on now', async () => {
+    jest.useFakeTimers();
+    try {
+      await renderUi(<Host />);
+      await act(async () => {
+        counterText().props.onAccessibilityAction({ nativeEvent: { actionName: 'increment' } });
+      });
+      expect(counterText()).toHaveTextContent('4/12');
+      // Closed, and opened on photo 8 before the exit animation has unmounted the stage.
+      await act(async () => setHost({ open: null, count: 12 }));
+      expect(screen.getByTestId('v')).toBeTruthy();
+      await act(async () => setHost({ open: 7, count: 12 }));
+      expect(counterText()).toHaveTextContent('8/12');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('keeps the counter within the photos when the list shrinks under it', async () => {
+    await renderUi(<Host />);
+    await act(async () => setHost({ open: 10, count: 12 }));
+    await act(async () => setHost({ open: null, count: 12 }));
+    await act(async () => setHost({ open: 10, count: 12 }));
+    expect(counterText()).toHaveTextContent('11/12');
+    await act(async () => setHost({ open: 10, count: 3 }));
+    expect(counterText()).toHaveTextContent('3/3');
   });
 });

@@ -220,6 +220,24 @@ describe('Icon', () => {
     // M4.14 business profiles: the contact rows "Anrufen" and "Website".
     'phone',
     'globe-simple',
+    // M5.9b STREET DEX: the SCAN button of the Start and Garage headers, and the scanner's light.
+    'scan',
+    'flashlight',
+    // M5.9d: earned badges (medal) and "Freunde einladen" (user-plus).
+    'medal',
+    'user-plus',
+    // M5.9e Season Wrapped: the story player's pause and play.
+    'pause',
+    'play',
+    // M5.2 Navigation 3.0 (10 §1): the Shop tab's bag and Nachrichten's paper plane in the Start and Entdecken headers.
+    'bag',
+    'paper-plane-tilt',
+    // M5.2 fix round (DQ-M52-05): the EVT-01 Karte/Liste toggle.
+    'list-bullets',
+    // M5.4 sticker designer (10 §2.3): undo, redo and "Scan-Test bestanden".
+    'arrow-u-up-left',
+    'arrow-u-up-right',
+    'check-circle',
   ];
 
   it('curates every icon the primitives need', () => {

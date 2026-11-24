@@ -1,4 +1,4 @@
-import { useRouter, type Href } from 'expo-router';
+import type { Href } from 'expo-router';
 import { use, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, type FocusEvent, type LayoutChangeEvent } from 'react-native';
@@ -10,20 +10,19 @@ import { FormNotice } from '@/features/auth/components/FormNotice';
 import { useTabScrollToTop } from '@/features/shell/retap';
 import { TabBarOverlayContext, useHideTabBar, useTabBarPadding } from '@/features/shell/tabBarLayout';
 import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
+import { useBackOr } from '@/lib/backNavigation';
 import { isWeb } from '@/lib/platform';
 import { useOnline } from '@/state/online';
 import { createStyles, layout, size, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import {
-  Button,
-  DiscardGuardDialog,
-  Header,
-  OfflineBanner,
-  Screen,
-  StickyCTABar,
-  useCollapsingHeader,
-  type CollapsingHeader,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { DiscardGuardDialog } from '@/ui/DiscardGuardDialog';
+import { Header } from '@/ui/Header';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { useSafeEdge } from '@/ui/safeArea';
+import { Screen } from '@/ui/Screen';
+import { StickyCTABar } from '@/ui/StickyCTABar';
+import { useCollapsingHeader, type CollapsingHeader } from '@/ui/useCollapsingHeader';
 import { NO_BROWSER_OUTLINE, useFocusRing } from '@/ui/useFocusRing';
 
 import type { SettingsKey } from '../navigation';
@@ -129,13 +128,17 @@ export function SettingsPage({
 }: SettingsPageProps) {
   const { t } = useTranslation('auth');
   const styles = useStyles();
-  const router = useRouter();
+  // R4B-007: after a direct link the tab root under this page is not where the member came from (lib/backNavigation).
+  const back = useBackOr(fallback);
   const online = useOnline();
   const motion = useMotionPreference();
   const { gutter, kind } = useBreakpoint();
   const wide = kind !== 'phone';
   const split = useSettingsSplit() && section !== undefined;
-  const padding = useTabBarPadding();
+  const tabBarPadding = useTabBarPadding();
+  // QA-C06: Screen leaves the bottom edge to the tab bar or a sticky CTA. A page with neither (SET-13's inline "Konto löschen", a
+  // pushed page outside the tabs) pads its end by the safe area itself, or it ends under the home indicator.
+  const safeBottom = useSafeEdge('bottom');
   const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const own = useCollapsingHeader();
   const header = collapsing ?? own;
@@ -147,6 +150,7 @@ export function SettingsPage({
   const overflows = isWeb && viewport > 0 && contentHeight > viewport + 1;
   const focusable = isWeb && (focusableScroll || overflows);
   const barOverlay = use(TabBarOverlayContext);
+  const padding = barOverlay ? tabBarPadding : safeBottom;
   // Only a page of text ends above the bar; one that is focusable because it overflows keeps its layout.
   const above = isWeb && focusableScroll && barOverlay;
   // View-as (m3.2-contract §3): a form says it is read-only and its button rests; the server would refuse the save anyway.
@@ -245,7 +249,7 @@ export function SettingsPage({
         title={title}
         scroll={header}
         // DQ-420: beside the list there is nothing to go back to, as in the MSG split; the pane is the way out.
-        onBack={split ? undefined : () => (router.canGoBack() ? router.back() : router.replace(fallback))}
+        onBack={split ? undefined : back}
         contentMaxWidth={wide ? settingsHeaderMaxWidth(gutter) : undefined}
         testID={`${routeId}.header`}
       />

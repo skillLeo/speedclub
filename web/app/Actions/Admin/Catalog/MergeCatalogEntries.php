@@ -45,7 +45,7 @@ class MergeCatalogEntries
     public function handle(Staff $staff, CatalogLevel $level, int $sourceId, int $targetId, string $reason): MergeOutcome
     {
         StaffAtoms::ensure($staff, 'catalog.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
 
         // Refused before anything is asked: a pair that cannot merge needs no second pair of eyes.
         DB::transaction(fn () => CatalogMerger::lockPair($level, $sourceId, $targetId));

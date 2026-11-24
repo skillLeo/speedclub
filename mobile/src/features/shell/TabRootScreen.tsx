@@ -7,7 +7,8 @@ import type { Edge } from 'react-native-safe-area-context';
 import { isWeb } from '@/lib/platform';
 import { createStyles } from '@/theme';
 import { motionDuration, useMotionPreference } from '@/ui/motion';
-import { Header, HeaderLargeTitle, Screen, type HeaderAction } from '@/ui';
+import { Header, HeaderLargeTitle, type HeaderAction } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
 import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { useTabScrollToTop } from './retap';

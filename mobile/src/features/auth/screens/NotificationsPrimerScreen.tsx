@@ -5,7 +5,9 @@ import { View } from 'react-native';
 import { isNative } from '@/lib/platform';
 import { useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { Icon, Screen, Text, type IconName } from '@/ui';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { Screen } from '@/ui/Screen';
+import { Text } from '@/ui/Text';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { primerAnswered, primerShown } from '../primer';

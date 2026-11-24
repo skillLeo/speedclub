@@ -45,8 +45,8 @@
     "garageOpen": "Zur Garage",
     "vehicleCount_one": "{{formatted}} Fahrzeug",
     "vehicleCount_other": "{{formatted}} Fahrzeuge",
-    "aboutTitle": "Über SPEED CLUB",
-    "aboutBody": "Deine Garage mit Technik und Mods als echte Daten, und ein QR-⁠Code, der dein Auto auf dem Parkplatz mit seiner Build-Seite verbindet.",
+    "aboutTitle": "Über Speedclub",
+    "aboutBody": "Deine Garage mit Technik und Mods als echte Daten, und ein Sticker mit QR-⁠Code, der dein Auto auf dem Parkplatz mit seiner Build-Seite verbindet.",
     "join": "Konto erstellen",
     "makesFocus": "Marken im Fokus"
   },
@@ -166,8 +166,8 @@
         "measures": "Wir haben deine Meldung geprüft und Maßnahmen ergriffen. Tippe für Einzelheiten.",
         "reversed": "Wir haben eine frühere Maßnahme aufgehoben. Tippe für Einzelheiten."
       },
-      "qrMilestone": "Dein QR-⁠Code für {{vehicle}} wurde {{scans}}-mal gescannt",
-      "qrMilestoneAny": "Einer deiner QR-⁠Codes wurde {{scans}}-mal gescannt",
+      "qrMilestone": "Dein Sticker für {{vehicle}} wurde {{scans}}-mal gescannt",
+      "qrMilestoneAny": "Einer deiner Sticker wurde {{scans}}-mal gescannt",
       "huAuReminder": "HU/AU für {{vehicle}} ist im {{month}} fällig",
       "huAuReminderAny": "Deine HU/AU ist im {{month}} fällig",
       "catalogRequest": {
@@ -177,7 +177,24 @@
         "yourVehicle": "dein Fahrzeug"
       },
       "supportReply": "Das Team hat auf deine Anfrage {{reference}} geantwortet",
-      "supportReplyAny": "Das Team hat auf deine Support-Anfrage geantwortet"
+      "supportReplyAny": "Das Team hat auf deine Support-Anfrage geantwortet",
+      "spotAlert": {
+        "yourCar": "Auto",
+        "today": {
+          "city_one": "Dein {{vehicle}} wurde heute in {{city}} gespottet",
+          "city_other": "Dein {{vehicle}} wurde heute {{count}}-mal in {{city}} gespottet",
+          "cities_other": "Dein {{vehicle}} wurde heute {{count}}-mal in {{cities}} Städten gespottet",
+          "plain_one": "Dein {{vehicle}} wurde heute gespottet",
+          "plain_other": "Dein {{vehicle}} wurde heute {{count}}-mal gespottet"
+        },
+        "day": {
+          "city_one": "Dein {{vehicle}} wurde in {{city}} gespottet",
+          "city_other": "Dein {{vehicle}} wurde {{count}}-mal in {{city}} gespottet",
+          "cities_other": "Dein {{vehicle}} wurde {{count}}-mal in {{cities}} Städten gespottet",
+          "plain_one": "Dein {{vehicle}} wurde gespottet",
+          "plain_other": "Dein {{vehicle}} wurde {{count}}-mal gespottet"
+        }
+      }
     },
     "restricted": "Dein Konto ist eingeschränkt. Deine Mitteilungen siehst du weiterhin.",
     "restrictedUntil": "Dein Konto ist bis {{date}} eingeschränkt. Deine Mitteilungen siehst du weiterhin.",
@@ -216,6 +233,7 @@
   "actions": {
     "react": "Reagieren",
     "reactions": {
+      "like": "Gefällt mir",
       "strong": "Stark",
       "clean": "Sauber",
       "low": "Tief",
@@ -223,7 +241,10 @@
     },
     "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
     "copied": "Link kopiert.",
-    "shareFailed": "Teilen geht hier nicht. Der Link: {{url}}"
+    "shareFailed": "Teilen geht hier nicht. Der Link: {{url}}",
+    "like": "Gefällt mir",
+    "comments": "Kommentare",
+    "commentsOf": "Kommentare zu {{vehicle}}"
   },
   "brands": {
     "title": "Marken im Fokus",
@@ -234,5 +255,67 @@
     "title": "Werkstätten und Betriebe",
     "all": "Alle",
     "allLabel": "Alle Betriebe in Entdecken zeigen"
+  },
+  "carOfTheDay": {
+    "label": "Car of the Day",
+    "date": "{{date}}",
+    "labelA11y": "Car of the Day am {{date}}",
+    "story": "„{{story}}“",
+    "ownerNote": "Dein Auto ist heute Car of the Day. Alle sehen es bis morgen 18 Uhr hier oben.",
+    "edit": "Story bearbeiten",
+    "add": "Story schreiben",
+    "editorTitle": "Deine Story",
+    "editorIntro": "Ein Satz, den alle unter deinem Auto lesen, bis morgen 18 Uhr.",
+    "field": "Story",
+    "placeholder": "Seit 2019 in meiner Hand, jedes Teil selbst verbaut.",
+    "counter": "{{count}} / {{max}}",
+    "save": "Speichern",
+    "saved": "Story gespeichert",
+    "tooLong": "Höchstens {{max}} Zeichen.",
+    "failed": "Speichern hat nicht geklappt. Versuch es noch einmal.",
+    "offline": "Offline – speichern kannst du, sobald du wieder online bist."
+  },
+  "nextEvents": {
+    "title": "Nächste Treffen",
+    "all": "Alle Treffen",
+    "allLabel": "Alle Treffen ansehen"
+  },
+  "vote": {
+    "title": "Wähle das Car of the Day von morgen",
+    "titleToday": "Wähle das Car of the Day für heute Abend",
+    "titleNext": "Car of the Day wählen",
+    "introTomorrow": "Eine Stimme pro Tag. Ändern kannst du sie bis morgen, {{time}} Uhr.",
+    "introToday": "Eine Stimme pro Tag. Ändern kannst du sie bis heute, {{time}} Uhr.",
+    "introPlain": "Eine Stimme pro Tag, du kannst sie bis zum Ende der Abstimmung ändern.",
+    "closed": "Abstimmung beendet, um 18 Uhr steht der Gewinner fest.",
+    "voted": "Du hast abgestimmt: {{vehicle}}.",
+    "votedChange": "Du hast abgestimmt: {{vehicle}}. Wechseln geht bis {{time}} Uhr.",
+    "yourChoice": "Deine Wahl",
+    "ownCar": "Dein Auto",
+    "lastWon": "Von euch gewählt: {{vehicle}} ist heute Car of the Day",
+    "lastWonMine": "Deine Wahl hat gewonnen: {{vehicle}} ist heute Car of the Day",
+    "offline": "Offline – abstimmen kannst du, sobald du wieder online bist.",
+    "offlineLoad": "Offline – die Abstimmung lädt, sobald du wieder online bist.",
+    "loadError": "Die Abstimmung konnte nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "failed": "Deine Stimme kam nicht an. Versuch es noch einmal.",
+    "verify": "E-Mail bestätigen",
+    "reasons": "Begründung ansehen",
+    "reason": {
+      "tooNew": "Abstimmen kannst du drei Tage nach deiner Anmeldung.",
+      "tooNewFrom": "Abstimmen kannst du drei Tage nach deiner Anmeldung, ab {{date}} Uhr.",
+      "unverified": "Bestätige zuerst deine E-Mail-Adresse, dann kannst du abstimmen.",
+      "restricted": "Dein Konto ist gerade eingeschränkt, deshalb kannst du nicht abstimmen.",
+      "sample": "Mit einem Beispielkonto kannst du nicht abstimmen."
+    }
+  },
+  "crews": {
+    "notifications": {
+      "aCrew": "eine Crew",
+      "requestReceived": "{{actor}} möchte „{{crew}}“ beitreten.",
+      "requestApproved": "Du bist jetzt Mitglied von „{{crew}}“.",
+      "invited": "{{actor}} hat dich zu „{{crew}}“ eingeladen.",
+      "other": "Neues aus „{{crew}}“."
+    }
   }
 }

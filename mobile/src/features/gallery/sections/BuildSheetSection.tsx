@@ -1,4 +1,4 @@
-import { BuildSheet } from '@/ui';
+import { BuildSheet } from '@/ui/BuildSheet';
 
 import { noop } from '../data';
 import { Group, SectionScreen } from '../parts';

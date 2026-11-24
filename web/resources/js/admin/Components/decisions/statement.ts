@@ -14,6 +14,9 @@ export interface StatementForm {
     ground_section: string;
 }
 
+/** Whose content the statement is about: picks the template's facts_<subject> text (a forum post since M5.8, a crew since R4-2.3). */
+export type StatementSubject = 'member' | 'vehicle' | 'photo' | 'post' | 'crew';
+
 export const TEMPLATE_KEYS = ['spam', 'harassment', 'impersonation', 'nudity', 'illegal', 'other'] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
@@ -31,7 +34,7 @@ export function emptyStatement(): StatementForm {
 }
 
 /** Fills the form from a template; the texts come from decisions.templates.<key> in the staff member's language. */
-export function applyTemplate(form: StatementForm, key: string, subject: 'member' | 'vehicle' | 'photo'): void {
+export function applyTemplate(form: StatementForm, key: string, subject: StatementSubject): void {
     const template = (TEMPLATE_KEYS as readonly string[]).includes(key) ? (key as TemplateKey) : null;
     form.template = key;
     if (template === null) return;

@@ -4,7 +4,9 @@ import { Controller, type Control, type FieldValues, type Path } from 'react-hoo
 import type { TextInput as RNTextInput } from 'react-native';
 
 import { isWeb } from '@/lib/platform';
-import { TextInput, type TextInputProps } from '@/ui';
+import { TextInput, type TextInputProps } from '@/ui/TextInput';
+
+import { EMAIL_MAX_LENGTH } from '../limits';
 
 import { fieldMessage } from '../forms';
 
@@ -58,6 +60,7 @@ export function FormField<T extends FieldValues>({ control, name, inputRef, webI
  * domain itself, transitionally, so `straße.de` left the browser as `strasse.de`, another domain and another account; every client
  * now sends what was typed and the server's mapping (ADR-183) is the only one. The keyboard (`inputmode`), autofill
  * (`autocomplete="email"`), no capitals and no spell check stay. Native keeps its e-mail keyboard.
+ * QA-H04: the field stops at the server's `max:255`, as every other text field stops at its limit.
  */
 export const EMAIL_INPUT = isWeb
   ? ({
@@ -68,6 +71,7 @@ export const EMAIL_INPUT = isWeb
       keyboardType: 'default',
       autoComplete: 'email',
       webInputMode: 'email',
+      maxLength: EMAIL_MAX_LENGTH,
     } as const)
   : ({
       autoCapitalize: 'none',
@@ -77,4 +81,5 @@ export const EMAIL_INPUT = isWeb
       inputMode: 'email',
       autoComplete: 'email',
       textContentType: 'emailAddress',
+      maxLength: EMAIL_MAX_LENGTH,
     } as const);

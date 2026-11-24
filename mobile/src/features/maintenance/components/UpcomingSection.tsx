@@ -7,7 +7,7 @@ import { MAINTENANCE_FLAG, useUpcomingMaintenance, type MaintenanceUpcoming } fr
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles } from '@/theme';
-import { MaintenanceCard } from '@/ui';
+import { MaintenanceCard } from '@/ui/MaintenanceCard';
 import { RowGroup } from '@/ui/RowGroup';
 
 import { dueModel } from '../model';

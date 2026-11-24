@@ -175,8 +175,10 @@ describe('neutral answers', function () {
                 ->assertStatus(429);
         };
 
-        $known = $delayed('da@example.de');
+        // One frozen clock for both: on a loaded machine the first five attempts could take over a second, and the known address's
+        // remaining wait then rounded down ("1 second" against "2 seconds", RISK-5). The answers must still be identical.
         $this->freezeTime();
+        $known = $delayed('da@example.de');
         $unknown = $delayed('wer@example.de');
 
         expect($known->json())->toBe($unknown->json())

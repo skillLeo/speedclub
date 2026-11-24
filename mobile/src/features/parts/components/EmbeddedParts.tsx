@@ -28,7 +28,14 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space, useTheme } from '@/theme';
-import { Button, EmptyState, ErrorState, MediaCard, MediaCardSkeleton, ProductRow, ProductRowSkeleton, SampleBadge, Skeleton, SkeletonText, Text } from '@/ui';
+import { SampleBadge } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { MediaCard, MediaCardSkeleton } from '@/ui/MediaCard';
+import { ProductRow, ProductRowSkeleton } from '@/ui/ProductRow';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import { buildsLabel, sampleProduct } from '../model';
 import { useGarageEntry } from './useGarageEntry';

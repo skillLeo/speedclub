@@ -4,8 +4,7 @@ import Svg, { Circle, Line, Polygon, Rect, Text as SvgText } from 'react-native-
 
 import { isWeb } from '@/lib/platform';
 import { createStyles, resolveColor, size, useTheme, type ColorToken } from '@/theme';
-import { Text } from '@/ui';
-import { typeStyle } from '@/ui/Text';
+import { Text, typeStyle } from '@/ui/Text';
 
 /** How a place on the car reads in QR-03. */
 export type PlacementTone = 'ok' | 'caution' | 'avoid';

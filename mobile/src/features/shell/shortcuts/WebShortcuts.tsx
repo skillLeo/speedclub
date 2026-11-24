@@ -24,7 +24,7 @@ const TAB_PATHS: Readonly<Record<TabName, string>> = {
   home: '/',
   discover: '/discover',
   garage: '/garage',
-  messages: '/messages',
+  shop: '/shop',
   profile: '/profile',
 };
 
@@ -88,6 +88,7 @@ function ShortcutLayer({ conversations: given }: WebShortcutsProps) {
       if (action.kind === 'switcher') setSwitcher(true);
       else if (action.kind === 'help') setHelp(true);
       else if (action.kind === 'tab') switchTab(action.tab, {});
+      else if (action.kind === 'messages') router.push('/messages');
       else focusSearch();
     };
   });
@@ -123,12 +124,15 @@ function ShortcutLayer({ conversations: given }: WebShortcutsProps) {
         href: row.path,
       })),
     );
-    const tabs: SwitcherItem[] = TAB_DESTINATIONS.map((destination) => ({
-      id: `tab.${destination.name}`,
-      group: 'tabs',
-      label: t(`common:${destination.labelKey}`),
-      href: TAB_PATHS[destination.name],
-    }));
+    const tabs: SwitcherItem[] = [
+      ...TAB_DESTINATIONS.map((destination) => ({
+        id: `tab.${destination.name}`,
+        group: 'tabs' as const,
+        label: t(`common:${destination.labelKey}`),
+        href: TAB_PATHS[destination.name],
+      })),
+      { id: 'place.messages', group: 'tabs' as const, label: t('common:places.messages'), href: '/messages' },
+    ];
     return [...own, ...conversations, ...settings, ...tabs];
   }, [conversations, member, t, vehicles.data]);
 

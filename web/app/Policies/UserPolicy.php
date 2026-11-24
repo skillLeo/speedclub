@@ -2,9 +2,12 @@
 
 namespace App\Policies;
 
+use App\Enums\ErrorCode;
 use App\Enums\RestrictionType;
 use App\Models\User;
 use App\Services\Showcase\SampleContent;
+use App\Support\ViewAs;
+use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
@@ -30,6 +33,18 @@ class UserPolicy
         return $member->isPubliclyVisible()
             && ! app(SampleContent::class)->hides($member, $viewer)
             && ($viewer === null || ! $viewer->hasBlockWith($member));
+    }
+
+    /**
+     * M5.7 INS-01 (10 §6.1, m5.7-contract §10): a member's own statistics (GET me/insights); staff in view-as get 403 view_as_read_only.
+     */
+    public function viewInsights(User $user, User $member): Response|bool
+    {
+        if (ViewAs::active()) {
+            return Response::deny(code: ErrorCode::ViewAsReadOnly->value);
+        }
+
+        return $user->is($member) && ! $user->isDeactivated();
     }
 
     /**

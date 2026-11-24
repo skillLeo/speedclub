@@ -27,6 +27,9 @@ export type BuildSheetMod = {
   values?: string;
   /** "Verbaut", "Geplant" */
   status?: string;
+  /** M5.3 a plan's priority ("Hoch"), a pill between the status and the legal status; its name for screen readers. */
+  priority?: string;
+  priorityLabel?: string;
   /** [SIG `sig.mod_legal_status`] the owner's stated legal status, a second pill. */
   legalStatus?: string;
   legalStatusLabel?: string;
@@ -42,7 +45,16 @@ export type BuildSheetMod = {
   testID?: string;
 };
 
-export type BuildSheetLink = { key: string; label: string; icon?: IconName; accessibilityLabel?: string; onPress: () => void; testID?: string };
+export type BuildSheetLink = {
+  key: string;
+  label: string;
+  icon?: IconName;
+  accessibilityLabel?: string;
+  onPress: () => void;
+  /** Button's `locked`: looks disabled, and a press says this reason instead (a restriction, view-as, offline; M5.3). */
+  locked?: string | null;
+  testID?: string;
+};
 
 export type BuildSheetSection = {
   key: string;
@@ -93,17 +105,15 @@ const useStyles = createStyles((t) => ({
   pills: { columnGap: t.space[8], flexDirection: 'row', flexWrap: 'wrap', marginTop: t.space[4], rowGap: t.space[4] },
   end: { justifyContent: 'center', paddingRight: t.space[4] },
   toggle: { alignItems: 'center', height: t.size.touchMin, justifyContent: 'center', width: t.size.touchMin },
-  details: { gap: t.space[8], paddingBottom: t.space[16], paddingLeft: ROW_INSET + t.size.modTile + t.space[12], paddingRight: ROW_INSET },
-  // The links start on the text's edge (the S button's padding pulled back by `flush`) and wrap as whole buttons.
-  links: {
-    columnGap: t.space[24],
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: -t.space[8],
-    paddingBottom: t.space[8],
-    paddingLeft: ROW_INSET + t.size.modTile + t.space[12],
-    paddingRight: ROW_INSET,
-  },
+  // DQ-M53R2 (audit): the text column (tile 40 + 12) is a spacer's width, not an off-scale padding; the row keeps its 16 inset.
+  details: { flexDirection: 'row', paddingBottom: t.space[16], paddingHorizontal: ROW_INSET },
+  detailsBody: { flex: 1, gap: t.space[8], minWidth: 0 },
+  textColumn: { width: t.size.modTile + t.space[12] },
+  // The links start on the text's edge (the S button's padding pulled back by `flush`) and wrap as whole buttons. DQ-M53-13a: the row
+  // above ends 8 earlier instead of the links reaching 8 up into it, so the links' 44 targets never overlap the row's own.
+  linksRow: { flexDirection: 'row', paddingBottom: t.space[8], paddingHorizontal: ROW_INSET },
+  links: { columnGap: t.space[24], flex: 1, flexDirection: 'row', flexWrap: 'wrap', minWidth: 0 },
+  rowBeforeLinks: { paddingBottom: t.space[4] },
   detail: { gap: t.space[2] },
 }));
 
@@ -176,6 +186,12 @@ export function BuildSheetRow({ mod, divider = false }: { mod: BuildSheetMod; di
 
   const statusPill = mod.status ? <StatusPill label={mod.status} testID={testID ? `${testID}.status` : undefined} /> : null;
   const legalName = mod.legalStatus ? (mod.legalStatusLabel ?? mod.legalStatus) : undefined;
+  const priorityName = mod.priority ? (mod.priorityLabel ?? mod.priority) : undefined;
+  const priorityPill = mod.priority ? (
+    <View accessible aria-label={priorityName} testID={testID ? `${testID}.priority` : undefined}>
+      <StatusPill label={mod.priority} />
+    </View>
+  ) : null;
   const legalPill = mod.legalStatus ? (
     <View accessible aria-label={legalName} testID={testID ? `${testID}.legalStatus` : undefined}>
       <StatusPill label={mod.legalStatus} />
@@ -187,9 +203,9 @@ export function BuildSheetRow({ mod, divider = false }: { mod: BuildSheetMod; di
       <View style={styles.line}>
         <RowBody
           onPress={mod.onPress}
-          label={joinLabel([mod.name, mod.brand, mod.values, mod.status, legalName])}
+          label={joinLabel([mod.name, mod.brand, mod.values, mod.status, priorityName, legalName])}
           boxStyle={styles.body}
-          style={[styles.row, expandable ? styles.rowBeforeToggle : null]}
+          style={[styles.row, expandable ? styles.rowBeforeToggle : null, mod.links && mod.links.length > 0 ? styles.rowBeforeLinks : null]}
           testID={testID ? `${testID}.body` : undefined}
         >
           <View style={styles.tile}>
@@ -207,9 +223,10 @@ export function BuildSheetRow({ mod, divider = false }: { mod: BuildSheetMod; di
             ) : null}
             {mod.values ? <ValueText variant="callout" color="text.secondary" hyphenate={largeFont} values={mod.values} wholeValues={!largeFont} /> : null}
             {/* DQ-952: the pills (install status, legal status) on one line under the value at every size, so the title keeps the row's width. */}
-            {statusPill || legalPill ? (
+            {statusPill || priorityPill || legalPill ? (
               <View style={styles.pills}>
                 {statusPill}
+                {priorityPill}
                 {legalPill}
               </View>
             ) : null}
@@ -239,7 +256,9 @@ export function BuildSheetRow({ mod, divider = false }: { mod: BuildSheetMod; di
         ) : null}
       </View>
       {mod.links && mod.links.length > 0 ? (
-        <View style={styles.links} testID={testID ? `${testID}.links` : undefined}>
+        <View style={styles.linksRow}>
+          <View style={styles.textColumn} />
+          <View style={styles.links} testID={testID ? `${testID}.links` : undefined}>
           {mod.links.map((link) => (
             <Button
               key={link.key}
@@ -251,13 +270,17 @@ export function BuildSheetRow({ mod, divider = false }: { mod: BuildSheetMod; di
               flush="start"
               accessibilityLabel={link.accessibilityLabel}
               onPress={link.onPress}
+              locked={link.locked}
               testID={link.testID}
             />
           ))}
+          </View>
         </View>
       ) : null}
       {expandable && open ? (
         <Animated.View nativeID={detailsId} style={[styles.details, detailsStyle]} testID={testID ? `${testID}.details` : undefined}>
+          <View style={styles.textColumn} />
+          <View style={styles.detailsBody}>
           {details.map((detail) => (
             <View key={detail.label} style={styles.detail}>
               <Text variant="caption" color="text.secondary">
@@ -266,6 +289,7 @@ export function BuildSheetRow({ mod, divider = false }: { mod: BuildSheetMod; di
               <ValueText variant="body" values={detail.value} />
             </View>
           ))}
+          </View>
         </Animated.View>
       ) : null}
       {divider ? <RowDivider inset={ROW_INSET} lead={size.modTile + space[12]} /> : null}

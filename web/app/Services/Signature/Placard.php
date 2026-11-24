@@ -93,7 +93,7 @@ final class Placard
 
         $pdf->loadView('pdf.placard', $this->viewData($vehicle, $qr, $size));
         $pdf->setPaper($size, 'portrait');
-        $pdf->addInfo(['Title' => 'SPEED CLUB '.$this->presenter->fullTitle($vehicle), 'Creator' => 'SPEED CLUB', 'Producer' => 'SPEED CLUB']);
+        $pdf->addInfo(['Title' => 'Speedclub '.$this->presenter->fullTitle($vehicle), 'Creator' => 'Speedclub', 'Producer' => 'Speedclub']);
 
         return $pdf->output();
     }

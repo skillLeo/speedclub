@@ -17,9 +17,12 @@
         "legal_version_taken": "Version :version already exists for this document. Choose a new one.",
         "legal_pending_approval": "Version :version is waiting for approval. Until then the text stays as it is.",
         "legal_changed": "The draft was changed after the request. The approval does not cover this text.",
+        "legal_draft_stale": "This draft is based on version :base, but version :live is live now. Publishing it would drop the newer sections. Start the draft again from the live text.",
+        "legal_draft_stale_first": "This draft is older than version :live, which is live now. Publishing it would drop its sections. Start the draft again from the live text.",
         "template_fixed": "This text is fixed and cannot be changed.",
         "template_unknown": "This template does not exist.",
-        "release_taken": "This build is already in the register (same version, build number, channel and platform)."
+        "release_taken": "This build is already in the register (same version, build number, channel and platform).",
+        "draft_pending_approval": "This draft is waiting for an approval and cannot be taken over until then."
     },
     "flash": {
         "draft_saved": "Draft saved.",
@@ -31,7 +34,9 @@
         "release_updated": "Entry corrected.",
         "releases_synced": "Register updated from RELEASES.md.",
         "releases_unchanged": "RELEASES.md read: everything is in the register already.",
-        "releases_file_missing": "RELEASES.md is not on this server. Enter builds here by hand."
+        "releases_file_missing": "RELEASES.md is not on this server. Enter builds here by hand.",
+        "flag_planned": "Saved as the planned state for the other environment. Nothing changes here.",
+        "draft_taken_over": "Draft taken over. You can now edit and publish it."
     },
     "draft": {
         "region": "Draft and publishing",
@@ -57,11 +62,17 @@
         "request_body": "This change only goes live once a second person in the team approves it.",
         "discard_title": "Discard the draft?",
         "discard_body": "All saved changes of this draft are lost. Everything live stays as it is.",
-        "discard_foreign_body": "The draft by :name is deleted. Give the reason, it goes into the audit log.",
+        "discard_foreign_body": "The draft by :name is deleted.",
         "leave_title": "Leave without saving?",
         "leave_body": "Your changes are not saved yet and will be lost.",
         "leave": "Leave",
-        "person": "Someone in the team"
+        "person": "Someone in the team",
+        "foreign_take_over": "Draft by :name, last saved :date. Take it over to edit and publish it.",
+        "take_over": "Take over draft",
+        "take_over_title": "Take over the draft?",
+        "take_over_body": "The draft by :name becomes yours. Then you can edit and publish it; :name can no longer save it.",
+        "payload_error": "The draft cannot be published like this: :message Check the marked field and save the draft again.",
+        "connection_lost": "The connection to the server dropped before an answer came. Reload the page to see whether the change went through, and try again if it did not."
     },
     "flags": {
         "title": "Feature flags",
@@ -115,7 +126,8 @@
         "no_changes": "You have not changed anything.",
         "save": "Save change",
         "environments_legend": "Local · Staging · Production",
-        "everyone": "Everyone"
+        "everyone": "Everyone",
+        "elsewhere_note": "You only change another environment. Here in :environment the flag stays as it is: each environment has its own database, and this switch applies there only once it is set there."
     },
     "remote": {
         "title": "Remote config",
@@ -144,7 +156,25 @@
         "maintenance_switch_off": "Maintenance mode: off",
         "change_maintenance": "Maintenance mode: :from → :to",
         "on": "on",
-        "off": "off"
+        "off": "off",
+        "wrapped_title": "Season Wrapped: releases",
+        "wrapped_intro": "From this date and time, members can see their Wrapped for the season. Without a date it stays closed. It is generated in the nights before, independently of this page.",
+        "wrapped_rule": "At least one day ahead and after the end of the season (31 October or 31 December).",
+        "wrapped_caption": "Release dates per season",
+        "wrapped_season": "Season",
+        "wrapped_day": "Day",
+        "wrapped_time": "Time",
+        "wrapped_zone_summer": "Summer time (:offset)",
+        "wrapped_zone_winter": "Winter time (:offset)",
+        "wrapped_zone_hint": "German time (summer and winter time are taken into account).",
+        "wrapped_add": "Add release",
+        "wrapped_remove": "Remove the release for :season",
+        "wrapped_empty": "No release planned yet. Without a date no member sees their Wrapped.",
+        "wrapped_all_used": "Every offered season already has a date.",
+        "wrapped_released": "Released",
+        "wrapped_planned": "Planned",
+        "wrapped_seasons": {"saison": "Season :year (March to October)", "jahr": "Year :year"},
+        "change_wrapped": "Wrapped releases changed"
     },
     "releases": {
         "title": "Release register",
@@ -203,13 +233,11 @@
             "channel": "Channel",
             "sha": "SHA-256 of the APK",
             "released": "Date",
-            "notes": "Notes",
-            "reason": "Reason for the correction"
+            "notes": "Notes"
         },
         "version_hint": "Three numbers like 1.0.0, optionally with a suffix (1.0.0-rc.1).",
         "code_hint": "A whole number, as it is in the build.",
         "sha_hint": "64 characters 0–9 and A–F, as build-apk prints them.",
-        "reason_hint": "Optional, for the audit log.",
         "save": "Save",
         "notes_title": "Notes of :version (build :code)"
     }

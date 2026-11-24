@@ -2,7 +2,7 @@
 import { trans } from 'laravel-vue-i18n';
 import { computed, reactive, ref, watch } from 'vue';
 import StateBlock from '../../../Components/patterns/StateBlock.vue';
-import { Button, Combobox, Drawer, Field, Input, SegmentedControl, Skeleton, Textarea, type SelectOption } from '../../../Components/ui';
+import { Button, Combobox, Drawer, Field, Input, SegmentedControl, Skeleton, type SelectOption } from '../../../Components/ui';
 import { qaDialogFailed } from '../../../composables/pageState';
 import { requestJson } from '../../../lib/http';
 import { routeOr } from '../../../lib/routes';
@@ -47,7 +47,6 @@ interface AcceptForm {
     generationName: string;
     yearFrom: string;
     yearTo: string;
-    reason: string;
 }
 const form = reactive<AcceptForm>({
     makeMode: 'pick',
@@ -62,7 +61,6 @@ const form = reactive<AcceptForm>({
     generationName: '',
     yearFrom: '',
     yearTo: '',
-    reason: '',
 });
 const write = useCatalogWrite();
 const failed = qaDialogFailed();
@@ -110,7 +108,6 @@ watch(
     (value) => {
         if (!value) return;
         write.reset();
-        form.reason = '';
         if (options.value === null) void load();
         else prefill();
     },
@@ -164,7 +161,7 @@ function submit(): void {
     local.value = next;
     if (Object.keys(next).length > 0) return;
 
-    const data: Record<string, unknown> = { reason: form.reason.trim() || null };
+    const data: Record<string, unknown> = {};
     if (form.makeMode === 'pick') data.make_id = Number(form.makeId);
     else Object.assign(data, { make_name: form.makeName.trim(), country: form.country.trim() || null });
     if (form.modelMode === 'pick') data.model_id = Number(form.modelId);
@@ -243,9 +240,6 @@ const formId = `${props.testId}-form`;
             </fieldset>
 
             <p class="text-admin-base text-ink-2">{{ trans('catalog.accept.member_note') }}</p>
-            <Field :label="trans('catalog.fields.reason')" :hint="trans('catalog.fields.reason_optional_hint')" :error="err('reason')" optional>
-                <Textarea v-model="form.reason" :rows="2" :maxlength="1000" />
-            </Field>
         </form>
         <template #footer>
             <Button variant="ghost" :disabled="write.processing.value" @click="open = false">{{ trans('ui.actions.cancel') }}</Button>

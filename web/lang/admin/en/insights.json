@@ -1,0 +1,66 @@
+{
+    "nav": {
+        "title": "Insights"
+    },
+    "palette": {
+        "week": "Insights of the last 7 days …"
+    },
+    "title": "Insights",
+    "intro": "How views, sticker scans, weekly recaps and build reminders are going across the platform.",
+    "privacy": "Platform totals only. No members, no cars, no names: nobody here counts who looked at what.",
+    "flag_off": "Views are not being counted right now (flag “insights” off). What was counted before stays here.",
+    "counting_since": "Views counted since :date.",
+    "load_error": "Insights are not loading right now",
+    "empty_title": "No data yet",
+    "empty_body": "As soon as profiles and cars are viewed, stickers scanned or weekly recaps sent, the totals show here.",
+    "empty_body_off": "Views are not being counted right now (flag “insights” off). With the flag on, the totals show here.",
+    "kpis": "Key figures",
+    "kpi": {
+        "views": "Views",
+        "sticker_scans": "Sticker scans",
+        "plan_prompts": "Build reminders",
+        "pushes_dropped": "Capped pushes"
+    },
+    "period": {
+        "label": "Period",
+        "days": ":days days",
+        "last": "Last :days days",
+        "last_7": "Last 7 days",
+        "last_7_off": "Last 7 days · flag “build_prompts” off",
+        "cap": "Last 7 days · over :max per week",
+        "failed": "The period did not change. The numbers above are still the old ones; try again."
+    },
+    "series": {
+        "views": "Views",
+        "sticker_scans": "Sticker scans"
+    },
+    "sources": {
+        "app": "App",
+        "web": "Web",
+        "sticker_scan": "Sticker scan",
+        "shared_link": "Shared link"
+    },
+    "charts": {
+        "days": "How often are profiles and cars viewed?",
+        "days_body": "Views per day (each person once per day and profile or car) and the sticker scans. The last day is still running and drawn dotted.",
+        "days_zero": "Nothing counted in this period",
+        "sources": "Where do the views come from?",
+        "sources_body": "Total of the last :days days by source.",
+        "sources_none": "No views counted in this period"
+    },
+    "recaps": {
+        "title": "Weekly recaps",
+        "intro": "Per week (Monday to Sunday): sent, skipped because nothing happened, or unreachable.",
+        "intro_off": "The weekly recap is off right now (flag “weekly_recap”). Earlier weeks stay here.",
+        "none": "No weekly recap has been prepared in this period yet.",
+        "caption": "Weekly recaps per week",
+        "week": "CW :week · :from–:to",
+        "columns": {
+            "week": "Week",
+            "sent": "Sent",
+            "skipped": "Skipped",
+            "unreachable": "Unreachable"
+        },
+        "legend": "Skipped: no views, scans, followers, spots and nothing due. Unreachable: no device and no confirmed e-mail address. Rows are deleted after 12 weeks."
+    }
+}

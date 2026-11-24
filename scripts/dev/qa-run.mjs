@@ -11,7 +11,7 @@
  * inherited output and returns its exit code. A lock counts as abandoned when its holder is gone, or after 6 hours.
  */
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,6 +22,60 @@ const breakGuard = `${lockDir}.breaking`;
 const STALE_MS = 6 * 60 * 60 * 1000;
 const BREAK_GUARD_STALE_MS = 60 * 1000;
 const POLL_MS = 15 * 1000;
+/**
+ * Client round 4: the lock was a free-for-all. A loop of short runs took it again within a second of each release while a waiter
+ * polled every 15 s, so a waiting e2e chunk never got a turn (45 minutes behind per-directory Pest loops). Waiters now queue: each
+ * takes a ticket (its start time and pid in .qa-queue), and only the oldest live ticket may take a free lock. The head polls often.
+ */
+const queueDir = join(root, 'docs', 'reports', 'logs', '.qa-queue');
+const HEAD_POLL_MS = 2 * 1000;
+/** Behind the head: often enough that the next in line notices its turn within seconds. */
+const QUEUE_POLL_MS = 5 * 1000;
+let ticket = null;
+
+function alive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return /** @type {NodeJS.ErrnoException} */ (error).code === 'EPERM';
+  }
+}
+
+/** The live tickets, oldest first; tickets of processes that are gone are removed. */
+function liveTickets() {
+  let names = [];
+  try {
+    names = readdirSync(queueDir);
+  } catch {
+    return [];
+  }
+  const live = [];
+  for (const name of names.sort()) {
+    const pid = Number.parseInt(name.split('-')[1] ?? '', 10);
+    if (Number.isNaN(pid) || !alive(pid)) rmSync(join(queueDir, name), { force: true });
+    else live.push(name);
+  }
+  return live;
+}
+
+function takeTicket() {
+  if (ticket) return;
+  mkdirSync(queueDir, { recursive: true });
+  ticket = `${String(Date.now()).padStart(15, '0')}-${process.pid}`;
+  writeFileSync(join(queueDir, ticket), `${command.join(' ')}\n`);
+}
+
+function dropTicket() {
+  if (ticket) rmSync(join(queueDir, ticket), { force: true });
+  ticket = null;
+}
+
+/** Whether this process may try the lock now: nobody waits, or this one is the oldest waiter. */
+function myTurn() {
+  const live = liveTickets();
+  return live.length === 0 || (ticket !== null && live[0] === ticket);
+}
 
 const command = process.argv.slice(2);
 if (command.length === 0) {
@@ -128,24 +182,31 @@ function breakIfAbandoned() {
 function acquire() {
   let announced = false;
   for (;;) {
-    try {
-      mkdirSync(lockDir);
-      writeFileSync(join(lockDir, 'owner.txt'), `${process.pid} ${command.join(' ')}\n`);
-      return;
-    } catch {
-      if (breakIfAbandoned()) continue;
-      if (!announced) {
-        console.log('[qa-run] another QA command is running, waiting for the lock');
-        announced = true;
+    if (myTurn()) {
+      try {
+        mkdirSync(lockDir);
+        writeFileSync(join(lockDir, 'owner.txt'), `${process.pid} ${command.join(' ')}\n`);
+        dropTicket();
+        return;
+      } catch {
+        if (breakIfAbandoned()) continue;
       }
-      sleep(POLL_MS);
     }
+    takeTicket();
+    if (!announced) {
+      console.log('[qa-run] another QA command is running, waiting for the lock (queued)');
+      announced = true;
+    }
+    sleep(myTurn() ? HEAD_POLL_MS : QUEUE_POLL_MS);
   }
 }
 
 mkdirSync(dirname(lockDir), { recursive: true });
-acquire();
-const release = () => rmSync(lockDir, { recursive: true, force: true });
+let holding = false;
+const release = () => {
+  dropTicket();
+  if (holding) rmSync(lockDir, { recursive: true, force: true });
+};
 process.on('SIGINT', () => {
   release();
   process.exit(130);
@@ -154,6 +215,8 @@ process.on('SIGTERM', () => {
   release();
   process.exit(143);
 });
+acquire();
+holding = true;
 
 let waited = false;
 while (foreignQaProcesses() > 0) {

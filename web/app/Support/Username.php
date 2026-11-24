@@ -32,13 +32,15 @@ final class Username
      *
      * @return list<string>
      */
-    public static function violations(string $username): array
+    public static function violations(string $username, bool $staff = false): array
     {
         $username = self::normalize($username);
         $length = mb_strlen($username);
         $violations = [];
+        $min = $staff ? 1 : config()->integer('speedclub.usernames.min_length');
+        $max = $staff ? config()->integer('speedclub.usernames.staff_max_length') : config()->integer('speedclub.usernames.max_length');
 
-        if ($length < config()->integer('speedclub.usernames.min_length') || $length > config()->integer('speedclub.usernames.max_length')) {
+        if ($length < $min || $length > $max) {
             $violations[] = self::VIOLATION_LENGTH;
         }
 
@@ -58,7 +60,7 @@ final class Username
             $violations[] = self::VIOLATION_CONSECUTIVE_DOTS;
         }
 
-        if (self::isReserved($username)) {
+        if (! $staff && self::isReserved($username)) {
             $violations[] = self::VIOLATION_RESERVED;
         }
 

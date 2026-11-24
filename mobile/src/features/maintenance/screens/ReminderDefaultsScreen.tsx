@@ -15,7 +15,13 @@ import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { Button, Chip, EmptyState, ErrorState, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Chip } from '@/ui/Chip';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { RowGroup } from '@/ui/RowGroup';
 
 import { LEAD_OPTIONS, MAX_LEADS } from '../model';

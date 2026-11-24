@@ -1,6 +1,6 @@
 /**
  * Web shortcuts [SIG `sig.web_shortcuts`] (02_PRODUCT_SPEC §5), desktop only: `/` focuses the search, ⌘K or Ctrl K opens the
- * quick switcher, `g` then h · d · g · m · p jumps to a tab, `?` opens the shortcut sheet. Never while the member types in a
+ * quick switcher, `g` then h · d · g · s · p jumps to a tab (m to Nachrichten), `?` opens the shortcut sheet. Never while the member types in a
  * field, never while an overlay is open, never with the IME composing. Pure, so the rules are tested without a browser.
  */
 import type { TabName } from '../destinations';
@@ -10,13 +10,16 @@ export const SHORTCUTS_FLAG = 'sig.web_shortcuts';
 /** How long `g` waits for its second key. */
 export const SEQUENCE_TIMEOUT_MS = 1500;
 
-export const TAB_KEYS: Readonly<Record<string, TabName>> = { h: 'home', d: 'discover', g: 'garage', m: 'messages', p: 'profile' };
+export const TAB_KEYS: Readonly<Record<string, TabName>> = { h: 'home', d: 'discover', g: 'garage', s: 'shop', p: 'profile' };
+/** `g m`: Nachrichten, no longer a tab since M5.2 (10 §1), opens like the header's link. */
+export const MESSAGES_KEY = 'm';
 
 export type ShortcutAction =
   | { kind: 'focusSearch' }
   | { kind: 'switcher' }
   | { kind: 'help' }
-  | { kind: 'tab'; tab: TabName };
+  | { kind: 'tab'; tab: TabName }
+  | { kind: 'messages' };
 
 /** What the handler reads of a DOM KeyboardEvent. */
 export type KeyLike = {
@@ -80,6 +83,7 @@ export function createShortcutHandler({ now = Date.now, overlayOpen = () => fals
     if (pending !== null && now() - pending <= SEQUENCE_TIMEOUT_MS) {
       const tab = TAB_KEYS[key.toLowerCase()];
       if (tab && !event.shiftKey) return { kind: 'tab', tab };
+      if (key.toLowerCase() === MESSAGES_KEY && !event.shiftKey) return { kind: 'messages' };
       return null;
     }
     if (key === '?') return { kind: 'help' };
@@ -99,6 +103,7 @@ export const SHORTCUT_ROWS = [
   { id: 'home', keys: ['G', 'H'] },
   { id: 'discover', keys: ['G', 'D'] },
   { id: 'garage', keys: ['G', 'G'] },
+  { id: 'shop', keys: ['G', 'S'] },
   { id: 'messages', keys: ['G', 'M'] },
   { id: 'profile', keys: ['G', 'P'] },
   { id: 'help', keys: ['?'] },

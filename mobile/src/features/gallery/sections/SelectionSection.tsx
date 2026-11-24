@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { size } from '@/theme';
-import { Checkbox, Chip, ContentTabs, Radio, SegmentedControl, Switch } from '@/ui';
+import { Checkbox } from '@/ui/Checkbox';
+import { Chip } from '@/ui/Chip';
+import { ContentTabs } from '@/ui/ContentTabs';
+import { Radio } from '@/ui/Radio';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Switch } from '@/ui/Switch';
 
 import { noop } from '../data';
 import { FORCED, Group, SectionScreen, Specimen, Wrap } from '../parts';

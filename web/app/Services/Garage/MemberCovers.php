@@ -9,6 +9,7 @@ use App\Enums\Visibility;
 use App\Models\Media;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Dex\GhostMode;
 
 /**
  * SEC-414-10 (DQ-1169 in one place): the member's profile cover as others see it, on WEB-02 /u, its og:image and the API (PROF-02).
@@ -40,6 +41,8 @@ final class MemberCovers
             && $vehicle->owner_id === $member->id
             && $vehicle->status === VehicleStatus::Published
             && $vehicle->visibility === Visibility::Public
+            // M5.9b: a cover from a ghost car would show the car on the profile.
+            && ! GhostMode::hides($vehicle, $reader)
             ? $cover : null;
     }
 }

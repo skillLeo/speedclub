@@ -35,6 +35,13 @@ class ProcessMedia implements ShouldQueue
     {
         $media = Media::query()->find($this->mediaId);
 
+        // Ready already: a store() that failed after the row was saved left the pending file behind; it goes now.
+        if ($media !== null && $media->status === MediaStatus::Ready) {
+            $service->tidy($media);
+
+            return;
+        }
+
         if ($media !== null && $media->status === MediaStatus::Processing) {
             $service->retry($media);
 

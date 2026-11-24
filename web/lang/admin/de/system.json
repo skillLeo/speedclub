@@ -194,6 +194,11 @@
                 "name": "Sentry",
                 "about": "Fehlerberichte aus App und Server.",
                 "test": "Test"
+            },
+            "shopify": {
+                "name": "Shopify Storefront",
+                "about": "Optional: liest den Shop-Katalog direkt aus Shopify; den Zugang trägt der Betreiber im Hosting ein. Ohne Token zeigt der Shop den Katalog aus dem Admin.",
+                "test": "Test"
             }
         },
         "reasons": {

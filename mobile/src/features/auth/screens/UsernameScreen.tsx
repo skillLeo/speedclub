@@ -7,14 +7,19 @@ import { View } from 'react-native';
 import { ApiError } from '@/api/client';
 import { useChooseUsername, useSignOut, useUsernameCheck, type UsernameReason } from '@/api/queries/auth';
 import { isWeb } from '@/lib/platform';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { createStyles } from '@/theme';
-import { Button, Icon, Text, TextInput } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Icon } from '@/ui/icons/Icon';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 
 import { AuthScreen } from '../components/AuthScreen';
 import { FormNotice } from '../components/FormNotice';
 import { RuleList } from '../components/RuleList';
 import { applyServerErrors, fieldMessage, useDebouncedValue } from '../forms';
 import { profileUrlPreview } from '../links';
+import { USERNAME_LENGTH_VALUES } from '../limits';
 import { normalizeUsername, usernameSchema, usernameViolations, USERNAME_MAX_LENGTH, type UsernameValues } from '../schemas';
 
 /** Long enough that typing a name in one go asks once. */
@@ -53,16 +58,16 @@ export function UsernameScreen() {
   const reason: UsernameReason | null = check.data && check.data.username === checkable ? check.data.reason : null;
   const available = Boolean(checkable && check.data?.username === checkable && check.data.available);
   // Local rules and the server's answer share one field. The server's own message on sending replaces both.
-  const reasonText = reason ? t(`username.reason.${reason}`) : undefined;
+  const reasonText = reason ? t(`username.reason.${reason}`, USERNAME_LENGTH_VALUES) : undefined;
 
-  const onSubmit = handleSubmit(async ({ username }) => {
+  const onSubmit = useSingleFlight(handleSubmit(async ({ username }) => {
     setNotice(null);
     try {
       await choose.mutateAsync(normalizeUsername(username));
     } catch (error) {
       setNotice(error instanceof ApiError ? applyServerErrors(error, setError, { username: 'username' }) : t('common.serverError'));
     }
-  });
+  }));
 
   return (
     <AuthScreen
@@ -136,7 +141,7 @@ export function UsernameScreen() {
       <RuleList
         testID="AUTH-08.rules"
         rules={[
-          { key: 'length', label: t('username.rules.length'), met: normalized ? !violations.includes('length') : false },
+          { key: 'length', label: t('username.rules.length', USERNAME_LENGTH_VALUES), met: normalized ? !violations.includes('length') : false },
           { key: 'characters', label: t('username.rules.characters'), met: normalized ? !violations.includes('characters') : false },
           {
             key: 'shape',

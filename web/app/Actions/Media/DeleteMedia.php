@@ -7,9 +7,11 @@ use App\Models\Media;
 use App\Models\Modification;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\BuildScore\BuildScores;
 use App\Services\Media\MediaService;
 use App\Services\PublicPages\OgImages;
 use App\Services\Search\VehicleSearchProjector;
+use App\Services\Wrapped\WrappedCardImages;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -64,6 +66,9 @@ class DeleteMedia
 
             User::query()->where('avatar_media_id', $media->getKey())->update(['avatar_media_id' => null]);
             User::query()->where('cover_media_id', $media->getKey())->update(['cover_media_id' => null]);
+
+            // M5.9c: a photo of a car, a mod or a build update stops counting for the Build Score.
+            app(BuildScores::class)->touchFor($media->getAttribute('mediable_type'), $media->getAttribute('mediable_id'));
         });
     }
 
@@ -73,6 +78,8 @@ class DeleteMedia
     public function withdraw(Media $media): void
     {
         $this->service->withdraw($media);
+        // SEC-P5G-09: a deleted photo leaves the member's cached Wrapped cards too.
+        app(WrappedCardImages::class)->forgetMember($media->owner_id);
 
         if ($media->status === MediaStatus::Failed) {
             return;

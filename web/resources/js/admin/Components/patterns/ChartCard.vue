@@ -10,6 +10,7 @@ import {
     Tooltip,
     type ChartData,
     type ChartOptions,
+    type ScriptableLineSegmentContext,
 } from "chart.js";
 import { PhArrowClockwise, PhWarningCircle } from "@phosphor-icons/vue";
 import { trans } from "laravel-vue-i18n";
@@ -37,6 +38,11 @@ export interface ChartSeries {
     values: number[];
     /** The one accent series of the chart; the rest are monochrome (03 §14). */
     accent?: boolean;
+    /**
+     * A chart without an accent (DQ-P5-042): `strong` draws the series in the primary ink, solid; `muted` in the tertiary ink, dashed.
+     * Two series then never differ by a grey alone (WCAG 1.4.1); both inks keep 3:1 against the surface (1.4.11).
+     */
+    tone?: "strong" | "muted";
 }
 
 /**
@@ -59,6 +65,8 @@ const props = withDefaults(
         zeroText?: string;
         /** false: the error state has no retry button (the page offers one retry for everything). */
         retryable?: boolean;
+        /** The last label is a period that is still running (today): its line segment is dotted, so it never reads as a drop. */
+        partialLast?: boolean;
         testId?: string;
     }>(),
     {
@@ -68,6 +76,7 @@ const props = withDefaults(
         emptyTitle: undefined,
         zeroText: undefined,
         retryable: true,
+        partialLast: false,
         testId: undefined,
     },
 );
@@ -121,7 +130,10 @@ const colors = computed(() => {
 });
 
 function seriesColor(series: ChartSeries, index: number): string {
-    if (allZero.value) return colors.value.tertiary;
+    // A series of only zeros is never an accent flat line (DQ-P5-030), also when another series of the chart has values.
+    if (allZero.value || series.values.every((value) => value === 0)) return colors.value.tertiary;
+    if (series.tone === "strong") return colors.value.ink;
+    if (series.tone === "muted") return colors.value.tertiary;
     return series.accent
         ? colors.value.accent
         : (colors.value.mono[index % colors.value.mono.length] ??
@@ -139,6 +151,15 @@ const lineData = computed<ChartData<"line">>(() => ({
         pointRadius: 0,
         pointHoverRadius: 4,
         tension: 0,
+        segment: {
+            borderDash: (context: ScriptableLineSegmentContext) => {
+                const running = props.partialLast && context.p1DataIndex === props.labels.length - 1;
+                const short = tokenPx("--sc-space-4", 4);
+                // The running day is dotted in every series (DQ-P5-050), the muted series dashed before it.
+                if (running) return [tokenPx("--sc-space-2", 2), short];
+                return series.tone === "muted" ? [tokenPx("--sc-space-8", 8), short] : undefined;
+            },
+        },
     })),
 }));
 
@@ -245,15 +266,23 @@ const options = computed(() => {
                         class="flex items-center gap-8 text-caption text-ink-2"
                     >
                         <span
+                            v-if="item.tone === 'muted'"
+                            class="w-16 border-t-2 border-dashed border-ink-3"
+                            aria-hidden="true"
+                        />
+                        <span
+                            v-else
                             class="h-2 w-16 rounded-full"
                             :class="
-                                allZero
+                                allZero || item.values.every((value) => value === 0)
                                     ? 'bg-ink-3'
                                     : item.accent
                                       ? 'bg-accent'
-                                      : index === 0
-                                        ? 'bg-ink-2'
-                                        : 'bg-ink-3'
+                                      : item.tone === 'strong'
+                                        ? 'bg-ink'
+                                        : index === 0
+                                          ? 'bg-ink-2'
+                                          : 'bg-ink-3'
                             "
                             aria-hidden="true"
                         />

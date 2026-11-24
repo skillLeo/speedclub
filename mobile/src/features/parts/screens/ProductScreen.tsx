@@ -17,7 +17,13 @@ import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space, useBreakpoint } from '@/theme';
-import { Button, Icon, PressableScale, Skeleton, SkeletonBlock, SkeletonText, SpecRow, StatusPill, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Icon } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { SpecRow } from '@/ui/SpecRow';
+import { StatusPill } from '@/ui/StatusPill';
+import { Text } from '@/ui/Text';
 
 import { BuildsEmpty, BuildsWall } from '../components/BuildsWall';
 import { PageStateBody, pageStateOf } from '../components/PageStates';

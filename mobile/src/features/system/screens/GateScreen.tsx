@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 
 import { useAppConfig } from '@/api/queries/appConfig';
 import { size, space } from '@/theme';
-import { Button, type PhotoFields } from '@/ui';
+import { Button } from '@/ui/Button';
+import { type PhotoFields } from '@/ui/Photo';
 
 import { BrandStage } from '../components/BrandStage';
 

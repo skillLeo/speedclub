@@ -45,8 +45,8 @@
     "garageOpen": "Open garage",
     "vehicleCount_one": "{{formatted}} vehicle",
     "vehicleCount_other": "{{formatted}} vehicles",
-    "aboutTitle": "About SPEED CLUB",
-    "aboutBody": "Your garage with specs and mods as real data, and a QR code that links your car in the car park to its build page.",
+    "aboutTitle": "About Speedclub",
+    "aboutBody": "Your garage with specs and mods as real data, and a sticker with a QR code that links your car in the car park to its build page.",
     "join": "Create account",
     "makesFocus": "Makes in focus"
   },
@@ -166,8 +166,8 @@
         "measures": "We've reviewed your report and took action. Tap for details.",
         "reversed": "We lifted an earlier measure. Tap for details."
       },
-      "qrMilestone": "Your QR code for {{vehicle}} has been scanned {{scans}} times",
-      "qrMilestoneAny": "One of your QR codes has been scanned {{scans}} times",
+      "qrMilestone": "Your sticker for {{vehicle}} has been scanned {{scans}} times",
+      "qrMilestoneAny": "One of your stickers has been scanned {{scans}} times",
       "huAuReminder": "The HU/AU inspection for {{vehicle}} is due in {{month}}",
       "huAuReminderAny": "Your HU/AU inspection is due in {{month}}",
       "catalogRequest": {
@@ -177,7 +177,24 @@
         "yourVehicle": "your vehicle"
       },
       "supportReply": "The team replied to your request {{reference}}",
-      "supportReplyAny": "The team replied to your support request"
+      "supportReplyAny": "The team replied to your support request",
+      "spotAlert": {
+        "yourCar": "car",
+        "today": {
+          "city_one": "Your {{vehicle}} was spotted in {{city}} today",
+          "city_other": "Your {{vehicle}} was spotted {{count}} times in {{city}} today",
+          "cities_other": "Your {{vehicle}} was spotted {{count}} times in {{cities}} cities today",
+          "plain_one": "Your {{vehicle}} was spotted today",
+          "plain_other": "Your {{vehicle}} was spotted {{count}} times today"
+        },
+        "day": {
+          "city_one": "Your {{vehicle}} was spotted in {{city}}",
+          "city_other": "Your {{vehicle}} was spotted {{count}} times in {{city}}",
+          "cities_other": "Your {{vehicle}} was spotted {{count}} times in {{cities}} cities",
+          "plain_one": "Your {{vehicle}} was spotted",
+          "plain_other": "Your {{vehicle}} was spotted {{count}} times"
+        }
+      }
     },
     "restricted": "Your account is restricted. You can still see your notifications.",
     "restrictedUntil": "Your account is restricted until {{date}}. You can still see your notifications.",
@@ -216,6 +233,7 @@
   "actions": {
     "react": "React",
     "reactions": {
+      "like": "Like",
       "strong": "Strong",
       "clean": "Clean",
       "low": "Low",
@@ -223,7 +241,10 @@
     },
     "failed": "That didn’t work. Please try again.",
     "copied": "Link copied.",
-    "shareFailed": "Sharing isn’t available here. The link: {{url}}"
+    "shareFailed": "Sharing isn’t available here. The link: {{url}}",
+    "like": "Like",
+    "comments": "Comments",
+    "commentsOf": "Comments on {{vehicle}}"
   },
   "brands": {
     "title": "Brands in focus",
@@ -234,5 +255,67 @@
     "title": "Workshops and businesses",
     "all": "All",
     "allLabel": "Show all businesses in Discover"
+  },
+  "carOfTheDay": {
+    "label": "Car of the Day",
+    "date": "{{date}}",
+    "labelA11y": "Car of the Day on {{date}}",
+    "story": "“{{story}}”",
+    "ownerNote": "Your car is today's Car of the Day. Everyone sees it up here until 6 pm tomorrow.",
+    "edit": "Edit story",
+    "add": "Write a story",
+    "editorTitle": "Your story",
+    "editorIntro": "One line everyone reads under your car, until 6 pm tomorrow.",
+    "field": "Story",
+    "placeholder": "Mine since 2019, every part fitted myself.",
+    "counter": "{{count}} / {{max}}",
+    "save": "Save",
+    "saved": "Story saved",
+    "tooLong": "At most {{max}} characters.",
+    "failed": "Saving did not work. Please try again.",
+    "offline": "Offline – you can save as soon as you are back online."
+  },
+  "nextEvents": {
+    "title": "Next meets",
+    "all": "All meets",
+    "allLabel": "See all meets"
+  },
+  "vote": {
+    "title": "Pick tomorrow’s Car of the Day",
+    "titleToday": "Pick tonight’s Car of the Day",
+    "titleNext": "Pick the Car of the Day",
+    "introTomorrow": "One vote a day. You can change it until {{time}} tomorrow.",
+    "introToday": "One vote a day. You can change it until {{time}} today.",
+    "introPlain": "One vote a day; you can change it until voting closes.",
+    "closed": "Voting has closed. The winner is out at 6 pm.",
+    "voted": "You voted: {{vehicle}}.",
+    "votedChange": "You voted: {{vehicle}}. You can switch until {{time}}.",
+    "yourChoice": "Your pick",
+    "ownCar": "Your car",
+    "lastWon": "Your votes picked it: {{vehicle}} is today’s Car of the Day",
+    "lastWonMine": "Your pick won: {{vehicle}} is today’s Car of the Day",
+    "offline": "Offline – you can vote as soon as you’re back online.",
+    "offlineLoad": "Offline – voting loads as soon as you’re back online.",
+    "loadError": "Voting couldn’t be loaded.",
+    "retry": "Try again",
+    "failed": "Your vote didn’t go through. Try again.",
+    "verify": "Confirm email",
+    "reasons": "See the reasons",
+    "reason": {
+      "tooNew": "You can vote three days after you sign up.",
+      "tooNewFrom": "You can vote three days after you sign up, from {{date}}.",
+      "unverified": "Confirm your email address first, then you can vote.",
+      "restricted": "Your account is restricted right now, so you can’t vote.",
+      "sample": "Sample accounts can’t vote."
+    }
+  },
+  "crews": {
+    "notifications": {
+      "aCrew": "a crew",
+      "requestReceived": "{{actor}} wants to join “{{crew}}”.",
+      "requestApproved": "You're now a member of “{{crew}}”.",
+      "invited": "{{actor}} invited you to “{{crew}}”.",
+      "other": "News from “{{crew}}”."
+    }
   }
 }

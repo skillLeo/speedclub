@@ -1,13 +1,13 @@
 ---
 status: draft
-review: lawyer review required before launch. Entwurf – rechtliche Prüfung ausstehend (Phase-4-Änderungen, OA-35)
+review: lawyer review required before launch. Entwurf – rechtliche Prüfung ausstehend (Phase-4- und Phase-5-Änderungen, OA-35)
 source: docs/08_LEGAL_COMPLIANCE.md sections 4, 7, 10; docs/02_PRODUCT_SPEC.md section 9; docs/09_PREMIUM_2_0.md sections 8.5–8.10 and 13
-changes: docs/legal/phase-4-changes.md
+changes: docs/legal/phase-4-changes.md, docs/legal/phase-5-changes.md
 ---
 
 # Community-Richtlinien
 
-SPEED CLUB lebt von Menschen, die ihre Autos lieben und offen darüber reden. Diese Regeln halten es so.
+Speedclub lebt von Menschen, die ihre Autos lieben und offen darüber reden. Diese Regeln halten es so.
 
 ## 1. Autos zuerst
 
@@ -29,7 +29,7 @@ Lade nur Fotos hoch, an denen du die Rechte hast. Keine Nacktheit und keine Gewa
 
 ## 5. Privatsphäre
 
-Denk an Kennzeichen und Menschen auf deinen Fotos. Ob du dein Kennzeichen zeigst, entscheidest du selbst. Wo verfügbar, hilft dir unser Werkzeug beim Unkenntlichmachen.
+Denk an Kennzeichen und Menschen auf deinen Fotos. Ob du dein Kennzeichen zeigst, entscheidest du selbst. Beim Hochladen ist „Kennzeichen unkenntlich machen“ eingeschaltet; du markierst die Stelle, wir verpixeln sie.
 
 ## 6. Kein Spam
 
@@ -37,11 +37,11 @@ Keine Massennachrichten und keine nicht gekennzeichnete Werbung. Wenn du für ei
 
 ## 7. Modifikationen und Rechtliches
 
-Angaben zu Modifikationen sind Angaben des Besitzers. SPEED CLUB sagt nichts dazu, ob ein Umbau zulässig ist. Das Feld zum rechtlichen Status heißt deshalb immer: Angaben des Besitzers, keine rechtliche Prüfung.
+Angaben zu Modifikationen sind Angaben des Besitzers. Speedclub sagt nichts dazu, ob ein Umbau zulässig ist. Das Feld zum rechtlichen Status heißt deshalb immer: Angaben des Besitzers, keine rechtliche Prüfung.
 
 ## 8. Treffen
 
-Treffen auf SPEED CLUB sind legale Treffen. Wer eins veranstaltet, bestätigt diese Regeln, und für alle, die hinkommen, gelten sie genauso:
+Treffen auf Speedclub sind legale Treffen. Wer eins veranstaltet, bestätigt diese Regeln, und für alle, die hinkommen, gelten sie genauso:
 
 - Nur legal: keine Rennen, kein gefährliches Fahren auf öffentlichen Straßen.
 - Kein Burnout, kein Drift, kein Wettfahren. Das gehört auf die Rennstrecke, nicht auf den Parkplatz.
@@ -53,18 +53,36 @@ Gib Zeit, Ort und Ablauf ehrlich an und sag rechtzeitig ab, wenn das Treffen aus
 
 ## 9. Betriebe und Werbung
 
-Betriebe zeigen auf SPEED CLUB ihre Arbeit. Markiere einen Betrieb mit „Eingebaut von“ nur, wenn er den Umbau wirklich gemacht hat, und als Betrieb nur Builds, an denen du gearbeitet hast. Halte dein Impressum aktuell. Keine gekauften oder erfundenen Empfehlungen, keine Werbung in Nachrichten an Mitglieder, die nicht danach gefragt haben, und kennzeichne Werbung immer als solche.
+Betriebe zeigen auf Speedclub ihre Arbeit. Markiere einen Betrieb mit „Eingebaut von“ nur, wenn er den Umbau wirklich gemacht hat, und als Betrieb nur Builds, an denen du gearbeitet hast. Halte dein Impressum aktuell. Keine gekauften oder erfundenen Empfehlungen, keine Werbung in Nachrichten an Mitglieder, die nicht danach gefragt haben, und kennzeichne Werbung immer als solche.
 
 ## 10. Reaktionen, Erwähnungen und Kommentare
 
 Reaktionen sind ein kurzes Zeichen an den Besitzer, kein Wettbewerb. Erwähne Mitglieder nur, wenn es um sie oder ihr Auto geht, nicht, um möglichst viele Leute anzustupsen. Wer dich nicht erwähnen lassen will, stellt das in den Einstellungen ein. Für Kommentare gelten, sobald es sie gibt, dieselben Regeln wie für alles andere hier: Kritik am Auto ist okay, Angriffe auf Menschen nicht.
 
-## 11. Melden
+## 11. STREET DEX und Spots
+
+Spotten heißt: Du siehst ein Auto mit Speedclub Sticker und scannst ihn vor Ort.
+
+- Scanne nur Sticker von Autos, vor denen du gerade stehst, keine Codes von Fotos, Screenshots oder aus dem Netz.
+- Lass das Auto in Ruhe: nicht anfassen, nicht draufsetzen, nicht zuparken.
+- Fahr keinem Auto hinterher, um es zu spotten.
+- Verfolge niemanden und lauere dem Besitzer nicht auf.
+- Veröffentliche nicht, wo ein bestimmtes Auto steht oder wann es wo war.
+- Fotografiere keine Menschen am Auto, die das nicht wollen.
+- Ein Konto pro Person. Keine Zweitkonten und keine abgesprochenen oder erfundenen Spots.
+
+Wer Ghost-Modus, „Spotten pausieren“ oder „Städte verbergen“ nutzt, möchte weniger gefunden werden. Respektiere das.
+
+## 12. Level, Abzeichen, Build Score und Einladungen
+
+XP, Abzeichen und Build Score folgen festen Regeln, die jeder in der App sieht. Trickse sie nicht aus: keine erfundenen Mods, keine fremden Fotos, keine Mods, die du nur löschst und neu anlegst, keine Zweitkonten. Einladungen sind für Menschen, die du wirklich dabeihaben willst, nicht für Massenwerbung (siehe Nummer 6).
+
+## 13. Melden
 
 Wenn du etwas siehst, das nicht hierher gehört, melde es: in der App an jedem Mitglied, Fahrzeug, Foto, Build-Update, Kommentar, Treffen, Betrieb und jeder Nachricht. Ohne Konto nutzt du unser Meldeformular unter /melden oder schreibst uns an [[Melde-E-Mail]]. Bei rechtswidrigen Inhalten brauchen wir eine Erklärung, den Ort (URL) und deine Versicherung, dass du in gutem Glauben handelst. Gibst du im Formular eine E-Mail-Adresse an, bestätigen wir den Eingang und teilen dir unsere Entscheidung mit. Wer etwas gemeldet hat, erfährt das Ergebnis und kann innerhalb von **6 Monaten** Einspruch dagegen einlegen. Moderatorinnen und Moderatoren sehen in Nachrichten nur die gemeldeten Nachrichten und den nötigen Zusammenhang.
 
-## 12. Folgen
+## 14. Folgen
 
-Je nach Schwere und Häufigkeit entfernen wir Inhalte, sagen Treffen ab, sperren Betriebsprofile, schränken Funktionen ein oder sperren Konten. Du bekommst immer eine Begründung und kannst innerhalb von **6 Monaten** Einspruch einlegen. Über den Einspruch entscheidet eine andere Person.
+Je nach Schwere und Häufigkeit entfernen wir Inhalte oder Spots, nehmen XP, Sets und Abzeichen zurück, sagen Treffen ab, sperren Betriebsprofile, schränken Funktionen ein oder sperren Konten. Du bekommst immer eine Begründung und kannst innerhalb von **6 Monaten** Einspruch einlegen. Über den Einspruch entscheidet eine andere Person.
 
 Stand: [[Datum]]

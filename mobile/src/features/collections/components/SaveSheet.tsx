@@ -12,18 +12,15 @@ import {
 } from '@/api/queries/social2';
 import { haptics } from '@/lib/haptics';
 import { createStyles, space } from '@/theme';
-import {
-  Button,
-  Checkbox,
-  ErrorState,
-  ListRow,
-  Sheet,
-  Skeleton,
-  SkeletonText,
-  Text,
-  TextInput,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { Checkbox } from '@/ui/Checkbox';
+import { ErrorState } from '@/ui/ErrorState';
+import { ListRow } from '@/ui/ListRow';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 
 const SKELETON_ROWS = 3;
 

@@ -15,7 +15,13 @@ import { useOnline } from '@/state/online';
 import { clearAuthIntent, useSessionStore } from '@/state/session';
 import { createStyles, layout, useBreakpoint } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import { EmptyState, ErrorState, Header, HeaderLargeTitle, Screen, Skeleton, Text, useCollapsingHeader } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Header, HeaderLargeTitle } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
+import { Skeleton } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { CollectionsGrid, CollectionsGridSkeleton, useCollectionActions } from '../components/CollectionsGrid';
 import { SampleCollections } from '../components/SampleCollections';

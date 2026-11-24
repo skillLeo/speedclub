@@ -17,6 +17,8 @@ class GarageListRequest extends FormRequest
     private const CURSOR_COLUMNS = [
         'api.v1.me.vehicles.index' => ['is_main', 'sort', 'id'],
         'api.v1.me.qr-codes.index' => ['is_main', 'sort', 'id'],
+        'api.v1.me.stickers.index' => ['is_main', 'sort', 'id'],
+        'api.v1.vehicles.sticker-design.versions' => ['version', 'id'],
         'api.v1.public.users.vehicles' => ['is_main', 'sort', 'id'],
         'api.v1.vehicles.mods.index' => ['sort', 'id'],
         'api.v1.vehicles.updates.index' => ['created_at', 'id'],

@@ -26,6 +26,12 @@ final class OrgIdentity
 
     public const EMAIL_FIELDS = ['contact_email', 'support_email', 'privacy_email', 'dsa_email', 'report_email'];
 
+    /** The fields a legal text may name by key (`[[company_name]]`): every field but the platform setting default_locale. */
+    public const TEXT_FIELDS = [
+        'company_name', 'legal_form', 'street', 'postal_city', 'representative', 'responsible_person', 'contact_email', 'phone',
+        'support_email', 'privacy_email', 'dsa_email', 'report_email', 'register_court', 'register_number', 'vat_id', 'supervisory_authority',
+    ];
+
     /** Placeholder text of the legal documents (database/data/legal/*.md) => org field. */
     public const PLACEHOLDERS = [
         'Firmenname' => 'company_name',
@@ -113,15 +119,16 @@ final class OrgIdentity
     }
 
     /**
-     * Replaces every `[[Placeholder]]` of PLACEHOLDERS whose field is set. Values are plain text; Markdown control characters are
-     * escaped, so a value cannot add a link or formatting to a legal text.
+     * Replaces every `[[Placeholder]]` of PLACEHOLDERS whose field is set, and every `[[field]]` written with the field's key (the legal
+     * editor's hint names them so, e.g. `[[company_name]]`; client report 2026-11-23). Values are plain text; Markdown control characters
+     * are escaped, so a value cannot add a link or formatting to a legal text.
      */
     public function resolve(string $markdown): string
     {
         $values = $this->values();
 
         return (string) preg_replace_callback('/\[\[([^\[\]]{1,120})\]\]/u', function (array $match) use ($values): string {
-            $field = self::PLACEHOLDERS[$match[1]] ?? null;
+            $field = self::PLACEHOLDERS[$match[1]] ?? (in_array($match[1], self::TEXT_FIELDS, true) ? $match[1] : null);
             $value = $field === null ? null : ($values[$field] ?? null);
 
             return $value === null ? $match[0] : self::escape($value);

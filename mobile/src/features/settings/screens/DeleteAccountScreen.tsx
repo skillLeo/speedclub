@@ -9,8 +9,15 @@ import { ApiError } from '@/api/client';
 import { endLocalSessionQuietly, type Me } from '@/api/queries/auth';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { applyServerErrors } from '@/features/auth/forms';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { createStyles, size } from '@/theme';
-import { Button, Checkbox, Dialog, Icon, Skeleton, SkeletonBlock, SkeletonText, Text, TextInput, type IconName } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Checkbox } from '@/ui/Checkbox';
+import { Dialog } from '@/ui/Dialog';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 
 import { twoFactorEnabledOf } from '../account';
 import { useMemberGate } from '../components/MemberGate';
@@ -122,7 +129,7 @@ function DeleteAccountForm({ me }: { me: Me }) {
     setConfirming(true);
   });
 
-  const run = handleSubmit(async (values) => {
+  const run = useSingleFlight(handleSubmit(async (values) => {
     const code = values.code.replace(/\s/g, '');
     try {
       await remove.mutateAsync({ password: values.password, ...(askCode && code ? { code } : {}) });
@@ -143,7 +150,7 @@ function DeleteAccountForm({ me }: { me: Me }) {
         setNotice(failure(error));
       }
     }
-  });
+  }));
 
   return (
     <SettingsPage

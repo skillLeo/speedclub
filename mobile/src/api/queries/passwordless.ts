@@ -8,6 +8,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api, ApiError } from '@/api/client';
+import { forgetInviteCode, inviteFields } from '@/features/auth/inviteCode';
 import type { components } from '@/api/schema';
 import i18n from '@/i18n';
 import { isWeb } from '@/lib/platform';
@@ -92,10 +93,11 @@ export function useVerifyEmailCode() {
       await revokePendingLogoutBeforeSignIn();
       const proof = 'code' in input ? { code: input.code } : { magic_token: input.magicToken };
       // The generated request type predates the passwordless fields (attempt_id, magic_token); the server documents them.
-      const body = { email: input.email, attempt_id: input.attemptId, locale: locale(), ...proof, ...device };
+      const body = { email: input.email, attempt_id: input.attemptId, locale: locale(), ...proof, ...device, ...inviteFields() };
       const { data } = await withFreshCsrf(() =>
         apiDetailed(api.POST('/auth/email/verify', { body: body as unknown as Schemas['VerifyEmailRequest'] })),
       );
+      forgetInviteCode();
       return answerOf(data);
     },
   });
@@ -134,8 +136,10 @@ export function useAppleSignIn() {
         locale: locale(),
         ...(os ? { platform: os } : {}),
         ...device,
+        ...inviteFields(),
       };
       const { data } = await withFreshCsrf(() => apiDetailed(api.POST('/auth/apple', { body })));
+      forgetInviteCode();
       return answerOf(data);
     },
   });
@@ -151,8 +155,9 @@ export function useGoogleSignIn() {
       const device = await deviceFields();
       await revokePendingLogoutBeforeSignIn();
       const os = platform();
-      const body: Schemas['GoogleSignInRequest'] = { id_token: idToken, nonce, locale: locale(), ...(os ? { platform: os } : {}), ...device };
+      const body: Schemas['GoogleSignInRequest'] = { id_token: idToken, nonce, locale: locale(), ...(os ? { platform: os } : {}), ...device, ...inviteFields() };
       const { data } = await withFreshCsrf(() => apiDetailed(api.POST('/auth/google', { body })));
+      forgetInviteCode();
       return answerOf(data);
     },
   });

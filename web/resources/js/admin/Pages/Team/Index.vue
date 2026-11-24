@@ -10,8 +10,9 @@ import { useAdminAction } from '../../Components/decisions/action';
 import ApprovalNotice from '../../Components/patterns/ApprovalNotice.vue';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
-import { Button, Drawer, Field, Input, Select, StatusPill, Textarea } from '../../Components/ui';
+import { Button, Drawer, Field, Input, Select, StatusPill } from '../../Components/ui';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
+import { useFourEyes } from '../../composables/fourEyes';
 import { qaDialog } from '../../composables/qaDialog';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
 import { usePermissions } from '../../lib/permissions';
@@ -22,7 +23,7 @@ import { roleChangeReasons, roleLabel, staffHref, stateTones, type RoleOption, t
 
 /**
  * ADM-39 staff list (06 §3 Team & roles, m3.6 §1): name and address, roles, status, second factor, last sign-in; filters and presets;
- * the invite drawer (name, address, roles with the four-eyes mark, mail language; a reason when a role waits for approval).
+ * the invite drawer (name, address, roles with the four-eyes mark, mail language; the approval notice when a role waits for one).
  */
 const props = defineProps<{
     rows: Paginated<StaffRow>;
@@ -82,13 +83,14 @@ function inviteText(row: StaffRow): string | null {
 // ---- invite drawer ----------------------------------------------------------------------------------------------------------
 const action = useAdminAction();
 const inviteOpen = ref(false);
-const form = reactive({ name: '', email: '', roles: [] as string[], locale: 'de', reason: '' });
-const errors = reactive<Record<string, string | null>>({ name: null, email: null, roles: null, reason: null });
+const form = reactive({ name: '', email: '', roles: [] as string[], locale: 'de' });
+const errors = reactive<Record<string, string | null>>({ name: null, email: null, roles: null });
 const localeOptions = computed(() => (['de', 'en'] as const).map((v) => ({ value: v, label: trans(`team.invite.locales.${v}`) })));
 const disabledRoles = computed(() => (props.viewerIsOwner ? [] : ['owner']));
-const fourEyes = computed(() => form.roles.length > 0 && roleChangeReasons([], form.roles, props.roles).includes('elevates'));
+const fourEyesSwitch = useFourEyes();
+const fourEyes = computed(() => fourEyesSwitch.value && form.roles.length > 0 && roleChangeReasons([], form.roles, props.roles).includes('elevates'));
 function openInvite(): void {
-    Object.assign(form, { name: '', email: '', roles: [], locale: 'de', reason: '' });
+    Object.assign(form, { name: '', email: '', roles: [], locale: 'de' });
     Object.keys(errors).forEach((key) => (errors[key] = null));
     action.reset();
     inviteOpen.value = true;
@@ -97,14 +99,12 @@ function submitInvite(): void {
     errors.name = form.name.trim().length < 2 ? trans('team.invite.errors.name') : null;
     errors.email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? null : trans('team.invite.errors.email');
     errors.roles = form.roles.length === 0 ? trans('team.invite.errors.roles') : null;
-    const reason = form.reason.trim();
-    errors.reason = fourEyes.value && (reason.length < 10 || reason.length > 1000) ? trans('team.invite.errors.reason') : null;
     if (Object.values(errors).some((e) => e !== null)) return;
-    action.run('post', routeOr('admin.team.invite', '/admin/team/invite'), { name: form.name.trim(), email: form.email.trim(), roles: form.roles, locale: form.locale, reason: fourEyes.value ? reason : null }, { sensitive: true, onSuccess: () => (inviteOpen.value = false) });
+    action.run('post', routeOr('admin.team.invite', '/admin/team/invite'), { name: form.name.trim(), email: form.email.trim(), roles: form.roles, locale: form.locale }, { sensitive: true, onSuccess: () => (inviteOpen.value = false) });
 }
 if (qaDialog() === 'invite') {
     openInvite();
-    Object.assign(form, { name: 'Jana Wolff', email: 'jana.wolff@speedclub.de', roles: ['admin'], reason: 'Übernimmt ab Montag die Vertretung im Team.' });
+    Object.assign(form, { name: 'Jana Wolff', email: 'jana.wolff@speedclub.de', roles: ['admin'] });
 }
 const serverError = computed(() => (failedDialog ? trans('ui.state.server_error') : action.error.value));
 </script>
@@ -174,7 +174,6 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                 <template v-if="fourEyes">
                     <ApprovalNotice test-id="ADM-39.invite.four-eyes" />
                     <p class="text-admin-base text-ink-2">{{ trans('team.invite.elevating') }}</p>
-                    <Field :label="trans('ui.confirm.reason')" :hint="trans('team.invite.reason_hint')" :error="errors.reason" required><Textarea v-model="form.reason" :rows="2" :maxlength="1000" show-count data-testid="ADM-39.invite.reason" /></Field>
                 </template>
             </form>
             <template #footer>

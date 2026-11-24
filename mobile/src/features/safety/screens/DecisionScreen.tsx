@@ -15,19 +15,16 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, layout, useBreakpoint } from '@/theme';
-import {
-  Button,
-  DiscardGuardDialog,
-  EmptyState,
-  ErrorState,
-  Hairline,
-  Header,
-  OfflineBanner,
-  Screen,
-  Skeleton,
-  SkeletonText,
-  Text,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { DiscardGuardDialog } from '@/ui/DiscardGuardDialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { Header } from '@/ui/Header';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Screen } from '@/ui/Screen';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import { appealOption, decisionDeadline } from '../appeal';
 import { AppealSheet } from '../components/AppealSheet';

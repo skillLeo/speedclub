@@ -134,6 +134,49 @@ final class Collections
     }
 
     /**
+     * For writers of `saves` rows that bypass add() (the demo seeders): every saved build of $user that is not in "Gespeichert" yet goes
+     * in, in the order of saving and dated by its save, as the M4.11 move did (ADR-436 a). Idempotent; returns how many went in.
+     */
+    public function adoptSaves(User $user): int
+    {
+        $saves = Save::query()->where('user_id', $user->id)->orderBy('created_at')->orderBy('id')->get(['vehicle_id', 'created_at']);
+
+        if ($saves->isEmpty()) {
+            return 0;
+        }
+
+        $collection = $this->defaultFor($user);
+
+        return DB::transaction(function () use ($collection, $saves): int {
+            MemberCollection::query()->whereKey($collection->id)->lockForUpdate()->value('id');
+
+            $present = $collection->items()->where('item_type', CollectionItemType::Vehicle)->pluck('item_id')->map(strval(...))->flip();
+            $position = (int) $collection->items()->max('position');
+            $rows = [];
+
+            foreach ($saves as $save) {
+                if ($present->has((string) $save->vehicle_id)) {
+                    continue;
+                }
+
+                $rows[] = [
+                    'collection_id' => $collection->id,
+                    'item_type' => CollectionItemType::Vehicle->value,
+                    'item_id' => (string) $save->vehicle_id,
+                    'position' => ++$position,
+                    'created_at' => $save->created_at,
+                ];
+            }
+
+            foreach (array_chunk($rows, 200) as $chunk) {
+                MemberCollectionItem::query()->insertOrIgnore($chunk);
+            }
+
+            return count($rows);
+        });
+    }
+
+    /**
      * PROF-05's unsave route: the build leaves every collection of the member.
      */
     public function unsaved(User $user, string $vehicleId): void

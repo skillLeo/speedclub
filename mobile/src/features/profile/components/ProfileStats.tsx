@@ -4,7 +4,8 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, typeScale, useTheme } from '@/theme';
-import { PressableScale, Text } from '@/ui';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text } from '@/ui/Text';
 
 const TABULAR = { fontVariant: ['tabular-nums' as const] };
 const NO_BREAK = ' ';

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:staff', EnsureStaffTwoFactor::class])->group(function (): void {
     // ADR-217: "Sitzung verlängern".
-    Route::post('session/keep-alive', SessionKeepAliveController::class)->middleware('throttle:30,1')->name('session.keep-alive');
+    Route::post('session/keep-alive', SessionKeepAliveController::class)->middleware('throttle:30,1,admin-session-keep-alive')->name('session.keep-alive');
 
     // ADR-214: the file an approved audit export wrote, for its requester, 24 hours. The id goes in the query, which RefuseLongQuery
     // bounds, not in the path: a GET with a session and a path parameter would store any length of path (SEC-P1-47).

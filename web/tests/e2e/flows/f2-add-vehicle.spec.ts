@@ -134,6 +134,8 @@ test.describe('F2 add first vehicle', () => {
     // Step 3 Fotos & Beschreibung: a real photo through the queue, and the 500 character description.
     const [chooser] = await Promise.all([page.waitForEvent('filechooser'), id(page, 'GAR-03.photos.add').click()]);
     await chooser.setFiles(photoFile('generic-exterior-01.jpg'));
+    // M5.9a (10 §16, ADR-509): the plate blur step between the picker and the queue; its default is the blur on.
+    await id(page, 'GAR-03.plateBlur.confirm').click();
     await expect(photoTiles(page)).toHaveCount(1, { timeout: 60_000 });
     await expect(id(page, 'GAR-03.photos.count')).toHaveText('1 von 30 Fotos');
     const description = 'Bayside Blue, seit 2015 in meiner Garage. Ziel: zuverlässige 500 PS.';
@@ -167,11 +169,11 @@ test.describe('F2 add first vehicle', () => {
     const code = published.qr.code as string;
     await expect(id(page, 'GAR-04.qr.shortCode')).toHaveText(`${code.slice(0, 4)} ${code.slice(4)}`);
 
-    // "QR-Code ansehen" (09 §7.6 GAR-04) → QR-02 of this vehicle, with the same code.
+    // "Sticker ansehen" (09 §7.6 GAR-04, renamed in M5.4) → STK-02 of this vehicle, with the same code.
     await id(page, 'GAR-04.viewQr').click();
-    await expect(id(page, 'QR-02.root')).toBeVisible();
-    expect(pathOf(page)).toBe(`/app/qr/${vehicleId}`);
-    await expect(id(page, 'QR-02.card.shortCode')).toHaveText(`${code.slice(0, 4)} ${code.slice(4)}`);
+    await expect(id(page, 'STK-02.root')).toBeVisible();
+    expect(pathOf(page)).toBe(`/app/stickers/${vehicleId}`);
+    await expect(id(page, 'STK-02.download')).toContainText(`${code.slice(0, 4)} ${code.slice(4)}`);
 
     // GAR-09 of this vehicle is still empty (GAR-04 no longer links it; the garage's quick action "Mods" does).
     await open(page, `/app/garage/${vehicleId}/mods`);
@@ -306,6 +308,7 @@ test.describe('F2 add first vehicle', () => {
     await open(page, `/app/add-vehicle/${draft.id}/photos`);
     const [chooser] = await Promise.all([page.waitForEvent('filechooser'), id(page, 'GAR-03.photos.add').click()]);
     await chooser.setFiles(photoFile('generic-wheels-01.jpg'));
+    await id(page, 'GAR-03.plateBlur.confirm').click();
     const tile = page.locator('[data-testid^="GAR-03.photos.upload."][role="button"]:visible');
     await expect(tile).toHaveCount(1);
     await expect(tile).toHaveAttribute('aria-label', 'Fehlgeschlagen: Der Upload hat nicht geklappt. Versuche es noch einmal.');

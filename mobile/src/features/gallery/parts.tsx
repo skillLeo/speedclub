@@ -5,7 +5,9 @@ import { ScrollView, View, type FocusEvent, type StyleProp, type ViewStyle } fro
 import { keepShortNamesTogether } from '@/lib/format';
 import { isWeb } from '@/lib/platform';
 import { createStyles, useBreakpoint } from '@/theme';
-import { Header, Screen, Text, type TextProps } from '@/ui';
+import { Header } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
+import { Text, type TextProps } from '@/ui/Text';
 import { useFocusRing } from '@/ui/useFocusRing';
 import { EagerImagesProvider, ForcedVisualStateProvider, type ForcedVisualState } from '@/ui/qaVisualState';
 

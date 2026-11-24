@@ -43,7 +43,7 @@ Every AI feature is labelled "KI-Vorschlag" / "KI-gestützte Suche" / "Übersetz
   - "Windschutzscheibe: möglichst gar nicht. Wenn überhaupt, nur ganz am Rand außerhalb des Sichtfelds und nie im Wischerbereich."
   - "Klein halten: deutlich unter 0,1 m² und nie mehr als ein Viertel einer Scheibe. Nicht spiegelnd, nicht leuchtend, keine Kennzeichen, Leuchten oder Plaketten verdecken."
   - Footer: "Keine Rechtsberatung. Maßgeblich sind die StVZO (u. a. §§ 35b, 40) und die Auslegung der Behörden. Verstöße können ein Bußgeld nach sich ziehen."
-  - Print guidance: minimum QR size 30 × 30 mm for scans from ~1 m (larger for longer distances), quiet zone 4 modules, matte vinyl, black on white.
+  - Print guidance (ADR-522, two contexts): **the self-print A6 sheet** (QR-02/STK-02 "Sticker-PDF", black on white, its code 56 mm) prints its own line: minimum QR size 30 × 30 mm for scans from ~1 m (larger for longer distances), quiet zone 4 modules, matte vinyl, black on white. **Designed stickers** (STK-05, produced on film): the designer keeps the QR symbol at 25 mm or more (enforced by the server, `speedclub.stickers.qr_min_mm`) with 4 modules clear; size M or L for scans from more than 1 m; white print on dark glass, black on light paint — this is the print line of STK-03 in the app. The placement sentences and the footer above stay word for word in both.
 
 ## 8. Accessibility
 Target **WCAG 2.2 AA** on web and equivalent native practices (labels, roles, focus order, contrast — enforced by the token gate and axe). The BFSG (since 28 Jun 2025) mainly targets e-commerce and specific services; V1 is likely out of scope, the future Shop would not be — building to AA now avoids rework.

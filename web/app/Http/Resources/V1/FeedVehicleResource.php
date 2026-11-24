@@ -6,6 +6,7 @@ use App\Models\BuildUpdate;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Garage\BuildUpdatePresenter;
+use App\Services\Social\VehicleCommentThread;
 use App\Services\Social\ViewerStates;
 use App\Support\Viewer;
 use Carbon\CarbonInterface;
@@ -69,6 +70,13 @@ class FeedVehicleResource extends VehicleCardResource
              * @var array{saved: bool, reaction: string|null}|null
              */
             'viewer' => $viewer === null ? null : app(ViewerStates::class)->of($viewer, 'vehicle', (string) $vehicle->id),
+            /**
+             * R5-5 [build_comments]: the car's own comment thread, so a card can open it in place. enabled: the thread is open (flag on,
+             * the owner allows comments); can_write: this reader may write now (false for guests). Never a count.
+             *
+             * @var array{enabled: bool, can_write: bool}
+             */
+            'comment_thread' => app(VehicleCommentThread::class)->state($vehicle, $viewer),
         ];
     }
 

@@ -333,6 +333,105 @@ export function powerCounterpart(text: string, unit: PowerUnit, locale: FormatLo
   return `≈ ${formatNumber(roundInt(convertPower(value, unit, other)), locale)}${NBSP}${label}`;
 }
 
+// -- "Daten übernehmen?" (M5.9, ai.vehicle_specs): typical factory specs of the catalogue car, taken into the empty fields only
+
+/** The fields a suggestion can fill and later mark "Herstellerangabe (KI-Vorschlag)" until the member changes them. */
+export const SPEC_MARK_KEYS = ['engineCode', 'displacement', 'fuel', 'aspiration', 'powerValue', 'torque', 'drivetrain', 'gearbox'] as const;
+export type SpecMarkKey = (typeof SPEC_MARK_KEYS)[number];
+
+/** The API's field of each mark (`specs.ai_fields`, a variant's `fields`). */
+const MARK_FIELD: Record<SpecMarkKey, string> = {
+  engineCode: 'engine_code',
+  displacement: 'displacement_cc',
+  fuel: 'fuel',
+  aspiration: 'aspiration',
+  powerValue: 'power_value',
+  torque: 'torque_nm',
+  drivetrain: 'drivetrain',
+  gearbox: 'gearbox',
+};
+
+/** The values of a mark: a power goes with its unit and the source "Herstellerangabe", a torque with that source. */
+export type SpecsMarks = Partial<SpecsValues>;
+
+function textOf(value: string | number | undefined): string | null {
+  if (typeof value === 'string') return value.trim() || null;
+  return typeof value === 'number' && Number.isFinite(value) ? String(value) : null;
+}
+
+function finiteOf(value: string | number | undefined): number | null {
+  const number = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : Number.NaN;
+  return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+/** A variant's `fields` as the form shows them; values outside the form's choices are left out (the server only sends valid ones). */
+export function suggestedSpecs(fields: Readonly<Record<string, string | number>>, locale: FormatLocale): SpecsMarks {
+  const values: SpecsMarks = {};
+  const engineCode = textOf(fields.engine_code);
+  if (engineCode) values.engineCode = engineCode;
+  const displacement = finiteOf(fields.displacement_cc);
+  if (displacement !== null) values.displacement = String(roundInt(displacement));
+  if (isOneOf(FUELS, fields.fuel)) values.fuel = fields.fuel;
+  if (isOneOf(ASPIRATIONS, fields.aspiration)) values.aspiration = fields.aspiration;
+  const power = finiteOf(fields.power_value);
+  if (power !== null && isOneOf(POWER_UNITS, fields.power_unit)) {
+    values.powerValue = numberText(power, locale);
+    values.powerUnit = fields.power_unit;
+    values.powerSource = 'factory';
+  }
+  const torque = finiteOf(fields.torque_nm);
+  if (torque !== null) {
+    values.torque = String(roundInt(torque));
+    values.torqueSource = 'factory';
+  }
+  if (isOneOf(DRIVETRAINS, fields.drivetrain)) values.drivetrain = fields.drivetrain;
+  if (isOneOf(GEARBOXES, fields.gearbox)) values.gearbox = fields.gearbox;
+  return values;
+}
+
+/** What "Übernehmen" writes: the suggested values of the fields that are empty now; a filled field keeps the member's value. */
+export function takeSuggestion(current: SpecsValues, suggested: SpecsMarks): SpecsMarks {
+  const taken: SpecsMarks = {};
+  for (const key of SPEC_MARK_KEYS) {
+    const value = suggested[key];
+    if (value === undefined || current[key] !== '') continue;
+    Object.assign(taken, { [key]: value });
+    if (key === 'powerValue') Object.assign(taken, { powerUnit: suggested.powerUnit, powerSource: suggested.powerSource });
+    if (key === 'torque') Object.assign(taken, { torqueSource: suggested.torqueSource });
+  }
+  return taken;
+}
+
+/** Whether a suggestion would fill anything in these values (else "Daten übernehmen?" has nothing to offer). */
+export function hasEmptySpecs(values: SpecsValues): boolean {
+  return SPEC_MARK_KEYS.some((key) => values[key] === '');
+}
+
+/** The fields still showing a mark's value: a power only in the same unit with the source "Herstellerangabe", a torque likewise. */
+export function markedSpecs(current: Partial<SpecsValues>, marks: SpecsMarks): SpecMarkKey[] {
+  return SPEC_MARK_KEYS.filter((key) => {
+    if (marks[key] === undefined || current[key] !== marks[key]) return false;
+    if (key === 'powerValue') return current.powerUnit === marks.powerUnit && current.powerSource === 'factory';
+    if (key === 'torque') return current.torqueSource === 'factory';
+    return true;
+  });
+}
+
+/** The marks the server keeps for the owner (`specs.ai_fields`), as the form shows those values. */
+export function storedMarks(specs: GarageVehicle['specs'] | undefined, locale: FormatLocale): SpecsMarks {
+  const fields: readonly string[] = specs?.ai_fields ?? [];
+  if (fields.length === 0) return {};
+  const values = specsValues(specs, locale);
+  const marks: SpecsMarks = {};
+  for (const key of SPEC_MARK_KEYS) {
+    if (!fields.includes(MARK_FIELD[key]) || values[key] === '') continue;
+    Object.assign(marks, { [key]: values[key] });
+    if (key === 'powerValue') Object.assign(marks, { powerUnit: values.powerUnit, powerSource: 'factory' });
+    if (key === 'torque') Object.assign(marks, { torqueSource: 'factory' });
+  }
+  return marks;
+}
+
 // -- Visibility (GAR-12)
 
 export function isVisibility(value: unknown): value is Visibility {

@@ -80,7 +80,22 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
  * The progress ring: the share of the interval that has passed. Native sweeps the arc in on spring.default when the card appears
  * (09 §5); reduced motion and the web show the final arc, the web crossfading it in on effect.default.
  */
-export function MaintenanceRing({ progress, tone, glyph, box, testID }: { progress: number | null; tone: MaintenanceTone; glyph: IconName; box: number; testID?: string }) {
+export function MaintenanceRing({
+  progress,
+  tone,
+  glyph,
+  box,
+  children,
+  testID,
+}: {
+  progress: number | null;
+  tone: MaintenanceTone;
+  glyph?: IconName;
+  box: number;
+  /** M5.9d: what stands in the ring instead of the glyph (the level sheet's numeral). */
+  children?: ReactNode;
+  testID?: string;
+}) {
   const theme = useTheme();
   const styles = useStyles();
   const motion = useMotionPreference();
@@ -143,7 +158,7 @@ export function MaintenanceRing({ progress, tone, glyph, box, testID }: { progre
         </Svg>
       </Animated.View>
       <View style={styles.ringGlyph}>
-        <Icon name={glyph} size={glyphSize} color={tone === 'unknown' ? 'text.tertiary' : 'text.primary'} />
+        {children ?? (glyph ? <Icon name={glyph} size={glyphSize} color={tone === 'unknown' ? 'text.tertiary' : 'text.primary'} /> : null)}
       </View>
     </View>
   );

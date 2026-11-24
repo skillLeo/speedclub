@@ -210,7 +210,7 @@
         "summary": "What changes?",
         "summary_hint": "Short and clear, shown in the app's consent sheet.",
         "text": "Text",
-        "text_hint": "Markdown. Placeholders like [[company_name]] are filled by the server from the organisation details.",
+        "text_hint": "Markdown. Placeholders like [[Firmenname]] or [[company_name]] are filled by the server from Governance › Organisation.",
         "editor_only": "Only those who may release legal texts (Owner or Admin) can publish.",
         "versions": "Versions",
         "versions_empty": "No version yet",
@@ -229,7 +229,13 @@
         "request_title": "Request approval for renewed consent?",
         "request_body": "A second person checks exactly this text. Until approval it can no longer be changed. Afterwards every member must accept.",
         "discard_title": "Discard the draft?",
-        "discard_body": "The draft is deleted. Published versions stay as they are."
+        "discard_body": "The draft is deleted. Published versions stay as they are.",
+        "stale_title": "This draft is based on version :base; version :live is live.",
+        "stale_title_first": "This draft is older than version :live, which is live now.",
+        "stale_body": "Publishing it would drop the newer sections, so it is locked. Start the draft again from the live text and carry your changes over.",
+        "rebase": "Start again",
+        "rebase_title": "Start the draft again?",
+        "rebase_body": "Draft :draft is discarded. A new draft with the text of version :live opens next. Carry your changes over before you save."
     },
     "help": {
         "title": "Help",
@@ -327,12 +333,12 @@
             "mail_account_closing": "Account is being deleted",
             "mail_moderation_decision": "Moderation decision",
             "mail_decision_reversed": "Decision reversed",
-            "mail_qr_changed_by_staff": "QR code changed by the team",
+            "mail_qr_changed_by_staff": "Sticker changed by the team",
             "push_title": "Title of every push notification",
             "push_new_follower": "New follower",
             "push_followed_published": "News from people you follow",
             "push_build_saved": "Build saved",
-            "push_qr_milestone": "QR milestone",
+            "push_qr_milestone": "Sticker milestone",
             "push_hu_au_reminder": "MOT reminder",
             "push_moderation_decision": "Moderation decision"
         },
@@ -445,7 +451,8 @@
             "remote_config": "Remote config",
             "rate_limits": "Request limits",
             "retention": "Retention",
-            "org": "Organisation"
+            "org": "Organisation",
+            "governance": "Governance"
         },
         "list": "Versions",
         "detail": "Changes of the version",

@@ -2,12 +2,18 @@
 
 use App\Enums\LegalDocumentKey;
 use App\Http\Controllers\Api\V1\Events\EventCalendarController;
+use App\Http\Controllers\Internal\CronController;
+use App\Http\Controllers\Internal\MaintenanceController;
+use App\Http\Controllers\Internal\PublicStorageController;
+use App\Http\Controllers\Internal\SetupController;
 use App\Http\Controllers\Web\AccountDeletionPageController;
 use App\Http\Controllers\Web\AppRouteRedirectController;
 use App\Http\Controllers\Web\ContactPageController;
 use App\Http\Controllers\Web\DevMailController;
 use App\Http\Controllers\Web\EmailActionPageController;
+use App\Http\Controllers\Web\EmailUnsubscribeController;
 use App\Http\Controllers\Web\GetAppPageController;
+use App\Http\Controllers\Web\JoinPageController;
 use App\Http\Controllers\Web\LandingController;
 use App\Http\Controllers\Web\LegalPageController;
 use App\Http\Controllers\Web\OgImageController;
@@ -23,16 +29,32 @@ use App\Http\Controllers\Web\SpaController;
 use App\Http\Middleware\PublicPageContext;
 use App\Http\Middleware\RedirectMembersToApp;
 use App\Http\PublicPages;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Support\Facades\Route;
 
 // Public pages go in this group: no session for guests. tests/Feature/Web/PublicPagesTest.php guards it.
 Route::withoutMiddleware(PublicPages::WITHOUT_SESSION)->group(function (): void {
+    // M5.11 (ADR-503): the URL cronjob of ALL-INKL; 404 without a configured token. Not a page: no context, no cookie, no Ziggy name.
+    Route::get('/internal/cron/{token}', CronController::class)->where('token', '[A-Za-z0-9_-]{1,200}');
+    // ADR-539: the web installer and the maintenance switch of a host without SSH; 404 without a valid SETUP_TOKEN, reachable in
+    // maintenance mode (bootstrap/app.php). No cookie middleware: on a first install APP_KEY is still empty.
+    Route::withoutMiddleware([EncryptCookies::class, AddQueuedCookiesToResponse::class])->group(function (): void {
+        Route::match(['get', 'post'], '/internal/setup/{token}', SetupController::class)->where('token', '[A-Za-z0-9_-]{1,200}');
+        Route::match(['get', 'post'], '/internal/maintenance/{token}/{state}', MaintenanceController::class)
+            ->where(['token' => '[A-Za-z0-9_-]{1,200}', 'state' => 'on|off']);
+    });
+    // ADR-539: /storage/… through PHP where public/storage cannot be a link; on a linked host the web server answers these itself.
+    Route::get('/storage/{path}', PublicStorageController::class)->where('path', '.+');
+
     Route::middleware(PublicPageContext::class)->group(function (): void {
         Route::get('/', LandingController::class)->middleware('throttle:public-read')->name('home');
 
         // Both spellings: a printed code is uppercase (02_PRODUCT_SPEC §3.4), and routes are case-sensitive.
         Route::get('/c/{code}', QrScanController::class)->middleware('throttle:qr')->name('qr.scan');
         Route::get('/C/{code}', QrScanController::class)->middleware('throttle:qr')->name('qr.scan.upper');
+        // M5.9d WEB-17: an invite link in a browser (the installed app claims /join/*); per-IP limit of the invite lookups.
+        Route::get('/join/{code}', JoinPageController::class)->where('code', '[A-Za-z0-9]{1,32}')->middleware('throttle:invite-lookup')->name('join');
 
         Route::middleware('throttle:public-read')->group(function (): void {
             Route::get('/v/{slug}', PublicVehicleController::class)->middleware(RedirectMembersToApp::class)->name('public.vehicle');
@@ -69,6 +91,11 @@ Route::withoutMiddleware(PublicPages::WITHOUT_SESSION)->group(function (): void 
 
         // WEB-04 and WEB-07 (M2.7): sessionless GETs. The e-mail landing carries its code in the fragment only (ADR-138), never in the URL.
         Route::get('/app-laden', GetAppPageController::class)->middleware('throttle:public-read')->name('get-app');
+        // M5.6 WEB-UNSUB: unsubscribe from an opted-in e-mail. Signed (checked in the controller, so a dead link gets a page, not a bare
+        // 403); GET only asks, POST (the button, RFC 8058 one-click) changes the setting. Sessionless like every page here, so no CSRF token.
+        Route::match(['get', 'post'], '/abbestellen/{list}/{member}', EmailUnsubscribeController::class)
+            ->whereIn('list', array_keys(EmailUnsubscribeController::LISTS))->where('member', '[0-9A-Za-z]{26}')
+            ->middleware('throttle:public-read')->name('email.unsubscribe');
         Route::get('/email/{action}', EmailActionPageController::class)->whereIn('action', array_keys(EmailActionPageController::ACTIONS))->middleware('throttle:public-read')->name('email-action');
         Route::post('/kontakt', [ContactPageController::class, 'store'])->middleware('throttle:contact-form')->name('contact.store');
 

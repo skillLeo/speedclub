@@ -23,7 +23,7 @@ import i18n from '@/i18n';
 import { createOutbox, type Outbox, type OutboxCoalesce, type OutboxOp, type OutboxOutcome } from '@/state/outbox';
 import { useSessionStore } from '@/state/session';
 import { onlineNetwork } from '@/state/uploads';
-import { toast } from '@/ui';
+import { toast } from '@/ui/toast';
 
 export const MAINTENANCE_OUTBOX_KEY = 'sc.outbox.maintenance';
 

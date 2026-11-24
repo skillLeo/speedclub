@@ -37,6 +37,60 @@ final class NotificationPrefs
         // updates and cancellations.
         'event_reminder' => ['push' => true, 'email' => false],
         'event_update' => ['push' => true],
+        // M5.9b STREET DEX (m5.9b contract §4): the grouped 3-hourly owner alert, SET-09 category "Spots" (the job is part 2).
+        'spot_alert' => ['push' => true],
+        // M5.9d (m5.9d contract §7, §10.6): SET-09 "Abzeichen" (in the app always, push off), "Car of the Day" (the opt-in for everybody's
+        // pick, off; the owner's own pick, on) and "Einladungen" (on).
+        'badge_unlocked' => ['push' => false],
+        'car_of_the_day' => ['push' => false],
+        'car_of_the_day_owner' => ['push' => true],
+        'invite_accepted' => ['push' => true],
+        // M5.8 (m5.8-contract §5): SET-09 "Forum": replies in my threads and subscriptions, mentions, my answer marked as the solution.
+        'forum_reply' => ['push' => true],
+        'forum_mention' => ['push' => true],
+        'forum_solved' => ['push' => true],
+        // M5.6 (m5.6-contract §6, 10 §4): "Neue Treffen in deiner Nähe", weekly around the SET-11 region; opt-in, so every channel starts
+        // off (web_push follows push). Nothing is sent without a home region.
+        'event_nearby' => ['push' => false, 'email' => false],
+        // M5.7 (m5.7-contract §8.2): SET-09 "Build-Erinnerungen" (push on) and "Wochenrückblick" (push on, e-mail on — the e-mail goes only
+        // when no push went out, D-1). Both engagement types: at most 3 such pushes a week, never 22–08.
+        'plan_due' => ['push' => true],
+        'weekly_recap' => ['push' => true, 'email' => true],
+    ];
+
+    /**
+     * M5.9d (contract §7): the SET-09 category of each gift type, its label `notifications.categories.<category>` (DE + EN).
+     */
+    public const GIFT_CATEGORIES = [
+        'spot_alert' => 'spots',
+        'badge_unlocked' => 'badges',
+        'car_of_the_day' => 'car_of_the_day',
+        'car_of_the_day_owner' => 'car_of_the_day',
+        'invite_accepted' => 'invites',
+    ];
+
+    /**
+     * M5.8: the SET-09 category of the forum types, its label `notifications.categories.forum` (DE + EN).
+     */
+    public const FORUM_CATEGORIES = [
+        'forum_reply' => 'forum',
+        'forum_mention' => 'forum',
+        'forum_solved' => 'forum',
+    ];
+
+    /**
+     * M5.6: the SET-09 category of the weekly nearby meets, its label `notifications.categories.events_nearby` (DE + EN).
+     */
+    public const EVENT_CATEGORIES = [
+        'event_nearby' => 'events_nearby',
+    ];
+
+    /**
+     * M5.7: the SET-09 category of the build prompts and the weekly recap, its label `notifications.categories.<category>` (DE + EN).
+     */
+    public const ENGAGEMENT_CATEGORIES = [
+        'plan_due' => 'build_prompts',
+        'weekly_recap' => 'weekly_recap',
     ];
 
     public const QUIET_HOURS = ['enabled' => true, 'from' => '22:00', 'to' => '07:00'];

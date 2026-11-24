@@ -15,6 +15,11 @@ export const AI_FLAGS = {
   photos: 'ai.photo_tagging',
   translate: 'ai.translate',
   description: 'ai.description_assist',
+  // M5.9 (m5.9-contract): typical factory specs in the wizard and GAR-06, a typed part matched to the catalogue (both with the
+  // opt-in), the forum summary (no opt-in, D-3: it arrives with the thread and has no request of its own).
+  specs: 'ai.vehicle_specs',
+  productMatch: 'ai.product_match',
+  forumSummary: 'ai.forum_summary',
 } as const;
 
 export type AiFlag = (typeof AI_FLAGS)[keyof typeof AI_FLAGS];
@@ -26,10 +31,16 @@ export type PhotoCategorySuggestion = components['schemas']['PhotoCategoryResour
 export type Translation = components['schemas']['TranslationResource'];
 export type TranslationSource = components['schemas']['TranslationSource'];
 export type DescriptionSuggestion = components['schemas']['DescriptionSuggestionResource'];
+export type SpecSuggestion = components['schemas']['SpecSuggestionResource'];
+export type SpecVariant = SpecSuggestion['variants'][number];
+export type ProductMatch = components['schemas']['ProductMatchResource'];
 
 /** The longest search text ai/search/interpret takes, and the longest pasted text of ai/mods/suggest. */
 export const AI_SEARCH_MAX = 200;
 export const AI_MOD_TEXT_MAX = 500;
+/** The longest typed part ai/products/match takes, and the shortest. */
+export const AI_PRODUCT_TEXT_MAX = 80;
+export const AI_PRODUCT_TEXT_MIN = 2;
 
 /** DISC-02 "Mit KI suchen": the typed search as editable filter chips. */
 export function useInterpretSearch() {
@@ -65,5 +76,35 @@ export function useTranslateText() {
 export function useSuggestDescription() {
   return useMutation({
     mutationFn: async (vehicleId: string) => (await apiData(api.POST('/ai/vehicles/{vehicle}/description', { params: { path: { vehicle: vehicleId } } }))).data,
+  });
+}
+
+/** What "Daten übernehmen?" asks for: the catalogue generation, or the model and its year when the model has no generations. */
+export type SpecSubject = { generation_id: number } | { model_id: number; model_year: number };
+
+/**
+ * GAR-03 step 2 / GAR-06 "Daten übernehmen?" (M5.9): up to six typical factory variants of the catalogue car, shared by every member
+ * who picks it. Nothing is written: the member takes a variant into the form and saves as usual (with `ai_suggestion`).
+ */
+export function useSuggestSpecs() {
+  return useMutation({
+    mutationFn: async (subject: SpecSubject): Promise<SpecSuggestion> => {
+      const body = await apiData(api.POST('/ai/specs/suggest', { body: subject }));
+      return body.data;
+    },
+  });
+}
+
+/** GAR-10 product search found nothing: the typed part matched to at most three catalogue products (never one we do not list). */
+export function useMatchProduct() {
+  return useMutation({
+    mutationFn: async (input: { text: string; categoryKey: string | null }) =>
+      (
+        await apiData(
+          api.POST('/ai/products/match', {
+            body: { text: input.text.trim().slice(0, AI_PRODUCT_TEXT_MAX), ...(input.categoryKey ? { category_key: input.categoryKey } : {}) },
+          }),
+        )
+      ).data,
   });
 }

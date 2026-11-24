@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import SharedLayout, { unstable_settings } from '@/app/(tabs)/(home,discover,garage,messages,profile)/_layout';
+import SharedLayout, { unstable_settings } from '@/app/(tabs)/(home,discover,garage,shop,profile)/_layout';
 import TabsLayout from '@/app/(tabs)/_layout';
 import { ShellToastHost } from '@/features/shell/ShellToastHost';
 import { TabRootScreen } from '@/features/shell/TabRootScreen';
@@ -85,11 +85,11 @@ const tree = () => ({
   '(auth)/reset-password': form('AUTH-07'),
   '(auth)/legal': plain('LEGAL'),
   '(tabs)/_layout': { default: TabsLayout },
-  '(tabs)/(home,discover,garage,messages,profile)/_layout': { default: SharedLayout, unstable_settings },
+  '(tabs)/(home,discover,garage,shop,profile)/_layout': { default: SharedLayout, unstable_settings },
   '(tabs)/(home)/index': tabRoot('home', 'HOME-01'),
   '(tabs)/(discover)/discover/index': tabRoot('discover', 'DISC-01'),
   '(tabs)/(garage)/garage/index': tabRoot('garage', 'GAR-01'),
-  '(tabs)/(messages)/messages/index': tabRoot('messages', 'MSG-01'),
+  '(tabs)/(shop)/shop/index': tabRoot('shop', 'SHOP-01'),
   '(tabs)/(profile)/profile/index': tabRoot('profile', 'PROF-01'),
   '(tabs)/(profile)/profile/edit': form('PROF-02'),
 });

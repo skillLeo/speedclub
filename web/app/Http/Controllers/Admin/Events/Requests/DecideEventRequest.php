@@ -12,6 +12,12 @@ class DecideEventRequest extends ReasonRequest
 {
     use EventVersion;
 
+    /** ADR-540: the organiser and the attendees read the rejection or cancellation text, so it stays required. */
+    protected function reasonRequired(): bool
+    {
+        return true;
+    }
+
     protected function atom(): string
     {
         return 'moderation.decide';

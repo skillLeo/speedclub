@@ -13,7 +13,8 @@ import {
   typographyDesktop,
   type TypeVariant,
 } from '@/theme';
-import { DisplayTitle, Text } from '@/ui';
+import { DisplayTitle } from '@/ui/DisplayTitle';
+import { Text } from '@/ui/Text';
 
 import { Group, NoteText, SectionScreen } from '../parts';
 
@@ -27,6 +28,7 @@ type Sample = { variant: TypeVariant; name: string; use: string; text: string; h
 export const SAMPLES: readonly Sample[] = [
   { variant: 'heroNumeral', name: 'hero.numeral', use: 'Spec-Helden: PS, Nm, s, kg', text: '1.725' },
   { variant: 'heroNumeralS', name: 'hero.numeral.s', use: 'Garagenkarte, Kennzahl, Datum', text: '3,9' },
+  { variant: 'heroNumeralXs', name: 'hero.numeral.xs', use: 'Datenleiste auf dem Handy', text: '510' },
   { variant: 'displayTitle', name: 'display.title', use: 'Fahrzeugnamen, Markenmomente', text: 'Volkswagen Golf GTI Clubsport' },
   { variant: 'title1', name: 'title.1', use: 'Große Titel, Personennamen', text: 'Lukas Schneider' },
   { variant: 'title2', name: 'title.2', use: 'Abschnitts- und Sheet-Titel', text: 'Benachrichtigungseinstellungen' },

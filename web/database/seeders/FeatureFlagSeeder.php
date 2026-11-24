@@ -39,13 +39,20 @@ class FeatureFlagSeeder extends Seeder
         'qr_milestone' => 'M4.9: the QR milestone moment (scan marks of a sticker); production with the release that ships it',
         'web_push' => '09 §8.18: browser notifications of the member web (M4.15); staging sends only once VAPID keys exist (OA-32)',
         'android_widget' => '09 §8.18: the Android home-screen widget "Mein Auto" (09 §8.14, M4.18); production with the store build that carries it',
+        'wrapped' => 'M5.9e Season Wrapped (10 §16.5): production from the first release (Saisonende 2027), set with wrapped.releases',
+        'wrapped.countdown' => 'M5.9e: the Home countdown banner before a Wrapped release; production with the first release',
+        'shop' => 'M5.5 Shop (10 §3, ADR-502/519): the SHOP-01/02 catalogue; production once the client\'s Shopify store and real products exist (OA-44)',
+        'build_comments' => '11 R4-2.2: comments under updates, moderated; production after the client\'s OK',
+        'crews' => '11 R4-2.3 Crews; production after the client signed off the crew rules',
+        'cotd_voting' => '11 R4-2.1 Car of the Day voting; production after the client signed off the voting rules',
     ];
 
     /**
      * Not listed anywhere, so off in every environment: `businesses` and `parts_catalogue` (M4.14, until its review passed; then
      * on · on · off per 09 §8.18), `affiliate_links` (09 §8.18: off), `membership` (09 §8.18: off, no billing) and
      * `msg_replies` (ADR-445, ADR-450: the API stores replies, the app turns them on),
-     * besides the off-by-default ones above (build_comments, sticker_shop, premium.enabled, auth.apple, auth.google).
+     * `events.gallery` and `events.checkin` (M5.6, m5.6-contract §3: off by default everywhere, staff switch them on for QA on staging),
+     * besides the off-by-default ones above (sticker_shop, premium.enabled, auth.apple, auth.google).
      *
      * Flags that start on in every environment (09 §8 table "on · on · on"). auth.apple and auth.google start off everywhere until the
      * owner supplies the client IDs (OA-15, OA-26).
@@ -53,7 +60,7 @@ class FeatureFlagSeeder extends Seeder
      * @var array<string, string> key => why
      */
     public const ON_EVERYWHERE = [
-        'auth.email_code' => '09 §8.1: the e-mail code is the own-account path that always works',
+        'auth.email_code' => '09 §8.1: the e-mail code is the own-account path that always works; off only on a host that cannot deliver mail yet (staging before SMTP, ADR-520): sign-in by code closes and the app offers the password',
         'auth.password_login' => '09 §8.1: existing accounts keep their password',
         'nav.native_tabs' => '09 §8.18: on everywhere, a kill switch back to the JS tab bar (M4.5)',
         'build_reactions' => '09 §8.18: private reactions, counts for the owner only (M4.11, ADR-413)',
@@ -62,6 +69,10 @@ class FeatureFlagSeeder extends Seeder
         'vehicle_follow' => '09 §8.18: follow a build without following the person (M4.11)',
         'maintenance' => '09 §8.18: maintenance, service log and reminders (M4.13)',
         'theme_reveal' => '09 §8.18: the animated theme change SM14 (M4.13), a kill switch back to an instant change',
+        'forum' => 'M5.8 Forum (10 §7, ADR-506): on in every environment; moderated (pre-moderation, keyword rules, DSA reports)',
+        'insights' => 'M5.7 (10 §6.1): anonymous view counting and the owner-only INS-01; off means nothing is counted at all',
+        'build_prompts' => 'M5.7 (10 §6.2): the target-month prompt of a planned mod, at most once a week, own SET-09 switch',
+        'weekly_recap' => 'M5.7 (10 §6.3): the Sunday recap, own SET-09 switches (push, web push, e-mail), skipped when nothing happened',
     ];
 
     /**

@@ -3,12 +3,14 @@
 namespace App\Http\Requests\Api\V1\Garage;
 
 use App\Enums\LegalStatus;
+use App\Enums\ModPriority;
 use App\Enums\ModStatus;
 use App\Enums\ProductStatus;
 use App\Models\Brand;
 use App\Models\ModCategory;
 use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 /**
@@ -18,6 +20,8 @@ use Illuminate\Validation\Rule;
  */
 class ModificationRequest extends FormRequest
 {
+    public const FIRST_TARGET_MONTH = '2000-01';
+
     /**
      * @return array<string, mixed>
      */
@@ -51,6 +55,35 @@ class ModificationRequest extends FormRequest
             'notes' => ['sometimes', 'nullable', 'string', 'max:500'],
             /** Key and value per the category's schema, unknown keys are refused. */
             'fields' => ['sometimes', 'array'],
+            /**
+             * M5.3 "Pläne": the target month of a planned mod as YYYY-MM, from 2000-01 to ten years ahead (a past month stays valid, so an
+             * overdue plan saves unchanged). Dropped for a mod that is not planned.
+             */
+            'target_month' => ['sometimes', 'nullable', 'date_format:Y-m', 'after_or_equal:'.self::FIRST_TARGET_MONTH, 'before_or_equal:'.self::lastTargetMonth()],
+            /** M5.3: optional priority of a planned mod. Dropped for a mod that is not planned. */
+            'priority' => ['sometimes', 'nullable', Rule::enum(ModPriority::class)],
+            /** M5.3: the planned budget. Private, always: only the owner reads it, like the cost. */
+            'budget_cents' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100000000'],
+            /** Kept by the server: the order of the plans changes through PUT vehicles/{id}/plans/order. */
+            'plan_sort' => ['prohibited'],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        $range = (string) __('garage.target_month_range', ['max' => Carbon::createFromFormat('Y-m-d', self::lastTargetMonth().'-01')?->format('m/Y')]);
+
+        return ['target_month.after_or_equal' => $range, 'target_month.before_or_equal' => $range];
+    }
+
+    /**
+     * Ten years from the current month in Germany (02_PRODUCT_SPEC: dates in Europe/Berlin).
+     */
+    public static function lastTargetMonth(): string
+    {
+        return Carbon::now(config()->string('speedclub.display_timezone'))->startOfMonth()->addYears(10)->format('Y-m');
     }
 }

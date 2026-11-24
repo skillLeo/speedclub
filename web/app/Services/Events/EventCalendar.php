@@ -44,7 +44,7 @@ class EventCalendar
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
-            'PRODID:-//SPEED CLUB//Treffen//DE',
+            'PRODID:-//Speedclub//Treffen//DE',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
             'BEGIN:VEVENT',

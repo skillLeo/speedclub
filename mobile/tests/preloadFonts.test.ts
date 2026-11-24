@@ -18,7 +18,7 @@ const HTML = [
   '<html lang="de">',
   '  <head>',
   '    <meta charset="utf-8" />',
-  '    <title>SPEED CLUB</title>',
+  '    <title>Speedclub</title>',
   '  </head>',
   '  <body><script src="/app/_expo/static/js/web/entry-abc.js" defer></script></body>',
   '</html>',

@@ -12,7 +12,13 @@ import { ownerName } from '@/features/vehicle/model';
 import { haptics } from '@/lib/haptics';
 import { clearAuthIntent, useRequireAuth } from '@/state/session';
 import { createStyles, size, space, useBreakpoint } from '@/theme';
-import { Button, EmptyState, MediaCard, MemberRow, SectionHeader, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { MediaCard } from '@/ui/MediaCard';
+import { MemberRow } from '@/ui/MemberRow';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { carLabel } from '../model';
 import { useFollowState, useOpenMember, vehiclePath } from '../navigation';

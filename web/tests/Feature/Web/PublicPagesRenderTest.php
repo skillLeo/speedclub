@@ -289,7 +289,7 @@ describe('WEB-01 without JavaScript', function () {
 
     it('speaks German first and English on request', function () {
         expect($this->withHeader('Accept-Language', 'fr')->get($this->url)->getContent())
-            ->toContain('lang="de"')->toContain('In der App öffnen')->toContain('Übersicht')->toContain('Technik');
+            ->toContain('lang="de"')->toContain('In der App öffnen')->toContain('Überblick')->toContain('Daten');
 
         foreach ([$this->get($this->url.'?lang=en'), $this->withHeader('Accept-Language', 'en-GB')->get($this->url)] as $response) {
             expect($response->getContent())
@@ -636,23 +636,39 @@ describe('public error state (DQ-1171)', function () {
 });
 
 describe('WEB-03', function () {
-    it('tells the story with the real build and its real, scannable code', function () {
+    it('is the short page of R4-1.5: hero, four things to do, the sticker with a real scannable code, the download section', function () {
         $qr = app(QrCodes::class)->ensureActive($this->vehicle);
 
         $html = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
 
         expect($html)
-            // M4.16 (09 §9 WEB-03 (1)): the claim of the spec, left-aligned in display.title.
+            // The claim of the spec, left-aligned in display.title, and one sentence; no second logo in the hero (R4DQ-61, the top bar's).
             ->toContain("Dein\u{00A0}Auto. Dein\u{00A0}Build. Dein\u{00A0}Club.")
-            ->toContain('data-testid="WEB-03.step1"')
-            ->toContain('data-testid="WEB-03.step2"')
-            ->toContain('data-testid="WEB-03.step3"')
-            ->toContain('data-testid="WEB-03.featured"')
-            ->toContain('Nissan Skyline GT-R')
-            ->toContain('href="'.url('/v/'.$this->vehicle->slug).'"')
-            ->toContain(mb_substr($qr->code, 0, 4).' '.mb_substr($qr->code, 4))
+            ->not->toContain('data-testid="WEB-03.logo"')
+            ->toContain('data-testid="WEB-03.lead"')
+            ->toContain('Was du mit Speedclub machst')
+            ->toContain('data-testid="WEB-03.do.garage"')->toContain('data-testid="WEB-03.do.mods"')
+            ->toContain('data-testid="WEB-03.do.meets"')->toContain('data-testid="WEB-03.do.discover"')
+            ->toContain('data-testid="WEB-03.sticker"')->toContain('Das Kennzeichen steht nie drauf.')
+            ->toContain('id="app"')
+            // The M4.16 sections left the landing page.
+            ->not->toContain('data-testid="WEB-03.steps"')
+            ->not->toContain('data-testid="WEB-03.featured"')
+            ->not->toContain('data-testid="WEB-03.events"')
+            ->not->toContain('data-testid="WEB-03.business"')
+            ->toContain('href="'.url('/v/'.$this->vehicle->canonicalSlug()).'"')
+            // ADR-514: the sticker code is never printed on a public page (typed into POST spots it would count as a spot).
+            ->not->toContain(mb_substr($qr->code, 0, 4).' '.mb_substr($qr->code, 4))
+            ->not->toContain($qr->code)
             ->toMatch('~data-testid="WEB-03.qr".*?<svg~s')
             ->not->toContain('<?xml');
+    });
+
+    it('speaks English with ?lang=en', function () {
+        $html = $this->get('/?lang=en')->assertOk()->getContent();
+
+        expect($html)->toContain('What you do with Speedclub')->toContain('The sticker on your car')->toContain('Open in your browser')
+            ->not->toContain('Was du mit Speedclub machst');
     });
 
     it('encodes and links the build page, not the sticker, so the landing page adds no scans to anybody\'s sticker', function () {
@@ -660,7 +676,7 @@ describe('WEB-03', function () {
         $page = rtrim(config()->string('app.url'), '/').'/v/'.$this->vehicle->canonicalSlug();
 
         $html = (string) $this->get('/')->assertOk()->getContent();
-        preg_match('~<figure class="sc-qr"[^>]*>\s*<a href="([^"]+)"[^>]*>(.*?)</a>~s', $html, $sample);
+        preg_match('~<figure class="sc-qr"[^>]*>\s*(?:\{\{--.*?--\}\}\s*)?<a href="([^"]+)"[^>]*>(.*?)</a>~s', $html, $sample);
         $svg = (string) preg_replace('/^<\?xml.*?\?>\s*/s', '', app(QrRenderer::class)->svg($page));
 
         expect($sample)->not->toBeEmpty()
@@ -675,36 +691,54 @@ describe('WEB-03', function () {
         expect(QrScanDaily::query()->count())->toBe(0);
     });
 
-    it('shows store links only once they exist (09 §9 WEB-03 (5)), and the web app always', function () {
+    it('leads "App laden" to /app-laden until store links exist, then to the stores, and the browser always', function () {
         $html = $this->withHeader('Accept-Language', 'de')->get('/')->getContent();
 
-        expect($html)->toContain('Die App ist unterwegs.')->toContain('href="'.url('/app').'"')->not->toContain('data-testid="WEB-03.store"')
+        expect($html)->toContain('Die App ist unterwegs.')->toMatch('~href="'.preg_quote(url('/app-laden'), '~').'"[^>]*data-testid="WEB-03.getApp"~')
+            ->toMatch('~href="'.preg_quote(url('/app'), '~').'"[^>]*data-testid="WEB-03.openBrowser"~')
+            ->toMatch('~href="'.preg_quote(url('/app-laden'), '~').'"[^>]*data-testid="WEB-03.appPage"~')
+            ->not->toContain('data-testid="WEB-03.store"')->not->toContain('data-testid="WEB-03.heroStore"')
             ->not->toContain('Bald verfügbar')->not->toContain('apps.apple.com')->not->toContain('play.google.com');
 
-        config(['speedclub.mobile.store_url_ios' => 'https://apps.apple.com/app/id1']);
+        config(['speedclub.mobile.store_url_ios' => 'https://apps.apple.com/app/id1', 'speedclub.mobile.store_url_android' => 'nicht-https']);
 
-        expect($this->withHeader('Accept-Language', 'de')->get('/')->getContent())->toMatch('~href="https://apps.apple.com/app/id1"[^>]*data-testid="WEB-03.store"~')
+        expect($this->withHeader('Accept-Language', 'de')->get('/')->getContent())
+            ->toMatch('~href="https://apps.apple.com/app/id1"[^>]*data-testid="WEB-03.heroStore"~')
+            ->toMatch('~href="https://apps.apple.com/app/id1"[^>]*data-testid="WEB-03.store"~')
+            ->not->toContain('data-testid="WEB-03.getApp"')
             ->toContain('App Store')->not->toContain('Google Play')->not->toContain('Bald verfügbar');
     });
 
-    it('prefers the configured build, and falls back when it cannot be shown', function () {
-        $other = publishedVehicle($this->owner, ['make_id' => null, 'model_id' => null, 'generation_id' => null, 'make_text' => 'Honda', 'model_text' => 'NSX']);
-        modIn($this->vehicle, 'exhaust', [], ['title' => 'Mod']);
+    it('links the sticker block to the shop only while the shop exists', function () {
+        FeatureFlag::query()->updateOrCreate(['key' => 'shop'], ['enabled' => false]);
+        expect($this->get('/')->getContent())->toContain('data-testid="WEB-03.sticker"')->not->toContain('data-testid="WEB-03.stickerShop"');
 
-        expect($this->get('/')->getContent())->toMatch('~data-testid="WEB-03.featuredLink"~')->toContain('Skyline GT-R');
-
-        config(['speedclub.public_pages.featured_slug' => $other->canonicalSlug()]);
-        expect($this->get('/')->getContent())->toContain('NSX');
-
-        $other->forceFill(['visibility' => 'private'])->save();
-        expect($this->get('/')->getContent())->not->toContain('NSX')->toContain('Skyline GT-R');
+        FeatureFlag::query()->updateOrCreate(['key' => 'shop'], ['enabled' => true]);
+        expect($this->get('/')->getContent())->toMatch('~href="'.preg_quote(url('/app/shop'), '~').'"[^>]*data-testid="WEB-03.stickerShop"~');
     });
 
-    it('features nothing private, hidden from search or of a member who is not public', function (Closure $hide) {
+    it('lets the code lead to the configured build, and falls back when it cannot be shown', function () {
+        app(QrCodes::class)->ensureActive($this->vehicle);
+        $other = publishedVehicle($this->owner, ['make_id' => null, 'model_id' => null, 'generation_id' => null, 'make_text' => 'Honda', 'model_text' => 'NSX']);
+        app(QrCodes::class)->ensureActive($other);
+        modIn($this->vehicle, 'exhaust', [], ['title' => 'Mod']);
+        $target = fn (): string => preg_match('~<figure class="sc-qr"[^>]*>\s*(?:\{\{--.*?--\}\}\s*)?<a href="([^"]+)"~s', (string) $this->get('/')->getContent(), $m) === 1 ? html_entity_decode($m[1]) : '';
+
+        expect($target())->toBe(url('/v/'.$this->vehicle->canonicalSlug()));
+
+        config(['speedclub.public_pages.featured_slug' => $other->canonicalSlug()]);
+        expect($target())->toBe(url('/v/'.$other->canonicalSlug()));
+
+        $other->forceFill(['visibility' => 'private'])->save();
+        expect($target())->toBe(url('/v/'.$this->vehicle->canonicalSlug()));
+    });
+
+    it('leads to nothing private, hidden from search or of a member who is not public', function (Closure $hide) {
         $qr = app(QrCodes::class)->ensureActive($this->vehicle);
         $hide($this->vehicle, $this->owner);
 
-        expect($this->get('/')->assertOk()->getContent())->not->toContain('data-testid="WEB-03.featured"')->not->toContain('data-testid="WEB-03.qr"')
+        expect($this->get('/')->assertOk()->getContent())->not->toContain('data-testid="WEB-03.qr"')
+            ->not->toContain(url('/v/'.$this->vehicle->canonicalSlug()))
             ->not->toContain(mb_substr($qr->code, 0, 4).' '.mb_substr($qr->code, 4));
     })->with([
         'private' => [fn (Vehicle $vehicle) => $vehicle->forceFill(['visibility' => 'private'])->save()],
@@ -721,23 +755,38 @@ describe('WEB-03', function () {
         Vehicle::query()->delete();
 
         expect($this->get('/')->assertOk()->getContent())
-            ->toContain('data-testid="WEB-03.steps"')
-            ->not->toContain('data-testid="WEB-03.featured"')
+            ->toContain('data-testid="WEB-03.do"')
+            ->toContain('data-testid="WEB-03.sticker"')
             ->not->toContain('data-testid="WEB-03.qr"');
     });
 
-    it('has the organisation in JSON-LD', function () {
-        expect(jsonLdBlocks((string) $this->get('/')->getContent())[0]['@type'])->toBe('Organization');
+    it('has the organisation and the website in JSON-LD', function () {
+        $blocks = jsonLdBlocks((string) $this->get('/')->getContent());
+
+        expect($blocks[0]['@type'])->toBe('Organization')->and($blocks[1]['@type'])->toBe('WebSite');
     });
 
-    it('keeps red on one call to action, "Zur Web-App" (DQ-228, 09 §9 WEB-03 (1)), with the QR story as a text link', function () {
+    // R4DQ-23 (round-4 design review): one honest filled CTA. Without store links the web app is the way in that works today, so "Im
+    // Browser öffnen" is red and "So kommst du zur App" (WEB-04) the secondary; with store links the stores lead and the browser link is
+    // a quiet text link again (DQ-228).
+    it('keeps red on one call to action: "Im Browser öffnen" without store links, the first store with them', function () {
         $html = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
 
         expect(preg_match_all('~(?<![:\w-])bg-accent-fill(?![\w-])~', $html))->toBe(1)
             ->and(preg_match_all('~(?<![:\w-])bg-inverse(?![\w-])~', $html))->toBe(0)
-            ->and($html)->toMatch('~bg-accent-fill [^>]*data-testid="WEB-03.openWebApp"~')
-            ->and($html)->toMatch('~href="#qr"[^>]*data-testid="WEB-03.howQr"~')
-            ->and($html)->toContain('id="qr"');
+            ->and($html)->toMatch('~bg-accent-fill [^>]*data-testid="WEB-03.openBrowser"~')
+            ->and($html)->not->toMatch('~bg-accent-fill [^>]*data-testid="WEB-03.getApp"~')
+            ->and($html)->toMatch('~href="[^"]*/app-laden"[^>]*data-testid="WEB-03.getApp">So kommst du zur App<~')
+            ->and(strpos($html, 'data-testid="WEB-03.openBrowser"'))->toBeLessThan(strpos($html, 'data-testid="WEB-03.getApp"'));
+
+        config(['speedclub.mobile.store_url_ios' => 'https://apps.apple.com/app/id1', 'speedclub.mobile.store_url_android' => 'https://play.google.com/store/apps/details?id=x']);
+        $stores = $this->withHeader('Accept-Language', 'de')->get('/')->assertOk()->getContent();
+
+        expect(preg_match_all('~(?<![:\w-])bg-accent-fill(?![\w-])~', $stores))->toBe(1)
+            ->and(substr_count($stores, 'data-testid="WEB-03.heroStore"'))->toBe(2)
+            ->and($stores)->toMatch('~bg-accent-fill [^>]*data-testid="WEB-03.heroStore"~')
+            ->and($stores)->toMatch('~<a href="[^"]*" class="[^"]*underline[^"]*" data-testid="WEB-03.openBrowser"~')
+            ->and($stores)->not->toContain('data-testid="WEB-03.getApp"');
     });
 });
 
@@ -761,9 +810,9 @@ describe('WEB-06', function () {
             ->not->toContain('lukas.sc')
             ->not->toContain('/v/'.$this->vehicle->canonicalSlug());
     })->with([
-        'revoked' => [fn (Vehicle $vehicle) => tap(null, fn () => app(QrCodes::class)->revoke($vehicle, QrRevocationReason::Reissued)), 410, 'revoked', "Dieser QR-\u{2060}Code ist nicht mehr gültig"],
+        'revoked' => [fn (Vehicle $vehicle) => tap(null, fn () => app(QrCodes::class)->revoke($vehicle, QrRevocationReason::Reissued)), 410, 'revoked', 'Dieser Sticker ist nicht mehr gültig'],
         'private' => [fn (Vehicle $vehicle) => tap(null, fn () => $vehicle->forceFill(['visibility' => 'private'])->save()), 404, 'private', 'Dieses Fahrzeug ist privat'],
-        'unknown' => [fn () => 'ZZZZZZZZ', 404, 'not_found', "Diesen QR-\u{2060}Code kennen wir nicht"],
+        'unknown' => [fn () => 'ZZZZZZZZ', 404, 'not_found', 'Diesen Sticker kennen wir nicht'],
     ]);
 
     it('shows one glyph per state, the one the app shows, and has it in the sprite (DQ-172)', function (Closure $arrange, int $status, string $glyph) {
@@ -815,7 +864,7 @@ describe('WEB-08', function () {
 
         expect(substr_count($privacy, '<h1'))->toBe(1)
             ->and($privacy)->toContain('data-testid="WEB-08.title">Datenschutzerklärung &lt;b&gt;x&lt;/b&gt;</h1>')
-            ->toContain('<title>Datenschutzerklärung &lt;b&gt;x&lt;/b&gt; · SPEED CLUB</title>')
+            ->toContain('<title>Datenschutzerklärung &lt;b&gt;x&lt;/b&gt; · Speedclub</title>')
             ->toContain('<p>Hier steht, was wir speichern.</p>')
             ->not->toContain('<b>x</b>')
             ->and(substr_count($imprint, '<h1'))->toBe(1)

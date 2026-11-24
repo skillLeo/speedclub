@@ -7,9 +7,12 @@ import { View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { useMe, useResendCode, useSignOut, useVerifyEmail } from '@/api/queries/auth';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { dropBareReturnTo, useSessionStore } from '@/state/session';
 import { createStyles } from '@/theme';
-import { Button, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { slot } from '@/ui/SlotText';
 import { identifierText } from '@/ui/textBreaks';
 
@@ -77,7 +80,7 @@ export function VerifyEmailScreen() {
     if (status === 'guest' && !email) router.replace('/sign-up');
   }, [email, router, status]);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = useSingleFlight(handleSubmit(async (values) => {
     // Six digits submit by themselves; a press on the button at the same moment must not send the code twice.
     if (verify.isPending) return;
     setNotice(null);
@@ -119,7 +122,7 @@ export function VerifyEmailScreen() {
         setNotice(t('common.serverError'));
       }
     }
-  });
+  }));
 
   const requestCode = async () => {
     setNotice(null);

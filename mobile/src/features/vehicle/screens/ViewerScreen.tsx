@@ -8,7 +8,11 @@ import { useCachedPublicVehicle, usePublicMod, usePublicVehicle } from '@/api/qu
 import { useReport } from '@/features/safety/useReport';
 import { useOnline } from '@/state/online';
 import { createStyles } from '@/theme';
-import { EmptyState, IconButton, OfflineBanner, Screen, Spinner } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { IconButton } from '@/ui/IconButton';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Screen } from '@/ui/Screen';
+import { Spinner } from '@/ui/Spinner';
 
 import { PhotoViewer } from '../components/PhotoViewer';
 import { StateScreen } from '../components/StateScreen';
@@ -109,6 +113,8 @@ export function ViewerScreen() {
           fallbackAlt={fallbackAlt}
           index={index}
           onClose={close}
+          // BL-25: this route is the viewer's own history entry; the browser's back already closes it.
+          closeOnBrowserBack={false}
           actions={reportPhoto}
           notice={online ? null : <OfflineBanner label={t('viewer.offline')} testID={`${ROUTE_ID}.offline`} />}
         />

@@ -194,6 +194,11 @@
                 "name": "Sentry",
                 "about": "Error reports from app and server.",
                 "test": "Test"
+            },
+            "shopify": {
+                "name": "Shopify Storefront",
+                "about": "Optional: reads the shop catalogue straight from Shopify; the operator adds the access token in the hosting settings. Without a token the shop shows the admin catalogue.",
+                "test": "Test"
             }
         },
         "reasons": {

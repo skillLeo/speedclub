@@ -5,7 +5,8 @@ import { ApiError, newIdempotencyKey } from '@/api/client';
 import { useReissueQr } from '@/api/queries/qr';
 import { keepNameTogether } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
-import { Dialog, toast } from '@/ui';
+import { Dialog } from '@/ui/Dialog';
+import { toast } from '@/ui/toast';
 
 export type ReissueDialogProps = {
   visible: boolean;
@@ -38,7 +39,7 @@ export function ReissueDialog({ visible, onClose, vehicleId }: ReissueDialogProp
         key.current = null;
         onClose();
         haptics.success();
-        toast(t('reissue.done'), { testID: 'QR-02.reissueToast' });
+        toast(t('reissue.done'), { testID: 'STK-02.reissueToast' });
       },
       onError: (error) => {
         // Staff took the code down meanwhile: the page shows the blocked state, there is nothing to retry.
@@ -48,7 +49,7 @@ export function ReissueDialog({ visible, onClose, vehicleId }: ReissueDialogProp
           return;
         }
         // The server's words may write "QR-Code" with a plain hyphen (DQ-162): keep it on one line.
-        toast(error instanceof ApiError ? keepNameTogether(error.message) : t('reissue.failed'), { testID: 'QR-02.reissueError' });
+        toast(error instanceof ApiError ? keepNameTogether(error.message) : t('reissue.failed'), { testID: 'STK-02.reissueError' });
       },
     });
   };
@@ -60,10 +61,10 @@ export function ReissueDialog({ visible, onClose, vehicleId }: ReissueDialogProp
       title={t('reissue.title')}
       body={t('reissue.body')}
       actions={[
-        { label: t('reissue.cancel'), variant: 'secondary', onPress: close, disabled: reissue.isPending, testID: 'QR-02.reissueCancel' },
-        { label: t('reissue.confirm'), destructive: true, onPress: confirm, loading: reissue.isPending, testID: 'QR-02.reissueConfirm' },
+        { label: t('reissue.cancel'), variant: 'secondary', onPress: close, disabled: reissue.isPending, testID: 'STK-02.reissueCancel' },
+        { label: t('reissue.confirm'), destructive: true, onPress: confirm, loading: reissue.isPending, testID: 'STK-02.reissueConfirm' },
       ]}
-      testID="QR-02.reissueDialog"
+      testID="STK-02.reissueDialog"
     />
   );
 }

@@ -43,6 +43,8 @@ class ClearUnprovenAccountData
             'profile_setup_at' => null,
             'avatar_media_id' => null,
             'cover_media_id' => null,
+            // M5.9d: an invite code set by whoever typed the address is not the owner's.
+            'pending_invite_code' => null,
         ])->save();
 
         // A removed Apple link is revoked at Apple too, after the response (09 §8.1, like at account deletion).

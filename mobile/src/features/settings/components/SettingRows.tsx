@@ -2,7 +2,11 @@ import { View } from 'react-native';
 
 import { useViewAsReadOnly } from '@/features/viewAs/useViewAs';
 import { createStyles } from '@/theme';
-import { Hairline, ListRow, Radio, Switch, Text } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { ListRow } from '@/ui/ListRow';
+import { Radio } from '@/ui/Radio';
+import { Switch } from '@/ui/Switch';
+import { Text } from '@/ui/Text';
 
 import { ROW_INSET } from './ValueRow';
 

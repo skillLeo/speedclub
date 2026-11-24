@@ -1,6 +1,6 @@
 {
     "title": "Search",
-    "intro": "Members by @username, vehicles by slug or ID, QR codes by code, cases by ID. Email addresses only exact and only with the PII permission.",
+    "intro": "Members by @username, vehicles by slug or ID, stickers by code, cases by ID. Email addresses only exact and only with the PII permission.",
     "label": "Search term",
     "placeholder": "e.g. @nightrunner, 7H2K QXMB, s14-kouki",
     "submit": "Search",
@@ -12,7 +12,7 @@
     "groups": {
         "members": "Members",
         "vehicles": "Vehicles",
-        "qr": "QR codes",
+        "qr": "Stickers",
         "cases": "Cases"
     },
     "searching": "Searching for “:q” …"

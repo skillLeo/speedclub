@@ -2,19 +2,25 @@
 
 namespace App\Services\Notifications;
 
+use App\Enums\ModStatus;
 use App\Enums\NotificationType;
 use App\Enums\SecurityNotice;
+use App\Models\Badge;
 use App\Models\Business;
 use App\Models\Event;
+use App\Models\ForumThread;
+use App\Models\Modification;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Content\MessageTemplates;
+use App\Services\Engagement\RecapTexts;
 use App\Services\Garage\VehiclePresenter;
 use App\Services\Maintenance\MaintenanceTexts;
 use App\Services\Privacy\OrgIdentity;
 use App\Support\Units;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Push texts and targets in the recipient's language (lang/{de,en}/notifications.php), from a row as NotificationFeed hydrates it: its
@@ -89,7 +95,8 @@ class NotificationTexts
             ], $locale),
             NotificationType::Comment => $actor === null || $vehicle === null ? null : (($row->data['reply'] ?? false) === true
                 ? (string) __('notifications.comment.reply', ['name' => $actor->username, 'vehicle' => $this->presenter->title($vehicle)], $locale)
-                : trans_choice('notifications.comment.update', max(1, $count), ['name' => $actor->username, 'count' => max(0, $count - 1), 'vehicle' => $this->presenter->title($vehicle)], $locale)),
+                // R5-5: a comment on the car itself.
+                : trans_choice('notifications.comment.'.(($row->data['target'] ?? null) === 'vehicle' ? 'vehicle' : 'update'), max(1, $count), ['name' => $actor->username, 'count' => max(0, $count - 1), 'vehicle' => $this->presenter->title($vehicle)], $locale)),
             NotificationType::VehicleFollower => $actor === null || $vehicle === null ? null : trans_choice('notifications.vehicle_follower', max(1, $count), [
                 'name' => $actor->username,
                 'count' => max(0, $count - 1),
@@ -104,6 +111,16 @@ class NotificationTexts
             ], $locale),
             NotificationType::EventUpdate => $event === null ? null : (string) __('notifications.event_update.'.(($row->data['kind'] ?? null) === 'changed' ? 'changed' : 'update'), ['title' => $event->title], $locale),
             NotificationType::EventCancelled => $event === null ? null : (string) __('notifications.event_cancelled', ['title' => $event->title], $locale),
+            // M5.6: how many photos wait, never who sent them; the decision on a photo is in-app only; the nearby meets name the first.
+            NotificationType::EventGalleryPending => $event === null ? null : trans_choice('notifications.event_gallery_pending', max(1, (int) ($row->data['count'] ?? 1)), [
+                'count' => max(1, (int) ($row->data['count'] ?? 1)),
+                'title' => $event->title,
+            ], $locale),
+            NotificationType::EventPhotoDecided => null,
+            NotificationType::EventNearby => $event === null ? null : trans_choice('notifications.event_nearby.body', max(1, (int) ($row->data['count'] ?? 1)), [
+                'title' => $event->title,
+                'count' => max(0, (int) ($row->data['count'] ?? 1) - 1),
+            ], $locale),
             // M4.13: the owner's own vehicle and item (MaintenanceTexts), in their distance unit.
             NotificationType::MaintenanceDue => $vehicle === null ? null : app(MaintenanceTexts::class)->sentence($row->data ?? [], $this->presenter->title($vehicle), $recipient, $locale),
             // M4.14: in-app only (no push switch); the business's own name, never a reason in the text.
@@ -117,9 +134,41 @@ class NotificationTexts
                 'name' => $business->name,
                 'username' => is_string($row->data['username'] ?? null) ? $row->data['username'] : '',
             ], $locale),
+            // R4-2.3: in-app only; the crew's name and the other side's username, nothing else.
+            NotificationType::Crew => ! is_string($row->data['crew_name'] ?? null) ? null : (string) __('notifications.crew.'.self::oneOf($row->data['state'] ?? null, ['request_received', 'request_approved', 'invited'], 'invited'), [
+                'name' => $row->data['crew_name'],
+                'username' => is_string($row->data['username'] ?? null) ? $row->data['username'] : '',
+            ], $locale),
+            // M5.9b: the owner's own car, the day's count and, where allowed, its city or number of cities; never who spotted it.
+            NotificationType::SpotAlert => $vehicle === null ? null : $this->spotAlert($row, $vehicle, $locale),
+            // M5.9d: the badge's name in the recipient's language; the owner's own car; the pick of the day with its owner's username;
+            // an invite code of the recipient (never who redeemed it).
+            NotificationType::BadgeUnlocked => ($badge = Badge::query()->find(is_string($row->data['badge_key'] ?? null) ? $row->data['badge_key'] : '')) === null
+                ? null
+                : (string) __('notifications.badge_unlocked', ['name' => $badge->name($locale)], $locale),
+            NotificationType::CarOfTheDayOwner => $vehicle === null ? null : (string) __('notifications.car_of_the_day_owner', ['vehicle' => $this->presenter->title($vehicle)], $locale),
+            NotificationType::CarOfTheDay => $vehicle === null || ($owner = User::query()->find($vehicle->owner_id)) === null || $owner->username === null
+                ? null
+                : (string) __('notifications.car_of_the_day', ['vehicle' => $this->presenter->title($vehicle), 'name' => $owner->username], $locale),
+            NotificationType::InviteAccepted => (string) __('notifications.invite_accepted', ['code' => is_string($row->data['code'] ?? null) ? $row->data['code'] : ''], $locale),
+            // M5.8: the thread's public title, never a post's text; no push once the reader may no longer see the thread or the actor.
+            NotificationType::ForumReply => ($thread = $this->forumThread($row)) === null || $actor === null ? null : (($row->data['reply_to'] ?? null) === 'post'
+                ? (string) __('notifications.forum_reply.post', ['name' => $actor->username, 'title' => $thread->title], $locale)
+                : trans_choice('notifications.forum_reply.thread', max(1, $count), ['name' => $actor->username, 'count' => max(0, $count - 1), 'title' => $thread->title], $locale)),
+            NotificationType::ForumMention => ($thread = $this->forumThread($row)) === null || $actor === null ? null : (string) __('notifications.forum_mention', ['name' => $actor->username, 'title' => $thread->title], $locale),
+            NotificationType::ForumSolved => ($thread = $this->forumThread($row)) === null ? null : (string) __('notifications.forum_solved', ['title' => $thread->title], $locale),
+            // M5.7: the owner's own plan while it is still planned ("Ist das KW V3 schon verbaut?"); the week's non-zero numbers, never who.
+            NotificationType::PlanDue => ($mod = $this->plannedMod($row)) === null ? null : (string) __('notifications.plan_due', ['mod' => trim((string) $mod->getAttribute('title'))], $locale),
+            NotificationType::WeeklyRecap => RecapTexts::pushBody($row->data ?? [], $locale),
         };
 
-        return $body === null ? null : ['title' => (string) __('notifications.title', [], $locale), 'body' => $body];
+        $title = match ($row->type) {
+            NotificationType::EventNearby => 'notifications.event_nearby.title',
+            NotificationType::WeeklyRecap => 'notifications.weekly_recap.title',
+            default => 'notifications.title',
+        };
+
+        return $body === null ? null : ['title' => (string) __($title, [], $locale), 'body' => $body];
     }
 
     /**
@@ -136,7 +185,8 @@ class NotificationTexts
             // M4.7: a login alert opens SET-21 at its row.
             NotificationType::Security => is_string($row->data['security_event_id'] ?? null) ? '/settings/security/activity?event='.$row->data['security_event_id'] : '/notifications',
             NotificationType::ModerationDecision, NotificationType::ReportDecided => is_string($row->data['decision_id'] ?? null) ? '/decision/'.$row->data['decision_id'] : '/notifications',
-            NotificationType::QrMilestone => $vehicle !== null ? '/qr/'.$vehicle->id : '/notifications',
+            // M5.4 (contract §10): the car's sticker detail STK-02.
+            NotificationType::QrMilestone => $vehicle !== null ? '/stickers/'.$vehicle->id : '/notifications',
             NotificationType::HuAuReminder => $vehicle !== null ? '/garage/'.$vehicle->id.'/specs' : '/notifications',
             NotificationType::CatalogRequest => $vehicle !== null ? '/garage/'.$vehicle->id : '/notifications',
             // SET-15 thread.
@@ -149,15 +199,73 @@ class NotificationTexts
             NotificationType::MaintenanceDue => $vehicle !== null ? '/garage/'.$vehicle->id.'/maintenance'.(is_string($row->data['item_id'] ?? null) ? '?item='.$row->data['item_id'] : '') : '/notifications',
             // M4.14: BIZ-03 for the business owner, BIZ-04 for a tag waiting for the business, else the build.
             NotificationType::BusinessReview => '/business',
+            // M5.9b: DEX-06, the owner's spots of the car.
+            NotificationType::SpotAlert => $vehicle !== null ? '/vehicles/'.$vehicle->id.'/spots' : '/notifications',
+            // M5.9d: the badge list, Start (the owner edits the story line there), the build, the invites screen.
+            NotificationType::BadgeUnlocked => '/profile/badges',
+            NotificationType::CarOfTheDayOwner => '/',
+            NotificationType::CarOfTheDay => $vehicle !== null ? '/v/'.$vehicle->slug : '/',
+            NotificationType::InviteAccepted => '/settings/invites',
+            // M5.8: FOR-03 at the post while the reader may see the thread.
+            NotificationType::ForumReply, NotificationType::ForumMention, NotificationType::ForumSolved => ($thread = $this->forumThread($row)) !== null
+                ? $thread->path().(is_string($row->data['post_id'] ?? null) ? '?post='.$row->data['post_id'] : '')
+                : '/notifications',
+            // R4-2.3: CREW-01's requests for the admins, CREW-01 for an approved member, the member's open invitations.
+            NotificationType::Crew => match (true) {
+                ! is_string($row->data['crew_slug'] ?? null) => '/notifications',
+                ($row->data['state'] ?? null) === 'request_received' => '/crews/'.$row->data['crew_slug'].'/requests',
+                ($row->data['state'] ?? null) === 'invited' => '/crews/invites',
+                default => '/crews/'.$row->data['crew_slug'],
+            },
             // SEC-414-01: the member's open invitations, or BIZ-03 for the owner.
             NotificationType::BusinessInvite => ($row->data['state'] ?? null) === 'invited' ? '/business/invites' : (($row->data['side'] ?? null) === 'business' ? '/business' : '/notifications'),
             NotificationType::BusinessTag => ($row->data['side'] ?? null) === 'business'
                 ? '/business/requests'
                 : ($vehicle !== null ? '/v/'.$vehicle->slug.(is_string($row->data['mod_id'] ?? null) ? '?mod='.$row->data['mod_id'] : '') : '/notifications'),
-            NotificationType::EventReview, NotificationType::EventPromoted, NotificationType::EventReminder, NotificationType::EventUpdate, NotificationType::EventCancelled => ($event = $this->event($row)) !== null
+            // M5.6: the organiser's photo queue on EVT-06, the uploader's photo on EVT-02, the week list EVT-01.
+            NotificationType::EventGalleryPending => ($event = $this->event($row)) !== null ? '/events/'.$event->slug.'/manage#gallery' : '/notifications',
+            NotificationType::EventNearby => '/events',
+            // M5.7: the Pläne section of the owner's VEH-01, and INS-01.
+            NotificationType::PlanDue => $vehicle !== null ? '/v/'.$vehicle->slug.'?section=plans' : '/notifications',
+            NotificationType::WeeklyRecap => '/insights',
+            NotificationType::EventReview, NotificationType::EventPromoted, NotificationType::EventReminder, NotificationType::EventUpdate, NotificationType::EventCancelled, NotificationType::EventPhotoDecided => ($event = $this->event($row)) !== null
                 ? '/events/'.$event->slug
                 : ($row->type === NotificationType::EventReview ? '/events/mine?tab=organised' : '/notifications'),
         };
+    }
+
+    /**
+     * "Dein Skyline R34 wurde heute 4-mal in Düsseldorf gespottet." / "… in 3 Städten …" / without a city when the day had only night spots
+     * or the owner hides the car's cities (now, not only when the row was written).
+     */
+    private function spotAlert(Notification $row, Vehicle $vehicle, string $locale): string
+    {
+        $count = max(1, (int) ($row->data['count'] ?? 1));
+        $cities = self::spotAlertCities($row, $vehicle);
+        $name = $this->presenter->shortTitle($vehicle) ?? $this->presenter->title($vehicle);
+        $values = ['vehicle' => $name, 'count' => Units::formatNumber($count, $locale, 0)];
+
+        return match (true) {
+            count($cities) === 1 => trans_choice('notifications.spot_alert.city', $count, [...$values, 'city' => $cities[0]], $locale),
+            count($cities) > 1 => trans_choice('notifications.spot_alert.cities', $count, [...$values, 'cities' => count($cities)], $locale),
+            default => trans_choice('notifications.spot_alert.plain', $count, $values, $locale),
+        };
+    }
+
+    /**
+     * The names of a spot_alert row's cities as the owner may read them now: none while the car hides its cities.
+     *
+     * @return list<string>
+     */
+    public static function spotAlertCities(Notification $row, ?Vehicle $vehicle): array
+    {
+        $ids = array_values(array_filter((array) ($row->data['city_ids'] ?? []), is_int(...)));
+
+        if ($ids === [] || $vehicle === null || $vehicle->hide_spot_cities) {
+            return [];
+        }
+
+        return array_values(array_map(strval(...), DB::table('de_cities')->whereIn('id', $ids)->orderBy('name')->pluck('name')->all()));
     }
 
     private function business(Notification $row): ?Business
@@ -178,6 +286,11 @@ class NotificationTexts
     private function updatePath(Notification $row, ?Vehicle $vehicle): string
     {
         $update = $row->data['update_id'] ?? null;
+
+        // R5-5: a comment (or a mention in one) on the car itself opens VEH-01 with its comments.
+        if ($vehicle !== null && ($row->data['target'] ?? null) === 'vehicle' && is_string($row->data['comment_id'] ?? null)) {
+            return '/v/'.$vehicle->slug.'?comments=1';
+        }
 
         if ($vehicle !== null && is_string($update) && in_array($update, $row->visibleUpdateIds, true)) {
             return '/v/'.$vehicle->slug.'/updates/'.$update.(is_string($row->data['comment_id'] ?? null) ? '?comment='.$row->data['comment_id'] : '');
@@ -234,6 +347,24 @@ class NotificationTexts
         $title = is_string($id) ? Event::query()->whereKey($id)->value('title') : null;
 
         return is_string($title) ? $title : '';
+    }
+
+    private function forumThread(Notification $row): ?ForumThread
+    {
+        $thread = $row->relationLoaded('forumThread') ? $row->getRelation('forumThread') : null;
+
+        return $thread instanceof ForumThread ? $thread : null;
+    }
+
+    /**
+     * The row's mod while it is still planned (not deleted, not installed in the meantime).
+     */
+    private function plannedMod(Notification $row): ?Modification
+    {
+        $id = $row->data['modification_id'] ?? null;
+        $mod = is_string($id) ? Modification::query()->find($id) : null;
+
+        return $mod instanceof Modification && ModStatus::tryFrom((string) $mod->getRawOriginal('status')) === ModStatus::Planned ? $mod : null;
     }
 
     private function vehicle(Notification $row): ?Vehicle

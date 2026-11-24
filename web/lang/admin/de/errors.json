@@ -31,6 +31,7 @@
     },
     "503": {
         "title": "Wartungsarbeiten",
-        "body": "SPEED CLUB wird gerade gewartet. Der Admin-Bereich ist gleich wieder erreichbar."
-    }
+        "body": "Speedclub wird gerade gewartet. Der Admin-Bereich ist gleich wieder erreichbar."
+    },
+    "419_write": "Die Seite war zu lange offen oder deine Sitzung ist abgelaufen. Es wurde nichts gespeichert. Lade die Seite neu und versuche es noch einmal."
 }

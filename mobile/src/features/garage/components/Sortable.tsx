@@ -9,7 +9,9 @@ import { haptics } from '@/lib/haptics';
 import { isIOS, isWeb } from '@/lib/platform';
 import { createStyles } from '@/theme';
 import { useMotionPreference } from '@/ui/motion';
-import { Icon, PressableScale, Text } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Text } from '@/ui/Text';
 import { keyOf as keyOfEvent } from '@/ui/useRovingKeys';
 
 import { deltaForKey, moveByKey, slotAt, slotPosition, type SlotCell } from '../model';
@@ -264,6 +266,10 @@ function SortableCell({ itemKey, index, count, cell, order, activeKey, disabled,
   };
 
   const cellPan = usePanGesture({
+    // On the web RNGH re-applies the handler config on every re-render and drops the detector's `touchAction` (CR2-1, CarouselSnap):
+    // set here, the vertical page scroll keeps working with a finger on it.
+    // @ts-expect-error -- touchAction is an allowed native prop of the pan handler (RNGH propsWhiteList) but not in PanGestureConfig
+    touchAction: 'pan-y',
     enabled: !disabled,
     activateAfterLongPress: LONG_PRESS_MS,
     onActivate: begin,

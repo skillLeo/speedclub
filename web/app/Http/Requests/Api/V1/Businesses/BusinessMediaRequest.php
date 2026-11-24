@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Businesses;
 
+use App\Http\Requests\Concerns\ValidatesPlateBlur;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -9,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class BusinessMediaRequest extends FormRequest
 {
+    use ValidatesPlateBlur;
+
     /**
      * @return array<string, mixed>
      */
@@ -20,6 +23,7 @@ class BusinessMediaRequest extends FormRequest
             'alt' => ['nullable', 'string', 'max:500'],
             'focal_x' => ['nullable', 'numeric', 'between:0,1', 'required_with:focal_y'],
             'focal_y' => ['nullable', 'numeric', 'between:0,1', 'required_with:focal_x'],
+            ...$this->plateBlurRules(),
         ];
     }
 }

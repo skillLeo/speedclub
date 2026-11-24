@@ -10,7 +10,12 @@ import { usePublicVehicle } from '@/api/queries/vehicles';
 import { useDebouncedValue } from '@/features/auth/forms';
 import { categoryIcon } from '@/features/vehicle/model';
 import { createStyles, space } from '@/theme';
-import { ModRow, Sheet, Skeleton, SkeletonText, Text, TextInput, toast } from '@/ui';
+import { ModRow } from '@/ui/ModRow';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 
 const TYPING_MS = 400;
 

@@ -62,6 +62,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(prepend: [RefuseLongQuery::class]);
 
+        // ADR-539: the web installer switches maintenance mode on and must be able to switch it off again (the cron URL is not
+        // listed: no scheduled job runs while files are being replaced). storage/framework/maintenance.php reads this list too.
+        $middleware->preventRequestsDuringMaintenance(except: ['internal/setup/*', 'internal/maintenance/*']);
+
         // Replaces statefulApi(): same Sanctum middleware, but a session only for requests that already have one (SEC-105).
         $middleware->api(prepend: [StatefulFrontendWithSession::class], append: [SetLocaleFromHeader::class, RejectInvalidText::class]);
 

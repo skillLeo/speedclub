@@ -15,7 +15,7 @@ class LegalPublishRequest extends ContentRequest
      */
     public function rules(): array
     {
-        return ['reason' => ['required', 'string', 'min:10', 'max:1000'], 'revision' => ['required', 'string', 'max:64']];
+        return ['reason' => ['nullable', 'string', 'max:1000'], 'revision' => ['required', 'string', 'max:64']];
     }
 
     /** The revision of the draft the publisher saw (code review SF-1); mandatory, on the direct and the four-eyes path (SF-4). */

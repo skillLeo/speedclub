@@ -16,6 +16,28 @@ export function publicProfileUrl(username: string, site: string | null = siteUrl
   return `${site.replace(/\/+$/, '')}/u/${encodeURIComponent(username)}`;
 }
 
+/** M5.7 (contract §2.4): a link someone shares carries `?via=share`, so a view through it counts as "geteilter Link". */
+export function withShareVia(url: string): string {
+  if (/[?&]via=share(?:&|#|$)/.test(url)) return url;
+  const hashAt = url.indexOf('#');
+  const base = hashAt === -1 ? url : url.slice(0, hashAt);
+  const hash = hashAt === -1 ? '' : url.slice(hashAt);
+  return `${base}${base.includes('?') ? '&' : '?'}via=share${hash}`;
+}
+
+/** The profile address for the share sheet: the server's `share_url` where the resource has one, else the public page with `?via=share`. */
+export function profileShareUrl(username: string, shareUrl: string | null | undefined = null, site: string | null = siteUrl()): string | null {
+  if (shareUrl) return shareUrl;
+  const url = publicProfileUrl(username, site);
+  return url ? withShareVia(url) : null;
+}
+
+/** A build's address for the share sheet when only its slug is known (INS-01's vehicle reference). */
+export function vehicleShareUrl(slug: string, site: string | null = siteUrl()): string | null {
+  if (!site || !slug) return null;
+  return withShareVia(`${site.replace(/\/+$/, '')}/v/${encodeURIComponent(slug)}`);
+}
+
 type WebShareNavigator = {
   share?: (data: { title?: string; text?: string; url?: string }) => Promise<void>;
   canShare?: (data: { url?: string }) => boolean;

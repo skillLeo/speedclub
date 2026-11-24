@@ -4,7 +4,9 @@ import { View } from 'react-native';
 import { useQaState } from '@/lib/qa';
 import { useFormat } from '@/lib/useFormat';
 import { createStyles, size } from '@/theme';
-import { Hairline, Skeleton, SkeletonBlock, SkeletonText, Text } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import { SettingsPage } from '../components/SettingsPage';
 import { appVersionInfo } from '../version';

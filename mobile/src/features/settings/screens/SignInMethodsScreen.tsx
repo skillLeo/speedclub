@@ -21,6 +21,7 @@ import {
   type LinkedProvider,
   type Passkey,
 } from '@/api/queries/security';
+import { useAuthFlags } from '@/features/auth/authFlags';
 import { appleProvider } from '@/features/auth/providers/apple';
 import { googleProvider } from '@/features/auth/providers/google';
 import { createPasskey, isPasskeyCancelled, passkeysAvailable } from '@/features/auth/providers/passkeys';
@@ -32,23 +33,19 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import {
-  Button,
-  ContextMenuButton,
-  Dialog,
-  ErrorState,
-  Hairline,
-  Icon,
-  ListRow,
-  SampleBadge,
-  Sheet,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Text,
-  TextInput,
-  toast,
-} from '@/ui';
+import { SampleBadge } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { ContextMenuButton } from '@/ui/ContextMenu';
+import { Dialog } from '@/ui/Dialog';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { Icon } from '@/ui/icons/Icon';
+import { ListRow } from '@/ui/ListRow';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 import { RowGroup } from '@/ui/RowGroup';
 import { identifierText } from '@/ui/textBreaks';
 
@@ -187,6 +184,7 @@ export function SignInMethodsScreen() {
   const failure = useFailureMessage();
   const status = useSessionStore((state) => state.status);
   const passkeysOn = useFlag('auth.passkeys');
+  const { emailCode } = useAuthFlags();
   const appleOn = useFlag('auth.apple');
   const googleOn = useFlag('auth.google');
   const me = useMe();
@@ -368,7 +366,8 @@ export function SignInMethodsScreen() {
               icon="envelope-simple"
               title={t('signIn.emailCode')}
               subtitle={identifierText(account.email)}
-              value={t('signIn.alwaysOn')}
+              // ADR-520: switched off on a host that cannot deliver mail yet.
+              value={emailCode ? t('signIn.alwaysOn') : t('signIn.codeOff')}
               // DQ-987: the address breaks only after "@", "." and "/", never with a hyphen of its own.
               hyphenate={false}
               divider

@@ -10,6 +10,12 @@ use App\Http\Controllers\Admin\Support\ReasonRequest;
  */
 class BusinessDecisionRequest extends ReasonRequest
 {
+    /** ADR-540: the business owner reads the rejection or suspension text; a reinstatement needs none. */
+    protected function reasonRequired(): bool
+    {
+        return in_array((string) str((string) $this->route()?->getName())->afterLast('.'), ['reject', 'suspend'], true);
+    }
+
     protected function atom(): string
     {
         return 'moderation.decide';

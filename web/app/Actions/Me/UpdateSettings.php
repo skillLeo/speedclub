@@ -40,6 +40,7 @@ class UpdateSettings
             }
 
             if ($region !== null) {
+                // CR-P5G-08: the private region never sets the public Bundesland (CityMatcher::bundeslandFor reads the profile city).
                 $this->setRegion($user, $region['given']);
             }
 

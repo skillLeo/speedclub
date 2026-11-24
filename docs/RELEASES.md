@@ -349,3 +349,119 @@ Superseded Build 3 facts, kept for the record:
 - Changes (since Build 18, commits b61fb27a and 4225e175; the 2.0.0 release candidate tagged `v2.0.0-rc.1`): HOME-02 Mitteilungen always asks the server again when it opens (a member blocked just before a reload stayed named in a row); PROF-03 "Änderungen verwerfen?" no longer appears over a save already under way (guard off from the press of "Speichern"); AUTH-17 keeps the "Das war ich nicht" token out of the address bar on the member web (Safari/WebKit). Server: Laravel 13.42 (advisory GHSA-63hm-g96r-2m2q), Arch tests in their own process, two architecture-rule fixes, no API change for the app.
 - Known issues (Low): member web `/app` misses the 09 §12 Lighthouse budget (Perf 34, LCP 11.7 s; ADR-473, Phase 5); iOS not built (OA-15); Apple/Google sign-in off until OA-38; e-mail codes on staging only reach the server log until SMTP (OA-22); queue jobs need the hPanel cron (OA-21).
 - Test status: final gate run 3 (`docs/reports/phase-4/verify-20261114-115939.md`): tokens, icons, fonts, strict design-lint, mobile verify (tsc, eslint, Jest, i18n), perf probes, web assets, npm audits, Expo export and public Lighthouse PASS. Failed there and fixed or re-run: Laravel verify (only `composer audit`: fixed by 13.42, then pint, phpstan, Arch 29, Pest 8,107 and audit green), E2E (2,740 passed, 5 failed: 1 real bug fixed in PROF-03, 4 load flakes; re-run of the affected specs 159/159 on Chromium and WebKit), visual p4 (4,898 cells, 3 WebKit offline picture-integrity cells, recaptured PASS). Still failing: Lighthouse `/app` (ADR-473). Not run on this build: a native smoke on the emulator (Maestro missing, OA-9).
+
+## 2.1.0 (Build 21) - staging - 2026-11-17 16:59
+- **Superseded by Build 22** (same day): Build 21 (like Build 20) lacks `android.permission.CAMERA`, so the STREET DEX scanner (DEX-02) cannot open the camera on Android. Not for distribution.
+- APK: releases/android/speedclub-2.1.0-b21-staging-20261117-1651.apk (70.8 MB)
+- SHA-256: 31E3F0AD56F6F7409E6D07B6FF2193B0D4C73684615307D67F4CAD19113F54C9
+- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- API: https://coral-okapi-906483.hostingersite.com
+- Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.FOREGROUND_SERVICE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+- Version: versionName 2.1.0, versionCode 21 (aapt badging and the embedded `app.config`), minSdk 24, targetSdk 36. APK signature scheme v2 (apksigner: v1/v3/v4 false), one signer, certificate pin of OA-8 matched.
+- Built from: `d90408f8` (`main`, clean tree, no `-DIRTY`), `scripts/build-apk.ps1 -Target staging` under PowerShell 7 on the Mac with `SPEEDCLUB_STAGING_URL`, `nice -n 15`, no `-Clean` (no native change since Build 20: `40aef7b6` only adds web chunking to `app.config.ts`). Log `docs/reports/logs/apk-2.1.0-b21.log` (prebuild to signed APK in 9 min). Version counter: the Build 20 bump was never committed (`mobile/version.json` still read 19), so it was set to 20 before the run and the script went to 21; a plain run would have built a second Build 20.
+- Bundle check (release engineer): Hermes bytecode; the staging host is the only API/App Link host (`assets/app.config` intent filters: `coral-okapi-906483.hostingersite.com` only); no LAN, `10.0.2.2` or `localhost:8080` address; 0 hits for Laravel `APP_KEY`/`base64:` keys, OpenAI/Anthropic/Stripe/Shopify/GitHub/Slack/AWS/Google API key patterns, private-key headers, server env names (`DB_PASSWORD`, `MAIL_PASSWORD`, `PUSHER_APP_SECRET`, signing variables) or secrets paths. `EXPO_PUBLIC_*` values are inlined, no other env reaches the bundle. QA overrides are present by design (only `production` compiles them out).
+- Changes (since Build 20, built 2026-11-16 01:56 on top of `fd83c47a`, to `d90408f8`; 41 commits): M5.2 navigation (Shop tab, Builds · Treffen), M5.3 client feedback (VEH-01 one scroll with section index, planned mods "Pläne", build progress, VEH-08, GAR-10 plan fields), M5.4 sticker designer app part (autosave, drafts, version history, Scan-Test), M5.5 Shop (SHOP-01/02, external Shopify checkout), M5.6 Events ("Diese Woche", next meets; check-in and gallery UI behind flags), M5.7 owner-only Insights (INS-01), M5.8 Forum ("Hilfreich" counts in the forum only), M5.9 AI helpers behind flags (spec suggestion, product match, forum summary, moderation template), CF-6 share card options (photo, elements, theme), M5.12a member web startup work (granular chunks, per-language strings), ADR-520 e-mail code off where mail cannot be delivered, design QA rounds r1–r4 and the r3/r6 capture fixes (200 % text, overlaps), security gate fixes SEC-P5-09..12, 14. Server and admin changes ship with the web package, not this APK.
+- Known issues:
+  - **High (new finding, not fixed in this build, also in Build 20): the STREET DEX scanner (DEX-02) cannot get the camera on Android.** `android.permission.CAMERA` is not in the APK (aapt; Build 20 is the same). Root cause: `mobile/app.config.ts` passes `cameraPermission: false` to `expo-image-picker`, and that plugin then puts `android.permission.CAMERA` on the blocked list (`tools:node="remove"` in the generated manifest), which overrides the permission `expo-camera` adds. The build script's allow-list already allows CAMERA (ADR-508). Fix for the lead: drop `cameraPermission: false` from the image-picker entry (or set the scanner purpose text there), rebuild with `-Clean`, check that aapt lists CAMERA. The iOS side (`NSCameraUsageDescription`, also passed `false` by the same entry) should be checked with `npx expo config --type introspect` before a TestFlight build.
+  - Low: member web `/app` still misses the 09 §12 Lighthouse budget (M5.12a partly met, BL-23); legal `[[…]]` placeholders (OA-10/OA-33/OA-35); Shop has no real store link until OA-44; AI helpers stay off until a provider is set (OA-18); check-in and gallery are off by flag; staging needs the hPanel cron for the nightly gift jobs and queues (OA-21); e-mail codes off on staging until SMTP (ADR-520, OA-22); iOS not built (OA-15).
+- Test status: only the build's own checks ran on this APK: Gradle release build with R8, signer pin, SEC-P1-06 permission allow-list (script), then re-checked by the release engineer: `apksigner verify --print-certs` (scheme v2, CN=SPEED CLUB, certificate `95ef800d…f079`), aapt badging (2.1.0 / 21), `shasum -a 256` equals the `.sha256` file, the bundle check above. Not installed or launched (no emulator run for this build, Maestro missing OA-9). No `verify.ps1 -Phase 5` report exists for `d90408f8`; the gates recorded in the commits on the way there are per module: mobile tsc/lint/i18n/design-lint and Jest 4,596 (`40aef7b6`), Jest 1,732 in 143 suites (`c7fa769d`), Jest ai/garage 392 and Pest Web 606 (`d90408f8`), Pest every directory and web verify (`40aef7b6`), visual capture r6 97 cells 0 High/Medium (`d90408f8`), zero-error crawl 3 roles × 3 devices, 0 bugs (`7d4dfaa7`, `docs/reports/phase-5/crawl-local-m510.md`).
+
+### Neu für Tester 2.1.0 (DE)
+- **STREET DEX:** Scanne den SPEED CLUB Sticker an einem echten Auto und sammle es in deinem Dex, mit Seltenheit, Sets und Karte. (Android: Scanner in diesem Build noch ohne Kamerazugriff, siehe Known issues.)
+- **Build Score:** Zeigt, wie vollständig dein Auto gezeigt und dokumentiert ist, mit Stufe, Platzierung nach Modell und Bundesland und genauer Erklärung. Nie Punkte für PS, Tempo, Sound oder Geld.
+- **Season Wrapped:** Dein Saisonrückblick mit Spots, Scans, Score und deinem Lieblingsmod, als Karte zum Teilen.
+- **Sticker-Designer:** Gestalte deinen QR-Sticker aus sechs Vorlagen, mit Entwürfen, Versionen und Scan-Test.
+- **Shop:** Neuer Tab mit Stickern und Merch; bezahlt wird im Shopify-Shop außerhalb der App.
+- **Forum:** Fragen und Antworten rund ums Schrauben; hilfreiche Antworten markierst du mit „Hilfreich“.
+- **Insights:** Nur du siehst, wie oft dein Auto aufgerufen und dein Sticker gescannt wurde.
+- **Treffen:** Check-in und Fotogalerie bei Treffen sind vorbereitet und werden später freigeschaltet.
+- **KI-Helfer:** Vorschläge für Herstellerangaben und Teile sind vorbereitet und noch ausgeschaltet.
+- **Teilen-Karte:** Du wählst Foto, angezeigte Angaben und Farbschema, mit Vorschau.
+- **Web-App:** Die Web-App unter /app startet schneller.
+- **Installieren:** Über 2.0.0 oder 2.1.0 Build 20 einfach drüber installieren (gleicher Schlüssel), du bleibst angemeldet.
+
+### What's new 2.1.0 (EN)
+- **STREET DEX:** scan the SPEED CLUB sticker on a real car and collect it in your Dex, with rarity, sets and a map. (Android: the scanner has no camera access in this build, see Known issues.)
+- **Build Score:** shows how completely your car is presented and documented, with a stage, ranks by model and federal state and a full explanation. Never points for power, speed, sound or money.
+- **Season Wrapped:** your season recap with spots, scans, score and your favourite mod, as a card to share.
+- **Sticker designer:** design your QR sticker from six templates, with drafts, versions and a scan test.
+- **Shop:** a new tab with stickers and merch; checkout happens in the Shopify store outside the app.
+- **Forum:** questions and answers about working on cars; mark useful answers as "Helpful".
+- **Insights:** only you see how often your car was viewed and your sticker scanned.
+- **Meets:** check-in and the photo gallery at meets are prepared and will be switched on later.
+- **AI helpers:** suggestions for manufacturer specs and parts are prepared and still switched off.
+- **Share card:** pick the photo, the details shown and the theme, with a preview.
+- **Web app:** the web app at /app starts faster.
+- **Install:** install over 2.0.0 or 2.1.0 Build 20 (same key); you stay signed in.
+
+## 2.1.0 (Build 22) - staging - 2026-11-17 17:12
+- APK: releases/android/speedclub-2.1.0-b22-staging-20261117-1704.apk (70.8 MB)
+- SHA-256: BD46A737CF67D92FEAAB68918104E9881FA129FCE5BFF6CE08700FFA1DD83539
+- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- API: https://coral-okapi-906483.hostingersite.com
+- Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.CAMERA, android.permission.FOREGROUND_SERVICE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+- Version: versionName 2.1.0, versionCode 22 (aapt badging and the embedded `app.config`), minSdk 24, targetSdk 36. APK signature scheme v2 (v1/v3/v4 false), one signer, certificate pin of OA-8 matched (`apksigner verify --print-certs`, re-run by the release engineer).
+- Built from: `6b85f7ae` (`main`) with `scripts/build-apk.ps1 -Target staging -Clean` (clean prebuild, so the old gitignored `mobile/android/` no longer carries the CAMERA remove node), PowerShell 7 on the Mac, `SPEEDCLUB_STAGING_URL`, `nice -n 15`. Log `docs/reports/logs/apk-2.1.0-b22.log` (8 min).
+- Tree note: at the start the tree was clean apart from agent memory files outside `mobile/`. Another agent started editing `mobile/src` during the run (first edit 17:06:50; Metro's packager map was written at 17:06:43). The release engineer compared all 1,170 app sources in the bundle's source map with HEAD: 1,169 are identical, one is not. `src/ui/specStripLayout.ts` was captured mid-edit (an uncommitted ADR-422 e change: new `SPEC_WRAP_MAX_COLUMNS`, `provenanceSegments`, `estimatedProvenanceSegmentWidth` and an optional `gridContentWidths`). No other bundled file uses them, and with `gridContentWidths` unset the fit check takes the same path as HEAD, so behaviour equals `6b85f7ae`. Strictly, this is not a pure HEAD build; rebuild as Build 23 once that work is committed if an exact-HEAD APK is required.
+- Manifest check: aapt lists `android.permission.CAMERA`; the merged release manifest (`processReleaseManifest`) declares CAMERA plainly and has no `tools:node="remove"` entry at all; `RECORD_AUDIO`, `ACCESS_FINE_LOCATION`, `ACCESS_BACKGROUND_LOCATION` and `FOREGROUND_SERVICE_LOCATION` are absent from the APK manifest (0 hits). Only foreground approximate location (`ACCESS_COARSE_LOCATION`), as ADR-508 allows.
+- Bundle check: Hermes bytecode; the staging host is the only API/App Link host; no LAN, `10.0.2.2` or `localhost:8080` address; 0 hits for the secret patterns listed under Build 21 and for `EXPO_PUBLIC_` names (values are inlined).
+- Changes (since Build 21): `6b85f7ae` fix(android): keep the CAMERA permission for the DEX-02 scanner (`expo-image-picker` gets `cameraPermission: CAMERA_PURPOSE_DE` instead of `false`, which had put CAMERA on the blocked list over `expo-camera`), with a Jest test; plus the Build 21 version and release entry. Everything else as Build 21.
+- Tester notes: as "Neu für Tester 2.1.0 (DE)" / "What's new 2.1.0 (EN)" under Build 21, without the line "Android: Scanner in diesem Build noch ohne Kamerazugriff" / "the scanner has no camera access in this build": the scanner asks for the camera on first use. Install over 2.0.0 or 2.1.0 Build 20/21 (same key).
+- Known issues (Low): as Build 21 (`/app` Lighthouse budget, legal `[[…]]` placeholders, OA-44 Shop link, OA-18 AI provider, check-in/gallery flags off, OA-21 cron, OA-22 SMTP/ADR-520, OA-15 iOS). The iOS `NSCameraUsageDescription` should still be confirmed with `npx expo config --type introspect` before a TestFlight build.
+- Test status: the build's own checks (R8 release build, signer pin, SEC-P1-06 permission allow-list) and the release engineer's re-checks above (apksigner, aapt badging/permissions/xmltree, merged manifest, `shasum -a 256` equals the `.sha256` file, bundle scan, source-map comparison with HEAD). Not installed or launched (no emulator run, Maestro missing OA-9), so the camera prompt itself is not yet verified on a device. Module gates as listed under Build 21; no `verify.ps1 -Phase 5` report for this commit.
+
+## 2.1.0 (Build 23) - staging - 2026-11-18 14:56
+- APK: releases/android/speedclub-2.1.0-b23-staging-20261118-1446.apk (70.8 MB)
+- SHA-256: 5F47E9CC95285A6C46FC10C55C2879FAE8CBDEF2F628C5299F2F5F1AF6760D8A
+- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- API: https://coral-okapi-906483.hostingersite.com
+- Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.CAMERA, android.permission.FOREGROUND_SERVICE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+- Changes: _(release engineer: summarise commits since the previous release)_
+- Known issues (Low): _(release engineer)_
+- Test status: _(release engineer: copy from the latest verify report - only what actually ran)_
+## 2.1.0 (Build 24) - staging - 2026-11-18 15:15
+- APK: releases/android/speedclub-2.1.0-b24-staging-20261118-1508.apk (70.8 MB)
+- SHA-256: A94C5B7148C3A70F71C1A322E1A39E324F87133CB1685468189A1BD9F770A1ED
+- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- API: https://coral-okapi-906483.hostingersite.com
+- Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.CAMERA, android.permission.FOREGROUND_SERVICE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+- Changes: _(release engineer: summarise commits since the previous release)_
+- Known issues (Low): _(release engineer)_
+- Test status: _(release engineer: copy from the latest verify report - only what actually ran)_
+## 2.1.0 (Build 25) - staging - 2026-11-19 22:34
+- APK: releases/android/speedclub-2.1.0-b25-staging-20261119-2230.apk (70.9 MB)
+- SHA-256: 8D7FA3BC82776FCD338C84BC8DBE42FF099EE22FB590419AE75F2EA9CE52CEA0
+- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- API: https://coral-okapi-906483.hostingersite.com
+- Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.CAMERA, android.permission.FOREGROUND_SERVICE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+- Changes: client round 3 — the client's new logo as app icon (iOS/Android, adaptive + monochrome), loading screen and in-app wordmarks (732463d7); Build Score gauge 232 instead of 264 (a9d57d7d); plate blur angle + movable box and username rules were in earlier commits of 2026-11-19
+- Known issues (Low): the logo source is the client's 700 px PNG (vector files wanted for print); Jest suites Sheet, DEX-03 reveal and heldForm time out on the build machine at HEAD before and after these commits (environment, under investigation)
+- Test status: tsc + eslint clean; Jest brand/score/Dex card/Home/settings suites green; Pest tests/Feature/Web + Admin/Settings 633 green; A8 company-data flow green on Chromium and WebKit; design-lint 0; signer and permissions checked by build-apk
+
+## 2.1.0 (Build 26) - staging - 2026-11-22 07:58
+- APK: releases/android/speedclub-2.1.0-b26-staging-20261122-0753.apk (71.2 MB)
+- SHA-256: 5C5DC22EB93EFECB2C7658573A7DF3370A7AE4C4BCF2489AFE027169A17CA90D
+- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- API: https://coral-okapi-906483.hostingersite.com
+- Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.CAMERA, android.permission.FOREGROUND_SERVICE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+- Changes (client round 4, docs/11_CLIENT_ROUND_4.md): Crews (CREW-00…05, sidebar place), Car of the Day vote on Start (no counts; demo rounds with badged samples outside production, ADR-535), one-tap heart + comments sheet, first-login introduction INTRO-01…04, DEX-01 explainer, shop categories (Sticker; Kleidung/Accessoires bald) + sticker explanation, VEH-01 section bar no longer jumps on phones, smaller Build Score gauge, desktop header sizes; 15 hunt fixes (R4B-000…013, L01/L02) and design QA rounds 1–4 (R4DQ-01…61, verdict PASS); back after a cold link keeps the tab anchor; server Scan-Test reads at three scales (ADR-534).
+- Known issues (Low): design QA Lows R4DQ-60 (shop sample hero crop on phones) and the open round-4 Lows in docs/reports/design-qa/round-4/review-r4.md; the iPhone check of the VEH-01 section bar (no iOS device here); native swipe of the introduction not run on a device.
+- Test status (ran 2026-11-22): server gate pint + phpstan clean, Pest one directory per process all green after fixes (Security route table, Stickers Scan-Test, Web 615); mobile typecheck, lint, i18n, design-lint clean; Jest all 37 directories green on Node 26 (≈ 4,980 tests); e2e full run 2,345 passed with 5 failures, all fixed or classified (load flakes re-run green), round-4 batches green (r4 flows incl. the live vote flow on Chromium + WebKit, back navigation 49, landing/shop/home 63, shell 194, admin 14).
+## 2.1.0 (Build 27) - staging - 2026-11-23 01:10
+- APK: releases/android/speedclub-2.1.0-b27-staging-20261123-0058.apk (71.4 MB)
+- SHA-256: 15039BC3608F9F3FF56A01B14344B113EBEBF05C29C96B81ACFF60DF0C7959B5
+- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- API: https://coral-okapi-906483.hostingersite.com
+- Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.CAMERA, android.permission.FOREGROUND_SERVICE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+- Changes: _(release engineer: summarise commits since the previous release)_
+- Known issues (Low): _(release engineer)_
+- Test status: _(release engineer: copy from the latest verify report - only what actually ran)_
+## 2.1.0 (Build 28) - production - 2026-11-24 02:11
+- APK: releases/android/speedclub-2.1.0-b28-production-20261124-0205.apk (71.3 MB)
+- SHA-256: A75AB71924E4013E304D2ADE6A22EFBFA4D50AFD3BE8F85534BEF81602A4135E
+- Signed by: CN=SPEED CLUB, OU=Mobile, O=SPEED CLUB, L=Berlin, ST=Berlin, C=DE (certificate SHA-256 95ef800df2d5d92b0f8ca9c9ded0b71bf96b0b82389284b21e8e24863002f079)
+- API: https://joinspeedclub.com
+- Permissions (aapt dump permissions, SEC-P1-06 allow-list passed): android.permission.ACCESS_COARSE_LOCATION, android.permission.ACCESS_NETWORK_STATE, android.permission.ACCESS_WIFI_STATE, android.permission.CAMERA, android.permission.FOREGROUND_SERVICE, android.permission.INTERNET, android.permission.POST_NOTIFICATIONS, android.permission.VIBRATE, android.permission.WAKE_LOCK, com.google.android.c2dm.permission.RECEIVE, de.speedclub.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+- Changes: _(release engineer: summarise commits since the previous release)_
+- Known issues (Low): _(release engineer)_
+- Test status: _(release engineer: copy from the latest verify report - only what actually ran)_

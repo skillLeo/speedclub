@@ -10,6 +10,8 @@ return [
     'generation_mismatch' => 'This generation does not belong to the chosen model.',
     'year_outside_generation' => 'The model year does not fit this generation (:from to :to).',
     'installed_in_future' => 'The month of installation must not be in the future.',
+    'mod_detail_required' => 'Add at least one detail about the part, for example the brand, the model or a title.',
+    'target_month_range' => 'The target month must be between 01/2000 and :max.',
     'cover_invalid' => 'The cover must be a finished photo of this vehicle.',
 
     'publish_missing' => [
@@ -125,4 +127,8 @@ return [
     'photos_added' => 'One new photo|:count new photos',
     'legal_disclaimer' => 'Stated by the owner, no legal review',
     'cost' => '€:amount',
+    'budget' => 'Budget €:amount',
+    // M5.7 (10 §6.2): the optional milestone goal of a build.
+    'build_goal' => 'Goal: season :season',
+    'build_goal_range' => 'The goal must be a season between :min and :max.',
 ];

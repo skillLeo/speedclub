@@ -20,7 +20,7 @@ import { HERO_SLOTS, LOGO_SLOTS, kindOf, logoGround, type AssetKind, type BrandA
 /**
  * ADM-28 Marke & Theme (06 §3, 03 §2/§3, FS-1, BL-4): the logo set, the hero photos with focal point and live contrast verdict, the OG
  * default, the accent set (only the pre-validated sets of tokens.json, no free colour) and the default theme, as the branding draft:
- * save → preview (ADM-34) → publish with a reason ⚿ → roll back in ADM-35. The client's logo is never redrawn or recoloured (03 §2).
+ * save → preview (ADM-34) → publish ⚿ → roll back in ADM-35. The client's logo is never redrawn or recoloured (03 §2).
  */
 const props = defineProps<{
     editor: EditorProps<Branding>;

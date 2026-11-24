@@ -48,6 +48,12 @@ export type MapPin = { id: string; lat: number; lng: number; label: string; titl
 
 export type MapPoint = { lat: number; lng: number };
 
+/**
+ * M5.9b "Spots" layer: one circle per city, sized by its count (`radius`, computed by the app), labelled with the city's name. A
+ * city aggregate only: never a vehicle, never a member (contract §6).
+ */
+export type MapArea = { id: string; lat: number; lng: number; count: number; radius: number; label: string };
+
 /** What the controller draws; every design value comes from the tokens. */
 export type MapState = {
   mode: MapMode;
@@ -56,6 +62,8 @@ export type MapState = {
   center: MapPoint;
   zoom: number;
   pins: readonly MapPin[];
+  /** The spot layer's cities; empty while the layer is off. */
+  areas: readonly MapArea[];
   selectedId: string | null;
   focus: MapPoint | null;
   exact: boolean;
@@ -129,6 +137,7 @@ export type MapInput = {
   center: MapPoint | null;
   zoom?: number;
   pins?: readonly MapPin[];
+  areas?: readonly MapArea[];
   selectedId?: string | null;
   exact?: boolean;
   picked?: MapPoint | null;
@@ -147,6 +156,7 @@ export function mapState(input: MapInput, theme: AppTheme, reduced: boolean): Ma
     center: input.center ?? input.picked ?? GERMANY,
     zoom: input.zoom ?? (input.center || input.picked ? CITY_ZOOM : COUNTRY_ZOOM),
     pins: input.pins ?? [],
+    areas: input.areas ?? [],
     selectedId: input.selectedId ?? null,
     focus: selected ? { lat: selected.lat, lng: selected.lng } : null,
     exact: input.exact ?? true,

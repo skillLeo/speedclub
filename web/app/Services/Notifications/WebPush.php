@@ -128,7 +128,7 @@ class WebPush
         $route = self::route($url);
 
         $data = array_filter([
-            'title' => $title === '' ? 'SPEED CLUB' : $title,
+            'title' => $title === '' ? 'Speedclub' : $title,
             'body' => $body,
             'tag' => $tag === null ? null : mb_substr($tag, 0, 64),
             'lang' => $lang,

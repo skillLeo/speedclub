@@ -13,7 +13,7 @@ Route::middleware([...AdminRoutes::signedIn(), 'can:catalog.view'])->prefix('cat
     Route::get('/', [ProductsController::class, 'index'])->name('index');
     Route::get('{product}', [ProductsController::class, 'show'])->where('product', $ulid)->name('show');
 
-    Route::middleware(['can:catalog.manage', 'throttle:60,1'])->group(function () use ($ulid): void {
+    Route::middleware(['can:catalog.manage', 'throttle:60,1,admin-products-1'])->group(function () use ($ulid): void {
         Route::post('/', [ProductsController::class, 'store'])->name('store');
         Route::patch('{product}', [ProductsController::class, 'update'])->where('product', $ulid)->name('update');
         Route::post('{product}/archive', [ProductsController::class, 'archive'])->where('product', $ulid)->name('archive');

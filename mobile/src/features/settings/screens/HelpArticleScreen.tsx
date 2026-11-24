@@ -7,7 +7,11 @@ import { ApiError } from '@/api/client';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { createStyles, space } from '@/theme';
-import { EmptyState, ErrorState, Skeleton, SkeletonText, Text, useCollapsingHeader } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { SettingsPage } from '../components/SettingsPage';
 import { Markdown } from '../markdown/Markdown';

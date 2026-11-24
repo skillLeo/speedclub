@@ -14,23 +14,19 @@ import {
 import { useReport } from '@/features/safety/useReport';
 import { CommentsSection } from '@/features/updates/components/Comments';
 import { MentionText } from '@/features/updates/components/MentionText';
-import { OwnerReactions, ReactButton, useBuildReactions } from '@/features/updates/components/Reactions';
+import { OwnerReactions, ReactButton } from '@/features/updates/components/Reactions';
 import { unpairedPhotos, updatePairs } from '@/features/updates/model';
 import { useFormat } from '@/lib/useFormat';
 import { useSessionStore } from '@/state/session';
 import { createStyles, space, useBreakpoint } from '@/theme';
-import {
-  Dialog,
-  ListRow,
-  Photo,
-  SectionHeader,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  SpecRow,
-  Text,
-  toast,
-} from '@/ui';
+import { Dialog } from '@/ui/Dialog';
+import { ListRow } from '@/ui/ListRow';
+import { Photo } from '@/ui/Photo';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { SpecRow } from '@/ui/SpecRow';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { BeforeAfter } from '@/ui/motion/kit';
 import { TranslatableText } from '@/features/ai/TranslatableText';
 
@@ -66,7 +62,7 @@ const useStyles = createStyles((t) => ({
   // DQ-1054: an update without photos of its own shows the car's photo as a 16:9 band, labelled where it comes from.
   fallback: { gap: t.space[8], marginTop: t.space[20] },
   photo: { overflow: 'hidden' },
-  react: { alignItems: 'center', flexDirection: 'row', gap: t.space[12], marginTop: t.space[24] },
+  react: { alignItems: 'flex-start', gap: t.space[4], marginTop: t.space[24] },
 }));
 
 /** Photos in the content column are as wide as the column (PushedPage keeps the gutter). */
@@ -155,7 +151,6 @@ export function UpdateDetailScreen() {
   const styles = useStyles();
   const router = useRouter();
   const format = useFormat();
-  const buildReactions = useBuildReactions();
   const params = useLocalSearchParams<{ slug: string; updateId: string }>();
   const slug = paramOf(params.slug) ?? '';
   const updateId = paramOf(params.updateId) ?? '';
@@ -256,7 +251,6 @@ export function UpdateDetailScreen() {
   ];
   const headline = head?.title ?? '';
   const fallbackPhoto = vehicle?.cover ?? null;
-  const reactionLabel = update?.my_reaction ? (buildReactions.find((reaction) => reaction.key === update.my_reaction)?.label ?? t('reactions.react')) : t('reactions.react');
   const changes = state === 'ready' ? (update?.changes ?? []) : [];
   const note = update?.note?.trim();
 
@@ -471,15 +465,16 @@ export function UpdateDetailScreen() {
         </View>
       ) : state === 'ready' && update && !own ? (
         <View style={styles.react}>
+          {/* R4-2.2: the heart "Gefällt mir" with its label (or the reaction you gave); a long press holds the car reactions. */}
           <ReactButton
             target="build-updates"
             id={update.id}
             mine={update.my_reaction}
+            labelled
             testID={`${ROUTE_ID}.react`}
           />
-          {/* DQ-1054 (c): the trigger says what it does, or which reaction is yours. The trigger names itself for readers. */}
-          <Text variant="callout" color="text.secondary" aria-hidden testID={`${ROUTE_ID}.react.label`}>
-            {reactionLabel}
+          <Text variant="caption" color="text.secondary" testID={`${ROUTE_ID}.react.hint`}>
+            {t('reactions.holdHint')}
           </Text>
         </View>
       ) : null}

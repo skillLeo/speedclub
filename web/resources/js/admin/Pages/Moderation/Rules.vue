@@ -9,7 +9,7 @@ import { useAdminAction } from '../../Components/decisions/action';
 import ScrollRegion from '../../Components/patterns/ScrollRegion.vue';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
-import { Badge, Button, ConfirmDialog, Dialog, Drawer, EmptyQueue, Field, IconButton, Input, RadioGroup, Skeleton, StatusPill, Textarea } from '../../Components/ui';
+import { Badge, Button, ConfirmDialog, Dialog, Drawer, EmptyQueue, Field, IconButton, Input, RadioGroup, Skeleton, StatusPill } from '../../Components/ui';
 import { usePageState } from '../../composables/pageState';
 import { qaDialog } from '../../composables/qaDialog';
 import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
@@ -17,7 +17,7 @@ import { usePermissions } from '../../lib/permissions';
 import { routeOr } from '../../lib/routes';
 
 /**
- * ADM-23 rules (06 §3 Moderation, m3.4-contract §1; moderation.rules, recent password, reason): the keyword lists (Sperren · Markieren:
+ * ADM-23 rules (06 §3 Moderation, m3.4-contract §1; moderation.rules, recent password): the keyword lists (Sperren · Markieren:
  * term, list, created by/at, matches in 30 days) and the rate-limit overrides of the member limiters (default, allowed 0.25×–4×,
  * override), published as one config version.
  */
@@ -79,11 +79,11 @@ function windowText(minutes: number): string {
 // ---- keywords ---------------------------------------------------------------------------------------------------------------
 const action = useAdminAction();
 const addOpen = ref(qaDialog() === 'add');
-const addForm = reactive({ term: '', list: 'flag', reason: '' });
+const addForm = reactive({ term: '', list: 'flag' });
 const addErrors = ref<Partial<Record<string, string>>>({});
 watch(addOpen, (open) => {
     if (!open) return;
-    Object.assign(addForm, { term: '', list: 'flag', reason: '' });
+    Object.assign(addForm, { term: '', list: 'flag' });
     addErrors.value = {};
     action.reset();
 });
@@ -92,11 +92,9 @@ const listModel = computed({ get: () => addForm.list, set: (v: string | undefine
 function add(): void {
     const next: Partial<Record<string, string>> = {};
     if (addForm.term.trim().length < 2) next.term = trans('moderation.rules.keywords.term_error');
-    const reason = addForm.reason.trim().length;
-    if (reason < 10 || reason > 1000) next.reason = trans('ui.confirm.reason_length');
     addErrors.value = next;
     if (Object.keys(next).length > 0) return;
-    action.run('post', routeOr('admin.moderation.rules.store', '/admin/moderation/rules'), { term: addForm.term.trim(), list: addForm.list, reason: addForm.reason.trim() }, { sensitive: true, onSuccess: () => (addOpen.value = false) });
+    action.run('post', routeOr('admin.moderation.rules.store', '/admin/moderation/rules'), { term: addForm.term.trim(), list: addForm.list }, { sensitive: true, onSuccess: () => (addOpen.value = false) });
 }
 
 const removing = ref<Rule | null>(null);
@@ -106,22 +104,20 @@ function openRemove(rule: Rule): void {
     action.reset();
     removeOpen.value = true;
 }
-function remove(reason: string | null): void {
+function remove(): void {
     if (!removing.value) return;
-    action.run('delete', routeOr('admin.moderation.rules.destroy', `/admin/moderation/rules/${removing.value.id}`, { rule: removing.value.id }), { reason: reason ?? '' }, { sensitive: true, onSuccess: () => (removeOpen.value = false) });
+    action.run('delete', routeOr('admin.moderation.rules.destroy', `/admin/moderation/rules/${removing.value.id}`, { rule: removing.value.id }), {}, { sensitive: true, onSuccess: () => (removeOpen.value = false) });
 }
 
 // ---- limits -----------------------------------------------------------------------------------------------------------------
 const limitsOpen = ref(qaDialog() === 'limits');
 const limitForm = reactive<Record<string, string>>({});
-const limitReason = ref('');
 const limitErrors = ref<Partial<Record<string, string>>>({});
 watch(
     limitsOpen,
     (open) => {
         if (!open) return;
         limitRows.value.forEach((l) => (limitForm[l.name] = l.override === null ? '' : String(l.override)));
-        limitReason.value = '';
         limitErrors.value = {};
         action.reset();
     },
@@ -141,11 +137,9 @@ function publishLimits(): void {
         if (!Number.isInteger(value) || value < l.lower || value > l.upper) next[l.name] = trans('moderation.rules.limits.invalid', { min: formatNumber(l.lower), max: formatNumber(l.upper) });
         else overrides[l.name] = value;
     }
-    const reason = limitReason.value.trim().length;
-    if (reason < 10 || reason > 1000) next.reason = trans('ui.confirm.reason_length');
     limitErrors.value = next;
     if (Object.keys(next).length > 0) return;
-    action.run('post', routeOr('admin.moderation.rules.limits', '/admin/moderation/rules/rate-limits'), { overrides, reason: limitReason.value.trim() }, { sensitive: true, onSuccess: () => (limitsOpen.value = false) });
+    action.run('post', routeOr('admin.moderation.rules.limits', '/admin/moderation/rules/rate-limits'), { overrides }, { sensitive: true, onSuccess: () => (limitsOpen.value = false) });
 }
 const serverError = computed(() => (failedDialog ? trans('ui.state.server_error') : action.error.value));
 </script>
@@ -256,9 +250,6 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                     <Input v-model="addForm.term" maxlength="100" data-testid="ADM-23.add.term" />
                 </Field>
                 <RadioGroup v-model="listModel" :legend="trans('moderation.rules.keywords.list')" :options="listOptions" data-testid="ADM-23.add.list" />
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('moderation.rules.reason_hint')" :error="addErrors.reason" required>
-                    <Textarea v-model="addForm.reason" :rows="2" :maxlength="1000" show-count data-testid="ADM-23.add.reason" />
-                </Field>
             </form>
             <template #footer>
                 <DialogError :message="serverError" />
@@ -272,7 +263,6 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
             :title="trans('moderation.rules.keywords.remove_title', { term: removing?.term ?? '' })"
             :body="trans('moderation.rules.keywords.remove_body')"
             :confirm-label="trans('moderation.rules.keywords.remove')"
-            reason
             :processing="action.processing.value"
             :error="action.error.value"
             test-id="ADM-23.remove-confirm"
@@ -292,9 +282,6 @@ const serverError = computed(() => (failedDialog ? trans('ui.state.server_error'
                         </Field>
                     </div>
                 </div>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('moderation.rules.reason_hint')" :error="limitErrors.reason" required>
-                    <Textarea v-model="limitReason" :rows="2" :maxlength="1000" show-count data-testid="ADM-23.limits.reason" />
-                </Field>
             </form>
             <template #footer>
                 <DialogError :message="serverError" />

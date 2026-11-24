@@ -9,7 +9,7 @@ import { routeOr } from '../../../lib/routes';
 import { fillPlaceholders, type AppealItem, type ComposerOptions, type SorTemplate } from '../shared';
 
 /**
- * Decide an internal complaint (Art. 20 DSA, m3.4-contract §1; `moderation.appeals`, recent password, reason): uphold or change the
+ * Decide an internal complaint (Art. 20 DSA, m3.4-contract §1; `moderation.appeals`, recent password): uphold or change the
  * decision, with the explanation the appellant reads. Changing it on an affected member's appeal lifts the measure; on a reporter's
  * appeal the staff member takes a measure now (remove content or restrict) with its statement of reasons. The server refuses the person
  * who took the decision; the page does not offer it to them.
@@ -21,16 +21,15 @@ interface Form {
     outcome: 'upheld' | 'reversed';
     explanation: string;
     action: 'remove_content' | 'restrict';
-    restriction: 'messaging' | 'publishing';
+    restriction: 'messaging' | 'publishing' | 'forum';
     duration: Duration;
     template: string;
     facts: string;
     ground: string;
     ground_document: 'community' | 'terms' | 'law';
     ground_section: string;
-    reason: string;
 }
-const blank = (): Form => ({ outcome: 'upheld', explanation: '', action: 'remove_content', restriction: 'messaging', duration: '7', template: '', facts: '', ground: '', ground_document: 'community', ground_section: '', reason: '' });
+const blank = (): Form => ({ outcome: 'upheld', explanation: '', action: 'remove_content', restriction: 'messaging', duration: '7', template: '', facts: '', ground: '', ground_document: 'community', ground_section: '' });
 const form = reactive<Form>(blank());
 const errors = ref<Partial<Record<string, string>>>({});
 const action = useAdminAction();
@@ -50,14 +49,14 @@ const outcomeOptions = computed(() => [
 const measureOptions = computed(() =>
     (['remove_content', ...(props.composer.actions.includes('restrict') ? (['restrict'] as const) : [])] as const).map((value) => ({ value, label: trans(`moderation.composer.actions.${value}`), hint: trans(`moderation.composer.hints.${value}`) })),
 );
-const restrictionOptions = computed(() => (['messaging', 'publishing'] as const).map((value) => ({ value, label: trans(`decisions.measures.${value}`) })));
+const restrictionOptions = computed(() => (['messaging', 'publishing', 'forum'] as const).map((value) => ({ value, label: trans(`decisions.measures.${value}`) })));
 const durationOptions = computed(() => (['1', '7', '30', 'none'] as const).map((value) => ({ value, label: trans(`decisions.durations.${value}`) })));
 const documentOptions = computed(() => (['community', 'terms', 'law'] as const).map((value) => ({ value, label: trans(`decisions.documents.${value}`) })));
 const templateOptions = computed(() => [{ value: '-', label: trans('moderation.composer.template_none') }, ...props.templates.filter((t) => t.locale === props.composer.member_locale).map((t) => ({ value: t.id, label: t.label }))]);
 
 const outcomeModel = computed({ get: () => form.outcome, set: (v: string | undefined) => (form.outcome = v === 'reversed' ? 'reversed' : 'upheld') });
 const measureModel = computed({ get: () => form.action, set: (v: string | undefined) => (form.action = v === 'restrict' ? 'restrict' : 'remove_content') });
-const restrictionModel = computed({ get: () => form.restriction, set: (v: string | undefined) => (form.restriction = v === 'publishing' ? 'publishing' : 'messaging') });
+const restrictionModel = computed({ get: () => form.restriction, set: (v: string | undefined) => (form.restriction = v === 'publishing' || v === 'forum' ? v : 'messaging') });
 const durationModel = computed({ get: () => form.duration, set: (v: string | undefined) => (form.duration = (v ?? '7') as Duration) });
 const documentModel = computed({ get: () => form.ground_document, set: (v: string | undefined) => (form.ground_document = (v ?? 'community') as Form['ground_document']) });
 const templateModel = computed({
@@ -78,8 +77,6 @@ function submit(): void {
     const next: Partial<Record<string, string>> = newMeasure.value ? { ...statementErrors({ template: '', facts: form.facts, ground: form.ground, ground_document: form.ground_document, ground_section: form.ground_section }) } : {};
     const explanation = form.explanation.trim().length;
     if (explanation < 10 || explanation > 5000) next.explanation = trans('decisions.errors.facts');
-    const reason = form.reason.trim().length;
-    if (reason < 10 || reason > 1000) next.reason = trans('ui.confirm.reason_length');
     errors.value = next;
     if (Object.keys(next).length > 0) return;
     const measure = newMeasure.value
@@ -96,7 +93,7 @@ function submit(): void {
     action.run(
         'post',
         routeOr('admin.moderation.appeals.decide', `/admin/moderation/appeals/${props.appeal.id}/decide`, { appeal: props.appeal.id }),
-        { outcome: form.outcome, explanation: form.explanation.trim(), reason: form.reason.trim(), ...measure },
+        { outcome: form.outcome, explanation: form.explanation.trim(), ...measure },
         { sensitive: true, onSuccess: () => (open.value = false) },
     );
 }
@@ -130,10 +127,6 @@ const serverError = computed(() => (props.failed ? trans('ui.state.server_error'
                     <div class="w-120"><Field :label="trans('decisions.section')" optional><Input v-model="form.ground_section" maxlength="100" /></Field></div>
                 </div>
             </fieldset>
-
-            <Field :label="trans('moderation.appeal.internal_reason')" :hint="trans('decisions.reason_hint')" :error="errors.reason" required>
-                <Textarea v-model="form.reason" :rows="2" :maxlength="1000" show-count :data-testid="`${testId}.reason`" />
-            </Field>
         </form>
         <template #footer>
             <DialogError :message="serverError" />

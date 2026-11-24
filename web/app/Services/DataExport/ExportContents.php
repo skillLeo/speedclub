@@ -3,11 +3,18 @@
 namespace App\Services\DataExport;
 
 use App\Enums\DecisionAction;
+use App\Models\InviteCode;
 use App\Models\Media;
+use App\Models\StickerDesign;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\Wrapped;
 use App\Services\Auth\DeviceSessions;
+use App\Services\Crews\CrewExport;
+use App\Services\Dex\OwnerSpotStats;
 use App\Services\Notifications\NotificationPrefs;
+use App\Services\Progress\Levels;
+use App\Services\Wrapped\WrappedPresenter;
 use DateTimeInterface;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
@@ -66,7 +73,327 @@ class ExportContents
             // to the applicant), team invitations, and the portfolio tags the member asked for or decided.
             'business.json' => $this->business($user),
             'business_tags.json' => $this->businessTags($user),
+            // M5.9b–e gifts (10 §16): the member's own spots and Dex progress (city and Bundesland only, never coordinates), what the
+            // owner sees about the spots of their cars (DEX-06), XP, level, badges and founding number, invite codes, Car of the Day
+            // features and Season Wrapped. Other members only as DEX-06 / INV-01 show them; never the install key (ADR-511).
+            'spots.json' => $this->spots($user),
+            'spots_of_my_cars.json' => $this->spotsOfMyCars($user, $forStaff),
+            'progress.json' => $this->progress($user),
+            'invites.json' => $this->invites($user),
+            'car_of_the_day.json' => $this->carOfTheDay($user),
+            // R4-2.1: the member's own Car of the Day votes (day, the car by its public id and name, cast and last changed). No counts.
+            'car_of_the_day_votes.json' => $this->carOfTheDayVotes($user),
+            'wrapped.json' => $this->wrapped($user),
+            // M5.8 Forum: the member's own threads, posts (their text as written), "Hilfreich" votes and subscriptions; of other
+            // members only the title of a thread the member wrote in, voted in or follows. Forum bans are in moderation_decisions.json.
+            'forum.json' => $this->forum($user),
+            // M5.7 (10 §6.1): the daily view totals of the member's profile and cars per source (their own statistics); never a view
+            // event, a hash or anything about a viewer.
+            'insights.json' => $this->insights($user),
+            // R4-2.3 Crews: the member's crews with their role, open join requests, invitations received and sent (crew and username).
+            'crews.json' => app(CrewExport::class)->forMember($user),
         ];
+    }
+
+    /**
+     * M5.7: views per day and source of the profile and of each car (a car by its public id), oldest first.
+     *
+     * @return list<array{subject: string, vehicle: string|null, day: string, source: string, views: int}>
+     */
+    private function insights(User $user): array
+    {
+        return array_values(DB::table('view_days')
+            ->leftJoin('vehicles', 'vehicles.id', '=', 'view_days.vehicle_id')
+            ->where('view_days.owner_id', $user->getKey())
+            ->orderBy('view_days.day')
+            ->orderBy('view_days.id')
+            ->get(['view_days.subject_type', 'vehicles.public_id', 'view_days.day', 'view_days.source', 'view_days.views'])
+            ->map(fn (object $row): array => [
+                'subject' => (string) $row->subject_type,
+                'vehicle' => $row->public_id === null ? null : (string) $row->public_id,
+                'day' => substr((string) $row->day, 0, 10),
+                'source' => (string) $row->source,
+                'views' => (int) $row->views,
+            ])
+            ->all());
+    }
+
+    /**
+     * Spots the member made (removed ones too, marked), their Dex progress and First Spotter foils. A car by its public id, name and Dex
+     * number; a place by city and Bundesland only.
+     *
+     * @return array{spots: list<array<string, mixed>>, dex: array{found: int, sets: list<array<string, mixed>>}, first_spotter_foils: int}
+     */
+    private function spots(User $user): array
+    {
+        $id = $user->getKey();
+        $locale = $this->locale($user);
+        $spots = DB::table('spots as s')
+            ->leftJoin('vehicles as v', 'v.id', '=', 's.vehicle_id')
+            ->leftJoin('makes as mk', 'mk.id', '=', 'v.make_id')
+            ->leftJoin('vehicle_models as vm', 'vm.id', '=', 'v.model_id')
+            ->leftJoin('generations as g', 'g.id', '=', 'v.generation_id')
+            ->leftJoin('de_cities as c', 'c.id', '=', 's.city_id')
+            ->where('s.spotter_id', $id)
+            ->orderBy('s.created_at')
+            ->orderBy('s.id')
+            ->get(['v.public_id', 'v.dex_number', 'mk.name as make', 'vm.name as model', 'g.name as generation', 'c.name as city', 's.bundesland', 's.is_night', 's.is_first_three', 's.counted', 's.created_at', 's.deleted_at'])
+            ->map(fn (object $spot): array => [
+                'vehicle' => $spot->public_id,
+                'vehicle_name' => self::carName($spot->make, $spot->model, $spot->generation),
+                'dex_number' => $spot->dex_number === null ? null : (int) $spot->dex_number,
+                'city' => $spot->city,
+                'bundesland' => $spot->bundesland,
+                'night' => (bool) $spot->is_night,
+                'first_spotter' => (bool) $spot->is_first_three,
+                'counted' => (bool) $spot->counted,
+                'spotted_at' => $spot->created_at,
+                'removed' => $spot->deleted_at !== null,
+            ])
+            ->all();
+
+        $sets = DB::table('user_set_progress as p')
+            ->leftJoin('dex_sets as d', 'd.key', '=', 'p.set_key')
+            ->where('p.user_id', $id)
+            ->orderBy('p.set_key')
+            ->orderBy('p.period')
+            ->get(['p.set_key', 'd.name_de', 'd.name_en', 'p.period', 'p.progress', 'p.target', 'p.completed_at'])
+            ->map(fn (object $set): array => [
+                'set' => $set->set_key,
+                'name' => $locale === 'en' ? $set->name_en : $set->name_de,
+                'period' => $set->period === '' ? null : $set->period,
+                'progress' => (int) $set->progress,
+                'target' => (int) $set->target,
+                'completed_at' => $set->completed_at,
+            ])
+            ->all();
+
+        $found = DB::table('spots')->where('spotter_id', $id)->where('counted', true)->whereNull('deleted_at')->distinct()->count('vehicle_id');
+
+        return [
+            'spots' => array_values($spots),
+            'dex' => ['found' => $found, 'sets' => array_values($sets)],
+            'first_spotter_foils' => DB::table('spots')->where('spotter_id', $id)->where('counted', true)->where('is_first_three', true)->whereNull('deleted_at')->count(),
+        ];
+    }
+
+    /**
+     * Per own car what DEX-06 shows the owner (OwnerSpotStats: totals, unique spotters, cities of day spots only and none while the car
+     * hides them, the last 30 days, recent spotters by name only where their "Meine Spots zeigen" allows it, else anonymous) and the
+     * car's STREET DEX switches. The staff copy has the number of recent spotters, not who.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function spotsOfMyCars(User $user, bool $forStaff): array
+    {
+        $rows = [];
+
+        foreach (Vehicle::query()->where('owner_id', $user->getKey())->with(['make', 'vehicleModel', 'generation'])->orderBy('sort')->orderBy('id')->get() as $vehicle) {
+            $stats = app(OwnerSpotStats::class)->for($vehicle);
+            $spotters = array_map(fn (array $spotter): array => isset($spotter['username']) ? ['username' => $spotter['username'], 'display_name' => $spotter['display_name'] ?? null] : ['anonymous' => true], $stats['recent_spotters']);
+
+            $rows[] = [
+                'vehicle' => $vehicle->getAttribute('public_id'),
+                'vehicle_name' => self::carName($vehicle->make?->getAttribute('name'), $vehicle->vehicleModel?->getAttribute('name'), $vehicle->generation?->getAttribute('name')),
+                'dex_number' => $vehicle->getAttribute('dex_number'),
+                'ghost_mode' => (bool) $vehicle->getAttribute('ghost_mode'),
+                'spotting_paused' => (bool) $vehicle->getAttribute('spotting_paused'),
+                'hide_spot_cities' => (bool) $vehicle->getAttribute('hide_spot_cities'),
+                'total' => $stats['total'],
+                'unique_spotters' => $stats['unique_spotters'],
+                'cities_count' => $stats['cities_count'],
+                'cities' => $stats['cities'],
+                'last_30_days' => $stats['last_30_days'],
+                'recent_spotters' => $forStaff ? ['count' => count($spotters)] : $spotters,
+                'street_famous_tier' => $stats['street_famous']['tier'],
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * XP events (type, points, capped, date; never the source's id), level and title, badges earned, the founding number.
+     *
+     * @return array<string, mixed>
+     */
+    private function progress(User $user): array
+    {
+        $locale = $this->locale($user);
+        $level = app(Levels::class)->for((int) $user->getAttribute('xp'), $locale);
+        $badges = DB::table('user_badges as ub')
+            ->join('badges as b', 'b.key', '=', 'ub.badge_key')
+            ->where('ub.user_id', $user->getKey())
+            ->orderBy('ub.awarded_at')
+            ->get(['ub.badge_key', 'b.name_de', 'b.name_en', 'b.tier', 'ub.awarded_at', 'ub.seen_at'])
+            ->map(fn (object $badge): array => [
+                'key' => $badge->badge_key,
+                'name' => $locale === 'en' ? $badge->name_en : $badge->name_de,
+                'tier' => $badge->tier,
+                'awarded_at' => $badge->awarded_at,
+                'seen_at' => $badge->seen_at,
+            ])
+            ->all();
+
+        return [
+            'xp' => $level['xp'],
+            'level' => $level['level'],
+            'title' => $level['title'],
+            'founding_number' => $user->getAttribute('founding_number'),
+            'activated_at' => $this->date($user->getAttribute('activated_at')),
+            'xp_events' => DB::table('xp_events')->where('user_id', $user->getKey())->orderBy('created_at')->orderBy('id')
+                ->get(['type', 'points', 'capped', 'day', 'created_at'])
+                ->map(fn (object $event): array => ['type' => $event->type, 'points' => (int) $event->points, 'capped' => (bool) $event->capped, 'day' => $event->day, 'created_at' => $event->created_at])
+                ->all(),
+            'badges' => array_values($badges),
+        ];
+    }
+
+    /**
+     * The member's invite codes, and the code they joined with. The other side by username only while that member is public (verified,
+     * active, a username, no block either way), otherwise "ein Mitglied".
+     *
+     * @return array{codes: list<array<string, mixed>>, joined_with: array{code: string, invited_by: string, accepted_at: string|null}|null}
+     */
+    private function invites(User $user): array
+    {
+        $locale = $this->locale($user);
+        $name = function (?string $memberId) use ($user, $locale): ?string {
+            if ($memberId === null) {
+                return null;
+            }
+
+            $member = User::query()->find($memberId);
+
+            return $member instanceof User && $member->hasUsername() && $member->isPubliclyVisible() && ! $user->hasBlockWith($member)
+                ? '@'.$member->username
+                : (string) __('settings.export.a_member', [], $locale);
+        };
+
+        $codes = InviteCode::query()->where('inviter_id', $user->getKey())->orderBy('created_at')->orderBy('code')->get()
+            ->map(fn (InviteCode $invite): array => [
+                'code' => $invite->code,
+                'created_at' => $this->date($invite->created_at),
+                'accepted_at' => $this->date($invite->accepted_at),
+                'accepted_by' => $name($invite->accepted_by),
+            ])
+            ->all();
+        $joined = InviteCode::query()->where('accepted_by', $user->getKey())->first();
+
+        return [
+            'codes' => array_values($codes),
+            'joined_with' => $joined instanceof InviteCode ? ['code' => $joined->code, 'invited_by' => (string) $name($joined->inviter_id), 'accepted_at' => $this->date($joined->accepted_at)] : null,
+        ];
+    }
+
+    /**
+     * R4-2.1: the member's votes, oldest round first. The car by its public id and name, as the round showed it.
+     *
+     * @return list<array{day: string, vehicle: string|null, vehicle_name: string|null, voted_at: string|null, changed_at: string|null}>
+     */
+    private function carOfTheDayVotes(User $user): array
+    {
+        return array_values(DB::table('car_of_the_day_votes as cv')
+            ->leftJoin('vehicles as v', 'v.id', '=', 'cv.vehicle_id')
+            ->leftJoin('makes as mk', 'mk.id', '=', 'v.make_id')
+            ->leftJoin('vehicle_models as vm', 'vm.id', '=', 'v.model_id')
+            ->leftJoin('generations as g', 'g.id', '=', 'v.generation_id')
+            ->where('cv.user_id', $user->getKey())
+            ->orderBy('cv.day')
+            ->get(['cv.day', 'v.public_id', 'mk.name as make', 'vm.name as model', 'g.name as generation', 'cv.created_at', 'cv.updated_at'])
+            ->map(fn (object $row): array => [
+                'day' => (string) $row->day,
+                'vehicle' => $row->public_id === null ? null : (string) $row->public_id,
+                'vehicle_name' => self::carName($row->make, $row->model, $row->generation),
+                'voted_at' => $row->created_at === null ? null : (string) $row->created_at,
+                'changed_at' => $row->updated_at === null ? null : (string) $row->updated_at,
+            ])
+            ->all());
+    }
+
+    /**
+     * Days the member's cars were the Car of the Day (published picks only), with the story line and who chose (the job or the team).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function carOfTheDay(User $user): array
+    {
+        return array_values(DB::table('car_of_the_day as c')
+            ->join('vehicles as v', 'v.id', '=', 'c.vehicle_id')
+            ->leftJoin('makes as mk', 'mk.id', '=', 'v.make_id')
+            ->leftJoin('vehicle_models as vm', 'vm.id', '=', 'v.model_id')
+            ->leftJoin('generations as g', 'g.id', '=', 'v.generation_id')
+            ->where('v.owner_id', $user->getKey())
+            ->where('c.skipped', false)
+            ->whereNotNull('c.published_at')
+            ->orderBy('c.day')
+            ->get(['c.day', 'v.public_id', 'mk.name as make', 'vm.name as model', 'g.name as generation', 'c.story_line', 'c.source'])
+            ->map(fn (object $row): array => [
+                'day' => $row->day,
+                'vehicle' => $row->public_id,
+                'vehicle_name' => self::carName($row->make, $row->model, $row->generation),
+                'story_line' => $row->story_line,
+                'source' => $row->source,
+            ])
+            ->all());
+    }
+
+    /**
+     * The member's Season Wrapped, as the app presents them (WrappedPresenter: words, not ids), without photo links.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function wrapped(User $user): array
+    {
+        $previous = app()->getLocale();
+        app()->setLocale($this->locale($user));
+
+        try {
+            return array_values(Wrapped::query()->where('user_id', $user->getKey())->with('user.avatar')->orderBy('season_key')->get()
+                ->map(fn (Wrapped $wrapped): array => [
+                    'season_key' => $wrapped->season_key,
+                    'generated_at' => $this->date($wrapped->generated_at),
+                    'viewed_at' => $this->date($wrapped->viewed_at),
+                    'shared_count' => $wrapped->shared_count,
+                    'payload' => self::withoutMedia(app(WrappedPresenter::class)->present($wrapped)),
+                ])
+                ->all());
+        } finally {
+            app()->setLocale($previous);
+        }
+    }
+
+    /**
+     * Drops photo objects (media, avatars, covers) from a presented payload: links that expire and say nothing beyond photos.json.
+     *
+     * @param  array<array-key, mixed>  $data
+     * @return array<array-key, mixed>
+     */
+    private static function withoutMedia(array $data): array
+    {
+        $clean = [];
+
+        foreach ($data as $key => $value) {
+            if (is_string($key) && ($key === 'avatar' || $key === 'media' || $key === 'photo' || $key === 'cover' || str_ends_with($key, '_media'))) {
+                continue;
+            }
+
+            $clean[$key] = is_array($value) ? self::withoutMedia($value) : $value;
+        }
+
+        return $clean;
+    }
+
+    private static function carName(mixed ...$parts): ?string
+    {
+        $name = trim(implode(' ', array_filter($parts, fn (mixed $part): bool => is_string($part) && $part !== '')));
+
+        return $name === '' ? null : $name;
+    }
+
+    private function locale(User $user): string
+    {
+        return $user->getAttribute('locale') === 'en' ? 'en' : 'de';
     }
 
     /**
@@ -187,7 +514,7 @@ class ExportContents
     }
 
     /**
-     * @return array{organised: list<array<string, mixed>>, answers: list<array<string, mixed>>}
+     * @return array{organised: list<array<string, mixed>>, answers: list<array<string, mixed>>, checkins: list<array<string, mixed>>, gallery_photos: list<array<string, mixed>>}
      */
     private function events(User $user): array
     {
@@ -231,7 +558,41 @@ class ExportContents
             ];
         }
 
-        return ['organised' => $organised, 'answers' => $answers];
+        // M5.6 (review SF-6, Art. 15/20): the member's own check-ins and gallery uploads with the event's title and link, never another member.
+        $checkins = [];
+
+        foreach (DB::table('event_checkins')->join('events', 'events.id', '=', 'event_checkins.event_id')->where('event_checkins.user_id', $id)
+            ->orderBy('event_checkins.checked_in_at')
+            ->get(['events.title', 'events.slug', 'event_checkins.checked_in_at', 'event_checkins.profile_visible']) as $checkin) {
+            $row = (array) $checkin;
+            $checkins[] = [
+                'event' => $row['title'],
+                'url' => '/e/'.(is_string($row['slug']) ? $row['slug'] : ''),
+                'checked_in_at' => $row['checked_in_at'],
+                'shown_on_profile' => (bool) $row['profile_visible'],
+            ];
+        }
+
+        $gallery = [];
+
+        foreach (DB::table('event_photos')->join('events', 'events.id', '=', 'event_photos.event_id')->where('event_photos.uploader_id', $id)
+            ->orderBy('event_photos.created_at')
+            ->get(['events.title', 'events.slug', 'event_photos.media_id', 'event_photos.status', 'event_photos.reject_reason', 'event_photos.reviewed_at',
+                'event_photos.created_at', 'event_photos.deleted_at']) as $photo) {
+            $row = (array) $photo;
+            $gallery[] = [
+                'event' => $row['title'],
+                'url' => '/e/'.(is_string($row['slug']) ? $row['slug'] : ''),
+                'photo' => $this->photoRef($row['media_id']),
+                'status' => $row['status'],
+                'reject_reason' => $row['reject_reason'],
+                'reviewed_at' => $row['reviewed_at'],
+                'uploaded_at' => $row['created_at'],
+                'deleted_at' => $row['deleted_at'],
+            ];
+        }
+
+        return ['organised' => $organised, 'answers' => $answers, 'checkins' => $checkins, 'gallery_photos' => $gallery];
     }
 
     /**
@@ -253,9 +614,71 @@ class ExportContents
                     'created_at' => $collection->created_at,
                     'items' => $rows(DB::table('member_collection_items')->where('collection_id', $collection->id)->orderByDesc('position')->select(['item_type', 'item_id', 'created_at as added_at'])),
                 ])->all(),
-            'comments' => $rows(DB::table('comments')->where('user_id', $id)->orderBy('created_at')->select(['build_update_id', 'parent_id', 'body', 'status', 'created_at', 'deleted_at'])),
+            // R5-5: a comment stands under an update (build_update_id) or on a car itself (vehicle_id).
+            'comments' => $rows(DB::table('comments')->where('user_id', $id)->orderBy('created_at')->select(['build_update_id', 'vehicle_id', 'parent_id', 'body', 'status', 'created_at', 'deleted_at'])),
             'mentions_written' => $rows(DB::table('mentions')->join('users', 'users.id', '=', 'mentions.mentioned_user_id')->where('mentions.author_id', $id)
                 ->orderBy('mentions.created_at')->select(['mentions.mentionable_type as item_type', 'mentions.mentionable_id as item_id', 'users.username as member', 'mentions.created_at'])),
+        ];
+    }
+
+    /**
+     * M5.8: threads the member started (every state, deleted ones within their retention marked), posts they wrote (opening posts and
+     * replies, their text as they wrote it, Markdown), the replies they marked "Hilfreich" and the threads they follow. Another member
+     * appears only as the title of a thread; never who else wrote, voted or follows.
+     *
+     * @return array{threads: list<array<string, mixed>>, posts: list<array<string, mixed>>, helpful_votes: list<array<string, mixed>>, subscriptions: list<array<string, mixed>>}
+     */
+    private function forum(User $user): array
+    {
+        $id = $user->getKey();
+        $rows = fn ($query): array => array_values($query->get()->map(fn (object $row): array => (array) $row)->all());
+
+        return [
+            'threads' => array_values(DB::table('forum_threads')->join('forum_categories', 'forum_categories.id', '=', 'forum_threads.category_id')
+                ->where('forum_threads.user_id', $id)->orderBy('forum_threads.created_at')
+                ->get(['forum_threads.id', 'forum_threads.title', 'forum_categories.name_de as category', 'forum_threads.status', 'forum_threads.tags',
+                    'forum_threads.review_reason', 'forum_threads.solved_post_id', 'forum_threads.created_at', 'forum_threads.published_at',
+                    'forum_threads.edited_at', 'forum_threads.deleted_at'])
+                ->map(fn (object $row): array => [
+                    'id' => $row->id,
+                    'title' => $row->title,
+                    'category' => $row->category,
+                    'status' => $row->status,
+                    'tags' => is_string($row->tags) ? json_decode($row->tags, true) : [],
+                    // Why the team did not publish it (pre-moderation), only on a rejected thread.
+                    'review_reason' => $row->status === 'rejected' ? $row->review_reason : null,
+                    'solved' => $row->solved_post_id !== null,
+                    'created_at' => $row->created_at,
+                    'published_at' => $row->published_at,
+                    'edited_at' => $row->edited_at,
+                    'deleted_at' => $row->deleted_at,
+                ])->all()),
+            'posts' => array_values(DB::table('forum_posts')->join('forum_threads', 'forum_threads.id', '=', 'forum_posts.thread_id')
+                ->where('forum_posts.user_id', $id)->orderBy('forum_posts.created_at')
+                ->get(['forum_posts.id', 'forum_posts.thread_id', 'forum_threads.title as thread_title', 'forum_posts.is_opening', 'forum_posts.parent_id',
+                    'forum_posts.body', 'forum_posts.status', 'forum_posts.helpful_count', 'forum_threads.solved_post_id', 'forum_posts.created_at',
+                    'forum_posts.edited_at', 'forum_posts.deleted_at'])
+                ->map(fn (object $row): array => [
+                    'id' => $row->id,
+                    'thread_id' => $row->thread_id,
+                    'thread_title' => $row->thread_title,
+                    'kind' => (bool) $row->is_opening ? 'opening' : 'reply',
+                    'answers_post_id' => $row->parent_id,
+                    'text' => $row->body,
+                    'status' => $row->status,
+                    'helpful_count' => (int) $row->helpful_count,
+                    'is_solution' => $row->solved_post_id === $row->id,
+                    'created_at' => $row->created_at,
+                    'edited_at' => $row->edited_at,
+                    'deleted_at' => $row->deleted_at,
+                ])->all()),
+            'helpful_votes' => $rows(DB::table('forum_votes')->join('forum_posts', 'forum_posts.id', '=', 'forum_votes.post_id')
+                ->join('forum_threads', 'forum_threads.id', '=', 'forum_posts.thread_id')
+                ->where('forum_votes.user_id', $id)->orderBy('forum_votes.created_at')
+                ->select(['forum_votes.post_id', 'forum_threads.title as thread_title', 'forum_votes.created_at as voted_at'])),
+            'subscriptions' => $rows(DB::table('forum_subscriptions')->join('forum_threads', 'forum_threads.id', '=', 'forum_subscriptions.thread_id')
+                ->where('forum_subscriptions.user_id', $id)->orderBy('forum_subscriptions.created_at')
+                ->select(['forum_subscriptions.thread_id', 'forum_threads.title as thread_title', 'forum_subscriptions.created_at as subscribed_at'])),
         ];
     }
 
@@ -352,7 +775,7 @@ class ExportContents
     {
         $vehicles = Vehicle::withTrashed()
             ->where('owner_id', $user->getKey())
-            ->with(['make', 'vehicleModel', 'generation', 'specs', 'qrCodes'])
+            ->with(['make', 'vehicleModel', 'generation', 'specs', 'qrCodes', 'stickerDesigns'])
             ->orderBy('sort')
             ->orderBy('id')
             ->get();
@@ -370,6 +793,8 @@ class ExportContents
                     'modifications.id', 'mod_categories.key as category', 'modifications.title', 'brands.name as brand', 'modifications.brand_text',
                     'modifications.part_name', 'modifications.part_number', 'modifications.status', 'modifications.installed_on',
                     'modifications.cost_cents', 'modifications.cost_public', 'modifications.legal_status', 'modifications.notes',
+                    // M5.3: the member's plans, budget included (their own data, GDPR Art. 15/20).
+                    'modifications.target_month', 'modifications.priority', 'modifications.budget_cents', 'modifications.plan_sort',
                     'modifications.fields', 'modifications.created_at', 'modifications.updated_at', 'modifications.deleted_at',
                 ])
                 ->map(fn (object $mod): array => [...(array) $mod, 'fields' => is_string($mod->fields) ? json_decode($mod->fields, true) : null])
@@ -401,6 +826,8 @@ class ExportContents
                 'description' => $vehicle->getAttribute('description'),
                 'color' => $vehicle->getAttribute('color'),
                 'hu_au_due' => $this->date($vehicle->getAttribute('hu_au_due')),
+                // M5.7: the optional milestone goal ("Ziel: Saison 2027").
+                'build_goal_season' => $vehicle->getAttribute('build_goal_season'),
                 'cover' => $this->photoRef($vehicle->getAttribute('cover_media_id')),
                 'specs' => $specs,
                 'modifications' => $mods,
@@ -412,15 +839,52 @@ class ExportContents
                     'revoked_reason' => $this->value($qr->getAttribute('revoked_reason')),
                     'created_at' => $this->date($qr->getAttribute('created_at')),
                 ])->all(),
+                // M5.4: every version of the sticker design with its options (custom line included) and Scan-Test results.
+                'sticker_designs' => $vehicle->stickerDesigns->sortBy('version')->values()->map(fn (StickerDesign $design): array => [
+                    'reference' => $design->reference,
+                    'version' => $design->version,
+                    'template' => $design->template->value,
+                    'options' => $design->options,
+                    'scan_test' => $design->scan_test?->value,
+                    'validated_at' => $this->date($design->validated_at),
+                    'order_requested_at' => $this->date($design->order_requested_at),
+                    'created_at' => $this->date($design->created_at),
+                    'updated_at' => $this->date($design->updated_at),
+                ])->all(),
                 'published_at' => $this->date($vehicle->getAttribute('published_at')),
                 'archived_at' => $this->date($vehicle->getAttribute('archived_at')),
                 'created_at' => $this->date($vehicle->created_at),
                 'updated_at' => $this->date($vehicle->updated_at),
                 'deleted_at' => $this->date($vehicle->getAttribute('deleted_at')),
+                // M5.9b/M5.9c: the Dex number and the Build Score with its parts and the days it changed.
+                'dex_number' => $vehicle->getAttribute('dex_number'),
+                'build_score' => $this->buildScore($vehicle->id),
             ];
         }
 
         return $rows;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function buildScore(string $vehicleId): ?array
+    {
+        $score = DB::table('build_scores')->where('vehicle_id', $vehicleId)->first();
+
+        if ($score === null) {
+            return null;
+        }
+
+        return [
+            'total' => (int) $score->total,
+            'stage' => (int) $score->stage,
+            'parts' => ['completeness' => (int) $score->completeness, 'documentation' => (int) $score->documentation, 'community' => (int) $score->community, 'journey' => (int) $score->journey],
+            'formula_version' => $score->formula_version,
+            'computed_at' => $score->computed_at,
+            'history' => DB::table('build_score_history')->where('vehicle_id', $vehicleId)->orderBy('day')->get(['day', 'total'])
+                ->map(fn (object $day): array => ['day' => $day->day, 'total' => (int) $day->total])->all(),
+        ];
     }
 
     /**

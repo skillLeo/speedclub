@@ -2,7 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 
 import { createStyles, useBreakpoint, useTheme } from '@/theme';
-import { Icon, Spinner, Text } from '@/ui';
+import { Icon } from '@/ui/icons/Icon';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
 import { useFocusRing } from '@/ui/useFocusRing';
 
 import { endViewAs, useViewAsStore } from './viewAsSession';

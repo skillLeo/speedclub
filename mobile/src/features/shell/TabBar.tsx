@@ -6,7 +6,8 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { isIOS, isWeb } from '@/lib/platform';
 import { createStyles, material, space, useTheme } from '@/theme';
-import { Hairline, Text } from '@/ui';
+import { Hairline } from '@/ui/Hairline';
+import { Text } from '@/ui/Text';
 import { WEB_BACKDROP } from '@/ui/chrome';
 import { useSafeEdge } from '@/ui/safeArea';
 
@@ -130,7 +131,6 @@ export function TabBar() {
                 icon={destination.icon}
                 label={label}
                 testID={destination.testID}
-                count={destination.name === 'messages' ? badges.messages : undefined}
                 dotLabel={destination.name === 'home' && badges.home ? t('a11y.unreadNotifications') : undefined}
                 onLongPress={(event) => {
                   // Large-content label: the capped label, readable. It must not also switch the tab.

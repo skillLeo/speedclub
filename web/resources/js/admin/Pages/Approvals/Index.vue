@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { PhCheck, PhDownloadSimple, PhProhibit, PhSealCheck, PhX } from '@phosphor-icons/vue';
-import { trans } from 'laravel-vue-i18n';
+import { trans, transChoice } from 'laravel-vue-i18n';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useAdminAction } from '../../Components/decisions/action';
 import DiffViewer from '../../Components/patterns/DiffViewer.vue';
+import OwnerOverrideDialog from '../../Components/patterns/OwnerOverrideDialog.vue';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
 import PageHeader from '../../Components/shell/PageHeader.vue';
 import { Badge, Button, ConfirmDialog, Dialog, EmptyQueue, Field, Select, Skeleton, StatusPill, Tabs, Textarea, type TabItem, type Tone } from '../../Components/ui';
@@ -15,8 +16,9 @@ import { routeOr } from '../../lib/routes';
 /**
  * ADM-43 approvals queue (06 §3 Team, ADR-214): Für mich (what I may approve) · Von mir (what I asked for, with the download of an
  * approved export) · Alle (Owner and Admin). Each request shows its summary as a diff (labels and values from approvals.json), the
- * reason and the countdown. Approve (comment optional) and deny (comment required) behind a recent password; the requester withdraws.
- * Approve runs the action through Approvals::approve() on the server; nothing executes here.
+ * reason and the countdown. Approve and deny (comment optional, ADR-540) behind a recent password; the requester withdraws.
+ * Approve runs the action through Approvals::approve() on the server; nothing executes here. M5.1: an own pending request names who can
+ * approve it; when nobody can, its requesting Owner may execute it (Owner-Override, ADR-507, decided on the server).
  */
 type Tab = 'for_me' | 'mine' | 'all';
 interface Line {
@@ -44,10 +46,28 @@ interface Request {
     result: { done: number | null; failed: number | null; error: string | null; failed_rows?: { id: string; label: string; code: string | null }[] };
     can_decide: boolean;
     can_cancel: boolean;
+    /** M5.1: for the viewer's own pending request, who can approve it and whether they may override it (ADR-507). */
+    waiting: { approvers: string[]; approvers_total: number; override: boolean } | null;
+    /** SF-1: executed by its own requester as an Owner-Override (ADR-507), never shown as a four-eyes approval. */
+    owner_override: boolean;
     download: string | null;
 }
 
 const props = defineProps<{ tab: Tab; status: string | null; canDecide: boolean; canSeeAll: boolean; requests: Request[]; counts: Record<Tab, number> }>();
+
+const overrideTarget = ref<Request | null>(null);
+const overrideOpen = ref(false);
+function openOverride(r: Request): void {
+    overrideTarget.value = r;
+    overrideOpen.value = true;
+}
+function approversLine(r: Request): string | null {
+    if (r.waiting === null) return null;
+    if (r.waiting.approvers_total === 0) return r.waiting.override ? trans('ui.approval.nobody_override') : trans('ui.approval.nobody');
+    const more = r.waiting.approvers_total - r.waiting.approvers.length;
+    const names = more > 0 ? trans('ui.approval.approvers_more', { names: r.waiting.approvers.join(', '), count: String(more) }) : r.waiting.approvers.join(', ');
+    return transChoice('ui.approval.approvers', r.waiting.approvers_total, { names });
+}
 
 const loading = ref(false);
 const failed = ref(false);
@@ -159,8 +179,8 @@ function openDecide(r: Request, kind: 'approve' | 'deny'): void {
 function submitDecision(): void {
     if (!target.value) return;
     const length = comment.value.trim().length;
-    if ((decision.value === 'deny' && length < 3) || length > 1000 || (length > 0 && length < 3)) {
-        commentError.value = trans(decision.value === 'deny' ? 'approvals.errors.comment_required' : 'approvals.errors.comment_length');
+    if (length > 1000 || (length > 0 && length < 3)) {
+        commentError.value = trans('approvals.errors.comment_length');
         return;
     }
     commentError.value = null;
@@ -221,14 +241,18 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
                         </p>
                     </div>
                     <div class="flex flex-col items-end gap-4">
-                        <StatusPill :tone="tones[r.status]" :label="trans(`approvals.status.${r.status}`)" />
+                        <StatusPill
+                            :tone="r.owner_override ? 'warning' : tones[r.status]"
+                            :label="trans(r.owner_override ? 'approvals.status.owner_override' : `approvals.status.${r.status}`)"
+                            :data-testid="r.owner_override ? 'ADM-43.owner-override' : undefined"
+                        />
                         <p v-if="r.status === 'pending'" class="text-caption text-ink-2 tabular-nums" :title="formatDateTime(r.expires_at)" data-testid="ADM-43.countdown">{{ countdown(r) }}</p>
                         <p v-else-if="r.status === 'expired'" class="text-caption text-ink-3 tabular-nums" :title="formatDateTime(r.expires_at)">{{ trans('approvals.expired_on', { time: formatDateTime(r.expires_at) }) }}</p>
-                        <p v-else-if="r.decided_at" class="text-caption text-ink-3 tabular-nums">{{ r.decided_by ? trans('approvals.decided', { name: r.decided_by, time: formatRelative(r.decided_at) }) : formatRelative(r.decided_at) }}</p>
+                        <p v-else-if="r.decided_at" class="text-caption text-ink-3 tabular-nums">{{ r.decided_by ? trans(r.owner_override ? 'approvals.overridden_by' : 'approvals.decided', { name: r.decided_by, time: formatRelative(r.decided_at) }) : formatRelative(r.decided_at) }}</p>
                     </div>
                 </div>
 
-                <blockquote class="border-l-2 border-line pl-12 text-admin-base text-ink">{{ r.reason }}</blockquote>
+                <blockquote v-if="r.reason" class="border-l-2 border-line pl-12 text-admin-base text-ink">{{ r.reason }}</blockquote>
                 <DiffViewer v-if="r.lines.length > 0" :before="diff(r).before" :after="diff(r).after" :test-id="`ADM-43.diff`" />
                 <p v-if="r.decision_comment" class="text-admin-base text-ink-2">{{ trans('approvals.comment', { comment: r.decision_comment }) }}</p>
                 <p v-if="r.status === 'executed' && r.result.done !== null && !r.result.failed" class="text-admin-base text-ink-2 tabular-nums">{{ trans('approvals.result', { done: formatNumber(r.result.done), failed: formatNumber(0) }) }}</p>
@@ -249,7 +273,9 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
                 </StateBlock>
                 <StateBlock v-if="r.status === 'failed'" kind="partial" :title="trans('approvals.failed_title')" :body="r.result.error ?? undefined" :retryable="false" />
 
-                <div v-if="r.can_decide || r.can_cancel || r.download" class="flex flex-wrap items-center gap-8">
+                <p v-if="approversLine(r)" class="text-admin-base" :class="r.waiting?.approvers_total === 0 ? 'text-warning' : 'text-ink-2'" data-testid="ADM-43.approvers">{{ approversLine(r) }}</p>
+                <div v-if="r.can_decide || r.can_cancel || r.download || r.waiting?.override" class="flex flex-wrap items-center gap-8">
+                    <Button v-if="r.waiting?.override" size="sm" variant="secondary" data-testid="ADM-43.override" @click="openOverride(r)">{{ trans('ui.approval.override') }}</Button>
                     <Button v-if="r.can_decide" size="sm" variant="primary" :icon="PhCheck" data-testid="ADM-43.approve" @click="openDecide(r, 'approve')">{{ trans('approvals.actions.approve') }}</Button>
                     <Button v-if="r.can_decide" size="sm" variant="secondary" :icon="PhX" data-testid="ADM-43.deny" @click="openDecide(r, 'deny')">{{ trans('approvals.actions.deny') }}</Button>
                     <Button v-if="r.can_cancel" size="sm" variant="ghost" :icon="PhProhibit" data-testid="ADM-43.cancel" @click="openCancel(r)">{{ trans('approvals.actions.cancel') }}</Button>
@@ -262,7 +288,7 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
         <Dialog v-model:open="decideOpen" :title="trans(decision === 'approve' ? 'approvals.approve.title' : 'approvals.deny.title')" :description="target ? title(target) : undefined" test-id="ADM-43.decide">
             <form id="adm43-decide" class="flex flex-col gap-16" novalidate @submit.prevent="submitDecision">
                 <p class="text-admin-base text-ink-2">{{ trans(decision === 'approve' ? 'approvals.approve.body' : 'approvals.deny.body') }}</p>
-                <Field :label="trans('approvals.comment_label')" :hint="trans(decision === 'approve' ? 'approvals.comment_optional' : 'approvals.comment_required')" :error="commentError" :required="decision === 'deny'" :optional="decision === 'approve'">
+                <Field :label="trans('approvals.comment_label')" :hint="trans('approvals.comment_optional')" :error="commentError" optional>
                     <Textarea v-model="comment" :rows="3" :maxlength="1000" show-count data-testid="ADM-43.comment" />
                 </Field>
                 <p v-if="action.error.value" class="text-admin-base text-danger" role="alert">{{ action.error.value }}</p>
@@ -275,6 +301,7 @@ const emptyIcon = computed(() => (props.tab === 'for_me' ? undefined : PhSealChe
             </template>
         </Dialog>
 
+        <OwnerOverrideDialog v-if="overrideTarget" v-model:open="overrideOpen" :approval-id="overrideTarget.id" :title="title(overrideTarget)" test-id="ADM-43.override-dialog" />
         <ConfirmDialog v-model:open="cancelOpen" :title="trans('approvals.cancel.title')" :body="trans('approvals.cancel.body')" :confirm-label="trans('approvals.actions.cancel')" tone="neutral" :processing="action.processing.value" :error="action.error.value" test-id="ADM-43.cancel-dialog" @confirm="submitCancel" />
     </div>
 </template>

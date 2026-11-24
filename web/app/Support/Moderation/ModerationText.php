@@ -30,7 +30,11 @@ final class ModerationText
             DecisionAction::NoAction => 'no_action',
             // A profile loses more than "the content": name, bio, pictures (ContentRemoval).
             DecisionAction::RemoveContent => $target === ReportTargetType::Member ? 'remove_profile' : 'remove_content',
-            DecisionAction::Restrict => 'restrict_'.($restriction === DecisionRestriction::Publishing ? 'publishing' : 'messaging'),
+            DecisionAction::Restrict => 'restrict_'.match ($restriction) {
+                DecisionRestriction::Publishing => 'publishing',
+                DecisionRestriction::Forum => 'forum',
+                default => 'messaging',
+            },
             DecisionAction::Suspend => 'suspend',
             DecisionAction::Reverse => 'reverse',
         };

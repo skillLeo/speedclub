@@ -73,7 +73,7 @@ describe('GET notifications', function () {
             ->and($response->json('data.1'))->toMatchArray(['id' => $saved?->id, 'actors' => [], 'actor_count' => 3, 'details' => ['count' => 3, 'week' => '2026-W45']])
             ->and($response->json('data.2'))->toMatchArray(['group_key' => null, 'actors' => [], 'actor_count' => 0, 'vehicle' => null, 'details' => ['event' => 'new_device', 'device_name' => 'iPhone 15', 'security_event_id' => null]])
             ->and($response->json('data.3'))->toMatchArray(['actor_count' => 1, 'vehicle' => null, 'details' => []])
-            ->and(array_keys($response->json('data.3')))->toBe(['id', 'type', 'group_key', 'actors', 'actor_count', 'vehicle', 'event', 'details', 'read_at', 'created_at']);
+            ->and(array_keys($response->json('data.3')))->toBe(['id', 'type', 'group_key', 'actors', 'actor_count', 'vehicle', 'event', 'forum_thread', 'details', 'read_at', 'created_at']);
     });
 
     it('shows at most three actors, newest first, and counts them all', function () {

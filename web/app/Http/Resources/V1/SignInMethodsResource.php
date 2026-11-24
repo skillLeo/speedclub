@@ -24,16 +24,19 @@ class SignInMethodsResource extends JsonResource
         $summary = $this->resource;
 
         return [
-            /** Always on (ADR-407). `reachable` is false for an Apple private relay address until OA-34: then it is no way in. */
+            /**
+             * On unless `auth.email_code` is off (ADR-520: a host that cannot deliver mail yet; ADR-407 keeps it on in production).
+             * `reachable` is false for an Apple private relay address until OA-34: then it is no way in.
+             */
             'email_code' => [
-                'available' => true,
+                'available' => $summary->flags['auth.email_code'] ?? true,
                 'email' => $summary->user->email,
                 'reachable' => $summary->mailboxReachable,
             ],
             'password' => [
                 'set' => $summary->user->hasPassword(),
-                /** Password sign-in offered (`auth.password_login`). */
-                'available' => $summary->flags['auth.password_login'] ?? false,
+                /** Password sign-in offered (`auth.password_login`, and always while the e-mail code is off, ADR-520). */
+                'available' => ($summary->flags['auth.password_login'] ?? false) || ! ($summary->flags['auth.email_code'] ?? true),
             ],
             'two_factor' => [
                 'enabled' => $summary->user->hasTwoFactor(),

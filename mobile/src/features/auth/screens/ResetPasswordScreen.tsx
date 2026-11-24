@@ -8,8 +8,11 @@ import { View, type TextInput as RNTextInput } from 'react-native';
 import { ApiError } from '@/api/client';
 import { endLocalSessionAfterReset, useForgotPassword, useResetPassword } from '@/api/queries/auth';
 import { isWeb } from '@/lib/platform';
+import { useSingleFlight } from '@/lib/useSingleFlight';
 import { createStyles } from '@/theme';
-import { Button, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { identifierText } from '@/ui/textBreaks';
 
 import { AuthScreen } from '../components/AuthScreen';
@@ -89,7 +92,7 @@ export function ResetPasswordScreen() {
   const email = useWatch({ control, name: 'email' });
   const checks = passwordChecks(password, email);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = useSingleFlight(handleSubmit(async (values) => {
     setNotice(null);
     try {
       await reset.mutateAsync({ email: values.email, code: values.code, password: values.password });
@@ -115,7 +118,7 @@ export function ResetPasswordScreen() {
         setNotice(t('common.serverError'));
       }
     }
-  });
+  }));
 
   const requestCode = async () => {
     setNotice(null);

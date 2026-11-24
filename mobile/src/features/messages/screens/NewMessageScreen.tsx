@@ -15,29 +15,25 @@ import { keepNameTogether } from '@/lib/format';
 import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { createStyles, layout, size, space, useBreakpoint } from '@/theme';
-import {
-  Button,
-  Composer,
-  DiscardGuardDialog,
-  EmptyState,
-  ErrorState,
-  Hairline,
-  Header,
-  IconButton,
-  KeyboardInsetView,
-  MemberRow,
-  OfflineBanner,
-  Photo,
-  Screen,
-  SearchBar,
-  SectionHeader,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Text,
-  toast,
-} from '@/ui';
-import { useSafeEdge, useSafeInset } from '@/ui/safeArea';
+import { Button } from '@/ui/Button';
+import { Composer } from '@/ui/Composer';
+import { DiscardGuardDialog } from '@/ui/DiscardGuardDialog';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { Header } from '@/ui/Header';
+import { IconButton } from '@/ui/IconButton';
+import { KeyboardInsetView } from '@/ui/KeyboardInsetView';
+import { MemberRow } from '@/ui/MemberRow';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Photo } from '@/ui/Photo';
+import { Screen } from '@/ui/Screen';
+import { SearchBar } from '@/ui/SearchBar';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { useCssSafeInset, useSafeEdge, useSafeInset } from '@/ui/safeArea';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 
 import { useMessaging } from '../data';
@@ -121,6 +117,10 @@ function NewMessageBody() {
   const { gutter } = useBreakpoint();
   const inset = useSafeInset('bottom');
   const bottom = useSafeEdge('bottom');
+  // QA-C06: the picker shows no composer, which otherwise holds the bottom edge (Screen EDGES leave it out): the end of the list
+  // clears the home indicator itself. FlashList needs a number, so web measures env(safe-area-inset-bottom).
+  const cssInset = useCssSafeInset('bottom');
+  const listEnd = useMemo(() => ({ paddingBottom: inset + cssInset }), [cssInset, inset]);
   const adapter = useMessaging();
   const actions = adapter.useActions();
   const member = useMessagingMember();
@@ -242,6 +242,7 @@ function NewMessageBody() {
         data={state ? [] : list}
         keyExtractor={(candidate) => candidate.username}
         style={styles.list}
+        contentContainerStyle={listEnd}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         ListHeaderComponent={!state && list.length > 0 ? <SectionHeader title={q ? t('compose.results') : t('compose.recent')} style={[styles.listHeader, { paddingHorizontal: gutter }]} testID={`${ROUTE}.listHeader`} /> : null}

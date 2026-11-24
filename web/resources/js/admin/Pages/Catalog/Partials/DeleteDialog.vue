@@ -4,14 +4,14 @@ import { trans } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
 import DialogError from '../../../Components/patterns/DialogError.vue';
 import StateBlock from '../../../Components/patterns/StateBlock.vue';
-import { Button, Dialog, Field, Input, Skeleton, Textarea } from '../../../Components/ui';
+import { Button, Dialog, Field, Input, Skeleton } from '../../../Components/ui';
 import { qaDialogFailed } from '../../../composables/pageState';
 import { formatNumber } from '../../../lib/format';
 import { routeOr } from '../../../lib/routes';
 import { fetchImpact, REFERENCE_KINDS, useCatalogWrite, type CatalogLevel, type Impact } from '../shared';
 
 /**
- * ADM-14 / ADM-16 "Löschen" (m3.3 §1; catalog.manage, ⚿, reason, typed confirmation): only an entry nothing points at goes, with what
+ * ADM-14 / ADM-16 "Löschen" (m3.3 §1; catalog.manage, ⚿, typed confirmation): only an entry nothing points at goes, with what
  * is below it. The dialog asks the server first: a referenced entry shows what still points at it (vehicles, modifications, aliases,
  * Kollektionen) and offers to deactivate or merge instead; the server refuses the same way if that changed in between.
  */
@@ -22,8 +22,6 @@ const emit = defineEmits<{ deactivate: []; merge: [] }>();
 const impact = ref<Impact | null>(null);
 const loadState = ref<'loading' | 'ready' | 'error'>('loading');
 const typed = ref('');
-const reason = ref('');
-const reasonError = ref<string | null>(null);
 const write = useCatalogWrite();
 const failed = qaDialogFailed();
 const word = computed(() => trans('ui.confirm.typed_word'));
@@ -44,8 +42,6 @@ watch(
     (value) => {
         if (!value) return;
         typed.value = '';
-        reason.value = '';
-        reasonError.value = null;
         write.reset();
         void load();
     },
@@ -65,14 +61,8 @@ const ready = computed(() => loadState.value === 'ready' && impact.value?.deleta
 
 function submit(): void {
     if (props.entry === null || !ready.value || typed.value.trim() !== word.value) return;
-    const length = reason.value.trim().length;
-    if (length < 10 || length > 1000) {
-        reasonError.value = trans('ui.confirm.reason_length');
-        return;
-    }
-    reasonError.value = null;
     const url = routeOr('admin.catalog.entries.destroy', `/admin/catalog/entries/${props.level}/${props.entry.id}`, { level: props.level, id: props.entry.id });
-    write.run('delete', url, { reason: reason.value.trim(), from: props.fromRecord ? 'record' : 'list' }, { sensitive: true, onSuccess: () => (open.value = false) });
+    write.run('delete', url, { from: props.fromRecord ? 'record' : 'list' }, { sensitive: true, onSuccess: () => (open.value = false) });
 }
 
 const serverError = computed(() => (failed ? trans('ui.state.server_error') : write.error.value));
@@ -102,9 +92,6 @@ const formId = `${props.testId}-form`;
             <template v-else-if="impact">
                 <p class="text-admin-base text-ink-2" :data-testid="`${testId}.unreferenced`">{{ trans('catalog.delete.body') }}</p>
                 <p v-if="children" class="rounded-sm border border-line px-12 py-8 text-admin-base text-ink-2">{{ children }}</p>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="reasonError ?? write.errors.value.reason ?? null" required>
-                    <Textarea v-model="reason" :rows="3" :maxlength="1000" show-count :data-testid="`${testId}.reason`" />
-                </Field>
                 <Field :label="trans('ui.confirm.typed_label', { word })">
                     <Input v-model="typed" autocomplete="off" spellcheck="false" :data-testid="`${testId}.typed`" />
                 </Field>

@@ -45,13 +45,13 @@
     },
     "entitlements": {
         "title": "Memberships: entitlements",
-        "intro": "Who holds which plan, granted by whom, with reason, start and end. A revocation stays as history.",
+        "intro": "Who holds which plan, granted by whom, with start and end. A revocation stays as history.",
         "caption": "Entitlements",
         "grant": "Grant",
         "revoke": "Revoke",
         "error": "The entitlements could not be loaded",
         "empty_title": "No entitlement yet",
-        "empty_body": "Members you grant a plan show here with plan, period and reason.",
+        "empty_body": "Members you grant a plan show here with plan and period.",
         "columns": {
             "member": "Member",
             "plan": "Plan",
@@ -75,7 +75,7 @@
     },
     "grant_form": {
         "title": "Grant a member",
-        "body": "The grant goes into the audit log with its reason.",
+        "body": "The grant goes into the audit log.",
         "member": "Username",
         "member_hint": "With or without @, e.g. @lukas.sc",
         "plan": "Plan",

@@ -25,7 +25,7 @@ class RoleRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:500'],
             'atoms' => ['present', 'array', 'max:100'],
             'atoms.*' => ['string', 'max:60'],
-            'reason' => ['nullable', 'string', 'min:10', 'max:1000'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

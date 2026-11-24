@@ -5,10 +5,13 @@ import { View } from 'react-native';
 
 import { useFormat } from '@/lib/useFormat';
 import { createStyles } from '@/theme';
-import { SegmentedControl, Text, TextInput } from '@/ui';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
 import { useStacksAtFontScale } from '@/ui/rowParts';
+import { metaLineText } from '@/ui/textBreaks';
 
-import { ASPIRATIONS, DRIVETRAINS, FUELS, GEARBOXES, POWER_UNITS, powerCounterpart, SOURCES, type SpecsValues } from '../model';
+import { ASPIRATIONS, DRIVETRAINS, FUELS, GEARBOXES, markedSpecs, POWER_UNITS, powerCounterpart, SOURCES, type SpecMarkKey, type SpecsMarks, type SpecsValues } from '../model';
 import { ENGINE_CODE_MAX_LENGTH, ENGINE_TEXT_MAX_LENGTH, fieldMessage } from '../schemas';
 import { ChoiceChips, FormGroup, PickerField } from './fields';
 import { OptionSheet } from './OptionSheet';
@@ -25,10 +28,17 @@ const useStyles = createStyles((t) => ({
 
 type PickerName = 'fuel' | 'aspiration' | 'gearbox';
 
+const NO_MARKS: SpecsMarks = {};
+
 export type SpecsFieldsProps = {
   control: Control<SpecsValues>;
   disabled?: boolean;
   routeId: string;
+  /**
+   * M5.9 "Daten übernehmen?": the taken-over factory values (stored `ai_fields` and the ones just taken); a field still showing its
+   * value has "Herstellerangabe (KI-Vorschlag)" under it until the member changes it.
+   */
+  marks?: SpecsMarks;
 };
 
 /**
@@ -36,7 +46,7 @@ export type SpecsFieldsProps = {
  * provenance chips, live "≈ 368 kW"), DREHMOMENT (Nm with provenance), ANTRIEB (Front · Heck · Allrad, Getriebe). The value
  * is stored as entered, in its unit (§3.2).
  */
-export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsProps) {
+export function SpecsFields({ control, disabled = false, routeId, marks = NO_MARKS }: SpecsFieldsProps) {
   const { t } = useTranslation('garage');
   const styles = useStyles();
   const format = useFormat();
@@ -45,7 +55,13 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
   const powerValue = useWatch({ control, name: 'powerValue' });
   const powerUnit = useWatch({ control, name: 'powerUnit' });
   const counterpart = powerCounterpart(powerValue, powerUnit, format.locale);
+  const current = useWatch({ control });
+  const marked = markedSpecs(current, marks);
   const sourceOptions = SOURCES.map((value) => ({ value, label: t(`specs.source.${value}`) }));
+  const provenance = (key: SpecMarkKey): string | undefined => (marked.includes(key) ? t('ai.specs.provenance') : undefined);
+  // DQ-P5-053: the line breaks after its "·", never inside the provenance label ("Herstellerangabe (KI-Vorschlag)" stays one label).
+  const powerParts = [counterpart, provenance('powerValue')].filter((part): part is string => Boolean(part));
+  const powerHelper = powerParts.length > 0 ? metaLineText(powerParts.join(' · ')) : undefined;
 
   return (
     <View style={styles.groups}>
@@ -61,6 +77,8 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
               onChangeText={field.onChange}
               onBlur={field.onBlur}
               placeholder={t('specs.engineCodePlaceholder')}
+              helper={provenance('engineCode')}
+              hyphenateHelper={false}
               error={fieldMessage(t, fieldState.error)}
               disabled={disabled}
               autoCapitalize="characters"
@@ -100,6 +118,8 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
               onBlur={field.onBlur}
               placeholder={t('specs.displacementPlaceholder')}
               suffix={t('units.cc')}
+              helper={provenance('displacement')}
+              hyphenateHelper={false}
               error={fieldMessage(t, fieldState.error)}
               disabled={disabled}
               keyboardType="number-pad"
@@ -118,6 +138,8 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
                 label={t('specs.fuel')}
                 value={field.value ? t(`specs.fuels.${field.value}`) : null}
                 placeholder={t('specs.choose')}
+                helper={provenance('fuel')}
+                hyphenateHelper={false}
                 error={fieldMessage(t, fieldState.error)}
                 disabled={disabled}
                 onPress={() => setPicker('fuel')}
@@ -146,6 +168,8 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
                 label={t('specs.aspiration')}
                 value={field.value ? t(`specs.aspirations.${field.value}`) : null}
                 placeholder={t('specs.choose')}
+                helper={provenance('aspiration')}
+                hyphenateHelper={false}
                 error={fieldMessage(t, fieldState.error)}
                 disabled={disabled}
                 onPress={() => setPicker('aspiration')}
@@ -181,7 +205,8 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
                   placeholder={t('specs.powerPlaceholder')}
-                  helper={counterpart ?? undefined}
+                  helper={powerHelper}
+                  hyphenateHelper={false}
                   error={fieldMessage(t, fieldState.error)}
                   disabled={disabled}
                   keyboardType="decimal-pad"
@@ -249,6 +274,8 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
               onBlur={field.onBlur}
               placeholder={t('specs.torquePlaceholder')}
               suffix={t('units.nm')}
+              helper={provenance('torque')}
+              hyphenateHelper={false}
               error={fieldMessage(t, fieldState.error)}
               disabled={disabled}
               keyboardType="number-pad"
@@ -296,6 +323,11 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
             />
           )}
         />
+        {marked.includes('drivetrain') ? (
+          <Text variant="caption" color="text.secondary" hyphenate={false} testID={`${routeId}.drivetrain.provenance`}>
+            {t('ai.specs.provenance')}
+          </Text>
+        ) : null}
         <Controller
           control={control}
           name="gearbox"
@@ -305,6 +337,8 @@ export function SpecsFields({ control, disabled = false, routeId }: SpecsFieldsP
                 label={t('specs.gearbox')}
                 value={field.value ? t(`specs.gearboxes.${field.value}`) : null}
                 placeholder={t('specs.choose')}
+                helper={provenance('gearbox')}
+                hyphenateHelper={false}
                 error={fieldMessage(t, fieldState.error)}
                 disabled={disabled}
                 onPress={() => setPicker('gearbox')}

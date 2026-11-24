@@ -29,6 +29,7 @@ export { default as StatusPill } from './StatusPill.vue';
 export { default as Switch } from './Switch.vue';
 export { default as Tabs, type TabItem } from './Tabs.vue';
 export { default as Textarea } from './Textarea.vue';
+export { default as TimeField } from './TimeField.vue';
 export { default as Toaster } from './Toaster.vue';
 export { default as Tooltip } from './Tooltip.vue';
 export { dismissToast, toast, type ToastTone } from './toast';

@@ -280,24 +280,26 @@ export function Text({
   ...rest
 }: TextProps) {
   const theme = useTheme();
+  // A ThemeScope's cap (the exported story cards) applies to every text inside, the lower of it and the caller's.
+  const cap = lowerCap(fontScaleCap, theme.fontScaleCap);
   const desktop = useDesktopType() && desktopSize;
   const android = Platform.OS === 'android';
   const truncates = rest.numberOfLines !== undefined && rest.numberOfLines > 0;
   const label = rest['aria-label'] ?? (truncates ? plainText(rest.children) || undefined : undefined);
-  const fixedScale = nativeFixedScale(variant, theme.fontScale, { fontScaleCap, maxFontSizeMultiplier: rest.maxFontSizeMultiplier, allowFontScaling: rest.allowFontScaling });
+  const fixedScale = nativeFixedScale(variant, theme.fontScale, { fontScaleCap: cap, maxFontSizeMultiplier: rest.maxFontSizeMultiplier, allowFontScaling: rest.allowFontScaling });
   const web = Platform.OS === 'web';
   return (
     <RNText
       textBreakStrategy={android ? 'balanced' : undefined}
       android_hyphenationFrequency={android ? (hyphenate ? 'normal' : 'none') : undefined}
-      maxFontSizeMultiplier={lowerCap(capFor(variant), fontScaleCap)}
+      maxFontSizeMultiplier={lowerCap(capFor(variant), cap)}
       {...rest}
       {...(fixedScale === undefined ? {} : { allowFontScaling: false })}
       aria-label={label}
       style={[
         typeStyle(
           variant,
-          web ? Math.min(theme.fontScale, fontScaleCap ?? theme.fontScale) : (fixedScale ?? 1),
+          web ? Math.min(theme.fontScale, cap ?? theme.fontScale) : (fixedScale ?? 1),
           Platform.OS,
           hyphenate,
           desktop,

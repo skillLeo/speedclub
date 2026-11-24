@@ -46,17 +46,17 @@ afterAll(() => i18n.changeLanguage('de'));
  */
 const WEB06 = {
   de: {
-    revoked: ['Dieser QR-⁠Code ist nicht mehr gültig', 'Dieser Sticker führt zu keinem Fahrzeug mehr.'],
+    revoked: ['Dieser Sticker ist nicht mehr gültig', 'Dieser Sticker führt zu keinem Fahrzeug mehr.'],
     private: ['Dieses Fahrzeug ist privat', 'Der Besitzer zeigt es gerade nicht öffentlich. Vielleicht klappt es später.'],
-    not_found: ['Diesen QR-⁠Code kennen wir nicht', 'Prüf den Code auf dem Sticker oder scanne ihn noch einmal.'],
+    not_found: ['Diesen Sticker kennen wir nicht', 'Prüf den Code auf dem Sticker oder scanne ihn noch einmal.'],
     discover: 'Builds entdecken',
     home: 'Zur Startseite',
     rateLimited: ['Kurz durchatmen', 'Das waren gerade sehr viele Aufrufe. Versuch es gleich noch einmal.'],
   },
   en: {
-    revoked: ['This QR code is no longer valid', 'This sticker no longer leads to a vehicle.'],
+    revoked: ['This sticker is no longer valid', 'This sticker no longer leads to a vehicle.'],
     private: ['This vehicle is private', 'The owner is not showing it publicly right now. Maybe later.'],
-    not_found: ['We do not know this QR code', 'Check the code on the sticker or scan it again.'],
+    not_found: ['We do not know this sticker', 'Check the code on the sticker or scan it again.'],
     discover: 'Discover builds',
     home: 'Go to the home page',
     rateLimited: ['One moment', 'That was a lot of requests. Please try again shortly.'],
@@ -111,9 +111,9 @@ describe('c/[code]', () => {
   });
 
   it.each([
-    ['revoked', 'APPY9FZ9', 'Dieser QR-\u2060Code ist nicht mehr gültig', 'Dieser Sticker führt zu keinem Fahrzeug mehr.'],
+    ['revoked', 'APPY9FZ9', 'Dieser Sticker ist nicht mehr gültig', 'Dieser Sticker führt zu keinem Fahrzeug mehr.'],
     ['private', '5A7XE8ET', 'Dieses Fahrzeug ist privat', 'Der Besitzer zeigt es gerade nicht öffentlich. Vielleicht klappt es später.'],
-    ['not_found', 'ZZZZZZZZ', 'Diesen QR-\u2060Code kennen wir nicht', 'Prüf den Code auf dem Sticker oder scanne ihn noch einmal.'],
+    ['not_found', 'ZZZZZZZZ', 'Diesen Sticker kennen wir nicht', 'Prüf den Code auf dem Sticker oder scanne ihn noch einmal.'],
   ])('shows the calm %s state with the server’s words and two ways on', async (state, code, title, message) => {
     mockParams = { code };
     stubFetch({ [`/api/v1/qr/${code}`]: resolution(state, { title, message }) });
@@ -171,7 +171,7 @@ describe('c/[code]', () => {
     const { fetchMock } = stubFetch({});
     await renderScreen(<QrResolveScreen />);
     expect(screen.getByTestId('QR-RESOLVE.state.not_found')).toBeTruthy();
-    expect(screen.getByTestId('QR-RESOLVE.title')).toHaveTextContent('Diesen QR-\u2060Code kennen wir nicht');
+    expect(screen.getByTestId('QR-RESOLVE.title')).toHaveTextContent('Diesen Sticker kennen wir nicht');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

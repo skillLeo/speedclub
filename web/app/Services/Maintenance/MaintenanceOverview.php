@@ -26,13 +26,13 @@ final class MaintenanceOverview
 
     /**
      * Enabled items of the member's vehicles (not deleted) that are overdue, within $days of their date or within 1,000 km: overdue first,
-     * then the nearest.
+     * then the nearest. $now is the read's moment (the QA clock outside production, DQ-P5-201); null is the real now.
      *
      * @return Collection<int, MaintenanceItem>
      */
-    public function upcoming(User $owner, int $days, int $limit): Collection
+    public function upcoming(User $owner, int $days, int $limit, ?CarbonImmutable $now = null): Collection
     {
-        $today = MaintenanceSchedule::today();
+        $today = MaintenanceSchedule::today($now);
 
         return $this->items($owner)
             ->filter(function (MaintenanceItem $item) use ($days, $today): bool {

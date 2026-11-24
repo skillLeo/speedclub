@@ -1,0 +1,66 @@
+{
+    "nav": {
+        "title": "Insights"
+    },
+    "palette": {
+        "week": "Insights der letzten 7 Tage …"
+    },
+    "title": "Insights",
+    "intro": "Wie Aufrufe, Sticker-Scans, Wochenrückblicke und Build-Erinnerungen auf der ganzen Plattform laufen.",
+    "privacy": "Nur Summen der ganzen Plattform. Keine Mitglieder, keine Autos, keine Namen: wer was angesehen hat, zählt hier niemand.",
+    "flag_off": "Aufrufe werden gerade nicht gezählt (Flag „insights“ aus). Was davor gezählt wurde, bleibt hier stehen.",
+    "counting_since": "Aufrufe gezählt seit :date.",
+    "load_error": "Die Insights laden gerade nicht",
+    "empty_title": "Noch keine Daten",
+    "empty_body": "Sobald Profile und Autos angesehen werden, Sticker gescannt oder Wochenrückblicke verschickt, stehen hier die Summen.",
+    "empty_body_off": "Aufrufe werden gerade nicht gezählt (Flag „insights“ aus). Mit dem Flag an stehen hier die Summen.",
+    "kpis": "Kennzahlen",
+    "kpi": {
+        "views": "Aufrufe",
+        "sticker_scans": "Sticker-Scans",
+        "plan_prompts": "Build-Erinnerungen",
+        "pushes_dropped": "Gedrosselte Pushes"
+    },
+    "period": {
+        "label": "Zeitraum",
+        "days": ":days Tage",
+        "last": "Letzte :days Tage",
+        "last_7": "Letzte 7 Tage",
+        "last_7_off": "Letzte 7 Tage · Flag „build_prompts“ aus",
+        "cap": "Letzte 7 Tage · über :max pro Woche",
+        "failed": "Der Zeitraum hat nicht gewechselt. Die Zahlen oben sind noch die alten; versuch es noch einmal."
+    },
+    "series": {
+        "views": "Aufrufe",
+        "sticker_scans": "Sticker-Scans"
+    },
+    "sources": {
+        "app": "App",
+        "web": "Web",
+        "sticker_scan": "Sticker-Scan",
+        "shared_link": "Geteilter Link"
+    },
+    "charts": {
+        "days": "Wie oft werden Profile und Autos angesehen?",
+        "days_body": "Aufrufe pro Tag (jede Person einmal pro Tag und Profil oder Auto) und die Sticker-Scans. Der letzte Tag läuft noch und ist gepunktet.",
+        "days_zero": "In diesem Zeitraum nichts gezählt",
+        "sources": "Woher kommen die Aufrufe?",
+        "sources_body": "Summe der letzten :days Tage nach Quelle.",
+        "sources_none": "In diesem Zeitraum keine Aufrufe gezählt"
+    },
+    "recaps": {
+        "title": "Wochenrückblicke",
+        "intro": "Pro Woche (Montag bis Sonntag): verschickt, übersprungen, weil nichts los war, oder nicht erreichbar.",
+        "intro_off": "Der Wochenrückblick ist gerade aus (Flag „weekly_recap“). Frühere Wochen bleiben hier stehen.",
+        "none": "In diesem Zeitraum wurde noch kein Wochenrückblick vorbereitet.",
+        "caption": "Wochenrückblicke pro Woche",
+        "week": "KW :week · :from–:to",
+        "columns": {
+            "week": "Woche",
+            "sent": "Verschickt",
+            "skipped": "Übersprungen",
+            "unreachable": "Nicht erreichbar"
+        },
+        "legend": "Übersprungen: keine Aufrufe, Scans, Follower, Spots und nichts fällig. Nicht erreichbar: kein Gerät und keine bestätigte E-Mail-Adresse. Nach 12 Wochen werden die Zeilen gelöscht."
+    }
+}

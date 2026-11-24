@@ -11,6 +11,7 @@ use App\Models\ConversationParticipant;
 use App\Models\Media;
 use App\Models\User;
 use App\Services\Media\MediaService;
+use App\Services\Media\PlateBlurChoice;
 use App\Services\Messaging\ChatMedia;
 use App\Services\Messaging\Reach;
 use Illuminate\Http\UploadedFile;
@@ -29,17 +30,17 @@ class UploadMessagePhoto
         private readonly DeliverMessage $deliver,
     ) {}
 
-    public function handle(User $member, ConversationParticipant $me, UploadedFile $file): Media
+    public function handle(User $member, ConversationParticipant $me, UploadedFile $file, ?PlateBlurChoice $plateBlur = null): Media
     {
         $this->assertMaySend($member, $me);
         $bytes = $this->media->inspectUpload($file);
 
-        $reserved = DB::transaction(function () use ($member, $me, $bytes): Media {
+        $reserved = DB::transaction(function () use ($member, $me, $bytes, $plateBlur): Media {
             // The member's row first, as every upload: the quota check then sees parallel uploads.
             User::query()->whereKey($member->id)->lockForUpdate()->value('id');
             $conversation = Conversation::query()->whereKey($me->conversation_id)->firstOrFail();
 
-            return $this->media->reserve($member, $conversation, ['category' => MediaCategory::Other], strlen($bytes), ChatMedia::disk());
+            return $this->media->reserve($member, $conversation, ['category' => MediaCategory::Other], strlen($bytes), ChatMedia::disk(), $plateBlur);
         });
 
         return $this->media->processOrQueue($reserved, $bytes);

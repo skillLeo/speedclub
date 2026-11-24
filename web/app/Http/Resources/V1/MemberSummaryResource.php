@@ -36,7 +36,7 @@ class MemberSummaryResource extends JsonResource
             'avatar' => $visible ? new MediaResource($avatar) : null,
             /** Sample content (09 §8.19): the app shows the "Beispiel" badge. */
             'is_sample' => $member->getAttribute('is_sample') === true,
-            /** The SPEED CLUB Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
+            /** The Speedclub Editorial account, owner of the sample builds: the app shows the "Editorial" badge. */
             'is_editorial' => $member->getAttribute('is_editorial') === true,
         ];
     }

@@ -30,6 +30,7 @@ use Illuminate\Support\Carbon;
  * @property int $report_count
  * @property string|null $ai_score
  * @property string|null $ai_summary
+ * @property string|null $ai_template_key M5.9: the statement-of-reasons template the triage suggests (a key of sor_templates)
  * @property int|null $assigned_staff_id
  * @property int $reason_weight M3.4: highest reason weight of the reports (priority part)
  * @property int $reporter_count M3.4: distinct reporters (priority part)

@@ -8,6 +8,7 @@ use App\Enums\PowerDisplay;
 use App\Models\Media;
 use App\Models\Vehicle;
 use App\Models\VehicleSpec;
+use App\Services\Ai\SpecProvenance;
 use App\Support\Units;
 
 /**
@@ -224,7 +225,8 @@ class VehiclePresenter
             'unit' => $specs->power_unit->value,
             'ps' => (float) $specs->power_ps,
             'source' => $specs->power_source?->value,
-            'source_label' => $specs->power_source?->label($locale),
+            // M5.9: "Herstellerangabe (KI-Vorschlag)" while the value stands as taken over from "Daten übernehmen?".
+            'source_label' => SpecProvenance::marked($specs, 'power_value') ? (string) __('ai.label.factory_suggestion', [], $locale) : $specs->power_source?->label($locale),
         ];
     }
 
@@ -244,7 +246,7 @@ class VehiclePresenter
             'label' => Units::formatTorque($torque, $locale),
             'nm' => $torque,
             'source' => $source?->value,
-            'source_label' => $source?->label($locale),
+            'source_label' => SpecProvenance::marked($specs, 'torque_nm') ? (string) __('ai.label.factory_suggestion', [], $locale) : $source?->label($locale),
         ];
     }
 

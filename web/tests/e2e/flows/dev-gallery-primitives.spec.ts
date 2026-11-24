@@ -92,7 +92,9 @@ test.describe('tab bar specimen on a phone (DQ-091)', () => {
       await page.setViewportSize({ width, height: 800 });
       await qaGoto('/app/dev/gallery/badges');
       const bar = await byTestId('DEV-01.badges.bar.128').boundingBox();
-      const tab = await byTestId('DEV-01.badges.bar.128.messages').boundingBox();
+      // A cell of the bar's own five tabs (M5.2, 10 §1: Nachrichten left the phone bar for the header, so it has no cell here).
+      await expect(byTestId('DEV-01.badges.bar.128').getByRole('tab')).toHaveCount(5);
+      const tab = await byTestId('DEV-01.badges.bar.128.home').boundingBox();
       if (!bar || !tab) throw new Error('no geometry');
       expect(bar.x).toBe(0);
       expect(bar.width).toBe(width);

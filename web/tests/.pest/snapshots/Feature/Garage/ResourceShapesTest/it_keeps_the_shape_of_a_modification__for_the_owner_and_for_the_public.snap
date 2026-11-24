@@ -13,6 +13,13 @@
         "status_label": "string",
         "installed_on": "string",
         "installed_label": "string",
+        "target_month": "null",
+        "target_label": "null",
+        "is_due": "bool",
+        "priority": "null",
+        "priority_label": "null",
+        "plan_sort": "null",
+        "budget": "null",
         "cost_public": "bool",
         "cost": {
             "cents": "int",
@@ -20,6 +27,7 @@
         },
         "legal_status": "null",
         "legal_status_label": "null",
+        "is_registered": "bool",
         "thumb": {
             "id": "string",
             "status": "string",
@@ -39,7 +47,10 @@
                     "url": "string"
                 }
             ],
-            "created_at": "string"
+            "created_at": "string",
+            "plate_blur": {
+                "state": "string"
+            }
         },
         "product": "null",
         "installed_by": "null",
@@ -82,7 +93,10 @@
                         "url": "string"
                     }
                 ],
-                "created_at": "string"
+                "created_at": "string",
+                "plate_blur": {
+                    "state": "string"
+                }
             }
         ],
         "failed_photos": [],

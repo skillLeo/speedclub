@@ -30,29 +30,30 @@ import {
 } from '@/features/garage/components/frames';
 import { pickPhotos } from '@/features/garage/photos';
 import { uploadQueue } from '@/features/garage/uploads';
+import type { WithPlateBlur } from '@/features/media/plateBlur/model';
+import { usePlateBlurReview } from '@/features/media/plateBlur/PlateBlurReview';
 import { variantUrl } from '@/features/vehicle/media';
 import { paramOf } from '@/features/vehicle/navigation';
 import { haptics } from '@/lib/haptics';
 import type { PickedPhoto } from '@/state/uploads';
 import { useOnline } from '@/state/online';
 import { createStyles, size } from '@/theme';
-import {
-  Button,
-  Checkbox,
-  Chip,
-  EmptyState,
-  Header,
-  IconButton,
-  MemberRow,
-  OfflineBanner,
-  Photo,
-  PressableScale,
-  Radio,
-  Screen,
-  Text,
-  TextInput,
-  toast,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { Checkbox } from '@/ui/Checkbox';
+import { Chip } from '@/ui/Chip';
+import { EmptyState } from '@/ui/EmptyState';
+import { Header } from '@/ui/Header';
+import { IconButton } from '@/ui/IconButton';
+import { MemberRow } from '@/ui/MemberRow';
+import { OfflineBanner } from '@/ui/OfflineBanner';
+import { Photo } from '@/ui/Photo';
+import { PressableScale } from '@/ui/PressableScale';
+import { Radio } from '@/ui/Radio';
+import { Screen } from '@/ui/Screen';
+import { SegmentedControl } from '@/ui/SegmentedControl';
+import { Text } from '@/ui/Text';
+import { TextInput } from '@/ui/TextInput';
+import { toast } from '@/ui/toast';
 import { SECTION_HEADER_ROLE } from '@/ui/RowGroup';
 
 import {
@@ -68,10 +69,14 @@ import {
   type LocalPair,
 } from '../model';
 import { finishPostWhenUploaded } from '../pairing';
+import { BeforeAfterSlots, type SlotName } from '@/features/score/components/BeforeAfterSlots';
+import { beforeAfterIssues, type BeforeAfterIssue, type BuildUpdateKind } from '@/features/score/model';
 
 const ROUTE = 'UPD-01';
 const EDGES = ['top', 'left', 'right'] as const;
 const MENTIONS_FLAG = 'mentions';
+/** M5.9c: a before/after has exactly two photos (contract §2). */
+const BEFORE_AFTER_PHOTOS = 2;
 
 const schema = z
   .object({ text: z.string(), mileage: z.string(), date: z.string(), photoCount: z.number() })
@@ -129,7 +134,7 @@ function FormSectionTitle({ title, trailing }: { title: string; trailing?: strin
   );
 }
 
-type Picked = PickedPhoto & { key: string };
+type Picked = WithPlateBlur<PickedPhoto> & { key: string };
 
 /**
  * UPD-01 "Update posten" (09 §7.6, §8.5): text with @mentions, up to 10 photos with before/after pairs, linked mods,
@@ -142,7 +147,7 @@ export function PostUpdateScreen() {
   const router = useRouter();
   const online = useOnline();
   const access = useGarageAccess();
-  const params = useLocalSearchParams<{ vehicleId?: string; updateId?: string; slug?: string }>();
+  const params = useLocalSearchParams<{ vehicleId?: string; updateId?: string; slug?: string; kind?: string }>();
   // Edit mode (09 §8.5: within 24 hours): text, details, audience and mods of an existing post; its photos stay as they are.
   const editId = paramOf(params.updateId) ?? '';
   const editing = editId !== '';
@@ -164,6 +169,16 @@ export function PostUpdateScreen() {
   const mentionsOn = useFlag(MENTIONS_FLAG);
 
   const [photos, setPhotos] = useState<Picked[]>([]);
+  // M5.9c Build Journey: a before/after post (contract §2), two slots instead of the photo list, one optional mod. "Nächstes Upgrade"
+  // opens the composer with `?kind=before_after`.
+  const [kind, setKind] = useState<BuildUpdateKind>(paramOf(params.kind) === 'before_after' && !editing ? 'before_after' : 'post');
+  const [slots, setSlots] = useState<{ before: Picked | null; after: Picked | null }>({ before: null, after: null });
+  const [slotIssues, setSlotIssues] = useState<BeforeAfterIssue[]>([]);
+  const [pairMod, setPairMod] = useState<string | null>(null);
+  const beforeAfter = kind === 'before_after';
+  const slotCount = (slots.before ? 1 : 0) + (slots.after ? 1 : 0);
+  // M5.9a: each picked photo gets its plate blur choice before it joins the post.
+  const plateBlur = usePlateBlurReview(ROUTE);
   const [pairs, setPairs] = useState<LocalPair[]>([]);
   const [pending, setPending] = useState<number | null>(null);
   const [pairing, setPairing] = useState(false);
@@ -176,7 +191,7 @@ export function PostUpdateScreen() {
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { text: '', mileage: '', date: todayGerman(), photoCount: 0 },
+    defaultValues: { text: '', mileage: '', date: todayGerman(), photoCount: kind === 'before_after' ? BEFORE_AFTER_PHOTOS : 0 },
     mode: 'onSubmit',
   });
   const text = useWatch({ control: form.control, name: 'text' });
@@ -202,7 +217,7 @@ export function PostUpdateScreen() {
   );
   const dirty = editing
     ? !posted && form.formState.isDirty
-    : !posted && (form.formState.isDirty || photos.length > 0 || modIds.length > 0 || audience !== 'vehicle');
+    : !posted && (form.formState.isDirty || photos.length > 0 || modIds.length > 0 || audience !== 'vehicle' || slotCount > 0 || pairMod !== null);
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/garage'));
 
@@ -227,7 +242,9 @@ export function PostUpdateScreen() {
     const remaining = COMPOSER_PHOTO_LIMIT - photos.length;
     if (remaining <= 0) return;
     try {
-      const picked = await pickPhotos(remaining);
+      const chosen = await pickPhotos(remaining);
+      if (!chosen || chosen.length === 0) return;
+      const picked = await plateBlur.review(chosen);
       if (!picked || picked.length === 0) return;
       const next = [
         ...photos,
@@ -241,6 +258,33 @@ export function PostUpdateScreen() {
     } catch {
       toast(t('composer.failed'), { haptic: 'warning', testID: `${ROUTE}.toast` });
     }
+  };
+
+  /** M5.9c: one photo for a before/after slot, through the picker and the plate blur editor; a filled slot is replaced. */
+  const pickSlot = async (slot: SlotName) => {
+    try {
+      const chosen = await pickPhotos(1);
+      if (!chosen || chosen.length === 0) return;
+      const picked = await plateBlur.review(chosen);
+      const photo = picked?.[0];
+      if (!photo) return;
+      const next = { ...slots, [slot]: { ...photo, key: `${slot}-${Date.now()}-${photo.uri.slice(-12)}` } };
+      setSlots(next);
+      setSlotIssues((issues) => issues.filter((issue) => issue !== (slot === 'before' ? 'beforeMissing' : 'afterMissing')));
+    } catch {
+      toast(t('composer.failed'), { haptic: 'warning', testID: `${ROUTE}.toast` });
+    }
+  };
+
+  const removeSlot = (slot: SlotName) => {
+    setSlots({ ...slots, [slot]: null });
+  };
+
+  const changeKind = (next: BuildUpdateKind) => {
+    setKind(next);
+    setSlotIssues([]);
+    // A before/after needs its two photos, checked on their own (beforeAfterIssues); its text stays optional.
+    form.setValue('photoCount', next === 'before_after' ? BEFORE_AFTER_PHOTOS : photos.length);
   };
 
   const removePhoto = (index: number) => {
@@ -269,6 +313,14 @@ export function PostUpdateScreen() {
   const onValid = (values: Values) => {
     if (!vehicle) return;
     setNotice(null);
+    if (!editing && beforeAfter) {
+      const issues = beforeAfterIssues(slots);
+      setSlotIssues(issues);
+      if (issues.length > 0) {
+        haptics.warning();
+        return;
+      }
+    }
     if (editing) {
       edit.mutate(
         {
@@ -308,25 +360,29 @@ export function PostUpdateScreen() {
         mileageKm: parseMileage(values.mileage) ?? null,
         happenedOn: parseDay(values.date) ?? null,
         audience,
-        modificationIds: modIds,
+        modificationIds: beforeAfter ? (pairMod ? [pairMod] : []) : modIds,
         idempotencyKey: idempotency.current,
+        ...(beforeAfter ? { kind: 'before_after' as const, modificationId: pairMod } : {}),
       },
       {
         onSuccess: (update) => {
           haptics.success();
           setPosted(true);
-          if (photos.length > 0) {
+          // A before/after sends its two photos in that order and pairs them (contract §2); a post its list and pairs.
+          const sent = beforeAfter ? [slots.before, slots.after].filter((photo): photo is Picked => photo !== null) : photos;
+          const sentPairs = beforeAfter ? [{ before: 0, after: 1 }] : pairs;
+          if (sent.length > 0) {
             const queue = uploadQueue();
             const itemIds = queue.store
               .getState()
-              .enqueue({ kind: 'update', vehicleId: vehicle.id, updateId: update.id }, photos);
+              .enqueue({ kind: 'update', vehicleId: vehicle.id, updateId: update.id }, sent);
             void finishPostWhenUploaded(queue.store, {
               updateId: update.id,
               slug: vehicle.slug,
               itemIds,
-              pairs,
+              pairs: sentPairs,
             });
-            toast(t('composer.uploading', { count: photos.length }), { testID: `${ROUTE}.toast` });
+            toast(t('composer.uploading', { count: sent.length }), { testID: `${ROUTE}.toast` });
           } else {
             toast(t('composer.posted'), { testID: `${ROUTE}.toast` });
           }
@@ -346,7 +402,11 @@ export function PostUpdateScreen() {
     );
   };
   // Built on press, not during render: the handler reads the idempotency key (a ref).
-  const submit = () => form.handleSubmit(onValid, () => haptics.warning())();
+  const submit = () =>
+    form.handleSubmit(onValid, () => {
+      if (!editing && beforeAfter) setSlotIssues(beforeAfterIssues(slots));
+      haptics.warning();
+    })();
 
   let body;
   if (access.status === 'guest') {
@@ -402,6 +462,37 @@ export function PostUpdateScreen() {
                 />
               ))}
             </View>
+          </View>
+        ) : null}
+
+        {editing ? null : (
+          <SegmentedControl
+            options={[
+              { value: 'post', label: t('composer.kindPost'), testID: `${ROUTE}.kind.post` },
+              { value: 'before_after', label: t('composer.kindBeforeAfter'), testID: `${ROUTE}.kind.beforeAfter` },
+            ]}
+            value={kind}
+            onChange={changeKind}
+            label={t('composer.kind')}
+            labelVariant="labelControl"
+            role="radiogroup"
+            testID={`${ROUTE}.kind`}
+          />
+        )}
+
+        {beforeAfter && !editing ? (
+          <View style={styles.group} testID={`${ROUTE}.beforeAfter`}>
+            <Text variant="callout" color="text.secondary">
+              {t('composer.beforeAfterHint')}
+            </Text>
+            <BeforeAfterSlots
+              before={slots.before}
+              after={slots.after}
+              onPick={(slot) => void pickSlot(slot)}
+              onRemove={removeSlot}
+              issues={slotIssues}
+              routeId={ROUTE}
+            />
           </View>
         ) : null}
 
@@ -462,7 +553,7 @@ export function PostUpdateScreen() {
           ) : null}
         </View>
 
-        {editing ? null : (
+        {editing || beforeAfter ? null : (
           <View style={styles.group} testID={`${ROUTE}.photos`}>
             <FormSectionTitle
               title={t('composer.photos')}
@@ -614,7 +705,26 @@ export function PostUpdateScreen() {
           </View>
         </View>
 
-        {(mods.data ?? []).length > 0 ? (
+        {beforeAfter && !editing && (mods.data ?? []).length > 0 ? (
+          <View style={styles.group} testID={`${ROUTE}.beforeAfter.mods`}>
+            <FormSectionTitle title={t('composer.pairMod')} />
+            <View style={styles.rows} role="radiogroup" aria-label={t('composer.pairMod')}>
+              <Radio checked={pairMod === null} onChange={() => setPairMod(null)} label={t('composer.pairModNone')} showLabel testID={`${ROUTE}.beforeAfter.mod.none`} />
+              {(mods.data ?? []).map((mod) => (
+                <Radio
+                  key={mod.id}
+                  checked={pairMod === mod.id}
+                  onChange={() => setPairMod(mod.id)}
+                  label={mod.title}
+                  showLabel
+                  testID={`${ROUTE}.beforeAfter.mod.${mod.id}`}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {!beforeAfter && (mods.data ?? []).length > 0 ? (
           <View style={styles.group} testID={`${ROUTE}.mods`}>
             <FormSectionTitle title={t('composer.mods')} />
             <View style={styles.rows}>
@@ -633,6 +743,7 @@ export function PostUpdateScreen() {
             </View>
           </View>
         ) : null}
+        {plateBlur.element}
       </EditorForm>
     );
   }

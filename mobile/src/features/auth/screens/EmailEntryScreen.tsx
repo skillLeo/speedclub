@@ -9,12 +9,16 @@ import { useFlag } from '@/api/queries/appConfig';
 import { errorNumber } from '@/api/queries/errorDetails';
 import { fetchPasskeySignInOptions, usePasskeySignIn, useStartEmailCode } from '@/api/queries/passwordless';
 import { isWeb } from '@/lib/platform';
-import { Button, SkeletonText, Text } from '@/ui';
+import { useSingleFlight } from '@/lib/useSingleFlight';
+import { Button } from '@/ui/Button';
+import { SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
-import { useAuthFlags } from '../authFlags';
+import { useAuthFlags, useLeaveCodeSignInWhenOff } from '../authFlags';
 import { AuthScreen, AuthSkeletonLink } from '../components/AuthScreen';
 import { EMAIL_INPUT, FormField } from '../components/FormField';
 import { FormNotice } from '../components/FormNotice';
+import { InviteNotice } from '../components/InviteNotice';
 import { handEmailTo, useHandedEmail } from '../emailHandoff';
 import { attemptFrom, holdEmailAttempt, newAttemptId } from '../emailAttempt';
 import { applyServerErrors, formatWait, useCountdown, useLeaveForm, useReturnToParam } from '../forms';
@@ -65,6 +69,7 @@ export function EmailEntryScreen() {
   const handedEmail = useHandedEmail('/auth/email', params.email);
   const start = useStartEmailCode();
   const { passwordLogin } = useAuthFlags();
+  useLeaveCodeSignInWhenOff(handedEmail);
   const passkeysOn = useFlag('auth.passkeys');
   const [notice, setNotice] = useState<string | null>(null);
   const wait = useCountdown();
@@ -78,7 +83,7 @@ export function EmailEntryScreen() {
   });
   const { isDirty } = formState;
 
-  const onSubmit = handleSubmit(async ({ email }) => {
+  const onSubmit = useSingleFlight(handleSubmit(async ({ email }) => {
     setNotice(null);
     const attemptId = newAttemptId();
     try {
@@ -94,7 +99,7 @@ export function EmailEntryScreen() {
         setNotice(t('common.serverError'));
       }
     }
-  });
+  }));
 
   const toPassword = () => {
     handEmailTo('/sign-in', getValues('email'));
@@ -135,6 +140,7 @@ export function EmailEntryScreen() {
         ) : null
       }
     >
+      <InviteNotice routeId="AUTH-12" />
       {wait.remaining > 0 ? (
         <FormNotice message={t('email.rateLimited', { time: formatWait(t, wait.remaining) })} testID="AUTH-12.notice" />
       ) : notice ? (

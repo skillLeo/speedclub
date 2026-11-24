@@ -28,11 +28,18 @@ function p1PublicApi(): array
         'api.v1.build-updates.show',
         'api.v1.vehicles.highlights.index',
         'api.v1.comments.index',
+        // R5-5: the car's own comment thread [build_comments], read like an update's.
+        'api.v1.vehicles.comments.index',
         // M4.12 events (09 §8.7): list, map pins, detail and the calendar file read by guests too, behind browse and the events flag.
         'api.v1.events.index',
         'api.v1.events.pins',
         'api.v1.events.show',
         'api.v1.events.ics',
+        // M5.6 (m5.6-contract §4.4, §5.3): the approved gallery of an event and a member's public "War dabei" (ended events only), read by
+        // guests too behind `events` + their own flag (404 feature_disabled while off), throttle:browse and an ETag; the organiser's
+        // queue and the member's own uploads (`status=pending|mine`) answer a guest 401 in the controller.
+        'api.v1.events.gallery.index',
+        'api.v1.public.users.checkins',
         // M4.14 (09 §8.9, §8.10): business and part pages read by guests too (ADR-124), behind browse, ETag and their flags
         // (`businesses`, `parts_catalogue`: 404 feature_disabled while off, like events).
         'api.v1.businesses.index',
@@ -45,6 +52,41 @@ function p1PublicApi(): array
         'api.v1.products.index',
         'api.v1.products.show',
         'api.v1.products.builds',
+        // M5.8 Forum (10 §7, ADR-506): categories, thread lists, FOR-03 and its replies, Home "Gerade im Forum", search and the
+        // discussions of a build, a mod or a product, read by guests too (ADR-124) behind the `forum` flag and throttle:browse (search
+        // also throttle:search); per-viewer fields only for a signed-in reader. Product discussions also need `parts_catalogue`.
+        'api.v1.forum.categories.index',
+        'api.v1.forum.categories.show',
+        'api.v1.forum.threads.index',
+        'api.v1.forum.active',
+        'api.v1.forum.threads.show',
+        'api.v1.forum.posts.index',
+        'api.v1.search.threads',
+        'api.v1.vehicles.forum-threads',
+        'api.v1.mods.forum-threads',
+        'api.v1.products.forum-threads',
+        // M5.5 Shop (10 §3, ADR-502): SHOP-01/02 read by guests too, behind browse, ETag and the `shop` flag; no per-viewer field.
+        'api.v1.shop.index',
+        'api.v1.shop.products.index',
+        'api.v1.shop.products.show',
+        // R4-2.3 Crews (contract-crews.md §3, ADR-530): the crew list, a crew page, its members and a member's crew chips, read by guests
+        // too (ADR-124, viewer null) behind the `crews` flag (404 feature_disabled while off), throttle:browse and an ETag.
+        'api.v1.crews.index',
+        'api.v1.crews.show',
+        'api.v1.crews.members.index',
+        'api.v1.public.users.crews',
+        // M5.9b STREET DEX: the rarity thresholds of "So funktioniert Seltenheit", static config (throttle:public-read, ETag).
+        'api.v1.rarity-rules',
+        // M5.9b part 2: the public spot map, city aggregates only (≥ 24 h, ≥ 5 spots), cached 1 h (throttle:public-read, ETag).
+        'api.v1.spot-map',
+        // M5.9c Build Score: the formula (static config, throttle:public-read, ETag) and a vehicle's score wherever the vehicle may be
+        // seen (VehiclePolicy::view, throttle:browse, ETag; `next_upgrades` only for the owner).
+        'api.v1.build-score.formula',
+        'api.v1.vehicles.build-score',
+        // M5.9d: a member's earned badges (where the profile may be seen, throttle:public-read, ETag) and the invite lookup of the
+        // sign-up screens (throttle:invite-lookup, 404 for anything but an open code).
+        'api.v1.users.badges',
+        'api.v1.invites.show',
         // M4.6 Auth 2.0 (09 §8.1, §8.2): the passwordless ways in, each behind its own limiter.
         'api.v1.auth.apple',
         'api.v1.auth.email.resend',
@@ -70,6 +112,10 @@ function p1PublicApi(): array
         'api.v1.maintenance-media.show',
         // Crash reports of the app's error screens: an error can happen signed out too (per-IP limit, no personal data).
         'api.v1.client-errors.store',
+        // M5.7 (10 §6.1, m5.7-contract §2, §3.1): the view beacon of VEH-01/PROF-02. Guests are visitors too, so their views count:
+        // only as a hash keyed with a salt of the day (deleted when the day ends), never an IP, user agent or id. Always 204 (no oracle),
+        // throttle:views per member or guest IP with a bound per IP; it writes nothing but the deduplicated count.
+        'api.v1.views.store',
         'api.v1.catalog.generations',
         'api.v1.catalog.makes',
         'api.v1.catalog.mod-categories',
@@ -222,6 +268,20 @@ describe('API route table', function () {
         ['api.v1.products.', 'parts_catalogue'],
     ]);
 
+    it('keeps the M5.6 guest reads behind both event flags, the browse limiter and an ETag', function () {
+        foreach (['api.v1.events.gallery.index' => 'events.gallery', 'api.v1.public.users.checkins' => 'events.checkin'] as $name => $flag) {
+            expect(p1Middleware(Route::getRoutes()->getByName($name)))
+                ->toContain(EnsureFeatureEnabled::class.':events', EnsureFeatureEnabled::class.':'.$flag, 'throttle:browse', 'etag');
+        }
+
+    });
+
+    it('keeps the M5.7 view beacon behind its own limiter, answering 204 to a guest', function () {
+        expect(p1Middleware(Route::getRoutes()->getByName('api.v1.views.store')))->toContain('throttle:views');
+
+        $this->postJson('/api/v1/views', ['subject' => 'vehicle', 'id' => '01JAAAAAAAAAAAAAAAAAAAAAAA', 'source' => 'web'])->assertNoContent();
+    });
+
     it('throttles every member write, apart from the listed ones', function () {
         $missing = [];
 
@@ -256,7 +316,14 @@ describe('API route table', function () {
                 continue;
             }
 
-            $uri = '/'.preg_replace('/\{[^}]+\}/', '01JAAAAAAAAAAAAAAAAAAAAAAA', $route->uri());
+            // A parameter takes a ULID placeholder, or '1' where the route only matches digits (e.g. a sticker version number,
+            // `whereNumber`): otherwise the route would not match at all and answer 404, which says nothing about the guard.
+            $uri = '/'.preg_replace_callback('/\{([^}?]+)\??\}/', function (array $m) use ($route): string {
+                $pattern = $route->wheres[$m[1]] ?? null;
+                $ulid = '01JAAAAAAAAAAAAAAAAAAAAAAA';
+
+                return $pattern !== null && preg_match('~^(?:'.$pattern.')$~', $ulid) !== 1 && preg_match('~^(?:'.$pattern.')$~', '1') === 1 ? '1' : $ulid;
+            }, $route->uri());
 
             $this->json($route->methods()[0], $uri)->assertUnauthorized();
             $checked++;

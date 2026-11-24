@@ -3,9 +3,11 @@
 namespace Database\Seeders;
 
 use App\Enums\StaffStatus;
+use App\Enums\TeamEvent;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Staff;
+use App\Services\Audit\Audit;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Concerns\SeedsFromData;
 use Illuminate\Database\Seeder;
@@ -46,6 +48,10 @@ class StaffSeeder extends Seeder
         'staff.invite', 'staff.manage', 'roles.manage', 'approvals.decide', 'audit.view', 'audit.export', 'privacy.view',
         'privacy.process', 'retention.manage', 'system.view', 'system.jobs', 'integrations.view', 'analytics.view',
         'memberships.manage',
+        // M5.4 (m5.4-contract §8): ADM "Sticker-Designs" and the print files by design id; an Owner can give a print partner's role only this.
+        'stickers.print',
+        // M5.5 (m5.5-contract §5): ADM-66 Shop-Produkte and ADM-67 Shop-Banner; an Owner can give a shop partner's role only this.
+        'shop.manage',
         // ADR-232: every admin list CSV needs it besides the list's view atom; the Analyst has no exports (06 §2).
         'lists.export',
     ];
@@ -68,7 +74,7 @@ class StaffSeeder extends Seeder
         ],
         'content_editor' => [
             'content.view', 'content.edit', 'content.publish', 'brand.manage', 'catalog.view', 'catalog.manage',
-            'catalog.import', 'qr.view', 'lists.export',
+            'catalog.import', 'qr.view', 'lists.export', 'shop.manage',
         ],
         'analyst' => ['analytics.view', 'members.view', 'vehicles.view', 'qr.view', 'moderation.view'],
     ];
@@ -156,19 +162,69 @@ class StaffSeeder extends Seeder
 
     private function seedOwner(?string $password): void
     {
-        $email = config('speedclub.staff.owner_email');
+        $emails = self::ownerEmails();
 
-        if (! is_string($email) || $email === '') {
+        if ($emails === []) {
             $this->warn('STAFF_OWNER_EMAIL is not set: no Owner account created.');
 
             return;
         }
 
-        $this->assignOnCreate($this->account($email, 'Owner', $password ?? Str::password(40), demo: $password !== null), 'owner');
+        foreach ($emails as $email) {
+            $owner = $this->account($email, 'Owner', $password ?? Str::password(40), demo: $password !== null);
+
+            // The Owner maximum (ADM-40) holds for seeded Owners too: a further address is left for the team page.
+            if ($owner->wasRecentlyCreated && Staff::query()->role('owner', self::GUARD)->count() >= config()->integer('speedclub.team.max_owners')) {
+                $this->warn("{$email}: the Owner maximum is reached, the account has no role yet.");
+
+                continue;
+            }
+
+            $this->assignOnCreate($owner, 'owner');
+            $this->ownerWhenNone($owner);
+        }
 
         if ($password === null) {
-            $this->say('Owner account ready. Set its password through the staff password reset.');
+            $this->say('Owner account(s) ready. Each sets its password through the one-time link (web installer) or the staff password reset.');
         }
+    }
+
+    /**
+     * The Owner addresses of STAFF_OWNER_EMAIL: one, or several separated by commas (client round 6: the platform owner first, then a
+     * second Owner), lower-cased, valid addresses only, without repeats.
+     *
+     * @return list<string>
+     */
+    public static function ownerEmails(): array
+    {
+        $configured = config('speedclub.staff.owner_email');
+        $emails = [];
+
+        foreach (explode(',', is_string($configured) ? $configured : '') as $email) {
+            $email = Str::lower(trim($email));
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) !== false && ! in_array($email, $emails, true)) {
+                $emails[] = $email;
+            }
+        }
+
+        return $emails;
+    }
+
+    /**
+     * Client round 6: the account of STAFF_OWNER_EMAIL is the platform owner's. When it existed already with another role (invited as an
+     * Admin before the address was set) and no Owner exists at all, nobody could save the company data or manage the team (ADR-239);
+     * it then becomes the Owner, audited. With any Owner in place, roles stay as ADM-40 left them.
+     */
+    private function ownerWhenNone(Staff $staff): void
+    {
+        if ($staff->wasRecentlyCreated || $staff->hasRole('owner') || Staff::query()->role('owner', self::GUARD)->exists()) {
+            return;
+        }
+
+        $before = $staff->getRoleNames()->values()->all();
+        $staff->syncRoles(['owner']);
+        Audit::record(TeamEvent::RolesChanged->value, $staff, before: ['roles' => $before], after: ['roles' => ['owner'], 'via' => 'staff_seeder_owner_email']);
+        $this->say("{$staff->email} had no Owner beside it: it is the Owner now (STAFF_OWNER_EMAIL).");
     }
 
     /** A seeded account gets its role when it is created; later role changes (ADM-40) are left alone. */

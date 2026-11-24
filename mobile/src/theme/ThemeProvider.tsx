@@ -1,7 +1,7 @@
 import { NavigationBar } from 'expo-navigation-bar';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { createContext, use, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, use, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
@@ -159,11 +159,22 @@ function HydratedThemeProvider({ children }: { children: ReactNode }) {
 /**
  * A subtree in one fixed theme at the app's font scale. The brand layer of §2 (Welcome, the SYS gates) is dark in every
  * theme, so its tokens, the focus ring included, come from a dark theme even when the app is light (DQ-102).
+ *
+ * `fontScaleCap` (DQ-P5G-04): a fixed composition that is exported as a picture (the WRP-01 story cards, 1080 × 1920) reads the
+ * app's font scale only up to this cap, so every scale-aware part inside (DisplayTitle's estimate, the gauge, web text) lays out
+ * at the capped scale. The theme carries the cap (`fontScaleCap`, the lower of this one and a parent scope's), and Text takes it
+ * as its own cap, so native text, which the OS scales freely, stays at the capped scale too (review SF-3).
  */
-export function ThemeScope({ name, children }: { name: ThemeName; children: ReactNode }) {
+export function ThemeScope({ name, fontScaleCap, children }: { name: ThemeName; fontScaleCap?: number; children: ReactNode }) {
   const parent = useTheme();
   const accent = useAccentSet();
-  return <ThemeContext value={getTheme(name, parent.fontScale, accent)}>{children}</ThemeContext>;
+  const cap = parent.fontScaleCap === undefined ? fontScaleCap : fontScaleCap === undefined ? parent.fontScaleCap : Math.min(parent.fontScaleCap, fontScaleCap);
+  const fontScale = cap === undefined ? parent.fontScale : Math.min(parent.fontScale, cap);
+  const theme = useMemo(() => {
+    const base = getTheme(name, fontScale, accent);
+    return cap === undefined ? base : { ...base, fontScaleCap: cap };
+  }, [name, fontScale, accent, cap]);
+  return <ThemeContext value={theme}>{children}</ThemeContext>;
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

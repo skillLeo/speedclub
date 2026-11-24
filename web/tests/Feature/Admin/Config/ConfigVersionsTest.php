@@ -75,8 +75,8 @@ it('keeps one draft per key: another staff member is refused, a stale revision i
     expect(fn () => ($this->publish)(2, ConfigKey::RemoteConfig, $other))->toThrow(fn (ConfigRefused $e) => expect($e->reason)->toBe('draft_taken'));
 });
 
-it('refuses a publish without a reason, without a draft and without a change', function () {
-    expect(fn () => app(PublishConfigVersion::class)->handle($this->staff, ConfigKey::RemoteConfig, 'kurz', 1))->toThrow(ValidationException::class);
+it('refuses a publish without a draft and without a change (ADR-540: a reason is not needed)', function () {
+    expect(fn () => app(PublishConfigVersion::class)->handle($this->staff, ConfigKey::RemoteConfig, str_repeat('a', 1001), 1))->toThrow(ValidationException::class);
     expect(fn () => ($this->publish)(1))->toThrow(fn (ConfigRefused $e) => expect($e->reason)->toBe('no_draft'));
 
     ($this->save)(m35Remote());
@@ -134,12 +134,11 @@ it('renumbers a draft that a rollback overtook', function () {
     $this->getJson('/api/v1/app-config')->assertJsonPath('data.latest_version.ios', '0.4.0');
 });
 
-it('lets the creator discard a draft; someone with the publish atom only with a reason', function () {
+it('lets the creator and someone with the publish atom discard a draft (ADR-540: no reason needed, an optional one is kept)', function () {
     m31Roles();
     $editor = m31Staff('content_editor');
     app(SaveConfigDraft::class)->handle($editor, ConfigKey::Announcements, ['items' => []], null);
 
-    expect(fn () => app(DiscardConfigDraft::class)->handle($this->staff, ConfigKey::Announcements))->toThrow(ValidationException::class);
     app(DiscardConfigDraft::class)->handle($this->staff, ConfigKey::Announcements, 'Verwaister Entwurf aus dem Urlaub.');
 
     expect(app(ConfigVersions::class)->draft(ConfigKey::Announcements))->toBeNull()
@@ -174,11 +173,11 @@ it('refuses a suspended staff member', function () {
 });
 
 it('keeps the org key to Owners', function () {
-    expect(fn () => ($this->save)(['company_name' => 'Speed Club GmbH'], null, ConfigKey::Org))->toThrow(AuthorizationException::class);
+    expect(fn () => ($this->save)(['company_name' => 'Speedclub GmbH'], null, ConfigKey::Org))->toThrow(AuthorizationException::class);
 
     $owner = m31Staff('owner');
-    $draft = ($this->save)(['company_name' => 'Speed Club GmbH', 'register_number' => 'HRB 1'], null, ConfigKey::Org, $owner);
-    expect($draft->payload['company_name'])->toBe('Speed Club GmbH')->and($draft->payload['register_number'])->toBe('HRB 1');
+    $draft = ($this->save)(['company_name' => 'Speedclub GmbH', 'register_number' => 'HRB 1'], null, ConfigKey::Org, $owner);
+    expect($draft->payload['company_name'])->toBe('Speedclub GmbH')->and($draft->payload['register_number'])->toBe('HRB 1');
 
     // M3.6 narrowed the key to the org fields (OrgIdentity::FIELDS).
     expect(fn () => ($this->save)(['Bad Key' => 1], 1, ConfigKey::Org, $owner))->toThrow(ValidationException::class)
@@ -198,4 +197,24 @@ it('serves the rate_limits key of M3.4: bounded overrides, written to the cache 
 
     expect(Cache::get(RateLimitOverrides::CACHE_KEY))->toBe([$name => $default * 2])
         ->and(RateLimitOverrides::published())->toBe([$name => $default * 2]);
+});
+
+describe('publishBySystem (demo seeders, crawl triage M5.9f)', function () {
+    it('publishes the change as the system, superseding the live version, and writes nothing when there is nothing to change', function () {
+        $live = app(ConfigVersions::class)->live(ConfigKey::RemoteConfig);
+        $add = fn (array $payload): ?array => isset($payload['wrapped']['releases']['2026-saison']) ? null : [...$payload, 'wrapped' => ['releases' => ['2026-saison' => '2026-11-05T10:00:00+01:00']]];
+
+        $version = app(ConfigVersions::class)->publishBySystem(ConfigKey::RemoteConfig, $add, 'Demo: Wrapped-Freigabe der Saison 2026.');
+
+        expect($version?->status)->toBe(ConfigVersionStatus::Published)
+            ->and($version?->published_by)->toBeNull()
+            ->and($version?->payload['wrapped']['releases'])->toBe(['2026-saison' => '2026-11-05T10:00:00+01:00'])
+            ->and($live?->fresh()?->status)->toBe($live === null ? null : ConfigVersionStatus::Superseded)
+            ->and(AuditEvent::query()->where('action', 'config.published')->sole()->getRawOriginal('actor_type'))->toBe('system');
+
+        // A release date in the past, which a staff draft could not publish (CR-P5G-06), is the system's to vouch for; the second call has nothing to add.
+        expect(app(ConfigVersions::class)->publishBySystem(ConfigKey::RemoteConfig, $add, 'Demo: Wrapped-Freigabe der Saison 2026.'))->toBeNull()
+            ->and(ConfigVersion::query()->where('key', ConfigKey::RemoteConfig->value)->where('status', ConfigVersionStatus::Published)->count())->toBe(1)
+            ->and(AuditEvent::query()->where('action', 'config.published')->count())->toBe(1);
+    });
 });

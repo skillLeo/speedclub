@@ -18,6 +18,8 @@ const useStyles = createStyles((t) => ({
   group: { gap: t.space[8] },
   // In line with the text of the rows below, which sit 16 inside the card.
   title: { paddingHorizontal: t.space[16] },
+  // The header and its caption as one block, 2 apart; the group's 8 follows under the caption.
+  heading: { gap: t.space[2], paddingHorizontal: t.space[16] },
   card: { backgroundColor: t.color.bg.surface, borderRadius: t.radius.md, overflow: 'hidden' },
   centred: { alignItems: 'center', justifyContent: 'center', minHeight: t.size.row.single, paddingHorizontal: t.space[16], paddingVertical: t.space[8] },
   centredText: { textAlign: 'center' },
@@ -26,6 +28,8 @@ const useStyles = createStyles((t) => ({
 export type RowGroupProps = {
   /** "App", "Rechtliches": sentence case, never caps (§4). */
   title?: string;
+  /** A caption line under the title, for what the numbers of the group cover ("Letzte 30 Tage", INS-01 DQ-P5-018). */
+  caption?: string;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
@@ -35,11 +39,20 @@ export type RowGroupProps = {
  * FS-12 grouped inset list (settings, PROF-01, MSG-03): bg.surface, radius 12, rows of 56 with hairlines, monochrome icons. Rows inside pass
  * `inset={space[16]}` and `divider` on all but the last.
  */
-export function RowGroup({ title, children, style, testID }: RowGroupProps) {
+export function RowGroup({ title, caption, children, style, testID }: RowGroupProps) {
   const styles = useStyles();
   return (
     <View style={[styles.group, style]} testID={testID}>
-      {title ? (
+      {title && caption ? (
+        <View style={styles.heading}>
+          <Text variant={SECTION_HEADER_ROLE} color="text.secondary" role="heading" {...({ 'aria-level': 2 } as object)} testID={testID ? `${testID}.title` : undefined}>
+            {title}
+          </Text>
+          <Text variant="caption" color="text.tertiary" testID={testID ? `${testID}.caption` : undefined}>
+            {caption}
+          </Text>
+        </View>
+      ) : title ? (
         <Text variant={SECTION_HEADER_ROLE} color="text.secondary" role="heading" {...({ 'aria-level': 2 } as object)} style={styles.title} testID={testID ? `${testID}.title` : undefined}>
           {title}
         </Text>

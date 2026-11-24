@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(AdminRoutes::signedIn())->prefix('media-review')->name('media.')->group(function (): void {
     Route::get('/', MediaReviewController::class)->middleware('can:media.review')->name('index');
 
-    Route::middleware('throttle:120,1')->whereUlid('media')->group(function (): void {
+    Route::middleware('throttle:120,1,admin-media-1')->whereUlid('media')->group(function (): void {
         Route::post('{media}/approve', [MediaActionsController::class, 'approve'])->middleware('can:media.review')->name('approve');
         Route::post('{media}/hide', [MediaActionsController::class, 'hide'])->middleware(['can:media.hide', 'staff.recent-password'])->name('hide');
         Route::post('{media}/unhide', [MediaActionsController::class, 'unhide'])->middleware(['can:media.hide', 'staff.recent-password'])->name('unhide');

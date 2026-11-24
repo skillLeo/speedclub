@@ -13,7 +13,10 @@ import { useBack } from '@/features/vehicle/navigation';
 import { useQaState } from '@/lib/qa';
 import { useSessionStore } from '@/state/session';
 import { createStyles, layout, useBreakpoint } from '@/theme';
-import { ErrorState, Header, Screen, Skeleton } from '@/ui';
+import { ErrorState } from '@/ui/ErrorState';
+import { Header } from '@/ui/Header';
+import { Screen } from '@/ui/Screen';
+import { Skeleton } from '@/ui/Skeleton';
 
 import { COLLECTIONS_FLAG } from '../components/ProfileTabs';
 

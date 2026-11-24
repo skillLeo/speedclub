@@ -24,22 +24,17 @@ import { useFormat } from '@/lib/useFormat';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size, space, typography, useTheme } from '@/theme';
-import {
-  Button,
-  CollapsingFlashList,
-  ContextMenuButton,
-  Dialog,
-  ErrorState,
-  Icon,
-  SampleBadge,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  Spinner,
-  Text,
-  toast,
-  type IconName,
-} from '@/ui';
+import { SampleBadge } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { ContextMenuButton } from '@/ui/ContextMenu';
+import { Dialog } from '@/ui/Dialog';
+import { ErrorState } from '@/ui/ErrorState';
+import { Icon, type IconName } from '@/ui/icons/Icon';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Spinner } from '@/ui/Spinner';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { CollapsingFlashList } from '@/ui/useCollapsingHeader';
 import { useScreenFocused } from '@/ui/SkeletonFocus';
 import { RowDivider } from '@/ui/rowParts';
 import { metaLineText, WHOLE_PART_MAX } from '@/ui/textBreaks';

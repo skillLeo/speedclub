@@ -4,7 +4,12 @@ import { View } from 'react-native';
 import { useModCategories, type ModCategory } from '@/api/queries/catalog';
 import { categoryIcon } from '@/features/vehicle/model';
 import { createStyles, size } from '@/theme';
-import { ErrorState, Icon, PressableScale, Sheet, Skeleton, SkeletonBlock, Text } from '@/ui';
+import { ErrorState } from '@/ui/ErrorState';
+import { Icon } from '@/ui/icons/Icon';
+import { PressableScale } from '@/ui/PressableScale';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonBlock } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { useStacksAtFontScale } from '@/ui/rowParts';
 
 /** The skeleton's tiles: the catalogue has about a dozen systems. */

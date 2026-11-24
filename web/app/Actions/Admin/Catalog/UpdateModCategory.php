@@ -32,7 +32,7 @@ class UpdateModCategory
     public function handle(Staff $staff, ModCategory $category, array $input, string $reason): ModCategory
     {
         StaffAtoms::ensure($staff, 'catalog.manage');
-        $reason = Reason::required($reason);
+        $reason = Reason::internal($reason);
         $valid = CategoryRules::validate($input, $category);
 
         return DB::transaction(function () use ($staff, $category, $valid, $reason): ModCategory {

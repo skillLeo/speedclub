@@ -7,7 +7,10 @@ import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { HeaderLargeTitle, SettingsSearch, Skeleton, SkeletonBlock, SkeletonText, useCollapsingHeader } from '@/ui';
+import { HeaderLargeTitle } from '@/ui/Header';
+import { SettingsSearch } from '@/ui/SettingsSearch';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { RestrictionNotice } from '../components/RestrictionNotice';
 import { SettingsList, useSettingsFlags } from '../components/SettingsList';

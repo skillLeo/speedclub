@@ -13,7 +13,10 @@
     "empty_value": "nicht gesetzt",
     "last": "Version :version, veröffentlicht :date von :name",
     "never": "Noch nicht veröffentlicht: Die Rechtstexte zeigen die Platzhalter.",
-    "owner_only": "Nur ein Owner ändert die Angaben zur Organisation. Du siehst sie hier.",
+    "owner_only_title": "Nur ein Owner kann die Firmendaten ändern",
+    "owner_only": "Du siehst die Angaben, speichern kann sie nur ein Owner. Bitte einen Owner, sie einzutragen oder dich unter Governance › Team zum Owner zu ernennen.",
+    "owners": "Owner im Team: :names",
+    "no_owners": "Im Team ist gerade kein Owner aktiv.",
     "missing": "{1} 1 Angabe fehlt noch|[2,*] :count Angaben fehlen noch",
     "save": "Speichern",
     "discard": "Verwerfen",
@@ -25,7 +28,7 @@
     },
     "errors": {
         "email": "Gib eine gültige E‑Mail-Adresse ein.",
-        "vat_id": "Eine USt-IdNr. beginnt mit zwei Großbuchstaben, z. B. DE123456789.",
+        "vat_id": "Eine USt-IdNr. beginnt mit zwei Buchstaben und enthält Ziffern, z. B. DE 123 456 789.",
         "phone": "Nur Ziffern, Leerzeichen, +, /, - und Klammern."
     },
     "fields": {
@@ -81,7 +84,7 @@
         },
         "vat_id": {
             "label": "USt-IdNr.",
-            "hint": "z. B. DE123456789"
+            "hint": "z. B. DE 123 456 789, Leerzeichen und Punkte sind erlaubt"
         },
         "supervisory_authority": {
             "label": "Zuständige Aufsichtsbehörde",
@@ -93,7 +96,34 @@
         }
     },
     "flash": {
-        "saved": "Angaben gespeichert und veröffentlicht."
+        "saved": "Angaben gespeichert und veröffentlicht.",
+        "governance_saved": "Governance gespeichert."
     },
-    "missing_field": "Fehlt noch."
+    "missing_field": "Fehlt noch.",
+    "governance": {
+        "title": "Governance",
+        "intro": "Hier legst du fest, wie streng das Admin-Team arbeitet. Jede Änderung steht im Audit-Log.",
+        "owner_override": "Owner-Override erlauben, wenn niemand sonst freigeben kann",
+        "owner_override_hint": "Ein Owner kann die eigene Anfrage dann selbst freigeben. Das steht im Audit-Log, Owner und Admins bekommen eine E-Mail. Sobald eine zweite Person freigeben kann, gilt immer das Vier-Augen-Prinzip.",
+        "approvers": "{0} Niemand kann gerade Freigaben erteilen.|{1} 1 Person kann gerade Freigaben erteilen:|[2,*] :count Personen können gerade Freigaben erteilen:",
+        "owner": "Owner",
+        "alone_on": "Ohne zweite Person mit Freigaberecht kannst du riskante Änderungen nur über den Owner-Override veröffentlichen.",
+        "alone_off": "Ohne zweite Person mit Freigaberecht laufen riskante Änderungen ab, ohne live zu gehen. Schalte den Owner-Override ein oder lade jemanden ein.",
+        "confirm_title": "Governance speichern",
+        "confirm_on": "Owner können eigene Anfragen selbst freigeben, solange niemand sonst freigeben kann.",
+        "confirm_off": "Riskante Änderungen warten immer auf eine zweite Person, auch wenn es keine gibt.",
+        "four_eyes": "Vier-Augen-Prinzip",
+        "four_eyes_on_hint": "An: Riskante Aktionen (Löschen, Sperren, Exporte, Rollen, kritische Flags, Rechtstexte) warten auf die Freigabe einer zweiten Person.",
+        "four_eyes_off_hint": "Aus: Diese Aktionen laufen sofort. Jede steht mit Person, Zeit und Vorher/Nachher im Audit-Log.",
+        "two_factor": "2FA für Admin-Konten",
+        "two_factor_optional": "Optional",
+        "two_factor_optional_hint": "Jede Person entscheidet in ihrem Konto selbst, ob sie die Zwei-Faktor-Anmeldung nutzt.",
+        "two_factor_required": "Pflicht",
+        "two_factor_required_hint": "Ohne eingerichtete Authenticator-App kommt niemand in den Admin.",
+        "two_factor_forced": "Auf diesem Server ist 2FA per Einstellung (STAFF_2FA_REQUIRED) Pflicht und kann hier nicht abgeschaltet werden.",
+        "confirm_four_eyes_on": "Riskante Aktionen warten ab jetzt auf eine zweite Person.",
+        "confirm_four_eyes_off": "Riskante Aktionen laufen ab jetzt sofort, ohne Freigabe.",
+        "confirm_two_factor_required": "Alle Admin-Konten brauchen ab jetzt die Zwei-Faktor-Anmeldung.",
+        "confirm_two_factor_optional": "Jede Person darf die Zwei-Faktor-Anmeldung ab jetzt für ihr Konto abschalten."
+    }
 }

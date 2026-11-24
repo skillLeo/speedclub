@@ -3,7 +3,11 @@ import { View } from 'react-native';
 
 import { isWeb } from '@/lib/platform';
 import { createStyles, size } from '@/theme';
-import { Avatar, PressableScale, SkeletonBlock, SkeletonText, Text, type VehicleCardOwner } from '@/ui';
+import { Avatar } from '@/ui/Avatar';
+import { PressableScale } from '@/ui/PressableScale';
+import { SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { type VehicleCardOwner } from '@/ui/VehicleCard';
 import { joinLabel } from '@/ui/rowParts';
 
 const useStyles = createStyles((t) => ({

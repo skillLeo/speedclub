@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -6,6 +7,9 @@ import { useFlag } from '@/api/queries/appConfig';
 import { useMemberSettings, useUpdateMemberSettings, type NotificationPrefs, type SettingsPatch } from '@/api/queries/settings';
 import { FormNotice } from '@/features/auth/components/FormNotice';
 import { useWebPush, type WebPushState } from '@/features/pwa/useWebPush';
+import { qaDexActive } from '@/features/dex/qaDex';
+import { qaGiftActive } from '@/features/gift/qaGift';
+import { EngagementSwitches } from '@/features/insights/components/EngagementSwitches';
 import { HU_AU_FLAG } from '@/features/garage/screens/EditSpecsScreen';
 import { SAVED_BUILDS_FLAG } from '@/features/vehicle/save';
 import { isWeb } from '@/lib/platform';
@@ -13,7 +17,13 @@ import { useQaState } from '@/lib/qa';
 import { useOnline } from '@/state/online';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { ErrorState, Hairline, Skeleton, SkeletonBlock, SkeletonText, Stepper, Text, toast } from '@/ui';
+import { ErrorState } from '@/ui/ErrorState';
+import { Hairline } from '@/ui/Hairline';
+import { ListRow } from '@/ui/ListRow';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Stepper } from '@/ui/Stepper';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 
 import { RowGroup } from '@/ui/RowGroup';
 import { SwitchRow } from '../components/SettingRows';
@@ -56,6 +66,111 @@ export const NOTIFICATION_CATEGORIES: readonly Category[] = [
   { key: 'garage', rows: [{ type: 'hu_au_reminder', email: true }] },
 ];
 
+/** M5.9b (contract §4): the grouped spot alert, its own category "Spots"; `notification_prefs.types.spot_alert` (default on). */
+export const SPOT_ALERT_TYPE = 'spot_alert' satisfies keyof NotificationPrefs['types'];
+
+/**
+ * M5.9b/M5.9d (m5.9d-contract §7): the gift categories, each with its own switches, shown for the types the server lists in
+ * `notification_prefs.types` (in the generated prefs since M5.9d; a row still shows only when the server lists its type, so an older
+ * server never gets a switch it cannot store). Defaults are the server's: Spots and
+ * Einladungen on, Abzeichen and Car of the Day off, the owner's own Car of the Day on. One shared limit on the server: at most one of
+ * these pushes a day, never 22–08.
+ */
+export type GiftCategoryKey = 'spots' | 'badges' | 'carOfTheDay' | 'invites';
+/** The gift types of the generated prefs (M5.9b/M5.9d). */
+export type GiftType = Extract<PushType, 'spot_alert' | 'badge_unlocked' | 'car_of_the_day' | 'car_of_the_day_owner' | 'invite_accepted'>;
+export const GIFT_CATEGORIES: readonly { key: GiftCategoryKey; types: readonly GiftType[] }[] = [
+  { key: 'spots', types: [SPOT_ALERT_TYPE] },
+  { key: 'badges', types: ['badge_unlocked'] },
+  { key: 'carOfTheDay', types: ['car_of_the_day', 'car_of_the_day_owner'] },
+  { key: 'invites', types: ['invite_accepted'] },
+];
+/** The contract's push defaults, for the QA set (`qaDex`, `qaGift`) before the server lists the types. */
+export const GIFT_DEFAULTS: Readonly<Record<GiftType, boolean>> = {
+  spot_alert: true,
+  badge_unlocked: false,
+  car_of_the_day: false,
+  car_of_the_day_owner: true,
+  invite_accepted: true,
+};
+
+/** A gift type's switch for this channel, once the server lists the type; null while it does not (the row is then not offered). */
+export function giftTypeValue(prefs: NotificationPrefs, type: GiftType, channel: 'push' | 'web_push'): boolean | null {
+  // An older server does not list the gift types yet: read them as optional.
+  const types: Partial<NotificationPrefs['types']> = prefs.types;
+  const entry = types[type];
+  if (!entry) return null;
+  return entry[channel] ?? entry.push ?? GIFT_DEFAULTS[type];
+}
+
+type PrefsTypesPatch = NonNullable<NonNullable<SettingsPatch['notification_prefs']>['types']>;
+
+/** `PATCH me/settings` for one gift switch: only that type and channel. */
+export function giftSwitchPatch(type: GiftType, channel: 'push' | 'web_push', value: boolean): SettingsPatch {
+  const types: PrefsTypesPatch = {};
+  types[type] = channel === 'push' ? { push: value } : { web_push: value };
+  return { notification_prefs: { types } };
+}
+
+/** The spot alert's switch (M5.9b name, kept for its tests). */
+export function spotAlertValue(prefs: NotificationPrefs, channel: 'push' | 'web_push'): boolean | null {
+  return giftTypeValue(prefs, SPOT_ALERT_TYPE, channel);
+}
+
+/** The gift groups with the rows the server lists (or the QA set shows), each row with its value; empty groups left out. */
+export function giftGroups(
+  prefs: NotificationPrefs,
+  channel: 'push' | 'web_push',
+  qaShows: (key: GiftCategoryKey) => boolean,
+): { key: GiftCategoryKey; rows: { type: GiftType; value: boolean }[] }[] {
+  return GIFT_CATEGORIES.map((category) => ({
+    key: category.key,
+    rows: category.types.flatMap((type) => {
+      const value = giftTypeValue(prefs, type, channel) ?? (qaShows(category.key) ? (GIFT_DEFAULTS[type] ?? true) : null);
+      return value === null ? [] : [{ type, value }];
+    }),
+  })).filter((group) => group.rows.length > 0);
+}
+
+/**
+ * M5.6 (10 §4; m5.6-contract §6): "Neue Treffen in deiner Nähe", a weekly push and e-mail around the SET-11 region, opt-in (default
+ * off), in the Treffen group. `notification_prefs.types.event_nearby` is in the generated settings (push, e-mail and web push).
+ */
+export const NEARBY_EVENTS_TYPE = 'event_nearby' satisfies PushType;
+type NearbyChannel = 'push' | 'web_push' | 'email';
+
+export function nearbyEventsValue(prefs: NotificationPrefs, channel: NearbyChannel): boolean {
+  return prefs.types[NEARBY_EVENTS_TYPE][channel];
+}
+
+/** `PATCH me/settings` for one channel of the weekly nearby-meets notification. */
+export function nearbyEventsPatch(channel: NearbyChannel, value: boolean): SettingsPatch {
+  return { notification_prefs: { types: { [NEARBY_EVENTS_TYPE]: { [channel]: value } } } };
+}
+
+/**
+ * M5.8 (m5.8-contract D10, §5): the forum's three switches in their own category "Forum" (push on by default), offered while `forum`
+ * is on.
+ */
+export const FORUM_NOTIFICATION_TYPES = ['forum_reply', 'forum_mention', 'forum_solved'] as const satisfies readonly PushType[];
+export type ForumNotificationType = (typeof FORUM_NOTIFICATION_TYPES)[number];
+
+/** A forum switch for this channel, as the other type rows read theirs. */
+export function forumTypeValue(prefs: NotificationPrefs, type: ForumNotificationType, channel: 'push' | 'web_push'): boolean {
+  return prefs.types[type][channel];
+}
+
+/** The forum rows with their values. */
+export function forumRows(prefs: NotificationPrefs, channel: 'push' | 'web_push'): { type: ForumNotificationType; value: boolean }[] {
+  return FORUM_NOTIFICATION_TYPES.map((type) => ({ type, value: forumTypeValue(prefs, type, channel) }));
+}
+
+export function forumSwitchPatch(type: ForumNotificationType, channel: 'push' | 'web_push', value: boolean): SettingsPatch {
+  const types: PrefsTypesPatch = {};
+  types[type] = channel === 'push' ? { push: value } : { web_push: value };
+  return { notification_prefs: { types } };
+}
+
 /** The flags the matrix reads. */
 function useMatrixFlags(): Readonly<Record<string, boolean>> {
   const reactions = useFlag('build_reactions');
@@ -90,6 +205,9 @@ const useStyles = createStyles((t) => ({
   skeletonGroup: { gap: t.space[8] },
   skeletonLabel: { paddingHorizontal: t.space[16] },
   note: { paddingHorizontal: ROW_INSET, paddingVertical: t.space[12] },
+  giftSection: { gap: t.space[24] },
+  giftTitle: { paddingHorizontal: ROW_INSET },
+  giftNote: { marginTop: -t.space[16], paddingHorizontal: ROW_INSET },
   timeRow: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -193,13 +311,15 @@ function BrowserPushGroup({ push, online }: { push: ReturnType<typeof useWebPush
   );
 }
 
-function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
+function NotificationForm({ prefs, hasRegion }: { prefs: NotificationPrefs; hasRegion: boolean }) {
   const { t } = useTranslation('settings');
+  const router = useRouter();
   const styles = useStyles();
   const online = useOnline();
   const failure = useFailureMessage();
   const update = useUpdateMemberSettings();
   const flags = useMatrixFlags();
+  const forumOn = useFlag('forum');
   const disabled = !online;
   const [times, setTimes] = useState({ from: minutesOf(prefs.quiet_hours.from), to: minutesOf(prefs.quiet_hours.to) });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -234,6 +354,9 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
 
   const categories = visibleCategories(flags);
   const quiet = prefs.quiet_hours.enabled;
+  // `qaDex` / `qaGift` (non-production) show the categories before the server lists the types, for the visual matrix.
+  const gifts = giftGroups(prefs, channel, (key) => (key === 'spots' ? qaDexActive() : qaGiftActive()));
+  const forum = forumOn ? forumRows(prefs, channel) : [];
 
   return (
     <View style={styles.groups}>
@@ -256,11 +379,15 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
           const entries = [{ row, channel: 'push' as const }];
           return row.email ? [...entries, { row, channel: 'email' as const }] : entries;
         });
+        // M5.6: the weekly nearby meets follow the Treffen rows (push, then e-mail).
+        const nearby = category.key === 'events';
+        const nearbyPush = nearby && nearbyEventsValue(prefs, channel);
+        const nearbyEmail = nearby && nearbyEventsValue(prefs, 'email');
         return (
           <RowGroup key={category.key} title={t(`notifications.categories.${category.key}`)} testID={`${ROUTE}.${category.key === 'builds' ? 'push' : category.key}`}>
             {rows.map(({ row, channel }, index) => {
               const type = row.type;
-              const divider = index < rows.length - 1;
+              const divider = index < rows.length - 1 || nearby;
               if (channel === 'email') {
                 const emailType = type as EmailType;
                 return (
@@ -289,9 +416,86 @@ function NotificationForm({ prefs }: { prefs: NotificationPrefs }) {
                 />
               );
             })}
+            {nearby ? (
+              <SwitchRow
+                title={t('notifications.types.event_nearby')}
+                helper={hasRegion ? t('notifications.types.event_nearbyHelper') : t('notifications.types.event_nearbyNoRegion')}
+                value={nearbyPush}
+                onValueChange={(next) => send(nearbyEventsPatch(channel, next))}
+                disabled={disabled}
+                divider
+                testID={`${ROUTE}.push.${NEARBY_EVENTS_TYPE}`}
+              />
+            ) : null}
+            {nearby ? (
+              <SwitchRow
+                title={t('notifications.types.event_nearbyEmail')}
+                helper={t('notifications.types.event_nearbyEmailHelper')}
+                value={nearbyEmail}
+                onValueChange={(next) => send(nearbyEventsPatch('email', next))}
+                disabled={disabled}
+                divider={!hasRegion}
+                testID={`${ROUTE}.email.${NEARBY_EVENTS_TYPE}`}
+              />
+            ) : null}
+            {nearby && !hasRegion ? (
+              <ListRow
+                icon="map-pin"
+                title={t('notifications.types.event_nearbyRegion')}
+                role="link"
+                inset={ROW_INSET}
+                onPress={() => router.push('/settings/language')}
+                testID={`${ROUTE}.nearbyRegion`}
+              />
+            ) : null}
           </RowGroup>
         );
       })}
+      {forum.length > 0 ? (
+        <RowGroup title={t('notifications.categories.forum')} testID={`${ROUTE}.forum`}>
+          {forum.map((row, index) => (
+            <SwitchRow
+              key={row.type}
+              title={t(`notifications.types.${row.type}`)}
+              helper={t(`notifications.types.${row.type}Helper`)}
+              value={row.value}
+              onValueChange={(next) => send(forumSwitchPatch(row.type, channel, next))}
+              disabled={disabled}
+              divider={index < forum.length - 1}
+              testID={`${ROUTE}.push.${row.type}`}
+            />
+          ))}
+        </RowGroup>
+      ) : null}
+      {/* M5.7 (10 §6.2, §6.3): Build-Erinnerungen and Wochenrückblick, once the server lists the types (features/insights). */}
+      <EngagementSwitches prefs={prefs} channel={channel} send={send} disabled={disabled} routeId={ROUTE} />
+      {gifts.length > 0 ? (
+        // DQ-P5G-32: one parent for the four gift groups, so the shared limit reads as theirs and not as the last group's.
+        <View style={styles.giftSection} testID={`${ROUTE}.gifts`}>
+          <Text variant="headline" role="heading" aria-level={2} style={styles.giftTitle} testID={`${ROUTE}.gifts.title`}>
+            {t('notifications.giftParent')}
+          </Text>
+          {gifts.map((group) => (
+            <RowGroup key={group.key} title={t(`notifications.categories.${group.key}`)} testID={`${ROUTE}.${group.key}`}>
+              {group.rows.map((row, index) => (
+                <SwitchRow
+                  key={row.type}
+                  title={t(`notifications.types.${row.type}`)}
+                  helper={t(`notifications.types.${row.type}Helper`)}
+                  value={row.value}
+                  onValueChange={(next) => send(giftSwitchPatch(row.type, channel, next))}
+                  disabled={disabled}
+                  divider={index < group.rows.length - 1}
+                  testID={`${ROUTE}.push.${row.type}`}
+                />
+              ))}
+            </RowGroup>
+          ))}
+          <Text variant="caption" color="text.tertiary" style={styles.giftNote} testID={`${ROUTE}.socialLimit`}>
+            {t('notifications.socialLimit')}
+          </Text>
+        </View>
+      ) : null}
       <RowGroup title={t('notifications.previewGroup')} testID={`${ROUTE}.previewGroup`}>
         <SwitchRow
           title={t('notifications.previews')}
@@ -364,7 +568,7 @@ export function NotificationSettingsScreen() {
       />
     );
   } else {
-    body = <NotificationForm prefs={settings.data.notification_prefs} />;
+    body = <NotificationForm prefs={settings.data.notification_prefs} hasRegion={settings.data.home_region !== null} />;
   }
 
   return (

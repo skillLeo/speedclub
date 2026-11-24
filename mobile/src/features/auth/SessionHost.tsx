@@ -26,9 +26,10 @@ import {
   setSessionNotice,
   useSessionStore,
 } from '@/state/session';
-import { Dialog } from '@/ui';
+import { Dialog } from '@/ui/Dialog';
 import { ConsentHost } from '@/features/consent/ConsentHost';
 import { AppLockHost } from '@/features/settings/appLock/AppLockHost';
+import { useIntroTrigger } from '@/features/intro/useIntroTrigger';
 
 import { handEmailTo } from './emailHandoff';
 import { restorePrimer, usePrimerStore } from './primer';
@@ -330,6 +331,8 @@ export function SessionHost() {
   usePushRegistration(ready);
   useSettingsSync();
   useTermsRequiredRefresh();
+  // R4-1.4: INTRO-01…04 once per account, after the first sign-in (and after F1).
+  useIntroTrigger(ready);
   return (
     <>
       {/* M4.6: the reauth sheet of every sensitive call (403 reauthentication_required, 09 §8.1). */}

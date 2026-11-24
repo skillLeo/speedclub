@@ -14,6 +14,8 @@ return [
         'comment' => 'einem Kommentar von dir',
         'event' => 'deinem Treffen „:label“',
         'business' => 'deinem Betriebsprofil „:label“',
+        'forum_post' => 'deinem Forenbeitrag in „:label“',
+        'crew' => 'deiner Crew „:label“',
     ],
     'target_unnamed' => [
         'member' => 'deinem Profil',
@@ -25,6 +27,8 @@ return [
         'comment' => 'einem Kommentar von dir',
         'event' => 'einem deiner Treffen',
         'business' => 'deinem Betriebsprofil',
+        'forum_post' => 'einem deiner Forenbeiträge',
+        'crew' => 'einer deiner Crews',
     ],
 
     'outcome' => [
@@ -35,6 +39,8 @@ return [
         'restrict_messaging_until' => 'Entscheidung: Du kannst bis zum :date keine Nachrichten schreiben.',
         'restrict_publishing' => 'Entscheidung: Du kannst vorerst nichts veröffentlichen oder bearbeiten.',
         'restrict_publishing_until' => 'Entscheidung: Du kannst bis zum :date nichts veröffentlichen oder bearbeiten.',
+        'restrict_forum' => 'Entscheidung: Du kannst vorerst nicht im Forum schreiben.',
+        'restrict_forum_until' => 'Entscheidung: Du kannst bis zum :date nicht im Forum schreiben.',
         'suspend' => 'Entscheidung: Wir haben dein Konto gesperrt.',
         'suspend_until' => 'Entscheidung: Wir haben dein Konto bis zum :date gesperrt.',
         // M3.2: a reverse decision.
@@ -49,7 +55,7 @@ return [
 
     // Art. 17(3)(a) DSA: what the decision applies to and for how long.
     'scope' => [
-        'content' => 'Umfang und Dauer: Wir haben den Inhalt auf ganz SPEED CLUB entfernt, andere sehen ihn nirgends mehr. Das gilt dauerhaft, es sei denn, ein Einspruch hat Erfolg.',
+        'content' => 'Umfang und Dauer: Wir haben den Inhalt auf ganz Speedclub entfernt, andere sehen ihn nirgends mehr. Das gilt dauerhaft, es sei denn, ein Einspruch hat Erfolg.',
         'account_until' => 'Umfang und Dauer: Die Maßnahme gilt für dein Konto bis zum :date und endet dann automatisch.',
         'account' => 'Umfang und Dauer: Die Maßnahme gilt für dein Konto und hat kein Enddatum. Sie endet, wenn ein Einspruch Erfolg hat oder wir sie aufheben.',
     ],
@@ -89,6 +95,7 @@ return [
             'lifted' => [
                 'restrict_messaging' => 'Du kannst wieder Nachrichten schreiben.',
                 'restrict_publishing' => 'Du kannst wieder veröffentlichen und bearbeiten.',
+                'restrict_forum' => 'Du kannst wieder im Forum schreiben.',
                 'suspend' => 'Dein Konto ist nicht mehr gesperrt. Du kannst dich wieder anmelden.',
                 'remove_content' => 'Der Inhalt ist wieder da, und andere sehen ihn wie vorher.',
                 'remove_profile' => 'Anzeigename, Kurzbeschreibung sowie Profil- und Titelbild sind wieder da, soweit du sie nicht inzwischen neu gesetzt hast.',
@@ -111,7 +118,7 @@ return [
             'intro' => 'Du hast uns einen Inhalt gemeldet (Meldungsnummer :reference).',
             'redress_no_date' => "Bist du mit der Entscheidung nicht einverstanden? Dann schreib uns innerhalb von :months Monaten ab dieser Nachricht an :support und nenn die Meldungsnummer. Ein anderes Teammitglied prüft die Entscheidung dann erneut. Du kannst dich außerdem an eine zertifizierte außergerichtliche Streitbeilegungsstelle nach Art.\u{00A0}21 des Digital Services Act (DSA) wenden (Liste: :url) oder die Entscheidung von einem Gericht überprüfen lassen.",
             'redress' => "Bist du mit der Entscheidung nicht einverstanden? Dann schreib uns bis zum :date an :support und nenn die Meldungsnummer. Ein anderes Teammitglied prüft die Entscheidung dann erneut. Du kannst dich außerdem an eine zertifizierte außergerichtliche Streitbeilegungsstelle nach Art.\u{00A0}21 des Digital Services Act (DSA) wenden (Liste: :url) oder die Entscheidung von einem Gericht überprüfen lassen.",
-            'note' => 'Danke, dass du hilfst, SPEED CLUB sicher zu halten.',
+            'note' => 'Danke, dass du hilfst, Speedclub sicher zu halten.',
             'note_no_action' => 'Danke für deinen Hinweis. Auch wenn wir diesmal nichts entfernt haben, hilft uns jede Meldung.',
         ],
         // M3.4: the outcome of an internal complaint (Art. 20(4) DSA), to the person who appealed.

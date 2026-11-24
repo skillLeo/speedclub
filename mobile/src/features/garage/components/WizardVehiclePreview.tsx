@@ -8,7 +8,13 @@ import { ProfileSummary, VehicleIdentity } from '@/features/vehicle/components/P
 import { heroIdentityOverlap, scrimOverlapDataSet } from '@/features/vehicle/layout';
 import { visiblePhotos } from '@/features/vehicle/media';
 import { aspect, createStyles, space } from '@/theme';
-import { Badge, Button, DisplayTitle, Photo, PhotoScrim, Skeleton, SkeletonBlock, SkeletonText, Text, type PhotoFields } from '@/ui';
+import { Badge } from '@/ui/Badge';
+import { Button } from '@/ui/Button';
+import { DisplayTitle } from '@/ui/DisplayTitle';
+import { Photo, type PhotoFields } from '@/ui/Photo';
+import { PhotoScrim } from '@/ui/PhotoScrim';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 import { ratioOf } from '@/ui/Photo';
 
 import { catalogueCaption } from '../card';

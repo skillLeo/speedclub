@@ -96,7 +96,7 @@
             <tr>
                 <td class="code-cell"><img src="{{ $qr_image }}" alt="{{ $code }}"></td>
                 <td class="info-cell">
-                    <img class="logo" src="{{ $logo }}" alt="SPEED CLUB">
+                    <img class="logo" src="{{ $logo }}" alt="Speedclub">
                     <p class="scan">{{ __('signature.placard.scan') }}</p>
                     <p class="short-code">{{ $code }}</p>
                     <p class="small">{{ $url }}</p>

@@ -17,7 +17,7 @@ class DiscardDraftRequest extends ConfigKeyRequest
      */
     public function rules(): array
     {
-        return ['reason' => ['nullable', 'string', 'min:10', 'max:1000']];
+        return ['reason' => ['nullable', 'string', 'max:1000']];
     }
 
     public function optionalReason(): ?string

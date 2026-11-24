@@ -8,7 +8,7 @@ import DialogError from '../../Components/patterns/DialogError.vue';
 import ScrollRegion from '../../Components/patterns/ScrollRegion.vue';
 import StateBlock from '../../Components/patterns/StateBlock.vue';
 import RecordLayout from '../../Components/record/RecordLayout.vue';
-import { Badge, Button, ConfirmDialog, Dialog, DropdownMenu, EmptyQueue, Field, IconButton, Skeleton, StatusPill, Textarea, type MenuEntry, type TabItem } from '../../Components/ui';
+import { Badge, Button, ConfirmDialog, Dialog, DropdownMenu, EmptyQueue, IconButton, Skeleton, StatusPill, type MenuEntry, type TabItem } from '../../Components/ui';
 import { qaDialogFailed, usePageState } from '../../composables/pageState';
 import { qaDialog } from '../../composables/qaDialog';
 import { formatNumber } from '../../lib/format';
@@ -25,7 +25,7 @@ import { useCatalogWrite } from './shared';
  * ADM-15 a mod category (06 §3 Catalogue, m3.3 §1/§2): tab Felder (the field schema with type, constraints, required, the read-only
  * Discover flags, how many modifications hold data in each field and its state; catalog.manage: add, edit, order, archive / restore,
  * delete without data), tab Vorschau (the member form as it is now) and tab Versionen (each schema change with who, when, why and the
- * diff). Every field change asks for a reason and writes one version.
+ * diff). Every field change writes one version.
  */
 const props = defineProps<{ category: CategoryRow; fields: SchemaField[]; versions: SchemaVersion[]; types: string[] }>();
 
@@ -84,15 +84,15 @@ function askDelete(field: SchemaField): void {
     write.reset();
     deleteOpen.value = true;
 }
-function archive(reason: string | null): void {
+function archive(): void {
     const f = target.value;
     if (f === null) return;
-    write.run('post', routeOr('admin.catalog.fields.archive', `/admin/catalog/mod-fields/${f.id}/archive`, { field: f.id }), { archived: f.archived_at === null, reason }, { onSuccess: () => (archiveOpen.value = false) });
+    write.run('post', routeOr('admin.catalog.fields.archive', `/admin/catalog/mod-fields/${f.id}/archive`, { field: f.id }), { archived: f.archived_at === null }, { onSuccess: () => (archiveOpen.value = false) });
 }
-function destroy(reason: string | null): void {
+function destroy(): void {
     const f = target.value;
     if (f === null) return;
-    write.run('delete', routeOr('admin.catalog.fields.destroy', `/admin/catalog/mod-fields/${f.id}`, { field: f.id }), { reason }, { sensitive: true, onSuccess: () => (deleteOpen.value = false) });
+    write.run('delete', routeOr('admin.catalog.fields.destroy', `/admin/catalog/mod-fields/${f.id}`, { field: f.id }), {}, { sensitive: true, onSuccess: () => (deleteOpen.value = false) });
 }
 
 function fieldMenu(field: SchemaField): MenuEntry[] {
@@ -118,9 +118,7 @@ function fieldMenu(field: SchemaField): MenuEntry[] {
 // ---- order -------------------------------------------------------------------------------------------------------------
 const ordering = ref(false);
 const order = ref<SchemaField[]>([]);
-const orderReasonOpen = ref(false);
-const orderReason = ref('');
-const orderReasonError = ref<string | null>(null);
+const orderConfirmOpen = ref(false);
 function startOrder(): void {
     order.value = [...props.fields];
     ordering.value = true;
@@ -134,19 +132,13 @@ function move(index: number, by: -1 | 1): void {
 }
 const orderChanged = computed(() => order.value.map((f) => f.id).join(',') !== props.fields.map((f) => f.id).join(','));
 function saveOrder(): void {
-    const length = orderReason.value.trim().length;
-    if (length < 10 || length > 1000) {
-        orderReasonError.value = trans('ui.confirm.reason_length');
-        return;
-    }
-    orderReasonError.value = null;
     write.run(
         'post',
         routeOr('admin.catalog.fields.reorder', `/admin/catalog/mod-categories/${props.category.id}/fields/order`, { category: props.category.id }),
-        { ids: order.value.map((f) => f.id), reason: orderReason.value.trim() },
+        { ids: order.value.map((f) => f.id) },
         {
             onSuccess: () => {
-                orderReasonOpen.value = false;
+                orderConfirmOpen.value = false;
                 ordering.value = false;
             },
         },
@@ -164,7 +156,7 @@ else if (dialog === 'category') categoryOpen.value = true;
 else if (dialog === 'order') {
     startOrder();
     move(0, 1);
-    orderReasonOpen.value = true;
+    orderConfirmOpen.value = true;
 }
 </script>
 
@@ -209,7 +201,7 @@ else if (dialog === 'order') {
                         <p class="text-admin-base text-ink-2">{{ trans(ordering ? 'catalog.order.active' : 'catalog.order.hint') }}</p>
                         <span v-if="ordering" class="flex items-center gap-8">
                             <Button size="sm" variant="ghost" @click="ordering = false">{{ trans('ui.actions.cancel') }}</Button>
-                            <Button size="sm" variant="primary" :disabled="!orderChanged" data-testid="ADM-15-category.order-save" @click="orderReasonOpen = true">{{ trans('catalog.order.save') }}</Button>
+                            <Button size="sm" variant="primary" :disabled="!orderChanged" data-testid="ADM-15-category.order-save" @click="orderConfirmOpen = true">{{ trans('catalog.order.save') }}</Button>
                         </span>
                         <Button v-else size="sm" variant="secondary" :icon="PhListNumbers" data-testid="ADM-15-category.order" @click="startOrder">{{ trans('catalog.order.start') }}</Button>
                     </div>
@@ -285,7 +277,6 @@ else if (dialog === 'order') {
             :body="trans(target?.archived_at ? 'catalog.field.restore_body' : 'catalog.field.archive_body', { count: formatNumber(target?.data ?? 0) })"
             :confirm-label="trans(target?.archived_at ? 'catalog.field.restore' : 'catalog.field.archive')"
             tone="neutral"
-            reason
             :processing="write.processing.value"
             :error="failed ? trans('ui.state.server_error') : write.error.value"
             test-id="ADM-15-category.archive"
@@ -297,13 +288,12 @@ else if (dialog === 'order') {
             :body="trans('catalog.field.delete_body')"
             :confirm-label="trans('catalog.actions.delete')"
             typed
-            reason
             :processing="write.processing.value"
             :error="failed ? trans('ui.state.server_error') : write.error.value"
             test-id="ADM-15-category.delete"
             @confirm="destroy"
         />
-        <Dialog v-model:open="orderReasonOpen" :title="trans('catalog.order.title')" :description="trans('catalog.order.body')" size="sm" :dismissible="!write.processing.value" test-id="ADM-15-category.order-dialog">
+        <Dialog v-model:open="orderConfirmOpen" :title="trans('catalog.order.title')" :description="trans('catalog.order.body')" size="sm" :dismissible="!write.processing.value" test-id="ADM-15-category.order-dialog">
             <form id="adm15-order" class="flex flex-col gap-16" novalidate @submit.prevent="saveOrder">
                 <ol class="flex flex-col text-admin-base text-ink-2">
                     <li v-for="(f, index) in order" :key="f.id" class="flex min-h-32 items-center gap-8 tabular-nums">
@@ -312,13 +302,10 @@ else if (dialog === 'order') {
                         <span class="sc-key truncate text-caption text-ink-3">{{ f.key }}</span>
                     </li>
                 </ol>
-                <Field :label="trans('ui.confirm.reason')" :hint="trans('ui.confirm.reason_hint')" :error="orderReasonError ?? write.errors.value.reason ?? null" required>
-                    <Textarea v-model="orderReason" :rows="2" :maxlength="1000" show-count />
-                </Field>
             </form>
             <template #footer>
                 <DialogError :message="failed ? trans('ui.state.server_error') : (write.errors.value.refused ?? null)" />
-                <Button variant="ghost" :disabled="write.processing.value" data-dialog-cancel @click="orderReasonOpen = false">{{ trans('ui.actions.cancel') }}</Button>
+                <Button variant="ghost" :disabled="write.processing.value" data-dialog-cancel @click="orderConfirmOpen = false">{{ trans('ui.actions.cancel') }}</Button>
                 <Button type="submit" form="adm15-order" variant="primary" :loading="write.processing.value">{{ trans('catalog.order.save') }}</Button>
             </template>
         </Dialog>

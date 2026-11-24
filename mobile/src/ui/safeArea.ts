@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ViewStyle } from 'react-native';
 
@@ -29,4 +30,68 @@ export function useSafeEdge(edge: Edge, extra: number = 0, property: Property = 
 export function useSafeInset(edge: Edge): number {
   const insets = useSafeAreaInsets();
   return isWeb ? 0 : insets[edge];
+}
+
+// --- The CSS insets as numbers (web) ----------------------------------------------------------------------------------------------
+
+type CssInsets = Record<Edge, number>;
+const NO_INSETS: CssInsets = { top: 0, bottom: 0 };
+let cssInsets: CssInsets | null = null;
+
+/** What the browser resolves env(safe-area-inset-*) to, read from a probe element; 0 without a DOM. */
+function measureCssInsets(): CssInsets {
+  const doc = (globalThis as { document?: Document }).document;
+  const computed = (globalThis as { getComputedStyle?: typeof getComputedStyle }).getComputedStyle;
+  if (!doc?.body || !computed) return NO_INSETS;
+  const probe = doc.createElement('div');
+  probe.style.cssText =
+    'position:fixed;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top, 0px);padding-bottom:env(safe-area-inset-bottom, 0px)';
+  doc.body.appendChild(probe);
+  const style = computed(probe);
+  const read = (value: string) => {
+    const n = Number.parseFloat(value);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const insets = { top: read(style.paddingTop), bottom: read(style.paddingBottom) };
+  doc.body.removeChild(probe);
+  return insets;
+}
+
+function cssInsetsSnapshot(): CssInsets {
+  cssInsets ??= measureCssInsets();
+  return cssInsets;
+}
+
+/** The insets change with the orientation and when an installed web app starts (standalone): measured again on resize. */
+function subscribeCssInsets(notify: () => void): () => void {
+  const target = globalThis as { addEventListener?: Window['addEventListener']; removeEventListener?: Window['removeEventListener'] };
+  if (typeof target.addEventListener !== 'function') return () => undefined;
+  const onResize = () => {
+    const next = measureCssInsets();
+    if (cssInsets && next.top === cssInsets.top && next.bottom === cssInsets.bottom) return;
+    cssInsets = next;
+    notify();
+  };
+  target.addEventListener('resize', onResize);
+  return () => target.removeEventListener?.('resize', onResize);
+}
+
+const noSubscribe = () => () => undefined;
+const zero = () => 0;
+
+/**
+ * QA-C05: the CSS inset of an edge as a number on web (what `env(safe-area-inset-<edge>)` resolves to), 0 on native. For the few places
+ * that need the web inset as a number (a list's padding, a floating control's `bottom`), where `useSafeEdge`'s calc() cannot go.
+ */
+export function useCssSafeInset(edge: Edge): number {
+  return useSyncExternalStore(
+    isWeb ? subscribeCssInsets : noSubscribe,
+    isWeb ? () => cssInsetsSnapshot()[edge] : zero,
+    zero,
+  );
+}
+
+/** Tests: the next read measures again. */
+export function resetCssSafeInsetsForTests(): void {
+  cssInsets = null;
 }

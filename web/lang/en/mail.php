@@ -7,19 +7,19 @@ return [
         'action' => 'Sign in',
         'same_device' => 'The button only works on the device where you asked for the code.',
         'sign_in' => [
-            'subject' => ':code is your SPEED CLUB code',
+            'subject' => ':code is your Speedclub code',
             'heading' => 'Your sign-in code',
             'intro' => 'Enter this code in the app or tap “Sign in”.',
         ],
         'sign_up' => [
-            'subject' => ':code is your SPEED CLUB code',
-            'heading' => 'Welcome to SPEED CLUB',
+            'subject' => ':code is your Speedclub code',
+            'heading' => 'Welcome to Speedclub',
             'intro' => 'Use this code to create your account. Enter it in the app or tap “Sign in”.',
         ],
         'link' => [
             'subject' => ':code confirms the connection',
             'heading' => 'Connect :provider to your account',
-            'intro' => 'Someone wants to connect :provider to your SPEED CLUB account. If that was you, enter this code in the app. Otherwise ignore this e-mail and nothing changes.',
+            'intro' => 'Someone wants to connect :provider to your Speedclub account. If that was you, enter this code in the app. Otherwise ignore this e-mail and nothing changes.',
         ],
         'reauth' => [
             'subject' => ':code is your confirmation code',
@@ -33,7 +33,7 @@ return [
         ],
     ],
     'verification' => [
-        'subject' => ':code is your SPEED CLUB code',
+        'subject' => ':code is your Speedclub code',
         'heading' => 'Confirm your e-mail address',
         'intro' => 'Enter this code in the app to confirm your account.',
         'action' => 'Confirm in the browser',
@@ -45,7 +45,7 @@ return [
         'action' => 'Reset in the browser',
     ],
     'exists' => [
-        'subject' => 'You already have a SPEED CLUB account',
+        'subject' => 'You already have a Speedclub account',
         'heading' => 'This address already has an account',
         'intro' => 'Someone tried to create an account with this e-mail address. The account already exists. If that was you, sign in or reset your password.',
         'sign_in' => 'Sign in',
@@ -53,7 +53,7 @@ return [
         'note' => 'That was not you? Then there is nothing to do. Nothing has changed on your account.',
     ],
     'closing' => [
-        'subject' => 'Your SPEED CLUB account is being deleted',
+        'subject' => 'Your Speedclub account is being deleted',
         'heading' => 'This address is still in use',
         'intro' => 'Someone tried to create an account with this e-mail address. The account it belongs to is deactivated and will be deleted for good within :days days of the deletion request. Until then the address cannot be used again.',
         'after' => 'After that the address is free, and you can register with it again.',
@@ -62,18 +62,18 @@ return [
     'email_change' => [
         'subject' => ':code is your code for the new address',
         'heading' => 'Confirm your new e-mail address',
-        'intro' => 'You want to change the e-mail address of your SPEED CLUB account to this address. Enter this code in the app to finish the change.',
+        'intro' => 'You want to change the e-mail address of your Speedclub account to this address. Enter this code in the app to finish the change.',
     ],
     'email_change_attempt' => [
         'subject' => 'Someone wanted to use this address for another account',
         'heading' => 'This address already belongs to your account',
-        'intro' => 'Someone wanted to change the e-mail address of another SPEED CLUB account to this address. We did not allow it. Nothing changed on your account.',
+        'intro' => 'Someone wanted to change the e-mail address of another Speedclub account to this address. We did not allow it. Nothing changed on your account.',
         'note' => 'You don\'t need to do anything. If you are worried, write to us at :support.',
     ],
     'export' => [
         'subject' => 'Your data export is ready',
         'heading' => 'Your data is ready to download',
-        'intro' => 'Your SPEED CLUB export is ready: a ZIP file with your data as JSON and the originals of your photos.',
+        'intro' => 'Your Speedclub export is ready: a ZIP file with your data as JSON and the originals of your photos.',
         'valid' => 'The link works until :date. After that we delete the file, and you can request a new export.',
         'ends' => 'If you reset your password, change your e-mail address or sign out a device before then, the link ends. You will then find a new one in the app under Settings › Data & storage › Export my data.',
         'action' => 'Download export',
@@ -135,7 +135,7 @@ return [
             'intro' => 'A sign-in with your passkey :device looked like it came from a copy of the key. We refused it. Remove the passkey in settings and create a new one.',
         ],
         'new_device' => [
-            'subject' => 'New sign-in to SPEED CLUB',
+            'subject' => 'New sign-in to Speedclub',
             'heading' => 'New sign-in on a device',
             'intro' => 'Your account was just signed in on :device, which we had not seen before.',
         ],
@@ -189,24 +189,24 @@ return [
         'deletion_requested' => [
             'subject' => 'Your account will be deleted',
             'heading' => 'Deletion of your account was requested',
-            'intro' => 'Your account is now deactivated: your profile and vehicles can no longer be seen, your QR stickers no longer work and all devices are signed out. We will delete the account and all photos for good within :days days.',
+            'intro' => 'Your account is now deactivated: your profile and vehicles can no longer be seen, your stickers no longer work and all devices are signed out. We will delete the account and all photos for good within :days days.',
             'after' => 'The deletion cannot be undone. In conversations, the other person still sees your messages, shown as from “Deleted member”. If you requested a data export before, you can still download it for up to 7 days through the link in the export e-mail.',
             'note' => 'Wasn’t you? Write to us at :support right away.',
             'action' => 'Write to support',
         ],
     ],
-    // M3.2: staff took a vehicle's QR code down or issued a new one (ADM-19). :title is the build's title.
+    // M3.2: staff took a vehicle's sticker code down or issued a new one (ADM-19). :title is the build's title.
     'qr_staff' => [
         'revoked' => [
-            'subject' => 'We blocked your QR code',
-            'heading' => 'Your QR code is blocked',
-            'intro' => 'Our team blocked the QR code of your build :title. Anyone scanning the sticker now sees “no longer valid”.',
+            'subject' => 'We blocked your sticker',
+            'heading' => 'Your sticker is blocked',
+            'intro' => 'Our team blocked the sticker of your build :title. Anyone scanning it now sees “no longer valid”.',
             'after' => 'Only our team can issue a new code. Write to us if you need one.',
         ],
         'reissued' => [
-            'subject' => 'Your build has a new QR code',
-            'heading' => 'New QR code for your build',
-            'intro' => 'Our team issued a new QR code for your build :title. The old sticker is no longer valid.',
+            'subject' => 'Your build has a new sticker code',
+            'heading' => 'New sticker code for your build',
+            'intro' => 'Our team issued a new sticker code for your build :title. The old sticker is no longer valid: download or order the sticker again.',
             'after' => 'You can download and print the new sticker in the app under your build.',
         ],
         'note' => 'Questions? Write to :support.',

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\MediaStatus;
+use App\Enums\PlateBlurState;
 use App\Enums\RestrictionType;
 use App\Models\Block;
 use App\Models\Media;
@@ -191,11 +192,12 @@ it('refuses a photo that is not finished', function (MediaStatus $status) {
         ->assertJsonValidationErrors('blur_regions');
 })->with([MediaStatus::Processing, MediaStatus::Failed]);
 
-it('does not exist while the flag is off, and the other fields keep working', function () {
+it('blurs whatever sig.plate_blur says (ADR-509: a hard rule since Phase 5), and the other fields keep working', function () {
     sigFlag('sig.plate_blur', false);
     Sanctum::actingAs($this->owner);
 
-    $this->patchJson("/api/v1/media/{$this->media->id}", ['blur_regions' => [SIG_PLATE]])->assertNotFound()->assertJsonPath('code', 'feature_disabled');
+    $this->patchJson("/api/v1/media/{$this->media->id}", ['blur_regions' => [SIG_PLATE]])->assertOk();
+    expect($this->media->refresh()->plate_blur)->toBe(PlateBlurState::Blurred);
     $this->patchJson("/api/v1/media/{$this->media->id}", ['alt' => 'Heck mit Kennzeichen'])->assertOk()->assertJsonPath('data.alt', 'Heck mit Kennzeichen');
 });
 

@@ -9,7 +9,14 @@ import { useSavedBuilds } from '@/api/queries/social';
 import type { VehicleMedia } from '@/api/queries/vehicles';
 import { useSessionStore } from '@/state/session';
 import { createStyles, space } from '@/theme';
-import { EmptyState, ErrorState, ListRow, SearchBar, SectionHeader, Sheet, Skeleton, SkeletonText, Text } from '@/ui';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { ListRow } from '@/ui/ListRow';
+import { SearchBar } from '@/ui/SearchBar';
+import { SectionHeader } from '@/ui/SectionHeader';
+import { Sheet } from '@/ui/Sheet';
+import { Skeleton, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
 
 import { isSameBuild } from '../compare';
 import { photoFields } from '../media';

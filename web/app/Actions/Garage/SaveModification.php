@@ -13,8 +13,10 @@ use App\Models\Modification;
 use App\Models\Product;
 use App\Models\Vehicle;
 use App\Services\AppConfig\FeatureFlags;
+use App\Services\BuildScore\BuildScores;
 use App\Services\Garage\BuildUpdates;
 use App\Services\Garage\ModFields;
+use App\Services\Notifications\Notifier;
 use App\Services\Rules\ContentScreen;
 use App\Services\Search\VehicleSearchProjector;
 use App\Support\Garage\SavedModification;
@@ -27,7 +29,8 @@ use Illuminate\Validation\ValidationException;
  * Create and edit of GAR-10 (02_PRODUCT_SPEC §3.3). The category's schema decides the fields. Brand and part fall back to what
  * the category form holds in its fields, so a client need not send them twice, and the title is brand + model until the member
  * writes their own. Costs stay private, always (M4.9 ruling, cost_public is ignored); legal_status exists only while its flag is on. An edit of
- * nothing but what only the owner reads (notes, a private cost) leaves the vehicle's updated_at alone.
+ * nothing but what only the owner reads (notes, a private cost or budget) leaves the vehicle's updated_at alone, and so does an edit of
+ * nothing but a plan's target month or priority (M5.3: rescheduling a plan is not build news, so no Verlauf entry either).
  */
 class SaveModification
 {
@@ -68,15 +71,62 @@ class SaveModification
             $mod->setRelation('vehicle', $vehicle);
 
             $this->fill($mod, $category, $attributes, isNew: true);
+
+            // R4B-006 (client round 4 hunt): a new installed or removed mod names the part at least once (a plan may name only its
+            // category and month: "Räder & Reifen, Mai 2027"). Checked after the owner's right to add it and after the category's
+            // fields, whose own errors come first.
+            $status = $mod->getAttribute('status');
+            $planned = ($status instanceof ModStatus ? $status->value : $status) === ModStatus::Planned->value;
+
+            if (! $planned && ! self::namesThePart($attributes)) {
+                $reason = (string) __('garage.mod_detail_required');
+
+                throw new ApiException(ErrorCode::ValidationFailed, $reason, errors: ['title' => [$reason]]);
+            }
+
             $mod->save();
 
             $this->updates->modAdded($mod);
             $this->search->changed($vehicle);
+            app(BuildScores::class)->touch($vehicle->id);
             // A flagged title files its report about the build it is shown on.
             $this->screen->flagAfterCommit($flags, $vehicle);
 
             return $mod;
         });
+    }
+
+    /**
+     * A title, a brand, a catalogue product, a part name or number, or any value of the category's fields. A bare category ("Räder &
+     * Reifen" and nothing else) names nothing; the app asks the same (features/garage/schemas `modHasDetail`).
+     *
+     * @param  array<string, mixed>  $attributes  validated
+     */
+    public static function namesThePart(array $attributes): bool
+    {
+        foreach (['title', 'brand_id', 'brand_text', 'product_id', 'part_name', 'part_number'] as $key) {
+            $value = $attributes[$key] ?? null;
+
+            if (is_int($value) || (is_string($value) && trim($value) !== '')) {
+                return true;
+            }
+        }
+
+        $fields = $attributes['fields'] ?? null;
+
+        if (! is_array($fields)) {
+            return false;
+        }
+
+        foreach ($fields as $value) {
+            if ($value === null || $value === false || $value === [] || (is_string($value) && trim($value) === '')) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -105,6 +155,16 @@ class SaveModification
             $mod->save();
 
             $recorded = $mod->wasChanged() && $this->updates->modChanged($mod, $before);
+
+            // M5.7: "Ist das … schon verbaut?" is wrong once the plan is installed, removed or moved to another month.
+            if ($mod->wasChanged(['status', 'target_month'])) {
+                app(Notifier::class)->forgetPlanDue($mod->id);
+            }
+
+            // M5.9c: brand, date, status and the stated papers count for the Build Score (never the cost).
+            if ($mod->wasChanged(['brand_id', 'brand_text', 'installed_on', 'status', 'legal_status'])) {
+                app(BuildScores::class)->touch($vehicle->id);
+            }
 
             // Touching the vehicle moves it in "Neue Builds" and its public updated_at: only for what others can read (SEC-M18-03).
             if ($this->publicFace($mod) !== $publicBefore) {
@@ -177,7 +237,7 @@ class SaveModification
 
         $this->fillProduct($mod, $attributes);
 
-        foreach (['part_number', 'notes', 'cost_cents'] as $key) {
+        foreach (['part_number', 'notes', 'cost_cents', 'budget_cents'] as $key) {
             if (array_key_exists($key, $attributes)) {
                 $mod->setAttribute($key, $attributes[$key]);
             }
@@ -193,6 +253,7 @@ class SaveModification
         }
 
         $this->fillInstalled($mod, $attributes);
+        $this->fillPlan($mod, $attributes);
         $this->fillLegalStatus($mod, $attributes, $isNew);
 
         // A title the member wrote stays; one the server derived follows brand and model.
@@ -335,6 +396,44 @@ class SaveModification
 
         if ($mod->getAttribute('status') === ModStatus::Planned) {
             $mod->setAttribute('installed_on', null);
+        }
+    }
+
+    /**
+     * M5.3 "Pläne" (m5.3-contract §1): target month and priority belong to a plan; a mod that becomes planned joins the end of the
+     * vehicle's plans, and one that leaves the plans (installed, removed) drops all three. The budget is the owner's and stays.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function fillPlan(Modification $mod, array $attributes): void
+    {
+        if ($mod->getAttribute('status') !== ModStatus::Planned) {
+            $mod->setAttribute('target_month', null);
+            $mod->setAttribute('priority', null);
+            $mod->setAttribute('plan_sort', null);
+            // M5.7: a plan that comes back later is asked about again.
+            $mod->setAttribute('plan_prompted_for', null);
+
+            return;
+        }
+
+        if (array_key_exists('target_month', $attributes)) {
+            $month = $attributes['target_month'];
+            $mod->setAttribute('target_month', is_string($month) ? Carbon::createFromFormat('Y-m-d', $month.'-01')?->startOfDay() : null);
+        }
+
+        if (array_key_exists('priority', $attributes)) {
+            $mod->setAttribute('priority', $attributes['priority']);
+        }
+
+        if ($mod->getAttribute('plan_sort') === null) {
+            $last = Modification::query()
+                ->where('vehicle_id', $mod->vehicle_id)
+                ->where('status', ModStatus::Planned->value)
+                ->when($mod->exists, fn ($query) => $query->whereKeyNot($mod->getKey()))
+                ->max('plan_sort');
+
+            $mod->setAttribute('plan_sort', is_numeric($last) ? (int) $last + 1 : 0);
         }
     }
 

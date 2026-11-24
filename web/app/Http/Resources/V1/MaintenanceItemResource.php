@@ -8,6 +8,7 @@ use App\Http\Resources\Concerns\AnswersDelivery;
 use App\Models\MaintenanceItem;
 use App\Services\Maintenance\MaintenanceReminders;
 use App\Services\Maintenance\MaintenanceSchedule;
+use App\Support\QaClock;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -30,6 +31,9 @@ class MaintenanceItemResource extends JsonResource
         $schedule = app(MaintenanceSchedule::class);
         $odometer = $item->vehicle->getAttribute('odometer_km');
         $odometer = is_int($odometer) ? $odometer : null;
+        // The countdown (state, days_left, progress) counts from the QA clock outside production (DQ-P5-201), else from the real today.
+        // Display only: the stored due date and the reminders keep the real clock.
+        $today = MaintenanceSchedule::today(QaClock::frozen($request));
 
         return [
             'id' => $item->id,
@@ -58,13 +62,13 @@ class MaintenanceItemResource extends JsonResource
             'enabled' => $item->enabled,
             'notes' => $item->notes,
             /** @var MaintenanceDueState */
-            'state' => $schedule->state($item, $odometer),
+            'state' => $schedule->state($item, $odometer, $today),
             /**
              * Days to the due date, negative once past it.
              *
              * @var int|null
              */
-            'days_left' => $schedule->daysLeft($item),
+            'days_left' => $schedule->daysLeft($item, $today),
             /**
              * Kilometres to the due mileage, negative once past it; null without a due mileage or a known odometer.
              *
@@ -76,7 +80,7 @@ class MaintenanceItemResource extends JsonResource
              *
              * @var float|null
              */
-            'progress' => $schedule->progress($item, $odometer),
+            'progress' => $schedule->progress($item, $odometer, $today),
             /**
              * The reminder stages of the current due date (09 §8.8 "server + local dedupe"): `key` is the id of the local backup notification.
              *

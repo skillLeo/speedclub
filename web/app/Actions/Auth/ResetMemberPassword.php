@@ -14,6 +14,7 @@ use App\Services\Auth\LoginThrottle;
 use App\Services\Auth\MemberSessions;
 use App\Services\Auth\SecondFactorGuard;
 use App\Services\Auth\VerificationCodes;
+use App\Services\Members\MemberActivation;
 use App\Services\Notifications\Notifier;
 use App\Support\Auth\NextStep;
 use Illuminate\Support\Facades\Hash;
@@ -94,6 +95,8 @@ class ResetMemberPassword
 
         if ($wasUnproven) {
             $this->unproven->handle($user);
+            // M5.9d: the reset proved the address of a registration whose terms were accepted at sign-up: the account activates.
+            app(MemberActivation::class)->activate($user);
         }
     }
 }

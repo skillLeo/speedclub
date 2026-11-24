@@ -2,6 +2,7 @@
 
 namespace App\Services\Config;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\ConfigKey;
 use App\Enums\ConfigVersionStatus;
 use App\Enums\ContentEvent;
@@ -176,7 +177,7 @@ final class ConfigVersions
 
             if ($draft->created_by !== $staff->getKey()) {
                 $this->ensure($staff, $key, $key->publishAtom());
-                $reason = Reason::required($reason);
+                $reason = Reason::internal($reason);
             }
 
             $draft->delete();
@@ -184,6 +185,54 @@ final class ConfigVersions
             Audit::record(ContentEvent::ConfigDraftDiscarded->value, $draft,
                 before: ['key' => $key->value, 'version' => $draft->version, 'revision' => $draft->revision, 'created_by' => $draft->created_by],
                 reason: $reason, actor: $staff);
+        });
+    }
+
+    /**
+     * M5.1: someone holding the key's publish atom takes over another staff member's draft (with a reason), so the draft can be finished
+     * and published instead of locking the key until its author returns (the staging case: a second Owner saw the first Owner's drafts
+     * read-only, with no way but discarding them). The draft keeps its payload; its author changes, its revision moves on (an editor of
+     * the old author still open gets stale_revision). A draft waiting for its four-eyes approval is not taken over.
+     *
+     * @throws AuthorizationException|ValidationException|ConfigRefused
+     */
+    public function takeOverDraft(Staff $staff, ConfigKey $key, string $reason, int $revision): ConfigVersion
+    {
+        $this->ensure($staff, $key, $key->publishAtom());
+        $this->ensure($staff, $key, $key->editAtom());
+        $reason = Reason::internal($reason);
+
+        return DB::transaction(function () use ($staff, $key, $reason, $revision): ConfigVersion {
+            $draft = $this->lock($key)->first(fn (ConfigVersion $row): bool => $row->status === ConfigVersionStatus::Draft);
+
+            if ($draft === null) {
+                throw new ConfigRefused('no_draft');
+            }
+
+            if ($draft->created_by === $staff->getKey()) {
+                return $draft;
+            }
+
+            if ($draft->revision !== $revision) {
+                throw new ConfigRefused('stale_revision', ['revision' => $draft->revision]);
+            }
+
+            $pending = ApprovalRequest::query()->where('subject_type', $draft->getMorphClass())->where('subject_id', (string) $draft->getKey())
+                ->where('status', ApprovalStatus::Pending)->where('expires_at', '>', now())->exists();
+
+            if ($pending) {
+                throw new ConfigRefused('draft_pending_approval');
+            }
+
+            $previous = $draft->created_by;
+            $draft->forceFill(['created_by' => $staff->getKey(), 'revision' => $draft->revision + 1])->save();
+
+            Audit::record(ContentEvent::ConfigDraftTakenOver->value, $draft,
+                before: ['key' => $key->value, 'version' => $draft->version, 'created_by' => $previous],
+                after: ['key' => $key->value, 'version' => $draft->version, 'revision' => $draft->revision, 'created_by' => $staff->getKey()],
+                reason: $reason, actor: $staff);
+
+            return $draft;
         });
     }
 
@@ -206,7 +255,7 @@ final class ConfigVersions
     {
         $this->ensure($staff, $key, $key->publishAtom());
 
-        return $this->runPublish($staff, null, $key, Reason::required($reason), $revision, null);
+        return $this->runPublish($staff, null, $key, Reason::internal($reason), $revision, null);
     }
 
     /**
@@ -229,7 +278,7 @@ final class ConfigVersions
     {
         $this->ensure($staff, $key, $key->publishAtom());
 
-        return $this->runRollback($staff, null, $key, $version, Reason::required($reason), null);
+        return $this->runRollback($staff, null, $key, $version, Reason::internal($reason), null);
     }
 
     /**
@@ -245,11 +294,40 @@ final class ConfigVersions
     }
 
     /**
+     * A change the system publishes (no staff member; audited `config.published` with the system as the actor): $change gets the live
+     * payload (or the schema's initial one) and answers the new payload, or null when there is nothing to change (then nothing is written).
+     * It skips the schema's staff rules on purpose, so only code may call it with values it vouches for: the demo seeders of local and
+     * staging hosts (GiftDemoSeeder: Wrapped release dates already in the past, which ADM-37 refuses for a staff edit). A draft in
+     * progress stays the staff member's.
+     *
+     * @param  callable(array<string, mixed>): (array<string, mixed>|null)  $change
+     */
+    public function publishBySystem(ConfigKey $key, callable $change, string $reason): ?ConfigVersion
+    {
+        return DB::transaction(function () use ($key, $change, $reason): ?ConfigVersion {
+            $rows = $this->lock($key);
+            $live = $rows->first(fn (ConfigVersion $row): bool => $row->status === ConfigVersionStatus::Published);
+            /** @var array<string, mixed> $current */
+            $current = $live !== null ? $live->payload : $this->schemas->for($key)->initial();
+            $payload = $change($current);
+
+            if ($payload === null) {
+                return null;
+            }
+
+            $next = new ConfigVersion(['key' => $key->value, 'version' => $this->nextVersion($rows), 'status' => ConfigVersionStatus::Draft, 'revision' => 1, 'base_version' => $live?->version, 'payload' => $payload]);
+
+            return $this->goLive($rows, $next, $live, $key, $payload, Reason::internal($reason), null, null, ContentEvent::ConfigPublished);
+        });
+    }
+
+    /**
      * The rollback reason as stored on the new version.
      */
     public static function rollbackReason(int $version, string $reason): string
     {
-        return mb_substr("Rollback auf v$version: $reason", 0, 1000);
+        // ADR-540: without a reason the label alone ("Rollback auf vN").
+        return mb_substr(trim($reason) === '' ? "Rollback auf v$version" : "Rollback auf v$version: $reason", 0, 1000);
     }
 
     /**
@@ -323,7 +401,7 @@ final class ConfigVersions
      * @param  Collection<int, ConfigVersion>  $rows
      * @param  array<string, mixed>  $payload
      */
-    private function goLive(Collection $rows, ConfigVersion $next, ?ConfigVersion $live, ConfigKey $key, array $payload, string $reason, Staff $requester, ?Staff $approver, ContentEvent $event, ?int $rolledBackTo = null): ConfigVersion
+    private function goLive(Collection $rows, ConfigVersion $next, ?ConfigVersion $live, ConfigKey $key, array $payload, string $reason, ?Staff $requester, ?Staff $approver, ContentEvent $event, ?int $rolledBackTo = null): ConfigVersion
     {
         $before = $live !== null ? $live->payload : [];
         $diff = JsonDiff::between($before, $payload);
@@ -339,9 +417,9 @@ final class ConfigVersions
             'version' => max((int) $next->getAttribute('version'), $this->nextVersion($rows->reject(fn (ConfigVersion $row): bool => $next->exists && $row->is($next)))),
             'status' => ConfigVersionStatus::Published,
             'payload' => $payload,
-            'published_by' => ($approver ?? $requester)->getKey(),
+            'published_by' => ($approver ?? $requester)?->getKey(),
             'published_at' => now(),
-            'reason' => $reason,
+            'reason' => trim($reason) === '' ? null : $reason, // ADR-540: no reason given → null
         ])->save();
 
         $this->schemas->for($key)->published($payload);
@@ -358,7 +436,7 @@ final class ConfigVersions
                 'version' => $next->version,
                 'rolled_back_to' => $rolledBackTo,
                 'changes' => $diff['after'],
-                'requested_by' => $requester->getKey(),
+                'requested_by' => $requester?->getKey(),
                 'approved_by' => $approver?->getKey(),
             ],
             reason: $reason, actor: $approver ?? $requester);

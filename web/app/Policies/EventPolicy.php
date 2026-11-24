@@ -101,6 +101,42 @@ class EventPolicy
     }
 
     /**
+     * M5.6 EVT-06 photo queue: the organiser, while active.
+     */
+    public function moderatePhotos(User $user, Event $event): bool
+    {
+        return $this->update($user, $event);
+    }
+
+    /**
+     * M5.6 EVT-06 "Check-in-Code zeigen": the organiser, while active.
+     */
+    public function showCheckinCode(User $user, Event $event): bool
+    {
+        return $this->update($user, $event);
+    }
+
+    /**
+     * M5.6 check-in: an active member with a verified e-mail who may see the event, not its organiser (403 checkin_own_event).
+     */
+    public function checkIn(User $user, Event $event): Response|bool
+    {
+        if (! $user->isActive()) {
+            return false;
+        }
+
+        if ($event->isOrganisedBy($user)) {
+            return Response::deny(code: ErrorCode::CheckinOwnEvent->value);
+        }
+
+        if (! $this->view($user, $event)) {
+            return false;
+        }
+
+        return $user->hasVerifiedEmail() ? true : Response::deny(code: ErrorCode::EmailNotVerified->value);
+    }
+
+    /**
      * 09 §8.7: an organiser's account is at least this old.
      */
     public static function eligibleAt(User $user): CarbonImmutable

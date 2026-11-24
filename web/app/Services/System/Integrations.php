@@ -3,6 +3,7 @@
 namespace App\Services\System;
 
 use App\Models\Staff;
+use App\Services\Shop\ShopDomain;
 
 /**
  * ADM-50 integrations, status only (m3.6 §1, 06 §3: never show secrets): for each, whether it is configured and, where harmless, the
@@ -49,6 +50,13 @@ final class Integrations
             [
                 'key' => 'turnstile',
                 'configured' => self::filled('speedclub.services.turnstile_site_key') && self::filled('speedclub.services.turnstile_secret'),
+                'driver' => null,
+                'test' => ['available' => false, 'reason' => 'no_test'],
+            ],
+            [
+                // M5.5 (m5.5-contract §2, OA-44): the optional Storefront token; without it the shop reads the ADM-66 catalogue.
+                'key' => 'shopify',
+                'configured' => self::filled('speedclub.shop.shopify.storefront_token') && app(ShopDomain::class)->configured(),
                 'driver' => null,
                 'test' => ['available' => false, 'reason' => 'no_test'],
             ],

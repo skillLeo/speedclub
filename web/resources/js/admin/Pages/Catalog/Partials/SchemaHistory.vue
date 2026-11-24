@@ -48,7 +48,7 @@ const diff = computed(() => (current.value === null ? null : schemaDiff(previous
             </ol>
             <section v-if="current" class="flex min-w-0 grow flex-col gap-12" :aria-label="trans('catalog.history.version', { n: String(current.version) })">
                 <h3 class="text-headline text-ink">{{ trans('catalog.history.version', { n: String(current.version) }) }}</h3>
-                <p class="text-admin-base text-ink-2">{{ current.reason ?? trans('catalog.history.initial_body') }}</p>
+                <p v-if="current.reason || !previous" class="text-admin-base text-ink-2">{{ current.reason ?? trans('catalog.history.initial_body') }}</p>
                 <DiffViewer v-if="previous && diff" :before="diff.before" :after="diff.after" :test-id="`${testId}.diff`" />
                 <p v-else class="text-admin-base text-ink-3">{{ transChoice('catalog.history.first', current.schema.length, { count: String(current.schema.length) }) }}</p>
             </section>

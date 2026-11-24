@@ -4,7 +4,9 @@ import { View } from 'react-native';
 
 import type { VehicleCardData } from '@/api/queries/profile';
 import { createStyles, size } from '@/theme';
-import { Button, IconButton, SkeletonBlock } from '@/ui';
+import { Button } from '@/ui/Button';
+import { IconButton } from '@/ui/IconButton';
+import { SkeletonBlock } from '@/ui/Skeleton';
 
 export type QuickAction = 'update' | 'mods' | 'photos' | 'qr';
 

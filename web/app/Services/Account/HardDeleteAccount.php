@@ -11,7 +11,9 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Audit\Audit;
 use App\Services\Auth\MemberSessions;
+use App\Services\Crews\CrewAccountDeletion;
 use App\Services\DataExport\BuildDataExport;
+use App\Services\Forum\ForumAccountDeletion;
 use App\Services\Media\MediaService;
 use App\Services\Privacy\RetentionPolicy;
 use App\Services\PublicPages\OgImages;
@@ -99,12 +101,20 @@ class HardDeleteAccount implements ShouldBeUniqueUntilProcessing, ShouldQueue
 
             $sessions->revokeAll($user);
 
+            // R4-2.3 (C8): what DeleteAccount did not catch (a crew joined in between is impossible, but a retry is cheap).
+            app(CrewAccountDeletion::class)->accountClosed($user);
+
+            // M5.8 (m5.8-contract D8): own posts go, threads keep their title and others' replies.
+            $forum = app(ForumAccountDeletion::class);
+            $prepared = $forum->prepare($user);
+
             Audit::record(MemberSecurityEvent::HardDeleted->value, $user, after: [
                 'vehicles' => $vehicles->count(),
                 'exports' => $exports->count(),
             ]);
 
             $user->forceDelete();
+            $forum->finish($prepared);
         });
 
         foreach ($exports as $export) {

@@ -4,7 +4,8 @@ import { View } from 'react-native';
 
 import { clearAuthIntent } from '@/state/session';
 import { createStyles, layout } from '@/theme';
-import { Button, Text } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Text } from '@/ui/Text';
 
 const useStyles = createStyles((t) => ({
   root: { gap: t.space[8], maxWidth: layout.inboxPane, paddingTop: t.space[8], width: '100%' },

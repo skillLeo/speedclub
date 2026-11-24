@@ -9,7 +9,10 @@ import { isWeb } from '@/lib/platform';
 import { useQaState } from '@/lib/qa';
 import { useSessionStore } from '@/state/session';
 import { createStyles, size } from '@/theme';
-import { ErrorState, Skeleton, SkeletonBlock, SkeletonText, Text, toast } from '@/ui';
+import { ErrorState } from '@/ui/ErrorState';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { RowGroup } from '@/ui/RowGroup';
 
 import { LOCK_AFTER_OPTIONS, saveAppLock, useAppLockStore, type LockAfter } from '../appLock/appLock';

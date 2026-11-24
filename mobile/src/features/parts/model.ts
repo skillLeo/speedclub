@@ -8,7 +8,7 @@ import type { BusinessCardData, BusinessDetail, Impressum, ModTag, OpeningDay } 
 import type { FeedVehicle } from '@/api/queries/home';
 import type { ProductRowData } from '@/api/queries/parts';
 import { photoFields } from '@/features/profile/media';
-import type { PhotoFields } from '@/ui';
+import type { PhotoFields } from '@/ui/Photo';
 
 export const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 export type DayKey = (typeof DAY_KEYS)[number];

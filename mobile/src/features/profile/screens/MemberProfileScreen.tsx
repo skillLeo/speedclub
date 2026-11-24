@@ -15,6 +15,8 @@ import {
   type MemberVehicle,
 } from '@/api/queries/social';
 import { usePublicViewer } from '@/api/queries/vehicles';
+import { CrewChips, useMemberCrewsSettling } from '@/features/crews/components/CrewChips';
+import { memberProfileGift } from '@/features/gift/components/ProfileGift';
 import { newMessageHref, useMessageBlock } from '@/features/messages/entry';
 import { BlockDialog } from '@/features/safety/BlockDialog';
 import { useReport } from '@/features/safety/useReport';
@@ -25,7 +27,13 @@ import { useOnline } from '@/state/online';
 import { useRequireAuth, useSessionStore } from '@/state/session';
 import { createStyles, size, useBreakpoint } from '@/theme';
 import { useViewAsLock } from '@/features/viewAs/useViewAs';
-import { Button, EmptyState, ErrorState, IconButton, Text, toast, useCollapsingHeader } from '@/ui';
+import { Button } from '@/ui/Button';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
+import { IconButton } from '@/ui/IconButton';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
+import { useCollapsingHeader } from '@/ui/useCollapsingHeader';
 
 import { FollowButton } from '../components/FollowButton';
 import { PROFILE_COLUMN_MAX, PROFILE_WIDE_MAX, profileCover, profileCoverHeight, profileCoverWidth, ProfileIdentity } from '../components/ProfileHeader';
@@ -33,7 +41,8 @@ import { ProfileFrame } from '../components/ProfileFrame';
 import { ProfileSkeleton } from '../components/ProfileSkeleton';
 import { GaragePanel, initialProfileTab, ProfileTabBar, profileTabs, UpdatesPanel, useProfileTabFlags, type ProfileTab } from '../components/ProfileTabs';
 import { profileVehicles } from '../media';
-import { publicProfileUrl, shareLink } from '../share';
+import { profileShareUrl, shareLink } from '../share';
+import { useProfileTabScroll } from '../tabScroll';
 
 const ROUTE = 'PROF-02';
 
@@ -79,7 +88,9 @@ export function MemberProfileScreen() {
   const header = useCollapsingHeader();
   const { width: windowWidth } = useWindowDimensions();
   const [width, setWidth] = useState(windowWidth);
-  const [tab, setTab] = useState<ProfileTab>(() => initialProfileTab(params.tab));
+  // CR2-3: a tap switches at once and the page keeps a sane place per tab (tabScroll.ts).
+  const tabState = useProfileTabScroll<ProfileTab>(initialProfileTab(params.tab), header.scrollY);
+  const tab = tabState.tab;
   const flags = useProfileTabFlags();
   const [moreOpen, setMoreOpen] = useState(false);
   const [blocking, setBlocking] = useState<string | null>(null);
@@ -91,6 +102,9 @@ export function MemberProfileScreen() {
   const redirected = useRef<string | null>(null);
 
   const query = useMemberProfile(left ? undefined : username);
+  // R4DQ-11: the crews load beside the profile; the identity skeleton stays until they are in (or failed), so nothing shifts.
+  const crewsFor = query.data?.username ?? username;
+  const crewsSettling = useMemberCrewsSettling(left ? null : crewsFor);
   const state = left ? 'ready' : stateOf(query, online, qaState);
   const loaded = left?.profile ?? (state === 'ready' ? query.data : undefined);
   const profile = loaded && qaState === 'empty' ? { ...loaded, bio: null, stats: { ...loaded.stats, vehicles: 0 } } : loaded;
@@ -134,7 +148,8 @@ export function MemberProfileScreen() {
     router.push({ pathname: '/u/[username]/connections', params: { username: profile?.username ?? username, tab } });
 
   const share = async () => {
-    const url = publicProfileUrl(profile?.username ?? username);
+    // M5.7: the server's `share_url` (`?via=share`, contract §2.4).
+    const url = profileShareUrl(profile?.username ?? username, profile?.share_url);
     if (!url) return;
     setSharing(true);
     try {
@@ -197,7 +212,7 @@ export function MemberProfileScreen() {
         }
       />
     );
-  } else if (state === 'loading') {
+  } else if (state === 'loading' || (state === 'ready' && crewsSettling)) {
     // The skeleton takes the loaded page's geometry: the bar over a cover block (every profile has one, DQ-1234).
     overPhoto = true;
     body = <ProfileSkeleton width={width} columnWidth={columnWidth} withCover variant="member" withMessage routeId={ROUTE} />;
@@ -229,6 +244,7 @@ export function MemberProfileScreen() {
   } else {
     overPhoto = true;
     const memberName = profile.username ?? username;
+    const gift = memberProfileGift(profile, memberName, ROUTE);
     body = (
       <>
         <ProfileIdentity
@@ -236,6 +252,14 @@ export function MemberProfileScreen() {
           routeId={ROUTE}
           width={width}
           cards={vehicles}
+          {...gift}
+          founding={
+            <>
+              {gift.founding}
+              {/* R4-2.3, R4DQ-33: the member's crews under the meta line, above Folgen/Nachricht (none while the flag is off). */}
+              <CrewChips username={memberName} routeId={ROUTE} />
+            </>
+          }
           badge={profile.follows_you ? t('member.followsYou') : undefined}
           other
           onFollowers={connections('followers')}
@@ -245,7 +269,7 @@ export function MemberProfileScreen() {
               <Text variant="caption" color="text.secondary" testID={`${ROUTE}.messageHelper`}>
                 {messageHelper}
               </Text>
-            ) : undefined
+            ) : null
           }
           actions={
             <>
@@ -264,7 +288,8 @@ export function MemberProfileScreen() {
           }
         />
         <View style={[styles.column, kind === 'desktop' ? styles.wideColumn : null, { paddingHorizontal: gutter }]}>
-          <ProfileTabBar routeId={ROUTE} tabs={tabs} value={current} onChange={setTab} />
+          <ProfileTabBar routeId={ROUTE} tabs={tabs} value={current} onChange={tabState.select} barRef={tabState.barRef} />
+          <View style={tabState.panelStyle} testID={`${ROUTE}.panel`}>
           {current === 'updates' ? (
             <View style={{ maxWidth: inner }}>
               <UpdatesPanel routeId={ROUTE} own={false} vehicles={vehicles} ready={vehicleData !== undefined} />
@@ -279,6 +304,7 @@ export function MemberProfileScreen() {
               profileCover={cover}
             />
           )}
+          </View>
         </View>
       </>
     );
@@ -293,11 +319,12 @@ export function MemberProfileScreen() {
       title={name}
       onBack={back}
       header={header}
+      scrollRef={tabState.scrollRef}
       collapseAt={Math.max(0, coverHeight - size.header)}
       photoWidth={overPhoto ? profileCoverWidth(width, kind) : undefined}
       onWidth={setWidth}
       offlineLabel={t('member.offlineBanner')}
-      scrollEnabled={state !== 'loading'}
+      scrollEnabled={state !== 'loading' && !(state === 'ready' && crewsSettling)}
       overlays={
         <>
           <MoreSheet visible={moreOpen} onClose={() => setMoreOpen(false)} title={handle} actions={moreActions} testID={`${ROUTE}.moreSheet`} />

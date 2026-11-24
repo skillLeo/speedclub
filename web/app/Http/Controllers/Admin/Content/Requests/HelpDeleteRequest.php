@@ -15,6 +15,6 @@ class HelpDeleteRequest extends ContentRequest
      */
     public function rules(): array
     {
-        return ['reason' => ['required', 'string', 'min:10', 'max:1000']];
+        return ['reason' => ['nullable', 'string', 'max:1000']];
     }
 }

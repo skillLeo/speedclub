@@ -13,7 +13,7 @@ use Carbon\CarbonImmutable;
 
 /**
  * Sample maintenance of the showcase (09 §8.19, M4.13): the main build of the showcase member (Showcase::SHOWCASE_USERNAME, who signs in
- * for the review, so MNT-01 has content) and the first build of the SPEED CLUB Editorial account get HU/AU, oil, brake fluid, tyres,
+ * for the review, so MNT-01 has content) and the first build of the Speedclub Editorial account get HU/AU, oil, brake fluid, tyres,
  * insurance and a few service log entries with costs at a "Beispiel-Werkstatt". Maintenance is owner-only, so nobody else ever sees it;
  * sample vehicles never send reminders (MaintenanceReminders). Fixed ids (so screenshots stay comparable) and dates from now; seeding again
  * rewrites the same rows. Removed with the vehicles (`speedclub:demo --purge`, foreign keys).

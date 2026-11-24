@@ -127,3 +127,39 @@ describe('document', () => {
     expect(css).toContain('overflow-x: hidden');
   });
 });
+
+describe('CR2-2 press guard (no image drag, no accidental selection)', () => {
+  const press = /<style id="sc-press">([\s\S]*?)<\/style>/.exec(html)![1]!;
+  const rule = (selector: string) => {
+    const start = press.indexOf(selector);
+    return press.slice(start, press.indexOf('}', start));
+  };
+
+  it('keeps photos from being dragged, called out or selected', () => {
+    const img = rule('img {');
+    expect(img).toContain('-webkit-user-drag: none');
+    expect(img).toContain('-webkit-touch-callout: none');
+    expect(img).toContain('user-select: none');
+  });
+
+  it('selects no text on pressables but keeps inputs selectable', () => {
+    const pressables = rule("[role='button'],");
+    expect(press).toMatch(/\[role='link'\],\s*\[role='tab'\]/);
+    expect(pressables).toContain('-webkit-user-select: none');
+    expect(rule('input,')).toContain('user-select: text');
+    // Plain text (posts, descriptions) is not targeted: no rule for body, div or span.
+    expect(press).not.toMatch(/(^|\s)(body|div|span|\*)\s*[,{]/);
+  });
+
+  it('cancels a native drag that starts on an image, and only there', () => {
+    const guard = /<script id="sc-no-image-drag">([\s\S]*?)<\/script>/.exec(html)![1]!;
+    let listener: ((event: { target: { tagName: string } | null; preventDefault: () => void }) => void) | undefined;
+    new Function('document', guard)({ addEventListener: (_: string, fn: typeof listener) => (listener = fn) });
+    const onImage = jest.fn();
+    const onText = jest.fn();
+    listener!({ target: { tagName: 'IMG' }, preventDefault: onImage });
+    listener!({ target: { tagName: 'SPAN' }, preventDefault: onText });
+    expect(onImage).toHaveBeenCalled();
+    expect(onText).not.toHaveBeenCalled();
+  });
+});

@@ -172,8 +172,7 @@
     },
     "reinstate_dialog": {
         "title": "„:name“ wieder freischalten?",
-        "body": "Das Profil ist sofort wieder öffentlich. Der Inhaber wird benachrichtigt.",
-        "reason": "Grund (steht im Audit-Log)"
+        "body": "Das Profil ist sofort wieder öffentlich. Der Inhaber wird benachrichtigt."
     },
     "reopen_dialog": {
         "title": "Entscheidung zu „:name“ zurücknehmen?",

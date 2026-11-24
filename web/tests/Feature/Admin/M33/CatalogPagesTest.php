@@ -196,11 +196,11 @@ describe('ADM-14 entries', function () {
             ->and(AuditEvent::query()->where('action', 'catalog.deactivated')->where('reason', adm32Reason())->exists())->toBeTrue();
     });
 
-    it('needs a reason to deactivate', function () {
+    it('refuses a reason over 1000 characters when deactivating (ADR-540: none is needed)', function () {
         [, $model] = adm33Tree();
         adm32SignedIn('content_editor');
 
-        $this->post("/admin/catalog/entries/model/{$model->id}/active", ['active' => false, 'reason' => 'kurz'])->assertSessionHasErrors('reason');
+        $this->post("/admin/catalog/entries/model/{$model->id}/active", ['active' => false, 'reason' => str_repeat('x', 1001)])->assertSessionHasErrors('reason');
         expect($model->refresh()->active)->toBeTrue();
     });
 

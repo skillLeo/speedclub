@@ -27,17 +27,12 @@ import { useFormat } from '@/lib/useFormat';
 import { photoFields } from '@/features/profile/media';
 import { useOnline } from '@/state/online';
 import { createStyles, size, space, useBreakpoint } from '@/theme';
-import {
-  Button,
-  DisplayTitle,
-  ProductRow,
-  ProductRowSkeleton,
-  Skeleton,
-  SkeletonBlock,
-  SkeletonText,
-  SpecRow,
-  Text,
-} from '@/ui';
+import { Button } from '@/ui/Button';
+import { DisplayTitle } from '@/ui/DisplayTitle';
+import { ProductRow, ProductRowSkeleton } from '@/ui/ProductRow';
+import { Skeleton, SkeletonBlock, SkeletonText } from '@/ui/Skeleton';
+import { SpecRow } from '@/ui/SpecRow';
+import { Text } from '@/ui/Text';
 
 import { BuildsEmpty, BuildsWall } from '../components/BuildsWall';
 import { PageStateBody, pageStateOf } from '../components/PageStates';

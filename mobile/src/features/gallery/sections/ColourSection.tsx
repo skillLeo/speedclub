@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
 import { createStyles, useTheme } from '@/theme';
-import { Text } from '@/ui';
+import { Text } from '@/ui/Text';
 
 import { DEPRECATED_COLOURS } from '../data';
 import { Group, NoteText, SectionScreen } from '../parts';

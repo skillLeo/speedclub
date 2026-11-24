@@ -11,7 +11,14 @@ import { useBlurPhoto } from '@/api/queries/signature';
 import { photoFields } from '@/features/vehicle/media';
 import { isWeb } from '@/lib/platform';
 import { createStyles, layout, useBreakpoint } from '@/theme';
-import { Button, Chip, Dialog, Photo, Spinner, Switch, Text, toast } from '@/ui';
+import { Button } from '@/ui/Button';
+import { Chip } from '@/ui/Chip';
+import { Dialog } from '@/ui/Dialog';
+import { Photo } from '@/ui/Photo';
+import { Spinner } from '@/ui/Spinner';
+import { Switch } from '@/ui/Switch';
+import { Text } from '@/ui/Text';
+import { toast } from '@/ui/toast';
 import { useImagePlaceholder } from '@/ui/imagePlaceholder';
 import { keyOf } from '@/ui/useRovingKeys';
 
@@ -202,6 +209,10 @@ export function BlurTool({ vehicle, photo, disabled, onDirtyChange, routeId }: B
   const pan = usePanGesture({
     enabled: open && !disabled && !processing,
     minDistance: 0,
+    // On the web RNGH re-applies the config on every render and drops the detector's `touchAction` (CR2-1, CarouselSnap); drawing
+    // re-renders on every step, so a finger on iPhone Safari would scroll the page instead.
+    // @ts-expect-error -- touchAction is an allowed native prop of the pan handler (RNGH propsWhiteList) but not in PanGestureConfig
+    touchAction: 'none',
     onBegin: (event) => {
       'worklet';
       scheduleOnRN(begin, event.x, event.y);

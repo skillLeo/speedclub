@@ -9,8 +9,10 @@ import {
   brandingState,
   deleteTestAccounts,
   disableM414Flags,
+  disableM56Gallery,
   disablePremiumFixture,
   enableM414Flags,
+  enableM56Gallery,
   enableM414Affiliate,
   disableM414Affiliate,
   enablePremiumFixture,
@@ -18,6 +20,18 @@ import {
   ensureSessionsFixture,
   ensureReconsentFixture,
   ensureSupportFixture,
+  ensureSpotsFixture,
+  removeSpotsFixture,
+  ensureCotdFixture,
+  removeCotdFixture,
+  ensureM59AiAdminFixture,
+  removeM59AiAdminFixture,
+  ensureM59AiSpecsFixture,
+  removeM59AiSpecsFixture,
+  ensureStickerFixture,
+  removeStickerFixture,
+  ensureStickerDraftFixture,
+  removeStickerDraftFixture,
   legalDocumentsState,
   lendSeededDrafts,
   publishAnnouncementFixture,
@@ -157,6 +171,14 @@ export const STAGE_FIXTURES = {
     teardown: () => disableM414Flags(),
     teardownSync: () => backendSync(['disable-m414-flags']),
   },
+  // DQ-P5-012: EVT-02's gallery from the seed: events.gallery on, so the cells read "Saugmotor-Abend"'s approved gallery (night photos at
+  // a car park, ShowcaseEvents member_events[].gallery) through the server's own endpoint, off again after the capture.
+  'm56-gallery': {
+    what: 'events.gallery on, so the EVT-02 gallery cells read the seeded gallery of Saugmotor-Abend',
+    setup: () => enableM56Gallery(),
+    teardown: () => disableM56Gallery(),
+    teardownSync: () => backendSync(['disable-m56-gallery']),
+  },
   // DQ-1150: BRD-02 with an affiliate link ("Anzeige"): the M4.14 flags plus affiliate_links on and a test affiliate URL on KW
   // Variante 3 (shop.speedclub.test), all undone after the capture (support/backend.php m414AffiliateFixture).
   'm414-affiliate': {
@@ -190,6 +212,62 @@ export const STAGE_FIXTURES = {
     setup: () => ensureSessionsFixture(),
     teardown: async () => undefined,
     teardownSync: () => true,
+  },
+  // M5.9b ADM-62: two test spotters on demo cars (a burst, a city hop, ordinary spots); the spots go first so the demo cars' stats are
+  // recomputed, then the accounts.
+  'm59b-spots': {
+    what: 'spots.fixture (@nico.spotter: burst + city hop) and spots.fixture-lea (@lea.dex: ordinary spots) on demo cars',
+    setup: () => ensureSpotsFixture(),
+    teardown: async () => {
+      await removeSpotsFixture();
+      await deleteTestAccounts('spots.fixture');
+    },
+    teardownSync: () => backendSync(['remove-spots-fixture'], ['delete-accounts', 'spots.fixture']),
+  },
+  'm59d-cotd': {
+    what: 'Car of the Day rows around today on public demo cars (two past picks, yesterday skipped, today picked, tomorrow a team choice)',
+    setup: () => ensureCotdFixture(),
+    teardown: () => removeCotdFixture(),
+    teardownSync: () => backendSync(['remove-cotd-fixture']),
+  },
+  // M5.4 DQ-M54-07/-15: lukas.sc's R34 with three sticker versions that passed the server's Scan-Test (STK-05 passed, STK-06 order,
+  // STK-07 history); the teardown deletes exactly those versions.
+  'm54-stickers': {
+    what: 'three passed sticker versions (Round, Banner, Classic with a custom line) on lukas.sc\'s R34',
+    setup: () => ensureStickerFixture(),
+    teardown: () => removeStickerFixture(),
+    teardownSync: () => backendSync(['remove-sticker-fixture']),
+  },
+  // DQ-P5-206: STK-05-line and STK-06-notReady need a current version that has not passed the Scan-Test, in a template that prints
+  // the custom line. Since M5.10 the seed leaves the R34 on a passed Vertical JDM, so this stage opens a Classic draft above it
+  // (support/backend.php ensure-sticker-draft-fixture) and the teardown deletes it again, whatever the seed gave the car.
+  'm54-sticker-draft': {
+    what: 'an open Classic draft (no Scan-Test) above lukas.sc\'s R34\'s current sticker version',
+    // A leftover of an aborted run (its draft or the draft it changed) is undone first.
+    setup: async () => {
+      await removeStickerDraftFixture();
+      return ensureStickerDraftFixture();
+    },
+    teardown: () => removeStickerDraftFixture(),
+    teardownSync: () => backendSync(['remove-sticker-draft-fixture']),
+  },
+  // M5.9 AI helpers (m5.9-contract §8 D-5, §2.4): no provider runs locally (OA-18), so no seed has a cached spec suggestion or a triage
+  // template. ADM-14-model's "KI-Herstellerangaben" (E30 and E46 of BMW M3) and ADM-21's "KI-Vorschlag: <Vorlage>" read these rows; the
+  // teardown deletes exactly them and puts the case's ai columns and ai.moderation_triage back (support/backend.php m59AiAdminFixture).
+  'm59-ai-admin': {
+    what: 'two cached AI spec suggestions of BMW M3 (E30, E46), the triage template street_racing on the ADM-21 web notice, ai.moderation_triage on',
+    setup: () => ensureM59AiAdminFixture(),
+    teardown: () => removeM59AiAdminFixture(),
+    teardownSync: () => backendSync(['remove-m59-ai-admin-fixture']),
+  },
+  // M5.9 DQ-P5-057: WEB-01 with an AI-marked spec needs a real row (Blade renders from the database). kenji.r34's R34 keeps its factory
+  // 280 PS / 392 Nm and gets vehicle_specs.ai_fields for power and torque, as a PUT with `ai_suggestion` would leave it; the teardown puts
+  // ai_fields back (support/backend.php m59AiSpecsFixture).
+  'm59-ai-specs': {
+    what: 'kenji.r34\'s R34 with power and torque marked as taken over from the AI suggestion (vehicle_specs.ai_fields)',
+    setup: () => ensureM59AiSpecsFixture(),
+    teardown: () => removeM59AiSpecsFixture(),
+    teardownSync: () => backendSync(['remove-m59-ai-specs-fixture']),
   },
   'support-tickets': {
     what: 'support.fixture with two support requests, one answered by the team',
